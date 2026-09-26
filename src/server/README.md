@@ -127,11 +127,14 @@ does not change the live selected-page boundary.
 owns child shutdown. HTTP readiness precedes exhaustive compilation and baseline
 preparation, so All remains usable while Changes is pending or preparing.
 The CLI injects the terminal reporter's server-facing subset into both Serve
-compositions. Plain mode emits only the historical readiness and diagnostic
-bytes. Rich mode presents accepted catalogue, baseline, Changes, reference, and
-watch-action boundaries. Diagnostics originating in a supervised child cross a
+compositions. Plain mode emits historical readiness and diagnostic bytes, plus
+deduplicated build warnings when inputs are ignored. Rich mode presents
+accepted catalogue, baseline, Changes, reference and watch-action boundaries.
+Diagnostics originating in a supervised child cross a
 validated IPC message so the parent remains the sole terminal owner; a child
-without IPC retains direct diagnostic output.
+without IPC retains direct diagnostic output. Render warnings from the child
+use a separate typed IPC warning event and the parent's run/rebuild-scoped
+deduplication sink; they are not child stderr diagnostics.
 
 The [public-exclusion policy](../../docs/protocol/mokly-source-protection.md#public-exclusions)
 adds config-owned `publicExclude` globs to the shared source classifier.

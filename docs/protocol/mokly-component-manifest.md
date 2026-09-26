@@ -18,6 +18,11 @@ Manifest v6 and component stylesheet ownership are defined by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestone 6 and delivered in Milestone 3 respectively.
 Historical parsing of v3–v5 is retained for Git baselines.
+The optional inserted-link provenance record below is planned by the same
+plan's Milestone 13 and is not implemented yet. It extends private v6 view
+metadata without changing the manifest version or public read model.
+Ignoring renderer records for declared CSS with a warning is planned by
+Milestone 14.
 
 ## Entries And Variants
 
@@ -142,6 +147,13 @@ interface ComponentResourceOwnership {
   componentIds: readonly string[];
 }
 
+interface InsertedComponentStylesheet {
+  startOffset: number;
+  endOffset: number;
+  path: string;
+  componentIds: readonly string[];
+}
+
 interface ComponentViewRecord {
   viewport: Viewport;
   colorScheme: ColorScheme;
@@ -150,6 +162,7 @@ interface ComponentViewRecord {
   ranges: readonly ComponentRangeRecord[];
   styles: readonly ComponentStyleOwnership[];
   resources: readonly ComponentResourceOwnership[];
+  insertedStylesheets?: readonly InsertedComponentStylesheet[];
 }
 ```
 
@@ -177,6 +190,20 @@ equal keys occur in different views. Optional `source` identifies the invocation
 with a repository-relative POSIX path and positive 1-based line/column. Absolute
 or escaping paths are invalid. Its build capture/stripping is specified there;
 source metadata never enters `propsKey`, input identity or Changes projections.
+
+`insertedStylesheets` is private provenance, not an additional resource
+reference. Each span covers one complete Mokly-inserted `<link>` in the final
+generated HTML, including the generated header in its UTF-16 coordinate
+space. The decoded public `path` matches that link; the corresponding derived
+`resources` record may use a configured alias of the same real file.
+`componentIds` are the sorted rendered declarers.
+Spans are ordered, non-overlapping, in bounds and validated against final
+links. The current writer emits the field for every component view, including
+an empty array when nothing was inserted. An absent field on an earlier v6
+baseline means no link can be proven Mokly-inserted; comparison retains those
+links as page content. The
+[stylesheet contract](./mokly-component-stylesheets.md#provenance-and-comparison-material)
+defines the transient transform token and projection rules.
 
 `owner` identifies the caller whose inputs are compared. `slotKey`, when present,
 identifies the original slot scope in which the instance was supplied. The slot
@@ -233,7 +260,9 @@ tags, resource confinement, and global output collisions retain existing rules.
 Variant fragment paths must exactly match the component route and suffix rule
 in the authoring contract, including every optional dark path. Derived
 stylesheet `resources` must match the actual render's declaring component ids;
-renderer records for the same file are rejected, not merged.
+renderer records for any declared file are ignored with a
+[build warning](./mokly-build-warnings.md#exact-messages), not merged. Derive
+owners only when the final post-transform document still links the file.
 
 Entries otherwise sort by route (empty for collections), then id; lexical
 ordering in v6 uses UTF-16 code units rather than a locale-sensitive collator.

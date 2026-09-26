@@ -117,12 +117,13 @@ propSchema: {
 `stylesheets` names existing public CSS files relative to `mockupsDir`, in
 authored order. Mokly links them only where the component actually renders,
 including an empty render, and derives a resource owner record. HTTP(S),
-missing, duplicate or non-public CSS paths fail validation. Two components
-may share a file; each rendered declarer owns it. Transitive imports are
-unowned unless separately declared or reported by the renderer. A renderer
-may still return exact style or other resource ownership, but cannot report
-ownership of the same declared CSS file. Put `componentStylesheets` in a
-configured rule's shared list to choose where declared CSS is linked.
+missing or non-public CSS paths fail validation. A repeated file or alias is
+linked once with a warning. Two components may share a file; each rendered
+declarer owns it. Transitive imports are unowned unless separately declared
+or reported by the renderer. A renderer may still return exact style or other
+resource ownership; a record for declared CSS is ignored with a warning. Put
+`componentStylesheets` in a configured rule's shared list to choose where
+declared CSS is linked.
 
 ## Resolve a saved instance
 

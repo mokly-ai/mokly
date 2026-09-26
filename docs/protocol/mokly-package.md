@@ -28,6 +28,8 @@ by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.
 Manifest v6 and the public component stylesheet marker were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestones 6 and 3. Historical v3–v5 baselines remain readable.
+Build warning delivery across public commands and Serve is planned by the same
+plan's Milestone 14 and is not implemented yet.
 
 ## Package Identity
 
@@ -98,7 +100,8 @@ data exit non-zero. Expected author errors do not print JavaScript stacks unless
 diagnostic output is explicitly requested.
 
 The [terminal output contract](./mokly-terminal-output.md) defines plain output
-compatibility, rich progress and errors, watched lifecycle events, keyboard
+compatibility, rich progress, errors and
+[build warnings](./mokly-build-warnings.md), watched lifecycle events, keyboard
 shortcuts, and browser opening. `--help` and `--version` retain their established
 bytes and do not render progress in either output mode.
 

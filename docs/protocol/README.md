@@ -13,6 +13,24 @@ The versioned formats below were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md):
 Milestone 6 changed the private manifest, Milestone 7 changed public
 catalogue/comparison formats, and Milestone 3 implemented stylesheet links.
+The graceful-handling and build-warning extensions below are planned by the
+same plan: Milestone 13 handles stylesheet placement and comparison, and
+Milestone 14 adds warnings and ignores removed inputs. They are not implemented
+yet.
+
+## Graceful Handling
+
+Mokly stops a build only when it cannot make correct, safe output, or when an
+input has two possible meanings. When an input is not necessary, or disagrees
+with a more specific input, Mokly uses the more specific input and continues.
+When Mokly ignores an input that the author wrote, it shows a warning. The
+[build warning contract](./mokly-build-warnings.md) defines collection,
+deduplication and terminal presentation for the affected cases. This rule does
+not waive public-file confinement, source protection or validation of the
+inputs Mokly actually uses. The current plan applies it to duplicate component
+CSS declarations, configured-link placement, configured/declared overlap,
+renderer ownership for declared CSS, and the removed authoring/configuration
+fields; other validation contracts are unchanged.
 
 ## Supported Formats
 
@@ -46,6 +64,8 @@ those old versions; exported catalogues must be regenerated.
 - [Package and authoring contract](./mokly-package.md)
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
   interactive progress, errors, watched events, and shortcuts.
+- [Build warnings](./mokly-build-warnings.md) — planned diagnostic channel,
+  exact messages and deduplication across commands and Serve.
 - [Packaged CLI guides](./mokly-guides.md) — versioned Markdown consumed by the
   cloud documentation site.
 - [Configuration contract](./mokly-configuration.md) — includes public-exclusion validation and defaults.

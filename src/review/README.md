@@ -11,6 +11,11 @@ Rendered `styles` and `resources` ownership records, including
 component-declared stylesheet records, drive component attribution.
 Historical v3–v5 normalization is implemented in Milestone 6; v4/v5 public
 comparison formats in Milestone 7.
+Component-aware page comparison excludes only proven Mokly-inserted declared
+stylesheet links, except a component page's root-owned links. It uses private
+final-document spans on both complete and unchanged-view fast paths; actual
+resource and CSS analysis still reads the final linked document. Renderer
+links reused for ownership remain page content.
 
 `git.ts` defines separate `RepositoryEvidence` (merge base and changed paths)
 and `BaselineReader` (historical files) interfaces. Paths at the reader boundary

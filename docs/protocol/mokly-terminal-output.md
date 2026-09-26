@@ -1,11 +1,19 @@
 # CLI Terminal Output
 
+## Delivery Status
+
+The existing plain/rich reporters are implemented. Structured build warnings
+from [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
+are planned by Milestone 14 and are not implemented yet. Their exact messages
+and collection scope are in the [build warning contract](./mokly-build-warnings.md).
+
 ## Scope
 
 This contract defines the user-visible terminal behavior of the `mokly` CLI.
 It covers output-mode selection, rich progress, plain compatibility, errors,
-watched Serve events, and interactive shortcuts. It does not change catalogue
-HTTP errors, `MoklyError` messages, generated files, or timing records.
+watched Serve events, build warnings, and interactive shortcuts. It does not
+change catalogue HTTP errors, `MoklyError` messages, generated files, or
+timing records.
 
 ## Output mode
 
@@ -179,9 +187,24 @@ Published Mokly catalogue.
 ```
 
 Plain commands add no phase or watch-event lines. Successful plain commands
-write nothing to stderr unless `--debug-timings` was requested. Expected plain
+write nothing to stderr unless they have a build warning or
+`--debug-timings` was requested. Each distinct build warning writes exactly
+`[mokly/warning] <message>\n` to stderr, in the warning contract's order.
+Warnings never change stdout success bytes or exit status. Expected plain
 errors remain exactly `[mokly/<code>] <message>\n`. Timing mode retains the
-same stdout and writes only its documented JSON lines plus existing failures.
+same stdout and writes its documented JSON lines plus warnings and failures.
+
+## Build Warnings
+
+The [build warning contract](./mokly-build-warnings.md) defines structured
+codes, exact messages, command/Serve collection, child-process forwarding and
+deduplication. Rich output clears any spinner, then writes each warning to
+stderr as `  ! <message>` (or the terminal's warning glyph) with the normal
+width, redaction and styling rules. Plain output uses the line above. Do not
+route these warnings through `runtimeDiagnostic`, render them as errors, or
+print them again when a phase or watched action completes. For watched Serve,
+the parent reporter is the only terminal writer, including warnings produced
+by on-demand or transient renders inside the child.
 
 ## Rich errors
 

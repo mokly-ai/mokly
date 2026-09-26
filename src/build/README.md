@@ -80,9 +80,10 @@ Export and Review boundaries continue to use directories that hold resolved
 entry modules. Source locations do not enter instance keys, props keys, slot
 identities, or Changes projections.
 
-Registry preparation validates component-declared public CSS and conflicts
-across all configured rules. `render.ts` keeps the shared-list marker position
-outside `RenderInput`, while `components/render.tsx` inserts links beside the
+Registry preparation validates component-declared public CSS, deduplicates
+same-real-file declarations, and reuses configured links for declared CSS.
+`render.ts` keeps the shared-list marker position outside `RenderInput`, while
+`components/render.tsx` inserts links beside the
 renderer-emitted configured links and derives their resource owners. Config
 bundles use the same namespaced `Symbol.for` marker as consumer bundles.
 The renderer-facing component entry omits `stylesheets`; the internal
@@ -90,6 +91,10 @@ registration still supplies declarations for linking and ownership.
 `RenderInput.stylesheets` remains the configured href list. Watched Serve
 attaches its inventory watcher before evaluation, then validates registration
 and extends the watch set with declared CSS before index preparation.
+Component stylesheet links use the nearest present configured link, or the end
+of head content when none exists. A transient marker survives a compatibility
+transform on retained inserted links; Mokly removes it before writing output
+and records private final-document spans for comparison projection.
 
 ## Development
 

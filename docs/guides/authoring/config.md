@@ -90,8 +90,9 @@ Use the `componentStylesheets` symbol once in the shared list to place the
 public CSS declared by actually rendered components there; otherwise it goes
 after shared CSS and before the matching scheme list. It is not a URL and
 cannot appear in a scheme-specific list. Component declarations accept only
-existing public `mockupsDir`-relative CSS, not HTTP(S) links. Mokly rejects a
-file that is both configured and component-declared.
+existing public `mockupsDir`-relative CSS, not HTTP(S) links. If a file is both
+configured and component-declared, Mokly keeps the configured link and gives
+the rendered declaring components ownership of it.
 
 ```ts
 stylesheets: [
@@ -108,8 +109,8 @@ stylesheets: [
 
 `review.base` names the Git ref whose merge base with `HEAD` is the branch
 point a comparison reads; it defaults to `origin/main`. `review.outDir` is the
-config-relative artifact directory. `review.sharedImpact` is removed: loading
-the key fails with `config-invalid` and directs you to delete it. Source
+config-relative artifact directory. `review.sharedImpact` is removed: if the
+key is still present, Mokly warns and ignores it. Source
 files without a changed render or referenced public resource no longer create
 Changes or comparison evidence.
 `review.baselineBuild` is only for derived output: an ordered list of argv

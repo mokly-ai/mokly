@@ -12,6 +12,8 @@ The `componentStylesheets` marker is delivered by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) for
 Milestone 3; Milestone 4 removed `review.sharedImpact`. Both changes are
 implemented.
+Ignoring that removed key with a warning is planned by the same plan's
+Milestone 14 and is not implemented yet.
 
 ## Configuration Discovery
 
@@ -194,9 +196,12 @@ required `--out` has the additional source/runtime/ownership confinement rules
 in the [export contract](./mokly-export.md).
 
 `review.sharedImpact` is removed. Loading a configuration that has this key,
-even when its value is `undefined`, fails with `config-invalid` and the exact
-message `review.sharedImpact has been removed; delete this field.` Source
-modules without rendered output or references do not create comparison evidence.
+even when its value is `undefined`, ignores it and issues the exact
+[build warning](./mokly-build-warnings.md#exact-messages), rather than
+`config-invalid`. It does not add watched paths or comparison evidence. See
+the [graceful-handling rule](./README.md#graceful-handling). The public config
+type still rejects this key. Source modules without rendered output or
+references do not create comparison evidence.
 Linked stylesheets, including transitive imports, are attributed by rule under
 [CSS change attribution](./mokly-css-attribution.md). A changed stylesheet keeps
 a view's dependency evidence only when a changed rule could match its before or

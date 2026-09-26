@@ -9,9 +9,10 @@ consumer rendering follows the [rendering contract](./mokly-rendering.md).
 The removal of entry `dependencies` was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
 implemented in Milestone 6; the `componentStylesheets` export is implemented in
-Milestone 3. Removed inputs now fail with a registry violation.
+Milestone 3. Current runtime validation rejects removed inputs.
 Milestone 11 of the same plan made public input types reject these removed
-fields at compile time; runtime validation remains in place for untyped input.
+fields at compile time. Ignoring them with warnings instead of runtime
+violations is planned by Milestone 14 and is not implemented yet.
 
 ## Public Authoring API
 
@@ -123,17 +124,18 @@ interface RootInput {
 `dependencies` on `defineScreen`, `definePage`, `defineUseCase`,
 `defineCollection`, `defineComponent`, nested `screen`/`page`/`collection`,
 `defineRoot` collection metadata, or a screen variant is removed. Detect the
-key even if its value is `undefined`; do not inherit or silently discard it.
-The registry reports violation code `removed-field` with the exact message
-`dependencies has been removed; delete this field.` (the ordinary entry source
-path/id context and `build-invalid` wrapper remain unchanged). Component
-`ownedDependencies` likewise reports `removed-field` with exact message
-`ownedDependencies has been removed; delete this field.`
+key even if its value is `undefined`; do not inherit it or use it for Changes,
+comparison evidence or ownership. Ignore it with the exact entry-specific
+[build warning](./mokly-build-warnings.md#exact-messages), not a registry
+violation. Removed component `ownedDependencies` is likewise ignored with its
+exact component-specific warning. This follows the
+[graceful-handling rule](./README.md#graceful-handling).
 All public entry, nested-marker and screen-variant input types carry
 `dependencies?: never`, including the root collection metadata type. The
 component input additionally carries `ownedDependencies?: never`; an explicit
 value or a spread object retaining either removed field is a TypeScript error.
-Runtime registry validation remains mandatory for JavaScript and untyped calls.
+Runtime registry validation still checks JavaScript and untyped calls, but
+these two keys alone are warnings, not invalid entries.
 
 `defineRoot` always flattens nested children into ordinary definitions and
 preserves their real `childIds` relationships. With `collection` metadata it

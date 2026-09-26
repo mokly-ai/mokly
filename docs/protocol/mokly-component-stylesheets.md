@@ -11,6 +11,10 @@ Milestone 11 of the same plan implemented the optional-never authoring types,
 startup/reconfiguration watching, real-file alias deduplication, stylesheet
 `rel` token and omitted-tag handling, and renderer-link reuse described below;
 these refinements are now in Build, Check, Serve, export and publication.
+The comparison provenance, post-transform owner pruning, and graceful handling
+of duplicate declarations, configured links, overlaps and renderer owner
+records below are planned by the same plan's Milestone 13; their warnings are
+planned by Milestone 14. Those changes are not implemented yet.
 
 ## Declaration And Public Files
 
@@ -52,14 +56,16 @@ Apply the existing public-file confinement and configured exclusion rules,
 including symlinks, before accepting a declaration. Do not treat a CSS source
 module or an imported source as a public stylesheet.
 
-One component cannot declare the same public file twice (including an alias of
-the same resolved file); preserve the authored order. Different components may
-declare the same file. Validate input shape and duplicate lexical paths at
-authoring and registry boundaries, including untyped inputs; check file
-existence, realpath aliasing and public eligibility after config resolves
-`mockupsDir`. Missing or invalid declarations fail Build/Check rather than
-being silently skipped. Never copy declarations into
-entry source-path dependency lists or manifest entry metadata.
+Preserve authored order and group paths by resolved real file. If one component
+lists a file twice, by the same path or an alias, keep its first path and
+position, link it once and issue the
+[duplicate warning](./mokly-build-warnings.md#exact-messages). Different
+components may declare the same file. Validate input shape at authoring and
+registry boundaries, including untyped inputs; check existence, realpath
+identity and public eligibility after config resolves `mockupsDir`. Missing
+or invalid files still fail Build/Check. Never copy declarations into entry
+source-path dependency lists or manifest entry metadata. This follows the
+[graceful-handling rule](./README.md#graceful-handling).
 
 ## Configured Placement Marker
 
@@ -95,11 +101,15 @@ declared links at its position in the matching shared list. Without one,
 insert after all shared links and before the matching scheme-specific links.
 No marker emits a literal `<link>`. A rule for another route has no effect.
 
-Configured stylesheet URL support is unchanged, but a configured local file
-cannot also be declared by a component. This prohibition applies across
-rules/schemes, not just the route currently being rendered, including local
-aliases to the same real file. A conflict fails Build/Check and names the file
-and the configured rule; do not deduplicate it away or grant it ownership.
+Configured stylesheet URL support is unchanged. A local file may be both
+configured and declared, including through aliases of one real file. On a
+matching route, keep the configured link at the renderer's position, add no
+second Mokly link, and give the file the rendered declaring components as
+owners. If the renderer omitted that configured link, insert one component
+link under the fallback rule and warn about the missing configured href. A
+declaration whose configured rule does not match this route follows
+ordinary component linking. Configuration supplies placement; the declaration
+supplies ownership. This overlap is not an error or an ignored input.
 
 ## Document Linking
 
@@ -126,8 +136,9 @@ per-segment URL encoding as configured local stylesheet links. Emit a normal
 `<link rel="stylesheet" href="...">` inside `<head>`. The path recorded for
 ownership is the decoded, `mockupsDir`-relative public path used by that link,
 not its encoded href or the real filesystem path. For a Mokly-inserted link,
-both the href and ownership path use the first rendered declaration's lexical
-public path, even when later declarers use aliases of the same real file.
+the pre-transform href uses the first rendered declaration's lexical public
+path, even when later declarers use aliases of the same real file. The final
+ownership path follows the retained final link, including a transform's alias.
 Shared/scheme configured link ordering otherwise stays unchanged.
 
 `RenderInput.stylesheets` contains only configured hrefs in configured order;
@@ -136,43 +147,74 @@ it does not receive the marker or component-declared paths. Its component
 emits configured links as before. If it also emits a local stylesheet link to
 the same real file as a declaration, Mokly keeps that link at its authored
 position and does not insert another. Its decoded, `mockupsDir`-relative href
-path becomes the ownership-record path, even when an alias was declared first.
+path becomes the ownership-record path when no retained configured link to
+that real file takes precedence, even when an alias was declared first.
 Query and fragment suffixes on a renderer-authored local href do not change
 real-file identity; keep them on that link but omit them from the record path.
 If several renderer links already name the same real file, Mokly leaves them
 unchanged, adds none, and takes the first in document order for the record;
 Mokly's one-link guarantee applies to links it inserts, not duplicates the
 renderer already authored. For files not already linked by the renderer, Mokly
-locates the configured links and inserts component links next to them:
+locates the configured links and inserts component links next to them.
 
-1. For a marker between configured links, insert immediately before the first
-   configured link after the marker (and after the preceding configured link).
-2. At the beginning of the shared list, insert before its first configured
-   link; at the default position, insert before the first scheme-specific link.
-3. If there is no configured link after the insertion position, insert just
-   after the last configured link before it.
-4. If this route has no configured stylesheets at all, insert at the end of the
-   logical head, even if it contains unrelated link elements. Use `</head>`
-   when present. When it is omitted, insert after the last element in the head;
-   if the head is empty, insert at the start of body content. An omitted
-   `<head>` or `<body>` tag is not by itself an error: use the parsed document's
-   inferred head/body boundaries.
+A configured link is a `<link>` in the logical head whose `rel` includes the
+ASCII-case-insensitive, whitespace-delimited `stylesheet` token and whose href
+matches a resolved configured href. `alternate stylesheet` qualifies. Use the
+first document occurrence when an href repeats. Let `p` be the marker/default
+boundary in configured order. A present link at index `i < p` is `p - i`
+positions away; one at `i >= p` is `i - p + 1` positions away. Choose the
+present link with the smallest distance; on a tie choose the following link.
+Insert the ordered component-link block after a chosen preceding link or
+before a chosen following link. This uses configured order even when the
+renderer reordered its links. If no configured link is present, insert at the
+end of logical head content, after unrelated links. Use `</head>` when present,
+otherwise the parsed head's last element or the start of body content when
+the head is empty. Omitted optional tags never fail placement.
 
-When inserting component links, require **every** configured link to appear
-exactly once in the renderer's logical head as a `<link>` whose `rel` contains
-the ASCII-case-insensitive, whitespace-delimited `stylesheet` token (including
-`rel="alternate stylesheet"`) and whose href matches its resolved href. The
-links must appear in configured order, even if a link is not adjacent to
-the insertion position. Locate the neighbouring configured links from this
-complete ordered set; do not anchor on unrelated links or text. If any
-configured link is missing, duplicated, or out of configured order, fail
-Build/Check with `build-invalid`, naming the route and offending href. Never
-silently append instead. Do not require an explicit head end tag when insertion
-uses a configured neighbouring link; omitted optional HTML tags never fail
-placement on their own. Preserve the renderer's other head content. Rebase all
-recorded UTF-16 style-ownership offsets after insertion and validate the final
-output through the normal ownership and source-protection pipeline. A compatibility
-transform must retain the links or fail normal output/resource validation.
+Missing, repeated or reordered configured links do not fail insertion; a
+missing href gets a [warning](./mokly-build-warnings.md#exact-messages).
+Keep every renderer-authored link unchanged, even duplicates. Preserve other
+head content, rebase UTF-16 style offsets, and validate final output normally.
+See the [graceful-handling rule](./README.md#graceful-handling).
+
+## Provenance And Comparison Material
+
+Mokly must distinguish only the links it inserts from renderer-authored links,
+including renderer links reused for ownership. Give each inserted link a
+unique transient `data-mokly-component-stylesheet` token before the optional
+compatibility transform. The attribute is reserved: a renderer-authored
+occurrence fails `build-invalid` because provenance would be ambiguous. The
+token is the zero-based decimal ordinal of an inserted link in that document.
+A transformer retaining an inserted link retains its token; removing or
+replacing the link may remove the token. An unmarked replacement, including
+the same href with its token stripped, is authored page content. Each token
+may survive exactly once, on a stylesheet link to its original real file;
+duplicates or reassignment fail `build-invalid`. After transformation, scan
+the final document, resolve marked links to declared real files, remove
+the transient attribute, and store their full-link UTF-16 spans, public paths
+and rendered declaring component ids in the private v6 view's
+`insertedStylesheets` record. Final
+HTML has no token or wrapper, so the rendered page is unchanged. Offsets refer
+to final HTML including its generated header. Validate spans against those
+bytes and rebase range/style offsets through attribute removal. Remove the
+attribute and its leading space without reserializing the link. A removed
+link produces no span. Old v6 baselines without this optional record
+conservatively retain all links as page content; never guess provenance. The
+first comparison to such a baseline may show a link-only migration change.
+
+For page comparison material, remove recorded full-link spans from both
+documents **before** component projection and paired or single Review-ignore
+normalization. Rebase a comparison-only copy of range/style offsets through
+that removal; never change the stored final-document offsets. Do this on the
+complete path and before the unchanged-view fast decision's equality checks.
+On a component page, retain a recorded link when its owners include that
+page's root component id, even if a child also owns it; remove child-only
+inserted links. A screen has no root exception. Renderer-
+authored and compatibility-authored links stay page content, even when their
+files have derived ownership. Public output and snapshots keep the final
+documents. Resource discovery and CSS rule matching use those final documents
+with their normal Review-ignore policy, **without** stripping inserted links.
+Thus provenance affects page material only, not file-content evidence or owners.
 
 ## Derived Ownership And Conflicts
 
@@ -188,21 +230,29 @@ interface ComponentResourceOwnership {
 
 Owners are exactly the rendered component ids declaring that real file (including
 the component root when applicable). Merge declarations from repeated
-instances/owners and realpath aliases of one file; the record's `path` is the
-decoded public path of the sole Mokly-inserted link or the first matching
-renderer link. Sort records by that path and ids by the manifest's lexical
-order, and retain the file's separate authored link position. Never infer
-ownership from selectors, a shared config link, or a transitive CSS import.
+instances/owners and realpath aliases of one file. When a configured link to
+that file remains in the final document, its decoded public path is the record
+path; otherwise use the first matching final link's decoded public path. Sort
+records by that path and ids by the manifest's lexical order; retain the
+separate link position.
+Never infer ownership from selectors, a configured link alone, or an import.
 Imported files remain unowned even when reached through a declared stylesheet.
 
 Renderer-supplied `styles` offsets and `resources` records still own other
-material. A renderer `resources` record for a declared file is an error even
-if its owners agree with Mokly's derived owners; do not merge or overwrite it.
-Fail Build/Check with `build-invalid`, naming the route and file. Keep the
-existing prohibition on conflicting ownership records and validate all
-resource paths against the same public-root rules. Derived ownership records
-are present only in views that actually link the file; they remain private to
-the manifest, not a public catalogue field.
+material. Ignore a renderer `resources` record for any declared real file on
+every page, even without a rendered declarer, and issue the
+[owner-record warning](./mokly-build-warnings.md#exact-messages). Do not
+validate its asserted component owners or merge it; it cannot grant
+ownership. Resolve the record's confined public path to establish real-file
+identity first; malformed or unsafe paths still fail normal validation.
+Validate other resource records against existing public-root and conflicting-owner
+rules. After compatibility transformation, rescan final stylesheet links
+recognized by normal resource discovery, by real file. Keep one derived owner
+record only for a declared file still directly linked in the final page;
+remove it if all its links disappeared. If an inserted link was
+removed but another final authored link to the same file remains, keep the
+owners and use that link's decoded public path. Derived records are private to
+manifest v6, not a public catalogue field.
 
 ## Changes And Delivery
 

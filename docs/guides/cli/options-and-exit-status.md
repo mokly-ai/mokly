@@ -49,6 +49,10 @@ combined with `--base`.
 | `0`  | The command succeeded |
 | `1`  | The command failed    |
 
+Warnings about ignored, unnecessary inputs appear on standard error in plain
+mode and do not change a successful exit code. Each distinct warning appears
+once per command or watched rebuild.
+
 ## Errors
 
 A failure prints one line on standard error that begins with its category, so

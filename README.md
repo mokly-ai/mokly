@@ -143,6 +143,9 @@ the public catalogue/comparison formats now use v2/v4–v5 (Milestone 7).
 Historical Git baselines retain compatibility readers; exported public formats
 must be regenerated.
 See the [component stylesheet contract](./docs/protocol/mokly-component-stylesheets.md).
+Redundant stylesheet declarations and removed source-path fields become
+non-fatal build warnings; the [warning contract](./docs/protocol/mokly-build-warnings.md)
+defines their exact messages and CLI output.
 
 ### 4. Open the catalogue
 

@@ -8,6 +8,10 @@ implemented in Milestone 3. Removal of entry `dependencies` and
 removal of `ownedDependencies` was implemented in Milestone 6.
 Milestone 11 of the same plan omits `stylesheets` from the renderer's
 component entry at runtime and in its public type.
+Deduplicating declarations and ignoring redundant renderer ownership follow
+the [graceful-handling rule](./README.md#graceful-handling); these changes and
+their warnings are planned by the same plan's Milestones 13 and 14,
+respectively, and are not implemented yet.
 
 The public `defineComponent` API, saved variants, ownership attribution,
 explorer, inspection, and local controls are implemented. The
@@ -94,7 +98,9 @@ The input includes the common entry metadata, a stable relative `.html` route,
 `colorSchemes`, `controls`, `slots`, and `stylesheets` are optional. Existing id,
 route, tag, and color-scheme validation applies. Declared stylesheets are
 validated and linked under the
-[component stylesheet contract](./mokly-component-stylesheets.md). Variant ids are unique
+[component stylesheet contract](./mokly-component-stylesheets.md). Repeating
+one real stylesheet links it once with a warning; renderer ownership for a
+declared file is ignored with a warning. Variant ids are unique
 kebab-case strings within their component; the first variant is the default.
 Each variant contains an id, title, complete typed props, and an optional
 description. There is no

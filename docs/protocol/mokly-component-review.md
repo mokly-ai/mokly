@@ -10,6 +10,10 @@ implemented in Milestone 7. The
 reader accepts v4/v5 only and rejects v2/v3 as unsupported.
 The Milestone 4 classifier already routes retained non-CSS resource evidence
 to owners at actual invocations, independently of saved-variant matches.
+Comparison-material exclusion for Mokly-inserted child stylesheet links and
+post-transform owner pruning are planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+Milestone 13, and are not implemented yet. The v5 wire result stays unchanged.
 `ReviewResult`, `ScreenReview`, `ViewReview`, and `ReviewState` refer to the
 screen-only [schema-v4 contract](./mokly-changes.md) and
 [named result interfaces](../../packages/viewer/src/review/types.ts). Manifest/usage types come
@@ -133,6 +137,10 @@ direct Changes reasons separately; it never invents an `ignored-only` state for
 a component-only edit. An affected-only screen or parent component can therefore
 have changed view results without a Changes row. Caller input changes can have
 unchanged view results when the current renderer does not display that prop.
+For page material, both the complete and fast paths omit Mokly-inserted links
+for child-declared CSS, but retain a component page's root-owned inserted links
+and all renderer-authored links. Resource/CSS evidence still reads the actual
+final linked documents; see [component change attribution](./mokly-component-changes.md).
 
 All registered components appear in `components`, even if unchanged or unused.
 All current/base screens appear in `screens`, including affected-only screens.

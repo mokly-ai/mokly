@@ -61,9 +61,10 @@ milestone.
   CSS rule analysis, Review-ignore, metadata, ancestry, flow propagation and
   component usage attribution stay unchanged.
 - Component stylesheets replace the stylesheet role of `ownedDependencies`:
-  - `defineComponent` accepts `stylesheets`: unique `mockupsDir`-relative
-    public CSS files in authored order. HTTP(S) URLs are rejected, because
-    Mokly must compare the files.
+  - `defineComponent` accepts `stylesheets`: `mockupsDir`-relative public CSS
+    files in authored order. HTTP(S) URLs are rejected, because Mokly must
+    compare the files. Repeating one real file, including through an alias,
+    links it once at its first occurrence and warns.
   - When a screen or component document renders at least one instance of a
     component, even an instance with no markup, Mokly links each of that
     component's stylesheets once. Links follow the order in which components
@@ -73,24 +74,37 @@ milestone.
     marker, exported by `@mokly/mokly`, once in its shared list. Component
     stylesheets go at the marker. Without the marker they go after the shared
     list and before the scheme-specific list.
-  - Mokly inserts the links next to the neighbouring configured `<link>`
-    elements that the renderer emitted, or at the end of `<head>` when the
-    route has no configured stylesheets. A missing neighbouring link fails the
-    build. `RenderInput` does not change.
+  - Mokly inserts links next to the nearest present configured `<link>` in
+    configured order, taking the first occurrence of a repeated renderer link.
+    If none is present, insert at the end of head content. Missing, repeated
+    or reordered configured links do not fail placement. `RenderInput` does
+    not change.
   - Mokly records a `resources` ownership record for each linked declared
-    stylesheet, owned by the rendered components that declare it. A file
-    cannot be both configured and declared, and a renderer cannot report
-    `resources` for a declared file. Files that a declared stylesheet imports
-    stay unowned.
+    stylesheet, owned by the rendered components that declare it. A configured
+    link to that file is reused, not duplicated, and still gets those owners.
+    Renderer `resources` records for any declared file are ignored with a
+    warning on every page. After a compatibility transform, retain owners
+    only for declared files the final page still links. Imports stay unowned.
+  - Page comparison omits Mokly-inserted declared-stylesheet links except a
+    component page's root-owned links. A private final-document provenance
+    record identifies those links through compatibility and Review-ignore;
+    renderer-authored links remain page content. Resource and CSS evidence
+    remains based on the actual linked files.
   - Serve reloads declared stylesheets like configured ones. Exports and
     publication handle them as public resources.
   - This replaces the documented rule "Separate stylesheet loading from review
     dependency declaration" and the example's per-render style collector.
     Renderer `styles` and `resources` records remain for all other material.
-- Removed inputs fail loudly. `dependencies` on an entry, nested marker or
-  variant, and `ownedDependencies` on a component, produce the registry
-  violation `removed-field`. `review.sharedImpact` fails configuration loading
-  with `config-invalid`. Each message names the field and says to delete it.
+- Removed inputs are ignored with a warning: `dependencies` on an entry,
+  nested marker or variant, `ownedDependencies` on a component, and
+  `review.sharedImpact` in configuration. They add no evidence or ownership;
+  TypeScript input types still reject the authoring fields.
+- [Graceful handling](../docs/protocol/README.md#graceful-handling) governs
+  redundant or conflicting inputs when output stays correct and safe. Build,
+  Check, export, publish and Serve collect and deduplicate structured warnings
+  across configuration, registry and render stages, including Serve children.
+  Warnings do not affect exit codes; plain and rich CLI reporting follows the
+  [warning contract](../docs/protocol/mokly-build-warnings.md).
 - Versions: private manifest v5 becomes v6. The public catalogue read model v1
   becomes v2 without `details.dependencies`. Comparison results v2 (catalogues
   without registered components) become v4, and v3 (with registered
@@ -620,37 +634,37 @@ Finding 13: no design screen links to "Matched styles"
 
 Update the contracts for the 2026-09-26 decisions. Docs only.
 
-- [ ] Add the graceful-handling rule to `docs/protocol/README.md`: Mokly stops
+- [x] Add the graceful-handling rule to `docs/protocol/README.md`: Mokly stops
       a build only when it cannot make correct, safe output, or when an input
       has two possible meanings. When an input is not necessary, or disagrees
       with a more specific input, Mokly uses the more specific input and
       continues. When Mokly ignores an input that the author wrote, it shows a
       warning. Link to the rule from the contracts that apply it.
-- [ ] Finding 1: the page comparison leaves out every link that Mokly inserted
+- [x] Finding 1: the page comparison leaves out every link that Mokly inserted
       for a declared stylesheet, except the root component's own links on a
       component page. Define how the comparison identifies inserted links.
       The mechanism must survive the compatibility transform and Review-ignore
       normalization, and must not change what the page renders. Rendered
       resource evidence, CSS rule analysis and owner attribution for the file
       contents stay unchanged. Add the case to the attribution table.
-- [ ] Finding 7: after the compatibility transform, keep owner records only
+- [x] Finding 7: after the compatibility transform, keep owner records only
       for the declared stylesheets that the final page still links.
-- [ ] Rule cases: a component that lists one file twice gets one link; missing,
+- [x] Rule cases: a component that lists one file twice gets one link; missing,
       repeated or reordered configured links place component links next to the
       configured links that are present (first occurrence, then the nearest
       present neighbour, then the end of the head content); a file that is
       both configured and declared keeps its configured link and gets the
       rendered declaring components as owners; renderer owner records for any
       declared stylesheet are ignored on every page with a warning.
-- [ ] Removed fields: `dependencies`, `ownedDependencies` and
+- [x] Removed fields: `dependencies`, `ownedDependencies` and
       `review.sharedImpact` produce a warning and have no effect. Define the
       exact warning text.
-- [ ] Build warnings: define how build, check, export, publish and Serve
+- [x] Build warnings: define how build, check, export, publish and Serve
       collect warnings and how the CLI shows them in plain and rich output.
       Warnings do not change the exit code, and each distinct warning shows
       once per run.
-- [ ] Update the matching Decisions And Scope bullets in this plan.
-- [ ] Validate the changed Markdown and run the docs tests.
+- [x] Update the matching Decisions And Scope bullets in this plan.
+- [x] Validate the changed Markdown and run the docs tests.
 
 ## Milestone 13: Implement the stylesheet comparison and graceful handling
 

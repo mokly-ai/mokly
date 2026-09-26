@@ -93,7 +93,11 @@ attributed. Unrendered source edits do not create Changes or comparison evidence
 Components declare public `mockupsDir`-relative CSS with `stylesheets`. Rendered
 instances (including null output and saved component roots) receive links in
 first-render order; the same pass derives resource ownership for each linked
-file. Conflicts with configured links and renderer resource records fail Build.
+file. A configured link to the same real file is reused, while renderer owner
+records for declared CSS are ignored with a warning. Duplicate declarations
+are linked once with a warning. The comparison omits Mokly-inserted links from
+consumer page material but retains a component page's own links; final
+post-transform links determine which derived owners remain.
 See [component stylesheets](../../docs/protocol/mokly-component-stylesheets.md).
 Historical Mokabook comparisons preserve the original document coordinates when
 applying recorded style ownership; internal marker renames alone do not create

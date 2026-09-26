@@ -14,6 +14,9 @@ Milestone 3 implemented injection and Milestone 6 implemented manifest v6.
 Both are in current generated output.
 Milestone 11 of the same plan removed component `stylesheets` from the
 renderer-facing `input.entry` at runtime and in its public type.
+The transient inserted-link provenance and relaxed configured-link placement
+below are planned by Milestone 13; the warning channel is planned by
+Milestone 14. They are not implemented yet.
 
 ## Rendering Boundary
 
@@ -137,7 +140,11 @@ segment.
 `RenderInput.entry` has no declaration list. Mokly inserts declared component
 stylesheets beside the renderer's configured links after rendering; see the
 [component stylesheet contract](./mokly-component-stylesheets.md) for marker
-placement, missing-link errors, derived owners and style-offset rebasing.
+placement, nearest-present-link fallback, transient comparison provenance,
+post-transform owner pruning and style-offset rebasing. The compatibility
+transform may remove a declared link; only files still linked in its final
+output receive derived owners. A transform retaining an inserted link preserves
+its transient provenance token, which Mokly removes before writing HTML.
 Shell and device-frame CSS is package-owned and self-contained; product CSS is
 never copied into the npm package.
 

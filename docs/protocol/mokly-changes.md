@@ -7,6 +7,9 @@ One Changes rule, summary updates and comparison v4/v5 below were planned by
 Milestone 4 has implemented membership, summary updates and removal of
 source-path evidence. Milestone 7 implemented the versioned result schemas;
 writers and readers now use v4/v5 and reject v2/v3.
+The component-aware page-material exclusion for Mokly-inserted stylesheet
+links is planned by the same plan's Milestone 13 and is not implemented yet;
+result versions remain v4/v5.
 
 The implemented [component attribution extension](./mokly-component-changes.md)
 keeps component-only consumers out of Changes while linking them from the
@@ -43,6 +46,12 @@ resource/CSS evidence, Review-ignore normalization, metadata, ancestry, flow
 propagation and component usage attribution still apply. A changed component
 may list its unchanged consumers under Affected screens; those consumers do
 not become Changes rows solely because of component usage.
+Mokly-inserted links for a rendered child component's declared CSS are not
+consumer page material. A component page keeps its root component's inserted
+links; renderer-authored links remain page content even if ownership is reused.
+Rendered-resource and CSS evidence use final linked documents, not this
+comparison-only projection. See the
+[component attribution contract](./mokly-component-changes.md).
 
 Each screen variant is projected independently. Its metadata projection
 contains `variantOf`, its parent's `{ id, title }`, and the parent's collection

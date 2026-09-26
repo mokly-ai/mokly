@@ -46,6 +46,9 @@ Dependencies display were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestones 4, 3 and 5 respectively. Milestone 6 removed the
 old authoring declarations.
+The shared build-warning channel for Build and Check is planned by the same
+plan's Milestone 14 and is not implemented yet; see
+[build warnings](./mokly-build-warnings.md).
 
 ## Component Workspaces
 
@@ -77,6 +80,8 @@ Changes. Screen-owned prop and slot changes still count as screen changes.
 
 An error leaves the last-good generated tree unchanged. Build output and
 diagnostics use repo-relative paths and deterministic ordering.
+Ignored, unnecessary inputs issue warnings without changing the exit code or
+generated output; Check reports the same warnings while leaving files untouched.
 
 ## Check
 

@@ -11,6 +11,9 @@ The component public CSS delivery, source-path-free Changes and new v6/v2/v4–v
 formats below were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 delivered in Milestones 3, 4, 6 and 7 respectively. Exports now use the new formats.
+Collecting and displaying build warnings across the export's compilation and
+capture phases is planned by the same plan's Milestone 14 and is not implemented
+yet; see the [warning contract](./mokly-build-warnings.md).
 
 The [viewer library plan](../../plans/mokly-viewer-library.md) tracks the
 implemented public catalogue, inert published inspector and separate viewer
@@ -55,6 +58,8 @@ npx mokly export --config docs/mokly.config.ts --out ../site --base main
   No new config section is introduced.
 - Success exits zero after installation and prints the output directory plus
   the instruction to deploy its contents as the site's document root.
+- Ignored, unnecessary inputs issue deduplicated build warnings on stderr;
+  they do not alter the successful output or exit code.
 - Failure exits non-zero with an actionable existing error category or the
   new typed `export-invalid` category. Normal author errors do not print stacks.
 
