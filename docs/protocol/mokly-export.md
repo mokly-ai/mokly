@@ -125,7 +125,9 @@ broad rules, without ignoring unrelated authored files with similar names.
    may be used, but no watcher or persistent process is started.
 5. Assemble all routes and resources defined by the static delivery contract.
    Verify internal references, ownership, route collisions, and complete local
-   dependency closure before writing the export ownership inventory.
+   dependency closure, then hash every staged file and write the export
+   ownership inventory. A regular file over 64 MiB, the inventory's size
+   ceiling, fails as `export-invalid` before staging.
 6. Drain generation work and close temporary servers before installing the
    stage. Replace owned output with rollback protection, then clean owned
    temporary resources and release the writer reservation.
@@ -168,10 +170,11 @@ does not yet exist.
 
 Accept a missing destination or an empty real directory. A nonempty directory
 must have a regular `.mokly-export-artifact` ownership file using the
-[public v1 schema](./mokly-export-ownership.md) and its generated-file inventory.
-Reject missing/malformed markers,
-unexpected files outside the inventory, unsafe inventory paths, symlink entries,
-and unsupported versions. Treat the marker as public-safe metadata: no absolute
+[public schema 2](./mokly-export-ownership.md) and its generated-file inventory.
+Reject missing/malformed markers, unexpected files outside the inventory,
+unsafe inventory paths, symlink entries, and unsupported versions, including
+schema 1 markers written by earlier releases; that failure names the stale
+directory to remove. Treat the marker as public-safe metadata: no absolute
 checkout paths, credentials, or timestamps. Never use its strings as unchecked
 deletion targets. Export owns replacement of its recorded output files.
 
@@ -240,7 +243,7 @@ public-safe inventory is distinct from private comparison metadata.
 [`__mokly/catalogue.json`](./mokly-catalogue.md) is implemented in the same
 collision-checked ownership/upload inventories, alongside the implemented
 `__mokly/client/inspector.js`. The read model is a public allowlist projection of manifest v5;
-`mokly-manifest.json` remains excluded. Ownership v1, upload v1, review v2/v3
+`mokly-manifest.json` remains excluded. Ownership v2, upload v1, review v2/v3
 and delivery descriptor v2 keep their schema versions. Deployment identity
 includes the catalogue under the [delivery hashing rule](./mokly-export-delivery.md#deployment-identity)
 and includes the inspector and its inert maps.

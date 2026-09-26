@@ -31,7 +31,10 @@ when the historical primary file is absent, never when it is invalid.
 - [CI verification](./ci-verification.md) — implemented suite, shard, evidence,
   cache and aggregation contract; hosted acceptance measurements remain tracked
   by the active CI performance plan.
-- [Catalogue upload v1](./mokly-upload.md) — public CLI and hosted/self-hosted receiver boundary.
+- [Catalogue upload v1](./mokly-upload.md) — public CLI and the
+  content-addressed plan, blob and complete exchange for hosted/self-hosted
+  receivers; the delta exchange is an approved target tracked by the active
+  Delta Publishing plan.
 - [Package and authoring contract](./mokly-package.md)
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
   interactive progress, errors, watched events, and shortcuts.
@@ -97,8 +100,8 @@ when the historical primary file is absent, never when it is invalid.
   hosting, navigation, and comparison behavior.
 - [Export recovery](./mokly-export-recovery.md) — backup ownership,
   concurrent destination changes, bounded cleanup, and failure reporting.
-- [Export ownership v1](./mokly-export-ownership.md) — public inventory schema
-  and compatibility fixtures for independent upload receivers.
+- [Export ownership v2](./mokly-export-ownership.md) — public per-file digest
+  inventory and compatibility fixtures for independent upload receivers.
 - [Watched development](./mokly-watch.md)
 - [Catalogue navigation contract](./mokly-navigation.md)
 - [Styled catalogue link controls](./mokly-link-controls.md)

@@ -1,6 +1,6 @@
 ---
 title: "publish"
-description: "Export the catalogue and upload it to a service you choose."
+description: "Export the catalogue and upload only the files the service does not already hold."
 section: "cli"
 order: 5
 ---
@@ -11,9 +11,11 @@ order: 5
 npx mokly publish
 ```
 
-Publish runs the export, then uploads it once to the endpoint you name. It
-works with Mokly Cloud or with any service that implements the upload
-contract.
+Publish runs the export, then hands it to the endpoint you name in three
+steps: it sends the export's file list with a digest for every file, the
+service answers with the digests it does not hold, publish uploads only those
+files, and the service commits the publication. It works with Mokly Cloud or
+with any service that implements the upload contract.
 
 ## Options
 
@@ -33,7 +35,8 @@ contract.
 Set `MOKLY_ENDPOINT` and `MOKLY_TOKEN` in your shell or your CI secrets;
 prefer the environment variable for the token so it stays out of your shell
 history. For a token that begins with `-`, use the assigned form
-`--token=-TOKEN`. The token never appears in output, including errors.
+`--token=-TOKEN`. The token never appears in output, including errors, and is
+only ever sent to the endpoint's own origin.
 
 ## Comparisons
 
@@ -55,7 +58,25 @@ npx mokly publish --no-changes --repository git.example.com/team/project
 
 ## What is uploaded
 
-One gzip tarball of the export, posted once to the exact endpoint. The export
-includes `mokly-upload.json`, which names the repository, the revision and the
-pinned comparison. The command does not follow redirects and does not retry;
-a failed upload leaves the complete local export in place for you to inspect.
+The export's `mokly-upload.json`, its ownership marker and, with comparisons,
+the pinned comparison file go first, as one small archive posted to the exact
+endpoint. The marker lists every exported file with its SHA-256 digest and byte
+size, so the service can answer with the digests it is missing. Publish then
+uploads each missing file's bytes, several files at a time, and asks the
+service to complete the publication. A service that already holds
+every file receives no file at all.
+
+A request that fails in transit or is answered with a temporary status is
+retried up to five times with growing delays, and nothing is retried after the
+expiry time the service gave the plan. Redirects are never followed.
+
+## What you see
+
+Success prints one line, for example
+`Published Mokly catalogue. 12 files uploaded, 266 unchanged.`, and, when the
+service returns one, the address of the published catalogue on the line after
+it. In a terminal, publish also shows how many of the requested files have
+been uploaded so far.
+
+A failed publish leaves the complete local export in place for you to inspect,
+and running it again resumes from whatever the service already stored.

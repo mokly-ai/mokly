@@ -63,6 +63,9 @@ outside that span; the caller's `export` span includes all phases.
 The [public ownership schema and fixtures](../../docs/protocol/mokly-export-ownership.md)
 define the emitted inventory and reader compatibility. Tests exercise them
 against this parser and an independent reader in the packed-consumer smoke.
+The contract is now schema 2 with a SHA-256 digest and byte size per entry;
+[Delta Publishing](../../plans/delta-publishing.md) tracks moving `stage.ts`
+and every reader from the schema 1 path list it still writes.
 `deployment.ts` finalizes a separate complete-artifact identity after provider
 transformation and ownership assembly. `content_id.ts` uses deterministic file
 hashes and alias edges; `shell_metadata.ts` normalizes and stamps only known
@@ -73,7 +76,7 @@ deployments. Comparison generation URLs retain their separate content identity.
 `site.ts` also writes the [public catalogue projection](../catalogue/README.md)
 at `__mokly/catalogue.json`. Its per-entry Changes state uses the same accepted
 attribution as the shell. It enters the normal collision-checked inventory,
-ownership v1 marker and upload v1 archive without changing either schema.
+ownership marker and upload inventories without changing either schema.
 Each shell page embeds only a compact reference with this catalogue's identity
 and revisions. The standalone browser validates and fetches the shared finalized
 resource once before hydration, avoiding catalogue-sized bytes repeated for

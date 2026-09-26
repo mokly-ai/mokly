@@ -52,16 +52,42 @@ test("CI code fences never invent a receiver request path", () => {
   }
 });
 
-test("documented request headers and acceptance match the transport", async () => {
-  const endpoint = "https://example.com/receiver?project=team";
-  const documented = Object.fromEntries(
-    [...upload.matchAll(/^(Authorization|Content-Type|Accept): (.+)$/gmu)].map(
-      ([, key, value]) => [key ?? "", value ?? ""],
+function fenceHeaders(source: string): Array<Record<string, string>> {
+  return [...source.matchAll(/```http\n([\s\S]*?)```/gu)].map(([, body]) =>
+    Object.fromEntries(
+      [...(body ?? "").matchAll(/^([A-Za-z-]+): (.+)$/gmu)].map(
+        ([, key, value]) => [key ?? "", value ?? ""],
+      ),
     ),
   );
-  assert.equal(Object.keys(documented).length, 3);
-  for (const [key, value] of Object.entries(documented))
-    assert.ok(protocol.includes(`${key}: ${value}`));
+}
+
+test("documented request headers and acceptance match the transport", async () => {
+  const endpoint = "https://example.com/receiver?project=team";
+  const fences = fenceHeaders(upload);
+  assert.equal(fences.length, 3);
+  const [plan, blob, complete] = fences;
+  assert.deepEqual(plan, {
+    Authorization: "Bearer TOKEN",
+    "Content-Type": "application/gzip",
+    Accept: "application/json",
+    "Content-Length": "<bytes>",
+  });
+  assert.deepEqual(blob, {
+    Authorization: "Bearer TOKEN",
+    "Content-Type": "application/octet-stream",
+    "Content-Length": "<size from the marker>",
+  });
+  assert.deepEqual(complete, {
+    Authorization: "Bearer TOKEN",
+    Accept: "application/json",
+    "Content-Length": "0",
+  });
+  const protocolFences = fenceHeaders(read("docs/protocol/mokly-upload.md"));
+  assert.deepEqual(protocolFences, fences);
+  const fixed = Object.entries(plan ?? {}).filter(
+    ([key]) => key !== "Content-Length",
+  );
   for (const status of [200, 201, 204, 299]) {
     let requests = 0;
     await uploadCatalogue(
@@ -72,26 +98,45 @@ test("documented request headers and acceptance match the transport", async () =
         assert.equal(url, endpoint);
         assert.equal(init?.method, "POST");
         assert.equal(init?.redirect, "manual");
-        for (const [key, value] of Object.entries(documented))
+        for (const [key, value] of fixed)
           assert.equal(new Headers(init?.headers).get(key), value);
         return new Response(null, { status });
       },
     );
     assert.equal(requests, 1);
   }
-  assert.match(prose, /Any 2xx response means the upload was accepted/u);
-  assert.match(prose, /no redirect is followed and nothing is retried/u);
-  assert.match(
-    protocol,
-    /All 2xx responses mean the complete upload was accepted/u,
-  );
+  assert.match(prose, /Any `2xx` answer means the file is stored/u);
+  assert.match(protocol, /Any 2xx means stored/u);
+  assert.match(prose, /`201` means a new publication is live/u);
+  assert.match(protocol, /`201` means a new publication is live/u);
+  assert.match(prose, /none follows a redirect/u);
+  assert.match(protocol, /follows no redirect/u);
   const seconds = /times out after (\d+) seconds/u.exec(prose)?.[1];
   assert.ok(seconds);
-  assert.ok(protocol.includes(`Upload timeout is ${seconds} seconds`));
+  assert.ok(protocol.includes(`times out after ${seconds} seconds`));
   const timeout = /AbortSignal\.timeout\(([\d_]+)\)/u.exec(
     read("src/publish/http.ts"),
   )?.[1];
   assert.equal(Number(timeout?.replaceAll("_", "")), Number(seconds) * 1000);
+});
+
+test("documented retries agree with the protocol", () => {
+  for (const source of [prose, protocol]) {
+    assert.match(source, /408/u);
+    for (const status of ["429", "500", "502", "503", "504"])
+      assert.ok(source.includes(status), status);
+    assert.match(source, /five/u);
+    assert.match(source, /Retry-After/u);
+    assert.match(source, /expir/u);
+  }
+  assert.match(prose, /at most sixteen seconds/u);
+  assert.match(protocol, /min\(16 s, 1 s × 2\^\(k−2\)\)/u);
+  assert.match(prose, /up to sixty seconds/u);
+  assert.match(protocol, /from 0 to 60 seconds/u);
+  assert.match(prose, /plans once more/u);
+  assert.match(protocol, /run Plan once more/u);
+  assert.match(prose, /second `409` fails/u);
+  assert.match(protocol, /second `409` is `upload-failed`/u);
 });
 
 test("comparison fields stay required nulls without comparisons", () => {
@@ -126,16 +171,9 @@ test("comparison fields stay required nulls without comparisons", () => {
   );
 });
 
-test("archive rules accept directories and authenticate before decompression", () => {
-  assert.match(
-    protocol,
-    /Only regular files and optional directories are accepted/u,
-  );
-  assert.match(
-    prose,
-    /(?:accepts|accept) (?:only )?regular files and optional directories/u,
-  );
-  assert.doesNotMatch(prose, /rejects anything that is not a regular file/u);
+test("archive rules accept only regular files and authenticate before decompression", () => {
+  assert.match(protocol, /Accept only regular files/u);
+  assert.match(prose, /accept only regular files/u);
   for (const entry of [
     "symlinks",
     "hard links",
@@ -145,10 +183,7 @@ test("archive rules accept directories and authenticate before decompression", (
   ])
     assert.ok(prose.includes(entry) && protocol.includes(entry), entry);
   assert.match(prose, /empty private (?:staging )?directory/u);
-  assert.match(
-    protocol,
-    /Receivers authenticate before expensive decompression/u,
-  );
+  assert.match(protocol, /authenticate before decompression/u);
   const receiver =
     upload.split("## What the receiver must do")[1]?.split("\n## ")[0] ?? "";
   const authentication = receiver.search(
@@ -161,9 +196,11 @@ test("archive rules accept directories and authenticate before decompression", (
     receiver.replace(/\s+/gu, " "),
     /allowed to publish for the repository/u,
   );
+  assert.match(receiver, /digest/u);
+  assert.match(receiver, /`409`/u);
 });
 
-test("documented rejections agree with the protocol and never retry", async () => {
+test("documented rejections agree with the protocol", async () => {
   const categories = [
     ...upload.matchAll(/^\|[^\n]+\| `(upload-[a-z-]+)`\s*\|/gmu),
   ].map(([, category]) => category ?? "");

@@ -49,12 +49,13 @@ records them in the protocol docs so no later milestone needs the brief.
   viewer URL line is printed only when `viewerUrl` is an absolute http(s) URL
   string in a JSON body of at most 16 MiB. Other fields are ignored.
 
-## Milestone 1: Protocol and guide contract — active
+## Milestone 1: Protocol and guide contract — completed
 
 Define the complete receiver and CLI contract before any code changes. Docs
-only; `cargo xtask check` is not required, validate Markdown with Prettier.
+and fixtures only; `cargo xtask check` is not required, validate Markdown with
+Prettier and the guide-structure test.
 
-- [ ] Rewrite [`mokly-export-ownership.md`](../docs/protocol/mokly-export-ownership.md)
+- [x] Rewrite [`mokly-export-ownership.md`](../docs/protocol/mokly-export-ownership.md)
       as Export Ownership v2: the `{ path, sha256, size }` entry shape and
       TypeScript type, one entry per regular file except the marker including
       `mokly-upload.json`, writer sort order (JavaScript default string order),
@@ -64,7 +65,7 @@ only; `cargo xtask check` is not required, validate Markdown with Prettier.
       any other `schemaVersion` → 426 `upload-unsupported-version`, and the v2
       fixture format with an optional `rejection` field
       (`unsupported-version` | `invalid`) on invalid cases. Delete the v1 shape.
-- [ ] Rewrite the exchange sections of [`mokly-upload.md`](../docs/protocol/mokly-upload.md):
+- [x] Rewrite the exchange sections of [`mokly-upload.md`](../docs/protocol/mokly-upload.md):
       `--upload-concurrency <n>` (1 to 32, default 8) in the CLI section; a
       Plan request (POST endpoint, gzip tar with exactly `mokly-upload.json`,
       `.mokly-export-artifact` and the `comparisonPath` review file, headers,
@@ -81,40 +82,55 @@ only; `cargo xtask check` is not required, validate Markdown with Prettier.
       integer `Retry-After` up to 60 s, never after `expiresAt`); and the
       status→category table for every request. Delete the single-archive
       exchange and the "retrying is a new upload" caveat.
-- [ ] Revise the upload archive layout, validation and limits sections: the
+- [x] Revise the upload archive layout, validation and limits sections: the
       plan archive contains three entries at most; receivers verify blob bytes
       against the declared digest and size, require every marker hash before
       commit, and keep the 20,000-file, 64 MiB per-file, 1,024-byte path and
       16 KiB manifest ceilings. State the 120 s per-request timeout and that
       ownership-marker version failures are 426.
-- [ ] Update [`mokly-terminal-output.md`](../docs/protocol/mokly-terminal-output.md):
+- [x] Update [`mokly-terminal-output.md`](../docs/protocol/mokly-terminal-output.md):
       publish phases and the in-place `Uploading <n> of <total> files · <size>`
       progress, the rich completion summary with counts, the exact plain line
       `Published Mokly catalogue. <uploaded> files uploaded, <unchanged> unchanged.`
       and the optional viewer URL line in both modes.
-- [ ] Update every remaining ownership/upload reference: [`mokly-export.md`](../docs/protocol/mokly-export.md)
+- [x] Update every remaining ownership/upload reference: [`mokly-export.md`](../docs/protocol/mokly-export.md)
       (public v2 schema, size ceiling enforced when writing the marker, stale v1
       directories rejected), [`mokly-export-delivery.md`](../docs/protocol/mokly-export-delivery.md),
-      [`mokly-catalogue.md`](../docs/protocol/mokly-catalogue.md),
-      [`docs/protocol/README.md`](../docs/protocol/README.md) index entries and
-      fixture list, and [`mokly-guides.md`](../docs/protocol/mokly-guides.md)
-      if the Reference table wording changes.
-- [ ] Rewrite the guides [`cli/publish.md`](../docs/guides/cli/publish.md)
-      (options table with `--upload-concurrency`, "What is uploaded" as the
-      three-step exchange, retries, viewer URL line),
-      [`cli/options-and-exit-status.md`](../docs/guides/cli/options-and-exit-status.md)
-      (new option row), [`ci/the-upload.md`](../docs/guides/ci/the-upload.md)
-      (the three requests and what a receiver must do) and
+      [`mokly-catalogue.md`](../docs/protocol/mokly-catalogue.md) and
+      [`docs/protocol/README.md`](../docs/protocol/README.md) index entries;
+      [`mokly-guides.md`](../docs/protocol/mokly-guides.md) needed no change
+      because the Reference slugs are unchanged.
+- [x] Author the contract fixtures now so the docs link to real files:
+      `docs/protocol/fixtures/export-ownership-v2.json` (43 cases with real
+      digests) and `docs/protocol/fixtures/upload-plan-v1.json` (47 cases);
+      the v1 ownership fixture stays until Milestone 2 switches every reader.
+- [x] Rewrite the guides [`cli/publish.md`](../docs/guides/cli/publish.md)
+      ("What is uploaded" as the three-step exchange, retries, the counted
+      success line and viewer URL line),
+      [`ci/the-upload.md`](../docs/guides/ci/the-upload.md) (the three
+      requests, the manifest, what a receiver must do, retries),
       [`ci/publish-from-ci.md`](../docs/guides/ci/publish-from-ci.md)
-      (retries, final output line); keep the guide frontmatter, link and
-      heading rules enforced by `tests/guides_structure.test.ts`.
-- [ ] Update [`.github/actions/publish/README.md`](../.github/actions/publish/README.md),
-      [`src/publish/README.md`](../src/publish/README.md),
-      [`src/export/README.md`](../src/export/README.md) and the root
-      [`README.md`](../README.md) wording from "one archive" to the delta
-      exchange; note the action forwards no concurrency input.
-- [ ] Add this plan to `plans/README.md`; run `npx prettier --check` on every
-      changed Markdown file and review the diff.
+      (success line, retries), [`ci/project-tokens.md`](../docs/guides/ci/project-tokens.md)
+      (token on every request) and [`ci/github-action.md`](../docs/guides/ci/github-action.md)
+      (no concurrency input); keep the guide frontmatter, link and heading
+      rules enforced by `tests/guides_structure.test.ts`. The
+      `--upload-concurrency` rows for `cli/publish.md` and
+      `cli/options-and-exit-status.md` wait for Milestone 3 because
+      `tests/guides_cli.test.ts` requires every documented option to be
+      parsed and listed in `--help`.
+- [x] Update `tests/guides_ci.test.ts`, which checks the CI guides against
+      the protocol doc and the transport: its doc-vs-doc assertions now
+      expect the plan, blob and complete fences, retries and the
+      regular-files-only rule, while its transport assertions still hold for
+      the current single-archive request (same headers, exact endpoint, no
+      redirect) until Milestone 3 replaces them.
+- [x] Update [`.github/actions/publish/README.md`](../.github/actions/publish/README.md),
+      [`src/publish/README.md`](../src/publish/README.md) and
+      [`src/export/README.md`](../src/export/README.md) to name the delta
+      exchange and the plan that lands it; the root `README.md` already
+      described publish without naming the archive and needed no change.
+- [x] Add this plan to `plans/README.md`; run `npx prettier --check` and the
+      guide-structure test on every changed file and review the diff.
 
 ## Milestone 2: Export ownership v2
 
@@ -134,14 +150,9 @@ preview and the existing publish path keep working end to end.
       and `scripts/preview/catalogue.mjs` to entry paths.
 - [ ] Give a stale v1 directory an actionable `export-invalid` message naming
       the directory to remove.
-- [ ] Replace `docs/protocol/fixtures/export-ownership-v1.json` with
-      `export-ownership-v2.json`: valid complete inventory, empty inventory,
-      unsorted entries (reader-tolerant), unknown fields ignored, Unicode and
-      lowercase-only collision cases, then invalid cases for schema 1
-      (`rejection: unsupported-version`), missing `path`/`sha256`/`size`,
-      uppercase or short hex, negative, fractional and over-limit sizes,
-      duplicate and case-colliding paths, the marker owning itself and every
-      v1 path-grammar rejection.
+- [ ] Delete `docs/protocol/fixtures/export-ownership-v1.json` and point every
+      reader at the `export-ownership-v2.json` fixture authored in Milestone 1;
+      extend its cases if the parser work exposes a missing shape.
 - [ ] Update `scripts/package/ownership.mjs` to an independent v2 reader that
       also verifies each entry's digest and size against extracted bytes, and
       `scripts/package/export.mjs` to iterate entry paths; update
@@ -192,11 +203,17 @@ contract; the single-archive upload is deleted.
       complete (with the single 409 re-plan), and return
       `{ uploaded, unchanged, viewerUrl }`.
 - [ ] Add `--upload-concurrency` to `src/cli/arguments.ts`, `src/cli/help.ts`
-      and the publish command validation; wire it through `src/cli/publish.ts`.
-- [ ] Add `docs/protocol/fixtures/upload-plan-v1.json` (cases carry the
-      endpoint, the marker hashes, the response document, `valid` and a
-      `rejection` category) and check it against the CLI validator and an
-      independent reader in `scripts/package/`, mirroring the ownership
+      and the publish command validation; wire it through `src/cli/publish.ts`;
+      then add its rows to `docs/guides/cli/publish.md` and
+      `docs/guides/cli/options-and-exit-status.md` and name it where the
+      guides say "several files at a time".
+- [ ] Update the transport assertions in `tests/guides_ci.test.ts` (plan
+      request headers through the new request helper, status mapping per
+      request kind, retry schedule instead of "one request per status").
+- [ ] Check the `upload-plan-v1.json` fixture authored in Milestone 1 (root
+      `endpoint`, `marker` digests and cases with optional `status`,
+      `contentType`, `document` or raw `body`) against the CLI validator and
+      an independent reader in `scripts/package/`, mirroring the ownership
       fixture tests; register the file in the package allowlists and release
       fixtures.
 - [ ] Remove the single-archive `uploadCatalogue` and its tests; update

@@ -35,8 +35,18 @@ catalogue skips its historical rebuild too.
 Your authoring code runs during the export, so only grant upload credentials
 to workflows you trust. A pull request from a fork should not receive them.
 
+## What success prints
+
+The last line of a successful job is
+`Published Mokly catalogue. 12 files uploaded, 266 unchanged.` with the
+counts of that run, followed by the published catalogue's address when the
+service returns one. Only files the service did not already hold are sent, so
+a job that publishes an unchanged catalogue uploads nothing and still succeeds.
+
 ## What a failure tells you
 
 The command exits non-zero with a category, so a job log says whether the
-build failed, the history was missing or the service refused the upload. The
-token is never printed, and no response body or header is echoed.
+build failed, the history was missing or the service refused the upload.
+Temporary failures are retried before the job fails, and rerunning the job
+resumes from whatever the service already stored. The token is never printed,
+and no response body or header is echoed.

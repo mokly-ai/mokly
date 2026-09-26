@@ -1,0 +1,740 @@
+{
+  "schemaVersion": 1,
+  "endpoint": "https://api.example.com/v1/projects/p-123/uploads",
+  "marker": [
+    "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+    "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853",
+    "7ee4143a47c59fa2b1f79d25a12c269f433622af257b724fa70a5595f2dce8b3",
+    "80f3d90666804a9335821cdb40782458835ffedaef33088bd1dc5eb3ef85ce61"
+  ],
+  "cases": [
+    {
+      "name": "two-missing-digests",
+      "valid": true,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "empty-missing",
+      "valid": true,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "every-digest-missing",
+      "valid": true,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853",
+          "7ee4143a47c59fa2b1f79d25a12c269f433622af257b724fa70a5595f2dce8b3",
+          "80f3d90666804a9335821cdb40782458835ffedaef33088bd1dc5eb3ef85ce61"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "unknown-fields-are-ignored",
+      "valid": true,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z",
+          "note": "ignored"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete",
+        "region": "eu"
+      }
+    },
+    {
+      "name": "json-content-type-with-parameters",
+      "valid": true,
+      "contentType": "application/json; charset=utf-8",
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "explicit-default-port-is-the-same-origin",
+      "valid": true,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com:443/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com:443/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "placeholder-inside-a-longer-path",
+      "valid": true,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/blobs/{sha256}/content",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "queries-after-the-path",
+      "valid": true,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}?ttl=60",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete?wait=1"
+      }
+    },
+    {
+      "name": "opaque-id-at-the-length-limit",
+      "valid": true,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "schema-version-2",
+      "valid": false,
+      "document": {
+        "schemaVersion": 2,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "string-schema-version",
+      "valid": false,
+      "document": {
+        "schemaVersion": "1",
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "missing-schema-version",
+      "valid": false,
+      "document": {
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "missing-upload",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "empty-upload-id",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "upload-id-over-255-bytes",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "expires-at-without-milliseconds",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "expires-at-with-offset",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000+00:00"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "expires-at-not-a-string",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": 1790424900000
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "missing-missing",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "missing-is-not-an-array",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "unsorted-missing",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853",
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "duplicate-missing",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "uppercase-digest",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1AE044AFDDD9B669F0A5F2FBA4ED038F3C6FBFEC20185AE8224C6BDEEBA9558F"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "short-digest",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "digest-not-in-the-marker",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "non-string-digest",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [null],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "relative-blob-url",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "/v1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "blob-url-on-another-host",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://blobs.example.com/v1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "blob-url-on-another-scheme",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "http://api.example.com/v1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "blob-url-on-another-port",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com:8443/v1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "blob-url-without-placeholder",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/blobs/sha256",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "blob-url-with-two-placeholders",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/{sha256}/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "blob-url-with-encoded-placeholder",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/blobs/%7Bsha256%7D",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "blob-url-placeholder-only-in-query",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/blobs?digest={sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "blob-url-placeholder-only-in-fragment",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/blobs#{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "blob-url-not-a-string",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": null,
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "relative-complete-url",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "/v1/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "complete-url-on-another-origin",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://blobs.example.com/v1/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "missing-complete-url",
+      "valid": false,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}"
+      }
+    },
+    {
+      "name": "array-root",
+      "valid": false,
+      "document": []
+    },
+    {
+      "name": "null-root",
+      "valid": false,
+      "document": null
+    },
+    {
+      "name": "non-json-content-type",
+      "valid": false,
+      "contentType": "text/plain",
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "missing-content-type",
+      "valid": false,
+      "contentType": null,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "status-204-without-a-body",
+      "valid": false,
+      "status": 204,
+      "body": ""
+    },
+    {
+      "name": "status-202-with-a-valid-body",
+      "valid": false,
+      "status": 202,
+      "document": {
+        "schemaVersion": 1,
+        "upload": {
+          "id": "u-1",
+          "expiresAt": "2026-09-26T12:15:00.000Z"
+        },
+        "missing": [
+          "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+          "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+        ],
+        "blobUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/blobs/{sha256}",
+        "completeUrl": "https://api.example.com/v1/projects/p-123/uploads/u-1/complete"
+      }
+    },
+    {
+      "name": "invalid-json-body",
+      "valid": false,
+      "status": 200,
+      "body": "{\"schemaVersion\": 1,"
+    },
+    {
+      "name": "html-body-with-json-content-type",
+      "valid": false,
+      "status": 200,
+      "body": "<!doctype html><title>Sign in</title>"
+    }
+  ]
+}

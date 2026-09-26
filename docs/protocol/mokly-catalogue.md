@@ -272,7 +272,7 @@ Readers reject unsupported `schemaVersion`; compatible v1 readers tolerate
 unknown additive fields but validate all known fields/references. Writers remain
 allowlisted. Optional fields are additive; removals, required additions, changed
 meaning, new union discriminants or incompatible paths require a new version.
-This file and the inspector asset are additive inventory entries: ownership v1,
+This file and the inspector asset are additive inventory entries: ownership v2,
 upload v1, review v2/v3 and delivery descriptor v2 remain unchanged.
 
 The [public v1 fixture](./fixtures/catalogue-v1.json) ships in the npm package

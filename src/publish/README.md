@@ -2,8 +2,11 @@
 
 This internal module implements `mokly publish`. Consumers and self-hosted
 receivers use the installed npm executable and the
-[upload v1 protocol](../../docs/protocol/mokly-upload.md), never deep imports.
-The protocol documents are included in the npm package.
+[catalogue upload protocol](../../docs/protocol/mokly-upload.md), never deep
+imports. The protocol documents are included in the npm package. The protocol
+now defines a content-addressed plan → blobs → complete exchange over a
+schema 2 ownership marker; [Delta Publishing](../../plans/delta-publishing.md)
+tracks replacing the single-archive upload described below with it.
 
 `run.ts` composes injected Git, export, HTTP and time boundaries. It pins the
 actual checkout HEAD, adds an owned manifest through the exporter, compresses

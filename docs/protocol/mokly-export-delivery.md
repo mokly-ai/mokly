@@ -73,7 +73,7 @@ existing validated route grammar and are encoded once when written into URLs.
 | `__mokly/catalogue.json`      | Public catalogue read model v1                                        |
 | `__mokly/client/inspector.js` | Inert cross-origin frame inspector                                    |
 | `404.html`                    | Existing catalogue not-found view                                     |
-| `.mokly-export-artifact`      | Public-safe versioned ownership inventory                             |
+| `.mokly-export-artifact`      | Public-safe versioned ownership inventory with per-file digests       |
 
 Catalogue routes retain their validated `.html` suffixes; additional public
 `.htm` documents retain their filenames too. Do not
@@ -305,7 +305,7 @@ artifact identity there and in every owned shell descriptor. Its other bytes,
 the inspector script and inert per-document maps participate normally. Validate
 the catalogue's owned identity field before finalization and replace its staging
 placeholder before installation. This prevents self-reference without changing
-delivery descriptor v2, ownership v1, upload v1 or the review schema.
+delivery descriptor v2, ownership v2, upload v1 or the review schema.
 
 Stamp the resulting identity into those owned root descriptors and the owned
 catalogue field, changing no other bytes.

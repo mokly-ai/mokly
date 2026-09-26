@@ -149,6 +149,15 @@ actually performs. Phase labels are outcome-oriented: `Loading configuration`,
 `Rendering catalogue`, `Writing generated output`, `Checking generated output`,
 `Exporting catalogue`, `Preparing upload`, and `Uploading catalogue`.
 
+While `Uploading catalogue` sends blobs, its spinner label is replaced in place
+by `Uploading <n> of <total> files · <size>`: `<n>` is the number of completed
+file uploads, `<total>` the number of files the receiver asked for, and
+`<size>` their total byte size in binary units, whole bytes below one KiB and
+one decimal place above it, such as `312 B`, `4.1 KiB`, or `12.0 MiB`. The
+label updates as each file completes; a forced-rich pipe shows only the
+starting line and the durable `Catalogue uploaded` line. A replay in which
+the receiver already holds every file shows no progress label.
+
 Completion summaries are:
 
 ```text
@@ -156,11 +165,15 @@ Completion summaries are:
   ✔ Mokly output is valid and untracked · 278 files (5.9s)
   ✔ Mokly output is current · 278 files (5.9s)
   ✔ Exported Mokly to .context/mokly-site (8.1s)
-  ✔ Published Mokly catalogue (9.3s)
+  ✔ Published Mokly catalogue · 12 files uploaded, 266 unchanged (9.3s)
 ```
 
 Export follows its summary with the unstyled guidance
 `Deploy this directory at your site's root with your hosting provider.`
+Publish follows its summary with the receiver's viewer URL on its own unstyled
+line when the completion response supplied an absolute http(s) URL, and adds
+nothing otherwise. Its counts are the export's ownership entries whose content
+the receiver requested during this command against the remaining entries.
 
 ## Plain compatibility
 
@@ -175,8 +188,13 @@ Mokly output is valid and untracked (<n> files).
 Mokly output is current (<n> files).
 Exported Mokly to <outDir>.
 Deploy this directory at your site's root with your hosting provider.
-Published Mokly catalogue.
+Published Mokly catalogue. <uploaded> files uploaded, <unchanged> unchanged.
+<viewer-url>
 ```
+
+`<uploaded>` and `<unchanged>` are the same decimal counts as the rich summary.
+The `<viewer-url>` line appears only when the receiver supplied one and
+contains that URL alone.
 
 Plain commands add no phase or watch-event lines. Successful plain commands
 write nothing to stderr unless `--debug-timings` was requested. Expected plain

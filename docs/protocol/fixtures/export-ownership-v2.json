@@ -1,0 +1,610 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "complete-minimal-inventory",
+      "valid": true,
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "404.html",
+            "sha256": "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+            "size": 39
+          },
+          {
+            "path": "index.html",
+            "sha256": "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853",
+            "size": 39
+          },
+          {
+            "path": "mokly-upload.json",
+            "sha256": "80f3d90666804a9335821cdb40782458835ffedaef33088bd1dc5eb3ef85ce61",
+            "size": 20
+          }
+        ]
+      }
+    },
+    {
+      "name": "empty-marker-shape",
+      "valid": true,
+      "document": {
+        "schemaVersion": 2,
+        "files": []
+      }
+    },
+    {
+      "name": "unsorted-inventory",
+      "valid": true,
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "index.html",
+            "sha256": "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853",
+            "size": 39
+          },
+          {
+            "path": "404.html",
+            "sha256": "1ae044afddd9b669f0a5f2fba4ed038f3c6fbfec20185ae8224c6bdeeba9558f",
+            "size": 39
+          }
+        ]
+      }
+    },
+    {
+      "name": "unknown-fields-are-ignored",
+      "valid": true,
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "index.html",
+            "sha256": "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853",
+            "size": 39,
+            "etag": "ignored"
+          }
+        ],
+        "future": {
+          "files": ["../unowned"]
+        }
+      }
+    },
+    {
+      "name": "unicode-and-nested-paths",
+      "valid": true,
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "static/café.svg",
+            "sha256": "d4dc56669143034f31aa309635d4113d9ad76a02b1739da22c965ed2049be9e6",
+            "size": 6
+          },
+          {
+            "path": "view/screens/home.html",
+            "sha256": "7ee4143a47c59fa2b1f79d25a12c269f433622af257b724fa70a5595f2dce8b3",
+            "size": 34
+          }
+        ]
+      }
+    },
+    {
+      "name": "lowercase-without-extra-folding-or-normalization",
+      "valid": true,
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "ß.html",
+            "sha256": "bbaa09f794643403f43654fad01fceae7733e0c861534f451306ca97637d5003",
+            "size": 7
+          },
+          {
+            "path": "ss.html",
+            "sha256": "98a62b6fce1e327119fc01db92cc3148b42d0cf13ff97b5018e5c00e072af16f",
+            "size": 7
+          },
+          {
+            "path": "é.html",
+            "sha256": "9b03f6187fff4b3753f24206769a4781199ed3c981c8d1bed9cb6fa78ebb20fb",
+            "size": 7
+          },
+          {
+            "path": "é.html",
+            "sha256": "4cae37533c6801bd4eda4c6cb2b4764c831f910d9bbfd8c0eef84c0fde8bc930",
+            "size": 8
+          }
+        ]
+      }
+    },
+    {
+      "name": "zero-byte-file",
+      "valid": true,
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "static/empty.txt",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "size": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "maximum-file-size",
+      "valid": true,
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "static/large.bin",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "size": 67108864
+          }
+        ]
+      }
+    },
+    {
+      "name": "schema-1-marker",
+      "valid": false,
+      "rejection": "unsupported-version",
+      "document": {
+        "schemaVersion": 1,
+        "files": ["404.html", "index.html", "mokly-upload.json"]
+      }
+    },
+    {
+      "name": "schema-3-marker",
+      "valid": false,
+      "rejection": "unsupported-version",
+      "document": {
+        "schemaVersion": 3,
+        "files": []
+      }
+    },
+    {
+      "name": "string-version",
+      "valid": false,
+      "rejection": "unsupported-version",
+      "document": {
+        "schemaVersion": "2",
+        "files": []
+      }
+    },
+    {
+      "name": "null-root",
+      "valid": false,
+      "rejection": "invalid",
+      "document": null
+    },
+    {
+      "name": "array-root",
+      "valid": false,
+      "rejection": "invalid",
+      "document": []
+    },
+    {
+      "name": "string-root",
+      "valid": false,
+      "rejection": "invalid",
+      "document": "marker"
+    },
+    {
+      "name": "missing-version",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "files": []
+      }
+    },
+    {
+      "name": "missing-files",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2
+      }
+    },
+    {
+      "name": "files-is-not-an-array",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": "index.html"
+      }
+    },
+    {
+      "name": "string-entry",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": ["index.html"]
+      }
+    },
+    {
+      "name": "null-entry",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [null]
+      }
+    },
+    {
+      "name": "entry-missing-path",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "sha256": "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853",
+            "size": 40
+          }
+        ]
+      }
+    },
+    {
+      "name": "entry-missing-sha256",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "index.html",
+            "size": 40
+          }
+        ]
+      }
+    },
+    {
+      "name": "entry-missing-size",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "index.html",
+            "sha256": "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853"
+          }
+        ]
+      }
+    },
+    {
+      "name": "non-string-path",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": 1,
+            "sha256": "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853",
+            "size": 40
+          }
+        ]
+      }
+    },
+    {
+      "name": "uppercase-hex",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "index.html",
+            "sha256": "555C566233E7163447A2EFF77FE967453CADC5C70D64E87948A0FDDC97169853",
+            "size": 39
+          }
+        ]
+      }
+    },
+    {
+      "name": "short-hex",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "index.html",
+            "sha256": "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc9716985",
+            "size": 39
+          }
+        ]
+      }
+    },
+    {
+      "name": "long-hex",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "index.html",
+            "sha256": "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc971698530",
+            "size": 39
+          }
+        ]
+      }
+    },
+    {
+      "name": "non-hex-digest",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "index.html",
+            "sha256": "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+            "size": 39
+          }
+        ]
+      }
+    },
+    {
+      "name": "string-size",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "index.html",
+            "sha256": "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853",
+            "size": "40"
+          }
+        ]
+      }
+    },
+    {
+      "name": "negative-size",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "index.html",
+            "sha256": "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853",
+            "size": -1
+          }
+        ]
+      }
+    },
+    {
+      "name": "fractional-size",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "index.html",
+            "sha256": "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853",
+            "size": 40.5
+          }
+        ]
+      }
+    },
+    {
+      "name": "size-over-limit",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "static/large.bin",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "size": 67108865
+          }
+        ]
+      }
+    },
+    {
+      "name": "empty-path",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "size": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "absolute-path",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "/index.html",
+            "sha256": "213456c5dc963e03ec1f27600c46c954c70224985fa62603db2fb2ab1ca06d35",
+            "size": 11
+          }
+        ]
+      }
+    },
+    {
+      "name": "parent-traversal",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "static/../secret",
+            "sha256": "6c762e0f8da031b0d9df3d63e9d6fa5ea7d48e4956f683c1d45bbb33063aead1",
+            "size": 16
+          }
+        ]
+      }
+    },
+    {
+      "name": "current-directory-segment",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "./index.html",
+            "sha256": "68d3c78b19194d89a86d5fd98a62b8b8d6c7fd8ca4b431b4f81b27cc3163fcb7",
+            "size": 12
+          }
+        ]
+      }
+    },
+    {
+      "name": "empty-directory-segment",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "static//logo.svg",
+            "sha256": "e547b2e00ba1fabc1a50531f419d855003f015b2378573cbd58bb7274ed54fe0",
+            "size": 16
+          }
+        ]
+      }
+    },
+    {
+      "name": "backslash",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "static\\logo.svg",
+            "sha256": "5f387cd989992e58c43cad402efdcb4ff5d16468b9fe08ed42b8de351550b372",
+            "size": 15
+          }
+        ]
+      }
+    },
+    {
+      "name": "colon",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "C:/index.html",
+            "sha256": "c57a65664e9cf5cd8f6135d1913096e900adf0808ad1c8115eadbe8594a2137d",
+            "size": 13
+          }
+        ]
+      }
+    },
+    {
+      "name": "nul",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "static/\u0000logo.svg",
+            "sha256": "da0ada9bb4e28d3a590fdcbe195c593eefe0239f4e76eb218950f1b40f0e97e7",
+            "size": 16
+          }
+        ]
+      }
+    },
+    {
+      "name": "marker-cannot-own-itself",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": ".mokly-export-artifact",
+            "sha256": "7f4f8dfe6eca35bea11ff5505d179e282a12a242717e92969ea448e7480c4197",
+            "size": 22
+          }
+        ]
+      }
+    },
+    {
+      "name": "duplicate-path",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "index.html",
+            "sha256": "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853",
+            "size": 39
+          },
+          {
+            "path": "index.html",
+            "sha256": "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853",
+            "size": 39
+          }
+        ]
+      }
+    },
+    {
+      "name": "case-collision",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "Index.html",
+            "sha256": "ba9f3fbde9c0c98a09b8fcb805a096ed053753a7b7d2844dca83ad9907e720cc",
+            "size": 10
+          },
+          {
+            "path": "index.html",
+            "sha256": "555c566233e7163447a2eff77fe967453cadc5c70d64e87948a0fddc97169853",
+            "size": 39
+          }
+        ]
+      }
+    },
+    {
+      "name": "unicode-case-collision",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "CAFÉ.html",
+            "sha256": "68b1bc8835143f031e8b43b1dc27fe194d3574276025f802af04b91880aae6da",
+            "size": 10
+          },
+          {
+            "path": "café.html",
+            "sha256": "11380eed1730767c3857f7895f2701d13fc60dba57428de9738f9c608c490ae8",
+            "size": 10
+          }
+        ]
+      }
+    }
+  ]
+}
