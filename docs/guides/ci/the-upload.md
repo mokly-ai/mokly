@@ -14,10 +14,11 @@ a redirect.
 
 ## The plan
 
-Publish posts one small gzip-compressed tar archive to the exact endpoint. It
-holds `mokly-upload.json`, the ownership marker that lists every exported file
-with its SHA-256 digest and byte size, and the pinned comparison file when
-comparisons are enabled. Nothing else is in it.
+Publish posts one small gzip-compressed tar archive to the exact endpoint,
+which is the service's plan route. It holds `mokly-upload.json`, the ownership
+marker that lists every exported file with its SHA-256 digest and byte size,
+and the pinned comparison file when comparisons are enabled. Nothing else is
+in it.
 
 ```http
 Authorization: Bearer TOKEN
@@ -28,7 +29,8 @@ Content-Length: <bytes>
 
 The service answers `200` with JSON: an upload id and its expiry time, the
 sorted list of digests it does not yet hold, a blob URL containing the literal
-placeholder `{sha256}`, and a completion URL. Both URLs must be on the
+placeholder `{sha256}`, and a completion URL. Publish takes both URLs only from
+this answer and never builds them from the endpoint. Both must be on the
 endpoint's own scheme, host and port; publish never sends the token elsewhere.
 
 ## The blobs

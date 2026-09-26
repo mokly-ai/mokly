@@ -29,7 +29,7 @@ takes no value. There are no silent positional arguments.
 | `--no-watch`                         | `serve`                      | Serve one deterministic snapshot                               |
 | `--base <ref>`                       | `serve`, `export`, `publish` | Git base ref used to find the branch point                     |
 | `--out <path>`                       | `export`, `publish`          | Config-relative output directory                               |
-| `--endpoint <url>`                   | `publish`                    | Upload URL, or `MOKLY_ENDPOINT`                                |
+| `--endpoint <url>`                   | `publish`                    | The service's plan URL, or `MOKLY_ENDPOINT`                    |
 | `--token <token>`                    | `publish`                    | Bearer token, or `MOKLY_TOKEN`                                 |
 | `--repository <host>/<owner>/<name>` | `publish`                    | Override the detected repository identity                      |
 | `--no-changes`                       | `publish`                    | Publish with no comparison baseline                            |

@@ -64,7 +64,7 @@ Actions environment. Other CI systems can invoke the npm CLI directly.
 | Input        | Required | Behavior                                                                      |
 | ------------ | -------- | ----------------------------------------------------------------------------- |
 | `version`    | yes      | Exact SemVer npm release; ranges, tags and URLs are rejected                  |
-| `endpoint`   | yes      | Full receiver HTTP(S) URL                                                     |
+| `endpoint`   | yes      | Full HTTP(S) URL of the receiver's plan route                                 |
 | `token`      | yes      | Bearer credential, forwarded only through the environment                     |
 | `config`     | no       | Config path relative to the consumer working directory; omission discovers it |
 | `base`       | no       | Comparison ref; omission uses the config or `origin/main`                     |

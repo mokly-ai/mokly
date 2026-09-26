@@ -59,7 +59,7 @@ choosing, and replace `COMMIT_SHA` with the action commit you reviewed.
 | Input        | Required | Meaning                                                     |
 | ------------ | -------- | ----------------------------------------------------------- |
 | `version`    | yes      | Exact published version; ranges, tags and URLs are refused  |
-| `endpoint`   | yes      | Full receiver URL                                           |
+| `endpoint`   | yes      | Full URL of the receiver's plan route                       |
 | `token`      | yes      | Bearer credential, forwarded only through the environment   |
 | `config`     | no       | Config path relative to the working directory               |
 | `base`       | no       | Comparison ref; otherwise the config's own base             |

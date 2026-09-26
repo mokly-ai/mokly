@@ -16,7 +16,7 @@ is [schema 2](./mokly-export-ownership.md) and the plan response is its own v1.
 ## CLI
 
 ```bash
-npx mokly publish --endpoint https://catalogues.example.com/uploads --token TOKEN
+npx mokly publish --endpoint https://api.mokly.ai/v1/projects/<projectId>/publications --token TOKEN
 npx mokly publish --out .context/site --config tools/mokly.config.ts --base main
 npx mokly publish --no-changes --repository git.example.com/team/project
 npx mokly publish --upload-concurrency 4
@@ -24,9 +24,13 @@ npx mokly publish --upload-concurrency 4
 
 Install `@mokly/mokly` first, or use `npx --package @mokly/mokly mokly publish`.
 Explicit `--endpoint` and `--token` override `MOKLY_ENDPOINT` and `MOKLY_TOKEN`.
-Both are required; empty values fail before export. Endpoint is an absolute
-HTTP(S) URL without userinfo or a fragment. HTTPS is recommended for remote
-services; HTTP supports local receivers. Tokens use the bearer-token grammar
+Both are required; empty values fail before export. The endpoint is the
+absolute HTTP(S) URL of the receiver's plan route, without userinfo or a
+fragment and with its query string preserved; for Mokly Cloud it is
+`https://api.mokly.ai/v1/projects/<projectId>/publications`. The CLI posts the
+plan to it exactly and never appends a path; the blob and complete URLs come
+only from the plan response and are never derived from the endpoint. HTTPS is
+recommended for remote services; HTTP supports local receivers. Tokens use the bearer-token grammar
 `[A-Za-z0-9._~+/-]+=*`. Tokens never appear in CLI output, including errors and
 diagnostic stacks. Response bodies, response headers and transport exceptions
 are not printed. Redirects are never followed; the only retries are the
@@ -96,7 +100,8 @@ the envelope's `comparisonPath` when it is not null. No other entries; receivers
 reject any other archive as an invalid bundle.
 
 Success is `200` with `Content-Type: application/json` (media-type parameters
-are permitted) and this body; the URL paths are illustrative and opaque:
+are permitted) and this body. The URL paths are the receiver's own and opaque
+to the CLI; these are Mokly Cloud's:
 
 ```json
 {
@@ -106,8 +111,8 @@ are permitted) and this body; the URL paths are illustrative and opaque:
     "expiresAt": "2026-09-26T12:15:00.000Z"
   },
   "missing": ["<sha256>", "<sha256>"],
-  "blobUrl": "https://api.example.com/v1/projects/<projectId>/uploads/<id>/blobs/{sha256}",
-  "completeUrl": "https://api.example.com/v1/projects/<projectId>/uploads/<id>/complete"
+  "blobUrl": "https://api.mokly.ai/v1/projects/<projectId>/publication-uploads/<id>/blobs/{sha256}",
+  "completeUrl": "https://api.mokly.ai/v1/projects/<projectId>/publication-uploads/<id>/complete"
 }
 ```
 
@@ -120,7 +125,8 @@ are permitted) and this body; the URL paths are illustrative and opaque:
   `{sha256}` exactly once, unencoded. The CLI checks and substitutes the
   placeholder on the raw string before parsing the result, so an encoded
   `%7Bsha256%7D` is not a placeholder. `completeUrl` is an absolute URL. Both
-  must have the endpoint's scheme, host and port.
+  must have the endpoint's scheme, host and port, and both are taken only from
+  this response.
 - Unknown fields are ignored. A missing or invalid field, another 2xx status,
   a body over 16 MiB, invalid JSON or a non-JSON content type is
   `upload-failed`.
@@ -267,11 +273,13 @@ interface MoklyUploadV1 {
   `__mokly/diffs/__generations/<64 lowercase hex characters>/review.json`,
   the single pinned review file; never search for a newest file.
 
-The manifest is written into the staged export before the ownership marker and
-deployment identity are finalized, so the marker lists and hashes it. It is an
-owned file in `--out`, so subsequent publish or export can safely replace it.
-The plan archive and every blob use the same finalized byte snapshot as the
-installed export, never a later walk of a mutable output.
+The manifest is written into the staged export before deployment identity
+finalization. It participates in that identity; after the catalogue and shells
+are stamped, the ownership marker lists and hashes the manifest together with
+every other finalized non-marker file. It is an owned file in `--out`, so
+subsequent publish or export can safely replace it. The plan archive and every
+blob use the same finalized byte snapshot as the installed export, never a
+later walk of a mutable output.
 
 ## Export Files And Limits
 

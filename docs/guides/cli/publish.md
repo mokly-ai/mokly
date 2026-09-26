@@ -21,7 +21,7 @@ with any service that implements the upload contract.
 
 | Option                               | Meaning                                                                |
 | ------------------------------------ | ---------------------------------------------------------------------- |
-| `--endpoint <url>`                   | Upload URL; overrides `MOKLY_ENDPOINT`                                 |
+| `--endpoint <url>`                   | The service's plan URL; overrides `MOKLY_ENDPOINT`                     |
 | `--token <token>`                    | Bearer token; overrides `MOKLY_TOKEN`                                  |
 | `--out <path>`                       | Config-relative export directory; defaults to `.context/mokly-publish` |
 | `--config <path>`                    | Use an explicit `mokly.config` file                                    |
@@ -34,7 +34,10 @@ with any service that implements the upload contract.
 
 Set `MOKLY_ENDPOINT` and `MOKLY_TOKEN` in your shell or your CI secrets;
 prefer the environment variable for the token so it stays out of your shell
-history. For a token that begins with `-`, use the assigned form
+history. The endpoint is the address of the service's plan route, for Mokly
+Cloud `https://api.mokly.ai/v1/projects/<projectId>/publications`; publish
+posts to it exactly, never appends a path, and takes every other address from
+the service's answer. For a token that begins with `-`, use the assigned form
 `--token=-TOKEN`. The token never appears in output, including errors, and is
 only ever sent to the endpoint's own origin.
 
