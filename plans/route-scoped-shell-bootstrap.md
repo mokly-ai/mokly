@@ -587,9 +587,11 @@ coverage or behavior.
   - Complete gate on 2026-09-26: unit 2,454 passed; browser 789 passed; zero
     failures, skips or cancellations. Repository, package, Rust, typecheck,
     example and all five packed-consumer smoke stages also passed.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [ ] After the push, use
+  - Pushed `bdb7780` (`test(viewer): split capability suites`) to
+    `calummoore/route-scoped-shell-bootstrap`.
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
@@ -1061,3 +1063,47 @@ are retained under `.context/test-timings/m7/`.
   measurements, the complete gate, normalized artifact comparisons, strict
   reader/capture guardrails, packed consumers, and the expanded hydration
   inventory all passed.
+
+### Milestone 8 review — 2026-09-26
+
+- Reviewed the complete pushed `origin/main...bdb7780` diff using
+  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+  The review was read-only; no implementation was changed.
+- No new findings. The split preserves all 14 test names, bodies, assertions,
+  helper bodies and ordering, and every resulting test file is below 300 lines.
+  The complete review continues to report these three deferred findings:
+
+1. **Medium — Returning A → B → A can expose A's stale initial private
+   workspace while B's scoped catalogue is still installed.** Doing nothing
+   can briefly present old usage or instance details as Ready during a held or
+   failed return read.
+   - **Option A:** make the request-bound live workspace the sole authority for
+     live routes and add held/failed round-trip coverage.
+   - **Option B:** clear the initial workspace after the first live transition.
+   - **Option C:** keep route-only matching and accept the stale window.
+   - **Recommendation:** Option A. It fixes authority at the store boundary and
+     prevents the same class of stale fallback from recurring.
+
+2. **Low — The server-rendered capability object and embedded JSON can
+   disagree.** Doing nothing lets a future caller render one workspace while
+   hydration reads another, risking a hard-to-diagnose mismatch.
+   - **Option A:** introduce one paired serialized-descriptor value/factory and
+     test that independent values cannot be supplied.
+   - **Option B:** pass only JSON and parse it inside the document.
+   - **Option C:** retain both props and rely on callers to synchronize them.
+   - **Recommendation:** Option A. A cohesive boundary prevents the mismatch
+     class without restoring render-time serialization.
+
+3. **Low — Repository preview validates the same complete catalogue twice.**
+   Doing nothing preserves correct output but repeats the largest complete read
+   and adds avoidable build time as catalogues grow.
+   - **Option A:** carry validated proof and canonical bytes into finalization,
+     verify staged bytes against them, and add a real call-count regression.
+   - **Option B:** delay validation until finalization and weaken capture.
+   - **Option C:** retain both validations and their cost.
+   - **Recommendation:** Option A. It preserves post-adapter tamper protection
+     while structurally enforcing one complete validation per preview build.
+
+- Residual risk remains limited to those three user-deferred decisions. The
+  Milestone 8 split itself passed focused tests, format, lint, typecheck, the
+  prepared unit suite and the complete unit/browser gate.
