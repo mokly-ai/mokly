@@ -8,7 +8,10 @@ import {
   loadBrowserNavigationModules,
 } from "../../dist/server/client_modules.js";
 
-const hydrationBundles = new Set(["/__mokly/client/react-shell.js"]);
+const hydrationBundles = new Set([
+  "/__mokly/client/react-host.js",
+  "/__mokly/client/react-shell.js",
+]);
 
 /** Check the exact delivered inventory, not unused build-directory files. */
 export function inspectBrowserGraph() {

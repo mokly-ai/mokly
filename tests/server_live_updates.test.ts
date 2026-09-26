@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { readCatalogue } from "@mokly/viewer";
+
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
@@ -10,9 +12,9 @@ import {
   serializeViewerCapabilityDescriptor,
 } from "../packages/viewer/dist/client/host_capability_descriptor.js";
 import {
-  readShellBootstrap,
+  readScopedShellBootstrap,
   serializeShellBootstrap,
-} from "../packages/viewer/dist/standalone/bootstrap.js";
+} from "../packages/viewer/dist/runtime.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
@@ -48,7 +50,9 @@ test("every served document loads the hydrated live host", async (context) => {
   )?.[1];
   assert.ok(bootstrapState);
   assert.equal(
-    serializeShellBootstrap(readShellBootstrap(JSON.parse(bootstrapState))),
+    serializeShellBootstrap(
+      readScopedShellBootstrap(JSON.parse(bootstrapState)),
+    ),
     bootstrapState,
   );
   assert.equal(
@@ -98,10 +102,16 @@ test("every served document loads the hydrated live host", async (context) => {
     (await fetch(`${server.url}/__mokly/client/react-host.js`)).status,
     200,
   );
-  assert.match(
-    await (await fetch(`${server.url}/__mokly/client/react-host.js`)).text(),
-    /\.\/react-shell\.js/,
-  );
+  const liveHost = await (
+    await fetch(`${server.url}/__mokly/client/react-host.js`)
+  ).text();
+  assert.match(liveHost, /hydrateRoot/);
+  assert.doesNotMatch(liveHost, /\.\/react-shell\.js/);
+  const publicCatalogue = await (
+    await fetch(`${server.url}/__mokly/catalogue.json`)
+  ).json();
+  assert.doesNotThrow(() => readCatalogue(publicCatalogue));
+  assert.doesNotMatch(JSON.stringify(publicCatalogue), /"status":"omitted"/);
   assert.equal(
     (await fetch(`${server.url}/__mokly/client/unknown.js`)).status,
     404,

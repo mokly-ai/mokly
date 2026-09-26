@@ -1,16 +1,15 @@
 import type { Route } from "@playwright/test";
 
-import { projectScopedCatalogue } from "../../packages/viewer/dist/runtime.js";
 import type { CatalogueUsageScopeTarget } from "../../packages/viewer/dist/runtime.js";
 import {
-  readShellBootstrap,
+  readScopedShellBootstrap,
   serializeShellBootstrap,
-} from "../../packages/viewer/dist/standalone/bootstrap.js";
+} from "../../packages/viewer/dist/runtime.js";
 
 const BOOTSTRAP_SCRIPT =
   /(<script\b[^>]*\bdata-mokly-shell-bootstrap=""[^>]*>)([^<]+)(<\/script>)/u;
 
-/** Fulfil one Serve page after replacing its complete bootstrap with exact scope. */
+/** Fulfil one native scoped Serve page, optionally corrupting only its view. */
 export async function fulfillScopedShell(
   route: Route,
   target?: CatalogueUsageScopeTarget,
@@ -19,7 +18,10 @@ export async function fulfillScopedShell(
   const response = await route.fetch();
   const body = await response.text();
   try {
-    await route.fulfill({ response, body: scopedShellHtml(body, target) });
+    await route.fulfill({
+      response,
+      body: target ? mismatchedScopedShellHtml(body, target) : body,
+    });
   } catch (error) {
     if (!documentRequest && isRouteAlreadyHandled(error)) {
       await settleCancelledRoute(route);
@@ -29,25 +31,19 @@ export async function fulfillScopedShell(
   }
 }
 
-/** Project the embedded bootstrap without changing any server-rendered markup. */
-export function scopedShellHtml(
+/** Create a rejected candidate without synthesizing a replacement catalogue. */
+function mismatchedScopedShellHtml(
   html: string,
-  target?: CatalogueUsageScopeTarget,
+  target: CatalogueUsageScopeTarget,
 ): string {
   const match = BOOTSTRAP_SCRIPT.exec(html);
   if (!match) throw new Error("Serve page has no shell bootstrap.");
-  const bootstrap = readShellBootstrap(JSON.parse(match[2]!));
-  const scoped = {
-    ...bootstrap,
-    catalogue: projectScopedCatalogue(
-      bootstrap.catalogue,
-      target ?? bootstrap.view,
-    ),
-  };
+  const bootstrap = readScopedShellBootstrap(JSON.parse(match[2]!));
+  const mismatched = { ...bootstrap, view: target };
   return html.replace(
     BOOTSTRAP_SCRIPT,
     (_script, open: string, _json: string, close: string) =>
-      `${open}${serializeShellBootstrap(scoped)}${close}`,
+      `${open}${serializeShellBootstrap(mismatched)}${close}`,
   );
 }
 

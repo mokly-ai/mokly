@@ -1,10 +1,8 @@
 /** Strict reader for route-scoped live shell bootstraps. */
 
-import { resolveCatalogueRoute } from "../catalogue/entry_selection.js";
 import { readShellCatalogue } from "../catalogue/reader.js";
 import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
 import {
-  catalogueHasOmittedUsage,
   catalogueUsageViews,
   resolveCatalogueUsageScope,
 } from "../catalogue/usage_scope.js";
@@ -23,36 +21,28 @@ import {
 /** A validated live bootstrap whose catalogue usage exactly matches its view. */
 export type ScopedShellBootstrap =
   ShellBootstrapEnvelope<ShellCatalogueReadModel>;
-/** A validated live bootstrap accepted during the complete-to-scoped rollout. */
+/** A validated live bootstrap whose usage is exactly scoped to its view. */
 export type LiveShellBootstrap = ScopedShellBootstrap;
-/** Whether live pages may still carry complete usage during staged rollout. */
-export type LiveShellBootstrapMode = "scoped" | "transitional";
-/** Current staged live-reader policy; Milestone 6 switches this with emission. */
-export const LIVE_SHELL_BOOTSTRAP_MODE: LiveShellBootstrapMode = "transitional";
 /** A live bootstrap or the unchanged compact static representation. */
 export type LiveShellBootstrapState =
   LiveShellBootstrap | ShellBootstrapEnvelope<ExternalCatalogueReference>;
 
 /** Validate shell-only usage and enforce the scope derived from the route. */
 export function readScopedShellBootstrap(value: unknown): ScopedShellBootstrap {
-  return readLiveShellBootstrap(value, "scoped");
+  return readLiveShellBootstrap(value);
 }
 
-/** Read one live page under an explicit rollout mode. */
-export function readLiveShellBootstrap(
-  value: unknown,
-  mode: LiveShellBootstrapMode,
-): LiveShellBootstrap {
+/** Validate one exactly route-scoped live page. */
+export function readLiveShellBootstrap(value: unknown): LiveShellBootstrap {
   const envelope = readShellBootstrapEnvelope(value);
   if (isExternalCatalogueReference(envelope.catalogue))
     throw new Error("External shell hydration requires a catalogue.");
-  return readLiveEnvelope(envelope, mode);
+  return readLiveEnvelope(envelope);
 }
 
-/** Read live state transitionally while preserving static external validation. */
+/** Validate a scoped live page or the unchanged static external reference. */
 export function readLiveShellBootstrapState(
   value: unknown,
-  mode: LiveShellBootstrapMode,
 ): LiveShellBootstrapState {
   const envelope = readShellBootstrapEnvelope(value);
   if (isExternalCatalogueReference(envelope.catalogue))
@@ -60,22 +50,13 @@ export function readLiveShellBootstrapState(
       ...envelope,
       catalogue: readExternalCatalogueReference(envelope.catalogue),
     };
-  return readLiveEnvelope(envelope, mode);
+  return readLiveEnvelope(envelope);
 }
 
 function readLiveEnvelope(
   envelope: ShellBootstrapEnvelope<unknown>,
-  mode: LiveShellBootstrapMode,
 ): LiveShellBootstrap {
   const catalogue = readShellCatalogue(envelope.catalogue);
-  if (mode === "transitional" && !catalogueHasOmittedUsage(catalogue)) {
-    if (
-      envelope.view.kind === "target" &&
-      !resolveCatalogueRoute(catalogue, envelope.view.route)
-    )
-      invalidData("$bootstrap", "invalid shell hydration target");
-    return { ...envelope, catalogue };
-  }
   enforceExactScope(catalogue, envelope.view);
   return { ...envelope, catalogue };
 }

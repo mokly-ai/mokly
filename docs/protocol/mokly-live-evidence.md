@@ -8,8 +8,8 @@ Deduplication verification is recorded in Milestone 2 of the
 Adoption of the current route's scoped bootstrap with its complete private
 workspace is implemented by Milestone 5 of the
 [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
-During the transition its one live reader also accepts complete Serve pages;
-Milestone 6 removes that mode when Serve starts emitting scope.
+Milestone 6 makes every Serve response exactly scoped and removes complete-live
+acceptance from the shared reader.
 
 ## Revisions and publication
 

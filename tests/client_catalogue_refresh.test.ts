@@ -4,6 +4,7 @@ import test from "node:test";
 import { setImmediate } from "node:timers/promises";
 
 import { readCatalogue } from "@mokly/viewer";
+import { projectScopedCatalogue } from "@mokly/viewer/runtime";
 import type {
   ViewerCapabilityDescriptor,
   ViewerCapabilityRequest,
@@ -24,7 +25,10 @@ test("React live refresh fences a page response that finishes after cancellation
   const nextCatalogue = structuredClone(catalogue);
   nextCatalogue.revision.evidence += 1;
   const next = descriptor(3, nextCatalogue.revision.evidence);
-  const environment = new FakeEnvironment(next, nextCatalogue);
+  const environment = new FakeEnvironment(
+    next,
+    projectScopedCatalogue(nextCatalogue, { kind: "home" }),
+  );
   const subscription = new AbortController();
   environment.abort = () => subscription.abort();
   let adopted = 0;

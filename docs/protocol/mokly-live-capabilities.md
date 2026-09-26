@@ -11,8 +11,8 @@ exported page; it has no live behavior, update transport, or private token.
 Scoped public-bootstrap adoption, every-target route evidence, and the
 loading/failed Usage fallback are implemented by Milestone 5 of the
 [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
-Its live reader temporarily also accepts complete Serve bootstraps until
-Milestone 6 switches emission and reading to scoped-only together.
+Milestone 6 switches emission and live reading to exact scope together; only
+the separate static state form remains external and complete after resolution.
 
 ## Boundary
 
@@ -24,13 +24,16 @@ a private descriptor in a separate `application/json` script with
 temporary-render token never enter the public catalogue or shell bootstrap.
 
 The live document has `data-mokly-host-capabilities` and loads
-`/__mokly/client/react-host.js`. That host imports the same
-`react-shell.js` module used by export, creates CLI-owned capabilities, and
-calls `hydrateMoklyShell(document, capabilities)`. Importing `react-shell.js`
-while the host marker is present does not auto-hydrate. This ordering ensures
-React receives its capability context before creating the root. Export has no
-marker, descriptor, token, private host modules, or host loader; its direct
-`react-shell.js` import auto-hydrates.
+`/__mokly/client/react-host.js`. That self-contained live host uses the strict
+scoped hydration entry, creates CLI-owned capabilities, and calls
+`hydrateMoklyShell(document, capabilities)`. The separate static
+`react-shell.js` retains the external-bootstrap hydration bytes used before
+live scoping; it only ships in finalized pages, whose bootstrap is the compact
+external form. This separation keeps static artifacts byte-identical without
+leaving a complete-live mode in the runtime API. React receives its capability
+context before the live root is created. Export has no marker, descriptor,
+token, private host modules, or host loader; its direct `react-shell.js` import
+auto-hydrates.
 
 The descriptor contains:
 

@@ -30,9 +30,7 @@ export async function buildBrowserModules(sourceRoot, target, options = {}) {
       (await fs.readdir(sourceRoot))
         .filter((name) => name.endsWith(".ts"))
         .map((name) => [
-          name === "react_host.ts" && options.viewerBrowserBundle
-            ? "react-host"
-            : name.slice(0, -3),
+          name === "react_host.ts" ? "react-host" : name.slice(0, -3),
           path.join(sourceRoot, name),
         ]),
     ),

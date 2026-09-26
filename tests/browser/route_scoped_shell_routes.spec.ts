@@ -105,7 +105,6 @@ test("development React hydrates a scoped live page with initial Usage ready", a
       contentType: "text/javascript",
     }),
   );
-  await page.route("**/view/**", (route) => fulfillScopedShell(route));
   await page.goto(actionRoute);
   await expectCleanHydration(page, errors, "scoped live hydration");
   const bootstrap = await page

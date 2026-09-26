@@ -114,12 +114,11 @@ that exact snapshot disappears. Identity-less legacy history adopts only an
 unchanged removed record; metadata changes reject live adoption and preserve the
 existing document reload boundary.
 The runtime-only scoped catalogue model, projection and strict reader back
-browser hydration and route/live evidence through one explicit transitional
-mode. It accepts a complete model or an exact scoped model, while any omission
-activates strict scope enforcement. Serve emission remains complete until it
-and this reader switch to scoped-only together in Milestone 6 of the
-route-scoped bootstrap plan. Capture keeps its existing complete reader until
-that milestone.
+browser hydration and route/live evidence through one exact-scope boundary.
+Complete live models, missing route-owned usage and leaked out-of-scope usage
+are rejected. Static external references retain their separate complete-model
+resolution path. Capture validates each live page with the same strict reader
+before replacing its scoped model with that external reference.
 Static export uses `src/standalone/static_workspace_evidence.ts` to read inert
 workspace JSON from a destination shell in the mounted deployment, validating
 the response route, compact catalogue reference, and delivery identities against

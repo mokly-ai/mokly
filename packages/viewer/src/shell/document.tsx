@@ -2,6 +2,7 @@
 
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
+import { projectScopedCatalogue } from "../catalogue/scoped_projection.js";
 import {
   serializeViewerCapabilityDescriptor,
   viewerCapabilityDescriptor,
@@ -43,9 +44,18 @@ export function renderHydratedShellPage(
 ): string {
   if (!context.readModel)
     throw new Error("Hydrated shell rendering requires a public catalogue.");
-  const resolvedBootstrap = shellBootstrap(context.readModel, view, context);
+  const completeBootstrap = shellBootstrap(context.readModel, view, context);
+  const resolvedBootstrap = context.delivery
+    ? completeBootstrap
+    : {
+        ...completeBootstrap,
+        catalogue: projectScopedCatalogue(
+          context.readModel,
+          completeBootstrap.view,
+        ),
+      };
   const bootstrap = context.delivery
-    ? externalShellBootstrap(resolvedBootstrap)
+    ? externalShellBootstrap(completeBootstrap)
     : resolvedBootstrap;
   const initialWorkspace =
     privateCatalogue &&

@@ -7,11 +7,10 @@ The serialize-once embedded-state boundary is implemented by Milestone 3 of the
 Milestone 4 implements the runtime-only scoped model, shared route resolver,
 pure projection and strict scoped reader as isolated data-layer entry points.
 Milestone 5 implements scoped shell hydration, frame and Usage presentation,
-route/live evidence adoption and retry. Live emission and capture remain
-targets tracked by later milestones of that plan. This contract changes live
-Serve hydration and captured-page validation only. The public catalogue v1
-format, static artifact bytes, and application-owned `MoklyViewer` sources
-remain unchanged.
+route/live evidence adoption and retry. Milestone 6 implements scoped Serve
+emission, strict live reading and captured-page validation. The public
+catalogue v1 format, static artifact bytes, and application-owned `MoklyViewer`
+sources remain unchanged.
 
 ## Purpose And Boundary
 
@@ -103,14 +102,12 @@ The reader rejects leaked out-of-scope usage, omitted in-scope usage, a scope
 that does not match the route/snapshot, dangling references, and all malformed
 real usage. It does not accept a producer-declared scope as evidence.
 
-During the staged rollout, `readLiveShellBootstrap` owns one explicit
-`transitional` mode for browser hydration, route evidence and live refresh. It
-accepts either a complete bootstrap with no `omitted` view, or an exactly scoped
-bootstrap that passes every strict scope rule above. Any payload containing one
-omission is treated as scoped; partial or leaked hybrids are rejected. Static
-external bootstraps and `readCatalogue` keep their existing readers. Milestone 6
-changes the one live mode to scoped-only together with Serve emission, so an
-intermediate build never rejects every still-complete Serve page.
+`readLiveShellBootstrap` accepts only an exactly scoped bootstrap that passes
+every strict scope rule above. Browser hydration, route evidence and live
+refresh all use that boundary; complete live bootstraps and partial or leaked
+hybrids are rejected. The companion state reader additionally accepts the
+unchanged compact static external form. Static external bootstraps and
+`readCatalogue` otherwise keep their existing readers.
 
 The external bootstrap reader validates the compact reference as today. After
 the complete deployment catalogue is fetched, identity, content revision,

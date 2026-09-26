@@ -13,13 +13,12 @@ import resolves within that complete inventory.
 `host_capability_descriptor.ts` validates the private live Serve bootstrap and
 source identity. `host_capabilities.ts` defines the behavior context, atomic
 public/private evidence revision and route/source cancellation scope. Route and
-live evidence use the one transitional live reader: complete pages remain valid
-until Serve emission changes, while a page containing any `omitted` usage must
-be exactly scoped. The accepted catalogue and complete private workspace
-replace the installed scoped model together, so usage from visited routes never
-accumulates. A rejected current route read is reported to the shell as failed
-Usage; obsolete or aborted reads stay inert. Both modules are kept protocol
-modules; static export omits their standalone browser outputs.
+live evidence use the one strict live reader, which accepts only the exact
+scope derived from the page route. The accepted catalogue and complete private
+workspace replace the installed scoped model together, so usage from visited
+routes never accumulates. A rejected current route read is reported to the
+shell as failed Usage; obsolete or aborted reads stay inert. Both modules are
+kept protocol modules; static export omits their standalone browser outputs.
 
 Disclosure capture and pre-hydration navigation width capture are owned directly
 under `src/standalone`. The synchronous navigation bootstrap records native

@@ -9,10 +9,7 @@ import type {
 import type { GeneratedComponentView } from "../components/views.js";
 import type { ShellRecoverySnapshot } from "../shell/store_state.js";
 import type { WorkspaceData } from "../shell/workspace_data.js";
-import {
-  LIVE_SHELL_BOOTSTRAP_MODE,
-  readLiveShellBootstrap,
-} from "../standalone/scoped_bootstrap.js";
+import { readLiveShellBootstrap } from "../standalone/scoped_bootstrap.js";
 
 import {
   viewerCapabilityRequestMatches,
@@ -119,7 +116,7 @@ export function readViewerRouteEvidenceRevision(
   value: unknown,
   workspace?: WorkspaceData,
 ): ViewerEvidenceRevision | undefined {
-  const bootstrap = readLiveShellBootstrap(value, LIVE_SHELL_BOOTSTRAP_MODE);
+  const bootstrap = readLiveShellBootstrap(value);
   const route = bootstrap.view.kind === "target" ? bootstrap.view.route : null;
   if (
     route !== request.route ||

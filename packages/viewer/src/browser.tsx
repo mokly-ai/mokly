@@ -27,15 +27,25 @@ import { isExternalCatalogueReference } from "./standalone/catalogue_reference.j
 import { StandaloneShellDocument } from "./standalone/document.js";
 import { prepareHydrationState } from "./standalone/preferences.js";
 import {
-  LIVE_SHELL_BOOTSTRAP_MODE,
   readLiveShellBootstrapState,
   type LiveShellBootstrap,
   type LiveShellBootstrapState,
 } from "./standalone/scoped_bootstrap.js";
 import { staticWorkspaceEvidence } from "./standalone/static_workspace_evidence.js";
 
-const hydratedDocuments = new WeakSet<Document>();
-const pendingDocuments = new WeakSet<Document>();
+interface BrowserHydrationState {
+  hydratedDocuments: WeakSet<Document>;
+  pendingDocuments: WeakSet<Document>;
+}
+
+const hydrationGlobal = globalThis as typeof globalThis & {
+  __moklyViewerHydrationStateV1?: BrowserHydrationState;
+};
+const hydrationState = (hydrationGlobal.__moklyViewerHydrationStateV1 ??= {
+  hydratedDocuments: new WeakSet<Document>(),
+  pendingDocuments: new WeakSet<Document>(),
+});
+const { hydratedDocuments, pendingDocuments } = hydrationState;
 
 interface EmbeddedCapabilityDescriptor {
   descriptor?: ViewerCapabilityDescriptor;
@@ -58,10 +68,7 @@ export function hydrateMoklyShell(
   );
   if (!state?.textContent) return;
   const bootstrapJson = state.textContent;
-  const bootstrapState = readLiveShellBootstrapState(
-    JSON.parse(bootstrapJson),
-    LIVE_SHELL_BOOTSTRAP_MODE,
-  );
+  const bootstrapState = readLiveShellBootstrapState(JSON.parse(bootstrapJson));
   const embeddedCapability = readCapabilityDescriptor(doc, capabilities);
   if (!isExternalShellBootstrap(bootstrapState)) {
     const bootstrap = bootstrapState;

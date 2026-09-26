@@ -4,11 +4,14 @@ import { isDeepStrictEqual } from "node:util";
 
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
+import { readCatalogue } from "@mokly/viewer";
 import type { CatalogueReadModel } from "@mokly/viewer";
 import {
   externalShellBootstrap,
-  readShellBootstrap,
+  projectScopedCatalogue,
+  readScopedShellBootstrap,
   serializeShellBootstrap,
+  type ShellCatalogueReadModel,
 } from "@mokly/viewer/runtime";
 
 import { exportError } from "./error.js";
@@ -16,12 +19,25 @@ import { exportError } from "./error.js";
 type HtmlNode = DefaultTreeAdapterMap["node"];
 type HtmlElement = DefaultTreeAdapterMap["element"];
 
+/** One complete published model validated before any captured page is compared. */
+export interface CapturedShellCatalogue {
+  readonly model: CatalogueReadModel;
+}
+
+/** Validate the complete shared model once for a captured publication build. */
+export function readCapturedShellCatalogue(
+  value: unknown,
+): CapturedShellCatalogue {
+  return { model: readCatalogue(value) };
+}
+
 /** Replace one captured live read model with the matching shared static reference. */
 export function externalizeCapturedShell(
   name: string,
   html: string,
-  catalogue: CatalogueReadModel,
+  published: CapturedShellCatalogue,
 ): string {
+  const catalogue = published.model;
   const document = parse(html, { sourceCodeLocationInfo: true });
   const scripts = matchingScripts(document);
   if (scripts.length !== 1)
@@ -33,14 +49,15 @@ export function externalizeCapturedShell(
     throw exportError(`Invalid captured shell bootstrap: ${name}`);
   let bootstrap;
   try {
-    bootstrap = readShellBootstrap(JSON.parse(html.slice(start, end)));
+    bootstrap = readScopedShellBootstrap(JSON.parse(html.slice(start, end)));
   } catch (cause) {
     throw exportError(`Invalid captured shell bootstrap: ${name}`, cause);
   }
+  const expected = projectScopedCatalogue(catalogue, bootstrap.view);
   if (
     bootstrap.context.comparisons !== (catalogue.comparisonUrl !== null) ||
     !capturedPreviewsRemainValid(bootstrap.catalogue, catalogue) ||
-    !sameRenderedCatalogue(bootstrap.catalogue, catalogue)
+    !sameRenderedCatalogue(bootstrap.catalogue, expected)
   )
     throw exportError(
       `Captured shell catalogue does not match the published model: ${name}`,
@@ -50,12 +67,12 @@ export function externalizeCapturedShell(
 }
 
 function sameRenderedCatalogue(
-  captured: CatalogueReadModel,
-  published: CatalogueReadModel,
+  captured: ShellCatalogueReadModel,
+  published: ShellCatalogueReadModel,
 ): boolean {
   if ((captured.comparisonUrl === null) !== (published.comparisonUrl === null))
     return false;
-  const normalize = (model: CatalogueReadModel): CatalogueReadModel => ({
+  const normalize = (model: ShellCatalogueReadModel) => ({
     ...model,
     deploymentId: "0".repeat(64),
     revision: { content: 0, evidence: 0 },
@@ -69,7 +86,7 @@ function sameRenderedCatalogue(
 
 /** Finalization may add descriptors, but cannot replace one already rendered. */
 function capturedPreviewsRemainValid(
-  captured: CatalogueReadModel,
+  captured: ShellCatalogueReadModel,
   published: CatalogueReadModel,
 ): boolean {
   return captured.removedEntries.every((removed, index) => {

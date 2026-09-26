@@ -23,6 +23,10 @@ test("route evidence loading fences revision, location, and cancellation", async
     ...descriptor,
     workspace: workspaceEvidence(route),
   };
+  environment.publicCatalogue = projectScopedCatalogue(catalogue, {
+    kind: "target",
+    route,
+  });
   environment.responses.push(htmlResponse(environment.location.href));
   const capabilities = createReactViewerCapabilities(descriptor, environment);
   assert.equal(
@@ -100,7 +104,10 @@ test("route evidence atomically carries a newer public and private revision", as
   const route = catalogue.screens[0]!.route;
   const next = structuredClone(catalogue);
   next.revision.evidence += 2;
-  environment.publicCatalogue = next;
+  environment.publicCatalogue = projectScopedCatalogue(next, {
+    kind: "target",
+    route,
+  });
   environment.location.href = `http://localhost/view/${route}`;
   environment.descriptor = {
     ...descriptor,
@@ -126,10 +133,13 @@ test("route evidence atomically carries a newer public and private revision", as
   assert.equal(revision.catalogue.revision.evidence, next.revision.evidence);
   assert.equal(revision.workspace?.entry.route, route);
 
-  environment.publicCatalogue = {
-    ...next,
-    revision: { ...next.revision, evidence: next.revision.evidence + 1 },
-  };
+  environment.publicCatalogue = projectScopedCatalogue(
+    {
+      ...next,
+      revision: { ...next.revision, evidence: next.revision.evidence + 1 },
+    },
+    { kind: "target", route },
+  );
   environment.responses.push(htmlResponse(environment.location.href));
   assert.equal(
     await createReactViewerCapabilities(

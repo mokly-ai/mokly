@@ -6,14 +6,12 @@ export {
   serializeShellBootstrap,
 } from "./standalone/bootstrap.js";
 export {
-  LIVE_SHELL_BOOTSTRAP_MODE,
   readLiveShellBootstrap,
   readLiveShellBootstrapState,
   readScopedShellBootstrap,
 } from "./standalone/scoped_bootstrap.js";
 export type {
   LiveShellBootstrap,
-  LiveShellBootstrapMode,
   LiveShellBootstrapState,
   ScopedShellBootstrap,
 } from "./standalone/scoped_bootstrap.js";

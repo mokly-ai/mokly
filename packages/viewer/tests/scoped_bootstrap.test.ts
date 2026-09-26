@@ -47,20 +47,16 @@ test("scoped bootstraps for every route shape round-trip canonical bytes", () =>
   }
 });
 
-test("the live reader's explicit transition mode accepts complete or exact scope", () => {
+test("the live reader accepts only exact route scope", () => {
   const view = { kind: "target" as const, route: "screens/home.html" };
   const complete = { catalogue: model, context, view };
   const scoped = JSON.parse(scopedBytes(view));
   assert.deepEqual(
-    readLiveShellBootstrap(complete, "transitional").catalogue,
-    model,
-  );
-  assert.deepEqual(
-    readLiveShellBootstrap(scoped, "transitional"),
+    readLiveShellBootstrap(scoped),
     readScopedShellBootstrap(scoped),
   );
   assert.throws(
-    () => readLiveShellBootstrap(complete, "scoped"),
+    () => readLiveShellBootstrap(complete),
     /out-of-scope usage must be omitted/i,
   );
 
@@ -68,12 +64,12 @@ test("the live reader's explicit transition mode accepts complete or exact scope
   hybrid.catalogue.components[0].variants[0].views[0].usage =
     model.components[0]!.variants[0]!.views[0]!.usage;
   assert.throws(
-    () => readLiveShellBootstrap(hybrid, "transitional"),
+    () => readLiveShellBootstrap(hybrid),
     /out-of-scope usage must be omitted/i,
   );
 });
 
-test("the transitional state reader leaves static external references unchanged", () => {
+test("the live state reader leaves static external references unchanged", () => {
   const external = {
     catalogue: {
       identity: model.identity.id,
@@ -84,10 +80,7 @@ test("the transitional state reader leaves static external references unchanged"
     context,
     view: { kind: "home" as const },
   };
-  assert.deepEqual(
-    readLiveShellBootstrapState(external, "transitional"),
-    external,
-  );
+  assert.deepEqual(readLiveShellBootstrapState(external), external);
 });
 
 test("public catalogue reading still rejects shell-only omitted usage", () => {

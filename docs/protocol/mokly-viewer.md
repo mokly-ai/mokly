@@ -22,9 +22,8 @@ Serialize-once embedded state is implemented by Milestone 3 of the
 [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
 Milestone 4 implements its isolated route-scoped model, projection and strict
 reader. Milestone 5 implements scoped hydration, pending frames and atomic
-route/live-evidence adoption behind a transitional reader that also accepts
-complete Serve bootstraps. Milestone 6 switches emission and that reader to
-scoped-only together.
+route/live-evidence adoption. Milestone 6 switches Serve emission and every live
+reader to exact route scope together; complete live bootstraps are rejected.
 
 ## Package And Props
 

@@ -347,10 +347,13 @@ boundary accepts only that complete v1 model and rejects `omitted`.
 The runtime subpath exposes `projectScopedCatalogue`, the
 `ShellCatalogueUsage`/`ShellCatalogueReadModel` types and the strict
 `readScopedShellBootstrap` boundary. Browser hydration and live evidence use
-the centralized `readLiveShellBootstrap` transition mode: a payload is either
-complete or exactly scoped, never a partial hybrid. Serve still emits complete
-bootstraps until Milestone 6 switches emission and the reader to scoped-only
-together.
+the centralized `readLiveShellBootstrap` boundary, which accepts only exact
+route scope and rejects complete or partial live payloads. Its state reader
+also accepts the unchanged external reference used by finalized static pages.
+Serve's private `react-host.js` bundles that strict entry. The delivered static
+`react-shell.js` retains its previous bytes and is confined to the external
+reference path, so changing live scope does not change a finalized artifact's
+client asset or deployment identity.
 
 Full-document rendering serializes each bootstrap and capability descriptor
 once. Hydration reuses the exact embedded text across later React renders;

@@ -80,7 +80,10 @@ test("React evidence refresh validates page descriptors before store adoption", 
       relatedComponents: [{ title: "Field", route: "components/field.html" }],
     },
   };
-  environment.publicCatalogue = next;
+  environment.publicCatalogue = projectScopedCatalogue(next, {
+    kind: "target",
+    route: currentRequest().route!,
+  });
   environment.responses.push(htmlResponse(environment.location.href));
   const adopted: { version: number; related: number }[] = [];
   const controller = new AbortController();
@@ -119,7 +122,10 @@ test("React evidence refresh rejects mixed public and private revisions", async 
       updateVersion: 5,
     },
   };
-  environment.publicCatalogue = publicCatalogue;
+  environment.publicCatalogue = projectScopedCatalogue(publicCatalogue, {
+    kind: "target",
+    route: currentRequest().route!,
+  });
   environment.responses.push(htmlResponse(environment.location.href));
   let adopted = false;
   createReactViewerCapabilities(descriptor, environment).updates.subscribe(

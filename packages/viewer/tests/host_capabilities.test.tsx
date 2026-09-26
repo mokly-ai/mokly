@@ -24,6 +24,14 @@ import {
 } from "../src/shell/capability_context.js";
 import { renderHydratedShellPage } from "../src/shell/document.js";
 import type { WorkspaceData } from "../src/shell/workspace_data.js";
+import { workspaceData } from "../src/shell/workspace_data.js";
+import {
+  readShellBootstrapState,
+  resolveShellBootstrap,
+  serializeShellBootstrap,
+  shellBootstrap,
+} from "../src/standalone/bootstrap.js";
+import { readScopedShellBootstrap } from "../src/standalone/scoped_bootstrap.js";
 import { viewerCatalogue, viewerView } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
@@ -209,6 +217,16 @@ test("live SSR carries a private descriptor while export carries no host loader"
   assert.match(live, /data-mokly-host-capabilities=""/);
   assert.match(live, /client\/react-host\.js/);
   assert.match(live, new RegExp(token));
+  const bootstrapState = live.match(
+    /data-mokly-shell-bootstrap="" type="application\/json">([^<]+)<\/script>/,
+  )?.[1];
+  assert.ok(bootstrapState);
+  const bootstrap = readScopedShellBootstrap(JSON.parse(bootstrapState));
+  assert.ok(
+    bootstrap.catalogue.screens.some((screen) =>
+      screen.views.some((screenView) => screenView.usage.status === "omitted"),
+    ),
+  );
   const state = live.match(
     /data-mokly-host-capability-state="" type="application\/json">([^<]+)<\/script>/,
   )?.[1];
@@ -284,4 +302,58 @@ test("server rendering serializes each embedded state exactly once", async () =>
     await session.post("Profiler.stopPreciseCoverage");
     session.disconnect();
   }
+});
+
+test("static shell, workspace and deployment derive from the complete model", () => {
+  const display = viewerCatalogue(catalogue);
+  const { publicModel: _publicModel, ...privateDisplay } = display;
+  const view = viewerView(display, {
+    ...defaultSelection,
+    screenId: catalogue.components[0]!.id,
+  });
+  const deploymentId = "d".repeat(64);
+  const publicModel = { ...catalogue, deploymentId };
+  const delivery = {
+    schemaVersion: 2 as const,
+    deploymentId,
+    canonicalPath: "/view/components/action.html",
+    comparisonUrl: null,
+    idRoutes: {},
+  };
+  const context = {
+    base: source.base,
+    delivery,
+    readModel: publicModel,
+    updateVersion: 0,
+  };
+  const html = renderHydratedShellPage(view, context, privateDisplay);
+  const bootstrapJson = html.match(
+    /data-mokly-shell-bootstrap="" type="application\/json">([^<]+)<\/script>/,
+  )?.[1];
+  const workspaceJson = html.match(
+    /data-workspace-data="" type="application\/json">([^<]+)<\/script>/,
+  )?.[1];
+  assert.ok(bootstrapJson);
+  assert.ok(workspaceJson);
+  const resolved = resolveShellBootstrap(
+    readShellBootstrapState(JSON.parse(bootstrapJson)),
+    publicModel,
+  );
+  assert.equal(
+    serializeShellBootstrap(resolved),
+    serializeShellBootstrap(shellBootstrap(publicModel, view, context)),
+  );
+  assert.equal(resolved.catalogue.deploymentId, deploymentId);
+  assert.equal(resolved.context.delivery?.deploymentId, deploymentId);
+  assert.equal(view.kind, "target");
+  if (
+    view.kind !== "target" ||
+    view.target.kind !== "entry" ||
+    view.target.entry.kind !== "component"
+  )
+    throw new Error("Expected a current component route.");
+  assert.deepEqual(
+    JSON.parse(workspaceJson),
+    workspaceData(privateDisplay, context, view.target.entry),
+  );
 });

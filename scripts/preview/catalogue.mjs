@@ -8,7 +8,10 @@ import {
 } from "../../dist/catalogue/serialization.js";
 import { isInside, projectRealPath } from "../../dist/config/paths.js";
 import { errorMessage } from "../../dist/errors.js";
-import { externalizeCapturedShell } from "../../dist/export/captured_shell.js";
+import {
+  externalizeCapturedShell,
+  readCapturedShellCatalogue,
+} from "../../dist/export/captured_shell.js";
 import { withExportCleanup } from "../../dist/export/cleanup.js";
 import { assertExportOwnership } from "../../dist/export/ownership.js";
 import { resolveExportOutput } from "../../dist/export/paths.js";
@@ -151,6 +154,7 @@ export async function buildPreview(config, output, options = {}) {
           removedPreviews: comparison?.removedPreviews,
           revision: { content: 0, evidence: 0 },
         });
+        const capturedCatalogue = readCapturedShellCatalogue(readModel);
         for (const name of capturedShells) {
           const html = await fs.promises.readFile(
             path.join(stage, name),
@@ -159,7 +163,7 @@ export async function buildPreview(config, output, options = {}) {
           await writeText(
             stage,
             name,
-            externalizeCapturedShell(name, html, readModel),
+            externalizeCapturedShell(name, html, capturedCatalogue),
           );
         }
         await writeText(stage, CATALOGUE_PATH, serializeCatalogue(readModel));

@@ -345,19 +345,19 @@ emits them, while complete catalogues keep today's behavior.
       accumulates. Audit `catalogue_updates.ts` separately and keep its unused
       public-catalogue boundary strict. `?instance=` selections from `Used by`
       links must resolve after adoption.
-- [x] Add one live-bootstrap reader with an explicit transitional mode that
-      accepts either an ordinary complete bootstrap or an exactly scoped one.
-      Browser hydration, route evidence and live refresh use that mode in this
-      milestone; static external bootstraps and `readCatalogue` remain strict
-      and unchanged. Milestone 6 removes complete-live acceptance when it
-      switches Serve emission and reading together.
+- [x] Add one live-bootstrap reader with an explicit transitional mode for the
+      Milestone 5 rollout. It accepted either an ordinary complete bootstrap or
+      an exactly scoped one while static external bootstraps and `readCatalogue`
+      stayed strict and unchanged. Milestone 6 has now removed this completed
+      transition and accepts only exact live scope.
 - [x] Change `refreshEvidence` in `src/client/react_capability_updates.ts` to
       read the public bootstrap from the same fetched shell page as its private
       descriptor and remove the second `__mokly/catalogue.json` request. Before
       Milestone 6 that bootstrap still carries the complete projection; after
       Milestone 6 the same path adopts the scoped projection. Test mixed
       descriptor/bootstrap revisions, stale sources and updates, rejected
-      candidates, and the absence of the second request.
+      candidates, and the absence of the second request. Milestone 6 now emits
+      the scoped projection on this path.
   - [x] Update the existing reload-recovery browser regression to preserve its
         no-extra-fetch intent with zero `catalogue.json` requests after an
         evidence update; it previously expected the removed second request.
@@ -404,28 +404,91 @@ emits them, while complete catalogues keep today's behavior.
 
 Summary: switch Serve and export/preview capture to route-scoped bootstraps.
 
-- [ ] Build the scoped bootstrap in `renderHydratedShellPage` from
+- [x] Build the scoped bootstrap in `renderHydratedShellPage` from
       `context.readModel` and the page view, derive the server-rendering props
       from that same scoped model, and keep computing the initial private
       workspace from the complete private catalogue.
-- [ ] Confirm that route-evidence and live-evidence responses, which are
+- [x] Confirm that route-evidence and live-evidence responses, which are
       ordinary shell pages, are scoped to their own route, and that Serve's
       `catalogue.json` stays complete.
-- [ ] In `externalizeCapturedShell` and
+- [x] In `externalizeCapturedShell` and
       [`scripts/preview/catalogue.mjs`](../scripts/preview/catalogue.mjs),
       validate the published model once per build, validate each captured
       scoped bootstrap, and compare it with the scoped projection of the
       published model so drift is still rejected for everything a page carries.
-- [ ] Add a regression proving that the example's export and repository
+  - [x] Add a regression that leaks one out-of-scope usage record into a
+        captured page and requires capture to reject it.
+- [x] Add a regression proving that the example's export and repository
       preview artifacts are byte-identical before and after the switch
       (catalogue, shells, workspace JSON and deployment identity).
-- [ ] Add the guardrail tests on real Serve pages: bootstrap invariance when
+  - Manual comparison on 2026-09-26 used the artifacts saved at `214fffa` and
+    the post-switch tree. The Changes builds were supplied the same captured
+    96-path Git evidence list, because newly changed implementation/test paths
+    are themselves a different comparison input. All regular files were
+    enumerated in sorted path order and hashed with SHA-256.
+    - Consumer export: 1,587 files, 108,288,926 bytes, whole-manifest digest
+      `58cbf6ded9b47075d532303e8ffd754c990d4604ee0488d4316dad8f97f2f1e5`
+      before and after; zero differing files.
+    - Ordinary repository preview: 716 files, 86,562,915 bytes,
+      `ec7e40d8a10c15f6e60254ccb8ec81f413455d26392fe1665a8affc33c563221`
+      before and after; zero differing files.
+    - Repository preview with Changes: 1,590 files, 105,865,839 bytes,
+      `0c977ab6100372ec5017a469f76aacc7b5c17be2b260c0b2213ea631421b26b9`
+      before and after; zero differing files.
+    - The comparison covers the complete catalogues, canonical and id-alias
+      shells, workspace scripts, ownership inventories, comparison JSON and
+      snapshots, client assets and finalized deployment identities.
+  - Automatic coverage reconstructs static external state against the complete
+    published model and requires identical shell-bootstrap bytes, private
+    workspace JSON and deployment identity. The static hydration bundle's
+    established SHA-256 is pinned as
+    `391560c509ed65e7e0c613d3d7582c50d1167848292cdd665817002ff6d1f11c`.
+- [x] Keep the static external-bootstrap client byte-identical while deleting
+      the complete-live reader mode: Serve's private `react-host.js` now
+      bundles the strict live entry, while finalized pages retain the previous
+      external-only `react-shell.js` bytes.
+- [x] Add the guardrail tests on real Serve pages: bootstrap invariance when
       another entry's usage changes, and the 1 MiB budget for the example's
       largest bootstrap.
-- [ ] Update existing tests that assert complete Serve bootstraps, and exercise
+  - All 120 current example routes were measured from real Serve output. The
+    largest was `design/review/outcomes/changed.html` at 450,045 bytes, below
+    the 1,048,576-byte limit. The automated inventory also covers missing and
+    synthetic historical routes.
+- [x] Update existing tests that assert complete Serve bootstraps, and exercise
       navigation, loading and usage flows against the real Serve.
-- [ ] Run the complete `cargo xtask check` gate with no failures or skips.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits, and
+  - The unchanged development hydration inventory passed all 115 catalogue
+    routes plus its three shell routes on native scoped pages. The focused
+    hydration, static and evidence run passed 136 of 136 browser tests.
+  - Updated tests retaining their prior intent:
+    `packages/viewer/tests/boundary.test.ts`,
+    `packages/viewer/tests/host_capabilities.test.tsx`,
+    `packages/viewer/tests/scoped_bootstrap.test.ts`,
+    `tests/client_catalogue_refresh.test.ts`,
+    `tests/client_react_capabilities.test.ts`,
+    `tests/client_route_evidence.test.ts`, `tests/server_live_updates.test.ts`,
+    `tests/browser/route_scoped_shell_routes.spec.ts`, and
+    `tests/browser/scoped_shell_fixture.ts`. The shared development hydration
+    fixture and its two explicit delay cases in
+    `tests/browser/react_shell_hydration_helpers.ts` and
+    `tests/browser/react_shell_hydration.spec.ts` now target the self-contained
+    live host while retaining the same pre-hydration assertions.
+    `scripts/package/fixture.mjs` keeps the packed-consumer smoke assertion
+    aligned with the self-contained strict live host.
+  - New capture and real-Serve guardrails live in
+    `tests/captured_shell_scope.test.ts` and
+    `tests/server_route_scoped_bootstrap.test.ts`.
+- [x] Record one ordinary preview sanity timing with the same command before
+      and after the switch.
+  - `node scripts/preview/build.mjs --out …` took 174.886 seconds for the first
+    baseline run and 33.737 seconds for the first post-switch run. The latter
+    reused the derived baseline prepared by the former, so this is a sanity
+    result rather than the controlled performance comparison owned by
+    Milestone 7; a repeat after the static-client split took 34.231 seconds.
+- [x] Run the complete `cargo xtask check` gate with no failures or skips.
+  - Complete gate on 2026-09-26: unit 2,455 passed; browser 789 passed;
+    zero failures, skips or cancellations in either suite. Repository, package,
+    Rust, typecheck, example and five packed-consumer smoke stages also passed.
+- [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)

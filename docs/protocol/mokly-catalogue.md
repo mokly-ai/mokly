@@ -10,9 +10,9 @@ implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
 The public model remains implemented and unchanged. The isolated route-scoped
 shell model, projection and strict reader are implemented by Milestone 4 of the
-[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md);
-Serve continues to emit the complete model until the coordinated live switch
-in Milestone 6.
+[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md), and
+Milestone 6 uses them for every live Serve page while this public endpoint stays
+complete.
 
 ## Location And Types
 
