@@ -38,7 +38,7 @@ for (const watch of [false, true]) {
           200,
         );
         const pageResponse = await fetch(
-          `${running.url}/__mokly/diffs/review.json?page=archive%2Fremoved.html`,
+          `${running.url}/__mokly/diffs/review.json?page=pages%2Fremoved-page.html`,
         );
         assert.equal(
           pageResponse.status,
@@ -68,7 +68,7 @@ for (const watch of [false, true]) {
           "main { color: rebeccapurple; }",
         );
         const screenResponse = await fetch(
-          `${running.url}/__mokly/diffs/review.json?route=screens%2Fremoved.html`,
+          `${running.url}/__mokly/diffs/review.json?route=screens%2Fremoved-screen.html`,
         );
         assert.equal(
           screenResponse.status,

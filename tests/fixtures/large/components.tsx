@@ -15,7 +15,6 @@ export function createComponents(area: string) {
     id: `${area}-action`,
     title: "Action",
     description: "A reusable action.",
-    route: `${area}/components/action.html`,
     propSchema: {
       kind: "object",
       properties: {
@@ -58,7 +57,6 @@ export function createComponents(area: string) {
     id: `${area}-panel`,
     title: "Panel",
     description: "A summary with caller-owned content.",
-    route: `${area}/components/panel.html`,
     propSchema: {
       kind: "object",
       properties: { title: { schema: { kind: "string" } } },

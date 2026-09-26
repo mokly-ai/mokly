@@ -6,7 +6,7 @@ import {
   notFoundPage as renderNotFoundPage,
   viewPage as renderViewPage,
 } from "../dist/server/pages.js";
-import type { ManifestV6 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV7 } from "../packages/viewer/dist/registry/types.js";
 import type { Catalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
@@ -23,7 +23,7 @@ import {
 } from "./helpers/html.js";
 import { publicShellContext } from "./helpers/public_shell.js";
 
-const manifest: ManifestV6 = {
+const manifest: ManifestV7 = {
   entries: [
     {
       kind: "page",
@@ -105,10 +105,10 @@ const manifest: ManifestV6 = {
   ],
   generatedBy: "mokly",
   sourceFiles: ["entries/fixture.mockup.tsx"],
-  schemaVersion: 6,
+  schemaVersion: 7,
 };
 
-const darkManifest: ManifestV6 = {
+const darkManifest: ManifestV7 = {
   ...manifest,
   entries: manifest.entries.map((entry) =>
     entry.kind === "screen" && entry.id === "welcome"
@@ -123,7 +123,7 @@ const darkManifest: ManifestV6 = {
   ),
 };
 
-const taggedFlowManifest: ManifestV6 = {
+const taggedFlowManifest: ManifestV7 = {
   ...manifest,
   entries: manifest.entries.map((entry) =>
     entry.kind === "use-case"
@@ -132,7 +132,7 @@ const taggedFlowManifest: ManifestV6 = {
   ),
 };
 
-const untaggedManifest: ManifestV6 = {
+const untaggedManifest: ManifestV7 = {
   ...manifest,
   entries: manifest.entries.map((entry) => {
     const { tags: _tags, ...untagged } = entry;

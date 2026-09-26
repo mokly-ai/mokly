@@ -12,7 +12,7 @@ export async function assertPublishedPagePreview(
   published: { kind: "page"; path: string },
 ): Promise<void> {
   const shell = await fs.readFile(
-    path.join(output, "view/archive/removed.html"),
+    path.join(output, "view/pages/removed-page.html"),
     "utf8",
   );
   const raw = /data-mokly-preview="([^"]*)"/.exec(shell)?.[1];

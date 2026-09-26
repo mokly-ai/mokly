@@ -1,6 +1,5 @@
 import { analyzeHierarchy, type HierarchyEntry } from "@mokly/viewer/data";
 
-import { isScreenVariantRoute } from "../authoring/variants.js";
 import { MoklyError } from "../errors.js";
 
 import { validateHistoricalCollections } from "./historical_collections.js";
@@ -63,9 +62,6 @@ function validateVariantParent(
     relationshipError(entry, "parent is not a screen");
   if (typeof parent.variantOf === "string") {
     relationshipError(entry, "parent is itself a variant");
-  }
-  if (!isScreenVariantRoute(parent.route as string, entry.route as string)) {
-    relationshipError(entry, "route does not match its parent screen");
   }
   if (
     mode === "current" &&

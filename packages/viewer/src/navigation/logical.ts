@@ -1,6 +1,8 @@
 /** Shared grammar for stable catalogue entry identifiers. */
 export const CATALOGUE_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+const WINDOWS_DEVICE_NAME_PATTERN = /^(?:aux|con|nul|prn|com[1-9]|lpt[1-9])$/i;
+
 /** Shared grammar for logical HTML fragment identifiers. */
 export const LOGICAL_FRAGMENT_PATTERN = /^[A-Za-z][A-Za-z0-9_:.-]*$/;
 
@@ -13,6 +15,16 @@ export interface LogicalTarget {
 /** Check one value against the stable catalogue-id grammar. */
 export function isCatalogueId(value: unknown): value is string {
   return typeof value === "string" && CATALOGUE_ID_PATTERN.test(value);
+}
+
+/** Return whether a value is a reserved Windows device filename stem. */
+export function isWindowsDeviceName(value: unknown): value is string {
+  return typeof value === "string" && WINDOWS_DEVICE_NAME_PATTERN.test(value);
+}
+
+/** Check one value against the portable global entry-id grammar. */
+export function isEntryId(value: unknown): value is string {
+  return isCatalogueId(value) && !isWindowsDeviceName(value);
 }
 
 /** Check one value against the bare logical-fragment grammar. */

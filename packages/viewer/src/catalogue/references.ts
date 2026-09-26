@@ -1,9 +1,9 @@
 import { decodeProps } from "../components/codec.js";
 import { validateControlledValues } from "../components/controls.js";
 import { canonicalJson, invalidData } from "../components/data.js";
-import { componentFragmentRoute } from "../components/paths.js";
 import { validateProps } from "../components/props.js";
 import { validateComponentViewRecord } from "../components/view_validation.js";
+import { componentFragmentRoute, viewRoute } from "../data/routes.js";
 import { analyzeHierarchy } from "../registry/hierarchy.js";
 
 import { projectTree } from "./tree.js";
@@ -84,9 +84,6 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
         const parentIsNotVariant =
           parent !== undefined && parent.variantOf === undefined;
         require(parentIsNotVariant, "variant parent cannot be a variant");
-        const routeMatchesParent =
-          parent !== undefined && variantRoute(parent.route, entry.route);
-        require(routeMatchesParent, "variant route must match its parent");
         require(canonicalJson(entry.navPath) ===
           canonicalJson(parent?.navPath), "variant path must match parent");
       }
@@ -168,8 +165,7 @@ function validateViews(
     ) === canonicalJson(axes), "views must match axes");
   unique(views.map((view) => `${view.viewport}/${view.colorScheme}`));
   for (const view of views) {
-    const stem = entry.route.slice(0, -5);
-    const expected = `static/${variantId ? componentFragmentRoute(entry.route, variantId, view.viewport, view.colorScheme) : `${stem}.${view.viewport}${view.colorScheme === "dark" ? ".dark" : ""}.html`}`;
+    const expected = `static/${variantId ? componentFragmentRoute(entry.route, variantId, view.viewport, view.colorScheme) : viewRoute("screen", entry.id, view.viewport, view.colorScheme)}`;
     require(historical
       ? view.fragmentPath === null
       : view.fragmentPath ===
@@ -201,11 +197,4 @@ function validateViews(
 
 function require(condition: boolean, message: string): void {
   if (!condition) invalidData("$catalogue", message);
-}
-
-function variantRoute(parentRoute: string, route: string): boolean {
-  if (!parentRoute.endsWith(".html") || !route.endsWith(".html")) return false;
-  const prefix = `${parentRoute.slice(0, -5)}.variants/`;
-  const slug = route.slice(prefix.length, -5);
-  return route.startsWith(prefix) && slug.length > 0 && !slug.includes("/");
 }

@@ -9,7 +9,7 @@ import type {
   ObjectPropSchema,
 } from "@mokly/viewer";
 
-import type { RoutedEntryInput } from "../authoring/types.js";
+import type { EntryInput } from "../authoring/types.js";
 
 export interface ComponentRenderContext {
   viewport: Viewport;
@@ -30,7 +30,7 @@ export interface ComponentVariant<P> {
 export interface ComponentInput<
   S extends ObjectPropSchema,
   Slots extends readonly string[],
-> extends RoutedEntryInput {
+> extends EntryInput {
   propSchema: S;
   slots?: Slots;
   controls?: {
@@ -51,10 +51,11 @@ export interface ComponentInput<
 }
 
 /** Runtime definition retains the adapter and slots only inside the consumer graph. */
-export interface ComponentDefinition extends RoutedEntryInput {
+export interface ComponentDefinition extends EntryInput {
   readonly __viaDefine: true;
   definedIn?: string;
   kind: "component";
+  route: string;
   propSchema: ObjectPropSchema;
   slots: readonly string[];
   controls: Readonly<Record<string, ComponentControl>>;

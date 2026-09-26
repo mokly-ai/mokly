@@ -16,6 +16,7 @@ export function validateEntry(
   entry: Record<string, unknown>,
   components = false,
   historicalCollection = false,
+  derivedRoutes = false,
 ): void {
   const kind = entry.kind;
   if (
@@ -76,7 +77,7 @@ export function validateEntry(
       `${String(entry.id)} has no route`,
     );
   }
-  validateRoute(entry.route, String(entry.id));
+  if (!derivedRoutes) validateRoute(entry.route, String(entry.id));
   if (entry.tags !== undefined && !stringArray(entry.tags)) {
     throw new MoklyError(
       "manifest-invalid",
@@ -84,11 +85,14 @@ export function validateEntry(
     );
   }
   if (kind === "component") validateManifestComponent(entry);
-  else if (kind === "screen") validateScreen(entry);
+  else if (kind === "screen") validateScreen(entry, derivedRoutes);
   else if (kind === "use-case") validateUseCase(entry);
 }
 
-function validateScreen(entry: Record<string, unknown>): void {
+function validateScreen(
+  entry: Record<string, unknown>,
+  derivedRoutes: boolean,
+): void {
   if (!record(entry.fragments)) {
     throw new MoklyError(
       "manifest-invalid",
@@ -103,7 +107,8 @@ function validateScreen(entry: Record<string, unknown>): void {
         `${String(entry.id)} has no ${viewport} fragment`,
       );
     }
-    validateRoute(fragment, `${String(entry.id)} ${viewport} fragment`);
+    if (!derivedRoutes)
+      validateRoute(fragment, `${String(entry.id)} ${viewport} fragment`);
   }
   if (entry.darkFragments !== undefined) {
     if (!record(entry.darkFragments)) {
@@ -120,7 +125,11 @@ function validateScreen(entry: Record<string, unknown>): void {
           `${String(entry.id)} has no ${viewport} dark fragment`,
         );
       }
-      validateRoute(fragment, `${String(entry.id)} ${viewport} dark fragment`);
+      if (!derivedRoutes)
+        validateRoute(
+          fragment,
+          `${String(entry.id)} ${viewport} dark fragment`,
+        );
     }
   }
   if (!stringArray(entry.useCaseIds)) {

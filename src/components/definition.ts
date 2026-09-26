@@ -1,6 +1,7 @@
 import type { ObjectPropSchema } from "@mokly/viewer";
 import {
   isCatalogueId,
+  entryRoute,
   validateControlledValues,
   validateControls,
   invalidData,
@@ -85,6 +86,7 @@ export function validateComponentDefinition(
     navPath: value.navPath === undefined ? [] : value.navPath,
     __viaDefine: true,
     kind: "component",
+    route: entryRoute("component", value.id),
     propSchema: structuredClone(value.propSchema),
     controls: structuredClone(controls),
     slots: [...slots].sort(),

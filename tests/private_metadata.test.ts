@@ -250,7 +250,7 @@ test("the former Mokabook manifest is accepted only from Git history", async (co
   };
   assert.throws(
     () => parseManifest(formerManifest),
-    /expected Mokly manifest schema version 6/,
+    /expected Mokly manifest schema version 7/,
   );
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),

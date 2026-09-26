@@ -49,10 +49,10 @@ test("Changes export packages removed previews into every delivery boundary", as
     ),
   );
   const page = model.removedEntries.find(
-    ({ entry }) => entry.route === "archive/removed.html",
+    ({ entry }) => entry.route === "pages/removed-page.html",
   );
   const screen = model.removedEntries.find(
-    ({ entry }) => entry.route === "screens/removed.html",
+    ({ entry }) => entry.route === "screens/removed-screen.html",
   );
   assert.deepEqual(screen?.preview, { kind: "screen" });
   assert.ok(page?.preview?.kind === "page");
@@ -67,12 +67,18 @@ test("Changes export packages removed previews into every delivery boundary", as
   const generationRoot = path.posix.dirname(
     path.posix.dirname(path.posix.dirname(pagePath)),
   );
-  assert.equal(pagePath, `${generationRoot}/pages/archive/removed.html.json`);
+  assert.equal(
+    pagePath,
+    `${generationRoot}/pages/pages/removed-page.html.json`,
+  );
   const preview = parseRemovedPagePreview(
     JSON.parse(await fs.readFile(path.join(fixture.output, pagePath), "utf8")),
   );
   assert.equal(preview.baseCommit, fixture.baseCommit);
-  assert.equal(preview.documentPath, "snapshots/before/archive/removed.html");
+  assert.equal(
+    preview.documentPath,
+    "snapshots/before/pages/removed-page.html",
+  );
   const document = await fs.readFile(
     path.join(fixture.output, generationRoot, preview.documentPath),
     "utf8",
@@ -81,7 +87,7 @@ test("Changes export packages removed previews into every delivery boundary", as
   assert.doesNotMatch(document, /Branch edit/);
   for (const name of [
     pagePath,
-    `${generationRoot}/snapshots/before/archive/removed.html`,
+    `${generationRoot}/snapshots/before/pages/removed-page.html`,
     `${generationRoot}/snapshots/before/assets/page.css`,
     `${generationRoot}/snapshots/before/assets/nested.css`,
     `${generationRoot}/snapshots/before/assets/past.png`,
@@ -117,7 +123,7 @@ test("Changes export packages removed previews into every delivery boundary", as
     ),
   );
   const desktop = review.screens
-    .find(({ route }) => route === "screens/removed.html")
+    .find(({ route }) => route === "screens/removed-screen.html")
     ?.views.find(({ viewport }) => viewport === "desktop");
   assert.ok(desktop?.beforePath);
   const screenDocument = await fs.readFile(
@@ -226,7 +232,7 @@ test("repository publication packages previews and default replacement removes t
     ),
   );
   const page = withChanges.removedEntries.find(
-    ({ entry }) => entry.route === "archive/removed.html",
+    ({ entry }) => entry.route === "pages/removed-page.html",
   );
   assert.ok(page?.preview?.kind === "page");
   await assertPublishedPagePreview(output, page.preview);

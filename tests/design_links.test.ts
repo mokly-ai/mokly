@@ -202,7 +202,7 @@ test("no design route doubles as a directory holding another design route", asyn
     );
 });
 
-test("the canonical documented inventory exactly matches the complete design registry", async () => {
+test("the canonical documented inventory exactly matches the complete design ids", async () => {
   const { manifest } = await designCatalogue;
   const spec = (
     await Promise.all(
@@ -214,15 +214,13 @@ test("the canonical documented inventory exactly matches the complete design reg
       ].map((file) => fs.readFile(path.join(repositoryRoot, file), "utf8")),
     )
   ).join("\n");
-  const documented = [
-    ...spec.matchAll(/\|\s*`(design-[^`]+)`\s*\|\s*`([^`]+)`/g),
-  ]
-    .map((match) => `${match[1]} ${match[2]}`)
+  const documented = [...spec.matchAll(/\|\s*`(design-[^`]+)`\s*\|/g)]
+    .map((match) => match[1])
     .sort();
   const actual = manifest.entries
     .flatMap((entry) =>
       entry.kind === "screen" && entry.id.startsWith("design-")
-        ? [`${entry.id} ${entry.route}`]
+        ? [entry.id]
         : [],
     )
     .sort();
@@ -309,7 +307,7 @@ test("a tag chip without a destination is a label, not a control", async () => {
       );
   let labels = 0;
   for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.route.startsWith("design/")) continue;
+    if (entry.kind !== "screen" || !entry.id.startsWith("design-")) continue;
     for (const route of Object.values(entry.fragments)) {
       const html = outputs.get(route);
       assert.ok(html, route);

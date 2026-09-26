@@ -9,9 +9,6 @@ import { loadConfig } from "../dist/config/load.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
-const nested =
-  'screen({ id: "home", title: "Home", description: "Home", slug: "home", mobile: "Mobile", desktop: "Desktop" })';
-
 for (const [kind, authored] of [
   ["screen", "[]"],
   ["screen", "undefined"],
@@ -21,10 +18,10 @@ for (const [kind, authored] of [
   test(`build rejects nested ${kind} with authored navPath: ${authored}`, async (context) => {
     const leaf =
       kind === "screen"
-        ? `screen({ id: "home", title: "Home", description: "Home", slug: "home", mobile: "Mobile", desktop: "Desktop", navPath: ${authored} })`
-        : `page({ id: "home", title: "Home", description: "Home", slug: "home", render: () => "<main>Home</main>", navPath: ${authored} })`;
+        ? `screen({ id: "home", title: "Home", description: "Home", mobile: "Mobile", desktop: "Desktop", navPath: ${authored} })`
+        : `page({ id: "home", title: "Home", description: "Home", render: () => "<main>Home</main>", navPath: ${authored} })`;
     const fixture = await createFixture(
-      `import { defineRoot, screen, page } from "@mokly/mokly";\nexport const mockups = defineRoot({ path: "design", children: [${leaf}] });`,
+      `import { defineRoot, screen, page } from "@mokly/mokly";\nexport const mockups = defineRoot({ children: [${leaf}] });`,
     );
     context.after(() => removeFixture(fixture));
     await assert.rejects(
@@ -43,23 +40,18 @@ for (const [kind, authored] of [
 for (const [name, definition, expected] of [
   [
     "authored leaf path",
-    `defineRoot({ path: "design", children: [screen({ id: "home", title: "Home", description: "Home", slug: "home", navPath: [], mobile: "Mobile", desktop: "Desktop" })] })`,
+    `defineRoot({ children: [screen({ id: "home", title: "Home", description: "Home", navPath: [], mobile: "Mobile", desktop: "Desktop" })] })`,
     /invalid-nested-nav-path.*entries\/fixture\.mockup\.tsx/s,
   ],
   [
     "empty folder",
-    `defineRoot({ path: "design", children: [folder({ title: "Empty", segment: "empty", children: [] })] })`,
-    /entries\/fixture\.mockup\.tsx.*folder design\/empty has no children/s,
+    `defineRoot({ navPath: ["Design"], children: [folder({ title: "Empty", children: [] })] })`,
+    /entries\/fixture\.mockup\.tsx.*folder Design › Empty has no children/s,
   ],
   [
     "empty root",
-    `defineRoot({ path: "design", navPath: ["Design"], children: [] })`,
-    /entries\/fixture\.mockup\.tsx.*root design has no children/s,
-  ],
-  [
-    "empty folder segment",
-    `defineRoot({ path: "design", children: [folder({ title: "Views", segment: "", children: [${nested}] })] })`,
-    /entries\/fixture\.mockup\.tsx.*folder design segment must be a non-empty string/s,
+    `defineRoot({ navPath: ["Design"], children: [] })`,
+    /entries\/fixture\.mockup\.tsx.*root Design has no children/s,
   ],
 ] as const) {
   test(`build attributes ${name} to its source module`, async (context) => {
@@ -76,7 +68,7 @@ for (const [name, definition, expected] of [
 
 test("an empty folder remains a typed build-invalid failure through the consumer facade", async (context) => {
   const fixture = await createFixture(
-    'import { defineRoot, folder } from "@mokly/mokly";\nexport const mockups = defineRoot({ path: "design", children: [folder({ title: "Empty", segment: "empty", children: [] })] });',
+    'import { defineRoot, folder } from "@mokly/mokly";\nexport const mockups = defineRoot({ navPath: ["Design"], children: [folder({ title: "Empty", children: [] })] });',
   );
   context.after(() => removeFixture(fixture));
   await assert.rejects(
@@ -87,7 +79,7 @@ test("an empty folder remains a typed build-invalid failure through the consumer
       assert.match(presentation.headline, /catalogue could not be built/i);
       assert.match(
         presentation.detail ?? "",
-        /entries\/fixture\.mockup\.tsx.*folder design\/empty has no children/,
+        /entries\/fixture\.mockup\.tsx.*folder Design › Empty has no children/,
       );
       assert.equal(
         (error.message.match(/\[mokly\/build-invalid\]/g) ?? []).length,
@@ -100,7 +92,6 @@ test("an empty folder remains a typed build-invalid failure through the consumer
 });
 
 for (const [field, value] of [
-  ["route", '"overridden.html"'],
   ["variants", "[]"],
   ["navPath", '["Other"]'],
   ["navPath", "undefined"],
@@ -109,10 +100,10 @@ for (const [field, value] of [
     const fixture = await createFixture(`
 import { defineScreen } from "@mokly/mokly";
 export const mockups = defineScreen({
-  id: "home", title: "Home", description: "Home", route: "home.html",
+  id: "home", title: "Home", description: "Home",
   navPath: ["Screens"], mobile: "Mobile", desktop: "Desktop",
   dependencies: [], relatedDocs: [],
-  variants: [{ id: "variant", title: "Variant", description: "Variant", slug: "variant", mobile: "Variant mobile", desktop: "Variant desktop", ${field}: ${value} }],
+  variants: [{ id: "variant", title: "Variant", description: "Variant", mobile: "Variant mobile", desktop: "Variant desktop", ${field}: ${value} }],
 });
 `);
     context.after(() => removeFixture(fixture));

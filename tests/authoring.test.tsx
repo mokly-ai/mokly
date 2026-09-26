@@ -16,6 +16,8 @@ import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
 import {
   defineRoot,
+  defineComponent,
+  definePage,
   defineScreen,
   defineUseCase,
   MockLink,
@@ -56,7 +58,6 @@ const screenBase = {
   id: "tagged-screen",
   mobile: "Mobile",
   relatedDocs: [],
-  route: "screens/tagged.html",
   title: "Tagged screen",
 } satisfies ScreenInput;
 
@@ -65,7 +66,6 @@ const useCaseBase: UseCaseInput = {
   description: "Tagged journey",
   id: "tagged-journey",
   relatedDocs: [],
-  route: "user-flows/tagged-journey.html",
   steps: [{ screenId: "tagged-screen" }],
   title: "Tagged journey",
 };
@@ -120,6 +120,34 @@ test("review material keys reject cyclic or non-finite state", () => {
   assert.throws(() => reviewMaterialKey({ value: Number.NaN }), /finite/);
 });
 
+test("definitions derive documents for every entry kind", () => {
+  const screenDefinition = defineScreen(screenBase);
+  const pageDefinition = definePage({
+    dependencies: [],
+    description: "Account guide",
+    id: "account-guide",
+    relatedDocs: [],
+    render: () => "<html><body>Guide</body></html>",
+    title: "Account guide",
+  });
+  const useCaseDefinition = defineUseCase(useCaseBase);
+  const componentDefinition = defineComponent({
+    dependencies: [],
+    description: "Action",
+    id: "action",
+    propSchema: { kind: "object", properties: {} },
+    relatedDocs: [],
+    render: () => "Action",
+    title: "Action",
+    variants: [{ id: "default", props: {}, title: "Default" }],
+  }).entry;
+
+  assert.equal(screenDefinition.route, "screens/tagged-screen.html");
+  assert.equal(pageDefinition.route, "pages/account-guide.html");
+  assert.equal(useCaseDefinition.route, "user-flows/tagged-journey.html");
+  assert.equal(componentDefinition.route, "components/action.html");
+});
+
 test("nested screens retain colorSchemes through root flattening", () => {
   const definitions = defineRoot({
     children: [
@@ -129,17 +157,16 @@ test("nested screens retain colorSchemes through root flattening", () => {
         desktop: <main>Desktop</main>,
         id: "nested-screen",
         mobile: <main>Mobile</main>,
-        slug: "nested",
         title: "Nested screen",
       }),
     ],
-    path: "screens",
   });
 
   const definition = definitions[0];
   assert.equal(definition?.kind, "screen");
   if (definition?.kind !== "screen") throw new Error("screen missing");
   assert.deepEqual(definition.colorSchemes, ["light"]);
+  assert.equal(definition.route, "screens/nested-screen.html");
 });
 
 test("defineScreen flattens declared variants after their parent", () => {
@@ -151,7 +178,6 @@ test("defineScreen flattens declared variants after their parent", () => {
         desktop: "Empty desktop",
         id: "tagged-screen-empty",
         mobile: "Empty mobile",
-        slug: "empty",
         title: "Tagged screen, empty",
       },
     ],
@@ -180,7 +206,6 @@ test("nested screens keep their own tags and inherit none", () => {
         desktop: "Desktop",
         id: "tagged-nested",
         mobile: "Mobile",
-        slug: "tagged",
         tags: ["forms"],
         title: "Tagged nested",
       }),
@@ -189,11 +214,9 @@ test("nested screens keep their own tags and inherit none", () => {
         desktop: "Desktop",
         id: "untagged-nested",
         mobile: "Mobile",
-        slug: "untagged",
         title: "Untagged nested",
       }),
     ],
-    path: "screens",
   });
 
   if (tagged?.kind !== "screen" || untagged?.kind !== "screen") {
@@ -252,6 +275,19 @@ test("top-level entries default to an empty navigation path", () => {
   const entry = defineScreen(screenBase);
   assert.deepEqual(entry.navPath, []);
   assert.deepEqual(validateEntry(resolved(entry), validationConfig), []);
+});
+
+test("entry validation rejects Windows device names without changing tag grammar", () => {
+  const definition = defineScreen({ ...screenBase, id: "con" });
+  assert.deepEqual(validateEntry(resolved(definition), validationConfig), [
+    {
+      code: "invalid-id",
+      id: "con",
+      message: "id must be globally unique kebab-case",
+      sourceRelativePath,
+    },
+  ]);
+  assert.deepEqual(tagViolations(["con"]), []);
 });
 
 function tagViolations(tags: unknown): RegistryViolation[] {

@@ -32,8 +32,7 @@ test("appearance screens publish both schemes for both viewports", async () => {
   const { manifest } = await designCatalogue;
   const screens = manifest.entries.filter(
     (entry) =>
-      entry.kind === "screen" &&
-      entry.route.startsWith("design/browse/appearance/"),
+      entry.kind === "screen" && entry.id.startsWith("design-appearance-"),
   );
   assert.ok(screens.length > 0, "the appearance section exists");
   for (const entry of screens) {
@@ -53,8 +52,7 @@ test("each generated appearance variant draws the scheme it was rendered for", a
   const { manifest, outputs } = await designCatalogue;
   const screens = manifest.entries.filter(
     (entry) =>
-      entry.kind === "screen" &&
-      entry.route.startsWith("design/browse/appearance/"),
+      entry.kind === "screen" && entry.id.startsWith("design-appearance-"),
   );
   for (const entry of screens) {
     assert.ok(entry.kind === "screen");
@@ -108,8 +106,7 @@ async function appearanceFragments(): Promise<
 > {
   const { manifest, outputs } = await designCatalogue;
   return manifest.entries.flatMap((entry) =>
-    entry.kind === "screen" &&
-    entry.route.startsWith("design/browse/appearance/")
+    entry.kind === "screen" && entry.id.startsWith("design-appearance-")
       ? (["mobile", "desktop"] as const).flatMap((viewport) =>
           (["light", "dark"] as const).map((scheme) => ({
             id: entry.id,
@@ -278,7 +275,7 @@ test("the canonical scheme screens render in both schemes", async () => {
 test("no design artboard depicts a scheme control", async () => {
   const { manifest, outputs } = await designCatalogue;
   for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.route.startsWith("design/")) continue;
+    if (entry.kind !== "screen" || !entry.id.startsWith("design-")) continue;
     for (const route of [
       ...Object.values(entry.fragments),
       ...Object.values(entry.darkFragments ?? {}),
@@ -321,7 +318,7 @@ test("every artboard with a top bar draws one Appearance control", async () => {
   const { manifest, outputs } = await designCatalogue;
   let checked = 0;
   for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.route.startsWith("design/")) continue;
+    if (entry.kind !== "screen" || !entry.id.startsWith("design-")) continue;
     for (const route of [
       ...Object.values(entry.fragments),
       ...Object.values(entry.darkFragments ?? {}),

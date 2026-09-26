@@ -1,5 +1,3 @@
-import fs from "node:fs/promises";
-
 import { expect, test } from "@playwright/test";
 
 import { compileCatalogue } from "../../dist/build/compile.js";
@@ -21,11 +19,11 @@ test("background baselines reconcile removed rows and invalidate changed histori
     import { defineComponent, definePage } from "@mokly/mokly";
     mockups.push(
       defineScreen({ ...metadata, id: "old-screen", title: "Old screen", description: "Previous screen",
-        route: "removed/z-screen.html", mobile: <main>Previous</main>, desktop: <main>Previous</main>, useCaseIds: [] }),
+        mobile: <main>Previous</main>, desktop: <main>Previous</main>, useCaseIds: [] }),
       definePage({ ...metadata, id: "old-page", title: "Old page", description: "Previous document",
-        route: "removed/m-page.html", render: () => "<!doctype html><html><head></head><body>Previous document</body></html>" }),
+        render: () => "<!doctype html><html><head></head><body>Previous document</body></html>" }),
       defineComponent({ ...metadata, id: "old-component", title: "Old component", description: "Previous component",
-        route: "removed/a-component.html", propSchema: { kind: "object", properties: {} },
+        propSchema: { kind: "object", properties: {} },
         render: () => <button>Previous</button>, variants: [{ id: "default", title: "Default", props: {} }] }).entry
     );
   `,
@@ -36,9 +34,9 @@ test("background baselines reconcile removed rows and invalidate changed histori
       await loadConfig(before.root),
     );
     const routes = [
-      "removed/a-component.html",
-      "removed/m-page.html",
-      "removed/z-screen.html",
+      "components/old-component.html",
+      "pages/old-page.html",
+      "screens/old-screen.html",
     ];
     const publish = (entries = baseline.entries) =>
       server.publishUpdate({
@@ -55,9 +53,11 @@ test("background baselines reconcile removed rows and invalidate changed histori
       .locator("html")
       .evaluate((root) => root.setAttribute("data-test-retained", "true"));
     const removed = page.locator("a[data-nav-removed]");
-    const screen = page.locator('a[data-route="removed/z-screen.html"]');
-    const document = page.locator('a[data-route="removed/m-page.html"]');
-    const component = page.locator('a[data-route="removed/a-component.html"]');
+    const screen = page.locator('a[data-route="screens/old-screen.html"]');
+    const document = page.locator('a[data-route="pages/old-page.html"]');
+    const component = page.locator(
+      'a[data-route="components/old-component.html"]',
+    );
     publish(baseline.entries.filter((entry) => entry.id !== "old-component"));
     await expect(removed).toHaveCount(2);
     await expect(screen).toBeVisible();
@@ -67,17 +67,17 @@ test("background baselines reconcile removed rows and invalidate changed histori
     await expect(removed).toHaveCount(3);
     await expect(
       page.locator(
-        '[data-nav-section="pages"] a[data-route="removed/z-screen.html"]',
+        '[data-nav-section="pages"] a[data-route="screens/old-screen.html"]',
       ),
     ).toHaveCount(1);
     await expect(
       page.locator(
-        '[data-nav-section="pages"] a[data-route="removed/m-page.html"]',
+        '[data-nav-section="pages"] a[data-route="pages/old-page.html"]',
       ),
     ).toHaveCount(1);
     await expect(
       page.locator(
-        '[data-nav-section="components"] a[data-route="removed/a-component.html"]',
+        '[data-nav-section="components"] a[data-route="components/old-component.html"]',
       ),
     ).toHaveCount(1);
     await expect(
@@ -88,9 +88,9 @@ test("background baselines reconcile removed rows and invalidate changed histori
         rows.map((row) => row.getAttribute("data-route")),
       ),
     ).toEqual([
-      "removed/m-page.html",
-      "removed/z-screen.html",
-      "removed/a-component.html",
+      "pages/old-page.html",
+      "screens/old-screen.html",
+      "components/old-component.html",
     ]);
     expect(await retained!.evaluate((row) => row.isConnected)).toBe(true);
     await expect(component).toBeVisible();
@@ -99,26 +99,6 @@ test("background baselines reconcile removed rows and invalidate changed histori
       "data-test-retained",
       "true",
     );
-    const source = await fs.readFile(before.entryPath, "utf8");
-    await fs.writeFile(
-      before.entryPath,
-      source
-        .replaceAll("removed/z-screen.html", "removed/m-page.html")
-        .replace(
-          'route: "removed/m-page.html", render:',
-          'route: "removed/z-screen.html", render:',
-        ),
-    );
-    const switched = await compileCatalogue(await loadConfig(before.root));
-    publish(switched.manifest.entries);
-    await expect(screen).toContainText("Old page");
-    await expect(screen).toBeHidden();
-    await expect(document).toBeVisible();
-    expect(await retained!.evaluate((row) => row.isConnected)).toBe(true);
-    publish();
-    await expect(screen).toContainText("Old screen");
-    await expect(screen).toBeVisible();
-    await expect(document).toBeHidden();
     await page.locator('[data-filter="changed"]').click();
     await expect(document).toBeVisible();
     expect(fixture.comparisonRequests).toBe(0);

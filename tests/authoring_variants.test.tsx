@@ -32,7 +32,7 @@ const config: ResolvedConfig = {
   watch: { debounceMs: 100, rules: [] },
 };
 
-test("screen variants inherit, override, brand, route, and attribute", () => {
+test("screen variants inherit, override, brand, derived route, and attribute", () => {
   const definitions = attributed(
     defineScreen({
       address: "example.test/welcome",
@@ -44,7 +44,6 @@ test("screen variants inherit, override, brand, route, and attribute", () => {
       mobile: "Mobile",
       rationale: "Parent rationale",
       relatedDocs: ["docs/protocol/mokly-authoring.md"],
-      route: "screens/welcome.html",
       tags: ["onboarding"],
       title: "Welcome",
       useCaseIds: ["tour"],
@@ -54,7 +53,6 @@ test("screen variants inherit, override, brand, route, and attribute", () => {
           desktop: "Empty desktop",
           id: "welcome-empty",
           mobile: "Empty mobile",
-          slug: "empty",
           title: "Welcome, empty workspace",
         },
         {
@@ -67,7 +65,6 @@ test("screen variants inherit, override, brand, route, and attribute", () => {
           mobile: "Retry mobile",
           rationale: "Explain the recovery state",
           relatedDocs: ["docs/protocol/mokly-screen-variants.md"],
-          slug: "retry",
           tags: [],
           title: "Welcome, retry",
           useCaseIds: [],
@@ -94,7 +91,7 @@ test("screen variants inherit, override, brand, route, and attribute", () => {
     mobile: "Empty mobile",
     navPath: [],
     relatedDocs: ["docs/protocol/mokly-authoring.md"],
-    route: "screens/welcome.variants/empty.html",
+    route: "screens/welcome-empty.html",
     tags: ["onboarding"],
     title: "Welcome, empty workspace",
     useCaseIds: [],
@@ -119,17 +116,15 @@ test("nested screen variants flatten beside the parent", () => {
         desktop: "Desktop",
         id: "nested-parent",
         mobile: "Mobile",
-        slug: "parent",
         tags: ["forms"],
         title: "Nested parent",
-        variants: [variant("nested-empty", "empty")],
+        variants: [variant("nested-empty")],
       }),
     ],
     address: "example.test/nested",
     dependencies: ["README.md"],
     navPath: ["Nested"],
     relatedDocs: ["docs/protocol/mokly-authoring.md"],
-    path: "screens",
   });
   const flattened = definitions.filter((entry) => entry.kind === "screen");
 
@@ -137,7 +132,8 @@ test("nested screen variants flatten beside the parent", () => {
     flattened.map(({ id }) => id),
     ["nested-parent", "nested-empty"],
   );
-  assert.equal(flattened[1]?.route, "screens/parent.variants/empty.html");
+  assert.equal(flattened[0]?.route, "screens/nested-parent.html");
+  assert.equal(flattened[1]?.route, "screens/nested-empty.html");
   assert.equal(flattened[1]?.variantOf, "nested-parent");
   assert.deepEqual(flattened[1]?.tags, ["forms"]);
   assert.deepEqual(flattened[1]?.dependencies, ["README.md"]);
@@ -148,7 +144,7 @@ test("registry preparation flattens one exported definition-array level", () => 
   const definitions = attributed(
     defineScreen({
       ...parentInput(),
-      variants: [variant("welcome-empty", "empty")],
+      variants: [variant("welcome-empty")],
     }),
   );
 
@@ -162,17 +158,13 @@ test("registry preparation keeps authored sibling variant order", () => {
   const definitions = attributed(
     defineScreen({
       ...parentInput(),
-      variants: [
-        variant("welcome-zeta", "zeta"),
-        variant("welcome-alpha", "alpha"),
-      ],
+      variants: [variant("welcome-zeta"), variant("welcome-alpha")],
     }),
   );
   const next = attributed(
     defineScreen({
       ...parentInput(),
       id: "workspace",
-      route: "screens/workspace.html",
       title: "Workspace",
     }),
   );
@@ -192,7 +184,7 @@ test("defineScreen runtime shape follows absent, undefined, empty, and broad var
   const empty = defineScreen({ ...parentInput(), variants: [] });
   const broadWithVariant: ScreenInput = {
     ...parentInput(),
-    variants: [variant("welcome-empty", "empty")],
+    variants: [variant("welcome-empty")],
   };
   const broadResult = defineScreen(broadWithVariant);
 
@@ -217,18 +209,16 @@ function parentInput() {
     id: "welcome",
     mobile: "Mobile",
     relatedDocs: [] as readonly string[],
-    route: "screens/welcome.html",
     title: "Welcome",
   };
 }
 
-function variant(id: string, slug: string) {
+function variant(id: string) {
   return {
     description: `${id} description`,
     desktop: `${id} desktop`,
     id,
     mobile: `${id} mobile`,
-    slug,
     title: id,
   };
 }

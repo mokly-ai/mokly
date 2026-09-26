@@ -252,44 +252,47 @@ helper until Milestone 4, component variants stay local, the shell is
 untouched, and the export still writes aliases, so the product works end to
 end.
 
-- [ ] Create the shared path module in `@mokly/viewer/data` with
+- [x] Create the shared path module in `@mokly/viewer/data` with
       `entryRoute`, `viewRoute`, `viewHref`, and the `/view/<route>`
       parser; move `fragmentRoute` and `componentFragmentRoute` behind it and
       delete the `src` copy of `fragmentRoute`.
-- [ ] Types in `src/authoring/types.ts` and `src/components/types.ts`: remove
+- [x] Types in `src/authoring/types.ts` and `src/components/types.ts`: remove
       `RoutedEntryInput`; drop `route` from every input, `slug` from
       `ScreenVariantInput`, `NestedScreenInput`, and `NestedPageInput`,
       `segment` from `NestedFolderInput`, and `path` from `RootInput`.
-- [ ] `defineScreen`, `definePage`, `defineUseCase`, and `defineComponent`
+- [x] `defineScreen`, `definePage`, `defineUseCase`, and `defineComponent`
       compute their document with the helper, and a screen variant derives
       its own document from its id; `defineRoot` and `flattenChild` stop
       threading a directory and use the new error texts.
-- [ ] Failure-first tests: documents per kind, nested trees, screen variants,
+- [x] Failure-first tests: documents per kind, nested trees, screen variants,
       the device-name id rule, and the new `defineRoot` errors.
-- [ ] Registry: delete `validateRoute` in `entry_metadata.ts`,
+- [x] Registry: delete `validateRoute` in `entry_metadata.ts`,
       `duplicateViolations(…, "route")`, the variant route match,
       `duplicate-variant-slug`, `screenVariantRoute`, `isScreenVariantRoute`,
       `isScreenVariantSlug`, and the `route` and `slug` entries of the
       forbidden variant fields; keep `invalid-nested-nav-path` and the
       `navPath` equality check.
-- [ ] Manifest: write `schemaVersion: 7`; strict validation accepts only 7
+- [x] Manifest: write `schemaVersion: 7`; strict validation accepts only 7
       and requires `route === entryRoute(kind, id)` until Milestone 4 drops
       the field; rename `ManifestV6` types to `ManifestV7`; the historical
       boundary accepts 3–7.
-- [ ] Key `removedManifestEntries` by id for every kind.
-- [ ] Build and export inputs: `logical_routes.ts`, ownership, and page output
+- [x] Key `removedManifestEntries` by id for every kind.
+- [x] Build and export inputs: `logical_routes.ts`, ownership, and page output
       use the helper; delete `validateCatalogueRoute` (no callers) and keep
       `manifest_values.validateRoute` for historical reads only.
-- [ ] Convert `examples/basic` (7 `route:`, 95 `slug:`, 30 `segment:`, and 1
+- [x] Convert `examples/basic` (7 `route:`, 95 `slug:`, 30 `segment:`, and 1
       `path:` across 42 files) and the `scripts/large` fixture generator.
-- [ ] `npm run build`, `npm run example:build`, `npm run example:check`, and
+- [x] `npm run build`, `npm run example:build`, `npm run example:check`, and
       `npm run dev`: the navigation tree is unchanged, the welcome screen
       renders at `/view/screens/example-welcome.html`, and `/id/example-welcome`
       still redirects.
-- [ ] Committed-output smoke: build once on the old layout, then on the new;
+- [x] Committed-output smoke: build once on the old layout, then on the new;
       old files disappear as pending orphans and Changes lists every entry
       once.
-- [ ] `npm run test:prepared` and the affected browser tests pass; commit.
+- [x] Resolve historical comparison evidence through a matching current entry
+      id before exposing its shell link, while retaining genuinely removed
+      evidence as historical.
+- [x] `npm run test:prepared` and the complete browser suite pass; commit.
 
 ## Milestone 3: Component variants as entries
 

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ManifestV6 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV7 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { targetHead } from "../packages/viewer/dist/shell/head.js";
 import {
@@ -18,7 +18,7 @@ function screen(
   title: string,
   navPath: readonly string[] = [],
   variantOf?: string,
-): ManifestV6["entries"][number] {
+): ManifestV7["entries"][number] {
   return {
     declaredDependencies: [],
     dependencies: [],
@@ -41,7 +41,7 @@ function page(
   id: string,
   title: string,
   route: string,
-): ManifestV6["entries"][number] {
+): ManifestV7["entries"][number] {
   return {
     declaredDependencies: [],
     dependencies: [],
@@ -56,11 +56,11 @@ function page(
   };
 }
 
-function tree(entries: ManifestV6["entries"]) {
-  const manifest: ManifestV6 = {
+function tree(entries: ManifestV7["entries"]) {
+  const manifest: ManifestV7 = {
     entries,
     generatedBy: "mokly",
-    schemaVersion: 6,
+    schemaVersion: 7,
     sourceFiles: [
       ...new Set(entries.map(({ sourcePath }) => sourcePath)),
     ].sort(),

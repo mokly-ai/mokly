@@ -19,7 +19,7 @@ test("manifest emits variantOf only for screen variants", () => {
     variant?.kind === "screen" ? variant.variantOf : undefined,
     "welcome",
   );
-  assert.equal(parseManifest(manifest).schemaVersion, 6);
+  assert.equal(parseManifest(manifest).schemaVersion, 7);
 });
 
 test("manifest and hierarchy keep authored sibling variant order", () => {
@@ -39,6 +39,14 @@ test("manifest and hierarchy keep authored sibling variant order", () => {
   assert.deepEqual(
     manifest.entries.map(({ id }) => id),
     [parent.id, zeta.id, alpha.id],
+  );
+  assert.deepEqual(
+    manifest.entries.map(({ route }) => route),
+    [
+      "screens/welcome.html",
+      "screens/welcome-zeta.html",
+      "screens/welcome-alpha.html",
+    ],
   );
   assert.deepEqual(
     analyzeHierarchy(manifest.entries)
@@ -67,10 +75,10 @@ test("historical v5 permits empty collections but drops them after validation", 
     parseHistoricalManifest(historical).entries.map(({ id }) => id),
     ["welcome", "welcome-empty"],
   );
-  assert.throws(() => parseManifest(historical), /schema version 6/);
+  assert.throws(() => parseManifest(historical), /schema version 7/);
 });
 
-test("manifest validation rejects broken variant parents and routes", () => {
+test("manifest validation rejects broken variant parents and non-derived routes", () => {
   const unknown = mutableManifest(variantManifest());
   screenEntry(unknown, "welcome-empty").variantOf = "missing";
   assert.throws(() => parseManifest(unknown), /parent screen does not exist/);
@@ -80,7 +88,7 @@ test("manifest validation rejects broken variant parents and routes", () => {
     ...screenEntry(nonScreen, "welcome"),
     kind: "page",
     id: "page",
-    route: "page.html",
+    route: "pages/page.html",
   });
   delete nonScreen.entries.at(-1)?.fragments;
   delete nonScreen.entries.at(-1)?.useCaseIds;
@@ -97,8 +105,22 @@ test("manifest validation rejects broken variant parents and routes", () => {
   };
   assert.throws(
     () => parseManifest(rerouted),
-    /route does not match its parent/,
+    /route does not match its kind and id/,
   );
+});
+
+test("historical manifest validation retains authored v6 routes", () => {
+  const historical = mutableManifest(variantManifest());
+  historical.schemaVersion = 6;
+  const variant = screenEntry(historical, "welcome-empty");
+  variant.route = "archive/welcome.variants/empty.html";
+  variant.fragments = {
+    desktop: "archive/welcome.variants/empty.desktop.html",
+    mobile: "archive/welcome.variants/empty.mobile.html",
+  };
+
+  assert.equal(parseHistoricalManifest(historical).schemaVersion, 6);
+  assert.throws(() => parseManifest(historical), /schema version 7/);
 });
 
 test("manifest validation rejects nested variants and mismatched paths", () => {

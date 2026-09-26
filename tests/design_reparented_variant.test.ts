@@ -27,7 +27,7 @@ import {
   variantToggles,
 } from "./helpers/design_rows.js";
 
-const removedRoute = "screens/welcome.variants/save-failed.html";
+const removedRoute = "screens/welcome-error.html";
 const common = {
   dependencies: [],
   description: "Fixture",
@@ -80,12 +80,7 @@ test("reparented mockup shows the runtime's Changes-visible rows", async () => {
       navPath: ["Example", "Screens"],
     },
     {
-      ...screen(
-        "welcome",
-        "Welcome",
-        "screens/workspace.variants/welcome.html",
-        "workspace",
-      ),
+      ...screen("welcome", "Welcome", "screens/welcome.html", "workspace"),
       navPath: ["Example", "Screens"],
     },
   ];

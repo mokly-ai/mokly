@@ -1,5 +1,5 @@
 import { isSafeCatalogueRoute } from "@mokly/viewer/data";
-import type { ManifestV6 } from "@mokly/viewer/data";
+import type { ManifestV7 } from "@mokly/viewer/data";
 
 import type { ComponentChangeSnapshot } from "./component_changes.js";
 import type {
@@ -45,7 +45,7 @@ export interface ChildUpdateMessage {
 
 export interface CatalogueCompleteMessage {
   type: "catalogue-complete";
-  manifest: ManifestV6;
+  manifest: ManifestV7;
   generation: string;
   version: number;
 }
@@ -93,7 +93,7 @@ export function parseCatalogueCompleteMessage(
     (candidate.version ?? 0) <= 0 ||
     !candidate.manifest ||
     typeof candidate.manifest !== "object" ||
-    candidate.manifest.schemaVersion !== 6
+    candidate.manifest.schemaVersion !== 7
   )
     return;
   return candidate as CatalogueCompleteMessage;

@@ -65,8 +65,8 @@ test("a light-only saved variant uses its displayed scheme for status and marks"
   page,
 }) => {
   const source = controlsEntrySource().replace(
-    'route: "components/action.html",',
-    'route: "components/action.html", colorSchemes: ["light"],',
+    'id: "action",',
+    'id: "action", colorSchemes: ["light"],',
   );
   const fixture = await startEvidenceFixture(source);
   const { compilation, server } = fixture;

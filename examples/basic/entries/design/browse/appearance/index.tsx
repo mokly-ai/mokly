@@ -11,21 +11,17 @@ export const appearanceDesign = folder({
     appearanceOverviewScreen,
     folder({
       children: appearanceStateScreens,
-      segment: "states",
       title: "Appearance states",
     }),
     folder({
       children: appearanceWorkspaceScreens,
-      segment: "workspaces",
       title: "Panels and comparisons",
     }),
     folder({
       children: appearanceStatusScreens,
-      segment: "status",
       title: "Status and recovery",
     }),
   ],
   relatedDocs: ["docs/protocol/mokly-viewer-appearance.md"],
-  segment: "appearance",
   title: "Appearance",
 });

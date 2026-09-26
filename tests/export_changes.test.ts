@@ -184,7 +184,7 @@ test("review export retains a removed variant route, id redirect, and parent con
   );
 
   const result = await exportCatalogue(fixture.config, { outDir: "site" });
-  const route = "screens/home.variants/empty.html";
+  const route = "screens/home-empty.html";
   assert.equal(result.idRoutes["home-empty"], `/view/${route}`);
   const removed = await fs.readFile(
     path.join(fixture.output, "view", route),

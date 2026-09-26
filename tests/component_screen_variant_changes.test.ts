@@ -27,7 +27,7 @@ for (const changed of ["parent", "variant"] as const)
     if (result.schemaVersion !== 3) return;
     const expected =
       changed === "variant"
-        ? ["screens/home.variants/empty.html", "user-flows/variant.html"]
+        ? ["screens/home-empty.html", "user-flows/variant-flow.html"]
         : ["screens/home.html"];
 
     assert.deepEqual(
@@ -42,7 +42,7 @@ for (const changed of ["parent", "variant"] as const)
     if (changed === "parent") assert.equal(flow, undefined);
     else
       assert.deepEqual(flow?.reasons, [
-        { kind: "screen", route: "screens/home.variants/empty.html" },
+        { kind: "screen", route: "screens/home-empty.html" },
       ]);
   });
 
@@ -70,7 +70,7 @@ test("a variant consuming a changed component is an affected screen on its own r
       ({ changedComponentId, consumer }) =>
         changedComponentId === "action" &&
         consumer.kind === "screen" &&
-        consumer.route === "screens/home.variants/empty.html",
+        consumer.route === "screens/home-empty.html",
     ),
   );
 });

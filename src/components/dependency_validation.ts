@@ -1,9 +1,9 @@
 /** Declaration invariants apply before any rendered usage is available. */
-import type { ManifestV6 } from "@mokly/viewer/data";
+import type { ManifestV7 } from "@mokly/viewer/data";
 import { canonicalJson, invalidData, sortedStrings } from "@mokly/viewer/data";
 
 export function validateDependencyDeclarations(
-  entry: ManifestV6["entries"][number],
+  entry: ManifestV7["entries"][number],
 ): void {
   sortedStrings(entry.declaredDependencies, `${entry.id}.declaredDependencies`);
   if (

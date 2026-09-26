@@ -21,14 +21,12 @@ export function ComponentOverviewMobile() {
 
 /** Canonical component page followed by linked, bounded groups of owning screens. */
 export const componentDesign = folder({
-  segment: "components",
   title: "Component explorer",
   dependencies: componentStyleDependencies,
   relatedDocs: componentDesignDocs,
   children: [
     screen({
       id: "design-component-overview",
-      slug: "overview",
       title: "Component page",
       colorSchemes: ["light"],
       description:
@@ -37,30 +35,25 @@ export const componentDesign = folder({
       mobile: <ComponentOverviewMobile />,
     }),
     folder({
-      segment: "inspector",
       title: "Inspector closed",
       children: inspectorScreens,
     }),
     controlsDesign,
     folder({
-      segment: "pages",
       title: "Pages and comparisons",
       children: pageScreens,
     }),
     folder({
-      segment: "inspection",
       title: "Screen inspection",
       children: [
         ...inspectionScreens,
         folder({
-          segment: "selection",
           title: "Selected instances",
           children: selectionScreens,
         }),
       ],
     }),
     folder({
-      segment: "states",
       title: "Empty and change states",
       children: [...stateScreens, additionDesigns, sharedImpactDesigns],
     }),

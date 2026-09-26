@@ -11,19 +11,13 @@ import {
 } from "./helpers/design_catalogue.js";
 
 const additions = [
-  ["design-browse-details-screen", "design/browse/views/details-screen.html"],
-  [
-    "design-browse-tag-picker",
-    "design/browse/views/screen.variants/picker.html",
-  ],
-  ["design-browse-tag-forms", "design/browse/views/screen.variants/forms.html"],
-  [
-    "design-browse-tag-onboarding",
-    "design/browse/views/screen.variants/onboarding.html",
-  ],
+  ["design-browse-details-screen", "screens/design-browse-details-screen.html"],
+  ["design-browse-tag-picker", "screens/design-browse-tag-picker.html"],
+  ["design-browse-tag-forms", "screens/design-browse-tag-forms.html"],
+  ["design-browse-tag-onboarding", "screens/design-browse-tag-onboarding.html"],
   [
     "design-browse-tag-onboarding-picker",
-    "design/browse/views/screen.variants/onboarding-picker.html",
+    "screens/design-browse-tag-onboarding-picker.html",
   ],
 ] as const;
 
@@ -42,15 +36,11 @@ test("the Welcome conversion keeps the approved screens as variants, not folder 
     (entry) => entry.id === "design-browse-screen",
   );
   assert.ok(parent?.kind === "screen");
-  for (const [id, slug] of convertedVariants) {
+  for (const [id] of convertedVariants) {
     const entry = manifest.entries.find((candidate) => candidate.id === id);
     assert.equal(entry?.kind, "screen", id);
     if (entry?.kind !== "screen") continue;
-    assert.equal(
-      entry.route,
-      `design/browse/views/screen.variants/${slug}.html`,
-      id,
-    );
+    assert.equal(entry.route, `screens/${id}.html`, id);
     assert.equal(entry.variantOf, "design-browse-screen", id);
     assert.deepEqual(entry.navPath, parent.navPath, id);
   }
@@ -164,22 +154,22 @@ test("inspector metadata belongs to its depicted subject", async () => {
 const stylesheetEvidence = [
   [
     "design-review-style-matched",
-    "design/review/impact/stylesheets/matched.html",
+    "screens/design-review-style-matched.html",
     "Changed styles that apply to this screen",
   ],
   [
     "design-review-style-unresolved",
-    "design/review/impact/stylesheets/unresolved.html",
+    "screens/design-review-style-unresolved.html",
     "This change can apply anywhere on the screen, so the screen stays in Changes:",
   ],
   [
     "design-review-style-unnamed",
-    "design/review/impact/stylesheets/unnamed.html",
+    "screens/design-review-style-unnamed.html",
     "This change can apply anywhere on the screen, so the screen stays in Changes.",
   ],
   [
     "design-review-style-excluded",
-    "design/review/impact/stylesheets/excluded.html",
+    "screens/design-review-style-excluded.html",
     "This stylesheet changed, but none of the changed styles apply to this screen",
   ],
 ] as const;

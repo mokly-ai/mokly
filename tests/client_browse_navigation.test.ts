@@ -131,7 +131,7 @@ test("free text matches untagged rows and structured entry ids", () => {
 test("a parent remains visible when a filtered variant matches", () => {
   const failure = leaf(
     "welcome-failure",
-    "screens/welcome.variants/failure.html",
+    "screens/welcome-failure.html",
     "Failure",
     ["errors"],
   );
@@ -151,7 +151,7 @@ test("a removed variant is hidden in All and visible in Changes", () => {
   const removed = {
     ...leaf(
       "welcome-legacy",
-      "screens/welcome.variants/legacy.html",
+      "screens/welcome-legacy.html",
       "Legacy · Removed",
     ),
     removedVariant: true,
@@ -168,7 +168,7 @@ test("a removed variant is hidden in All and visible in Changes", () => {
 test("an active variant opens its persisted list and ancestry", () => {
   const failure = leaf(
     "welcome-failure",
-    "screens/welcome.variants/failure.html",
+    "screens/welcome-failure.html",
     "Failure",
   );
   const section: NavSectionNode = {

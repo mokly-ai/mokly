@@ -48,15 +48,12 @@ test("public helpers retain stable authoring semantics", () => {
             desktop: "desktop",
             id: "nested-screen",
             mobile: "mobile",
-            slug: "screen",
             title: "Screen",
           }),
         ],
-        segment: "group",
         title: "Group",
       }),
     ],
-    path: "screens",
   });
   assert.deepEqual(
     definitions.map((entry) => entry.id),
@@ -64,7 +61,7 @@ test("public helpers retain stable authoring semantics", () => {
   );
   assert.equal(
     definitions[0]?.kind === "screen" ? definitions[0].route : "",
-    "screens/group/screen.html",
+    "screens/nested-screen.html",
   );
   assert.deepEqual(definitions[0]?.navPath, ["Group"]);
 
@@ -75,12 +72,10 @@ test("public helpers retain stable authoring semantics", () => {
         desktop: "desktop",
         id: "rooted-screen",
         mobile: "mobile",
-        slug: "rooted",
         title: "Rooted screen",
       }),
     ],
     navPath: ["Visible root"],
-    path: "screens",
   });
   assert.deepEqual(
     rooted.map(({ id }) => id),

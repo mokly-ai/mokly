@@ -44,7 +44,7 @@ test("Dark shows the previous dark views a screen was captured in", async ({
 test("Dark falls back to the light views a screen kept only", async ({
   page,
 }) => {
-  await page.goto(`${host.url}/view/screens/removed.html`);
+  await page.goto(`${host.url}/view/screens/removed-screen.html`);
   await chooseViewport(page, "desktop");
   await chooseScheme(page, "dark");
   await expect(
@@ -57,7 +57,7 @@ test("Dark falls back to the light views a screen kept only", async ({
     page.locator(`${stage} .mbk-frame-desktop iframe`),
   ).toHaveAttribute(
     "data-mokly-preview-source",
-    /\/screens\/removed\.desktop\.html$/,
+    /\/screens\/removed-screen\.desktop\.html$/,
   );
   await expect(
     page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
@@ -81,7 +81,7 @@ for (const change of ["scheme", "viewport"] as const)
         if (response.url().includes("/snapshots/") && !response.ok())
           failed.push(response.url());
       });
-      await page.goto(`${host.url}/view/screens/removed.html`);
+      await page.goto(`${host.url}/view/screens/removed-screen.html`);
       await chooseViewport(page, "desktop");
       const desktop = page.locator(`${stage} .mbk-frame-desktop iframe`);
       await expect(
@@ -92,7 +92,7 @@ for (const change of ["scheme", "viewport"] as const)
 
       now += 120_001;
       const pruning = await page.request.get(
-        `${host.url}/__mokly/diffs/review.json?page=archive%2Fremoved.html`,
+        `${host.url}/__mokly/diffs/review.json?page=pages%2Fremoved-page.html`,
       );
       expect(pruning.ok()).toBe(true);
       expect((await page.request.get(expired!)).status()).toBe(404);
@@ -115,7 +115,7 @@ for (const change of ["scheme", "viewport"] as const)
       );
       expect(
         selections.map((url) => url.searchParams.get("route")).filter(Boolean),
-      ).toEqual(["screens/removed.html", "screens/removed.html"]);
+      ).toEqual(["screens/removed-screen.html", "screens/removed-screen.html"]);
       expect(selections.some((url) => url.searchParams.has("refresh"))).toBe(
         false,
       );

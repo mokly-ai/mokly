@@ -42,11 +42,11 @@ for (const direction of ["added", "removed"] as const)
   });
 
 for (const generatedOutput of ["derived", "committed"] as const)
-  test(`relocated views use the complete path in ${generatedOutput} mode`, async (t) => {
+  test(`legacy route fields cannot relocate views in ${generatedOutput} mode`, async (t) => {
     const fixture = await relocatedFixture(t);
     const beforePath = actionViewPath(fixture.before);
     const afterPath = actionViewPath(fixture.after);
-    assert.notEqual(beforePath, afterPath);
+    assert.equal(beforePath, afterPath);
     assert.equal(
       fixture.before.outputs.get(beforePath),
       fixture.after.outputs.get(afterPath),
@@ -72,7 +72,7 @@ for (const generatedOutput of ["derived", "committed"] as const)
     });
     assert.equal(
       result.components.find((component) => component.id === "action")?.state,
-      "changed",
+      generatedOutput === "committed" ? "changed" : "unchanged",
     );
   });
 
@@ -97,8 +97,8 @@ async function relocatedFixture(t: TestContext) {
   await fs.writeFile(
     fixture.entryPath,
     source.replace(
-      'route: "components/action.html"',
-      'route: "components/nested/action.html"',
+      'id: "action",',
+      'id: "action", route: "components/nested/action.html",',
     ),
   );
   const after = await compileCatalogue(config);

@@ -4,6 +4,7 @@ import test from "node:test";
 
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
 import type { CatalogueNode } from "../packages/viewer/dist/catalogue/types.js";
+import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
@@ -94,43 +95,44 @@ test("projection exposes screen variants beneath their parent entry", async (t) 
     (entry): entry is CurrentManifestScreen => entry.kind === "screen",
   );
   assert.ok(parent);
-  const stem = parent.route.slice(0, -5);
+  const zetaId = `${parent.id}-zeta`;
   const zeta: CurrentManifestScreen = {
     ...structuredClone(parent),
     description: "Zeta workspace",
     fragments: {
-      desktop: `${stem}.variants/zeta.desktop.html`,
-      mobile: `${stem}.variants/zeta.mobile.html`,
+      desktop: viewRoute("screen", zetaId, "desktop", "light"),
+      mobile: viewRoute("screen", zetaId, "mobile", "light"),
     },
-    id: `${parent.id}-zeta`,
-    route: `${stem}.variants/zeta.html`,
+    id: zetaId,
+    route: entryRoute("screen", zetaId),
     title: `${parent.title}, zeta`,
     useCaseIds: [],
     variantOf: parent.id,
     ...(parent.darkFragments
       ? {
           darkFragments: {
-            desktop: `${stem}.variants/zeta.desktop.dark.html`,
-            mobile: `${stem}.variants/zeta.mobile.dark.html`,
+            desktop: viewRoute("screen", zetaId, "desktop", "dark"),
+            mobile: viewRoute("screen", zetaId, "mobile", "dark"),
           },
         }
       : {}),
   };
+  const alphaId = `${parent.id}-alpha`;
   const alpha: CurrentManifestScreen = {
     ...structuredClone(zeta),
     description: "Alpha workspace",
     fragments: {
-      desktop: `${stem}.variants/alpha.desktop.html`,
-      mobile: `${stem}.variants/alpha.mobile.html`,
+      desktop: viewRoute("screen", alphaId, "desktop", "light"),
+      mobile: viewRoute("screen", alphaId, "mobile", "light"),
     },
-    id: `${parent.id}-alpha`,
-    route: `${stem}.variants/alpha.html`,
+    id: alphaId,
+    route: entryRoute("screen", alphaId),
     title: `${parent.title}, alpha`,
     ...(zeta.darkFragments
       ? {
           darkFragments: {
-            desktop: `${stem}.variants/alpha.desktop.dark.html`,
-            mobile: `${stem}.variants/alpha.mobile.dark.html`,
+            desktop: viewRoute("screen", alphaId, "desktop", "dark"),
+            mobile: viewRoute("screen", alphaId, "mobile", "dark"),
           },
         }
       : {}),

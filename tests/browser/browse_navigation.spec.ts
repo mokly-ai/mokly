@@ -203,7 +203,7 @@ test("raw native links navigate from desktop, area, SVG, flow, and legacy frames
     .click();
   await expectDestination(page);
 
-  await page.goto(`${navigation.url}/view/guide.html`);
+  await page.goto(`${navigation.url}/view/pages/guide.html`);
   await expect(page.locator(".mbk-stage-embed iframe")).toHaveAttribute(
     "data-mokly-frame-state",
     "ready",

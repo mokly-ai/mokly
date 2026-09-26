@@ -28,7 +28,7 @@ export async function smokeRegisteredComponents(
   const manifest = JSON.parse(
     await fs.readFile(path.join(root, output, "mokly-manifest.json"), "utf8"),
   );
-  assert.equal(manifest.schemaVersion, 6);
+  assert.equal(manifest.schemaVersion, 7);
   assert.equal(
     manifest.entries.filter((entry) => entry.kind === "component").length,
     2,

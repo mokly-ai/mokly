@@ -5,7 +5,7 @@ import type {
   ManifestEntry,
   ManifestPage,
   ManifestScreen,
-  ManifestV6,
+  ManifestV7,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import {
@@ -147,7 +147,7 @@ function page(id: string, title: string, route: string): ManifestPage {
 function manifest(
   entries: readonly ManifestEntry[],
   pages: readonly ManifestPage[] = [],
-): ManifestV6 {
+): ManifestV7 {
   const all = [...entries, ...pages];
   return {
     entries: all.map((entry) => ({
@@ -155,7 +155,7 @@ function manifest(
       declaredDependencies: entry.declaredDependencies ?? [],
     })),
     generatedBy: "mokly",
-    schemaVersion: 6,
+    schemaVersion: 7,
     sourceFiles: [...new Set(all.map(({ sourcePath }) => sourcePath))].sort(),
   };
 }

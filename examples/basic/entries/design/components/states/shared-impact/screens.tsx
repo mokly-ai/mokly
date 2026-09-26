@@ -11,12 +11,10 @@ export function SharedImpactMobile() {
 }
 
 export const sharedImpactDesigns = folder({
-  segment: "shared-impact",
   title: "Shared impact",
   children: [
     screen({
       id: "design-component-shared-impact",
-      slug: "action",
       title: "Component with shared files",
       colorSchemes: ["light"],
       description:

@@ -11,7 +11,6 @@ test("logical links reject a use case without a screen first step", () => {
     description: "No first step",
     id: "empty-flow",
     relatedDocs: [],
-    route: "user-flows/empty-flow.html",
     steps: [],
     title: "Empty flow",
   }) as ResolvedRegistryEntry;

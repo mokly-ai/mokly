@@ -32,7 +32,6 @@ export type {
   NestedScreenInput,
   RegistryDefinition,
   RootInput,
-  RoutedEntryInput,
   ScreenDefinition,
   ScreenInput,
   ScreenVariantInput,

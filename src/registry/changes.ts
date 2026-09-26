@@ -22,19 +22,18 @@ export interface CatalogueChangeSnapshot {
   removedEntries: readonly RemovedEntrySnapshot[];
 }
 
-/** Only a free old route retains a baseline leaf; current ids and routes always win. */
+/** Retain supported baseline entries whose ids are absent from the current catalogue. */
 export function removedManifestEntries(
   manifest: CatalogueMetadata,
   baseline: HistoricalManifest,
 ): RemovedEntrySnapshot[] {
-  const routes = new Set(manifest.entries.map((entry) => entry.route));
   const ids = new Set(manifest.entries.map((entry) => entry.id));
   return baseline.entries
     .flatMap((entry): RemovedEntrySnapshot[] =>
       (entry.kind === "page" ||
         entry.kind === "screen" ||
-        (entry.kind === "component" && !ids.has(entry.id))) &&
-      !routes.has(entry.route)
+        entry.kind === "component") &&
+      !ids.has(entry.id)
         ? [
             {
               entry,
@@ -44,7 +43,7 @@ export function removedManifestEntries(
     )
     .sort(
       (a, b) =>
-        a.entry.route.localeCompare(b.entry.route) ||
+        a.entry.kind.localeCompare(b.entry.kind) ||
         a.entry.id.localeCompare(b.entry.id),
     );
 }

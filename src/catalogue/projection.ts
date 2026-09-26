@@ -47,12 +47,12 @@ export function projectCatalogue(
       .map((entry) => entry.id),
   );
   if (
-    catalogue.manifest.schemaVersion !== 6 &&
+    catalogue.manifest.schemaVersion !== 7 &&
     catalogue.manifest.schemaVersion !== "live-index-1"
   )
     invalidData(
       "$catalogue",
-      "current projection requires manifest v6 or live metadata",
+      "current projection requires manifest v7 or live metadata",
     );
   const common = (entry: ManifestEntry, removed: boolean): CatalogueEntry => ({
     id: entry.id,

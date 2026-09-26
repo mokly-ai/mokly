@@ -3,8 +3,10 @@ import { parse } from "parse5";
 import {
   componentFragmentRoute,
   duplicateReservedAttributeName,
+  entryRoute,
   type HtmlSourceLocation,
   effectiveColorSchemes,
+  viewRoute,
   VIEWPORTS,
 } from "@mokly/viewer/data";
 
@@ -12,7 +14,6 @@ import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 import { extractHtmlReferences } from "../html_references.js";
-import { fragmentRoute } from "../registry/manifest.js";
 
 import {
   logicalNamespace,
@@ -136,10 +137,11 @@ export function validateLogicalFragments(
     checked.add(key);
     const entry = byId.get(record.destination.id);
     if (entry?.kind === "page") {
-      if (!anchors(entry.route)?.has(fragment))
+      const route = entryRoute("page", entry.id);
+      if (!anchors(route)?.has(fragment))
         throw new MoklyError(
           "build-invalid",
-          `${record.sourceRoute} logical fragment ${fragment} for ${entry.id} is missing from page ${entry.route}`,
+          `${record.sourceRoute} logical fragment ${fragment} for ${entry.id} is missing from page ${route}`,
         );
       continue;
     }
@@ -155,12 +157,12 @@ export function validateLogicalFragments(
         const route =
           screen.kind === "component"
             ? componentFragmentRoute(
-                screen.route,
+                entryRoute("component", screen.id),
                 screen.variants[0]!.id,
                 viewport,
                 scheme,
               )
-            : fragmentRoute(screen.route, viewport, scheme);
+            : viewRoute("screen", screen.id, viewport, scheme);
         if (!anchors(route)?.has(fragment)) {
           throw new MoklyError(
             "build-invalid",

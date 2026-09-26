@@ -37,7 +37,7 @@ test("the real preview build preserves generated output and serves fresh publica
 }) => {
   expect(after).toBe(before);
   expect(preview.freshness.outputWasAbsent).toBe(true);
-  await page.goto(`${preview.url}/view/screens/welcome`);
+  await page.goto(`${preview.url}/view/screens/example-welcome`);
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
 });
 

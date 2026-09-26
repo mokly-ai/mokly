@@ -321,7 +321,7 @@
         "Product",
         "Browse"
       ],
-      "route": "screens/home.variants/empty.html",
+      "route": "screens/home-empty.html",
       "tags": [],
       "title": "Home, empty",
       "useCaseIds": [],
@@ -336,7 +336,7 @@
           "comparison": {
             "status": "unavailable"
           },
-          "fragmentPath": "static/screens/home.variants/empty.mobile.html",
+          "fragmentPath": "static/screens/home-empty.mobile.html",
           "usage": {
             "instances": [],
             "ranges": [],
@@ -350,7 +350,7 @@
           "comparison": {
             "status": "unavailable"
           },
-          "fragmentPath": "static/screens/home.variants/empty.desktop.html",
+          "fragmentPath": "static/screens/home-empty.desktop.html",
           "usage": {
             "instances": [],
             "ranges": [],

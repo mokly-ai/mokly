@@ -18,7 +18,7 @@ test("v6 source metadata round-trips deterministically and readers still accept 
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const { manifest } = await compileCatalogue(await loadConfig(fixture.root));
-  assert.equal(manifest.schemaVersion, 6);
+  assert.equal(manifest.schemaVersion, 7);
   const original = structuredClone(manifest);
   for (const view of componentViews(original))
     for (const instance of view.instances)

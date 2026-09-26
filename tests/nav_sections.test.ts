@@ -5,7 +5,7 @@ import type { ManifestComponent } from "../packages/viewer/dist/components/manif
 import type {
   ManifestEntry,
   ManifestScreen,
-  ManifestV6,
+  ManifestV7,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { reconcileDisclosures } from "../packages/viewer/dist/shell/disclosure_storage.js";
@@ -249,14 +249,14 @@ function component(
   };
 }
 
-function manifest(entries: readonly ManifestEntry[]): ManifestV6 {
+function manifest(entries: readonly ManifestEntry[]): ManifestV7 {
   return {
     entries: entries.map((entry) => ({
       ...entry,
       declaredDependencies: entry.declaredDependencies ?? [],
     })),
     generatedBy: "mokly",
-    schemaVersion: 6,
+    schemaVersion: 7,
     sourceFiles: [
       ...new Set(entries.map(({ sourcePath }) => sourcePath)),
     ].sort(),

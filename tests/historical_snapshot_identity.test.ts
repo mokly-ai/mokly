@@ -30,14 +30,14 @@ type CurrentManifestScreen = ManifestScreen & {
 const BASELINE_A = "a".repeat(40);
 const BASELINE_B = "b".repeat(40);
 const GENERATION = "c".repeat(64);
-const oldScreen = screen("shared-screen", "Old screen", "screens/old.html");
+const oldScreen = screen("removed-screen", "Old screen", "screens/old.html");
 const currentScreen = screen(
-  "shared-screen",
+  "current-screen",
   "Current screen",
-  "screens/current.html",
+  "screens/current-screen.html",
 );
 const baseline = manifest([oldScreen]);
-const current = { ...manifest([currentScreen]), schemaVersion: 6 as const };
+const current = { ...manifest([currentScreen]), schemaVersion: 7 as const };
 
 test("projection publishes stable per-record identity before comparison generation", () => {
   const live = project(BASELINE_A);
@@ -93,7 +93,10 @@ test("reader safely derives older generation-backed identities", () => {
   value.comparisonUrl = null;
   const identityLess = readCatalogue(value);
   assert.equal(identityLess.removedEntries[0]?.snapshotId, undefined);
-  assert.equal(resolveCatalogueRoute(identityLess, oldScreen.route), undefined);
+  assert.equal(
+    resolveCatalogueRoute(identityLess, oldScreen.route)?.entry.route,
+    oldScreen.route,
+  );
 });
 
 test("reader rejects malformed and duplicate published identities", () => {

@@ -1,9 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import type { ColorScheme, Viewport, ComponentViewRecord } from "@mokly/viewer";
-import type { ManifestV6, HistoricalManifest } from "@mokly/viewer/data";
-import { canonicalJson, effectiveColorSchemes } from "@mokly/viewer/data";
+import type { ColorScheme, ComponentViewRecord } from "@mokly/viewer";
+import type { ManifestV7, HistoricalManifest } from "@mokly/viewer/data";
+import {
+  canonicalJson,
+  effectiveColorSchemes,
+  entryRoute,
+  viewRoute,
+} from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { componentManifestEntry } from "../components/manifest_build.js";
@@ -21,23 +26,13 @@ export const FORMER_MANIFEST_NAME = "mokabook-manifest.json";
 /** Legacy version 2 manifest filename accepted only during migration. */
 export const LEGACY_MANIFEST_NAME = "mockbook-manifest.json";
 
-/** Derive one viewport and color-scheme fragment route from a screen route. */
-export function fragmentRoute(
-  route: string,
-  viewport: Viewport,
-  colorScheme: ColorScheme = "light",
-): string {
-  const schemeSuffix = colorScheme === "dark" ? ".dark" : "";
-  return route.replace(/\.html$/, `.${viewport}${schemeSuffix}.html`);
-}
-
 /** Create deterministic manifest data from prepared entries and the source inventory. */
 export function createManifest(
   entries: readonly ResolvedRegistryEntry[],
   sourceFiles: readonly string[],
   catalogueSchemes: readonly ColorScheme[],
   componentViews: ReadonlyMap<string, ComponentViewRecord> = new Map(),
-): ManifestV6 {
+): ManifestV7 {
   return {
     entries: entries.map((entry) =>
       toManifestEntry(
@@ -54,17 +49,17 @@ export function createManifest(
         ...entries.map((entry) => entry.sourceRelativePath),
       ]),
     ].sort(),
-    schemaVersion: 6,
+    schemaVersion: 7,
   };
 }
 
 /** Serialize the current manifest with canonical object-key ordering. */
-export function serializeManifest(manifest: ManifestV6): string {
+export function serializeManifest(manifest: ManifestV7): string {
   return `${canonicalJson(manifest, 2)}\n`;
 }
 
-/** Read strictly current schema-v6 canonical output. */
-export function readManifest(config: ResolvedConfig): ManifestV6 {
+/** Read strictly current schema-v7 canonical output. */
+export function readManifest(config: ResolvedConfig): ManifestV7 {
   const canonicalPath = path.join(config.mockupsDir, MANIFEST_NAME);
   const manifest = readManifestFile(canonicalPath);
   config.sourceFiles = manifest.sourceFiles;
@@ -87,7 +82,7 @@ export function selectManifestInput(
   return { allowV2: true, filename: LEGACY_MANIFEST_NAME };
 }
 
-function readManifestFile(candidate: string): ManifestV6 {
+function readManifestFile(candidate: string): ManifestV7 {
   let value: unknown;
   try {
     value = JSON.parse(fs.readFileSync(candidate, "utf8"));
@@ -104,8 +99,8 @@ function readManifestFile(candidate: string): ManifestV6 {
 }
 
 /** Validate manifest-shaped JSON and normalize temporary version 2 input. */
-export function parseManifest(value: unknown): ManifestV6 {
-  return validateManifest(value, false, false) as ManifestV6;
+export function parseManifest(value: unknown): ManifestV7 {
+  return validateManifest(value, false, false) as ManifestV7;
 }
 
 /** Read old schemas only at the historical comparison boundary. */
@@ -121,7 +116,7 @@ function toManifestEntry(
   catalogueSchemes: readonly ColorScheme[],
   componentViews: ReadonlyMap<string, ComponentViewRecord>,
   navPath: readonly string[],
-): ManifestV6["entries"][number] {
+): ManifestV7["entries"][number] {
   const common = {
     declaredDependencies: [...new Set(entry.dependencies)].sort(),
     dependencies: [
@@ -150,14 +145,14 @@ function toManifestEntry(
     return {
       ...common,
       kind: "page",
-      route: entry.route,
+      route: entryRoute("page", entry.id),
       ...(entry.tags?.length ? { tags: [...entry.tags] } : {}),
     };
   if (entry.kind === "use-case") {
     return {
       ...common,
       kind: "use-case",
-      route: entry.route,
+      route: entryRoute("use-case", entry.id),
       steps: entry.steps.map((step) => ({ ...step })),
       ...(entry.tags && entry.tags.length > 0 ? { tags: [...entry.tags] } : {}),
     };
@@ -168,14 +163,14 @@ function toManifestEntry(
     ...(effectiveColorSchemes(entry, catalogueSchemes).includes("dark")
       ? {
           darkFragments: {
-            desktop: fragmentRoute(entry.route, "desktop", "dark"),
-            mobile: fragmentRoute(entry.route, "mobile", "dark"),
+            desktop: viewRoute("screen", entry.id, "desktop", "dark"),
+            mobile: viewRoute("screen", entry.id, "mobile", "dark"),
           },
         }
       : {}),
     fragments: {
-      desktop: fragmentRoute(entry.route, "desktop"),
-      mobile: fragmentRoute(entry.route, "mobile"),
+      desktop: viewRoute("screen", entry.id, "desktop", "light"),
+      mobile: viewRoute("screen", entry.id, "mobile", "light"),
     },
     kind: "screen",
     ...(componentViews.size
@@ -183,13 +178,18 @@ function toManifestEntry(
           componentViews: ["mobile", "desktop"].flatMap((viewport) =>
             effectiveColorSchemes(entry, catalogueSchemes).map((scheme) =>
               componentViews.get(
-                fragmentRoute(entry.route, viewport as Viewport, scheme),
+                viewRoute(
+                  "screen",
+                  entry.id,
+                  viewport as "desktop" | "mobile",
+                  scheme,
+                ),
               )!,
             ),
           ),
         }
       : {}),
-    route: entry.route,
+    route: entryRoute("screen", entry.id),
     ...(entry.tags && entry.tags.length > 0 ? { tags: [...entry.tags] } : {}),
     useCaseIds: [...entry.useCaseIds],
     ...(entry.variantOf !== undefined ? { variantOf: entry.variantOf } : {}),

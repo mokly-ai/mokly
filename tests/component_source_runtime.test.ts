@@ -60,7 +60,6 @@ test("dev shim attaches source only to registered wrappers without mutating thei
     id: "action",
     title: "Action",
     description: "Action",
-    route: "components/action.html",
     dependencies: [],
     relatedDocs: [],
     propSchema: {

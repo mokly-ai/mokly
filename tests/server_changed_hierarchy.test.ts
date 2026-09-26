@@ -6,7 +6,7 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 import { changedManifestRoutes } from "../dist/registry/changed_routes.js";
 import { parseHistoricalManifest } from "../dist/registry/manifest.js";
-import type { ManifestV6 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV7 } from "../packages/viewer/dist/registry/types.js";
 
 import {
   createFixture,
@@ -84,6 +84,6 @@ test("a validated v5 baseline with collections does not invent moves in unchange
 
 async function compileManifest(
   config: Awaited<ReturnType<typeof loadConfig>>,
-): Promise<ManifestV6> {
+): Promise<ManifestV7> {
   return (await compileCatalogue(config)).manifest;
 }

@@ -47,10 +47,10 @@ test("filesystem manifest loading never accepts v2 under the canonical filename"
     JSON.stringify(legacy),
   );
 
-  assert.throws(() => readManifest(config), /schema version 6/);
+  assert.throws(() => readManifest(config), /schema version 7/);
 });
 
-test("manifest loading rejects URL-sensitive catalogue routes", async (context) => {
+test("manifest loading rejects routes that do not derive from identity", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -59,16 +59,19 @@ test("manifest loading rejects URL-sensitive catalogue routes", async (context) 
   if (!screen || screen.kind !== "screen") throw new Error("screen missing");
   screen.route = "screens/home?alternate.html";
 
-  assert.throws(() => parseManifest(manifest), /unsafe route/);
+  assert.throws(
+    () => parseManifest(manifest),
+    /route does not match its kind and id/,
+  );
 });
 
 test("manifest validates darkFragments names and collisions", () => {
-  const manifest = manifestWithScreen("a", "a.html");
+  const manifest = manifestWithScreen("a");
   const screen = manifest.entries[0];
   if (!screen || screen.kind !== "screen") throw new Error("screen missing");
   screen.darkFragments = {
-    desktop: "a.desktop.dark.html",
-    mobile: "a.mobile.dark.html",
+    desktop: "screens/a.desktop.dark.html",
+    mobile: "screens/a.mobile.dark.html",
   };
   assert.doesNotThrow(() => parseManifest(manifest));
 
@@ -78,7 +81,7 @@ test("manifest validates darkFragments names and collisions", () => {
     throw new Error("screen missing");
   }
   wrongScreen.darkFragments = {
-    desktop: "a.desktop.dark.html",
+    desktop: "screens/a.desktop.dark.html",
     mobile: "wrong.mobile.dark.html",
   };
   assert.throws(
@@ -86,13 +89,16 @@ test("manifest validates darkFragments names and collisions", () => {
     /has invalid or colliding mobile dark fragment/,
   );
 
+  const collidingScreen = manifestWithScreen("b").entries[0]!;
+  if (collidingScreen.kind !== "screen") throw new Error("screen missing");
+  collidingScreen.darkFragments = {
+    desktop: "screens/b.desktop.dark.html",
+    mobile: "screens/a.mobile.dark.html",
+  };
   const collision = {
     ...structuredClone(manifest),
     sourceFiles: ["entries/a.mockup.tsx", "entries/b.mockup.tsx"],
-    entries: [
-      ...manifest.entries,
-      manifestWithScreen("b", "a.mobile.dark.html").entries[0]!,
-    ],
+    entries: [...manifest.entries, collidingScreen],
   };
   assert.throws(
     () => parseManifest(collision),
@@ -105,7 +111,7 @@ test("manifest validates darkFragments names and collisions", () => {
 });
 
 test("manifest validation accepts tags and rejects invalid ones", () => {
-  const manifest = manifestWithScreen("a", "a.html");
+  const manifest = manifestWithScreen("a");
   const screen = manifest.entries[0];
   if (!screen || screen.kind !== "screen") throw new Error("screen missing");
   screen.tags = ["forms", "onboarding"];
@@ -133,17 +139,17 @@ test("light-only manifests remain deterministic without variant metadata", () =>
         sourcePath: "entries/a.mockup.tsx",
         title: "A",
         fragments: {
-          desktop: "a.desktop.html",
-          mobile: "a.mobile.html",
+          desktop: "screens/a.desktop.html",
+          mobile: "screens/a.mobile.html",
         },
-        route: "a.html",
+        route: "screens/a.html",
         useCaseIds: [],
         viewports: ["mobile", "desktop"],
       },
     ],
     generatedBy: "mokly",
     sourceFiles: ["entries/a.mockup.tsx"],
-    schemaVersion: 6,
+    schemaVersion: 7,
   });
 
   const serialized = serializeManifest(createManifest([entry], [], ["light"]));
@@ -234,8 +240,8 @@ function toV2Manifest(manifest: unknown): Record<string, unknown> {
   return legacy;
 }
 
-function manifestWithScreen(id: string, route: string) {
-  return createManifest([resolvedScreen(id, route)], [], ["light"]);
+function manifestWithScreen(id: string) {
+  return createManifest([resolvedScreen(id)], [], ["light"]);
 }
 
 function resolvedUseCase(

@@ -16,7 +16,7 @@ for (const viewport of ["desktop", "mobile"] as const)
     page.on("response", (response) => {
       if (response.status() >= 400) failures.push(response.url());
     });
-    await page.goto("/view/components/action.html");
+    await page.goto("/view/components/example-action.html");
     await chooseViewport(page, viewport);
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     if (viewport === "mobile")

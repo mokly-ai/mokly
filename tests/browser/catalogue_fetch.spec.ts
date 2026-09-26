@@ -120,7 +120,7 @@ test("Serve hydrates from its inline catalogue without an initial read", async (
   page.on("request", (request) =>
     requests.push(new URL(request.url()).pathname),
   );
-  await page.goto("/view/screens/welcome.html");
+  await page.goto("/view/screens/example-welcome.html");
   await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
   expect(requests).not.toContain("/__mokly/catalogue.json");
 });

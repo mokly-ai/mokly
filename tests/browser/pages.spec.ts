@@ -33,7 +33,7 @@ for (const width of [390, 1280]) {
     await expect(frame).toHaveCount(1);
     await expect(frame).toHaveAttribute(
       "src",
-      /\/static\/handbook.html#next-steps$/,
+      /\/static\/pages\/example-handbook.html#next-steps$/,
     );
     await expect(frame).toHaveAttribute("sandbox", "allow-same-origin");
     await expect(
@@ -89,7 +89,9 @@ for (const width of [390, 1280]) {
       .frameLocator(screenFrame)
       .getByRole("link", { name: "Read the handbook" })
       .click();
-    await expect(page).toHaveURL(/\/view\/handbook.html\?fragment=next-steps$/);
+    await expect(page).toHaveURL(
+      /\/view\/pages\/example-handbook.html\?fragment=next-steps$/,
+    );
     await page.goBack();
     await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
     await page.goForward();
@@ -106,35 +108,31 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await chooseViewport(page, viewport);
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
     await frame.locator(".ce-inspector-link").click();
-    await expect(page).toHaveURL(
-      /\/view\/design\/browse\/pages\/details\.html$/,
-    );
+    await expect(page).toHaveURL(/\/view\/screens\/design-page-details\.html$/);
     await expect(frame.locator(".mbk-details-body")).toContainText(
       "handbook.html",
     );
     await frame.locator(".ce-inspector-link").click();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/view\.html$/);
+    await expect(page).toHaveURL(/\/view\/screens\/design-page-view\.html$/);
     if (viewport === "mobile") {
       await frame
         .getByRole("link", { name: "Open catalogue navigation" })
         .click();
       await expect(page).toHaveURL(
-        /\/view\/design\/browse\/pages\/navigation\.html$/,
+        /\/view\/screens\/design-page-navigation\.html$/,
       );
       await frame
         .getByRole("link", { name: "Close catalogue navigation" })
         .click();
-      await expect(page).toHaveURL(
-        /\/view\/design\/browse\/pages\/view\.html$/,
-      );
+      await expect(page).toHaveURL(/\/view\/screens\/design-page-view\.html$/);
     }
     await frame
       .getByRole("link", { name: "Open Welcome", exact: true })
       .click();
     await expect(page).toHaveURL(
-      /\/view\/design\/browse\/views\/screen\.html$/,
+      /\/view\/screens\/design-browse-screen\.html$/,
     );
     await page.goBack();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/view\.html$/);
+    await expect(page).toHaveURL(/\/view\/screens\/design-page-view\.html$/);
   });
 }

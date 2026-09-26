@@ -101,7 +101,6 @@ export const changesScreens = [
     desktop: <ChangesScreen overlay={false} viewport="desktop" />,
     id: "design-changes-current",
     mobile: <ChangesScreen overlay={false} viewport="mobile" />,
-    slug: "current",
     title: "Current screen in Changes",
   }),
   screen({
@@ -110,7 +109,6 @@ export const changesScreens = [
     desktop: <ChangesScreen overlay viewport="desktop" />,
     id: "design-changes-overlay",
     mobile: <ChangesScreen overlay viewport="mobile" />,
-    slug: "overlay",
     title: "On-demand overlay",
   }),
 ];

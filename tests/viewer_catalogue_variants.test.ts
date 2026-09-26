@@ -15,18 +15,18 @@ test("viewer rebuilds current and removed screen variant relationships", () => {
   const parent = screen("welcome", "screens/welcome.html");
   const current = screen(
     "welcome-empty",
-    "screens/welcome.variants/empty.html",
+    "screens/welcome-empty.html",
     parent.id,
   );
   const removed = screen(
     "welcome-error",
-    "screens/welcome.variants/error.html",
+    "screens/welcome-error.html",
     parent.id,
   );
   const manifest = {
     entries: [parent, current],
     generatedBy: "mokly" as const,
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     sourceFiles: [parent.sourcePath, current.sourcePath].sort(),
   };
   const model = projectCatalogue({

@@ -16,7 +16,6 @@ export function ControlsOverviewMobile() {
 
 /** Canonical controls design followed by bounded galleries of authored outcomes. */
 export const controlsDesign = folder({
-  segment: "controls",
   title: "Prop controls",
   dependencies: [
     ...componentStyleDependencies,
@@ -29,7 +28,6 @@ export const controlsDesign = folder({
   children: [
     screen({
       id: "design-component-controls",
-      slug: "overview",
       title: "Component prop controls",
       description:
         "Default saved values with text, boolean, number, select, and optional controls beside the component preview.",
@@ -38,17 +36,14 @@ export const controlsDesign = folder({
       mobile: <ControlsOverviewMobile />,
     }),
     folder({
-      segment: "editing",
       title: "Editing and saved variants",
       children: editingScreens,
     }),
     folder({
-      segment: "states",
       title: "Rendering and comparison",
       children: statesScreens,
     }),
     folder({
-      segment: "published",
       title: "Published catalogue",
       children: publishedScreens,
     }),

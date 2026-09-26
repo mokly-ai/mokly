@@ -9,18 +9,15 @@ import {
   screen,
 } from "../dist/authoring/definitions.js";
 
-test("nested folders derive paths independently of routes", () => {
+test("nested folders derive paths while ids alone derive routes", () => {
   const entries = defineRoot({
-    path: "design",
     navPath: ["Design"],
     children: [
       folder({
-        segment: "views",
         title: "Browse shell",
         children: [
           screen({
             id: "browse-home",
-            slug: "home",
             title: "Home",
             description: "Home screen",
             mobile: "Mobile",
@@ -28,7 +25,6 @@ test("nested folders derive paths independently of routes", () => {
           }),
           page({
             id: "browse-document",
-            slug: "document",
             title: "Document",
             description: "Document page",
             render: () => "<main>Document</main>",
@@ -46,69 +42,56 @@ test("nested folders derive paths independently of routes", () => {
   );
   assert.deepEqual(
     entries.map((entry) => "route" in entry && entry.route),
-    ["design/views/home.html", "design/views/document.html"],
+    ["screens/browse-home.html", "pages/browse-document.html"],
   );
 });
 
 test("root and folders reject empty authored structure", () => {
   assert.throws(
-    () => defineRoot({ path: "design", navPath: ["Design"], children: [] }),
-    /root design has no children/,
+    () => defineRoot({ navPath: ["Design"], children: [] }),
+    /root Design has no children/,
   );
   assert.throws(
     () =>
       defineRoot({
-        path: "design",
-        children: [folder({ segment: "views", title: "Views", children: [] })],
+        navPath: ["Design"],
+        children: [folder({ title: "Views", children: [] })],
       }),
-    /folder design\/views has no children/,
+    /folder Design › Views has no children/,
   );
-  assert.deepEqual(defineRoot({ path: "design", children: [] }), []);
-  assert.deepEqual(
-    defineRoot({ path: "design", navPath: [], children: [] }),
-    [],
-  );
+  assert.deepEqual(defineRoot({ children: [] }), []);
+  assert.deepEqual(defineRoot({ navPath: [], children: [] }), []);
 });
 
-test("root paths must be arrays and folder segments cannot be empty", () => {
+test("root navPath and empty-folder errors use navigation labels", () => {
   assert.throws(
     () =>
       defineRoot({
-        path: "design",
         navPath: "Design" as unknown as string[],
         children: [],
       }),
-    /root design navPath must be an array/,
+    /root navPath must be an array/,
   );
   assert.throws(
     () =>
       defineRoot({
-        path: "design",
+        navPath: ["Design"],
         children: [
           folder({
-            segment: "",
             title: "Views",
             children: [
-              screen({
-                id: "view",
-                slug: "view",
-                title: "View",
-                description: "A view",
-                mobile: "Mobile",
-                desktop: "Desktop",
-              }),
+              folder({ title: 42 as unknown as string, children: [] }),
             ],
           }),
         ],
       }),
-    /folder design segment must be a non-empty string/,
+    /folder Design › Views › 42 has no children/,
   );
 });
 
 test("flattened variants inherit their parent path", () => {
   const entries = defineScreen({
     id: "browse-home",
-    route: "browse/home.html",
     title: "Home",
     description: "Home screen",
     dependencies: [],
@@ -119,7 +102,6 @@ test("flattened variants inherit their parent path", () => {
     variants: [
       {
         id: "browse-dark",
-        slug: "dark",
         title: "Dark",
         description: "Dark screen",
         mobile: "Dark mobile",

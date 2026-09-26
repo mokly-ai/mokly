@@ -73,12 +73,9 @@ test("workspace badges, comparison eligibility and usage use recorded evidence",
   );
 });
 
-test("a renamed screen keeps distinct Added and Removed evidence in a component catalogue", async (t) => {
+test("a changed screen id keeps distinct Added and Removed evidence in a component catalogue", async (t) => {
   const fixture = await componentReviewFixture(t, (source) =>
-    source.replace(
-      'route: "screens/home.html"',
-      'route: "screens/renamed.html"',
-    ),
+    source.replace('id: "home"', 'id: "renamed"'),
   );
   const { result } = await compareReview(
     fixture.after,
@@ -91,7 +88,7 @@ test("a renamed screen keeps distinct Added and Removed evidence in a component 
     fixture.after.manifest,
     fixture.before.manifest,
   );
-  const current = catalogue.byId.get("home");
+  const current = catalogue.byId.get("renamed");
   if (current?.kind !== "screen") assert.fail("Expected current screen");
   const context = {
     base: "main",

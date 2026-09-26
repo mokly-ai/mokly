@@ -39,24 +39,11 @@ const config: ResolvedConfig = {
   watch: { debounceMs: 100, rules: [] },
 };
 
-test("variant authoring rejects invalid slugs and forbidden fields", () => {
-  const badSlug = screenDefinitions([variant("welcome-bad-slug", "bad/slug")]);
-  assertViolation(allViolations(badSlug), "invalid-variants", "welcome");
-
-  const duplicate = screenDefinitions([
-    variant("welcome-empty", "empty"),
-    variant("welcome-empty-again", "empty"),
-  ]);
-  assertViolation(
-    allViolations(duplicate),
-    "duplicate-variant-slug",
-    "welcome",
-  );
-
-  for (const field of ["variants", "route", "navPath"] as const) {
+test("variant authoring rejects only the retained forbidden fields", () => {
+  for (const field of ["variants", "navPath"] as const) {
     const input = {
-      ...variant(`welcome-${field}`, field),
-      [field]: field === "route" ? "screens/custom.html" : [],
+      ...variant(`welcome-${field}`),
+      [field]: [],
     };
     assertViolation(
       allViolations(screenDefinitions([input])),
@@ -64,12 +51,22 @@ test("variant authoring rejects invalid slugs and forbidden fields", () => {
       `welcome-${field}`,
     );
   }
+
+  const legacy = {
+    ...variant("welcome-legacy"),
+    route: "screens/custom.html",
+    slug: "custom",
+  } as unknown as ScreenVariantInput;
+  const definitions = screenDefinitions([legacy]);
+  assert.equal(definitions[1]?.route, "screens/welcome-legacy.html");
+  assert.equal(
+    allViolations(definitions).some(({ code }) => code === "invalid-variants"),
+    false,
+  );
 });
 
-test("variant relationships reject unknown, nested, non-screen, and re-routed parents", () => {
-  const [parent, child] = screenDefinitions([
-    variant("welcome-empty", "empty"),
-  ]);
+test("variant relationships reject unknown, nested, and non-screen parents", () => {
+  const [parent, child] = screenDefinitions([variant("welcome-empty")]);
   assert.ok(parent && child);
   const unknown = { ...child, variantOf: "missing" };
   assertViolation(
@@ -80,19 +77,13 @@ test("variant relationships reject unknown, nested, non-screen, and re-routed pa
   const nested = {
     ...child,
     id: "welcome-nested",
-    route: "screens/welcome.variants/empty.variants/nested.html",
+    route: "screens/welcome-nested.html",
     variantOf: child.id,
   };
   assertViolation(
     allViolations([parent, child, nested]),
     "invalid-variant-of",
     nested.id,
-  );
-  const rerouted = { ...child, route: "screens/elsewhere.html" };
-  assertViolation(
-    allViolations([parent, rerouted]),
-    "invalid-variant-of",
-    child.id,
   );
   const nonScreenParent = {
     ...invalidNonScreen("page"),
@@ -110,9 +101,7 @@ test("variant relationships reject unknown, nested, non-screen, and re-routed pa
 });
 
 test("variants must retain their parent's navigation path", () => {
-  const [parent, child] = screenDefinitions([
-    variant("welcome-empty", "empty"),
-  ]);
+  const [parent, child] = screenDefinitions([variant("welcome-empty")]);
   assert.ok(parent && child);
   const moved = { ...child, navPath: ["Elsewhere"] };
   assertViolation(allViolations([parent, moved]), "invalid-variants", child.id);
@@ -157,7 +146,6 @@ function screenDefinitions(
     id: "welcome",
     mobile: "Mobile",
     relatedDocs: [],
-    route: "screens/welcome.html",
     title: "Welcome",
     variants,
   });
@@ -165,13 +153,12 @@ function screenDefinitions(
   return definitions.map((definition) => resolved(attributed(definition)));
 }
 
-function variant(id: string, slug: string): ScreenVariantInput {
+function variant(id: string): ScreenVariantInput {
   return {
     description: `${id} description`,
     desktop: `${id} desktop`,
     id,
     mobile: `${id} mobile`,
-    slug,
     title: id,
   };
 }
@@ -186,12 +173,11 @@ function flowWithVariant(
     id: "welcome",
     mobile: "Mobile",
     relatedDocs: [],
-    route: "screens/welcome.html",
     title: "Welcome",
     useCaseIds: ["tour"],
     variants: [
       {
-        ...variant("welcome-empty", "empty"),
+        ...variant("welcome-empty"),
         ...(variantUseCaseIds === undefined
           ? {}
           : { useCaseIds: variantUseCaseIds }),
@@ -203,7 +189,6 @@ function flowWithVariant(
     description: "Tour",
     id: "tour",
     relatedDocs: [],
-    route: "user-flows/tour.html",
     steps: [{ screenId: "welcome" }],
     title: "Tour",
   });

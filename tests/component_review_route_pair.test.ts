@@ -18,15 +18,13 @@ const image = '<img src="../shared.svg" />';
 const svg = (fill: string) =>
   `<svg xmlns="http://www.w3.org/2000/svg"><rect fill="${fill}"/></svg>`;
 
-test("a moved screen shares an id with a removed pair without losing view evidence", async (t) => {
-  const fixture = await createFixture(
-    source([screen("a", "a", image), screen("b", "b", "<p>Before B</p>")]),
-  );
+test("an authored route cannot split one screen id's view evidence", async (t) => {
+  const fixture = await createFixture(source([screen("a", "a", image)]));
   t.after(() => removeFixture(fixture));
   await fs.writeFile(path.join(fixture.mockupsDir, "shared.svg"), svg("red"));
   const config = await loadConfig(fixture.root);
   const before = await compileCatalogue(config);
-  await fs.writeFile(fixture.entryPath, source([screen("b", "a", image)]));
+  await fs.writeFile(fixture.entryPath, source([screen("a", "moved", image)]));
   const after = await compileCatalogue(config);
   const result = await assertFastPathEquivalent({
     before: before.manifest,
@@ -36,24 +34,15 @@ test("a moved screen shares an id with a removed pair without losing view eviden
     changedPaths: [resource],
     config,
   });
-  const moved = result.screens.find(
+  const paired = result.screens.find(
     (entry) => entry.route === "screens/a.html",
   )!;
-  const removed = result.screens.find(
-    (entry) => entry.route === "screens/b.html",
-  )!;
-  assert.equal(moved.before?.id, "a");
-  assert.equal(moved.after?.id, "b");
-  assert.equal(removed.before?.id, "b");
-  assert.equal(removed.after, undefined);
+  assert.equal(paired.before?.id, "a");
+  assert.equal(paired.after?.id, "a");
+  assert.equal(result.screens.length, 1);
   assert.ok(
-    moved.views.some((view) =>
+    paired.views.some((view) =>
       view.reasons?.some((reason) => reason.path === resource),
-    ),
-  );
-  assert.ok(
-    removed.views.every(
-      (view) => !view.reasons?.some((reason) => reason.path === resource),
     ),
   );
   assert.ok(

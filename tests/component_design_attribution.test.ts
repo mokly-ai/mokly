@@ -34,8 +34,7 @@ test("mixed component design styles retain their actual rendered resource scope"
       );
       if (screens === "all-design") {
         const allDesignScreens = fixture.before.manifest.entries.filter(
-          (entry) =>
-            entry.kind === "screen" && entry.route.startsWith("design/"),
+          (entry) => entry.kind === "screen" && entry.id.startsWith("design-"),
         );
         assert.deepEqual(
           expectedScreens.map(({ id }) => id).sort(),
@@ -57,7 +56,7 @@ test("mixed component design styles retain their actual rendered resource scope"
       if (stylesheet !== "design.css")
         assert.ok(
           result.changes.every((change) =>
-            (change.after ?? change.before)!.route.startsWith("design/"),
+            (change.after ?? change.before)!.id.startsWith("design-"),
           ),
           "unrelated Example content stays unchanged",
         );

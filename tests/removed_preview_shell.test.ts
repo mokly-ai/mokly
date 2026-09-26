@@ -6,7 +6,7 @@ import test from "node:test";
 import { exportCatalogue } from "../dist/export/run.js";
 import { viewPage } from "../dist/server/pages.js";
 import { readPreviewDescriptor } from "../packages/viewer/dist/previews/descriptor.js";
-import type { ManifestV6 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV7 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { RemovedEntrySnapshot } from "../packages/viewer/dist/shell/metadata.js";
 
@@ -84,8 +84,8 @@ const flow: RemovedEntry = {
 };
 
 function removedShell(entry: RemovedEntry): string {
-  const manifest: ManifestV6 = {
-    schemaVersion: 6,
+  const manifest: ManifestV7 = {
+    schemaVersion: 7,
     generatedBy: "mokly",
     sourceFiles: [],
     entries: [],
@@ -190,14 +190,14 @@ test("exported shells advertise only the packaged previous versions", async (t) 
   });
   const read = (route: string) =>
     fs.readFile(path.join(fixture.output, "view", route), "utf8");
-  const document = descriptor(await read("archive/removed.html"));
+  const document = descriptor(await read("pages/removed-page.html"));
   assert.equal(document?.kind, "page");
   assert.equal(document?.published?.kind, "page");
   assert.match(
     document?.published?.kind === "page" ? document.published.path : "",
-    /^__mokly\/diffs\/__generations\/[a-f0-9]{64}\/pages\/archive\/removed\.html\.json$/,
+    /^__mokly\/diffs\/__generations\/[a-f0-9]{64}\/pages\/pages\/removed-page\.html\.json$/,
   );
-  const removedScreen = descriptor(await read("screens/removed.html"));
+  const removedScreen = descriptor(await read("screens/removed-screen.html"));
   assert.deepEqual(removedScreen?.published, { kind: "screen" });
   const current = await read("screens/current.html");
   assert.doesNotMatch(current, /data-mokly-preview=/);

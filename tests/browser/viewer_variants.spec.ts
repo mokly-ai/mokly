@@ -88,7 +88,7 @@ function screenVariantCatalogue(): CatalogueReadModel {
     ...parent,
     id: "home-error",
     title: "Save failed",
-    route: "screens/home.variants/error.html",
+    route: "screens/home-error.html",
     variantOf: parent.id,
     changes: {
       status: "ready" as const,
@@ -97,7 +97,7 @@ function screenVariantCatalogue(): CatalogueReadModel {
     },
     views: parent.views.map((view) => ({
       ...view,
-      fragmentPath: `static/screens/home.variants/error.${view.viewport}${
+      fragmentPath: `static/screens/home-error.${view.viewport}${
         view.colorScheme === "dark" ? ".dark" : ""
       }.html`,
       comparison:

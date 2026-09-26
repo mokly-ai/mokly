@@ -107,7 +107,7 @@ test("removing a parent and variant retains one removed screen for each", async 
   );
   assert.deepEqual(
     changes.changedRoutes.filter((route) => route.startsWith("screens/home")),
-    ["screens/home.html", "screens/home.variants/empty.html"],
+    ["screens/home-empty.html", "screens/home.html"],
   );
 });
 
@@ -137,7 +137,7 @@ test("a committed baseline places a removed variant under its parent row", async
 
   assert.match(
     html,
-    /<div class="mbk-nav-variants" data-nav-disclosure="variants:pages:home"[^>]*id="mb-nav-variants-pages-home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""[^>]*hidden=""[^>]*data-route="screens\/home\.variants\/empty\.html"/,
+    /<div class="mbk-nav-variants" data-nav-disclosure="variants:pages:home"[^>]*id="mb-nav-variants-pages-home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""[^>]*hidden=""[^>]*data-route="screens\/home-empty\.html"/,
   );
   assert.match(html, /Home empty · Removed<span class="mbk-nav-changed-text"/);
   assert.match(html, /<span class="mbk-nav-filter-count">1<\/span>/);
@@ -147,6 +147,6 @@ test("a committed baseline places a removed variant under its parent row", async
   );
   assert.match(
     html,
-    /data-changed="true"[^>]*data-route="screens\/home\.variants\/empty\.html"/,
+    /data-changed="true"[^>]*data-route="screens\/home-empty\.html"/,
   );
 });

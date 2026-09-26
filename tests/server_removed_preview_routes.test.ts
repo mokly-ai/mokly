@@ -77,7 +77,7 @@ test("Serve routes removed screens and pages without capture during browsing", a
   assert.ok(beforeCapture.removedEntries.every((entry) => !entry.preview));
 
   const screenResponse = await fetch(
-    `${server.url}/__mokly/diffs/review.json?route=screens%2Fremoved.html`,
+    `${server.url}/__mokly/diffs/review.json?route=screens%2Fremoved-screen.html`,
   );
   assert.equal(screenResponse.status, 200, await screenResponse.clone().text());
   const screen = parseReviewResult(await screenResponse.json()).screens[0]!;
@@ -92,7 +92,7 @@ test("Serve routes removed screens and pages without capture during browsing", a
   assert.equal(screenCaptures, 1);
 
   const pageResponse = await fetch(
-    `${server.url}/__mokly/diffs/review.json?page=archive%2Fremoved.html`,
+    `${server.url}/__mokly/diffs/review.json?page=pages%2Fremoved-page.html`,
   );
   assert.equal(pageResponse.status, 200, await pageResponse.clone().text());
   const preview = parseRemovedPagePreview(await pageResponse.json());

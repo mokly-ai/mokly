@@ -20,7 +20,7 @@ import { validEntrySource } from "./helpers/fixture.js";
 test("component metadata reflects authored paths without a hierarchy projection", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const manifest = fixture.after.manifest;
-  assert.equal(manifest.schemaVersion, 6);
+  assert.equal(manifest.schemaVersion, 7);
   const entry = manifest.entries.find((item) => item.kind === "screen");
   assert.ok(entry);
   assert.notEqual(metadata(entry), metadata({ ...entry, navPath: ["Moved"] }));
@@ -29,7 +29,7 @@ test("component metadata reflects authored paths without a hierarchy projection"
 test("component dependency ownership is indexed once per changed path", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const sourceManifest = fixture.after.manifest;
-  assert.equal(sourceManifest.schemaVersion, 6);
+  assert.equal(sourceManifest.schemaVersion, 7);
   let ownershipReads = 0;
   const entries = sourceManifest.entries.map((entry) =>
     entry.kind === "component"

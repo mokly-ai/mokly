@@ -29,17 +29,14 @@ const designMockups = defineRoot({
       children: [
         folder({
           children: [...browseViewScreens, detailsScreen],
-          segment: "views",
           title: "Catalogue views",
         }),
         folder({
           children: [...browseStateScreens, ...browseTagScreens],
-          segment: "states",
           title: "Shell states",
         }),
         folder({
           children: variantScreens,
-          segment: "variants",
           title: "Screen variants",
         }),
         folder({
@@ -47,28 +44,23 @@ const designMockups = defineRoot({
             ...pageScreens,
             folder({
               children: removedPageScreens,
-              segment: "previous-version",
               title: "Previous document versions",
             }),
           ],
-          segment: "pages",
           title: "Document pages",
         }),
         folder({
           children: publicationScreens,
-          segment: "publication",
           title: "Published catalogue",
         }),
         appearanceDesign,
       ],
-      segment: "browse",
       title: "Browse shell",
     }),
     folder({
       children: [
         folder({
           children: changesScreens,
-          segment: "controls",
           title: "Diff controls",
         }),
         folder({
@@ -76,11 +68,9 @@ const designMockups = defineRoot({
             ...reviewOutcomeScreens,
             folder({
               children: removedOutcomeScreens,
-              segment: "previous-version",
               title: "Previous screen versions",
             }),
           ],
-          segment: "outcomes",
           title: "Comparison outcomes",
         }),
         folder({
@@ -88,16 +78,13 @@ const designMockups = defineRoot({
             ...reviewImpactScreens,
             folder({
               children: reviewStyleScreens,
-              segment: "stylesheets",
               title: "Stylesheet evidence",
             }),
           ],
-          segment: "impact",
           title: "Impact states",
         }),
         folder({
           children: reviewAvailabilityScreens,
-          segment: "availability",
           title: "Comparison availability",
         }),
       ],
@@ -105,7 +92,6 @@ const designMockups = defineRoot({
         ...DESIGN_DEPENDENCIES,
         "examples/basic/generated/design-review.css",
       ],
-      segment: "review",
       title: "Changes",
     }),
   ],
@@ -114,7 +100,6 @@ const designMockups = defineRoot({
     "docs/protocol/mokly-shell-design.md",
     "examples/basic/notes.md",
   ],
-  path: "design",
 });
 
 /** The neutral Mokly catalogue and Changes design catalogue. */

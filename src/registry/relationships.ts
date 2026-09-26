@@ -27,14 +27,14 @@ export function crossReferenceViolations(
   return violations;
 }
 
-/** Find duplicate ids or routed values. */
+/** Find duplicate ids. */
 export function duplicateViolations(
   entries: readonly ResolvedRegistryEntry[],
-  field: "id" | "route",
+  field: "id",
 ): RegistryViolation[] {
   const groups = new Map<string, ResolvedRegistryEntry[]>();
   for (const entry of entries) {
-    const value = field === "id" ? entry.id : entry.route;
+    const value = entry.id;
     if (value) groups.set(value, [...(groups.get(value) ?? []), entry]);
   }
   return [...groups.entries()].flatMap(([value, group]) =>

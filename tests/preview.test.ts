@@ -36,11 +36,11 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   assert.match(index, /class="mbk-nav-filter-count">\d+</);
   assert.match(index, /\/__mokly\/client\/react-shell\.js/);
   assert.doesNotMatch(index, /\/__mokly\/client\/browser\.js/);
-  assert.match(index, /href="\/view\/screens\/welcome"/);
-  assert.doesNotMatch(index, /href="\/view\/screens\/welcome\.html"/);
-  const welcome = await read(output, "view/screens/welcome.html");
+  assert.match(index, /href="\/view\/screens\/example-welcome"/);
+  assert.doesNotMatch(index, /href="\/view\/screens\/example-welcome\.html"/);
+  const welcome = await read(output, "view/screens/example-welcome.html");
   assert.match(welcome, /Welcome · Mokly/);
-  assert.match(welcome, /data-diff-screen="screens\/welcome.html"/);
+  assert.match(welcome, /data-diff-screen="screens\/example-welcome.html"/);
   for (const mode of ["current", "side", "overlay", "difference"])
     assert.match(welcome, new RegExp(`data-diff-mode="${mode}"`));
   // A static export carries the one Appearance control, and requests the asset
@@ -55,24 +55,24 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
     /<iframe[^>]*data-fragment-light="([^"]+)"[^>]*src="([^"]+)"/,
   );
   assert.ok(frame);
-  assert.equal(frame[1], "/static/screens/welcome.mobile");
+  assert.equal(frame[1], "/static/screens/example-welcome.mobile");
   assert.equal(frame[2], frame[1]);
   assert.match(
     welcome,
-    /data-fragment-dark="\/static\/screens\/welcome\.mobile\.dark"/,
+    /data-fragment-dark="\/static\/screens\/example-welcome\.mobile\.dark"/,
   );
-  assert.match(welcome, /src="\/static\/screens\/welcome\.desktop"/);
+  assert.match(welcome, /src="\/static\/screens\/example-welcome\.desktop"/);
   assert.doesNotMatch(
     welcome,
-    /src="\/static\/screens\/welcome\.desktop\.html"/,
+    /src="\/static\/screens\/example-welcome\.desktop\.html"/,
   );
   assert.doesNotMatch(welcome, /data-fragment-(?:light|dark)="[^"]+\.html"/);
   assert.match(
-    await read(output, "static/screens/welcome.desktop.html"),
+    await read(output, "static/screens/example-welcome.desktop.html"),
     /Welcome to Mokly/,
   );
   assert.match(
-    await read(output, "static/screens/welcome.desktop.dark.html"),
+    await read(output, "static/screens/example-welcome.desktop.dark.html"),
     /data-color-scheme="dark"/,
   );
   assert.match(await read(output, "__mokly/shell.css"), /--mbk-/);
@@ -90,7 +90,7 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   assert.match(await read(output, "404.html"), /Item not found/);
   assert.match(
     await read(output, "_redirects"),
-    /\/id\/example-welcome \/view\/screens\/welcome 302/,
+    /\/id\/example-welcome \/view\/screens\/example-welcome 302/,
   );
   assert.equal(
     await read(output, ".mokly-preview-artifact"),

@@ -10,12 +10,12 @@ import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
 
 const document =
-  '<html><head><link rel="stylesheet" href="document.css"></head><body><!--mokly-review-ignore:start:nav--><nav>Old navigation</nav><!--mokly-review-ignore:end:nav--><main>Document content</main></body></html>';
+  '<html><head><link rel="stylesheet" href="../document.css"></head><body><!--mokly-review-ignore:start:nav--><nav>Old navigation</nav><!--mokly-review-ignore:end:nav--><main>Document content</main></body></html>';
 const source =
   validEntrySource() +
   `
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ id: "handbook", title: "Handbook", description: "A document", route: "handbook.html", dependencies: ["notes.md"], relatedDocs: [], render: () => ${JSON.stringify(document)} }));
+mockups.push(definePage({ id: "handbook", title: "Handbook", description: "A document", dependencies: ["notes.md"], relatedDocs: [], render: () => ${JSON.stringify(document)} }));
 `;
 
 for (const change of [
@@ -61,7 +61,9 @@ for (const change of [
         "HEAD",
         committedReviewRepository(fixture.config),
       ),
-      change === "material" || change === "resource" ? ["handbook.html"] : [],
+      change === "material" || change === "resource"
+        ? ["pages/handbook.html"]
+        : [],
     );
   });
 }

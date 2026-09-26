@@ -51,7 +51,7 @@ test("a repeated slot rejects conflicting logical inputs from an impure child", 
   );
 });
 
-test("saved variants share transactional collision and orphan protection", async (t) => {
+test("saved variants share transactional orphan protection", async (t) => {
   const source = componentEntrySource();
   const fixture = await createFixture(source, {
     extraConfig: 'colorSchemes: ["light", "dark"],',
@@ -76,17 +76,6 @@ test("saved variants share transactional collision and orphan protection", async
     code: "ENOENT",
   });
   checkCompilation(next, config);
-  await fs.writeFile(
-    fixture.entryPath,
-    source.replace(
-      'route: "screens/home.html"',
-      'route: "components/action.variants/default.html"',
-    ),
-  );
-  await assert.rejects(
-    compileCatalogue(config),
-    /collision|duplicate|already/i,
-  );
 });
 
 for (const [name, transform, error] of [

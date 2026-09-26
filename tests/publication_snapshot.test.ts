@@ -90,7 +90,7 @@ for (const includeChanges of [false, true]) {
           rebuilt = true;
           await fs.promises.appendFile(
             fixture.entryPath,
-            '\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "publication-added", title: "Added during publication", route: "publication-added.html", description: "A new document", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Added document</body></html>" }));\n',
+            '\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "publication-added", title: "Added during publication", description: "A new document", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Added document</body></html>" }));\n',
           );
           await writeCompilation(await compileCatalogue(config), config);
         }
@@ -108,13 +108,16 @@ for (const includeChanges of [false, true]) {
       fs.promises.readFile(path.join(output, file), "utf8");
     assert.match(await read("index.html"), /data-entry-id="publication-added"/);
     assert.match(
-      await read("view/publication-added.html"),
+      await read("view/pages/publication-added.html"),
       /Added during publication/,
     );
-    assert.match(await read("static/publication-added.html"), /Added document/);
+    assert.match(
+      await read("static/pages/publication-added.html"),
+      /Added document/,
+    );
     assert.match(
       await read("_redirects"),
-      /\/id\/publication-added \/view\/publication-added 302/,
+      /\/id\/publication-added \/view\/pages\/publication-added 302/,
     );
     if (includeChanges)
       assert.match(

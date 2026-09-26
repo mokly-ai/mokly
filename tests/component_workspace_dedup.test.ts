@@ -61,13 +61,26 @@ test("affected usage keeps complete serialized identity and evidence order with 
     removed: true,
     comparisonEligible: false,
   });
-  const evidence = (link: UsageLink): AffectedUsageEvidence => ({
+  distinct.push({
+    ...distinct.at(-2)!,
+    title: "Previous route owner",
+    removed: true,
+    comparisonEligible: false,
+  });
+  const evidence = (
+    link: UsageLink,
+    id = link.removed
+      ? "removed-consumer"
+      : link.route === "components/pane.html"
+        ? "pane"
+        : "home",
+  ): AffectedUsageEvidence => ({
     side: "after",
     context: {
       ...(link.variantId
         ? { kind: "component", variantId: link.variantId }
         : { kind: "screen" }),
-      entry: { id: "consumer", title: link.title, route: link.route },
+      entry: { id, title: link.title, route: link.route },
       viewport: link.viewport,
       colorScheme: link.colorScheme,
     },

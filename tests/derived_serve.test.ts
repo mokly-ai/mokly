@@ -104,7 +104,7 @@ test(
         throw new Error("HTTP must never rebuild a baseline");
       });
       const response = await fetch(
-        `${running.url}/__mokly/diffs/review.json?page=archive%2Fremoved.html`,
+        `${running.url}/__mokly/diffs/review.json?page=pages%2Fremoved-page.html`,
       );
       assert.equal(response.status, 200, await response.clone().text());
       const preview = parseRemovedPagePreview(await response.json());

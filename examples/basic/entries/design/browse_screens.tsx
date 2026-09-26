@@ -153,7 +153,6 @@ export const browseViewScreens = [
     desktop: <HomeDesktop />,
     id: "design-browse-home",
     mobile: <HomeMobile />,
-    slug: "home",
     title: "Home",
   }),
   screen({
@@ -162,7 +161,6 @@ export const browseViewScreens = [
     desktop: <SelectedScreenDesktop />,
     id: "design-browse-screen",
     mobile: <SelectedScreenMobile />,
-    slug: "screen",
     title: "Selected screen",
     variants: [
       ...browseSchemeVariants,
@@ -183,7 +181,6 @@ export const browseStateScreens = [
     desktop: <DetailsOpenDesktop />,
     id: "design-browse-details",
     mobile: <DetailsOpenMobile />,
-    slug: "details",
     title: "Details panel",
   }),
   screen({
@@ -192,7 +189,6 @@ export const browseStateScreens = [
     desktop: <MissingRouteDesktop />,
     id: "design-browse-missing-route",
     mobile: <MissingRouteMobile />,
-    slug: "missing-route",
     title: "Missing route",
   }),
   screen({
@@ -202,7 +198,6 @@ export const browseStateScreens = [
     desktop: <NarrowNavigationDesktop />,
     id: "design-browse-navigation",
     mobile: <NarrowNavigationMobile />,
-    slug: "navigation",
     title: "Narrow navigation",
   }),
 ];

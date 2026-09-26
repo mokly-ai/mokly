@@ -34,7 +34,7 @@ for (const mode of ["serve", "static"] as const) {
             });
           });
           const record = host.catalogue.removedEntries.find(
-            ({ entry: candidate }) => candidate.id === entry.id,
+            ({ entry: candidate }) => candidate.id === entry.previousId,
           );
           expect(record?.snapshotId).toMatch(/^[a-f0-9]{64}$/);
           const previousUrl = `${host.url}/view/${entry.previousRoute.slice(0, -5)}?snapshot=${record!.snapshotId}`;
@@ -87,7 +87,7 @@ for (const mode of ["serve", "static"] as const) {
               "baseline",
               host.baseCommit,
               entry.kind,
-              entry.id,
+              entry.previousId,
               entry.previousRoute,
             ]),
           )

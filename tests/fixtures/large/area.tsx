@@ -30,7 +30,6 @@ export function createArea(area: string, count: number, rows: number) {
         id: `${area}-flow-${index + 1}`,
         title: `Activity journey ${index + 1}`,
         description: "Review connected activities.",
-        route: `user-flows/${area}/journey-${index + 1}.html`,
         steps: flows[index]!.map((screenId) => ({ screenId })),
       }),
     ]),
@@ -52,7 +51,6 @@ export function createArea(area: string, count: number, rows: number) {
         id,
         title: `Activity ${index + 1}`,
         description: "Review and manage workspace activity.",
-        route: `${area}/screens/activity-${index + 1}.html`,
         tags: ["activity", index % 2 ? "complete" : "in-progress"],
         useCaseIds: flows.flatMap((group, groupIndex) =>
           group.includes(id) ? [`${area}-flow-${groupIndex + 1}`] : [],
@@ -67,7 +65,6 @@ export function createArea(area: string, count: number, rows: number) {
       id: `${area}-guide`,
       title: "Getting started",
       description: "A guide to workspace activity.",
-      route: `${area}/guide.html`,
       render: () =>
         `<!doctype html><html><head><title>Getting started</title><link rel="stylesheet" href="../assets/catalogue.css"></head><body><main><h1>Getting started</h1><p>Review activity and save your changes.</p><a href="mock:${ids[0]}#summary">Open activity</a></main></body></html>`,
     }),

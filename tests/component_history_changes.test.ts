@@ -50,7 +50,7 @@ test("one-sided registration retains real screen content edits", async (t) => {
       }),
     unregistered("<p>Before adoption</p>"),
   );
-  assert.equal(fixture.before.manifest.schemaVersion, 6);
+  assert.equal(fixture.before.manifest.schemaVersion, 7);
   const { result } = await compareReview(
     fixture.after,
     fixture.config,
@@ -72,7 +72,7 @@ test("removed components retain variants, missing sides, and baseline consuming 
   const fixture = await componentReviewFixture(t, () =>
     unregistered("<p>Now standalone</p>"),
   );
-  assert.equal(fixture.after.manifest.schemaVersion, 6);
+  assert.equal(fixture.after.manifest.schemaVersion, 7);
   const { result } = await compareReview(
     fixture.after,
     fixture.config,

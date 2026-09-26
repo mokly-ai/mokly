@@ -1,10 +1,12 @@
 import type { ComponentViewRecord } from "@mokly/viewer";
 import {
   componentFragmentRoute,
+  entryRoute,
   effectiveColorSchemes,
+  viewRoute,
   VIEWPORTS,
 } from "@mokly/viewer/data";
-import type { ManifestV6, ArtifactView } from "@mokly/viewer/data";
+import type { ManifestV7, ArtifactView } from "@mokly/viewer/data";
 
 import { transformCompatibilityDocuments } from "../compatibility/transform.js";
 import { validateComponentResources } from "../components/output_validation.js";
@@ -15,7 +17,6 @@ import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
 import {
   createManifest,
-  fragmentRoute,
   MANIFEST_NAME,
   parseManifest,
   serializeManifest,
@@ -34,7 +35,7 @@ import { renderCooperatively } from "./render_cooperative.js";
 
 /** Complete in-memory static compilation result. */
 export interface Compilation {
-  manifest: ManifestV6;
+  manifest: ManifestV7;
   outputs: ReadonlyMap<string, string>;
 }
 
@@ -91,11 +92,16 @@ async function compileMeasured(
           componentViews,
         ),
       );
-  const routedEntries = new Set(registry.entries.map((entry) => entry.route));
+  const routedEntries = new Set(
+    registry.entries.map((entry) => entryRoute(entry.kind, entry.id)),
+  );
   const generatedOwners = new Map<string, string>();
   for (const entry of registry.entries) {
     if (entry.kind === "page")
-      generatedOwners.set(entry.route, entry.sourceRelativePath);
+      generatedOwners.set(
+        entryRoute("page", entry.id),
+        entry.sourceRelativePath,
+      );
     if (entry.kind !== "screen" && entry.kind !== "component") continue;
     for (const variantId of entry.kind === "component"
       ? entry.variants.map((variant) => variant.id)
@@ -108,12 +114,12 @@ async function compileMeasured(
           generatedOwners.set(
             variantId
               ? componentFragmentRoute(
-                  entry.route,
+                  entryRoute("component", entry.id),
                   variantId,
                   viewport,
                   colorScheme,
                 )
-              : fragmentRoute(entry.route, viewport, colorScheme),
+              : viewRoute("screen", entry.id, viewport, colorScheme),
             entry.sourceRelativePath,
           );
         }
@@ -124,7 +130,8 @@ async function compileMeasured(
     [...generatedOwners.keys()].filter(
       (route) =>
         !registry.entries.some(
-          (entry) => entry.kind === "page" && entry.route === route,
+          (entry) =>
+            entry.kind === "page" && entryRoute("page", entry.id) === route,
         ),
     ),
   );

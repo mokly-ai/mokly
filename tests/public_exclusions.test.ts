@@ -92,11 +92,18 @@ test("source policy matches both aliases and projects missing children relative 
     );
 });
 
-for (const route of ["README.html", "internal/page.html"]) {
+for (const [kind, route, exclusion] of [
+  ["page", "pages/page.html", "pages/**"],
+  ["screen", "screens/page.mobile.html", "screens/**"],
+] as const) {
   test(`build rejects excluded generated route ${route} before writing`, async (t) => {
+    const definition =
+      kind === "page"
+        ? 'definePage({ id: "page", title: "Page", description: "Page", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body><p>Page</p></body></html>" })'
+        : 'defineScreen({ id: "page", title: "Page", description: "Page", dependencies: [], relatedDocs: [], mobile: "Mobile", desktop: "Desktop" })';
     const fixture = await createFixture(
-      `import { definePage } from "@mokly/mokly"; export const mockups = [definePage({ id: "page", title: "Page", description: "Page", dependencies: [], relatedDocs: [], route: "${route}", render: () => "<!doctype html><html><body><p>Page</p></body></html>" })];`,
-      { extraConfig: 'publicExclude: ["internal/**"],' },
+      `import { definePage, defineScreen } from "@mokly/mokly"; export const mockups = [${definition}];`,
+      { extraConfig: `publicExclude: [${JSON.stringify(exclusion)}],` },
     );
     t.after(() => removeFixture(fixture));
     await assert.rejects(
@@ -104,11 +111,7 @@ for (const route of ["README.html", "internal/page.html"]) {
       (error: Error) => {
         assert.match(error.message, /matches public exclusion.*publicExclude/);
         assert.ok(error.message.includes(route));
-        assert.ok(
-          error.message.includes(
-            route === "README.html" ? "**/README.*" : "internal/**",
-          ),
-        );
+        assert.ok(error.message.includes(exclusion));
         return true;
       },
     );

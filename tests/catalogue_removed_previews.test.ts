@@ -12,7 +12,7 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 const generation = "c".repeat(64);
 const comparisonUrl = `__mokly/diffs/__generations/${generation}/review.json`;
-const pagePath = `__mokly/diffs/__generations/${generation}/pages/archive/guide.html.json`;
+const pagePath = `__mokly/diffs/__generations/${generation}/pages/pages/guide.html.json`;
 
 test("projection and reader retain typed removed page and screen previews", async (t) => {
   const model = await previewModel(t);
@@ -24,7 +24,7 @@ test("projection and reader retain typed removed page and screen previews", asyn
       preview,
     ]),
     [
-      ["page", "archive/guide.html", { kind: "page", path: pagePath }],
+      ["page", "pages/guide.html", { kind: "page", path: pagePath }],
       ["screen", "screens/old.html", { kind: "screen" }],
     ],
   );
@@ -96,10 +96,10 @@ test("projection requires descriptors to match a published comparison generation
       ...input,
       removedPreviews: new Map([
         [
-          "archive/guide.html",
+          "pages/guide.html",
           {
             kind: "page" as const,
-            path: `__mokly/diffs/__generations/${"d".repeat(64)}/pages/archive/guide.html.json`,
+            path: `__mokly/diffs/__generations/${"d".repeat(64)}/pages/pages/guide.html.json`,
           },
         ],
       ]),
@@ -124,10 +124,10 @@ async function previewInput(t: test.TestContext) {
     configPath: "mokly.config.ts",
     catalogue: catalogueAtBaseline(current, before.manifest),
     changesStatus: "ready" as const,
-    changedRoutes: ["archive/guide.html", "screens/old.html"],
+    changedRoutes: ["pages/guide.html", "screens/old.html"],
     comparisonUrl,
     removedPreviews: new Map([
-      ["archive/guide.html", { kind: "page" as const, path: pagePath }],
+      ["pages/guide.html", { kind: "page" as const, path: pagePath }],
       ["screens/old.html", { kind: "screen" as const }],
     ]),
     revision: { content: 0, evidence: 0 },
@@ -139,8 +139,8 @@ function source(): string {
 import { definePage, defineScreen } from "@mokly/mokly";
 const metadata = { dependencies: [], relatedDocs: [], description: "Fixture" };
 export const mockups = [
-  defineScreen({ ...metadata, id: "current", title: "Current", route: "screens/current.html", mobile: <p>Current</p>, desktop: <p>Current</p>, useCaseIds: [] }),
-  defineScreen({ ...metadata, id: "old", title: "Old", route: "screens/old.html", mobile: <p>Old</p>, desktop: <p>Old</p>, useCaseIds: [] }),
-  definePage({ ...metadata, id: "guide", title: "Guide", route: "archive/guide.html", render: () => "<!doctype html><html><body>Guide</body></html>" })
+  defineScreen({ ...metadata, id: "current", title: "Current", mobile: <p>Current</p>, desktop: <p>Current</p>, useCaseIds: [] }),
+  defineScreen({ ...metadata, id: "old", title: "Old", mobile: <p>Old</p>, desktop: <p>Old</p>, useCaseIds: [] }),
+  definePage({ ...metadata, id: "guide", title: "Guide", render: () => "<!doctype html><html><body>Guide</body></html>" })
 ];`;
 }

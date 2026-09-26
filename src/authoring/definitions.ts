@@ -1,3 +1,5 @@
+import { entryRoute } from "@mokly/viewer/data";
+
 import { MoklyError } from "../errors.js";
 
 import { NESTED_AUTHORED_NAV_PATH } from "./markers.js";
@@ -74,6 +76,7 @@ export function defineScreen(
     ...parentInput,
     kind: "screen" as const,
     navPath: input.navPath === undefined ? [] : input.navPath,
+    route: entryRoute("screen", input.id),
     useCaseIds: input.useCaseIds ?? [],
   });
   return variants === undefined
@@ -81,16 +84,17 @@ export function defineScreen(
     : flattenScreenVariants(parent, variants);
 }
 
-/** Define a complete document with an explicit, stable route. */
+/** Define a complete document with a route derived from its id. */
 export function definePage(input: PageInput): PageDefinition {
   return branded({
     ...input,
     kind: "page",
     navPath: input.navPath === undefined ? [] : input.navPath,
+    route: entryRoute("page", input.id),
   });
 }
 
-/** Create a page marker whose slug participates in a nested path. */
+/** Create a page marker inside a nested tree. */
 export function page(input: NestedPageInput): NestedPageMarker {
   return { ...input, __nested: "page" };
 }
@@ -101,6 +105,7 @@ export function defineUseCase(input: UseCaseInput): UseCaseDefinition {
     ...input,
     kind: "use-case",
     navPath: input.navPath === undefined ? [] : input.navPath,
+    route: entryRoute("use-case", input.id),
   });
 }
 
@@ -118,38 +123,40 @@ export function folder(input: NestedFolderInput): NestedFolderMarker {
 export function defineRoot(input: RootInput): RegistryDefinition[] {
   const definitions: RegistryDefinition[] = [];
   if (input.navPath !== undefined && !Array.isArray(input.navPath)) {
-    throw new MoklyError(
-      "build-invalid",
-      `root ${input.path} navPath must be an array`,
-    );
+    throw new MoklyError("build-invalid", "root navPath must be an array");
   }
   if (input.navPath?.length && input.children.length === 0) {
-    throw new MoklyError("build-invalid", `root ${input.path} has no children`);
+    throw new MoklyError(
+      "build-invalid",
+      `root ${labels(input.navPath)} has no children`,
+    );
   }
   const inherited: NestedInherited = input;
   const navPath = input.navPath ?? [];
   for (const child of input.children) {
-    flattenChild(child, input.path, inherited, navPath, definitions);
+    flattenChild(child, inherited, navPath, definitions);
   }
   return definitions;
 }
 
 function flattenChild(
   node: NestedChild,
-  directory: string,
   inherited: NestedInherited,
   navPath: readonly string[],
   definitions: RegistryDefinition[],
 ): void {
   const effective = mergeInherited(inherited, node);
   if (node.__nested === "page") {
-    const { slug, __nested: _marker, ...input } = node;
+    const {
+      __nested: _marker,
+      slug: _slug,
+      ...input
+    } = node as NestedPageMarker & { slug?: unknown };
     const definition = definePage({
       ...input,
       dependencies: effective.dependencies ?? [],
       navPath,
       relatedDocs: effective.relatedDocs ?? [],
-      route: `${directory}/${slug}.html`,
     });
     if (Object.hasOwn(node, "navPath")) {
       Object.assign(definition, { [NESTED_AUTHORED_NAV_PATH]: true });
@@ -170,7 +177,6 @@ function flattenChild(
       navPath,
       ...(node.rationale ? { rationale: node.rationale } : {}),
       relatedDocs: effective.relatedDocs ?? [],
-      route: `${directory}/${node.slug}.html`,
       ...(node.tags ? { tags: node.tags } : {}),
       title: node.title,
       useCaseIds: node.useCaseIds ?? [],
@@ -191,28 +197,19 @@ function flattenChild(
     }
     return;
   }
-  if (typeof node.segment !== "string" || node.segment.length === 0) {
-    throw new MoklyError(
-      "build-invalid",
-      `folder ${directory} segment must be a non-empty string`,
-    );
-  }
-  const folderDirectory = `${directory}/${node.segment}`;
   if (node.children.length === 0) {
     throw new MoklyError(
       "build-invalid",
-      `folder ${folderDirectory} has no children`,
+      `folder ${labels([...navPath, node.title])} has no children`,
     );
   }
   for (const child of node.children) {
-    flattenChild(
-      child,
-      folderDirectory,
-      effective,
-      [...navPath, node.title],
-      definitions,
-    );
+    flattenChild(child, effective, [...navPath, node.title], definitions);
   }
+}
+
+function labels(values: readonly unknown[]): string {
+  return values.map(String).join(" › ");
 }
 
 function mergeInherited(

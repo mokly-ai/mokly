@@ -6,7 +6,7 @@ import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 import { createFixture, removeFixture } from "../helpers/fixture.js";
 import { screenVariantEntrySource } from "../helpers/screen_variant_fixture.js";
 
-const ROUTE = "screens/home.variants/empty.html";
+const ROUTE = "screens/home-empty.html";
 const ROW = `a[data-nav-row][data-route="${ROUTE}"]`;
 const LIST = '[data-nav-disclosure="variants:pages:home"]';
 const HOME = 'a[data-nav-row][data-route="screens/home.html"]';

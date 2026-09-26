@@ -41,7 +41,7 @@ test("the npm preview entrypoint advertises a removed page's packaged bytes", as
     ),
   );
   const page = model.removedEntries.find(
-    ({ entry }) => entry.route === "archive/removed.html",
+    ({ entry }) => entry.route === "pages/removed-page.html",
   );
   assert.ok(page?.preview?.kind === "page");
   await assertPublishedPagePreview(output, page.preview);
@@ -76,7 +76,7 @@ test("the npm preview entrypoint advertises a removed page's packaged bytes", as
     ),
   );
   const desktop = review.screens
-    .find(({ route }) => route === "screens/removed.html")
+    .find(({ route }) => route === "screens/removed-screen.html")
     ?.views.find(({ viewport }) => viewport === "desktop");
   assert.ok(desktop?.beforePath);
   const screenDocument = await fs.readFile(

@@ -11,12 +11,10 @@ export function AddedComponentMobile() {
 }
 
 export const additionDesigns = folder({
-  segment: "additions",
   title: "Additions",
   children: [
     screen({
       id: "design-component-added",
-      slug: "added",
       title: "Added component",
       colorSchemes: ["light"],
       description:

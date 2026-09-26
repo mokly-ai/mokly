@@ -128,18 +128,18 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
   assert.match(redirects, /\/id\/removed \/view\/screens\/removed 302/);
   assert.match(await read("_headers"), /Cache-Control: no-store/);
   assert.match(
-    documentText(await read("view/removed-document.html")),
+    documentText(await read("view/pages/removed-document.html")),
     /Showing previous version/,
   );
   assert.doesNotMatch(
-    await read("view/removed-document.html"),
+    await read("view/pages/removed-document.html"),
     /data-diff-screen|data-nav-folder="folder:documents"/,
   );
   for (const file of [
     "index.html",
-    "view/handbook.html",
+    "view/pages/handbook.html",
     "view/screens/removed.html",
-    "view/removed-document.html",
+    "view/pages/removed-document.html",
     "404.html",
   ])
     assert.doesNotMatch(await read(file), /client\/browser\.js|EventSource/);
@@ -246,7 +246,7 @@ test("capture mutation aborts atomically and default replacement removes old rev
     { cwd: repositoryRoot },
   );
   for (const file of [
-    "view/removed-document.html",
+    "view/pages/removed-document.html",
     "view/screens/removed.html",
     "__mokly/diffs",
     "static/archived-review/private-snapshot.html",
@@ -257,19 +257,18 @@ test("capture mutation aborts atomically and default replacement removes old rev
     await fs.promises.readFile(path.join(fixture.output, "index.html"), "utf8"),
     /data-filter|removed-document/,
   );
-  assert.ok(fs.existsSync(path.join(fixture.output, "view/handbook.html")));
+  assert.ok(
+    fs.existsSync(path.join(fixture.output, "view/pages/handbook.html")),
+  );
 });
 
-test("a published renamed screen keeps its current id redirect and old comparison route", async (context) => {
+test("a published renamed screen keeps one derived route and id redirect", async (context) => {
   const fixture = await createPreviewComparisonFixture();
   context.after(() => fixture.close());
   const source = await fs.promises.readFile(fixture.entryPath, "utf8");
   await fs.promises.writeFile(
     fixture.entryPath,
-    source.replace(
-      'route: "screens/home.html"',
-      'route: "screens/renamed.html"',
-    ),
+    source.replace('title: "Home"', 'title: "Renamed home"'),
   );
   await writeCompilation(
     await compileCatalogue(fixture.config),
@@ -280,12 +279,12 @@ test("a published renamed screen keeps its current id redirect and old compariso
     path.join(fixture.output, "_redirects"),
     "utf8",
   );
-  assert.match(redirects, /\/id\/home \/view\/screens\/renamed 302/);
+  assert.match(redirects, /\/id\/home \/view\/screens\/home 302/);
   assert.equal(redirects.match(/^\/id\/home /gm)?.length, 1);
-  const old = await fs.promises.readFile(
+  const current = await fs.promises.readFile(
     path.join(fixture.output, "view/screens/home.html"),
     "utf8",
   );
-  assert.match(documentText(old), /Showing previous version/);
-  assert.doesNotMatch(old, /data-diff-mode="side"/);
+  assert.match(documentText(current), /Renamed home/);
+  assert.doesNotMatch(documentText(current), /Showing previous version/);
 });

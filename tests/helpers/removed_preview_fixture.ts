@@ -79,17 +79,17 @@ const links = `
 function removedPreviewSource(current: boolean): string {
   const removed = current
     ? ""
-    : `defineScreen({ ...metadata, navPath: ["Fixture"], id: "removed-screen", title: "Removed screen", route: "screens/removed.html",
+    : `defineScreen({ ...metadata, navPath: ["Fixture"], id: "removed-screen", title: "Removed screen",
     colorSchemes: ["light"],
     mobile: <main id="top"><h1>Previous mobile screen</h1><div dangerouslySetInnerHTML={{ __html: ${JSON.stringify(links)} }} /><p id="foot">End of the archived screen.</p></main>,
     desktop: <main id="top"><h1>Previous desktop screen</h1><div dangerouslySetInnerHTML={{ __html: ${JSON.stringify(links)} }} /><p id="foot">End of the archived screen.</p></main>,
     useCaseIds: [] }),
-  defineScreen({ ...metadata, navPath: ["Fixture"], id: "removed-dark", title: "Removed dark screen", route: "screens/removed-dark.html",
+  defineScreen({ ...metadata, navPath: ["Fixture"], id: "removed-dark", title: "Removed dark screen",
     colorSchemes: ["light", "dark"],
     mobile: <main><h1>Previous themed mobile screen</h1></main>,
     desktop: <main><h1>Previous themed desktop screen</h1></main>,
     useCaseIds: [] }),
-  definePage({ ...metadata, navPath: ["Fixture"], id: "removed-page", title: "Removed page", route: "archive/removed.html",
+  definePage({ ...metadata, navPath: ["Fixture"], id: "removed-page", title: "Removed page",
     render: () => ${JSON.stringify(
       `<!doctype html><html><head><link rel="stylesheet" href="../assets/archive.css"></head><body><main id="top"><h1>Previous page</h1>${links}${paragraphs}<p id="foot">End of the archived page.</p></main></body></html>`,
     )} }),`;
@@ -97,7 +97,7 @@ function removedPreviewSource(current: boolean): string {
 import { definePage, defineScreen } from "@mokly/mokly";
 const metadata = { description: "Fixture", dependencies: [], relatedDocs: [] };
 export const mockups = [
-  defineScreen({ ...metadata, navPath: ["Fixture"], id: "current", title: "Current", route: "screens/current.html", colorSchemes: ["light"], mobile: <main>Current mobile</main>, desktop: <main>Current desktop</main>, useCaseIds: [] }),
+  defineScreen({ ...metadata, navPath: ["Fixture"], id: "current", title: "Current", colorSchemes: ["light"], mobile: <main>Current mobile</main>, desktop: <main>Current desktop</main>, useCaseIds: [] }),
   ${removed}
 ];`;
 }

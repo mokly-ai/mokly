@@ -4,7 +4,7 @@ import type {
 } from "../../packages/viewer/dist/components/manifest_types.js";
 import type {
   ManifestV5,
-  ManifestV6,
+  ManifestV7,
 } from "../../packages/viewer/dist/registry/types.js";
 import type { ReviewResultV3 } from "../../packages/viewer/dist/review/component_types.js";
 import type { ViewReview } from "../../packages/viewer/dist/review/types.js";
@@ -51,10 +51,10 @@ export const component: ManifestComponent = {
   viewports: ["mobile", "desktop"],
 };
 
-export const componentManifest: ManifestV6 = {
+export const componentManifest: ManifestV7 = {
   entries: [component],
   generatedBy: "mokly",
-  schemaVersion: 6,
+  schemaVersion: 7,
   sourceFiles: [component.sourcePath],
 };
 
@@ -92,10 +92,10 @@ export const screen = {
   viewports: ["mobile", "desktop"],
 } as const;
 
-export const screenManifest: ManifestV6 = {
+export const screenManifest: ManifestV7 = {
   entries: [screen],
   generatedBy: "mokly",
-  schemaVersion: 6,
+  schemaVersion: 7,
   sourceFiles: [screen.sourcePath],
 };
 

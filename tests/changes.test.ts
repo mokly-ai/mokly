@@ -51,15 +51,14 @@ test("changing only a screen variant parent marks its route changed", async (t) 
     (entry) => entry.kind === "screen" && entry.id === "home",
   );
   assert.ok(parent?.kind === "screen");
-  const stem = parent.route.slice(0, -5);
   const variant = {
     ...structuredClone(parent),
     fragments: {
-      desktop: `${stem}.variants/empty.desktop.html`,
-      mobile: `${stem}.variants/empty.mobile.html`,
+      desktop: "screens/home-empty.desktop.html",
+      mobile: "screens/home-empty.mobile.html",
     },
     id: "home-empty",
-    route: `${stem}.variants/empty.html`,
+    route: "screens/home-empty.html",
     useCaseIds: [],
     variantOf: "home",
   };
@@ -115,8 +114,8 @@ test("renaming a parent title marks its variant through the parent projection", 
   };
 
   assert.deepEqual(changedManifestRoutes(current, manifest, config, []), [
-    parent.route,
     variant.route,
+    parent.route,
   ]);
 });
 
@@ -140,7 +139,7 @@ for (const changed of ["parent", "variant"] as const)
         `mockups/${screen.fragments.mobile}`,
       ]),
       changed === "variant"
-        ? [screen.route, "user-flows/variant.html"]
+        ? [screen.route, "user-flows/variant-flow.html"]
         : [screen.route],
     );
   });

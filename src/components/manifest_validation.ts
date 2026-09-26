@@ -156,10 +156,12 @@ export function validateManifestComponent(
 
 /** Validate every per-view record against the complete registered component set. */
 export function validateManifestComponentUsage(manifest: Manifest): void {
+  const version = manifest.schemaVersion;
   if (
-    manifest.schemaVersion !== 5 &&
-    manifest.schemaVersion !== 6 &&
-    (manifest.schemaVersion !== 4 || "sourceFiles" in manifest)
+    version !== 5 &&
+    version !== 6 &&
+    version !== 7 &&
+    (version !== 4 || "sourceFiles" in manifest)
   )
     return;
   exactKeys(
@@ -168,9 +170,7 @@ export function validateManifestComponentUsage(manifest: Manifest): void {
       "schemaVersion",
       "generatedBy",
       "entries",
-      manifest.schemaVersion === 5 || manifest.schemaVersion === 6
-        ? "sourceFiles"
-        : "legacyPages",
+      [5, 6, 7].includes(version) ? "sourceFiles" : "legacyPages",
     ],
     "$manifest",
   );
@@ -179,7 +179,7 @@ export function validateManifestComponentUsage(manifest: Manifest): void {
       entry.kind === "component" ? [[entry.id, entry] as const] : [],
     ),
   );
-  if (!components.size && manifest.schemaVersion === 4)
+  if (!components.size && version === 4)
     invalidData("$manifest", "v4 requires registered components");
   for (const entry of manifest.entries) {
     validateDependencyDeclarations(entry);

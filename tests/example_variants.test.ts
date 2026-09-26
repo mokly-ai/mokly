@@ -14,17 +14,17 @@ test("example catalogue generates exactly one inherited Welcome variant", async 
   assert.ok(variant?.kind === "screen");
   assert.equal(variant.id, "example-welcome-empty");
   assert.equal(variant.variantOf, "example-welcome");
-  assert.equal(variant.route, "screens/welcome.variants/empty.html");
+  assert.equal(variant.route, "screens/example-welcome-empty.html");
   assert.deepEqual(variant.tags, ["forms", "onboarding"]);
   assert.deepEqual(variant.useCaseIds, []);
   assert.deepEqual(variant.fragments, {
-    desktop: "screens/welcome.variants/empty.desktop.html",
-    mobile: "screens/welcome.variants/empty.mobile.html",
+    desktop: "screens/example-welcome-empty.desktop.html",
+    mobile: "screens/example-welcome-empty.mobile.html",
   });
   assert.ok(variant.darkFragments);
   assert.deepEqual(variant.darkFragments, {
-    desktop: "screens/welcome.variants/empty.desktop.dark.html",
-    mobile: "screens/welcome.variants/empty.mobile.dark.html",
+    desktop: "screens/example-welcome-empty.desktop.dark.html",
+    mobile: "screens/example-welcome-empty.mobile.dark.html",
   });
   for (const route of [
     ...Object.values(variant.fragments),

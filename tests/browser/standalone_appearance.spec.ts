@@ -16,7 +16,7 @@ const control = ".mbk-topbar [data-mokly-appearance-control]";
 const select = "[data-mokly-appearance-select]";
 const mobileFrame = ".mbk-frame-mobile iframe";
 const desktopFrame = ".mbk-frame-desktop iframe";
-const screen = "/view/screens/welcome.html";
+const screen = "/view/screens/example-welcome.html";
 
 let lightOnlyFixture: Awaited<ReturnType<typeof createExportFixture>>;
 let lightOnlySite: Awaited<ReturnType<typeof serveStaticFiles>>;
@@ -68,7 +68,7 @@ for (const catalogue of ["mixed", "light-only"] as const) {
         catalogue === "mixed"
           ? screen
           : `${lightOnlySite.url}/view/screens/home.html`;
-      const entry = catalogue === "mixed" ? "welcome" : "home";
+      const entry = catalogue === "mixed" ? "example-welcome" : "home";
       for (const choice of ["auto", "light", "dark", "pin"] as const) {
         await page.goto(target);
         await page.evaluate(() => localStorage.clear());
@@ -116,7 +116,7 @@ test("a scheme pin paints the document without being saved", async ({
     });
   await expectFrameSource(
     page.locator(mobileFrame),
-    /screens\/welcome\.mobile\.dark\.html$/,
+    /screens\/example-welcome\.mobile\.dark\.html$/,
   );
   // A pin dresses one document; it is not the reader's saved preference.
   expect(
@@ -145,7 +145,7 @@ test("a saved appearance is restored on a later visit", async ({ page }) => {
     });
   await expectFrameSource(
     page.locator(desktopFrame),
-    /screens\/welcome\.desktop\.dark\.html$/,
+    /screens\/example-welcome\.desktop\.dark\.html$/,
   );
 });
 
@@ -231,7 +231,7 @@ test("Auto follows the system while the document stays open", async ({
     });
   await expectFrameSource(
     page.locator(mobileFrame),
-    /screens\/welcome\.mobile\.dark\.html$/,
+    /screens\/example-welcome\.mobile\.dark\.html$/,
   );
 
   // An explicit choice is the reader's, so the system no longer moves it.
@@ -270,7 +270,7 @@ test("Auto keeps following the system after a back-forward cache restore", async
     .toEqual({ scheme: "dark", theme: "auto", value: "auto" });
   await expectFrameSource(
     page.locator(mobileFrame),
-    /screens\/welcome\.mobile\.dark\.html$/,
+    /screens\/example-welcome\.mobile\.dark\.html$/,
   );
 });
 
@@ -282,27 +282,31 @@ test("a restored dark appearance swaps each frame at most once", async ({
   page.on("request", (request) => {
     const url = new URL(request.url());
     // Only the frame documents; the shell's own view fetches are not swaps.
-    if (/^\/static\/screens\/welcome\.(mobile|desktop)/u.test(url.pathname))
+    if (
+      /^\/static\/screens\/example-welcome\.(mobile|desktop)/u.test(
+        url.pathname,
+      )
+    )
       requests.push(url.pathname);
   });
   await page.goto(screen);
   await expectFrameSource(
     page.locator(mobileFrame),
-    /screens\/welcome\.mobile\.dark\.html$/,
+    /screens\/example-welcome\.mobile\.dark\.html$/,
   );
   await expectFrameSource(
     page.locator(desktopFrame),
-    /screens\/welcome\.desktop\.dark\.html$/,
+    /screens\/example-welcome\.desktop\.dark\.html$/,
   );
   await page.waitForTimeout(500);
 
   for (const viewport of ["mobile", "desktop"]) {
     const dark = requests.filter((path) =>
-      path.endsWith(`welcome.${viewport}.dark.html`),
+      path.endsWith(`example-welcome.${viewport}.dark.html`),
     );
     expect(dark, `${viewport} settled on one dark fragment`).toHaveLength(1);
     const light = requests.filter((path) =>
-      path.endsWith(`welcome.${viewport}.html`),
+      path.endsWith(`example-welcome.${viewport}.html`),
     );
     expect(
       light.length,
@@ -325,8 +329,10 @@ test("an appearance survives progressive navigation", async ({ page }) => {
     (window as { __moklyDocument?: boolean }).__moklyDocument = true;
   });
 
-  await page.click('a[data-nav-row][data-route="screens/details.html"]');
-  await expect(page).toHaveURL(/screens\/details/u);
+  await page.click(
+    'a[data-nav-row][data-route="screens/example-details.html"]',
+  );
+  await expect(page).toHaveURL(/screens\/example-details/u);
   expect(
     await page.evaluate(
       () => (window as { __moklyDocument?: boolean }).__moklyDocument === true,
@@ -364,7 +370,7 @@ test("the appearance keeps working when storage refuses", async ({ page }) => {
     });
   await expectFrameSource(
     page.locator(mobileFrame),
-    /screens\/welcome\.mobile\.dark\.html$/,
+    /screens\/example-welcome\.mobile\.dark\.html$/,
   );
 });
 
@@ -419,7 +425,7 @@ test.describe("without JavaScript", () => {
     // The frames keep the sources the server rendered.
     await expectFrameSource(
       page.locator(mobileFrame),
-      /screens\/welcome\.mobile\.html$/,
+      /screens\/example-welcome\.mobile\.html$/,
     );
   });
 });
@@ -427,7 +433,7 @@ test.describe("without JavaScript", () => {
 test("a component sample follows the one Appearance control", async ({
   page,
 }) => {
-  await page.goto("/view/components/action.html");
+  await page.goto("/view/components/example-action.html");
   const sample = page.locator('[data-workspace-frame="desktop"]');
   await expectFrameSource(sample, /action\.variants\/default\.desktop\.html$/);
   // No separate preview control: the sample follows the interface appearance.

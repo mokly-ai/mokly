@@ -100,6 +100,9 @@ export function workspaceData(
     );
   const snapshot = context.componentChanges;
   const result = snapshot?.result;
+  const currentEntriesById = new Map(
+    catalogue.manifest.entries.map((candidate) => [candidate.id, candidate]),
+  );
   const resourceEvidence = snapshot?.screenEvidence?.find(
     (screen) => screen.route === entry.route,
   )?.views;
@@ -175,10 +178,12 @@ export function workspaceData(
     .filter((item) => item.changedComponentId === entry.id)
     .flatMap((item) =>
       item.evidence.map((evidence) => {
-        const removed = !catalogue.byRoute.has(evidence.context.entry.route);
+        const current = currentEntriesById.get(evidence.context.entry.id);
+        const route = current?.route ?? evidence.context.entry.route;
+        const removed = current === undefined;
         return {
           title: evidence.context.entry.title,
-          route: evidence.context.entry.route,
+          route,
           ...(evidence.context.kind === "component"
             ? { variantId: evidence.context.variantId }
             : {}),

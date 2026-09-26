@@ -262,7 +262,7 @@ test("runtime startup rejects a message without entry globs", async () => {
       repoRoot: "/repo",
       publicExclude: resolvePublicExclude([]),
     },
-    manifest: { entries: [], schemaVersion: 6, sourceFiles: [] },
+    manifest: { entries: [], schemaVersion: 7, sourceFiles: [] },
   };
   process.emit("message", {
     ...valid,

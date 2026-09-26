@@ -1,11 +1,12 @@
 import type { ColorScheme, Viewport } from "@mokly/viewer";
 import {
   componentFragmentRoute,
+  entryRoute,
   effectiveColorSchemes,
+  viewRoute,
 } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
-import { fragmentRoute } from "../registry/manifest.js";
 
 /** Resolve a registry entry to the static artifact appropriate for a view. */
 export function artifactRouteForEntry(
@@ -15,7 +16,7 @@ export function artifactRouteForEntry(
   byId: ReadonlyMap<string, ResolvedRegistryEntry>,
   catalogueSchemes: readonly ColorScheme[],
 ): string | undefined {
-  if (entry.kind === "page") return entry.route;
+  if (entry.kind === "page") return entryRoute("page", entry.id);
   if (entry.kind === "component") {
     const scheme = effectiveColorSchemes(entry, catalogueSchemes).includes(
       colorScheme,
@@ -23,7 +24,7 @@ export function artifactRouteForEntry(
       ? colorScheme
       : "light";
     return componentFragmentRoute(
-      entry.route,
+      entryRoute("component", entry.id),
       entry.variants[0]!.id,
       viewport,
       scheme,
@@ -41,7 +42,7 @@ export function artifactRouteForEntry(
   )
     ? colorScheme
     : "light";
-  return fragmentRoute(screen.route, viewport, targetScheme);
+  return viewRoute("screen", screen.id, viewport, targetScheme);
 }
 
 /** Map logical catalogue routes to concrete view artifacts. */
@@ -61,7 +62,9 @@ export function logicalArtifactRoutes(
         byId,
         catalogueSchemes,
       );
-      return artifact ? [[entry.route, artifact] as const] : [];
+      return artifact
+        ? [[entryRoute(entry.kind, entry.id), artifact] as const]
+        : [];
     }),
   );
 }

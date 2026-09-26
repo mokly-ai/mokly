@@ -3,7 +3,7 @@ import test from "node:test";
 
 import type {
   ManifestScreen,
-  ManifestV6,
+  ManifestV7,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { changesActivation } from "../packages/viewer/dist/shell/changes_activation.js";
@@ -18,26 +18,18 @@ type CurrentManifestScreen = ManifestScreen & {
 
 const parent = screen("welcome", "Welcome", "screens/welcome.html");
 const empty = {
-  ...screen(
-    "welcome-empty",
-    "Empty workspace",
-    "screens/welcome.variants/empty.html",
-  ),
+  ...screen("welcome-empty", "Empty workspace", "screens/welcome-empty.html"),
   variantOf: parent.id,
 };
 const failure = {
-  ...screen(
-    "welcome-failure",
-    "Failure",
-    "screens/welcome.variants/failure.html",
-  ),
+  ...screen("welcome-failure", "Failure", "screens/welcome-failure.html"),
   tags: ["errors"],
   variantOf: parent.id,
 };
-const manifest: ManifestV6 = {
+const manifest: ManifestV7 = {
   entries: [parent, empty, failure],
   generatedBy: "mokly",
-  schemaVersion: 6,
+  schemaVersion: 7,
   sourceFiles: [parent.sourcePath],
 };
 const catalogue = createCatalogue(manifest);

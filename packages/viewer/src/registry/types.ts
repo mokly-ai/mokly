@@ -7,7 +7,7 @@ import type { Viewport } from "../data/axes.js";
 /** Serializable common metadata for a manifest entry. */
 export interface ManifestEntryBase {
   dependencies: readonly string[];
-  /** Explicit author declarations in component v4 and current v6 manifests. */
+  /** Explicit author declarations in component v4 and current v7 manifests. */
   declaredDependencies?: readonly string[];
   description: string;
   id: string;
@@ -103,19 +103,28 @@ export interface ManifestV5 {
   sourceFiles: readonly string[];
 }
 
-/** Current canonical manifest with only routed entries and authored paths. */
-export interface ManifestV6 {
+/** Current canonical manifest with computed routed documents. */
+export interface ManifestV7 {
   entries: readonly (ManifestEntry & {
     declaredDependencies: readonly string[];
   })[];
   generatedBy: "mokly";
-  schemaVersion: 6;
+  schemaVersion: 7;
   sourceFiles: readonly string[];
 }
 
 /** All validated formats accepted at the historical Git boundary. */
+type HistoricalRoutedManifest = Omit<ManifestV7, "schemaVersion"> & {
+  schemaVersion: 6;
+};
+
 export type Manifest =
-  ManifestV3 | ManifestV4 | ManifestPagesV4 | ManifestV5 | ManifestV6;
+  | ManifestV3
+  | ManifestV4
+  | ManifestPagesV4
+  | ManifestV5
+  | HistoricalRoutedManifest
+  | ManifestV7;
 
 /** Historical comparisons accept older formats without weakening current loading. */
 export type HistoricalManifest = Manifest;

@@ -7,7 +7,9 @@ import type { ArtifactView } from "@mokly/viewer/data";
 import {
   componentFragmentRoute,
   encodeUrlPath,
+  entryRoute,
   effectiveColorSchemes,
+  viewRoute,
   VIEWPORTS,
 } from "@mokly/viewer/data";
 
@@ -21,7 +23,6 @@ import {
 } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
-import { fragmentRoute } from "../registry/manifest.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { Renderer } from "../renderer/types.js";
 
@@ -52,8 +53,9 @@ export function renderFragments(
   for (const entry of ordered) {
     if (selection && selection.entryId !== entry.id) continue;
     if (entry.kind === "page") {
-      addOutput(outputs, entry.route, renderPage(entry));
-      fragmentViews.set(entry.route, {
+      const route = entryRoute("page", entry.id);
+      addOutput(outputs, route, renderPage(entry));
+      fragmentViews.set(route, {
         colorScheme: "light",
         viewport: "desktop",
       });
@@ -77,14 +79,14 @@ export function renderFragments(
             continue;
           const route = variantId
             ? componentFragmentRoute(
-                entry.route,
+                entryRoute("component", entry.id),
                 variantId,
                 viewport,
                 colorScheme,
               )
-            : fragmentRoute(entry.route, viewport, colorScheme);
+            : viewRoute("screen", entry.id, viewport, colorScheme);
           const stylesheets = stylesheetsFor(
-            entry.route,
+            entryRoute(entry.kind, entry.id),
             route,
             colorScheme,
             config,

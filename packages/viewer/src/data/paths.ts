@@ -1,5 +1,6 @@
+import { isWindowsDeviceName } from "../navigation/logical.js";
+
 const PORTABLE_URL_SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._~-]*$/;
-const WINDOWS_DEVICE = /^(?:aux|con|nul|prn|com[1-9]|lpt[1-9])$/i;
 
 /** Return whether a catalogue route is portable as both a path and a URL. */
 export function isSafeCatalogueRoute(value: string): boolean {
@@ -15,7 +16,7 @@ export function isPortableUrlPath(value: string): boolean {
       return (
         PORTABLE_URL_SEGMENT.test(segment) &&
         !segment.endsWith(".") &&
-        !WINDOWS_DEVICE.test(stem)
+        !isWindowsDeviceName(stem)
       );
     })
   );

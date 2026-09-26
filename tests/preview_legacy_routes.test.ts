@@ -10,11 +10,11 @@ import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
 
 for (const includeChanges of [false, true]) {
-  test(`preview migration retains valid public routes under build-directory names (changes: ${includeChanges})`, async (context) => {
+  test(`preview publishes ids that match build-directory names (changes: ${includeChanges})`, async (context) => {
     const source = `${validEntrySource()}
 import { definePage } from "@mokly/mokly";
 for (const directory of ["target", "node_modules"])
-  mockups.push(definePage({ id: directory.replaceAll("_", "-"), title: directory, description: "A public document", dependencies: [], relatedDocs: [], route: directory + "/handbook.html", render: () => "<!doctype html><html><body>Handbook</body></html>" }));`;
+  mockups.push(definePage({ id: directory.replaceAll("_", "-"), title: directory, description: "A public document", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Handbook</body></html>" }));`;
     const fixture = await changedFixture(context, source);
     const output = path.join(fixture.root, ".context/published");
     const options = includeChanges
@@ -25,10 +25,10 @@ for (const directory of ["target", "node_modules"])
     await fs.rm(path.join(output, "id"), { recursive: true });
     await fs.rm(path.join(output, "__mokly/catalogue.json"));
     await buildPreview(fixture.config, output, options);
-    for (const directory of ["target", "node_modules"])
+    for (const id of ["target", "node-modules"])
       assert.match(
         await fs.readFile(
-          path.join(output, "static", directory, "handbook.html"),
+          path.join(output, "static/pages", `${id}.html`),
           "utf8",
         ),
         /Handbook/,

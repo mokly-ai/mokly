@@ -8,16 +8,16 @@ import { repositoryRoot } from "../helpers/fixture.js";
 const directory = path.join(repositoryRoot, "examples/basic/generated");
 
 const pickerDesigns = [
-  "design/browse/views/screen.variants/picker",
-  "design/browse/states/tag-filter",
-  "design/browse/views/screen.variants/forms",
-  "design/browse/views/screen.variants/onboarding-picker",
+  "screens/design-browse-tag-picker",
+  "screens/design-browse-tag-filter",
+  "screens/design-browse-tag-forms",
+  "screens/design-browse-tag-onboarding-picker",
 ];
 
 const barDesigns = [
-  ["design/browse/views/screen", 440],
-  ["design/browse/appearance/states/auto", 366],
-  ["design/browse/appearance/overview", 366],
+  ["screens/design-browse-screen", 440],
+  ["screens/design-appearance-auto", 366],
+  ["screens/design-appearance-overview", 366],
 ] as const;
 
 for (const viewport of ["desktop", "mobile"] as const) {
@@ -28,7 +28,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       pathToFileURL(
         path.join(
           directory,
-          `design/browse/variants/changed-views.${viewport}.html`,
+          `screens/design-browse-changed-views.${viewport}.html`,
         ),
       ).href,
     );

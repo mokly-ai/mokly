@@ -21,7 +21,7 @@ for (const watch of [false, true]) {
         `
       import { definePage } from "@mokly/mokly";
       mockups.push(definePage({ id: "broken", title: "Broken", description: "Broken page",
-        route: "broken.html", dependencies: [], relatedDocs: [],
+        dependencies: [], relatedDocs: [],
         render: () => { throw new Error("unrequested page rendered"); } }));
     `,
     );
@@ -38,7 +38,7 @@ for (const watch of [false, true]) {
     assert.equal(preview.status, 200);
     assert.match(await preview.text(), /id="home"/);
     assert.equal(
-      (await fetch(`${running.url}/static/broken.html`)).status,
+      (await fetch(`${running.url}/static/pages/broken.html`)).status,
       500,
     );
     assert.equal((await fetch(running.url)).status, 200);
@@ -86,7 +86,7 @@ test(
         `
     import { definePage } from "@mokly/mokly";
     mockups.push(definePage({ id: "broken", title: "Broken", description: "Broken page",
-      route: "broken.html", dependencies: [], relatedDocs: [],
+      dependencies: [], relatedDocs: [],
       render: () => { throw new Error("background cannot complete"); } }));
   `,
     );

@@ -129,7 +129,7 @@ test("malformed manifest routes fail before server readiness", async (context) =
   await fs.promises.writeFile(manifestPath, `${JSON.stringify(manifest)}\n`);
   await assert.rejects(
     () => startCatalogueServer(config, { base: "origin/main", port: 0 }),
-    /unsafe route/,
+    /route does not match|invalid or colliding .* fragment/,
   );
 });
 
@@ -367,10 +367,10 @@ async function waitFor(
 }
 
 function sourceWithHomeRoute(route: string, title: string): string {
-  return validEntrySource({ firstTitle: title }).replace(
-    'route: "screens/home.html"',
-    `route: ${JSON.stringify(route)}`,
-  );
+  const id = route.slice("screens/".length, -".html".length);
+  return validEntrySource({ firstTitle: title })
+    .replace('id: "home"', `id: ${JSON.stringify(id)}`)
+    .replace('screenId: "home"', `screenId: ${JSON.stringify(id)}`);
 }
 
 async function streamEnded(

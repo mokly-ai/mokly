@@ -200,12 +200,11 @@ test("current labels report every invalid segment, and duplicates remain separat
   );
 });
 
-test("manifest v6 preserves authored paths; v5 baselines validate then discard collection records", () => {
+test("manifest v7 preserves navigation paths; v5 baselines validate then discard collection records", () => {
   const screen = defineScreen({
     id: "home",
     title: "Home",
     description: "Home",
-    route: "screens/home.html",
     mobile: "Mobile",
     desktop: "Desktop",
     dependencies: [],
@@ -223,7 +222,7 @@ test("manifest v6 preserves authored paths; v5 baselines validate then discard c
     [],
     ["light"],
   );
-  assert.equal(parseManifest(manifest).schemaVersion, 6);
+  assert.equal(parseManifest(manifest).schemaVersion, 7);
   const old = structuredClone(manifest) as unknown as Record<
     string,
     unknown
@@ -241,7 +240,7 @@ test("manifest v6 preserves authored paths; v5 baselines validate then discard c
     relatedDocs: [],
     sourcePath: "entries/home.mockup.tsx",
   });
-  assert.throws(() => parseManifest(old), /schema version 6/);
+  assert.throws(() => parseManifest(old), /schema version 7/);
   assert.deepEqual(
     parseHistoricalManifest(old).entries.map(({ id }) => id),
     ["home"],

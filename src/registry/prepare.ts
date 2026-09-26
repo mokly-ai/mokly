@@ -23,7 +23,7 @@ import {
 /**
  * Validate loaded values and prepare stable source-attributed entries. Valid
  * sibling variants follow their parent in authored order; a variant without a
- * uniquely valid root-screen parent stays in route/id order for validation.
+ * uniquely valid root-screen parent stays in kind/id order for validation.
  */
 export function prepareRegistry(
   values: readonly unknown[],
@@ -69,7 +69,6 @@ export function prepareRegistry(
   const orderedEntries = orderEntriesWithVariants(entries, (entry) => entry);
   violations.push(
     ...duplicateViolations(orderedEntries, "id"),
-    ...duplicateViolations(orderedEntries, "route"),
     ...crossReferenceViolations(orderedEntries),
   );
   if (entries.length === 0) {

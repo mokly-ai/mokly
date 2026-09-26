@@ -16,7 +16,7 @@ export interface CompletionMarker {
   readonly commit: string;
   readonly finishedAt: string;
   readonly commands: readonly (readonly string[])[];
-  readonly manifestVersion: 2 | 3 | 4 | 5 | 6;
+  readonly manifestVersion: 2 | 3 | 4 | 5 | 6 | 7;
 }
 
 export interface CacheLayout {
@@ -88,7 +88,7 @@ export function parseCompletionMarker(
     typeof marker.finishedAt !== "string" ||
     !Number.isFinite(Date.parse(marker.finishedAt)) ||
     !validCommands(marker.commands) ||
-    ![2, 3, 4, 5, 6].includes(marker.manifestVersion ?? 0)
+    ![2, 3, 4, 5, 6, 7].includes(marker.manifestVersion ?? 0)
   )
     return;
   return marker as CompletionMarker;

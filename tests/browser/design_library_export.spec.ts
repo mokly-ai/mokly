@@ -51,7 +51,7 @@ test.beforeAll(async () => {
   site = await serveStaticFiles(output);
   await assertServedShellMarker(
     site.url,
-    "/view/design/library/chrome/top-bar.html?variant=search",
+    "/view/components/design-ui-top-bar.html?variant=search",
   );
 });
 test.afterAll(async () => {
@@ -74,7 +74,7 @@ for (const viewport of ["desktop", "mobile"] as const)
       if (response.status() >= 400) failures.push(response.url());
     });
     await page.goto(
-      `${site.url}/view/design/library/chrome/top-bar.html?variant=search`,
+      `${site.url}/view/components/design-ui-top-bar.html?variant=search`,
     );
     await chooseViewport(page, viewport);
     await page.getByRole("tab", { name: "Props", exact: true }).click();
@@ -86,15 +86,15 @@ for (const viewport of ["desktop", "mobile"] as const)
       .selectOption("tag-picker");
     await expect(frame.locator(".mbk-tag-picker")).toBeVisible();
     await expect(frame.locator(".mbk-chip").first()).toContainText("revised");
-    await page.goto(`${site.url}/view/design/library/controls/tag-chip.html`);
+    await page.goto(`${site.url}/view/components/design-ui-tag-chip.html`);
     await expect(
       page.locator(
-        '[data-nav-row][data-route="design/library/controls/tag-chip.html"]',
+        '[data-nav-row][data-route="components/design-ui-tag-chip.html"]',
       ),
     ).toHaveAttribute("data-changed", "true");
     await expect(
       page.locator(
-        '[data-nav-row][data-route="design/browse/views/screen.variants/picker.html"]',
+        '[data-nav-row][data-route="screens/design-browse-tag-picker.html"]',
       ),
     ).not.toHaveAttribute("data-changed", "true");
     await page.getByRole("tab", { name: "Usage", exact: true }).click();

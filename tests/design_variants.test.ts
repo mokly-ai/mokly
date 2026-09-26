@@ -19,14 +19,23 @@ import {
 } from "./helpers/design_rows.js";
 
 const variantScreens = [
-  ["design-browse-variant-selected", "design/browse/variants/selected.html"],
-  ["design-browse-variant-changes", "design/browse/variants/changes.html"],
-  ["design-browse-variant-removed", "design/browse/variants/removed.html"],
+  [
+    "design-browse-variant-selected",
+    "screens/design-browse-variant-selected.html",
+  ],
+  [
+    "design-browse-variant-changes",
+    "screens/design-browse-variant-changes.html",
+  ],
+  [
+    "design-browse-variant-removed",
+    "screens/design-browse-variant-removed.html",
+  ],
   [
     "design-browse-variant-reparented",
-    "design/browse/variants/reparented.html",
+    "screens/design-browse-variant-reparented.html",
   ],
-  ["design-browse-changed-views", "design/browse/variants/changed-views.html"],
+  ["design-browse-changed-views", "screens/design-browse-changed-views.html"],
 ] as const;
 
 for (const viewport of ["mobile", "desktop"] as const) {

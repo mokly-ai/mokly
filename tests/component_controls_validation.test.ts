@@ -78,7 +78,6 @@ test("saved props and schemas are isolated from the author's later mutations", (
     id: "action",
     title: "Action",
     description: "Shared action",
-    route: "action.html",
     relatedDocs: [],
     dependencies: [],
     propSchema: input,

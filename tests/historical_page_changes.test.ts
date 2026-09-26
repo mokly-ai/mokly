@@ -34,7 +34,7 @@ for (const version of [2, 3] as const) {
             }
           : {},
       );
-      const paths = ["mockups/handbook.html"];
+      const paths = ["mockups/pages/handbook.html"];
       if (change === "resource") {
         await fs.writeFile(
           path.join(fixture.mockupsDir, "document.css"),
@@ -70,7 +70,7 @@ for (const version of [2, 3] as const) {
         ),
         change === "identical" || change === "ignored"
           ? []
-          : ["mockups/handbook.html"],
+          : ["mockups/pages/handbook.html"],
       );
     });
   }
@@ -82,7 +82,7 @@ for (const version of [2, 3] as const) {
       "HEAD",
       committedReviewRepository(fixture.config),
     );
-    assert.deepEqual(changes.changedRoutes, ["handbook.html"]);
+    assert.deepEqual(changes.changedRoutes, ["pages/handbook.html"]);
     assert.deepEqual(changes.removedEntries, []);
     const catalogue = createCatalogue(fixture.manifest, changes.removedEntries);
     assert.equal(catalogue.byId.get("handbook")?.title, "Current handbook");
@@ -96,7 +96,9 @@ for (const failure of ["symlink", "private", "invalid-ignore"] as const) {
   test(`preserved historical page rejects ${failure} artifacts`, async (context) => {
     const fixture = await historicalPageFixture(context, 3, {
       ...(failure === "symlink" ? { symlink: true } : {}),
-      ...(failure === "private" ? { sourcePath: "mockups/handbook.html" } : {}),
+      ...(failure === "private"
+        ? { sourcePath: "mockups/pages/handbook.html" }
+        : {}),
       ...(failure === "invalid-ignore"
         ? { document: pageDocument.replace("end:nav", "end:other") }
         : {}),
@@ -108,7 +110,7 @@ for (const failure of ["symlink", "private", "invalid-ignore"] as const) {
         fixture.config,
         fixture.client.reader,
         fixture.commit,
-        ["mockups/handbook.html"],
+        ["mockups/pages/handbook.html"],
       ),
       failure === "symlink"
         ? /not a regular Git file/
@@ -129,6 +131,6 @@ test("a renamed legacy route is an added page without pairing or synthetic remov
     "HEAD",
     committedReviewRepository(fixture.config),
   );
-  assert.deepEqual(changes.changedRoutes, ["handbook.html"]);
+  assert.deepEqual(changes.changedRoutes, ["pages/handbook.html"]);
   assert.deepEqual(changes.removedEntries, []);
 });

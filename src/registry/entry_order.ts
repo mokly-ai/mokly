@@ -1,14 +1,13 @@
 interface EntryOrderFields {
   id: string;
   kind: string;
-  route?: string;
   variantOf?: unknown;
 }
 
 /**
- * Order ordinary entries by route then id while keeping each valid screen
+ * Order ordinary entries by kind then id while keeping each valid screen
  * parent's variants immediately after it in input order. A variant without one
- * uniquely valid root-screen parent stays in ordinary route/id position so the
+ * uniquely valid root-screen parent stays in ordinary kind/id position so the
  * relationship validator can report it deterministically.
  */
 export function orderEntriesWithVariants<T>(
@@ -51,9 +50,7 @@ export function orderEntriesWithVariants<T>(
 }
 
 function compareEntries(left: EntryOrderFields, right: EntryOrderFields) {
-  const leftRoute = left.route ?? "";
-  const rightRoute = right.route ?? "";
-  return lexical(leftRoute, rightRoute) || lexical(left.id, right.id);
+  return lexical(left.kind, right.kind) || lexical(left.id, right.id);
 }
 
 function lexical(left: string, right: string): number {

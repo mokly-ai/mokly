@@ -21,28 +21,27 @@ export const DUAL_SCHEME_SAMPLES = new Set<LibraryStyle>([
 /** Registration metadata is separate from implementation impact dependencies. */
 export function libraryMetadata(
   group: LibraryGroup,
-  slug: LibraryStyle,
+  style: LibraryStyle,
   title: string,
   description: string,
-  /** Extra owned view modules in the same group, beyond `{slug}.view.tsx`. */
+  /** Extra owned view modules in the same group, beyond `{style}.view.tsx`. */
   views: readonly string[] = [],
 ) {
   const directory = `examples/basic/entries/design/library/${group}`;
   const modules = [
-    `${directory}/${slug}.view.tsx`,
+    `${directory}/${style}.view.tsx`,
     ...views.map((view) => `${directory}/${view}`),
   ];
-  const stylesheet = `examples/basic/generated/${libraryStyleFiles[slug]}`;
+  const stylesheet = `examples/basic/generated/${libraryStyleFiles[style]}`;
   return {
-    id: `design-ui-${slug}`,
+    id: `design-ui-${style}`,
     navPath: ["Design", "Shared components", groupTitles[group]],
-    route: `design/library/${group}/${slug}.html`,
     title,
     description,
     dependencies: [...modules, stylesheet],
     ownedDependencies: [...modules, stylesheet],
     relatedDocs: ["docs/protocol/mokly-design-component-library.md"],
-    colorSchemes: DUAL_SCHEME_SAMPLES.has(slug)
+    colorSchemes: DUAL_SCHEME_SAMPLES.has(style)
       ? (["light", "dark"] as const)
       : (["light"] as const),
   };

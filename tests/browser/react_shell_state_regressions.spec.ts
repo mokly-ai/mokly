@@ -1,14 +1,14 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-const componentPath = "/view/design/library/inspector/inspector.html";
+const componentPath = "/view/components/design-ui-inspector.html";
 const componentRow =
-  'a[data-nav-row][data-route="design/library/inspector/inspector.html"]';
+  'a[data-nav-row][data-route="components/design-ui-inspector.html"]';
 const fragment = "react-native-stylesheet";
 
 test("sequential search editing preserves spaces and typed tag terms", async ({
   page,
 }) => {
-  await page.goto("/view/screens/welcome.html");
+  await page.goto("/view/screens/example-welcome.html");
   const search = page.getByRole("searchbox", { name: "Search catalogue" });
 
   await search.pressSequentially("welcome tag:forms");

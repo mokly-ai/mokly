@@ -1,11 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import {
-  isSafeCatalogueRoute,
-  isSafeRepositoryPath,
-  isCatalogueId,
-} from "@mokly/viewer/data";
+import { isSafeRepositoryPath, isCatalogueId } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { isInside } from "../config/paths.js";
@@ -25,37 +21,6 @@ export function problem(
     message,
     sourceRelativePath: entry.sourceRelativePath,
   };
-}
-
-export function validateRoute(
-  entry: ResolvedRegistryEntry,
-  violations: RegistryViolation[],
-): void {
-  const route = "route" in entry ? entry.route : "";
-  const invalid = !nonEmpty(route) || !isSafeCatalogueRoute(route);
-  if (invalid) {
-    violations.push(
-      problem(
-        entry,
-        "invalid-route",
-        "route must use portable URL-safe segments and end in .html",
-      ),
-    );
-  }
-  if (entry.kind === "screen" && route.endsWith("/index.html")) {
-    violations.push(
-      problem(entry, "invalid-route", "screen routes must name the screen"),
-    );
-  }
-  if (entry.kind === "use-case" && !route.startsWith("user-flows/")) {
-    violations.push(
-      problem(
-        entry,
-        "invalid-route",
-        "use-case routes must live under user-flows/",
-      ),
-    );
-  }
 }
 
 export function validateTags(

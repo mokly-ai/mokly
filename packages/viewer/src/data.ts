@@ -5,7 +5,9 @@ export {
 export type { StaticDelivery } from "./navigation/delivery.js";
 export {
   isCatalogueId,
+  isEntryId,
   isLogicalFragment,
+  isWindowsDeviceName,
   parseLogicalTarget,
   parseLogicalMarker,
   logicalMarker,
@@ -104,7 +106,19 @@ export type {
 export { instanceKey, slotKey } from "./components/keys.js";
 export { resolveInstance } from "./components/resolve_instance.js";
 export type { InstanceResolution } from "./components/resolve_instance.js";
-export { componentFragmentRoute } from "./components/paths.js";
+export {
+  componentFragmentRoute,
+  entryRoute,
+  fragmentRoute,
+  parseViewHref,
+  viewHref,
+  viewRoute,
+} from "./data/routes.js";
+export type {
+  EntryRouteKind,
+  ViewHrefIdentity,
+  ViewRouteKind,
+} from "./data/routes.js";
 export type {
   ReviewEntryAddress,
   ScreenReviewV3,
@@ -159,7 +173,7 @@ export type {
   ManifestPage,
   ManifestEntry,
   ManifestV5,
-  ManifestV6,
+  ManifestV7,
   Manifest,
   HistoricalManifest,
 } from "./registry/types.js";

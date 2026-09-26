@@ -11,7 +11,6 @@ export const toolbar = defineComponent({
   id: "example-toolbar",
   title: "Toolbar",
   description: "A composed toolbar with caller-supplied content.",
-  route: "components/toolbar.html",
   navPath: ["Example", "Components"],
   dependencies: [dependency, implementation],
   ownedDependencies: [dependency, implementation],

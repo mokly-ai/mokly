@@ -35,7 +35,10 @@ test.beforeAll(async () => {
     exportCatalogue(config, { base: "HEAD", outDir: output }),
   );
   server = await serveStaticFiles(output);
-  await assertServedShellMarker(server.url, "/view/screens/welcome.html");
+  await assertServedShellMarker(
+    server.url,
+    "/view/screens/example-welcome.html",
+  );
 });
 test.afterAll(async () => {
   await server?.close();
@@ -53,7 +56,7 @@ test("the owning example stays usable when HEAD is the unchanged baseline", asyn
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`${server.url}/id/example-welcome/?fragment=welcome`);
     await expect(page).toHaveURL(
-      `${server.url}/view/screens/welcome.html?fragment=welcome`,
+      `${server.url}/view/screens/example-welcome.html?fragment=welcome`,
     );
     await chooseViewport(page, width === 390 ? "mobile" : "desktop");
     await expect(page.locator("[data-workspace-status]")).toHaveText(
@@ -92,10 +95,10 @@ test("the exported example discloses a screen's variants without a server", asyn
     })
     .locator("[data-nav-variants-toggle]");
   const variantRow = page.locator(
-    'a[data-nav-row][data-route="screens/welcome.variants/empty.html"]',
+    'a[data-nav-row][data-route="screens/example-welcome-empty.html"]',
   );
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto(`${server.url}/view/screens/details.html`);
+  await page.goto(`${server.url}/view/screens/example-details.html`);
   await expect(list).toBeHidden();
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
 
@@ -105,7 +108,7 @@ test("the exported example discloses a screen's variants without a server", asyn
 
   await variantRow.click();
   await expect(page).toHaveURL(
-    `${server.url}/view/screens/welcome.variants/empty.html`,
+    `${server.url}/view/screens/example-welcome-empty.html`,
   );
   await expect(page.locator("#mb-main h2")).toHaveText(
     "Welcome, empty workspace",

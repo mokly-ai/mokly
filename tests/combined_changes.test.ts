@@ -12,7 +12,7 @@ import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
 const page = `import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Document", dependencies: [], relatedDocs: [], route: "handbook.html", render: () => "<html><body>Original handbook</body></html>" }));`;
+mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Document", dependencies: [], relatedDocs: [], render: () => "<html><body>Original handbook</body></html>" }));`;
 
 for (const editComponent of [false, true]) {
   test(`page material Changes survive component classification and static export: component edit=${editComponent}`, async (t) => {
@@ -39,8 +39,8 @@ for (const editComponent of [false, true]) {
     assert.deepEqual(
       changed.changedRoutes,
       editComponent
-        ? ["components/action.html", "handbook.html"]
-        : ["handbook.html"],
+        ? ["components/action.html", "pages/handbook.html"]
+        : ["pages/handbook.html"],
     );
     assert.ok(changed.result);
     assert.deepEqual(
@@ -72,13 +72,18 @@ for (const editComponent of [false, true]) {
       material,
     );
     const home = String(site.inventory.files.get("index.html"));
-    assert.match(home, /data-changed="true"[^>]*data-route="handbook.html"/);
+    assert.match(
+      home,
+      /data-changed="true"[^>]*data-route="pages\/handbook.html"/,
+    );
     assert.doesNotMatch(
       home,
       /data-changed="true"[^>]*data-route="screens\/home.html"/,
     );
-    const document = String(site.inventory.files.get("view/handbook.html"));
-    assert.match(document, /src="\/static\/handbook.html"/);
+    const document = String(
+      site.inventory.files.get("view/pages/handbook.html"),
+    );
+    assert.match(document, /src="\/static\/pages\/handbook.html"/);
     assert.doesNotMatch(document, /data-workspace-data|data-diff-screen/);
   });
 }
@@ -107,7 +112,7 @@ test("a component catalogue without review never asks for Git Changes", async (t
   fixture.beforeRemove(() => server.close());
   for (const route of [
     "/",
-    "/view/handbook.html",
+    "/view/pages/handbook.html",
     "/view/components/action.html",
   ]) {
     const response = await fetch(server.url + route);

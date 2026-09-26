@@ -1,4 +1,4 @@
-import { isCatalogueId } from "@mokly/viewer/data";
+import { isEntryId } from "@mokly/viewer/data";
 
 import { nestedAuthoredNavPath } from "../authoring/definitions.js";
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
@@ -7,7 +7,6 @@ import type { ResolvedConfig } from "../config/types.js";
 
 import {
   problem,
-  validateRoute,
   validateTags,
   validatePaths,
   validateTextList,
@@ -31,7 +30,7 @@ export function validateEntry(
       );
     }
   }
-  if (!isCatalogueId(entry.id)) {
+  if (!isEntryId(entry.id)) {
     violations.push(
       problem(entry, "invalid-id", "id must be globally unique kebab-case"),
     );
@@ -69,7 +68,6 @@ export function validateEntry(
     );
   }
   validateTags(entry, violations);
-  validateRoute(entry, violations);
   if (nestedAuthoredNavPath(entry)) {
     violations.push(
       problem(

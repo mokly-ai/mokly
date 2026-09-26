@@ -15,11 +15,6 @@ export interface EntryInput {
   title: string;
 }
 
-/** Metadata shared by entries that own a route. */
-export interface RoutedEntryInput extends EntryInput {
-  route: string;
-}
-
 /** One authored state flattened beneath its parent screen. */
 export interface ScreenVariantInput {
   address?: string;
@@ -31,14 +26,13 @@ export interface ScreenVariantInput {
   mobile: ReactNode;
   rationale?: string;
   relatedDocs?: readonly string[];
-  slug: string;
   tags?: readonly string[];
   title: string;
   useCaseIds?: readonly string[];
 }
 
 /** One screen with distinct mobile and desktop renders. */
-export interface ScreenInput extends RoutedEntryInput {
+export interface ScreenInput extends EntryInput {
   address?: string;
   colorSchemes?: readonly ColorScheme[];
   desktop: ReactNode;
@@ -50,7 +44,7 @@ export interface ScreenInput extends RoutedEntryInput {
 }
 
 /** One complete HTML document rendered without device variants. */
-export interface PageInput extends RoutedEntryInput {
+export interface PageInput extends EntryInput {
   render: () => string;
   tags?: readonly string[];
 }
@@ -63,7 +57,7 @@ export interface UseCaseStep {
 }
 
 /** A journey composed from existing screens. */
-export interface UseCaseInput extends RoutedEntryInput {
+export interface UseCaseInput extends EntryInput {
   steps: readonly UseCaseStep[];
   /** Lowercase kebab-case classification tags, e.g. ["forms"]. */
   tags?: readonly string[];
@@ -78,6 +72,7 @@ interface DefinitionBrand {
 export interface ScreenDefinition extends ScreenInput, DefinitionBrand {
   kind: "screen";
   navPath: readonly string[];
+  route: string;
   useCaseIds: readonly string[];
   /** Parent screen id when this definition is a flattened screen variant. */
   variantOf?: string;
@@ -87,12 +82,14 @@ export interface ScreenDefinition extends ScreenInput, DefinitionBrand {
 export interface PageDefinition extends PageInput, DefinitionBrand {
   kind: "page";
   navPath: readonly string[];
+  route: string;
 }
 
 /** Validated use-case definition created by `defineUseCase`. */
 export interface UseCaseDefinition extends UseCaseInput, DefinitionBrand {
   kind: "use-case";
   navPath: readonly string[];
+  route: string;
 }
 
 /** Any structured catalogue definition. */
@@ -114,7 +111,6 @@ export interface NestedScreenInput extends NestedInherited {
   id: string;
   mobile: ReactNode;
   rationale?: string;
-  slug: string;
   /** Lowercase kebab-case classification tags; never inherited from ancestors. */
   tags?: readonly string[];
   title: string;
@@ -122,14 +118,13 @@ export interface NestedScreenInput extends NestedInherited {
   variants?: readonly ScreenVariantInput[] | undefined;
 }
 
-/** Whole document with a route derived from ancestor paths and this slug. */
+/** Whole document nested beneath a navigation path. */
 export interface NestedPageInput extends Omit<
   PageInput,
-  "route" | "dependencies" | "relatedDocs" | "navPath"
+  "dependencies" | "relatedDocs" | "navPath"
 > {
   dependencies?: readonly string[];
   relatedDocs?: readonly string[];
-  slug: string;
 }
 
 /** Source-attributed marker for nested page composition. */
@@ -141,7 +136,6 @@ export interface NestedPageMarker extends NestedPageInput {
 /** A folder in a nested definition tree, without an independent entry. */
 export interface NestedFolderInput extends NestedInherited {
   children: readonly NestedChild[];
-  segment: string;
   title: string;
 }
 
@@ -149,7 +143,6 @@ export interface NestedFolderInput extends NestedInherited {
 export interface RootInput extends NestedInherited {
   children: readonly NestedChild[];
   navPath?: readonly string[];
-  path: string;
 }
 
 /** Marker returned by `screen` for nested composition. */

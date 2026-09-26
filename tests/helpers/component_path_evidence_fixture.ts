@@ -34,7 +34,7 @@ export function pathCatalogueSource(
     .replace('id: "home",', 'id: "home", useCaseIds: ["journey"],')
     .replace(
       "\n];",
-      ',\n  defineUseCase({ ...metadata, id: "journey", title: "Journey", description: "A screen journey", route: "user-flows/journey.html", navPath: ["Fixture"], steps: [{ screenId: "home" }] })\n];',
+      ',\n  defineUseCase({ ...metadata, id: "journey", title: "Journey", description: "A screen journey", navPath: ["Fixture"], steps: [{ screenId: "home" }] })\n];',
     );
 }
 

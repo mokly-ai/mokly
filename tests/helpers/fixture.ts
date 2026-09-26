@@ -95,7 +95,7 @@ async function removeOwnedFixture(
 export async function registerFixturePage(
   fixture: TestFixture,
   id: string,
-  route: string,
+  _route: string,
   modulePath: string,
   exportName = "source",
 ): Promise<void> {
@@ -106,7 +106,7 @@ export async function registerFixturePage(
     .join("/");
   await fs.promises.appendFile(
     fixture.entryPath,
-    `\nimport { definePage as definePage_${suffix} } from "@mokly/mokly";\nimport { ${exportName} as render_${suffix} } from ${JSON.stringify(imported.startsWith(".") ? imported : `./${imported}`)};\nmockups.push(definePage_${suffix}({ id: ${JSON.stringify(id)}, route: ${JSON.stringify(route)}, title: ${JSON.stringify(id)}, description: "Complete fixture document", dependencies: [], relatedDocs: [], render: render_${suffix} }));\n`,
+    `\nimport { definePage as definePage_${suffix} } from "@mokly/mokly";\nimport { ${exportName} as render_${suffix} } from ${JSON.stringify(imported.startsWith(".") ? imported : `./${imported}`)};\nmockups.push(definePage_${suffix}({ id: ${JSON.stringify(id)}, title: ${JSON.stringify(id)}, description: "Complete fixture document", dependencies: [], relatedDocs: [], render: render_${suffix} }));\n`,
   );
 }
 
@@ -169,9 +169,9 @@ function fixtureEntrySource(
 import React from "react";
 const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"] };
 export const mockups = [
-  defineScreen({ ...metadata, navPath: ${JSON.stringify(navPaths.home)}, description: "Home screen", desktop: <main id="home">${body}</main>, id: "home", mobile: <main id="home-mobile">${body}</main>, route: "screens/home.html", title: ${JSON.stringify(firstTitle)}, useCaseIds: ["tour"] }),
-  defineScreen({ ...metadata, navPath: ${JSON.stringify(navPaths.details)}, description: "Detail screen", desktop: <main id="details">Detail</main>, id: "details", mobile: <main id="details-mobile">Detail</main>, route: "screens/details.html", title: "Details", useCaseIds: ["tour"] }),
-  defineUseCase({ ...metadata, navPath: ${JSON.stringify(navPaths.tour)}, description: "Fixture journey", id: "tour", route: "user-flows/tour.html", steps: [{ screenId: "home" }, { screenId: "details" }], title: "Tour" })
+  defineScreen({ ...metadata, navPath: ${JSON.stringify(navPaths.home)}, description: "Home screen", desktop: <main id="home">${body}</main>, id: "home", mobile: <main id="home-mobile">${body}</main>, title: ${JSON.stringify(firstTitle)}, useCaseIds: ["tour"] }),
+  defineScreen({ ...metadata, navPath: ${JSON.stringify(navPaths.details)}, description: "Detail screen", desktop: <main id="details">Detail</main>, id: "details", mobile: <main id="details-mobile">Detail</main>, title: "Details", useCaseIds: ["tour"] }),
+  defineUseCase({ ...metadata, navPath: ${JSON.stringify(navPaths.tour)}, description: "Fixture journey", id: "tour", steps: [{ screenId: "home" }, { screenId: "details" }], title: "Tour" })
 ];
 `;
 }

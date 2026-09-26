@@ -9,6 +9,7 @@ import {
   VIEWPORTS,
   encodeProps,
   componentFragmentRoute,
+  entryRoute,
 } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
@@ -25,7 +26,7 @@ export function componentManifestEntry(
     ...common,
     declaredDependencies: [...new Set(entry.dependencies)].sort(),
     kind: "component",
-    route: entry.route,
+    route: entryRoute("component", entry.id),
     viewports: ["mobile", "desktop"],
     ...(entry.tags?.length ? { tags: [...entry.tags] } : {}),
     propSchema: entry.propSchema,
@@ -41,7 +42,13 @@ export function componentManifestEntry(
       const fragment = (
         viewport: "mobile" | "desktop",
         scheme: ColorScheme = "light",
-      ) => componentFragmentRoute(entry.route, variant.id, viewport, scheme);
+      ) =>
+        componentFragmentRoute(
+          entryRoute("component", entry.id),
+          variant.id,
+          viewport,
+          scheme,
+        );
       return {
         id: variant.id,
         title: variant.title,

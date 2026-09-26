@@ -53,7 +53,7 @@ export default defineConfig({
   },
   stylesheets: [
     {
-      match: "design/library/**",
+      match: "components/design-ui-*.html",
       stylesheets: withLibraryStyles(designBaseStyles, [
         ...componentLayoutStyles,
         "design-component-controls.css",
@@ -61,32 +61,32 @@ export default defineConfig({
       ]),
     },
     {
-      match: "design/components/controls/**",
+      match: "screens/design-component-controls*.html",
       stylesheets: withLibraryStyles(designBaseStyles, [
         ...componentLayoutStyles,
         "design-component-controls.css",
       ]),
     },
     {
-      match: "design/components/**",
+      match: "screens/design-component-*.html",
       stylesheets: withLibraryStyles(designBaseStyles, componentLayoutStyles),
     },
     {
-      match: "design/browse/appearance/**",
+      match: "screens/design-appearance-*.html",
       stylesheets: withLibraryStyles(
         ["design.css", "design-stage.css", "design-review.css"],
         workspaceLayoutStyles,
       ),
     },
     {
-      match: "design/review/**",
+      match: "screens/design-review-*.html",
       stylesheets: withLibraryStyles(
         ["design.css", "design-stage.css", "design-review.css"],
         workspaceLayoutStyles,
       ),
     },
     {
-      match: "design/**",
+      match: "screens/design-*.html",
       stylesheets: withLibraryStyles(
         ["design.css", "design-stage.css"],
         workspaceLayoutStyles,

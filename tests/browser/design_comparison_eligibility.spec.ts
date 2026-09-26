@@ -37,7 +37,7 @@ async function assertFragmentEligibility(
   fragment: string,
 ): Promise<void> {
   await page.goto(pathToFileURL(path.join(directory, fragment)).href);
-  const componentDesign = entry.route.startsWith("design/components/");
+  const componentDesign = entry.id.startsWith("design-component-");
   const changedComponentOrScreen =
     componentDesign &&
     (await page.locator('[data-change-status="changed"]').count()) > 0;

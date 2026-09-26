@@ -9,8 +9,8 @@ import type {
   ComponentViewRecord,
   ManifestComponentVariant,
 } from "../components/manifest_types.js";
-import { componentFragmentRoute } from "../components/paths.js";
-import type { ManifestEntry, ManifestV6 } from "../registry/types.js";
+import { componentFragmentRoute } from "../data/routes.js";
+import type { ManifestEntry, ManifestV7 } from "../registry/types.js";
 import { catalogueRouteEntry, createCatalogue } from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
 import { toRouteTarget } from "../shell/target.js";
@@ -113,8 +113,8 @@ export function displayEntry(entry: CatalogueRoutedEntry): ManifestEntry {
   }
 }
 export function viewerCatalogue(model: CatalogueReadModel) {
-  const manifest: ManifestV6 = {
-    schemaVersion: 6,
+  const manifest: ManifestV7 = {
+    schemaVersion: 7,
     generatedBy: "mokly",
     sourceFiles: [],
     entries: [

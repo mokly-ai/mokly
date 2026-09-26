@@ -12,7 +12,7 @@ import {
 import { changedFixture } from "./changed_fixture.js";
 
 export const pageDocument =
-  '<!doctype html><html><head><link rel="stylesheet" href="document.css"></head><body><!--mokly-review-ignore:start:nav--><nav>Old navigation</nav><!--mokly-review-ignore:end:nav--><main>Document content</main></body></html>';
+  '<!doctype html><html><head><link rel="stylesheet" href="../document.css"></head><body><!--mokly-review-ignore:start:nav--><nav>Old navigation</nav><!--mokly-review-ignore:end:nav--><main>Document content</main></body></html>';
 
 /** Commit a v2/v3 document baseline, then restore the registered v4 page. */
 export async function historicalPageFixture(
@@ -28,7 +28,7 @@ export async function historicalPageFixture(
   const source = `import { definePage } from "@mokly/mokly";
 const meta = { description: "Document", dependencies: [], relatedDocs: [] };
 export const mockups = [
-  definePage({ ...meta, id: "handbook", title: "Current handbook", navPath: ["Documents"], route: "handbook.html", render: () => ${JSON.stringify(pageDocument)} })
+  definePage({ ...meta, id: "handbook", title: "Current handbook", navPath: ["Documents"], render: () => ${JSON.stringify(pageDocument)} })
 ];`;
   const fixture = await changedFixture(
     context,
@@ -46,9 +46,9 @@ export const mockups = [
   const manifest = readManifest(fixture.config);
   const manifestPath = path.join(fixture.mockupsDir, "mokly-manifest.json");
   const currentManifest = await fs.readFile(manifestPath);
-  const currentPath = path.join(fixture.mockupsDir, "handbook.html");
+  const currentPath = path.join(fixture.mockupsDir, "pages/handbook.html");
   const currentDocument = await fs.readFile(currentPath, "utf8");
-  const route = options.route ?? "handbook.html";
+  const route = options.route ?? "pages/handbook.html";
   const sourcePath =
     options.sourcePath ?? "mockups/legacy/handbook.source.html";
   const historical = {

@@ -18,13 +18,13 @@ test("Props renders only its view and freezes resources without copying linked p
     componentEntrySource({
       actionRender: `(props) => <section>
     <button>{props.label}</button><img src="../../image.svg" alt="Example" />
-    <a href="../../broken.html">Reference</a><MockLink to="home">Home</MockLink>
+    <a href="../../pages/broken.html">Reference</a><MockLink to="home">Home</MockLink>
   </section>`,
     }) +
     `
     import { definePage } from "@mokly/mokly";
     mockups.push(definePage({ id: "broken", title: "Broken", description: "Broken page",
-      route: "broken.html", dependencies: [], relatedDocs: [],
+      dependencies: [], relatedDocs: [],
       render: () => { throw new Error("unrelated page must not render"); } }));
   `;
   const fixture = await createFixture(source);
@@ -59,7 +59,7 @@ test("Props renders only its view and freezes resources without copying linked p
   );
   const html = Buffer.from(bundle.files.get(bundle.route)!.bytes).toString();
   assert.match(html, /Edited/);
-  assert.match(html, /href="\/static\/broken.html"/);
+  assert.match(html, /href="\/static\/pages\/broken.html"/);
   assert.match(html, /href="\/static\/screens\/home.desktop.html"/);
   await fs.writeFile(asset, '<svg width="24"/>');
   assert.equal(

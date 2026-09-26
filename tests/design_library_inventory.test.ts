@@ -80,7 +80,7 @@ test("all sixteen shared components have connected pages, controls and saved exa
     const id = `design-ui-${slug}`;
     const entry = components.find((entry) => entry.id === id);
     assert.ok(entry?.kind === "component", id);
-    assert.equal(entry.route, `design/library/${group}/${slug}.html`);
+    assert.equal(entry.route, `components/${id}.html`);
     assert.deepEqual(
       entry.variants.map((variant) => variant.id),
       variants,
