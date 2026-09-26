@@ -135,8 +135,12 @@ test("documented retries agree with the protocol", () => {
   assert.match(protocol, /from 0 to 60 seconds/u);
   assert.match(prose, /plans once more/u);
   assert.match(protocol, /run Plan once more/u);
-  assert.match(prose, /second `409` fails/u);
-  assert.match(protocol, /second `409` is `upload-failed`/u);
+  assert.match(prose, /second `409` or `410` fails/u);
+  assert.match(protocol, /second `409` or\s+`410` is `upload-failed`/u);
+  assert.match(prose, /already published for this commit/u);
+  assert.match(protocol, /already published for this commit/u);
+  assert.match(prose, /Any other `2xx` fails/u);
+  assert.match(protocol, /Any other 2xx is `upload-failed`/u);
 });
 
 test("comparison fields stay required nulls without comparisons", () => {

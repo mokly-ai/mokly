@@ -59,10 +59,12 @@ Content-Length: 0
 ```
 
 `201` means a new publication is live, and `200` means the service already had
-one for this revision and config path. When the JSON answer carries an absolute
+one for this revision and config path and kept it, in which case publish
+prints `Mokly catalogue already published for this commit.` instead of the
+upload counts. Any other `2xx` fails. When the JSON answer carries an absolute
 `viewerUrl`, publish prints it after its success line. `409` means the service
-still lacks files: publish plans once more, uploads what comes back, and
-completes again; a second `409` fails.
+still lacks files and `410` means the upload expired: publish plans once more,
+uploads what comes back, and completes again; a second `409` or `410` fails.
 
 ## What the manifest says
 
@@ -80,12 +82,14 @@ it holds your source inventory and is not a public artifact.
 A service first authenticates the bearer credential. Only then does it
 decompress the plan archive, enforcing size and file-count limits before
 reporting version or structural failures. It validates the manifest's fields
-and version, the marker's schema, digests, sizes and paths, and compares the
-listed digests with what it already holds. Each stored blob must match its
-declared digest and size. The service commits only once every listed digest is
-present and answers `409` until then. Before exposing any catalogue, it checks
-that the credential is allowed to publish for the repository the manifest
-names.
+and version, the marker's schema, digests, sizes and paths, stores the three
+archived files once their bytes match their digests, and compares the
+remaining digests with what it already holds for that project. Each stored
+blob must match its declared digest and size. The service commits only once
+every listed digest is present and answers `409` until then, and it keeps the
+first publication it completed for a revision and config path. Before exposing
+any catalogue, it checks that the credential is allowed to publish for the
+repository the manifest names.
 
 Receivers accept only regular files. They reject symlinks, hard links,
 devices, FIFOs, sparse files and other special entries in the plan archive,
@@ -97,7 +101,8 @@ Each request times out after 120 seconds. A request that fails in transit, or
 is answered `408`, `429`, `500`, `502`, `503` or `504`, is retried up to five
 times with a growing, randomised delay of at most sixteen seconds, or the
 delay a `Retry-After` header of up to sixty seconds asks for. Nothing is
-retried after the plan's expiry time.
+retried after the plan's expiry time; instead publish plans once more, as it
+does after a `410`, and everything already stored stays held.
 
 ## When it is refused
 
@@ -107,7 +112,7 @@ retried after the plan's expiry time.
 | The plan archive, manifest or marker was rejected, or a file's bytes did not match their digest | `upload-invalid-bundle`      |
 | An upload limit was exceeded                                                                    | `upload-too-large`           |
 | The manifest or marker declares an unknown version                                              | `upload-unsupported-version` |
-| Anything else, including a timeout, an expired plan or a second `409`                           | `upload-failed`              |
+| Anything else, including a timeout or a second `409` or `410`                                   | `upload-failed`              |
 
 A failed publish leaves the complete local export where it was written, so you
 can look at exactly what would have been sent, and running it again resumes

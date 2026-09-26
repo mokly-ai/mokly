@@ -42,6 +42,9 @@ The last line of a successful job is
 counts of that run, followed by the published catalogue's address when the
 service returns one. Only files the service did not already hold are sent, so
 a job that publishes an unchanged catalogue uploads nothing and still succeeds.
+A rerun for a commit the service already published prints
+`Mokly catalogue already published for this commit.` with the existing address
+and also succeeds.
 
 ## What a failure tells you
 

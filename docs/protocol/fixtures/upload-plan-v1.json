@@ -735,6 +735,244 @@
       "valid": false,
       "status": 200,
       "body": "<!doctype html><title>Sign in</title>"
+    },
+    {
+      "name": "complete-201-new-publication",
+      "step": "complete",
+      "valid": true,
+      "outcome": "published",
+      "status": 201,
+      "document": {
+        "id": "pub-1",
+        "projectId": "p-123",
+        "state": "live",
+        "catalogueUrl": "https://api.example.com/v1/projects/p-123/publications/pub-1",
+        "viewerUrl": "https://mokly.ai/p/p-123/publications/pub-1"
+      },
+      "viewerUrl": "https://mokly.ai/p/p-123/publications/pub-1"
+    },
+    {
+      "name": "complete-200-already-published",
+      "step": "complete",
+      "valid": true,
+      "outcome": "already-published",
+      "status": 200,
+      "document": {
+        "id": "pub-1",
+        "projectId": "p-123",
+        "state": "live",
+        "catalogueUrl": "https://api.example.com/v1/projects/p-123/publications/pub-1",
+        "viewerUrl": "https://mokly.ai/p/p-123/publications/pub-1"
+      },
+      "viewerUrl": "https://mokly.ai/p/p-123/publications/pub-1"
+    },
+    {
+      "name": "complete-201-without-viewer-url",
+      "step": "complete",
+      "valid": true,
+      "outcome": "published",
+      "status": 201,
+      "document": {
+        "id": "pub-1",
+        "projectId": "p-123",
+        "state": "live",
+        "catalogueUrl": "https://api.example.com/v1/projects/p-123/publications/pub-1",
+        "viewerUrl": null
+      },
+      "viewerUrl": null
+    },
+    {
+      "name": "complete-201-relative-viewer-url-is-not-printed",
+      "step": "complete",
+      "valid": true,
+      "outcome": "published",
+      "status": 201,
+      "document": {
+        "id": "pub-1",
+        "projectId": "p-123",
+        "state": "live",
+        "catalogueUrl": "https://api.example.com/v1/projects/p-123/publications/pub-1",
+        "viewerUrl": "/p/p-123/publications/pub-1"
+      },
+      "viewerUrl": null
+    },
+    {
+      "name": "complete-201-non-http-viewer-url-is-not-printed",
+      "step": "complete",
+      "valid": true,
+      "outcome": "published",
+      "status": 201,
+      "document": {
+        "id": "pub-1",
+        "projectId": "p-123",
+        "state": "live",
+        "catalogueUrl": "https://api.example.com/v1/projects/p-123/publications/pub-1",
+        "viewerUrl": "ftp://mokly.ai/p/pub-1"
+      },
+      "viewerUrl": null
+    },
+    {
+      "name": "complete-201-unreadable-body-still-succeeds",
+      "step": "complete",
+      "valid": true,
+      "outcome": "published",
+      "status": 201,
+      "contentType": "text/html",
+      "body": "<!doctype html><title>Done</title>",
+      "viewerUrl": null
+    },
+    {
+      "name": "complete-200-with-unknown-fields",
+      "step": "complete",
+      "valid": true,
+      "outcome": "already-published",
+      "status": 200,
+      "document": {
+        "id": "pub-1",
+        "projectId": "p-123",
+        "state": "live",
+        "catalogueUrl": "https://api.example.com/v1/projects/p-123/publications/pub-1",
+        "viewerUrl": "https://mokly.ai/p/p-123/publications/pub-1",
+        "region": "eu"
+      },
+      "viewerUrl": "https://mokly.ai/p/p-123/publications/pub-1"
+    },
+    {
+      "name": "complete-204-is-not-a-success",
+      "step": "complete",
+      "valid": false,
+      "outcome": "upload-failed",
+      "status": 204,
+      "body": "",
+      "viewerUrl": null
+    },
+    {
+      "name": "complete-202-is-not-a-success",
+      "step": "complete",
+      "valid": false,
+      "outcome": "upload-failed",
+      "status": 202,
+      "document": {
+        "id": "pub-1",
+        "projectId": "p-123",
+        "state": "live",
+        "catalogueUrl": "https://api.example.com/v1/projects/p-123/publications/pub-1",
+        "viewerUrl": "https://mokly.ai/p/p-123/publications/pub-1"
+      },
+      "viewerUrl": null
+    },
+    {
+      "name": "complete-409-missing-blobs-replans",
+      "step": "complete",
+      "valid": false,
+      "outcome": "replan",
+      "status": 409,
+      "document": {
+        "error": {
+          "code": "upload-incomplete"
+        }
+      },
+      "viewerUrl": null
+    },
+    {
+      "name": "complete-410-expired-upload-replans",
+      "step": "complete",
+      "valid": false,
+      "outcome": "replan",
+      "status": 410,
+      "document": {
+        "error": {
+          "code": "upload-expired"
+        }
+      },
+      "viewerUrl": null
+    },
+    {
+      "name": "complete-404-unknown-upload",
+      "step": "complete",
+      "valid": false,
+      "outcome": "upload-failed",
+      "status": 404,
+      "document": {
+        "error": {
+          "code": "not-found"
+        }
+      },
+      "viewerUrl": null
+    },
+    {
+      "name": "complete-401-unauthorized",
+      "step": "complete",
+      "valid": false,
+      "outcome": "upload-unauthorized",
+      "status": 401,
+      "document": {
+        "error": {
+          "code": "upload-unauthorized"
+        }
+      },
+      "viewerUrl": null
+    },
+    {
+      "name": "complete-403-forbidden",
+      "step": "complete",
+      "valid": false,
+      "outcome": "upload-unauthorized",
+      "status": 403,
+      "document": {
+        "error": {
+          "code": "upload-unauthorized"
+        }
+      },
+      "viewerUrl": null
+    },
+    {
+      "name": "complete-422-invalid-bundle",
+      "step": "complete",
+      "valid": false,
+      "outcome": "upload-invalid-bundle",
+      "status": 422,
+      "document": {
+        "error": {
+          "code": "upload-invalid-bundle"
+        }
+      },
+      "viewerUrl": null
+    },
+    {
+      "name": "complete-426-unsupported-version",
+      "step": "complete",
+      "valid": false,
+      "outcome": "upload-unsupported-version",
+      "status": 426,
+      "document": {
+        "error": {
+          "code": "upload-unsupported-version"
+        }
+      },
+      "viewerUrl": null
+    },
+    {
+      "name": "complete-503-is-retried",
+      "step": "complete",
+      "valid": false,
+      "outcome": "retry",
+      "status": 503,
+      "document": {
+        "error": {
+          "code": "unavailable"
+        }
+      },
+      "viewerUrl": null
+    },
+    {
+      "name": "complete-302-redirect-is-not-followed",
+      "step": "complete",
+      "valid": false,
+      "outcome": "upload-failed",
+      "status": 302,
+      "body": "",
+      "viewerUrl": null
     }
   ]
 }

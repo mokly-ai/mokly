@@ -166,6 +166,7 @@ Completion summaries are:
   ✔ Mokly output is current · 278 files (5.9s)
   ✔ Exported Mokly to .context/mokly-site (8.1s)
   ✔ Published Mokly catalogue · 12 files uploaded, 266 unchanged (9.3s)
+  ✔ Mokly catalogue already published for this commit (2.1s)
 ```
 
 Export follows its summary with the unstyled guidance
@@ -173,7 +174,10 @@ Export follows its summary with the unstyled guidance
 Publish follows its summary with the receiver's viewer URL on its own unstyled
 line when the completion response supplied an absolute http(s) URL, and adds
 nothing otherwise. Its counts are the export's ownership entries whose content
-the receiver requested during this command against the remaining entries.
+the receiver requested during this command against the remaining entries. The
+already-published summary replaces the counted one when the receiver answers
+the completion with `200`, meaning it kept an earlier publication for the same
+commit and config path.
 
 ## Plain compatibility
 
@@ -189,12 +193,14 @@ Mokly output is current (<n> files).
 Exported Mokly to <outDir>.
 Deploy this directory at your site's root with your hosting provider.
 Published Mokly catalogue. <uploaded> files uploaded, <unchanged> unchanged.
+Mokly catalogue already published for this commit.
 <viewer-url>
 ```
 
 `<uploaded>` and `<unchanged>` are the same decimal counts as the rich summary.
-The `<viewer-url>` line appears only when the receiver supplied one and
-contains that URL alone.
+A publish prints exactly one of the two publish lines: the already-published
+line when the receiver answers the completion with `200`. The `<viewer-url>`
+line appears only when the receiver supplied one and contains that URL alone.
 
 Plain commands add no phase or watch-event lines. Successful plain commands
 write nothing to stderr unless `--debug-timings` was requested. Expected plain

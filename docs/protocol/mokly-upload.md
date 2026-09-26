@@ -56,7 +56,9 @@ with a commit even without comparisons, to identify the uploaded revision.
 Derived catalogues rebuild the pinned baseline only when comparisons are enabled;
 `--no-changes` requires neither that history nor a historical install/build.
 Uncommitted authoring changes are permitted: `headSha` identifies checkout
-context, not a claim that every exported byte exists at that commit.
+context, not a claim that every exported byte exists at that commit. A receiver
+keeps the first publication it completes for a `headSha` and `configPath`;
+publishing a dirty tree is not a supported way to change a published commit.
 
 `--repository <host>/<owner>/<name>` overrides remote detection. Otherwise use
 `origin`, or the sole remote if `origin` is absent; multiple other remotes are
@@ -131,13 +133,21 @@ to the CLI; these are Mokly Cloud's:
   a body over 16 MiB, invalid JSON or a non-JSON content type is
   `upload-failed`.
 
+A receiver verifies the archived envelope and review bytes against their
+marker digests (a mismatch is 400), stores them at plan time and never lists
+them in `missing`, so replaying an unchanged export yields an empty set. A
+receiver that already completed a publication for this `headSha` and
+`configPath` also answers `missing: []`, and Complete then answers `200`.
+
 [The plan fixture](./fixtures/upload-plan-v1.json) ships in the package for
 independent receivers and the CLI validator. Its root has `schemaVersion: 1`
 (fixture format), the `endpoint` the cases were planned against, `marker` (the
-digests that marker lists) and `cases`, each with a unique `name`, `valid`, an
-optional `status` (default 200) and `contentType` (default `application/json`;
-`null` means absent), and either `document`, a JSON value serialized as the
-body, or `body`, raw text. Every invalid case is `upload-failed`.
+digests that marker lists) and `cases`. Each case has a unique `name`, a `step`
+(`plan`, the default, or `complete`), `valid`, an optional `status` (default 200) and `contentType` (default `application/json`; `null` means absent), and
+either `document`, a JSON value serialized as the body, or `body`, raw text.
+Every invalid plan case is `upload-failed`. Complete cases add `outcome`
+(`published`, `already-published`, `replan`, `retry` or an error category) and
+the `viewerUrl` the CLI prints, or `null`.
 
 ### Blobs
 
@@ -153,8 +163,10 @@ Content-Length: <size from the marker>
 The body is the raw bytes of the file with that digest; files sharing a digest
 are uploaded once. Any 2xx means stored (receivers return 204 with no body).
 `400` means the bytes did not match the declared digest or size:
-`upload-invalid-bundle`. `404` means the digest is not part of this plan:
-`upload-failed`. The first failed blob cancels the remaining uploads.
+`upload-invalid-bundle`. `404` means the digest is not part of this plan or the
+upload id is unknown: `upload-failed`. `410` means the upload expired and is
+handled like `409` on Complete. The first failed blob cancels the remaining
+uploads.
 
 ### Complete
 
@@ -168,13 +180,17 @@ Content-Length: 0
 ```
 
 `201` means a new publication is live. `200` means the receiver already had a
-publication for this `headSha` and `configPath` and returned it. The body is
+publication for this `headSha` and `configPath` and returned it unchanged; the
+CLI then prints `Mokly catalogue already published for this commit.` instead of
+the upload counts. Any other 2xx is `upload-failed`. The body is
 `{ "id", "projectId", "state", "catalogueUrl", "viewerUrl" }`. When
 `viewerUrl` is an absolute http(s) URL string in a JSON body of at most 16 MiB,
 the CLI prints it on its own line after the success line; otherwise it prints
 the success line alone, and an unreadable body does not fail the command. `409`
-means the receiver still misses blobs: run Plan once more, upload the returned
-set, complete again; a second `409` is `upload-failed`.
+means the receiver still misses blobs and `410` means the upload expired: run
+Plan once more, upload the returned set, complete again; a second `409` or
+`410` is `upload-failed`. `404` means an unknown or foreign upload id:
+`upload-failed`.
 
 ### Retries And Expiry
 
@@ -185,33 +201,36 @@ attempts per request. The wait before attempt _k_ (2 to 5) is a uniformly
 random duration between zero and min(16 s, 1 s × 2^(k−2)), full jitter. An
 integer `Retry-After` header from 0 to 60 seconds replaces that wait; other
 values are ignored. Never start an attempt, or a wait that would end, after
-`upload.expiresAt`; reaching it is `upload-failed`. Cancellation stops
-immediately with `upload-failed`.
+`upload.expiresAt`: reaching it locally is handled like a `410`, one re-plan
+and then `upload-failed`. Receivers choose an expiry that covers a complete
+upload; Mokly Cloud allows sixty minutes. Cancellation stops immediately with
+`upload-failed`.
 
 ### Rejections
 
 Statuses map to CLI categories by value alone; a server may return
 `{"error":{"code":"upload-invalid-bundle"}}` for other clients.
 
-| Rejection                                                          | HTTP status            | CLI category                      |
-| ------------------------------------------------------------------ | ---------------------- | --------------------------------- |
-| Unsupported envelope or ownership marker `schemaVersion`           | 426                    | `upload-unsupported-version`      |
-| Invalid plan archive, envelope or marker; blob bytes mismatch      | 400 or 422             | `upload-invalid-bundle`           |
-| Missing/invalid token or forbidden repository                      | 401 or 403             | `upload-unauthorized`             |
-| Any upload limit exceeded, on plan or on a blob                    | 413                    | `upload-too-large`                |
-| Blob digest not part of the plan                                   | 404                    | `upload-failed`                   |
-| Complete while blobs are missing                                   | 409                    | one re-plan, then `upload-failed` |
-| Retryable status after five attempts, or `expiresAt` reached       | 408, 429, 500, 502–504 | `upload-failed`                   |
-| Other non-2xx, redirect, invalid response, cancellation, transport | any other              | `upload-failed`                   |
+| Rejection                                                      | HTTP status            | CLI category                      |
+| -------------------------------------------------------------- | ---------------------- | --------------------------------- |
+| Unsupported envelope or ownership marker `schemaVersion`       | 426                    | `upload-unsupported-version`      |
+| Invalid plan archive, envelope or marker; blob bytes mismatch  | 400 or 422             | `upload-invalid-bundle`           |
+| Missing/invalid token or forbidden repository                  | 401 or 403             | `upload-unauthorized`             |
+| Any upload limit exceeded, on plan or on a blob                | 413                    | `upload-too-large`                |
+| Blob digest not part of the plan, or unknown upload id         | 404                    | `upload-failed`                   |
+| Complete while blobs are missing                               | 409                    | one re-plan, then `upload-failed` |
+| Expired upload on a blob or Complete, or `expiresAt` reached   | 410                    | one re-plan, then `upload-failed` |
+| Retryable status after five attempts                           | 408, 429, 500, 502–504 | `upload-failed`                   |
+| Other non-2xx or 2xx, redirect, invalid response, cancellation | any other              | `upload-failed`                   |
 
-Errors print `[mokly/<category>] <fixed actionable message>` on stderr and exit
-
-1. Local bundle validation/limits use the same invalid bundle/too-large
-   categories. Argument, config, build, Git and export failures retain their
-   existing typed categories. No request follows an export failure. Unexpected
-   local preparation failures use `upload-failed` with a fixed message to check
-   configuration and temporary storage; raw exceptions are not printed. Failed
-   uploads leave the complete local export available; they do not roll it back.
+Errors print `[mokly/<category>] <fixed actionable message>` on stderr with
+exit status 1. Local bundle validation/limits use the same invalid
+bundle/too-large categories. Argument, config, build, Git and export failures
+retain their existing typed categories. No request follows an export failure.
+Unexpected local preparation failures use `upload-failed` with a fixed message
+to check configuration and temporary storage; raw exceptions are not printed.
+Failed uploads leave the complete local export available; they do not roll it
+back.
 
 ### Output
 
@@ -220,9 +239,10 @@ While blobs upload, rich mode shows `Uploading <n> of <total> files · <size>`:
 `<size>` their total byte size. Plain mode prints exactly one final line,
 `Published Mokly catalogue. <uploaded> files uploaded, <unchanged> unchanged.`,
 counting marker entries whose digest was uploaded during this command
-(including a re-plan) against the remaining entries; the viewer URL line
-follows when present. Both modes exit 0 and follow the
-[terminal output contract](./mokly-terminal-output.md).
+(including a re-plan) against the remaining entries. When Complete answers
+`200`, that line is `Mokly catalogue already published for this commit.`
+instead. The viewer URL line follows when present. Both modes exit 0 and follow
+the [terminal output contract](./mokly-terminal-output.md).
 
 ## Upload Manifest
 
@@ -321,9 +341,10 @@ Require the root upload manifest, a schema 2 ownership marker, and inventory
 entries for `index.html`, `404.html` and `mokly-upload.json`. The archived
 manifest and review file must match their marker digests and sizes, and the
 review file must sit at `comparisonPath`. Answer `missing` from the store of
-verified blobs; verify each received blob's digest and length against its entry
-before storing it; commit only when every listed digest is present, and refuse
-completion with 409 otherwise. Validate a referenced review against the
+verified blobs held by a publication of the same project, so one project
+cannot probe another's content; verify each received blob's digest and length
+against its entry before storing it; commit only when every listed digest is
+present, and refuse completion with 409 otherwise. Validate a referenced review against the
 documented [comparison formats](./README.md#supported-formats); comparison
 metadata must agree with the manifest, and current-only uploads contain no
 comparison files. Check repository authorization and hosting policy before

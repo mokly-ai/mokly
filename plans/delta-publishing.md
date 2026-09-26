@@ -47,7 +47,16 @@ records them in the protocol docs so no later milestone needs the brief.
   `<unchanged>` is the remaining entries.
 - **Complete body.** `201`/`200` succeed regardless of body validity; the
   viewer URL line is printed only when `viewerUrl` is an absolute http(s) URL
-  string in a JSON body of at most 16 MiB. Other fields are ignored.
+  string in a JSON body of at most 16 MiB. Other fields are ignored. Any other
+  2xx on Complete is `upload-failed`. A `200` means the receiver kept an
+  earlier publication for the same `headSha` and `configPath`; the CLI then
+  prints `Mokly catalogue already published for this commit.` instead of the
+  counts (cloud decision, 2026-09-26).
+- **Expiry and 410.** A `410` on a blob or Complete, or a locally reached
+  `expiresAt`, is handled like `409`: one re-plan, then `upload-failed`. Mokly
+  Cloud allows sixty minutes per upload, stores the plan-archive files at plan
+  time so a replay yields an empty `missing`, and computes `missing` per
+  project (cloud decisions, 2026-09-26).
 
 ## Milestone 1: Protocol and guide contract — completed
 
@@ -101,7 +110,7 @@ Prettier and the guide-structure test.
       [`mokly-guides.md`](../docs/protocol/mokly-guides.md) needed no change
       because the Reference slugs are unchanged.
 - [x] Author the contract fixtures now so the docs link to real files:
-      `docs/protocol/fixtures/export-ownership-v2.json` (43 cases with real
+      `docs/protocol/fixtures/export-ownership-v2.json` (46 cases with real
       digests) and `docs/protocol/fixtures/upload-plan-v1.json` (47 cases);
       the v1 ownership fixture stays until Milestone 2 switches every reader.
 - [x] Rewrite the guides [`cli/publish.md`](../docs/guides/cli/publish.md)
@@ -183,10 +192,12 @@ contract; the single-archive upload is deleted.
       hash, a foreign-origin `blobUrl`/`completeUrl`, a missing or repeated
       `{sha256}`, a non-JSON content type and a body over 16 MiB as
       `upload-failed` without echoing the body; blob PUT headers, bodies and
-      the 400/404 mappings; complete `201`/`200` results and viewer URL
-      extraction; one 409 re-plan then `upload-failed`; the retry schedule
-      (five attempts, 1 s → 16 s with full jitter, `Retry-After` honoured up
-      to 60 s, stop at `expiresAt`, non-retryable statuses fail immediately);
+      the 400/404 mappings; complete `201`/`200` results, any other 2xx as
+      `upload-failed`, and viewer URL extraction; one re-plan after 409, 410
+      or a locally reached `expiresAt`, then `upload-failed`; the retry
+      schedule (five attempts, 1 s → 16 s with full jitter, `Retry-After`
+      honoured up to 60 s, no attempt or wait past `expiresAt`, non-retryable
+      statuses fail immediately);
       concurrency never exceeds the limit and a failed blob cancels the rest;
       `--upload-concurrency` parsing (1 to 32, default 8, publish-only,
       assigned form, `cli-invalid` otherwise).
@@ -200,8 +211,9 @@ contract; the single-archive upload is deleted.
 - [ ] Extend `PublishDependencies` with `sleep` and `random` seams and
       `PublishOptions` with `uploadConcurrency`; make `publishCatalogue` keep
       the finalized file map plus the parsed v2 marker, run plan → blobs →
-      complete (with the single 409 re-plan), and return
-      `{ uploaded, unchanged, viewerUrl }`.
+      complete (with the single re-plan after 409, 410 or expiry), and return
+      a `PublishResult` whose `outcome` is `published` or `already-published`
+      beside `uploaded`, `unchanged` and `viewerUrl`.
 - [ ] Add `--upload-concurrency` to `src/cli/arguments.ts`, `src/cli/help.ts`
       and the publish command validation; wire it through `src/cli/publish.ts`;
       then add its rows to `docs/guides/cli/publish.md` and
@@ -212,8 +224,9 @@ contract; the single-archive upload is deleted.
       request kind, retry schedule instead of "one request per status").
 - [ ] Check the `upload-plan-v1.json` fixture authored in Milestone 1 (root
       `endpoint`, `marker` digests and cases with optional `status`,
-      `contentType`, `document` or raw `body`) against the CLI validator and
-      an independent reader in `scripts/package/`, mirroring the ownership
+      `contentType`, `document` or raw `body`, plus `step: "complete"` cases
+      with `outcome` and `viewerUrl`) against the CLI validator and an
+      independent reader in `scripts/package/`, mirroring the ownership
       fixture tests; register the file in the package allowlists and release
       fixtures.
 - [ ] Remove the single-archive `uploadCatalogue` and its tests; update
@@ -229,8 +242,10 @@ contract in both output modes.
       `Uploading <n> of <total> files · <size>` progress and settles to the
       counted success line; plain mode prints exactly
       `Published Mokly catalogue. <uploaded> files uploaded, <unchanged> unchanged.`
-      followed by the viewer URL line only when present; forced-rich pipes
-      remain deterministic; nothing else reaches stdout or stderr.
+      or, after a `200` completion,
+      `Mokly catalogue already published for this commit.`, followed by the
+      viewer URL line only when present; forced-rich pipes remain
+      deterministic; nothing else reaches stdout or stderr.
 - [ ] Add a phase `update(label)` capability to `ReporterPhase` (no-op in
       plain mode, in-place re-render in rich mode) and a publish progress
       observer that reports completed blob counts and the total size.
@@ -246,13 +261,16 @@ same without importing package internals.
 - [ ] Add `tests/helpers/fake_receiver.ts`: an HTTP receiver that extracts the
       plan archive, validates the v2 marker, answers `missing` from its own
       blob store, verifies PUT bytes against the declared digest and size,
-      completes with `201`/`200`, and can be scripted to return 409 once,
-      short `expiresAt`, retryable statuses with `Retry-After`, and each
-      rejection status.
+      completes with `201`/`200`, stores the plan-archive files at plan time,
+      keeps the first publication per `headSha` and `configPath`, and can be
+      scripted to return 409 once, 410 once, a short `expiresAt`, retryable
+      statuses with `Retry-After`, and each rejection status.
 - [ ] Add integration tests through `dist/cli/bin.js`: first publish uploads
-      every blob; replay with the same export yields empty `missing`, no PUTs
-      and `200`; 409 once then success; `expiresAt` reached → `upload-failed`;
-      every rejection status on plan, blob and complete maps to its category;
+      every blob; replay with the same export yields empty `missing`, no PUTs,
+      `200` and the already-published line; 409 once then success; 410 once
+      then success; a short `expiresAt` re-plans once and then succeeds, and a
+      second expiry is `upload-failed`; every rejection status on plan, blob
+      and complete maps to its category;
       tokens never appear in output; a failed publish keeps the local export;
       `--no-changes` sends a two-entry plan archive.
 - [ ] Update `tests/publish_cli.test.ts`, `tests/publish_assigned_options.test.ts`

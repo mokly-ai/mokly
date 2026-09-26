@@ -70,8 +70,10 @@ service to complete the publication. A service that already holds
 every file receives no file at all.
 
 A request that fails in transit or is answered with a temporary status is
-retried up to five times with growing delays, and nothing is retried after the
-expiry time the service gave the plan. Redirects are never followed.
+retried up to five times with growing delays. When the plan's expiry time
+passes, or the service reports that the upload expired, publish plans once
+more and continues from what the service already holds. Redirects are never
+followed.
 
 ## What you see
 
@@ -80,6 +82,12 @@ Success prints one line, for example
 service returns one, the address of the published catalogue on the line after
 it. In a terminal, publish also shows how many of the requested files have
 been uploaded so far.
+
+A service keeps the first publication it completed for a commit and config
+path. Publishing that commit again prints
+`Mokly catalogue already published for this commit.` with the existing
+catalogue's address, and uncommitted changes in the working tree are not a
+way to replace a published commit.
 
 A failed publish leaves the complete local export in place for you to inspect,
 and running it again resumes from whatever the service already stored.
