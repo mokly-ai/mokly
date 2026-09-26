@@ -40,11 +40,12 @@ records them in the protocol docs so no later milestone needs the brief.
   string, requires it inside the path (before any `?` or `#`), then parses the
   substituted URL for the origin check. Receivers emit unencoded braces.
 - **Progress copy.** The rich upload progress line is
-  `Uploading <n> of <total> files · <size>`. `<n>` counts completed blob
-  uploads, `<total>` is the number of files whose hash is in `missing`, and
-  `<size>` is their total byte size in binary units. `<uploaded>` counts marker
-  entries whose hash was uploaded in this run (including a 409 re-plan);
-  `<unchanged>` is the remaining entries.
+  `Uploading <n> of <total> files · <size>`. The counting rules below were
+  replaced by [Review Fix Decisions](#review-fix-decisions) (counts and
+  plurals): `<n>` counted completed blob uploads, `<total>` the files whose
+  hash is in `missing`, `<size>` their total byte size in binary units,
+  `<uploaded>` the marker entries whose hash was uploaded in this run
+  (including a 409 re-plan), and `<unchanged>` the remaining entries.
 - **Complete body.** `201`/`200` succeed regardless of body validity; the
   viewer URL line is printed only when `viewerUrl` is an absolute http(s) URL
   string in a JSON body of at most 16 MiB. Other fields are ignored. Any other
@@ -57,6 +58,68 @@ records them in the protocol docs so no later milestone needs the brief.
   Cloud allows sixty minutes per upload, stores the plan-archive files at plan
   time so a replay yields an empty `missing`, and computes `missing` per
   project (cloud decisions, 2026-09-26).
+
+## Review Fix Decisions
+
+The user approved fixing every finding of the
+[delta publishing review](../docs/reviews/delta-publishing.md) with its
+recommended option (2026-09-26). Milestones 7–13 carry that work; `#n` refers
+to finding _n_ of that review. These decisions settle what the
+recommendations left open:
+
+- **Counts (#3).** Counting is by digest. A marker entry is _uploaded_ when
+  this command sent its digest, either as a file in a plan archive or through
+  at least one blob PUT attempt in any round; every other entry is
+  _unchanged_. The rich progress `<total>` for a round is the number of
+  entries whose digest is in that round's plan archive or `missing`; `<n>`
+  starts at the plan-archive entries and advances by every entry sharing a
+  digest when that digest's PUT completes; `<size>` is the byte size of the
+  round's distinct contents, plan-archive files included. A first publish to
+  an empty receiver therefore reports `0 unchanged`, and a single-round
+  progress label ends at the summary's `<uploaded>`. No progress label is
+  shown for a round whose `missing` is empty.
+- **Plurals and cancellation (#8).** `1 file uploaded`, `2 files uploaded`,
+  `Uploading 0 of 1 file`; `unchanged` takes no plural. Serve's inline plural
+  moves to the same helper. Cancelling publish keeps the `upload-failed`
+  category but prints its own fixed message and, in rich mode, no connection
+  hint; the transport failure's message and rich hint no longer repeat each
+  other.
+- **Repeated Complete (#2).** Complete is idempotent per upload: repeating it
+  for an upload that already completed returns that upload's first status
+  and body and never creates another publication. `200` means a different
+  upload already completed a publication for the same `headSha` and
+  `configPath`, which the receiver returns unchanged.
+- **Over-limit marker entries (#9).** An integer `size` above 67108864 and a
+  `path` over 1,024 UTF-8 bytes exceed limits: receivers answer `413`
+  (`upload-too-large`), and the ownership fixture classifies them with a new
+  `too-large` rejection. Malformed values (negative, fractional or
+  non-numeric sizes, grammar violations) stay `400`/`422` (`invalid`).
+  Receivers answer `missing` from blobs stored for the same project,
+  including blobs received for an earlier upload that has not completed.
+- **Path grammar (#1, #10).** One portability rule covers every exported
+  path, marker entry and upload path: nonempty, at most 1,024 UTF-8 bytes,
+  well-formed Unicode, no Unicode category Cc character (U+0000–U+001F and
+  U+007F–U+009F), no leading `/`, no `\` or `:`, and no empty, `.` or `..`
+  segment. Format characters such as U+200D are allowed. A marker in which
+  one entry's path equals a directory prefix of another, compared after
+  lowercasing, is invalid. A missing `schemaVersion` is invalid; any present
+  value other than the number `2`, including the string `"2"`, is
+  unsupported (426).
+- **Deployment identity (#5).** The identity input excludes the ownership
+  marker and the publication metadata files that an export adapter declares;
+  publish declares only `mokly-upload.json`. The marker still lists and
+  hashes the manifest.
+- **Retries (#7).** Five attempts per request; the wait before attempt _k_
+  (2 to 5) is a uniformly random duration up to 1 s × 2^(k−2), so at most
+  1, 2, 4 and 8 seconds. The unreachable 16 s cap is removed.
+- **Plan URLs (#12).** `blobUrl` and `completeUrl` must be absolute `http:` or
+  `https:` URLs whose scheme, hostname and port equal the endpoint's, without
+  userinfo; `blob:` and other schemes are rejected before any request.
+- **Release (#15).** Squash-merge the pull request as
+  `feat(publish)!: upload catalogue content deltas` and keep the
+  `BREAKING CHANGE:` footer in the squash body, because release-please reads
+  that squash commit on `main`. A new check enforces Conventional Commits pull
+  request titles of at most 50 characters.
 
 ## Milestone 1: Protocol and guide contract — completed
 
@@ -341,6 +404,173 @@ Complete branch work before review; merge remains the completion boundary.
       ten Low) are recorded in the
       [review](../docs/reviews/delta-publishing.md) for the user's decision.
 
+## Milestone 7: Review fix contract
+
+Documentation and contract only, so the implementation milestones need no
+guesswork. Fixture cases the current code would fail land with that code in
+later milestones, tests first. Validate with Prettier and the guide tests;
+`cargo xtask check` is not required.
+
+- [ ] Split `docs/protocol/mokly-upload.md` (364 lines) into `mokly-upload.md`
+      (CLI, repository identity, upload manifest, output and GitHub Action)
+      and a new `mokly-upload-exchange.md` (plan, blobs, complete, retries,
+      rejections, limits and receiver validation), each near the ~250-line
+      guidance; update every link and anchor, the protocol index, and the
+      package allowlists and release fixtures that list shipped protocol
+      files (#9).
+- [ ] Record the [Review Fix Decisions](#review-fix-decisions) in the
+      exchange contract: repeated Complete (#2); counts, progress, plurals
+      and cancellation copy (#3, #8); `413` for over-limit declared sizes and
+      paths and "stored for the same project" (#9); http(s) plan URLs (#12);
+      the five-attempt schedule without the 16 s cap (#7).
+- [ ] Update `mokly-export-ownership.md`: the portability rule with category
+      Cc, the prefix-collision rule, version precedence, the `too-large`
+      rejection class and its `413` mapping, and the fixture cases Milestone
+      8 adds (#9, #10).
+- [ ] Update `mokly-export.md` step 5 and Output Ownership for the
+      portability rule and the export error naming the escaped path (#1) and
+      the earlier-release message (move added files, then delete the folder)
+      (#11); update `mokly-export-delivery.md` Deployment Identity and every
+      other identity statement for declared publication metadata (#5).
+- [ ] Update `mokly-terminal-output.md`: counting and progress definitions,
+      plurals, cancellation copy, and erasing the line before every in-place
+      frame (#3, #6, #8).
+- [ ] Update the CLI, CI and export guides to match (#1, #3, #7, #8), and
+      `docs/protocol/ci-verification.md` for the pull request title check
+      (#15).
+- [ ] Update the doc-only assertions in `tests/guides_*.test.ts` that the new
+      wording and the split change; run Prettier and the guide tests.
+
+## Milestone 8: Export portability, ownership and identity
+
+The exporter enforces one path rule at the point files enter the export,
+the marker readers classify every documented case, publications of unchanged
+content stop changing page shells, and Watch stops re-parsing markers.
+
+- [ ] Add failing tests first: a public file whose path has a Cc character,
+      invalid Unicode or more than 1,024 UTF-8 bytes fails export as
+      `export-invalid` naming the `JSON.stringify`-escaped path; the marker
+      parser rejects prefix collisions and returns `too-large` for over-limit
+      sizes and paths; the earlier-release message tells the user to move
+      added files and then delete the folder; page shells and
+      `__mokly/catalogue.json` are byte-identical across two publishes whose
+      manifests differ only in `headSha` and `exportedAt`; Watch parses an
+      unchanged marker once across many ignore checks and again after it
+      changes.
+- [ ] Add one portability predicate in `src/export`, enforce it where files
+      enter `ExportInventory`, and reuse it in the marker builder and parser
+      and in `src/publish/validation.ts` (#1).
+- [ ] Give `parseExportOwnership` a `too-large` result, the prefix-collision
+      rule and the documented version precedence; local readers treat
+      `too-large` as an invalid inventory (#9, #10).
+- [ ] Extend `export-ownership-v2.json`: DEL, U+0085, an accepted U+200D, a
+      valid path of exactly 1,024 UTF-8 bytes, a multi-byte path over the
+      limit, and exact and case-folded prefix collisions; reclassify
+      `size-over-limit` and `path-byte-limit-exceeded` as `too-large`; update
+      the independent reader in `scripts/package/ownership.mjs` and both
+      conformance tests (#9, #10).
+- [ ] Reword the earlier-release message (#11).
+- [ ] Exclude adapter-declared publication metadata from the deployment
+      identity; publish declares `mokly-upload.json`; add a test that a
+      second `--no-changes` publish of unchanged content on a new commit
+      uploads no blob, and update the delta and deployment tests (#5).
+- [ ] Cache parsed markers in `src/export/ignored.ts` by device, inode, size
+      and modification time as owned-path and directory-prefix sets, bounded
+      in size, with an injected reader for a parse-count test; raise the
+      marker read cap to 64 MiB (#13).
+- [ ] Run the export, ownership, watch, preview, publish and package suites
+      and `npm run package:smoke`.
+
+## Milestone 9: Publish structure, counts and plan URLs
+
+The publish module is split before new logic lands, counts follow one
+definition, and plan URLs accept only http(s).
+
+- [ ] Split `src/publish/run.ts` into orchestration, snapshot validation and
+      exchange modules; move the shared response helpers into `http.ts` and
+      the error factories into one leaf module; behaviour and tests unchanged
+      (#14).
+- [ ] Add failing counting tests first: a first publish reports
+      `0 unchanged`; entries sharing a digest; plan-archive entries; a lost
+      PUT response followed by a re-plan; a single-round progress label ends
+      at the summary's `<uploaded>` (#3).
+- [ ] Add one counting module that owns `<uploaded>`, `<unchanged>` and each
+      round's progress; the exchange and the CLI progress read from it (#3).
+- [ ] Validate `blobUrl` and `completeUrl` with one helper (absolute http(s),
+      scheme, hostname and port equal to the endpoint's, no userinfo); add
+      `blob:` cases to `upload-plan-v1.json` and the same rule to the
+      independent reader in `scripts/package/upload_plan.mjs` (#12).
+- [ ] Update the publish unit and integration tests and the packed smoke to
+      the new counts.
+
+## Milestone 10: Terminal copy and rendering
+
+Rich progress redraws cleanly and every publish line reads correctly.
+
+- [ ] Add failing tests first: a long-then-short label leaves no stale
+      characters under an emulated terminal; progress and summaries for 0, 1
+      and 2 files; cancellation prints its own message and no connection hint
+      in rich mode; the transport failure's detail and hint differ.
+- [ ] Erase the line before every in-place frame (#6).
+- [ ] Add one plural helper used by publish progress, publish summaries and
+      Serve's changed-screen count (#8).
+- [ ] Give publish cancellation a typed error that keeps `upload-failed`, its
+      own fixed message and its own rich hint; reword the transport failure
+      message so its detail and hint differ (#8).
+
+## Milestone 11: Receiver conformance tests
+
+The fake receiver and the contract tests can express and catch every
+documented receiver and request rule.
+
+- [ ] Make the fake receiver decide keep-first at Complete time, remember
+      completed uploads and replay their first result, drop a scripted
+      Complete response after processing it, answer `413` for `too-large`
+      markers, and let overrides carry headers such as `Location` (#2, #4,
+      #9).
+- [ ] Test overlapping uploads (the second Complete returns `200` with the
+      first publication), a repeated Complete (the same `201` body and one
+      publication), and a CLI publish whose first Complete response is
+      dropped (#2).
+- [ ] Build fixture response bodies from bytes and assert each built
+      response's status and content type; assert `redirect: "manual"` for
+      plan, blob and Complete through one shared request-init assertion; make
+      the `302` cases send a same-origin `Location` that is never requested
+      (#4).
+- [ ] Export the retry schedule constants from `src/publish/retry.ts` and
+      derive the guides' attempt count and maximum wait from them in
+      `tests/guides_ci.test.ts` (#7).
+- [ ] Cross-check the ownership fixture's rejection classes against the
+      exchange contract's status table (#9).
+
+## Milestone 12: Pull request title check
+
+Release notes depend on the squash title, so CI checks it.
+
+- [ ] Add failing tests first for a validator script: this repository's
+      Conventional Commits types, an optional lowercase scope, an optional
+      `!`, a nonempty description and at most 50 characters.
+- [ ] Add `.github/workflows/pull-request-title.yml` running the validator on
+      pull requests (opened, edited, reopened and synchronize), passing the
+      title through an environment variable rather than interpolating it
+      into the script; extend the workflow tests (#15).
+- [ ] Document the check in `docs/protocol/ci-verification.md` and the
+      release contract (#15).
+
+## Milestone 13: Review fix verification and delivery
+
+- [ ] Run the focused publish, export, guides, package, CI and browser
+      suites, then `cargo xtask check`; resolve every failure.
+- [ ] Mark each finding in `docs/reviews/delta-publishing.md` addressed and
+      summarize what changed.
+- [ ] After checks pass, `git add -A`, commit with a Conventional Commits
+      title of at most 50 characters, and push the branch.
+- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; append the
+      numbered, severity-rated findings with lettered options and a
+      recommendation to `docs/reviews/delta-publishing.md` and report them
+      without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - Merge the release-please PR that ships the next minor (`0.13.0`) and verify
@@ -350,3 +580,5 @@ Complete branch work before review; merge remains the completion boundary.
   real `mokly publish` export against its receiver.
 - Consider an optional `upload-concurrency` input for the composite action if
   consumers ask for it.
+- Make the pull request title check a required status check in the
+  repository's branch protection.
