@@ -3,8 +3,8 @@
 ## Status And Outcome
 
 Status: implemented, verified, merged with `origin/main` (#115), pushed and
-reviewed. Milestones 9 to 12 fix the review findings that the user chose on
-2026-09-25.
+reviewed. Milestones 9 to 11 fixed the review findings that the user chose on
+2026-09-25. Milestones 12 to 15 implement the user's 2026-09-26 decisions.
 The binding Decisions And Scope remove all three inputs and adopt
 component-declared stylesheets in place of the stylesheet role of
 `ownedDependencies`. The user approved both the removals and the component
@@ -493,6 +493,28 @@ are not scheduled. Milestones 9 to 12 hold this work. The fixes for findings
 1 and 7, and the scope of the graceful-handling rule, await the user's
 confirmation and will get their own milestones before Milestone 12.
 
+On 2026-09-26 the user decided the open items:
+
+- Finding 1: option B. When Mokly compares a page, it leaves out every link
+  that it inserted for a declared stylesheet, except the links of the page's
+  own root component.
+- Finding 7: option B. After a compatibility transform, Mokly keeps owner
+  records only for the declared stylesheets that the page still links.
+- Graceful-handling rule: add it to the protocol and apply it to four cases
+  that stop the build today: a component that lists one file twice; a
+  configured link that the renderer leaves out, repeats or reorders; a file
+  that is both configured and declared; and a renderer owner record for a
+  declared stylesheet, which Mokly ignores (this also fixes finding 2).
+- Removed fields: option C. Add build warnings, then ignore `dependencies`,
+  `ownedDependencies` and `review.sharedImpact` with a warning instead of
+  stopping the build. Mokly also warns when it ignores a renderer owner record.
+- Finding 3: option B. Add marker placement tests and one test for each
+  placement rule.
+
+These replace the matching bullets in Decisions And Scope. Milestones 12 to 14
+hold this work; the final verification, delivery and review move to
+Milestone 15. Finding 11 stays unscheduled.
+
 ## Milestone 9: Document the confirmed review fixes
 
 Update the contracts before code changes. This milestone changes docs only.
@@ -594,7 +616,73 @@ Finding 13: no design screen links to "Matched styles"
       `npm run example:build`, `npm run example:check`, the focused tests and
       the complete unit suite, and require 100%.
 
-## Milestone 12: Verify, deliver and review the fixes
+## Milestone 12: Document the remaining review decisions
+
+Update the contracts for the 2026-09-26 decisions. Docs only.
+
+- [ ] Add the graceful-handling rule to `docs/protocol/README.md`: Mokly stops
+      a build only when it cannot make correct, safe output, or when an input
+      has two possible meanings. When an input is not necessary, or disagrees
+      with a more specific input, Mokly uses the more specific input and
+      continues. When Mokly ignores an input that the author wrote, it shows a
+      warning. Link to the rule from the contracts that apply it.
+- [ ] Finding 1: the page comparison leaves out every link that Mokly inserted
+      for a declared stylesheet, except the root component's own links on a
+      component page. Define how the comparison identifies inserted links.
+      The mechanism must survive the compatibility transform and Review-ignore
+      normalization, and must not change what the page renders. Rendered
+      resource evidence, CSS rule analysis and owner attribution for the file
+      contents stay unchanged. Add the case to the attribution table.
+- [ ] Finding 7: after the compatibility transform, keep owner records only
+      for the declared stylesheets that the final page still links.
+- [ ] Rule cases: a component that lists one file twice gets one link; missing,
+      repeated or reordered configured links place component links next to the
+      configured links that are present (first occurrence, then the nearest
+      present neighbour, then the end of the head content); a file that is
+      both configured and declared keeps its configured link and gets the
+      rendered declaring components as owners; renderer owner records for any
+      declared stylesheet are ignored on every page with a warning.
+- [ ] Removed fields: `dependencies`, `ownedDependencies` and
+      `review.sharedImpact` produce a warning and have no effect. Define the
+      exact warning text.
+- [ ] Build warnings: define how build, check, export, publish and Serve
+      collect warnings and how the CLI shows them in plain and rich output.
+      Warnings do not change the exit code, and each distinct warning shows
+      once per run.
+- [ ] Update the matching Decisions And Scope bullets in this plan.
+- [ ] Validate the changed Markdown and run the docs tests.
+
+## Milestone 13: Implement the stylesheet comparison and graceful handling
+
+- [ ] Finding 1: failure-first tests. A parent that starts to show a child
+      with declared stylesheets puts only the parent in Changes, with its
+      consumers affected. A component that adds a stylesheet puts only the
+      component in Changes. A component page keeps its own links in the
+      comparison. The complete and fast comparison paths agree.
+- [ ] Finding 7: a test with a transformer that removes an inserted link.
+- [ ] Rule cases 1 to 4, each with a failure-first test. The case 4 test uses a
+      renderer record for a declared stylesheet on a page without the
+      declaring component, and proves that Changes names the right entries.
+- [ ] Finding 3: marker placement tests with the marker first, in the middle
+      and missing, and one table test for each placement rule, including the
+      new cases.
+- [ ] Run the focused tests, `npm run typecheck`, `npm run lint`,
+      `npm run example:build`, `npm run example:check` and the complete unit
+      suite at 100%.
+
+## Milestone 14: Add build warnings and ignore removed fields
+
+- [ ] Add the build warning channel from Milestone 12 to build, check, export,
+      publish and Serve, with plain and rich CLI output.
+- [ ] Removed fields produce the documented warning instead of the
+      `removed-field` violation or `config-invalid`, and have no effect. The
+      TypeScript types still reject them.
+- [ ] Ignored renderer owner records produce a warning.
+- [ ] Tests for each command, for deduplication and for the exit code.
+- [ ] Run the focused tests, `npm run typecheck`, `npm run lint`,
+      `npm run package:smoke` and the complete unit suite at 100%.
+
+## Milestone 15: Verify, deliver and review the fixes
 
 - [ ] Run `cargo xtask check` and require a 100% pass rate.
 - [ ] Inspect `git diff --name-status origin/main` and its deletions.
