@@ -62,10 +62,14 @@ when the historical primary file is absent, never when it is invalid.
   embedded theme beside independent preview controls.
 - [Viewer semantic palette](./mokly-viewer-palette.md) — Light and Dark
   swatches, recorded contrast and the Light corrections they required.
+- [Mokly shell brand](./mokly-shell-brand.md) — package-owned mark, wordmark,
+  responsive presentation, and palette boundary.
 - [Viewer markers and multi-instance highlights](./mokly-viewer-markers.md) —
   host-owned anchored content and exact atomic highlight behavior.
 - [Viewer frame adapter](./mokly-frame-adapter.md) — approved same-origin
   interface and cross-origin inspector protocol v1.
+- [Published inspector and overlay](./mokly-published-inspector.md) — static
+  injection, inert metadata, style isolation, and script budget.
 - [On-demand Serve](./mokly-on-demand.md)
 - [Selected live comparisons](./mokly-selected-comparisons.md)
 - [Live catalogue evidence updates](./mokly-live-evidence.md)

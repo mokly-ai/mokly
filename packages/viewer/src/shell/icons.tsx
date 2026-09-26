@@ -1,10 +1,11 @@
 // Shared Mokly shell glyphs: the disclosure chevron, the closed / open
 // folder icons for collapsible folders, the screen / page / use-case leaf
 // icons, the top bar's brand, search and tag controls, and the device chrome's
-// copy and expand / collapse controls. All icons are stroke-based on a 24-unit
-// viewBox and inherit `currentColor`. Authored folder groups swap closed
-// and open folder icons; top-level catalogue sections and the details inspector
-// use the chevron.
+// copy and expand / collapse controls. Icons are stroke-based on a 24-unit
+// viewBox and inherit `currentColor`; the brand mark is the filled Mokly logo
+// on its own 32-unit grid. Authored folder groups swap closed and open
+// folder icons; top-level catalogue sections and the details inspector use the
+// chevron.
 
 import type { ReactNode } from "react";
 
@@ -26,16 +27,33 @@ export function IconSvg(props: { children: ReactNode; size: number }) {
   );
 }
 
-/** Overlapping mobile and desktop screens in Mokly's brand mark. */
+/**
+ * Mokly's brand mark: two overlapping rounded screens, the front one carrying
+ * two short rules. The screens fill with `currentColor`; the `mbk-mark-rules`
+ * class paints the rules in the surface color behind the mark.
+ */
 export function BrandIcon(props: { size?: number }) {
+  const size = props.size ?? 22;
   return (
-    <IconSvg size={props.size ?? 17}>
-      <path
-        d="M6.5 5.5V5a2 2 0 0 1 2-2H20a2 2 0 0 1 2 2v10.5a2 2 0 0 1-2 2h-8"
-        strokeLinecap="butt"
+    <svg aria-hidden="true" height={size} viewBox="0 0 32 32" width={size}>
+      <rect
+        fill="currentColor"
+        height={21}
+        opacity={0.3}
+        rx={4}
+        width={20}
+        x={3}
+        y={3}
       />
-      <rect height={13} rx={1.75} width={8.5} x={1.5} y={7} />
-    </IconSvg>
+      <rect fill="currentColor" height={21} rx={4} width={20} x={9} y={8} />
+      <path
+        className="mbk-mark-rules"
+        d="M14 15h10M14 20h7"
+        fill="none"
+        strokeLinecap="round"
+        strokeWidth={2}
+      />
+    </svg>
   );
 }
 

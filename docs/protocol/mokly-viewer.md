@@ -354,11 +354,10 @@ renders one Appearance selector that controls both values. Its preference,
 first-paint and URL-pin behavior is the
 [appearance contract](./mokly-viewer-appearance.md).
 
-Import `@mokly/viewer/styles.css` once. The supported overrides are
-`--mokly-accent`, `--mokly-accent-contrast` and `--mokly-accent-soft`, subject to
-the [shell contrast contract](./mokly-shell-design.md). Internal selectors,
-geometry, structure and `--chrome-*` tokens are not APIs. Scoped styles exclude
-the host page and slot content; do not inject host CSS into frames.
+Import `@mokly/viewer/styles.css` once. Its public accent surface and internal
+ownership follow the [shell design](./mokly-shell-design.md) and
+[brand contract](./mokly-shell-brand.md). Scoped styles exclude the host page
+and slot content; do not inject host CSS into frames.
 The host must give the viewer's containing element a definite height. The viewer
 fills that height, clips its outer shell and owns scrolling within the stage and
 other bounded shell regions; the embedding document must not be the stage scroll
