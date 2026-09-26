@@ -19,6 +19,7 @@ const changedDesigns = new Set([
   "design-browse-variant-changes",
   "design-changes-current",
   "design-changes-overlay",
+  "design-changes-overlay-long",
   "design-review-changed",
   "design-review-difference",
   "design-review-style-matched",

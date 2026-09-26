@@ -54,19 +54,13 @@ export function ComparisonStage({
   );
 }
 
-/** The before/current comparison grid on the dotted stage. */
-export function CompareGrid({
-  children,
-  difference,
-}: {
-  children: ReactNode;
-  difference?: boolean;
-}) {
+/**
+ * Side by side keeps one device chrome per version in a two-column grid on the
+ * dotted stage; Overlay and Difference use `ComparisonStack` instead.
+ */
+export function CompareGrid({ children }: { children: ReactNode }) {
   return (
-    <div
-      className="mbk-compare"
-      data-compare-mode={difference ? "difference" : "side"}
-    >
+    <div className="mbk-compare" data-compare-mode="side">
       {children}
     </div>
   );

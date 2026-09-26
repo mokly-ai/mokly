@@ -51,6 +51,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       ["design-changes-current", "Current"],
       ["design-review-changed", "Side by side"],
       ["design-changes-overlay", "Overlay"],
+      ["design-changes-overlay-long", "Overlay"],
       ["design-review-difference", "Difference"],
     ]) {
       const { document } = await designDocument(source!, viewport);
@@ -137,6 +138,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
 test("Changes leaves and All escapes retain their subject", async () => {
   for (const [source, all] of [
     ["design-changes-current", "design-browse-screen"],
+    ["design-changes-overlay-long", "design-browse-screen"],
     ["design-review-added", "design-browse-details-screen"],
     ["design-review-removed", "design-browse-home"],
     ["design-review-empty", "design-browse-screen"],

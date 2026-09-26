@@ -45,6 +45,7 @@ export const DESTINATIONS = {
   appearanceFlow: "design-appearance-flow",
   current: "design-changes-current",
   overlay: "design-changes-overlay",
+  overlayLong: "design-changes-overlay-long",
   changed: "design-review-changed",
   added: "design-review-added",
   removed: "design-review-removed",

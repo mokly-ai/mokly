@@ -104,6 +104,17 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
   Every screen starts in Current, and diff snapshots load only after a click.
   The same band belongs to the actual shell in both development and published
   catalogues; it is independent of the design pictures rendered inside frames.
+- Overlay and Difference draw one device chrome holding both versions, as the
+  [comparison pane contract](../../docs/protocol/mokly-comparison-panes.md)
+  presents them: both layers fill the chrome's viewport at the taller of their
+  two heights, each on its own opaque screen background, and the chrome itself
+  never blends. Side by side keeps one chrome per version. The Welcome sketch
+  inside any depicted comparison carries its link as inert text, because links
+  inside a comparison do nothing.
+- The long-overlay artboard shows Welcome continuing well below its first
+  screenful, part-way down, with one section reworded in place so every other
+  section stays aligned. A static artboard cannot scroll, so its offset and
+  scrollbar are drawn.
 - The approved tokens, consumer-tunable accent properties, and responsive
   breakpoints are recorded in `docs/protocol/mokly-shell-design.md`.
 
@@ -129,6 +140,9 @@ following presentation differences are intentional:
   visibility are part of the destination screen.
 - There is no separate Review section or standalone comparison command. Stable
   design routes retain their old identifiers to preserve catalogue links.
+- Comparison artboards draw shorter browser frames than the served shell so two
+  versions fit side by side, and every comparison mode keeps that one frame
+  size.
 - Difference mockups use CSS blending, as does the served comparison; no pixel
   percentages or invented diff metrics appear. Classification and impact facts
   come from the comparison engine in the runtime and from synthetic fixture data

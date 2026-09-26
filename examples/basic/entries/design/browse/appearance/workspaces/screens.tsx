@@ -10,6 +10,7 @@ import {
   FramedShot,
   type CompareViewport,
 } from "../../../parts/compare_page.js";
+import { ComparisonStack } from "../../../parts/compare_stack.js";
 import { DesignNavigation } from "../../../parts/design_navigation.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { MiniWelcome } from "../../../parts/mini_screens.js";
@@ -76,7 +77,7 @@ function WelcomePanes({ viewport }: { viewport: CompareViewport }) {
           dark={dark}
           viewport={viewport}
         >
-          <MiniWelcome compact={viewport === "mobile"} />
+          <MiniWelcome compact={viewport === "mobile"} inert />
         </FramedShot>
       </Pane>
       <Pane label="Current" side="after">
@@ -85,10 +86,24 @@ function WelcomePanes({ viewport }: { viewport: CompareViewport }) {
           dark={dark}
           viewport={viewport}
         >
-          <MiniWelcome compact={viewport === "mobile"} revised />
+          <MiniWelcome compact={viewport === "mobile"} inert revised />
         </FramedShot>
       </Pane>
     </>
+  );
+}
+
+/** Difference stacks the same two versions inside one shared chrome. */
+function WelcomeStack({ viewport }: { viewport: CompareViewport }) {
+  return (
+    <ComparisonStack
+      address="example.test/welcome"
+      after={<MiniWelcome compact={viewport === "mobile"} inert revised />}
+      before={<MiniWelcome compact={viewport === "mobile"} inert />}
+      dark={useDarkPreview()}
+      mode="difference"
+      viewport={viewport}
+    />
   );
 }
 
@@ -120,11 +135,7 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
       idChip="example-welcome"
       mode="difference"
       nav={<ReviewNav activeTitle="Welcome" />}
-      render={(previewViewport) => (
-        <CompareGrid difference>
-          <WelcomePanes viewport={previewViewport} />
-        </CompareGrid>
-      )}
+      render={(previewViewport) => <WelcomeStack viewport={previewViewport} />}
       state="changed"
       subject="welcome"
       title="Welcome"

@@ -231,7 +231,7 @@ Tags: mockup
 Summary: depict the shared scroller and the single-chrome stacked structure in
 the design catalogue before the implementation lands.
 
-- [ ] Add a `design-changes-overlay-long` screen to
+- [x] Add a `design-changes-overlay-long` screen to
       `examples/basic/entries/design/changes_screens.tsx` with desktop and
       mobile variants: a long screen in Overlay scrolled part-way inside one
       chrome, both layers at the same offset, the chrome viewport showing its
@@ -240,23 +240,39 @@ the design catalogue before the implementation lands.
       add its inventory row at `design/review/controls/overlay-long.html` to
       the table in `docs/protocol/mokly-shell-design.md`, and keep the Changes
       page within the five-screen limit.
-- [ ] Restructure the Difference mockups in
+- [x] Restructure the Difference mockups in
       `examples/basic/entries/design/review_outcome_screens.tsx` and
       `examples/basic/entries/design/browse/appearance/workspaces/screens.tsx`
       to one chrome holding two stacked layers, matching the overlay mockup,
       and update the authored difference rules in
       `examples/basic/generated/design-review.css` while keeping the opaque
       blend base in either appearance.
-- [ ] Confirm the Side by side mockups need no structural change and that
+- [x] Confirm the Side by side mockups need no structural change and that
       every changed screen still renders in both schemes.
-- [ ] Add the new screen id to the design inventories and link-state tests
+- [x] Add the new screen id to the design inventories and link-state tests
       (`tests/design_library_inventory.test.ts`,
       `tests/design_page_links.test.ts`, `tests/design_link_states.test.ts`,
       `tests/browser/design_comparison_eligibility.spec.ts`) as each requires.
-- [ ] Run `npm run build`, `npm run example:build` and
+- [x] Depict every comparison pane as read-only, as Decision 6 requires: the
+      Welcome sketch inside the Side by side, Overlay and Difference mockups
+      carries its link as inert text, and `mokly-design-links.md` records it.
+- [x] Pin the stacked structure with regressions:
+      `tests/design_comparison_stacks.test.ts` (one chrome and two layers per
+      stack, one chrome per Side by side version, no link inside any depicted
+      comparison, one reworded section in the long overlay) and
+      `tests/browser/design_comparison_stacks.spec.ts` (coincident layers,
+      opaque screen base per scheme, unblended chrome, and the long overlay's
+      shared offset matching its drawn scrollbar).
+- [x] Now that the mockups exist, state in the Delivery Status of
+      `mokly-shell-design.md` and `mokly-comparison-panes.md` that the design
+      references are delivered while the runtime waits for Milestones 3 and 4,
+      and update the design-screen counts in `mokly-design-links.md`,
+      `examples/basic/README.md` and the design tests (Milestone 1 review
+      finding 9).
+- [x] Run `npm run build`, `npm run example:build` and
       `npm run example:check`, then smoke-test the changed pages through
       `npm run dev` and save screenshots under `.context/`.
-- [ ] Run the design tests, then `cargo xtask check`.
+- [x] Run the design tests, then `cargo xtask check`.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
@@ -346,6 +362,9 @@ side, and prove alignment in the browser.
 - [ ] Update `packages/viewer/src/shell/README.md` and
       `packages/viewer/README.md` for the delivered modules, then run the
       comparison and preview browser specs and `cargo xtask check`.
+- [ ] Remove the pending-runtime sentences that Milestone 2 added to the
+      Delivery Status sections of `docs/protocol/mokly-shell-design.md` and
+      `docs/protocol/mokly-comparison-panes.md`.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)

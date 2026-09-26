@@ -3,8 +3,10 @@
 ## Delivery Status
 
 The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-defines the presentation below; its Milestones 3 and 4 deliver it. This
-contract governs the Before and Current panes that
+defines the presentation below. Its Milestone 2 delivered the design references
+listed at the end, which already depict the stacked layout and inert panes; its
+Milestones 3 and 4 deliver the runtime presentation, so until they land the
+shell still frames each pane directly. This contract governs the Before and Current panes that
 [Changes and screen comparisons](./mokly-changes.md) offer for changed screens
 and eligible component variants in Side by side, Overlay and Difference. It
 changes nothing about comparison eligibility, capture, generation, publishing,
@@ -172,11 +174,15 @@ both output modes and through both frame adapters:
 
 ## Design References
 
-`design-changes-overlay` at `design/review/controls/overlay.html` depicts a
-short screen in Overlay inside one chrome, and `design-changes-overlay-long`
-at `design/review/controls/overlay-long.html` depicts a long screen scrolled
-part-way inside its shared chrome viewport with both layers at one offset.
+The implemented design mockups depict this contract in both viewports and both
+schemes. `design-changes-overlay` at `design/review/controls/overlay.html`
+depicts a short screen in Overlay inside one chrome, and
+`design-changes-overlay-long` at `design/review/controls/overlay-long.html`
+depicts a long screen scrolled part-way inside its shared chrome viewport, with
+both layers at one offset, unchanged sections aligned, one reworded section
+showing both versions, and the viewport's scrollbar drawn part-way down.
 `design-review-difference` and `design-appearance-difference` depict Difference
-with the same single-chrome stack, and `design-review-changed` and
-`design-appearance-side-by-side` depict Side by side. See
-[the shell design](./mokly-shell-design.md) for the complete table.
+with the same single-chrome stack over an opaque Before layer, and
+`design-review-changed` and `design-appearance-side-by-side` depict Side by
+side with one chrome per version. Links inside every depicted pane are inert.
+See [the shell design](./mokly-shell-design.md) for the complete table.

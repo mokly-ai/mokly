@@ -2,13 +2,13 @@
 
 ## Delivery Status
 
-Implemented in the 60 Browse/Changes design screens and two real example
+Implemented in the 61 Browse/Changes design screens and two real example
 screens using `MockLink` and `MockLink asChild`. Verification and delivery are tracked by the
 [implementation plan](../../plans/mokabook-design-mocklinks.md).
 
 The [component design inventory](./mokly-component-design.md) extend the
 catalogue with their own state contract and native component/control depictions.
-Those 60 Browse/Changes designs retain the canonical links below, including the
+Those 61 Browse/Changes designs retain the canonical links below, including the
 removed previous-version family added by
 [removed previews](./mokly-removed-previews.md).
 They now share native icon inspector tabs and working viewport dropdowns with
@@ -114,7 +114,7 @@ stable id and points readers to Welcome; no unrelated route or membership moves.
 | Changed catalogue: Survey / Invite / Archive    | `design-review-removed-long` / `design-review-removed-loading` / `design-review-removed-unavailable`           |
 | Changed catalogue: Timeline                     | `design-review-removed-no-view`                                                                                |
 | Removed documents: four Changes rows            | `design-page-removed` / `-long` / `-loading` / `-unavailable`, each returning to `design-browse-home` from All |
-| MiniWelcome: Open the details screen            | `design-browse-details-screen`                                                                                 |
+| MiniWelcome: Open the details screen            | `design-browse-details-screen`; inert inside a depicted comparison                                             |
 | MiniDetails: Return to welcome                  | `design-browse-screen`                                                                                         |
 | Depicted use-case step reference                | Welcome: `design-browse-screen`; Details: `design-browse-details-screen`                                       |
 | Welcome/Details inspector: Example tour         | `design-browse-use-case`                                                                                       |
@@ -231,6 +231,13 @@ Welcome states; Browse and tag-picker states omit them. Each comparison destinat
 its Current action returns to `design-changes-current`. Current is already
 selected in `design-changes-current`, so it has no
 transition there. Returning to All uses the navigation table above.
+`design-changes-overlay-long` depicts the same Overlay part-way down a long
+Welcome, so its controls map to the same destinations with Overlay selected,
+and it keeps the Welcome filters and Changes rows. No comparison control links
+into it, because scrolling is not a link; readers reach it beside Current and
+Overlay in its owning Diff controls group. The Welcome sketch inside every
+depicted comparison carries its link as inert text, because links inside a
+comparison pane do nothing.
 
 Added Details shows its Current preview without comparison modes. Removed
 Farewell, Survey, Invite, Archive, and Timeline show their previous version,

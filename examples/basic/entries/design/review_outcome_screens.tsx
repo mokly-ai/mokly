@@ -7,6 +7,7 @@ import {
   FramedShot,
   type CompareViewport,
 } from "./parts/compare_page.js";
+import { ComparisonStack } from "./parts/compare_stack.js";
 import { DESTINATIONS } from "./parts/destinations.js";
 import { ExampleWorkspace } from "./parts/example_workspace.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
@@ -35,7 +36,7 @@ function ChangedCompare({ viewport }: { viewport: CompareViewport }) {
               dark={dark}
               viewport={previewViewport}
             >
-              <MiniWelcome compact={previewViewport === "mobile"} />
+              <MiniWelcome compact={previewViewport === "mobile"} inert />
             </FramedShot>
           </Pane>
           <Pane label="Current" side="after">
@@ -44,7 +45,11 @@ function ChangedCompare({ viewport }: { viewport: CompareViewport }) {
               dark={dark}
               viewport={previewViewport}
             >
-              <MiniWelcome compact={previewViewport === "mobile"} revised />
+              <MiniWelcome
+                compact={previewViewport === "mobile"}
+                inert
+                revised
+              />
             </FramedShot>
           </Pane>
         </CompareGrid>
@@ -108,26 +113,16 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
       title="Welcome"
       viewport={viewport}
       render={(previewViewport) => (
-        <CompareGrid difference>
-          <Pane label="Before" side="before">
-            <FramedShot
-              address="example.test/welcome"
-              dark={dark}
-              viewport={previewViewport}
-            >
-              <MiniWelcome compact={previewViewport === "mobile"} />
-            </FramedShot>
-          </Pane>
-          <Pane label="Current" side="after">
-            <FramedShot
-              address="example.test/welcome"
-              dark={dark}
-              viewport={previewViewport}
-            >
-              <MiniWelcome compact={previewViewport === "mobile"} revised />
-            </FramedShot>
-          </Pane>
-        </CompareGrid>
+        <ComparisonStack
+          address="example.test/welcome"
+          after={
+            <MiniWelcome compact={previewViewport === "mobile"} inert revised />
+          }
+          before={<MiniWelcome compact={previewViewport === "mobile"} inert />}
+          dark={dark}
+          mode="difference"
+          viewport={previewViewport}
+        />
       )}
     />
   );

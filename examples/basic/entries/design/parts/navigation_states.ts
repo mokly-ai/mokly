@@ -132,6 +132,7 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   },
   [D.current]: { ...welcomeFilters, comparison: welcomeModes },
   [D.overlay]: { ...welcomeFilters, comparison: welcomeModes },
+  [D.overlayLong]: { ...welcomeFilters, comparison: welcomeModes },
   [D.changed]: { ...welcomeFilters, comparison: welcomeModes },
   [D.difference]: { ...welcomeFilters, comparison: welcomeModes },
   [D.added]: { ...detailsFilters },

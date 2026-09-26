@@ -7,8 +7,61 @@ interface MiniScreenProps {
   empty?: boolean;
   /** The last save did not complete. */
   error?: boolean;
+  /** Shown inside a comparison, where links do nothing, so it carries none. */
+  inert?: boolean;
+  /** Continues well below the first screenful, as a long screen does. */
+  long?: boolean;
   restyled?: boolean;
   revised?: boolean;
+}
+
+/**
+ * Welcome's content below its introduction. The revision rewords one section
+ * in place, so every other section keeps its position in both versions.
+ */
+const WELCOME_SECTIONS = [
+  [
+    "Browse the screens",
+    "Every screen opens in its own frame, beside its notes.",
+  ],
+  ["Read the handbook", "Whole documents keep their own layout and headings."],
+  ["Try the components", "Each component keeps its saved variants together."],
+  [
+    "Follow the tour",
+    "The tour opens the screens in the order readers meet them.",
+  ],
+  ["Search the catalogue", "Type a word or a tag to narrow the navigation."],
+  ["Share a screen", "Copy a frame's address to send the same screen on."],
+  ["Keep notes nearby", "Notes stay beside the screen they describe."],
+  ["Switch the appearance", "Light and dark screens follow one setting."],
+  ["Review a change", "Changed screens gather in one list until they merge."],
+  ["Come back later", "Everything you opened stays in the navigation."],
+] as const;
+
+/** The one section the revision rewords, named by its previous heading. */
+const REVISED_SECTION = {
+  previous: "Follow the tour",
+  heading: "Take the example tour",
+  summary: "The tour now starts here and ends on the details screen.",
+} as const;
+
+function WelcomeSections({ revised }: { revised?: boolean | undefined }) {
+  return (
+    <div className="mbk-shot-sections">
+      {WELCOME_SECTIONS.map(([title, body]) => {
+        const [heading, summary] =
+          revised && title === REVISED_SECTION.previous
+            ? [REVISED_SECTION.heading, REVISED_SECTION.summary]
+            : [title, body];
+        return (
+          <section key={title}>
+            <h3>{heading}</h3>
+            <p>{summary}</p>
+          </section>
+        );
+      })}
+    </div>
+  );
 }
 
 /** Miniature depiction of the example Welcome fragment. */
@@ -16,9 +69,26 @@ export function MiniWelcome({
   compact,
   empty,
   error,
+  inert,
+  long,
   restyled,
   revised,
 }: MiniScreenProps) {
+  const introduction = (
+    <>
+      <h2>{revised ? "Welcome to the Mokly example" : "Welcome to Mokly"}</h2>
+      {revised ? <p>A short introduction now welcomes new readers.</p> : null}
+      {empty ? (
+        <>
+          <div className="mbk-shot-field">Workspace name</div>
+          <span className="mbk-shot-action">Create workspace</span>
+        </>
+      ) : null}
+      <DesignLink to={inert ? undefined : DESTINATIONS.details}>
+        <span className="mbk-shot-link">Open the details screen</span>
+      </DesignLink>
+    </>
+  );
   return (
     <div className={restyled ? "mbk-shot mbk-shot--restyled" : "mbk-shot"}>
       <div className="mbk-shot-pad">
@@ -30,17 +100,14 @@ export function MiniWelcome({
             Couldn’t save this workspace. Try again.
           </p>
         ) : null}
-        <h2>{revised ? "Welcome to the Mokly example" : "Welcome to Mokly"}</h2>
-        {revised ? <p>A short introduction now welcomes new readers.</p> : null}
-        {empty ? (
+        {long ? (
           <>
-            <div className="mbk-shot-field">Workspace name</div>
-            <span className="mbk-shot-action">Create workspace</span>
+            <div className="mbk-shot-hero">{introduction}</div>
+            <WelcomeSections revised={revised} />
           </>
-        ) : null}
-        <DesignLink to={DESTINATIONS.details}>
-          <span className="mbk-shot-link">Open the details screen</span>
-        </DesignLink>
+        ) : (
+          introduction
+        )}
       </div>
     </div>
   );

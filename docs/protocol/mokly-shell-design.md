@@ -38,6 +38,15 @@ breadcrumbs are text even after their parents are deleted. Ordinary
 publications omit the Changes filter and comparison band while preserving the
 same navigation, search, tags, and screen variants.
 
+The comparison designs depict the
+[comparison pane contract](./mokly-comparison-panes.md) ahead of its runtime
+delivery: Overlay and Difference hold both versions in one device chrome whose
+viewport scrolls them as one, and links inside every depicted comparison do
+nothing. Until Milestones 3 and 4 of the
+[comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
+land, the shipped shell still stacks two chromes and keeps comparison links
+active; every other state recorded here is implemented.
+
 The removed-document and removed-screen designs depict the shipped
 [removed previews](./mokly-removed-previews.md) behavior: the previous version
 under a quiet "Showing previous version" label, with loading, unavailable, and
@@ -80,6 +89,7 @@ contract until their standalone screens are implemented.
 | `design-browse-changed-views`         | `design/browse/variants/changed-views.html`                     | Change confined to the views that are not shown            |
 | `design-changes-current`              | `design/review/controls/current.html`                           | Current screen in Changes                                  |
 | `design-changes-overlay`              | `design/review/controls/overlay.html`                           | On-demand overlay comparison                               |
+| `design-changes-overlay-long`         | `design/review/controls/overlay-long.html`                      | Overlay on a long screen, scrolled part-way in one chrome  |
 | `design-review-changed`               | `design/review/outcomes/changed.html`                           | Changed screen, side-by-side compare                       |
 | `design-review-added`                 | `design/review/outcomes/added.html`                             | Added screen current preview without comparison controls   |
 | `design-review-removed`               | `design/review/outcomes/removed.html`                           | Removed badge and previous version without comparisons     |
@@ -586,8 +596,15 @@ snapshots remain script-disabled documents under the
 Difference stack both versions inside one device chrome whose viewport is the
 only scroll container: Overlay composites the current layer at 50% opacity and
 Difference uses CSS difference blending, and the long-overlay depiction shows
-that chrome scrolled part-way with both layers at one offset. Side by side
-keeps one chrome per version. Missing panes for
+that chrome scrolled part-way with both layers at one offset. Both layers fill
+the viewport at the taller of their two heights and each paints its own opaque
+screen background in its scheme, so the blend never reaches the stage; the
+browser bar, phone status band, notch and home pill stay outside the blend.
+Stacked comparisons show no Before or Current caption. The long depiction draws
+its scrollbar part-way down the viewport, a thin indicator on the phone, because
+a static artboard cannot scroll itself. Side by side keeps one chrome per
+version, captioned Before and Current. Links inside every depicted comparison do
+nothing. Missing panes for
 eligible Removed component variants remain side by side for readability in every mode. No pixel percentages are
 shown. Baseline, affected files, and excluded content belong in secondary
 comparison details. Loading and failure states keep the catalogue available.
