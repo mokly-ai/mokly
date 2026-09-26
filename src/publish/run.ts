@@ -2,6 +2,7 @@ import path from "node:path";
 
 import { parseReviewResult } from "@mokly/viewer/data";
 
+import type { BuildWarning } from "../build/warnings.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
@@ -21,6 +22,7 @@ export interface PublishOptions extends UploadOptions {
   noChanges?: boolean;
   repository?: string;
   diagnostic?: (message: string) => void;
+  onWarning?: (warning: BuildWarning) => void;
 }
 
 /** Injectable runtime boundaries for publish orchestration. */
@@ -60,6 +62,7 @@ export async function publishCatalogue(
       ...(signal === undefined ? {} : { signal }),
       noChanges: options.noChanges ?? false,
       ...(options.diagnostic ? { diagnostic: options.diagnostic } : {}),
+      ...(options.onWarning ? { onWarning: options.onWarning } : {}),
       adapter: {
         transform(files, routes) {
           const comparisonPath = routes.comparisonUrl?.slice(1) ?? null;

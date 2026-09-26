@@ -21,8 +21,8 @@ Historical parsing of v3–v5 is retained for Git baselines.
 The optional inserted-link provenance record below was implemented by the same
 plan's Milestone 13. It extends private v6 view
 metadata without changing the manifest version or public read model.
-Ignoring renderer records for declared CSS with a warning is planned by
-Milestone 14.
+Milestone 14 implemented the warning for ignored renderer records for declared
+CSS.
 
 ## Entries And Variants
 

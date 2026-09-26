@@ -1,6 +1,8 @@
 import { isSafeCatalogueRoute } from "@mokly/viewer/data";
 import type { ManifestV6 } from "@mokly/viewer/data";
 
+import { isBuildWarning, type BuildWarning } from "../build/warnings.js";
+
 import type { ComponentChangeSnapshot } from "./component_changes.js";
 import type {
   RuntimeMessage,
@@ -54,6 +56,26 @@ export interface CatalogueCompleteMessage {
 export interface ChildDiagnosticMessage {
   readonly message: string;
   readonly type: "diagnostic";
+}
+
+export interface ChildWarningMessage {
+  readonly type: "warning";
+  readonly warning: BuildWarning;
+}
+
+export function parseChildWarningMessage(
+  value: unknown,
+): ChildWarningMessage | undefined {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    !("type" in value) ||
+    value.type !== "warning" ||
+    !("warning" in value) ||
+    !isBuildWarning(value.warning)
+  )
+    return;
+  return { type: "warning", warning: value.warning };
 }
 
 /** Validate one bounded diagnostic from the supervised child. */

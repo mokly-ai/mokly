@@ -2,11 +2,10 @@
 
 ## Delivery Status
 
-The structured warning channel and warnings below are planned by
+The structured warning channel and warnings below were implemented by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-Milestone 14. They are not implemented yet. Existing browser-opening warnings
-are unchanged. [CLI terminal output](./mokly-terminal-output.md) owns their
-presentation.
+Milestone 14. Existing browser-opening warnings are unchanged.
+[CLI terminal output](./mokly-terminal-output.md) owns their presentation.
 
 ## Warning Boundary
 

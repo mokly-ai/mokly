@@ -2,6 +2,7 @@ import type { BaselineBuilder, BaselineProgress } from "../baseline/types.js";
 import type { Compilation } from "../build/compile.js";
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { GeneratedOutputStore } from "../build/output_store.js";
+import type { BuildWarningSink } from "../build/warning_sink.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import type { CatalogueChangeClassifier } from "./component_changes.js";
@@ -18,6 +19,7 @@ interface WatchedBackgroundOptions {
   readonly outputStore: GeneratedOutputStore;
   readonly report: (error: unknown) => void;
   readonly reporter: ServeReporter;
+  readonly warnings: BuildWarningSink;
   readonly resources: ResourceWatcher;
   readonly running: ProcessSupervisor;
   readonly runtime: () => ComponentRuntime;
@@ -38,6 +40,9 @@ export class WatchedBackground {
       options.outputStore,
       options.classifier,
       (compilation, accepted) => {
+        compilation.warnings?.forEach((warning) =>
+          options.warnings.add(warning),
+        );
         this.changesStartedAt = Date.now();
         if (this.reportCatalogue)
           options.reporter.catalogueReady(
@@ -66,6 +71,7 @@ export class WatchedBackground {
         );
       },
       {
+        onWarning: (warning) => options.warnings.add(warning),
         baselinePrepared: (commit) =>
           options.running.notifyUpdate(
             undefined,

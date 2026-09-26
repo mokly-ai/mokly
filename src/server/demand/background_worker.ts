@@ -34,7 +34,9 @@ const checkpoint = async () => {
 if (!existingManifest)
   void runWithTimings(debug, "background", async () => {
     try {
-      const compilation = await compileRuntime(runtime, checkpoint);
+      const compilation = await compileRuntime(runtime, checkpoint, (warning) =>
+        parentPort?.postMessage({ type: "warning", warning }),
+      );
       manifest = compilation.manifest;
       outputs = compilation.outputs;
       parentPort?.postMessage({ type: "compiled", compilation });

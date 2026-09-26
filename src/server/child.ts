@@ -1,4 +1,5 @@
 import type { ComponentRuntime } from "../build/component_runtime.js";
+import type { BuildWarning } from "../build/warnings.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { bindTimings, timeSync } from "../diagnostics/timings.js";
 
@@ -24,6 +25,7 @@ export async function runServerChild(
   strictPort: boolean,
   retainedRuntime: boolean,
   manifest?: ComponentRuntime["manifest"],
+  onWarning?: (warning: BuildWarning) => void,
 ): Promise<void> {
   const initial =
     retainedRuntime && manifest?.schemaVersion === "live-index-1"
@@ -40,6 +42,7 @@ export async function runServerChild(
       if (process.send) process.send({ type: "diagnostic", message });
       else process.stderr.write(`${message}\n`);
     },
+    ...(onWarning ? { onBuildWarning: onWarning } : {}),
     onPreviewResources: (observation) =>
       process.send?.({ type: "preview-resources", ...observation }),
     ...(manifest ? { manifest } : {}),

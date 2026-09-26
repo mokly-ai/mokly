@@ -8,6 +8,7 @@ import { invalidData, validateResourcePath } from "@mokly/viewer/data";
 
 import type { ScreenDefinition } from "../authoring/types.js";
 import type { BuildWarning } from "../build/warnings.js";
+import { ignoredDeclaredResourceOwner } from "../build/warnings.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { RenderInput, Renderer, RenderResult } from "../renderer/types.js";
 
@@ -127,11 +128,13 @@ export const renderWithComponents: ComponentGraphRenderer = (
       );
     if (!warned.has(physicalPath)) {
       warned.add(physicalPath);
-      warnings.push({
-        code: "ignored-declared-resource-owner",
-        context: [placement.route, physicalPath],
-        message: `renderer resources for declared stylesheet ${JSON.stringify(resource.path)} on ${JSON.stringify(placement.route)} are ignored; Mokly derives owners from rendered components.`,
-      });
+      warnings.push(
+        ignoredDeclaredResourceOwner(
+          placement.route,
+          physicalPath,
+          resource.path,
+        ),
+      );
     }
     return false;
   });
@@ -151,6 +154,7 @@ export const renderWithComponents: ComponentGraphRenderer = (
       .filter(([physical]) => !rendererLinks.has(physical))
       .map(([, owner]) => owner.file),
     true,
+    (warning) => warnings.push(warning),
   );
   const view: ComponentViewRecord = {
     viewport: input.viewport,

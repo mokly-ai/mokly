@@ -98,7 +98,9 @@ and records private final-document spans for comparison projection.
 `stylesheet_provenance.ts` prunes derived owners after compatibility output;
 renderer owner records ignored for declared CSS are retained as structured
 `BuildWarning` values on exhaustive compilations and requested documents.
-Terminal reporting of those values belongs to the next warning milestone.
+`warning_sink.ts` deduplicates them by code and context for one command or
+watched rebuild; the CLI presents them without changing output bytes or exit
+status.
 
 ## Development
 

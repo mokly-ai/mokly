@@ -46,8 +46,8 @@ Dependencies display were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestones 4, 3 and 5 respectively. Milestone 6 removed the
 old authoring declarations.
-The shared build-warning channel for Build and Check is planned by the same
-plan's Milestone 14 and is not implemented yet; see
+The shared build-warning channel for Build and Check was implemented by the
+same plan's Milestone 14; see
 [build warnings](./mokly-build-warnings.md).
 
 ## Component Workspaces

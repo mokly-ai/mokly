@@ -13,20 +13,25 @@ import type { ComponentRuntime } from "./component_runtime.js";
 import { consumerBundle } from "./consumer_bundle.js";
 import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
+import type { BuildWarning } from "./warnings.js";
 
 export async function prepareLiveRuntime(
   config: ResolvedConfig,
   preloaded?: LoadedGraph,
   prepared?: PreparedRegistry,
+  onWarning?: (warning: BuildWarning) => void,
 ): Promise<ComponentRuntime> {
   return timeAsync("catalogue.prepare-index", async () => {
+    config.warnings?.forEach(onWarning ?? (() => undefined));
     const graph = preloaded ?? (await loadConsumerGraph(config));
     config = {
       ...config,
       entryModules: graph.entrySources,
       sourceFiles: graph.sourceFiles,
     };
-    const registry = prepared ?? prepareRegistry(graph.definitions, config);
+    const registry =
+      prepared ?? prepareRegistry(graph.definitions, config, onWarning);
+    if (prepared) registry.warnings.forEach(onWarning ?? (() => undefined));
     const manifest = createCatalogueIndex(
       registry.entries,
       graph.sourceFiles,
@@ -41,6 +46,9 @@ export async function prepareLiveRuntime(
       config,
     );
     return {
+      ...([...(config.warnings ?? []), ...registry.warnings].length
+        ? { warnings: [...(config.warnings ?? []), ...registry.warnings] }
+        : {}),
       bundle: consumerBundle(graph),
       config,
       generation: randomBytes(16).toString("hex"),

@@ -691,14 +691,16 @@ Update the contracts for the 2026-09-26 decisions. Docs only.
 
 ## Milestone 14: Add build warnings and ignore removed fields
 
-- [ ] Add the build warning channel from Milestone 12 to build, check, export,
+- [x] Add the build warning channel from Milestone 12 to build, check, export,
       publish and Serve, with plain and rich CLI output.
-- [ ] Removed fields produce the documented warning instead of the
+- [x] Removed fields produce the documented warning instead of the
       `removed-field` violation or `config-invalid`, and have no effect. The
       TypeScript types still reject them.
-- [ ] Ignored renderer owner records produce a warning.
-- [ ] Tests for each command, for deduplication and for the exit code.
-- [ ] Run the focused tests, `npm run typecheck`, `npm run lint`,
+- [x] Ignored renderer owner records produce a warning.
+- [x] Propagate warnings from failed background builds and transient Serve
+      renders without exposing them in client responses.
+- [x] Tests for each command, for deduplication and for the exit code.
+- [x] Run the focused tests, `npm run typecheck`, `npm run lint`,
       `npm run package:smoke` and the complete unit suite at 100%.
 
 ## Milestone 15: Verify, deliver and review the fixes

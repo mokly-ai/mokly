@@ -2,6 +2,7 @@ import path from "node:path";
 
 import { compileCatalogue } from "../build/compile.js";
 import { FileSystemGeneratedOutputStore } from "../build/output_store.js";
+import { BuildWarningSink } from "../build/warning_sink.js";
 import { loadConfig } from "../config/load.js";
 import { runWithTimings, timeAsync } from "../diagnostics/timings.js";
 import { runServerChild } from "../server/child.js";
@@ -20,6 +21,7 @@ import {
   type CliReporter,
   type TerminalEnvironment,
 } from "./reporter/index.js";
+import { redactCliSecrets } from "./secrets.js";
 import { packageVersion } from "./version.js";
 
 /** Execute one CLI invocation and return its process exit code. */
@@ -38,11 +40,24 @@ export async function run(
     reporter.write(`${packageVersion()}\n`);
     return 0;
   }
-  return runWithTimings(
-    arguments_.debugTimings ?? false,
-    arguments_.command === "__serve-child" ? "child" : arguments_.command,
-    () => execute(arguments_, cwd, environment, reporter),
+  const warnings = new BuildWarningSink((warning) =>
+    arguments_.command === "__serve-child" && process.send
+      ? process.send({ type: "warning", warning })
+      : reporter.buildWarning({
+          ...warning,
+          message: redactCliSecrets(warning.message, argv, environment.env),
+        }),
   );
+  try {
+    return await runWithTimings(
+      arguments_.debugTimings ?? false,
+      arguments_.command === "__serve-child" ? "child" : arguments_.command,
+      () => execute(arguments_, cwd, environment, reporter, warnings),
+    );
+  } catch (error) {
+    warnings.flush();
+    throw error;
+  }
 }
 
 async function execute(
@@ -50,13 +65,17 @@ async function execute(
   cwd: string,
   environment: TerminalEnvironment,
   reporter: CliReporter,
+  warnings: BuildWarningSink,
 ): Promise<number> {
   const startedAt = environment.now();
   if (arguments_.command === "publish") {
     const { runPublish } = await import("./publish.js");
     await timeAsync("publish", () =>
-      runPublish(arguments_, cwd, reporter, environment.env),
+      runPublish(arguments_, cwd, reporter, environment.env, (warning) =>
+        warnings.add(warning),
+      ),
     );
+    warnings.flush();
     reporter.summary(
       "Published Mokly catalogue.\n",
       "Published Mokly catalogue",
@@ -76,7 +95,12 @@ async function execute(
       reporter,
       "Loading configuration",
       "Configuration loaded",
-      () => timeAsync("config.load", () => loadConfig(cwd, arguments_.config)),
+      () =>
+        timeAsync("config.load", () =>
+          loadConfig(cwd, arguments_.config, (warning) =>
+            warnings.add(warning),
+          ),
+        ),
     ));
   if (arguments_.command === "export") {
     const result = await reportPhase(
@@ -86,12 +110,14 @@ async function execute(
       () =>
         timeAsync("export", () =>
           runExport(config, {
+            onWarning: (warning) => warnings.add(warning),
             diagnostic: (message) => reporter.runtimeDiagnostic(message),
             outDir: arguments_.out ?? "",
             ...(arguments_.base !== undefined ? { base: arguments_.base } : {}),
           }),
         ),
     );
+    warnings.flush();
     reporter.summary(
       `Exported Mokly to ${result.outDir}.\nDeploy this directory at your site's root with your hosting provider.\n`,
       `Exported Mokly to ${result.outDir}`,
@@ -109,7 +135,8 @@ async function execute(
       reporter,
       "Rendering catalogue",
       "Catalogue rendered",
-      () => compileCatalogue(config),
+      () =>
+        compileCatalogue(config, undefined, (warning) => warnings.add(warning)),
     );
     await reportPhase(
       reporter,
@@ -117,6 +144,7 @@ async function execute(
       "Generated output written",
       () => outputStore.write(compilation, config),
     );
+    warnings.flush();
     reporter.summary(
       `Generated ${compilation.outputs.size} Mokly files.\n`,
       `Generated ${compilation.outputs.size} files in ${relativeOutput(cwd, config.mockupsDir)}`,
@@ -129,8 +157,10 @@ async function execute(
       reporter,
       "Rendering catalogue",
       "Catalogue rendered",
-      () => compileCatalogue(config),
+      () =>
+        compileCatalogue(config, undefined, (warning) => warnings.add(warning)),
     );
+    warnings.flush();
     await reportPhase(
       reporter,
       "Checking generated output",
@@ -155,6 +185,8 @@ async function execute(
   const base = arguments_.base ?? config.review.base;
   const port = arguments_.port ?? 4173;
   if (arguments_.command === "__serve-child") {
+    config.warnings?.forEach((warning) => warnings.add(warning));
+    warnings.flush();
     await runServerChild(
       config,
       port,
@@ -163,6 +195,7 @@ async function execute(
       arguments_.strictPort ?? false,
       arguments_.retainedRuntime ?? false,
       runtimeStartup?.manifest,
+      (warning) => warnings.add(warning),
     );
     return 0;
   }
@@ -174,7 +207,7 @@ async function execute(
         port,
         watch: arguments_.watch ?? true,
       },
-      { reporter },
+      { reporter, warnings },
     ),
   );
   const shutdown = waitForShutdown(

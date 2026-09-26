@@ -48,7 +48,7 @@ export default defineConfig({ repoRoot: ".", entriesDir: "entries", mockupsDir: 
   await assert.rejects(loadConfig(fixture.root), /Could not resolve "mokly"/);
 });
 
-test("review.sharedImpact rejects even undefined with the removed-field message", async (context) => {
+test("review.sharedImpact warns and is ignored even when undefined", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   for (const value of ['["notes.md"]', "undefined"]) {
@@ -60,14 +60,16 @@ test("review.sharedImpact rejects even undefined with the removed-field message"
         `outDir: ".review", sharedImpact: ${value}`,
       ),
     );
-    await assert.rejects(
-      loadConfig(fixture.root),
-      (error: Error & { code?: string }) =>
-        error.code === "config-invalid" &&
-        error.message.endsWith(
-          "review.sharedImpact has been removed; delete this field.",
-        ),
-    );
+    const config = await loadConfig(fixture.root);
+    assert.deepEqual(config.warnings, [
+      {
+        code: "removed-shared-impact",
+        context: [fixture.configPath],
+        message:
+          "review.sharedImpact has been removed; ignoring it. Delete the field.",
+      },
+    ]);
+    assert.equal(Object.hasOwn(config.review, "sharedImpact"), false);
     await fs.promises.writeFile(fixture.configPath, source);
   }
 });

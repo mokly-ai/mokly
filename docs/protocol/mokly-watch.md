@@ -8,8 +8,8 @@ implemented in Milestone 3, alongside existing configured stylesheet and
 referenced-resource watching.
 Milestone 11 of the same plan implemented watching every declared stylesheet
 from initial watched-Serve startup and after successful reconfiguration.
-The per-rebuild warning scope and supervised-child warning forwarding are
-planned by the same plan's Milestone 14 and are not implemented yet; see
+The per-rebuild warning scope and supervised-child warning forwarding were
+implemented by the same plan's Milestone 14; see
 [build warnings](./mokly-build-warnings.md).
 
 `mokly serve` watches by default; `--no-watch` serves one deterministic

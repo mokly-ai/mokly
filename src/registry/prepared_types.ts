@@ -1,4 +1,5 @@
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
+import type { BuildWarning } from "../build/warnings.js";
 
 /** One actionable catalogue validation failure. */
 export interface RegistryViolation {
@@ -12,4 +13,5 @@ export interface RegistryViolation {
 export interface PreparedRegistry {
   entries: readonly ResolvedRegistryEntry[];
   byId: ReadonlyMap<string, ResolvedRegistryEntry>;
+  warnings: readonly BuildWarning[];
 }

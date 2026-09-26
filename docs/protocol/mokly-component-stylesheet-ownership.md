@@ -4,8 +4,8 @@
 
 The provenance, final-link ownership and comparison rules below were planned
 by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
-and implemented in Milestone 13. The structured warnings are planned by
-Milestone 14 and are not implemented yet. Declaration, validation and placement
+and implemented in Milestone 13. The structured warnings were implemented in
+Milestone 14. Declaration, validation and placement
 remain in [component stylesheets](./mokly-component-stylesheets.md).
 
 ## Provenance And Comparison Material

@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 import { build, type Plugin, type PluginBuild } from "esbuild";
 
 import { graphSourceFiles } from "../build/source_inventory.js";
+import type { BuildWarning } from "../build/warnings.js";
 import { MoklyError, errorMessage } from "../errors.js";
 
 import { componentStylesheetsKey } from "./component_stylesheets.js";
@@ -21,13 +22,19 @@ const CONFIG_NAMES = [
 
 /** Reloadable consumer-configuration boundary used by watched Serve. */
 export interface ConfigLoader {
-  load(configPath: string): Promise<ResolvedConfig>;
+  load(
+    configPath: string,
+    onWarning?: (warning: BuildWarning) => void,
+  ): Promise<ResolvedConfig>;
 }
 
 /** Filesystem-backed configuration loader. */
 export class FileSystemConfigLoader implements ConfigLoader {
-  load(configPath: string): Promise<ResolvedConfig> {
-    return loadConfig(path.dirname(configPath), configPath);
+  load(
+    configPath: string,
+    onWarning?: (warning: BuildWarning) => void,
+  ): Promise<ResolvedConfig> {
+    return loadConfig(path.dirname(configPath), configPath, onWarning);
   }
 }
 
@@ -66,6 +73,7 @@ export function discoverConfig(cwd: string, explicitPath?: string): string {
 export async function loadConfig(
   cwd: string,
   explicitPath?: string,
+  onWarning?: (warning: BuildWarning) => void,
 ): Promise<ResolvedConfig> {
   const configPath = discoverConfig(cwd, explicitPath);
   const temporaryDir = await fs.promises.mkdtemp(
@@ -97,7 +105,7 @@ export async function loadConfig(
         `${configPath} must have a default export`,
       );
     }
-    const config = resolveConfig(loaded.default, configPath);
+    const config = resolveConfig(loaded.default, configPath, onWarning);
     config.configSourceFiles = graphSourceFiles(
       result.metafile,
       path.dirname(configPath),

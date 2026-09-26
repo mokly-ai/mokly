@@ -14,8 +14,8 @@ The versioned formats below were planned by
 Milestone 6 changed the private manifest, Milestone 7 changed public
 catalogue/comparison formats, and Milestone 3 implemented stylesheet links.
 The graceful stylesheet placement and comparison extensions were implemented
-by the same plan's Milestone 13. Milestone 14 will add build warnings and
-ignore removed inputs; those warning changes are not implemented yet.
+by the same plan's Milestone 13. Milestone 14 implemented build warnings and
+ignored removed inputs.
 
 ## Graceful Handling
 

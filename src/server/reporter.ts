@@ -1,5 +1,6 @@
 import type { ManifestV6 } from "@mokly/viewer/data";
 
+import type { BuildWarning } from "../build/warnings.js";
 import { errorMessage } from "../errors.js";
 
 import type { RuntimeWatchAction } from "./watch_events.js";
@@ -24,6 +25,7 @@ export interface WatchReport {
 
 /** Presentation boundary for Serve lifecycle, watch, and runtime diagnostics. */
 export interface ServeReporter {
+  buildWarning?(warning: BuildWarning): void;
   baselinePreparing(base: string): void;
   baselineReady(commit: string, cacheHit: boolean, durationMs: number): void;
   catalogueReady(manifest: ManifestV6, durationMs: number): void;
@@ -53,6 +55,9 @@ export class PlainServeReporter implements ServeReporter {
   catalogueReady(_manifest: ManifestV6, _durationMs: number): void {}
   changesReady(_changed: number, _durationMs: number): void {}
   changesUnavailable(_durationMs: number): void {}
+  buildWarning(warning: BuildWarning): void {
+    this.write(`[mokly/warning] ${warning.message}\n`);
+  }
   gitReferenceRefresh(_base: string): void {}
   runtimeDiagnostic(error: unknown): void {
     this.write(`${errorMessage(error)}\n`);

@@ -66,13 +66,19 @@ export async function startCatalogueServer(
   let catalogue = validated.catalogue;
   let manifest = catalogue.manifest;
   let controls = options.componentRuntime
-    ? new ComponentRenderService(options.componentRuntime)
+    ? new ComponentRenderService(
+        options.componentRuntime,
+        options.onBuildWarning,
+      )
     : undefined;
   const activity = new ForegroundActivity(options.onForeground ?? (() => {}));
   const createDocuments = (runtime: ComponentRuntime) =>
     runtime.manifest.schemaVersion === "live-index-1"
       ? new DocumentService(runtime, activity.channel(), {
           onDocument: (document) => {
+            document.warnings?.forEach((warning) =>
+              options.onBuildWarning?.(warning),
+            );
             if (runtime.generation === controls?.capability().generation)
               publicCatalogue.acceptDocument(
                 document,
@@ -265,7 +271,8 @@ export async function startCatalogueServer(
         activeCatalogue = catalogue;
       }
       if (controls) controls.replace(runtime);
-      else controls = new ComponentRenderService(runtime);
+      else
+        controls = new ComponentRenderService(runtime, options.onBuildWarning);
     },
     publishUpdate(update = {}): void {
       const next = advanceCatalogueState(

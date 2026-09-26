@@ -2,10 +2,11 @@
 
 ## Delivery Status
 
-The existing plain/rich reporters are implemented. Structured build warnings
-from [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
-are planned by Milestone 14 and are not implemented yet. Their exact messages
-and collection scope are in the [build warning contract](./mokly-build-warnings.md).
+The plain/rich reporters and structured build warnings are implemented.
+Warning delivery was planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
+and implemented in Milestone 14. Exact messages and collection scope are in
+the [build warning contract](./mokly-build-warnings.md).
 
 ## Scope
 

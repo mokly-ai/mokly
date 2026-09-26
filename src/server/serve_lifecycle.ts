@@ -2,9 +2,11 @@
 import { fileURLToPath } from "node:url";
 
 import type { Compilation } from "../build/compile.js";
+import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { GeneratedOutputStore } from "../build/output_store.js";
+import type { BuildWarning } from "../build/warnings.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { timingArguments } from "../diagnostics/timings.js";
+import { timeAsync, timingArguments } from "../diagnostics/timings.js";
 
 import type { RunningServer } from "./http_types.js";
 import type {
@@ -16,7 +18,7 @@ import type {
   ProcessSupervisor,
   ProcessSupervisorFactory,
 } from "./supervisor.js";
-import type { WatchActionQueue } from "./watch_events.js";
+import type { NotificationGate, WatchActionQueue } from "./watch_events.js";
 import type { ConsumerWatcher } from "./watcher.js";
 
 /** Keep CLI child configuration, including diagnostic opt-in, stable across restarts. */
@@ -36,6 +38,34 @@ export function createWatchedSupervisor(
     ],
     options.port,
   );
+}
+
+/** Attach warning and failure observers before child readiness, cleaning up on failure. */
+export async function startWatchedSupervisor(
+  config: ResolvedConfig,
+  options: ServeOptions,
+  factory: ProcessSupervisorFactory,
+  runtime: ComponentRuntime,
+  failures: NotificationGate<Error>,
+  onWarning: (warning: BuildWarning) => void,
+  watcher: ConsumerWatcher,
+  resources: ResourceWatcher,
+): Promise<{ running: ProcessSupervisor; port: number }> {
+  const running = createWatchedSupervisor(config, options, factory);
+  try {
+    running.onUnexpectedExit((error) => failures.notify(error));
+    running.onWarning?.(onWarning);
+    running.replaceComponentRuntime(runtime, "stage");
+    const port = await timeAsync("child.ready", () => running.start());
+    return { running, port };
+  } catch (error) {
+    await Promise.allSettled([
+      watcher.close(),
+      resources.close(),
+      running.close(),
+    ]);
+    throw error;
+  }
 }
 
 /** Present a deterministic child server through the public Serve lifecycle. */

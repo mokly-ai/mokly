@@ -12,8 +12,8 @@ formats below were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 delivered in Milestones 3, 4, 6 and 7 respectively. Exports now use the new formats.
 Collecting and displaying build warnings across the export's compilation and
-capture phases is planned by the same plan's Milestone 14 and is not implemented
-yet; see the [warning contract](./mokly-build-warnings.md).
+capture phases was implemented by the same plan's Milestone 14; see the
+[warning contract](./mokly-build-warnings.md).
 
 The [viewer library plan](../../plans/mokly-viewer-library.md) tracks the
 implemented public catalogue, inert published inspector and separate viewer

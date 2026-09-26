@@ -10,8 +10,10 @@ import { MANIFEST_NAME } from "../registry/manifest.js";
 import type { Compilation } from "./compile.js";
 import { consumerBundle, type ConsumerBundle } from "./consumer_bundle.js";
 import type { LoadedGraph } from "./load_graph.js";
+import type { BuildWarning } from "./warnings.js";
 
 export interface ComponentRuntime {
+  warnings?: readonly BuildWarning[];
   bundle: ConsumerBundle;
   config: ResolvedConfig;
   generation: string;
@@ -25,6 +27,7 @@ export function rememberRuntime(
   config: ResolvedConfig,
 ): void {
   runtimes.set(compilation, {
+    ...(compilation.warnings ? { warnings: compilation.warnings } : {}),
     bundle: consumerBundle(graph),
     config,
     generation: randomBytes(16).toString("hex"),

@@ -28,8 +28,8 @@ by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.
 Manifest v6 and the public component stylesheet marker were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
 implemented in Milestones 6 and 3. Historical v3–v5 baselines remain readable.
-Build warning delivery across public commands and Serve is planned by the same
-plan's Milestone 14 and is not implemented yet.
+Build warning delivery across public commands and Serve was implemented by
+the same plan's Milestone 14.
 
 ## Package Identity
 

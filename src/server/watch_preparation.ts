@@ -1,6 +1,7 @@
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import { prepareLiveRuntime } from "../build/live_runtime.js";
 import { loadConsumerGraph } from "../build/load_graph.js";
+import type { BuildWarning } from "../build/warnings.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
@@ -36,6 +37,7 @@ export async function prepareInitialWatchedSource(
   report: (error: unknown) => void,
   shutdown: Promise<void>,
   isClosed: () => boolean,
+  onWarning?: (warning: BuildWarning) => void,
 ): Promise<PreparedWatchedSource> {
   const prepared = await prepareWatchedSource(
     config,
@@ -44,6 +46,7 @@ export async function prepareInitialWatchedSource(
     report,
     shutdown,
     isClosed,
+    onWarning,
   );
   if (!prepared)
     throw new MoklyError(
@@ -60,7 +63,9 @@ export async function prepareWatchedSource(
   report: (error: unknown) => void,
   shutdown: Promise<void>,
   isClosed: () => boolean,
+  onWarning?: (warning: BuildWarning) => void,
 ): Promise<PreparedWatchedSource | undefined> {
+  config.warnings?.forEach(onWarning ?? (() => undefined));
   const inventory = await loadConsumerGraph(config, false);
   config.entryModules = inventory.entrySources;
   config.sourceFiles = inventory.sourceFiles;
@@ -76,7 +81,7 @@ export async function prepareWatchedSource(
     if (isClosed()) return;
     config.entryModules = graph.entrySources;
     config.sourceFiles = graph.sourceFiles;
-    const registry = prepareRegistry(graph.definitions, config);
+    const registry = prepareRegistry(graph.definitions, config, onWarning);
     if (isClosed()) return;
     if (
       JSON.stringify(initialTargets) !== JSON.stringify(watchTargets(config))
@@ -95,7 +100,12 @@ export async function prepareWatchedSource(
         if (!adopted) await extended.close();
       }
     }
-    const runtime = await prepareLiveRuntime(config, graph, registry);
+    const runtime = await prepareLiveRuntime(
+      config,
+      graph,
+      registry,
+      onWarning,
+    );
     if (isClosed()) return;
     retained = true;
     return { runtime, watcher };

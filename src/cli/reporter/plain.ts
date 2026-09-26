@@ -1,5 +1,6 @@
 import type { ManifestV6 } from "@mokly/viewer/data";
 
+import type { BuildWarning } from "../../build/warnings.js";
 import { errorMessage } from "../../errors.js";
 import type { ServeReadyReport, WatchReport } from "../../server/reporter.js";
 
@@ -37,6 +38,9 @@ export class PlainReporter implements CliReporter {
   changesReady(_changed: number, _durationMs: number): void {}
 
   changesUnavailable(_durationMs: number): void {}
+  buildWarning(warning: BuildWarning): void {
+    this.environment.stderr.write(`[mokly/warning] ${warning.message}\n`);
+  }
 
   diagnostic(message: string): void {
     this.environment.stderr.write(`${message}\n`);

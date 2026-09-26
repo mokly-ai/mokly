@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { removedSharedImpact, type BuildWarning } from "../build/warnings.js";
 import { MoklyError } from "../errors.js";
 
 import { isBaselineCachePath } from "./cache_paths.js";
@@ -32,6 +33,7 @@ import type { MoklyConfig, ResolvedConfig } from "./types.js";
 export function resolveConfig(
   value: unknown,
   configPath: string,
+  onWarning?: (warning: BuildWarning) => void,
 ): ResolvedConfig {
   if (!isRecord(value)) {
     throw new MoklyError(
@@ -44,11 +46,11 @@ export function resolveConfig(
       "config-invalid",
       "legacy configuration was removed; register whole documents with definePage",
     );
-  if (isRecord(value.review) && Object.hasOwn(value.review, "sharedImpact"))
-    throw new MoklyError(
-      "config-invalid",
-      "review.sharedImpact has been removed; delete this field.",
-    );
+  const removedReviewField =
+    isRecord(value.review) && Object.hasOwn(value.review, "sharedImpact")
+      ? removedSharedImpact(configPath)
+      : undefined;
+  if (removedReviewField) onWarning?.(removedReviewField);
   const input = value as unknown as MoklyConfig;
   const publicExclude = resolvePublicExclude(input.publicExclude);
   const generatedOutput = generatedOutputMode(input.generatedOutput);
@@ -128,6 +130,7 @@ export function resolveConfig(
     repoRoot,
   });
   const resolved: ResolvedConfig = {
+    ...(removedReviewField ? { warnings: [removedReviewField] } : {}),
     publicExclude,
     generatedOutput,
     colorSchemes,

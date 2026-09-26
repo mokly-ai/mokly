@@ -9,10 +9,9 @@ consumer rendering follows the [rendering contract](./mokly-rendering.md).
 The removal of entry `dependencies` was planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) and
 implemented in Milestone 6; the `componentStylesheets` export is implemented in
-Milestone 3. Current runtime validation rejects removed inputs.
+Milestone 3. Runtime validation ignores removed inputs with warnings.
 Milestone 11 of the same plan made public input types reject these removed
-fields at compile time. Ignoring them with warnings instead of runtime
-violations is planned by Milestone 14 and is not implemented yet.
+fields at compile time. Milestone 14 implemented the runtime warning behavior.
 
 ## Public Authoring API
 

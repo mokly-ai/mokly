@@ -6,6 +6,11 @@ import type {
   RegistryDefinition,
   ResolvedRegistryEntry,
 } from "../authoring/types.js";
+import {
+  removedDependencies,
+  removedOwnedDependencies,
+  type BuildWarning,
+} from "../build/warnings.js";
 import { validateComponentDefinition } from "../components/definition.js";
 import { validateDeclaredStylesheets } from "../components/stylesheet_validation.js";
 import { toPosixPath } from "../config/paths.js";
@@ -29,9 +34,15 @@ import {
 export function prepareRegistry(
   values: readonly unknown[],
   config: ResolvedConfig,
+  onWarning?: (warning: BuildWarning) => void,
 ): PreparedRegistry {
   const violations: RegistryViolation[] = [];
   const entries: ResolvedRegistryEntry[] = [];
+  const warnings: BuildWarning[] = [];
+  const warn = (warning: BuildWarning) => {
+    warnings.push(warning);
+    onWarning?.(warning);
+  };
   const flattened = values.flatMap((value) =>
     Array.isArray(value) ? value : [value],
   );
@@ -50,7 +61,16 @@ export function prepareRegistry(
       ...value,
       sourcePath,
       sourceRelativePath,
-    } as ResolvedRegistryEntry;
+    } as ResolvedRegistryEntry & {
+      dependencies?: unknown;
+      ownedDependencies?: unknown;
+    };
+    if (Object.hasOwn(entry, "dependencies"))
+      warn(removedDependencies(String(entry.id)));
+    if (entry.kind === "component" && Object.hasOwn(entry, "ownedDependencies"))
+      warn(removedOwnedDependencies(String(entry.id)));
+    delete entry.dependencies;
+    delete entry.ownedDependencies;
     const metadataViolations = validateEntry(entry, config);
     violations.push(...metadataViolations);
     if (entry.kind === "component") {
@@ -81,10 +101,11 @@ export function prepareRegistry(
     });
   }
   if (violations.length > 0) throw invalidRegistry(violations);
-  validateDeclaredStylesheets(orderedEntries, config);
+  validateDeclaredStylesheets(orderedEntries, config, warn);
   return {
     byId: new Map(orderedEntries.map((entry) => [entry.id, entry])),
     entries: orderedEntries,
+    warnings,
   };
 }
 

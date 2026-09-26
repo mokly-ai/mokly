@@ -51,7 +51,8 @@ combined with `--base`.
 
 Warnings about ignored, unnecessary inputs appear on standard error in plain
 mode and do not change a successful exit code. Each distinct warning appears
-once per command or watched rebuild.
+once per command or watched rebuild. Rich output shows the same warning with
+an exclamation mark after clearing its progress line.
 
 ## Errors
 

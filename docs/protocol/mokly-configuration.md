@@ -12,8 +12,8 @@ The `componentStylesheets` marker is delivered by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md) for
 Milestone 3; Milestone 4 removed `review.sharedImpact`. Both changes are
 implemented.
-Ignoring that removed key with a warning is planned by the same plan's
-Milestone 14 and is not implemented yet.
+Ignoring that removed key with a warning was implemented by the same plan's
+Milestone 14.
 
 ## Configuration Discovery
 

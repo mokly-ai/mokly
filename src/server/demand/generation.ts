@@ -6,6 +6,7 @@ import type {
 import type { Compilation } from "../../build/compile.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import type { GeneratedOutputStore } from "../../build/output_store.js";
+import type { BuildWarning } from "../../build/warnings.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { timeAsync, timingCounts } from "../../diagnostics/timings.js";
 import {
@@ -24,6 +25,7 @@ import { BackgroundBaseline } from "./baseline.js";
 
 /** Collaborators and observers supplied by the Serve composition root. */
 export interface BackgroundGenerationOptions {
+  readonly onWarning?: (warning: BuildWarning) => void;
   readonly resources?: ResourceWatcher;
   /** Resolves when the host shuts down; preparation stays independently cancellable. */
   readonly shutdown?: Promise<void>;
@@ -79,9 +81,15 @@ export class BackgroundGeneration {
     if (this.closed) return;
     const sequence = ++this.sequence;
     const controller = (this.controller = new AbortController());
-    const worker = (this.worker = new BackgroundCompilation(runtime, existing));
-    worker.foreground(this.busy);
     const current = () => !this.closed && sequence === this.sequence;
+    const worker = (this.worker = new BackgroundCompilation(
+      runtime,
+      existing,
+      (warning) => {
+        if (current()) this.options.onWarning?.(warning);
+      },
+    ));
+    worker.foreground(this.busy);
     this.adoption = (async () => {
       let prepared: PreparedResourceWatch | undefined;
       try {

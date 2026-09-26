@@ -14,7 +14,7 @@ Actual-invocation ownership of retained non-CSS resource evidence is implemented
 by the same Milestone 4 classifier.
 The inserted-link comparison projection and post-transform ownership rule
 below were implemented by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-Milestone 13. Warning delivery remains planned for Milestone 14.
+Milestone 13. Milestone 14 implemented warning delivery.
 
 ## Changes Membership
 

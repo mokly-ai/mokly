@@ -7,8 +7,8 @@ planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence
 and implemented in Milestones 6 and 3 respectively. Serve now uses the v6
 entry shape and links declared stylesheets.
 Post-transform owner pruning and inserted-link provenance were implemented by
-the same plan's Milestone 13. Render warning reporting in foreground and
-transient Serve renders remains planned for Milestone 14.
+the same plan's Milestone 13. Milestone 14 implemented render warning reporting
+in foreground and transient Serve renders.
 
 ## Startup and completeness
 

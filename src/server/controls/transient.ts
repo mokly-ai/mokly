@@ -52,19 +52,24 @@ export function renderTransient(
       target.colorScheme === request.colorScheme,
   )![0];
   const document = compiler.render(route, componentProps);
+  const warnings = [...(document.warnings ?? [])];
+  const files = captureRenderBundle(
+    route,
+    new Map([[route, document.html]]),
+    runtime.manifest,
+    runtime.config,
+    (target) => {
+      if (!compiler!.routes.has(target)) return;
+      const generated = compiler!.render(target);
+      warnings.push(...(generated.warnings ?? []));
+      return generated.html;
+    },
+  );
   return {
     route,
     props: encodeProps(props),
     view: document.view!,
-    files: captureRenderBundle(
-      route,
-      new Map([[route, document.html]]),
-      runtime.manifest,
-      runtime.config,
-      (target) =>
-        compiler!.routes.has(target)
-          ? compiler!.render(target).html
-          : undefined,
-    ),
+    files,
+    ...(warnings.length ? { warnings } : {}),
   };
 }

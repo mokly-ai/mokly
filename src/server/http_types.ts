@@ -1,6 +1,7 @@
 import type { ManifestV6 } from "@mokly/viewer/data";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
+import type { BuildWarning } from "../build/warnings.js";
 
 import type { CatalogueSnapshot } from "./catalogue_snapshot.js";
 import type {
@@ -18,6 +19,7 @@ export interface ServerOptions {
   liveChanges?: boolean;
   onForeground?: (active: boolean) => void;
   onDiagnostic?: (error: unknown) => void;
+  onBuildWarning?: (warning: BuildWarning) => void;
   onPreviewResources?: (observation: PreviewObservation) => void;
   base: string;
   /** Reuse a validated startup or publication generation without rereading metadata. */

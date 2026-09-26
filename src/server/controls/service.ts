@@ -8,6 +8,7 @@ import {
 } from "@mokly/viewer/data";
 
 import type { ComponentRuntime } from "../../build/component_runtime.js";
+import type { BuildWarning } from "../../build/warnings.js";
 import { validateRenderRequest } from "../../components/render_request.js";
 
 import { RenderQueue } from "./queue.js";
@@ -20,7 +21,10 @@ export class ComponentRenderService {
   private queue: RenderQueue;
   private replacement: Promise<void> = Promise.resolve();
   private closed = false;
-  constructor(private runtime: ComponentRuntime) {
+  constructor(
+    private runtime: ComponentRuntime,
+    private readonly onWarning?: (warning: BuildWarning) => void,
+  ) {
     this.queue = new RenderQueue(new NodeRenderWorkerFactory(runtime));
   }
   capability(): RenderCapability {
@@ -61,6 +65,7 @@ export class ComponentRenderService {
         "cancelled",
         "The preview request was replaced.",
       );
+    result.warnings?.forEach((warning) => this.onWarning?.(warning));
     return this.store.put(result, request.generation);
   }
   async close(): Promise<void> {

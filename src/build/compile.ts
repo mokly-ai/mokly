@@ -45,14 +45,24 @@ export interface Compilation {
 export async function compileCatalogue(
   config: ResolvedConfig,
   accepted?: { graph: LoadedGraph; checkpoint: () => Promise<void> },
+  onWarning?: (warning: BuildWarning) => void,
 ): Promise<Compilation> {
-  return timeAsync("compile", () => compileMeasured(config, accepted));
+  return timeAsync("compile", () =>
+    compileMeasured(config, accepted, onWarning),
+  );
 }
 
 async function compileMeasured(
   config: ResolvedConfig,
   accepted?: { graph: LoadedGraph; checkpoint: () => Promise<void> },
+  onWarning?: (warning: BuildWarning) => void,
 ): Promise<Compilation> {
+  const warnings: BuildWarning[] = [];
+  const recordWarning = (warning: BuildWarning) => {
+    warnings.push(warning);
+    onWarning?.(warning);
+  };
+  config.warnings?.forEach(recordWarning);
   const graph = accepted?.graph ?? (await loadConsumerGraph(config));
   config = {
     ...config,
@@ -60,7 +70,7 @@ async function compileMeasured(
     sourceFiles: graph.sourceFiles,
   };
   const registry = timeSync("registry.prepare", () =>
-    prepareRegistry(graph.definitions, config),
+    prepareRegistry(graph.definitions, config, recordWarning),
   );
   timingCounts("catalogue", () => ({
     entries: registry.entries.length,
@@ -73,7 +83,6 @@ async function compileMeasured(
   }));
   const fragmentViews = new Map<string, ArtifactView>();
   const componentViews = new Map<string, ComponentViewRecord>();
-  const warnings: BuildWarning[] = [];
   const outputs = accepted
     ? await timeAsync("render", () =>
         renderCooperatively(
@@ -83,7 +92,7 @@ async function compileMeasured(
           fragmentViews,
           componentViews,
           accepted.checkpoint,
-          (warning) => warnings.push(warning),
+          recordWarning,
         ),
       )
     : timeSync("render", () =>
@@ -95,7 +104,7 @@ async function compileMeasured(
           graph.renderWithComponents,
           componentViews,
           undefined,
-          (warning) => warnings.push(warning),
+          recordWarning,
         ),
       );
   const routedEntries = new Set(

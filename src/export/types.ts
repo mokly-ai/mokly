@@ -1,5 +1,7 @@
 import type { StaticDelivery, ReviewArtifactContent } from "@mokly/viewer/data";
 
+import type { BuildWarning } from "../build/warnings.js";
+
 import type { LegacyExportOwnership } from "./ownership.js";
 
 /** Immutable route information available before an adapter finishes staging. */
@@ -34,6 +36,7 @@ export interface ExportOptions {
   base?: string;
   /** Route non-fatal baseline cleanup diagnostics through the CLI reporter. */
   diagnostic?: (message: string) => void;
+  onWarning?: (warning: BuildWarning) => void;
   /** Omit baseline reads and comparison artifacts; publish uses this capability. */
   noChanges?: boolean;
   /** Consume finalized bytes before installation, while the output is reserved. */

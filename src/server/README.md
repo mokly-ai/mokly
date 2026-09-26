@@ -134,7 +134,9 @@ Diagnostics originating in a supervised child cross a
 validated IPC message so the parent remains the sole terminal owner; a child
 without IPC retains direct diagnostic output. Render warnings from the child
 use a separate typed IPC warning event and the parent's run/rebuild-scoped
-deduplication sink; they are not child stderr diagnostics.
+deduplication sink; they are not child stderr diagnostics. Foreground and
+transient render warnings enter the same sink, while resource-only reloads
+do not replay an earlier warning.
 
 The [public-exclusion policy](../../docs/protocol/mokly-source-protection.md#public-exclusions)
 adds config-owned `publicExclude` globs to the shared source classifier.

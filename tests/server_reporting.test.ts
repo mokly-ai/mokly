@@ -14,7 +14,10 @@ import {
   ReadyProcessSupervisor,
 } from "../dist/server/supervisor.js";
 import type { ChildCommand } from "../dist/server/update_messages.js";
-import { parseChildDiagnosticMessage } from "../dist/server/update_messages.js";
+import {
+  parseChildDiagnosticMessage,
+  parseChildWarningMessage,
+} from "../dist/server/update_messages.js";
 import {
   WatchActionQueue,
   WatchDebouncer,
@@ -87,18 +90,60 @@ test("child diagnostic IPC accepts only a bounded string message", () => {
     assert.equal(parseChildDiagnosticMessage(value), undefined);
 });
 
+test("child warning IPC accepts only bounded structured warnings", () => {
+  const warning = {
+    code: "removed-dependencies",
+    context: ["home"],
+    message:
+      'dependencies has been removed; ignoring it on entry "home". Delete the field.',
+  };
+  assert.deepEqual(parseChildWarningMessage({ type: "warning", warning }), {
+    type: "warning",
+    warning,
+  });
+  for (const value of [
+    { type: "warning" },
+    { type: "warning", warning: { ...warning, code: "unknown" } },
+    { type: "warning", warning: { ...warning, context: ["home", "extra"] } },
+    { type: "warning", warning: { ...warning, context: [42] } },
+    { type: "warning", warning: { ...warning, message: "" } },
+    { type: "warning", warning: { ...warning, message: "x".repeat(65_537) } },
+    { type: "diagnostic", warning },
+  ])
+    assert.equal(parseChildWarningMessage(value), undefined);
+});
+
 test("the supervisor forwards validated child diagnostics", async () => {
   const child = new ReportingChild();
   const supervisor = new ReadyProcessSupervisor({ spawn: () => child }, [], 0);
   const diagnostics: string[] = [];
+  const warnings: string[] = [];
   supervisor.onDiagnostic(diagnostics.push.bind(diagnostics));
+  supervisor.onWarning((warning) => warnings.push(warning.message));
   const started = supervisor.start();
   child.emit({ type: "diagnostic", message: "before ready" });
+  child.emit({
+    type: "warning",
+    warning: {
+      code: "removed-dependencies",
+      context: ["home"],
+      message: "before ready warning",
+    },
+  });
   child.emit({ type: "diagnostic", message: 42 });
   child.emit({ type: "ready", port: 48123 });
   assert.equal(await started, 48123);
   child.emit({ type: "diagnostic", message: "after ready" });
+  child.emit({
+    type: "warning",
+    warning: {
+      code: "removed-dependencies",
+      context: ["home"],
+      message: "after ready warning",
+    },
+  });
   assert.deepEqual(diagnostics, ["before ready", "after ready"]);
+  assert.deepEqual(warnings, ["before ready warning", "after ready warning"]);
   const closing = supervisor.close();
   child.exit();
   await closing;

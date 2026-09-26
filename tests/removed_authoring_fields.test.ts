@@ -37,7 +37,7 @@ function component(input: Record<string, unknown> = {}) {
   }).entry;
 }
 
-test("every authoring boundary reports removed dependencies as a registry violation", async (context) => {
+test("every authoring boundary warns once for removed dependencies", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -64,13 +64,21 @@ test("every authoring boundary reports removed dependencies as a registry violat
     ],
     [
       "defineUseCase",
-      () =>
+      () => [
         defineUseCase({
           ...common,
           ...removed,
           route: "user-flows/example.html",
-          steps: [{ screenId: "example" }],
+          steps: [{ screenId: "other" }],
         }),
+        defineScreen({
+          ...common,
+          ...views,
+          id: "other",
+          route: "screens/other.html",
+          useCaseIds: ["example"],
+        }),
+      ],
     ],
     [
       "defineCollection",
@@ -146,50 +154,43 @@ test("every authoring boundary reports removed dependencies as a registry violat
     ],
   ] as const;
   for (const [label, create] of cases) {
-    assert.throws(
-      () =>
-        prepareRegistry(
-          [create()].flat().map((entry) => ({
-            ...entry,
-            definedIn: "entries/fixture.mockup.tsx",
-          })),
-          config,
-        ),
-      (error: Error & { code?: string }) =>
-        error.code === "build-invalid" &&
-        error.message.includes("[removed-field] entries/fixture.mockup.tsx") &&
-        error.message.includes(
-          "dependencies has been removed; delete this field.",
-        ),
+    const definitions = [create()].flat().map((entry) => ({
+      ...entry,
+      definedIn: "entries/fixture.mockup.tsx",
+    }));
+    const prepared = prepareRegistry(definitions, config);
+    assert.deepEqual(
+      prepared.warnings.map((warning) => warning.context),
+      [[label === "screen variant" ? "example-variant" : "example"]],
       label,
+    );
+    assert.ok(
+      prepared.entries.every((entry) => !Object.hasOwn(entry, "dependencies")),
     );
   }
 });
 
-test("component ownedDependencies reports the same typed registry violation", async (context) => {
+test("component ownedDependencies warns without entering the registry", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
-  assert.throws(
-    () =>
-      prepareRegistry(
-        [
-          {
-            ...component({ ownedDependencies: undefined }),
-            definedIn: "entries/fixture.mockup.tsx",
-          },
-        ],
-        config,
-      ),
-    (error: Error & { code?: string }) =>
-      error.code === "build-invalid" &&
-      error.message.includes(
-        "[removed-field] entries/fixture.mockup.tsx (example): ownedDependencies has been removed; delete this field.",
-      ),
+  const prepared = prepareRegistry(
+    [
+      {
+        ...component({ ownedDependencies: undefined }),
+        definedIn: "entries/fixture.mockup.tsx",
+      },
+    ],
+    config,
   );
+  assert.deepEqual(
+    prepared.warnings.map((warning) => warning.code),
+    ["removed-owned-dependencies"],
+  );
+  assert.equal(Object.hasOwn(prepared.entries[0]!, "ownedDependencies"), false);
 });
 
-test("removed fields on a variant parent or root collection produce one parent violation without inheritance", async (context) => {
+test("removed fields on a variant parent or root collection warn once without inheritance", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -208,26 +209,19 @@ test("removed fields on a variant parent or root collection produce one parent v
     }),
   ];
   for (const definitions of cases) {
-    assert.throws(
-      () =>
-        prepareRegistry(
-          [definitions].flat().map((entry) => ({
-            ...entry,
-            definedIn: "entries/fixture.mockup.tsx",
-          })),
-          config,
-        ),
-      (error: Error & { code?: string }) => {
-        assert.equal(error.code, "build-invalid");
-        assert.deepEqual(error.message.match(/\[removed-field\]/g), [
-          "[removed-field]",
-        ]);
-        assert.match(
-          error.message,
-          /\[removed-field\] entries\/fixture\.mockup\.tsx \(example\): dependencies has been removed; delete this field\./,
-        );
-        return true;
-      },
+    const prepared = prepareRegistry(
+      [definitions].flat().map((entry) => ({
+        ...entry,
+        definedIn: "entries/fixture.mockup.tsx",
+      })),
+      config,
+    );
+    assert.deepEqual(
+      prepared.warnings.map((warning) => warning.context),
+      [["example"]],
+    );
+    assert.ok(
+      prepared.entries.every((entry) => !Object.hasOwn(entry, "dependencies")),
     );
   }
 });

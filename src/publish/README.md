@@ -4,6 +4,9 @@ This internal module implements `mokly publish`. Consumers and self-hosted
 receivers use the installed npm executable and the
 [upload v1 protocol](../../docs/protocol/mokly-upload.md), never deep imports.
 The protocol documents are included in the npm package.
+Publish passes its export's structured warnings through the same CLI sink as
+configuration loading. It emits each distinct warning once before the success
+summary or failure without placing warnings in the upload archive.
 
 `run.ts` composes injected Git, export, HTTP and time boundaries. It pins the
 actual checkout HEAD, adds an owned manifest through the exporter, compresses

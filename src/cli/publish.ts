@@ -1,3 +1,4 @@
+import type { BuildWarning } from "../build/warnings.js";
 import { loadConfig } from "../config/load.js";
 import { MoklyError } from "../errors.js";
 import { exportCatalogue } from "../export/run.js";
@@ -16,6 +17,7 @@ export async function runPublish(
   cwd: string,
   reporter: CliReporter,
   env: NodeJS.ProcessEnv,
+  onWarning: (warning: BuildWarning) => void,
 ): Promise<void> {
   const options = resolvePublishOptions(arguments_, env);
   const controller = new AbortController();
@@ -27,7 +29,7 @@ export async function runPublish(
       reporter,
       "Loading configuration",
       "Configuration loaded",
-      () => loadConfig(cwd, arguments_.config),
+      () => loadConfig(cwd, arguments_.config, onWarning),
     );
     await publishCatalogue(
       config,
@@ -35,6 +37,7 @@ export async function runPublish(
         ...arguments_,
         ...options,
         diagnostic: (message) => reporter.runtimeDiagnostic(message),
+        onWarning,
       },
       packageVersion(),
       env,

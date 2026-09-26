@@ -4,6 +4,9 @@ This internal package module builds complete consumer sites for ordinary static
 hosting. Consumers use `mokly export --out <path>`, not a JavaScript deep import.
 The separate `mokly publish` command uploads through the
 [public upload boundary](../publish/README.md); export itself performs no upload.
+Export passes configuration, registry and render warnings to the caller's
+invocation sink across its build and capture phases; warnings do not enter
+the staged site or change the export result.
 
 `run.ts` pins one merge-base commit through `RepositoryEvidence`, retains the
 independent `BaselineReader`, runs the normal build, captures public inputs,

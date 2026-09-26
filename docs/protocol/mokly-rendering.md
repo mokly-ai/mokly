@@ -15,8 +15,8 @@ Both are in current generated output.
 Milestone 11 of the same plan removed component `stylesheets` from the
 renderer-facing `input.entry` at runtime and in its public type.
 The transient inserted-link provenance and relaxed configured-link placement
-below were implemented by Milestone 13; the warning channel remains planned
-by Milestone 14 and is not implemented yet.
+below were implemented by Milestone 13; Milestone 14 implemented the warning
+channel.
 
 ## Rendering Boundary
 

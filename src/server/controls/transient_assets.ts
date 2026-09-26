@@ -7,6 +7,7 @@ import { ComponentRenderError, isSafeRepositoryPath } from "@mokly/viewer/data";
 import { createCatalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../../browse/document_adapter.js";
+import type { BuildWarning } from "../../build/warnings.js";
 import {
   isPublicStaticFile,
   publicFileFailureReason,
@@ -31,6 +32,7 @@ export interface TransientRender {
   props: ComponentWireProps;
   view: ComponentViewRecord;
   files: ReadonlyMap<string, RenderFile>;
+  warnings?: readonly BuildWarning[];
 }
 export function captureRenderBundle(
   route: string,

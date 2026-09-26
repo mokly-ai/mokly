@@ -3,6 +3,7 @@ import { MessageChannel, Worker } from "node:worker_threads";
 
 import type { Compilation } from "../../build/compile.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
+import type { BuildWarning } from "../../build/warnings.js";
 import { timingArguments } from "../../diagnostics/timings.js";
 import type { ComponentChangeSnapshot } from "../component_changes.js";
 
@@ -22,7 +23,11 @@ export class BackgroundCompilation {
         reject(error: unknown): void;
       }
     | undefined;
-  constructor(runtime: ComponentRuntime, existing?: Compilation) {
+  constructor(
+    runtime: ComponentRuntime,
+    existing?: Compilation,
+    private readonly onWarning?: (warning: BuildWarning) => void,
+  ) {
     const { port1, port2 } = new MessageChannel();
     this.git = new BackgroundGitHost(runtime.config.repoRoot, port1);
     try {
@@ -63,9 +68,12 @@ export class BackgroundCompilation {
           compilation: Compilation;
           snapshot?: ComponentChangeSnapshot;
           error?: string;
+          warning?: BuildWarning;
         }) => {
           if (this.closed) return;
           if (message.type === "compiled") resolve(message.compilation);
+          if (message.type === "warning" && message.warning)
+            this.onWarning?.(message.warning);
           if (message.type === "classified") {
             this.classification?.resolve(message.snapshot);
             this.classification = undefined;

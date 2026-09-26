@@ -67,7 +67,11 @@ async function generateExport(
     const baseline = prepared
       ? await readBaseManifest(prepared.reader, prepared.commit, config)
       : undefined;
-    const compilation = await compileCatalogue(config);
+    const compilation = await compileCatalogue(
+      config,
+      undefined,
+      options.onWarning,
+    );
     config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
     assertExportActive(options.signal);
     await writeCompilation(compilation, config);

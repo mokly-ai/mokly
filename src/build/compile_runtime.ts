@@ -2,10 +2,12 @@
 import { compileCatalogue, type Compilation } from "./compile.js";
 import type { ComponentRuntime } from "./component_runtime.js";
 import { evaluateBundle, rememberBundle } from "./consumer_bundle.js";
+import type { BuildWarning } from "./warnings.js";
 
 export async function compileRuntime(
   runtime: ComponentRuntime,
   checkpoint: () => Promise<void>,
+  onWarning?: (warning: BuildWarning) => void,
 ): Promise<Compilation> {
   const graph = {
     ...evaluateBundle(runtime.bundle),
@@ -13,5 +15,5 @@ export async function compileRuntime(
     sourceFiles: runtime.config.sourceFiles ?? [],
   };
   rememberBundle(graph, runtime.bundle);
-  return compileCatalogue(runtime.config, { graph, checkpoint });
+  return compileCatalogue(runtime.config, { graph, checkpoint }, onWarning);
 }

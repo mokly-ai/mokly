@@ -14,8 +14,8 @@ these refinements are now in Build, Check, Serve, export and publication.
 Milestone 13 implemented graceful handling of duplicate declarations,
 configured links and overlaps. The linked
 [ownership and comparison contract](./mokly-component-stylesheet-ownership.md)
-covers its provenance and post-transform rules. Their warnings are planned by
-Milestone 14 and are not implemented yet.
+covers its provenance and post-transform rules. Milestone 14 implemented
+their warnings.
 
 ## Declaration And Public Files
 

@@ -4,6 +4,7 @@ import {
   FileSystemGeneratedOutputStore,
   type GeneratedOutputStore,
 } from "../build/output_store.js";
+import { BuildWarningSink } from "../build/warning_sink.js";
 import { FileSystemConfigLoader, type ConfigLoader } from "../config/load.js";
 import type { ResolvedConfig } from "../config/types.js";
 
@@ -54,6 +55,7 @@ export interface ServeDependencies {
   outputStore: GeneratedOutputStore;
   processSupervisorFactory: ProcessSupervisorFactory;
   reporter?: ServeReporter;
+  warnings?: BuildWarningSink;
   serverFactory: CatalogueServerFactory;
   watcherFactory: ConsumerWatcherFactory;
 }
@@ -77,11 +79,20 @@ export async function serve(
 ): Promise<RunningServe> {
   const dependencies = { ...DEFAULT_DEPENDENCIES, ...provided };
   const reporter = dependencies.reporter ?? DEFAULT_DEPENDENCIES.reporter!;
+  const warnings =
+    dependencies.warnings ??
+    new BuildWarningSink((warning) => reporter.buildWarning?.(warning));
+  config.warnings?.forEach((warning) => warnings.add(warning));
   if (!options.watch) {
     const generationStartedAt = Date.now();
     let changesStartedAt = generationStartedAt;
     let baselineStartedAt = generationStartedAt;
-    const runtime = await prepareLiveRuntime(config);
+    const runtime = await prepareLiveRuntime(
+      config,
+      undefined,
+      undefined,
+      (warning) => warnings.add(warning),
+    );
     config = runtime.config;
     const base = options.base ?? config.review.base;
     const repository = new ServedReviewRepository(config);
@@ -89,6 +100,7 @@ export async function serve(
       dependencies.outputStore,
       dependencies.changeClassifier ?? DEFAULT_CHANGE_CLASSIFIER,
       (compilation, accepted) => {
+        compilation.warnings?.forEach((warning) => warnings.add(warning));
         changesStartedAt = Date.now();
         reporter.catalogueReady(
           compilation.manifest,
@@ -110,6 +122,7 @@ export async function serve(
         });
       },
       {
+        onWarning: (warning) => warnings.add(warning),
         baselinePrepared: (commit) => {
           repository.accept(commit);
           server.publishUpdate({
@@ -146,7 +159,9 @@ export async function serve(
       port: options.port,
       review: configuredServedReview(config, base, repository),
       onDiagnostic: (error) => reporter.runtimeDiagnostic(error),
+      onBuildWarning: (warning) => warnings.add(warning),
     });
+    warnings.flush();
     background.start(runtime, base);
     return {
       port: server.port,
@@ -157,5 +172,5 @@ export async function serve(
       },
     };
   }
-  return serveWatched(config, options, dependencies);
+  return serveWatched(config, options, { ...dependencies, warnings });
 }

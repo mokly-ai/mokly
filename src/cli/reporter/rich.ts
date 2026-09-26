@@ -1,5 +1,6 @@
 import type { ManifestV6 } from "@mokly/viewer/data";
 
+import type { BuildWarning } from "../../build/warnings.js";
 import { errorMessage } from "../../errors.js";
 import type { ServeReadyReport, WatchReport } from "../../server/reporter.js";
 import { cliErrorPresentation } from "../errors.js";
@@ -102,6 +103,10 @@ export class RichReporter implements CliReporter {
       this.environment.stdout,
       `  ${this.#glyphs.warning} Changes unavailable (${formatDuration(durationMs)})`,
     );
+  }
+
+  buildWarning(warning: BuildWarning): void {
+    this.warning(warning.message);
   }
 
   diagnostic(message: string): void {

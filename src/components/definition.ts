@@ -74,7 +74,6 @@ export function validateComponentDefinition(
   if (!Array.isArray(stylesheets))
     invalidData(at, "stylesheets must be an array");
   const declared = stylesheets as unknown[];
-  const seenStylesheets = new Set<string>();
   for (const stylesheet of declared) {
     if (
       typeof stylesheet !== "string" ||
@@ -93,7 +92,6 @@ export function validateComponentDefinition(
         at,
         `stylesheets must contain mockupsDir-relative public CSS paths: ${String(stylesheet)}`,
       );
-    seenStylesheets.add(stylesheet);
   }
   const definition: ComponentDefinition = {
     ...value,
@@ -102,7 +100,7 @@ export function validateComponentDefinition(
     propSchema: structuredClone(value.propSchema),
     controls: structuredClone(controls),
     slots: [...slots].sort(),
-    stylesheets: [...seenStylesheets],
+    stylesheets: [...(declared as string[])],
   };
   if (!Array.isArray(value.variants) || !value.variants.length)
     invalidData(at, "at least one saved variant is required");

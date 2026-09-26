@@ -3,6 +3,7 @@
 import type { ManifestV6 } from "@mokly/viewer/data";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
+import type { BuildWarning } from "../build/warnings.js";
 import { bindTimings, timeSync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
 
@@ -17,6 +18,7 @@ import {
 import {
   childUpdateMessage,
   parseChildDiagnosticMessage,
+  parseChildWarningMessage,
   type ChangesStatus,
   type CatalogueUpdateKind,
 } from "./update_messages.js";
@@ -26,6 +28,7 @@ export interface ProcessSupervisor {
   completeCatalogue?(manifest: ManifestV6, generation: string): void;
   onForeground?(callback: (active: boolean) => void): void;
   onDiagnostic?(callback: (message: string) => void): void;
+  onWarning?(callback: (warning: BuildWarning) => void): void;
   onPreviewResources?(
     callback: (observation: PreviewObservation) => void,
   ): void;
@@ -81,6 +84,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   #runtime: ComponentRuntime | undefined;
   #foreground: ((active: boolean) => void) | undefined;
   #diagnostic: ((message: string) => void) | undefined;
+  #warning: ((warning: BuildWarning) => void) | undefined;
   #previewResources: ((observation: PreviewObservation) => void) | undefined;
 
   constructor(
@@ -123,6 +127,8 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
         const diagnostic = parseChildDiagnosticMessage(message);
         if (diagnostic && this.#child === child)
           this.#diagnostic?.(diagnostic.message);
+        const warning = parseChildWarningMessage(message);
+        if (warning && this.#child === child) this.#warning?.(warning.warning);
         if (
           message &&
           typeof message === "object" &&
@@ -244,6 +250,9 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   }
   onDiagnostic(callback: (message: string) => void): void {
     this.#diagnostic = callback;
+  }
+  onWarning(callback: (warning: BuildWarning) => void): void {
+    this.#warning = callback;
   }
   onPreviewResources(
     callback: (observation: PreviewObservation) => void,

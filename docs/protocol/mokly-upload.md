@@ -12,8 +12,8 @@ Uploaded public resources and new manifest/comparison formats were planned by
 implemented in Milestones 3, 6 and 7. The upload envelope stays at v1;
 packages carry the current public formats.
 Collecting and displaying build warnings across `publish`'s export, comparison
-and upload preparation is planned by the same plan's Milestone 14 and is not
-implemented yet. Warnings follow the
+and upload preparation was implemented by the same plan's Milestone 14.
+Warnings follow the
 [build warning contract](./mokly-build-warnings.md) and never become upload
 payload or receiver errors.
 

@@ -1,5 +1,9 @@
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
+import {
+  missingConfiguredStylesheetLink,
+  type BuildWarning,
+} from "../build/warnings.js";
 import { localStylesheetHref } from "../config/stylesheet_hrefs.js";
 import { MoklyError } from "../errors.js";
 
@@ -79,6 +83,7 @@ export function insertComponentStylesheets(
   position: number,
   declared: readonly string[],
   provenance = false,
+  onWarning?: (warning: BuildWarning) => void,
 ): string {
   if (!declared.length) return html;
   const document = parse(html, { sourceCodeLocationInfo: true });
@@ -109,6 +114,7 @@ export function insertComponentStylesheets(
         (attribute) => attribute.name === "href" && attribute.value === href,
       ),
     );
+    if (!match) onWarning?.(missingConfiguredStylesheetLink(route, href));
     return match?.sourceCodeLocation
       ? [{ index, location: match.sourceCodeLocation }]
       : [];

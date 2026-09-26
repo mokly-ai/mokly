@@ -35,6 +35,11 @@ and supervised Serve children therefore do not initialize the upload archiver.
 Rich presentation never changes `MoklyError`, generated output, HTTP responses,
 or timing JSON. The supervised Serve child stays plain and forwards diagnostics
 to the parent so only one reporter owns the terminal.
+`run.ts` also owns one structured warning sink per invocation. It flushes
+sorted, deduplicated warnings before one-shot summaries and Serve readiness,
+redacts credentials, and resets watched rebuilds without changing exit codes.
+The supervised child forwards render warnings over typed IPC instead of
+writing a second terminal copy.
 
 ## Quick Start
 
@@ -71,6 +76,7 @@ ordinary test runners pipe stdout and intentionally select plain mode.
 ### Related Docs
 
 - [Terminal output contract](../../docs/protocol/mokly-terminal-output.md)
+- [Build warnings](../../docs/protocol/mokly-build-warnings.md)
 - [Package and CLI contract](../../docs/protocol/mokly-package.md)
 - [Timing diagnostics](../../docs/protocol/mokly-timings.md)
 - [Watched development](../../docs/protocol/mokly-watch.md)
