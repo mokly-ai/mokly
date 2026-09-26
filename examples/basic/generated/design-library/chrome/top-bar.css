@@ -16,20 +16,36 @@ align-items: center;
 .mbk-brand {
 align-items: center;
   display: flex;
-  font-weight: 700;
   gap: 8px;
-  letter-spacing: -0.01em;
+}
+
+/* The artboard-scoped copy outranks the later `.ce-design a` rule, which
+   otherwise tints the brand link's wordmark like a prose link. */
+.ce-design .mbk-brand {
+color: inherit;
+  text-decoration: none;
 }
 
 .mbk-mark {
-background: var(--mbk-sage);
-  border-radius: 6px;
-  color: var(--mbk-accent-contrast);
+color: var(--chrome-brand);
   display: inline-grid;
   flex-shrink: 0;
-  height: 24px;
+  height: 22px;
   place-items: center;
-  width: 24px;
+  width: 22px;
+}
+
+.mbk-mark-rules {
+stroke: var(--chrome-surface);
+}
+
+.mbk-name {
+font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .mbk-menu-btn {

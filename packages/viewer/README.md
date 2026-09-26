@@ -367,8 +367,10 @@ properties on a containing element:
 ```
 
 Maintain readable contrast in both appearances. Unset overrides use the current
-semantic palette defaults; fonts are packaged locally. Viewer
-styles are scoped away from the surrounding application and host slot content.
+semantic palette defaults; fonts are packaged locally. These properties tune
+the viewer's accent only; the Mokly logo in the top bar keeps its brand colors
+in each appearance. Viewer styles are scoped away from the surrounding
+application and host slot content.
 Internal selectors, DOM structure, geometry and other custom properties are not
 extension APIs.
 
