@@ -867,3 +867,30 @@ use-case and page targets so their installed scope matches their route.
   the Medium A → B → A initial-workspace authority issue, the Low independent
   descriptor object/JSON boundary, and the Low duplicate complete-catalogue
   preview validation.
+
+### Milestone 6 correction review — 2026-09-26
+
+- Reviewed the complete pushed `origin/main...b5e9e37` diff using
+  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+  The review was read-only; no implementation was changed.
+- No new findings. The correction removes the unreviewed build transform,
+  restores one checked hydration implementation, and tests the corrected
+  deployment invariant without weakening strict live reading or static
+  complete-catalogue validation.
+- The complete review continues to report the three numbered findings above,
+  with their impact, options and recommendations unchanged:
+  1. **Medium:** A → B → A can pair the stale initial private workspace with
+     the previous route's scoped catalogue. Recommendation: make the
+     request-bound live workspace the sole live authority and add held/failed
+     round-trip coverage.
+  2. **Low:** `StandaloneShellDocument` accepts an independently supplied
+     capability descriptor object and JSON string. Recommendation: introduce a
+     paired serialized-descriptor boundary and regression.
+  3. **Low:** repository preview validates the same complete catalogue before
+     capture and again during deployment finalization. Recommendation: carry a
+     validated proof/canonical bytes into finalization and add a real call-count
+     regression.
+- Residual risk is limited to those explicitly deferred decisions. The
+  correction itself is covered by the complete 2,454-unit/789-browser gate,
+  the 131-test focused development hydration run, packed-consumer smoke and the
+  three normalized `214fffa` artifact comparisons.
