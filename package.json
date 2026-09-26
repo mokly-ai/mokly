@@ -1,6 +1,6 @@
 {
   "name": "@mokly/mokly",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "App-independent static mockup catalogues, development browsing, and on-demand visual comparisons.",
   "type": "module",
   "license": "MIT",
@@ -78,7 +78,7 @@
     "parse5": "^8.0.1",
     "tar": "^7.5.22",
     "tar-stream": "^3.2.1",
-    "@mokly/viewer": "0.3.0"
+    "@mokly/viewer": "0.4.0"
   },
   "peerDependencies": {
     "react": ">=19.0.0",
