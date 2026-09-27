@@ -802,7 +802,7 @@ CI proves the suites do not need remote-tracking references.
 - [x] Widen `tests/helpers/test_repository_refs.ts` to the decided scope and
       keep zero violations on the tree, fixing any real violation it finds.
 
-## Milestone 22: Third review fix verification and delivery
+## Milestone 22: Third review fix verification and delivery — completed
 
 - [x] Run the focused publish, export, baseline, CLI, guides, package and CI
       suites, then the unit and browser suites in a local copy without
@@ -810,13 +810,15 @@ CI proves the suites do not need remote-tracking references.
       failure.
 - [x] Mark the third-review findings addressed in
       `docs/reviews/delta-publishing.md` and summarize what changed.
-- [ ] After checks pass, `git add -A`, commit with a Conventional Commits
-      title of at most 50 characters, and push the branch.
-- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After checks pass, `git add -A`, commit with a Conventional Commits
+      title of at most 50 characters, and push the branch. Committed as
+      `78f259d fix(publish): classify Ctrl+C before installation`.
+- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
-      without changing the implementation.
+      without changing the implementation. Seven findings (one Medium, six
+      Low) are recorded in its Fourth Review for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 

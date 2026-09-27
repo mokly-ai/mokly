@@ -677,14 +677,16 @@ follow-ups 1 and 2 above.
    marks. Spawned publish tests without `--no-changes`, for committed and
    derived catalogues, send SIGINT to the whole process group during
    comparison preparation, staging, the input recheck and configuration
-   loading, and a unit matrix covers each Git reader.
+   loading, and a unit matrix covers each Git reader. A timing race with
+   esbuild remains; see [fourth review](#fourth-review) finding 1.
 2. **Addressed (option B).** `tests/preview.test.ts` builds an isolated copy
    of the example with a fixture-owned baseline and one deterministic edit,
    and the browser suite's server compares with `--base HEAD`. CI no longer
    reads `origin/main` for the baseline lockfile and deletes every
    remote-tracking reference and `FETCH_HEAD` before the unit and browser
    suites, and [`ci-verification.md`](../protocol/ci-verification.md) states
-   the rule truthfully. Before delivery, the full unit suite (2,532/2,532)
+   the rule; the fourth review found the removal step fragile, the preview
+   edit unasserted and two stale sentences (findings 2–4). Before delivery, the full unit suite (2,532/2,532)
    and browser suite (781/781) passed in a clone with no remote-tracking
    references.
 3. **Addressed (options B and C, with A's cheap cases).** The static test is
@@ -693,10 +695,134 @@ follow-ups 1 and 2 above.
    checkout), and recognises `origin/` and `remotes/` anywhere in an
    argument, `refs/remotes`, `-r`, `--all`, `--remotes`, `FETCH_HEAD`,
    upstream spellings in any letter case and the `fetch` and `ls-remote`
-   subcommands; `ci-verification.md` lists exactly what it recognises and
-   cannot see.
+   subcommands; `ci-verification.md` describes what it recognises and cannot
+   see, though not exactly (see [fourth review](#fourth-review) finding 5).
 
 Follow-up verification: `cargo xtask check` passed with Node 24.21.0 (unit
 2,532/2,532 across 470 files, browser 781/781 across 122 files, packed-consumer
 smoke and every static check), and the remote-free unit and browser runs above
 passed.
+
+## Fourth Review
+
+Reviewed on 2026-09-27 with
+[the implementation review prompt](../implementation-review-prompt.md), after
+fix commit `78f259d` was pushed, against `origin/main` (`3699c56`). Two
+independent read-only reviewers covered the pre-installation window and the
+tree-only tests, CI step and lint, and rechecked the plan, this document and
+every changed link. They confirmed the third-review fixes work in the common
+case. Seven new findings follow: one Medium and six Low. None was changed;
+each awaits the user's decision. Second-review findings 3–11 stay open.
+
+1. **P2 / Medium — Ctrl+C during an esbuild step can still print a build
+   error.** `withPreInstallationCancellation` in
+   [`src/export/error.ts`](../../src/export/error.ts) decides "was this a
+   cancellation?" when a step fails, by reading the command's abort signal.
+   A terminal Ctrl+C also kills esbuild, which shares the command's process
+   group, and Node may notice esbuild's death before it runs the SIGINT
+   listener that sets the signal. The failure then passes through as
+   `[mokly/build-invalid] could not bundle consumer modules: The service was stopped: write EPIPE`.
+   A reviewer reproduced it in 3–10 of 51 presses during compile, in both
+   committed and derived catalogues, and deterministically from an esbuild
+   plugin; the new spawned tests miss it because their hooks always let the
+   listener run first, and no test covers compile. Git and baseline steps are
+   unaffected. **Impact of no change:** some deliberate cancellations are
+   still reported as broken builds. **Options:** **A)** when a step fails and
+   the signal is not yet set, wait one event-loop turn and check again;
+   **B)** tag window failures and decide at the command boundary after
+   cleanup (still needs A for configuration loading and identity); **C)**
+   keep esbuild out of the process group (esbuild's API does not allow it);
+   **D)** add a spawned compile test whose hook waits for esbuild to exit,
+   and a unit test where the step fails in the same turn an abort is queued.
+   **Recommended: A + D,** and define "after the signal fired" in the
+   recovery contract.
+
+2. **P3 / Low — The CI step that removes remote-tracking references crashes
+   on a symbolic `origin/HEAD` and leaves `origin` fetchable.** In
+   [`ci.yml`](../../.github/workflows/ci.yml), `git for-each-ref … | git update-ref --stdin`
+   has no `--no-deref`, so Git follows `refs/remotes/origin/HEAD` and rejects
+   the batch; the lead reproduced
+   `fatal: multiple updates for 'refs/remotes/origin/master' (including one via symref 'refs/remotes/origin/HEAD') are not allowed`
+   in an ordinary clone. CI passes today only because its checkout writes no
+   `origin/HEAD`, and a plain `git fetch origin` recreates every reference
+   afterwards. `tests/ci_workflow.test.ts` only checks substrings.
+   **Impact of no change:** if a checkout ever writes `origin/HEAD`, every
+   unit and browser job fails, and the documented local remote-free run has
+   no working tooling. **Options:** **A)** add `--no-deref`; **B)** move the
+   step into one repository script shared by CI and the local run (remove
+   each remote, delete leftover references with `--no-deref`, delete
+   `FETCH_HEAD`, verify) and test it in a fixture clone with `origin/HEAD`, a
+   packed reference, a pull reference and `FETCH_HEAD`, asserting
+   `git fetch origin` then fails; **C)** document that checkouts must have no
+   symbolic remote references. **Recommended: B.**
+
+3. **P3 / Low — The preview test's deterministic edit is never asserted.**
+   [`tests/preview.test.ts`](../../tests/preview.test.ts) edits the Welcome
+   badge, but its count check accepts 0 and its diff attributes render for
+   every screen whenever comparisons are on; a reviewer built the fixture
+   with and without the edit and every assertion passed both ways. The CI
+   contract says the edit keeps the comparison assertions meaningful.
+   **Impact of no change:** a preview that detects or publishes no change
+   would still pass. **Options:** **A)** assert the changed count, that
+   Welcome is marked Changed and that an unedited screen stays Unmodified;
+   **B)** A plus a before-and-after build in one fixture; **C)** drop the
+   claim. **Recommended: A.**
+
+4. **P3 / Low — Two protocol documents still describe the removed
+   merge-base lockfile.** [`ci-verification.md`](../protocol/ci-verification.md)
+   says jobs that run historical installs add a lockfile read from the
+   merge-base commit, and [`npm-release.md`](../protocol/npm-release.md) says
+   CI includes the merge-base lockfile in cache keys and ties full history to
+   resolving `origin/main`; only the Preview workflow still does this.
+   **Impact of no change:** the documents contradict each other, and restoring
+   CI to match them would bring back the `origin/main` read. **Options:**
+   **A)** correct the three sentences; **B)** A and link `npm-release.md` to
+   `ci-verification.md` for caching and history instead of repeating it;
+   **C)** A plus a prose test. **Recommended: B.**
+
+5. **P3 / Low — The lint's new default flags legitimate code, and its
+   documented lists are not exact.** [`tests/helpers/test_repository_refs.ts`](../../tests/helpers/test_repository_refs.ts)
+   treats shorthand `{ cwd }`, an options variable or a spread as "no
+   `cwd`", which means the real checkout, and matches `-r` for every
+   subcommand, so `git ls-tree -r HEAD` in the real checkout is flagged. It
+   also misreads `-C` after the subcommand, and `-c name=value` or
+   `--git-dir` hide the subcommand. The CI contract omits several blind spots
+   (`branch -a`, `HEAD..FETCH_HEAD`, `git remote`, `scripts/` modules).
+   **Impact of no change:** idiomatic fixture code fails the unit suite, which
+   pushes authors to hide arguments in variables. **Options:** **A)** fix the
+   false positives (accept shorthand `cwd`, treat non-inline options as
+   unknown, limit `-r`/`-a`/`--all`/`--remotes` to reference-listing
+   subcommands, skip option values when finding the subcommand, read `-C`
+   only before it) with synthetic cases; **B)** keep the code, document the
+   behaviour and blind spots and drop "exactly"; **C)** retire the lint.
+   **Recommended: A for the false positives plus B for the rest,** and invest
+   in finding 2's runtime guard rather than a fuller parser.
+
+6. **P3 / Low — Ctrl+C just after esbuild starts can exit with code 13.**
+   esbuild unreferences its pipes, so if Ctrl+C kills it during startup
+   (configuration loading), Node sees nothing left to wait for and exits with
+   only `Warning: Detected unsettled top-level await` and status 13, no Mokly
+   message. A reviewer captured it 2 times in about 1,000 presses; it
+   predates `78f259d`. **Impact of no change:** rare confusing output and a
+   wrong exit status. **Options:** **A)** keep a referenced handle alive for
+   the whole of `runPublish` and `runExport`; **B)** make esbuild calls reject
+   when the command signal aborts; **C)** document it. **Recommended: A.**
+
+7. **P3 / Low — After a classified Ctrl+C, diagnostic mode shows the wrong
+   stack.** The window helper throws a new copy of the error, so
+   `MOKLY_DIAGNOSTIC=1` prints a stack pointing at the helper, and baseline
+   error subclasses lose their extra fields (`argv`, `exitCode`,
+   `outputLines`); the original survives only as an unprinted `cause`.
+   Normal output is unchanged. **Options:** **A)** mark the original error as
+   cancelled in place (a private set that `isCancellation` checks); **B)**
+   copy `stack` and `name` onto the copy; **C)** print the cause chain in
+   diagnostic mode. **Recommended: A.**
+
+Fourth-review verification: the reviewers' focused reruns passed 12, 19, 2,
+31 and 16 tests; about 1,000 timed process-group presses exercised the
+window; every relative link and anchor in the 31 changed Markdown files
+resolves. Residual test risk: Windows (the process-group tests are skipped),
+the release workflow's complete-verification fallback still runs with remote
+references present, an unused `includeChanges` path in
+`tests/browser/preview_fixture.ts` would read `origin/main`, and the preview
+test now rebuilds a baseline on every run (about 6.6 minutes).
