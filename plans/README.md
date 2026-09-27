@@ -8,8 +8,9 @@
   authorized findings from the
   [review record](../docs/reviews/imported-css-delivery.md) and
   [Milestone 14 review](../docs/reviews/imported-css-delivery-milestone-14.md)
-  are resolved in Milestones 15–16. The four unselected findings remain open;
-  Milestone 17's independent review is for the parent session.
+  are resolved in Milestones 15–16 (`7b454b0`, `0ce4f20`). The four
+  unselected findings remain open; Milestone 17's independent review is for
+  the parent session.
   Move this plan to Completed when its
   implementation PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one

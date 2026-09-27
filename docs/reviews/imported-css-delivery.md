@@ -224,8 +224,9 @@ checked the Milestone 10 fixes, the Milestone 11 fixes, and the documentation
 and length gate. They confirmed that fixes 2, 5, 6, 7, 12, 13, 15, 16, 18 and
 20 are correct. The parent session checked, with its own fixture, derived
 export Changes and CSS Module `image-set()`. The 16 findings below were each
-reproduced in a scratch copy. Finding 1 was authorized and fixed in Milestone 13. Milestone 15 resolved findings 2 and 3 in `7b454b0`; the remaining
-findings are open unless separately marked resolved below.
+reproduced in a scratch copy. Finding 1 was fixed in Milestone 13. Milestone
+15 resolved findings 2 and 3 in `7b454b0`; Milestone 16 resolved findings 5
+and 8–16 in `0ce4f20`. Findings 4, 6 and 7 remain open by user direction.
 
 1. **High — CSS Modules drop `@import` rules and reject `url()` in custom
    properties.** The finding 4 fix enabled Lightning CSS
@@ -268,6 +269,10 @@ findings are open unless separately marked resolved below.
 5. **Low — Milestone 11 adds about 220 ms per graph load.** Root validation
    and `isPackageCode` resolve real paths for every edge. Recommended: resolve
    only on failure, use one path mapper per metafile, and add a timed test.
+
+   Resolved in `0ce4f20`: metafile paths share one mapper per graph, edge
+   provenance is built only on failure, and large inventory is budget-tested.
+
 6. **Low — the finding 8 scanner still disagrees with esbuild on malformed
    end-of-file imports.** Recommended: assert that the renderer's CSS closure
    equals esbuild's inputs, and fail with a "malformed @import" message
@@ -278,34 +283,70 @@ findings are open unless separately marked resolved below.
 8. **Low — a missing dependency directory is still reported before
    generated-output and public-file errors.** Recommended: defer it to the
    regular-file pass, and test all four diagnostics together.
+
+   Resolved in `0ce4f20`: missing-directory reports follow generated,
+   public and missing exact-file checks in the combined regression.
+
 9. **Low — virtual `mokly:styles:N` names still appear in other CSS-pass
    diagnostics.** Recommended: map virtual importers to their root in every
    diagnostic, and test that none contains the name.
+
+   Resolved in `0ce4f20`: CSS-pass errors name delivery roots and display
+   synthetic absolute imports relatively, without virtual names.
+
 10. **Low — the finding 9 pull request note describes the wrong change.**
     Compared with main, the breaking change is that quoted local `image-set()`
     sources in authored public CSS now fail Build. Public CSS `//` URLs are now
     accepted. Recommended: correct the note and prepare the pull request text
     or a `BREAKING CHANGE` footer.
+
+    Resolved in `0ce4f20`: the plan note is corrected, the commit has a
+    breaking-change footer, and the ignored PR draft is at
+    `.context/pr/imported-css-delivery.md`.
+
 11. **Low — the length gate fails when `cargo xtask` runs from a
     subdirectory.** Recommended: run every xtask subprocess from the workspace
     root, use one shared command builder, and add parse and dispatch tests.
+
+    Resolved in `0ce4f20`: xtask subprocesses use the workspace root; parser
+    and unimock dispatch tests cover the length command.
+
 12. **Low — the gate covers less than the documentation says.** It misses
     `packages/viewer/tests`, `packages/viewer/scripts`, `examples` and
     `.mts`/`.cts`. Recommended: cover all TypeScript and JavaScript files
     repository-wide, and document any exclusions.
+
+    Resolved in `0ce4f20`: all repository TS/JS extensions and protocol
+    Markdown are covered; only Git-ignored untracked files are excluded.
+
 13. **Low — the gate's test never covers committed branch changes, which is
     the path CI uses.** Recommended: add committed, staged-only, exact-limit
     and `--all` exit-code cases, plus one per directory and extension.
+
+    Resolved in `0ce4f20`: committed, staged, exact-limit, subdirectory and
+    `--all` cases pin branch-diff and extension coverage.
+
 14. **Low — the protocol split broke one inbound link, and the stale-text
     tests miss continuation pages.** Recommended: fix the link, add a
     repository-wide link and anchor check, and group the stale-text tests by
     page family.
+
+    Resolved in `0ce4f20`: links and anchors across docs/READMEs are checked,
+    broken links are repaired, and stale-text checks include split families.
+
 15. **Low — documentation drift.** The CI table omits the length audit, two
     documents say five packed consumers instead of six, `npm-release.md` says
     xtask only delegates to npm scripts and has an ambiguous "its", the
     Lightning CSS scope omits transformer inventory, and the Config guide says
     Mokly copies assets in authored public CSS. Recommended: fix each, and
     avoid hard-coded counts.
+
+    Resolved in `0ce4f20`: CI, package smoke, Lightning scope and authored
+    public CSS wording now reflect shipped behavior without brittle counts.
+
 16. **Low — plan bookkeeping.** Milestone 9 is not marked complete, and a
     Milestone 11 TODO points at commit references that live in this record.
     Recommended: mark Milestone 9 complete and reword the TODO.
+
+    Resolved in `0ce4f20`: Milestone 9 is complete and Milestones 11–12
+    point to this review record for exact resolution references.
