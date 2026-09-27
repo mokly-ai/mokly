@@ -78,7 +78,12 @@ test("projection exposes real usage and attribution without private evidence", a
       entries: [...fixture.after.manifest.entries].reverse(),
     }),
   });
-  assert.equal(serializeCatalogue(reordered), json);
+  assert.deepEqual(
+    reordered.components
+      .filter((entry) => "variantOf" in entry)
+      .map((entry) => entry.id),
+    ["action-disabled", "action-default", "pane-default"],
+  );
   assert.equal(model.comparisonUrl, null);
   assert.equal(
     projectCatalogue({
@@ -174,14 +179,14 @@ test("projection exposes screen variants beneath their parent entry", async (t) 
   );
 });
 
-test("public v2 fixture conforms and compatible readers ignore additive fields", async () => {
+test("public v3 fixture conforms and compatible readers ignore additive fields", async () => {
   const json = await fs.readFile(
-    "docs/protocol/fixtures/catalogue-v2.json",
+    "docs/protocol/fixtures/catalogue-v3.json",
     "utf8",
   );
   const fixture = JSON.parse(json);
   const model = readCatalogue(fixture);
-  assert.equal(model.schemaVersion, 2);
+  assert.equal(model.schemaVersion, 3);
   assert.deepEqual(
     model.removedEntries.map(({ entry, preview }) => [entry.kind, preview]),
     [
@@ -200,6 +205,7 @@ test("public v2 fixture conforms and compatible readers ignore additive fields",
   fixture.screens[0].future = true;
   fixture.screens[0].views[0].usage.future = true;
   assert.deepEqual(readCatalogue(fixture), model);
+  assert.throws(() => readCatalogue({ ...fixture, schemaVersion: 2 }));
   assert.throws(() => readCatalogue({ ...fixture, schemaVersion: 1 }));
   assert.throws(() =>
     readCatalogue({ schemaVersion: 5, generatedBy: "mokly", entries: [] }),
@@ -208,7 +214,7 @@ test("public v2 fixture conforms and compatible readers ignore additive fields",
 
 test("reader rejects unsafe paths, private extensions and broken known references", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v2.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
   );
   const mutations = [
     (value: typeof fixture) => {

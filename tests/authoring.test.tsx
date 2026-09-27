@@ -139,8 +139,8 @@ test("definitions derive documents for every entry kind", () => {
     relatedDocs: [],
     render: () => "Action",
     title: "Action",
-    variants: [{ id: "default", props: {}, title: "Default" }],
-  }).entry;
+    variants: [{ id: "action-default", props: {}, title: "Default" }],
+  }).entries[0];
 
   assert.equal(screenDefinition.route, "screens/tagged-screen.html");
   assert.equal(pageDefinition.route, "pages/account-guide.html");

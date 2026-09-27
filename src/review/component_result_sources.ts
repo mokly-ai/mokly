@@ -1,5 +1,7 @@
 import {
+  flattenComponentVariantEntries,
   generatedViews,
+  isManifestComponentVariant,
   requireEqual,
   reviewInvalid,
   parseReviewResult,
@@ -7,6 +9,7 @@ import {
 import type { Manifest, ReviewResultV3, ViewReview } from "@mokly/viewer/data";
 
 import { affectedConsumers } from "./component_affected.js";
+import { componentReviewManifest } from "./component_manifests.js";
 import {
   address,
   entryPairKey,
@@ -31,13 +34,18 @@ export function validateComponentReviewSources(
   sources: DependencyReasonSources,
 ): void {
   parseReviewResult(result);
+  const beforeVariants = componentVariantMap(before);
+  const afterVariants = componentVariantMap(after);
+  before = componentReviewManifest(before);
+  after = componentReviewManifest(after);
   const pairs = entryPairs(before, after);
   const expectedScreens = pairs.filter(
     (pair) => (pair.after ?? pair.before)!.kind === "screen",
   );
-  const expectedComponents = pairs.filter(
-    (pair) => (pair.after ?? pair.before)!.kind === "component",
-  );
+  const expectedComponents = pairs.filter((pair) => {
+    const entry = (pair.after ?? pair.before)!;
+    return entry.kind === "component" && !isManifestComponentVariant(entry);
+  });
   if (
     expectedScreens.length !== result.screens.length ||
     expectedComponents.length !== result.components.length
@@ -52,7 +60,7 @@ export function validateComponentReviewSources(
     const record =
       entry.kind === "screen"
         ? result.screens.find((screen) => screen.route === entry.route)
-        : entry.kind === "component"
+        : entry.kind === "component" && !isManifestComponentVariant(entry)
           ? result.components.find((component) => component.id === entry.id)
           : undefined;
     if (entry.kind !== "use-case" && !record)
@@ -103,9 +111,17 @@ export function validateComponentReviewSources(
     if ("views" in record) validateViews(record.views, baseViews, headViews);
     else {
       const baseVariants =
-        pair.before?.kind === "component" ? pair.before.variants : [];
+        pair.before?.kind === "component" &&
+        !isManifestComponentVariant(pair.before) &&
+        "variants" in pair.before
+          ? pair.before.variants
+          : [];
       const headVariants =
-        pair.after?.kind === "component" ? pair.after.variants : [];
+        pair.after?.kind === "component" &&
+        !isManifestComponentVariant(pair.after) &&
+        "variants" in pair.after
+          ? pair.after.variants
+          : [];
       const ids = [
         ...new Set([
           ...headVariants.map((variant) => variant.id),
@@ -135,12 +151,59 @@ export function validateComponentReviewSources(
           baseViews.filter((view) => view.variantId === variant.id),
           headViews.filter((view) => view.variantId === variant.id),
         );
+        const beforeEntry = beforeVariants.get(variant.id);
+        const afterEntry = afterVariants.get(variant.id);
+        const variantChange = result.changes.find(
+          (candidate) =>
+            candidate.kind === "component" &&
+            (candidate.after ?? candidate.before)?.id === variant.id,
+        );
+        if (variantChange) {
+          requireEqual(
+            {
+              before: variantChange.before,
+              after: variantChange.after,
+            },
+            {
+              before: beforeEntry ? address(beforeEntry) : undefined,
+              after: afterEntry ? address(afterEntry) : undefined,
+            },
+          );
+          const selectedEntry = afterEntry ?? beforeEntry!;
+          for (const reason of variantChange.reasons) {
+            if (
+              reason.kind === "dependency" &&
+              !sources.pathsByEntry
+                .get(entryPairKey(selectedEntry))
+                ?.has(reason.path)
+            )
+              reviewInvalid("dependency reason has no source evidence");
+            if (
+              reason.kind === "metadata" &&
+              (!beforeEntry ||
+                !afterEntry ||
+                (metadata(beforeEntry) === metadata(afterEntry) &&
+                  pair.before?.title === pair.after?.title))
+            )
+              reviewInvalid("variant metadata reason has no source difference");
+          }
+        }
       }
     }
   }
   requireEqual(
     result.affectedConsumers,
     affectedConsumers(before, after, implementationImpact),
+  );
+}
+
+function componentVariantMap(manifest: Manifest) {
+  return new Map(
+    flattenComponentVariantEntries(manifest.entries).flatMap((entry) =>
+      entry.kind === "component" && isManifestComponentVariant(entry)
+        ? [[entry.id, entry] as const]
+        : [],
+    ),
   );
 }
 function validateViews(

@@ -63,8 +63,8 @@ test("component style ownership rebases through generated headers while preservi
 
 test("slot forwarding preserves its original caller and scope through an intermediate component", async (t) => {
   const source = componentEntrySource({
-    extra: `const forward = defineComponent({ ...metadata, id: "forward", title: "Forward", description: "Forwarded content", route: "components/forward.html", propSchema: { kind: "object", properties: {} }, slots: ["children"], render: (props) => <pane.Component>{props.children}</pane.Component>, variants: [{ id: "default", title: "Default", props: { children: <strong>Saved</strong> } }] });`,
-    exports: "action.entry, pane.entry, forward.entry,",
+    extra: `const forward = defineComponent({ ...metadata, id: "forward", title: "Forward", description: "Forwarded content", route: "components/forward.html", propSchema: { kind: "object", properties: {} }, slots: ["children"], render: (props) => <pane.Component>{props.children}</pane.Component>, variants: [{ id: "forward-default", title: "Default", props: { children: <strong>Saved</strong> } }] });`,
+    exports: "action.entries, pane.entries, forward.entries,",
     body: '<forward.Component><action.Component label="Screen slot" /></forward.Component>',
   });
   const fixture = await createFixture(source);
@@ -130,10 +130,12 @@ test("renderer mutations cannot change captured props or the next saved render",
   const second = await compileCatalogue(config);
   assert.deepEqual(first, second);
   const action = first.manifest.entries.find(
-    (entry) => entry.kind === "component" && entry.id === "action",
+    (entry) => entry.kind === "component" && entry.id === "action-default",
   )!;
-  assert.ok(action.kind === "component");
-  assert.deepEqual(decodeProps(action.variants[0]!.props), {
+  assert.ok(action.kind === "component" && "variantOf" in action);
+  if (action.kind !== "component" || !("variantOf" in action))
+    throw new Error("Missing action variant");
+  assert.deepEqual(decodeProps(action.props), {
     label: "Continue",
   });
   const screen = first.manifest.entries.find(

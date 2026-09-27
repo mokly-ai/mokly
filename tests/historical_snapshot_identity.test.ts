@@ -117,7 +117,7 @@ test("reader rejects malformed and duplicate published identities", () => {
 
 test("exact selection resolves every routed kind independently of stable id", () => {
   const fixture = readCatalogue(
-    JSON.parse(requireFixture("../docs/protocol/fixtures/catalogue-v2.json")),
+    JSON.parse(requireFixture("../docs/protocol/fixtures/catalogue-v3.json")),
   );
   const current = [
     fixture.screens[0]!,

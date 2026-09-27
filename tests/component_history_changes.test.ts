@@ -112,7 +112,7 @@ test("removed components retain variants, missing sides, and baseline consuming 
 test("variant removal retains authored current order followed by explicit removed variants", async (t) => {
   const fixture = await componentReviewFixture(t, (source) =>
     source.replace(
-      ', { id: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+      ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
       "",
     ),
   );
@@ -127,11 +127,15 @@ test("variant removal retains authored current order followed by explicit remove
   const action = result.components.find((entry) => entry.id === "action")!;
   assert.deepEqual(
     action.variants.map((variant) => variant.id),
-    ["default", "disabled"],
+    ["action-default", "action-disabled"],
   );
   assert.equal(action.variants[1]!.state, "removed");
   assert.equal(action.after?.id, "action");
   assert.equal(result.changes.length, 1);
+  assert.equal(
+    (result.changes[0]!.after ?? result.changes[0]!.before)?.id,
+    "action-disabled",
+  );
 });
 
 test("removed consumers retain their previous usage when a component changes", async (t) => {

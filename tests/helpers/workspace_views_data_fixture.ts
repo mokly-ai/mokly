@@ -2,17 +2,17 @@ import type {
   ManifestComponent,
   ManifestComponentVariant,
 } from "../../packages/viewer/dist/components/manifest_types.js";
-import type {
-  ManifestV5,
-  ManifestV7,
-} from "../../packages/viewer/dist/registry/types.js";
+import type { ManifestV7 } from "../../packages/viewer/dist/registry/types.js";
 import type { ReviewResultV3 } from "../../packages/viewer/dist/review/component_types.js";
 import type { ViewReview } from "../../packages/viewer/dist/review/types.js";
 
 function variant(id: string, title: string): ManifestComponentVariant {
-  const stem = `components/badge.variants/${id}`;
+  const stem = `components/${id}`;
   return {
     componentViews: [],
+    declaredDependencies: [],
+    dependencies: [],
+    description: `${title} badge`,
     darkFragments: {
       desktop: `${stem}.desktop.dark.html`,
       mobile: `${stem}.mobile.dark.html`,
@@ -22,15 +22,22 @@ function variant(id: string, title: string): ManifestComponentVariant {
       mobile: `${stem}.mobile.html`,
     },
     id,
+    kind: "component",
+    navPath: [],
     props: {},
+    relatedDocs: [],
+    route: `${stem}.html`,
+    sourcePath: "entries/badge.mockup.tsx",
     suppliedSlots: [],
     title,
+    variantOf: "badge",
+    viewports: ["mobile", "desktop"],
   };
 }
 
-export const DEFAULT_VARIANT = variant("default", "Default");
-export const SECOND_VARIANT = variant("second", "Second");
-export const REMOVED_VARIANT = variant("removed", "Removed");
+export const DEFAULT_VARIANT = variant("badge-default", "Default");
+export const SECOND_VARIANT = variant("badge-second", "Second");
+export const REMOVED_VARIANT = variant("badge-removed", "Removed");
 
 export const component: ManifestComponent = {
   controls: {},
@@ -47,26 +54,19 @@ export const component: ManifestComponent = {
   slots: [],
   sourcePath: "entries/badge.mockup.tsx",
   title: "Badge",
-  variants: [DEFAULT_VARIANT, SECOND_VARIANT],
   viewports: ["mobile", "desktop"],
 };
 
 export const componentManifest: ManifestV7 = {
-  entries: [component],
+  entries: [component, DEFAULT_VARIANT, SECOND_VARIANT],
   generatedBy: "mokly",
   schemaVersion: 7,
   sourceFiles: [component.sourcePath],
 };
 
-export const componentBaseline: ManifestV5 = {
+export const componentBaseline: ManifestV7 = {
   ...componentManifest,
-  schemaVersion: 5,
-  entries: [
-    {
-      ...component,
-      variants: [DEFAULT_VARIANT, SECOND_VARIANT, REMOVED_VARIANT],
-    },
-  ],
+  entries: [component, DEFAULT_VARIANT, SECOND_VARIANT, REMOVED_VARIANT],
 };
 
 export const screen = {

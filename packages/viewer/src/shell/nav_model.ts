@@ -1,5 +1,6 @@
 /** Pure navigation-tree state used by SSR and the hydrated shell. */
 
+import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -13,21 +14,25 @@ import { queryConstrains, rowMatchesQuery } from "./search_query.js";
 export function catalogueNavSections(
   catalogue: Catalogue,
 ): readonly NavSectionNode[] {
-  const removed: NavLeafNode[] = catalogue.removedEntries.map(
+  const removed: NavLeafNode[] = catalogue.removedEntries.flatMap(
     ({ entry, snapshotId }) => {
+      if (entry.kind === "component" && isManifestComponentVariant(entry))
+        return [];
       const variantOf = entry.kind === "screen" ? entry.variantOf : undefined;
-      return {
-        kind: "leaf",
-        key: `removed:${entry.route}`,
-        entryId: entry.id,
-        entryKind: entry.kind,
-        label: `${entry.title} · Removed`,
-        route: entry.route,
-        tags: entry.tags ?? [],
-        removedPage: entry.kind === "page",
-        ...(snapshotId ? { snapshotId } : {}),
-        ...(variantOf === undefined ? {} : { variantOf }),
-      };
+      return [
+        {
+          kind: "leaf",
+          key: `removed:${entry.route}`,
+          entryId: entry.id,
+          entryKind: entry.kind,
+          label: `${entry.title} · Removed`,
+          route: entry.route,
+          tags: entry.tags ?? [],
+          removedPage: entry.kind === "page",
+          ...(snapshotId ? { snapshotId } : {}),
+          ...(variantOf === undefined ? {} : { variantOf }),
+        },
+      ];
     },
   );
   return buildNavSections(catalogue.hierarchy, removed);

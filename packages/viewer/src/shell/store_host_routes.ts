@@ -8,6 +8,7 @@ import type {
 } from "react";
 
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
+import { catalogueComponentVariants } from "../catalogue/entry_selection.js";
 import type { FrameNavigation } from "../client/frame_adapter.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
@@ -94,7 +95,11 @@ export function announceNavigation(
   if (!entry) return;
   const variantId =
     selection.variantId ??
-    (entry.kind === "component" ? entry.variants[0]?.id : undefined);
+    (entry.kind === "component"
+      ? "variantOf" in entry
+        ? entry.id
+        : catalogueComponentVariants(environment.model, entry.id)[0]?.id
+      : undefined);
   environment.events().onScreenNavigate?.({
     screenId: entry.id,
     route: entry.route,

@@ -114,39 +114,43 @@ export const catalogueNavigation = defineComponent({
     <CatalogueNavigationView {...props} viewport={context.viewport} />
   ),
   variants: [
-    { id: "all", title: "All entries", props: sample },
     {
-      id: "changes",
+      id: "design-ui-catalogue-navigation-all",
+      title: "All entries",
+      props: sample,
+    },
+    {
+      id: "design-ui-catalogue-navigation-changes",
       title: "Changes",
       props: { ...sample, changedOnly: true, rows: NAV_TREE.slice(0, 3) },
     },
     {
-      id: "empty",
+      id: "design-ui-catalogue-navigation-empty",
       title: "Empty",
       props: { ...sample, rows: [], changedCount: 0, changedOnly: true },
     },
     {
-      id: "drawer",
+      id: "design-ui-catalogue-navigation-drawer",
       title: "Drawer",
       props: { ...sample, presentation: "drawer" },
     },
     {
-      id: "loading",
+      id: "design-ui-catalogue-navigation-loading",
       title: "Checking for changes",
       props: { ...sample, changedOnly: true, changesStatus: "pending" },
     },
     {
-      id: "preparing",
+      id: "design-ui-catalogue-navigation-preparing",
       title: "Preparing comparison",
       props: { ...sample, changedOnly: true, changesStatus: "preparing" },
     },
     {
-      id: "unavailable",
+      id: "design-ui-catalogue-navigation-unavailable",
       title: "Changes unavailable",
       props: { ...sample, changedOnly: true, changesStatus: "unavailable" },
     },
     {
-      id: "variants",
+      id: "design-ui-catalogue-navigation-variants",
       title: "Screen variants",
       props: {
         ...sample,
@@ -155,7 +159,7 @@ export const catalogueNavigation = defineComponent({
       },
     },
     {
-      id: "changed-variants",
+      id: "design-ui-catalogue-navigation-changed-variants",
       title: "Changed variant",
       props: {
         activeLabel: "Save failed",

@@ -1,7 +1,11 @@
 import path from "node:path";
 
 import type { Viewport, ComponentViewRecord } from "@mokly/viewer";
-import { generatedViews, encodeUrlPath } from "@mokly/viewer/data";
+import {
+  generatedViews,
+  encodeUrlPath,
+  isManifestComponentVariant,
+} from "@mokly/viewer/data";
 import type { LogicalTarget } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 
@@ -49,11 +53,15 @@ export function expectedPortableHref(
 ): string {
   const entry = catalogue.byId.get(destination.id);
   const screen =
-    entry?.kind === "screen" || entry?.kind === "component"
+    entry?.kind === "screen"
       ? entry
-      : entry?.kind === "use-case" && entry.steps[0]
-        ? catalogue.byId.get(entry.steps[0].screenId)
-        : undefined;
+      : entry?.kind === "component"
+        ? isManifestComponentVariant(entry)
+          ? entry
+          : catalogue.hierarchy.variantsById.get(entry.id)?.[0]
+        : entry?.kind === "use-case" && entry.steps[0]
+          ? catalogue.byId.get(entry.steps[0].screenId)
+          : undefined;
   if (
     entry?.kind !== "page" &&
     screen?.kind !== "screen" &&
@@ -65,12 +73,7 @@ export function expectedPortableHref(
     );
   }
   const views = screen
-    ? generatedViews(screen).filter(
-        (view) =>
-          view.viewport === source.viewport &&
-          (screen.kind !== "component" ||
-            view.variantId === screen.variants[0]!.id),
-      )
+    ? generatedViews(screen).filter((view) => view.viewport === source.viewport)
     : [];
   const targetRoute =
     entry?.kind === "page"

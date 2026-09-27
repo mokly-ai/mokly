@@ -67,12 +67,12 @@ test.beforeEach(async () => {
 test("a static direct URL restores its variant and fragment after refresh", async ({
   page,
 }) => {
-  const url = `${server.url}/view/components/action.html?variant=disabled&fragment=${fragment}`;
+  const url = `${server.url}/view/components/action.html?variant=action-disabled&fragment=${fragment}`;
   await page.goto(url);
-  await expectStaticComponentQuery(page, "disabled");
+  await expectStaticComponentQuery(page, "action-disabled");
 
   await page.reload();
-  await expectStaticComponentQuery(page, "disabled");
+  await expectStaticComponentQuery(page, "action-disabled");
 });
 
 test("a static alias retains its initial fragment through normalization and refresh", async ({
@@ -82,10 +82,10 @@ test("a static alias retains its initial fragment through normalization and refr
   await expect(page).toHaveURL(
     `${server.url}/view/components/action.html?fragment=${fragment}`,
   );
-  await expectStaticComponentQuery(page, "default");
+  await expectStaticComponentQuery(page, "action-default");
 
   await page.reload();
-  await expectStaticComponentQuery(page, "default");
+  await expectStaticComponentQuery(page, "action-default");
 });
 
 for (const failure of ["missing", "different deployment"] as const)
@@ -267,9 +267,7 @@ async function expectStaticComponentQuery(
   for (const viewport of ["mobile", "desktop"])
     await expectFrameSource(
       page.locator(`iframe[data-workspace-frame="${viewport}"]`),
-      new RegExp(
-        `action\\.variants/${variant}\\.${viewport}\\.html#${fragment}$`,
-      ),
+      new RegExp(`${variant}\\.${viewport}\\.html#${fragment}$`),
     );
 }
 

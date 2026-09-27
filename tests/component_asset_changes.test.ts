@@ -110,8 +110,9 @@ for (const ownership of ["dependency", "renderer", "unowned"] as const)
     const expected =
       ownership === "unowned"
         ? [
-            "components/action.html",
-            "components/pane.html",
+            "components/action-default.html",
+            "components/action-disabled.html",
+            "components/pane-default.html",
             "screens/home.html",
           ]
         : ["components/action.html"];

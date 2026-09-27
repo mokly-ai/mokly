@@ -57,10 +57,10 @@ test("readers validate known fields while additive schema, control and usage fie
       value.screens[0].views[0].usage.ranges[0].parentId = "r-999";
     },
     (value: typeof additive) => {
-      value.components[0].variants[0].props.label = ["boolean", true];
+      value.components[1].props.label = ["boolean", true];
     },
     (value: typeof additive) => {
-      value.components[0].variants[0].comparison = {
+      value.components[1].comparison = {
         status: "ready",
         kind: "added",
         eligible: true,
@@ -83,8 +83,8 @@ test("readers validate known fields while additive schema, control and usage fie
     const views =
       entry.kind === "screen"
         ? (entry.componentViews ?? [])
-        : entry.kind === "component"
-          ? entry.variants.flatMap((variant) => variant.componentViews)
+        : entry.kind === "component" && "variantOf" in entry
+          ? entry.componentViews
           : [];
     for (const view of views) {
       view.instances = [...view.instances].reverse();
@@ -118,12 +118,12 @@ test("readers validate known fields while additive schema, control and usage fie
 
 test("public fixture rejects incomplete view axes and private nested extension paths", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v2.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
   );
   fixture.screens[0].views.pop();
   assert.throws(() => readCatalogue(fixture));
   const extended = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v2.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
   );
   extended.extension = { absolutePath: "/private/file.tsx" };
   assert.throws(() => readCatalogue(extended));
@@ -131,7 +131,7 @@ test("public fixture rejects incomplete view axes and private nested extension p
 
 test("reader retains variant relationships and entry-node children", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v2.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
   );
   const parent = fixture.screens.find(
     ({ id }: { id: string }) => id === "home",
@@ -155,7 +155,7 @@ test("reader retains variant relationships and entry-node children", async () =>
 
 test("reader accepts empty sections but rejects empty folders", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v2.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
   );
   fixture.components = [];
   fixture.tree.components = [];

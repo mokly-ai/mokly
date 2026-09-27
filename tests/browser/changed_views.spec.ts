@@ -278,7 +278,7 @@ test("component view evidence follows the selected saved variant", async ({
 
     await page
       .getByLabel("Saved variant", { exact: true })
-      .selectOption("disabled");
+      .selectOption("action-disabled");
 
     await expect(page.locator(SCHEME_DOT)).toBeVisible();
     await expect(row).toBeVisible();

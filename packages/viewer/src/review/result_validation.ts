@@ -107,11 +107,26 @@ function validateResult(value: unknown): ReviewResult {
         change.kind === "screen"
           ? screens.find((screen) => screen.route === preferred.route)
           : components.find((component) => component.id === preferred.id);
-      if (!record) reviewInvalid("changed entry has no result record");
-      requireEqual(
-        { before: record.before, after: record.after },
-        { before: change.before, after: change.after },
-      );
+      const variant =
+        change.kind === "component" && !record
+          ? components
+              .flatMap(
+                (component) => component.variants as Record<string, unknown>[],
+              )
+              .find((candidate) => candidate.id === preferred.id)
+          : undefined;
+      if (!record && !variant)
+        reviewInvalid("changed entry has no result record");
+      if (record)
+        requireEqual(
+          { before: record.before, after: record.after },
+          { before: change.before, after: change.after },
+        );
+      if (
+        variant &&
+        (variant.title !== preferred.title || variant.id !== preferred.id)
+      )
+        reviewInvalid("changed variant address differs from its result");
     }
     const affected = reviewArray(result.affectedConsumers).map(
       validateAffected,

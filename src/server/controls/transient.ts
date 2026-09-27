@@ -6,6 +6,7 @@ import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { DocumentCompiler } from "../../build/document_compiler.js";
 import type { LoadedGraph } from "../../build/load_graph.js";
 import { validateRenderRequest } from "../../components/render_request.js";
+import { isComponentVariantDefinition } from "../../components/types.js";
 
 import {
   captureRenderBundle,
@@ -30,28 +31,28 @@ export function renderTransient(
     compilers.set(runtime, compiler);
   }
   const entry = compiler.entries.find(
-    (entry) => entry.id === request.componentId,
+    (entry) =>
+      entry.id === request.componentId &&
+      entry.kind === "component" &&
+      !isComponentVariantDefinition(entry),
   );
   if (entry?.kind !== "component") throw new Error("Missing component record");
-  const saved = entry.variants.find(
-    (variant) => variant.id === request.variantId,
-  )!;
-  const componentProps = {
-    ...props,
-    ...Object.fromEntries(
-      entry.slots
-        .filter((key) => Object.hasOwn(saved.props, key))
-        .map((key) => [key, saved.props[key]]),
-    ),
-  };
+  const saved = compiler.entries.find(
+    (candidate) =>
+      candidate.kind === "component" &&
+      isComponentVariantDefinition(candidate) &&
+      candidate.id === request.variantId &&
+      candidate.variantOf === entry.id,
+  );
+  if (!saved) throw new Error("Missing component variant record");
   const route = [...compiler.routes].find(
     ([, target]) =>
-      target.entryId === entry.id &&
+      target.entryId === saved.id &&
       target.variantId === request.variantId &&
       target.viewport === request.viewport &&
       target.colorScheme === request.colorScheme,
   )![0];
-  const document = compiler.render(route, componentProps);
+  const document = compiler.render(route, props);
   return {
     route,
     props: encodeProps(props),

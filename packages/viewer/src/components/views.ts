@@ -4,8 +4,10 @@ import { VIEWPORTS } from "../registry/views.js";
 
 import type {
   ComponentViewRecord,
+  LegacyManifestComponentVariant,
   ManifestComponentVariant,
 } from "./manifest_types.js";
+import { isManifestComponentVariant } from "./manifest_types.js";
 
 export interface GeneratedComponentView {
   viewport: Viewport;
@@ -17,10 +19,13 @@ export interface GeneratedComponentView {
 
 /** Enumerate actual artifacts, preserving the distinction between absent and empty usage. */
 export function generatedViews(entry: ManifestEntry): GeneratedComponentView[] {
-  if (entry.kind === "component")
-    return entry.variants.flatMap((variant) =>
-      fragmentViews(variant, variant.id),
-    );
+  if (entry.kind === "component") {
+    if (isManifestComponentVariant(entry))
+      return fragmentViews(entry, entry.id);
+    return "variants" in entry
+      ? entry.variants.flatMap((variant) => fragmentViews(variant, variant.id))
+      : [];
+  }
   if (entry.kind === "screen") return fragmentViews(entry);
   return [];
 }
@@ -43,7 +48,8 @@ export function orderedInstances(usage?: ComponentViewRecord) {
 export function fragmentViews(
   fragments:
     | Pick<ManifestScreen, "fragments" | "darkFragments" | "componentViews">
-    | ManifestComponentVariant,
+    | ManifestComponentVariant
+    | LegacyManifestComponentVariant,
   variantId?: string,
 ): GeneratedComponentView[] {
   return VIEWPORTS.flatMap((viewport) => {

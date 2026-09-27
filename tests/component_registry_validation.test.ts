@@ -10,31 +10,26 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 for (const [name, extra, exports, diagnostic] of [
   [
     "forged variants",
-    "const forged = { ...action.entry, variants: {} };",
-    "forged, pane.entry,",
-    /saved variant/,
+    "const forged = { ...action.entries[0], variants: {} };",
+    "forged, pane.entries,",
+    /variant/,
   ],
-  [
-    "mutated variants",
-    "action.entry.variants = undefined;",
-    undefined,
-    /saved variant/,
-  ],
+  ["mutated variants", "action.entries.length = 1;", undefined, /variant/],
   [
     "mutated controls",
-    'action.entry.controls = { unknown: { kind: "text" } };',
+    'action.entries[0].controls = { unknown: { kind: "text" } };',
     undefined,
     /control/,
   ],
   [
     "mutated render",
-    "action.entry.render = null;",
+    "action.entries[0].render = null;",
     undefined,
     /render must be a function/,
   ],
   [
     "mutated props",
-    "action.entry.variants[0].props = { label: 42 };",
+    "action.entries[1].props = { label: 42 };",
     undefined,
     /label/,
   ],
@@ -55,3 +50,17 @@ for (const [name, extra, exports, diagnostic] of [
     );
   });
 }
+
+test("component variant ids use registry-wide duplicate-id diagnostics", async (t) => {
+  const fixture = await createFixture(
+    componentEntrySource().replace(
+      'id: "action-disabled"',
+      'id: "action-default"',
+    ),
+  );
+  t.after(() => removeFixture(fixture));
+  await assert.rejects(
+    compileCatalogue(await loadConfig(fixture.root)),
+    /\[duplicate-id\].*action-default/,
+  );
+});

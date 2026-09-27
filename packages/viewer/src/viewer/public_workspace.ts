@@ -1,7 +1,9 @@
 /** Workspace values derived only from the validated public catalogue. */
 import { resolveCatalogueRecord } from "../catalogue/entry_selection.js";
+import { catalogueComponentVariants } from "../catalogue/entry_selection.js";
 import type {
   CatalogueComponent,
+  CatalogueComponentVariant,
   CatalogueReadModel,
   CatalogueRoutedEntry,
   CatalogueScreen,
@@ -54,12 +56,13 @@ function publishedChangedViews(
 
 /** Key public comparison evidence exactly like the served workspace data. */
 function publishedChangedViewsBySelection(
-  entry: CatalogueComponent | CatalogueScreen,
+  entry: CatalogueScreen | CatalogueComponent | CatalogueComponentVariant,
+  variants: readonly CatalogueComponentVariant[] = [],
 ): ChangedViewsBySelection {
   if (entry.kind === "screen")
     return { [entry.id]: publishedChangedViews(entry.views) };
   return Object.fromEntries(
-    entry.variants.map((variant) => [
+    variants.map((variant) => [
       variant.id,
       publishedChangedViews(variant.views),
     ]),
@@ -86,14 +89,15 @@ function publishedViewStates(
 
 /** Key published ready states like the served workspace evidence. */
 function publishedViewStatesBySelection(
-  entry: CatalogueComponent | CatalogueScreen,
+  entry: CatalogueScreen | CatalogueComponent | CatalogueComponentVariant,
+  variants: readonly CatalogueComponentVariant[] = [],
 ): ViewStatesBySelection {
   if (entry.kind === "screen") {
     const states = publishedViewStates(entry.views);
     return states === undefined ? {} : { [entry.id]: states };
   }
   const evidence: Record<string, readonly ViewState[]> = {};
-  for (const variant of entry.variants) {
+  for (const variant of variants) {
     const states = publishedViewStates(variant.views);
     if (states !== undefined) evidence[variant.id] = states;
   }
@@ -133,12 +137,19 @@ export function publicWorkspace(
           });
   }
   const entryStatus = status(original);
+  const sourceVariants =
+    original.kind === "component" && !("variantOf" in original)
+      ? catalogueComponentVariants(model, original.id)
+      : [];
   const variants =
-    entry.kind === "component" && original.kind === "component"
-      ? entry.variants.map((value) => {
-          const source = original.variants.find(
-            (item) => item.id === value.id,
-          )!;
+    entry.kind === "component" &&
+    !("variantOf" in entry) &&
+    original.kind === "component" &&
+    !("variantOf" in original)
+      ? sourceVariants.map((source) => {
+          const value = displayEntry(source);
+          if (value.kind !== "component" || !("variantOf" in value))
+            throw new Error("The component variant is unavailable.");
           return {
             value,
             removed:
@@ -154,17 +165,35 @@ export function publicWorkspace(
           };
         })
       : [];
+  const workspaceStatus =
+    entryStatus === "Unmodified" &&
+    variants.some(
+      (variant) =>
+        variant.status === "Added" ||
+        variant.status === "Changed" ||
+        variant.status === "Removed",
+    )
+      ? "Changed"
+      : entryStatus;
   return {
     entry,
     components: [
       ...model.components,
       ...model.removedEntries.flatMap(({ entry }) =>
-        entry.kind === "component" ? [entry] : [],
+        entry.kind === "component" && !("variantOf" in entry) ? [entry] : [],
       ),
-    ].map(({ id, title, route }) => ({ id, title, route })),
-    views: generatedViews(entry),
-    changedViews: publishedChangedViewsBySelection(original),
-    viewStates: publishedViewStatesBySelection(original),
+    ]
+      .filter(
+        (component): component is CatalogueComponent =>
+          !("variantOf" in component),
+      )
+      .map(({ id, title, route }) => ({ id, title, route })),
+    views:
+      entry.kind === "component" && !("variantOf" in entry)
+        ? variants.flatMap(({ value }) => generatedViews(value))
+        : generatedViews(entry),
+    changedViews: publishedChangedViewsBySelection(original, sourceVariants),
+    viewStates: publishedViewStatesBySelection(original, sourceVariants),
     variants,
     usedBy,
     affected: [],
@@ -180,6 +209,6 @@ export function publicWorkspace(
     removed,
     relatedComponents: [],
     inputChanges: [],
-    ...(entryStatus ? { status: entryStatus } : {}),
+    ...(workspaceStatus ? { status: workspaceStatus } : {}),
   };
 }

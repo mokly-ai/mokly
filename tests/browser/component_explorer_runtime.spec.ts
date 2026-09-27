@@ -27,8 +27,8 @@ test.beforeAll(async () => {
           '<button className="revised" data-viewport=',
         )
         .replace(
-          '{ id: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }]',
-          '{ id: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }, { id: "new", title: "New", props: { label: "New" } }]',
+          '{ id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }]',
+          '{ id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }, { id: "action-new", title: "New", props: { label: "New" } }]',
         ),
   );
   const compared = await compareReview(
@@ -83,8 +83,8 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
   ).toHaveAttribute("data-viewport", "mobile");
   await page
     .getByLabel("Saved variant", { exact: true })
-    .selectOption("disabled");
-  await expect(page).toHaveURL(/variant=disabled/);
+    .selectOption("action-disabled");
+  await expect(page).toHaveURL(/variant=action-disabled/);
   await expect(mobile.getByRole("button", { name: "Continue" })).toBeDisabled();
   await page.getByRole("tab", { name: "Props", exact: true }).click();
   await expect(page.locator('[data-prop-control="disabled"]')).toBeChecked();
@@ -95,7 +95,7 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
   );
   await page.goBack();
   await expect(page.getByLabel("Saved variant", { exact: true })).toHaveValue(
-    "default",
+    "action-default",
   );
   await expect(mobile.getByRole("button", { name: "Continue" })).toBeEnabled();
   await page.goto(`${server.url}/view/components/action.html?variant=missing`);
@@ -104,7 +104,7 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
   ).toBeVisible();
   await page
     .getByLabel("Saved variant", { exact: true })
-    .selectOption("default");
+    .selectOption("action-default");
   await expect(mobile.getByRole("button", { name: "Continue" })).toBeVisible();
   expect(errors).toEqual([]);
 });
@@ -262,7 +262,7 @@ test("component comparisons follow changed variants while added variants stay cu
   ).toBeDisabled();
   await page
     .getByLabel("Saved variant", { exact: true })
-    .selectOption("disabled");
+    .selectOption("action-disabled");
   await expect(page.locator("[data-diff-stage] iframe").last()).toHaveAttribute(
     "src",
     /disabled\.mobile\.html$/,
@@ -273,7 +273,9 @@ test("component comparisons follow changed variants while added variants stay cu
       .frameLocator('[data-workspace-frame="mobile"]')
       .getByRole("button", { name: "Continue" }),
   ).toBeDisabled();
-  await page.getByLabel("Saved variant", { exact: true }).selectOption("new");
+  await page
+    .getByLabel("Saved variant", { exact: true })
+    .selectOption("action-new");
   await expect(page.locator("[data-workspace-variant-status]")).toHaveText(
     "New · Added",
   );

@@ -1,24 +1,24 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import {
+  componentParent,
+  componentVariants,
+} from "./helpers/component_views.js";
 import { designCatalogue } from "./helpers/design_catalogue.js";
 
 test("standalone variants emit only the exclusive child styles they actually render", async () => {
   const { manifest, outputs } = await designCatalogue;
-  const entry = manifest.entries.find(
-    (entry) => entry.id === "design-ui-top-bar",
-  );
-  assert.ok(entry?.kind === "component");
+  const entry = componentParent(manifest, "design-ui-top-bar");
+  const variants = componentVariants(manifest, entry.id);
   for (const viewport of ["mobile", "desktop"] as const) {
     const closed = outputs.get(
-      entry.variants.find((variant) => variant.id === "default")!.fragments[
-        viewport
-      ],
+      variants.find((variant) => variant.id === "design-ui-top-bar-default")!
+        .fragments[viewport],
     )!;
     const opened = outputs.get(
-      entry.variants.find((variant) => variant.id === "tag-picker")!.fragments[
-        viewport
-      ],
+      variants.find((variant) => variant.id === "design-ui-top-bar-tag-picker")!
+        .fragments[viewport],
     )!;
     assert.match(closed, /href="[^"]*design-library\/chrome\/top-bar\.css"/);
     assert.doesNotMatch(
@@ -31,11 +31,10 @@ test("standalone variants emit only the exclusive child styles they actually ren
     );
     assert.match(opened, /href="[^"]*design-library\/controls\/tag-chip\.css"/);
   }
-  const picker = manifest.entries.find(
-    (entry) => entry.id === "design-ui-tag-picker",
-  );
-  assert.ok(picker?.kind === "component");
-  const empty = picker.variants.find((variant) => variant.id === "empty")!;
+  const picker = componentParent(manifest, "design-ui-tag-picker");
+  const empty = componentVariants(manifest, picker.id).find(
+    (variant) => variant.id === "design-ui-tag-picker-empty",
+  )!;
   for (const route of Object.values(empty.fragments))
     assert.doesNotMatch(
       outputs.get(route)!,
@@ -46,7 +45,11 @@ test("standalone variants emit only the exclusive child styles they actually ren
 test("ownership includes implementation and CSS, while variants stay outside impact dependencies", async () => {
   const { manifest } = await designCatalogue;
   for (const entry of manifest.entries) {
-    if (entry.kind !== "component" || !entry.id.startsWith("design-ui-"))
+    if (
+      entry.kind !== "component" ||
+      "variantOf" in entry ||
+      !entry.id.startsWith("design-ui-")
+    )
       continue;
     const slug = entry.id.slice("design-ui-".length);
     assert.ok(

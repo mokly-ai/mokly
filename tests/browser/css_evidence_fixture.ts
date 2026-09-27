@@ -28,10 +28,10 @@ const badge = defineComponent({ ...metadata,
   id: "badge", title: "Badge", description: "A shared badge", route: "components/badge.html", navPath: ["Fixture"],
   propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } },
   render: (props) => <span className="badge">{props.label}</span>,
-  variants: [{ id: "default", title: "Default", props: { label: "New" } }]
+  variants: [{ id: "badge-default", title: "Default", props: { label: "New" } }]
 });
 export const mockups = [
-  ${components ? "badge.entry," : ""}
+  ${components ? "badge.entries," : ""}
   defineScreen({ ...metadata, navPath: ["Fixture"], id: "home", title: "Home", description: "Home screen", route: "screens/home.html",
     mobile: <main id="home"><button className="auth">${home}</button></main>,
     desktop: <main id="home"><button className="auth">${home}</button></main> }),

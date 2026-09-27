@@ -2,7 +2,7 @@
 
 Use `defineComponent` to give a shared React component its own catalogue page,
 variants, controls, and recorded usage in screens or other components.
-Callers render the returned `Component` and export its `entry` in `mockups`.
+Callers render the returned `Component` and export its `entries` in `mockups`.
 Mokly renders that wrapper in the consumer's existing React/provider graph.
 
 ```tsx
@@ -28,7 +28,7 @@ export const mockups = [...action.entries];
 ```
 
 A registration may live in any repository module, typically beside the
-component it adapts, and the entry module that exports its `entry` may be
+component it adapts, and the entry module that exports its `entries` may be
 discovered through any configured `entries` glob. The registration file is
 recorded as the component's source. The glob itself defines the entry shape;
 `.mockup.ts` and `.mockup.tsx` are the recommended convention selected by the

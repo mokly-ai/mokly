@@ -1,12 +1,15 @@
 import type { ColorScheme, Viewport } from "@mokly/viewer";
 import {
-  componentFragmentRoute,
   entryRoute,
   effectiveColorSchemes,
   viewRoute,
 } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
+import {
+  isComponentVariantDefinition,
+  type ComponentVariantDefinition,
+} from "../components/types.js";
 
 /** Resolve a registry entry to the static artifact appropriate for a view. */
 export function artifactRouteForEntry(
@@ -18,17 +21,23 @@ export function artifactRouteForEntry(
 ): string | undefined {
   if (entry.kind === "page") return entryRoute("page", entry.id);
   if (entry.kind === "component") {
-    const scheme = effectiveColorSchemes(entry, catalogueSchemes).includes(
+    const variant = isComponentVariantDefinition(entry)
+      ? entry
+      : [...byId.values()].find(
+          (
+            candidate,
+          ): candidate is ResolvedRegistryEntry & ComponentVariantDefinition =>
+            candidate.kind === "component" &&
+            isComponentVariantDefinition(candidate) &&
+            candidate.variantOf === entry.id,
+        );
+    if (!variant) return undefined;
+    const scheme = effectiveColorSchemes(variant, catalogueSchemes).includes(
       colorScheme,
     )
       ? colorScheme
       : "light";
-    return componentFragmentRoute(
-      entryRoute("component", entry.id),
-      entry.variants[0]!.id,
-      viewport,
-      scheme,
-    );
+    return viewRoute("component", variant.id, viewport, scheme);
   }
   const screen =
     entry.kind === "screen"

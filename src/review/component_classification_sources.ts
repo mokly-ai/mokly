@@ -1,10 +1,9 @@
 import path from "node:path";
 
-import { canonicalJson, generatedViews } from "@mokly/viewer/data";
+import { generatedViews, isManifestComponentVariant } from "@mokly/viewer/data";
 import type {
   ChangedEntry,
   ComponentReview,
-  ComponentVariantReview,
   EntryChangeReason,
   ReviewResultV3,
   ScreenReviewV3,
@@ -20,6 +19,7 @@ import {
 } from "./component_change_propagation.js";
 import type { ComponentClassificationInput } from "./component_classification_input.js";
 import { ComponentComparisonCounts } from "./component_comparison_counts.js";
+import { componentReviewManifest } from "./component_manifests.js";
 import {
   address,
   ComponentDependencyPolicy,
@@ -28,7 +28,7 @@ import {
   metadata,
   uniqueReasons,
 } from "./component_metadata.js";
-import { variantAddress, viewPairs } from "./component_pairing.js";
+import { viewPairs } from "./component_pairing.js";
 import { ComponentReasonSources } from "./component_reason_sources.js";
 import {
   exactScreenCssReasons,
@@ -38,6 +38,10 @@ import {
 } from "./component_resource_attribution.js";
 import { ComponentMaterialReader } from "./component_resources.js";
 import type { DependencyReasonSources } from "./component_result_sources.js";
+import {
+  classifyComponentVariants,
+  componentVariantEntries,
+} from "./component_variant_classification.js";
 import {
   compareComponentView,
   type ComponentViewContext,
@@ -61,7 +65,11 @@ export interface ComponentClassificationWithSources {
 export async function classifyComponentsWithSources(
   input: ComponentClassificationInput,
 ): Promise<ComponentClassificationWithSources> {
-  const { before, after, changedPaths, config } = input;
+  const beforeVariantEntries = componentVariantEntries(input.before.entries);
+  const afterVariantEntries = componentVariantEntries(input.after.entries);
+  const before = componentReviewManifest(input.before);
+  const after = componentReviewManifest(input.after);
+  const { changedPaths, config } = input;
   const dependencies = new ComponentDependencyPolicy(
     before,
     after,
@@ -160,7 +168,9 @@ export async function classifyComponentsWithSources(
             context,
             view.before,
             view.after,
-            entry.kind === "component" ? entry.id : undefined,
+            entry.kind === "component" && !isManifestComponentVariant(entry)
+              ? entry.id
+              : undefined,
           ),
         ),
       );
@@ -170,15 +180,19 @@ export async function classifyComponentsWithSources(
         config,
       );
       const viewReasons = compared.flatMap((result) => result.reasons);
-      reasons.push(...viewReasons);
-      reasonSources.record(entry, viewReasons);
+      if (entry.kind !== "component") {
+        reasons.push(...viewReasons);
+        reasonSources.record(entry, viewReasons);
+      }
       const exactCssReasons = exactScreenCssReasons(
         pair.before,
         pair.after,
         compared.map((result) => result.view),
       );
-      reasons.push(...exactCssReasons);
-      reasonSources.record(entry, exactCssReasons);
+      if (entry.kind !== "component") {
+        reasons.push(...exactCssReasons);
+        reasonSources.record(entry, exactCssReasons);
+      }
       const unownedEvidence = dependencies
         .unownedEvidence(pair.before, pair.after, changedPaths)
         .filter((path) => !analysisOwnsStylesheet(path, config));
@@ -199,46 +213,30 @@ export async function classifyComponentsWithSources(
           state: aggregateState(compared.map((result) => result.view.state)),
           views: compared.map((result) => result.view),
         });
-      if (entry.kind === "component") {
-        const bases =
-          pair.before?.kind === "component" ? pair.before.variants : [];
-        const heads =
-          pair.after?.kind === "component" ? pair.after.variants : [];
-        const variants: ComponentVariantReview[] = [];
-        for (const id of [
-          ...new Set([
-            ...heads.map((variant) => variant.id),
-            ...bases.map((variant) => variant.id),
-          ]),
-        ]) {
-          const base = bases.find((variant) => variant.id === id);
-          const head = heads.find((variant) => variant.id === id);
-          const selected = (head ?? base)!;
-          const variantComparisons = compared.filter(
-            (_result, index) =>
-              (pairedViews[index]!.after ?? pairedViews[index]!.before)
-                ?.variantId === id,
-          );
-          const views = variantComparisons.map((result) => result.view);
-          variants.push({
-            id,
-            title: selected.title,
-            ...(base ? { before: variantAddress(base) } : {}),
-            ...(head ? { after: variantAddress(head) } : {}),
-            state: aggregateState(views.map((view) => view.state)),
-            views,
-          });
-          if (
-            base &&
-            head &&
-            canonicalJson(base.props) === canonicalJson(head.props) &&
-            variantComparisons.some(
-              (comparison) => comparison.reasons.length > 0,
-            ) &&
-            !reasons.some((reason) => reason.kind === "metadata")
-          )
-            impacting.add(entry.id);
-        }
+      if (entry.kind === "component" && !isManifestComponentVariant(entry)) {
+        const classifiedVariants = classifyComponentVariants({
+          ...(pair.before?.kind === "component" &&
+          !isManifestComponentVariant(pair.before)
+            ? { before: pair.before }
+            : {}),
+          ...(pair.after?.kind === "component" &&
+          !isManifestComponentVariant(pair.after)
+            ? { after: pair.after }
+            : {}),
+          entry,
+          compared,
+          pairedViews,
+          beforeEntries: beforeVariantEntries,
+          afterEntries: afterVariantEntries,
+          dependencies,
+          reasonSources,
+          changes,
+        });
+        const variants = classifiedVariants.reviews;
+        reasons.push(...classifiedVariants.parentReasons);
+        reasonSources.record(entry, classifiedVariants.parentReasons);
+        if (classifiedVariants.parentReasons.length > 0)
+          impacting.add(entry.id);
         if (
           reasons.some(
             (reason) =>

@@ -2,6 +2,7 @@ import { expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 import type { InstanceRef } from "@mokly/viewer";
+import { catalogueComponentVariants } from "@mokly/viewer/data";
 
 import type { markerFixture } from "./viewer_marker_fixture.js";
 
@@ -31,14 +32,17 @@ export function variantInstance(fixture: MarkerFixture): InstanceRef {
   const component = fixture.catalogue.components.find(
     ({ id }) => id === "pane",
   )!;
-  const variant = component.variants.find(({ id }) => id === "second")!;
+  const variant = catalogueComponentVariants(
+    fixture.catalogue,
+    component.id,
+  ).find(({ id }) => id === "pane-second")!;
   const view = variant.views.find(
     (view) => view.viewport === "mobile" && view.colorScheme === "light",
   )!;
   if (view.usage.status !== "ready") throw new Error("Expected ready usage");
   return {
     screenId: "pane",
-    variantId: "second",
+    variantId: "pane-second",
     viewport: "mobile",
     colorScheme: "light",
     key: view.usage.instances.find(

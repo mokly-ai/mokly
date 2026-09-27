@@ -135,7 +135,7 @@ function attributedApiContents(
     `export const definePage = (input) => attribute(api.definePage(input), source);`,
     `export const page = (input) => attribute(api.page(input), source);`,
     `import { defineComponent as registerComponent } from ${quote(runtimeModule("../components/definition.js", "../components/definition.ts"))};`,
-    `export const defineComponent = (input) => { const value = registerComponent(input); value.entry.definedIn = source; return value; };`,
+    `export const defineComponent = (input) => { const value = registerComponent(input); value.entries.forEach((entry) => { entry.definedIn = source; }); return value; };`,
     `export const defineScreen = (input) => attribute(api.defineScreen(input), source);`,
     `export const defineUseCase = (input) => attribute(api.defineUseCase(input), source);`,
     `export const screen = (input) => attribute(api.screen(input), source);`,

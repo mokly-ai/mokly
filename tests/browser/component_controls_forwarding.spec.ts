@@ -90,7 +90,7 @@ for (const hostname of ["127.0.0.1", "localhost"])
       ).toBeVisible();
       await page
         .getByLabel("Saved variant", { exact: true })
-        .selectOption("disabled");
+        .selectOption("action-disabled");
       await expect(page.getByLabel("label", { exact: true })).toHaveValue(
         "Continue",
       );

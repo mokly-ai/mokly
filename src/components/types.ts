@@ -55,6 +55,7 @@ export interface ComponentDefinition extends EntryInput {
   readonly __viaDefine: true;
   definedIn?: string;
   kind: "component";
+  navPath: readonly string[];
   route: string;
   propSchema: ObjectPropSchema;
   slots: readonly string[];
@@ -63,17 +64,41 @@ export interface ComponentDefinition extends EntryInput {
     props: Readonly<Record<string, unknown>>,
     context: ComponentRenderContext,
   ) => ReactNode;
-  variants: readonly ComponentVariant<Readonly<Record<string, unknown>>>[];
   colorSchemes?: readonly ColorScheme[];
   tags?: readonly string[];
   ownedDependencies: readonly string[];
+}
+
+/** One saved component state flattened into the catalogue beside its parent. */
+export interface ComponentVariantDefinition extends EntryInput {
+  readonly __viaDefine: true;
+  definedIn?: string;
+  kind: "component";
+  navPath: readonly string[];
+  route: string;
+  variantOf: string;
+  props: Readonly<Record<string, unknown>>;
+  suppliedSlots: readonly string[];
+  colorSchemes?: readonly ColorScheme[];
+  tags?: readonly string[];
+}
+
+/** A component parent or one of its flattened saved variants. */
+export type ComponentEntryDefinition =
+  ComponentDefinition | ComponentVariantDefinition;
+
+/** Narrow one runtime component entry to its flattened variant shape. */
+export function isComponentVariantDefinition(
+  entry: ComponentEntryDefinition,
+): entry is ComponentVariantDefinition {
+  return "variantOf" in entry && typeof entry.variantOf === "string";
 }
 
 export interface RegisteredComponent<
   S extends ObjectPropSchema,
   Slots extends readonly string[],
 > {
-  entry: ComponentDefinition;
+  entries: readonly [ComponentDefinition, ...ComponentVariantDefinition[]];
   Component: ComponentType<
     ComponentProps<S, Slots> & { moklyInstance?: string }
   >;

@@ -7,7 +7,8 @@ order: 3
 
 ## Register a component
 
-`defineComponent` returns the component to render and the entry to export.
+`defineComponent` returns the component to render and the parent-plus-variant
+entries to export.
 Data belongs in `propSchema`; React content belongs in declared `slots`.
 
 ```tsx
@@ -142,15 +143,15 @@ catalogue, inspect rendered markup or classify a visual change.
 
 ## Exported types
 
-| Type                                                            | Use                                     |
-| --------------------------------------------------------------- | --------------------------------------- |
-| `ComponentInput`, `ComponentDefinition`                         | What `defineComponent` takes and stores |
-| `RegisteredComponent`                                           | The returned `Component` and `entry`    |
-| `ComponentProps`, `ComponentRenderContext`                      | What `render` receives                  |
-| `ComponentVariant`                                              | One variant declaration                 |
-| `ComponentControl`, `ComponentControlLabel`, `ControlFor`       | The editable controls                   |
-| `ObjectPropSchema`, `DataPropSchema`, `DataPropField`           | The schema of a component's data        |
-| `InferProp`, `ComponentPropsData`, `PropValue`, `PropPrimitive` | The values a schema allows              |
-| `ComponentStyleOwnership`, `ComponentResourceOwnership`         | Exact ownership a renderer may report   |
-| `ComponentInstanceRecord`, `ComponentSourceLocation`            | Saved instance identity and source      |
-| `InstanceResolution`                                            | The result of `resolveInstance`         |
+| Type                                                                                              | Use                                     |
+| ------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| `ComponentInput`, `ComponentDefinition`, `ComponentVariantDefinition`, `ComponentEntryDefinition` | What `defineComponent` takes and stores |
+| `RegisteredComponent`                                                                             | The returned `Component` and `entries`  |
+| `ComponentProps`, `ComponentRenderContext`                                                        | What `render` receives                  |
+| `ComponentVariant`                                                                                | One variant declaration                 |
+| `ComponentControl`, `ComponentControlLabel`, `ControlFor`                                         | The editable controls                   |
+| `ObjectPropSchema`, `DataPropSchema`, `DataPropField`                                             | The schema of a component's data        |
+| `InferProp`, `ComponentPropsData`, `PropValue`, `PropPrimitive`                                   | The values a schema allows              |
+| `ComponentStyleOwnership`, `ComponentResourceOwnership`                                           | Exact ownership a renderer may report   |
+| `ComponentInstanceRecord`, `ComponentSourceLocation`                                              | Saved instance identity and source      |
+| `InstanceResolution`                                                                              | The result of `resolveInstance`         |

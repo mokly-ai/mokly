@@ -9,6 +9,8 @@ import {
   type ReactNode,
 } from "react";
 
+import { isManifestComponentVariant } from "../components/manifest_types.js";
+
 import { useShellStore } from "./store_context.js";
 import type { WorkspaceHydrationState } from "./store_state.js";
 import {
@@ -51,7 +53,10 @@ export function WorkspaceProvider({
   const entry =
     target?.kind === "entry" &&
     (target.entry.kind === "screen" || target.entry.kind === "component")
-      ? target.entry
+      ? target.entry.kind === "component" &&
+        isManifestComponentVariant(target.entry)
+        ? undefined
+        : target.entry
       : undefined;
   const workspace = useWorkspaceData(store.catalogue, store.context, entry);
   const data = workspace?.data;

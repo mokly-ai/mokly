@@ -1,5 +1,6 @@
 /** Changes-filter navigation shared by standalone and embedded shells. */
 
+import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { ManifestEntry } from "../registry/types.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
@@ -55,7 +56,8 @@ export function changesActivation(
     route.viewport !== undefined ||
     route.colorScheme !== undefined ||
     (destination.entry.kind !== "screen" &&
-      destination.entry.kind !== "component")
+      (destination.entry.kind !== "component" ||
+        isManifestComponentVariant(destination.entry)))
   )
     return next;
   const data = workspaceData(catalogue, context, destination.entry);

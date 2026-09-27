@@ -28,9 +28,13 @@ const action = defineComponent({
     </Body>
   ),
   variants: [
-    { id: "default", title: "Default", props: { label: "Continue" } },
     {
-      id: "disabled",
+      id: "packed-action-default",
+      title: "Default",
+      props: { label: "Continue" },
+    },
+    {
+      id: "packed-action-disabled",
       title: "Disabled",
       props: { label: "Continue", disabled: true },
     },
@@ -51,12 +55,16 @@ const panel = defineComponent({
     </div>
   ),
   variants: [
-    { id: "default", title: "Default", props: { children: <p>Saved slot</p> } },
+    {
+      id: "packed-panel-default",
+      title: "Default",
+      props: { children: <p>Saved slot</p> },
+    },
   ],
 });
 export const mockups = [
-  action.entry,
-  panel.entry,
+  action.entries,
+  panel.entries,
   defineScreen({
     ...metadata,
     id: "packed-components",

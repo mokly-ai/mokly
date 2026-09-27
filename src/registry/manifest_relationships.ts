@@ -22,7 +22,22 @@ export function validateManifestRelationships(
   }
   for (const entry of entries) {
     if (entry.kind === "screen") validateScreen(entry, byId, mode);
+    else if (entry.kind === "component")
+      validateVariantParent(entry, byId, mode);
     else if (entry.kind === "use-case") validateUseCase(entry, byId);
+  }
+  if (mode === "current") {
+    for (const entry of entries) {
+      if (
+        entry.kind === "component" &&
+        typeof entry.variantOf !== "string" &&
+        !entries.some(
+          (candidate) =>
+            candidate.kind === "component" && candidate.variantOf === entry.id,
+        )
+      )
+        relationshipError(entry, "component has no variants");
+    }
   }
 }
 
@@ -57,9 +72,9 @@ function validateVariantParent(
 ): void {
   if (typeof entry.variantOf !== "string") return;
   const parent = byId.get(entry.variantOf);
-  if (!parent) relationshipError(entry, "parent screen does not exist");
-  if (parent.kind !== "screen")
-    relationshipError(entry, "parent is not a screen");
+  if (!parent) relationshipError(entry, "variant parent does not exist");
+  if (parent.kind !== entry.kind)
+    relationshipError(entry, `parent is not a ${String(entry.kind)}`);
   if (typeof parent.variantOf === "string") {
     relationshipError(entry, "parent is itself a variant");
   }

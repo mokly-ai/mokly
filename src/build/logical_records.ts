@@ -1,7 +1,6 @@
 import { parse } from "parse5";
 
 import {
-  componentFragmentRoute,
   duplicateReservedAttributeName,
   entryRoute,
   type HtmlSourceLocation,
@@ -11,6 +10,7 @@ import {
 } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
+import { isComponentVariantDefinition } from "../components/types.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 import { extractHtmlReferences } from "../html_references.js";
@@ -146,23 +146,24 @@ export function validateLogicalFragments(
       continue;
     }
     const screen =
-      entry?.kind === "screen" || entry?.kind === "component"
+      entry?.kind === "screen"
         ? entry
-        : entry?.kind === "use-case" && entry.steps[0]
-          ? byId.get(entry.steps[0].screenId)
-          : undefined;
+        : entry?.kind === "component"
+          ? isComponentVariantDefinition(entry)
+            ? entry
+            : entries.find(
+                (candidate) =>
+                  candidate.kind === "component" &&
+                  isComponentVariantDefinition(candidate) &&
+                  candidate.variantOf === entry.id,
+              )
+          : entry?.kind === "use-case" && entry.steps[0]
+            ? byId.get(entry.steps[0].screenId)
+            : undefined;
     if (screen?.kind !== "screen" && screen?.kind !== "component") continue;
     for (const viewport of VIEWPORTS) {
       for (const scheme of effectiveColorSchemes(screen, config.colorSchemes)) {
-        const route =
-          screen.kind === "component"
-            ? componentFragmentRoute(
-                entryRoute("component", screen.id),
-                screen.variants[0]!.id,
-                viewport,
-                scheme,
-              )
-            : viewRoute("screen", screen.id, viewport, scheme);
+        const route = viewRoute(screen.kind, screen.id, viewport, scheme);
         if (!anchors(route)?.has(fragment)) {
           throw new MoklyError(
             "build-invalid",

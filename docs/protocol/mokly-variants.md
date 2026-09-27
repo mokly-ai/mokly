@@ -97,10 +97,10 @@ an empty list and is never inherited because membership is reciprocal with the
 flow's steps; a flow that steps through the variant must be listed by that
 variant. `title`, `description`, `mobile`, and `desktop` are always the
 variant's own. A component variant inherits the parent's `colorSchemes`,
-`dependencies`, `relatedDocs`, and `tags`, and owns its `title`,
-`description`, and `props`. `id` is a global catalogue id written in full by
-the author; ids never derive from tree position, so `welcome-empty` is
-authored as `welcome-empty` and `action-disabled` as `action-disabled`.
+`dependencies`, `relatedDocs`, and `tags`, and owns its `title` and `props`. An
+authored nonempty `description` replaces the parent's; omission copies the
+parent description into the flattened entry. `id` is a global catalogue id
+written in full; `welcome-empty` and `action-disabled` are authored in full.
 
 Validation rejects, with source attribution:
 

@@ -1,6 +1,6 @@
 import { isCatalogueId } from "@mokly/viewer/data";
 
-import { validateManifestComponent } from "../components/manifest_validation.js";
+import { validateManifestComponent } from "../components/manifest_entry_validation.js";
 import { MoklyError } from "../errors.js";
 
 import {
@@ -196,6 +196,7 @@ export function validateCurrentFields(
   entry: Record<string, unknown>,
   components = false,
   historicalCollection = false,
+  current = false,
 ): void {
   const common = [
     "dependencies",
@@ -215,16 +216,28 @@ export function validateCurrentFields(
       : entry.kind === "page"
         ? ["route", "tags"]
         : entry.kind === "component" && components
-          ? [
-              "route",
-              "tags",
-              "viewports",
-              "propSchema",
-              "slots",
-              "controls",
-              "ownedDependencies",
-              "variants",
-            ]
+          ? typeof entry.variantOf === "string"
+            ? [
+                "route",
+                "tags",
+                "viewports",
+                "variantOf",
+                "props",
+                "suppliedSlots",
+                "fragments",
+                "darkFragments",
+                "componentViews",
+              ]
+            : [
+                "route",
+                "tags",
+                "viewports",
+                "propSchema",
+                "slots",
+                "controls",
+                "ownedDependencies",
+                ...(current ? [] : ["variants"]),
+              ]
           : entry.kind === "screen"
             ? [
                 "route",

@@ -45,7 +45,7 @@ export const comparisonPane = defineComponent({
   render: ComparisonPaneView,
   variants: [
     {
-      id: "before",
+      id: "design-ui-comparison-pane-before",
       title: "Before",
       props: {
         side: "before",
@@ -66,7 +66,7 @@ export const comparisonPane = defineComponent({
       },
     },
     {
-      id: "current",
+      id: "design-ui-comparison-pane-current",
       title: "Current",
       props: {
         side: "after",
@@ -87,7 +87,7 @@ export const comparisonPane = defineComponent({
       },
     },
     {
-      id: "missing-before",
+      id: "design-ui-comparison-pane-missing-before",
       title: "Missing before",
       props: {
         side: "before",
@@ -97,7 +97,7 @@ export const comparisonPane = defineComponent({
       },
     },
     {
-      id: "missing-current",
+      id: "design-ui-comparison-pane-missing-current",
       title: "Missing current",
       props: {
         side: "after",

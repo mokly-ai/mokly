@@ -77,7 +77,7 @@ test("static export retains removed saved variants and baseline component consum
   const fixture = await createExportFixture(source);
   t.after(fixture.close);
   const changed = source.replace(
-    ', { id: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+    ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
     "",
   );
   assert.notEqual(changed, source);
@@ -91,8 +91,8 @@ test("static export retains removed saved variants and baseline component consum
   assert.deepEqual(
     action.variants.map((item) => [item.value.id, item.removed]),
     [
-      ["default", false],
-      ["disabled", true],
+      ["action-default", false],
+      ["action-disabled", true],
     ],
   );
   const result = parseReviewResult(
@@ -101,7 +101,7 @@ test("static export retains removed saved variants and baseline component consum
   if (result.schemaVersion !== 3) assert.fail("Expected component result");
   const removed = result.components
     .find((item) => item.id === "action")!
-    .variants.find((item) => item.id === "disabled")!;
+    .variants.find((item) => item.id === "action-disabled")!;
   assert.equal(removed.state, "removed");
   for (const view of removed.views)
     assert.ok(

@@ -1,4 +1,4 @@
-import type { ManifestComponentVariant } from "../components/manifest_types.js";
+import type { ComponentWireProps } from "../components/prop_types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 
 import type {
@@ -19,10 +19,13 @@ export interface ReviewEntrySides {
   after?: ReviewEntryAddress;
 }
 export interface ScreenReviewV3 extends ScreenReview, ReviewEntrySides {}
-export type ReviewVariantAddress = Pick<
-  ManifestComponentVariant,
-  "id" | "title" | "description" | "props" | "suppliedSlots"
->;
+export interface ReviewVariantAddress {
+  id: string;
+  title: string;
+  description?: string;
+  props: ComponentWireProps;
+  suppliedSlots: readonly string[];
+}
 export interface ComponentVariantReview {
   id: string;
   title: string;

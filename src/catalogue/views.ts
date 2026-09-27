@@ -1,7 +1,8 @@
-import type { ManifestComponentVariant, CatalogueView } from "@mokly/viewer";
+import type { CatalogueView } from "@mokly/viewer";
 import type { ManifestEntry, ManifestScreen } from "@mokly/viewer/data";
 import {
   fragmentViews,
+  isManifestComponentVariant,
   readInstance,
   readRange,
   readSlot,
@@ -16,22 +17,25 @@ export function projectViews(
   input: CatalogueProjectionInput,
   retainedComponents: ReadonlySet<string>,
   entry: ManifestScreen | Extract<ManifestEntry, { kind: "component" }>,
-  source: ManifestScreen | ManifestComponentVariant,
   removed: boolean,
-  variantId?: string,
 ): CatalogueView[] {
+  if (entry.kind === "component" && !isManifestComponentVariant(entry))
+    return [];
   const result = input.comparison ?? input.evidence?.result;
   const reviewViews =
     entry.kind === "screen"
       ? (result?.screens.find((item) => item.route === entry.route)?.views ??
         input.evidence?.screenViews?.find((item) => item.route === entry.route)
           ?.views)
-      : result?.schemaVersion === 3
+      : result?.schemaVersion === 3 && isManifestComponentVariant(entry)
         ? result.components
-            .find((item) => item.id === entry.id)
-            ?.variants.find((item) => item.id === variantId)?.views
+            .find((item) => item.id === entry.variantOf)
+            ?.variants.find((item) => item.id === entry.id)?.views
         : undefined;
-  return fragmentViews(source).map((view) => {
+  return fragmentViews(
+    entry,
+    entry.kind === "component" ? entry.id : undefined,
+  ).map((view) => {
     const recordedUsage =
       (!removed ? input.usage?.get(view.path) : undefined) ?? view.usage;
     const usage =

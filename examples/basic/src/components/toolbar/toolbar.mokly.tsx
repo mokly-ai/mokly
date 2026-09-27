@@ -46,7 +46,7 @@ export const toolbar = defineComponent({
   ),
   variants: [
     {
-      id: "default",
+      id: "example-toolbar-default",
       title: "Default",
       props: {
         title: "Workspace actions",

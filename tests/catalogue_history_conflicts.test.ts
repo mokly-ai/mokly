@@ -23,17 +23,17 @@ const metadata = { dependencies: [], relatedDocs: [], description: "Fixture" };
 const action = defineComponent({ ...metadata, id: "action", title: "Action",
   propSchema: { kind: "object", properties: {} },
   render: () => <button>Continue</button>,
-  variants: [{ id: "default", title: "Default", props: {} }] });
+  variants: [{ id: "action-default", title: "Default", props: {} }] });
 const holder = defineComponent({ ...metadata, id: "holder", title: "Holder",
   propSchema: { kind: "object", properties: {} }, slots: ["children"],
   render: (props) => <section>{props.children}</section>,
-  variants: [{ id: "default", title: "Default", props: { children: <span>Saved</span> } }
-    ${reuse ? "" : ', { id: "previous", title: "Previous", props: { children: <action.Component /> } }'}] });
-export const mockups = [holder.entry, ${
+  variants: [{ id: "holder-default", title: "Default", props: { children: <span>Saved</span> } }
+    ${reuse ? "" : ', { id: "holder-previous", title: "Previous", props: { children: <action.Component /> } }'}] });
+export const mockups = [holder.entries, ${
     reuse
       ? `definePage({ ...metadata, id: "action", title: "Replacement",
           render: () => "<!doctype html><html><head><title>Replacement</title></head><body>Replacement</body></html>" })`
-      : `action.entry,
+      : `action.entries,
          defineScreen({ ...metadata, id: "home", title: "Home",
            mobile: <action.Component />, desktop: <action.Component /> }),
          defineScreen({ ...metadata, id: "empty", title: "Empty",
@@ -50,9 +50,12 @@ function verify(model: CatalogueReadModel): void {
   if (home.kind !== "screen") throw new Error("Expected screen");
   for (const view of home.views)
     assert.deepEqual(view.usage, { status: "unavailable" });
-  const previous = model.components[0]!.variants.find(
-    (variant) => variant.id === "previous",
-  )!;
+  const previous = model.removedEntries.find(
+    ({ entry }) => entry.id === "holder-previous",
+  )!.entry;
+  assert.ok(previous.kind === "component" && "variantOf" in previous);
+  if (previous.kind !== "component" || !("variantOf" in previous))
+    throw new Error("Expected removed component variant");
   for (const view of previous.views)
     assert.deepEqual(view.usage, { status: "unavailable" });
   const empty = model.removedEntries.find(

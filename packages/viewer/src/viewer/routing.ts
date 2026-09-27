@@ -1,4 +1,5 @@
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
+import { catalogueComponentVariants } from "../catalogue/entry_selection.js";
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { FrameNavigation } from "../client/frame_adapter.js";
@@ -51,7 +52,11 @@ export class ViewerRouting {
     const entry = this.entry();
     return (
       this.actions.selection().variantId ??
-      (entry?.kind === "component" ? entry.variants[0]?.id : undefined)
+      (entry?.kind === "component"
+        ? "variantOf" in entry
+          ? entry.id
+          : catalogueComponentVariants(this.model, entry.id)[0]?.id
+        : undefined)
     );
   }
   private key() {

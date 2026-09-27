@@ -236,7 +236,7 @@ for (const cross of [false, true]) {
           cross,
           defaultSelection: {
             screenId: "pane",
-            variantId: "second",
+            variantId: "pane-second",
             viewport: "mobile",
           },
         });

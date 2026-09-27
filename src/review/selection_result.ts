@@ -29,11 +29,16 @@ export function selectedComponentResult(
     ...result,
     screens,
     components,
-    changes: result.changes.filter(
-      (entry) =>
-        entry.kind === (components.length ? "component" : "screen") &&
-        (entry.after ?? entry.before)?.route === selection.route,
-    ),
+    changes: result.changes.filter((entry) => {
+      if (entry.kind !== (components.length ? "component" : "screen"))
+        return false;
+      const address = entry.after ?? entry.before;
+      return (
+        address?.route === selection.route ||
+        (selection.variantId !== undefined &&
+          address?.id === selection.variantId)
+      );
+    }),
     affectedConsumers: [],
     ignoredImpact: aggregateIgnored(screens),
   };

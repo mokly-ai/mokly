@@ -28,7 +28,7 @@ export const metadataRow = defineComponent({
   render: MetadataRowView,
   variants: [
     {
-      id: "text",
+      id: "design-ui-metadata-row-text",
       title: "Text",
       props: {
         label: "Schemes",
@@ -37,7 +37,7 @@ export const metadataRow = defineComponent({
       },
     },
     {
-      id: "code",
+      id: "design-ui-metadata-row-code",
       title: "Code",
       props: {
         label: "label",
@@ -46,7 +46,7 @@ export const metadataRow = defineComponent({
       },
     },
     {
-      id: "linked",
+      id: "design-ui-metadata-row-linked",
       title: "Linked",
       props: {
         label: "Used by",
@@ -55,7 +55,7 @@ export const metadataRow = defineComponent({
       },
     },
     {
-      id: "tags",
+      id: "design-ui-metadata-row-tags",
       title: "Tags",
       props: {
         label: "Tags",

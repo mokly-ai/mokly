@@ -3,6 +3,7 @@
 // active-route helpers the document scaffold and progressive navigation use.
 
 import { canonicalJson } from "../components/data.js";
+import { isManifestComponentVariant } from "../components/manifest_types.js";
 import { sha256 } from "../data/sha256.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -209,7 +210,8 @@ export function ShellMain(props: {
       {props.view.kind === "target" ? (
         props.view.target.kind === "entry" &&
         (props.view.target.entry.kind === "screen" ||
-          props.view.target.entry.kind === "component") ? (
+          (props.view.target.entry.kind === "component" &&
+            !isManifestComponentVariant(props.view.target.entry))) ? (
           <ComponentWorkspace
             catalogue={props.catalogue}
             context={props.context}

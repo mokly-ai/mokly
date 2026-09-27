@@ -1,6 +1,11 @@
 /** Declaration invariants apply before any rendered usage is available. */
 import type { ManifestV7 } from "@mokly/viewer/data";
-import { canonicalJson, invalidData, sortedStrings } from "@mokly/viewer/data";
+import {
+  canonicalJson,
+  invalidData,
+  isManifestComponentVariant,
+  sortedStrings,
+} from "@mokly/viewer/data";
 
 export function validateDependencyDeclarations(
   entry: ManifestV7["entries"][number],
@@ -18,6 +23,7 @@ export function validateDependencyDeclarations(
     );
   if (
     entry.kind === "component" &&
+    !isManifestComponentVariant(entry) &&
     !entry.ownedDependencies.every((dependency) =>
       entry.declaredDependencies.includes(dependency),
     )

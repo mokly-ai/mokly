@@ -1,5 +1,6 @@
 /** Atomic filtering and active-route disclosure transitions. */
 
+import { isManifestComponentVariant } from "../components/manifest_types.js";
 import { revealSelection, selectionQuery } from "../viewer/selection.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
@@ -36,7 +37,12 @@ export function withRoute(
   if (
     route.variant &&
     entry?.kind === "component" &&
-    entry.variants.some((variant) => variant.id === route.variant)
+    (catalogue.hierarchy.variantsById.get(entry.id) ?? []).some(
+      (variant) =>
+        variant.kind === "component" &&
+        isManifestComponentVariant(variant) &&
+        variant.id === route.variant,
+    )
   )
     selection.variantId = route.variant;
   else delete selection.variantId;

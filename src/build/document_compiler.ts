@@ -1,6 +1,7 @@
 /** Shared single-view render/validation with generation-local route and resource indexes. */
 import type { ComponentViewRecord } from "@mokly/viewer";
 import {
+  isManifestComponentVariant,
   validateComponentViewRecord,
   generatedViews,
 } from "@mokly/viewer/data";
@@ -67,7 +68,9 @@ export class DocumentCompiler {
     this.compatibility = { byId: registry.byId, routeIndexes: new Map() };
     this.components = new Map(
       runtime.manifest.entries.flatMap((entry) =>
-        entry.kind === "component" ? [[entry.id, entry] as const] : [],
+        entry.kind === "component" && !isManifestComponentVariant(entry)
+          ? [[entry.id, entry] as const]
+          : [],
       ),
     );
     for (const entry of runtime.manifest.entries) {
@@ -193,7 +196,9 @@ export class DocumentCompiler {
         view,
         this.components,
         route,
-        entry.kind === "component" ? entry.id : undefined,
+        entry.kind === "component" && "variantOf" in entry
+          ? entry.variantOf
+          : undefined,
       );
       validateComponentResources(new Map([[route, view]]), config);
     }

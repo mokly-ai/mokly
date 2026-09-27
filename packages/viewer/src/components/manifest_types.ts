@@ -54,7 +54,8 @@ export interface ComponentViewRecord {
   styles: readonly ComponentStyleOwnership[];
   resources: readonly ComponentResourceOwnership[];
 }
-export interface ManifestComponentVariant {
+/** Saved component shape stored inside historical v3-v6 parent records. */
+export interface LegacyManifestComponentVariant {
   id: string;
   title: string;
   description?: string;
@@ -74,5 +75,35 @@ export interface ManifestComponent extends Omit<ManifestEntryBase, "kind"> {
   slots: readonly string[];
   controls: Readonly<Record<string, ComponentControl>>;
   ownedDependencies: readonly string[];
-  variants: readonly ManifestComponentVariant[];
+}
+
+/** Component parent shape stored by historical component-aware manifests. */
+export interface HistoricalManifestComponent extends ManifestComponent {
+  variants: readonly LegacyManifestComponentVariant[];
+}
+
+/** Current v7 component variant represented as an ordinary catalogue entry. */
+export interface ManifestComponentVariant extends Omit<
+  ManifestEntryBase,
+  "kind"
+> {
+  declaredDependencies: readonly string[];
+  kind: "component";
+  route: string;
+  viewports: readonly ["mobile", "desktop"];
+  tags?: readonly string[];
+  variantOf: string;
+  props: ComponentWireProps;
+  suppliedSlots: readonly string[];
+  fragments: Record<Viewport, string>;
+  darkFragments?: Record<Viewport, string>;
+  componentViews: readonly ComponentViewRecord[];
+}
+
+/** Whether a manifest component entry is a flattened variant. */
+export function isManifestComponentVariant(
+  entry:
+    ManifestComponent | HistoricalManifestComponent | ManifestComponentVariant,
+): entry is ManifestComponentVariant {
+  return "variantOf" in entry && typeof entry.variantOf === "string";
 }

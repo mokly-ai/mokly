@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
 
+import { catalogueComponentVariants } from "../src/catalogue/entry_selection.js";
 import { readCatalogue } from "../src/catalogue/reader.js";
 import {
   defaultSelection,
@@ -15,7 +16,7 @@ const fixture = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v2.json",
+        "../../../docs/protocol/fixtures/catalogue-v3.json",
         import.meta.url,
       ),
       "utf8",
@@ -44,7 +45,7 @@ test("selection normalizes mixed tag terms without mutating host values", () => 
 
 test("selection validates saved variants without guessing another entry", () => {
   const component = fixture.components[0]!;
-  const variantId = component.variants[0]!.id;
+  const variantId = catalogueComponentVariants(fixture, component.id)[0]!.id;
   const selected = normalizeSelection(fixture, {
     ...defaultSelection,
     screenId: component.id,
@@ -68,10 +69,11 @@ test("selection validates saved variants without guessing another entry", () => 
 
 test("screen changes drop omitted variants while explicit variants round trip", () => {
   const [component] = fixture.components;
+  const variantId = catalogueComponentVariants(fixture, component!.id)[0]!.id;
   const current = normalizeSelection(fixture, {
     ...defaultSelection,
     screenId: component!.id,
-    variantId: component!.variants[0]!.id,
+    variantId,
   });
   const screen = mergeSelection(fixture, current, {
     screenId: fixture.screens[0]!.id,
@@ -80,24 +82,24 @@ test("screen changes drop omitted variants while explicit variants round trip", 
   assert.equal(
     mergeSelection(fixture, screen, {
       screenId: component!.id,
-      variantId: component!.variants[0]!.id,
+      variantId,
     }).variantId,
-    component!.variants[0]!.id,
+    variantId,
   );
 });
 
 test("same-id current and historical components reset record-specific variants", () => {
   const current = fixture.components[0]!;
+  const currentVariant = catalogueComponentVariants(fixture, current.id)[0]!;
   const historical = {
     ...structuredClone(current),
     route: "archive/action.html",
-    variants: [
-      {
-        ...structuredClone(current.variants[0]!),
-        id: "historical",
-        title: "Historical",
-      },
-    ],
+  };
+  const historicalVariant = {
+    ...structuredClone(currentVariant),
+    id: "historical",
+    route: "archive/historical.html",
+    title: "Historical",
   };
   const snapshotId = "f".repeat(64);
   const model = {
@@ -105,12 +107,13 @@ test("same-id current and historical components reset record-specific variants",
     removedEntries: [
       ...fixture.removedEntries,
       { entry: historical, snapshotId },
+      { entry: historicalVariant, snapshotId: "e".repeat(64) },
     ],
   };
   const currentSelection = normalizeSelection(model, {
     ...defaultSelection,
     screenId: current.id,
-    variantId: current.variants[0]!.id,
+    variantId: currentVariant.id,
   });
   const selectedHistory = mergeSelection(model, currentSelection, {
     screenId: current.id,
@@ -119,27 +122,29 @@ test("same-id current and historical components reset record-specific variants",
   assert.equal(selectedHistory.snapshotId, snapshotId);
   assert.equal(selectedHistory.variantId, undefined);
 
-  const historicalVariant = normalizeSelection(model, {
+  const selectedHistoricalVariant = normalizeSelection(model, {
     ...selectedHistory,
     variantId: "historical",
   });
-  const selectedCurrent = mergeSelection(model, historicalVariant, {
+  const selectedCurrent = mergeSelection(model, selectedHistoricalVariant, {
     screenId: current.id,
   });
   assert.equal(selectedCurrent.snapshotId, undefined);
   assert.equal(selectedCurrent.variantId, undefined);
   assert.equal(
-    mergeSelection(model, historicalVariant, { viewport: "mobile" }).variantId,
+    mergeSelection(model, selectedHistoricalVariant, { viewport: "mobile" })
+      .variantId,
     "historical",
   );
 });
 
 test("variant identity participates in equality and survives reveal", () => {
   const component = fixture.components[0]!;
+  const variantId = catalogueComponentVariants(fixture, component.id)[0]!.id;
   const selected = normalizeSelection(fixture, {
     ...defaultSelection,
     screenId: component.id,
-    variantId: component.variants[0]!.id,
+    variantId,
     search: "does-not-match",
   });
   assert.equal(

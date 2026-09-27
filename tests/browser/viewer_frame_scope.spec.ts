@@ -6,6 +6,7 @@ import type {
   InstanceRef,
   MoklyViewerProps,
 } from "@mokly/viewer";
+import { catalogueComponentVariants } from "@mokly/viewer/data";
 
 import { followupFixture } from "./viewer_followup_fixture.js";
 
@@ -178,7 +179,10 @@ for (const cross of [false, true]) {
     const component = fixture.catalogue.components.find(
       (entry) => entry.id === "pane",
     )!;
-    for (const variant of component.variants) {
+    for (const variant of catalogueComponentVariants(
+      fixture.catalogue,
+      component.id,
+    )) {
       await page
         .getByRole("combobox", { name: "Saved variant" })
         .selectOption(variant.id);

@@ -33,7 +33,7 @@ test("frame links and saved variants emit only committed navigation", async ({
   ).toBeVisible();
   await page
     .getByRole("combobox", { name: "Saved variant" })
-    .selectOption("disabled");
+    .selectOption("action-disabled");
   const events = await page.evaluate(() =>
     window.viewerHarness
       .get("one")
@@ -50,7 +50,10 @@ test("frame links and saved variants emit only committed navigation", async ({
         activation: "primary",
       },
     }),
-    expect.objectContaining({ screenId: "action", variantId: "disabled" }),
+    expect.objectContaining({
+      screenId: "action",
+      variantId: "action-disabled",
+    }),
   ]);
 });
 

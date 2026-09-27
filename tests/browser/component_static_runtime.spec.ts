@@ -35,7 +35,7 @@ test.beforeAll(async () => {
     site = await serveStaticFiles(directory);
     await assertServedShellMarker(
       site.url,
-      "/view/components/action.html?variant=disabled",
+      "/view/components/action.html?variant=action-disabled",
     );
   } finally {
     await fixture.close();
@@ -61,7 +61,9 @@ for (const viewport of ["desktop", "mobile"] as const)
         ? { width: 1280, height: 900 }
         : { width: 390, height: 844 },
     );
-    await page.goto(`${site.url}/view/components/action.html?variant=disabled`);
+    await page.goto(
+      `${site.url}/view/components/action.html?variant=action-disabled`,
+    );
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     await expect(page.locator('[data-prop-control="label"]')).toBeDisabled();
     await expect(page.locator('[data-prop-control="disabled"]')).toBeChecked();

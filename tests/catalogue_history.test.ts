@@ -26,7 +26,7 @@ test("removed screens and saved variants retain baseline context with null curre
         .slice(0, value.indexOf("  defineScreen("))
         .concat("];")
         .replace(
-          ', { id: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+          ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
           "",
         ),
     source,
@@ -52,9 +52,12 @@ test("removed screens and saved variants retain baseline context with null curre
     ]),
     revision: { content: 0, evidence: 0 },
   });
-  assert.deepEqual(model.removedEntries[0]?.entry.navPath, ["Components"]);
-  const removed = model.removedEntries[0]!.entry;
-  assert.deepEqual(model.removedEntries[0]!.preview, { kind: "screen" });
+  const removedRecord = model.removedEntries.find(
+    ({ entry }) => entry.id === "home",
+  )!;
+  assert.deepEqual(removedRecord.entry.navPath, ["Components"]);
+  const removed = removedRecord.entry;
+  assert.deepEqual(removedRecord.preview, { kind: "screen" });
   assert.equal(removed.kind, "screen");
   if (removed.kind !== "screen") throw new Error("Expected removed screen");
   for (const view of removed.views) {
@@ -66,9 +69,12 @@ test("removed screens and saved variants retain baseline context with null curre
       eligible: false,
     });
   }
-  const variant = model.components
-    .find((item) => item.id === "action")!
-    .variants.find((item) => item.id === "disabled")!;
+  const variant = model.removedEntries.find(
+    ({ entry }) => entry.id === "action-disabled",
+  )!.entry;
+  assert.equal(variant.kind, "component");
+  if (variant.kind !== "component" || !("variantOf" in variant))
+    throw new Error("Expected removed component variant");
   assert.deepEqual(variant.comparison, {
     status: "ready",
     kind: "removed",
@@ -104,6 +110,32 @@ test("removed screens and saved variants retain baseline context with null curre
       old.views.every((view) => view.usage.status === "unavailable"),
   );
   assert.deepEqual(unavailable.removedEntries[0]!.preview, { kind: "screen" });
+});
+
+test("removed component parents round trip with their variant entries", async (t) => {
+  const source = componentEntrySource({ body: "<p>Before</p>" });
+  const fixture = await componentReviewFixture(
+    t,
+    () => componentEntrySource({ body: "<p>After</p>", exports: "" }),
+    source,
+  );
+  const model = projectCatalogue({
+    configPath: "mokly.config.ts",
+    catalogue: catalogueAtBaseline(
+      fixture.after.manifest,
+      fixture.before.manifest,
+    ),
+    changesStatus: "ready",
+    evidence: { baseline: fixture.before.manifest },
+    comparisonUrl: null,
+    revision: { content: 0, evidence: 0 },
+  });
+
+  const removedIds = model.removedEntries.map(({ entry }) => entry.id);
+  assert.ok(removedIds.includes("action"));
+  assert.ok(removedIds.includes("action-default"));
+  assert.ok(removedIds.includes("action-disabled"));
+  assert.deepEqual(readCatalogue(JSON.parse(serializeCatalogue(model))), model);
 });
 
 test("historical usage survives changed component schemas and slot declarations", async (t) => {

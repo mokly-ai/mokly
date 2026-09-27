@@ -164,7 +164,7 @@ for (const baseline of ["screens", "components"] as const)
 test("shared classification batches both sides including removed dark variants", async (t) => {
   const fixture = await componentReviewFixture(t, (source) =>
     source.replace(
-      ', { id: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+      ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
       "",
     ),
   );

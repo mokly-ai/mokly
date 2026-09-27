@@ -22,7 +22,7 @@ const model = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v2.json",
+        "../../../docs/protocol/fixtures/catalogue-v3.json",
         import.meta.url,
       ),
       "utf8",
@@ -42,10 +42,12 @@ test("shell routes derive targets, variants, fragments, aliases, and misses from
 
   const variant = routeFromUrl(
     catalogue,
-    new URL("https://example.test/view/components/action.html?variant=default"),
+    new URL(
+      "https://example.test/view/components/action.html?variant=action-default",
+    ),
   );
-  assert.equal(variant.variant, "default");
-  assert.deepEqual(variant.variantValues, ["default"]);
+  assert.equal(variant.variant, "action-default");
+  assert.deepEqual(variant.variantValues, ["action-default"]);
   assert.equal(
     routeFromUrl(catalogue, new URL("https://example.test/id/home")).view.kind,
     "target",
@@ -116,11 +118,11 @@ test("shell routes retain invalid component variant requests", () => {
   const duplicate = routeFromUrl(
     catalogue,
     new URL(
-      "https://example.test/view/components/action.html?variant=default&variant=missing",
+      "https://example.test/view/components/action.html?variant=action-default&variant=missing",
     ),
   );
   assert.equal(duplicate.variant, undefined);
-  assert.deepEqual(duplicate.variantValues, ["default", "missing"]);
+  assert.deepEqual(duplicate.variantValues, ["action-default", "missing"]);
   assert.equal(
     routeHref(
       "components/action.html",
@@ -128,7 +130,7 @@ test("shell routes retain invalid component variant requests", () => {
       duplicate.variant,
       duplicate,
     ),
-    "/view/components/action.html?variant=default&variant=missing",
+    "/view/components/action.html?variant=action-default&variant=missing",
   );
 
   const empty = routeFromUrl(

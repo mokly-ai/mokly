@@ -54,7 +54,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await expect(frame.locator(".mbk-tag-picker")).toHaveCount(0);
     await page
       .getByLabel("Saved variant", { exact: true })
-      .selectOption("search");
+      .selectOption("design-ui-top-bar-search");
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
     await expect(page.locator("[data-workspace-status]")).toHaveText(status!);
     expect(await contents()).toEqual(before);

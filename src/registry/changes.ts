@@ -1,16 +1,25 @@
-import type { ManifestComponent } from "@mokly/viewer";
+import type {
+  ManifestComponent,
+  ManifestComponentVariant,
+} from "@mokly/viewer";
 import type {
   HistoricalManifest,
   ManifestPage,
   ManifestScreen,
 } from "@mokly/viewer/data";
+import { flattenComponentVariantEntries } from "@mokly/viewer/data";
 
 import type { CatalogueMetadata } from "./catalogue_index.js";
+import { orderEntriesWithVariants } from "./entry_order.js";
 
 /** Baseline context retained independently of current folder placement. */
 export interface RemovedEntrySnapshot {
   /** Complete baseline DTO, including `variantOf` when the screen was a variant. */
-  entry: ManifestPage | ManifestScreen | ManifestComponent;
+  entry:
+    | ManifestPage
+    | ManifestScreen
+    | ManifestComponent
+    | ManifestComponentVariant;
 }
 
 /** One pinned generation shared by Browse, watched updates and publication. */
@@ -28,22 +37,19 @@ export function removedManifestEntries(
   baseline: HistoricalManifest,
 ): RemovedEntrySnapshot[] {
   const ids = new Set(manifest.entries.map((entry) => entry.id));
-  return baseline.entries
-    .flatMap((entry): RemovedEntrySnapshot[] =>
-      (entry.kind === "page" ||
-        entry.kind === "screen" ||
-        entry.kind === "component") &&
-      !ids.has(entry.id)
-        ? [
-            {
-              entry,
-            },
-          ]
-        : [],
-    )
-    .sort(
-      (a, b) =>
-        a.entry.kind.localeCompare(b.entry.kind) ||
-        a.entry.id.localeCompare(b.entry.id),
-    );
+  return orderEntriesWithVariants(
+    flattenComponentVariantEntries(baseline.entries),
+    (entry) => entry,
+  ).flatMap((entry): RemovedEntrySnapshot[] =>
+    (entry.kind === "page" ||
+      entry.kind === "screen" ||
+      entry.kind === "component") &&
+    !ids.has(entry.id)
+      ? [
+          {
+            entry,
+          },
+        ]
+      : [],
+  );
 }

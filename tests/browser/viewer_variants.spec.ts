@@ -7,6 +7,7 @@ import type {
   InstanceRef,
   ViewerSelection,
 } from "@mokly/viewer";
+import { catalogueComponentVariants } from "@mokly/viewer/data";
 
 import { followupFixture } from "./viewer_followup_fixture.js";
 
@@ -32,7 +33,7 @@ async function openViewer(page: Page, cross: boolean, controlled = false) {
   );
   await expect(
     page.getByRole("combobox", { name: "Saved variant" }),
-  ).toHaveValue("default");
+  ).toHaveValue("pane-default");
 }
 
 function appendScreenVariant(
@@ -215,8 +216,8 @@ for (const cross of [false, true]) {
   }) => {
     await openViewer(page, cross);
     const selector = page.getByRole("combobox", { name: "Saved variant" });
-    await selector.selectOption("second");
-    await expect(selector).toHaveValue("second");
+    await selector.selectOption("pane-second");
+    await expect(selector).toHaveValue("pane-second");
     await expect(
       page
         .frameLocator('iframe[data-workspace-frame="desktop"]')
@@ -225,9 +226,9 @@ for (const cross of [false, true]) {
     await page.evaluate(() =>
       window.viewerHarness
         .get("one")
-        .ref.current.select({ variantId: "default" }),
+        .ref.current.select({ variantId: "pane-default" }),
     );
-    await expect(selector).toHaveValue("default");
+    await expect(selector).toHaveValue("pane-default");
     await expect(
       page
         .frameLocator('iframe[data-workspace-frame="desktop"]')
@@ -245,28 +246,28 @@ for (const cross of [false, true]) {
         name: "navigate",
         value: expect.objectContaining({
           screenId: "pane",
-          variantId: "second",
+          variantId: "pane-second",
         }),
       },
       {
         name: "selection",
         value: expect.objectContaining({
           screenId: "pane",
-          variantId: "second",
+          variantId: "pane-second",
         }),
       },
       {
         name: "navigate",
         value: expect.objectContaining({
           screenId: "pane",
-          variantId: "default",
+          variantId: "pane-default",
         }),
       },
       {
         name: "selection",
         value: expect.objectContaining({
           screenId: "pane",
-          variantId: "default",
+          variantId: "pane-default",
         }),
       },
     ]);
@@ -277,8 +278,8 @@ for (const cross of [false, true]) {
   }) => {
     await openViewer(page, cross, true);
     const selector = page.getByRole("combobox", { name: "Saved variant" });
-    await selector.selectOption("second");
-    await expect(selector).toHaveValue("default");
+    await selector.selectOption("pane-second");
+    await expect(selector).toHaveValue("pane-default");
     await expect(
       page
         .frameLocator('iframe[data-workspace-frame="desktop"]')
@@ -291,14 +292,14 @@ for (const cross of [false, true]) {
           .events.find((event) => event.name === "selection")!.value,
     );
     expect(proposal).toEqual(
-      expect.objectContaining({ screenId: "pane", variantId: "second" }),
+      expect.objectContaining({ screenId: "pane", variantId: "pane-second" }),
     );
     await page.evaluate((selection) => {
       window.viewerHarness
         .get("one")
         .setSelection(selection as ViewerSelection);
     }, proposal);
-    await expect(selector).toHaveValue("second");
+    await expect(selector).toHaveValue("pane-second");
     await expect(
       page
         .frameLocator('iframe[data-workspace-frame="desktop"]')
@@ -319,7 +320,7 @@ for (const cross of [false, true]) {
             .events.find((event) => event.name === "navigate")?.value,
       ),
     ).toEqual(
-      expect.objectContaining({ screenId: "pane", variantId: "second" }),
+      expect.objectContaining({ screenId: "pane", variantId: "pane-second" }),
     );
   });
 
@@ -340,7 +341,7 @@ for (const cross of [false, true]) {
     expect(message).toBe("The requested catalogue selection is unavailable.");
     await expect(
       page.getByRole("combobox", { name: "Saved variant" }),
-    ).toHaveValue("default");
+    ).toHaveValue("pane-default");
     expect(
       await page.evaluate(() =>
         window.viewerHarness
@@ -362,16 +363,20 @@ for (const cross of [false, true]) {
     page,
   }) => {
     await openViewer(page, cross);
-    const variant = fixture.catalogue.components
-      .find((entry) => entry.id === "pane")!
-      .variants.find((entry) => entry.id === "second")!;
+    const component = fixture.catalogue.components.find(
+      (entry) => entry.id === "pane",
+    )!;
+    const variant = catalogueComponentVariants(
+      fixture.catalogue,
+      component.id,
+    ).find((entry) => entry.id === "pane-second")!;
     const view = variant.views.find(
       (entry) => entry.viewport === "desktop" && entry.colorScheme === "light",
     )!;
     if (view.usage.status !== "ready") throw new Error("Expected ready usage");
     const instance: InstanceRef = {
       screenId: "pane",
-      variantId: "second",
+      variantId: "pane-second",
       viewport: "desktop",
       colorScheme: "light",
       key: view.usage.instances[0]!.key,
@@ -379,7 +384,7 @@ for (const cross of [false, true]) {
     await page.evaluate(
       async ({ instance }) => {
         const viewer = window.viewerHarness.get("one").ref.current;
-        viewer.select({ variantId: "second" });
+        viewer.select({ variantId: "pane-second" });
         await viewer.scrollToInstance(instance);
         await viewer.highlightInstance(instance);
       },
@@ -390,7 +395,7 @@ for (const cross of [false, true]) {
     );
     const outcomes = await page.evaluate(async (instance) => {
       const viewer = window.viewerHarness.get("one").ref.current;
-      const mismatched = { ...instance, variantId: "default" };
+      const mismatched = { ...instance, variantId: "pane-default" };
       return Promise.all([
         viewer.highlightInstance(mismatched).then(
           () => "resolved",

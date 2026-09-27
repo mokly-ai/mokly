@@ -17,8 +17,8 @@ test("Props renders only its view and freezes resources without copying linked p
   const source =
     componentEntrySource({
       actionRender: `(props) => <section>
-    <button>{props.label}</button><img src="../../image.svg" alt="Example" />
-    <a href="../../pages/broken.html">Reference</a><MockLink to="home">Home</MockLink>
+    <button>{props.label}</button><img src="../image.svg" alt="Example" />
+    <a href="../pages/broken.html">Reference</a><MockLink to="home">Home</MockLink>
   </section>`,
     }) +
     `
@@ -36,7 +36,7 @@ test("Props renders only its view and freezes resources without copying linked p
   fixture.beforeRemove(() => service.close());
   const request: ComponentRenderRequest = {
     componentId: "action",
-    variantId: "default",
+    variantId: "action-default",
     viewport: "desktop",
     colorScheme: "light",
     generation: runtime.generation,

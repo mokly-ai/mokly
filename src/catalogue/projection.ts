@@ -2,12 +2,12 @@ import type {
   CatalogueEntry,
   CatalogueReadModel,
   CatalogueRoutedEntry,
-  CatalogueVariant,
   RemovedEntryPreview,
 } from "@mokly/viewer";
 import type { ManifestEntry } from "@mokly/viewer/data";
 import {
   invalidData,
+  isManifestComponentVariant,
   readControls,
   readProps,
   readSchema,
@@ -43,7 +43,10 @@ export function projectCatalogue(
         ? catalogue.removedEntries.map(({ entry }) => entry)
         : []),
     ]
-      .filter((entry) => entry.kind === "component")
+      .filter(
+        (entry) =>
+          entry.kind === "component" && !isManifestComponentVariant(entry),
+      )
       .map((entry) => entry.id),
   );
   if (
@@ -102,73 +105,63 @@ export function projectCatalogue(
         route: entry.route,
         viewports: [...entry.viewports],
         colorSchemes: entry.darkFragments ? ["light", "dark"] : ["light"],
-        views: projectViews(input, retainedComponents, entry, entry, removed),
+        views: projectViews(input, retainedComponents, entry, removed),
         useCaseIds: [...entry.useCaseIds],
         ...(entry.address !== undefined ? { address: entry.address } : {}),
         ...(entry.variantOf !== undefined
           ? { variantOf: entry.variantOf }
           : {}),
       };
-    const schema = readSchema(entry.propSchema);
-    if (schema.kind !== "object")
-      invalidData("$catalogue", "expected object schema");
-    const previous = input.evidence?.baseline.entries.find(
-      (item) => item.kind === "component" && item.id === entry.id,
-    );
-    const oldVariants =
-      previous?.kind === "component"
-        ? previous.variants.filter(
-            (item) => !entry.variants.some((current) => current.id === item.id),
-          )
-        : [];
-    const variants: CatalogueVariant[] = [
-      ...entry.variants,
-      ...oldVariants,
-    ].map((variant) => {
-      const missing = removed || oldVariants.includes(variant);
+    if (isManifestComponentVariant(entry)) {
       const review = (
         input.comparison?.schemaVersion === 3
           ? input.comparison
           : input.evidence?.result
       )?.components
-        .find((item) => item.id === entry.id)
-        ?.variants.find((item) => item.id === variant.id);
+        .find((item) => item.id === entry.variantOf)
+        ?.variants.find((item) => item.id === entry.id);
       return {
-        id: variant.id,
-        title: variant.title,
-        props: readProps(variant.props),
-        suppliedSlots: [...variant.suppliedSlots],
-        views: projectViews(
-          input,
-          retainedComponents,
-          entry,
-          variant,
-          missing,
-          variant.id,
-        ),
+        ...base,
+        kind: "component",
+        navPath: entry.navPath,
+        route: entry.route,
+        viewports: [...entry.viewports],
+        colorSchemes: entry.darkFragments ? ["light", "dark"] : ["light"],
+        variantOf: entry.variantOf,
+        props: readProps(entry.props),
+        suppliedSlots: [...entry.suppliedSlots],
+        views: projectViews(input, retainedComponents, entry, removed),
         comparison: comparisonSelection(
           input,
-          missing ? "removed" : review?.state,
+          removed ? "removed" : review?.state,
           true,
         ),
-        ...(variant.description !== undefined
-          ? { description: variant.description }
-          : {}),
       };
-    });
+    }
+    const schema = readSchema(entry.propSchema);
+    if (schema.kind !== "object")
+      invalidData("$catalogue", "expected object schema");
+    const firstVariant = catalogue.manifest.entries.find(
+      (candidate) =>
+        candidate.kind === "component" &&
+        isManifestComponentVariant(candidate) &&
+        candidate.variantOf === entry.id,
+    );
     return {
       ...base,
       kind: "component",
       navPath: entry.navPath,
       route: entry.route,
       viewports: [...entry.viewports],
-      colorSchemes: entry.variants[0]?.darkFragments
-        ? ["light", "dark"]
-        : ["light"],
+      colorSchemes:
+        firstVariant?.kind === "component" &&
+        isManifestComponentVariant(firstVariant) &&
+        firstVariant.darkFragments
+          ? ["light", "dark"]
+          : ["light"],
       propSchema: schema,
       slots: [...entry.slots],
       controls: readControls(entry.controls, schema),
-      variants,
     };
   };
   const entries: CatalogueRoutedEntry[] = orderEntriesWithVariants(
@@ -177,7 +170,16 @@ export function projectCatalogue(
   ).map((entry) => routed(entry, false));
   const removedSnapshots =
     input.changesStatus === "ready"
-      ? orderEntriesWithVariants(catalogue.removedEntries, ({ entry }) => entry)
+      ? orderEntriesWithVariants(
+          [
+            ...catalogue.manifest.entries.map((entry) => ({ entry })),
+            ...catalogue.removedEntries.map((snapshot) => ({
+              ...snapshot,
+              removed: true as const,
+            })),
+          ],
+          ({ entry }) => entry,
+        ).flatMap((item) => ("removed" in item ? [item] : []))
       : [];
   const removedRoutes = new Set(
     removedSnapshots.map(({ entry }) => entry.route),
@@ -186,7 +188,7 @@ export function projectCatalogue(
     if (!removedRoutes.has(route))
       invalidData("$catalogue", "preview route is not a removed entry");
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     identity,
     deploymentId: ZERO_DEPLOYMENT_ID,
     revision: {

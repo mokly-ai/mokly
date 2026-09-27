@@ -36,7 +36,7 @@ export const comparisonToolbar = defineComponent({
   },
   render: ComparisonToolbarView,
   variants: comparisonMode.schema.values.map((mode) => ({
-    id: mode,
+    id: `design-ui-comparison-toolbar-${mode}`,
     title: mode,
     props: { mode, eligible: true, accessible: true, destinations: {} },
   })),

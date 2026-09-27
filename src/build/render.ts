@@ -5,7 +5,6 @@ import { minimatch } from "minimatch";
 import type { ColorScheme, ComponentViewRecord } from "@mokly/viewer";
 import type { ArtifactView } from "@mokly/viewer/data";
 import {
-  componentFragmentRoute,
   encodeUrlPath,
   entryRoute,
   effectiveColorSchemes,
@@ -14,8 +13,13 @@ import {
 } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
+import { componentInputs } from "../components/inputs.js";
 import type { ComponentGraphRenderer } from "../components/render.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
+import {
+  isComponentVariantDefinition,
+  type ComponentDefinition,
+} from "../components/types.js";
 import { toPosixPath } from "../config/paths.js";
 import {
   isPublicStaticFile,
@@ -45,7 +49,11 @@ export function renderFragments(
   },
 ): Map<string, string> {
   const outputs = new Map<string, string>();
-  const components = entries.filter((entry) => entry.kind === "component");
+  const components = entries.filter(
+    (entry): entry is ComponentDefinition & ResolvedRegistryEntry =>
+      entry.kind === "component" && !isComponentVariantDefinition(entry),
+  );
+  const componentById = new Map(components.map((entry) => [entry.id, entry]));
   const ordered = [
     ...entries.filter((entry) => entry.kind !== "page"),
     ...entries.filter((entry) => entry.kind === "page"),
@@ -61,10 +69,12 @@ export function renderFragments(
       });
       continue;
     }
-    if (entry.kind !== "screen" && entry.kind !== "component") continue;
-    for (const variantId of entry.kind === "component"
-      ? entry.variants.map((variant) => variant.id)
-      : [undefined]) {
+    if (
+      entry.kind !== "screen" &&
+      !(entry.kind === "component" && isComponentVariantDefinition(entry))
+    )
+      continue;
+    {
       for (const viewport of VIEWPORTS) {
         for (const colorScheme of effectiveColorSchemes(
           entry,
@@ -72,19 +82,11 @@ export function renderFragments(
         )) {
           if (
             selection &&
-            (selection.variantId !== variantId ||
-              selection.viewport !== viewport ||
+            (selection.viewport !== viewport ||
               selection.colorScheme !== colorScheme)
           )
             continue;
-          const route = variantId
-            ? componentFragmentRoute(
-                entryRoute("component", entry.id),
-                variantId,
-                viewport,
-                colorScheme,
-              )
-            : viewRoute("screen", entry.id, viewport, colorScheme);
+          const route = viewRoute(entry.kind, entry.id, viewport, colorScheme);
           const stylesheets = stylesheetsFor(
             entryRoute(entry.kind, entry.id),
             route,
@@ -93,13 +95,21 @@ export function renderFragments(
           );
           let rendered: string;
           try {
+            const componentProps =
+              entry.kind === "component"
+                ? componentInputs(
+                    componentById.get(entry.variantOf)!,
+                    entry.props,
+                    `${entry.variantOf} / ${entry.id}`,
+                  ).data
+                : undefined;
             const input = {
               colorScheme,
               entry,
               node: entry.kind === "screen" ? entry[viewport] : null,
               stylesheets,
               viewport,
-              ...(variantId ? { variantId } : {}),
+              ...(componentProps ? { componentProps } : {}),
             };
             if (components.length) {
               const output = graphRenderer(input, renderer, components);

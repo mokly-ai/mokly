@@ -21,8 +21,8 @@ export function createArea(area: string, count: number, rows: number) {
     group.length === 1 ? [...group, ids[0]!] : group,
   );
   return [
-    components.action.entry,
-    components.panel.entry,
+    components.action.entries,
+    components.panel.entries,
     ...groups.flatMap((group, index) => [
       defineUseCase({
         ...metadata,

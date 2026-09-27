@@ -78,7 +78,7 @@ test("Usage and Changes completion preserve edited props and their live preview"
     await expect(frame.getByRole("button", { name: "Continue" })).toBeVisible();
     await page
       .getByLabel("Saved variant", { exact: true })
-      .selectOption("disabled");
+      .selectOption("action-disabled");
     await expect(
       frame.getByRole("button", { name: "Continue" }),
     ).toBeDisabled();

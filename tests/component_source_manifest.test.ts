@@ -70,7 +70,7 @@ test("authored data schemas, slots and forged manifest components reserve __mokl
     relatedDocs: [],
     propSchema: { kind: "object" as const, properties: {} },
     render: () => null,
-    variants: [{ id: "default", title: "Default", props: {} }],
+    variants: [{ id: "action-default", title: "Default", props: {} }],
   };
   assert.throws(
     () => defineComponent({ ...input, slots: ["__moklySource"] }),
@@ -95,8 +95,10 @@ test("authored data schemas, slots and forged manifest components reserve __mokl
   for (const field of ["slots", "props"] as const) {
     const forged = structuredClone(manifest);
     const component = forged.entries.find(
-      (entry) => entry.kind === "component",
+      (entry) => entry.kind === "component" && !("variantOf" in entry),
     )!;
+    if (component.kind !== "component" || "variantOf" in component)
+      throw new Error("Missing component parent");
     if (field === "slots")
       Object.assign(component, { slots: ["__moklySource"] });
     else

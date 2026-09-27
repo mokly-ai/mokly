@@ -23,11 +23,12 @@ test("affected usage keeps complete serialized identity and evidence order with 
   if (result.schemaVersion !== 3) assert.fail("Expected component result");
   const catalogue = createCatalogue(fixture.after.manifest);
   const entry = catalogue.byId.get("action");
-  if (entry?.kind !== "component") assert.fail("Expected component");
+  if (entry?.kind !== "component" || "variantOf" in entry)
+    assert.fail("Expected component");
   const base: UsageLink = {
     title: "Pane",
     route: "components/pane.html",
-    variantId: "default",
+    variantId: "pane-default",
     viewport: "desktop",
     colorScheme: "light",
     instanceKey: "action-1",
@@ -39,7 +40,7 @@ test("affected usage keeps complete serialized identity and evidence order with 
     base,
     { ...base, viewport: "mobile" },
     { ...base, colorScheme: "dark" },
-    { ...base, variantId: "disabled" },
+    { ...base, variantId: "pane-disabled" },
     { ...base, direct: false },
     { ...base, instanceKey: "action-2" },
     { ...base, title: "Previous pane title" },

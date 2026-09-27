@@ -6,7 +6,14 @@ import type {
   RegistryDefinition,
   ResolvedRegistryEntry,
 } from "../authoring/types.js";
-import { validateComponentDefinition } from "../components/definition.js";
+import {
+  validateComponentDefinition,
+  validateComponentVariantDefinition,
+} from "../components/definition.js";
+import type {
+  ComponentDefinition,
+  ComponentVariantDefinition,
+} from "../components/types.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
@@ -52,7 +59,7 @@ export function prepareRegistry(
     } as ResolvedRegistryEntry;
     const metadataViolations = validateEntry(entry, config);
     violations.push(...metadataViolations);
-    if (entry.kind === "component") {
+    if (entry.kind === "component" && !("variantOf" in entry)) {
       if (metadataViolations.length) return;
       try {
         entries.push({
@@ -66,6 +73,7 @@ export function prepareRegistry(
       }
     } else entries.push(entry);
   });
+  validateComponentVariants(entries, violations);
   const orderedEntries = orderEntriesWithVariants(entries, (entry) => entry);
   violations.push(
     ...duplicateViolations(orderedEntries, "id"),
@@ -83,6 +91,52 @@ export function prepareRegistry(
     byId: new Map(orderedEntries.map((entry) => [entry.id, entry])),
     entries: orderedEntries,
   };
+}
+
+function validateComponentVariants(
+  entries: ResolvedRegistryEntry[],
+  violations: RegistryViolation[],
+): void {
+  const byId = new Map<string, ResolvedRegistryEntry[]>();
+  for (const entry of entries)
+    byId.set(entry.id, [...(byId.get(entry.id) ?? []), entry]);
+  for (const [index, entry] of entries.entries()) {
+    if (entry.kind !== "component" || !("variantOf" in entry)) continue;
+    if (typeof entry.variantOf !== "string") continue;
+    const candidates = byId.get(entry.variantOf) ?? [];
+    const parent = candidates.length === 1 ? candidates[0] : undefined;
+    if (!parent || parent.kind !== "component" || "variantOf" in parent)
+      continue;
+    for (const field of [
+      "dependencies",
+      "relatedDocs",
+      "colorSchemes",
+      "tags",
+    ] as const) {
+      if (JSON.stringify(entry[field]) !== JSON.stringify(parent[field])) {
+        violations.push(
+          problem(
+            entry,
+            "invalid-variants",
+            `component variant ${entry.id} must inherit ${field} from ${parent.id}`,
+          ),
+        );
+      }
+    }
+    try {
+      entries[index] = {
+        ...validateComponentVariantDefinition(
+          entry as ComponentVariantDefinition,
+          parent as ComponentDefinition,
+        ),
+        sourcePath: entry.sourcePath,
+        sourceRelativePath: entry.sourceRelativePath,
+      };
+    } catch (error) {
+      if (!(error instanceof ComponentValidationError)) throw error;
+      violations.push(problem(entry, "invalid-component", error.message));
+    }
+  }
 }
 
 /** Label registry-wide violations with the configured entry globs. */

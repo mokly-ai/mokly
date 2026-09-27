@@ -1,4 +1,9 @@
-import { entryRoute, isEntryId, viewRoute } from "@mokly/viewer/data";
+import {
+  entryRoute,
+  isEntryId,
+  legacyComponentVariantId,
+  viewRoute,
+} from "@mokly/viewer/data";
 import type { HistoricalManifest } from "@mokly/viewer/data";
 
 import {
@@ -111,7 +116,12 @@ export function validateManifestMetadata(
       throw new MoklyError("manifest-invalid", `invalid manifest id: ${id}`);
     }
     if (pages) {
-      validateCurrentFields(entry, components, historicalCollection);
+      validateCurrentFields(
+        entry,
+        components,
+        historicalCollection,
+        current && !historical,
+      );
       if (
         !(normalized.sourceFiles as string[]).includes(
           entry.sourcePath as string,
@@ -156,6 +166,7 @@ export function validateManifestMetadata(
       routes.add(entry.route);
     }
   }
+  if (historical) validateHistoricalComponentVariantIds(entries);
   const outputRoutes = validateFragmentRoutes(entries, routes, current);
   if (!pages)
     validateLegacyPages(normalized.legacyPages as unknown[], outputRoutes);
@@ -175,6 +186,35 @@ export function validateManifestMetadata(
       : entries,
   } as unknown as HistoricalManifest;
   return manifest;
+}
+
+function validateHistoricalComponentVariantIds(
+  entries: readonly Record<string, unknown>[],
+): void {
+  const occupied = new Map(
+    entries.map((entry) => [
+      entry.id as string,
+      `manifest entry ${String(entry.id)}`,
+    ]),
+  );
+  for (const entry of entries) {
+    if (entry.kind !== "component" || !Array.isArray(entry.variants)) continue;
+    for (const raw of entry.variants) {
+      if (!record(raw) || typeof raw.id !== "string") continue;
+      const id = legacyComponentVariantId(entry.id as string, raw.id);
+      const previous = occupied.get(id);
+      if (previous !== undefined) {
+        throw new MoklyError(
+          "manifest-invalid",
+          `historical component variant ${String(entry.id)} / ${raw.id} expands to ${id}, which conflicts with ${previous}`,
+        );
+      }
+      occupied.set(
+        id,
+        `historical component variant ${String(entry.id)} / ${raw.id}`,
+      );
+    }
+  }
 }
 
 function validateFragmentRoutes(

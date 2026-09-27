@@ -11,7 +11,14 @@ import {
 } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
-import { componentManifestEntry } from "../components/manifest_build.js";
+import {
+  componentManifestEntry,
+  componentVariantManifestEntry,
+} from "../components/manifest_build.js";
+import {
+  isComponentVariantDefinition,
+  type ComponentDefinition,
+} from "../components/types.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 
@@ -40,6 +47,7 @@ export function createManifest(
         catalogueSchemes,
         componentViews,
         entry.navPath ?? [],
+        entries,
       ),
     ),
     generatedBy: "mokly",
@@ -116,6 +124,7 @@ function toManifestEntry(
   catalogueSchemes: readonly ColorScheme[],
   componentViews: ReadonlyMap<string, ComponentViewRecord>,
   navPath: readonly string[],
+  entries: readonly ResolvedRegistryEntry[],
 ): ManifestV7["entries"][number] {
   const common = {
     declaredDependencies: [...new Set(entry.dependencies)].sort(),
@@ -131,14 +140,24 @@ function toManifestEntry(
     sourcePath: entry.sourceRelativePath,
     title: entry.title,
   };
+  if (entry.kind === "component" && isComponentVariantDefinition(entry)) {
+    const parent = entries.find(
+      (candidate): candidate is ComponentDefinition & ResolvedRegistryEntry =>
+        candidate.kind === "component" &&
+        !isComponentVariantDefinition(candidate) &&
+        candidate.id === entry.variantOf,
+    )!;
+    return componentVariantManifestEntry(
+      entry,
+      parent,
+      common,
+      catalogueSchemes,
+      componentViews,
+    );
+  }
   if (entry.kind === "component")
     return {
-      ...componentManifestEntry(
-        entry,
-        common,
-        catalogueSchemes,
-        componentViews,
-      ),
+      ...componentManifestEntry(entry, common),
       declaredDependencies: common.declaredDependencies,
     };
   if (entry.kind === "page")

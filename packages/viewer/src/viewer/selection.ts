@@ -1,5 +1,6 @@
 import {
   currentCatalogueEntries,
+  catalogueComponentVariants,
   resolveCatalogueSelection,
 } from "../catalogue/entry_selection.js";
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
@@ -49,7 +50,11 @@ export function normalizeSelection(
       value.variantId === undefined ||
       (typeof value.variantId === "string" &&
         entry?.kind === "component" &&
-        entry.variants.some((variant) => variant.id === value.variantId))
+        ("variantOf" in entry
+          ? entry.id === value.variantId
+          : catalogueComponentVariants(model, entry.id).some(
+              (variant) => variant.id === value.variantId,
+            )))
     ) ||
     !["all", "changes"].includes(value.view) ||
     !["mobile", "desktop", "both"].includes(value.viewport) ||

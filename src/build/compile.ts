@@ -1,6 +1,5 @@
 import type { ComponentViewRecord } from "@mokly/viewer";
 import {
-  componentFragmentRoute,
   entryRoute,
   effectiveColorSchemes,
   viewRoute,
@@ -12,6 +11,7 @@ import { transformCompatibilityDocuments } from "../compatibility/transform.js";
 import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
+import { isComponentVariantDefinition } from "../components/types.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
@@ -102,24 +102,19 @@ async function compileMeasured(
         entryRoute("page", entry.id),
         entry.sourceRelativePath,
       );
-    if (entry.kind !== "screen" && entry.kind !== "component") continue;
-    for (const variantId of entry.kind === "component"
-      ? entry.variants.map((variant) => variant.id)
-      : [undefined]) {
+    if (
+      entry.kind !== "screen" &&
+      !(entry.kind === "component" && isComponentVariantDefinition(entry))
+    )
+      continue;
+    {
       for (const viewport of VIEWPORTS) {
         for (const colorScheme of effectiveColorSchemes(
           entry,
           config.colorSchemes,
         )) {
           generatedOwners.set(
-            variantId
-              ? componentFragmentRoute(
-                  entryRoute("component", entry.id),
-                  variantId,
-                  viewport,
-                  colorScheme,
-                )
-              : viewRoute("screen", entry.id, viewport, colorScheme),
+            viewRoute(entry.kind, entry.id, viewport, colorScheme),
             entry.sourceRelativePath,
           );
         }

@@ -2,7 +2,11 @@
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
-import { analyzeHierarchy, type CatalogueHierarchy } from "@mokly/viewer/data";
+import {
+  analyzeHierarchy,
+  isManifestComponentVariant,
+  type CatalogueHierarchy,
+} from "@mokly/viewer/data";
 import type { Manifest, ManifestEntry } from "@mokly/viewer/data";
 
 import { toPosixPath } from "../config/paths.js";
@@ -27,7 +31,12 @@ export function changedManifestRoutes(
   const baseHierarchy = {
     variantParentById: new Map(
       baseManifest.entries.flatMap((entry) => {
-        if (entry.kind !== "screen" || !entry.variantOf) return [];
+        if (
+          (entry.kind !== "screen" && entry.kind !== "component") ||
+          !("variantOf" in entry) ||
+          !entry.variantOf
+        )
+          return [];
         const parent = baseEntries.get(entry.variantOf);
         return parent ? [[entry.id, parent] as const] : [];
       }),
@@ -81,6 +90,18 @@ function routeChangeProjection(
   if (entry.kind === "use-case") {
     return { ...common, route: entry.route, steps: entry.steps };
   }
+  if (entry.kind === "component" && isManifestComponentVariant(entry))
+    return {
+      ...common,
+      darkFragments: entry.darkFragments,
+      fragments: entry.fragments,
+      props: entry.props,
+      route: entry.route,
+      suppliedSlots: entry.suppliedSlots,
+      variantParent: projectedVariantParent(entry, hierarchy),
+      variantOf: entry.variantOf,
+      viewports: entry.viewports,
+    };
   if (entry.kind === "component")
     return {
       ...common,
@@ -88,9 +109,6 @@ function routeChangeProjection(
       propSchema: entry.propSchema,
       controls: entry.controls,
       slots: entry.slots,
-      variants: entry.variants.map(
-        ({ componentViews: _views, ...variant }) => variant,
-      ),
     };
   return {
     ...common,
@@ -123,7 +141,13 @@ function changedPathCandidates(
   for (const candidate of [entry, baseEntry]) {
     if (candidate?.kind === "page")
       candidates.push(`${prefix}${candidate.route}`);
-    if (candidate?.kind !== "screen") continue;
+    if (
+      candidate?.kind !== "screen" &&
+      !(
+        candidate?.kind === "component" && isManifestComponentVariant(candidate)
+      )
+    )
+      continue;
     candidates.push(
       `${prefix}${candidate.fragments.mobile}`,
       `${prefix}${candidate.fragments.desktop}`,

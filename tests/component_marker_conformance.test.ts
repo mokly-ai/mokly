@@ -96,8 +96,8 @@ test("each recorded range in every screen/variant view has exactly one matched p
     const targets =
       entry.kind === "screen"
         ? [entry]
-        : entry.kind === "component"
-          ? entry.variants
+        : entry.kind === "component" && "variantOf" in entry
+          ? [entry]
           : [];
     for (const target of targets)
       for (const view of target.componentViews ?? []) {

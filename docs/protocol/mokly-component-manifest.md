@@ -287,20 +287,20 @@ final LF.
 Emit v7 for every current catalogue, including those without components. Its
 sorted private `sourceFiles` inventory and explicit page entries replace legacy
 discovery; component records retain their complete usage and declaration proof.
-Historical Git readers retain v3, opt-in v2, both earlier v4 shapes, v5, v6,
-and v7: main's component format has `legacyPages`, while the page migration
-format has `sourceFiles`. These v4 shapes are disjoint; mixed top-level fields
-are invalid. The historical reader normalizes every baseline entry into one
-internal shape whose artifact paths are read from the stored v3–v6 `route`,
-`fragments`, and `darkFragments` fields or derived for v7, and whose
-component saved variants (v3–v6 `variants` arrays) become variant entries
-keyed by `<component id>` and the stored variant id; stored routes never leave
-that boundary. Historical path handling follows the
-[navigation path contract](./mokly-nav-paths.md#variants-and-historical-paths).
-Current loading rejects every earlier version with a rebuild diagnostic.
-Do not invent component usage for historical screen/page-only entries or revive
-legacy configuration. Registered document pages retain their material Changes
-and baseline context without screen/component visual comparisons or controls.
-Reject unknown versions.
-Shared positive/negative contract fixtures, schema round trips,
-deterministic-output checks, and ownership/path regressions cover these rules.
+Historical Git readers retain v3, opt-in v2, both earlier v4 shapes, v5, v6, and
+v7: main's component format has `legacyPages`, while the page migration format
+has `sourceFiles`. These v4 shapes are disjoint; mixed top-level fields are
+invalid. The historical reader normalizes baseline entries into one internal
+shape: paths come from stored v3–v6 `route`, `fragments`, and `darkFragments` or
+derive for v7, and v3–v6 component `variants` arrays become entries. A stored
+variant id already beginning `<component id>-` stays unchanged; otherwise it
+expands to `<component id>-<stored variant id>`. A collision with an entry id or
+another expanded id rejects the manifest as `manifest-invalid`, so Changes is
+unavailable. Stored routes never leave that boundary; the
+[path contract](./mokly-nav-paths.md#variants-and-historical-paths) covers
+historical paths. Current loading rejects earlier versions with a rebuild
+diagnostic; historical loading rejects unnamed versions. Do not invent component
+usage for historical screen/page-only entries or revive legacy configuration.
+Registered document pages keep material Changes and baseline context without
+visual comparisons or controls. Contract fixtures, schema round trips,
+deterministic output, and ownership/path regressions cover these rules.

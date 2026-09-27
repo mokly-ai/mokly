@@ -156,7 +156,9 @@ test("renewal failure offers a retry that reacquires the selected comparison", a
 test("a pending renewal cannot restore a previously selected saved variant", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/view/components/action.html?variant=disabled`);
+  await page.goto(
+    `${server.url}/view/components/action.html?variant=action-disabled`,
+  );
   await chooseViewport(page, "desktop");
   await loadComparison(page, "Side by side");
   await expect(
@@ -170,7 +172,7 @@ test("a pending renewal cannot restore a previously selected saved variant", asy
     await pending.arrived;
     await page
       .getByLabel("Saved variant", { exact: true })
-      .selectOption("default");
+      .selectOption("action-default");
     await expect(
       page
         .frameLocator(".mb-pane--after iframe")
@@ -178,7 +180,7 @@ test("a pending renewal cannot restore a previously selected saved variant", asy
     ).toBeEnabled();
     pending.release();
     await pending.finished;
-    await expect(page).toHaveURL(/variant=default/);
+    await expect(page).toHaveURL(/variant=action-default/);
     await expect(
       page
         .frameLocator(".mb-pane--after iframe")

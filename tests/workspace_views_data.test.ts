@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { removedManifestEntries } from "../dist/registry/changes.js";
 import { viewPage } from "../dist/server/pages.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
@@ -57,11 +58,15 @@ test("a v3 component result keys every saved variant's view states", () => {
     comparison,
   );
 
-  assert.deepEqual(Object.keys(evidence), ["default", "second", "removed"]);
+  assert.deepEqual(Object.keys(evidence), [
+    "badge-default",
+    "badge-second",
+    "badge-removed",
+  ]);
   assert.deepEqual(
-    evidence.second,
+    evidence["badge-second"],
     comparison.variants
-      .find(({ id }) => id === "second")
+      .find(({ id }) => id === "badge-second")
       ?.views.map(({ colorScheme, state, viewport }) => ({
         colorScheme,
         state,
@@ -73,9 +78,9 @@ test("a v3 component result keys every saved variant's view states", () => {
       component,
       context({ baseline: componentBaseline, result }),
       comparison,
-      "default",
+      "badge-default",
     ),
-    evidence.default,
+    evidence["badge-default"],
   );
 });
 
@@ -172,7 +177,10 @@ test("workspace data publishes one changed-view list for a screen", () => {
 test("workspace data keeps changed views with current and removed variants", () => {
   const result = componentVariantResult();
   const data = workspaceData(
-    createCatalogue(componentManifest),
+    createCatalogue(
+      componentManifest,
+      removedManifestEntries(componentManifest, componentBaseline),
+    ),
     {
       base: "main",
       componentChanges: { baseline: componentBaseline, result },
@@ -182,9 +190,9 @@ test("workspace data keeps changed views with current and removed variants", () 
   );
 
   assert.deepEqual(data.changedViews, {
-    default: [],
-    second: DARK_VIEWS,
-    removed: [
+    "badge-default": [],
+    "badge-second": DARK_VIEWS,
+    "badge-removed": [
       { viewport: "mobile", colorScheme: "light" },
       { viewport: "mobile", colorScheme: "dark" },
       { viewport: "desktop", colorScheme: "light" },
@@ -205,7 +213,7 @@ test("workspace data keeps changed views with current and removed variants", () 
     ),
   );
   assert.equal(
-    data.variants.find(({ value }) => value.id === "removed")?.removed,
+    data.variants.find(({ value }) => value.id === "badge-removed")?.removed,
     true,
   );
 });

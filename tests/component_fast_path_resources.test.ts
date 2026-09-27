@@ -52,14 +52,14 @@ for (const generatedOutput of ["derived", "committed"] as const)
       fixture.after.outputs.get(afterPath),
     );
     const changedPaths = ["entries/fixture.mockup.tsx"];
-    if (generatedOutput === "committed")
-      changedPaths.push("mockups/components/image.svg");
+    if (generatedOutput === "committed") changedPaths.push("mockups/image.svg");
     const beforeResources = {
       "image.svg": "image",
       "components/image.svg": "image",
     };
     const afterResources = {
       ...beforeResources,
+      ...(generatedOutput === "committed" ? { "image.svg": "updated" } : {}),
       "components/nested/image.svg": "image",
     };
     const result = await assertFastPathEquivalent({
@@ -107,7 +107,7 @@ async function relocatedFixture(t: TestContext) {
 
 function actionViewPath(compilation: Compilation): string {
   const action = compilation.manifest.entries.find(
-    (entry) => entry.kind === "component" && entry.id === "action",
+    (entry) => entry.kind === "component" && entry.id === "action-default",
   );
   assert.ok(action);
   return generatedViews(action)[0]!.path;

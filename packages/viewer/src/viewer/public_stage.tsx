@@ -1,6 +1,7 @@
 import { useContext, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
+import { catalogueComponentVariants } from "../catalogue/entry_selection.js";
 import type {
   CatalogueReadModel,
   CatalogueRoutedEntry,
@@ -197,9 +198,15 @@ export function PublicStage({
     );
   const views =
     entry.kind === "component"
-      ? (entry.variants.find(
+      ? (("variantOf" in entry
+          ? [entry]
+          : catalogueComponentVariants(catalogue, entry.id)
+        ).find(
           (variant) => variant.id === (variantId ?? selection.variantId),
-        ) ?? entry.variants[0])!.views
+        ) ??
+          ("variantOf" in entry
+            ? entry
+            : catalogueComponentVariants(catalogue, entry.id)[0]))!.views
       : (entry as CatalogueScreen).views;
   return (
     <div

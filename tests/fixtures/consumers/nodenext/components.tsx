@@ -37,7 +37,7 @@ const component = defineComponent({
   ),
   variants: [
     {
-      id: "default",
+      id: "typed-component-default",
       title: "Default",
       props: { label: "Continue", children: <strong>Slot</strong> },
     },

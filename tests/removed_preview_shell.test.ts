@@ -59,19 +59,23 @@ const component: RemovedEntry = {
   slots: [],
   controls: {},
   ownedDependencies: [],
-  variants: [
-    {
-      id: "default",
-      title: "Default",
-      props: {},
-      suppliedSlots: [],
-      componentViews: [],
-      fragments: {
-        mobile: "components/chip.default.mobile.html",
-        desktop: "components/chip.default.desktop.html",
-      },
-    },
-  ],
+};
+
+const componentVariant: RemovedEntry = {
+  ...metadata,
+  kind: "component",
+  id: "chip-default",
+  title: "Default",
+  route: "components/chip-default.html",
+  variantOf: "chip",
+  viewports: ["mobile", "desktop"],
+  props: {},
+  suppliedSlots: [],
+  componentViews: [],
+  fragments: {
+    mobile: "components/chip-default.mobile.html",
+    desktop: "components/chip-default.desktop.html",
+  },
 };
 
 const flow: RemovedEntry = {
@@ -83,7 +87,10 @@ const flow: RemovedEntry = {
   steps: [],
 };
 
-function removedShell(entry: RemovedEntry): string {
+function removedShell(
+  entry: RemovedEntry,
+  related: readonly RemovedEntry[] = [],
+): string {
   const manifest: ManifestV7 = {
     schemaVersion: 7,
     generatedBy: "mokly",
@@ -92,6 +99,9 @@ function removedShell(entry: RemovedEntry): string {
   };
   const removed: RemovedEntrySnapshot[] = [
     { entry: { ...entry, navPath: ["Example"] } },
+    ...related.map((candidate) => ({
+      entry: { ...candidate, navPath: ["Example"] },
+    })),
   ];
   const catalogue = createCatalogue(manifest, removed);
   return viewPage(
@@ -168,7 +178,7 @@ test("a served stage claims no request until its client can make one", () => {
 });
 
 test("removed components and flows keep the behavior the contract leaves alone", () => {
-  const chip = removedShell(component);
+  const chip = removedShell(component, [componentVariant]);
   assert.match(documentText(chip), /This component was removed/);
   assert.match(
     documentText(chip),

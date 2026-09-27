@@ -57,13 +57,13 @@ export function secondVariantDarkOnlyResult(): ReviewResultV3 {
         title: "Action",
         variants: [
           {
-            id: "default",
+            id: "action-default",
             state: "unchanged",
             title: "Default",
             views: variantViews(false),
           },
           {
-            id: "disabled",
+            id: "action-disabled",
             state: "changed",
             title: "Disabled",
             views: variantViews(true),

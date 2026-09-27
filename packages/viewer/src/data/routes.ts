@@ -53,20 +53,6 @@ export function fragmentRoute(
   return route.replace(/\.html$/, `.${viewport}${scheme}.html`);
 }
 
-/** Derive one temporary local component-variant document from its parent route. */
-export function componentFragmentRoute(
-  route: string,
-  variantId: string,
-  viewport: Viewport,
-  colorScheme: ColorScheme = "light",
-): string {
-  const scheme = colorScheme === "dark" ? ".dark" : "";
-  return route.replace(
-    /\.html$/,
-    `.variants/${variantId}.${viewport}${scheme}.html`,
-  );
-}
-
 /** Derive the canonical shell URL for an entry. */
 export function viewHref(kind: EntryRouteKind, id: string): string {
   return `/view/${entryRoute(kind, id)}`;

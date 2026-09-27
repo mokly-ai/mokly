@@ -13,7 +13,6 @@ import type {
   CatalogueEntry,
   CatalogueRoutedEntry,
   CatalogueUsage,
-  CatalogueVariant,
   CatalogueView,
   ComparisonSelection,
 } from "./types.js";
@@ -177,6 +176,19 @@ export function readEntry(value: unknown): CatalogueRoutedEntry {
         ? { variantOf: id(input.variantOf) }
         : {}),
     };
+  if (input.variantOf !== undefined)
+    return {
+      ...base,
+      kind,
+      navPath,
+      route: path,
+      ...axes,
+      variantOf: id(input.variantOf),
+      props: readProps(input.props),
+      suppliedSlots: array(input.suppliedSlots).map(string),
+      views: array(input.views).map(readView),
+      comparison: readComparison(input.comparison),
+    };
   const schema = readSchema(input.propSchema);
   if (schema.kind !== "object")
     invalidData("$catalogue", "component requires object schema");
@@ -189,21 +201,6 @@ export function readEntry(value: unknown): CatalogueRoutedEntry {
     propSchema: schema,
     slots: array(input.slots).map(string),
     controls: readControls(input.controls, schema),
-    variants: array(input.variants).map(readVariant),
-  };
-}
-function readVariant(value: unknown): CatalogueVariant {
-  const input = object(value);
-  return {
-    id: id(input.id),
-    title: text(input.title),
-    props: readProps(input.props),
-    suppliedSlots: array(input.suppliedSlots).map(string),
-    views: array(input.views).map(readView),
-    comparison: readComparison(input.comparison),
-    ...(input.description !== undefined
-      ? { description: text(input.description) }
-      : {}),
   };
 }
 

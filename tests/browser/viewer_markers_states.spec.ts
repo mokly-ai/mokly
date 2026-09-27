@@ -60,7 +60,7 @@ for (const cross of [false, true]) {
     await page.evaluate(() =>
       window.viewerHarness.get("one").ref.current.select({
         screenId: "pane",
-        variantId: "default",
+        variantId: "pane-default",
       }),
     );
     await expectMarkerState(page, "visible", "unavailable");

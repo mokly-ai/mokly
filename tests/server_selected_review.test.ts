@@ -58,12 +58,12 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
   assert.ok((await fs.readFile(renderLog, "utf8")).includes("render"));
   await fs.writeFile(renderLog, "");
   const unrelated = fixture.after.manifest.entries.find(
-    (entry) => entry.kind === "component",
+    (entry) => entry.kind === "component" && "variantOf" in entry,
   );
-  assert.ok(unrelated?.kind === "component");
-  await fs.rm(
-    path.join(fixture.mockupsDir, unrelated.variants[0]!.fragments.mobile),
-  );
+  assert.ok(unrelated?.kind === "component" && "variantOf" in unrelated);
+  if (unrelated?.kind !== "component" || !("variantOf" in unrelated))
+    throw new Error("Missing component variant");
+  await fs.rm(path.join(fixture.mockupsDir, unrelated.fragments.mobile));
 
   const response = await fetch(
     `${server.url}/__mokly/diffs/review.json?route=screens%2Fhome.html`,
@@ -154,7 +154,7 @@ test("component comparison snapshots contain only the selected saved variant", a
   });
   fixture.beforeRemove(() => server.close());
   const response = await fetch(
-    `${server.url}/__mokly/diffs/review.json?route=components%2Faction.html&variant=disabled`,
+    `${server.url}/__mokly/diffs/review.json?route=components%2Faction.html&variant=action-disabled`,
   );
   assert.equal(response.status, 200, await response.clone().text());
   const result = parseReviewResult(await response.json());
@@ -164,7 +164,7 @@ test("component comparison snapshots contain only the selected saved variant", a
   assert.equal(result.components.length, 1);
   assert.deepEqual(
     result.components[0]!.variants.map((variant) => variant.id),
-    ["disabled"],
+    ["action-disabled"],
   );
   const view = result.components[0]!.variants[0]!.views[0]!;
   const before = await (

@@ -36,6 +36,7 @@ export {
 } from "./catalogue/component_values.js";
 export { projectTree } from "./catalogue/tree.js";
 export {
+  catalogueComponentVariants,
   currentCatalogueEntries,
   resolveCatalogueRecord,
   resolveCatalogueRoute,
@@ -97,17 +98,22 @@ export {
 } from "./components/view_validation.js";
 export { generatedViews, fragmentViews } from "./components/views.js";
 export type { GeneratedComponentView } from "./components/views.js";
+export {
+  flattenComponentVariantEntries,
+  legacyComponentVariantEntry,
+  legacyComponentVariantId,
+} from "./components/variants.js";
 export type {
   ComponentInstanceRecord,
   ComponentSourceLocation,
   ComponentStyleOwnership,
   ComponentResourceOwnership,
 } from "./components/manifest_types.js";
+export { isManifestComponentVariant } from "./components/manifest_types.js";
 export { instanceKey, slotKey } from "./components/keys.js";
 export { resolveInstance } from "./components/resolve_instance.js";
 export type { InstanceResolution } from "./components/resolve_instance.js";
 export {
-  componentFragmentRoute,
   entryRoute,
   fragmentRoute,
   parseViewHref,

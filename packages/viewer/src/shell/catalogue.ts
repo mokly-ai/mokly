@@ -1,6 +1,7 @@
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { ManifestComponent } from "../components/manifest_types.js";
+import { isManifestComponentVariant } from "../components/manifest_types.js";
 import {
   analyzeHierarchy,
   type CatalogueHierarchy,
@@ -79,7 +80,9 @@ export function createCatalogue(
     entry.kind === "screen" ? [entry] : [],
   );
   const removedComponents = removedEntries.flatMap(({ entry }) =>
-    entry.kind === "component" ? [entry] : [],
+    entry.kind === "component" && !isManifestComponentVariant(entry)
+      ? [entry]
+      : [],
   );
   const byId = new Map(manifest.entries.map((entry) => [entry.id, entry]));
   const byRoute = new Map<string, ManifestEntry>();
@@ -96,7 +99,8 @@ export function createCatalogue(
     entry.kind === "screen"
       ? entry.darkFragments !== undefined
       : entry.kind === "component" &&
-        entry.variants.some((variant) => variant.darkFragments !== undefined),
+        isManifestComponentVariant(entry) &&
+        entry.darkFragments !== undefined,
   );
   const hierarchy = analyzeHierarchy<ManifestEntry>(manifest.entries).hierarchy;
   const tags = collectTags(manifest.entries);

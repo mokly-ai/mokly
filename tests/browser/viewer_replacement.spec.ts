@@ -86,7 +86,7 @@ for (const cross of [false, true]) {
         if (transition === "variant")
           await page
             .getByRole("combobox", { name: "Saved variant" })
-            .selectOption("second");
+            .selectOption("pane-second");
         else
           await page.evaluate(
             (transition) =>

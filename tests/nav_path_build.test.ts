@@ -228,7 +228,7 @@ for (const [name, definition] of [
   ],
   [
     "component",
-    `defineComponent({ id: "home", title: "Home", description: "Home", route: "home.html", navPath: null, dependencies: [], relatedDocs: [], propSchema: { kind: "object", properties: {} }, render: () => "Home", variants: [{ id: "default", title: "Default", props: {} }] }).entry`,
+    `defineComponent({ id: "home", title: "Home", description: "Home", route: "home.html", navPath: null, dependencies: [], relatedDocs: [], propSchema: { kind: "object", properties: {} }, render: () => "Home", variants: [{ id: "home-default", title: "Default", props: {} }] }).entries`,
   ],
 ] as const) {
   test(`untyped ${name} null navPath does not default to an empty path`, async (context) => {

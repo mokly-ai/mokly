@@ -19,7 +19,7 @@ test.beforeAll(async () => {
       source
         .replace(/ {2}defineScreen\([^\n]+\)\n/, "")
         .replace(
-          ', { id: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+          ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
           "",
         )
         .replace(
@@ -95,7 +95,7 @@ test("removed component variants still honor eligible comparison URLs", async ({
   page,
 }) => {
   await page.goto(
-    `${server.url}/view/components/action.html?variant=disabled&viewport=mobile&comparison=side`,
+    `${server.url}/view/components/action.html?variant=action-disabled&viewport=mobile&comparison=side`,
   );
   await expect(page.locator("[data-workspace-variant-status]")).toHaveText(
     "Disabled · Removed",

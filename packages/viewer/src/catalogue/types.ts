@@ -17,9 +17,9 @@ export type PublicPath = string;
 export type RemovedEntryPreview =
   { kind: "screen" } | { kind: "page"; path: PublicPath };
 
-/** Public v2 contract, independent of private build and comparison inventories. */
+/** Public v3 contract, independent of private build and comparison inventories. */
 export interface CatalogueReadModel {
-  schemaVersion: 2;
+  schemaVersion: 3;
   identity: { id: string; title: string };
   deploymentId: string;
   revision: { content: number; evidence: number };
@@ -32,7 +32,7 @@ export interface CatalogueReadModel {
   screens: readonly CatalogueScreen[];
   pages: readonly CataloguePage[];
   useCases: readonly CatalogueUseCase[];
-  components: readonly CatalogueComponent[];
+  components: readonly (CatalogueComponent | CatalogueComponentVariant)[];
   removedEntries: readonly {
     entry: CatalogueRoutedEntry;
     snapshotId?: string;
@@ -40,7 +40,11 @@ export interface CatalogueReadModel {
   }[];
 }
 export type CatalogueRoutedEntry =
-  CatalogueScreen | CataloguePage | CatalogueUseCase | CatalogueComponent;
+  | CatalogueScreen
+  | CataloguePage
+  | CatalogueUseCase
+  | CatalogueComponent
+  | CatalogueComponentVariant;
 export type CatalogueNode =
   | { kind: "folder"; label: string; children: readonly CatalogueNode[] }
   | { kind: "entry"; id: string; children?: readonly CatalogueNode[] };
@@ -112,14 +116,19 @@ export interface CatalogueComponent extends CatalogueEntry {
   propSchema: ObjectPropSchema;
   slots: readonly string[];
   controls: Readonly<Record<string, ComponentControl>>;
-  variants: readonly CatalogueVariant[];
 }
-export interface CatalogueVariant {
-  id: string;
-  title: string;
-  description?: string;
+export interface CatalogueComponentVariant extends CatalogueEntry {
+  kind: "component";
+  navPath: readonly string[];
+  route: string;
+  viewports: readonly Viewport[];
+  colorSchemes: readonly ColorScheme[];
+  variantOf: string;
   props: ComponentWireProps;
   suppliedSlots: readonly string[];
   views: readonly CatalogueView[];
   comparison: ComparisonSelection;
 }
+
+/** Compatibility name for code that presents a component's variant rows. */
+export type CatalogueVariant = CatalogueComponentVariant;

@@ -8,6 +8,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { DUAL_SCHEME_SAMPLES } from "../examples/basic/entries/design/library/metadata.js";
 import { AppearanceSelect } from "../packages/viewer/dist/shell/appearance.js";
 
+import { componentVariants } from "./helpers/component_views.js";
 import {
   attribute,
   designCatalogue,
@@ -74,7 +75,7 @@ test("the appearance-related registered samples render in both schemes", async (
   for (const id of dualSchemeComponents) {
     const entry = manifest.entries.find((entry) => entry.id === id);
     assert.ok(entry?.kind === "component", id);
-    for (const variant of entry.variants) {
+    for (const variant of componentVariants(manifest, id)) {
       assert.ok(
         variant.darkFragments,
         `${id}/${variant.id} has no dark sample`,

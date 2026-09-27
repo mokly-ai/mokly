@@ -81,7 +81,7 @@ test("historical v5 permits empty collections but drops them after validation", 
 test("manifest validation rejects broken variant parents and non-derived routes", () => {
   const unknown = mutableManifest(variantManifest());
   screenEntry(unknown, "welcome-empty").variantOf = "missing";
-  assert.throws(() => parseManifest(unknown), /parent screen does not exist/);
+  assert.throws(() => parseManifest(unknown), /variant parent does not exist/);
 
   const nonScreen = mutableManifest(variantManifest());
   nonScreen.entries.push({

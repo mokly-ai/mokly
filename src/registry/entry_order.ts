@@ -5,9 +5,9 @@ interface EntryOrderFields {
 }
 
 /**
- * Order ordinary entries by kind then id while keeping each valid screen
- * parent's variants immediately after it in input order. A variant without one
- * uniquely valid root-screen parent stays in ordinary kind/id position so the
+ * Order ordinary entries by kind then id while keeping each valid screen or
+ * component parent's variants immediately after it in input order. A variant without one
+ * uniquely valid non-variant parent stays in ordinary kind/id position so the
  * relationship validator can report it deterministically.
  */
 export function orderEntriesWithVariants<T>(
@@ -24,7 +24,10 @@ export function orderEntriesWithVariants<T>(
   const variantsByParent = new Map<T, T[]>();
   for (const value of values) {
     const entry = entryOf(value);
-    if (entry.kind !== "screen" || typeof entry.variantOf !== "string") {
+    if (
+      !["screen", "component"].includes(entry.kind) ||
+      typeof entry.variantOf !== "string"
+    ) {
       continue;
     }
     const candidates = byId.get(entry.variantOf) ?? [];
@@ -32,7 +35,7 @@ export function orderEntriesWithVariants<T>(
     if (parent === undefined || parent === value) continue;
     const parentEntry = entryOf(parent);
     if (
-      parentEntry.kind !== "screen" ||
+      parentEntry.kind !== entry.kind ||
       Object.hasOwn(parentEntry, "variantOf")
     )
       continue;

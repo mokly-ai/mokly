@@ -204,9 +204,11 @@ function structuredNode(
     const entry = node.entry;
     return leafNode(
       entry,
-      (hierarchy.variantsById.get(entry.id) ?? []).map((variant) =>
-        leafNode(variant, []),
-      ),
+      entry.kind === "screen"
+        ? (hierarchy.variantsById.get(entry.id) ?? []).map((variant) =>
+            leafNode(variant, []),
+          )
+        : [],
     );
   }
   return {

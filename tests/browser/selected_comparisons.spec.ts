@@ -70,8 +70,8 @@ test("saved variant selection and refresh keep the selected comparison scope", a
   await chooseViewport(page, "mobile");
   await page
     .getByLabel("Saved variant", { exact: true })
-    .selectOption("disabled");
-  await expect(page).toHaveURL(/variant=disabled/);
+    .selectOption("action-disabled");
+  await expect(page).toHaveURL(/variant=action-disabled/);
   await loadComparison(page, "Overlay");
   await expect(
     page
@@ -87,18 +87,18 @@ test("saved variant selection and refresh keep the selected comparison scope", a
   expect(requests).toHaveLength(2);
   for (const request of requests) {
     expect(request.searchParams.get("route")).toBe("components/action.html");
-    expect(request.searchParams.get("variant")).toBe("disabled");
+    expect(request.searchParams.get("variant")).toBe("action-disabled");
   }
   expect(requests[1]!.searchParams.get("refresh")).toBe("1");
   await page
     .getByLabel("Saved variant", { exact: true })
-    .selectOption("default");
-  await expect(page).toHaveURL(/variant=default/);
+    .selectOption("action-default");
+  await expect(page).toHaveURL(/variant=action-default/);
   await page.getByRole("button", { name: "Side by side", exact: true }).click();
   await expect(
     page
       .frameLocator(".mb-pane--after iframe")
       .getByRole("button", { name: "Proceed", exact: true }),
   ).toBeEnabled();
-  expect(requests.at(-1)!.searchParams.get("variant")).toBe("default");
+  expect(requests.at(-1)!.searchParams.get("variant")).toBe("action-default");
 });

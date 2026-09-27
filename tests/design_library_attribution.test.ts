@@ -61,7 +61,10 @@ test("each exclusive library stylesheet changes its component and only affects r
             ? [evidence.context.variantId]
             : [],
         );
-        assert.deepEqual([...new Set(variants)], ["tag-picker"]);
+        assert.deepEqual(
+          [...new Set(variants)],
+          ["design-ui-top-bar-tag-picker"],
+        );
         assert.ok(
           topBar.evidence.some(
             (evidence) =>
@@ -94,7 +97,7 @@ test("real implementation and saved metadata edits have distinct impact", async 
       "chrome/top-bar.tsx",
       'title: "Search"',
       'title: "Filtered search"',
-      "top-bar",
+      "top-bar-search",
       false,
     ],
     [
@@ -108,7 +111,7 @@ test("real implementation and saved metadata edits have distinct impact", async 
       "chrome/top-bar.tsx",
       'query: "tag:forms"',
       'query: "tag:onboarding"',
-      "top-bar",
+      "top-bar-search",
       false,
     ],
   ] as const)

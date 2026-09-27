@@ -1,6 +1,10 @@
 /** Live routing metadata is deliberately not a publishable manifest. */
 import type { ColorScheme } from "@mokly/viewer";
-import type { Manifest, ManifestV7 } from "@mokly/viewer/data";
+import {
+  isManifestComponentVariant,
+  type Manifest,
+  type ManifestV7,
+} from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { validateDependencyDeclarations } from "../components/dependency_validation.js";
@@ -47,11 +51,9 @@ export function parseCatalogueIndex(value: unknown): CatalogueIndex {
     if (
       (entry.kind === "screen" && entry.componentViews !== undefined) ||
       (entry.kind === "component" &&
-        entry.variants.some(
-          (variant) =>
-            !Array.isArray(variant.componentViews) ||
-            variant.componentViews.length > 0,
-        ))
+        isManifestComponentVariant(entry) &&
+        (!Array.isArray(entry.componentViews) ||
+          entry.componentViews.length > 0))
     )
       throw new MoklyError(
         "manifest-invalid",

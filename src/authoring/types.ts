@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import type { ColorScheme } from "@mokly/viewer";
 
-import type { ComponentDefinition } from "../components/types.js";
+import type { ComponentEntryDefinition } from "../components/types.js";
 
 /** Metadata shared by all structured catalogue entries. */
 export interface EntryInput {
@@ -94,7 +94,10 @@ export interface UseCaseDefinition extends UseCaseInput, DefinitionBrand {
 
 /** Any structured catalogue definition. */
 export type RegistryDefinition =
-  ScreenDefinition | PageDefinition | UseCaseDefinition | ComponentDefinition;
+  | ScreenDefinition
+  | PageDefinition
+  | UseCaseDefinition
+  | ComponentEntryDefinition;
 
 /** Fields inherited by a nested child from its ancestors. */
 export interface NestedInherited {

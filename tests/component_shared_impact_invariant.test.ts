@@ -68,9 +68,12 @@ test("entry sharedImpact matches the documented old set across globs, declaratio
     ["screen", result.screens.map((entry) => entry.sharedImpact)],
     ["component", result.components.map((entry) => entry.sharedImpact)],
   ] as const) {
-    const expectedPairs = pairs.filter(
-      (pair) => (pair.after ?? pair.before)!.kind === kind,
-    );
+    const expectedPairs = pairs.filter((pair) => {
+      const entry = (pair.after ?? pair.before)!;
+      return (
+        entry.kind === kind && (kind !== "component" || !("variantOf" in entry))
+      );
+    });
     assert.equal(actual.length, expectedPairs.length);
     expectedPairs.forEach((pair, index) =>
       assert.deepEqual(
@@ -116,9 +119,9 @@ function singleSideSource(source: string, side: "removed" | "added"): string {
   dependencies: ["src/one-side/${componentId}"],
   propSchema: { kind: "object", properties: {} },
   render: () => <span>One side</span>,
-  variants: [{ id: "default", title: "Default", props: {} }]
+  variants: [{ id: "${componentId}-default", title: "Default", props: {} }]
 });
-export const mockups = [oneSide.entry,`,
+export const mockups = [oneSide.entries,`,
     )
     .replace(
       "\n];",
@@ -172,6 +175,7 @@ function documentedEntryImpact(
         [before, after].flatMap((manifest) =>
           manifest.entries.flatMap((entry) =>
             entry.kind === "component" &&
+            !("variantOf" in entry) &&
             entry.ownedDependencies.some((root) => contains(root, changed))
               ? [entry.id]
               : [],

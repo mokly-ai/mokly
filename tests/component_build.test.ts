@@ -12,6 +12,7 @@ import {
 } from "../packages/viewer/dist/components/keys.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
+import { componentVariants } from "./helpers/component_views.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 async function compile(
@@ -30,16 +31,21 @@ test("component registration emits deterministic variants and actual per-view ow
   assert.equal(result.manifest.schemaVersion, 7);
   const action = result.manifest.entries.find((entry) => entry.id === "action");
   assert.ok(action?.kind === "component");
+  assert.equal("variants" in action, false);
+  assert.equal("componentViews" in action, false);
+  const variants = componentVariants(result.manifest, action.id);
+  assert.equal(variants[0]!.variantOf, action.id);
+  assert.deepEqual(variants[0]!.navPath, action.navPath);
   assert.equal(
-    action.variants[0]!.fragments.mobile,
-    "components/action.variants/default.mobile.html",
+    variants[0]!.fragments.mobile,
+    "components/action-default.mobile.html",
   );
   assert.equal(
-    action.variants[1]!.darkFragments?.desktop,
-    "components/action.variants/disabled.desktop.dark.html",
+    variants[1]!.darkFragments?.desktop,
+    "components/action-disabled.desktop.dark.html",
   );
   assert.deepEqual(
-    action.variants[0]!.componentViews.map((view) => [
+    variants[0]!.componentViews.map((view) => [
       view.viewport,
       view.colorScheme,
       view.instances.length,
@@ -72,10 +78,7 @@ test("component registration emits deterministic variants and actual per-view ow
   assert.deepEqual(decodeProps(slotted.props), { label: "Slot action" });
   const html = result.outputs.get(screen.fragments.mobile)!;
   assert.equal(html.includes("<template"), false);
-  assert.match(
-    html,
-    /href="..\/components\/action.variants\/default.mobile.html"/,
-  );
+  assert.match(html, /href="..\/components\/action-default.mobile.html"/);
   const ranges = validateComponentRanges(html, view.ranges);
   const hidden = view.instances.find((instance) => instance.id === "hidden")!;
   const hiddenRange = ranges.find(
@@ -131,7 +134,7 @@ for (const [name, options, error] of [
   ],
   [
     "unregistered wrapper",
-    { exports: "pane.entry,", extra: "" },
+    { exports: "pane.entries,", extra: "" },
     /missing-child|not exported/,
   ],
   [

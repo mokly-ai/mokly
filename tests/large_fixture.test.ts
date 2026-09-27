@@ -87,7 +87,7 @@ test("scaled consumer exercises the same render, hierarchy, resource and compone
       write: (event) => events.push(event),
     },
   );
-  assert.equal(fixture.routes, 16);
+  assert.equal(fixture.routes, 28);
   assert.equal(fixture.documents, 82);
   assert.equal(compilation.outputs.size, fixture.documents + 1);
   assert.equal(compilation.manifest.entries.length, fixture.routes);

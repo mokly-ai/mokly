@@ -66,12 +66,13 @@ for (const cross of [false, true])
     );
     const action = page.getByRole("link", { name: "Action", exact: true });
     await action.evaluate((link) => {
-      (link as HTMLAnchorElement).href += "?variant=disabled&fragment=details";
+      (link as HTMLAnchorElement).href +=
+        "?variant=action-disabled&fragment=details";
     });
     await action.click();
     await expect(
       page.getByRole("combobox", { name: "Saved variant" }),
-    ).toHaveValue("disabled");
+    ).toHaveValue("action-disabled");
     await expect
       .poll(async () => {
         const element = await page
@@ -94,7 +95,7 @@ for (const cross of [false, true])
       {
         screenId: "action",
         route: "components/action.html",
-        variantId: "disabled",
+        variantId: "action-disabled",
         fragment: "details",
       },
     ]);

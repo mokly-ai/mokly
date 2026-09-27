@@ -1,7 +1,7 @@
 import { minimatch } from "minimatch";
 
-import type { ComponentViewRecord } from "@mokly/viewer";
-import { canonicalJson } from "@mokly/viewer/data";
+import type { ComponentViewRecord, ManifestComponent } from "@mokly/viewer";
+import { canonicalJson, isManifestComponentVariant } from "@mokly/viewer/data";
 import type {
   Manifest,
   ManifestEntry,
@@ -29,12 +29,18 @@ export function entryPairs(
 ): { before: RoutedEntry | undefined; after: RoutedEntry | undefined }[] {
   const bases = new Map(
     before.entries.flatMap((entry) =>
-      entry.kind === "page" ? [] : [[entryPairKey(entry), entry] as const],
+      entry.kind === "page" ||
+      (entry.kind === "component" && isManifestComponentVariant(entry))
+        ? []
+        : [[entryPairKey(entry), entry] as const],
     ),
   );
   const heads = new Map(
     after.entries.flatMap((entry) =>
-      entry.kind === "page" ? [] : [[entryPairKey(entry), entry] as const],
+      entry.kind === "page" ||
+      (entry.kind === "component" && isManifestComponentVariant(entry))
+        ? []
+        : [[entryPairKey(entry), entry] as const],
     ),
   );
   return [...new Set([...bases.keys(), ...heads.keys()])]
@@ -51,14 +57,13 @@ export function metadata(entry: RoutedEntry): string {
     ...common
   } = entry;
   if (entry.kind === "component") {
-    const { variants: _variants, ...component } = common as typeof entry;
-    return canonicalJson({
-      ...component,
-      navPath,
-      variants: entry.variants.map(
-        ({ componentViews: _views, ...variant }) => variant,
-      ),
-    });
+    if (isManifestComponentVariant(entry)) {
+      const { componentViews: _views, ...variant } = common as typeof entry;
+      return canonicalJson({ ...variant, navPath });
+    }
+    const component = { ...common } as Record<string, unknown>;
+    Reflect.deleteProperty(component, "variants");
+    return canonicalJson({ ...component, navPath });
   }
   if (entry.kind === "screen") {
     const { componentViews: _views, ...screen } = common as typeof entry;
@@ -69,10 +74,7 @@ export function metadata(entry: RoutedEntry): string {
 
 /** Track owners, exact reasons, and unowned path evidence across both manifests. */
 export class ComponentDependencyPolicy {
-  private readonly components: readonly Extract<
-    ManifestEntry,
-    { kind: "component" }
-  >[];
+  private readonly components: readonly ManifestComponent[];
   private readonly ownersByPath = new Map<string, ReadonlySet<string>>();
   private readonly sharedByPath = new Map<string, boolean>();
   constructor(
@@ -81,8 +83,8 @@ export class ComponentDependencyPolicy {
     private readonly shared: readonly string[],
   ) {
     this.components = [...before.entries, ...after.entries].filter(
-      (entry): entry is Extract<ManifestEntry, { kind: "component" }> =>
-        entry.kind === "component",
+      (entry): entry is ManifestComponent =>
+        entry.kind === "component" && !isManifestComponentVariant(entry),
     );
   }
   owners(changed: string): ReadonlySet<string> {
@@ -103,7 +105,12 @@ export class ComponentDependencyPolicy {
   }
   independent(entry: RoutedEntry, changed: string): boolean {
     const owners = this.owners(changed);
-    if (owners.has(entry.id) && entry.kind === "component") return true;
+    if (
+      owners.has(entry.id) &&
+      entry.kind === "component" &&
+      !isManifestComponentVariant(entry)
+    )
+      return true;
     const declared = entry.declaredDependencies ?? [];
     return (
       declared.includes(changed) && (!owners.size || entry.kind === "screen")

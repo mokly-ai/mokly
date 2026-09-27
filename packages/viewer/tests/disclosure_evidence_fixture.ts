@@ -20,7 +20,7 @@ const fixture = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v2.json",
+        "../../../docs/protocol/fixtures/catalogue-v3.json",
         import.meta.url,
       ),
       "utf8",
@@ -99,7 +99,9 @@ export function revision(
   const catalogue = viewerCatalogue(model);
   const entry = route ? catalogueRouteEntry(catalogue, route) : undefined;
   const workspace =
-    entry && (entry.kind === "screen" || entry.kind === "component")
+    entry &&
+    (entry.kind === "screen" ||
+      (entry.kind === "component" && !("variantOf" in entry)))
       ? { ...publicWorkspace(model, entry), base: previous.base }
       : undefined;
   return {

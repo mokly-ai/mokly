@@ -84,7 +84,7 @@ export const action = defineComponent({
   },
   variants: [
     {
-      id: "default",
+      id: "example-action-default",
       title: "Default",
       props: {
         label: "Continue",
@@ -95,12 +95,12 @@ export const action = defineComponent({
       },
     },
     {
-      id: "disabled",
+      id: "example-action-disabled",
       title: "Disabled",
       props: { label: "Continue", tone: "primary", radius: 8, disabled: true },
     },
     {
-      id: "secondary",
+      id: "example-action-secondary",
       title: "Secondary",
       props: {
         label: "Go back",

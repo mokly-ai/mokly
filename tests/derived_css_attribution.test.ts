@@ -30,11 +30,12 @@ for (const components of [false, true]) {
     const cssPaths = ["shared.css", "components/shared.css"].map((route) =>
       path.join(fixture.mockupsDir, route),
     );
-    const evidencePath = components
-      ? "mockups/components/shared.css"
-      : "mockups/shared.css";
+    const evidencePath = "mockups/shared.css";
     const current = await compileCatalogue(fixture.config);
-    const route = components ? "components/action.html" : "screens/home.html";
+    const route = components
+      ? "components/action-default.html"
+      : "screens/home.html";
+    const selectionRoute = components ? "components/action.html" : route;
     for (const [rule, expectedState] of [
       [".guide { padding: 2px; }", "unchanged"],
       [".auth { padding: 3px; }", "changed"],
@@ -67,7 +68,10 @@ for (const components of [false, true]) {
           after: current.manifest,
           ...(snapshot.result ? { result: snapshot.result } : {}),
         },
-        { route, ...(components ? { variantId: "default" } : {}) },
+        {
+          route: selectionRoute,
+          ...(components ? { variantId: "action-default" } : {}),
+        },
         new AbortController().signal,
       );
       const result = parseReviewResult(selected.result);

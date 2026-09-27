@@ -68,7 +68,11 @@ test("dev shim attaches source only to registered wrappers without mutating thei
     },
     render: (props) => props.label,
     variants: [
-      { id: "default", title: "Default", props: { label: "Continue" } },
+      {
+        id: "action-default",
+        title: "Default",
+        props: { label: "Continue" },
+      },
     ],
   });
   const jsxDEV = createJsxDEV(fixture.root, fixture.root);

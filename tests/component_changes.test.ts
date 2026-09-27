@@ -61,7 +61,7 @@ for (const [name, change, routes] of componentChangeCases)
     }
   });
 
-test("metadata-only component titles do not invent affected consumers", async (t) => {
+test("component title changes mark its variants without inventing affected consumers", async (t) => {
   const fixture = await componentReviewFixture(t, (s) =>
     s.replace(
       'title: "Action", description:',
@@ -76,7 +76,10 @@ test("metadata-only component titles do not invent affected consumers", async (t
   );
   assert.equal(result.schemaVersion, 3);
   if (result.schemaVersion !== 3) return;
-  assert.equal(result.changes.length, 1);
+  assert.deepEqual(
+    result.changes.map((entry) => (entry.after ?? entry.before)!.id).sort(),
+    ["action", "action-default", "action-disabled"].sort(),
+  );
   assert.equal(result.affectedConsumers.length, 0);
 });
 

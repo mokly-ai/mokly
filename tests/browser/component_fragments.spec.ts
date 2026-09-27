@@ -52,13 +52,11 @@ test("saved component variants render through standalone portable links in every
         page.getByRole("button", { name: "Inside", exact: true }),
       ).toBeVisible();
       await page.getByRole("link", { name: "Open Action" }).click();
-      await expect(page).toHaveURL(
-        url(`components/action.variants/default.${suffix}`),
-      );
+      await expect(page).toHaveURL(url(`components/action-default.${suffix}`));
       await expect(
         page.getByRole("button", { name: "Continue" }),
       ).toHaveAttribute("data-viewport", viewport);
-      await page.goto(url(`components/action.variants/disabled.${suffix}`));
+      await page.goto(url(`components/action-disabled.${suffix}`));
       await expect(
         page.getByRole("button", { name: "Continue" }),
       ).toBeDisabled();

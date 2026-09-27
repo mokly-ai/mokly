@@ -88,8 +88,11 @@ and `ownedDependencies` are optional. Existing id, dependency, tag, and
 color-scheme validation applies; the component's route derives from its id
 under the [derived route rule](./mokly-authoring.md#derived-routes). Each
 variant contains an id, title, complete typed props, and an optional
-description; `defineComponent` rejects unknown variant fields. Variant ids are
-global kebab-case catalogue ids, and each variant flattens into its own
+description. An authored description must be nonempty and becomes the variant
+entry's description; when omitted, the flattened entry copies the parent's
+description. Historical nested component variants use the same fallback when
+adapted to entries. `defineComponent` rejects unknown variant fields. Variant
+ids are global kebab-case catalogue ids, and each variant flattens into its own
 `kind: "component"` entry carrying `variantOf`, `props`, and `suppliedSlots`,
 copying the parent's `navPath` and inheriting its `colorSchemes`,
 `dependencies`, `relatedDocs`, and `tags`, as the

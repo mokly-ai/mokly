@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import type { CatalogueReadModel } from "@mokly/viewer";
+import { catalogueComponentVariants } from "@mokly/viewer/data";
 
 import { followupFixture } from "./viewer_followup_fixture.js";
 
@@ -102,7 +103,9 @@ test("Viewer keeps an unknown saved variant comparison ineligible", async ({
   const component = catalogue.components.find(({ id }) => id === "pane");
   if (!component) throw new Error("Missing Viewer component fixture");
   component.changes = { status: "ready", kind: "changed", included: true };
-  const variant = component.variants.find(({ id }) => id === "default");
+  const variant = catalogueComponentVariants(catalogue, component.id).find(
+    ({ id }) => id === "pane-default",
+  );
   if (!variant) throw new Error("Missing Viewer saved variant fixture");
   variant.comparison = { status: "unavailable" };
   variant.views = variant.views.map((view) => ({

@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  componentFragmentRoute,
   entryRoute,
   fragmentRoute,
   isCatalogueId,
@@ -62,21 +61,12 @@ test("view routes derive every axis from entry identity", () => {
     "screens/account-home.mobile.html",
   );
   assert.equal(
-    viewRoute("component", "action", "desktop", "dark"),
-    "components/action.desktop.dark.html",
+    viewRoute("component", "action-disabled", "desktop", "dark"),
+    "components/action-disabled.desktop.dark.html",
   );
   assert.equal(
     fragmentRoute("screens/account-home.html", "desktop", "dark"),
     "screens/account-home.desktop.dark.html",
-  );
-  assert.equal(
-    componentFragmentRoute(
-      "components/action.html",
-      "disabled",
-      "mobile",
-      "dark",
-    ),
-    "components/action.variants/disabled.mobile.dark.html",
   );
 });
 

@@ -14,7 +14,7 @@ test("document identity includes origin, route and query but excludes hashes", (
   for (const next of [
     "https://elsewhere.test/view/component.html?variant=first",
     "/view/other.html?variant=first",
-    "?variant=second#mb-main",
+    "?variant=pane-second#mb-main",
     "/view/component.html",
   ])
     assert.notEqual(

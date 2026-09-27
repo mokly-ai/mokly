@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ManifestComponent } from "../packages/viewer/dist/components/manifest_types.js";
+import type {
+  ManifestComponent,
+  ManifestComponentVariant,
+} from "../packages/viewer/dist/components/manifest_types.js";
 import type {
   ManifestEntry,
   ManifestScreen,
@@ -232,34 +235,51 @@ function component(
     slots: [],
     sourcePath: `entries/${id}.tsx`,
     title,
-    variants: [
-      {
-        componentViews: [],
-        fragments: {
-          desktop: `components/${id}.desktop.html`,
-          mobile: `components/${id}.mobile.html`,
-        },
-        id: "default",
-        props: {},
-        suppliedSlots: [],
-        title: "Default",
-      },
-    ],
     viewports: ["mobile", "desktop"],
   };
 }
 
 function manifest(entries: readonly ManifestEntry[]): ManifestV7 {
   return {
-    entries: entries.map((entry) => ({
-      ...entry,
-      declaredDependencies: entry.declaredDependencies ?? [],
-    })),
+    entries: entries.flatMap((entry) => [
+      {
+        ...entry,
+        declaredDependencies: entry.declaredDependencies ?? [],
+      },
+      ...(entry.kind === "component" && !("variantOf" in entry)
+        ? [componentVariant(entry)]
+        : []),
+    ]),
     generatedBy: "mokly",
     schemaVersion: 7,
     sourceFiles: [
       ...new Set(entries.map(({ sourcePath }) => sourcePath)),
     ].sort(),
+  };
+}
+
+function componentVariant(parent: ManifestComponent): ManifestComponentVariant {
+  const id = `${parent.id}-default`;
+  return {
+    componentViews: [],
+    declaredDependencies: [],
+    dependencies: parent.dependencies,
+    description: parent.description,
+    fragments: {
+      desktop: `components/${id}.desktop.html`,
+      mobile: `components/${id}.mobile.html`,
+    },
+    id,
+    kind: "component",
+    navPath: parent.navPath,
+    props: {},
+    relatedDocs: parent.relatedDocs,
+    route: `components/${id}.html`,
+    sourcePath: parent.sourcePath,
+    suppliedSlots: [],
+    title: "Default",
+    variantOf: parent.id,
+    viewports: ["mobile", "desktop"],
   };
 }
 

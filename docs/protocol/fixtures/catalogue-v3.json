@@ -43,55 +43,80 @@
       "slots": [],
       "tags": [],
       "title": "Action",
-      "variants": [
-        {
-          "comparison": {
-            "status": "unavailable"
-          },
-          "id": "default",
-          "props": {
-            "label": [
-              "string",
-              "Continue"
-            ]
-          },
-          "suppliedSlots": [],
-          "title": "Default",
-          "views": [
-            {
-              "colorScheme": "light",
-              "comparison": {
-                "status": "unavailable"
-              },
-              "fragmentPath": "static/components/action.variants/default.mobile.html",
-              "usage": {
-                "instances": [],
-                "ranges": [],
-                "slots": [],
-                "status": "ready"
-              },
-              "viewport": "mobile"
-            },
-            {
-              "colorScheme": "light",
-              "comparison": {
-                "status": "unavailable"
-              },
-              "fragmentPath": "static/components/action.variants/default.desktop.html",
-              "usage": {
-                "instances": [],
-                "ranges": [],
-                "slots": [],
-                "status": "ready"
-              },
-              "viewport": "desktop"
-            }
-          ]
-        }
-      ],
       "viewports": [
         "mobile",
         "desktop"
+      ]
+    },
+    {
+      "changes": {
+        "included": false,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "comparison": {
+        "status": "unavailable"
+      },
+      "details": {
+        "dependencies": [
+          "entries/fixture.mockup.tsx"
+        ],
+        "description": "Action",
+        "relatedDocs": [],
+        "sourcePath": "entries/fixture.mockup.tsx"
+      },
+      "id": "action-default",
+      "kind": "component",
+      "navPath": [
+        "Product"
+      ],
+      "props": {
+        "label": [
+          "string",
+          "Continue"
+        ]
+      },
+      "route": "components/action-default.html",
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Default",
+      "variantOf": "action",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "fragmentPath": "static/components/action-default.mobile.html",
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "fragmentPath": "static/components/action-default.desktop.html",
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "desktop"
+        }
       ]
     }
   ],
@@ -232,7 +257,7 @@
     "content": 0,
     "evidence": 0
   },
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "screens": [
     {
       "changes": {
@@ -367,6 +392,12 @@
       {
         "children": [
           {
+            "children": [
+              {
+                "id": "action-default",
+                "kind": "entry"
+              }
+            ],
             "id": "action",
             "kind": "entry"
           }

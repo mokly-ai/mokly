@@ -4,7 +4,10 @@ import { test } from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 import { parseManifest } from "../dist/registry/manifest.js";
-import type { ManifestComponent } from "../packages/viewer/dist/components/manifest_types.js";
+import type {
+  ManifestComponent,
+  ManifestComponentVariant,
+} from "../packages/viewer/dist/components/manifest_types.js";
 import type {
   ManifestV7,
   ManifestScreenV4,
@@ -31,6 +34,7 @@ test("manifest v7 rejects broken identities, ownership references and props befo
       value: ManifestV7,
       screen: ManifestScreenV4,
       component: ManifestComponent,
+      variant: ManifestComponentVariant,
     ) => void,
   ][] = [
     ["unknown schema", (value) => Object.assign(value, { schemaVersion: 8 })],
@@ -119,22 +123,22 @@ test("manifest v7 rejects broken identities, ownership references and props befo
     ],
     [
       "unsafe fragment",
-      (_v, _s, component) =>
-        Object.assign(component.variants[0]!.fragments, {
+      (_v, _s, _component, variant) =>
+        Object.assign(variant.fragments, {
           mobile: "../source.html",
         }),
     ],
     [
       "noncanonical variant fragment",
-      (_v, _s, component) =>
-        Object.assign(component.variants[0]!.fragments, {
+      (_v, _s, _component, variant) =>
+        Object.assign(variant.fragments, {
           mobile: "components/action.mobile.html",
         }),
     ],
     [
       "bad saved props",
-      (_v, _s, component) =>
-        Object.assign(component.variants[0]!, {
+      (_v, _s, _component, variant) =>
+        Object.assign(variant, {
           props: { label: ["number", "2"] },
         }),
     ],
@@ -161,9 +165,14 @@ test("manifest v7 rejects broken identities, ownership references and props befo
       (entry): entry is ManifestScreenV4 => entry.kind === "screen",
     )!;
     const component = value.entries.find(
-      (entry): entry is ManifestComponent => entry.kind === "component",
+      (entry): entry is ManifestComponent =>
+        entry.kind === "component" && !("variantOf" in entry),
     )!;
-    edit(value, screen, component);
+    const variant = value.entries.find(
+      (entry): entry is ManifestComponentVariant =>
+        entry.kind === "component" && "variantOf" in entry,
+    )!;
+    edit(value, screen, component, variant);
     assert.throws(() => parseManifest(value), Error, name);
   }
 });

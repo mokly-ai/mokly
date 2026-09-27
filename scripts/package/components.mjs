@@ -69,7 +69,7 @@ export async function smokeRegisteredComponents(
       },
       body: JSON.stringify({
         componentId: "packed-action",
-        variantId: "default",
+        variantId: "packed-action-default",
         viewport: "mobile",
         colorScheme: "light",
         generation: capability.generation,

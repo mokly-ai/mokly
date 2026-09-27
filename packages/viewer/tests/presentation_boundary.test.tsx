@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
 
+import { catalogueComponentVariants } from "../src/catalogue/entry_selection.js";
 import { readCatalogue } from "../src/catalogue/reader.js";
 import { renderViewer } from "../src/viewer/server.js";
 
@@ -9,7 +10,7 @@ const fixture = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v2.json",
+        "../../../docs/protocol/fixtures/catalogue-v3.json",
         import.meta.url,
       ),
       "utf8",
@@ -25,10 +26,13 @@ test("SSR preserves pending entry and saved-variant comparison eligibility", () 
         ? model.screens.find(({ id }) => id === screenId)!
         : model.components.find(({ id }) => id === screenId)!;
     entry.changes = { status: "ready", included: true, kind: "changed" };
+    const variant =
+      entry.kind === "component"
+        ? catalogueComponentVariants(model, entry.id)[0]!
+        : undefined;
     const views =
-      entry.kind === "component" ? entry.variants[0]!.views : entry.views;
-    if (entry.kind === "component")
-      entry.variants[0]!.comparison = { status: "pending" };
+      variant?.views ?? (entry.kind === "screen" ? entry.views : []);
+    if (variant) variant.comparison = { status: "pending" };
     for (const view of views) view.comparison = { status: "pending" };
 
     const html = renderViewer({
@@ -46,15 +50,12 @@ test("SSR uses effective Light evidence for light-only screens and variants", ()
   const originalScreenModel = structuredClone(fixture);
   const screenModel = {
     ...originalScreenModel,
-    components: originalScreenModel.components.map((candidate, index) =>
-      index === 0
+    components: originalScreenModel.components.map((candidate) =>
+      "variantOf" in candidate && candidate.variantOf === "action"
         ? {
             ...candidate,
             colorSchemes: ["light", "dark"] as const,
-            variants: candidate.variants.map((variant) => ({
-              ...variant,
-              views: withDarkViews(variant.views),
-            })),
+            views: withDarkViews(candidate.views),
           }
         : candidate,
     ),
@@ -99,7 +100,10 @@ test("SSR uses effective Light evidence for light-only screens and variants", ()
     included: true,
     kind: "changed",
   };
-  const selected = lightComponent.variants[0]!;
+  const selected = catalogueComponentVariants(
+    componentModel,
+    lightComponent.id,
+  )[0]!;
   selected.comparison = { status: "ready", kind: "changed", eligible: true };
   for (const view of selected.views)
     view.comparison = { status: "ready", kind: "changed", eligible: true };

@@ -23,14 +23,16 @@ function withSecondControlledComponent(source: string): string {
     .slice(actionStart, paneStart)
     .replace("const action =", "const alternate =")
     .replace('id: "action"', 'id: "alternate"')
+    .replaceAll('"action-default"', '"alternate-default"')
+    .replaceAll('"action-disabled"', '"alternate-disabled"')
     .replace('title: "Action"', 'title: "Alternate"')
     .replace(
       'route: "components/action.html"',
       'route: "components/alternate.html"',
     );
   return `${source.slice(0, paneStart)}${alternate}${source.slice(paneStart)}`.replace(
-    "action.entry, pane.entry,",
-    "action.entry, alternate.entry, pane.entry,",
+    "action.entries, pane.entries,",
+    "action.entries, alternate.entries, pane.entries,",
   );
 }
 
@@ -151,7 +153,7 @@ for (const viewport of ["desktop", "mobile"] as const)
     ).toBeVisible();
     await page
       .getByLabel("Saved variant", { exact: true })
-      .selectOption("disabled");
+      .selectOption("action-disabled");
     await expect(page.getByLabel("Label", { exact: true })).toHaveValue(
       "Continue",
     );

@@ -139,8 +139,8 @@ its neutral default. The renderer receives:
 
 ```ts
 interface RenderInput {
-  entry: ScreenDefinition | ComponentDefinition;
-  variantId?: string;
+  entry: ScreenDefinition | ComponentVariantDefinition;
+  componentProps?: Readonly<Record<string, unknown>>;
   node: ReactNode;
   stylesheets: readonly string[];
   viewport: "mobile" | "desktop";

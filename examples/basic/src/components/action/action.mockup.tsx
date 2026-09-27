@@ -1,3 +1,3 @@
 import { action } from "./action.mokly.js";
 
-export const mockups = [action.entry];
+export const mockups = action.entries;

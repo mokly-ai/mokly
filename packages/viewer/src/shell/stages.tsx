@@ -5,6 +5,8 @@
 
 import type { ReactNode } from "react";
 
+import type { ManifestComponentVariant } from "../components/manifest_types.js";
+import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import { encodeUrlPath } from "../data/paths.js";
 import { routedEntries } from "../viewer/selection.js";
@@ -80,12 +82,22 @@ export function TargetStage(props: {
       />
     );
   if (entry.kind === "component") {
+    const parent = isManifestComponentVariant(entry)
+      ? props.catalogue.byId.get(entry.variantOf)
+      : entry;
+    if (parent?.kind !== "component" || isManifestComponentVariant(parent))
+      return <EmptyStage heading="Component unavailable">{null}</EmptyStage>;
+    const variants = (
+      props.catalogue.hierarchy.variantsById.get(parent.id) ?? []
+    ).filter(
+      (candidate): candidate is ManifestComponentVariant =>
+        candidate.kind === "component" && isManifestComponentVariant(candidate),
+    );
     const variant =
-      entry.variants.find((item) => item.id === props.variantId) ??
-      entry.variants[0]!;
+      variants.find((item) => item.id === props.variantId) ?? variants[0]!;
     return (
       <ComponentStage
-        title={entry.title}
+        title={parent.title}
         variant={variant}
         {...(props.previewViews ? { previewViews: props.previewViews } : {})}
       />

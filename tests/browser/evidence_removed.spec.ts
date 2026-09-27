@@ -24,7 +24,7 @@ test("background baselines reconcile removed rows and invalidate changed histori
         render: () => "<!doctype html><html><head></head><body>Previous document</body></html>" }),
       defineComponent({ ...metadata, id: "old-component", title: "Old component", description: "Previous component",
         propSchema: { kind: "object", properties: {} },
-        render: () => <button>Previous</button>, variants: [{ id: "default", title: "Default", props: {} }] }).entry
+        render: () => <button>Previous</button>, variants: [{ id: "old-component-default", title: "Default", props: {} }] }).entries
     );
   `,
   );
@@ -58,7 +58,13 @@ test("background baselines reconcile removed rows and invalidate changed histori
     const component = page.locator(
       'a[data-route="components/old-component.html"]',
     );
-    publish(baseline.entries.filter((entry) => entry.id !== "old-component"));
+    publish(
+      baseline.entries.filter(
+        (entry) =>
+          entry.id !== "old-component" &&
+          (!("variantOf" in entry) || entry.variantOf !== "old-component"),
+      ),
+    );
     await expect(removed).toHaveCount(2);
     await expect(screen).toBeVisible();
     await expect(document).toBeHidden();

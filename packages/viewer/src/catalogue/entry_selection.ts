@@ -1,6 +1,10 @@
 /** Exact current or historical entry resolution for public selection. */
 
-import type { CatalogueReadModel, CatalogueRoutedEntry } from "./types.js";
+import type {
+  CatalogueComponentVariant,
+  CatalogueReadModel,
+  CatalogueRoutedEntry,
+} from "./types.js";
 
 export interface ResolvedCatalogueEntry {
   entry: CatalogueRoutedEntry;
@@ -17,6 +21,22 @@ export function currentCatalogueEntries(
     ...model.useCases,
     ...model.components,
   ];
+}
+
+/** Component variants in current order followed by retained removed variants. */
+export function catalogueComponentVariants(
+  model: CatalogueReadModel,
+  componentId: string,
+): readonly CatalogueComponentVariant[] {
+  return [
+    ...model.components,
+    ...model.removedEntries.map(({ entry }) => entry),
+  ].filter(
+    (entry): entry is CatalogueComponentVariant =>
+      entry.kind === "component" &&
+      "variantOf" in entry &&
+      entry.variantOf === componentId,
+  );
 }
 
 /** Resolve the complete public selection; explicit snapshots never downgrade. */

@@ -303,38 +303,38 @@ helper and dropped in Milestone 4. Shell changes are compile-only: the explorer
 keeps its `?variant=` selection by reading the parent's variants through
 `variantsById`, so behavior is unchanged until Milestone 5.
 
-- [ ] `defineComponent` validates variant ids with the global id grammar,
+- [x] `defineComponent` validates variant ids with the global id grammar,
       returns the parent entry followed by one entry per variant in authored
       order (`kind: "component"`, `variantOf`, `props`, supplied slots,
       copied `navPath`, inherited color schemes), and the module-bound loader
       flattens the array; the parent has no `variants`.
-- [ ] Manifest v7 component shapes: the parent without `variants` or views;
+- [x] Manifest v7 component shapes: the parent without `variants` or views;
       variant entries rendered at `components/<variant-id>.<viewport>[.dark].html`;
       `componentViews` per variant entry; delete the `.variants/` directory.
-- [ ] Registry validation: `variantOf` rules apply to components (parent
+- [x] Registry validation: `variantOf` rules apply to components (parent
       exists, is a component, is not itself a variant, shares `navPath`); at
       least one variant per component; `duplicate-id` covers variant ids.
-- [ ] Read model v3 in `src/catalogue/projection.ts` and
+- [x] Read model v3 in `src/catalogue/projection.ts` and
       `packages/viewer/src/catalogue/*`: `CatalogueComponent` without
       `variants`; a component variant entry type with `props`, supplied
       slots, views, and `comparison`; `variantsById` and hierarchy cover
       components; regenerate `docs/protocol/fixtures/catalogue-v2.json` as
       `catalogue-v3.json`; the reader accepts only v3.
-- [ ] Removal and Changes: a removed component variant is an ordinary removed
+- [x] Removal and Changes: a removed component variant is an ordinary removed
       entry with `variantOf`; changed-entry computation treats variant
       entries like screens; delete the surviving-component removed-variant
       paths in `src` and the viewer data layer.
-- [ ] Review and instances in `src/review/*` and `packages/viewer/src/review/*`:
+- [x] Review and instances in `src/review/*` and `packages/viewer/src/review/*`:
       variant addresses, `variantId` contexts, and instance records name the
       variant entry id; the builder picks the parent's first variant entry
       for the component page.
-- [ ] Compile-only shell adaptation: `workspace_data.ts` builds
+- [x] Compile-only shell adaptation: `workspace_data.ts` builds
       `WorkspaceVariant` rows from `variantsById` so the variant bar,
       controls, and comparison keep working with `?variant=`; no behavior
       change.
-- [ ] Convert the 18 example component definitions to global variant ids and
+- [x] Convert the 18 example component definitions to global variant ids and
       update the design catalogue entries that reference them.
-- [ ] Failure-first tests for flattening, validation, manifest, read model,
+- [x] Failure-first tests for flattening, validation, manifest, read model,
       removal, and review addressing; `npm run example:check`; `npm run dev`
       smoke: component pages and variant selection behave as before; commit.
 
@@ -363,6 +363,8 @@ because derived documents already produce it.
       `review/*` readers address entries and views by id and axes; artifact
       files under the generation directory are named by the helper; the
       reader accepts only v4.
+- [ ] Delete `componentReviewManifest` and the grouped-variant bridge; Review
+      classifies flat component variant entries directly for review result v4.
 - [ ] Server and export inputs: `computeChangedRoutes` and `changedRoutes`
       become changed ids; `ExportRoutes`, `site.ts`, `run.ts`, `view_routes.ts`,
       `fragments.ts`, `review_routes.ts`, and the controls use the helper;

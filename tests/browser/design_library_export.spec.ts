@@ -51,7 +51,7 @@ test.beforeAll(async () => {
   site = await serveStaticFiles(output);
   await assertServedShellMarker(
     site.url,
-    "/view/components/design-ui-top-bar.html?variant=search",
+    "/view/components/design-ui-top-bar.html?variant=design-ui-top-bar-search",
   );
 });
 test.afterAll(async () => {
@@ -74,7 +74,7 @@ for (const viewport of ["desktop", "mobile"] as const)
       if (response.status() >= 400) failures.push(response.url());
     });
     await page.goto(
-      `${site.url}/view/components/design-ui-top-bar.html?variant=search`,
+      `${site.url}/view/components/design-ui-top-bar.html?variant=design-ui-top-bar-search`,
     );
     await chooseViewport(page, viewport);
     await page.getByRole("tab", { name: "Props", exact: true }).click();
@@ -83,7 +83,7 @@ for (const viewport of ["desktop", "mobile"] as const)
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
     await page
       .getByLabel("Saved variant", { exact: true })
-      .selectOption("tag-picker");
+      .selectOption("design-ui-top-bar-tag-picker");
     await expect(frame.locator(".mbk-tag-picker")).toBeVisible();
     await expect(frame.locator(".mbk-chip").first()).toContainText("revised");
     await page.goto(`${site.url}/view/components/design-ui-tag-chip.html`);

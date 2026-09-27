@@ -1,5 +1,7 @@
 import type {
   ManifestComponent,
+  HistoricalManifestComponent,
+  ManifestComponentVariant,
   ComponentViewRecord,
 } from "../components/manifest_types.js";
 import type { Viewport } from "../data/axes.js";
@@ -11,7 +13,7 @@ export interface ManifestEntryBase {
   declaredDependencies?: readonly string[];
   description: string;
   id: string;
-  kind: "screen" | "page" | "use-case";
+  kind: "screen" | "page" | "use-case" | "component";
   navPath: readonly string[];
   rationale?: string;
   relatedDocs: readonly string[];
@@ -53,7 +55,18 @@ export interface ManifestUseCase extends ManifestEntryBase {
 
 /** Any supported registry entry, including current whole-document pages. */
 export type ManifestEntry =
-  ManifestScreen | ManifestPage | ManifestUseCase | ManifestComponent;
+  | ManifestScreen
+  | ManifestPage
+  | ManifestUseCase
+  | ManifestComponent
+  | HistoricalManifestComponent
+  | ManifestComponentVariant;
+
+/** Entry shapes emitted by the current v7 writer. */
+export type ManifestEntryV7 = Exclude<
+  ManifestEntry,
+  HistoricalManifestComponent
+>;
 
 /** One generated legacy page. */
 export interface ManifestLegacyPage {
@@ -90,7 +103,7 @@ export interface ManifestV4 {
 }
 
 export type ManifestEntryV4 = (
-  ManifestScreenV4 | ManifestComponent | ManifestUseCase
+  ManifestScreenV4 | HistoricalManifestComponent | ManifestUseCase
 ) & { declaredDependencies: readonly string[] };
 
 /** Historical v5 catalogue combining pages, components, and source protection. */
@@ -105,7 +118,7 @@ export interface ManifestV5 {
 
 /** Current canonical manifest with computed routed documents. */
 export interface ManifestV7 {
-  entries: readonly (ManifestEntry & {
+  entries: readonly (ManifestEntryV7 & {
     declaredDependencies: readonly string[];
   })[];
   generatedBy: "mokly";

@@ -76,13 +76,7 @@ export function changedViewsBySelection(
       ? comparison.variants.map(({ id }) => id)
       : [];
   return Object.fromEntries(
-    [
-      ...new Set([
-        ...entry.variants.map(({ id }) => id),
-        ...variantIds,
-        ...reviewedIds,
-      ]),
-    ].map((variantId) => [
+    [...new Set([...variantIds, ...reviewedIds])].map((variantId) => [
       variantId,
       changedViews(entry, context, comparison, variantId),
     ]),
@@ -108,11 +102,7 @@ export function viewStatesBySelection(
       ? comparison.variants.map(({ id }) => id)
       : [];
   const evidence: Record<string, readonly ViewState[]> = {};
-  for (const variantId of new Set([
-    ...entry.variants.map(({ id }) => id),
-    ...variantIds,
-    ...reviewedIds,
-  ])) {
+  for (const variantId of new Set([...variantIds, ...reviewedIds])) {
     const states = viewStates(entry, context, comparison, variantId);
     if (states !== undefined) evidence[variantId] = states;
   }

@@ -141,7 +141,7 @@ export const mockups = createArea(${JSON.stringify(id)}, ${size.screens}, ${size
     generatedOutput,
     configPath: path.join(root, "mokly.config.ts"),
     size,
-    routes: size.areas * (size.screens + 2 + flows + 1),
+    routes: size.areas * (size.screens + 8 + flows + 1),
     documents: size.areas * (size.screens * 4 + 2 * 3 * 4 + 1),
   };
 }

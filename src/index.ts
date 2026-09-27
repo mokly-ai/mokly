@@ -45,10 +45,12 @@ export { resolveInstance } from "@mokly/viewer";
 export type { InstanceResolution } from "@mokly/viewer";
 export type {
   ComponentDefinition,
+  ComponentEntryDefinition,
   ComponentInput,
   ComponentProps,
   ComponentRenderContext,
   ComponentVariant,
+  ComponentVariantDefinition,
   RegisteredComponent,
 } from "./components/types.js";
 export type {

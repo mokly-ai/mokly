@@ -1,7 +1,5 @@
-import type {
-  ManifestComponent,
-  ManifestComponentVariant,
-} from "../components/manifest_types.js";
+import type { ManifestComponent } from "../components/manifest_types.js";
+import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { RenderCapability } from "../components/render_types.js";
 /** Serializable, source-derived state shared by the served and published inspector. */
 import {
@@ -31,18 +29,17 @@ import {
   type InputChange,
 } from "./workspace_input_changes.js";
 import {
+  workspaceVariants,
+  type WorkspaceVariant,
+} from "./workspace_variants.js";
+import {
   changedViewsBySelection,
   type ChangedViewsBySelection,
   viewStatesBySelection,
 } from "./workspace_views_data.js";
 
 export type { EntryStatus } from "./view_status.js";
-export interface WorkspaceVariant {
-  value: ManifestComponentVariant;
-  removed: boolean;
-  comparisonEligible: boolean;
-  status?: EntryStatus;
-}
+export type { WorkspaceVariant } from "./workspace_variants.js";
 export interface UsageLink {
   title: string;
   route: string;
@@ -130,50 +127,33 @@ export function workspaceData(
         ? "Added"
         : change ||
             comparison?.state === "changed" ||
+            (entry.kind === "component" &&
+              comparison &&
+              "variants" in comparison &&
+              comparison.variants.some(
+                (variant) =>
+                  variant.state === "added" ||
+                  variant.state === "changed" ||
+                  variant.state === "removed",
+              )) ||
             context.changedRoutes?.includes(entry.route)
           ? "Changed"
           : "Unmodified";
-  const previous = baseline?.kind === "component" ? baseline.variants : [];
-  const variants: WorkspaceVariant[] =
-    entry.kind !== "component"
-      ? []
-      : [
-          ...entry.variants,
-          ...previous.filter(
-            (item) => !entry.variants.some((current) => current.id === item.id),
-          ),
-        ].map((value) => {
-          const review =
-            comparison && "variants" in comparison
-              ? comparison.variants.find((item) => item.id === value.id)
-              : undefined;
-          const isRemoved =
-            removed || !entry.variants.some((item) => item.id === value.id);
-          const variantStatus = !known
-            ? undefined
-            : isRemoved
-              ? "Removed"
-              : review?.state === "added"
-                ? "Added"
-                : review?.state === "changed" ||
-                    (review?.before &&
-                      review.after &&
-                      JSON.stringify(review.before.props) !==
-                        JSON.stringify(review.after.props))
-                  ? "Changed"
-                  : status === "Added"
-                    ? "Added"
-                    : "Unmodified";
-          return {
-            value,
-            removed: isRemoved,
-            comparisonEligible: shownComparisonEligible(
-              variantStatus,
-              "component",
-            ),
-            ...(variantStatus ? { status: variantStatus } : {}),
-          };
-        });
+  const variantSet =
+    entry.kind === "component"
+      ? workspaceVariants(
+          catalogue,
+          entry,
+          snapshot,
+          comparison && "variants" in comparison ? comparison : undefined,
+          known,
+          removed,
+          status,
+        )
+      : { baseline: [], current: [], rows: [] };
+  const currentVariants = variantSet.current;
+  const baselineVariants = variantSet.baseline;
+  const variants = variantSet.rows;
   const affected: UsageLink[] = (result?.affectedConsumers ?? [])
     .filter((item) => item.changedComponentId === entry.id)
     .flatMap((item) =>
@@ -199,7 +179,13 @@ export function workspaceData(
         };
       }),
     );
-  const inputChanges = entryInputChanges(catalogue, entry, baseline);
+  const inputChanges = entryInputChanges(
+    catalogue,
+    entry,
+    baseline,
+    currentVariants,
+    baselineVariants,
+  );
   const relatedIds = new Set(
     result?.affectedConsumers
       .filter((item) =>
@@ -238,9 +224,15 @@ export function workspaceData(
       })
       .map(({ title, route }) => ({ title, route })),
     components: [...catalogue.manifest.entries, ...catalogue.removedComponents]
-      .filter((item): item is ManifestComponent => item.kind === "component")
+      .filter(
+        (item): item is ManifestComponent =>
+          item.kind === "component" && !isManifestComponentVariant(item),
+      )
       .map(({ id, title, route }) => ({ id, title, route })),
-    views: generatedViews(entry).map((view) => {
+    views: (entry.kind === "component"
+      ? currentVariants.flatMap((variant) => generatedViews(variant))
+      : generatedViews(entry)
+    ).map((view) => {
       if (!context.previewGeneration || removed) return view;
       const demand = { ...view };
       delete demand.usage;
@@ -267,8 +259,14 @@ export function workspaceData(
         orderedInstances(view.usage)
           .filter((instance) => instance.componentId === entry.id)
           .map((instance) => ({
-            title: owner.title,
-            route: owner.route!,
+            title:
+              owner.kind === "component" && isManifestComponentVariant(owner)
+                ? (catalogue.byId.get(owner.variantOf)?.title ?? owner.title)
+                : owner.title,
+            route:
+              owner.kind === "component" && isManifestComponentVariant(owner)
+                ? (catalogue.byId.get(owner.variantOf)?.route ?? owner.route)
+                : owner.route,
             viewport: view.viewport,
             colorScheme: view.colorScheme,
             ...(view.variantId ? { variantId: view.variantId } : {}),

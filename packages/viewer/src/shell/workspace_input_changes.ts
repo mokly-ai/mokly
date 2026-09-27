@@ -3,7 +3,10 @@
 // was recorded in, and both serialized prop sets, so the inspector can show
 // what an author changed without re-rendering either side.
 
-import type { ManifestComponent } from "../components/manifest_types.js";
+import type {
+  ManifestComponent,
+  ManifestComponentVariant,
+} from "../components/manifest_types.js";
 import type { ComponentWireProps } from "../components/prop_types.js";
 import { generatedViews } from "../components/views.js";
 import type { ManifestEntry, ManifestScreen } from "../registry/types.js";
@@ -27,11 +30,21 @@ export function inputChanges(
   catalogue: Catalogue,
   entry: ManifestComponent | ManifestScreen,
   baseline: ManifestEntry | undefined,
+  currentVariants: readonly ManifestComponentVariant[] = [],
+  baselineVariants: readonly ManifestComponentVariant[] = [],
 ): InputChange[] {
   const changes: InputChange[] = [];
   if (!baseline) return changes;
-  for (const after of generatedViews(entry)) {
-    const before = generatedViews(baseline).find(
+  const afterViews =
+    entry.kind === "component"
+      ? currentVariants.flatMap((variant) => generatedViews(variant))
+      : generatedViews(entry);
+  const beforeViews =
+    baseline.kind === "component"
+      ? baselineVariants.flatMap((variant) => generatedViews(variant))
+      : generatedViews(baseline);
+  for (const after of afterViews) {
+    const before = beforeViews.find(
       (view) =>
         view.viewport === after.viewport &&
         view.colorScheme === after.colorScheme &&

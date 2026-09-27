@@ -3,14 +3,16 @@ import { validateControlledValues } from "../components/controls.js";
 import { canonicalJson, invalidData } from "../components/data.js";
 import { validateProps } from "../components/props.js";
 import { validateComponentViewRecord } from "../components/view_validation.js";
-import { componentFragmentRoute, viewRoute } from "../data/routes.js";
+import { viewRoute } from "../data/routes.js";
 import { analyzeHierarchy } from "../registry/hierarchy.js";
 
 import { projectTree } from "./tree.js";
 import type {
   CatalogueComponent,
+  CatalogueComponentVariant,
   CatalogueReadModel,
   CatalogueRoutedEntry,
+  CatalogueScreen,
   CatalogueView,
 } from "./types.js";
 import { unique } from "./values.js";
@@ -32,7 +34,8 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
     canonicalJson(
       projectTree(hierarchy),
     ), "tree must project the navigation paths");
-  const all = [...current, ...model.removedEntries.map(({ entry }) => entry)];
+  const historical = model.removedEntries.map(({ entry }) => entry);
+  const all = [...current, ...historical];
   unique(model.removedEntries.map(({ entry }) => entry.route));
   unique(
     model.removedEntries.flatMap(({ snapshotId }) =>
@@ -41,7 +44,10 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
   );
   const components = new Map(
     all
-      .filter((entry) => entry.kind === "component")
+      .filter(
+        (entry): entry is CatalogueComponent =>
+          entry.kind === "component" && !("variantOf" in entry),
+      )
       .map((entry) => [entry.id, entry]),
   );
   for (const entry of all) {
@@ -97,31 +103,17 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
       validateViews(entry, entry.views, components, removed);
     }
     if (entry.kind === "component") {
-      require(entry.variants.length > 0, "component needs variants");
-      unique(entry.slots);
-      unique(entry.variants.map((variant) => variant.id));
-      for (const variant of entry.variants) {
-        if (variant.comparison.status === "ready")
-          require(variant.comparison.eligible ===
-            (variant.comparison.kind === "changed" ||
-              variant.comparison.kind ===
-                "removed"), "invalid variant comparison eligibility");
-        const historical =
-          removed ||
-          (variant.comparison.status === "ready" &&
-            variant.comparison.kind === "removed");
-        unique(variant.suppliedSlots);
-        if (!historical) {
-          require(variant.suppliedSlots.every((slot) =>
-            entry.slots.includes(slot),
-          ), "unknown supplied slot");
-          validateControlledValues(
-            entry.controls,
-            validateProps(entry.propSchema, decodeProps(variant.props)),
-            entry.id,
-          );
-        }
-        validateViews(entry, variant.views, components, historical, variant.id);
+      if ("variantOf" in entry) {
+        validateComponentVariant(entry, components, current, removed);
+      } else {
+        unique(entry.slots);
+        const cohort = removed ? historical : current;
+        require(cohort.some(
+          (candidate) =>
+            candidate.kind === "component" &&
+            "variantOf" in candidate &&
+            candidate.variantOf === entry.id,
+        ), "component needs variants");
       }
     }
   }
@@ -145,11 +137,10 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
 }
 
 function validateViews(
-  entry: Extract<CatalogueRoutedEntry, { kind: "screen" | "component" }>,
+  entry: CatalogueScreen | CatalogueComponentVariant,
   views: readonly CatalogueView[],
   components: ReadonlyMap<string, CatalogueComponent>,
   historical: boolean,
-  variantId?: string,
 ): void {
   require(canonicalJson(entry.viewports) ===
     '["mobile","desktop"]', "invalid viewport set");
@@ -165,7 +156,7 @@ function validateViews(
     ) === canonicalJson(axes), "views must match axes");
   unique(views.map((view) => `${view.viewport}/${view.colorScheme}`));
   for (const view of views) {
-    const expected = `static/${variantId ? componentFragmentRoute(entry.route, variantId, view.viewport, view.colorScheme) : viewRoute("screen", entry.id, view.viewport, view.colorScheme)}`;
+    const expected = `static/${viewRoute(entry.kind, entry.id, view.viewport, view.colorScheme)}`;
     require(historical
       ? view.fragmentPath === null
       : view.fragmentPath ===
@@ -189,10 +180,47 @@ function validateViews(
         },
         components,
         entry.id,
-        entry.kind === "component" ? entry.id : undefined,
+        entry.kind === "component" ? entry.variantOf : undefined,
         historical,
       );
   }
+}
+
+function validateComponentVariant(
+  entry: CatalogueComponentVariant,
+  components: ReadonlyMap<string, CatalogueComponent>,
+  current: readonly CatalogueRoutedEntry[],
+  removed: boolean,
+): void {
+  if (entry.comparison.status === "ready")
+    require(entry.comparison.eligible ===
+      (entry.comparison.kind === "changed" ||
+        entry.comparison.kind ===
+          "removed"), "invalid variant comparison eligibility");
+  const historical =
+    removed ||
+    (entry.comparison.status === "ready" &&
+      entry.comparison.kind === "removed");
+  const parent = components.get(entry.variantOf);
+  if (!removed) {
+    require(current.includes(
+      parent as CatalogueRoutedEntry,
+    ), "variant parent component must exist");
+    require(canonicalJson(entry.navPath) ===
+      canonicalJson(parent?.navPath), "variant path must match parent");
+  }
+  unique(entry.suppliedSlots);
+  if (!historical && parent) {
+    require(entry.suppliedSlots.every((slot) =>
+      parent.slots.includes(slot),
+    ), "unknown supplied slot");
+    validateControlledValues(
+      parent.controls,
+      validateProps(parent.propSchema, decodeProps(entry.props)),
+      entry.id,
+    );
+  }
+  validateViews(entry, entry.views, components, historical);
 }
 
 function require(condition: boolean, message: string): void {

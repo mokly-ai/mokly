@@ -70,20 +70,20 @@ test("saved-variant query history stays separate from native fragment history", 
       requests.push(new URL(request.url()).search);
   });
   const variant = page.getByLabel("Saved variant", { exact: true });
-  await variant.selectOption("props");
+  await variant.selectOption("design-ui-inspector-props");
   await page.locator(".mbk-skip-link").focus();
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\?variant=props#mb-main$/);
+  await expect(page).toHaveURL(/\?variant=design-ui-inspector-props#mb-main$/);
   await page.goBack();
-  await expect(page).toHaveURL(/\?variant=props$/);
-  await expect(variant).toHaveValue("props");
+  await expect(page).toHaveURL(/\?variant=design-ui-inspector-props$/);
+  await expect(variant).toHaveValue("design-ui-inspector-props");
   await page.goBack();
-  await expect(variant).toHaveValue("details");
+  await expect(variant).toHaveValue("design-ui-inspector-details");
   await page.goForward();
-  await expect(variant).toHaveValue("props");
+  await expect(variant).toHaveValue("design-ui-inspector-props");
   await page.goForward();
-  await expect(page).toHaveURL(/\?variant=props#mb-main$/);
-  await expect(variant).toHaveValue("props");
+  await expect(page).toHaveURL(/\?variant=design-ui-inspector-props#mb-main$/);
+  await expect(variant).toHaveValue("design-ui-inspector-props");
   await expect(page.locator("html")).toHaveAttribute(
     "data-history-session",
     "retained",

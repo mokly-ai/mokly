@@ -77,7 +77,7 @@ test("a light-only saved variant uses its displayed scheme for status and marks"
       .filter(({ colorScheme }) => colorScheme === "light")
       .map((view) => ({
         ...view,
-        state: variant.id === "disabled" ? "changed" : "unchanged",
+        state: variant.id === "action-disabled" ? "changed" : "unchanged",
       }));
   }
   try {
@@ -88,7 +88,7 @@ test("a light-only saved variant uses its displayed scheme for status and marks"
       componentChanges: { baseline: compilation.manifest, result },
     });
     await page.goto(
-      `${server.url}/view/components/action.html?variant=disabled&scheme=dark`,
+      `${server.url}/view/components/action.html?variant=action-disabled&scheme=dark`,
     );
 
     await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");

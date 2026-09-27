@@ -1,11 +1,14 @@
-import type { ManifestComponentVariant } from "@mokly/viewer";
+import type {
+  LegacyManifestComponentVariant,
+  ManifestComponentVariant,
+} from "@mokly/viewer";
 import type {
   GeneratedComponentView,
   ReviewVariantAddress,
 } from "@mokly/viewer/data";
 
 export function variantAddress(
-  variant: ManifestComponentVariant,
+  variant: LegacyManifestComponentVariant | ManifestComponentVariant,
 ): ReviewVariantAddress {
   return {
     id: variant.id,

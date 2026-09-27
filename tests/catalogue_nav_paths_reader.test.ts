@@ -28,7 +28,7 @@ interface Fixture {
 
 async function fixture(): Promise<Fixture> {
   return JSON.parse(
-    await readFile("docs/protocol/fixtures/catalogue-v2.json", "utf8"),
+    await readFile("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
   ) as Fixture;
 }
 
@@ -150,11 +150,11 @@ const cases: Array<{
 ];
 
 for (const { name, mutate, reason } of cases) {
-  test(`read model v2 ${reason === undefined ? "accepts" : "rejects"} ${name}`, async () => {
+  test(`read model v3 ${reason === undefined ? "accepts" : "rejects"} ${name}`, async () => {
     const value = await fixture();
     mutate(value);
     if (reason === undefined)
-      assert.equal(readCatalogue(value).schemaVersion, 2);
+      assert.equal(readCatalogue(value).schemaVersion, 3);
     else
       assert.throws(
         () => readCatalogue(value),

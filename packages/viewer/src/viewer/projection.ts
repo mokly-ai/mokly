@@ -9,7 +9,6 @@ import type {
   ComponentViewRecord,
   ManifestComponentVariant,
 } from "../components/manifest_types.js";
-import { componentFragmentRoute } from "../data/routes.js";
 import type { ManifestEntry, ManifestV7 } from "../registry/types.js";
 import { catalogueRouteEntry, createCatalogue } from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
@@ -89,6 +88,21 @@ export function displayEntry(entry: CatalogueRoutedEntry): ManifestEntry {
         ),
       };
     case "component":
+      if ("variantOf" in entry)
+        return {
+          ...base,
+          kind: "component",
+          viewports: ["mobile", "desktop"],
+          variantOf: entry.variantOf,
+          props: entry.props,
+          suppliedSlots: entry.suppliedSlots,
+          ...fragments(entry.views, (axis, scheme) =>
+            entry.route.replace(
+              /\.html$/,
+              `.${axis}${scheme === "dark" ? ".dark" : ""}.html`,
+            ),
+          ),
+        } as ManifestComponentVariant;
       return {
         ...base,
         kind: "component",
@@ -97,18 +111,6 @@ export function displayEntry(entry: CatalogueRoutedEntry): ManifestEntry {
         slots: entry.slots,
         controls: entry.controls,
         ownedDependencies: [],
-        variants: entry.variants.map((variant): ManifestComponentVariant => ({
-          id: variant.id,
-          title: variant.title,
-          ...(variant.description !== undefined
-            ? { description: variant.description }
-            : {}),
-          props: variant.props,
-          suppliedSlots: variant.suppliedSlots,
-          ...fragments(variant.views, (axis, scheme) =>
-            componentFragmentRoute(entry.route, variant.id, axis, scheme),
-          ),
-        })),
       };
   }
 }
