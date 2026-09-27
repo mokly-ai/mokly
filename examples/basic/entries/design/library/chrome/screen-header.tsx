@@ -30,6 +30,7 @@ const propSchema = {
     status: { ...changeStatus, optional: true },
     comparisons: flag,
     mode: comparisonMode,
+    scrollTogether: flag,
     accessible: flag,
     destinations: comparisonDestinations,
   },
@@ -46,6 +47,7 @@ const sample = {
   idChip: "welcome",
   comparisons: false,
   mode: "current",
+  scrollTogether: true,
   accessible: true,
   destinations: {},
 } as const;

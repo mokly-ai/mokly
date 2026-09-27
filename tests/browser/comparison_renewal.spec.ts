@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import type { RunningServer } from "../../dist/server/http_types.js";
 
-import { loadComparison } from "./comparison_actions.js";
+import { loadComparison, PANE_SOURCE } from "./comparison_actions.js";
 import { selectedComparisonFixture } from "./selected_comparison_fixture.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
@@ -66,7 +66,7 @@ test("retained snapshots share one renewal and use the latest viewport, theme an
   ).toContainText("Updated screen");
   const original = await page
     .locator(".mb-pane--after iframe")
-    .getAttribute("src");
+    .getAttribute(PANE_SOURCE);
   const originalMetadata = [...metadata];
   const pending = await holdRenewal(page);
   try {
@@ -85,7 +85,7 @@ test("retained snapshots share one renewal and use the latest viewport, theme an
         "difference",
       );
       await expect(view.locator(".mb-pane--after iframe")).toHaveAttribute(
-        "src",
+        PANE_SOURCE,
         original!.replace(/desktop\.html$/, `${viewport}.dark.html`),
       );
       await expect(
@@ -148,7 +148,7 @@ test("renewal failure offers a retry that reacquires the selected comparison", a
     page.frameLocator(".mb-pane--after iframe").locator("main"),
   ).toContainText("Updated screen");
   await expect(page.locator(".mb-pane--after iframe")).toHaveAttribute(
-    "src",
+    PANE_SOURCE,
     /\.mobile\.html$/,
   );
 });
@@ -204,7 +204,7 @@ test("new evidence cancels renewal in place and the next comparison uses fresh s
   await expect(frame.contentFrame().locator("main")).toContainText(
     "Updated screen",
   );
-  const snapshot = await frame.getAttribute("src");
+  const snapshot = await frame.getAttribute(PANE_SOURCE);
   const root = page.locator("html");
   const version = Number(await root.getAttribute("data-mokly-update-version"));
   await root.evaluate((element) =>
@@ -231,9 +231,9 @@ test("new evidence cancels renewal in place and the next comparison uses fresh s
     await expect(frame.contentFrame().locator("main")).toContainText(
       "Updated screen",
     );
-    expect((await frame.getAttribute("src"))!.split("/snapshots/")[0]).not.toBe(
-      snapshot!.split("/snapshots/")[0],
-    );
+    expect(
+      (await frame.getAttribute(PANE_SOURCE))!.split("/snapshots/")[0],
+    ).not.toBe(snapshot!.split("/snapshots/")[0]);
     expect(requests).toHaveLength(2);
     expect(new URL(requests[1]!).searchParams.get("route")).toBe(
       "screens/home.html",

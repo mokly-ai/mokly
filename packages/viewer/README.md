@@ -35,7 +35,9 @@ collaboration UI.
 
 - **A complete catalogue experience.** Render pages, screens, component
   variants and user flows with search, tags, responsive previews, color
-  schemes, Changes filtering and inspection.
+  schemes, Changes filtering, inspection, and Overlay, Difference and Side by
+  side comparisons whose pages and paired scrolling panels move together by
+  default, with a reader-controlled Scroll together switch.
 - **Designed to be embedded.** Connect the viewer to application state through
   controlled selection, typed events, host-owned slots and an imperative ref.
 - **Component-aware collaboration.** Resolve saved component references,
@@ -337,6 +339,26 @@ the controller. Final disposal removes both system and selector listeners.
 Serve loads live capabilities separately; static navigation reads inert
 workspace evidence from the same finalized deployment.
 
+### Standalone reader preferences
+
+Serve and export keep these origin-local preferences in `localStorage`:
+
+| Key                                | Choice                            |
+| ---------------------------------- | --------------------------------- |
+| `mokly:theme`                      | Explicit Light or Dark appearance |
+| `mokly:nav-disclosure:v2`          | Open catalogue groups             |
+| `mokly:details-disclosure`         | Details open or closed            |
+| `mokly:navigation-width:v1`        | Navigation split width            |
+| `mokly:comparison-scroll-together` | `on` or `off`; missing means on   |
+
+Scroll together appears after the comparison modes in Side by side, Overlay,
+and Difference. It updates the open comparison without reloading panes. An
+embedded `MoklyViewer` never reads this storage key; it keeps the choice only
+for the lifetime of that mounted viewer. The
+[region pairing](../../docs/protocol/mokly-comparison-region-pairing.md) and
+[Scroll together](../../docs/protocol/mokly-comparison-scroll-together.md)
+contracts define panel pairing, per-mode behavior, and re-alignment.
+
 ## Theming
 
 `theme` accepts `"auto"`, `"light"` or `"dark"`. Auto is the default and follows
@@ -386,10 +408,13 @@ an HTTP(S) origin with correct MIME types and without an SPA fallback.
   `sameOriginAdapter()` explicitly.
 - **Cross origin:** configure `postMessageAdapter` with the artifact's exact,
   nonopaque origin. Allow the embedding application's exact origin with CORS on
-  every advertised catalogue, preview, font, stylesheet, client and historical
-  comparison resource. Wildcard CORS and credentialed requests are not used.
-- **Content Security Policy:** removed historical documents are fetched and
-  rendered in script-disabled `srcdoc` frames at the host origin. Restrictive
+  every advertised catalogue, preview, font, stylesheet, client and comparison
+  generation resource, including the snapshot HTML the viewer fetches for
+  removed previews and comparison panes. Wildcard CORS and credentialed
+  requests are not used.
+- **Content Security Policy:** removed historical documents and comparison pane
+  documents are fetched and rendered in script-disabled `srcdoc` frames at the
+  host origin. Restrictive
   policies must allow the artifact origin for the documented resource types and
   permit their generated inline styles; this does not grant script execution.
 - **Isolation:** the cross-origin adapter pins both origins and a per-session
