@@ -12,7 +12,7 @@ from the 2026-09-26 discussion; Milestone 4 revised how frames are sized, as
 Decision 3 records. Milestones 5 to 7, added at the user's request on
 2026-09-27, extend the alignment to inner scroll regions, such as the
 scrolling panel of an app shell, which Milestone 4 left independent per
-version.
+version, and let readers turn scroll syncing off.
 
 ## Base And Prerequisites
 
@@ -178,18 +178,24 @@ and is specified by the
     section to the same `scrollLeft` and `scrollTop` at once, in the same
     handler and with `behavior: "instant"`, clamped by the browser to the
     counterpart's own range; the value-based echo rule of Decision 3 prevents
-    loops, per element. The counterpart is, in order: the element with the
-    same non-empty `id`, if it is a region; otherwise the region whose border
-    box, in document coordinates, overlaps the scrolled region's by the
-    largest area, provided the overlap covers at least half of each box, with
-    ties going to the same element name and then to document order; otherwise
-    none, and the region scrolls alone. A match is made when a region first
-    scrolls and discarded whenever the section measures its documents again,
-    so a changed layout is matched afresh. Class names and DOM positions are
-    not used: utility class lists and generated class names change with
-    ordinary style edits and inserted content shifts positions, whereas
-    geometry follows what the reader sees and a shared `id` gives authors an
-    explicit pairing. A counterpart shorter than the offset stops at its own
+    loops, per element. Only regions scrolling on the same axis can pair, and
+    the counterpart is the first unambiguous match of: (1) the region
+    carrying the same `data-mokly-scroll` name, an attribute authors add to
+    name a panel explicitly; (2) the region with the same non-empty `id`;
+    (3) the region with the same landmark or role and accessible name (for
+    example `<main>`, or `<nav aria-label="Projects">`), when that pair is
+    unique in both versions; (4) the candidate with the best score combining
+    border-box overlap in document coordinates, shared text (the words of the
+    region's headings and first text) and the same element name, provided
+    the score reaches a minimum and leads the runner-up by a margin that the
+    Milestone 5 contract fixes. Otherwise there is no counterpart and the
+    region scrolls alone, because a wrong pairing is worse than none. A
+    region marked `data-mokly-scroll="off"`, or whose counterpart is, never
+    mirrors. A match is made when a region first scrolls and discarded
+    whenever the section measures its documents again, so a changed layout is
+    matched afresh. Class names and DOM positions are not used: utility class
+    lists and generated class names change with ordinary style edits and
+    inserted content shifts positions. A counterpart shorter than the offset stops at its own
     end; the viewer never restyles or moves elements inside a snapshot, so
     past that end the two regions differ, and the contract says so. Side by
     side, both viewports at once, component comparisons and nested regions
@@ -205,6 +211,16 @@ and is specified by the
     scrolls each enclosing region, innermost first, just enough to show the
     target, then moves the shared viewport to the target's document position;
     every counterpart follows.
+12. **Readers can turn scroll syncing off.** A "Scroll together" toggle in
+    the comparison toolbar, shown whenever a comparison mode is selected, is
+    on by default and remembered in the browser like the viewer's other
+    reader preferences; embedded viewers keep it for the session. Turned off
+    in Side by side, each pane's page and inner regions scroll on their own.
+    Turned off in Overlay or Difference, inner regions stop mirroring, while
+    the page itself keeps one scroll position, because both versions sit in
+    one chrome with one scrollbar and the lower version cannot be reached to
+    scroll it separately. The toggle changes no comparison data and never
+    reloads a pane.
 
 ## Non-Goals
 
@@ -218,6 +234,9 @@ and is specified by the
 - Browser expansion stays available only in Current.
 - No restyling or moving of elements inside a snapshot, and no pairing of
   inner scroll regions by class name or DOM position (Decision 10).
+- No pairing by component instance: comparison artifacts do not record which
+  component instance holds each element of the older version, so that signal
+  would need capture changes outside this plan.
 
 ## Milestone 1: Protocol And Documentation Contract
 
@@ -593,8 +612,9 @@ frames and awaits the user's confirmation.
 ## Milestone 5: Inner Scroll Region Contract
 
 Summary: define inner scroll region mirroring, counterpart matching, key
-routing and anchors inside regions (Decisions 10 and 11) in the specs and
-guides, so Milestones 6 and 7 have a complete contract.
+routing, anchors inside regions and the "Scroll together" toggle
+(Decisions 10 to 12) in the specs and guides, so Milestones 6 and 7 have a
+complete contract.
 
 - [ ] Move the Scrolling section of
       [`mokly-comparison-panes.md`](../docs/protocol/mokly-comparison-panes.md)
@@ -603,14 +623,23 @@ guides, so Milestones 6 and 7 have a complete contract.
       link it from the pane contract, the
       [protocol index](../docs/protocol/README.md) and every doc that cites
       the moved rules, keeping both contracts near 250 lines.
-- [ ] Specify Decisions 10 and 11 completely in the scrolling contract: what
+- [ ] Specify Decisions 10 to 12 completely in the scrolling contract: what
       counts as a region, when and how a counterpart is written, the matching
-      order with its overlap threshold, tie-breaks and coordinate space,
+      order with the `data-mokly-scroll` grammar and its `off` value, the
+      landmark and accessible-name rule, the scored fallback with its exact
+      weights, minimum, margin, text fingerprint and coordinate space,
       match discarding on every measurement, clamping at a shorter
       counterpart, the per-element echo rule, nested and horizontal regions,
       key routing from the focused element or the last pointer press, anchors
-      inside regions, and the Side by side, both-viewports and component
-      cases.
+      inside regions, the Side by side, both-viewports and component cases,
+      and the toggle's placement, product copy, default, storage and
+      behaviour in each mode.
+- [ ] Confirm `data-mokly-scroll` conflicts with no reserved attribute or
+      transformer rule, and document it for authors beside the other
+      authoring attributes in `docs/guides/authoring/` and
+      [`mokly-authoring.md`](../docs/protocol/mokly-authoring.md); add the
+      toggle preference wherever [`mokly-viewer.md`](../docs/protocol/mokly-viewer.md)
+      and the viewer README list reader preferences.
 - [ ] Replace the inner-scroll limitation paragraph and the "Only document
       scrolling is shared" sentence in the pane contract's Layout section,
       extend its Alignment Invariant and Acceptance sections with the region
@@ -638,8 +667,8 @@ guides, so Milestones 6 and 7 have a complete contract.
 
 Tags: mockup
 
-Summary: depict an app-shell screen whose panel scrolls as one in Overlay
-before the runtime changes.
+Summary: depict an app-shell screen whose panel scrolls as one in Overlay,
+and the "Scroll together" toggle on and off, before the runtime changes.
 
 - [ ] Add a `design-changes-overlay-panel` screen to
       `examples/basic/entries/design/changes_screens.tsx` with desktop and
@@ -649,14 +678,20 @@ before the runtime changes.
       panel's own scrollbar drawn part-way and no page scrollbar on the chrome
       viewport. Reuse `ComparisonStack` and the Milestone 2 parts, keep the
       depicted panes inert, and put no annotations inside the screen area.
-- [ ] Register its destination, reach it from its Diff controls group like
-      its siblings, add its inventory row at
-      `design/review/controls/overlay-panel.html` to the table in
+- [ ] Add the "Scroll together" toggle, on, to the comparison toolbar of every
+      comparison mockup through the shared toolbar part, and add a
+      `design-changes-side-by-side-apart` screen with desktop and mobile
+      variants in both schemes showing Side by side with the toggle off and
+      the two panes at different offsets.
+- [ ] Register both destinations, reach them from their Diff controls group
+      like their siblings, add their inventory rows at
+      `design/review/controls/overlay-panel.html` and
+      `design/review/controls/side-by-side-apart.html` to the table in
       `docs/protocol/mokly-shell-design.md`, change the Milestone 5 Design
       References wording from planned to existing, and keep the Changes page
       within five screens.
 - [ ] Extend the design inventory, link-state, stack and screen-count tests
-      the new screen touches; assert structure, layer order, blending, opaque
+      the new screens and the toolbar toggle touch; assert structure, layer order, blending, opaque
       backgrounds and offsets fixed by CSS, never font metrics or text
       wrapping.
 - [ ] Run `npm run build`, `npm run example:build` and
@@ -680,21 +715,28 @@ anchors to regions first, and prove both in the browser.
       and Current versions each hold a scrolling main panel, a scrolling side
       list and a nested horizontally scrolling region, including an
       `id`-paired panel whose position changed and an unpaired panel whose
-      class names changed; add `tests/browser/comparison_regions.spec.ts` and
+      class names changed, plus regions paired by `data-mokly-scroll`, by
+      landmark and label, and by text alone, an ambiguous pair, and a region
+      marked `off`; add `tests/browser/comparison_regions.spec.ts` and
       run it before the runtime changes, recording the failing assertions in
       the review record.
 - [ ] Cover in that spec: the wheel over a panel in Overlay and Difference,
       Side by side in both directions, both viewports at once, a component
       comparison, PageDown, Space and ArrowDown after a click inside a panel,
-      focus moving into a panel, an anchor inside a panel, `id` pairing,
-      geometric pairing, nested and horizontal regions, a region without a
-      counterpart scrolling alone without errors, and a shorter counterpart
-      stopping at its end.
+      focus moving into a panel, an anchor inside a panel, every pairing rule
+      in order, an ambiguous candidate left unpaired, `data-mokly-scroll="off"`,
+      nested and horizontal regions, a region without a counterpart scrolling
+      alone without errors, and a shorter counterpart stopping at its end.
+- [ ] Cover the toggle: on by default, off unlinking Side by side pages and
+      regions and stopping region mirroring in Overlay and Difference while
+      the stack keeps one page offset, remembered across screens and reloads
+      in Serve and static export, kept for the session in an embedded viewer,
+      and never reloading a pane.
 - [ ] Replace the Milestone 4 case "inner scroll regions stay independent per
       version" in `tests/browser/comparison_alignment.spec.ts` with the
       mirrored behaviour.
-- [ ] Add a pure region matcher (region detection, `id` pairing and geometric
-      overlap) and a region mirror (one capturing `scroll` listener per pane
+- [ ] Add a pure region matcher (region detection and the four pairing rules
+      in order) and a region mirror (one capturing `scroll` listener per pane
       document, the per-element echo rule, and matches discarded on every
       measurement), wired into `comparison_scroll_sync.ts` without pushing any
       module past 300 lines.
@@ -702,8 +744,12 @@ anchors to regions first, and prove both in the browser.
       last pointer press in each pane document, and fall back to the shared
       viewport only when no region can move; extend the anchor reveal to
       scroll enclosing regions first.
-- [ ] Add unit tests with fake documents for region detection, matching,
-      mirroring, the echo rule, match discarding, key routing and anchors.
+- [ ] Add the "Scroll together" toggle to the comparison toolbar with its
+      remembered preference, and make the section controller honour it
+      without reloading panes.
+- [ ] Add unit tests with fake documents for region detection, every pairing
+      rule, ambiguity, mirroring, the echo rule, match discarding, key routing,
+      anchors and the toggle.
 - [ ] Smoke-test through `npm run dev` with a temporary app-shell example
       screen: Overlay, Difference and Side by side on desktop and mobile, with
       the wheel, scroll keys and an anchor; save screenshots under `.context/`
@@ -724,6 +770,8 @@ anchors to regions first, and prove both in the browser.
   comparison links inert there.
 - Consider mirroring navigation between Side by side panes if reviewers ask
   for linked-screen browsing inside comparisons again.
+- Consider pairing inner scroll regions by component instance once comparison
+  artifacts record the component ranges of both versions.
 
 ## Review record
 
