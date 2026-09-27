@@ -310,12 +310,60 @@ review rather than `cargo xtask check`.
       removes those sentences.
 - [x] Discovered: `src/build/README.md` mentions no records and needs no
       change.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
+
+### Milestone 1 review findings
+
+Reported by the post-push review of commit `0fc24de`; each awaits the user's
+decision and is not yet applied.
+
+1. High. `excluded` inline evidence is defined by rule outcome alone, but its
+   validation rule requires an `unchanged` view with no `material` and no
+   reason; a view with excluded head rules plus a markup edit satisfies one
+   and fails the other. Recommended: emit `excluded` only when the actual
+   materials are equal and the view retains no reason.
+2. High. `mokly-changes.md`, `mokly-component-review.md` and
+   `mokly-css-attribution.md` still define `material` as "the paired
+   ignore-normalized documents differ", which contradicts the new contract
+   for excluded-only inline edits. Recommended: define `material` once as
+   "the view's actual comparison material differs" in `mokly-changes.md` and
+   reference it elsewhere.
+3. High. Owner pairing uses key and component id only. A caller prop edit
+   under atomic CSS adds a head rule matching only that instance, which the
+   contract would attribute to the component and turn into a false component
+   row. Recommended: pair only instances with equal `propsKey`, resolving
+   matches inside input-changed instances to the entry.
+4. Medium. The Scope section says fast-path views run no analysis while the
+   same document and `mokly-component-changes.md` say reference-bearing
+   rules do. Recommended: say "no diff" and state the reference-only pass.
+5. Medium. `unchanged` versus `ignored-only` still derives from stripped raw
+   documents, so an excluded-only inline edit would report `ignored-only`;
+   the actual material is also described as applying instance tokens, which
+   it does not. Recommended: state that both normalizations use the actual
+   material and correct the wording.
+6. Medium. A parse failure is said to make "every rule" unresolved, but an
+   unresolved diff carries no rules and no rendering is defined.
+   Recommended: retain both sides' unowned text verbatim, report
+   `unresolved` with serializable selectors and no owned set.
+7. Medium. Replacing style text only cannot make materials equal when the
+   number of unowned style elements or their attributes differ, as Emotion
+   output does. Recommended: remove unowned style elements from both
+   materials and append one canonical fragment, as caller-slot material is.
+8. Medium. `mokly-changes.md`, `mokly-timings.md` and the components guide
+   present the target as implemented. Recommended: add the plan sentence to
+   the two contracts and defer the guide wording to Milestone 4.
+9. Low. The evidence-shell contract cites an inventory row Milestone 2 adds;
+   Required Evidence omits the formatting-only, nested-slot-child and
+   cross-path cases; several spliced lines exceed 120 columns. Recommended:
+   qualify the inventory citation, extend Required Evidence and re-wrap.
+
+Residual: reference detection in `src/review/css/material.ts` handles
+`url()` only, so Milestone 5 must add `@import` detection.
 
 ## Milestone 2: Excluded Page Styles Design Screen
 
