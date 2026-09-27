@@ -133,13 +133,23 @@ Global `var(--brand)` tokens, grid-area and container names stay unchanged.
 Lightning may normalize declarations (e.g. `animation: pulse 1s` to
 `animation: 1s <scoped-name>`), preserving their meaning. A collision between
 distinct local identities fails rather than appending a suffix.
-Enable Lightning CSS `analyzeDependencies` for CSS Modules. Restore each
-reported URL placeholder as an authored `url(...)` token, including URLs
-Lightning would otherwise turn into a quoted `image-set()` source; preserve
-the original URL value and suffix for esbuild's resolver. Run the quoted
-`image-set()` guard again on the transformed text so an unhandled rewrite
-cannot escape Build validation. The same local asset must be copied under
-`mokly-generated/assets/` in plain and module CSS.
+Do **not** enable Lightning CSS `analyzeDependencies` for CSS Modules: that
+mode removes local and remote `@import` rules and rejects relative `url()` in
+custom properties. Module `@import`s and custom-property `url()` values use
+the same esbuild resolution, pruning, inventory and asset delivery as plain
+CSS. Lightning's normal transform may turn an authored `url()` image in an
+unprefixed `image-set()` option into a quoted string. Tokenize the transformed
+CSS, find each unprefixed `image-set()` function, and replace a local quoted
+first token of each top-level comma-separated option with `url(<unchanged
+string token>)`. Preserve escapes, query/hash suffixes, comments, nested
+functions, `type()` arguments, gradients, and external strings; do not rewrite
+`-webkit-image-set()`. Authored local quoted image-set strings have already
+failed the pre-transform guard. Run a distinct post-transform guard on any
+remaining local quoted image-set source so an unhandled Lightning rewrite
+cannot escape Build validation. Asset routes and resolved URL targets are
+equivalent between plain and module CSS; Lightning may format declarations
+differently. Transformer-only CSS analysis may still use dependency analysis
+because it does not emit a stylesheet.
 PostCSS runs first. Feed the identical transformed CSS to the stylesheet
 pass and use Lightning's exports for JavaScript: a default plain object
 whose original local names map to space-joined scoped names; recursively

@@ -5,8 +5,8 @@
 Active until the implementation PR merges. Created 2026-09-24 from the
 CSS-in-JS investigation on this branch. All implementation milestones and the
 bookkeeping push are complete; finding 3 was resolved in the separate
-`922c1ec` merge. The Milestone 12 post-push review found 16 new issues that
-await the user's decision in the
+`922c1ec` merge. Milestone 13 resolves Milestone 12 review finding 1;
+the other 15 findings remain open for the user in the
 [review record](../docs/reviews/imported-css-delivery.md#milestone-12-review).
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
@@ -713,6 +713,25 @@ Close review findings 8–20 without changing the accepted-generation model.
       Sixteen findings (1 High, 2 Medium, 13 Low) are recorded in the
       [review record](../docs/reviews/imported-css-delivery.md#milestone-12-review)
       for the user's decision.
+
+## Milestone 13: CSS Module import and custom-property regression (complete)
+
+Restore plain-CSS-equivalent delivery for CSS Module imports and local URLs,
+without changing any other Milestone 12 review finding.
+
+- [x] Add failing tests for local, remote and conditional CSS Module `@import` delivery and source inventory, plus custom-property `url()` assets.
+- [x] Add tokenizer-based unit tests for restoring local image-set option strings after Lightning CSS, including escapes, comments, nested functions, `type()`, gradients, uppercase spelling, and external strings.
+- [x] Add table-driven plain-vs-module equivalence tests for asset routes/bytes, resolved URL targets, imports and source inventory across documented CSS contexts.
+- [x] Disable module dependency analysis, restore only local first-option image strings as `url(<original string token>)`, and use a separately catalogued post-Lightning guard.
+- [x] Update the imported CSS protocol, error catalogue, Build README, review finding 1 and plan status; leave the other 15 findings open. Record the exact resolution commit in Milestone 14.
+- [x] Verify Build, focused imported/module suites, byte-identical example CSS, example Build/Check, lint, typecheck and `cargo xtask check`; commit and push.
+
+## Milestone 14: Commit, push, and review
+
+- [ ] Commit and push final resolution-reference bookkeeping with a clean tree.
+- [ ] Review the complete local diff against `origin/main` using
+      `docs/implementation-review-prompt.md` after the push. Report findings
+      without changing the implementation; the parent session owns this review.
 
 ## Post-merge follow-up (non-blocking)
 

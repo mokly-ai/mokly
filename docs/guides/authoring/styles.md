@@ -50,6 +50,10 @@ names, are also local and exported. Global tokens such as `var(--brand)`
 remain global, as do grid-area and container names. Lightning CSS can
 reorder equivalent declaration values (for example `animation: pulse 1s`
 becomes `animation: 1s <scoped-name>`).
+Local and remote `@import`s and relative `url()` values inside custom
+properties work the same way in a CSS Module as in plain CSS. For a local
+`image-set()` image, write `url("./image.png")`; Mokly preserves it through
+module scoping and copies the asset.
 
 ```tsx
 import styles from "./card.module.css";

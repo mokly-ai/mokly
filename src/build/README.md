@@ -11,9 +11,11 @@ imports in JavaScript import order, traverses prelude `@import`s, and emits
 one deterministic stylesheet per nonempty root. The renderer's complete CSS
 closure is pruned before processing entry CSS; separate entries still share
 sources independently. CSS Modules use path-stable Lightning CSS names and
-expose default and named bindings to JavaScript. Lightning dependency analysis
-restores `url()` tokens that module normalization would otherwise turn into
-unvalidated `image-set()` strings; the string guard runs again afterwards.
+expose default and named bindings to JavaScript. Module transformation leaves
+Lightning dependency analysis off so local/remote `@import`s and custom-property
+`url()` values reach the same bundle and inventory as plain CSS. A tokenized
+post-transform pass restores local `image-set()` first-option strings to
+`url()`; a separate guard catches any unhandled Lightning rewrite.
 CSS `url()` assets become
 byte-preserving files under `mokly-generated/assets/`, and CSS/asset inputs
 join the private source inventory in both full and inventory-only graph loads.

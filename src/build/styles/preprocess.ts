@@ -6,7 +6,10 @@ import { toPosixPath } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
 
-import { validateImageSetStrings } from "./image_set.js";
+import {
+  validateImageSetStrings,
+  validateTransformedImageSetStrings,
+} from "./image_set.js";
 import { scopeModule, type ScopedStyle } from "./modules.js";
 import { nestedExcludedImports } from "./nested_imports.js";
 import type { StyleDependencyReport } from "./postcss.js";
@@ -138,7 +141,11 @@ export class StylePreprocessor {
       };
     const relative = toPosixPath(path.relative(this.config.repoRoot, source));
     const scoped = scopeModule(text, relative);
-    validateImageSetStrings(scoped.css, source, this.config.repoRoot);
+    validateTransformedImageSetStrings(
+      scoped.css,
+      source,
+      this.config.repoRoot,
+    );
     for (const name of scoped.identities) {
       const first = this.identities.get(name);
       if (first && first !== relative) {
