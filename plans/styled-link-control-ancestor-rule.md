@@ -56,8 +56,7 @@ address to the Links guide, so the guide must become self-contained.
 - Errors name the first offending element as `<tag>` or
   `<tag attribute="value">`, where the attribute is the one that made it
   interactive (`role`, `contenteditable`, `controls`, or `tabindex`). The
-  inline-handler errors name the attribute with the same helper. Templates,
-  with the ancestor example showing a structure that builds after this plan:
+  inline-handler errors name the attribute with the same helper. Templates:
 
   ```text
   <route>: MockLink child control is inside <div role="menuitem">; move the control outside it
