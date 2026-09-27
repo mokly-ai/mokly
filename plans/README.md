@@ -2,6 +2,11 @@
 
 ## Active
 
+- [Inferred Inline Style Ownership](./inferred-inline-style-ownership.md) —
+  replace renderer-supplied style and resource ownership records with
+  ownership inferred from rendered documents and component ranges, so head
+  styles from React Native Web and CSS-in-JS attribute to their components
+  without consumer code; the renderer returns a string again.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align
