@@ -3,9 +3,9 @@
 ## Active
 
 - [Styled Link Control Ancestor Rule](./styled-link-control-ancestor-rule.md)
-  — narrow the `MockLink asChild` interactive-ancestor rule to activatable
-  ancestors, name the offending element in build errors, and state the full
-  rule in the Links guide.
+  — three tiers for `MockLink asChild` placement (fail, warn, allow), a build
+  warning channel with `--strict`, element-naming messages, and the full rule
+  in the Links guide.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align
