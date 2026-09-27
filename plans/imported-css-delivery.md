@@ -8,6 +8,8 @@ bookkeeping push are complete; finding 3 was resolved in the separate
 `922c1ec` merge. Milestone 13 resolves Milestone 12 review finding 1 in
 `d474975`; the other 15 findings remain open for the user in the
 [review record](../docs/reviews/imported-css-delivery.md#milestone-12-review).
+The Milestone 14 review confirmed that fix and found three new issues, recorded
+in the [Milestone 14 review record](../docs/reviews/imported-css-delivery-milestone-14.md).
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -726,12 +728,15 @@ without changing any other Milestone 12 review finding.
 - [x] Update the imported CSS protocol, error catalogue, Build README, review finding 1 and plan status; leave the other 15 findings open. Record the exact resolution commit in Milestone 14.
 - [x] Verify Build, focused imported/module suites, byte-identical example CSS, example Build/Check, lint, typecheck and `cargo xtask check`; commit and push.
 
-## Milestone 14: Commit, push, and review
+## Milestone 14: Commit, push, and review (complete)
 
 - [x] Commit and push final resolution-reference bookkeeping with a clean tree.
-- [ ] Review the complete local diff against `origin/main` using
+- [x] Review the complete local diff against `origin/main` using
       `docs/implementation-review-prompt.md` after the push. Report findings
       without changing the implementation; the parent session owns this review.
+      Three new findings (2 Medium, 1 Low) are recorded in the
+      [Milestone 14 review record](../docs/reviews/imported-css-delivery-milestone-14.md)
+      for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 

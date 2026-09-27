@@ -17,6 +17,9 @@ those fixes. The user authorized fixes for findings 1, 2 and 4–20 as Milestone
 10–11. A separate session merged `origin/main` as `922c1ec`, resolving finding 3
 without including the uncommitted Milestone 10 work.
 
+The review of the Milestone 13 fix is recorded separately in the
+[Milestone 14 review record](./imported-css-delivery-milestone-14.md).
+
 ## Findings
 
 1. **High — watched Serve slows to minutes with large PostCSS inventories.**

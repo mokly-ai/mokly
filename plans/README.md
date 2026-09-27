@@ -6,8 +6,11 @@
   and authorized final-review fixes complete; finding 3 was resolved by the
   separate `922c1ec` merge. Milestone 12 finding 1 was resolved in `d474975`;
   the other 15 findings remain open in the
-  [review record](../docs/reviews/imported-css-delivery.md).
-  Move this plan to Completed when its implementation PR merges.
+  [review record](../docs/reviews/imported-css-delivery.md), and three new
+  findings from the
+  [Milestone 14 review](../docs/reviews/imported-css-delivery-milestone-14.md)
+  await the user's decision. Move this plan to Completed when its
+  implementation PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align
