@@ -5,6 +5,7 @@ import test from "node:test";
 import { readCatalogue } from "../src/catalogue/reader.js";
 import type { ViewerEvidenceRevision } from "../src/client/host_capabilities.js";
 import type { ViewerCapabilitySource } from "../src/client/host_capability_descriptor.js";
+import { viewHref } from "../src/navigation/routes.js";
 import {
   adoptedViewerCatalogue,
   shellContextWithViewerEvidence,
@@ -40,7 +41,7 @@ test("new evidence adopts before making a replaced historical snapshot unavailab
   const route = routeFromUrl(
     current,
     new URL(
-      `https://catalogue.test/view/${historical.entry.route}?snapshot=${historical.snapshotId}`,
+      `https://catalogue.test${viewHref(historical.entry.kind, historical.entry.id)}?snapshot=${historical.snapshotId}`,
     ),
   );
   assert.equal(route.view.kind, "target");
@@ -93,7 +94,7 @@ test("new evidence adopts before making a replaced historical snapshot unavailab
     nextState,
   );
   assert.equal(projected.snapshotId, undefined);
-  assert.equal(projected.activeRoute, undefined);
+  assert.equal(projected.activeId, undefined);
   assert.equal(projected.updateVersion, 2);
 
   const reusedRoute = viewerCatalogue({

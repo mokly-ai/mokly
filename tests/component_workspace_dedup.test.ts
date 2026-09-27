@@ -20,14 +20,15 @@ test("affected usage keeps complete serialized identity and evidence order with 
     fixture.git,
     "main",
   );
-  if (result.schemaVersion !== 3) assert.fail("Expected component result");
+  if (result.schemaVersion !== 4) assert.fail("Expected component result");
   const catalogue = createCatalogue(fixture.after.manifest);
   const entry = catalogue.byId.get("action");
   if (entry?.kind !== "component" || "variantOf" in entry)
     assert.fail("Expected component");
   const base: UsageLink = {
+    entryId: "pane",
+    entryKind: "component",
     title: "Pane",
-    route: "components/pane.html",
     variantId: "pane-default",
     viewport: "desktop",
     colorScheme: "light",
@@ -44,10 +45,11 @@ test("affected usage keeps complete serialized identity and evidence order with 
     { ...base, direct: false },
     { ...base, instanceKey: "action-2" },
     { ...base, title: "Previous pane title" },
-    { ...base, route: "components/removed.html", removed: true },
+    { ...base, entryId: "removed", removed: true },
     {
+      entryId: "home",
+      entryKind: "screen",
       title: "Home",
-      route: "screens/home.html",
       viewport: "desktop",
       colorScheme: "light",
       instanceKey: "action-1",
@@ -58,30 +60,24 @@ test("affected usage keeps complete serialized identity and evidence order with 
   ];
   distinct.push({
     ...distinct.at(-1)!,
-    route: "screens/removed.html",
+    entryId: "removed",
     removed: true,
     comparisonEligible: false,
   });
   distinct.push({
     ...distinct.at(-2)!,
     title: "Previous route owner",
-    removed: true,
-    comparisonEligible: false,
   });
   const evidence = (
     link: UsageLink,
-    id = link.removed
-      ? "removed-consumer"
-      : link.route === "components/pane.html"
-        ? "pane"
-        : "home",
+    id = link.entryId,
   ): AffectedUsageEvidence => ({
     side: "after",
     context: {
       ...(link.variantId
         ? { kind: "component", variantId: link.variantId }
         : { kind: "screen" }),
-      entry: { id, title: link.title, route: link.route },
+      entry: { id, title: link.title },
       viewport: link.viewport,
       colorScheme: link.colorScheme,
     },

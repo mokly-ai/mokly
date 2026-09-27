@@ -8,7 +8,6 @@ import type {
 } from "react";
 
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
-import { catalogueComponentVariants } from "../catalogue/entry_selection.js";
 import type { FrameNavigation } from "../client/frame_adapter.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
@@ -59,7 +58,7 @@ export function withHostRoute(
 ): ShellState {
   const path =
     route.view.kind === "target"
-      ? disclosurePath(sections, route.view.target.entry.route)
+      ? disclosurePath(sections, route.view.target.entry.id)
       : [];
   return {
     ...state,
@@ -93,18 +92,8 @@ export function announceNavigation(
         )?.entry
       : undefined;
   if (!entry) return;
-  const variantId =
-    selection.variantId ??
-    (entry.kind === "component"
-      ? "variantOf" in entry
-        ? entry.id
-        : catalogueComponentVariants(environment.model, entry.id)[0]?.id
-      : undefined);
   environment.events().onScreenNavigate?.({
     screenId: entry.id,
-    route: entry.route,
-    ...(selection.snapshotId ? { snapshotId: selection.snapshotId } : {}),
-    ...(variantId ? { variantId } : {}),
     ...(fragment ? { fragment } : {}),
     ...(pending?.navigation ? { navigation: pending.navigation } : {}),
   });

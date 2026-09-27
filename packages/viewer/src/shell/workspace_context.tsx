@@ -15,7 +15,7 @@ import { useShellStore } from "./store_context.js";
 import type { WorkspaceHydrationState } from "./store_state.js";
 import {
   useWorkspaceData,
-  type RoutedWorkspaceData,
+  type WorkspaceDataState,
 } from "./use_workspace_data.js";
 import { viewMarks, type ViewMarks } from "./view_marks.js";
 import {
@@ -28,7 +28,7 @@ import {
 } from "./workspace_views.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
 
-interface ActiveWorkspace extends RoutedWorkspaceData {
+interface ActiveWorkspace extends WorkspaceDataState {
   marks: ViewMarks;
   presentation: WorkspaceHydrationState;
   selection: WorkspaceVariantSelection;

@@ -4,7 +4,7 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
-import { changedManifestRoutes } from "../dist/registry/changed_routes.js";
+import { changedManifestIds } from "../dist/registry/changed_ids.js";
 import { parseHistoricalManifest } from "../dist/registry/manifest.js";
 import type { ManifestV7 } from "../packages/viewer/dist/registry/types.js";
 
@@ -13,6 +13,7 @@ import {
   removeFixture,
   reparentedEntrySource,
 } from "./helpers/fixture.js";
+import { legacyManifestFromV7 } from "./helpers/historical_manifest.js";
 
 test("changing a navPath marks its screen and referencing use case", async (context) => {
   const fixture = await createFixture(reparentedEntrySource("screens"));
@@ -25,9 +26,9 @@ test("changing a navPath marks its screen and referencing use case", async (cont
   );
   const manifest = await compileManifest(config);
 
-  assert.deepEqual(changedManifestRoutes(manifest, baseManifest, config, []), [
-    "screens/home.html",
-    "user-flows/tour.html",
+  assert.deepEqual(changedManifestIds(manifest, baseManifest, config, []), [
+    "home",
+    "tour",
   ]);
 });
 
@@ -42,10 +43,10 @@ test("changing a folder label marks its routed descendants", async (context) => 
   );
   const manifest = await compileManifest(config);
 
-  assert.deepEqual(changedManifestRoutes(manifest, baseManifest, config, []), [
-    "screens/details.html",
-    "screens/home.html",
-    "user-flows/tour.html",
+  assert.deepEqual(changedManifestIds(manifest, baseManifest, config, []), [
+    "details",
+    "home",
+    "tour",
   ]);
 });
 
@@ -54,32 +55,30 @@ test("a validated v5 baseline with collections does not invent moves in unchange
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const current = await compileManifest(config);
-  const historical = parseHistoricalManifest({
-    ...current,
-    schemaVersion: 5,
-    entries: [
-      ...current.entries,
-      {
-        id: "fixture",
-        kind: "collection",
-        title: "Fixture",
-        description: "Former navigation folder",
-        childIds: current.entries
-          .filter(
-            ({ navPath }) => navPath[0] === "Fixture" && navPath.length === 1,
-          )
-          .map(({ id }) => id),
-        navPath: [],
-        dependencies: [],
-        declaredDependencies: [],
-        relatedDocs: [],
-        sourcePath: current.entries[0]!.sourcePath,
-      },
-    ],
+  const stored = legacyManifestFromV7(current, 5);
+  stored.entries.push({
+    id: "fixture",
+    kind: "collection",
+    title: "Fixture",
+    description: "Former navigation folder",
+    childIds: stored.entries
+      .filter(
+        ({ navPath }) =>
+          Array.isArray(navPath) &&
+          navPath[0] === "Fixture" &&
+          navPath.length === 1,
+      )
+      .map(({ id }) => id),
+    navPath: [],
+    dependencies: [],
+    declaredDependencies: [],
+    relatedDocs: [],
+    sourcePath: current.entries[0]!.sourcePath,
   });
+  const historical = parseHistoricalManifest(stored);
   assert.equal(historical.schemaVersion, 5);
   assert.equal(historical.entries.length, current.entries.length);
-  assert.deepEqual(changedManifestRoutes(current, historical, config, []), []);
+  assert.deepEqual(changedManifestIds(current, historical, config, []), []);
 });
 
 async function compileManifest(

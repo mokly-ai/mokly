@@ -6,14 +6,11 @@ import type {
   ManifestComponent,
   ManifestComponentVariant,
 } from "../../packages/viewer/dist/components/manifest_types.js";
-import {
-  flattenComponentVariantEntries,
-  isManifestComponentVariant,
-} from "../../packages/viewer/dist/data.js";
-import type { Manifest } from "../../packages/viewer/dist/registry/types.js";
+import { isManifestComponentVariant } from "../../packages/viewer/dist/data.js";
+import type { ManifestV7 } from "../../packages/viewer/dist/registry/types.js";
 
 /** Every actual screen and saved-variant view, in its own entry scope. */
-export function componentViews(manifest: Manifest): ComponentViewRecord[] {
+export function componentViews(manifest: ManifestV7): ComponentViewRecord[] {
   return manifest.entries.flatMap((entry) =>
     entry.kind === "screen"
       ? [...(entry.componentViews ?? [])]
@@ -24,12 +21,10 @@ export function componentViews(manifest: Manifest): ComponentViewRecord[] {
 }
 
 export function componentParent(
-  manifest: Manifest,
+  manifest: ManifestV7,
   id: string,
 ): ManifestComponent {
-  const entry = flattenComponentVariantEntries(manifest.entries).find(
-    (candidate) => candidate.id === id,
-  );
+  const entry = manifest.entries.find((candidate) => candidate.id === id);
   assert.ok(
     entry?.kind === "component" && !isManifestComponentVariant(entry),
     `Missing component ${id}`,
@@ -38,10 +33,10 @@ export function componentParent(
 }
 
 export function componentVariants(
-  manifest: Manifest,
+  manifest: ManifestV7,
   parentId: string,
 ): ManifestComponentVariant[] {
-  return flattenComponentVariantEntries(manifest.entries).filter(
+  return manifest.entries.filter(
     (entry): entry is ManifestComponentVariant =>
       entry.kind === "component" &&
       isManifestComponentVariant(entry) &&

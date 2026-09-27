@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
@@ -39,14 +39,12 @@ for (const kind of ["screen", "page"]) {
         '<svg width="96"/>',
       );
       assert.deepEqual(
-        await computeChangedRoutes(
+        await computeChangedIds(
           fixture.config,
           "HEAD",
           committedReviewRepository(fixture.config),
         ),
-        kind === "screen"
-          ? ["screens/home.html", "user-flows/tour.html"]
-          : ["pages/handbook.html"],
+        kind === "screen" ? ["home", "tour"] : ["handbook"],
       );
     });
   }
@@ -70,7 +68,7 @@ test("ignored alias resources remain outside Changes after target edits", async 
     '<svg width="96"/>',
   );
   assert.deepEqual(
-    await computeChangedRoutes(
+    await computeChangedIds(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),

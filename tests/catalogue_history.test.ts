@@ -47,9 +47,7 @@ test("removed screens and saved variants retain baseline context with null curre
     changesStatus: "ready",
     evidence,
     comparisonUrl: `__mokly/diffs/__generations/${previewGeneration}/review.json`,
-    removedPreviews: new Map([
-      ["screens/home.html", { kind: "screen" as const }],
-    ]),
+    removedPreviews: new Map([["home", { kind: "screen" as const }]]),
     revision: { content: 0, evidence: 0 },
   });
   const removedRecord = model.removedEntries.find(
@@ -61,7 +59,7 @@ test("removed screens and saved variants retain baseline context with null curre
   assert.equal(removed.kind, "screen");
   if (removed.kind !== "screen") throw new Error("Expected removed screen");
   for (const view of removed.views) {
-    assert.equal(view.fragmentPath, null);
+    assert.equal("fragmentPath" in view, false);
     assert.equal(view.usage.status, "ready");
     assert.deepEqual(view.comparison, {
       status: "ready",
@@ -80,7 +78,7 @@ test("removed screens and saved variants retain baseline context with null curre
     kind: "removed",
     eligible: true,
   });
-  assert.ok(variant.views.every((view) => view.fragmentPath === null));
+  assert.ok(variant.views.every((view) => !("fragmentPath" in view)));
   assert.deepEqual(readCatalogue(JSON.parse(serializeCatalogue(model))), model);
   const historical = structuredClone(fixture.before.manifest);
   for (const entry of historical.entries)
@@ -99,9 +97,7 @@ test("removed screens and saved variants retain baseline context with null curre
     changesStatus: "ready",
     evidence: { baseline: legacy },
     comparisonUrl: `__mokly/diffs/__generations/${previewGeneration}/review.json`,
-    removedPreviews: new Map([
-      ["screens/home.html", { kind: "screen" as const }],
-    ]),
+    removedPreviews: new Map([["home", { kind: "screen" as const }]]),
     revision: { content: 0, evidence: 0 },
   });
   const old = unavailable.removedEntries[0]!.entry;

@@ -49,7 +49,6 @@ function session(
     generation,
     identity: {
       entryId: "home",
-      route: "screens/home.html",
       viewport,
       colorScheme: "light",
     },

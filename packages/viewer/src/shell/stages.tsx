@@ -9,6 +9,7 @@ import type { ManifestComponentVariant } from "../components/manifest_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import { encodeUrlPath } from "../data/paths.js";
+import { entryRoute } from "../navigation/routes.js";
 import { routedEntries } from "../viewer/selection.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -76,7 +77,7 @@ export function TargetStage(props: {
   if (entry.kind === "page")
     return (
       <EmbedStage
-        route={entry.route}
+        route={entryRoute("page", entry.id)}
         title={entry.title}
         {...(props.fragment ? { fragment: props.fragment } : {})}
       />

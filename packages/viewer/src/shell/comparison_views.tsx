@@ -1,5 +1,6 @@
 /** React rendering for isolated before/current comparison panes. */
 
+import { entryRoute, viewRoute } from "../navigation/routes.js";
 import type { ViewReview } from "../review/types.js";
 
 import type { LoadedComparison } from "./comparison_request.js";
@@ -54,7 +55,9 @@ export function ComparisonViews({
           );
         if (!view) return null;
         const mode =
-          view.beforePath && view.afterPath ? presentation.mode : "side";
+          view.state !== "added" && view.state !== "removed"
+            ? presentation.mode
+            : "side";
         const label = isStyleOnlyView(view)
           ? "Styles this screen uses changed"
           : stateLabels[view.state];
@@ -77,6 +80,7 @@ export function ComparisonViews({
                 loaded={loaded}
                 route={route}
                 side="before"
+                {...(variantId ? { variantId } : {})}
                 view={view}
               />
               <ComparisonPane
@@ -84,6 +88,7 @@ export function ComparisonViews({
                 loaded={loaded}
                 route={route}
                 side="after"
+                {...(variantId ? { variantId } : {})}
                 view={view}
               />
             </div>
@@ -99,16 +104,24 @@ function ComparisonPane({
   loaded,
   route,
   side,
+  variantId,
   view,
 }: {
   component: boolean;
   loaded: LoadedComparison;
   route: string;
   side: "after" | "before";
+  variantId?: string;
   view: ViewReview;
 }) {
   const label = side === "before" ? "Before" : "Current";
-  const source = side === "before" ? view.beforePath : view.afterPath;
+  const available =
+    (side === "before" && view.state !== "added") ||
+    (side === "after" && view.state !== "removed");
+  const id = component ? (variantId ?? route) : route;
+  const source = available
+    ? `snapshots/${side}/${viewRoute(component ? "component" : "screen", id, view.viewport, view.colorScheme)}`
+    : undefined;
   return (
     <div className={`mb-pane mb-pane--${side}`}>
       <p className="mb-pane-label">{label}</p>
@@ -164,7 +177,7 @@ function ComparisonFrame({
   return view.viewport === "mobile" ? (
     <PhoneFrame>{frame}</PhoneFrame>
   ) : (
-    <BrowserFrame address={route} expandable={false}>
+    <BrowserFrame address={entryRoute("screen", route)} expandable={false}>
       {frame}
     </BrowserFrame>
   );
@@ -175,15 +188,14 @@ function comparisonEntry(
   route: string,
   variantId: string | undefined,
 ): { views: readonly ViewReview[] } | undefined {
-  const component =
-    loaded.result.schemaVersion === 3
-      ? loaded.result.components.find((candidate) => candidate.route === route)
-      : undefined;
+  const component = loaded.result.components.find(
+    (candidate) => candidate.id === route,
+  );
   const variant = component?.variants.find(
     (candidate) => candidate.id === variantId,
   );
   if (component) return variant;
-  return loaded.result.screens.find((candidate) => candidate.route === route);
+  return loaded.result.screens.find((candidate) => candidate.id === route);
 }
 
 function snapshotUrl(base: string, source: string): string {

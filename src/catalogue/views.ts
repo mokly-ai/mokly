@@ -1,13 +1,12 @@
 import type { CatalogueView } from "@mokly/viewer";
 import type { ManifestEntry, ManifestScreen } from "@mokly/viewer/data";
 import {
-  fragmentViews,
+  generatedViews,
   isManifestComponentVariant,
   readInstance,
   readRange,
   readSlot,
   lexical,
-  publicPath,
 } from "@mokly/viewer/data";
 
 import { comparisonSelection } from "./changes.js";
@@ -24,18 +23,15 @@ export function projectViews(
   const result = input.comparison ?? input.evidence?.result;
   const reviewViews =
     entry.kind === "screen"
-      ? (result?.screens.find((item) => item.route === entry.route)?.views ??
-        input.evidence?.screenViews?.find((item) => item.route === entry.route)
+      ? (result?.screens.find((item) => item.id === entry.id)?.views ??
+        input.evidence?.screenViews?.find((item) => item.id === entry.id)
           ?.views)
-      : result?.schemaVersion === 3 && isManifestComponentVariant(entry)
+      : result && isManifestComponentVariant(entry)
         ? result.components
             .find((item) => item.id === entry.variantOf)
             ?.variants.find((item) => item.id === entry.id)?.views
         : undefined;
-  return fragmentViews(
-    entry,
-    entry.kind === "component" ? entry.id : undefined,
-  ).map((view) => {
+  return generatedViews(entry).map((view) => {
     const recordedUsage =
       (!removed ? input.usage?.get(view.path) : undefined) ?? view.usage;
     const usage =
@@ -63,7 +59,6 @@ export function projectViews(
     return {
       viewport: view.viewport,
       colorScheme: view.colorScheme,
-      fragmentPath: removed ? null : publicPath(`static/${view.path}`),
       usage: usage
         ? {
             status: "ready",

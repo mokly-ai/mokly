@@ -87,7 +87,7 @@ test("adopting a Removed variant reconciles Collapse all, recovery, and v3 saves
   const adopted = commitViewerEvidence(
     { catalogue: current, source: source(base) },
     state,
-    revision(added, source(base), "screens/home.html"),
+    revision(added, source(base), "home"),
   );
   assert.ok(adopted);
   assert.equal(adopted.state.disclosures[variantKey], true);
@@ -96,7 +96,7 @@ test("adopting a Removed variant reconciles Collapse all, recovery, and v3 saves
     Object.keys(
       defaultDisclosures(
         catalogueNavSections(adopted.snapshot.catalogue),
-        "screens/home.html",
+        "home",
       ),
     ).sort(),
   );
@@ -119,7 +119,7 @@ test("adopting a Removed variant reconciles Collapse all, recovery, and v3 saves
   const retracted = commitViewerEvidence(
     adopted.snapshot,
     currentStore.state(),
-    revision(removed, adopted.snapshot.source!, "screens/home.html"),
+    revision(removed, adopted.snapshot.source!, "home"),
   );
   assert.ok(retracted);
   assert.equal(Object.hasOwn(retracted.state.disclosures, variantKey), false);
@@ -128,7 +128,7 @@ test("adopting a Removed variant reconciles Collapse all, recovery, and v3 saves
     Object.keys(
       defaultDisclosures(
         catalogueNavSections(retracted.snapshot.catalogue),
-        "screens/home.html",
+        "home",
       ),
     ).sort(),
   );
@@ -202,7 +202,7 @@ test("background evidence preserves a collapsed active folder with and without n
   const unchanged = commitViewerEvidence(
     { catalogue: current, source: source(base) },
     collapsed,
-    revision(unchangedModel, source(base), "screens/home.html"),
+    revision(unchangedModel, source(base), "home"),
   );
   assert.ok(unchanged);
   assert.equal(unchanged.state.disclosures[activeFolder], false);
@@ -211,7 +211,7 @@ test("background evidence preserves a collapsed active folder with and without n
   const changed = commitViewerEvidence(
     unchanged.snapshot,
     unchanged.state,
-    revision(added, unchanged.snapshot.source!, "screens/home.html"),
+    revision(added, unchanged.snapshot.source!, "home"),
   );
   assert.ok(changed);
   assert.equal(changed.state.disclosures[activeFolder], false);

@@ -2,6 +2,7 @@
 
 import { resolveCatalogueRoute } from "../catalogue/entry_selection.js";
 import { readCatalogue } from "../catalogue/reader.js";
+import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import { canonicalJson } from "../components/data.js";
 import {
@@ -9,7 +10,12 @@ import {
   type StaticDelivery,
 } from "../navigation/delivery.js";
 import { isLogicalFragment } from "../navigation/logical.js";
-import { catalogueRouteEntry } from "../shell/catalogue.js";
+import { isEntryId } from "../navigation/logical.js";
+import type { EntryRouteKind } from "../navigation/routes.js";
+import {
+  catalogueRouteEntry,
+  catalogueSelectionEntry,
+} from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
 import { toRouteTarget } from "../shell/target.js";
 import type { ShellView } from "../shell/views.js";
@@ -29,7 +35,12 @@ import {
 type BootstrapView =
   | { kind: "home" }
   | { kind: "missing"; requested: string }
-  | { kind: "target"; route: string };
+  | {
+      kind: "target";
+      entryId: string;
+      entryKind: EntryRouteKind;
+      snapshotId?: string;
+    };
 
 interface BootstrapContext {
   base: string;
@@ -85,7 +96,14 @@ export function shellBootstrap(
     },
     view:
       view.kind === "target"
-        ? { kind: "target", route: view.target.entry.route }
+        ? {
+            kind: "target",
+            entryId: view.target.entry.id,
+            entryKind: view.target.entry.kind,
+            ...(context.snapshotId === undefined
+              ? {}
+              : { snapshotId: context.snapshotId }),
+          }
         : view.kind === "missing"
           ? { kind: "missing", requested: view.requested }
           : { kind: "home" },
@@ -151,10 +169,17 @@ export function shellBootstrapProps(bootstrap: ShellBootstrap) {
   const catalogue = viewerCatalogue(bootstrap.catalogue);
   const selected =
     bootstrap.view.kind === "target"
-      ? resolveCatalogueRoute(bootstrap.catalogue, bootstrap.view.route)
+      ? resolveCatalogueRoute(
+          bootstrap.catalogue,
+          {
+            id: bootstrap.view.entryId,
+            kind: bootstrap.view.entryKind,
+          },
+          bootstrap.view.snapshotId,
+        )
       : undefined;
   const selectedEntry = selected
-    ? catalogueRouteEntry(catalogue, selected.entry.route)
+    ? catalogueSelectionEntry(catalogue, selected.entry.id, selected.snapshotId)
     : undefined;
   const selectedId = selectedEntry?.id ?? null;
   const selection = {
@@ -185,7 +210,7 @@ export function shellBootstrapProps(bootstrap: ShellBootstrap) {
       ? {}
       : { theme: bootstrap.context.theme }),
     ...(bootstrap.view.kind === "target"
-      ? { activeRoute: bootstrap.view.route }
+      ? { activeId: bootstrap.view.entryId }
       : {}),
   };
   const view: ShellView =
@@ -193,7 +218,12 @@ export function shellBootstrapProps(bootstrap: ShellBootstrap) {
       ? { kind: "home" }
       : bootstrap.view.kind === "missing"
         ? bootstrap.view
-        : targetView(catalogue, bootstrap.view.route);
+        : targetView(
+            catalogue,
+            bootstrap.view.entryId,
+            bootstrap.view.entryKind,
+            bootstrap.view.snapshotId,
+          );
   return { catalogue, context, view };
 }
 
@@ -255,8 +285,23 @@ function readView(value: Record<string, unknown>): BootstrapView {
   if (value["kind"] === "home") return { kind: "home" };
   if (value["kind"] === "missing" && typeof value["requested"] === "string")
     return { kind: "missing", requested: value["requested"] };
-  if (value["kind"] === "target" && typeof value["route"] === "string")
-    return { kind: "target", route: value["route"] };
+  if (
+    value["kind"] === "target" &&
+    isEntryId(value["entryId"]) &&
+    (value["snapshotId"] === undefined ||
+      isHistoricalSnapshotId(value["snapshotId"])) &&
+    ["component", "page", "screen", "use-case"].includes(
+      String(value["entryKind"]),
+    )
+  )
+    return {
+      kind: "target",
+      entryId: value["entryId"],
+      entryKind: value["entryKind"] as EntryRouteKind,
+      ...(value["snapshotId"] === undefined
+        ? {}
+        : { snapshotId: value["snapshotId"] }),
+    };
   throw new Error("Invalid shell hydration view.");
 }
 
@@ -270,15 +315,30 @@ function validateTarget(
   catalogue: CatalogueReadModel,
   view: BootstrapView,
 ): void {
-  if (view.kind === "target" && !resolveCatalogueRoute(catalogue, view.route))
+  if (
+    view.kind === "target" &&
+    !resolveCatalogueRoute(
+      catalogue,
+      {
+        id: view.entryId,
+        kind: view.entryKind,
+      },
+      view.snapshotId,
+    )
+  )
     throw new Error("Invalid shell hydration target.");
 }
 
 function targetView(
   catalogue: ReturnType<typeof viewerCatalogue>,
-  route: string,
+  id: string,
+  kind: EntryRouteKind,
+  snapshotId?: string,
 ): ShellView {
-  const entry = catalogueRouteEntry(catalogue, route);
+  const entry = snapshotId
+    ? catalogueSelectionEntry(catalogue, id, snapshotId)
+    : catalogueRouteEntry(catalogue, id, kind);
+  if (entry?.kind !== kind) throw new Error("Invalid shell hydration target.");
   const target = entry && toRouteTarget(entry);
   if (!target) throw new Error("Invalid shell hydration target.");
   return { kind: "target", target };

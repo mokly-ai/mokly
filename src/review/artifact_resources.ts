@@ -1,4 +1,4 @@
-import { reviewInvalid } from "@mokly/viewer/data";
+import { reviewInvalid, viewRoute } from "@mokly/viewer/data";
 import type { ReviewArtifact, ViewReview } from "@mokly/viewer/data";
 
 import { referencedRoutes } from "./asset_references.js";
@@ -6,15 +6,28 @@ import { normalizeHistoricalDocument, normalizeReviewPair } from "./ignore.js";
 
 /** Check graph-backed evidence against the actual retained snapshots before publication. */
 export function validateArtifactResources(artifact: ReviewArtifact): void {
-  const views: ViewReview[] = artifact.result.screens.flatMap(
-    (screen) => screen.views,
-  );
-  if (artifact.result.schemaVersion === 3)
-    views.push(
-      ...artifact.result.components.flatMap((entry) =>
-        entry.variants.flatMap((variant) => variant.views),
+  const views: {
+    id: string;
+    kind: "component" | "screen";
+    view: ViewReview;
+  }[] = [
+    ...artifact.result.screens.flatMap((screen) =>
+      screen.views.map((view) => ({
+        id: screen.id,
+        kind: "screen" as const,
+        view,
+      })),
+    ),
+    ...artifact.result.components.flatMap((entry) =>
+      entry.variants.flatMap((variant) =>
+        variant.views.map((view) => ({
+          id: variant.id,
+          kind: "component" as const,
+          view,
+        })),
       ),
-    );
+    ),
+  ];
   const edges = new Map<string, readonly string[]>();
   const text = (route: string): string => {
     const bytes = artifact.files.get(route);
@@ -24,24 +37,35 @@ export function validateArtifactResources(artifact: ReviewArtifact): void {
       ? bytes
       : Buffer.from(bytes).toString("utf8");
   };
-  for (const view of views) {
+  for (const item of views) {
+    const { view } = item;
     const evidence = [
       ...(view.reasons ?? []),
       ...(view.excludedResources ?? []),
     ];
     if (!evidence.length) continue;
     const reachable = new Set<string>();
-    const before = view.beforePath
-      ? normalizeHistoricalDocument(text(view.beforePath))
+    const route = viewRoute(
+      item.kind,
+      item.id,
+      view.viewport,
+      view.colorScheme,
+    );
+    const beforePath =
+      view.state === "added" ? undefined : `snapshots/before/${route}`;
+    const afterPath =
+      view.state === "removed" ? undefined : `snapshots/after/${route}`;
+    const before = beforePath
+      ? normalizeHistoricalDocument(text(beforePath))
       : undefined;
-    const after = view.afterPath ? text(view.afterPath) : undefined;
+    const after = afterPath ? text(afterPath) : undefined;
     const normalized = normalizeReviewPair(
       before ?? after ?? "",
       after ?? before ?? "",
-      view.afterPath ?? view.beforePath!,
+      afterPath ?? beforePath!,
     );
     for (const side of ["before", "after"] as const) {
-      const root = view[`${side}Path`];
+      const root = side === "before" ? beforePath : afterPath;
       if (!root) continue;
       const prefix = `snapshots/${side}/`;
       const pending = referencedRoutes(

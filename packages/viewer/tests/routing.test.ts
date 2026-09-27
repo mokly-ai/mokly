@@ -3,6 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 
 import { readCatalogue } from "../src/catalogue/reader.js";
+import { viewHref } from "../src/navigation/routes.js";
 import { ViewerRouting } from "../src/viewer/routing.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 import type { ViewerSelection } from "../src/viewer/types.js";
@@ -81,7 +82,7 @@ test("legacy shell routing carries exact history and clears it for current route
   routing.shell(
     historical.entry.id,
     new URL(
-      `https://catalogue.example/view/${historical.entry.route}?snapshot=${historical.snapshotId}`,
+      `https://catalogue.example${viewHref(historical.entry.kind, historical.entry.id)}?snapshot=${historical.snapshotId}`,
     ),
   );
   assert.deepEqual(proposals.pop(), {
@@ -98,9 +99,7 @@ test("legacy shell routing carries exact history and clears it for current route
   routing.announce();
   assert.deepEqual(navigations, [
     {
-      route: historical.entry.route,
       screenId: historical.entry.id,
-      snapshotId: historical.snapshotId,
     },
   ]);
 

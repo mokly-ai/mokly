@@ -1,5 +1,9 @@
-import type { ColorScheme, Viewport } from "../data/axes.js";
-import type { ManifestEntryBase } from "../registry/types.js";
+import type { ColorScheme } from "../data/axes.js";
+import type {
+  HistoricalArtifactView,
+  HistoricalManifestEntryBase,
+  ManifestEntryBase,
+} from "../registry/types.js";
 
 import type { ComponentControl } from "./control_types.js";
 import type { ComponentWireProps, ObjectPropSchema } from "./prop_types.js";
@@ -46,7 +50,7 @@ export interface ComponentResourceOwnership {
   componentIds: readonly string[];
 }
 export interface ComponentViewRecord {
-  viewport: Viewport;
+  viewport: "mobile" | "desktop";
   colorScheme: ColorScheme;
   instances: readonly ComponentInstanceRecord[];
   slots: readonly ComponentSlotRecord[];
@@ -54,22 +58,23 @@ export interface ComponentViewRecord {
   styles: readonly ComponentStyleOwnership[];
   resources: readonly ComponentResourceOwnership[];
 }
-/** Saved component shape stored inside historical v3-v6 parent records. */
+
+/** Saved component shape stored inside raw historical v3-v6 parent records. */
 export interface LegacyManifestComponentVariant {
   id: string;
   title: string;
   description?: string;
   props: ComponentWireProps;
   suppliedSlots: readonly string[];
-  fragments: Record<Viewport, string>;
-  darkFragments?: Record<Viewport, string>;
+  fragments: Record<"mobile" | "desktop", string>;
+  darkFragments?: Record<"mobile" | "desktop", string>;
   componentViews: readonly ComponentViewRecord[];
 }
+
+/** Current identity-only component parent. */
 export interface ManifestComponent extends Omit<ManifestEntryBase, "kind"> {
-  declaredDependencies: readonly string[];
+  colorSchemes: readonly ColorScheme[];
   kind: "component";
-  route: string;
-  viewports: readonly ["mobile", "desktop"];
   tags?: readonly string[];
   propSchema: ObjectPropSchema;
   slots: readonly string[];
@@ -77,33 +82,56 @@ export interface ManifestComponent extends Omit<ManifestEntryBase, "kind"> {
   ownedDependencies: readonly string[];
 }
 
-/** Component parent shape stored by historical component-aware manifests. */
-export interface HistoricalManifestComponent extends ManifestComponent {
-  variants: readonly LegacyManifestComponentVariant[];
-}
-
-/** Current v7 component variant represented as an ordinary catalogue entry. */
+/** Current identity-only flattened component variant. */
 export interface ManifestComponentVariant extends Omit<
   ManifestEntryBase,
   "kind"
 > {
-  declaredDependencies: readonly string[];
+  colorSchemes: readonly ColorScheme[];
   kind: "component";
-  route: string;
-  viewports: readonly ["mobile", "desktop"];
   tags?: readonly string[];
   variantOf: string;
   props: ComponentWireProps;
   suppliedSlots: readonly string[];
-  fragments: Record<Viewport, string>;
-  darkFragments?: Record<Viewport, string>;
   componentViews: readonly ComponentViewRecord[];
 }
 
-/** Whether a manifest component entry is a flattened variant. */
+/** Normalized historical component parent. */
+export interface HistoricalManifestComponent extends Omit<
+  HistoricalManifestEntryBase,
+  "kind"
+> {
+  colorSchemes: readonly ColorScheme[];
+  kind: "component";
+  tags?: readonly string[];
+  propSchema: ObjectPropSchema;
+  slots: readonly string[];
+  controls: Readonly<Record<string, ComponentControl>>;
+  ownedDependencies: readonly string[];
+}
+
+/** Normalized historical flattened component variant. */
+export interface HistoricalManifestComponentVariant extends Omit<
+  HistoricalManifestEntryBase,
+  "kind"
+> {
+  artifacts: readonly HistoricalArtifactView[];
+  colorSchemes: readonly ColorScheme[];
+  componentViews: readonly ComponentViewRecord[];
+  kind: "component";
+  tags?: readonly string[];
+  variantOf: string;
+  props: ComponentWireProps;
+  suppliedSlots: readonly string[];
+}
+
+/** Whether a current or normalized historical component is a variant entry. */
 export function isManifestComponentVariant(
   entry:
-    ManifestComponent | HistoricalManifestComponent | ManifestComponentVariant,
-): entry is ManifestComponentVariant {
+    | ManifestComponent
+    | ManifestComponentVariant
+    | HistoricalManifestComponent
+    | HistoricalManifestComponentVariant,
+): entry is ManifestComponentVariant | HistoricalManifestComponentVariant {
   return "variantOf" in entry && typeof entry.variantOf === "string";
 }

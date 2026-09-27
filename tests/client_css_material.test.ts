@@ -10,7 +10,7 @@ import { isStyleOnlyView } from "../packages/viewer/dist/shell/workspace_style_e
 import { cssSchemaFixture } from "./helpers/review_css_schema.js";
 
 test("a material change with matched stylesheet evidence reads Screen changed", () => {
-  const result = cssSchemaFixture(2);
+  const result = cssSchemaFixture(4);
   const view = result.screens[0]!.views[0]!;
   Object.assign(view, { material: true });
 
@@ -24,7 +24,7 @@ test("a material change with matched stylesheet evidence reads Screen changed", 
         requestedColorScheme: "light",
         viewport: "mobile",
       },
-      route: "screens/auth.html",
+      route: "auth",
     }),
   );
 
@@ -34,7 +34,7 @@ test("a material change with matched stylesheet evidence reads Screen changed", 
 });
 
 test("an effective Light comparison retains the requested Dark fallback label", () => {
-  const result = cssSchemaFixture(2);
+  const result = cssSchemaFixture(4);
   const markup = renderToStaticMarkup(
     createElement(ComparisonViews, {
       component: false,
@@ -45,7 +45,7 @@ test("an effective Light comparison retains the requested Dark fallback label", 
         requestedColorScheme: "dark",
         viewport: "mobile",
       },
-      route: "screens/auth.html",
+      route: "auth",
     }),
   );
 

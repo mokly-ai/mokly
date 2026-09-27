@@ -13,12 +13,14 @@ import type { ResolvedConfig } from "../dist/config/types.js";
 import {
   createManifest,
   MANIFEST_NAME,
+  parseHistoricalManifest,
   parseManifest,
   readManifest,
   serializeManifest,
 } from "../dist/registry/manifest.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { legacyManifestFromV7 } from "./helpers/historical_manifest.js";
 
 test("current filesystem reads reject legacy-only output even with historical compatibility", async (context) => {
   const fixture = await createFixture();
@@ -50,64 +52,63 @@ test("filesystem manifest loading never accepts v2 under the canonical filename"
   assert.throws(() => readManifest(config), /schema version 7/);
 });
 
-test("manifest loading rejects routes that do not derive from identity", async (context) => {
+test("manifest loading rejects stored routes", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const manifest = structuredClone((await compileCatalogue(config)).manifest);
   const screen = manifest.entries.find((entry) => entry.kind === "screen");
   if (!screen || screen.kind !== "screen") throw new Error("screen missing");
-  screen.route = "screens/home?alternate.html";
+  Object.assign(screen, { route: "screens/home?alternate.html" });
 
-  assert.throws(
-    () => parseManifest(manifest),
-    /route does not match its kind and id/,
-  );
+  assert.throws(() => parseManifest(manifest), /unsupported route/);
 });
 
-test("manifest validates darkFragments names and collisions", () => {
+test("manifest validates retained color schemes and rejects stored view paths", () => {
   const manifest = manifestWithScreen("a");
   const screen = manifest.entries[0];
   if (!screen || screen.kind !== "screen") throw new Error("screen missing");
-  screen.darkFragments = {
-    desktop: "screens/a.desktop.dark.html",
-    mobile: "screens/a.mobile.dark.html",
-  };
+  screen.colorSchemes = ["light", "dark"];
   assert.doesNotThrow(() => parseManifest(manifest));
 
-  const wrongName = structuredClone(manifest);
-  const wrongScreen = wrongName.entries[0];
-  if (!wrongScreen || wrongScreen.kind !== "screen") {
-    throw new Error("screen missing");
-  }
-  wrongScreen.darkFragments = {
-    desktop: "screens/a.desktop.dark.html",
-    mobile: "wrong.mobile.dark.html",
-  };
-  assert.throws(
-    () => parseManifest(wrongName),
-    /has invalid or colliding mobile dark fragment/,
-  );
-
-  const collidingScreen = manifestWithScreen("b").entries[0]!;
-  if (collidingScreen.kind !== "screen") throw new Error("screen missing");
-  collidingScreen.darkFragments = {
-    desktop: "screens/b.desktop.dark.html",
-    mobile: "screens/a.mobile.dark.html",
-  };
-  const collision = {
-    ...structuredClone(manifest),
-    sourceFiles: ["entries/a.mockup.tsx", "entries/b.mockup.tsx"],
-    entries: [...manifest.entries, collidingScreen],
-  };
-  assert.throws(
-    () => parseManifest(collision),
-    /has invalid or colliding mobile dark fragment/,
-  );
-
   const invalidShape = structuredClone(manifest);
-  Object.assign(invalidShape.entries[0]!, { darkFragments: [] });
-  assert.throws(() => parseManifest(invalidShape), /invalid darkFragments/);
+  Object.assign(invalidShape.entries[0]!, { colorSchemes: ["dark"] });
+  assert.throws(() => parseManifest(invalidShape), /invalid colorSchemes/);
+  const stored = structuredClone(manifest);
+  Object.assign(stored.entries[0]!, { fragments: {} });
+  assert.throws(() => parseManifest(stored), /unsupported fragments/);
+});
+
+test("historical manifests validate darkFragments names and collisions", () => {
+  const current = createManifest(
+    [resolvedScreen("a"), resolvedScreen("b")],
+    [],
+    ["light", "dark"],
+  );
+  const historical = legacyManifestFromV7(current, 6);
+  assert.doesNotThrow(() => parseHistoricalManifest(historical));
+
+  const wrongName = structuredClone(historical);
+  const wrongScreen = wrongName.entries.find((entry) => entry.id === "a");
+  assert.ok(wrongScreen);
+  const wrongDark = wrongScreen.darkFragments as Record<string, string>;
+  wrongDark.mobile = "wrong.mobile.dark.html";
+  assert.throws(
+    () => parseHistoricalManifest(wrongName),
+    /invalid or colliding mobile dark fragment/,
+  );
+
+  const collision = structuredClone(historical);
+  const first = collision.entries.find((entry) => entry.id === "a");
+  const second = collision.entries.find((entry) => entry.id === "b");
+  assert.ok(first && second);
+  const firstDark = first.darkFragments as Record<string, string>;
+  const secondDark = second.darkFragments as Record<string, string>;
+  secondDark.mobile = firstDark.mobile!;
+  assert.throws(
+    () => parseHistoricalManifest(collision),
+    /invalid or colliding mobile dark fragment/,
+  );
 });
 
 test("manifest validation accepts tags and rejects invalid ones", () => {
@@ -130,7 +131,7 @@ test("light-only manifests remain deterministic without variant metadata", () =>
     entries: [
       {
         declaredDependencies: [],
-        dependencies: ["entries/a.mockup.tsx"],
+        colorSchemes: ["light"],
         description: "A screen",
         id: "a",
         kind: "screen",
@@ -138,13 +139,7 @@ test("light-only manifests remain deterministic without variant metadata", () =>
         relatedDocs: [],
         sourcePath: "entries/a.mockup.tsx",
         title: "A",
-        fragments: {
-          desktop: "screens/a.desktop.html",
-          mobile: "screens/a.mobile.html",
-        },
-        route: "screens/a.html",
         useCaseIds: [],
-        viewports: ["mobile", "desktop"],
       },
     ],
     generatedBy: "mokly",

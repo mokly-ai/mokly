@@ -29,9 +29,8 @@ test("manifest v7 ships before the identity-keyed comparison format", async (t) 
       fixture.git,
       "main",
     );
-    const componentComparison = before === components || after === components;
     assert.equal(fixture.after.manifest.schemaVersion, 7);
-    assert.equal(result.schemaVersion, componentComparison ? 3 : 2);
+    assert.equal(result.schemaVersion, 4);
     assert.match(
       index,
       after === components

@@ -207,13 +207,8 @@ test("SSR selects a requested saved variant in its control and preview", () => {
     {
       ...structuredClone(original),
       id: "action-second",
-      route: "components/action-second.html",
       title: "Second",
-      views: original.views.map((view) => ({
-        ...structuredClone(view),
-        fragmentPath:
-          view.fragmentPath?.replace("action-default", "action-second") ?? null,
-      })),
+      views: original.views.map((view) => structuredClone(view)),
     },
   ];
   const actionNode = (
@@ -262,7 +257,6 @@ test("SSR resolves light fallback evidence across status, marks and comparison",
       {
         ...structuredClone(view),
         colorScheme: "dark" as const,
-        fragmentPath: view.fragmentPath?.replace(".html", ".dark.html") ?? null,
       },
     ]);
   }
@@ -302,10 +296,10 @@ test("SSR preserves comparison ineligibility while view evidence is unknown", ()
   assert.match(html, /class="mbk-diff-toolbar" hidden=""/);
 });
 
-test("invalid current paths are rejected instead of replaced with guessed URLs", () => {
+test("incomplete current view axes are rejected", () => {
   const model = structuredClone(fixture);
   const screen = model.screens[0]!;
-  for (const view of screen.views) view.fragmentPath = null;
+  screen.views = [];
   assert.throws(() =>
     renderViewer({
       viewerId: "fixture",

@@ -22,12 +22,11 @@ baseline identities fail projection; revisions and live deployment hashes are
 never substituted. Older generation-backed catalogues normalize safely, while
 identity-less same-id history remains unavailable.
 `CatalogueProjectionInput.removedPreviews` is caller-supplied generation data;
-projection never derives it from Git or the filesystem. Page paths must name the
-same 64-hex generation as `comparisonUrl` and end in the exact removed route,
-while screen descriptors reuse that generation's comparison. Readers reject
-descriptors on current entries, mismatched entry kinds, missing comparison URLs,
-and cross-generation or mismatched page paths while accepting v3 catalogues
-that omit the optional preview field.
+projection never derives it from Git or the filesystem. The map is keyed by
+removed entry id; page metadata is packaged at `pages/<id>.json`, while screen
+descriptors reuse the same generation's comparison. Readers reject descriptors
+on current entries, mismatched entry kinds, or missing comparison URLs while
+accepting v3 catalogues that omit the optional preview field.
 Serve supplies only removed-screen descriptors after a complete comparison is
 pinned; selected-only generations never change the public model, and live page
 descriptors remain absent. Changes-enabled consumer export and repository

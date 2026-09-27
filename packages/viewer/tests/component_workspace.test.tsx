@@ -302,7 +302,8 @@ test("control availability and usage URLs explain the active product state", () 
   assert.equal(
     usageHref({
       title: "Home",
-      route: "screens/home.html",
+      entryId: "home",
+      entryKind: "screen",
       variantId: "action-default",
       viewport: "mobile",
       colorScheme: "dark",

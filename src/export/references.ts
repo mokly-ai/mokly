@@ -11,6 +11,7 @@ import {
 import {
   extractCssReferences,
   extractHtmlReferences,
+  snapshotBaseDocumentRoute,
 } from "../html_references.js";
 
 import { exportError } from "./error.js";
@@ -38,9 +39,17 @@ export function validateExportReferences(
         ? [
             [
               name,
-              htmlResource(
-                extractHtmlReferences(Buffer.from(bytes).toString("utf8")),
-              ),
+              (() => {
+                const extracted = extractHtmlReferences(
+                  Buffer.from(bytes).toString("utf8"),
+                );
+                return {
+                  ...htmlResource(extracted),
+                  ...(extracted.snapshotBase
+                    ? { snapshotBase: extracted.snapshotBase }
+                    : {}),
+                };
+              })(),
             ] as const,
           ]
         : [],
@@ -70,7 +79,13 @@ export function validateExportReferences(
         references.push({ value: match[1] ?? "", checkFragment: false });
     }
     for (const reference of references) {
-      const target = referenceTarget(name, reference.value);
+      const snapshotBase = documents.get(name)?.snapshotBase;
+      const source = snapshotBase
+        ? snapshotBaseDocumentRoute(name, snapshotBase)
+        : name;
+      if (!source)
+        throw exportError(`Invalid historical snapshot base: ${name}`);
+      const target = referenceTarget(source, reference.value);
       if (target === undefined) continue;
       const resolved = files.has(target)
         ? target

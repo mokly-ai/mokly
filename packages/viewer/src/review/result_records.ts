@@ -10,7 +10,6 @@ import {
   reviewInvalid,
   reviewObject,
   reviewPath,
-  reviewRoute,
   reviewSides,
   reviewState,
   reviewString,
@@ -21,45 +20,28 @@ import {
   validateResourceEvidence,
 } from "./result_resources.js";
 
-const screenKeys = [
-  "dependencies",
-  "id",
-  "route",
-  "sharedImpact",
-  "state",
-  "title",
-];
+const screenKeys = ["dependencies", "id", "sharedImpact", "state", "title"];
 export function validateReviewScreen(
   value: unknown,
-  version: 2 | 3,
   component = false,
   changedPaths: readonly string[] = [],
 ): Record<string, unknown> {
   const record = reviewObject(
     value,
     [...screenKeys, component ? "variants" : "views"],
-    version === 3 ? ["before", "after"] : [],
+    ["before", "after"],
   );
   reviewId(record.id);
-  reviewRoute(record.route);
   reviewString(record.title);
   reviewStrings(record.dependencies, reviewPath);
   reviewStrings(record.sharedImpact, reviewPath);
   reviewState(record.state);
-  if (version === 3) {
-    reviewSides(record);
-    requireEqual(record.after ?? record.before, {
-      id: record.id,
-      route: record.route,
-      title: record.title,
-    });
-  }
-  if (!component)
-    validateReviewViews(
-      record.views,
-      version === 3 ? record : undefined,
-      changedPaths,
-    );
+  reviewSides(record);
+  requireEqual(record.after ?? record.before, {
+    id: record.id,
+    title: record.title,
+  });
+  if (!component) validateReviewViews(record.views, record, changedPaths);
   else {
     const variants = reviewArray(record.variants);
     if (!variants.length) reviewInvalid("component variants are missing");
@@ -114,7 +96,7 @@ export function validateReviewViews(
     const view = reviewObject(
       item,
       ["viewport", "colorScheme", "ignoredIds", "state"],
-      ["beforePath", "afterPath", "material", "reasons", "excludedResources"],
+      ["material", "reasons", "excludedResources"],
     );
     validateResourceEvidence(view, changedPaths);
     if (
@@ -127,26 +109,10 @@ export function validateReviewViews(
     );
     reviewStrings(view.ignoredIds, reviewId);
     reviewState(view.state);
-    if (!view.beforePath && !view.afterPath)
-      reviewInvalid("view sides are missing");
-    if (
-      (!view.beforePath && view.state !== "added") ||
-      (!view.afterPath && view.state !== "removed")
-    )
-      reviewInvalid("missing view side has the wrong state");
-    if (
-      view.beforePath &&
-      view.afterPath &&
-      (view.state === "added" || view.state === "removed")
-    )
-      reviewInvalid("paired view has a missing-side state");
-    for (const side of ["before", "after"] as const) {
-      const path = view[`${side}Path`];
-      if (path === undefined) continue;
-      if (sides && !sides[side]) reviewInvalid("view has no entry side");
-      if (!reviewRoute(path).startsWith(`snapshots/${side}/`))
-        reviewInvalid("snapshot belongs to the wrong side");
-    }
+    if (view.state === "added" && sides && !sides.after)
+      reviewInvalid("added view has no after entry side");
+    if (view.state === "removed" && sides && !sides.before)
+      reviewInvalid("removed view has no before entry side");
   }
   requireOrdered(keys, (key) => key);
 }
@@ -169,7 +135,7 @@ export function validateChangedEntry(
       raw.kind === "dependency"
         ? ["kind", "path"]
         : raw.kind === "screen"
-          ? ["kind", "route"]
+          ? ["kind", "id"]
           : ["kind"],
       raw.kind === "dependency" ? ["analysis"] : [],
     );
@@ -193,12 +159,12 @@ export function validateChangedEntry(
       reviewInvalid("reason conflicts with available sides");
     if (reason.kind === "dependency")
       validateDependencyReason(reason, changedPaths);
-    if (
-      reason.kind === "screen" &&
-      (record.kind !== "use-case" || !reviewRoute(reason.route))
-    )
-      reviewInvalid("screen propagation requires a use case");
-    keys.push(`${reason.kind}:${reason.path ?? reason.route ?? ""}`);
+    if (reason.kind === "screen") {
+      if (record.kind !== "use-case")
+        reviewInvalid("screen propagation requires a use case");
+      reviewId(reason.id);
+    }
+    keys.push(`${reason.kind}:${reason.path ?? reason.id ?? ""}`);
   }
   requireOrdered(keys, (key) => key);
   return record;
@@ -216,10 +182,10 @@ export function validateAffected(value: unknown): Record<string, unknown> {
       typeof record.consumer === "object" &&
       "kind" in record.consumer &&
       record.consumer.kind === "screen"
-      ? ["kind", "route"]
+      ? ["kind", "id"]
       : ["kind", "id"],
   );
-  if (consumer.kind === "screen") reviewRoute(consumer.route);
+  if (consumer.kind === "screen") reviewId(consumer.id);
   else if (consumer.kind === "component") reviewId(consumer.id);
   else reviewInvalid("invalid affected consumer");
   const evidence = reviewArray(record.evidence);
@@ -257,7 +223,7 @@ export function validateAffected(value: unknown): Record<string, unknown> {
     )
       reviewInvalid("invalid ownership chain");
     keys.push(
-      `${item.side === "before" ? 0 : 1}:${entry.route}:${context.variantId ?? ""}:${context.viewport === "mobile" ? 0 : 1}:${context.colorScheme === "light" ? 0 : 1}:${canonicalJson(chain)}`,
+      `${item.side === "before" ? 0 : 1}\u0000${entry.id}\u0000${context.variantId ?? ""}\u0000${context.viewport === "mobile" ? 0 : 1}\u0000${context.colorScheme === "light" ? 0 : 1}\u0000${canonicalJson(chain)}`,
     );
   }
   requireOrdered(keys, (key) => key);

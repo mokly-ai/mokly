@@ -6,6 +6,7 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
+import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import {
   createFixture,
@@ -161,11 +162,15 @@ test("legacy authored routes cannot change derived documents", async () => {
       const config = await loadConfig(fixture.root);
       const compilation = await compileCatalogue(config);
       assert.ok(compilation.outputs.has("screens/unsafe-target.mobile.html"));
+      const entry = compilation.manifest.entries.find(
+        ({ id }) => id === "unsafe-target",
+      );
+      assert.ok(entry);
       assert.equal(
-        compilation.manifest.entries.find(({ id }) => id === "unsafe-target")
-          ?.route,
+        entryRoute(entry.kind, entry.id),
         "screens/unsafe-target.html",
       );
+      assert.equal("route" in entry, false);
     } finally {
       await removeFixture(fixture);
     }

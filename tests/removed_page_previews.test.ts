@@ -25,17 +25,16 @@ for (const version of [4, 5] as const) {
       fixture.reader,
     ).generate(
       fixture.source,
-      { kind: "page", route: PAGE_ROUTE },
+      { kind: "page", id: "guide" },
       new AbortController().signal,
     );
     const files = renderRemovedPagePreviewArtifact(artifact);
 
     assert.deepEqual(artifact.preview, {
-      schemaVersion: 1,
+      schemaVersion: 2,
       baseRef: "main",
       baseCommit: PAGE_COMMIT,
-      route: PAGE_ROUTE,
-      documentPath: `snapshots/before/${PAGE_ROUTE}`,
+      id: "guide",
     });
     assert.deepEqual(
       parseRemovedPagePreview(JSON.parse(String(files.get("preview.json")))),
@@ -43,13 +42,24 @@ for (const version of [4, 5] as const) {
     );
     assert.equal(files.size, fixture.files.size + 1);
     for (const [repoPath, value] of fixture.files) {
-      assert.deepEqual(
-        Buffer.from(
-          files.get(`snapshots/before/${repoPath.slice("mockups/".length)}`)!,
-        ),
-        Buffer.from(value.bytes!),
-        repoPath,
+      const captured = Buffer.from(
+        files.get(
+          repoPath === `mockups/${PAGE_ROUTE}`
+            ? "snapshots/before/pages/guide.html"
+            : `snapshots/before/${repoPath.slice("mockups/".length)}`,
+        )!,
       );
+      if (repoPath === `mockups/${PAGE_ROUTE}`) {
+        const base = '<base data-mokly-snapshot-base="" href="../archive/">';
+        assert.match(captured.toString(), new RegExp(base));
+        assert.deepEqual(
+          Buffer.from(captured.toString().replace(base, "")),
+          Buffer.from(value.bytes!),
+          repoPath,
+        );
+        continue;
+      }
+      assert.deepEqual(captured, Buffer.from(value.bytes!), repoPath);
     }
     assert.deepEqual(
       fixture.batches.map((batch) => batch.length),
@@ -79,7 +89,7 @@ test("removed page capture rejects missing documents and every missing dependenc
         baselineReader(files),
       ).generate(
         fixture.source,
-        { kind: "page", route: PAGE_ROUTE },
+        { kind: "page", id: "guide" },
         new AbortController().signal,
       ),
       /Snapshot file is missing/,
@@ -93,7 +103,7 @@ test("removed page capture rejects a selection outside the accepted removal snap
   await assert.rejects(
     new RepositoryRemovedPagePreview(fixture.config, fixture.reader).generate(
       fixture.source,
-      { kind: "page", route: "archive/missing.html" },
+      { kind: "page", id: "missing" },
       new AbortController().signal,
     ),
     /selected view has no comparison/,
@@ -104,7 +114,7 @@ test("removed page capture rejects a selection outside the accepted removal snap
         ...fixture.source,
         baseline: { ...fixture.baseline, entries: [] } as HistoricalManifest,
       },
-      { kind: "page", route: PAGE_ROUTE },
+      { kind: "page", id: "guide" },
       new AbortController().signal,
     ),
     /removed page does not match the pinned baseline/,
@@ -126,7 +136,7 @@ for (const [name, reference, message] of [
     await assert.rejects(
       new RepositoryRemovedPagePreview(fixture.config, fixture.reader).generate(
         fixture.source,
-        { kind: "page", route: PAGE_ROUTE },
+        { kind: "page", id: "guide" },
         new AbortController().signal,
       ),
       message,
@@ -140,14 +150,16 @@ test("removed page capture denies traversal, symlinks, metadata, and authored so
     ...fixture.source,
     baseline: {
       ...fixture.baseline,
-      entries: [{ ...fixture.page, route: "../guide.html" }],
+      entries: [{ ...fixture.page, artifactPath: "../guide.html" }],
     } as HistoricalManifest,
-    removedEntries: [{ entry: { ...fixture.page, route: "../guide.html" } }],
+    removedEntries: [
+      { entry: { ...fixture.page, artifactPath: "../guide.html" } },
+    ],
   };
   await assert.rejects(
     new RepositoryRemovedPagePreview(fixture.config, fixture.reader).generate(
       unsafeSource,
-      { kind: "page", route: "../guide.html" },
+      { kind: "page", id: "guide" },
       new AbortController().signal,
     ),
     /unsafe path/,
@@ -184,7 +196,7 @@ test("removed page capture denies traversal, symlinks, metadata, and authored so
         baselineReader(files),
       ).generate(
         { ...fixture.source, baseline },
-        { kind: "page", route: PAGE_ROUTE },
+        { kind: "page", id: "guide" },
         new AbortController().signal,
       ),
       denied,
@@ -202,7 +214,7 @@ test("removed page capture applies the selected artifact byte limit", async (t) 
   await assert.rejects(
     new RepositoryRemovedPagePreview(fixture.config, fixture.reader).generate(
       fixture.source,
-      { kind: "page", route: PAGE_ROUTE },
+      { kind: "page", id: "guide" },
       new AbortController().signal,
     ),
     /exceeds 64 MiB/,
@@ -211,19 +223,16 @@ test("removed page capture applies the selected artifact byte limit", async (t) 
 
 test("preview reader strictly validates metadata and document identity", () => {
   const valid = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     baseRef: "main",
     baseCommit: PAGE_COMMIT,
-    route: PAGE_ROUTE,
-    documentPath: `snapshots/before/${PAGE_ROUTE}`,
+    id: "guide",
   };
   assert.deepEqual(parseRemovedPagePreview(valid), valid);
   for (const value of [
-    { ...valid, schemaVersion: 2 },
+    { ...valid, schemaVersion: 1 },
     { ...valid, baseCommit: "invalid" },
-    { ...valid, route: "../guide.html" },
-    { ...valid, documentPath: "snapshots/after/archive/guide.html" },
-    { ...valid, documentPath: "snapshots/before/archive/other.html" },
+    { ...valid, id: "../guide" },
     { ...valid, extra: path.resolve("private") },
   ])
     assert.throws(() => parseRemovedPagePreview(value));

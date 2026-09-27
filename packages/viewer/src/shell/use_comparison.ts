@@ -73,7 +73,7 @@ export function useComparison({
   const selection = store?.state.selection;
   const evidenceKey = `${store?.context.updateVersion ?? 0}:${store?.catalogue.publicModel?.revision.evidence ?? 0}`;
   const scope = useMemo<ComparisonScope>(
-    () => ({ route, ...(variantId ? { variantId } : {}) }),
+    () => ({ id: variantId ?? route }),
     [route, variantId],
   );
   const scopeKey = useMemo(

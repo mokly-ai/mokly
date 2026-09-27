@@ -10,6 +10,8 @@ import {
   parseManifest,
 } from "../dist/registry/manifest.js";
 
+import { legacyManifestFromV7 } from "./helpers/historical_manifest.js";
+
 const entry = (
   id: string,
   kind: string,
@@ -223,11 +225,7 @@ test("manifest v7 preserves navigation paths; v5 baselines validate then discard
     ["light"],
   );
   assert.equal(parseManifest(manifest).schemaVersion, 7);
-  const old = structuredClone(manifest) as unknown as Record<
-    string,
-    unknown
-  > & { entries: Array<Record<string, unknown>> };
-  old.schemaVersion = 5;
+  const old = legacyManifestFromV7(manifest, 5);
   old.entries.unshift({
     id: "design",
     kind: "collection",

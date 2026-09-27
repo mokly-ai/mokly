@@ -9,8 +9,9 @@ import { writeCompilation } from "../dist/build/transaction.js";
 import { parseArguments } from "../dist/cli/arguments.js";
 import { HELP } from "../dist/cli/help.js";
 import { loadConfig } from "../dist/config/load.js";
-import { changedManifestRoutes } from "../dist/registry/changed_routes.js";
+import { changedManifestIds } from "../dist/registry/changed_ids.js";
 import { serve } from "../dist/server/serve.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
@@ -37,12 +38,12 @@ test("shared inputs require rendered impact to include screens in Changes", asyn
     review: { ...config.review, sharedImpact: ["theme/**"] },
   };
   assert.deepEqual(
-    changedManifestRoutes(manifest, manifest, withShared, ["theme/colors.css"]),
+    changedManifestIds(manifest, manifest, withShared, ["theme/colors.css"]),
     [],
   );
 });
 
-test("changing only a screen variant parent marks its route changed", async (t) => {
+test("changing only a screen variant parent marks its id changed", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -53,12 +54,7 @@ test("changing only a screen variant parent marks its route changed", async (t) 
   assert.ok(parent?.kind === "screen");
   const variant = {
     ...structuredClone(parent),
-    fragments: {
-      desktop: "screens/home-empty.desktop.html",
-      mobile: "screens/home-empty.mobile.html",
-    },
     id: "home-empty",
-    route: "screens/home-empty.html",
     useCaseIds: [],
     variantOf: "home",
   };
@@ -70,9 +66,7 @@ test("changing only a screen variant parent marks its route changed", async (t) 
     ),
   };
 
-  assert.deepEqual(changedManifestRoutes(current, base, config, []), [
-    variant.route,
-  ]);
+  assert.deepEqual(changedManifestIds(current, base, config, []), [variant.id]);
 });
 
 test("a material variant edit marks only the variant route", async (t) => {
@@ -86,10 +80,10 @@ test("a material variant edit marks only the variant route", async (t) => {
   assert.ok(variant?.kind === "screen");
 
   assert.deepEqual(
-    changedManifestRoutes(manifest, manifest, config, [
-      `mockups/${variant.fragments.mobile}`,
+    changedManifestIds(manifest, manifest, config, [
+      `mockups/${viewRoute("screen", variant.id, "mobile", "light")}`,
     ]),
-    [variant.route],
+    [variant.id],
   );
 });
 
@@ -113,9 +107,9 @@ test("renaming a parent title marks its variant through the parent projection", 
     ),
   };
 
-  assert.deepEqual(changedManifestRoutes(current, manifest, config, []), [
-    variant.route,
-    parent.route,
+  assert.deepEqual(changedManifestIds(current, manifest, config, []), [
+    parent.id,
+    variant.id,
   ]);
 });
 
@@ -135,12 +129,10 @@ for (const changed of ["parent", "variant"] as const)
     assert.ok(screen?.kind === "screen");
 
     assert.deepEqual(
-      changedManifestRoutes(manifest, manifest, config, [
-        `mockups/${screen.fragments.mobile}`,
+      changedManifestIds(manifest, manifest, config, [
+        `mockups/${viewRoute("screen", screen.id, "mobile", "light")}`,
       ]),
-      changed === "variant"
-        ? [screen.route, "user-flows/variant-flow.html"]
-        : [screen.route],
+      changed === "variant" ? [screen.id, "variant-flow"] : [screen.id],
     );
   });
 
@@ -181,8 +173,14 @@ test("Changes keeps screen comparisons lazy and has no separate Review route", a
       false,
     );
     const view = comparison.screens[0]?.views[0];
-    assert.ok(view?.beforePath);
-    const snapshot = await fetch(new URL(view.beforePath, response.url));
+    assert.ok(view);
+    const screen = comparison.screens[0]!;
+    const snapshot = await fetch(
+      new URL(
+        `snapshots/before/${viewRoute("screen", screen.id, view.viewport, view.colorScheme)}`,
+        response.url,
+      ),
+    );
     assert.equal(snapshot.status, 200);
     assert.doesNotMatch(await snapshot.text(), /data-mokly-update-version/);
   } finally {

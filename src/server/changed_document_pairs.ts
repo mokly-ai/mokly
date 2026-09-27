@@ -1,7 +1,7 @@
 /** Pair current view documents with their baseline paths and material-change eligibility. */
 import type { ColorScheme, Viewport } from "@mokly/viewer";
-import type { Manifest } from "@mokly/viewer/data";
-import { VIEWPORTS } from "@mokly/viewer/data";
+import type { HistoricalManifest, ManifestV7 } from "@mokly/viewer/data";
+import { entryRoute, VIEWPORTS } from "@mokly/viewer/data";
 
 import { pageBaselines } from "../review/page_baselines.js";
 import { fragmentForView, unionColorSchemes } from "../review/screen_views.js";
@@ -11,12 +11,12 @@ export interface DocumentPair {
   head: string;
   context: string;
   changed: boolean;
-  view?: { route: string; viewport: Viewport; colorScheme: ColorScheme };
+  view?: { id: string; viewport: Viewport; colorScheme: ColorScheme };
 }
 
 export function documentPairs(
-  manifest: Manifest,
-  baseline: Manifest,
+  manifest: ManifestV7,
+  baseline: HistoricalManifest,
   changed: ReadonlySet<string>,
   documents: "all" | "pages",
 ): DocumentPair[] {
@@ -26,12 +26,13 @@ export function documentPairs(
   for (const screen of manifest.entries) {
     const baseEntry = bases.get(screen.id);
     if (screen.kind === "page") {
-      const base = pages.get(screen.id)?.route;
+      const base = pages.get(screen.id)?.artifactPath;
+      const head = entryRoute("page", screen.id);
       pairs.push({
         ...(base ? { base } : {}),
-        head: screen.route,
-        context: screen.route,
-        changed: base !== screen.route || changed.has(screen.route),
+        head,
+        context: head,
+        changed: base !== head || changed.has(head),
       });
       continue;
     }
@@ -47,9 +48,9 @@ export function documentPairs(
         pairs.push({
           ...(before ? { base: before } : {}),
           head: after,
-          context: `${screen.route} (${viewport}, ${scheme})`,
+          context: `${entryRoute("screen", screen.id)} (${viewport}, ${scheme})`,
           changed: before !== after || changed.has(after),
-          view: { route: screen.route, viewport, colorScheme: scheme },
+          view: { id: screen.id, viewport, colorScheme: scheme },
         });
       }
     }

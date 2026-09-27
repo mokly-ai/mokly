@@ -8,7 +8,7 @@ import { compileCatalogue } from "../../dist/build/compile.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
 import { serve } from "../../dist/server/serve.js";
-import type { ReviewResultV3 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV4 } from "../../packages/viewer/dist/review/component_types.js";
 import { componentEntrySource } from "../helpers/component_fixture.js";
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 import { createFixture, removeFixture } from "../helpers/fixture.js";
@@ -30,7 +30,7 @@ test("a registered catalogue shows shared-impact-only files in a screen's Detail
         baseline: compilation.manifest,
         result: sharedImpactOnlyResult(),
       },
-      changedRoutes: [],
+      changedIds: [],
       changesStatus: "ready",
     });
 
@@ -112,10 +112,10 @@ function pathOnlyEntrySource(): string {
   );
 }
 
-function sharedImpactOnlyResult(): ReviewResultV3 {
-  const address = { id: "home", route: "screens/home.html", title: "Home" };
+function sharedImpactOnlyResult(): ReviewResultV4 {
+  const address = { id: "home", title: "Home" };
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: ["notes.md"],
@@ -135,8 +135,6 @@ function sharedImpactOnlyResult(): ReviewResultV3 {
             colorScheme,
             state: "unchanged" as const,
             ignoredIds: [],
-            beforePath: `snapshots/before/screens/home.${viewport}.${colorScheme}.html`,
-            afterPath: `snapshots/after/screens/home.${viewport}.${colorScheme}.html`,
           })),
         ),
       },

@@ -7,6 +7,7 @@ import {
   parseManifest,
   parseHistoricalManifest,
 } from "../dist/registry/manifest.js";
+import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
 
 test("manifest emits variantOf only for screen variants", () => {
@@ -41,7 +42,7 @@ test("manifest and hierarchy keep authored sibling variant order", () => {
     [parent.id, zeta.id, alpha.id],
   );
   assert.deepEqual(
-    manifest.entries.map(({ route }) => route),
+    manifest.entries.map(({ id, kind }) => entryRoute(kind, id)),
     [
       "screens/welcome.html",
       "screens/welcome-zeta.html",
@@ -57,8 +58,7 @@ test("manifest and hierarchy keep authored sibling variant order", () => {
 });
 
 test("historical v5 permits empty collections but drops them after validation", () => {
-  const historical = mutableManifest(variantManifest());
-  historical.schemaVersion = 5;
+  const historical = historicalManifest(5);
   historical.entries.push({
     id: "screens",
     kind: "collection",
@@ -78,40 +78,33 @@ test("historical v5 permits empty collections but drops them after validation", 
   assert.throws(() => parseManifest(historical), /schema version 7/);
 });
 
-test("manifest validation rejects broken variant parents and non-derived routes", () => {
+test("manifest validation rejects broken variant parents and stored routes", () => {
   const unknown = mutableManifest(variantManifest());
   screenEntry(unknown, "welcome-empty").variantOf = "missing";
   assert.throws(() => parseManifest(unknown), /variant parent does not exist/);
 
   const nonScreen = mutableManifest(variantManifest());
   nonScreen.entries.push({
-    ...screenEntry(nonScreen, "welcome"),
+    declaredDependencies: [],
+    description: "Page",
     kind: "page",
     id: "page",
-    route: "pages/page.html",
+    navPath: [],
+    relatedDocs: [],
+    sourcePath: "entries/welcome.mockup.tsx",
+    title: "Page",
   });
-  delete nonScreen.entries.at(-1)?.fragments;
-  delete nonScreen.entries.at(-1)?.useCaseIds;
-  delete nonScreen.entries.at(-1)?.viewports;
   screenEntry(nonScreen, "welcome-empty").variantOf = "page";
   assert.throws(() => parseManifest(nonScreen), /parent is not a screen/);
 
   const rerouted = mutableManifest(variantManifest());
   const reroutedVariant = screenEntry(rerouted, "welcome-empty");
   reroutedVariant.route = "screens/elsewhere.html";
-  reroutedVariant.fragments = {
-    desktop: "screens/elsewhere.desktop.html",
-    mobile: "screens/elsewhere.mobile.html",
-  };
-  assert.throws(
-    () => parseManifest(rerouted),
-    /route does not match its kind and id/,
-  );
+  assert.throws(() => parseManifest(rerouted), /unsupported route/);
 });
 
 test("historical manifest validation retains authored v6 routes", () => {
-  const historical = mutableManifest(variantManifest());
-  historical.schemaVersion = 6;
+  const historical = historicalManifest(6);
   const variant = screenEntry(historical, "welcome-empty");
   variant.route = "archive/welcome.variants/empty.html";
   variant.fragments = {
@@ -119,7 +112,14 @@ test("historical manifest validation retains authored v6 routes", () => {
     mobile: "archive/welcome.variants/empty.mobile.html",
   };
 
-  assert.equal(parseHistoricalManifest(historical).schemaVersion, 6);
+  const parsed = parseHistoricalManifest(historical);
+  assert.equal(parsed.schemaVersion, 6);
+  const normalized = parsed.entries.find((entry) => entry.id === variant.id);
+  assert.ok(normalized?.kind === "screen" && "artifacts" in normalized);
+  assert.equal(
+    normalized.artifacts.find(({ viewport }) => viewport === "mobile")?.path,
+    "archive/welcome.variants/empty.mobile.html",
+  );
   assert.throws(() => parseManifest(historical), /schema version 7/);
 });
 
@@ -150,13 +150,15 @@ test("manifest validation rejects nested variants and mismatched paths", () => {
 test("current non-screen manifest entries reject variant fields", () => {
   const manifest = mutableManifest(variantManifest());
   const page: MutableEntry = {
-    ...manifest.entries[0]!,
+    declaredDependencies: [],
+    description: "Page",
     kind: "page",
     id: "page",
-    route: "page.html",
+    navPath: [],
+    relatedDocs: [],
+    sourcePath: "entries/welcome.mockup.tsx",
+    title: "Page",
   };
-  for (const field of ["fragments", "useCaseIds", "viewports"])
-    delete page[field];
   page.variantOf = undefined;
   manifest.entries.push(page);
   assert.throws(() => parseManifest(manifest), /unsupported variantOf/);
@@ -175,6 +177,28 @@ function variantManifest() {
     [],
     ["light"],
   );
+}
+
+function historicalManifest(schemaVersion: 5 | 6): MutableManifest {
+  const current = variantManifest();
+  return mutableManifest({
+    ...current,
+    schemaVersion,
+    entries: current.entries.map((entry) => {
+      if (entry.kind !== "screen") return entry;
+      const { colorSchemes: _colorSchemes, ...metadata } = entry;
+      return {
+        ...metadata,
+        dependencies: [entry.sourcePath],
+        route: entryRoute("screen", entry.id),
+        fragments: {
+          desktop: viewRoute("screen", entry.id, "desktop", "light"),
+          mobile: viewRoute("screen", entry.id, "mobile", "light"),
+        },
+        viewports: ["mobile", "desktop"],
+      };
+    }),
+  });
 }
 
 function resolvedScreen(

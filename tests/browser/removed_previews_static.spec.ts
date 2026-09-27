@@ -40,9 +40,7 @@ for (const width of [390, 1280]) {
       requests.filter((url) => /\/__mokly\/diffs\/review\.json/.test(url)),
     ).toEqual([]);
     expect(
-      requests.filter((url) =>
-        /\/pages\/pages\/removed-page\.html\.json$/.test(url),
-      ),
+      requests.filter((url) => /\/pages\/removed-page\.json$/.test(url)),
     ).toHaveLength(1);
   });
 }
@@ -64,10 +62,10 @@ test("a catalogue that advertises nothing stays quiet", async ({ page }) => {
   await page.route(`${host.url}/__mokly/catalogue.json`, async (route) => {
     const response = await route.fetch();
     const catalogue = (await response.json()) as {
-      removedEntries: { entry: { route: string }; preview?: unknown }[];
+      removedEntries: { entry: { id: string }; preview?: unknown }[];
     };
     const removed = catalogue.removedEntries.find(
-      ({ entry }) => entry.route === "pages/removed-page.html",
+      ({ entry }) => entry.id === "removed-page",
     );
     if (removed) delete removed.preview;
     await route.fulfill({ response, json: catalogue });
@@ -84,9 +82,7 @@ test("a catalogue that advertises nothing stays quiet", async ({ page }) => {
     page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
   ).toHaveText("Previous desktop screen");
   expect(
-    requests.filter((url) =>
-      /\/pages\/pages\/removed-page\.html\.json$/.test(url),
-    ),
+    requests.filter((url) => /\/pages\/removed-page\.json$/.test(url)),
   ).toEqual([]);
 });
 

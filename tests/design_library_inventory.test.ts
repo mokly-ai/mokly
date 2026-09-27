@@ -5,6 +5,11 @@ import test from "node:test";
 import { catalogueNavigation } from "../examples/basic/entries/design/library/chrome/catalogue-navigation.js";
 import { DUAL_SCHEME_SAMPLES } from "../examples/basic/entries/design/library/metadata.js";
 import { NAV_TREE } from "../examples/basic/entries/design/parts/nav_data.js";
+import {
+  entryRoute,
+  generatedViews,
+  viewRoute,
+} from "../packages/viewer/dist/data.js";
 
 import {
   componentParent,
@@ -67,10 +72,15 @@ test("the shared library preserves every existing design screen and viewport rou
   for (const original of baseline) {
     const entry = manifest.entries.find((entry) => entry.id === original.id);
     assert.ok(entry?.kind === "screen", original.id);
-    assert.equal(entry.route, original.route);
-    assert.deepEqual(entry.fragments, original.fragments);
+    assert.equal(entryRoute("screen", entry.id), `screens/${entry.id}.html`);
+    assert.deepEqual(
+      (["mobile", "desktop"] as const).map((viewport) =>
+        viewRoute("screen", entry.id, viewport, "light"),
+      ),
+      [`screens/${entry.id}.mobile.html`, `screens/${entry.id}.desktop.html`],
+    );
     if (!DUAL_SCHEME_SINCE_BASELINE.has(original.id))
-      assert.equal(entry.darkFragments, undefined);
+      assert.deepEqual(entry.colorSchemes, ["light"]);
   }
 });
 
@@ -91,7 +101,7 @@ test("all sixteen shared components have connected pages, controls and saved exa
     const id = `design-ui-${slug}`;
     const entry = componentParent(manifest, id);
     const saved = componentVariants(manifest, id);
-    assert.equal(entry.route, `components/${id}.html`);
+    assert.equal(entryRoute("component", entry.id), `components/${id}.html`);
     assert.deepEqual(
       saved.map((variant) => variant.id),
       variants.map((variant) => `${id}-${variant}`),
@@ -110,7 +120,7 @@ test("all sixteen shared components have connected pages, controls and saved exa
     for (const variant of saved) {
       // Only the samples whose own subject is appearance render in both schemes.
       assert.equal(
-        variant.darkFragments === undefined,
+        !variant.colorSchemes.includes("dark"),
         !DUAL_SCHEME_SAMPLES.has(slug),
         `${id}/${variant.id}`,
       );
@@ -122,10 +132,7 @@ test("all sixteen shared components have connected pages, controls and saved exa
         ["desktop", "mobile"],
       );
       assert.equal(variant.componentViews.length, 2 * schemes, id);
-      for (const route of [
-        ...Object.values(variant.fragments),
-        ...Object.values(variant.darkFragments ?? {}),
-      ])
+      for (const route of generatedViews(variant).map((view) => view.path))
         assert.ok(outputs.has(route), route);
     }
   }

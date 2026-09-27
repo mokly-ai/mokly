@@ -51,13 +51,12 @@ test("hydrated Serve and export distinguish removed and replacement ids", async 
     await fetch(`${server.url}/__mokly/catalogue.json`)
   ).json()) as {
     removedEntries: readonly {
-      entry: { id: string; route: string };
+      entry: { id: string };
       snapshotId: string;
     }[];
   };
   const historical = catalogue.removedEntries.find(
-    ({ entry }) =>
-      entry.id === "handbook" && entry.route === "pages/handbook.html",
+    ({ entry }) => entry.id === "handbook",
   );
   assert.ok(historical);
 

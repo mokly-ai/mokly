@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url";
 
 import { expect, test } from "@playwright/test";
 
+import { viewRoute } from "../../packages/viewer/dist/data.js";
 import type { ManifestV7 } from "../../packages/viewer/dist/registry/types.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
@@ -37,7 +38,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
         )
           continue;
         {
-          await page.goto(fileUrl(entry.fragments[viewport]));
+          await page.goto(
+            fileUrl(viewRoute("component", entry.id, viewport, "light")),
+          );
           await expect(page.locator(".mbk-library-host")).toBeVisible();
           for (const panel of await page
             .locator(".ce-workspace details[open] > .ce-inspector-panel")
@@ -173,7 +176,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
         );
         if (entry?.kind !== "component" || !("variantOf" in entry))
           throw new Error(`Missing ${slug}`);
-        await page.goto(fileUrl(entry.fragments[viewport]));
+        await page.goto(
+          fileUrl(viewRoute("component", entry.id, viewport, "light")),
+        );
         expect(
           (await page.locator(selector!).boundingBox())!.width,
         ).toBeLessThan(150);
@@ -188,7 +193,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
       );
       if (entry?.kind !== "component" || !("variantOf" in entry))
         throw new Error("Missing footer panel");
-      await page.goto(fileUrl(entry.fragments[viewport]));
+      await page.goto(
+        fileUrl(viewRoute("component", entry.id, viewport, "light")),
+      );
       await expect(
         page.getByText(
           "A shared action with an optional destination and hint.",
@@ -229,7 +236,7 @@ test("mobile footer component owns its full-width sheet surface", async ({
   );
   if (entry?.kind !== "component" || !("variantOf" in entry))
     throw new Error("Missing footer panel");
-  await page.goto(fileUrl(entry.fragments.mobile));
+  await page.goto(fileUrl(viewRoute("component", entry.id, "mobile", "light")));
   const workspace = page.locator(".ce-workspace");
   const dock = page.locator(".ce-inspector-dock");
   const inspector = page.locator(".ce-inspector");

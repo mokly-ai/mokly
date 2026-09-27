@@ -11,6 +11,7 @@ import { reparentedEntrySource } from "../helpers/fixture.js";
 import { expectFrameSource } from "./workspace_actions.js";
 
 const HOME = "screens/home.html";
+const HOME_ID = "home";
 const HOME_ROW = `a[data-nav-row][data-route="${HOME}"]`;
 const SCHEME_DOT = '[data-view-changed="scheme"]';
 const VIEWPORT_DOT = '[data-view-changed="viewport"]';
@@ -47,7 +48,7 @@ test("a dark-only change marks the views it hides and opens on one", async ({
   try {
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [HOME],
+      changedIds: [HOME_ID],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
@@ -164,13 +165,13 @@ test("a light fallback rejects an ineligible comparison deep link", async ({
   try {
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [HOME],
+      changedIds: [HOME_ID],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
         screenViews: [
           {
-            route: HOME,
+            id: HOME_ID,
             views: [
               {
                 viewport: "mobile",
@@ -232,7 +233,7 @@ test("a background classification moves the marks without reloading the frames",
 
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [HOME],
+      changedIds: [HOME_ID],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
@@ -261,7 +262,7 @@ test("component view evidence follows the selected saved variant", async ({
   try {
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [],
+      changedIds: [],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
@@ -300,7 +301,7 @@ test("Changes lands on the first changed view and every other arrival stays stic
   try {
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [HOME],
+      changedIds: [HOME_ID],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,

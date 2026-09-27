@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { entryRoute } from "../packages/viewer/dist/data.js";
+
 import {
   attribute,
   byClass,
@@ -40,7 +42,7 @@ test("the Welcome conversion keeps the approved screens as variants, not folder 
     const entry = manifest.entries.find((candidate) => candidate.id === id);
     assert.equal(entry?.kind, "screen", id);
     if (entry?.kind !== "screen") continue;
-    assert.equal(entry.route, `screens/${id}.html`, id);
+    assert.equal(entryRoute("screen", entry.id), `screens/${id}.html`, id);
     assert.equal(entry.variantOf, "design-browse-screen", id);
     assert.deepEqual(entry.navPath, parent.navPath, id);
   }
@@ -84,7 +86,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: all five owning destinations keep their route and frame`, async () => {
     for (const [id, route] of additions) {
       const { entry, document } = await designDocument(id, viewport);
-      assert.equal(entry.route, route);
+      assert.equal(entryRoute("screen", entry.id), route);
       assert.equal(byClass(document, "mbk-shell").length, 1);
       assert.equal(
         byClass(
@@ -184,8 +186,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: stylesheet evidence states keep selectors out of headings`, async () => {
     for (const [id, route, copy] of stylesheetEvidence) {
       const { entry, document } = await designDocument(id, viewport);
-      assert.equal(entry.route, route);
-      assert.equal(entry.darkFragments, undefined);
+      assert.equal(entryRoute("screen", entry.id), route);
+      assert.deepEqual(entry.colorSchemes, ["light"]);
       const evidence = byClass(document, "mbk-comparison-details")[0];
       assert.ok(evidence, id);
       const text = textContent(evidence);

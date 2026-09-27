@@ -40,7 +40,9 @@ for (const controlled of [false, true]) {
     const root = page.locator("#history");
     await expect(root.locator("h2")).toHaveText("Current home");
     await root
-      .locator(`a[data-nav-row][data-route="${HISTORICAL_ROUTE}"]`)
+      .locator(
+        `a[data-nav-row][data-nav-removed][data-route="${HISTORICAL_ROUTE}"]`,
+      )
       .click();
     await expect
       .poll(() =>
@@ -93,6 +95,11 @@ for (const controlled of [false, true]) {
     await expect(root.locator(".mbk-diff-toolbar")).toHaveCount(0);
     await expect(
       root.locator(`a[data-nav-row][data-route="${HISTORICAL_ROUTE}"]`),
+    ).toHaveCount(2);
+    await expect(
+      root.locator(
+        `a[data-nav-row][data-nav-removed][data-route="${HISTORICAL_ROUTE}"]`,
+      ),
     ).toHaveAttribute("aria-current", "page");
     expect(
       await page.evaluate(
@@ -104,8 +111,6 @@ for (const controlled of [false, true]) {
     ).toEqual(
       expect.objectContaining({
         screenId: "home",
-        route: HISTORICAL_ROUTE,
-        snapshotId: fixture.snapshotId,
       }),
     );
 

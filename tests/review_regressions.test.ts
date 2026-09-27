@@ -12,10 +12,8 @@ import { compareReview } from "../dist/review/compare.js";
 import { CommittedRepository } from "../dist/review/git.js";
 import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { runReview } from "../dist/review/run.js";
-import type {
-  ManifestScreen,
-  ManifestV3,
-} from "../packages/viewer/dist/registry/types.js";
+import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
+import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 
 import {
   createFixture,
@@ -271,9 +269,34 @@ function fakeGit(files: ReadonlyMap<string, string>): ReadOnlyReviewRepository {
   };
 }
 
-function manifest(entries: readonly ManifestScreen[]): ManifestV3 {
+function manifest(entries: readonly ManifestScreen[]) {
   return {
-    entries,
+    entries: entries.map((entry) => ({
+      declaredDependencies: [...entry.declaredDependencies],
+      dependencies: [entry.sourcePath, ...entry.declaredDependencies],
+      description: entry.description,
+      fragments: {
+        desktop: viewRoute("screen", entry.id, "desktop", "light"),
+        mobile: viewRoute("screen", entry.id, "mobile", "light"),
+      },
+      ...(entry.colorSchemes.includes("dark")
+        ? {
+            darkFragments: {
+              desktop: viewRoute("screen", entry.id, "desktop", "dark"),
+              mobile: viewRoute("screen", entry.id, "mobile", "dark"),
+            },
+          }
+        : {}),
+      id: entry.id,
+      kind: "screen" as const,
+      navPath: [...entry.navPath],
+      relatedDocs: [...entry.relatedDocs],
+      route: entryRoute("screen", entry.id),
+      sourcePath: entry.sourcePath,
+      title: entry.title,
+      useCaseIds: [...entry.useCaseIds],
+      viewports: ["mobile", "desktop"] as const,
+    })),
     generatedBy: "mokly",
     legacyPages: [],
     schemaVersion: 3,

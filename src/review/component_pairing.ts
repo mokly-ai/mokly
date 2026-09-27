@@ -1,5 +1,5 @@
 import type {
-  LegacyManifestComponentVariant,
+  HistoricalManifestComponentVariant,
   ManifestComponentVariant,
 } from "@mokly/viewer";
 import type {
@@ -8,7 +8,7 @@ import type {
 } from "@mokly/viewer/data";
 
 export function variantAddress(
-  variant: LegacyManifestComponentVariant | ManifestComponentVariant,
+  variant: HistoricalManifestComponentVariant | ManifestComponentVariant,
 ): ReviewVariantAddress {
   return {
     id: variant.id,

@@ -68,7 +68,16 @@ export class ResourceComparison {
     for (const route of new Set([...bases, ...heads])) {
       if (excluded?.(route)) continue;
       const path = this.prefix ? `${this.prefix}/${route}` : route;
-      if (this.changed.has(path))
+      const html = /\.html?$/i.test(route);
+      const baseDocument =
+        html && bases.has(route)
+          ? await this.before.resourceText(route)
+          : undefined;
+      const headDocument =
+        html && heads.has(route)
+          ? await this.after.resourceText(route)
+          : undefined;
+      if (this.changed.has(path) && (!html || baseDocument !== headDocument))
         resources.push({
           path,
           ...(baseCss.get(route) === undefined
@@ -78,16 +87,12 @@ export class ResourceComparison {
             ? {}
             : { after: headCss.get(route)! }),
         });
-      if (changedCss.length && /\.html?$/i.test(route)) {
-        const base = bases.has(route)
-          ? await this.before.resourceText(route)
-          : undefined;
-        const head = heads.has(route)
-          ? await this.after.resourceText(route)
-          : undefined;
+      if (changedCss.length && html) {
         documents.push({
-          ...(base === undefined ? {} : { before: parse(base) }),
-          ...(head === undefined ? {} : { after: parse(head) }),
+          ...(baseDocument === undefined
+            ? {}
+            : { before: parse(baseDocument) }),
+          ...(headDocument === undefined ? {} : { after: parse(headDocument) }),
         });
       }
     }

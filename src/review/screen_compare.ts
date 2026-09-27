@@ -4,11 +4,12 @@ import crypto from "node:crypto";
 import type { ColorScheme, Viewport } from "@mokly/viewer";
 import type {
   ManifestScreen,
+  HistoricalManifestScreen,
   ReviewArtifactContent,
   ScreenReview,
   ViewReview,
 } from "@mokly/viewer/data";
-import { VIEWPORTS } from "@mokly/viewer/data";
+import { entryRoute, viewRoute, VIEWPORTS } from "@mokly/viewer/data";
 
 import type { Compilation } from "../build/compile.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -34,7 +35,7 @@ import {
 
 /** Compare every viewport/scheme of one route, preserving its original documents. */
 export async function compareScreen(
-  base: ManifestScreen | undefined,
+  base: ManifestScreen | HistoricalManifestScreen | undefined,
   head: ManifestScreen | undefined,
   baseDocuments: ReadonlyMap<string, Uint8Array>,
   compilation: Pick<Compilation, "outputs">,
@@ -79,11 +80,17 @@ export async function compareScreen(
           `head fragment is missing: ${headFragment}`,
         );
       }
+      const canonicalView = viewRoute(
+        "screen",
+        entry.id,
+        viewport,
+        colorScheme,
+      );
       const beforePath = baseFragment
-        ? snapshotPath("before", baseFragment)
+        ? snapshotPath("before", canonicalView)
         : undefined;
       const afterPath = headFragment
-        ? snapshotPath("after", headFragment)
+        ? snapshotPath("after", canonicalView)
         : undefined;
       if (before !== undefined && beforePath && baseFragment) {
         addArtifactFile(files, beforePath, before);
@@ -96,18 +103,16 @@ export async function compareScreen(
       const view = compareView(
         before,
         after,
-        entry.route,
+        entryRoute("screen", entry.id),
         viewport,
         colorScheme,
-        beforePath,
-        afterPath,
       );
       const normalized =
         before !== undefined && after !== undefined
           ? normalizeReviewPair(
               normalizeHistoricalDocument(before),
               after,
-              entry.route,
+              entryRoute("screen", entry.id),
             )
           : {
               base:
@@ -115,12 +120,15 @@ export async function compareScreen(
                   ? undefined
                   : normalizeSingleDocument(
                       normalizeHistoricalDocument(before),
-                      entry.route,
+                      entryRoute("screen", entry.id),
                     ),
               head:
                 after === undefined
                   ? undefined
-                  : normalizeSingleDocument(after, entry.route),
+                  : normalizeSingleDocument(
+                      after,
+                      entryRoute("screen", entry.id),
+                    ),
             };
       const evidence = await resources.compare(
         baseFragment && normalized.base !== undefined
@@ -144,7 +152,14 @@ export async function compareScreen(
   }
   assertViewAnalysisScope(views, config);
   const dependencies = [
-    ...new Set([...(base?.dependencies ?? []), ...(head?.dependencies ?? [])]),
+    ...new Set([
+      ...(base
+        ? "dependencies" in base
+          ? base.dependencies
+          : [base.sourcePath, ...base.declaredDependencies]
+        : []),
+      ...(head ? [head.sourcePath, ...head.declaredDependencies] : []),
+    ]),
   ].sort();
   const dependencyImpact = changedPaths.filter((changedPath) =>
     dependencies.some((dependency) =>
@@ -154,7 +169,6 @@ export async function compareScreen(
   return {
     dependencies,
     id: entry.id,
-    route: entry.route,
     sharedImpact: [
       ...new Set([
         ...[...sharedImpact, ...dependencyImpact].filter(
@@ -177,8 +191,6 @@ function compareView(
   route: string,
   viewport: Viewport,
   colorScheme: ColorScheme,
-  beforePath: string | undefined,
-  afterPath: string | undefined,
 ): ViewReview {
   const context = `${route} (${viewport}, ${colorScheme})`;
   const historicalBefore =
@@ -191,7 +203,6 @@ function compareView(
     after === undefined ? undefined : normalizeSingleDocument(after, context);
   if (before === undefined)
     return {
-      ...(afterPath ? { afterPath } : {}),
       colorScheme,
       ignoredIds: [],
       material: true,
@@ -200,7 +211,6 @@ function compareView(
     };
   if (after === undefined)
     return {
-      ...(beforePath ? { beforePath } : {}),
       colorScheme,
       ignoredIds: [],
       material: true,
@@ -216,8 +226,6 @@ function compareView(
   const rawEqual =
     digest(normalizedBefore ?? "") === digest(normalizedAfter ?? "");
   return {
-    ...(afterPath ? { afterPath } : {}),
-    ...(beforePath ? { beforePath } : {}),
     colorScheme,
     ignoredIds: normalized.ignoredIds,
     ...(!normalizedEqual ? { material: true as const } : {}),

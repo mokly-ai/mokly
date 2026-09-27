@@ -6,6 +6,7 @@ import { parse, type DefaultTreeAdapterMap } from "parse5";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 import type { ComponentViewRecord } from "../packages/viewer/dist/components/manifest_types.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
@@ -101,9 +102,12 @@ test("each recorded range in every screen/variant view has exactly one matched p
           : [];
     for (const target of targets)
       for (const view of target.componentViews ?? []) {
-        const route = (
-          view.colorScheme === "dark" ? target.darkFragments! : target.fragments
-        )[view.viewport];
+        const route = viewRoute(
+          target.kind,
+          target.id,
+          view.viewport,
+          view.colorScheme,
+        );
         assertMarkers(compilation.outputs.get(route)!, view);
         count++;
       }

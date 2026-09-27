@@ -6,6 +6,7 @@ import {
   notFoundPage as renderNotFoundPage,
   viewPage as renderViewPage,
 } from "../dist/server/pages.js";
+import { parseViewHref } from "../packages/viewer/dist/data.js";
 import type { ManifestV7 } from "../packages/viewer/dist/registry/types.js";
 import type { Catalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
@@ -30,10 +31,8 @@ const manifest: ManifestV7 = {
       id: "old",
       title: "Old",
       description: "Original complete document",
-      route: "legacy/old.html",
       sourcePath: "entries/fixture.mockup.tsx",
       declaredDependencies: [],
-      dependencies: [],
       relatedDocs: [],
       navPath: ["Example"],
     },
@@ -42,62 +41,46 @@ const manifest: ManifestV7 = {
       id: "overview",
       title: "Overview",
       description: "Catalogue overview",
-      route: "legacy/index.html",
       sourcePath: "entries/fixture.mockup.tsx",
       declaredDependencies: [],
-      dependencies: [],
       relatedDocs: [],
       navPath: ["Example"],
     },
     {
       address: "example.test/welcome",
-      declaredDependencies: [],
-      dependencies: ["styles.css"],
+      colorSchemes: ["light"],
+      declaredDependencies: ["styles.css"],
       description: "Landing screen",
-      fragments: {
-        desktop: "screens/welcome.desktop.html",
-        mobile: "screens/welcome.mobile.html",
-      },
       id: "welcome",
       kind: "screen",
       navPath: ["Example", "Screens"],
       rationale: "Proves the shell",
       relatedDocs: ["notes.md"],
-      route: "screens/welcome.html",
       sourcePath: "entries/fixture.mockup.tsx",
       tags: ["forms", "onboarding"],
       title: "Welcome",
       useCaseIds: ["tour"],
-      viewports: ["mobile", "desktop"],
     },
     {
       declaredDependencies: [],
-      dependencies: [],
+      colorSchemes: ["light"],
       description: "Second screen",
-      fragments: {
-        desktop: "screens/details.desktop.html",
-        mobile: "screens/details.mobile.html",
-      },
       id: "details",
       kind: "screen",
       navPath: ["Example", "Screens"],
       relatedDocs: [],
-      route: "screens/details.html",
       sourcePath: "entries/fixture.mockup.tsx",
       tags: ["billing"],
       title: "Details",
       useCaseIds: ["tour"],
-      viewports: ["mobile", "desktop"],
     },
     {
       declaredDependencies: [],
-      dependencies: [],
       description: "Ordered journey",
       id: "tour",
       kind: "use-case",
       navPath: ["Example"],
       relatedDocs: [],
-      route: "user-flows/tour.html",
       sourcePath: "entries/fixture.mockup.tsx",
       steps: [{ screenId: "welcome" }, { screenId: "details" }],
       title: "Tour",
@@ -114,10 +97,7 @@ const darkManifest: ManifestV7 = {
     entry.kind === "screen" && entry.id === "welcome"
       ? {
           ...entry,
-          darkFragments: {
-            desktop: "screens/welcome.desktop.dark.html",
-            mobile: "screens/welcome.mobile.dark.html",
-          },
+          colorSchemes: ["light", "dark"],
         }
       : entry,
   ),
@@ -270,11 +250,13 @@ function routePage(
   route: string,
   extra: Partial<ShellContext> = {},
 ): string {
-  const entry = catalogue.byRoute.get(route);
-  assert.ok(entry);
+  const identity = parseViewHref(`/view/${route}`);
+  assert.ok(identity);
+  const entry = catalogue.byId.get(identity.id);
+  assert.ok(entry && entry.kind === identity.kind);
   return viewPage(entry, catalogue, {
     ...context,
-    activeRoute: route,
+    activeId: entry.id,
     ...extra,
   });
 }
@@ -330,11 +312,11 @@ test("nav tree nests pages and screens in one declared hierarchy", () => {
 
 test("page breadcrumbs use path folders without invented Overview links", () => {
   const catalogue = createCatalogue(manifest);
-  const entry = catalogue.byRoute.get("legacy/old.html");
+  const entry = catalogue.byId.get("old");
   assert.ok(entry);
   const html = viewPage(entry, catalogue, {
     ...context,
-    activeRoute: "legacy/old.html",
+    activeId: "old",
   });
   assert.match(
     html,
@@ -345,12 +327,12 @@ test("page breadcrumbs use path folders without invented Overview links", () => 
 
 test("catalogue nav marks active, changed, and iconed rows", () => {
   const catalogue = createCatalogue(manifest);
-  const entry = catalogue.byRoute.get("screens/welcome.html");
+  const entry = catalogue.byId.get("welcome");
   assert.ok(entry);
   const html = viewPage(entry, catalogue, {
     ...context,
-    activeRoute: "screens/welcome.html",
-    changedRoutes: ["screens/welcome.html"],
+    activeId: "welcome",
+    changedIds: ["welcome"],
   });
   assert.match(
     html,
@@ -391,11 +373,11 @@ test("catalogue nav marks active, changed, and iconed rows", () => {
 
 test("screen page renders device chrome, viewport switch, and details", () => {
   const catalogue = createCatalogue(manifest);
-  const entry = catalogue.byRoute.get("screens/welcome.html");
+  const entry = catalogue.byId.get("welcome");
   assert.ok(entry);
   const html = viewPage(entry, catalogue, {
     ...context,
-    activeRoute: "screens/welcome.html",
+    activeId: "welcome",
   });
   assert.match(
     html,
@@ -458,7 +440,7 @@ test("screen page renders device chrome, viewport switch, and details", () => {
 
 test("use-case page renders the flow with catalogue links per step", () => {
   const catalogue = createCatalogue(manifest);
-  const entry = catalogue.byRoute.get("user-flows/tour.html");
+  const entry = catalogue.byId.get("tour");
   assert.ok(entry);
   const html = viewPage(entry, catalogue, context);
   const welcomeLink = requiredElement(
@@ -629,8 +611,8 @@ test("details inspector lists dark fragments and the schemes row", () => {
       '<span class="mbk-meta-k">Generated</span><span class="mbk-meta-v">' +
         '<span class="mbk-chips">' +
         '<code class="mbk-code">screens/welcome.mobile.html</code>' +
-        '<code class="mbk-code">screens/welcome.desktop.html</code>' +
         '<code class="mbk-code">screens/welcome.mobile.dark.html</code>' +
+        '<code class="mbk-code">screens/welcome.desktop.html</code>' +
         '<code class="mbk-code">screens/welcome.desktop.dark.html</code>' +
         "</span></span></div>" +
         '<div class="mbk-meta-row"><span class="mbk-meta-k">Schemes</span>' +
@@ -841,11 +823,11 @@ test("the search field leads with a legible search icon, not a glyph", () => {
 
 test("the browser bar draws copy and expand icons, not tiny glyphs", () => {
   const catalogue = createCatalogue(manifest);
-  const entry = catalogue.byRoute.get("screens/welcome.html");
+  const entry = catalogue.byId.get("welcome");
   assert.ok(entry);
   const html = viewPage(entry, catalogue, {
     ...context,
-    activeRoute: "screens/welcome.html",
+    activeId: "welcome",
   });
   for (const glyph of ["⧉", "⤢", "⤡"]) {
     assert.equal(html.includes(glyph), false);
@@ -888,13 +870,13 @@ test("filter renders in the nav only when changed routes are known", () => {
   const catalogue = createCatalogue(manifest);
   const withFilter = homePage(catalogue, {
     ...context,
-    changedRoutes: ["screens/welcome.html"],
+    changedIds: ["welcome"],
   });
   assert.match(withFilter, /data-mokly-filter/);
   assert.match(withFilter, /class="mbk-nav-filter-count">1</);
   const withNoChanges = homePage(catalogue, {
     ...context,
-    changedRoutes: [],
+    changedIds: [],
   });
   assert.match(withNoChanges, /data-mokly-filter/);
   assert.match(withNoChanges, /class="mbk-nav-filter-count">0</);

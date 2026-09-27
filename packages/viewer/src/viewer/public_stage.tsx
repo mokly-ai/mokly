@@ -4,22 +4,24 @@ import type { ReactNode } from "react";
 import { catalogueComponentVariants } from "../catalogue/entry_selection.js";
 import type {
   CatalogueReadModel,
-  CatalogueRoutedEntry,
+  CatalogueRecord,
   CatalogueScreen,
   CatalogueView,
 } from "../catalogue/types.js";
-import { encodeUrlPath } from "../data/paths.js";
+import { entryRoute, viewHref } from "../navigation/routes.js";
+import { VIEWPORTS } from "../registry/views.js";
 import { BrowserFrame, PhoneFrame } from "../shell/frames.js";
 import { framePath, frameSource } from "../shell/stage_sources.js";
 
 import { DisplaySelection } from "./display_context.js";
 
 function frameUrl(
+  entry: Extract<CatalogueRecord, { kind: "component" | "screen" }>,
   view: CatalogueView | undefined,
   fragment?: string,
   stepIndex?: number,
 ): string | undefined {
-  return frameSource(view, fragment, stepIndex);
+  return frameSource(entry, view, fragment, stepIndex);
 }
 function PublicFrame({
   entry,
@@ -29,7 +31,7 @@ function PublicFrame({
   fragment,
   stepIndex,
 }: {
-  entry: CatalogueRoutedEntry;
+  entry: Extract<CatalogueRecord, { kind: "component" | "screen" }>;
   views: readonly CatalogueView[];
   viewport: "mobile" | "desktop";
   flow?: boolean;
@@ -44,7 +46,7 @@ function PublicFrame({
     (view) => view.viewport === viewport && view.colorScheme === "dark",
   );
   const selected = selection.colorScheme === "dark" ? (dark ?? light) : light;
-  const src = frameUrl(selected, fragment, stepIndex);
+  const src = frameUrl(entry, selected, fragment, stepIndex);
   const frame = useRef<HTMLIFrameElement>(null);
   const initialSource = useRef(src);
   const appliedSource = useRef(src);
@@ -84,8 +86,8 @@ function PublicFrame({
         <Frame
           address={
             entry.kind === "screen"
-              ? (entry.address ?? entry.route)
-              : entry.route
+              ? (entry.address ?? entryRoute(entry.kind, entry.id))
+              : entryRoute(entry.kind, entry.id)
           }
           frameKey={`${entry.id}:${stepIndex ?? "single"}:${viewport}`}
         >
@@ -93,8 +95,8 @@ function PublicFrame({
             className="mbk-frag"
             data-mokly-fragment-frame=""
             data-workspace-frame={flow ? undefined : viewport}
-            data-fragment-light={frameUrl(light, fragment, stepIndex)}
-            data-fragment-dark={frameUrl(dark, fragment, stepIndex)}
+            data-fragment-light={frameUrl(entry, light, fragment, stepIndex)}
+            data-fragment-dark={frameUrl(entry, dark, fragment, stepIndex)}
             ref={frame}
             sandbox="allow-same-origin"
             src={initialSource.current}
@@ -112,7 +114,7 @@ function Flow({
   catalogue,
   fragment,
 }: {
-  entry: Extract<CatalogueRoutedEntry, { kind: "use-case" }>;
+  entry: Extract<CatalogueRecord, { kind: "use-case" }>;
   catalogue: CatalogueReadModel;
   fragment?: string | undefined;
 }) {
@@ -132,7 +134,7 @@ function Flow({
                   <p>{step.description ?? screen.details.description}</p>
                   <a
                     className="flow-step-link"
-                    href={`/view/${encodeUrlPath(screen.route)}`}
+                    href={viewHref("screen", screen.id)}
                   >
                     This screen in the catalogue: {screen.title} →
                   </a>
@@ -161,7 +163,7 @@ export function PublicStage({
   variantId,
 }: {
   catalogue: CatalogueReadModel;
-  entry: CatalogueRoutedEntry;
+  entry: CatalogueRecord;
   fragment?: string | undefined;
   variantId?: string | undefined;
 }) {
@@ -174,17 +176,13 @@ export function PublicStage({
         data-preview-color-scheme="light"
         key={entry.id}
       >
-        {entry.documentPath ? (
-          <iframe
-            className="mbk-frag"
-            sandbox="allow-same-origin"
-            data-mokly-fragment-frame=""
-            src={framePath(entry.documentPath, fragment)}
-            title={entry.title}
-          />
-        ) : (
-          <p className="mbk-empty">This preview is unavailable.</p>
-        )}
+        <iframe
+          className="mbk-frag"
+          sandbox="allow-same-origin"
+          data-mokly-fragment-frame=""
+          src={framePath(`static/${entryRoute("page", entry.id)}`, fragment)}
+          title={entry.title}
+        />
       </div>
     );
   if (entry.kind === "use-case")
@@ -216,7 +214,7 @@ export function PublicStage({
       data-viewport={selection.viewport}
       key={`${entry.id}:${variantId ?? ""}`}
     >
-      {entry.viewports.map((viewport) => (
+      {VIEWPORTS.map((viewport) => (
         <PublicFrame
           key={`${entry.id}:${variantId ?? ""}:${viewport}`}
           entry={entry}

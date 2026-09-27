@@ -13,6 +13,7 @@ import {
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentViews } from "./helpers/component_views.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { legacyManifestFromV7 } from "./helpers/historical_manifest.js";
 
 test("v6 source metadata round-trips deterministically and readers still accept its absence", async (t) => {
   const fixture = await createFixture(componentEntrySource());
@@ -23,16 +24,22 @@ test("v6 source metadata round-trips deterministically and readers still accept 
   for (const view of componentViews(original))
     for (const instance of view.instances)
       Reflect.deleteProperty(instance, "source");
-  for (const read of [parseManifest, parseHistoricalManifest])
-    assert.deepEqual(read(original), original);
+  assert.deepEqual(parseManifest(original), original);
+  assert.equal(
+    parseHistoricalManifest(legacyManifestFromV7(original, 6)).schemaVersion,
+    6,
+  );
   const supplied = structuredClone(original);
   const source = { path: "entries/caller.tsx", line: 12, column: 4 };
   const instance = componentViews(supplied).flatMap(
     (view) => view.instances,
   )[0]!;
   Object.assign(instance, { source });
-  for (const read of [parseManifest, parseHistoricalManifest])
-    assert.deepEqual(read(supplied), supplied);
+  assert.deepEqual(parseManifest(supplied), supplied);
+  assert.equal(
+    parseHistoricalManifest(legacyManifestFromV7(supplied, 6)).schemaVersion,
+    6,
+  );
   const text = serializeManifest(supplied);
   Object.assign(instance, {
     source: { column: 4, line: 12, path: "entries/caller.tsx" },
@@ -55,8 +62,11 @@ test("v6 source metadata round-trips deterministically and readers still accept 
     { ...source, column: 1.5 },
   ]) {
     Object.assign(instance, { source: invalid });
-    for (const read of [parseManifest, parseHistoricalManifest])
-      assert.throws(() => read(supplied), /source/);
+    assert.throws(() => parseManifest(supplied), /source/);
+    assert.throws(
+      () => parseHistoricalManifest(legacyManifestFromV7(supplied, 6)),
+      /source/,
+    );
   }
 });
 

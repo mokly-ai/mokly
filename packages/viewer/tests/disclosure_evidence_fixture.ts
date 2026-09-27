@@ -94,10 +94,10 @@ export function source(model: CatalogueReadModel): ViewerCapabilitySource {
 export function revision(
   model: CatalogueReadModel,
   previous: ViewerCapabilitySource,
-  route: string | null,
+  entryId: string | null,
 ): ViewerEvidenceRevision {
   const catalogue = viewerCatalogue(model);
-  const entry = route ? catalogueRouteEntry(catalogue, route) : undefined;
+  const entry = entryId ? catalogueRouteEntry(catalogue, entryId) : undefined;
   const workspace =
     entry &&
     (entry.kind === "screen" ||

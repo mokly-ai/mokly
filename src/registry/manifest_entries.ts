@@ -7,6 +7,7 @@ import {
   nonEmptyString,
   record,
   stringArray,
+  validateColorSchemes,
   validateRepoPath,
   validateRoute,
 } from "./manifest_values.js";
@@ -16,7 +17,7 @@ export function validateEntry(
   entry: Record<string, unknown>,
   components = false,
   historicalCollection = false,
-  derivedRoutes = false,
+  identityOnly = false,
 ): void {
   const kind = entry.kind;
   if (
@@ -49,7 +50,12 @@ export function validateEntry(
       `${String(entry.id)} has invalid rationale`,
     );
   }
-  for (const field of ["navPath", "relatedDocs", "dependencies"] as const) {
+  const arrayFields = [
+    "navPath",
+    "relatedDocs",
+    identityOnly ? "declaredDependencies" : "dependencies",
+  ] as const;
+  for (const field of arrayFields) {
     if (!stringArray(entry[field])) {
       throw new MoklyError(
         "manifest-invalid",
@@ -57,7 +63,10 @@ export function validateEntry(
       );
     }
   }
-  for (const field of ["relatedDocs", "dependencies"] as const) {
+  for (const field of [
+    "relatedDocs",
+    identityOnly ? "declaredDependencies" : "dependencies",
+  ] as const) {
     for (const value of entry[field] as string[]) {
       validateRepoPath(value, `${String(entry.id)} ${field}`);
     }
@@ -71,28 +80,35 @@ export function validateEntry(
     }
     return;
   }
-  if (typeof entry.route !== "string") {
-    throw new MoklyError(
-      "manifest-invalid",
-      `${String(entry.id)} has no route`,
-    );
+  if (!identityOnly) {
+    if (typeof entry.route !== "string") {
+      throw new MoklyError(
+        "manifest-invalid",
+        `${String(entry.id)} has no route`,
+      );
+    }
+    validateRoute(entry.route, String(entry.id));
   }
-  if (!derivedRoutes) validateRoute(entry.route, String(entry.id));
   if (entry.tags !== undefined && !stringArray(entry.tags)) {
     throw new MoklyError(
       "manifest-invalid",
       `${String(entry.id)} has invalid tags`,
     );
   }
-  if (kind === "component") validateManifestComponent(entry);
-  else if (kind === "screen") validateScreen(entry, derivedRoutes);
+  if (kind === "component") validateManifestComponent(entry, identityOnly);
+  else if (kind === "screen") validateScreen(entry, identityOnly);
   else if (kind === "use-case") validateUseCase(entry);
 }
 
 function validateScreen(
   entry: Record<string, unknown>,
-  derivedRoutes: boolean,
+  identityOnly: boolean,
 ): void {
+  if (identityOnly) {
+    validateColorSchemes(entry.colorSchemes, String(entry.id));
+    validateScreenMetadata(entry, false);
+    return;
+  }
   if (!record(entry.fragments)) {
     throw new MoklyError(
       "manifest-invalid",
@@ -107,8 +123,7 @@ function validateScreen(
         `${String(entry.id)} has no ${viewport} fragment`,
       );
     }
-    if (!derivedRoutes)
-      validateRoute(fragment, `${String(entry.id)} ${viewport} fragment`);
+    validateRoute(fragment, `${String(entry.id)} ${viewport} fragment`);
   }
   if (entry.darkFragments !== undefined) {
     if (!record(entry.darkFragments)) {
@@ -125,13 +140,16 @@ function validateScreen(
           `${String(entry.id)} has no ${viewport} dark fragment`,
         );
       }
-      if (!derivedRoutes)
-        validateRoute(
-          fragment,
-          `${String(entry.id)} ${viewport} dark fragment`,
-        );
+      validateRoute(fragment, `${String(entry.id)} ${viewport} dark fragment`);
     }
   }
+  validateScreenMetadata(entry, true);
+}
+
+function validateScreenMetadata(
+  entry: Record<string, unknown>,
+  requireViewports: boolean,
+): void {
   if (!stringArray(entry.useCaseIds)) {
     throw new MoklyError(
       "manifest-invalid",
@@ -139,10 +157,11 @@ function validateScreen(
     );
   }
   if (
-    !Array.isArray(entry.viewports) ||
-    entry.viewports.length !== 2 ||
-    entry.viewports[0] !== "mobile" ||
-    entry.viewports[1] !== "desktop"
+    requireViewports &&
+    (!Array.isArray(entry.viewports) ||
+      entry.viewports.length !== 2 ||
+      entry.viewports[0] !== "mobile" ||
+      entry.viewports[1] !== "desktop")
   ) {
     throw new MoklyError(
       "manifest-invalid",
@@ -199,7 +218,6 @@ export function validateCurrentFields(
   current = false,
 ): void {
   const common = [
-    "dependencies",
     "description",
     "id",
     "kind",
@@ -208,49 +226,77 @@ export function validateCurrentFields(
     "relatedDocs",
     "sourcePath",
     "title",
-    ...(components ? ["declaredDependencies"] : []),
+    ...(current ? ["declaredDependencies"] : ["dependencies"]),
+    ...(!current && components ? ["declaredDependencies"] : []),
   ];
   const specific =
     entry.kind === "collection" && historicalCollection
       ? ["childIds"]
       : entry.kind === "page"
-        ? ["route", "tags"]
+        ? [...(current ? [] : ["route"]), "tags"]
         : entry.kind === "component" && components
           ? typeof entry.variantOf === "string"
-            ? [
-                "route",
-                "tags",
-                "viewports",
-                "variantOf",
-                "props",
-                "suppliedSlots",
-                "fragments",
-                "darkFragments",
-                "componentViews",
-              ]
-            : [
-                "route",
-                "tags",
-                "viewports",
-                "propSchema",
-                "slots",
-                "controls",
-                "ownedDependencies",
-                ...(current ? [] : ["variants"]),
-              ]
+            ? current
+              ? [
+                  "colorSchemes",
+                  "tags",
+                  "variantOf",
+                  "props",
+                  "suppliedSlots",
+                  "componentViews",
+                ]
+              : [
+                  "route",
+                  "tags",
+                  "viewports",
+                  "variantOf",
+                  "props",
+                  "suppliedSlots",
+                  "fragments",
+                  "darkFragments",
+                  "componentViews",
+                ]
+            : current
+              ? [
+                  "colorSchemes",
+                  "tags",
+                  "propSchema",
+                  "slots",
+                  "controls",
+                  "ownedDependencies",
+                ]
+              : [
+                  "route",
+                  "tags",
+                  "viewports",
+                  "propSchema",
+                  "slots",
+                  "controls",
+                  "ownedDependencies",
+                  "variants",
+                ]
           : entry.kind === "screen"
-            ? [
-                "route",
-                "tags",
-                "address",
-                "darkFragments",
-                "fragments",
-                "useCaseIds",
-                "variantOf",
-                "viewports",
-                ...(components ? ["componentViews"] : []),
-              ]
-            : ["route", "tags", "steps"];
+            ? current
+              ? [
+                  "tags",
+                  "address",
+                  "colorSchemes",
+                  "useCaseIds",
+                  "variantOf",
+                  ...(components ? ["componentViews"] : []),
+                ]
+              : [
+                  "route",
+                  "tags",
+                  "address",
+                  "darkFragments",
+                  "fragments",
+                  "useCaseIds",
+                  "variantOf",
+                  "viewports",
+                  ...(components ? ["componentViews"] : []),
+                ]
+            : [...(current ? [] : ["route"]), "tags", "steps"];
   for (const field of Object.keys(entry))
     if (![...common, ...specific].includes(field))
       throw new MoklyError(

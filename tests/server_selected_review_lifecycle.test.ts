@@ -20,7 +20,7 @@ const source: SelectedReviewSource = {
   after: {
     entries: [],
     generatedBy: "mokly",
-    schemaVersion: 5,
+    schemaVersion: 7,
     sourceFiles: [],
   },
   baseCommit: "a".repeat(40),
@@ -45,9 +45,12 @@ function artifact(route: string): ReviewArtifact {
       baseRef: source.baseRef,
       changedPaths: [],
       ignoredImpact: [],
-      schemaVersion: 2,
+      schemaVersion: 4,
       screens: [],
       sharedImpact: [],
+      components: [],
+      changes: [],
+      affectedConsumers: [],
     },
   };
 }
@@ -79,9 +82,9 @@ async function start(
   assert.ok(address && typeof address !== "string");
   return {
     routes,
-    request: (route: string, refresh = false) =>
+    request: (id: string, refresh = false) =>
       fetch(
-        `http://127.0.0.1:${address.port}/__mokly/diffs/review.json?route=${encodeURIComponent(route)}${refresh ? "&refresh=1" : ""}`,
+        `http://127.0.0.1:${address.port}/__mokly/diffs/review.json?id=${encodeURIComponent(id)}${refresh ? "&refresh=1" : ""}`,
       ),
   };
 }
@@ -93,34 +96,34 @@ test("selected comparisons coalesce matching requests and serialize different ro
   const calls: string[] = [];
   const server = await start(t, {
     async generate(_source, selection) {
-      calls.push(selection.route);
+      calls.push(selection.id);
       if (calls.length === 1) {
         arrived.release();
         await release.promise;
       }
-      return artifact(selection.route);
+      return artifact(selection.id);
     },
   });
-  const first = server.request("first.html");
+  const first = server.request("first");
   await arrived.promise;
-  const same = server.request("first.html");
-  const different = server.request("second.html");
+  const same = server.request("first");
+  const different = server.request("second");
   release.release();
   const [a, b, c] = await Promise.all([first, same, different]);
   for (const response of [a, b, c]) assert.equal(response.status, 200);
   assert.equal(a.url, b.url);
   assert.notEqual(a.url, c.url);
-  assert.deepEqual(calls, ["first.html", "second.html"]);
+  assert.deepEqual(calls, ["first", "second"]);
   assert.match(
     await (await fetch(new URL("snapshots/after/pane.html", c.url))).text(),
-    /second.html/,
+    /second/,
   );
-  const refreshed = await server.request("first.html", true);
+  const refreshed = await server.request("first", true);
   assert.notEqual(refreshed.url, a.url);
-  assert.deepEqual(calls, ["first.html", "second.html", "first.html"]);
+  assert.deepEqual(calls, ["first", "second", "first"]);
   assert.match(
     await (await fetch(new URL("snapshots/after/pane.html", a.url))).text(),
-    /first.html/,
+    /first/,
   );
 });
 
@@ -146,10 +149,10 @@ for (const action of ["invalidate", "close"] as const)
           );
           await drained.promise;
         }
-        return artifact(selection.route);
+        return artifact(selection.id);
       },
     });
-    const pending = server.request("first.html");
+    const pending = server.request("first");
     await arrived.promise;
     let closed = false;
     const completion =
@@ -164,7 +167,7 @@ for (const action of ["invalidate", "close"] as const)
     await completion;
     assert.equal((await pending).status, 500);
     assert.equal(
-      (await server.request("first.html")).status,
+      (await server.request("first")).status,
       action === "close" ? 500 : 200,
     );
   });
@@ -174,17 +177,17 @@ test("selected snapshot failures do not poison the queue or overwrite retained p
   const server = await start(t, {
     async generate(_source, selection) {
       if (++attempts === 2) throw new Error("Failed capture");
-      return artifact(selection.route);
+      return artifact(selection.id);
     },
   });
-  const first = await server.request("first.html");
+  const first = await server.request("first");
   assert.equal(first.status, 200);
-  assert.equal((await server.request("first.html", true)).status, 500);
+  assert.equal((await server.request("first", true)).status, 500);
   assert.match(
     await (await fetch(new URL("snapshots/after/pane.html", first.url))).text(),
-    /first.html/,
+    /first/,
   );
-  const retry = await server.request("first.html", true);
+  const retry = await server.request("first", true);
   assert.equal(retry.status, 200);
   assert.notEqual(retry.url, first.url);
 });
@@ -195,37 +198,32 @@ test("HEAD renews selected snapshots without capture and expired selections can 
   const calls: string[] = [];
   const server = await start(t, {
     async generate(_source, selection) {
-      calls.push(selection.route);
-      return artifact(selection.route);
+      calls.push(selection.id);
+      return artifact(selection.id);
     },
   });
-  const first = await server.request("first.html");
+  const first = await server.request("first");
   assert.equal(first.status, 200);
   now += 59_000;
   const renewed = await fetch(first.url, { method: "HEAD" });
   assert.equal(renewed.status, 200);
   assert.equal(renewed.headers.get("cache-control"), "no-store");
   assert.equal(await renewed.text(), "");
-  assert.deepEqual(calls, ["first.html"]);
+  assert.deepEqual(calls, ["first"]);
   now += 59_000;
-  assert.equal((await server.request("second.html")).status, 200);
+  assert.equal((await server.request("second")).status, 200);
   const pane = new URL("snapshots/after/pane.html", first.url);
   assert.equal((await fetch(pane)).status, 200);
   now += 60_001;
-  assert.equal((await server.request("third.html")).status, 200);
+  assert.equal((await server.request("third")).status, 200);
   assert.equal((await fetch(first.url, { method: "HEAD" })).status, 404);
   assert.equal((await fetch(pane)).status, 404);
-  const recovered = await server.request("first.html");
+  const recovered = await server.request("first");
   assert.equal(recovered.status, 200);
   assert.notEqual(recovered.url, first.url);
   assert.equal(
     (await fetch(new URL("snapshots/after/pane.html", recovered.url))).status,
     200,
   );
-  assert.deepEqual(calls, [
-    "first.html",
-    "second.html",
-    "third.html",
-    "first.html",
-  ]);
+  assert.deepEqual(calls, ["first", "second", "third", "first"]);
 });

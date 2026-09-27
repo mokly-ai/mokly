@@ -39,14 +39,9 @@
           }
         }
       },
-      "route": "components/action.html",
       "slots": [],
       "tags": [],
-      "title": "Action",
-      "viewports": [
-        "mobile",
-        "desktop"
-      ]
+      "title": "Action"
     },
     {
       "changes": {
@@ -79,22 +74,16 @@
           "Continue"
         ]
       },
-      "route": "components/action-default.html",
       "suppliedSlots": [],
       "tags": [],
       "title": "Default",
       "variantOf": "action",
-      "viewports": [
-        "mobile",
-        "desktop"
-      ],
       "views": [
         {
           "colorScheme": "light",
           "comparison": {
             "status": "unavailable"
           },
-          "fragmentPath": "static/components/action-default.mobile.html",
           "usage": {
             "instances": [],
             "ranges": [],
@@ -108,7 +97,6 @@
           "comparison": {
             "status": "unavailable"
           },
-          "fragmentPath": "static/components/action-default.desktop.html",
           "usage": {
             "instances": [],
             "ranges": [],
@@ -140,11 +128,9 @@
         "relatedDocs": [],
         "sourcePath": "entries/fixture.mockup.tsx"
       },
-      "documentPath": "static/guide.html",
       "id": "guide",
       "kind": "page",
       "navPath": [],
-      "route": "guide.html",
       "tags": [],
       "title": "Guide"
     }
@@ -165,21 +151,18 @@
           "relatedDocs": [],
           "sourcePath": "entries/fixture.mockup.tsx"
         },
-        "documentPath": null,
         "id": "removed-page",
         "kind": "page",
         "navPath": [
           "Product"
         ],
-        "route": "archive/removed-page.html",
         "tags": [],
         "title": "Removed page"
       },
       "preview": {
-        "kind": "page",
-        "path": "__mokly/diffs/__generations/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc/pages/archive/removed-page.html.json"
+        "kind": "page"
       },
-      "snapshotId": "a7042a1b5ec9559bf51fa7c3db21d37ee42ee05522608d9d3bfd055daaff2640"
+      "snapshotId": "ae7c43c42ac411cb914b0029a816886b912351c7f54ab79c6bb77f2122a1530c"
     },
     {
       "entry": {
@@ -204,14 +187,9 @@
         "navPath": [
           "Product"
         ],
-        "route": "screens/removed.html",
         "tags": [],
         "title": "Removed screen",
         "useCaseIds": [],
-        "viewports": [
-          "mobile",
-          "desktop"
-        ],
         "views": [
           {
             "colorScheme": "light",
@@ -220,7 +198,6 @@
               "kind": "removed",
               "status": "ready"
             },
-            "fragmentPath": null,
             "usage": {
               "instances": [],
               "ranges": [],
@@ -236,7 +213,6 @@
               "kind": "removed",
               "status": "ready"
             },
-            "fragmentPath": null,
             "usage": {
               "instances": [],
               "ranges": [],
@@ -250,7 +226,7 @@
       "preview": {
         "kind": "screen"
       },
-      "snapshotId": "4f7cddf3d4b42e077227e71776d5b065ead88700de46b96445b4c652d78fdac8"
+      "snapshotId": "0db7db71cd6f82ff3ec1dfd949c09032585520da8361bbf8d3aa718cf7442312"
     }
   ],
   "revision": {
@@ -282,15 +258,10 @@
         "Product",
         "Browse"
       ],
-      "route": "screens/home.html",
       "tags": [],
       "title": "Home",
       "useCaseIds": [
         "tour"
-      ],
-      "viewports": [
-        "mobile",
-        "desktop"
       ],
       "views": [
         {
@@ -298,7 +269,6 @@
           "comparison": {
             "status": "unavailable"
           },
-          "fragmentPath": "static/screens/home.mobile.html",
           "usage": {
             "instances": [],
             "ranges": [],
@@ -312,7 +282,6 @@
           "comparison": {
             "status": "unavailable"
           },
-          "fragmentPath": "static/screens/home.desktop.html",
           "usage": {
             "instances": [],
             "ranges": [],
@@ -346,22 +315,16 @@
         "Product",
         "Browse"
       ],
-      "route": "screens/home-empty.html",
       "tags": [],
       "title": "Home, empty",
       "useCaseIds": [],
       "variantOf": "home",
-      "viewports": [
-        "mobile",
-        "desktop"
-      ],
       "views": [
         {
           "colorScheme": "light",
           "comparison": {
             "status": "unavailable"
           },
-          "fragmentPath": "static/screens/home-empty.mobile.html",
           "usage": {
             "instances": [],
             "ranges": [],
@@ -375,7 +338,6 @@
           "comparison": {
             "status": "unavailable"
           },
-          "fragmentPath": "static/screens/home-empty.desktop.html",
           "usage": {
             "instances": [],
             "ranges": [],
@@ -459,7 +421,6 @@
       "navPath": [
         "Product"
       ],
-      "route": "user-flows/tour.html",
       "steps": [
         {
           "screenId": "home",

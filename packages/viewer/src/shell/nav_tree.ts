@@ -9,7 +9,7 @@ import type { ManifestEntry } from "../registry/types.js";
 
 /** A leaf navigation row linking to one viewable route. */
 export interface NavLeafNode {
-  entryId?: string;
+  entryId: string;
   removedPage?: boolean;
   /**
    * A retained baseline variant placed under its surviving parent. Like a
@@ -22,7 +22,6 @@ export interface NavLeafNode {
   key: string;
   kind: "leaf";
   label: string;
-  route: string;
   snapshotId?: string;
   /** Declared classification tags, present only when the entry has them. */
   tags?: readonly string[];
@@ -89,13 +88,13 @@ export function buildNavSections(
     const children = [
       ...current,
       ...additional.sort((left, right) =>
-        left.route < right.route
+        left.entryKind < right.entryKind
           ? -1
-          : left.route > right.route
+          : left.entryKind > right.entryKind
             ? 1
-            : (left.entryId ?? "") < (right.entryId ?? "")
+            : left.entryId < right.entryId
               ? -1
-              : (left.entryId ?? "") > (right.entryId ?? "")
+              : left.entryId > right.entryId
                 ? 1
                 : 0,
       ),
@@ -161,7 +160,7 @@ function attachRemovedVariants(
         ...node,
         children: attachRemovedVariants(node.children, byParent, attached),
       };
-    const removed = node.entryId ? byParent.get(node.entryId) : undefined;
+    const removed = byParent.get(node.entryId);
     for (const leaf of removed ?? []) attached.add(leaf);
     return removed
       ? {
@@ -190,7 +189,6 @@ function leafNode(
     key: `entry:${entry.id}`,
     kind: "leaf",
     label: entry.title,
-    route: entry.route,
     ...(entry.tags && entry.tags.length > 0 ? { tags: [...entry.tags] } : {}),
     ...(variants.length > 0 ? { variants } : {}),
   };
@@ -230,7 +228,7 @@ function sortNodes(nodes: readonly NavNode[]): NavNode[] {
         key:
           left.kind === "group"
             ? left.key.slice("folder:".length)
-            : (left.entryId ?? left.route),
+            : left.entryId,
       },
       {
         kind: right.kind === "group" ? "folder" : "entry",
@@ -238,7 +236,7 @@ function sortNodes(nodes: readonly NavNode[]): NavNode[] {
         key:
           right.kind === "group"
             ? right.key.slice("folder:".length)
-            : (right.entryId ?? right.route),
+            : right.entryId,
       },
     ),
   );

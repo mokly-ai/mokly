@@ -113,7 +113,7 @@ test("event-stream HEAD releases a keep-alive connection", async (context) => {
   assert.match(home.body, /data-mokly-shell/);
 });
 
-test("malformed manifest routes fail before server readiness", async (context) => {
+test("malformed manifest identities fail before server readiness", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -122,14 +122,15 @@ test("malformed manifest routes fail before server readiness", async (context) =
   const manifest = JSON.parse(
     await fs.promises.readFile(manifestPath, "utf8"),
   ) as {
-    entries: Array<{ fragments?: { mobile: string } }>;
+    entries: Array<{ id: string; kind: string }>;
   };
-  const screen = manifest.entries.find((entry) => entry.fragments);
-  if (screen?.fragments) screen.fragments.mobile = "../outside.html";
+  const screen = manifest.entries.find((entry) => entry.kind === "screen");
+  assert.ok(screen);
+  screen.id = "../outside";
   await fs.promises.writeFile(manifestPath, `${JSON.stringify(manifest)}\n`);
   await assert.rejects(
     () => startCatalogueServer(config, { base: "origin/main", port: 0 }),
-    /route does not match|invalid or colliding .* fragment/,
+    /invalid manifest id/,
   );
 });
 

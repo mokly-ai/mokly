@@ -74,8 +74,8 @@ test("removing a variant retains its parent relationship and folder path", async
   assert.equal(removed.entry.id, "home-empty");
   assert.equal(removed.entry.variantOf, "home");
   assert.deepEqual(removed.entry.navPath, ["Fixture"]);
-  assert.ok(changes.changedRoutes.includes(removed.entry.route));
-  assert.equal(changes.changedRoutes.includes("screens/home.html"), false);
+  assert.ok(changes.changedIds.includes(removed.entry.id));
+  assert.equal(changes.changedIds.includes("home"), false);
 });
 
 test("removing a parent and variant retains one removed screen for each", async (t) => {
@@ -106,8 +106,8 @@ test("removing a parent and variant retains one removed screen for each", async 
     ],
   );
   assert.deepEqual(
-    changes.changedRoutes.filter((route) => route.startsWith("screens/home")),
-    ["screens/home-empty.html", "screens/home.html"],
+    changes.changedIds.filter((id) => id.startsWith("home")),
+    ["home", "home-empty"],
   );
 });
 
@@ -130,7 +130,7 @@ test("a committed baseline places a removed variant under its parent row", async
 
   const context = publicShellContext(catalogue, {
     base: "main",
-    changedRoutes: changes.changedRoutes,
+    changedIds: changes.changedIds,
     updateVersion: 1,
   });
   const html = homePage(catalogue, context);

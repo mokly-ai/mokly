@@ -67,7 +67,7 @@ export function useViewerCapabilityStore(input: {
   const [snapshot, setSnapshot] = useState<ViewerCapabilitySnapshot>(() => ({
     catalogue: input.catalogue,
     ...(initialRequest ? { source: initialRequest.source } : {}),
-    ...(initialRequest && initialWorkspace?.entry.route === initialRequest.route
+    ...(initialRequest && initialWorkspace?.entry.id === initialRequest.entryId
       ? { workspace: { request: initialRequest, value: initialWorkspace } }
       : {}),
   }));
@@ -116,7 +116,7 @@ export function useViewerCapabilityStore(input: {
           if (
             !current.source ||
             !viewerCapabilitySourceEquals(current.source, request.source) ||
-            currentRoute !== request.route
+            currentRoute !== request.entryId
           )
             return true;
           const commit = commitViewerEvidence(
@@ -197,7 +197,7 @@ function useRouteEvidence(
         if (
           !current.source ||
           !viewerCapabilitySourceEquals(current.source, request.source) ||
-          viewerCapabilityRoute(stateRef.current.route) !== request.route
+          viewerCapabilityRoute(stateRef.current.route) !== request.entryId
         )
           return;
         const commit = commitViewerEvidence(
@@ -241,7 +241,7 @@ function sameRequest(
 ): boolean {
   return (
     left !== undefined &&
-    left.route === right.route &&
+    left.entryId === right.entryId &&
     viewerCapabilitySourceEquals(left.source, right.source)
   );
 }

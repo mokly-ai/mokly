@@ -124,7 +124,6 @@ for (const cross of [false, true]) {
           id: "tour",
           navPath: [],
           title: "Tour",
-          route: "flows/tour.html",
           tags: [],
           details: home.details,
           changes: { status: "disabled" },

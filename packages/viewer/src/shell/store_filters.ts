@@ -51,7 +51,7 @@ export function withRoute(
     selection = revealSelection(catalogue.publicModel, selection);
   let next = withSelection(state, selection, false);
   if (route.view.kind === "target") {
-    const path = disclosurePath(sections, route.view.target.entry.route);
+    const path = disclosurePath(sections, route.view.target.entry.id);
     next = {
       ...next,
       disclosures: openDisclosures(next.disclosures, path),

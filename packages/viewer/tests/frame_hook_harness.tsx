@@ -227,7 +227,6 @@ function HookFrame({ host, usage }: { host: HookHost; usage: CatalogueUsage }) {
     enabled: true,
     identity: {
       entryId: `frame-hook-${host.documentIdentity}`,
-      route: `screens/frame-hook-${host.documentIdentity}.html`,
     },
     onEvent: () => undefined,
     source: host.source,

@@ -5,6 +5,7 @@ import {
 } from "../catalogue/entry_selection.js";
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
+import { entryRoute } from "../navigation/routes.js";
 import { parseSearchQuery, rowMatchesQuery } from "../shell/search_query.js";
 
 import type { ViewerSelection } from "./types.js";
@@ -146,7 +147,12 @@ export function revealSelection(
   if (!entry) return value;
   const matches = rowMatchesQuery(
     { freeText: value.search, tags: value.tags },
-    { id: entry.id, route: entry.route, tags: entry.tags, text: entry.title },
+    {
+      id: entry.id,
+      route: entryRoute(entry.kind, entry.id),
+      tags: entry.tags,
+      text: entry.title,
+    },
   );
   return {
     ...value,

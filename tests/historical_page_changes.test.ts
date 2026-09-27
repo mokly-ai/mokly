@@ -82,7 +82,7 @@ for (const version of [2, 3] as const) {
       "HEAD",
       committedReviewRepository(fixture.config),
     );
-    assert.deepEqual(changes.changedRoutes, ["pages/handbook.html"]);
+    assert.deepEqual(changes.changedIds, ["handbook"]);
     assert.deepEqual(changes.removedEntries, []);
     const catalogue = createCatalogue(fixture.manifest, changes.removedEntries);
     assert.equal(catalogue.byId.get("handbook")?.title, "Current handbook");
@@ -131,6 +131,6 @@ test("a renamed legacy route is an added page without pairing or synthetic remov
     "HEAD",
     committedReviewRepository(fixture.config),
   );
-  assert.deepEqual(changes.changedRoutes, ["pages/handbook.html"]);
+  assert.deepEqual(changes.changedIds, ["handbook"]);
   assert.deepEqual(changes.removedEntries, []);
 });

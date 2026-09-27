@@ -113,7 +113,7 @@ export function ComponentWorkspace({
       store?.state.route.viewport === "mobile" ? "mobile" : "desktop",
     );
     setSelectedKey(store?.state.route.instance);
-  }, [entry.route, store?.state.route.instance, store?.state.route.viewport]);
+  }, [entry.id, store?.state.route.instance, store?.state.route.viewport]);
 
   useEffect(() => {
     if (selectedKey && activeView?.usage && !selectedInstance)
@@ -246,7 +246,7 @@ export function ComponentWorkspace({
               eligible={presentation.comparisonEligible}
               onComparisonChange={setLoadedComparison}
               onModeChange={setComparisonMode}
-              route={entry.route}
+              route={entry.id}
               {...(variantId ? { variantId } : {})}
             >
               {stage}

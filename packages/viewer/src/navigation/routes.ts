@@ -1,6 +1,6 @@
-import { isEntryId } from "../navigation/logical.js";
+import type { ColorScheme, Viewport } from "../data/axes.js";
 
-import type { ColorScheme, Viewport } from "./axes.js";
+import { isEntryId } from "./logical.js";
 
 /** Entry kinds with canonical catalogue documents. */
 export type EntryRouteKind = "component" | "page" | "screen" | "use-case";
@@ -40,17 +40,8 @@ export function viewRoute(
   viewport: Viewport,
   colorScheme: ColorScheme = "light",
 ): string {
-  return fragmentRoute(entryRoute(kind, id), viewport, colorScheme);
-}
-
-/** Derive one view document from an already validated entry route. */
-export function fragmentRoute(
-  route: string,
-  viewport: Viewport,
-  colorScheme: ColorScheme = "light",
-): string {
   const scheme = colorScheme === "dark" ? ".dark" : "";
-  return route.replace(/\.html$/, `.${viewport}${scheme}.html`);
+  return entryRoute(kind, id).replace(/\.html$/, `.${viewport}${scheme}.html`);
 }
 
 /** Derive the canonical shell URL for an entry. */

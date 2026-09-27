@@ -6,7 +6,6 @@ import type { ManifestV7, HistoricalManifest } from "@mokly/viewer/data";
 import {
   canonicalJson,
   effectiveColorSchemes,
-  entryRoute,
   viewRoute,
 } from "@mokly/viewer/data";
 
@@ -116,7 +115,7 @@ export function parseHistoricalManifest(
   value: unknown,
   allowV2 = false,
 ): HistoricalManifest {
-  return validateManifest(value, allowV2, true);
+  return validateManifest(value, allowV2, true) as HistoricalManifest;
 }
 
 function toManifestEntry(
@@ -128,9 +127,6 @@ function toManifestEntry(
 ): ManifestV7["entries"][number] {
   const common = {
     declaredDependencies: [...new Set(entry.dependencies)].sort(),
-    dependencies: [
-      ...new Set([entry.sourceRelativePath, ...entry.dependencies]),
-    ].sort(),
     description: entry.description,
     id: entry.id,
     kind: entry.kind,
@@ -157,45 +153,33 @@ function toManifestEntry(
   }
   if (entry.kind === "component")
     return {
-      ...componentManifestEntry(entry, common),
+      ...componentManifestEntry(entry, common, catalogueSchemes),
       declaredDependencies: common.declaredDependencies,
     };
   if (entry.kind === "page")
     return {
       ...common,
       kind: "page",
-      route: entryRoute("page", entry.id),
       ...(entry.tags?.length ? { tags: [...entry.tags] } : {}),
     };
   if (entry.kind === "use-case") {
     return {
       ...common,
       kind: "use-case",
-      route: entryRoute("use-case", entry.id),
       steps: entry.steps.map((step) => ({ ...step })),
       ...(entry.tags && entry.tags.length > 0 ? { tags: [...entry.tags] } : {}),
     };
   }
+  const colorSchemes = effectiveColorSchemes(entry, catalogueSchemes);
   return {
     ...common,
     ...(entry.address ? { address: entry.address } : {}),
-    ...(effectiveColorSchemes(entry, catalogueSchemes).includes("dark")
-      ? {
-          darkFragments: {
-            desktop: viewRoute("screen", entry.id, "desktop", "dark"),
-            mobile: viewRoute("screen", entry.id, "mobile", "dark"),
-          },
-        }
-      : {}),
-    fragments: {
-      desktop: viewRoute("screen", entry.id, "desktop", "light"),
-      mobile: viewRoute("screen", entry.id, "mobile", "light"),
-    },
+    colorSchemes: [...colorSchemes],
     kind: "screen",
     ...(componentViews.size
       ? {
           componentViews: ["mobile", "desktop"].flatMap((viewport) =>
-            effectiveColorSchemes(entry, catalogueSchemes).map((scheme) =>
+            colorSchemes.map((scheme) =>
               componentViews.get(
                 viewRoute(
                   "screen",
@@ -208,10 +192,8 @@ function toManifestEntry(
           ),
         }
       : {}),
-    route: entryRoute("screen", entry.id),
     ...(entry.tags && entry.tags.length > 0 ? { tags: [...entry.tags] } : {}),
     useCaseIds: [...entry.useCaseIds],
     ...(entry.variantOf !== undefined ? { variantOf: entry.variantOf } : {}),
-    viewports: ["mobile", "desktop"],
   };
 }

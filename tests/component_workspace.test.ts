@@ -20,7 +20,7 @@ test("workspace badges, comparison eligibility and usage use recorded evidence",
     fixture.git,
     "main",
   );
-  if (result.schemaVersion !== 3) assert.fail("Expected component result");
+  if (result.schemaVersion !== 4) assert.fail("Expected component result");
   const catalogue = createCatalogue(
     fixture.after.manifest,
     removedManifestEntries(fixture.after.manifest, fixture.before.manifest),
@@ -47,13 +47,10 @@ test("workspace badges, comparison eligibility and usage use recorded evidence",
   );
   assert.equal(data.affected.length, 0);
   assert.equal(
-    data.usedBy.filter((item) => item.route === "screens/home.html").length,
+    data.usedBy.filter((item) => item.entryId === "home").length,
     16,
   );
-  assert.equal(
-    data.usedBy.filter((item) => item.route === "components/pane.html").length,
-    4,
-  );
+  assert.equal(data.usedBy.filter((item) => item.entryId === "pane").length, 4);
   const defaultSelection = selectedVariant(data, "");
   assert.equal(defaultSelection.variant?.value.id, "action-default");
   assert.equal(defaultSelection.comparisonEligible, false);
@@ -91,7 +88,7 @@ test("a changed screen id keeps distinct Added and Removed evidence in a compone
     fixture.git,
     "main",
   );
-  if (result.schemaVersion !== 3) assert.fail("Expected component result");
+  if (result.schemaVersion !== 4) assert.fail("Expected component result");
   const catalogue = catalogueAtBaseline(
     fixture.after.manifest,
     fixture.before.manifest,
@@ -136,7 +133,7 @@ test("a removed component variant retains its previous comparison", async (t) =>
     fixture.git,
     "main",
   );
-  if (result.schemaVersion !== 3) assert.fail("Expected component result");
+  if (result.schemaVersion !== 4) assert.fail("Expected component result");
   const catalogue = createCatalogue(
     fixture.after.manifest,
     removedManifestEntries(fixture.after.manifest, fixture.before.manifest),

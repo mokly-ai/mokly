@@ -15,12 +15,12 @@ import {
 } from "../packages/viewer/dist/shell/nav_tree.js";
 
 const removed = {
+  entryId: "welcome-error",
   entryKind: "screen" as const,
   key: "removed:welcome-error",
   kind: "leaf" as const,
   label: "Save failed · Removed",
   removedPage: true,
-  route: "welcome-error.html",
   variantOf: "welcome",
 };
 
@@ -58,8 +58,8 @@ test("removed variants remain represented exactly once across parent transitions
       [removed],
     );
     const nodes = sections.flatMap(({ children }) => children);
-    assert.equal(occurrences(nodes, removed.route), 1, current.label);
-    const represented = findLeaf(nodes, removed.route);
+    assert.equal(occurrences(nodes, removed.entryId), 1, current.label);
+    const represented = findLeaf(nodes, removed.entryId);
     assert.ok(represented, current.label);
     assert.equal(
       represented.removedVariant === true,
@@ -71,28 +71,26 @@ test("removed variants remain represented exactly once across parent transitions
 
 function findLeaf(
   nodes: readonly NavNode[],
-  route: string,
+  id: string,
 ): NavLeafNode | undefined {
   for (const node of nodes) {
     if (node.kind === "group") {
-      const nested = findLeaf(node.children, route);
+      const nested = findLeaf(node.children, id);
       if (nested) return nested;
     } else {
-      if (node.route === route) return node;
-      const nested = findLeaf(node.variants ?? [], route);
+      if (node.entryId === id) return node;
+      const nested = findLeaf(node.variants ?? [], id);
       if (nested) return nested;
     }
   }
   return undefined;
 }
 
-function occurrences(nodes: readonly NavNode[], route: string): number {
+function occurrences(nodes: readonly NavNode[], id: string): number {
   return nodes.reduce((count, node) => {
-    if (node.kind === "group") return count + occurrences(node.children, route);
+    if (node.kind === "group") return count + occurrences(node.children, id);
     return (
-      count +
-      Number(node.route === route) +
-      occurrences(node.variants ?? [], route)
+      count + Number(node.entryId === id) + occurrences(node.variants ?? [], id)
     );
   }, 0);
 }
@@ -103,21 +101,16 @@ function screen(
   navPath: readonly string[] = [],
 ): ManifestScreen {
   return {
-    dependencies: [],
+    colorSchemes: ["light"],
+    declaredDependencies: [],
     description: title,
-    fragments: {
-      desktop: `${id}.desktop.html`,
-      mobile: `${id}.mobile.html`,
-    },
     id,
     kind: "screen",
     navPath,
     relatedDocs: [],
-    route: `${id}.html`,
     sourcePath: `entries/${id}.tsx`,
     title,
     useCaseIds: [],
-    viewports: ["mobile", "desktop"],
   };
 }
 
@@ -130,15 +123,14 @@ function variant(
   return { ...screen(id, title, navPath), variantOf };
 }
 
-function page(id: string, title: string, route: string): ManifestPage {
+function page(id: string, title: string, _route: string): ManifestPage {
   return {
-    dependencies: [],
+    declaredDependencies: [],
     description: title,
     id,
     kind: "page",
     navPath: [],
     relatedDocs: [],
-    route,
     sourcePath: `entries/${id}.tsx`,
     title,
   };

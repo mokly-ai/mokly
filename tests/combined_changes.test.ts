@@ -37,10 +37,8 @@ for (const editComponent of [false, true]) {
       "a".repeat(40),
     );
     assert.deepEqual(
-      changed.changedRoutes,
-      editComponent
-        ? ["components/action.html", "pages/handbook.html"]
-        : ["pages/handbook.html"],
+      changed.changedIds,
+      editComponent ? ["action", "handbook"] : ["handbook"],
     );
     assert.ok(changed.result);
     assert.deepEqual(

@@ -6,6 +6,7 @@ import { readCatalogue } from "../src/catalogue/reader.js";
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
 import type { ViewerEvidenceRevision } from "../src/client/host_capabilities.js";
 import type { ViewerCapabilitySource } from "../src/client/host_capability_descriptor.js";
+import { viewHref } from "../src/navigation/routes.js";
 import {
   adoptedViewerCatalogue,
   shellContextWithViewerEvidence,
@@ -43,7 +44,7 @@ test("live evidence rebinds records while preserving interaction state", () => {
     new URL("https://example.test/view/screens/home.html"),
   );
   const source = capabilitySource(model, 4);
-  const nextModel = evidenceRevision(model, ["screens/home.html"]);
+  const nextModel = evidenceRevision(model, ["home"]);
   const revision = viewerRevision(nextModel, source, route);
   const next = adoptedViewerCatalogue(current, source, route, revision);
   assert.ok(next);
@@ -86,7 +87,7 @@ test("live evidence rebinds records while preserving interaction state", () => {
     adopted,
   );
   assert.equal(projected.updateVersion, 5);
-  assert.deepEqual(projected.changedRoutes, ["screens/home.html"]);
+  assert.deepEqual(projected.changedIds, ["home"]);
 });
 
 test("live evidence preserves host shell mode and comparison availability", () => {
@@ -127,7 +128,7 @@ test("newer evidence adopts when the server update version is unchanged", () => 
     new URL("https://example.test/view/screens/home.html"),
   );
   const source = capabilitySource(model, 4);
-  const nextModel = evidenceRevision(model, ["screens/home.html"]);
+  const nextModel = evidenceRevision(model, ["home"]);
   const revision = viewerRevision(nextModel, source, route);
   revision.source = { ...revision.source, updateVersion: source.updateVersion };
   const context = {
@@ -156,10 +157,7 @@ test("newer evidence adopts when the server update version is unchanged", () => 
   );
   assert.deepEqual(commit.snapshot.source, revision.source);
   assert.deepEqual(commit.snapshot.workspace?.request.source, revision.source);
-  assert.equal(
-    commit.snapshot.workspace?.value.entry.route,
-    "screens/home.html",
-  );
+  assert.equal(commit.snapshot.workspace?.value.entry.id, "home");
 });
 
 test("live evidence retains unchanged identity-less historical metadata", () => {
@@ -172,7 +170,7 @@ test("live evidence retains unchanged identity-less historical metadata", () => 
   const current = viewerCatalogue(historical);
   const route = routeFromUrl(
     current,
-    new URL(`https://example.test/view/${screen.route}`),
+    new URL(`https://example.test${viewHref(screen.kind, screen.id)}`),
   );
   const source = capabilitySource(historical, 4);
   const unchanged: CatalogueReadModel = {
@@ -216,7 +214,7 @@ test("live evidence rejects changed or removed identity-less history", () => {
   const current = viewerCatalogue(historical);
   const route = routeFromUrl(
     current,
-    new URL(`https://example.test/view/${screen.route}`),
+    new URL(`https://example.test${viewHref(screen.kind, screen.id)}`),
   );
   const source = capabilitySource(historical, 4);
   const changed: CatalogueReadModel = {
@@ -264,9 +262,9 @@ test("live evidence rejects private workspace removal drift", () => {
 
 function evidenceRevision(
   value: CatalogueReadModel,
-  changedRoutes: readonly string[],
+  changedIds: readonly string[],
 ): CatalogueReadModel {
-  const changed = new Set(changedRoutes);
+  const changed = new Set(changedIds);
   return {
     ...value,
     revision: { ...value.revision, evidence: value.revision.evidence + 1 },
@@ -274,8 +272,8 @@ function evidenceRevision(
       ...entry,
       changes: {
         status: "ready" as const,
-        kind: changed.has(entry.route) ? "changed" : "unmodified",
-        included: changed.has(entry.route),
+        kind: changed.has(entry.id) ? "changed" : "unmodified",
+        included: changed.has(entry.id),
       },
     })),
   };
@@ -301,7 +299,7 @@ function viewerRevision(
 ): ViewerEvidenceRevision {
   const next = viewerCatalogue(value);
   const routeValue =
-    route.view.kind === "target" ? route.view.target.entry.route : undefined;
+    route.view.kind === "target" ? route.view.target.entry.id : undefined;
   const entry = routeValue ? catalogueRouteEntry(next, routeValue) : undefined;
   const workspace =
     entry &&

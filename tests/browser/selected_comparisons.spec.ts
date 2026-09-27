@@ -36,7 +36,7 @@ test("live Difference requests the active screen and keeps real before/current p
     page.frameLocator(".mb-pane--after iframe").locator("main"),
   ).toContainText("Updated screen");
   expect(requests).toHaveLength(1);
-  expect(requests[0]!.searchParams.get("route")).toBe("screens/home.html");
+  expect(requests[0]!.searchParams.get("id")).toBe("home");
   expect(requests[0]!.searchParams.has("variant")).toBe(false);
   await expect(page.locator(".mb-panes")).toHaveAttribute(
     "data-compare-mode",
@@ -86,8 +86,8 @@ test("saved variant selection and refresh keep the selected comparison scope", a
   await loadComparison(page, "Refresh comparison");
   expect(requests).toHaveLength(2);
   for (const request of requests) {
-    expect(request.searchParams.get("route")).toBe("components/action.html");
-    expect(request.searchParams.get("variant")).toBe("action-disabled");
+    expect(request.searchParams.get("id")).toBe("action-disabled");
+    expect(request.searchParams.has("variant")).toBe(false);
   }
   expect(requests[1]!.searchParams.get("refresh")).toBe("1");
   await page
@@ -100,5 +100,5 @@ test("saved variant selection and refresh keep the selected comparison scope", a
       .frameLocator(".mb-pane--after iframe")
       .getByRole("button", { name: "Proceed", exact: true }),
   ).toBeEnabled();
-  expect(requests.at(-1)!.searchParams.get("variant")).toBe("action-default");
+  expect(requests.at(-1)!.searchParams.get("id")).toBe("action-default");
 });

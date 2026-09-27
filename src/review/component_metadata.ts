@@ -1,32 +1,39 @@
 import { minimatch } from "minimatch";
 
-import type { ComponentViewRecord, ManifestComponent } from "@mokly/viewer";
+import type {
+  ComponentViewRecord,
+  HistoricalManifestComponent,
+  ManifestComponent,
+} from "@mokly/viewer";
 import { canonicalJson, isManifestComponentVariant } from "@mokly/viewer/data";
 import type {
   Manifest,
   ManifestEntry,
+  HistoricalManifestEntry,
   EntryChangeReason,
   ReviewEntryAddress,
 } from "@mokly/viewer/data";
 
 import { dependencyContainsChangedPath } from "../registry/dependency_paths.js";
 
-export type RoutedEntry = Exclude<ManifestEntry, { kind: "page" }>;
-export const address = (entry: RoutedEntry): ReviewEntryAddress => ({
+export type ReviewEntry = Exclude<
+  ManifestEntry | HistoricalManifestEntry,
+  { kind: "page" }
+>;
+export const address = (entry: ReviewEntry): ReviewEntryAddress => ({
   id: entry.id,
-  route: entry.route,
   title: entry.title,
 });
-/** Pair screens and flows by route, and components by stable id. */
-export function entryPairKey(entry: RoutedEntry): string {
-  return `${entry.kind}:${entry.kind === "component" ? entry.id : entry.route}`;
+/** Pair every reviewable entry by its globally stable id. */
+export function entryPairKey(entry: ReviewEntry): string {
+  return `${entry.kind}:${entry.id}`;
 }
 export const lexical = (a: string, b: string): number =>
   a < b ? -1 : a > b ? 1 : 0;
 export function entryPairs(
   before: Manifest,
   after: Manifest,
-): { before: RoutedEntry | undefined; after: RoutedEntry | undefined }[] {
+): { before: ReviewEntry | undefined; after: ReviewEntry | undefined }[] {
   const bases = new Map(
     before.entries.flatMap((entry) =>
       entry.kind === "page" ||
@@ -47,34 +54,29 @@ export function entryPairs(
     .sort()
     .map((id) => ({ before: bases.get(id), after: heads.get(id) }));
 }
-export function metadata(entry: RoutedEntry): string {
+export function metadata(entry: ReviewEntry): string {
   const navPath = entry.navPath;
-  const {
-    dependencies: _dependencies,
-    declaredDependencies: _declaredDependencies,
-    sourcePath: _source,
-    navPath: _navPath,
-    ...common
-  } = entry;
+  const common = { ...entry } as Record<string, unknown>;
+  for (const field of [
+    "artifacts",
+    "componentViews",
+    "declaredDependencies",
+    "dependencies",
+    "navPath",
+    "sourcePath",
+  ])
+    Reflect.deleteProperty(common, field);
   if (entry.kind === "component") {
-    if (isManifestComponentVariant(entry)) {
-      const { componentViews: _views, ...variant } = common as typeof entry;
-      return canonicalJson({ ...variant, navPath });
-    }
-    const component = { ...common } as Record<string, unknown>;
-    Reflect.deleteProperty(component, "variants");
-    return canonicalJson({ ...component, navPath });
-  }
-  if (entry.kind === "screen") {
-    const { componentViews: _views, ...screen } = common as typeof entry;
-    return canonicalJson({ ...screen, navPath });
+    return canonicalJson({ ...common, navPath });
   }
   return canonicalJson({ ...common, navPath });
 }
 
 /** Track owners, exact reasons, and unowned path evidence across both manifests. */
 export class ComponentDependencyPolicy {
-  private readonly components: readonly ManifestComponent[];
+  private readonly components: readonly (
+    ManifestComponent | HistoricalManifestComponent
+  )[];
   private readonly ownersByPath = new Map<string, ReadonlySet<string>>();
   private readonly sharedByPath = new Map<string, boolean>();
   constructor(
@@ -83,7 +85,7 @@ export class ComponentDependencyPolicy {
     private readonly shared: readonly string[],
   ) {
     this.components = [...before.entries, ...after.entries].filter(
-      (entry): entry is ManifestComponent =>
+      (entry): entry is ManifestComponent | HistoricalManifestComponent =>
         entry.kind === "component" && !isManifestComponentVariant(entry),
     );
   }
@@ -103,7 +105,7 @@ export class ComponentDependencyPolicy {
     }
     return owners;
   }
-  independent(entry: RoutedEntry, changed: string): boolean {
+  independent(entry: ReviewEntry, changed: string): boolean {
     const owners = this.owners(changed);
     if (
       owners.has(entry.id) &&
@@ -120,8 +122,8 @@ export class ComponentDependencyPolicy {
     return changed.filter((item) => this.sharedPath(item));
   }
   unownedEvidence(
-    before: RoutedEntry | undefined,
-    after: RoutedEntry | undefined,
+    before: ReviewEntry | undefined,
+    after: ReviewEntry | undefined,
     changed: readonly string[],
   ): string[] {
     return changed.filter(
@@ -136,8 +138,8 @@ export class ComponentDependencyPolicy {
     );
   }
   reasons(
-    before: RoutedEntry | undefined,
-    after: RoutedEntry | undefined,
+    before: ReviewEntry | undefined,
+    after: ReviewEntry | undefined,
     changed: readonly string[],
   ): EntryChangeReason[] {
     return changed
@@ -183,7 +185,7 @@ export function uniqueReasons(
 ): EntryChangeReason[] {
   const merged = new Map<string, EntryChangeReason>();
   for (const reason of reasons) {
-    const key = `${reason.kind}:${"path" in reason ? reason.path : "route" in reason ? reason.route : ""}`;
+    const key = `${reason.kind}:${"path" in reason ? reason.path : "id" in reason ? reason.id : ""}`;
     const previous = merged.get(key);
     if (reason.kind === "dependency" && previous?.kind === "dependency") {
       const analyses = [previous.analysis, reason.analysis].filter(
@@ -212,8 +214,8 @@ export function uniqueReasons(
     (a, b) =>
       lexical(a.kind, b.kind) ||
       lexical(
-        "path" in a ? a.path : "route" in a ? a.route : "",
-        "path" in b ? b.path : "route" in b ? b.route : "",
+        "path" in a ? a.path : "id" in a ? a.id : "",
+        "path" in b ? b.path : "id" in b ? b.id : "",
       ),
   );
 }

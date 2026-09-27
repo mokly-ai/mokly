@@ -1,11 +1,7 @@
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
 import type { RemovedEntryPreview } from "@mokly/viewer";
-import {
-  catalogueViewHref,
-  type ManifestPage,
-  type ManifestScreen,
-} from "@mokly/viewer/data";
+import { catalogueViewHref } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 import type { RemovedEntrySnapshot } from "../registry/changes.js";
@@ -22,10 +18,11 @@ export function advertisePublicationShell(
 ): string {
   if (!previews) return html;
   const entry = removed.find(
-    (candidate) => catalogueViewHref(candidate.route) === canonicalPath,
+    (candidate) =>
+      catalogueViewHref(candidate.kind, candidate.id) === canonicalPath,
   );
   if (!entry || (entry.kind !== "page" && entry.kind !== "screen")) return html;
-  const published = previews.get(entry.route);
+  const published = previews.get(entry.id);
   return published
     ? advertisePublicationPreview(name, html, entry, published)
     : html;
@@ -35,7 +32,7 @@ export function advertisePublicationShell(
 export function advertisePublicationPreview(
   name: string,
   html: string,
-  entry: ManifestPage | ManifestScreen,
+  entry: RemovedEntrySnapshot["entry"],
   published: RemovedEntryPreview,
 ): string {
   const duplicateOffsets: number[] = [];
@@ -73,7 +70,6 @@ export function advertisePublicationPreview(
   if (
     descriptor["id"] !== entry.id ||
     descriptor["kind"] !== entry.kind ||
-    descriptor["route"] !== entry.route ||
     (published.kind === "screen" && entry.kind !== "screen") ||
     (published.kind === "page" && entry.kind !== "page")
   )

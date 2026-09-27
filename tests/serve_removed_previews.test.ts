@@ -3,7 +3,12 @@ import test from "node:test";
 import { setTimeout } from "node:timers/promises";
 
 import { readCatalogue } from "@mokly/viewer";
-import { parseRemovedPagePreview, parseReviewResult } from "@mokly/viewer/data";
+import {
+  entryRoute,
+  parseRemovedPagePreview,
+  parseReviewResult,
+  viewRoute,
+} from "@mokly/viewer/data";
 
 import { serve } from "../dist/server/serve.js";
 
@@ -38,7 +43,7 @@ for (const watch of [false, true]) {
           200,
         );
         const pageResponse = await fetch(
-          `${running.url}/__mokly/diffs/review.json?page=pages%2Fremoved-page.html`,
+          `${running.url}/__mokly/diffs/review.json?page=removed-page`,
         );
         assert.equal(
           pageResponse.status,
@@ -49,13 +54,23 @@ for (const watch of [false, true]) {
         assert.equal(preview.baseCommit, fixture.baseCommit);
         assert.match(
           await (
-            await fetch(new URL(preview.documentPath, pageResponse.url))
+            await fetch(
+              new URL(
+                `snapshots/before/${entryRoute("page", preview.id)}`,
+                pageResponse.url,
+              ),
+            )
           ).text(),
           /Previous page/,
         );
         assert.doesNotMatch(
           await (
-            await fetch(new URL(preview.documentPath, pageResponse.url))
+            await fetch(
+              new URL(
+                `snapshots/before/${entryRoute("page", preview.id)}`,
+                pageResponse.url,
+              ),
+            )
           ).text(),
           /Branch edit/,
         );
@@ -68,7 +83,7 @@ for (const watch of [false, true]) {
           "main { color: rebeccapurple; }",
         );
         const screenResponse = await fetch(
-          `${running.url}/__mokly/diffs/review.json?route=screens%2Fremoved-screen.html`,
+          `${running.url}/__mokly/diffs/review.json?id=removed-screen`,
         );
         assert.equal(
           screenResponse.status,
@@ -78,14 +93,18 @@ for (const watch of [false, true]) {
         const screen = parseReviewResult(await screenResponse.json())
           .screens[0];
         assert.equal(screen?.state, "removed");
-        assert.ok(
-          screen?.views.every((view) => view.beforePath && !view.afterPath),
-        );
+        assert.ok(screen?.views.every((view) => view.state === "removed"));
         const screenDocument = await (
           await fetch(
             new URL(
-              screen?.views.find((view) => view.viewport === "desktop")
-                ?.beforePath ?? "missing",
+              (() => {
+                const view = screen?.views.find(
+                  (candidate) => candidate.viewport === "desktop",
+                );
+                return view
+                  ? `snapshots/before/${viewRoute("screen", "removed-screen", view.viewport, view.colorScheme)}`
+                  : "missing";
+              })(),
               screenResponse.url,
             ),
           )

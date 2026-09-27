@@ -3,7 +3,11 @@ import { test } from "node:test";
 
 import { minimatch } from "minimatch";
 
-import type { Manifest } from "../packages/viewer/dist/registry/types.js";
+import type {
+  HistoricalManifestEntry,
+  Manifest,
+  ManifestEntry,
+} from "../packages/viewer/dist/registry/types.js";
 
 import {
   pathCatalogueSource,
@@ -135,28 +139,31 @@ export const mockups = [oneSide.entries,`,
     );
 }
 
-type RoutedEntry = Exclude<Manifest["entries"][number], { kind: "page" }>;
+type ReviewableEntry = Exclude<
+  ManifestEntry | HistoricalManifestEntry,
+  { kind: "page" }
+>;
 type EntryPair = {
-  before: RoutedEntry | undefined;
-  after: RoutedEntry | undefined;
+  before: ReviewableEntry | undefined;
+  after: ReviewableEntry | undefined;
 };
 
-function routedEntries(manifest: Manifest): RoutedEntry[] {
-  return manifest.entries.filter(
-    (entry): entry is RoutedEntry => entry.kind !== "page",
+function reviewableEntries(manifest: Manifest): ReviewableEntry[] {
+  return manifest.entries.flatMap((entry) =>
+    entry.kind === "page" ? [] : [entry as ReviewableEntry],
   );
 }
 
-function pairKey(entry: RoutedEntry): string {
-  return `${entry.kind}:${entry.kind === "component" ? entry.id : entry.route}`;
+function pairKey(entry: ReviewableEntry): string {
+  return `${entry.kind}:${entry.id}`;
 }
 
 function manifestPairs(before: Manifest, after: Manifest): EntryPair[] {
   const bases = new Map(
-    routedEntries(before).map((entry) => [pairKey(entry), entry]),
+    reviewableEntries(before).map((entry) => [pairKey(entry), entry]),
   );
   const heads = new Map(
-    routedEntries(after).map((entry) => [pairKey(entry), entry]),
+    reviewableEntries(after).map((entry) => [pairKey(entry), entry]),
   );
   return [...new Set([...bases.keys(), ...heads.keys()])]
     .sort()
@@ -197,7 +204,7 @@ function documentedEntryImpact(
 }
 
 function oldIndependent(
-  entry: RoutedEntry,
+  entry: ReviewableEntry,
   changed: string,
   owners: ReadonlySet<string>,
   matchedGlob: boolean,

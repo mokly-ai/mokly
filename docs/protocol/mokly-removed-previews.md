@@ -126,12 +126,11 @@ write it beside the comparison:
 
 ```text
 __mokly/diffs/__generations/<generation>/review.json
-__mokly/diffs/__generations/<generation>/pages/<route>.json
-__mokly/diffs/__generations/<generation>/snapshots/before/<route>
+__mokly/diffs/__generations/<generation>/pages/<id>.json
+__mokly/diffs/__generations/<generation>/snapshots/before/pages/<id>.html
 ```
 
-`pages/<route>.json` is the same `RemovedPagePreview` shape; `<route>` is the
-page's derived route and keeps its `.html` suffix. Its files enter the
+`pages/<id>.json` is the same `RemovedPagePreview` shape. Its files enter the
 generation content identity, ownership
 inventory, reference validation, deployment hash, and upload archive. A preview
 whose closure is incomplete fails the export transactionally, as an incomplete

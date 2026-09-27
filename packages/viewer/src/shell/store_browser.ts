@@ -111,7 +111,8 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
         canonical = new URL(
           browserRouteHref(
             routeHref(
-              requestedRoute.view.target.entry.route,
+              requestedRoute.view.target.entry.kind,
+              requestedRoute.view.target.entry.id,
               requestedRoute.fragment,
               requestedRoute.variant,
               requestedRoute,
@@ -335,7 +336,8 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
         return;
       }
       const href = routeHref(
-        activated.view.target.entry.route,
+        activated.view.target.entry.kind,
+        activated.view.target.entry.id,
         activated.fragment,
         activated.variant,
         {
@@ -380,7 +382,8 @@ export function canonicalHistoricalUrl(
   return new URL(
     browserRouteHref(
       routeHref(
-        route.view.target.entry.route,
+        route.view.target.entry.kind,
+        route.view.target.entry.id,
         route.fragment,
         route.variant,
         route,

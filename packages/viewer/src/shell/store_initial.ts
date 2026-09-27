@@ -32,8 +32,10 @@ export function createInitialShellState(
   const snapshotId =
     context.snapshotId ??
     (context.readModel && view.kind === "target"
-      ? resolveCatalogueRoute(context.readModel, view.target.entry.route)
-          ?.snapshotId
+      ? resolveCatalogueRoute(context.readModel, {
+          id: view.target.entry.id,
+          kind: view.target.entry.kind,
+        })?.snapshotId
       : undefined);
   const route: ShellRoute = {
     view,
@@ -41,7 +43,7 @@ export function createInitialShellState(
     ...(snapshotId ? { snapshot: snapshotId } : {}),
   };
   const sections = catalogueNavSections(catalogue);
-  const defaults = defaultDisclosures(sections, context.activeRoute);
+  const defaults = defaultDisclosures(sections, context.activeId);
   const parsed = parseSearchQuery(recovery?.query ?? "");
   const selection = {
     ...defaultSelection,
@@ -78,7 +80,7 @@ export function createInitialShellState(
       )
     : undefined;
   if (route.view.kind === "target") {
-    const activePath = disclosurePath(sections, route.view.target.entry.route);
+    const activePath = disclosurePath(sections, route.view.target.entry.id);
     disclosures = openDisclosures(disclosures, activePath);
     if (filterBaseline)
       filterBaseline = openDisclosures(filterBaseline, activePath);

@@ -3,6 +3,7 @@
 import { Fragment } from "react";
 
 import { decodeProps } from "../components/codec.js";
+import { viewHref } from "../navigation/routes.js";
 import type { EntryChangeReason } from "../review/component_types.js";
 import type { ReviewResult } from "../review/types.js";
 
@@ -53,9 +54,9 @@ export function WorkspaceEvidence({
           <h3>Comparison details</h3>
           <p>Compared with the branch point on {data.base}.</p>
           {data.relatedComponents.map((component) => (
-            <p key={component.route}>
+            <p key={component.id}>
               Changed component:{" "}
-              <a href={`/view/${encodeRoute(component.route)}`}>
+              <a href={viewHref("component", component.id)}>
                 {component.title}
               </a>
             </p>
@@ -154,7 +155,7 @@ function Reason({ reason }: { reason: EntryChangeReason }) {
   return (
     <p>
       {reason.kind === "screen"
-        ? `A screen in this flow changed: ${reason.route}`
+        ? `A screen in this flow changed: ${reason.id}`
         : labels[reason.kind]}
     </p>
   );
@@ -174,10 +175,6 @@ function reasonKey(reason: EntryChangeReason): string {
   return reason.kind === "dependency"
     ? `${reason.kind}/${reason.path}`
     : reason.kind === "screen"
-      ? `${reason.kind}/${reason.route}`
+      ? `${reason.kind}/${reason.id}`
       : reason.kind;
-}
-
-function encodeRoute(route: string): string {
-  return route.split("/").map(encodeURIComponent).join("/");
 }

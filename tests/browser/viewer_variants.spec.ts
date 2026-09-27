@@ -244,10 +244,7 @@ for (const cross of [false, true]) {
     expect(events).toEqual([
       {
         name: "navigate",
-        value: expect.objectContaining({
-          screenId: "pane",
-          variantId: "pane-second",
-        }),
+        value: { screenId: "pane" },
       },
       {
         name: "selection",
@@ -258,10 +255,7 @@ for (const cross of [false, true]) {
       },
       {
         name: "navigate",
-        value: expect.objectContaining({
-          screenId: "pane",
-          variantId: "pane-default",
-        }),
+        value: { screenId: "pane" },
       },
       {
         name: "selection",
@@ -319,9 +313,7 @@ for (const cross of [false, true]) {
             .get("one")
             .events.find((event) => event.name === "navigate")?.value,
       ),
-    ).toEqual(
-      expect.objectContaining({ screenId: "pane", variantId: "pane-second" }),
-    );
+    ).toEqual({ screenId: "pane" });
   });
 
   test(`${adapter} rejects an invalid imperative variant once`, async ({

@@ -1,9 +1,10 @@
 import type { ServerResponse } from "node:http";
 
 import {
-  encodeUrlPath,
   isHistoricalSnapshotId,
+  parseViewHref,
   resolveCatalogueRoute,
+  viewHref,
 } from "@mokly/viewer/data";
 import { catalogueRouteEntry } from "@mokly/viewer/server";
 import type { Catalogue, ShellContext } from "@mokly/viewer/server";
@@ -53,10 +54,13 @@ export async function redirectId(
     return send(response, 400, "text/plain", "Invalid fragment query", method);
   }
   const selected = context.readModel
-    ? resolveCatalogueRoute(context.readModel, entry.route)
+    ? resolveCatalogueRoute(context.readModel, {
+        id: entry.id,
+        kind: entry.kind,
+      })
     : undefined;
   const location = new URL(
-    withFragmentQuery(`/view/${encodeUrlPath(entry.route)}`, fragment),
+    withFragmentQuery(viewHref(entry.kind, entry.id), fragment),
     "https://mokly.invalid",
   );
   if (selected?.snapshotId)
@@ -78,6 +82,7 @@ export async function renderView(
   documents?: DocumentService,
 ): Promise<void> {
   const route = safeDecodePath(encodedRoute);
+  const identity = route ? parseViewHref(`/view/${route}`) : undefined;
   const snapshots = url.searchParams.getAll("snapshot");
   const requestedSnapshot = snapshots.length === 1 ? snapshots[0] : undefined;
   if (
@@ -93,16 +98,26 @@ export async function renderView(
       method,
     );
   const selected =
-    route && context.readModel
-      ? resolveCatalogueRoute(context.readModel, route, requestedSnapshot)
+    identity && context.readModel
+      ? resolveCatalogueRoute(context.readModel, identity, requestedSnapshot)
       : undefined;
-  const entry = route
+  const entry = identity
     ? context.readModel
       ? selected
-        ? catalogueRouteEntry(catalogue, selected.entry.route)
+        ? selected.snapshotId
+          ? catalogue.removedEntries.find(
+              ({ entry: candidate }) =>
+                candidate.id === selected.entry.id &&
+                candidate.kind === selected.entry.kind,
+            )?.entry
+          : catalogueRouteEntry(
+              catalogue,
+              selected.entry.id,
+              selected.entry.kind,
+            )
         : undefined
       : requestedSnapshot === undefined
-        ? catalogueRouteEntry(catalogue, route)
+        ? catalogueRouteEntry(catalogue, identity.id, identity.kind)
         : undefined
     : undefined;
   if (!entry)
@@ -114,9 +129,11 @@ export async function renderView(
       method,
     );
   const manifestEntry = "kind" in entry ? entry : undefined;
-  const removed = catalogue.removedEntries.some(
-    ({ entry }) => entry.route === route,
-  );
+  const removed = context.readModel
+    ? selected?.snapshotId !== undefined
+    : catalogue.removedEntries.some(
+        ({ entry: candidate }) => candidate === entry,
+      );
   const fragment = removed
     ? url.searchParams.has("fragment")
       ? null
@@ -127,7 +144,7 @@ export async function renderView(
   }
   const viewContext = {
     ...context,
-    ...(route ? { activeRoute: route } : {}),
+    activeId: entry.id,
     ...(fragment ? { fragment } : {}),
     ...(selected?.snapshotId ? { snapshotId: selected.snapshotId } : {}),
   };

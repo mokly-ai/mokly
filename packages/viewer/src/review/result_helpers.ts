@@ -1,4 +1,5 @@
 import { canonicalJson } from "../components/data.js";
+import { isEntryId } from "../navigation/logical.js";
 
 export const compareText = (a: string, b: string): number =>
   a < b ? -1 : a > b ? 1 : 0;
@@ -47,7 +48,7 @@ export function reviewString(value: unknown): string {
 }
 export function reviewId(value: unknown): string {
   const id = reviewString(value);
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) reviewInvalid("invalid entry id");
+  if (!isEntryId(id)) reviewInvalid("invalid entry id");
   return id;
 }
 export function reviewPath(value: unknown): string {
@@ -83,18 +84,22 @@ export function requireOrdered<T>(
   items: readonly T[],
   key: (value: T) => string,
 ): void {
-  for (let index = 1; index < items.length; index++)
-    if (key(items[index - 1]!) >= key(items[index]!))
-      reviewInvalid("records must be sorted and unique");
+  for (let index = 1; index < items.length; index++) {
+    const previous = key(items[index - 1]!);
+    const current = key(items[index]!);
+    if (previous >= current)
+      reviewInvalid(
+        `records must be sorted and unique: ${previous} before ${current}`,
+      );
+  }
 }
 export function requireEqual(a: unknown, b: unknown): void {
   if (canonicalJson(a) !== canonicalJson(b))
     reviewInvalid("inconsistent sides or references");
 }
 export function reviewAddress(value: unknown): Record<string, unknown> {
-  const entry = reviewObject(value, ["id", "route", "title"]);
+  const entry = reviewObject(value, ["id", "title"]);
   reviewId(entry.id);
-  reviewRoute(entry.route);
   reviewString(entry.title);
   return entry;
 }

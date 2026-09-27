@@ -6,6 +6,7 @@ import { setTimeout } from "node:timers/promises";
 
 import { CachedBaselineBuilder } from "../dist/baseline/rebuild.js";
 import { serve } from "../dist/server/serve.js";
+import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 import { parseRemovedPagePreview } from "../packages/viewer/dist/review/page_preview.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
@@ -51,7 +52,7 @@ for (const watch of [false, true]) {
           "wrong local bytes",
         );
         const response = await fetch(
-          `${running.url}/__mokly/diffs/review.json?route=screens%2Fhome.html`,
+          `${running.url}/__mokly/diffs/review.json?id=home`,
         );
         assert.equal(response.status, 200, await response.clone().text());
         const result = parseReviewResult(await response.json());
@@ -60,11 +61,25 @@ for (const watch of [false, true]) {
           (view) => view.viewport === "mobile",
         )!;
         assert.match(
-          await (await fetch(new URL(view.afterPath!, response.url))).text(),
+          await (
+            await fetch(
+              new URL(
+                `snapshots/after/${viewRoute("screen", "home", view.viewport, view.colorScheme)}`,
+                response.url,
+              ),
+            )
+          ).text(),
           /Derived source edit/,
         );
         assert.doesNotMatch(
-          await (await fetch(new URL(view.beforePath!, response.url))).text(),
+          await (
+            await fetch(
+              new URL(
+                `snapshots/before/${viewRoute("screen", "home", view.viewport, view.colorScheme)}`,
+                response.url,
+              ),
+            )
+          ).text(),
           /Derived source edit/,
         );
         assert.equal(
@@ -104,13 +119,21 @@ test(
         throw new Error("HTTP must never rebuild a baseline");
       });
       const response = await fetch(
-        `${running.url}/__mokly/diffs/review.json?page=pages%2Fremoved-page.html`,
+        `${running.url}/__mokly/diffs/review.json?page=removed-page`,
       );
       assert.equal(response.status, 200, await response.clone().text());
       const preview = parseRemovedPagePreview(await response.json());
       assert.equal(preview.baseCommit, fixture.commit);
+      assert.equal(preview.id, "removed-page");
       assert.match(
-        await (await fetch(new URL(preview.documentPath, response.url))).text(),
+        await (
+          await fetch(
+            new URL(
+              `snapshots/before/${entryRoute("page", preview.id)}`,
+              response.url,
+            ),
+          )
+        ).text(),
         /Previous page/,
       );
     } finally {

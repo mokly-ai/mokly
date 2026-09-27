@@ -24,8 +24,13 @@ test("a second origin can fetch catalogue and fragment with exact-origin headers
         credentials: "omit",
       });
       const model = await response.json();
+      const screen = model.screens[0];
+      const view = screen.views[0];
       const fragment = await fetch(
-        new URL(model.screens[0].views[0].fragmentPath, origin),
+        new URL(
+          `/static/screens/${screen.id}.${view.viewport}${view.colorScheme === "dark" ? ".dark" : ""}.html`,
+          origin,
+        ),
         { credentials: "omit" },
       );
       return {

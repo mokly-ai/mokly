@@ -10,7 +10,7 @@ import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
 import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
@@ -138,7 +138,7 @@ for (const baseline of ["screens", "components"] as const)
         },
       },
     };
-    const expected = await computeChangedRoutes(
+    const expected = await computeChangedIds(
       fixture.config,
       "main",
       fixture.git,
@@ -146,7 +146,7 @@ for (const baseline of ["screens", "components"] as const)
     assert.ok(expected);
 
     assert.deepEqual(
-      await computeChangedRoutes(fixture.config, "main", git),
+      await computeChangedIds(fixture.config, "main", git),
       expected,
     );
     const paths = fixture.before.manifest.entries.flatMap((entry) =>

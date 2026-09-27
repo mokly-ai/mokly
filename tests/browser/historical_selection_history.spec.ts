@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-
 import { expect, test, type Page } from "@playwright/test";
 
 import {
@@ -79,20 +77,11 @@ for (const mode of ["serve", "static"] as const) {
       }) => {
         const errors: string[] = [];
         page.on("pageerror", (error) => errors.push(error.message));
-        const snapshotId = createHash("sha256")
-          .update(
-            JSON.stringify([
-              "mokly-historical-snapshot-v1",
-              host.catalogue.identity.id,
-              "baseline",
-              host.baseCommit,
-              entry.kind,
-              entry.previousId,
-              entry.previousRoute,
-            ]),
-          )
-          .digest("hex");
-        const previousUrl = `${host.url}/view/${entry.previousRoute}?snapshot=${snapshotId}`;
+        const snapshotId = host.catalogue.removedEntries.find(
+          ({ entry: candidate }) => candidate.id === entry.previousId,
+        )?.snapshotId;
+        expect(snapshotId).toMatch(/^[a-f0-9]{64}$/);
+        const previousUrl = `${host.url}/view/${entry.previousRoute}?snapshot=${snapshotId!}`;
         const currentUrl = `${host.url}/view/${entry.currentRoute}`;
         await page.goto(currentUrl);
         await expect(page.locator("html")).toHaveAttribute(
@@ -131,7 +120,7 @@ for (const mode of ["serve", "static"] as const) {
         await expectHistorical(page, entry);
         expect(errors).toEqual([]);
 
-        await page.goto(`${currentUrl}?snapshot=${snapshotId}`);
+        await page.goto(`${currentUrl}?snapshot=${snapshotId!}`);
         await expect(page.locator("[data-mokly-preview] iframe")).toHaveCount(
           0,
         );

@@ -4,9 +4,8 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV4 } from "../packages/viewer/dist/review/component_types.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
-import type { ReviewResultV2 } from "../packages/viewer/dist/review/types.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 
@@ -55,6 +54,14 @@ test("loaded v2 details merge with classification, deduplicate selectors and sup
       ],
     },
   ];
+  loaded.ignoredImpact = [
+    {
+      viewport: "mobile",
+      colorScheme: "light",
+      id: "chrome",
+      count: 1,
+    },
+  ];
   const parsed = parseReviewResult(loaded);
   const markup = renderEvidence(data, parsed);
   assert.match(markup, /Changed styles that apply to this screen:/);
@@ -82,7 +89,7 @@ test("historical v2 loaded evidence remains available when classification has no
 test("loaded comparisons for another screen cannot add evidence to the selected workspace", () => {
   const data = workspace();
   const loaded = comparison();
-  loaded.screens = [{ ...loaded.screens[0]!, route: "screens/other.html" }];
+  loaded.screens = [{ ...loaded.screens[0]!, id: "other" }];
   assert.doesNotMatch(renderEvidence(data, loaded), /mockups\/logo.svg/);
 });
 
@@ -141,10 +148,10 @@ function componentComparison(
   sharedImpact: string[],
   reasonPath?: string,
   excludedCss?: string,
-): ReviewResultV3 {
-  const address = { id: "home", route: "screens/home.html", title: "Home" };
+): ReviewResultV4 {
+  const address = { id: "home", title: "Home" };
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: [
@@ -164,8 +171,6 @@ function componentComparison(
           viewport,
           colorScheme: "light",
           state: "unchanged" as const,
-          beforePath: `snapshots/before/screens/home.${viewport}.html`,
-          afterPath: `snapshots/after/screens/home.${viewport}.html`,
           ignoredIds: [],
           ...(excludedCss
             ? {
@@ -192,9 +197,9 @@ function componentComparison(
   };
 }
 
-function comparison(): ReviewResultV2 {
+function comparison(): ReviewResultV4 {
   return {
-    schemaVersion: 2,
+    schemaVersion: 4,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: [
@@ -206,8 +211,9 @@ function comparison(): ReviewResultV2 {
     ignoredImpact: [],
     screens: [
       {
+        before: { id: "home", title: "Home" },
+        after: { id: "home", title: "Home" },
         id: "home",
-        route: "screens/home.html",
         title: "Home",
         state: "changed",
         dependencies: [],
@@ -218,12 +224,13 @@ function comparison(): ReviewResultV2 {
             colorScheme: "light",
             state: "changed",
             ignoredIds: [],
-            beforePath: "snapshots/before/home.html",
-            afterPath: "snapshots/after/home.html",
           },
         ],
       },
     ],
+    components: [],
+    changes: [],
+    affectedConsumers: [],
   };
 }
 
@@ -236,18 +243,16 @@ function workspace(): WorkspaceData {
     comparisons: true,
     comparisonEligible: true,
     entry: {
+      colorSchemes: ["light"],
+      declaredDependencies: [],
       id: "home",
       kind: "screen",
-      route: "screens/home.html",
       title: "Home",
       description: "Home",
-      dependencies: [],
       relatedDocs: [],
       navPath: [],
       sourcePath: "entries/home.mockup.tsx",
       useCaseIds: [],
-      viewports: ["mobile", "desktop"],
-      fragments: { mobile: "home-mobile.html", desktop: "home-desktop.html" },
     },
     components: [],
     views: [],

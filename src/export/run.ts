@@ -6,6 +6,8 @@ import { projectRealPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { removedManifestEntries } from "../registry/changes.js";
+import { parseHistoricalManifest } from "../registry/manifest.js";
+import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
 import { readBaseManifest } from "../review/base_manifest.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { compareReview } from "../review/compare.js";
@@ -109,7 +111,7 @@ async function generateExport(
         prepared.commit,
         changed,
         assetReader,
-        comparison.result.schemaVersion === 3 ? "pages" : "all",
+        hasRegisteredComponents(compilation.manifest) ? "pages" : "all",
       );
       const removedEntries = removedManifestEntries(
         compilation.manifest,
@@ -122,7 +124,7 @@ async function generateExport(
           baseline,
           baseCommit: comparison.result.baseCommit,
           baseRef: comparison.result.baseRef,
-          changedRoutes: removedEntries.map(({ entry }) => entry.route),
+          changedIds: removedEntries.map(({ entry }) => entry.id),
           removedEntries,
         },
         options.signal ?? new AbortController().signal,
@@ -135,7 +137,7 @@ async function generateExport(
     const site = assembleExport(
       config,
       compilation,
-      baseline ?? compilation.manifest,
+      baseline ?? parseHistoricalManifest(compilation.manifest),
       comparison,
       publicFiles,
       contentChanges,

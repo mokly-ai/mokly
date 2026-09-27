@@ -9,26 +9,16 @@ import type { ShellInitialState } from "../src/shell/store_state.js";
 import { StandaloneShellDocument } from "../src/standalone/document.js";
 
 const screen = {
+  colorSchemes: ["light", "dark"],
   declaredDependencies: [],
-  dependencies: [],
   description: "Welcome screen",
-  fragments: {
-    mobile: "welcome.mobile.html",
-    desktop: "welcome.desktop.html",
-  },
-  darkFragments: {
-    mobile: "welcome.mobile.dark.html",
-    desktop: "welcome.desktop.dark.html",
-  },
   id: "welcome",
   kind: "screen",
   navPath: [],
   relatedDocs: [],
-  route: "welcome.html",
   sourcePath: "entries/welcome.mockup.tsx",
   title: "Welcome",
   useCaseIds: [],
-  viewports: ["mobile", "desktop"],
 } satisfies ManifestScreen;
 const manifest: ManifestV7 = {
   entries: [screen],
@@ -48,12 +38,12 @@ function render(colorScheme: "light" | "dark", home = false): string {
         base: "main",
         updateVersion: 1,
         changesStatus: "ready",
-        changedRoutes: [screen.route],
+        changedIds: [screen.id],
         componentChanges: {
           baseline: manifest,
           screenViews: [
             {
-              route: screen.route,
+              id: screen.id,
               views: [
                 { viewport: "mobile", colorScheme: "dark", state: "changed" },
               ],

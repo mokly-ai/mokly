@@ -1,7 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { catalogueViewHref, parseStaticDelivery } from "@mokly/viewer/data";
+import {
+  catalogueViewHref,
+  entryRoute,
+  parseStaticDelivery,
+} from "@mokly/viewer/data";
 
 import { ownedEntries } from "../../dist/export/ownership.js";
 import { isExportPublicName } from "../../dist/export/resource_policy.js";
@@ -54,7 +58,7 @@ export async function stagePreviewArtifact(
     ...removed.filter((entry) => !currentIds.has(entry.id)),
   ];
   for (const entry of entries)
-    idRoutes[entry.id] = catalogueViewHref(entry.route);
+    idRoutes[entry.id] = catalogueViewHref(entry.kind, entry.id);
   const delivery = parseStaticDelivery({
     schemaVersion: 2,
     deploymentId: STAGED_DEPLOYMENT_ID,
@@ -90,8 +94,10 @@ export async function stagePreviewArtifact(
     addShell(`id/${id}/index.html`, route, decodeURIComponent(route.slice(1)));
   addShell("index.html", "/");
   addShell("404.html", "/404.html");
-  for (const entry of [...manifest.entries, ...removed])
-    addShell(`view/${entry.route}`, catalogueViewHref(entry.route));
+  for (const entry of [...manifest.entries, ...removed]) {
+    const route = entryRoute(entry.kind, entry.id);
+    addShell(`view/${route}`, catalogueViewHref(entry.kind, entry.id));
+  }
   const aliases = new Map();
   for (const [name, bytes] of files) {
     if (/^(?:view|static)\/.+\.html$/.test(name))

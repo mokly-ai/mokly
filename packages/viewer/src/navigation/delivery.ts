@@ -1,8 +1,10 @@
 import { isCatalogueId, isLogicalFragment } from "./logical.js";
+import { viewHref } from "./routes.js";
+import type { EntryRouteKind } from "./routes.js";
 
 /** Exact file URL shared by shell rendering and static logical-id navigation. */
-export function catalogueViewHref(route: string): string {
-  return `/view/${route.split("/").map(encodeURIComponent).join("/")}`;
+export function catalogueViewHref(kind: EntryRouteKind, id: string): string {
+  return viewHref(kind, id);
 }
 
 /** Trusted shell metadata needed to serve a catalogue from ordinary files. */

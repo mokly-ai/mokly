@@ -95,12 +95,12 @@ the same config-owned validation.
 route fails with typed `review-invalid` ("The comparison is not prepared")
 until a derived reader is available. `selected_review_routes.ts` owns one
 bounded generation service for screen/component comparisons and removed-page
-previews. The latter uses
-`review.json?page=<encoded-route>`, redirects to an immutable `preview.json`,
+previews. Pages use `review.json?page=<page-id>`, while screens and component
+variants use `review.json?id=<entry-id>`; each redirects to immutable metadata
 and serves only its captured `snapshots/before/**` closure. Both selection kinds
 share coalescing, refresh, admission, timeout, byte, retention, epoch and
 shutdown bounds. `review_sources.ts` derives selections only from accepted
-evidence; route, baseline commit and base ref must match the provider response.
+evidence; identity, baseline commit and base ref must match the provider response.
 Neither route can import or invoke a baseline builder. Preparing or unavailable
 evidence returns the existing retryable failure while current routes remain
 usable. Evidence updates invalidate selected generations and atomically clear

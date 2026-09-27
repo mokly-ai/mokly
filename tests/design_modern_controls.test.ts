@@ -3,7 +3,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { isManifestComponentVariant } from "../packages/viewer/dist/data.js";
+import {
+  generatedViews,
+  isManifestComponentVariant,
+} from "../packages/viewer/dist/data.js";
 import type { ManifestV7 } from "../packages/viewer/dist/registry/types.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -77,14 +80,11 @@ test("view options have one icon presentation and no view-controls scheme contro
 test("every owning design and shared sample omits legacy footer and view markup", async () => {
   for (const entry of manifest.entries) {
     if (!entry.id.startsWith("design-")) continue;
-    const views =
-      entry.kind === "screen"
-        ? [entry.fragments]
-        : entry.kind === "component" && isManifestComponentVariant(entry)
-          ? [entry.fragments]
-          : [];
-    for (const view of views)
-      for (const file of Object.values(view)) {
+    if (
+      entry.kind === "screen" ||
+      (entry.kind === "component" && isManifestComponentVariant(entry))
+    )
+      for (const file of generatedViews(entry).map((view) => view.path)) {
         const html = await fs.readFile(path.join(generated, file), "utf8");
         assert.doesNotMatch(html, /class="mbk-details(?:-bar|-hint)?"/, file);
         assert.doesNotMatch(

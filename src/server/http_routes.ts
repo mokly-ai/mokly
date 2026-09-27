@@ -104,10 +104,10 @@ export async function handleCatalogueRequest(
       method,
     );
   const changed =
-    componentChanges?.changedRoutes ??
+    componentChanges?.changedIds ??
     (componentChanges?.result
       ? componentChanges.result.changes.map(
-          (entry) => (entry.after ?? entry.before)!.route,
+          (entry) => (entry.after ?? entry.before)!.id,
         )
       : currentChangedRoutes());
   const context = shellContext(
@@ -116,7 +116,7 @@ export async function handleCatalogueRequest(
       ? [
           ...new Set([
             ...changed,
-            ...catalogue.removedEntries.map(({ entry }) => entry.route),
+            ...catalogue.removedEntries.map(({ entry }) => entry.id),
           ]),
         ]
       : undefined,

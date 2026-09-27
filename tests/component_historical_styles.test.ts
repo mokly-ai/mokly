@@ -11,7 +11,7 @@ import {
   MANIFEST_NAME,
 } from "../dist/registry/manifest.js";
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
@@ -68,25 +68,24 @@ for (const edit of [
     );
     const git = componentGit(before, changedPaths);
     const artifact = await compareReview(after, config, git, "main");
-    assert.equal(artifact.result.schemaVersion, 3);
-    if (artifact.result.schemaVersion !== 3) return;
+    assert.equal(artifact.result.schemaVersion, 4);
+    if (artifact.result.schemaVersion !== 4) return;
     const expected =
       edit === "owned-css" || edit === "implementation"
-        ? ["components/action.html"]
+        ? ["action"]
         : edit === "global-css"
-          ? [
-              "components/action.html",
-              "components/pane.html",
-              "screens/home.html",
-            ]
+          ? ["action", "pane", "home"]
           : edit === "caller" || edit === "material-key"
-            ? ["screens/home.html"]
+            ? ["home"]
             : [];
     assert.deepEqual(
-      artifact.result.changes.map((entry) => entry.after!.route),
+      artifact.result.changes.map((entry) => entry.after!.id),
       expected,
     );
-    assert.deepEqual(await computeChangedRoutes(config, "main", git), expected);
+    assert.deepEqual(
+      await computeChangedIds(config, "main", git),
+      [...expected].sort(),
+    );
     const screenReview = artifact.result.screens.find(
       (screen) => screen.id === "home",
     )!;

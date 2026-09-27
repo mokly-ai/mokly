@@ -131,13 +131,13 @@ function hydrateResolvedShell(
     props.view.kind === "target"
       ? disclosurePath(
           catalogueNavSections(props.catalogue),
-          props.view.target.entry.route,
+          props.view.target.entry.id,
         )
       : [];
   const recovery = capabilities?.updates.consumeRecovery(
     viewerCapabilityRequest(
       capabilities.source,
-      props.view.kind === "target" ? props.view.target.entry.route : null,
+      props.view.kind === "target" ? props.view.target.entry.id : null,
     ),
   );
   hydratedDocuments.add(doc);

@@ -66,7 +66,7 @@ function descriptor(
 }
 
 function request(value: ViewerCapabilityDescriptor): ViewerCapabilityRequest {
-  return { route: null, source: value.source };
+  return { entryId: null, source: value.source };
 }
 
 class FakeSource {

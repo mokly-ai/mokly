@@ -1,6 +1,6 @@
 import type { EntryChangeReason } from "@mokly/viewer/data";
 
-import { entryPairKey, type RoutedEntry } from "./component_metadata.js";
+import { entryPairKey, type ReviewEntry } from "./component_metadata.js";
 import type { OwnedCssReason } from "./component_resource_attribution.js";
 import type { DependencyReasonSources } from "./component_result_sources.js";
 
@@ -8,7 +8,7 @@ import type { DependencyReasonSources } from "./component_result_sources.js";
 export class ComponentReasonSources implements DependencyReasonSources {
   readonly pathsByEntry = new Map<string, Set<string>>();
 
-  record(entry: RoutedEntry, reasons: readonly EntryChangeReason[]): void {
+  record(entry: ReviewEntry, reasons: readonly EntryChangeReason[]): void {
     const key = entryPairKey(entry);
     const paths = this.pathsByEntry.get(key) ?? new Set<string>();
     for (const reason of reasons)
@@ -18,7 +18,7 @@ export class ComponentReasonSources implements DependencyReasonSources {
 
   recordOwnedCss(
     evidence: readonly OwnedCssReason[],
-    entries: readonly RoutedEntry[],
+    entries: readonly ReviewEntry[],
   ): void {
     const components = new Map(
       entries.flatMap((entry) =>

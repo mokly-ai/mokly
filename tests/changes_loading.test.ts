@@ -27,12 +27,12 @@ test("live navigation keeps its filters while Changes is pending, ready or unava
   assert.match(pending, /Checking for changes/);
   assert.doesNotMatch(pending, /mbk-nav-filter-count">0</);
 
-  server.publishUpdate({ changedRoutes: [], changesStatus: "ready" });
+  server.publishUpdate({ changedIds: [], changesStatus: "ready" });
   const empty = await read();
   assert.match(empty, /data-changes-status="ready"/);
   assert.match(empty, /mbk-nav-filter-count">0</);
 
-  server.publishUpdate({ changedRoutes: null, changesStatus: "pending" });
+  server.publishUpdate({ changedIds: null, changesStatus: "pending" });
   assert.match(await read(), /data-changes-status="pending"/);
   server.publishUpdate({ changesStatus: "unavailable" });
   const unavailable = await read();
@@ -79,7 +79,7 @@ test("live navigation prepares a derived comparison before it checks for changes
   assert.match(pending, /Checking for changes/);
   assert.doesNotMatch(pending, /mbk-nav-status-detail/);
 
-  server.publishUpdate({ changedRoutes: [], changesStatus: "ready" });
+  server.publishUpdate({ changedIds: [], changesStatus: "ready" });
   const ready = await read();
   assert.match(ready, /data-changes-status="ready"/);
   assert.doesNotMatch(ready, /mbk-nav-spinner/);
@@ -102,7 +102,7 @@ test("static capture omits live Changes states but retains supplied evidence", a
   assert.doesNotMatch(await read(), /data-mokly-filter|data-nav-status/);
   server.publishUpdate({ changesStatus: "pending" });
   assert.doesNotMatch(await read(), /data-mokly-filter|data-nav-status/);
-  server.publishUpdate({ changedRoutes: [] });
+  server.publishUpdate({ changedIds: [] });
   const classified = await read();
   assert.match(classified, /data-changes-status="ready"/);
   assert.match(classified, /mbk-nav-filter-count">0</);

@@ -212,7 +212,6 @@ function darkCatalogue(): CatalogueReadModel {
   const darkViews = screen.views.map((view) => ({
     ...view,
     colorScheme: "dark" as const,
-    fragmentPath: view.fragmentPath?.replace(".html", ".dark.html") ?? null,
   }));
   return {
     ...model,

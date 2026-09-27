@@ -9,6 +9,7 @@ import { writeCompilation } from "../dist/build/transaction.js";
 import { validateComponentRanges } from "../dist/components/ranges.js";
 import { loadConfig } from "../dist/config/load.js";
 import { decodeProps } from "../packages/viewer/dist/components/codec.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
@@ -37,7 +38,8 @@ test("component style ownership rebases through generated headers while preservi
     (entry) => entry.kind === "screen",
   )!;
   const view = screen.componentViews![0]!;
-  const html = result.outputs.get(screen.fragments.mobile)!;
+  const mobileView = viewRoute("screen", screen.id, "mobile", "light");
+  const html = result.outputs.get(mobileView)!;
   assert.equal(
     html.slice(view.styles[0]!.startOffset, view.styles[0]!.endOffset),
     ".action{border-radius:12px}",
@@ -53,10 +55,7 @@ test("component style ownership rebases through generated headers while preservi
   );
   await assert.rejects(compileCatalogue(config), /owners must render/);
   assert.equal(
-    await fs.readFile(
-      path.join(fixture.mockupsDir, screen.fragments.mobile),
-      "utf8",
-    ),
+    await fs.readFile(path.join(fixture.mockupsDir, mobileView), "utf8"),
     html,
   );
 });
@@ -95,7 +94,9 @@ test("component boundaries support multi-root text and reject removed or physica
     (entry) => entry.kind === "screen",
   )!;
   const view = screen.componentViews![0]!;
-  const html = result.outputs.get(screen.fragments.mobile)!;
+  const html = result.outputs.get(
+    viewRoute("screen", screen.id, "mobile", "light"),
+  )!;
   const ranges = validateComponentRanges(html, view.ranges);
   assert.ok(
     ranges.some((range) =>

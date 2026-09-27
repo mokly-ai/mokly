@@ -2,7 +2,6 @@
 
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { RemovedEntryPreview } from "../catalogue/types.js";
-import { isSafeCatalogueRoute } from "../data/paths.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
 
 /** The attribute the shell writes on every previous-version stage host. */
@@ -14,10 +13,9 @@ function text(value: unknown): string | undefined {
 
 function published(value: unknown): RemovedEntryPreview | undefined {
   if (!value || typeof value !== "object") return undefined;
-  const record = value as { kind?: unknown; path?: unknown };
+  const record = value as { kind?: unknown };
   if (record.kind === "screen") return { kind: "screen" };
-  const path = text(record.path);
-  return record.kind === "page" && path ? { kind: "page", path } : undefined;
+  return record.kind === "page" ? { kind: "page" } : undefined;
 }
 
 /**
@@ -38,10 +36,9 @@ export function readPreviewDescriptor(
   if (!value || typeof value !== "object") return undefined;
   const record = value as Record<string, unknown>;
   const id = text(record["id"]);
-  const route = text(record["route"]);
   const title = text(record["title"]);
   const kind = record["kind"];
-  if (!id || !route || !title || !isSafeCatalogueRoute(route)) return undefined;
+  if (!id || !title) return undefined;
   if (kind !== "page" && kind !== "screen") return undefined;
   const address = text(record["address"]);
   const advertised = published(record["published"]);
@@ -58,7 +55,6 @@ export function readPreviewDescriptor(
   return {
     id,
     kind,
-    route,
     title,
     ...(address ? { address } : {}),
     ...(hasIdentity ? { catalogueIdentity, snapshotId } : {}),
@@ -71,7 +67,6 @@ export function previewKey(data: RemovedPreviewData): string {
   return JSON.stringify([
     data.id,
     data.kind,
-    data.route,
     data.catalogueIdentity,
     data.snapshotId,
     data.published,

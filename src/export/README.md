@@ -25,7 +25,8 @@ change snapshots. A removed variant retains its baseline parent relationship;
 removal preserves ancestor context without introducing visual comparisons.
 Changes-enabled delivery captures every removed page from the same pinned
 baseline before installation. Its typed metadata is written as
-`pages/<route>.json` beside `review.json`, while its original document and local
+`pages/<id>.json` beside `review.json`, while its document at the derived
+`snapshots/before/pages/<id>.html` path and local
 resource closure share `snapshots/before/**` with screen comparisons. Removed
 page and screen descriptors are emitted only for a complete generation. These
 files enter comparison identity before the generation path is chosen, then the
@@ -41,7 +42,7 @@ The shared `server/changed_content.ts` calculation receives the same captured
 asset reader as comparisons, preserving Serve's material-output/resource Changes
 membership without reading a different current-file snapshot.
 For screen-only catalogues, `site.ts` projects per-view resource evidence from
-the existing v2 comparison into shell workspace data. Details can show matched,
+the unified v4 comparison into shell workspace data. Details can show matched,
 unresolved, and excluded stylesheets in Current without fetching comparison
 JSON, and no extra classification pass is needed for this projection.
 The projection omits views without retained or excluded resources and drops

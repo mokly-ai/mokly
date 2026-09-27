@@ -22,6 +22,7 @@ import {
 import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { runReview } from "../dist/review/run.js";
 import { writeReviewArtifact } from "../dist/review/write.js";
+import { generatedViews } from "../packages/viewer/dist/data.js";
 import type {
   ManifestScreen,
   ManifestV7,
@@ -33,6 +34,7 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { legacyManifestFromV7 } from "./helpers/historical_manifest.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -87,21 +89,17 @@ test("Review classifies added, removed, and unchanged routes independently", asy
   assert.ok(detail?.kind === "screen" && home?.kind === "screen");
   const old = {
     ...home,
-    fragments: {
-      desktop: "screens/old.desktop.html",
-      mobile: "screens/old.mobile.html",
-    },
     id: "old-screen",
-    route: "screens/old.html",
     title: "Old screen",
     useCaseIds: [],
   };
-  const baseManifest = {
-    entries: [{ ...detail, useCaseIds: [] }, old],
-    generatedBy: "mokly" as const,
-    sourceFiles: compilation.manifest.sourceFiles,
-    schemaVersion: 5 as const,
-  };
+  const baseManifest = legacyManifestFromV7(
+    {
+      ...compilation.manifest,
+      entries: [{ ...detail, useCaseIds: [] }, old],
+    },
+    5,
+  );
   const gitFiles = new Map<string, string>([
     ["mockups/mokly-manifest.json", `${JSON.stringify(baseManifest)}\n`],
     [
@@ -112,9 +110,12 @@ test("Review classifies added, removed, and unchanged routes independently", asy
       "mockups/screens/details.desktop.html",
       compilation.outputs.get("screens/details.desktop.html") ?? "",
     ],
-    ["mockups/screens/old.mobile.html", "<html><body>Old mobile</body></html>"],
     [
-      "mockups/screens/old.desktop.html",
+      "mockups/screens/old-screen.mobile.html",
+      "<html><body>Old mobile</body></html>",
+    ],
+    [
+      "mockups/screens/old-screen.desktop.html",
       "<html><body>Old desktop</body></html>",
     ],
   ]);
@@ -196,27 +197,18 @@ test("dark views compare and classify against a pre-dark base", async (context) 
   const reviewJson = JSON.parse(
     renderReviewArtifact(artifact).get("review.json") as string,
   ) as ReviewResult;
-  assert.equal(reviewJson.schemaVersion, 2);
+  assert.equal(reviewJson.schemaVersion, 4);
   const jsonHome = reviewJson.screens.find((screen) => screen.id === "home");
   assert.ok(jsonHome);
   assert.deepEqual(
-    jsonHome.views.map(
-      ({
-        afterPath,
-        beforePath,
-        colorScheme,
-        ignoredIds,
-        state,
-        viewport,
-      }) => ({
-        after: Boolean(afterPath),
-        before: Boolean(beforePath),
-        colorScheme,
-        ignoredIds,
-        state,
-        viewport,
-      }),
-    ),
+    jsonHome.views.map(({ colorScheme, ignoredIds, state, viewport }) => ({
+      after: state !== "removed",
+      before: state !== "added",
+      colorScheme,
+      ignoredIds,
+      state,
+      viewport,
+    })),
     [
       {
         after: true,
@@ -365,8 +357,7 @@ test("Review compares Git base without checkout and writes deterministic artifac
     new CommittedRepository(new NodeGitCommandRunner(fixture.root)),
   );
   assert.equal(
-    result.screens.find((screen) => screen.route === "screens/home.html")
-      ?.state,
+    result.screens.find((screen) => screen.id === "home")?.state,
     "changed",
   );
   assert.deepEqual(result.sharedImpact, ["notes.md"]);
@@ -379,7 +370,7 @@ test("Review compares Git base without checkout and writes deterministic artifac
       "utf8",
     ),
   ) as { baseCommit: string; schemaVersion: number };
-  assert.equal(reviewJson.schemaVersion, 2);
+  assert.equal(reviewJson.schemaVersion, 4);
   assert.match(reviewJson.baseCommit, /^[a-f0-9]{40}$/);
   assert.equal(
     fs.existsSync(path.join(config.review.outDir, "index.html")),
@@ -496,8 +487,17 @@ function withoutDarkFragments(manifest: ManifestV7): ManifestV7 {
     ...manifest,
     entries: manifest.entries.map((entry) => {
       if (entry.kind !== "screen") return entry;
-      const { darkFragments: _darkFragments, ...screen } = entry;
-      return screen;
+      return {
+        ...entry,
+        colorSchemes: ["light"],
+        ...(entry.componentViews
+          ? {
+              componentViews: entry.componentViews.filter(
+                (view) => view.colorScheme === "light",
+              ),
+            }
+          : {}),
+      };
     }),
   };
 }
@@ -521,10 +521,7 @@ function withHomeIgnoredRegions(
 }
 
 function screenFragments(screen: ManifestScreen): string[] {
-  return [
-    ...Object.values(screen.fragments),
-    ...Object.values(screen.darkFragments ?? {}),
-  ];
+  return generatedViews(screen).map((view) => view.path);
 }
 
 function insertIgnoredRegions(

@@ -29,20 +29,27 @@ const REMOVED_HOME_VARIANT = {
     declaredDependencies: [],
     dependencies: [],
     description: "Home after the workspace was deleted",
-    fragments: {
-      desktop: "screens/home-gone.desktop.html",
-      mobile: "screens/home-gone.mobile.html",
-    },
+    artifacts: [
+      {
+        colorScheme: "light" as const,
+        path: "screens/home-gone.mobile.html",
+        viewport: "mobile" as const,
+      },
+      {
+        colorScheme: "light" as const,
+        path: "screens/home-gone.desktop.html",
+        viewport: "desktop" as const,
+      },
+    ],
+    colorSchemes: ["light" as const],
     id: "home-gone",
     kind: "screen" as const,
     navPath: ["Fixture", "Nested"],
     relatedDocs: [],
-    route: "screens/home-gone.html",
     sourcePath: "entries/fixture.mockup.tsx",
     title: "Workspace deleted",
     useCaseIds: [],
     variantOf: "home",
-    viewports: ["mobile" as const, "desktop" as const],
   },
 };
 
@@ -85,12 +92,7 @@ export async function startNavigationFixture(): Promise<NavigationFixture> {
       schemaVersion: 1,
       baseRef: "origin/main",
       baseCommit: "a".repeat(40),
-      changedRoutes: [
-        "screens/extra.html",
-        "screens/home-error.html",
-        "screens/home-gone.html",
-        "user-flows/tour.html",
-      ],
+      changedIds: ["extra", "home-error", "home-gone", "tour"],
       removedEntries: [REMOVED_HOME_VARIANT],
     })),
     port: 0,

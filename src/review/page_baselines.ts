@@ -1,26 +1,47 @@
-import type { HistoricalManifest, ManifestPage } from "@mokly/viewer/data";
+import { entryRoute } from "@mokly/viewer/data";
+import type { HistoricalManifest, Manifest } from "@mokly/viewer/data";
 
 /** Historical document identity; sourcePath stays subject to baseline source protection. */
-type PageBaseline = Pick<ManifestPage, "route" | "sourcePath">;
+export interface PageBaseline {
+  artifactPath: string;
+  sourcePath: string;
+}
 
 /** Attribute historical page artifacts to current IDs without synthesizing current metadata. */
 export function pageBaselines(
-  current: HistoricalManifest,
+  current: Manifest,
   baseline: HistoricalManifest,
 ): ReadonlyMap<string, PageBaseline> {
   const historical: ReadonlyMap<string, PageBaseline> =
-    "sourceFiles" in baseline
+    baseline.sourceFiles !== undefined
       ? new Map(
           baseline.entries.flatMap((entry) =>
-            entry.kind === "page" ? [[entry.id, entry]] : [],
+            entry.kind === "page"
+              ? [
+                  [
+                    entry.id,
+                    {
+                      artifactPath:
+                        "artifactPath" in entry
+                          ? entry.artifactPath
+                          : entryRoute("page", entry.id),
+                      sourcePath: entry.sourcePath,
+                    },
+                  ] as const,
+                ]
+              : [],
           ),
         )
-      : new Map(baseline.legacyPages.map((page) => [page.route, page]));
+      : new Map(
+          (baseline.legacyPages ?? []).map((page) => [page.artifactPath, page]),
+        );
   const matches = new Map<string, PageBaseline>();
   for (const entry of current.entries) {
     if (entry.kind !== "page") continue;
     const match = historical.get(
-      "sourceFiles" in baseline ? entry.id : entry.route,
+      baseline.sourceFiles !== undefined
+        ? entry.id
+        : entryRoute("page", entry.id),
     );
     if (match) matches.set(entry.id, match);
   }

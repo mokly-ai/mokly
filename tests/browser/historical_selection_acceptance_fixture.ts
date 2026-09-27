@@ -9,9 +9,9 @@ import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 const BASELINE = "a".repeat(40);
 const GENERATION = "b".repeat(64);
 const GENERATION_ROOT = `__mokly/diffs/__generations/${GENERATION}`;
-export const HISTORICAL_ROUTE = "screens/former-home.html";
+export const HISTORICAL_ROUTE = "screens/home.html";
 
-/** Published test history uses the same ID as a current screen at another route. */
+/** Published test history uses the same stable ID as a current screen. */
 export async function historicalSelectionFixture() {
   const fixture = await viewerFixture();
   try {
@@ -26,12 +26,10 @@ export async function historicalSelectionFixture() {
     const historical: CatalogueScreen = {
       ...home,
       title: "Historical home",
-      route: HISTORICAL_ROUTE,
       details: { ...home.details, description: "The recorded earlier screen." },
       changes: { status: "ready", kind: "removed", included: true },
       views: home.views.map((view) => ({
         ...view,
-        fragmentPath: null,
         usage: { status: "unavailable" },
         comparison: { status: "ready", kind: "removed", eligible: false },
       })),
@@ -39,13 +37,12 @@ export async function historicalSelectionFixture() {
     const snapshotId = createHash("sha256")
       .update(
         JSON.stringify([
-          "mokly-historical-snapshot-v1",
+          "mokly-historical-snapshot-v2",
           source.identity.id,
           "baseline",
           BASELINE,
           historical.kind,
           historical.id,
-          historical.route,
         ]),
       )
       .digest("hex");
@@ -77,7 +74,6 @@ export async function historicalSelectionFixture() {
       colorScheme,
       state: "removed",
       ignoredIds: [],
-      beforePath: `snapshots/before/screens/former-home.${viewport}.html`,
     }));
     const directory = path.join(fixture.root, GENERATION_ROOT);
     await fs.mkdir(path.join(directory, "snapshots/before/screens"), {
@@ -86,7 +82,7 @@ export async function historicalSelectionFixture() {
     await fs.writeFile(
       path.join(directory, "review.json"),
       JSON.stringify({
-        schemaVersion: 2,
+        schemaVersion: 4,
         baseRef: "origin/main",
         baseCommit: BASELINE,
         changedPaths: [],
@@ -94,8 +90,8 @@ export async function historicalSelectionFixture() {
         ignoredImpact: [],
         screens: [
           {
+            before: { id: historical.id, title: historical.title },
             id: historical.id,
-            route: historical.route,
             title: historical.title,
             state: "removed",
             dependencies: [],
@@ -103,14 +99,14 @@ export async function historicalSelectionFixture() {
             views,
           },
         ],
+        components: [],
+        changes: [],
+        affectedConsumers: [],
       }),
     );
     for (const { viewport } of views)
       await fs.writeFile(
-        path.join(
-          directory,
-          `snapshots/before/screens/former-home.${viewport}.html`,
-        ),
+        path.join(directory, `snapshots/before/screens/home.${viewport}.html`),
         `<!doctype html><html><body><h1>Historical ${viewport} content</h1><a href="/view/screens/home.html">Old link</a></body></html>`,
       );
     return { ...fixture, catalogue, snapshotId };

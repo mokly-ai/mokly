@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { entryRoute } from "@mokly/viewer/data";
+
 import { projectCatalogue } from "../../dist/catalogue/projection.js";
 import {
   CATALOGUE_PATH,
@@ -104,10 +106,11 @@ export async function buildPreview(config, output, options = {}) {
           await capturePage(server.url, "/", stage, "index.html");
           capturedShells.add("index.html");
           for (const entry of [...manifest.entries, ...removed]) {
-            const name = `view/${entry.route}`;
+            const route = entryRoute(entry.kind, entry.id);
+            const name = `view/${route}`;
             await capturePage(
               server.url,
-              `/view/${encodePath(entry.route)}`,
+              `/view/${encodePath(route)}`,
               stage,
               name,
             );
@@ -141,7 +144,7 @@ export async function buildPreview(config, output, options = {}) {
             .join("/"),
           catalogue,
           changesStatus: comparison ? "ready" : "disabled",
-          changedRoutes: changes?.changedRoutes,
+          changedIds: changes?.changedIds,
           evidence: snapshot.componentChanges,
           comparison: comparison?.result,
           comparisonUrl: comparison

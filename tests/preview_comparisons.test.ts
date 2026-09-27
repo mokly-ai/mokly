@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
+import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -42,14 +43,20 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
   );
   const generation = path.dirname(jsonPath);
   for (const screen of result.screens) {
-    const page = await read(`view/${screen.route}`);
+    const route = entryRoute("screen", screen.id);
+    const page = await read(`view/${route}`);
     if (screen.state === "removed") {
       assert.ok(page.includes("Showing previous version"));
       assert.ok(!page.includes("data-diff-screen="));
-    } else assert.ok(page.includes(`data-diff-screen="${screen.route}"`));
+    } else assert.ok(page.includes(`data-diff-screen="${screen.id}"`));
     for (const view of screen.views) {
-      for (const snapshot of [view.beforePath, view.afterPath]) {
-        if (!snapshot) continue;
+      for (const side of ["before", "after"] as const) {
+        if (
+          (side === "before" && view.state === "added") ||
+          (side === "after" && view.state === "removed")
+        )
+          continue;
+        const snapshot = `snapshots/${side}/${viewRoute("screen", screen.id, view.viewport, view.colorScheme)}`;
         assert.match(await read(`${generation}/${snapshot}`), /<main/);
       }
     }
@@ -82,7 +89,7 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
   const publicCatalogue = JSON.parse(await read("__mokly/catalogue.json")) as {
     identity: { id: string };
     removedEntries: readonly {
-      entry: { id: string; route: string };
+      entry: { id: string };
       snapshotId?: string;
     }[];
     revision: { content: number; evidence: number };
@@ -104,8 +111,7 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
     revision: publicCatalogue.revision,
   });
   const removed = publicCatalogue.removedEntries.find(
-    ({ entry }) =>
-      entry.id === "removed" && entry.route === "screens/removed.html",
+    ({ entry }) => entry.id === "removed",
   );
   assert.match(removed?.snapshotId ?? "", /^[a-f0-9]{64}$/);
   assert.ok(

@@ -30,7 +30,7 @@ const page: RemovedEntry = {
   kind: "page",
   id: "handbook",
   title: "Getting started",
-  route: "docs/handbook.html",
+  artifactPath: "docs/handbook.html",
 };
 
 const screen: RemovedEntry = {
@@ -38,14 +38,21 @@ const screen: RemovedEntry = {
   kind: "screen",
   id: "farewell",
   title: "Farewell",
-  route: "screens/farewell.html",
+  artifacts: [
+    {
+      colorScheme: "light",
+      path: "screens/farewell.mobile.html",
+      viewport: "mobile",
+    },
+    {
+      colorScheme: "light",
+      path: "screens/farewell.desktop.html",
+      viewport: "desktop",
+    },
+  ],
+  colorSchemes: ["light"],
   address: "example.test/farewell",
   useCaseIds: [],
-  viewports: ["mobile", "desktop"],
-  fragments: {
-    mobile: "screens/farewell.mobile.html",
-    desktop: "screens/farewell.desktop.html",
-  },
 };
 
 const component: RemovedEntry = {
@@ -53,8 +60,7 @@ const component: RemovedEntry = {
   kind: "component",
   id: "chip",
   title: "Chip",
-  route: "components/chip.html",
-  viewports: ["mobile", "desktop"],
+  colorSchemes: ["light"],
   propSchema: { kind: "object", properties: {} },
   slots: [],
   controls: {},
@@ -66,16 +72,23 @@ const componentVariant: RemovedEntry = {
   kind: "component",
   id: "chip-default",
   title: "Default",
-  route: "components/chip-default.html",
+  artifacts: [
+    {
+      colorScheme: "light",
+      path: "components/chip-default.mobile.html",
+      viewport: "mobile",
+    },
+    {
+      colorScheme: "light",
+      path: "components/chip-default.desktop.html",
+      viewport: "desktop",
+    },
+  ],
+  colorSchemes: ["light"],
   variantOf: "chip",
-  viewports: ["mobile", "desktop"],
   props: {},
   suppliedSlots: [],
   componentViews: [],
-  fragments: {
-    mobile: "components/chip-default.mobile.html",
-    desktop: "components/chip-default.desktop.html",
-  },
 };
 
 const flow: RemovedEntry = {
@@ -83,7 +96,6 @@ const flow: RemovedEntry = {
   kind: "use-case",
   id: "tour",
   title: "Tour",
-  route: "flows/tour.html",
   steps: [],
 };
 
@@ -110,7 +122,7 @@ function removedShell(
     publicShellContext(catalogue, {
       base: "origin/main",
       comparisons: true,
-      changedRoutes: [entry.route],
+      changedIds: [entry.id],
       updateVersion: 1,
     }),
   );
@@ -141,7 +153,6 @@ test("a removed document opens its previous version instead of an empty state", 
   assert.deepEqual(descriptor(html), {
     id: "handbook",
     kind: "page",
-    route: "docs/handbook.html",
     title: "Getting started",
   });
 });
@@ -162,7 +173,6 @@ test("a removed screen opens historical frames without comparison controls", () 
     address: "example.test/farewell",
     id: "farewell",
     kind: "screen",
-    route: "screens/farewell.html",
     title: "Farewell",
   });
 });
@@ -203,10 +213,7 @@ test("exported shells advertise only the packaged previous versions", async (t) 
   const document = descriptor(await read("pages/removed-page.html"));
   assert.equal(document?.kind, "page");
   assert.equal(document?.published?.kind, "page");
-  assert.match(
-    document?.published?.kind === "page" ? document.published.path : "",
-    /^__mokly\/diffs\/__generations\/[a-f0-9]{64}\/pages\/pages\/removed-page\.html\.json$/,
-  );
+  assert.deepEqual(document?.published, { kind: "page" });
   const removedScreen = descriptor(await read("screens/removed-screen.html"));
   assert.deepEqual(removedScreen?.published, { kind: "screen" });
   const current = await read("screens/current.html");

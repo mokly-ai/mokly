@@ -54,22 +54,16 @@ test("exact unowned component and screen declarations keep only their own reason
     sharedGlobs: ["src/tokens/**"],
   });
 
-  assert.deepEqual(changedRoutes(result), [
-    "components/action.html",
-    "screens/home.html",
-    "user-flows/journey.html",
-  ]);
-  assert.deepEqual(dependencyPaths(result, "components/action.html"), [
-    actionPath,
-  ]);
-  assert.deepEqual(dependencyPaths(result, "screens/home.html"), [homePath]);
-  assert.deepEqual(dependencyPaths(result, "user-flows/journey.html"), []);
+  assert.deepEqual(changedIds(result), ["action", "home", "journey"]);
+  assert.deepEqual(dependencyPaths(result, "action"), [actionPath]);
+  assert.deepEqual(dependencyPaths(result, "home"), [homePath]);
+  assert.deepEqual(dependencyPaths(result, "journey"), []);
   assert.ok(
     result.affectedConsumers.some(
       (item) =>
         item.changedComponentId === "action" &&
         item.consumer.kind === "screen" &&
-        item.consumer.route === "screens/home.html",
+        item.consumer.id === "home",
     ),
   );
 });
@@ -91,10 +85,8 @@ for (const [name, ownerRoot, changed] of [
       sharedGlobs: ["src/tokens/**"],
     });
 
-    assert.deepEqual(changedRoutes(result), ["components/action.html"]);
-    assert.deepEqual(dependencyPaths(result, "components/action.html"), [
-      changed,
-    ]);
+    assert.deepEqual(changedIds(result), ["action"]);
+    assert.deepEqual(dependencyPaths(result, "action"), [changed]);
     assert.deepEqual(
       result.screens.find((entry) => entry.id === "home")?.sharedImpact,
       [TOKEN],
@@ -104,7 +96,7 @@ for (const [name, ownerRoot, changed] of [
         (item) =>
           item.changedComponentId === "action" &&
           item.consumer.kind === "screen" &&
-          item.consumer.route === "screens/home.html",
+          item.consumer.id === "home",
       ),
     );
   });
@@ -121,12 +113,8 @@ test("an exact screen declaration stays independent even when a component owns t
     sharedGlobs: ["src/tokens/**"],
   });
 
-  assert.deepEqual(changedRoutes(result), [
-    "components/action.html",
-    "screens/home.html",
-    "user-flows/journey.html",
-  ]);
-  assert.deepEqual(dependencyPaths(result, "screens/home.html"), ["notes.md"]);
+  assert.deepEqual(changedIds(result), ["action", "home", "journey"]);
+  assert.deepEqual(dependencyPaths(result, "home"), ["notes.md"]);
 });
 
 test("an unowned registration module under a broad component glob lists nothing", async (t) => {
@@ -143,19 +131,19 @@ test("an unowned registration module under a broad component glob lists nothing"
     assert.deepEqual(entry.sharedImpact, [changed]);
 });
 
-function changedRoutes(
+function changedIds(
   result: Awaited<ReturnType<typeof pathEvidenceFixture>>["result"],
 ): string[] {
-  return result.changes.map((entry) => (entry.after ?? entry.before)!.route);
+  return result.changes.map((entry) => (entry.after ?? entry.before)!.id);
 }
 
 function dependencyPaths(
   result: Awaited<ReturnType<typeof pathEvidenceFixture>>["result"],
-  route: string,
+  id: string,
 ): string[] {
   return (
     result.changes
-      .find((entry) => (entry.after ?? entry.before)?.route === route)
+      .find((entry) => (entry.after ?? entry.before)?.id === id)
       ?.reasons.flatMap((reason) =>
         reason.kind === "dependency" ? [reason.path] : [],
       ) ?? []

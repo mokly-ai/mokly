@@ -1,6 +1,6 @@
 import type {
   HistoricalManifestComponent,
-  LegacyManifestComponentVariant,
+  HistoricalManifestComponentVariant,
   ManifestComponent,
   ManifestComponentVariant,
 } from "@mokly/viewer";
@@ -10,13 +10,10 @@ import type {
   EntryChangeReason,
   GeneratedComponentView,
   ManifestEntry,
+  HistoricalManifestEntry,
   generatedViews,
 } from "@mokly/viewer/data";
-import {
-  canonicalJson,
-  flattenComponentVariantEntries,
-  isManifestComponentVariant,
-} from "@mokly/viewer/data";
+import { canonicalJson, isManifestComponentVariant } from "@mokly/viewer/data";
 
 import {
   address,
@@ -30,6 +27,8 @@ import type { ComparedComponentView } from "./component_view.js";
 import { aggregateState } from "./screen_views.js";
 
 type ComponentParent = ManifestComponent | HistoricalManifestComponent;
+type ReviewComponentVariant =
+  ManifestComponentVariant | HistoricalManifestComponentVariant;
 
 interface VariantClassificationInput {
   before?: ComponentParent;
@@ -40,8 +39,8 @@ interface VariantClassificationInput {
     before: GeneratedComponentView | undefined;
     after: GeneratedComponentView | undefined;
   }[];
-  beforeEntries: ReadonlyMap<string, ManifestComponentVariant>;
-  afterEntries: ReadonlyMap<string, ManifestComponentVariant>;
+  beforeEntries: ReadonlyMap<string, ReviewComponentVariant>;
+  afterEntries: ReadonlyMap<string, ReviewComponentVariant>;
   dependencies: ComponentDependencyPolicy;
   reasonSources: ComponentReasonSources;
   changes: ChangedEntry[];
@@ -56,8 +55,8 @@ interface VariantClassification {
 export function classifyComponentVariants(
   input: VariantClassificationInput,
 ): VariantClassification {
-  const bases = variants(input.before);
-  const heads = variants(input.after);
+  const bases = variants(input.before, input.beforeEntries);
+  const heads = variants(input.after, input.afterEntries);
   const reviews: ComponentVariantReview[] = [];
   const parentReasons: EntryChangeReason[] = [];
   for (const id of [
@@ -153,10 +152,10 @@ export function classifyComponentVariants(
 
 /** Index current entries and normalized historical nested variants by global id. */
 export function componentVariantEntries(
-  entries: readonly ManifestEntry[],
-): ReadonlyMap<string, ManifestComponentVariant> {
+  entries: readonly (ManifestEntry | HistoricalManifestEntry)[],
+): ReadonlyMap<string, ReviewComponentVariant> {
   return new Map(
-    flattenComponentVariantEntries(entries).flatMap((entry) =>
+    entries.flatMap((entry) =>
       entry.kind === "component" && isManifestComponentVariant(entry)
         ? [[entry.id, entry] as const]
         : [],
@@ -166,8 +165,11 @@ export function componentVariantEntries(
 
 function variants(
   parent: ComponentParent | undefined,
-): readonly LegacyManifestComponentVariant[] {
-  return parent && "variants" in parent ? parent.variants : [];
+  entries: ReadonlyMap<string, ReviewComponentVariant>,
+): readonly ReviewComponentVariant[] {
+  return parent
+    ? [...entries.values()].filter((entry) => entry.variantOf === parent.id)
+    : [];
 }
 
 function slotScopedInputsChanged(

@@ -6,9 +6,9 @@
 import type { ReactNode } from "react";
 
 import { catalogueViewHref } from "../navigation/delivery.js";
-import type { ManifestEntry, ManifestUseCase } from "../registry/types.js";
+import type { ManifestUseCase } from "../registry/types.js";
 
-import type { Catalogue } from "./catalogue.js";
+import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
 import { FlowIcon, ScreenIcon, VariantIcon } from "./icons.js";
 import { TagChip } from "./tags.js";
 import { changedViewsLabel, type ChangedView } from "./view_marks.js";
@@ -97,7 +97,7 @@ export function UsedByChips(props: {
         {useCases.map((useCase) => (
           <a
             className="mbk-chip flow"
-            href={catalogueViewHref(useCase.route)}
+            href={catalogueViewHref(useCase.kind, useCase.id)}
             key={useCase.id}
           >
             <FlowIcon size={11} />
@@ -112,13 +112,13 @@ export function UsedByChips(props: {
 /** The variants a screen declares, in manifest order. */
 export function VariantChips(props: {
   catalogue: Catalogue;
-  entry: ManifestEntry;
+  entry: CatalogueManifestEntry;
 }) {
   if (props.entry.kind !== "screen") {
     return null;
   }
   const historical = props.catalogue.removedEntries.some(
-    ({ entry }) => entry.route === props.entry.route,
+    ({ entry }) => entry.id === props.entry.id,
   );
   const variants = historical
     ? props.catalogue.removedEntries.flatMap(({ entry }) =>
@@ -151,14 +151,14 @@ export function VariantChips(props: {
 /** The screen a variant belongs to, resolved for current and removed entries. */
 export function VariantOfChip(props: {
   catalogue: Catalogue;
-  entry: ManifestEntry;
+  entry: CatalogueManifestEntry;
 }) {
   if (props.entry.kind !== "screen" || props.entry.variantOf === undefined) {
     return null;
   }
   const variantOf = props.entry.variantOf;
   const historical = props.catalogue.removedEntries.some(
-    ({ entry }) => entry.route === props.entry.route,
+    ({ entry }) => entry.id === props.entry.id,
   );
   const parent = historical
     ? (props.catalogue.removedEntries.find(
@@ -184,11 +184,14 @@ export function VariantOfChip(props: {
   );
 }
 
-function entryHref(catalogue: Catalogue, entry: ManifestEntry): string {
+function entryHref(
+  catalogue: Catalogue,
+  entry: CatalogueManifestEntry,
+): string {
   const snapshotId = catalogue.removedEntries.find(
-    ({ entry: candidate }) => candidate.route === entry.route,
+    ({ entry: candidate }) => candidate.id === entry.id,
   )?.snapshotId;
-  return `${catalogueViewHref(entry.route)}${
+  return `${catalogueViewHref(entry.kind, entry.id)}${
     snapshotId ? `?snapshot=${snapshotId}` : ""
   }`;
 }

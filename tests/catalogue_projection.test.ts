@@ -4,8 +4,7 @@ import test from "node:test";
 
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
 import type { CatalogueNode } from "../packages/viewer/dist/catalogue/types.js";
-import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
-import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV7 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import { projectCatalogue } from "../src/catalogue/projection.js";
@@ -28,7 +27,7 @@ test("projection exposes real usage and attribution without private evidence", a
     configPath: "mokly.config.ts",
     catalogue: createCatalogue(fixture.after.manifest),
     changesStatus: "ready" as const,
-    changedRoutes: evidence.changedRoutes,
+    changedIds: evidence.changedIds,
     evidence,
     comparisonUrl: null,
     revision: { content: 0, evidence: 0 },
@@ -54,7 +53,7 @@ test("projection exposes real usage and attribution without private evidence", a
     home.views.map(({ viewport, colorScheme }) => `${viewport}/${colorScheme}`),
     ["mobile/light", "mobile/dark", "desktop/light", "desktop/dark"],
   );
-  assert.equal(home.views[0]?.fragmentPath, "static/screens/home.mobile.html");
+  assert.equal("fragmentPath" in home.views[0]!, false);
   const json = serializeCatalogue(model);
   for (const privateField of [
     "sourceFiles",
@@ -104,43 +103,17 @@ test("projection exposes screen variants beneath their parent entry", async (t) 
   const zeta: CurrentManifestScreen = {
     ...structuredClone(parent),
     description: "Zeta workspace",
-    fragments: {
-      desktop: viewRoute("screen", zetaId, "desktop", "light"),
-      mobile: viewRoute("screen", zetaId, "mobile", "light"),
-    },
     id: zetaId,
-    route: entryRoute("screen", zetaId),
     title: `${parent.title}, zeta`,
     useCaseIds: [],
     variantOf: parent.id,
-    ...(parent.darkFragments
-      ? {
-          darkFragments: {
-            desktop: viewRoute("screen", zetaId, "desktop", "dark"),
-            mobile: viewRoute("screen", zetaId, "mobile", "dark"),
-          },
-        }
-      : {}),
   };
   const alphaId = `${parent.id}-alpha`;
   const alpha: CurrentManifestScreen = {
     ...structuredClone(zeta),
     description: "Alpha workspace",
-    fragments: {
-      desktop: viewRoute("screen", alphaId, "desktop", "light"),
-      mobile: viewRoute("screen", alphaId, "mobile", "light"),
-    },
     id: alphaId,
-    route: entryRoute("screen", alphaId),
     title: `${parent.title}, alpha`,
-    ...(zeta.darkFragments
-      ? {
-          darkFragments: {
-            desktop: viewRoute("screen", alphaId, "desktop", "dark"),
-            mobile: viewRoute("screen", alphaId, "mobile", "dark"),
-          },
-        }
-      : {}),
   };
   const model = projectCatalogue({
     configPath: "mokly.config.ts",
@@ -194,7 +167,6 @@ test("public v3 fixture conforms and compatible readers ignore additive fields",
         "page",
         {
           kind: "page",
-          path: `__mokly/diffs/__generations/${"c".repeat(64)}/pages/archive/removed-page.html.json`,
         },
       ],
       ["screen", { kind: "screen" }],
@@ -227,10 +199,10 @@ test("reader rejects unsafe paths, private extensions and broken known reference
       value.screens[0].details.relatedDocs = ["../secret.md"];
     },
     (value: typeof fixture) => {
-      value.screens[0].views[0].fragmentPath = "static/../secret.html";
+      value.screens[0].views[0].viewport = "tablet";
     },
     (value: typeof fixture) => {
-      value.screens[0].views[0].fragmentPath = "static/page.html?token=secret";
+      value.screens[0].views[0].colorScheme = "sepia";
     },
     (value: typeof fixture) => {
       value.comparisonUrl = "__mokly/diffs/review.json";
@@ -273,6 +245,6 @@ function findNode(
 }
 
 type CurrentManifestScreen = Extract<
-  ManifestV5["entries"][number],
+  ManifestV7["entries"][number],
   { kind: "screen" }
 >;

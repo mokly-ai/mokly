@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
@@ -56,14 +56,12 @@ for (const change of [
       await fixture.build();
     }
     assert.deepEqual(
-      await computeChangedRoutes(
+      await computeChangedIds(
         fixture.config,
         "HEAD",
         committedReviewRepository(fixture.config),
       ),
-      change === "material" || change === "resource"
-        ? ["pages/handbook.html"]
-        : [],
+      change === "material" || change === "resource" ? ["handbook"] : [],
     );
   });
 }
@@ -93,7 +91,7 @@ test("Changes cannot treat a historical authoring input as a deleted public reso
     ),
   );
   assert.equal(
-    await computeChangedRoutes(
+    await computeChangedIds(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),

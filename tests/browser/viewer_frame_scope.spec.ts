@@ -37,7 +37,6 @@ async function start(page: Page, cross: boolean, screenId = "home") {
           id: "tour",
           navPath: [],
           title: "Tour",
-          route: "flows/tour.html",
           tags: [],
           details: catalogue.screens[0]!.details,
           changes: { status: "disabled" },

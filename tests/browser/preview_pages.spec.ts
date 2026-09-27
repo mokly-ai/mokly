@@ -82,9 +82,7 @@ for (const width of [390, 1280]) {
       requests.filter((url) => /\/__mokly\/diffs\/review\.json/.test(url)),
     ).toEqual([]);
     expect(
-      requests.filter((url) =>
-        /\/pages\/removed-document\.html\.json$/.test(url),
-      ),
+      requests.filter((url) => /\/pages\/removed-document\.json$/.test(url)),
     ).toHaveLength(1);
   });
 }

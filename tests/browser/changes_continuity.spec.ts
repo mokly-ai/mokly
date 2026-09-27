@@ -78,7 +78,7 @@ for (const mobile of [false, true]) {
       await expect(page.locator('[data-filter="all"]')).toBeFocused();
       server.publishUpdate({
         kind: "evidence",
-        changedRoutes: ["screens/details.html"],
+        changedIds: ["details"],
         changesStatus: "ready",
       });
       await expect(page.locator(".mbk-nav-filter-count")).toHaveText("1");
@@ -98,7 +98,7 @@ for (const mobile of [false, true]) {
       const searched = await navigationState(page);
       server.publishUpdate({
         kind: "evidence",
-        changedRoutes: [],
+        changedIds: [],
         changesStatus: "ready",
       });
       await expect(page.locator(".mbk-nav-filter-count")).toHaveText("0");

@@ -50,13 +50,10 @@ export function baselineResourceConfig(
 ): ResolvedConfig {
   return {
     ...config,
-    sourceFiles:
-      "sourceFiles" in manifest
-        ? manifest.sourceFiles
-        : [
-            ...manifest.entries.map((entry) => entry.sourcePath),
-            ...manifest.legacyPages.map((page) => page.sourcePath),
-          ],
+    sourceFiles: manifest.sourceFiles ?? [
+      ...manifest.entries.map((entry) => entry.sourcePath),
+      ...(manifest.legacyPages ?? []).map((page) => page.sourcePath),
+    ],
   };
 }
 

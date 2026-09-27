@@ -62,11 +62,7 @@ for (const components of [false, true]) {
         ),
       );
       assert.deepEqual(changes.result?.changedPaths, []);
-    } else
-      assert.deepEqual(changes.changedRoutes, [
-        "screens/home.html",
-        "user-flows/tour.html",
-      ]);
+    } else assert.deepEqual(changes.changedIds, ["home", "tour"]);
   });
 }
 
@@ -84,5 +80,5 @@ mockups.push(definePage({ id: "guide", title: "Guide", description: "Guide", dep
     "HEAD",
     await prepareReviewRepository(fixture.config, "HEAD"),
   );
-  assert.deepEqual(changes.changedRoutes, ["pages/guide.html"]);
+  assert.deepEqual(changes.changedIds, ["guide"]);
 });

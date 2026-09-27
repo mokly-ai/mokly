@@ -6,6 +6,7 @@ import path from "node:path";
 import type { ManifestComponentVariant } from "@mokly/viewer";
 import {
   generatedViews,
+  entryRoute,
   isLogicalFragment,
   isManifestComponentVariant,
 } from "@mokly/viewer/data";
@@ -31,7 +32,12 @@ export async function requestedFragment(
   const fragment = values.length === 1 ? values[0] : undefined;
   if (!fragment || !isLogicalFragment(fragment)) return null;
   if (entry?.kind === "page")
-    return (await containsFragment(entry.route, fragment, config, documents))
+    return (await containsFragment(
+      entryRoute("page", entry.id),
+      fragment,
+      config,
+      documents,
+    ))
       ? fragment
       : null;
   const screen = destinationScreen(entry, catalogue);

@@ -98,11 +98,7 @@ export {
 } from "./components/view_validation.js";
 export { generatedViews, fragmentViews } from "./components/views.js";
 export type { GeneratedComponentView } from "./components/views.js";
-export {
-  flattenComponentVariantEntries,
-  legacyComponentVariantEntry,
-  legacyComponentVariantId,
-} from "./components/variants.js";
+export { legacyComponentVariantId } from "./components/variants.js";
 export type {
   ComponentInstanceRecord,
   ComponentSourceLocation,
@@ -115,19 +111,18 @@ export { resolveInstance } from "./components/resolve_instance.js";
 export type { InstanceResolution } from "./components/resolve_instance.js";
 export {
   entryRoute,
-  fragmentRoute,
   parseViewHref,
   viewHref,
   viewRoute,
-} from "./data/routes.js";
+} from "./navigation/routes.js";
 export type {
   EntryRouteKind,
   ViewHrefIdentity,
   ViewRouteKind,
-} from "./data/routes.js";
+} from "./navigation/routes.js";
 export type {
   ReviewEntryAddress,
-  ScreenReviewV3,
+  ScreenReviewV4,
   ReviewVariantAddress,
   ComponentVariantReview,
   ComponentReview,
@@ -136,7 +131,7 @@ export type {
   ComponentUsageContext,
   AffectedUsageEvidence,
   AffectedConsumer,
-  ReviewResultV3,
+  ReviewResultV4,
 } from "./review/component_types.js";
 export type {
   ReviewArtifactContent,
@@ -178,9 +173,15 @@ export type {
   ManifestScreen,
   ManifestPage,
   ManifestEntry,
-  ManifestV5,
   ManifestV7,
   Manifest,
+  HistoricalArtifactView,
+  HistoricalManifestEntryBase,
+  HistoricalManifestEntry,
+  HistoricalManifestScreen,
+  HistoricalManifestPage,
+  HistoricalManifestUseCase,
+  HistoricalLegacyPage,
   HistoricalManifest,
 } from "./registry/types.js";
 export { reviewMaterialKey } from "./data/material_key.js";

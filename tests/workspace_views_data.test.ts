@@ -33,7 +33,7 @@ function context(evidence?: ShellContext["componentChanges"]): ShellContext {
   return {
     base: "main",
     updateVersion: 1,
-    activeRoute: screen.route,
+    activeId: screen.id,
     ...(evidence ? { componentChanges: evidence } : {}),
   };
 }
@@ -48,7 +48,7 @@ test("a ready comparison names the views it marked changed", () => {
   );
 });
 
-test("a v3 component result keys every saved variant's view states", () => {
+test("a v4 component result keys every saved variant's view states", () => {
   const result = componentVariantResult();
   const comparison = result.components[0];
   assert.ok(comparison);
@@ -89,7 +89,7 @@ test("lightweight screen-view evidence names the same views", () => {
     baseline: screenManifest,
     screenViews: [
       {
-        route: screen.route,
+        id: screen.id,
         views: [
           { viewport: "desktop", colorScheme: "dark", state: "changed" },
           { viewport: "mobile", colorScheme: "light", state: "unchanged" },
@@ -126,7 +126,7 @@ test("added and removed views count as changed views", () => {
     baseline: screenManifest,
     screenViews: [
       {
-        route: screen.route,
+        id: screen.id,
         views: [
           { viewport: "mobile", colorScheme: "light", state: "added" },
           { viewport: "mobile", colorScheme: "dark", state: "ignored-only" },

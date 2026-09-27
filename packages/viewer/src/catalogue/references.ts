@@ -3,15 +3,15 @@ import { validateControlledValues } from "../components/controls.js";
 import { canonicalJson, invalidData } from "../components/data.js";
 import { validateProps } from "../components/props.js";
 import { validateComponentViewRecord } from "../components/view_validation.js";
-import { viewRoute } from "../data/routes.js";
 import { analyzeHierarchy } from "../registry/hierarchy.js";
+import { VIEWPORTS } from "../registry/views.js";
 
 import { projectTree } from "./tree.js";
 import type {
   CatalogueComponent,
   CatalogueComponentVariant,
   CatalogueReadModel,
-  CatalogueRoutedEntry,
+  CatalogueRecord,
   CatalogueScreen,
   CatalogueView,
 } from "./types.js";
@@ -20,14 +20,13 @@ import { unique } from "./values.js";
 /** Validate relationships after parsing all known fields, including both ownership sections. */
 export function validateCatalogueReferences(model: CatalogueReadModel): void {
   require(model.identity.title === "Mokly", "catalogue title must be Mokly");
-  const current: CatalogueRoutedEntry[] = [
+  const current: CatalogueRecord[] = [
     ...model.screens,
     ...model.pages,
     ...model.useCases,
     ...model.components,
   ];
   unique(current.map((entry) => entry.id));
-  unique(current.map((entry) => entry.route));
   const { hierarchy, issues } = analyzeHierarchy(current);
   require(issues.length === 0, "invalid navigation paths");
   require(canonicalJson(model.tree) ===
@@ -36,14 +35,14 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
     ), "tree must project the navigation paths");
   const historical = model.removedEntries.map(({ entry }) => entry);
   const all = [...current, ...historical];
-  unique(model.removedEntries.map(({ entry }) => entry.route));
+  unique(model.removedEntries.map(({ entry }) => entry.id));
   unique(
     model.removedEntries.flatMap(({ snapshotId }) =>
       snapshotId ? [snapshotId] : [],
     ),
   );
   const components = new Map(
-    all
+    [...historical, ...current]
       .filter(
         (entry): entry is CatalogueComponent =>
           entry.kind === "component" && !("variantOf" in entry),
@@ -59,15 +58,13 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
       require(entry.changes.status === "ready" &&
         entry.changes.kind === "removed" &&
         entry.changes.included, "removed entry needs removed Changes");
-      require(!current.some(
-        (item) => item.route === entry.route,
-      ), "current routes take precedence");
+      const collides = current.some((item) => item.id === entry.id);
+      const snapshotId = model.removedEntries.find(
+        (record) => record.entry === entry,
+      )?.snapshotId;
+      require(!collides ||
+        snapshotId !== undefined, "same-id history needs an exact snapshot");
     }
-    if (entry.kind === "page")
-      require(removed
-        ? entry.documentPath === null
-        : entry.documentPath ===
-            `static/${entry.route}`, "page path must match current route");
     if (entry.kind === "use-case" && !removed) {
       require(entry.steps.length > 0, "use case needs steps");
       for (const step of entry.steps) {
@@ -124,9 +121,7 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
         (preview.kind === "page" &&
           entry.kind === "page"), "preview kind must match removed entry");
       if (preview.kind === "page") {
-        const generation = model.comparisonUrl!.slice(0, -"review.json".length);
-        require(preview.path ===
-          `${generation}pages/${entry.route}.json`, "page preview must match comparison generation and route");
+        require(entry.kind === "page", "page preview needs a page");
       }
     }
   }
@@ -142,12 +137,10 @@ function validateViews(
   components: ReadonlyMap<string, CatalogueComponent>,
   historical: boolean,
 ): void {
-  require(canonicalJson(entry.viewports) ===
-    '["mobile","desktop"]', "invalid viewport set");
   require(['["light"]', '["light","dark"]'].includes(
     canonicalJson(entry.colorSchemes),
   ), "invalid scheme set");
-  const axes = entry.viewports.flatMap((viewport) =>
+  const axes = VIEWPORTS.flatMap((viewport) =>
     entry.colorSchemes.map((scheme) => `${viewport}/${scheme}`),
   );
   if (!historical)
@@ -156,11 +149,6 @@ function validateViews(
     ) === canonicalJson(axes), "views must match axes");
   unique(views.map((view) => `${view.viewport}/${view.colorScheme}`));
   for (const view of views) {
-    const expected = `static/${viewRoute(entry.kind, entry.id, view.viewport, view.colorScheme)}`;
-    require(historical
-      ? view.fragmentPath === null
-      : view.fragmentPath ===
-          expected, "view path must match current fragment");
     if (view.comparison.status === "ready")
       require(view.comparison.eligible ===
         (view.comparison.kind === "changed" ||
@@ -189,7 +177,7 @@ function validateViews(
 function validateComponentVariant(
   entry: CatalogueComponentVariant,
   components: ReadonlyMap<string, CatalogueComponent>,
-  current: readonly CatalogueRoutedEntry[],
+  current: readonly CatalogueRecord[],
   removed: boolean,
 ): void {
   if (entry.comparison.status === "ready")
@@ -204,7 +192,7 @@ function validateComponentVariant(
   const parent = components.get(entry.variantOf);
   if (!removed) {
     require(current.includes(
-      parent as CatalogueRoutedEntry,
+      parent as CatalogueRecord,
     ), "variant parent component must exist");
     require(canonicalJson(entry.navPath) ===
       canonicalJson(parent?.navPath), "variant path must match parent");

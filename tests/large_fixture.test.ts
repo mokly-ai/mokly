@@ -11,6 +11,7 @@ import {
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
 import { prepareRegistry } from "../dist/registry/prepare.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 
 import { generateLargeFixture, largeSize } from "./fixtures/large/generate.js";
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -106,7 +107,9 @@ test("scaled consumer exercises the same render, hierarchy, resource and compone
       (view) => view.instances.length >= 4 && view.slots.length > 0,
     ),
   );
-  const html = compilation.outputs.get(screen.fragments.desktop)!;
+  const html = compilation.outputs.get(
+    viewRoute("screen", screen.id, "desktop", "light"),
+  )!;
   assert.match(html, /react-native-stylesheet/);
   assert.match(html, /data-mokly-link/);
   assert.match(html, /assets\/mark.svg/);

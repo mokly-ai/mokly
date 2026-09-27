@@ -3,13 +3,19 @@ import path from "node:path";
 
 import { minimatch } from "minimatch";
 
-import { parseReviewResult } from "@mokly/viewer/data";
+import {
+  generatedViews,
+  isManifestComponentVariant,
+  parseReviewResult,
+  viewRoute,
+} from "@mokly/viewer/data";
 import type {
+  HistoricalManifestScreen,
+  Manifest,
   ManifestScreen,
   ReviewArtifact,
   ReviewArtifactContent,
   ReviewResult,
-  ViewReview,
 } from "@mokly/viewer/data";
 
 import { ConfiguredGitCommandRunner } from "../config/git.js";
@@ -23,6 +29,7 @@ import { ComponentMaterialReader } from "./component_resources.js";
 import { SelectedAssetReader } from "./evidence_assets.js";
 import type { BaselineReader } from "./git.js";
 import { CompiledReviewAssetReader } from "./head_assets.js";
+import { relocateHistoricalDocument } from "./historical_document.js";
 import { baselineReaderForCommit } from "./repository.js";
 import { ResourceComparison } from "./resource_comparison.js";
 import { compareScreen } from "./screen_compare.js";
@@ -84,15 +91,13 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
       ? selectedComponentResult(source.result, selection)
       : await this.screenResult(source, selection, before, after);
     parseReviewResult(result);
-    const views =
-      result.schemaVersion === 3 && result.components.length
-        ? result.components.flatMap((entry) =>
-            entry.variants.flatMap((variant) => variant.views),
-          )
-        : result.screens.flatMap((screen) => screen.views);
     const files = new Map<string, ReviewArtifactContent>();
     for (const side of ["before", "after"] as const) {
-      const routes = snapshotRoutes(views, side);
+      const artifacts = selectedArtifacts(
+        side === "before" ? source.before : source.after,
+        selection.id,
+      );
+      const routes = new Set(artifacts.map((artifact) => artifact.source));
       if (side === "after")
         for (const route of routes)
           if (!Object.hasOwn(source.headDigests, route))
@@ -108,6 +113,26 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
         (route) => reader.read(route),
         (routes) => reader.readMany(routes),
       );
+      for (const artifact of artifacts) {
+        const sourcePath = `snapshots/${side}/${artifact.source}`;
+        const targetPath = `snapshots/${side}/${artifact.target}`;
+        if (sourcePath === targetPath) continue;
+        const content = files.get(sourcePath);
+        if (content === undefined)
+          throw new MoklyError(
+            "review-invalid",
+            `Selected snapshot is missing: ${artifact.source}`,
+          );
+        files.delete(sourcePath);
+        files.set(
+          targetPath,
+          relocateHistoricalDocument(
+            Buffer.from(content).toString("utf8"),
+            artifact.source,
+            artifact.target,
+          ),
+        );
+      }
     }
     signal.throwIfAborted();
     return { result, files };
@@ -119,14 +144,17 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
     beforeReader: SelectedAssetReader,
     afterReader: SelectedAssetReader,
   ): Promise<ReviewResult> {
-    if (selection.variantId !== undefined) throw missingSelection();
     const before = source.before.entries.find(
-      (entry): entry is ManifestScreen =>
-        entry.kind === "screen" && entry.route === selection.route,
+      (entry): entry is HistoricalManifestScreen =>
+        entry.kind === "screen" &&
+        "artifacts" in entry &&
+        entry.id === selection.id,
     );
     const after = source.after.entries.find(
       (entry): entry is ManifestScreen =>
-        entry.kind === "screen" && entry.route === selection.route,
+        entry.kind === "screen" &&
+        !("artifacts" in entry) &&
+        entry.id === selection.id,
     );
     if (!before && !after) throw missingSelection();
     const sharedImpact = source.changedPaths.filter((changed) =>
@@ -166,26 +194,38 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
       ),
       this.config,
     );
+    const reviewed = {
+      ...screen,
+      ...(before ? { before: { id: before.id, title: before.title } } : {}),
+      ...(after ? { after: { id: after.id, title: after.title } } : {}),
+    };
     return {
+      affectedConsumers: [],
       baseCommit: source.baseCommit,
       baseRef: source.baseRef,
       changedPaths: source.changedPaths,
-      ignoredImpact: aggregateIgnored([screen]),
-      schemaVersion: 2,
-      screens: [screen],
+      changes: [],
+      components: [],
+      ignoredImpact: aggregateIgnored([reviewed]),
+      schemaVersion: 4,
+      screens: [reviewed],
       sharedImpact,
     };
   }
 }
 
-function snapshotRoutes(
-  views: readonly ViewReview[],
-  side: "before" | "after",
-): Set<string> {
-  return new Set(
-    views.flatMap((view) => {
-      const route = view[`${side}Path`];
-      return route ? [route.slice(`snapshots/${side}/`.length)] : [];
-    }),
+function selectedArtifacts(manifest: Manifest, id: string) {
+  const entry = manifest.entries.find(
+    (candidate) =>
+      candidate.id === id &&
+      (candidate.kind === "screen" ||
+        (candidate.kind === "component" &&
+          isManifestComponentVariant(candidate))),
   );
+  if (!entry || (entry.kind !== "screen" && entry.kind !== "component"))
+    return [];
+  return generatedViews(entry).map((view) => ({
+    source: view.path,
+    target: viewRoute(entry.kind, entry.id, view.viewport, view.colorScheme),
+  }));
 }

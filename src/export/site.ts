@@ -1,9 +1,10 @@
 import path from "node:path";
 
-import type { Manifest, ReviewArtifact } from "@mokly/viewer/data";
+import type { HistoricalManifest, ReviewArtifact } from "@mokly/viewer/data";
 import {
   canonicalJson,
   catalogueViewHref,
+  entryRoute,
   parseStaticDelivery,
   type StaticDelivery,
   parseReviewResult,
@@ -21,7 +22,7 @@ import {
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { staticRemovedPreviews } from "../publication/removed_previews.js";
-import { changedManifestRoutes } from "../registry/changed_routes.js";
+import { changedManifestIds } from "../registry/changed_ids.js";
 import { removedManifestEntries } from "../registry/changes.js";
 import {
   loadBrowserClientModules,
@@ -50,7 +51,7 @@ const LIVE_HOST_BUNDLES = new Set([
 export function assembleExport(
   config: ResolvedConfig,
   compilation: Compilation,
-  baseline: Manifest,
+  baseline: HistoricalManifest,
   comparison: ReviewArtifact | undefined,
   publicFiles: ReadonlyMap<string, Buffer>,
   contentChanges: readonly string[],
@@ -66,7 +67,7 @@ export function assembleExport(
   );
   const removed = removedSnapshots.map(({ entry }) => entry);
   const catalogue = createCatalogue(compilation.manifest, removedSnapshots);
-  const entries = [...current.byRoute.values(), ...removed];
+  const entries = [...compilation.manifest.entries, ...removed];
   const idRoutes: Record<string, string> = Object.create(null) as Record<
     string,
     string
@@ -77,15 +78,14 @@ export function assembleExport(
       current.byId.has(entry.id)
     )
       continue;
-    idRoutes[entry.id] = catalogueViewHref(entry.route);
+    idRoutes[entry.id] = catalogueViewHref(entry.kind, entry.id);
   }
   const comparisonFiles = new Map(comparison?.files);
-  if (comparison?.result.schemaVersion === 3)
-    parseReviewResult(comparison.result);
+  if (comparison) parseReviewResult(comparison.result);
   if (comparison)
     comparisonFiles.set(
       "review.json",
-      `${comparison.result.schemaVersion === 3 ? canonicalJson(comparison.result, 2) : JSON.stringify(comparison.result, null, 2)}\n`,
+      `${canonicalJson(comparison.result, 2)}\n`,
     );
   const generation = comparisonContentId(comparisonFiles);
   const prefix = `__mokly/diffs/__generations/${generation}`;
@@ -93,7 +93,6 @@ export function assembleExport(
     removedSnapshots,
     comparison,
     comparisonFiles,
-    prefix,
   );
   const delivery = parseStaticDelivery({
     schemaVersion: 2,
@@ -121,74 +120,67 @@ export function assembleExport(
       );
     inventory.add(`${prefix}/${name}`, bytes);
   }
-  const materialRoutes = changedManifestRoutes(
+  const materialIds = changedManifestIds(
     compilation.manifest,
     baseline,
     config,
     contentChanges,
   );
-  const pageRoutes = new Set(
+  const pageIds = new Set(
     compilation.manifest.entries.flatMap((entry) =>
-      entry.kind === "page" ? [entry.route] : [],
+      entry.kind === "page" ? [entry.id] : [],
     ),
   );
-  const changes =
-    comparison?.result.schemaVersion === 3
-      ? [
-          ...comparison.result.changes.map(
-            (item) => (item.after ?? item.before)!.route,
-          ),
-          ...materialRoutes.filter((route) => pageRoutes.has(route)),
-        ]
-      : materialRoutes;
+  const changes = comparison
+    ? [
+        ...comparison.result.changes.map(
+          (item) => (item.after ?? item.before)!.id,
+        ),
+        ...materialIds.filter((id) => pageIds.has(id)),
+      ]
+    : materialIds;
   const context: ShellContext = {
     base: comparison?.result.baseRef ?? "",
     ...(comparison
       ? {
-          changedRoutes: [
-            ...new Set([...changes, ...removed.map((entry) => entry.route)]),
+          changedIds: [
+            ...new Set([...changes, ...removed.map((entry) => entry.id)]),
           ],
           comparisons: true,
           componentChanges: {
             baseline,
-            ...(comparison.result.schemaVersion === 3
-              ? { result: comparison.result }
-              : {
-                  screenEvidence: comparison.result.screens
-                    .map(({ route, views }) => ({
-                      route,
-                      views: views
-                        .filter(
-                          (view) =>
-                            view.reasons?.length ||
-                            view.excludedResources?.length,
-                        )
-                        .map(
-                          ({
-                            viewport,
-                            colorScheme,
-                            reasons,
-                            excludedResources,
-                          }) => ({
-                            viewport,
-                            colorScheme,
-                            ...(reasons ? { reasons } : {}),
-                            ...(excludedResources ? { excludedResources } : {}),
-                          }),
-                        ),
-                    }))
-                    .filter((screen) => screen.views.length > 0),
-                  screenViews: comparison.result.screens.map(
-                    ({ route, views }) => ({
-                      route,
-                      views: views.map(({ viewport, colorScheme, state }) => ({
-                        viewport,
-                        colorScheme,
-                        state,
-                      })),
+            result: comparison.result,
+            screenEvidence: comparison.result.screens
+              .map(({ id, views }) => ({
+                id,
+                views: views
+                  .filter(
+                    (view) =>
+                      view.reasons?.length || view.excludedResources?.length,
+                  )
+                  .map(
+                    ({
+                      viewport,
+                      colorScheme,
+                      reasons,
+                      excludedResources,
+                    }) => ({
+                      viewport,
+                      colorScheme,
+                      ...(reasons ? { reasons } : {}),
+                      ...(excludedResources ? { excludedResources } : {}),
                     }),
                   ),
-                }),
+              }))
+              .filter((screen) => screen.views.length > 0),
+            screenViews: comparison.result.screens.map(({ id, views }) => ({
+              id,
+              views: views.map(({ viewport, colorScheme, state }) => ({
+                viewport,
+                colorScheme,
+                state,
+              })),
+            })),
           },
         }
       : { comparisons: false }),
@@ -199,7 +191,7 @@ export function assembleExport(
     configPath: toPosixPath(path.relative(config.repoRoot, config.configPath)),
     catalogue,
     changesStatus: comparison ? "ready" : "disabled",
-    changedRoutes: context.changedRoutes,
+    changedIds: context.changedIds,
     evidence: context.componentChanges,
     comparison: comparison?.result,
     comparisonUrl: delivery.comparisonUrl?.slice(1) ?? null,
@@ -219,15 +211,15 @@ export function assembleExport(
     notFoundDelivery,
   );
   for (const entry of entries) {
-    if (!("route" in entry)) continue;
-    const canonicalPath = catalogueViewHref(entry.route);
+    const route = entryRoute(entry.kind, entry.id);
+    const canonicalPath = catalogueViewHref(entry.kind, entry.id);
     const descriptor = { ...delivery, canonicalPath };
     const html = viewPage(entry, catalogue, {
       ...context,
-      activeRoute: entry.route,
+      activeId: entry.id,
       delivery: descriptor,
     });
-    addShell(`view/${entry.route}`, html, descriptor);
+    addShell(`view/${route}`, html, descriptor);
     if (
       "id" in entry &&
       typeof entry.id === "string" &&

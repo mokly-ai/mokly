@@ -2,7 +2,6 @@
 import type { ColorScheme } from "@mokly/viewer";
 import {
   isManifestComponentVariant,
-  type Manifest,
   type ManifestV7,
 } from "@mokly/viewer/data";
 
@@ -20,7 +19,7 @@ export interface CatalogueIndex {
   entries: ManifestV7["entries"];
 }
 
-export type CatalogueMetadata = Manifest | CatalogueIndex;
+export type CatalogueMetadata = ManifestV7 | CatalogueIndex;
 
 export function createCatalogueIndex(
   entries: readonly ResolvedRegistryEntry[],

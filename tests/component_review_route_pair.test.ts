@@ -18,13 +18,13 @@ const image = '<img src="../shared.svg" />';
 const svg = (fill: string) =>
   `<svg xmlns="http://www.w3.org/2000/svg"><rect fill="${fill}"/></svg>`;
 
-test("an authored route cannot split one screen id's view evidence", async (t) => {
-  const fixture = await createFixture(source([screen("a", "a", image)]));
+test("non-identity metadata cannot split one screen id's view evidence", async (t) => {
+  const fixture = await createFixture(source([screen("a", "Before", image)]));
   t.after(() => removeFixture(fixture));
   await fs.writeFile(path.join(fixture.mockupsDir, "shared.svg"), svg("red"));
   const config = await loadConfig(fixture.root);
   const before = await compileCatalogue(config);
-  await fs.writeFile(fixture.entryPath, source([screen("a", "moved", image)]));
+  await fs.writeFile(fixture.entryPath, source([screen("a", "After", image)]));
   const after = await compileCatalogue(config);
   const result = await assertFastPathEquivalent({
     before: before.manifest,
@@ -34,9 +34,7 @@ test("an authored route cannot split one screen id's view evidence", async (t) =
     changedPaths: [resource],
     config,
   });
-  const paired = result.screens.find(
-    (entry) => entry.route === "screens/a.html",
-  )!;
+  const paired = result.screens.find((entry) => entry.id === "a")!;
   assert.equal(paired.before?.id, "a");
   assert.equal(paired.after?.id, "a");
   assert.equal(result.screens.length, 1);
@@ -49,7 +47,7 @@ test("an authored route cannot split one screen id's view evidence", async (t) =
     result.changes.some(
       (entry) =>
         entry.kind === "screen" &&
-        entry.after?.route === "screens/a.html" &&
+        entry.after?.id === "a" &&
         entry.reasons.some(
           (reason) => reason.kind === "dependency" && reason.path === resource,
         ),
@@ -63,6 +61,6 @@ function source(screens: readonly string[]): string {
   return `${parts[0]}\n  ${screens.join(",\n  ")}\n];`;
 }
 
-function screen(id: string, route: string, body: string): string {
-  return `defineScreen({ ...metadata, id: "${id}", title: "${id}", description: "A screen", route: "screens/${route}.html", navPath: ["Fixture"], mobile: <main>${body}</main>, desktop: <main>${body}</main> })`;
+function screen(id: string, title: string, body: string): string {
+  return `defineScreen({ ...metadata, id: "${id}", title: "${title}", description: "A screen", navPath: ["Fixture"], mobile: <main>${body}</main>, desktop: <main>${body}</main> })`;
 }

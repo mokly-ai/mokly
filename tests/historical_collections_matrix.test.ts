@@ -4,9 +4,11 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 import { parseHistoricalManifest } from "../dist/registry/manifest.js";
+import type { ManifestV7 } from "../packages/viewer/dist/registry/types.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { legacyManifestFromV7 } from "./helpers/historical_manifest.js";
 
 type Entry = Record<string, unknown> & { id: string; kind: string };
 interface HistoricalInput {
@@ -34,27 +36,13 @@ function collection(id: string, childIds: unknown): Entry {
 
 function envelope(
   version: "v3" | "component v4" | "pages v4" | "v5",
-  current: HistoricalInput,
+  current: ManifestV7,
 ): HistoricalInput {
-  const entries = structuredClone(current.entries);
-  if (version === "v3" || version === "pages v4") {
-    for (const entry of entries) {
-      if (entry.kind === "screen") delete entry.componentViews;
-      delete entry.declaredDependencies;
-    }
-  }
-  const selected =
-    version === "v3" || version === "pages v4"
-      ? entries.filter((entry) => entry.kind === "screen")
-      : entries;
-  return {
-    schemaVersion: version === "v3" ? 3 : version === "v5" ? 5 : 4,
-    generatedBy: "mokly",
-    entries: selected,
-    ...(version === "v3" || version === "component v4"
-      ? { legacyPages: [] }
-      : { sourceFiles: [...(current.sourceFiles ?? [])] }),
-  };
+  return legacyManifestFromV7(
+    current,
+    version === "v3" ? 3 : version === "v5" ? 5 : 4,
+    version === "component v4" ? "components" : "pages",
+  ) as HistoricalInput;
 }
 
 function historicalCollectionFields(input: HistoricalInput): void {
@@ -155,21 +143,14 @@ test("historical collection shape and relationships validate before records are 
   context.after(() => removeFixture(fixture));
   const manifest = (await compileCatalogue(await loadConfig(fixture.root)))
     .manifest;
-  const current: HistoricalInput = {
-    schemaVersion: manifest.schemaVersion,
-    generatedBy: manifest.generatedBy,
-    entries: manifest.entries.map((entry) => ({ ...entry })),
-    sourceFiles: [...manifest.sourceFiles],
-  };
+  const current = manifest;
   for (const version of ["v3", "component v4", "pages v4", "v5"] as const) {
     const valid = envelope(version, current);
     valid.entries.push(collection("group", ["home"]));
     historicalCollectionFields(valid);
     assert.deepEqual(
       parseHistoricalManifest(valid).entries.map(({ id }) => id),
-      valid.entries
-        .filter((entry) => entry.kind !== "collection")
-        .map(({ id }) => id),
+      normalizedIds(valid),
       version,
     );
     for (const { name, mutate, message } of invalidCases) {
@@ -191,3 +172,21 @@ test("historical collection shape and relationships validate before records are 
     }
   }
 });
+
+function normalizedIds(input: HistoricalInput): string[] {
+  return input.entries
+    .filter((entry) => entry.kind !== "collection")
+    .flatMap((entry) => [
+      entry.id,
+      ...(Array.isArray(entry.variants)
+        ? entry.variants.flatMap((variant) =>
+            variant &&
+            typeof variant === "object" &&
+            "id" in variant &&
+            typeof variant.id === "string"
+              ? [variant.id]
+              : [],
+          )
+        : []),
+    ]);
+}

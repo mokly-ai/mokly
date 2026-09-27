@@ -1,6 +1,7 @@
 /** Shared single-view render/validation with generation-local route and resource indexes. */
 import type { ComponentViewRecord } from "@mokly/viewer";
 import {
+  entryRoute,
   isManifestComponentVariant,
   validateComponentViewRecord,
   generatedViews,
@@ -75,7 +76,7 @@ export class DocumentCompiler {
     );
     for (const entry of runtime.manifest.entries) {
       if (entry.kind === "page")
-        this.routes.set(entry.route, {
+        this.routes.set(entryRoute("page", entry.id), {
           entryId: entry.id,
           viewport: "desktop",
           colorScheme: "light",

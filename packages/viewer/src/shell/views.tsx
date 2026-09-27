@@ -62,7 +62,7 @@ function TargetView(props: {
   const removed =
     target.kind === "entry" &&
     props.catalogue.removedEntries.some(
-      ({ entry }) => entry.route === target.entry.route,
+      ({ entry }) => entry.id === target.entry.id,
     );
   const preview = removed
     ? removedPreviewData(props.catalogue, props.context, target.entry)
@@ -106,7 +106,7 @@ function TargetView(props: {
       (props.context.comparisons ?? false) &&
       props.target.kind === "entry" &&
       props.target.entry.kind === "screen" ? (
-        <DiffScreen route={props.target.entry.route}>{stage}</DiffScreen>
+        <DiffScreen route={props.target.entry.id}>{stage}</DiffScreen>
       ) : (
         stage
       )}
@@ -162,11 +162,11 @@ function MissingView(props: { requested: string }) {
 }
 
 /** The active catalogue route for a shell view, when it has one. */
-export function activeRouteForView(view: ShellView): string | undefined {
+export function activeIdForView(view: ShellView): string | undefined {
   if (view.kind !== "target") {
     return undefined;
   }
-  return view.target.entry.route;
+  return view.target.entry.id;
 }
 
 /** The browser document title for a shell view. */
@@ -187,9 +187,9 @@ export function ShellMain(props: {
   view: ShellView;
 }) {
   const mainId = useShellIdentifier("mb-main");
-  const route = activeRouteForView(props.view);
+  const route = activeIdForView(props.view);
   const baseline = props.catalogue.removedEntries.find(
-    ({ entry }) => entry.route === route,
+    ({ entry }) => entry.id === route,
   );
   return (
     <main
@@ -216,7 +216,7 @@ export function ShellMain(props: {
             catalogue={props.catalogue}
             context={props.context}
             entry={props.view.target.entry}
-            key={props.view.target.entry.route}
+            key={props.view.target.entry.id}
           />
         ) : (
           <TargetView

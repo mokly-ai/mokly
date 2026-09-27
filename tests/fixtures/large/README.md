@@ -34,7 +34,7 @@ can select an existing fixture. `dev:large` serves until Ctrl-C.
 `benchmark:large` launches Chrome, starts a fresh server and measures command start
 to searchable navigation with a real selected preview visible. It verifies record
 count, both viewports/themes, a successful Action label Props edit and a whole page.
-Then it waits for complete Changes and verifies zero changed routes for the
+Then it waits for complete Changes and verifies zero changed ids for the
 unrelated stylesheet rule. It repeats with a new server and browser context for
 a warm restart. Zero stylesheets or a zero share also yield zero Changes.
 JSON records separate listening, usable startup, Props, cached delivery and Changes

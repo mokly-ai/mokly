@@ -9,6 +9,18 @@ export function validateRoute(route: string, label: string): void {
   }
 }
 
+/** Validate one retained effective color-scheme configuration. */
+export function validateColorSchemes(value: unknown, label: string): void {
+  if (
+    JSON.stringify(value) !== '["light"]' &&
+    JSON.stringify(value) !== '["light","dark"]'
+  )
+    throw new MoklyError(
+      "manifest-invalid",
+      `${label} has invalid colorSchemes`,
+    );
+}
+
 /** Narrow a manifest string-array field. */
 export function stringArray(value: unknown): value is string[] {
   return (

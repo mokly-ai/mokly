@@ -3,18 +3,18 @@
 import type {
   CatalogueComponentVariant,
   CatalogueReadModel,
-  CatalogueRoutedEntry,
+  CatalogueRecord,
 } from "./types.js";
 
 export interface ResolvedCatalogueEntry {
-  entry: CatalogueRoutedEntry;
+  entry: CatalogueRecord;
   snapshotId?: string;
 }
 
 /** Current routed entries in public model order. */
 export function currentCatalogueEntries(
   model: CatalogueReadModel,
-): readonly CatalogueRoutedEntry[] {
+): readonly CatalogueRecord[] {
   return [
     ...model.screens,
     ...model.pages,
@@ -69,51 +69,49 @@ export function resolveCatalogueSelection(
     : undefined;
 }
 
-/** Resolve one route, inferring a published snapshot only from that exact route. */
+/** Resolve one kind-and-id address, inferring its published snapshot when unique. */
 export function resolveCatalogueRoute(
   model: CatalogueReadModel,
-  route: string,
+  identity: { id: string; kind: CatalogueRecord["kind"] },
   snapshotId?: string,
 ): ResolvedCatalogueEntry | undefined {
+  if (snapshotId !== undefined) {
+    const historical = model.removedEntries.find(
+      (record) =>
+        record.entry.id === identity.id &&
+        record.entry.kind === identity.kind &&
+        record.snapshotId === snapshotId,
+    );
+    return historical ? { entry: historical.entry, snapshotId } : undefined;
+  }
   const current = currentCatalogueEntries(model).find(
-    (entry) => entry.route === route,
+    (entry) => entry.id === identity.id && entry.kind === identity.kind,
   );
-  if (current) return snapshotId === undefined ? { entry: current } : undefined;
+  if (current) return { entry: current };
   const historical = model.removedEntries.filter(
-    (record) => record.entry.route === route,
+    (record) =>
+      record.entry.id === identity.id && record.entry.kind === identity.kind,
   );
   if (historical.length !== 1) return undefined;
   const [record] = historical;
   if (!record) return undefined;
-  if (snapshotId !== undefined)
-    return record.snapshotId === snapshotId
-      ? { entry: record.entry, snapshotId }
-      : undefined;
   if (record.snapshotId)
     return { entry: record.entry, snapshotId: record.snapshotId };
-  const collides = currentCatalogueEntries(model).some(
-    (entry) => entry.id === record.entry.id,
-  );
-  return collides ? undefined : { entry: record.entry };
+  return { entry: record.entry };
 }
 
 /** Resolve the public record corresponding to an already exact routed entry. */
 export function resolveCatalogueRecord(
   model: CatalogueReadModel,
-  entry: { id: string; kind: string; route: string },
+  entry: { id: string; kind: string },
 ): ResolvedCatalogueEntry | undefined {
   const current = currentCatalogueEntries(model).find(
-    (candidate) =>
-      candidate.id === entry.id &&
-      candidate.kind === entry.kind &&
-      candidate.route === entry.route,
+    (candidate) => candidate.id === entry.id && candidate.kind === entry.kind,
   );
   if (current) return { entry: current };
   const historical = model.removedEntries.find(
     (record) =>
-      record.entry.id === entry.id &&
-      record.entry.kind === entry.kind &&
-      record.entry.route === entry.route,
+      record.entry.id === entry.id && record.entry.kind === entry.kind,
   );
   return historical
     ? {

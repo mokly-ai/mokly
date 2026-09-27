@@ -49,7 +49,10 @@ async function loadWorkspace(
   entry: WorkspaceData["entry"],
   signal: AbortSignal,
 ): Promise<WorkspaceData | undefined> {
-  const requested = new URL(catalogueViewHref(entry.route), win.location.href);
+  const requested = new URL(
+    catalogueViewHref(entry.kind, entry.id),
+    win.location.href,
+  );
   try {
     const response = await win.fetch(requested, {
       cache: "no-store",
@@ -65,7 +68,7 @@ async function loadWorkspace(
     if (
       !delivery ||
       !sameDeployment(delivery, installedDelivery) ||
-      delivery.canonicalPath !== catalogueViewHref(entry.route)
+      delivery.canonicalPath !== catalogueViewHref(entry.kind, entry.id)
     )
       return;
     const bootstrapValue = scriptValue(
@@ -81,18 +84,14 @@ async function loadWorkspace(
       ),
       delivery,
     );
-    if (!sameStaticSource(bootstrap, installed, entry.route)) return;
+    if (!sameStaticSource(bootstrap, installed, entry.id, entry.kind)) return;
     const workspace = readViewerWorkspace(workspaceValue, {
       base: installed.context.base,
       ...(installed.context.previewGeneration
         ? { previewGeneration: installed.context.previewGeneration }
         : {}),
     });
-    if (
-      workspace.entry.id !== entry.id ||
-      workspace.entry.kind !== entry.kind ||
-      workspace.entry.route !== entry.route
-    )
+    if (workspace.entry.id !== entry.id || workspace.entry.kind !== entry.kind)
       return;
     return workspace;
   } catch {
@@ -140,11 +139,13 @@ function sameDeployment(
 function sameStaticSource(
   candidate: ShellBootstrap,
   installed: ShellBootstrap,
-  route: string,
+  id: string,
+  kind: WorkspaceData["entry"]["kind"],
 ): boolean {
   return (
     candidate.view.kind === "target" &&
-    candidate.view.route === route &&
+    candidate.view.entryId === id &&
+    candidate.view.entryKind === kind &&
     candidate.catalogue.identity.id === installed.catalogue.identity.id &&
     candidate.catalogue.deploymentId === installed.catalogue.deploymentId &&
     candidate.catalogue.revision.content ===

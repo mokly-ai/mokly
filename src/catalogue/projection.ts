@@ -1,7 +1,7 @@
 import type {
   CatalogueEntry,
   CatalogueReadModel,
-  CatalogueRoutedEntry,
+  CatalogueRecord,
   RemovedEntryPreview,
 } from "@mokly/viewer";
 import type { ManifestEntry } from "@mokly/viewer/data";
@@ -15,8 +15,6 @@ import {
   comparisonPath,
   comparisonGeneration,
   historicalSnapshotId,
-  publicPath,
-  pagePreviewPath,
   relatedDoc,
   repositoryPath,
 } from "@mokly/viewer/data";
@@ -61,34 +59,27 @@ export function projectCatalogue(
     id: entry.id,
     title: entry.title,
     tags: [...(entry.tags ?? [])],
+    navPath: [...entry.navPath],
     details: {
       description: entry.description,
       sourcePath: repositoryPath(entry.sourcePath),
       relatedDocs: entry.relatedDocs.map(relatedDoc),
-      dependencies: entry.dependencies.map(repositoryPath).sort(),
+      dependencies: entryDependencies(entry).map(repositoryPath),
       ...(entry.rationale !== undefined ? { rationale: entry.rationale } : {}),
     },
     changes: entryChanges(entry, input, removed),
   });
-  const routed = (
-    entry: ManifestEntry,
-    removed: boolean,
-  ): CatalogueRoutedEntry => {
+  const record = (entry: ManifestEntry, removed: boolean): CatalogueRecord => {
     const base = common(entry, removed);
     if (entry.kind === "page")
       return {
         ...base,
         kind: "page",
-        navPath: entry.navPath,
-        route: entry.route,
-        documentPath: removed ? null : publicPath(`static/${entry.route}`),
       };
     if (entry.kind === "use-case")
       return {
         ...base,
         kind: "use-case",
-        navPath: entry.navPath,
-        route: entry.route,
         steps: entry.steps.map((step) => ({
           screenId: step.screenId,
           ...(step.title !== undefined ? { title: step.title } : {}),
@@ -101,10 +92,7 @@ export function projectCatalogue(
       return {
         ...base,
         kind: "screen",
-        navPath: entry.navPath,
-        route: entry.route,
-        viewports: [...entry.viewports],
-        colorSchemes: entry.darkFragments ? ["light", "dark"] : ["light"],
+        colorSchemes: [...entry.colorSchemes],
         views: projectViews(input, retainedComponents, entry, removed),
         useCaseIds: [...entry.useCaseIds],
         ...(entry.address !== undefined ? { address: entry.address } : {}),
@@ -113,20 +101,13 @@ export function projectCatalogue(
           : {}),
       };
     if (isManifestComponentVariant(entry)) {
-      const review = (
-        input.comparison?.schemaVersion === 3
-          ? input.comparison
-          : input.evidence?.result
-      )?.components
+      const review = (input.comparison ?? input.evidence?.result)?.components
         .find((item) => item.id === entry.variantOf)
         ?.variants.find((item) => item.id === entry.id);
       return {
         ...base,
         kind: "component",
-        navPath: entry.navPath,
-        route: entry.route,
-        viewports: [...entry.viewports],
-        colorSchemes: entry.darkFragments ? ["light", "dark"] : ["light"],
+        colorSchemes: [...entry.colorSchemes],
         variantOf: entry.variantOf,
         props: readProps(entry.props),
         suppliedSlots: [...entry.suppliedSlots],
@@ -141,33 +122,19 @@ export function projectCatalogue(
     const schema = readSchema(entry.propSchema);
     if (schema.kind !== "object")
       invalidData("$catalogue", "expected object schema");
-    const firstVariant = catalogue.manifest.entries.find(
-      (candidate) =>
-        candidate.kind === "component" &&
-        isManifestComponentVariant(candidate) &&
-        candidate.variantOf === entry.id,
-    );
     return {
       ...base,
       kind: "component",
-      navPath: entry.navPath,
-      route: entry.route,
-      viewports: [...entry.viewports],
-      colorSchemes:
-        firstVariant?.kind === "component" &&
-        isManifestComponentVariant(firstVariant) &&
-        firstVariant.darkFragments
-          ? ["light", "dark"]
-          : ["light"],
+      colorSchemes: [...entry.colorSchemes],
       propSchema: schema,
       slots: [...entry.slots],
       controls: readControls(entry.controls, schema),
     };
   };
-  const entries: CatalogueRoutedEntry[] = orderEntriesWithVariants(
+  const entries: CatalogueRecord[] = orderEntriesWithVariants(
     catalogue.manifest.entries,
     (value) => value,
-  ).map((entry) => routed(entry, false));
+  ).map((entry) => record(entry, false));
   const removedSnapshots =
     input.changesStatus === "ready"
       ? orderEntriesWithVariants(
@@ -181,12 +148,10 @@ export function projectCatalogue(
           ({ entry }) => entry,
         ).flatMap((item) => ("removed" in item ? [item] : []))
       : [];
-  const removedRoutes = new Set(
-    removedSnapshots.map(({ entry }) => entry.route),
-  );
-  for (const route of input.removedPreviews?.keys() ?? [])
-    if (!removedRoutes.has(route))
-      invalidData("$catalogue", "preview route is not a removed entry");
+  const removedIds = new Set(removedSnapshots.map(({ entry }) => entry.id));
+  for (const id of input.removedPreviews?.keys() ?? [])
+    if (!removedIds.has(id))
+      invalidData("$catalogue", "preview id is not a removed entry");
   return {
     schemaVersion: 3,
     identity,
@@ -203,7 +168,7 @@ export function projectCatalogue(
     useCases: entries.filter((entry) => entry.kind === "use-case"),
     components: entries.filter((entry) => entry.kind === "component"),
     removedEntries: removedSnapshots.map(({ entry }) => ({
-      entry: routed(entry, true),
+      entry: record(entry, true),
       ...(snapshotSource
         ? {
             snapshotId: historicalSnapshotId(
@@ -215,7 +180,7 @@ export function projectCatalogue(
         : {}),
       ...projectPreview(
         entry,
-        input.removedPreviews?.get(entry.route),
+        input.removedPreviews?.get(entry.id),
         comparisonUrl,
       ),
     })),
@@ -258,12 +223,12 @@ function projectPreview(
   }
   if (entry.kind !== "page")
     invalidData("$catalogue", "page preview requires a removed page");
-  const previewPath = pagePreviewPath(preview.path);
-  const generation = comparisonUrl.slice(0, -"review.json".length);
-  if (previewPath !== `${generation}pages/${entry.route}.json`)
-    invalidData(
-      "$catalogue",
-      "page preview must match comparison generation and route",
-    );
-  return { preview: { kind: "page", path: previewPath } };
+  return { preview: { kind: "page" } };
+}
+
+function entryDependencies(entry: ManifestEntry): string[] {
+  const historical = (entry as { dependencies?: unknown }).dependencies;
+  return Array.isArray(historical)
+    ? [...(historical as string[])].sort()
+    : [...new Set([entry.sourcePath, ...entry.declaredDependencies])].sort();
 }

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import type { ReviewResultV3 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV4 } from "../../packages/viewer/dist/review/component_types.js";
 import { controlsEntrySource } from "../helpers/component_controls_fixture.js";
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 
@@ -53,8 +53,8 @@ test("Usage and Changes completion preserve edited props and their live preview"
     ).not.toContainText("until the catalogue has been checked");
     server.publishUpdate({
       kind: "evidence",
-      componentChanges: { baseline: compilation.manifest, changedRoutes: [] },
-      changedRoutes: [],
+      componentChanges: { baseline: compilation.manifest, changedIds: [] },
+      changedIds: [],
       changesStatus: "ready",
     });
     await expect(page.locator("[data-workspace-status]")).toHaveText(
@@ -134,7 +134,7 @@ test("Changes completion preserves keyboard focus on an unchanged Usage link", a
         baseline: compilation.manifest,
         result: affectedUsageResult(),
       },
-      changedRoutes: [],
+      changedIds: [],
       changesStatus: "ready",
     });
 
@@ -156,22 +156,68 @@ test("Changes completion preserves keyboard focus on an unchanged Usage link", a
   }
 });
 
-function affectedUsageResult(): ReviewResultV3 {
+function affectedUsageResult(): ReviewResultV4 {
   return {
     baseCommit: "a".repeat(40),
     baseRef: "main",
     changedPaths: ["entries/fixture.mockup.tsx"],
     ignoredImpact: [],
-    schemaVersion: 3,
+    schemaVersion: 4,
     sharedImpact: [],
-    screens: [],
-    components: [],
+    screens: [
+      {
+        after: { id: "home", title: "Home" },
+        dependencies: [],
+        id: "home",
+        sharedImpact: [],
+        state: "unchanged",
+        title: "Home",
+        views: [
+          {
+            colorScheme: "light",
+            ignoredIds: [],
+            state: "unchanged",
+            viewport: "mobile",
+          },
+        ],
+      },
+    ],
+    components: [
+      {
+        after: { id: "action", title: "Action" },
+        dependencies: [],
+        id: "action",
+        sharedImpact: [],
+        state: "changed",
+        title: "Action",
+        variants: [
+          {
+            after: {
+              id: "action-default",
+              title: "Default",
+              props: {},
+              suppliedSlots: [],
+            },
+            id: "action-default",
+            state: "unchanged",
+            title: "Default",
+            views: [
+              {
+                colorScheme: "light",
+                ignoredIds: [],
+                state: "unchanged",
+                viewport: "mobile",
+              },
+            ],
+          },
+        ],
+      },
+    ],
     changes: [
       {
         kind: "component",
         after: {
           id: "action",
-          route: "components/action.html",
           title: "Action",
         },
         reasons: [{ kind: "material" }],
@@ -180,7 +226,7 @@ function affectedUsageResult(): ReviewResultV3 {
     affectedConsumers: [
       {
         changedComponentId: "action",
-        consumer: { kind: "screen", route: "screens/home.html" },
+        consumer: { kind: "screen", id: "home" },
         evidence: [
           {
             side: "after",
@@ -188,13 +234,12 @@ function affectedUsageResult(): ReviewResultV3 {
               kind: "screen",
               entry: {
                 id: "home",
-                route: "screens/home.html",
                 title: "Home",
               },
               viewport: "mobile",
               colorScheme: "light",
             },
-            via: [{ componentId: "action", instanceKey: "affected-action" }],
+            via: [{ componentId: "action", instanceKey: "a".repeat(64) }],
           },
         ],
       },

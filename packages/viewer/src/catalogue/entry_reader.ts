@@ -11,7 +11,7 @@ import {
 import type {
   CatalogueChanges,
   CatalogueEntry,
-  CatalogueRoutedEntry,
+  CatalogueRecord,
   CatalogueUsage,
   CatalogueView,
   ComparisonSelection,
@@ -22,10 +22,8 @@ import {
   choice,
   id,
   object,
-  publicPath,
   relatedDoc,
   repositoryPath,
-  route,
   string,
   text,
 } from "./values.js";
@@ -86,17 +84,23 @@ export function readView(value: unknown): CatalogueView {
   return {
     viewport: choice(input.viewport, ["mobile", "desktop"] as const),
     colorScheme: choice(input.colorScheme, ["light", "dark"] as const),
-    fragmentPath: publicPath(input.fragmentPath),
     usage: readUsage(input.usage),
     comparison: readComparison(input.comparison),
   };
 }
 function common(input: Record<string, unknown>): CatalogueEntry {
   const details = object(input.details);
+  const navPath = array(input.navPath).map((value) => {
+    const label = string(value);
+    if (label.length === 0)
+      invalidData("$catalogue", "expected a nonempty navPath label");
+    return label;
+  });
   const result: CatalogueEntry = {
     id: id(input.id),
     title: text(input.title),
     tags: array(input.tags).map(id),
+    navPath,
     changes: readChanges(input.changes),
     details: {
       description: string(details.description),
@@ -109,16 +113,9 @@ function common(input: Record<string, unknown>): CatalogueEntry {
     result.details.rationale = string(details.rationale);
   return result;
 }
-export function readEntry(value: unknown): CatalogueRoutedEntry {
+export function readEntry(value: unknown): CatalogueRecord {
   const input = object(value),
-    base = common(input),
-    path = route(input.route),
-    navPath = array(input.navPath).map((value) => {
-      const label = string(value);
-      if (label.length === 0)
-        invalidData("$catalogue", "expected a nonempty navPath label");
-      return label;
-    });
+    base = common(input);
   if (Object.hasOwn(input, "preview"))
     invalidData("$catalogue", "preview is only valid on a removed entry");
   const kind = choice(input.kind, [
@@ -131,16 +128,11 @@ export function readEntry(value: unknown): CatalogueRoutedEntry {
     return {
       ...base,
       kind,
-      navPath,
-      route: path,
-      documentPath: publicPath(input.documentPath),
     };
   if (kind === "use-case")
     return {
       ...base,
       kind,
-      navPath,
-      route: path,
       steps: array(input.steps).map((raw) => {
         const step = object(raw);
         return {
@@ -153,9 +145,6 @@ export function readEntry(value: unknown): CatalogueRoutedEntry {
       }),
     };
   const axes = {
-    viewports: array(input.viewports).map((value) =>
-      choice(value, ["mobile", "desktop"] as const),
-    ),
     colorSchemes: array(input.colorSchemes).map((value) =>
       choice(value, ["light", "dark"] as const),
     ),
@@ -164,8 +153,6 @@ export function readEntry(value: unknown): CatalogueRoutedEntry {
     return {
       ...base,
       kind,
-      navPath,
-      route: path,
       ...axes,
       views: array(input.views).map(readView),
       useCaseIds: array(input.useCaseIds).map(id),
@@ -180,8 +167,6 @@ export function readEntry(value: unknown): CatalogueRoutedEntry {
     return {
       ...base,
       kind,
-      navPath,
-      route: path,
       ...axes,
       variantOf: id(input.variantOf),
       props: readProps(input.props),
@@ -195,8 +180,6 @@ export function readEntry(value: unknown): CatalogueRoutedEntry {
   return {
     ...base,
     kind,
-    navPath,
-    route: path,
     ...axes,
     propSchema: schema,
     slots: array(input.slots).map(string),

@@ -3,10 +3,16 @@
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { StaticDelivery } from "../navigation/delivery.js";
 import { isLogicalFragment } from "../navigation/logical.js";
+import { parseViewHref, viewHref } from "../navigation/routes.js";
+import type { EntryRouteKind } from "../navigation/routes.js";
 import { parseViewAxes } from "../navigation/view_axes.js";
-import type { ManifestEntry } from "../registry/types.js";
 
-import { catalogueRouteEntry, type Catalogue } from "./catalogue.js";
+import {
+  catalogueRouteEntry,
+  catalogueSelectionEntry,
+  type Catalogue,
+  type CatalogueManifestEntry,
+} from "./catalogue.js";
 import { toRouteTarget } from "./target.js";
 import type { ShellView } from "./views.js";
 
@@ -34,7 +40,8 @@ export function routeFromUrl(
   const snapshots = url.searchParams.getAll("snapshot");
   const historical = entry
     ? catalogue.removedEntries.find(
-        ({ entry: candidate }) => candidate.route === entry.route,
+        ({ entry: candidate }) =>
+          candidate.id === entry.id && candidate.kind === entry.kind,
       )
     : undefined;
   const alias = /^\/id\//.test(url.pathname);
@@ -42,22 +49,31 @@ export function routeFromUrl(
     snapshots.length === 1 && isHistoricalSnapshotId(snapshots[0])
       ? snapshots[0]
       : undefined;
+  const currentEntry = entry
+    ? catalogue.manifest.entries.some(
+        (candidate) =>
+          candidate.id === entry.id && candidate.kind === entry.kind,
+      )
+    : false;
   const snapshot =
     historical &&
-    (snapshots.length === 0 ||
+    ((!currentEntry && snapshots.length === 0) ||
       (!alias && requestedSnapshot === historical.snapshotId))
       ? (requestedSnapshot ?? historical.snapshotId)
       : undefined;
   const collidingLegacy =
     historical !== undefined &&
     historical.snapshotId === undefined &&
-    catalogue.manifest.entries.some(
-      (candidate) => candidate.id === historical.entry.id,
-    );
+    currentEntry;
   const validSnapshot = historical
     ? snapshot !== undefined || (snapshots.length === 0 && !collidingLegacy)
     : snapshots.length === 0;
-  const target = entry && validSnapshot ? toRouteTarget(entry) : undefined;
+  const selectedEntry =
+    entry && snapshot
+      ? catalogueSelectionEntry(catalogue, entry.id, snapshot)
+      : entry;
+  const target =
+    selectedEntry && validSnapshot ? toRouteTarget(selectedEntry) : undefined;
   const view = target
     ? { kind: "target" as const, target }
     : url.pathname === "/" && snapshots.length === 0
@@ -94,7 +110,8 @@ export function routeFromUrl(
 
 /** Canonical URL for a validated catalogue entry and logical fragment. */
 export function routeHref(
-  route: string,
+  kind: EntryRouteKind,
+  id: string,
   fragment?: string,
   variant?: string,
   workspace: Pick<
@@ -107,10 +124,7 @@ export function routeHref(
     | "viewport"
   > = {},
 ): string {
-  const url = new URL(
-    `/view/${route.split("/").map(encodeURIComponent).join("/")}`,
-    "https://mokly.invalid",
-  );
+  const url = new URL(viewHref(kind, id), "https://mokly.invalid");
   if (fragment) url.searchParams.set("fragment", fragment);
   if (workspace.variantValues)
     for (const value of workspace.variantValues)
@@ -140,21 +154,20 @@ function routeEntry(
   catalogue: Catalogue,
   pathname: string,
   delivery?: StaticDelivery,
-): ManifestEntry | undefined {
+): CatalogueManifestEntry | undefined {
   if (pathname.startsWith("/view/")) {
-    const route = decodePath(pathname.slice("/view/".length));
-    if (route === undefined) return undefined;
-    const exact = catalogueRouteEntry(catalogue, route);
-    if (exact || !delivery || route.endsWith(".html")) return exact;
-    const normalizedRoute = `${route}.html`;
-    const normalized = catalogueRouteEntry(catalogue, normalizedRoute);
-    if (!normalized) return undefined;
-    const canonicalPath = `/view/${normalizedRoute}`;
+    const identity = parseViewHref(pathname);
+    if (!identity) return undefined;
+    const entry = catalogueRouteEntry(catalogue, identity.id, identity.kind);
+    if (!entry || !delivery || pathname.endsWith(".html")) return entry;
+    const canonicalPath = viewHref(identity.kind, identity.id);
     const current = Object.values(delivery.idRoutes).includes(canonicalPath);
     const historical = catalogue.removedEntries.some(
-      ({ entry }) => entry.route === normalizedRoute,
+      ({ entry }) => entry.id === identity.id && entry.kind === identity.kind,
     );
-    return current || historical ? normalized : undefined;
+    return current || historical
+      ? catalogueRouteEntry(catalogue, identity.id, identity.kind)
+      : undefined;
   }
   const match = /^\/id\/([^/]+)(?:\/(?:index\.html)?)?$/.exec(pathname);
   if (!match) return undefined;

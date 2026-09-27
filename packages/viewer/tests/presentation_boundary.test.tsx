@@ -4,6 +4,7 @@ import { test } from "node:test";
 
 import { catalogueComponentVariants } from "../src/catalogue/entry_selection.js";
 import { readCatalogue } from "../src/catalogue/reader.js";
+import type { CatalogueView } from "../src/catalogue/types.js";
 import { renderViewer } from "../src/viewer/server.js";
 
 const fixture = readCatalogue(
@@ -122,15 +123,12 @@ test("SSR uses effective Light evidence for light-only screens and variants", ()
   assert.match(componentHtml, /data-view-changed="scheme" hidden=""/);
 });
 
-function withDarkViews<
-  T extends { colorScheme: "dark" | "light"; fragmentPath: string | null },
->(views: readonly T[]): T[] {
+function withDarkViews<T extends CatalogueView>(views: readonly T[]): T[] {
   return views.flatMap((view) => [
     view,
     {
       ...view,
       colorScheme: "dark" as const,
-      fragmentPath: view.fragmentPath?.replace(/\.html$/, ".dark.html") ?? null,
     },
   ]);
 }

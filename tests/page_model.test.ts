@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
+import { entryRoute } from "../packages/viewer/src/navigation/routes.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
 import { buildNavSections } from "../packages/viewer/src/shell/nav_tree.js";
 import { compileCatalogue } from "../src/build/compile.js";
 import { loadConfig } from "../src/config/load.js";
-import { changedManifestRoutes } from "../src/registry/changed_routes.js";
+import { changedManifestIds } from "../src/registry/changed_ids.js";
 import { removedManifestEntries } from "../src/registry/changes.js";
 import { viewPage, homePage } from "../src/server/pages.js";
 
@@ -35,14 +36,10 @@ test("flat page titles and memberships affect Changes without moving derived rou
   const after = (await compileCatalogue(config)).manifest;
   const handbook = after.entries.find((entry) => entry.id === "handbook");
   assert.equal(
-    handbook?.kind === "page" ? handbook.route : undefined,
+    handbook?.kind === "page" ? entryRoute("page", handbook.id) : undefined,
     "pages/handbook.html",
   );
-  assert.ok(
-    changedManifestRoutes(after, before, config, []).includes(
-      "pages/handbook.html",
-    ),
-  );
+  assert.ok(changedManifestIds(after, before, config, []).includes("handbook"));
   const catalogue = createCatalogue(after);
   assert.deepEqual(
     buildNavSections(catalogue.hierarchy)[0]!
@@ -69,7 +66,7 @@ test("removed page metadata keeps deleted ancestry and current id precedence", a
     ...publicShellContext(catalogue, {
       base: "main",
       updateVersion: 1,
-      changedRoutes: [entry.route],
+      changedIds: [entry.id],
     }),
   });
   assert.match(documentText(html), /Showing previous version/);
@@ -81,7 +78,7 @@ test("removed page metadata keeps deleted ancestry and current id precedence", a
       publicShellContext(catalogue, {
         base: "main",
         updateVersion: 1,
-        changedRoutes: [entry.route],
+        changedIds: [entry.id],
       }),
     ),
     /data-removed-page=""[^>]*hidden/,
@@ -111,7 +108,7 @@ export const mockups = defineRoot({ navPath: ["App"], dependencies: ["notes.md"]
       (value) => value.kind === "page",
     );
     assert.equal(
-      entry?.kind === "page" ? entry.route : undefined,
+      entry?.kind === "page" ? entryRoute("page", entry.id) : undefined,
       "pages/handbook.html",
     );
     assert.deepEqual(entry?.navPath, ["App", title]);

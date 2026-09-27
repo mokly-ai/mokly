@@ -1,11 +1,11 @@
 /** Workspace values derived only from the validated public catalogue. */
-import { resolveCatalogueRecord } from "../catalogue/entry_selection.js";
 import { catalogueComponentVariants } from "../catalogue/entry_selection.js";
+import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type {
   CatalogueComponent,
   CatalogueComponentVariant,
   CatalogueReadModel,
-  CatalogueRoutedEntry,
+  CatalogueRecord,
   CatalogueScreen,
   CatalogueView,
 } from "../catalogue/types.js";
@@ -35,7 +35,7 @@ const reviewStates: Readonly<Record<keyof typeof statuses, ReviewState>> = {
   removed: "removed",
   unmodified: "unchanged",
 };
-function status(entry: CatalogueRoutedEntry): EntryStatus | undefined {
+function status(entry: CatalogueRecord): EntryStatus | undefined {
   return entry.changes.status === "ready"
     ? statuses[entry.changes.kind]
     : undefined;
@@ -108,8 +108,11 @@ export function publicWorkspace(
   model: CatalogueReadModel,
   entry: WorkspaceData["entry"],
   comparisons = model.comparisonUrl !== null,
+  snapshotId?: string,
 ): WorkspaceData {
-  const original = resolveCatalogueRecord(model, entry)?.entry;
+  const selected = resolveCatalogueSelection(model, entry.id, snapshotId);
+  const original =
+    selected?.entry.kind === entry.kind ? selected.entry : undefined;
   if (
     !original ||
     (original.kind !== "screen" && original.kind !== "component")
@@ -123,8 +126,9 @@ export function publicWorkspace(
       for (const instance of view.usage?.instances ?? [])
         if (instance.componentId === entry.id)
           usedBy.push({
+            entryId: owner.id,
+            entryKind: owner.kind,
             title: owner.title,
-            route: owner.route,
             ...(view.variantId ? { variantId: view.variantId } : {}),
             viewport: view.viewport,
             colorScheme: view.colorScheme,
@@ -187,7 +191,7 @@ export function publicWorkspace(
         (component): component is CatalogueComponent =>
           !("variantOf" in component),
       )
-      .map(({ id, title, route }) => ({ id, title, route })),
+      .map(({ id, title }) => ({ id, title })),
     views:
       entry.kind === "component" && !("variantOf" in entry)
         ? variants.flatMap(({ value }) => generatedViews(value))

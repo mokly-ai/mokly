@@ -4,6 +4,7 @@ import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { FrameNavigation } from "../client/frame_adapter.js";
 import { isLogicalFragment } from "../navigation/logical.js";
+import { viewHref } from "../navigation/routes.js";
 import { parseViewAxes } from "../navigation/view_axes.js";
 
 import type { ViewerEvents, ViewerSelection } from "./types.js";
@@ -87,14 +88,9 @@ export class ViewerRouting {
     if (key === this.announced) return;
     this.announced = key;
     const entry = this.entry();
-    const variantId = this.effectiveVariant();
-    const snapshotId = this.actions.selection().snapshotId;
     if (entry)
       this.actions.events().onScreenNavigate?.({
         screenId: entry.id,
-        route: entry.route,
-        ...(snapshotId ? { snapshotId } : {}),
-        ...(variantId ? { variantId } : {}),
         ...(this.fragment ? { fragment: this.fragment } : {}),
         ...(navigation ? { navigation } : {}),
       });
@@ -124,7 +120,7 @@ export class ViewerRouting {
       navigation.target.kind === "named" ||
       (navigation.target.kind === "self" && navigation.activation !== "primary")
     ) {
-      const url = new URL(`/view/${entry.route}`, this.baseUrl);
+      const url = new URL(viewHref(entry.kind, entry.id), this.baseUrl);
       if (selected.snapshotId)
         url.searchParams.set("snapshot", selected.snapshotId);
       if (navigation.fragment)

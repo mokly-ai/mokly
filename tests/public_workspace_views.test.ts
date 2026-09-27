@@ -4,7 +4,7 @@ import test from "node:test";
 import { projectCatalogue } from "../dist/catalogue/projection.js";
 import { removedManifestEntries } from "../dist/registry/changes.js";
 import type { ManifestV7 } from "../packages/viewer/dist/registry/types.js";
-import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV4 } from "../packages/viewer/dist/review/component_types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { workspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
@@ -65,22 +65,16 @@ test("public workspace keeps each saved variant's changed views", () => {
 
 test("public workspace derives a screen's ready per-view states", () => {
   const screen = {
+    colorSchemes: ["light"] as const,
     declaredDependencies: [],
-    dependencies: [],
     description: "Welcome screen",
-    fragments: {
-      desktop: "screens/welcome.desktop.html",
-      mobile: "screens/welcome.mobile.html",
-    },
     id: "welcome",
     kind: "screen" as const,
     navPath: [],
     relatedDocs: [],
-    route: "screens/welcome.html",
     sourcePath: "entries/welcome.mockup.tsx",
     title: "Welcome",
     useCaseIds: [],
-    viewports: ["mobile", "desktop"] as const,
   };
   const manifest: ManifestV7 = {
     entries: [screen],
@@ -88,7 +82,7 @@ test("public workspace derives a screen's ready per-view states", () => {
     schemaVersion: 7,
     sourceFiles: [screen.sourcePath],
   };
-  const result: ReviewResultV3 = {
+  const result: ReviewResultV4 = {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
     baseRef: "main",
@@ -96,12 +90,13 @@ test("public workspace derives a screen's ready per-view states", () => {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 3,
+    schemaVersion: 4,
     screens: [
       {
+        after: { id: screen.id, title: screen.title },
+        before: { id: screen.id, title: screen.title },
         dependencies: [],
         id: screen.id,
-        route: screen.route,
         sharedImpact: [],
         state: "changed",
         title: screen.title,

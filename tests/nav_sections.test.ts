@@ -71,12 +71,10 @@ test("screen variant leaves follow manifest order", () => {
   const parent = screen("welcome", "Welcome", ["Screens"]);
   const zeta = {
     ...screen("welcome-zeta", "Welcome zeta", ["Screens"]),
-    route: "welcome.variants/zeta.html",
     variantOf: parent.id,
   };
   const alpha = {
     ...screen("welcome-alpha", "Welcome alpha", ["Screens"]),
-    route: "welcome.variants/alpha.html",
     variantOf: parent.id,
   };
   const catalogue = createCatalogue(manifest([parent, zeta, alpha]));
@@ -127,7 +125,7 @@ test("folder identities preserve colons and remain section-local", () => {
     );
   }
   const defaults = defaultDisclosures(sections, undefined);
-  assert.deepEqual(disclosurePath(sections, "a.html"), [
+  assert.deepEqual(disclosurePath(sections, "a"), [
     "section:pages",
     "folder:pages:Design: System",
     "folder:pages:Design: System/Browse",
@@ -200,18 +198,16 @@ function screen(
   navPath: readonly string[] = [],
 ): ManifestScreen {
   return {
-    dependencies: [],
+    colorSchemes: ["light"],
+    declaredDependencies: [],
     description: `${title} screen`,
-    fragments: { desktop: `${id}.desktop.html`, mobile: `${id}.mobile.html` },
     id,
     kind: "screen",
     navPath,
     relatedDocs: [],
-    route: `${id}.html`,
     sourcePath: `entries/${id}.tsx`,
     title,
     useCaseIds: [],
-    viewports: ["mobile", "desktop"],
   };
 }
 
@@ -221,9 +217,9 @@ function component(
   navPath: readonly string[] = [],
 ): ManifestComponent {
   return {
+    colorSchemes: ["light"],
     controls: {},
     declaredDependencies: [],
-    dependencies: [],
     description: `${title} component`,
     id,
     kind: "component",
@@ -231,11 +227,9 @@ function component(
     ownedDependencies: [],
     propSchema: { kind: "object", properties: {} },
     relatedDocs: [],
-    route: `components/${id}.html`,
     slots: [],
     sourcePath: `entries/${id}.tsx`,
     title,
-    viewports: ["mobile", "desktop"],
   };
 }
 
@@ -261,25 +255,19 @@ function manifest(entries: readonly ManifestEntry[]): ManifestV7 {
 function componentVariant(parent: ManifestComponent): ManifestComponentVariant {
   const id = `${parent.id}-default`;
   return {
+    colorSchemes: parent.colorSchemes,
     componentViews: [],
     declaredDependencies: [],
-    dependencies: parent.dependencies,
     description: parent.description,
-    fragments: {
-      desktop: `components/${id}.desktop.html`,
-      mobile: `components/${id}.mobile.html`,
-    },
     id,
     kind: "component",
     navPath: parent.navPath,
     props: {},
     relatedDocs: parent.relatedDocs,
-    route: `components/${id}.html`,
     sourcePath: parent.sourcePath,
     suppliedSlots: [],
     title: "Default",
     variantOf: parent.id,
-    viewports: ["mobile", "desktop"],
   };
 }
 

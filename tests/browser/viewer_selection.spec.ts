@@ -94,8 +94,6 @@ for (const cross of [false, true])
     ).toEqual([
       {
         screenId: "action",
-        route: "components/action.html",
-        variantId: "action-disabled",
         fragment: "details",
       },
     ]);

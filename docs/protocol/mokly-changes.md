@@ -340,10 +340,10 @@ binary fonts and images, while explicit HTTP(S)/data resources remain external.
 Root-absolute, protocol-relative, and other scheme-qualified resource URLs are
 not portable in an isolated snapshot and fail comparison instead of being
 silently omitted.
-Current-worktree resources must resolve to regular public files. Every base
-resource, including the pane document itself and each transitive dependency,
-must be a regular Git file. Neither side may read from protected authoring inputs. Pane documents remain byte-unmodified and run in
-script-disabled sandboxes.
+Current-worktree resources and every base dependency must be regular public
+files, never protected authoring inputs. Pane documents run in script-disabled sandboxes that confine navigation to the pane; current documents remain byte-unmodified.
+Relocating a v3–v6 document resolves and rewrites its first relative `<base href>` against the stored location, marking it `data-mokly-snapshot-base` instead of adding a second; a non-portable base fails capture. Without one, Mokly injects that private base.
+Injected-base HTML `href="#fragment"`, SVG `href`, and qualified `xlink:href` fragments are rewritten to the canonical snapshot document, so native pane anchor clicks stay within that document. SVG presentation attributes and inline styles retain `url(#fragment)`: browsers keep those paint, clip, mask, marker, and filter references document-local despite the base. Relocation changes no `mock:` link marker or non-fragment URL, reference validation confines the base to the same snapshot side, and no stored path enters `review.json`.
 
 `review.json` is the normative machine-readable result. Its screen records are:
 

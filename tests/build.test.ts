@@ -12,6 +12,7 @@ import {
   parseManifest,
   parseHistoricalManifest,
 } from "../dist/registry/manifest.js";
+import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 
 import {
   registerFixturePage,
@@ -85,13 +86,13 @@ test("dark schemes render dark fragments per view", async (context) => {
     (entry) => entry.id === "details",
   );
   assert.equal(home?.kind, "screen");
-  assert.deepEqual(home?.kind === "screen" ? home.darkFragments : undefined, {
-    desktop: "screens/home.desktop.dark.html",
-    mobile: "screens/home.mobile.dark.html",
-  });
-  assert.equal(
-    details?.kind === "screen" ? details.darkFragments : undefined,
-    undefined,
+  assert.deepEqual(home?.kind === "screen" ? home.colorSchemes : undefined, [
+    "light",
+    "dark",
+  ]);
+  assert.deepEqual(
+    details?.kind === "screen" ? details.colorSchemes : undefined,
+    ["light"],
   );
   assert.deepEqual(
     [...compilation.outputs.keys()].filter((route) =>
@@ -107,7 +108,28 @@ test("manifest readers accept version 2 only through explicit compatibility", as
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   const legacy = {
-    ...compilation.manifest,
+    entries: compilation.manifest.entries.flatMap((entry) => {
+      if (entry.kind === "page" || entry.kind === "component") return [];
+      const common = {
+        ...entry,
+        dependencies: [entry.sourcePath, ...entry.declaredDependencies],
+        route: entryRoute(entry.kind, entry.id),
+      } as Record<string, unknown>;
+      delete common["colorSchemes"];
+      delete common["componentViews"];
+      return entry.kind === "screen"
+        ? [
+            {
+              ...common,
+              fragments: {
+                desktop: viewRoute("screen", entry.id, "desktop", "light"),
+                mobile: viewRoute("screen", entry.id, "mobile", "light"),
+              },
+              viewports: ["mobile", "desktop"],
+            },
+          ]
+        : [common];
+    }),
     generatedBy: undefined,
     schemaVersion: 2,
     legacyPages: [],

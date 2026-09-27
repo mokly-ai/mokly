@@ -159,15 +159,14 @@ test("a viewer selection change fences the previous request", async ({
     release = resolve;
   });
   let handled = false;
-  await page.route("**/pages/pages/removed-page.html.json", async (route) => {
+  await page.route("**/pages/removed-page.json", async (route) => {
     await held;
     await route.continue().catch(() => undefined);
     handled = true;
   });
   let settled = false;
   const settle = (request: { url(): string }): void => {
-    if (request.url().includes("/pages/pages/removed-page.html.json"))
-      settled = true;
+    if (request.url().includes("/pages/removed-page.json")) settled = true;
   };
   page.on("requestfinished", settle);
   page.on("requestfailed", settle);

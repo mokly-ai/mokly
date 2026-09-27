@@ -1,12 +1,16 @@
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
-import type { ManifestComponent } from "../components/manifest_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import {
   analyzeHierarchy,
   type CatalogueHierarchy,
 } from "../registry/hierarchy.js";
-import type { ManifestEntry, ManifestScreen } from "../registry/types.js";
+import type {
+  HistoricalManifestEntry,
+  HistoricalManifestScreen,
+  ManifestEntry,
+  ManifestScreen,
+} from "../registry/types.js";
 
 import type { CatalogueMetadata } from "./metadata.js";
 import { type RemovedEntrySnapshot } from "./metadata.js";
@@ -14,8 +18,7 @@ import { type RemovedEntrySnapshot } from "./metadata.js";
 /** Validated lookup model used by server routes. */
 export interface Catalogue {
   publicModel?: CatalogueReadModel;
-  byId: ReadonlyMap<string, ManifestEntry>;
-  byRoute: ReadonlyMap<string, ManifestEntry>;
+  byId: ReadonlyMap<string, CatalogueManifestEntry>;
   /** Whether any screen in the catalogue was rendered in the dark scheme. */
   hasDarkFragments: boolean;
   hierarchy: CatalogueHierarchy<ManifestEntry>;
@@ -23,21 +26,27 @@ export interface Catalogue {
   /** Every classification tag the entries declare, deduplicated and sorted. */
   tags: readonly string[];
   /** Baseline screens retained only for on-demand comparisons. */
-  removedScreens: readonly ManifestScreen[];
+  removedScreens: readonly (ManifestScreen | HistoricalManifestScreen)[];
   removedEntries: readonly RemovedEntrySnapshot[];
   /** Removed component variants retain their immutable baseline for inspection. */
-  removedComponents: readonly ManifestComponent[];
+  removedComponents: readonly CatalogueManifestEntry[];
 }
 
-/** Resolve a routed entry, giving current content precedence over history. */
+/** Current entries and normalized history share identity and display metadata. */
+export type CatalogueManifestEntry = ManifestEntry | HistoricalManifestEntry;
+
+/** Resolve an entry identity, giving current content precedence over history. */
 export function catalogueRouteEntry(
   catalogue: Catalogue,
-  route: string,
-): ManifestEntry | undefined {
-  return (
-    catalogue.byRoute.get(route) ??
-    catalogue.removedEntries.find(({ entry }) => entry.route === route)?.entry
-  );
+  id: string,
+  kind?: ManifestEntry["kind"],
+): CatalogueManifestEntry | undefined {
+  const entry =
+    catalogue.byId.get(id) ??
+    catalogue.removedEntries.find(({ entry }) => entry.id === id)?.entry;
+  return entry && (kind === undefined || entry.kind === kind)
+    ? entry
+    : undefined;
 }
 
 /** Resolve one public current or historical selection into its display entry. */
@@ -45,21 +54,38 @@ export function catalogueSelectionEntry(
   catalogue: Catalogue,
   entryId: string,
   snapshotId?: string,
-): ManifestEntry | undefined {
+): CatalogueManifestEntry | undefined {
+  if (catalogue.publicModel) {
+    const selected = resolveCatalogueSelection(
+      catalogue.publicModel,
+      entryId,
+      snapshotId,
+    );
+    if (!selected) return;
+    if (selected.snapshotId !== undefined) {
+      const historical = catalogue.removedEntries.filter(
+        (record) =>
+          record.entry.id === selected.entry.id &&
+          record.entry.kind === selected.entry.kind,
+      );
+      return (
+        historical.find(
+          (record) => record.snapshotId === selected.snapshotId,
+        ) ?? historical.find((record) => record.snapshotId === undefined)
+      )?.entry;
+    }
+    return catalogueRouteEntry(
+      catalogue,
+      selected.entry.id,
+      selected.entry.kind,
+    );
+  }
   if (snapshotId !== undefined)
     return catalogue.removedEntries.find(
       (record) =>
         record.entry.id === entryId && record.snapshotId === snapshotId,
     )?.entry;
-  if (!catalogue.publicModel) return catalogue.byId.get(entryId);
-  const selected = resolveCatalogueSelection(
-    catalogue.publicModel,
-    entryId,
-    snapshotId,
-  );
-  return selected
-    ? catalogueRouteEntry(catalogue, selected.entry.route)
-    : undefined;
+  return catalogue.byId.get(entryId);
 }
 
 /** The union of the tags declared across every entry that can carry them. */
@@ -71,7 +97,7 @@ function collectTags(entries: readonly ManifestEntry[]): readonly string[] {
   return [...new Set(declared)].sort();
 }
 
-/** Build deterministic id and route indexes from a validated manifest. */
+/** Build a deterministic id index from a validated manifest. */
 export function createCatalogue(
   manifest: CatalogueMetadata,
   removedEntries: readonly RemovedEntrySnapshot[] = [],
@@ -84,29 +110,25 @@ export function createCatalogue(
       ? [entry]
       : [],
   );
-  const byId = new Map(manifest.entries.map((entry) => [entry.id, entry]));
-  const byRoute = new Map<string, ManifestEntry>();
-  for (const entry of manifest.entries) {
-    byRoute.set(entry.route, entry);
-  }
+  const byId = new Map<string, CatalogueManifestEntry>(
+    manifest.entries.map((entry) => [entry.id, entry]),
+  );
   for (const { entry } of removedEntries)
     if (!byId.has(entry.id)) byId.set(entry.id, entry);
   const hasDarkFragments = [
     ...manifest.entries,
     ...removedScreens,
     ...removedComponents,
-  ].some((entry) =>
-    entry.kind === "screen"
-      ? entry.darkFragments !== undefined
-      : entry.kind === "component" &&
-        isManifestComponentVariant(entry) &&
-        entry.darkFragments !== undefined,
+  ].some(
+    (entry) =>
+      (entry.kind === "screen" ||
+        (entry.kind === "component" && isManifestComponentVariant(entry))) &&
+      entry.colorSchemes.includes("dark"),
   );
   const hierarchy = analyzeHierarchy<ManifestEntry>(manifest.entries).hierarchy;
   const tags = collectTags(manifest.entries);
   return {
     byId,
-    byRoute,
     hasDarkFragments,
     hierarchy,
     manifest,

@@ -24,7 +24,6 @@ test("an incomplete ready state renders the retryable unavailable state", () => 
         data: {
           id: "removed-page",
           kind: "page",
-          route: "archive/removed.html",
           title: "Removed page",
         },
         loaded,

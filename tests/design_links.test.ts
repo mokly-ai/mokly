@@ -9,6 +9,11 @@ import {
   appearanceModes,
   welcomeModes,
 } from "../examples/basic/entries/design/parts/navigation_states.js";
+import {
+  entryRoute,
+  generatedViews,
+  viewRoute,
+} from "../packages/viewer/dist/data.js";
 
 import {
   attribute,
@@ -149,7 +154,7 @@ test("every design link resolves to a real same-viewport design artifact without
           path.posix.normalize(
             path.posix.join(path.posix.dirname(route), href),
           ),
-          target.fragments[viewport],
+          viewRoute("screen", target.id, viewport, "light"),
         );
         assert.equal(attribute(link, "role"), undefined);
         for (const child of link.childNodes) {
@@ -186,7 +191,7 @@ test("no design route doubles as a directory holding another design route", asyn
   const { manifest } = await designCatalogue;
   const routes = manifest.entries.flatMap((entry) =>
     entry.kind === "screen" && entry.id.startsWith("design-")
-      ? [entry.route]
+      ? [entryRoute("screen", entry.id)]
       : [],
   );
   const directories = new Set(
@@ -240,9 +245,10 @@ test("a dark fragment's links stay dark wherever the target has a dark render", 
   );
   let checked = 0;
   for (const entry of designs) {
-    if (entry.kind !== "screen" || !entry.darkFragments) continue;
+    if (entry.kind !== "screen" || !entry.colorSchemes.includes("dark"))
+      continue;
     for (const viewport of ["mobile", "desktop"] as const) {
-      const route: string | undefined = entry.darkFragments[viewport];
+      const route = viewRoute("screen", entry.id, viewport, "dark");
       assert.ok(route, `${entry.id} ${viewport}`);
       const html = outputs.get(route);
       assert.ok(html, route);
@@ -260,7 +266,12 @@ test("a dark fragment's links stay dark wherever the target has a dark render", 
           path.posix.normalize(
             path.posix.join(path.posix.dirname(route), href),
           ),
-          target.darkFragments?.[viewport] ?? target.fragments[viewport],
+          viewRoute(
+            "screen",
+            target.id,
+            viewport,
+            target.colorSchemes.includes("dark") ? "dark" : "light",
+          ),
           `${route}: link to ${id} leaves the dark render`,
         );
       }
@@ -275,7 +286,7 @@ test("comparison families publish the same schemes for every member", async () =
     const members = family.map((id) => {
       const entry = manifest.entries.find((entry) => entry.id === id);
       assert.ok(entry?.kind === "screen", id);
-      return [id, entry.darkFragments !== undefined] as const;
+      return [id, entry.colorSchemes.includes("dark")] as const;
     });
     assert.deepEqual(
       members.filter(([, dual]) => !dual).map(([id]) => id),
@@ -308,7 +319,9 @@ test("a tag chip without a destination is a label, not a control", async () => {
   let labels = 0;
   for (const entry of manifest.entries) {
     if (entry.kind !== "screen" || !entry.id.startsWith("design-")) continue;
-    for (const route of Object.values(entry.fragments)) {
+    for (const route of generatedViews(entry)
+      .filter((view) => view.colorScheme === "light")
+      .map((view) => view.path)) {
       const html = outputs.get(route);
       assert.ok(html, route);
       for (const chip of byClass(parse(html), "tag")) {

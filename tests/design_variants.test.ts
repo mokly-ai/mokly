@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { entryRoute } from "../packages/viewer/dist/data.js";
+
 import {
   attribute,
   byClass,
@@ -42,8 +44,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: variant states render as light-only shells`, async () => {
     for (const [id, route] of variantScreens) {
       const { entry, document } = await designDocument(id, viewport);
-      assert.equal(entry.route, route, id);
-      assert.equal(entry.darkFragments, undefined, id);
+      assert.equal(entryRoute("screen", entry.id), route, id);
+      assert.deepEqual(entry.colorSchemes, ["light"], id);
       assert.equal(byClass(document, "mbk-shell").length, 1, id);
     }
   });

@@ -8,14 +8,11 @@ import {
   parseHistoricalManifest,
   parseManifest,
 } from "../dist/registry/manifest.js";
-import { componentReviewManifest } from "../dist/review/component_manifests.js";
-import {
-  flattenComponentVariantEntries,
-  legacyComponentVariantId,
-} from "../packages/viewer/dist/data.js";
+import { legacyComponentVariantId } from "../packages/viewer/dist/data.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { legacyManifestFromV7 } from "./helpers/historical_manifest.js";
 
 const pageSource = `import { definePage } from "@mokly/mokly";
 export const mockups = [definePage({ id: "handbook", title: "Handbook", description: "Document", dependencies: [], relatedDocs: [], render: () => "<html><body>Handbook</body></html>" })];`;
@@ -49,19 +46,8 @@ test("both disjoint historical v4 formats remain readable only at the Git bounda
   ).manifest;
   const pages = (await compileCatalogue(await loadConfig(pageFixture.root)))
     .manifest;
-  const componentV4 = {
-    schemaVersion: 4,
-    generatedBy: "mokly",
-    legacyPages: [],
-    entries: componentReviewManifest(components).entries,
-  };
-  const pageV4 = {
-    ...pages,
-    schemaVersion: 4,
-    entries: pages.entries.map(
-      ({ declaredDependencies: _declared, ...entry }) => entry,
-    ),
-  };
+  const componentV4 = legacyManifestFromV7(components, 4, "components");
+  const pageV4 = legacyManifestFromV7(pages, 4, "pages");
   for (const historical of [componentV4, pageV4]) {
     assert.equal(parseHistoricalManifest(historical).schemaVersion, 4);
     assert.throws(() => parseManifest(historical), /schema version 7/);
@@ -70,12 +56,8 @@ test("both disjoint historical v4 formats remain readable only at the Git bounda
     parseHistoricalManifest({ ...componentV4, sourceFiles: [] }),
   );
   assert.throws(() => parseHistoricalManifest({ ...pageV4, legacyPages: [] }));
-  const nestedV7 = {
-    ...componentReviewManifest(components),
-    schemaVersion: 7 as const,
-  };
-  assert.equal(parseHistoricalManifest(nestedV7).schemaVersion, 7);
-  assert.throws(() => parseManifest(nestedV7));
+  assert.equal(parseHistoricalManifest(components).schemaVersion, 7);
+  assert.equal(parseManifest(components).schemaVersion, 7);
   const invalidUsage = structuredClone(componentV4);
   const screen = invalidUsage.entries.find((entry) => entry.kind === "screen");
   assert.ok(screen);
@@ -88,10 +70,7 @@ test("historical component variant ids expand once and reject collisions", async
   context.after(() => removeFixture(fixture));
   const current = (await compileCatalogue(await loadConfig(fixture.root)))
     .manifest;
-  const historical = {
-    ...componentReviewManifest(current),
-    schemaVersion: 5 as const,
-  };
+  const historical = legacyManifestFromV7(current, 5);
 
   assert.equal(legacyComponentVariantId("action", "default"), "action-default");
   assert.equal(
@@ -102,9 +81,7 @@ test("historical component variant ids expand once and reject collisions", async
   const localAction = historicalComponent(localId.entries, "action");
   localAction.variants[0]!.id = "default";
   delete localAction.variants[0]!.description;
-  const flattened = flattenComponentVariantEntries(
-    parseHistoricalManifest(localId).entries,
-  );
+  const flattened = parseHistoricalManifest(localId).entries;
   const actionVariants = flattened.filter(
     (entry) =>
       entry.kind === "component" &&

@@ -123,16 +123,16 @@ export async function benchmark(repository, fixture) {
         );
         await waitForBrowseChanges(url);
         const classified = await (await fetch(url)).text();
-        const changedRoutes = expectedStylesheetChanges;
+        const changedIds = expectedStylesheetChanges;
         expect(classified).toContain(
-          `class="mbk-nav-filter-count">${changedRoutes}<`,
+          `class="mbk-nav-filter-count">${changedIds}<`,
         );
         const changesReadyMs = Math.round(performance.now() - beginning);
         expect(errors).toEqual([]);
         const baseline = derived
           ? baselineMeasurement(running.timings, beginning, state === "warm")
           : {};
-        runs.push({ ...measured, changesReadyMs, changedRoutes, ...baseline });
+        runs.push({ ...measured, changesReadyMs, changedIds, ...baseline });
         if (usableMs >= 5000)
           throw new Error(
             `${state} usable startup exceeded 5 seconds: ${usableMs}ms`,

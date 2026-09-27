@@ -237,9 +237,7 @@ test("new evidence cancels renewal in place and the next comparison uses fresh s
       snapshot!.split("/snapshots/")[0],
     );
     expect(requests).toHaveLength(2);
-    expect(new URL(requests[1]!).searchParams.get("route")).toBe(
-      "screens/home.html",
-    );
+    expect(new URL(requests[1]!).searchParams.get("id")).toBe("home");
   } finally {
     pending.release();
   }

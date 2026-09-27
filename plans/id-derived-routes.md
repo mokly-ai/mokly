@@ -347,36 +347,45 @@ and URL on kind and id through the shared helper. Shell edits are mechanical
 becomes `viewHref(entry.kind, entry.id)`), and the URL surface is unchanged
 because derived documents already produce it.
 
-- [ ] Manifest v7: drop `route`, `fragments`, `darkFragments`, and component
+- [x] Manifest v7: drop `route`, `fragments`, `darkFragments`, and component
       view paths, plus the fields the Milestone 1 audit decided to drop;
       strict validation checks identity, and the `ManifestEntry` types lose
       the path fields.
-- [ ] Historical boundary: `parseHistoricalManifest` normalizes v3–v7 entries
+- [x] Historical boundary: `parseHistoricalManifest` normalizes v3–v7 entries
       into an internal shape with artifact paths read from stored fields or
       computed for v7; `src/review`, removed previews, and baseline reads use
       that shape and never a stored route.
-- [ ] Read model v3: drop `route` and view paths; `byRoute` becomes `byId`;
+- [x] Read model v3: drop `route` and view paths; `byRoute` becomes `byId`;
       removed entries lose `route`; snapshot identity v2; entry arrays sort
       by kind then id; regenerate `catalogue-v3.json`.
-- [ ] Review result v4: `src/review/paths.ts`, `screen_views.ts`,
+- [x] Review result v4: `src/review/paths.ts`, `screen_views.ts`,
       `component_metadata.ts`, `asset_references.ts`, and the viewer
       `review/*` readers address entries and views by id and axes; artifact
       files under the generation directory are named by the helper; the
       reader accepts only v4.
-- [ ] Delete `componentReviewManifest` and the grouped-variant bridge; Review
+- [x] Delete `componentReviewManifest` and the grouped-variant bridge; Review
       classifies flat component variant entries directly for review result v4.
-- [ ] Server and export inputs: `computeChangedRoutes` and `changedRoutes`
+- [x] Server and export inputs: `computeChangedRoutes` and `changedRoutes`
       become changed ids; `ExportRoutes`, `site.ts`, `run.ts`, `view_routes.ts`,
       `fragments.ts`, `review_routes.ts`, and the controls use the helper;
       `logical_routes.ts` is deleted.
-- [ ] Shell and client data layer: `routeFromUrl` parses `/view/<route>`
+- [x] Shell and client data layer: `routeFromUrl` parses `/view/<route>`
       into kind and id and resolves through `byId`; `routeHref`,
       `catalogueViewHref`, `activeRoute`, `selectionForRoute`,
       `catalogueRouteEntry`, `hostRoute`, `sameShellRoute`, and the
       comparison, preview, capability, frame-instance, head, details, and
       nav-row route comparisons key on id; delete the four routed-entry
       aliases.
-- [ ] Tests and fixtures: unit, catalogue conformance, review, server, export,
+- [x] Historical relocation preserves qualified SVG `xlink:href` source
+      locations, rewrites anchor and SVG href fragments deterministically,
+      and retains browser-safe `url(#fragment)` paint references.
+- [x] Compare full-catalogue Changes export and preview-build timings against
+      Milestone 3 twice each; confirm no material regression and retain the
+      original 300-second setup timeout.
+- [x] Audit every removed unit-test declaration, port every surviving
+      identity-keyed or historical behavior, and record why superseded wire
+      path and review-schema cases no longer exist.
+- [x] Tests and fixtures: unit, catalogue conformance, review, server, export,
       and browser suites updated; one grep confirms no `.route` reads remain
       outside the historical boundary; `npm run dev` smoke shows identical
       navigation, Changes, comparisons, and removed previews; commit.

@@ -33,19 +33,15 @@ test("background baselines reconcile removed rows and invalidate changed histori
     const { manifest: baseline } = await compileCatalogue(
       await loadConfig(before.root),
     );
-    const routes = [
-      "components/old-component.html",
-      "pages/old-page.html",
-      "screens/old-screen.html",
-    ];
+    const changedIds = ["old-component", "old-page", "old-screen"];
     const publish = (entries = baseline.entries) =>
       server.publishUpdate({
         kind: "evidence",
         changesStatus: "ready",
-        changedRoutes: routes,
+        changedIds,
         componentChanges: {
           baseline: { ...baseline, entries },
-          changedRoutes: routes,
+          changedIds,
         },
       });
     await page.goto(`${server.url}/view/screens/home.html`);
@@ -133,7 +129,7 @@ test("background baselines reconcile removed rows and invalidate changed histori
     await page.goto(`${server.url}/view/screens/home.html`);
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [],
+      changedIds: [],
       componentChanges: null,
       changesStatus: "pending",
     });

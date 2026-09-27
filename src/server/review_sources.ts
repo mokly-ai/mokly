@@ -5,7 +5,7 @@ import type { Catalogue } from "@mokly/viewer/server";
 
 import type { CatalogueProjectionInput } from "../catalogue/projection_input.js";
 import type { CatalogueMetadata } from "../registry/catalogue_index.js";
-import type { RemovedEntrySnapshot } from "../registry/changes.js";
+import { removedManifestEntries } from "../registry/changes.js";
 import type {
   RemovedPagePreviewSource,
   SelectedReviewSource,
@@ -34,19 +34,19 @@ export function removedPagePreviewSource(
   status: ChangesStatus,
 ): RemovedPagePreviewSource | undefined {
   if (status !== "ready" || !changes?.comparison) return;
-  const removedEntries = catalogue.removedEntries.flatMap(
-    ({ entry }): RemovedEntrySnapshot[] =>
-      entry.kind === "use-case" ? [] : [{ entry }],
+  const removedEntries = removedManifestEntries(
+    catalogue.manifest,
+    changes.baseline,
   );
   return {
     schemaVersion: 1,
     baseline: changes.baseline,
     baseCommit: changes.comparison.baseCommit,
     baseRef: changes.comparison.baseRef,
-    changedRoutes: [
+    changedIds: [
       ...new Set([
-        ...(changes.changedRoutes ?? []),
-        ...removedEntries.map(({ entry }) => entry.route),
+        ...(changes.changedIds ?? []),
+        ...removedEntries.map(({ entry }) => entry.id),
       ]),
     ].sort(),
     removedEntries,
@@ -62,14 +62,14 @@ type LivePublicInput = Omit<
 export function livePublicInput(
   catalogue: Catalogue,
   changesStatus: CatalogueProjectionInput["changesStatus"],
-  changedRoutes: readonly string[] | undefined,
+  changedIds: readonly string[] | undefined,
   evidence: ComponentChangeSnapshot | undefined,
   comparison: PublicComparison | undefined,
 ): LivePublicInput {
   return {
     catalogue,
     changesStatus,
-    changedRoutes,
+    changedIds,
     evidence,
     comparison: comparison?.result,
     comparisonUrl: comparison?.path ?? null,
@@ -85,16 +85,18 @@ export function servedScreenPreviews(
   const complete = new Set(
     result.screens.flatMap((screen) =>
       screen.state === "removed" &&
+      screen.before !== undefined &&
+      screen.after === undefined &&
       screen.views.length > 0 &&
-      screen.views.every((view) => view.beforePath && !view.afterPath)
-        ? [screen.route]
+      screen.views.every((view) => view.state === "removed")
+        ? [screen.id]
         : [],
     ),
   );
   return new Map(
     catalogue.removedEntries.flatMap(({ entry }) =>
-      entry.kind === "screen" && complete.has(entry.route)
-        ? [[entry.route, { kind: "screen" as const }]]
+      entry.kind === "screen" && complete.has(entry.id)
+        ? [[entry.id, { kind: "screen" as const }]]
         : [],
     ),
   );

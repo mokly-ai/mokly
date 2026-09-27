@@ -73,7 +73,7 @@ test("obsolete keys do not discard a current folder preference", () => {
 });
 
 test("removed pages appear only in Changes while removed screens remain in All", () => {
-  const context = navigationContext([glossary.route, details.route]);
+  const context = navigationContext([glossary.entryId, details.entryId]);
   const removedPage = { ...glossary, removedPage: true };
   assert.equal(navLeafVisible(removedPage, defaultSelection, context), false);
   assert.equal(navLeafVisible(details, defaultSelection, context), true);
@@ -94,7 +94,7 @@ test("a tag term hides unmatched rows and the groups they empty", () => {
 });
 
 test("a tag term composes with the Changes filter", () => {
-  const context = navigationContext([welcome.route, glossary.route]);
+  const context = navigationContext([welcome.entryId, glossary.entryId]);
   const selection = {
     ...querySelection("tag:onboarding"),
     view: "changes" as const,
@@ -136,7 +136,7 @@ test("a parent remains visible when a filtered variant matches", () => {
     ["errors"],
   );
   const parent = { ...welcome, variants: [failure] };
-  const context = navigationContext([failure.route]);
+  const context = navigationContext([failure.entryId]);
   const selection = {
     ...querySelection("tag:errors"),
     view: "changes" as const,
@@ -156,7 +156,7 @@ test("a removed variant is hidden in All and visible in Changes", () => {
     ),
     removedVariant: true,
   };
-  const context = navigationContext([removed.route]);
+  const context = navigationContext([removed.entryId]);
 
   assert.equal(navLeafVisible(removed, defaultSelection, context), false);
   assert.equal(
@@ -180,10 +180,10 @@ test("an active variant opens its persisted list and ancestry", () => {
   const sections = [section];
 
   assert.equal(
-    defaultDisclosures(sections, failure.route)["variants:pages:welcome"],
+    defaultDisclosures(sections, failure.entryId)["variants:pages:welcome"],
     true,
   );
-  assert.deepEqual(disclosurePath(sections, failure.route), [
+  assert.deepEqual(disclosurePath(sections, failure.entryId), [
     "section:pages",
     "variants:pages:welcome",
   ]);
@@ -203,10 +203,10 @@ test("navigation clears only a query that hides its destination", () => {
   );
 });
 
-function navigationContext(changedRoutes: readonly string[]): ShellContext {
+function navigationContext(changedIds: readonly string[]): ShellContext {
   return {
     base: "",
-    changedRoutes,
+    changedIds,
     changesStatus: "ready",
     updateVersion: 0,
   };
@@ -223,7 +223,7 @@ function querySelection(raw: string) {
 
 function leaf(
   entryId: string,
-  route: string,
+  _route: string,
   label: string,
   tags: readonly string[] = [],
 ): NavLeafNode {
@@ -233,7 +233,6 @@ function leaf(
     key: `entry:${entryId}`,
     kind: "leaf",
     label,
-    route,
     tags,
   };
 }
@@ -270,15 +269,13 @@ function navigationModel(): CatalogueReadModel {
     screens: [
       {
         ...template,
-        id: welcome.entryId!,
-        route: welcome.route,
+        id: welcome.entryId,
         tags: welcome.tags ?? [],
         title: welcome.label,
       },
       {
         ...template,
         id: "details",
-        route: details.route,
         tags: details.tags ?? [],
         title: details.label,
       },

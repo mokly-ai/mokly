@@ -1,9 +1,9 @@
 import type {
   ManifestComponent,
   ManifestComponentVariant,
+  HistoricalManifestComponentVariant,
 } from "../components/manifest_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
-import { legacyComponentVariantEntry } from "../components/variants.js";
 import type { ComponentReview } from "../review/component_types.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -37,23 +37,13 @@ export function workspaceVariants(
     (candidate): candidate is ManifestComponentVariant =>
       candidate.kind === "component" && isManifestComponentVariant(candidate),
   );
-  const baselineParent = snapshot?.baseline.entries.find(
-    (candidate) => candidate.kind === "component" && candidate.id === entry.id,
-  );
-  const baseline = [
+  const baseline: ManifestComponentVariant[] = [
     ...(snapshot?.baseline.entries.filter(
-      (candidate): candidate is ManifestComponentVariant =>
+      (candidate): candidate is HistoricalManifestComponentVariant =>
         candidate.kind === "component" &&
         isManifestComponentVariant(candidate) &&
         candidate.variantOf === entry.id,
     ) ?? []),
-    ...(baselineParent?.kind === "component" &&
-    !isManifestComponentVariant(baselineParent) &&
-    "variants" in baselineParent
-      ? baselineParent.variants.map((variant) =>
-          legacyComponentVariantEntry(baselineParent, variant),
-        )
-      : []),
   ];
   const removed = catalogue.removedEntries.flatMap(({ entry: candidate }) =>
     candidate.kind === "component" &&

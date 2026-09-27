@@ -1,28 +1,35 @@
-/** Pure route membership from material paths and catalogue metadata. */
+/** Pure id membership from material paths and catalogue metadata. */
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
 import {
   analyzeHierarchy,
+  entryRoute,
+  generatedViews,
   isManifestComponentVariant,
   type CatalogueHierarchy,
 } from "@mokly/viewer/data";
-import type { Manifest, ManifestEntry } from "@mokly/viewer/data";
+import type {
+  HistoricalManifest,
+  HistoricalManifestEntry,
+  ManifestEntry,
+  ManifestV7,
+} from "@mokly/viewer/data";
 
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 
-/** Match each routed entry, including each variant, against changed material and metadata. */
-export function changedManifestRoutes(
-  manifest: Manifest,
-  baseManifest: Manifest,
+/** Match each entry, including every variant, against changed material and metadata. */
+export function changedManifestIds(
+  manifest: ManifestV7,
+  baseManifest: HistoricalManifest,
   config: ResolvedConfig,
   changedPaths: readonly string[],
 ): readonly string[] {
   const mockupsPrefix = toPosixPath(
     path.relative(config.repoRoot, config.mockupsDir),
   );
-  const routes = new Set<string>();
+  const ids = new Set<string>();
   const changedScreenIds = new Set<string>();
   const baseEntries = new Map(
     baseManifest.entries.map((entry) => [entry.id, entry]),
@@ -47,33 +54,31 @@ export function changedManifestRoutes(
     const candidates = changedPathCandidates(entry, baseEntry, mockupsPrefix);
     if (
       isDeepStrictEqual(
-        routeChangeProjection(entry, hierarchy),
-        routeChangeProjection(baseEntry, baseHierarchy),
+        changeProjection(entry, hierarchy),
+        changeProjection(baseEntry, baseHierarchy),
       ) &&
-      !candidates.some((candidate) =>
-        changedPaths.some((changedPath) => candidate === changedPath),
-      )
-    ) {
+      !candidates.some((candidate) => changedPaths.includes(candidate))
+    )
       continue;
-    }
-    routes.add(entry.route);
+    ids.add(entry.id);
     if (entry.kind === "screen") changedScreenIds.add(entry.id);
   }
-  for (const entry of manifest.entries) {
+  for (const entry of manifest.entries)
     if (
       entry.kind === "use-case" &&
       entry.steps.some((step) => changedScreenIds.has(step.screenId))
-    ) {
-      routes.add(entry.route);
-    }
-  }
-  return [...routes].sort();
+    )
+      ids.add(entry.id);
+  return [...ids].sort();
 }
 
-/** Select manifest metadata whose changes can affect a routed Browse entry. */
-function routeChangeProjection(
-  entry: ManifestEntry | undefined,
-  hierarchy: Pick<CatalogueHierarchy<ManifestEntry>, "variantParentById">,
+/** Select metadata whose changes can affect one Browse entry. */
+function changeProjection(
+  entry: ManifestEntry | HistoricalManifestEntry | undefined,
+  hierarchy: Pick<
+    CatalogueHierarchy<ManifestEntry | HistoricalManifestEntry>,
+    "variantParentById"
+  >,
 ): unknown {
   if (!entry) return undefined;
   const common = {
@@ -86,26 +91,21 @@ function routeChangeProjection(
     tags: entry.tags,
     title: entry.title,
   };
-  if (entry.kind === "page") return { ...common, route: entry.route };
-  if (entry.kind === "use-case") {
-    return { ...common, route: entry.route, steps: entry.steps };
-  }
+  if (entry.kind === "page") return common;
+  if (entry.kind === "use-case") return { ...common, steps: entry.steps };
   if (entry.kind === "component" && isManifestComponentVariant(entry))
     return {
       ...common,
-      darkFragments: entry.darkFragments,
-      fragments: entry.fragments,
+      colorSchemes: entry.colorSchemes,
       props: entry.props,
-      route: entry.route,
       suppliedSlots: entry.suppliedSlots,
       variantParent: projectedVariantParent(entry, hierarchy),
       variantOf: entry.variantOf,
-      viewports: entry.viewports,
     };
   if (entry.kind === "component")
     return {
       ...common,
-      route: entry.route,
+      colorSchemes: entry.colorSchemes,
       propSchema: entry.propSchema,
       controls: entry.controls,
       slots: entry.slots,
@@ -113,19 +113,19 @@ function routeChangeProjection(
   return {
     ...common,
     address: entry.address,
-    darkFragments: entry.darkFragments,
-    fragments: entry.fragments,
-    route: entry.route,
+    colorSchemes: entry.colorSchemes,
     useCaseIds: entry.useCaseIds,
     variantParent: projectedVariantParent(entry, hierarchy),
     variantOf: entry.variantOf,
-    viewports: entry.viewports,
   };
 }
 
 function projectedVariantParent(
-  entry: ManifestEntry,
-  hierarchy: Pick<CatalogueHierarchy<ManifestEntry>, "variantParentById">,
+  entry: ManifestEntry | HistoricalManifestEntry,
+  hierarchy: Pick<
+    CatalogueHierarchy<ManifestEntry | HistoricalManifestEntry>,
+    "variantParentById"
+  >,
 ): { id: string; title: string } | undefined {
   const parent = hierarchy.variantParentById.get(entry.id);
   return parent ? { id: parent.id, title: parent.title } : undefined;
@@ -133,31 +133,25 @@ function projectedVariantParent(
 
 function changedPathCandidates(
   entry: ManifestEntry,
-  baseEntry: ManifestEntry | undefined,
+  baseEntry: ManifestEntry | HistoricalManifestEntry | undefined,
   mockupsPrefix: string,
 ): string[] {
-  const candidates: string[] = [];
   const prefix = mockupsPrefix ? `${mockupsPrefix}/` : "";
-  for (const candidate of [entry, baseEntry]) {
-    if (candidate?.kind === "page")
-      candidates.push(`${prefix}${candidate.route}`);
-    if (
-      candidate?.kind !== "screen" &&
-      !(
-        candidate?.kind === "component" && isManifestComponentVariant(candidate)
-      )
-    )
-      continue;
-    candidates.push(
-      `${prefix}${candidate.fragments.mobile}`,
-      `${prefix}${candidate.fragments.desktop}`,
-    );
-    if (candidate.darkFragments) {
-      candidates.push(
-        `${prefix}${candidate.darkFragments.mobile}`,
-        `${prefix}${candidate.darkFragments.desktop}`,
-      );
-    }
-  }
-  return [...new Set(candidates)];
+  const current =
+    entry.kind === "page"
+      ? [entryRoute("page", entry.id)]
+      : generatedViews(entry).map((view) => view.path);
+  const baseline =
+    baseEntry?.kind === "page"
+      ? [
+          "artifactPath" in baseEntry
+            ? baseEntry.artifactPath
+            : entryRoute("page", baseEntry.id),
+        ]
+      : baseEntry
+        ? generatedViews(baseEntry).map((view) => view.path)
+        : [];
+  return [...new Set([...current, ...baseline])].map(
+    (candidate) => `${prefix}${candidate}`,
+  );
 }

@@ -43,17 +43,13 @@ test("frame links and saved variants emit only committed navigation", async ({
   expect(events).toEqual([
     expect.objectContaining({
       screenId: "action",
-      route: "components/action.html",
       navigation: {
         id: "action",
         target: { kind: "self" },
         activation: "primary",
       },
     }),
-    expect.objectContaining({
-      screenId: "action",
-      variantId: "action-disabled",
-    }),
+    { screenId: "action" },
   ]);
 });
 
@@ -99,7 +95,6 @@ test("flow events preserve the screen key and identify the owning step", async (
         id: "tour",
         navPath: [],
         title: "Tour",
-        route: "flows/tour.html",
         tags: [],
         details: catalogue.screens[0]!.details,
         changes: { status: "disabled" },

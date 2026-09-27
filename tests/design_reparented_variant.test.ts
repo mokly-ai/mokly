@@ -27,30 +27,22 @@ import {
   variantToggles,
 } from "./helpers/design_rows.js";
 
-const removedRoute = "screens/welcome-error.html";
 const common = {
-  dependencies: [],
+  colorSchemes: ["light"] as const,
+  declaredDependencies: [],
   description: "Fixture",
   navPath: [],
   relatedDocs: [],
   sourcePath: "fixture.mockup.tsx",
 };
 
-function screen(
-  id: string,
-  title: string,
-  route: string,
-  variantOf?: string,
-): ManifestScreen {
+function screen(id: string, title: string, variantOf?: string): ManifestScreen {
   return {
     ...common,
     id,
     title,
     kind: "screen",
-    route,
-    fragments: { desktop: `${route}.desktop`, mobile: `${route}.mobile` },
     useCaseIds: [],
-    viewports: ["mobile", "desktop"],
     ...(variantOf === undefined ? {} : { variantOf }),
   };
 }
@@ -76,11 +68,11 @@ function visibleRows(
 test("reparented mockup shows the runtime's Changes-visible rows", async () => {
   const entries: ManifestEntry[] = [
     {
-      ...screen("workspace", "Workspace", "screens/workspace.html"),
+      ...screen("workspace", "Workspace"),
       navPath: ["Example", "Screens"],
     },
     {
-      ...screen("welcome", "Welcome", "screens/welcome.html", "workspace"),
+      ...screen("welcome", "Welcome", "workspace"),
       navPath: ["Example", "Screens"],
     },
   ];
@@ -90,10 +82,9 @@ test("reparented mockup shows the runtime's Changes-visible rows", async () => {
     {
       entryId: "welcome-error",
       entryKind: "screen",
-      key: `removed:${removedRoute}`,
+      key: "removed:welcome-error",
       kind: "leaf",
       label: "Save failed · Removed",
-      route: removedRoute,
       variantOf: "welcome",
     },
   ]);
@@ -101,7 +92,7 @@ test("reparented mockup shows the runtime's Changes-visible rows", async () => {
   assert.equal(pages.id, "pages");
   const context: ShellContext = {
     base: "",
-    changedRoutes: [removedRoute],
+    changedIds: ["welcome-error"],
     changesStatus: "ready",
     updateVersion: 0,
   };

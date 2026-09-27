@@ -40,7 +40,7 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   assert.doesNotMatch(index, /href="\/view\/screens\/example-welcome\.html"/);
   const welcome = await read(output, "view/screens/example-welcome.html");
   assert.match(welcome, /Welcome · Mokly/);
-  assert.match(welcome, /data-diff-screen="screens\/example-welcome.html"/);
+  assert.match(welcome, /data-diff-screen="example-welcome"/);
   for (const mode of ["current", "side", "overlay", "difference"])
     assert.match(welcome, new RegExp(`data-diff-mode="${mode}"`));
   // A static export carries the one Appearance control, and requests the asset

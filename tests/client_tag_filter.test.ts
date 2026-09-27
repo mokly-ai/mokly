@@ -20,7 +20,7 @@ import { defaultSelection } from "../packages/viewer/dist/viewer/selection.js";
 
 const context: ShellContext = {
   base: "",
-  changedRoutes: [],
+  changedIds: [],
   changesStatus: "ready",
   updateVersion: 0,
 };
@@ -89,12 +89,16 @@ function leaf(
   label: string,
   tags: readonly string[] = [],
 ): NavLeafNode {
+  const entryId = route
+    .split("/")
+    .at(-1)!
+    .replace(/\.html$/, "");
   return {
+    entryId,
     entryKind: "screen",
-    key: `entry:${route}`,
+    key: `entry:${entryId}`,
     kind: "leaf",
     label,
-    route,
     tags,
   };
 }

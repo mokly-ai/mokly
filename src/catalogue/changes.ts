@@ -11,13 +11,9 @@ export function entryChanges(
   if (input.changesStatus !== "ready") return { status: input.changesStatus };
   const included =
     removed ||
-    (input.changedRoutes ?? input.evidence?.changedRoutes ?? []).includes(
-      entry.route,
-    );
-  const before = input.evidence?.baseline.entries.find((candidate) =>
-    entry.kind === "component"
-      ? candidate.id === entry.id
-      : candidate.route === entry.route,
+    (input.changedIds ?? input.evidence?.changedIds ?? []).includes(entry.id);
+  const before = input.evidence?.baseline.entries.find(
+    (candidate) => candidate.id === entry.id,
   );
   return {
     status: "ready",

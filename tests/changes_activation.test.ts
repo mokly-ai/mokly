@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { viewHref } from "../packages/viewer/dist/data.js";
 import type {
   ManifestScreen,
   ManifestV7,
@@ -34,15 +35,15 @@ const manifest: ManifestV7 = {
 };
 const catalogue = createCatalogue(manifest);
 const context: ShellContext = {
-  activeRoute: parent.route,
+  activeId: parent.id,
   base: "main",
-  changedRoutes: [empty.route, failure.route],
+  changedIds: [empty.id, failure.id],
   changesStatus: "ready",
   componentChanges: {
     baseline: manifest,
     screenViews: [
       {
-        route: empty.route,
+        id: empty.id,
         views: [
           {
             colorScheme: "light",
@@ -52,7 +53,7 @@ const context: ShellContext = {
         ],
       },
       {
-        route: failure.route,
+        id: failure.id,
         views: [
           {
             colorScheme: "dark",
@@ -147,7 +148,7 @@ test("a removed variant redirect retains its exact snapshot despite an id collis
   ]);
   const collisionContext = {
     ...context,
-    changedRoutes: [empty.route, failure.route],
+    changedIds: [empty.id, failure.id],
   };
   const redirected = changesActivation(
     collisionCatalogue,
@@ -155,7 +156,7 @@ test("a removed variant redirect retains its exact snapshot despite an id collis
     { ...defaultSelection, search: "empty workspace", view: "changes" },
     route(parent),
   );
-  assert.equal(target(redirected).route, empty.route);
+  assert.equal(target(redirected).id, empty.id);
   assert.equal(redirected.snapshot, snapshotId);
 
   const sticky = changesActivation(
@@ -181,7 +182,7 @@ test("a removed variant redirect retains its exact snapshot despite an id collis
     { ...defaultSelection, search: "empty workspace", view: "changes" },
     route(parent),
   );
-  assert.equal(target(rejected).route, parent.route);
+  assert.equal(target(rejected).id, parent.id);
 });
 
 test("an explicit axis prevents automatic view selection", () => {
@@ -201,7 +202,7 @@ test("only a valid explicit axis suppresses first-changed-view landing", () => {
   const partial = routeFromUrl(
     catalogue,
     new URL(
-      `https://example.test/view/${parent.route}?viewport=invalid&scheme=light`,
+      `https://example.test${viewHref("screen", parent.id)}?viewport=invalid&scheme=light`,
     ),
   );
   const partialActivation = changesActivation(
@@ -217,7 +218,7 @@ test("only a valid explicit axis suppresses first-changed-view landing", () => {
   const invalid = routeFromUrl(
     catalogue,
     new URL(
-      `https://example.test/view/${parent.route}?viewport=mobile&viewport=desktop&scheme=invalid`,
+      `https://example.test${viewHref("screen", parent.id)}?viewport=mobile&viewport=desktop&scheme=invalid`,
     ),
   );
   const automatic = changesActivation(
@@ -254,26 +255,19 @@ function target(route: ShellRoute): ManifestScreen {
 function screen(
   id: string,
   title: string,
-  route: string,
+  _route: string,
 ): CurrentManifestScreen {
-  const stem = route.replace(/\.html$/, "");
   return {
+    colorSchemes: ["light"],
     declaredDependencies: [],
-    dependencies: [],
     description: title,
-    fragments: {
-      desktop: `${stem}.desktop.html`,
-      mobile: `${stem}.mobile.html`,
-    },
     id,
     kind: "screen",
     navPath: [],
     relatedDocs: [],
-    route,
     sourcePath: "entries/welcome.mockup.tsx",
     tags: [],
     title,
     useCaseIds: [],
-    viewports: ["mobile", "desktop"],
   };
 }

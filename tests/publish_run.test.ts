@@ -37,13 +37,16 @@ function dependencies() {
         [
           comparisonPath,
           JSON.stringify({
-            schemaVersion: 2,
+            schemaVersion: 4,
             baseRef: "origin/main",
             baseCommit: base,
             changedPaths: [],
             ignoredImpact: [],
             screens: [],
             sharedImpact: [],
+            components: [],
+            changes: [],
+            affectedConsumers: [],
           }),
         ],
       ]);

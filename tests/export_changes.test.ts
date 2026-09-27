@@ -11,7 +11,7 @@ import {
   CommittedRepository,
 } from "../dist/review/git.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 import { changedContentPaths } from "../dist/server/changed_content.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
@@ -57,12 +57,12 @@ for (const resource of ["nested.css", "image.svg"]) {
       resource.endsWith(".css") ? "\nmain { color: red; }" : "\n",
     );
     assert.deepEqual(
-      await computeChangedRoutes(
+      await computeChangedIds(
         fixture.config,
         "HEAD",
         committedReviewRepository(fixture.config),
       ),
-      ["screens/home.html", "user-flows/tour.html"],
+      ["home", "tour"],
     );
     const result = await exportCatalogue(fixture.config, {
       outDir: "site",

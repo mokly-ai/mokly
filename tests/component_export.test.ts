@@ -6,6 +6,7 @@ import { test } from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { exportCatalogue } from "../dist/export/run.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
@@ -41,8 +42,8 @@ test("static export keeps component Changes, affected screens, saved variants an
   const result = parseReviewResult(
     JSON.parse(files.get(exported.comparisonUrl.slice(1))!.toString()),
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
   assert.deepEqual(
     result.changes.map((item) => (item.after ?? item.before)!.id),
     ["action"],
@@ -52,7 +53,7 @@ test("static export keeps component Changes, affected screens, saved variants an
   );
   const home = workspace(files.get("view/screens/home.html")!.toString());
   assert.equal(action.variants.length, 2);
-  assert.ok(action.affected.some((item) => item.route === "screens/home.html"));
+  assert.ok(action.affected.some((item) => item.entryId === "home"));
   assert.equal(home.change, undefined);
   assert.equal(home.status, "Changed");
   assert.deepEqual(
@@ -98,7 +99,7 @@ test("static export retains removed saved variants and baseline component consum
   const result = parseReviewResult(
     JSON.parse(files.get(exported.comparisonUrl.slice(1))!.toString()),
   );
-  if (result.schemaVersion !== 3) assert.fail("Expected component result");
+  if (result.schemaVersion !== 4) assert.fail("Expected component result");
   const removed = result.components
     .find((item) => item.id === "action")!
     .variants.find((item) => item.id === "action-disabled")!;
@@ -106,7 +107,7 @@ test("static export retains removed saved variants and baseline component consum
   for (const view of removed.views)
     assert.ok(
       files.has(
-        `${path.posix.dirname(exported.comparisonUrl.slice(1))}/${view.beforePath!}`,
+        `${path.posix.dirname(exported.comparisonUrl.slice(1))}/snapshots/before/${viewRoute("component", removed.id, view.viewport, view.colorScheme)}`,
       ),
     );
 });
@@ -141,9 +142,7 @@ test("preview capture retains route-scoped workspace evidence after removing liv
   assert.match(actionPage, /data-mokly-static=""/);
   assert.match(actionPage, /react-shell\.js/);
   assert.ok(
-    workspace(actionPage).affected.some(
-      (item) => item.route === "screens/home.html",
-    ),
+    workspace(actionPage).affected.some((item) => item.entryId === "home"),
   );
   assert.deepEqual(
     workspace(homePage).relatedComponents.map((item) => item.title),

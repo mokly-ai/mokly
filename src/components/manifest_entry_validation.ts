@@ -12,37 +12,38 @@ import {
   validateControls,
   validateProps,
   validatePropSchema,
-  viewRoute,
 } from "@mokly/viewer/data";
 
-const commonKeys = [
+import { validateColorSchemes } from "../registry/manifest_values.js";
+
+const commonKeys = (identityOnly: boolean) => [
   "id",
   "title",
   "description",
   "rationale",
   "relatedDocs",
-  "dependencies",
   "declaredDependencies",
   "sourcePath",
   "navPath",
   "kind",
+  ...(identityOnly ? [] : ["dependencies"]),
 ];
 
 /** Validate one component parent or flattened component variant. */
 export function validateManifestComponent(
   value: Record<string, unknown>,
+  identityOnly = false,
 ): void {
   if (typeof value.variantOf === "string") {
-    validateVariantEntry(value);
+    validateVariantEntry(value, identityOnly);
     return;
   }
   const at = `${String(value.id)} $component`;
   exactKeys(
     value,
     [
-      ...commonKeys,
-      "route",
-      "viewports",
+      ...commonKeys(identityOnly),
+      ...(identityOnly ? ["colorSchemes"] : ["route", "viewports"]),
       "tags",
       "propSchema",
       "slots",
@@ -76,11 +77,12 @@ export function validateManifestComponent(
       invalidData(at, "data and slots overlap");
   }
   for (const dependency of value.ownedDependencies)
-    if (!(value.dependencies as string[]).includes(dependency))
+    if (!(value.declaredDependencies as string[]).includes(dependency))
       invalidData(at, "owned dependencies must be declared dependencies");
   validateControls(schema, value.controls, at);
   validateTags(value.tags, at);
-  validateViewports(value.viewports, at);
+  if (identityOnly) validateColorSchemes(value.colorSchemes, at);
+  else validateViewports(value.viewports, at);
   if (value.variants === undefined) return;
   if (!Array.isArray(value.variants) || !value.variants.length)
     invalidData(at, "historical component requires saved variants");
@@ -102,30 +104,32 @@ export function validateManifestComponent(
   }
 }
 
-function validateVariantEntry(value: Record<string, unknown>): void {
+function validateVariantEntry(
+  value: Record<string, unknown>,
+  identityOnly: boolean,
+): void {
   const at = `${String(value.id)} $component-variant`;
   exactKeys(
     value,
     [
-      ...commonKeys,
-      "route",
-      "viewports",
+      ...commonKeys(identityOnly),
+      ...(identityOnly ? ["colorSchemes"] : ["route", "viewports"]),
       "tags",
       "variantOf",
       "props",
       "suppliedSlots",
-      "fragments",
-      "darkFragments",
+      ...(identityOnly ? [] : ["fragments", "darkFragments"]),
       "componentViews",
     ],
     at,
   );
   if (!isEntryId(value.variantOf)) invalidData(at, "invalid variantOf");
   validateTags(value.tags, at);
-  validateViewports(value.viewports, at);
+  if (identityOnly) validateColorSchemes(value.colorSchemes, at);
+  else validateViewports(value.viewports, at);
   sortedStrings(value.suppliedSlots, `${at}.suppliedSlots`);
   decodeProps(value.props);
-  validateFragmentFields(value, String(value.id), at);
+  if (!identityOnly) validateFragmentFields(value, at);
 }
 
 function validateLegacyVariant(
@@ -182,7 +186,6 @@ function validateLegacyVariant(
 
 function validateFragmentFields(
   value: Record<string, unknown>,
-  id: string,
   at: string,
 ): void {
   for (const key of ["fragments", "darkFragments"] as const) {
@@ -190,17 +193,7 @@ function validateFragmentFields(
     exactKeys(value[key], ["mobile", "desktop"], `${at}.${key}`);
     for (const viewport of ["mobile", "desktop"] as const) {
       const fragment = (value[key] as Record<string, unknown>)[viewport];
-      if (
-        typeof fragment !== "string" ||
-        !isSafeCatalogueRoute(fragment) ||
-        fragment !==
-          viewRoute(
-            "component",
-            id,
-            viewport,
-            key === "fragments" ? "light" : "dark",
-          )
-      )
+      if (typeof fragment !== "string" || !isSafeCatalogueRoute(fragment))
         invalidData(at, "invalid variant fragment path");
     }
   }

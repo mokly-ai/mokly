@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 import { serve } from "../dist/server/serve.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
@@ -24,7 +24,7 @@ test("Changes excludes ignored-only edits while comparisons retain their evidenc
   );
   await fixture.build();
   assert.deepEqual(
-    await computeChangedRoutes(
+    await computeChangedIds(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -60,12 +60,12 @@ test("Changes keeps real content edits alongside ignored-region edits", async (t
   );
   await fixture.build();
   assert.deepEqual(
-    await computeChangedRoutes(
+    await computeChangedIds(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
     ),
-    ["screens/home.html", "user-flows/tour.html"],
+    ["home", "tour"],
   );
 });
 
@@ -73,7 +73,7 @@ test("dependency-only edits retain evidence without generating a review list", a
   const fixture = await changedFixture(t);
   await fs.writeFile(path.join(fixture.root, "notes.md"), "# Edited notes\n");
   assert.deepEqual(
-    await computeChangedRoutes(
+    await computeChangedIds(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -103,12 +103,12 @@ test("Changes includes a dark-only material edit", async (t) => {
   const document = await fs.readFile(file, "utf8");
   await fs.writeFile(file, document.replaceAll(">Details<", ">Dark details<"));
   assert.deepEqual(
-    await computeChangedRoutes(
+    await computeChangedIds(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
     ),
-    ["screens/home.html", "user-flows/tour.html"],
+    ["home", "tour"],
   );
 });
 
@@ -124,12 +124,12 @@ test("Changes keeps material keys inside otherwise ignored shared chrome", async
   );
   await fixture.build();
   assert.deepEqual(
-    await computeChangedRoutes(
+    await computeChangedIds(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
     ),
-    ["screens/home.html", "user-flows/tour.html"],
+    ["home", "tour"],
   );
 });
 
@@ -141,7 +141,7 @@ test("moving a source module preserves an unchanged review list", async (t) => {
   );
   await fixture.build();
   assert.deepEqual(
-    await computeChangedRoutes(
+    await computeChangedIds(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -172,7 +172,7 @@ test("invalid baseline ignore markers leave the filter unavailable", async (t) =
   fixture.git("commit", "-qm", "test: invalid baseline");
   await fixture.build();
   assert.equal(
-    await computeChangedRoutes(
+    await computeChangedIds(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -193,7 +193,7 @@ test("embedding an ignored-only screen does not reintroduce it through resource 
   );
   await fixture.build();
   assert.deepEqual(
-    await computeChangedRoutes(
+    await computeChangedIds(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),

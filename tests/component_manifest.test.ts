@@ -7,14 +7,19 @@ import { parseManifest } from "../dist/registry/manifest.js";
 import type {
   ManifestComponent,
   ManifestComponentVariant,
+  ComponentViewRecord,
 } from "../packages/viewer/dist/components/manifest_types.js";
 import type {
   ManifestV7,
-  ManifestScreenV4,
+  ManifestScreen,
 } from "../packages/viewer/dist/registry/types.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+
+type ComponentManifestScreen = ManifestScreen & {
+  componentViews: readonly ComponentViewRecord[];
+};
 
 async function example(t: {
   after: (fn: () => Promise<void>) => void;
@@ -32,7 +37,7 @@ test("manifest v7 rejects broken identities, ownership references and props befo
     string,
     (
       value: ManifestV7,
-      screen: ManifestScreenV4,
+      screen: ComponentManifestScreen,
       component: ManifestComponent,
       variant: ManifestComponentVariant,
     ) => void,
@@ -122,18 +127,16 @@ test("manifest v7 rejects broken identities, ownership references and props befo
       },
     ],
     [
-      "unsafe fragment",
+      "stored variant fragments",
       (_v, _s, _component, variant) =>
-        Object.assign(variant.fragments, {
-          mobile: "../source.html",
+        Object.assign(variant, {
+          fragments: { mobile: "../source.html", desktop: "source.html" },
         }),
     ],
     [
-      "noncanonical variant fragment",
+      "invalid variant schemes",
       (_v, _s, _component, variant) =>
-        Object.assign(variant.fragments, {
-          mobile: "components/action.mobile.html",
-        }),
+        Object.assign(variant, { colorSchemes: ["dark"] }),
     ],
     [
       "bad saved props",
@@ -162,7 +165,8 @@ test("manifest v7 rejects broken identities, ownership references and props befo
   for (const [name, edit] of edits) {
     const value = structuredClone(original);
     const screen = value.entries.find(
-      (entry): entry is ManifestScreenV4 => entry.kind === "screen",
+      (entry): entry is ComponentManifestScreen =>
+        entry.kind === "screen" && entry.componentViews !== undefined,
     )!;
     const component = value.entries.find(
       (entry): entry is ManifestComponent =>

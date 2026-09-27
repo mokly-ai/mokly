@@ -20,7 +20,6 @@ import {
   hash,
   id,
   object,
-  pagePreviewPath,
   text,
 } from "./values.js";
 
@@ -96,14 +95,8 @@ export function readCatalogue(value: unknown): CatalogueReadModel {
 function readPreview(value: unknown): RemovedEntryPreview {
   const input = object(value),
     kind = choice(input.kind, ["screen", "page"] as const);
-  exactKeys(
-    input,
-    kind === "screen" ? ["kind"] : ["kind", "path"],
-    "$catalogue.preview",
-  );
-  return kind === "screen"
-    ? { kind }
-    : { kind, path: pagePreviewPath(input.path) };
+  exactKeys(input, ["kind"], "$catalogue.preview");
+  return { kind };
 }
 
 function readNode(value: unknown): CatalogueNode {

@@ -3,6 +3,7 @@ import fs from "node:fs";
 import { test } from "node:test";
 
 import { readCatalogue } from "../src/catalogue/reader.js";
+import { viewHref } from "../src/navigation/routes.js";
 import { entryWording } from "../src/shell/entry_wording.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";
 import { routeFromUrl, routeHref } from "../src/shell/routes.js";
@@ -69,7 +70,9 @@ test("shell routes derive targets, variants, fragments, aliases, and misses from
 test("an inferred historical route is pinned in the installed browser URL", () => {
   const historical = model.removedEntries[0]!;
   assert.ok(historical.snapshotId);
-  const bare = new URL(`https://example.test/view/${historical.entry.route}`);
+  const bare = new URL(
+    `https://example.test${viewHref(historical.entry.kind, historical.entry.id)}`,
+  );
   const route = routeFromUrl(catalogue, bare);
   assert.equal(route.snapshot, historical.snapshotId);
   assert.equal(
@@ -125,7 +128,8 @@ test("shell routes retain invalid component variant requests", () => {
   assert.deepEqual(duplicate.variantValues, ["action-default", "missing"]);
   assert.equal(
     routeHref(
-      "components/action.html",
+      "component",
+      "action",
       duplicate.fragment,
       duplicate.variant,
       duplicate,
@@ -140,7 +144,7 @@ test("shell routes retain invalid component variant requests", () => {
   assert.equal(empty.variant, undefined);
   assert.deepEqual(empty.variantValues, [""]);
   assert.equal(
-    routeHref("components/action.html", undefined, undefined, empty),
+    routeHref("component", "action", undefined, undefined, empty),
     "/view/components/action.html?variant=",
   );
 });

@@ -307,7 +307,7 @@ automatically hydrates a matching standalone Mokly document.
 `viewRoute` and `viewHref`, which derive every route and `/view/<route>` URL
 from an entry's kind and id. `parseViewHref` reads canonical and
 provider-normalized `/view/` paths back into that identity; the implementation
-lives in `src/data/routes.ts`. `isEntryId` adds portable Windows filename rules
+lives in `src/navigation/routes.ts`. `isEntryId` adds portable Windows filename rules
 to the broader `isCatalogueId` grammar used by tags and logical links;
 `isWindowsDeviceName` exposes that filename check directly.
 

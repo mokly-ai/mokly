@@ -5,8 +5,9 @@ import type {
   ChangedEntry,
   ComponentReview,
   EntryChangeReason,
-  ReviewResultV3,
-  ScreenReviewV3,
+  ReviewResultV4,
+  ScreenReviewV4,
+  GeneratedComponentView,
 } from "@mokly/viewer/data";
 
 import { toPosixPath } from "../config/paths.js";
@@ -19,13 +20,13 @@ import {
 } from "./component_change_propagation.js";
 import type { ComponentClassificationInput } from "./component_classification_input.js";
 import { ComponentComparisonCounts } from "./component_comparison_counts.js";
-import { componentReviewManifest } from "./component_manifests.js";
 import {
   address,
   ComponentDependencyPolicy,
   entryPairs,
   lexical,
   metadata,
+  type ReviewEntry,
   uniqueReasons,
 } from "./component_metadata.js";
 import { viewPairs } from "./component_pairing.js";
@@ -56,7 +57,7 @@ import { aggregateIgnored, aggregateState } from "./screen_views.js";
 
 /** Internal classifier output for source validation and its regression fixtures. */
 export interface ComponentClassificationWithSources {
-  result: ReviewResultV3;
+  result: ReviewResultV4;
   implementationImpact: ReadonlySet<string>;
   sources: DependencyReasonSources;
 }
@@ -67,8 +68,11 @@ export async function classifyComponentsWithSources(
 ): Promise<ComponentClassificationWithSources> {
   const beforeVariantEntries = componentVariantEntries(input.before.entries);
   const afterVariantEntries = componentVariantEntries(input.after.entries);
-  const before = componentReviewManifest(input.before);
-  const after = componentReviewManifest(input.after);
+  const before = input.before;
+  const after = input.after;
+  const componentAware = [...before.entries, ...after.entries].some(
+    (entry) => entry.kind === "component" && !isManifestComponentVariant(entry),
+  );
   const { changedPaths, config } = input;
   const dependencies = new ComponentDependencyPolicy(
     before,
@@ -114,7 +118,7 @@ export async function classifyComponentsWithSources(
     ),
   ]);
   const sharedImpact = dependencies.sharedPaths(changedPaths);
-  const screens: ScreenReviewV3[] = [];
+  const screens: ScreenReviewV4[] = [];
   const components: ComponentReview[] = [];
   const changes: ChangedEntry[] = [];
   const impacting = new Set<string>();
@@ -139,13 +143,15 @@ export async function classifyComponentsWithSources(
         metadata(pair.before) !== metadata(pair.after)
       )
         reasons.push({ kind: "metadata" });
-      const policyReasons = dependencies
-        .reasons(pair.before, pair.after, changedPaths)
-        .filter(
-          (reason) =>
-            reason.kind !== "dependency" ||
-            !analysisOwnsStylesheet(reason.path, config),
-        );
+      const policyReasons = componentAware
+        ? dependencies
+            .reasons(pair.before, pair.after, changedPaths)
+            .filter(
+              (reason) =>
+                reason.kind !== "dependency" ||
+                !analysisOwnsStylesheet(reason.path, config),
+            )
+        : [];
       reasons.push(...policyReasons);
       reasonSources.record(entry, policyReasons);
       const common = {
@@ -153,14 +159,14 @@ export async function classifyComponentsWithSources(
         ...sides,
         dependencies: [
           ...new Set([
-            ...(pair.before?.dependencies ?? []),
-            ...(pair.after?.dependencies ?? []),
+            ...entryDependencies(pair.before),
+            ...entryDependencies(pair.after),
           ]),
         ].sort(),
         sharedImpact: [] as string[],
       };
-      const baseViews = pair.before ? generatedViews(pair.before) : [];
-      const headViews = pair.after ? generatedViews(pair.after) : [];
+      const baseViews = entryViews(pair.before, beforeVariantEntries);
+      const headViews = entryViews(pair.after, afterVariantEntries);
       const pairedViews = viewPairs(baseViews, headViews);
       const compared = await Promise.all(
         pairedViews.map((view) =>
@@ -273,16 +279,15 @@ export async function classifyComponentsWithSources(
     changes,
   );
   propagateUseCases(pairs, before, after, changes);
-  screens.sort((a, b) => lexical(a.route, b.route));
+  screens.sort((a, b) => lexical(a.id, b.id));
   components.sort((a, b) => lexical(a.id, b.id));
   changes.sort(
     (a, b) =>
-      lexical((a.after ?? a.before)!.route, (b.after ?? b.before)!.route) ||
       lexical(a.kind, b.kind) ||
       lexical((a.after ?? a.before)!.id, (b.after ?? b.before)!.id),
   );
-  const result: ReviewResultV3 = {
-    schemaVersion: 3,
+  const result: ReviewResultV4 = {
+    schemaVersion: 4,
     baseCommit: input.baseCommit,
     baseRef: input.baseRef,
     changedPaths: [...changedPaths].sort(),
@@ -294,4 +299,23 @@ export async function classifyComponentsWithSources(
     ignoredImpact: aggregateIgnored(screens),
   };
   return { result, implementationImpact: impacting, sources: reasonSources };
+}
+
+function entryDependencies(entry: ReviewEntry | undefined): readonly string[] {
+  if (!entry) return [];
+  return "dependencies" in entry
+    ? entry.dependencies
+    : [entry.sourcePath, ...entry.declaredDependencies];
+}
+
+function entryViews(
+  entry: ReviewEntry | undefined,
+  variants: ReturnType<typeof componentVariantEntries>,
+): GeneratedComponentView[] {
+  if (!entry) return [];
+  if (entry.kind === "component" && !isManifestComponentVariant(entry))
+    return [...variants.values()]
+      .filter((variant) => variant.variantOf === entry.id)
+      .flatMap((variant) => generatedViews(variant));
+  return generatedViews(entry);
 }

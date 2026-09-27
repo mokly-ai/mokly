@@ -31,6 +31,7 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { legacyManifestFromV7 } from "./helpers/historical_manifest.js";
 
 const metadataRoutes = [
   MANIFEST_NAME,
@@ -270,7 +271,16 @@ test("the former Mokabook manifest is accepted only from Git history", async (co
   ]);
   const git = new CommittedRepository(runner);
   const baseline = await readBaseManifest(git.reader, "HEAD", config);
-  assert.deepEqual(baseline, compilation.manifest);
+  assert.equal(baseline.schemaVersion, 7);
+  assert.deepEqual(
+    baseline.entries.map((entry) => entry.id),
+    compilation.manifest.entries.map((entry) => entry.id),
+  );
+  assert.ok(
+    baseline.entries
+      .filter((entry) => entry.kind === "screen")
+      .every((entry) => "artifacts" in entry),
+  );
   const reader = new GitReviewAssetReader(
     config,
     git.reader,
@@ -283,31 +293,14 @@ test("the former Mokabook manifest is accepted only from Git history", async (co
   );
 });
 
-for (const schemaVersion of [2, 3, 4, 5]) {
+for (const schemaVersion of [2, 3, 4, 5, 6] as const) {
   test(`historical v${schemaVersion} manifests remain readable internally but cannot become Review assets`, async (context) => {
     const fixture = await createFixture();
     context.after(() => removeFixture(fixture));
     const config = await loadConfig(fixture.root);
     const compilation = await compileCatalogue(config);
     await writeCompilation(compilation, config);
-    const { sourceFiles: _sources, ...historical } = compilation.manifest;
-    const manifest =
-      schemaVersion === 5
-        ? { ...compilation.manifest, schemaVersion: 5 }
-        : schemaVersion === 4
-          ? {
-              ...compilation.manifest,
-              schemaVersion: 4,
-              entries: compilation.manifest.entries.map(
-                ({ declaredDependencies: _declared, ...entry }) => entry,
-              ),
-            }
-          : {
-              ...historical,
-              schemaVersion,
-              generatedBy: schemaVersion === 2 ? "mockbook" : "mokly",
-              legacyPages: [],
-            };
+    const manifest = legacyManifestFromV7(compilation.manifest, schemaVersion);
     const filename = schemaVersion === 2 ? LEGACY_MANIFEST_NAME : MANIFEST_NAME;
     if (schemaVersion === 2)
       await fs.promises.rm(path.join(fixture.mockupsDir, MANIFEST_NAME));

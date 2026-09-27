@@ -132,7 +132,7 @@ export class BackgroundGeneration {
         if (current()) {
           if (snapshot)
             timingCounts("changes.publish", () => ({
-              changedRoutes: snapshot.changedRoutes?.length ?? 0,
+              changedIds: snapshot.changedIds?.length ?? 0,
             }));
           this.classified(snapshot);
         }

@@ -19,13 +19,13 @@ test("a light-only screen deep link keeps effective Light evidence through a bac
     );
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: ["screens/details.html"],
+      changedIds: ["details"],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
         screenViews: [
           {
-            route: "screens/details.html",
+            id: "details",
             views: [
               {
                 viewport: "mobile",
@@ -83,7 +83,7 @@ test("a light-only saved variant uses its displayed scheme for status and marks"
   try {
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [],
+      changedIds: [],
       changesStatus: "ready",
       componentChanges: { baseline: compilation.manifest, result },
     });

@@ -3,7 +3,6 @@ import test from "node:test";
 
 import {
   entryRoute,
-  fragmentRoute,
   isCatalogueId,
   isEntryId,
   isWindowsDeviceName,
@@ -63,10 +62,6 @@ test("view routes derive every axis from entry identity", () => {
   assert.equal(
     viewRoute("component", "action-disabled", "desktop", "dark"),
     "components/action-disabled.desktop.dark.html",
-  );
-  assert.equal(
-    fragmentRoute("screens/account-home.html", "desktop", "dark"),
-    "screens/account-home.desktop.dark.html",
   );
 });
 

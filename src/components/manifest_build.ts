@@ -9,7 +9,6 @@ import {
   effectiveColorSchemes,
   VIEWPORTS,
   encodeProps,
-  entryRoute,
   viewRoute,
 } from "@mokly/viewer/data";
 
@@ -25,13 +24,12 @@ import type {
 export function componentManifestEntry(
   entry: ComponentDefinition & ResolvedRegistryEntry,
   common: Omit<ManifestEntryBase, "kind">,
+  schemes: readonly ColorScheme[],
 ): ManifestComponent {
   return {
     ...common,
-    declaredDependencies: [...new Set(entry.dependencies)].sort(),
+    colorSchemes: [...effectiveColorSchemes(entry, schemes)],
     kind: "component",
-    route: entryRoute("component", entry.id),
-    viewports: ["mobile", "desktop"],
     ...(entry.tags?.length ? { tags: [...entry.tags] } : {}),
     propSchema: entry.propSchema,
     controls: entry.controls,
@@ -57,30 +55,17 @@ export function componentVariantManifestEntry(
     viewport: "mobile" | "desktop",
     scheme: ColorScheme = "light",
   ) => viewRoute("component", entry.id, viewport, scheme);
+  const colorSchemes = effectiveColorSchemes(entry, schemes);
   return {
     ...common,
-    declaredDependencies: [...new Set(entry.dependencies)].sort(),
+    colorSchemes: [...colorSchemes],
     kind: "component",
-    route: entryRoute("component", entry.id),
-    viewports: ["mobile", "desktop"],
     ...(entry.tags?.length ? { tags: [...entry.tags] } : {}),
     variantOf: entry.variantOf,
     props: encodeProps(inputs.data),
     suppliedSlots: [...entry.suppliedSlots],
-    fragments: {
-      mobile: fragment("mobile"),
-      desktop: fragment("desktop"),
-    },
-    ...(effectiveColorSchemes(entry, schemes).includes("dark")
-      ? {
-          darkFragments: {
-            mobile: fragment("mobile", "dark"),
-            desktop: fragment("desktop", "dark"),
-          },
-        }
-      : {}),
     componentViews: VIEWPORTS.flatMap((viewport) =>
-      effectiveColorSchemes(entry, schemes).flatMap(
+      colorSchemes.flatMap(
         (scheme) => views.get(fragment(viewport, scheme)) ?? [],
       ),
     ),

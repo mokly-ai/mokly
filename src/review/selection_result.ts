@@ -1,5 +1,5 @@
 /** Project completed ownership evidence onto the one comparison being displayed. */
-import type { ReviewResultV3 } from "@mokly/viewer/data";
+import type { ReviewResultV4 } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 
@@ -7,18 +7,15 @@ import { aggregateIgnored } from "./screen_views.js";
 import type { ReviewSelection } from "./selection_types.js";
 
 export function selectedComponentResult(
-  result: ReviewResultV3,
+  result: ReviewResultV4,
   selection: ReviewSelection,
-): ReviewResultV3 {
-  const screens =
-    selection.variantId === undefined
-      ? result.screens.filter((screen) => screen.route === selection.route)
-      : [];
-  const component = result.components.find(
-    (entry) => entry.route === selection.route,
+): ReviewResultV4 {
+  const screens = result.screens.filter((screen) => screen.id === selection.id);
+  const component = result.components.find((entry) =>
+    entry.variants.some((variant) => variant.id === selection.id),
   );
   const variant = component?.variants.find(
-    (entry) => entry.id === selection.variantId,
+    (entry) => entry.id === selection.id,
   );
   if (!screens.length && (!component || !variant)) throw missingSelection();
   const components =
@@ -33,11 +30,7 @@ export function selectedComponentResult(
       if (entry.kind !== (components.length ? "component" : "screen"))
         return false;
       const address = entry.after ?? entry.before;
-      return (
-        address?.route === selection.route ||
-        (selection.variantId !== undefined &&
-          address?.id === selection.variantId)
-      );
+      return address?.id === selection.id;
     }),
     affectedConsumers: [],
     ignoredImpact: aggregateIgnored(screens),

@@ -4,9 +4,8 @@
 import type { ReactNode } from "react";
 
 import { catalogueViewHref } from "../navigation/delivery.js";
-import type { ManifestEntry } from "../registry/types.js";
 
-import type { Catalogue } from "./catalogue.js";
+import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
 import { structuredCrumbTrail } from "./nav_tree.js";
 import type { CatalogueCrumb } from "./nav_tree.js";
 import { useOptionalShellStore } from "./store_context.js";
@@ -143,13 +142,13 @@ export function ScreenHead(props: {
 function variantParent(
   catalogue: Catalogue,
   target: RouteTarget,
-): ManifestEntry | undefined {
+): CatalogueManifestEntry | undefined {
   const entry = target.entry;
   if (entry.kind !== "screen") {
     return undefined;
   }
   const historical = catalogue.removedEntries.some(
-    ({ entry: candidate }) => candidate.route === entry.route,
+    ({ entry: candidate }) => candidate.id === entry.id,
   );
   if (historical)
     return entry.variantOf === undefined
@@ -172,12 +171,12 @@ export function targetHead(
 ): { crumbs: CatalogueCrumb[]; id?: string; title: string } {
   const ancestors =
     catalogue.removedEntries
-      .find(({ entry }) => entry.route === target.entry.route)
+      .find(({ entry }) => entry.id === target.entry.id)
       ?.entry.navPath.map((label) => ({ label })) ??
     structuredCrumbTrail(catalogue.hierarchy, target.entry.id);
   const parent = variantParent(catalogue, target);
   const parentSnapshot = parent
-    ? catalogue.removedEntries.find(({ entry }) => entry.route === parent.route)
+    ? catalogue.removedEntries.find(({ entry }) => entry.id === parent.id)
         ?.snapshotId
     : undefined;
   return {
@@ -187,7 +186,7 @@ export function targetHead(
         : [
             ...ancestors,
             {
-              href: `${catalogueViewHref(parent.route)}${
+              href: `${catalogueViewHref(parent.kind, parent.id)}${
                 parentSnapshot ? `?snapshot=${parentSnapshot}` : ""
               }`,
               label: parent.title,

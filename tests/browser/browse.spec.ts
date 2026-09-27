@@ -345,9 +345,7 @@ test("failed route evidence keeps public navigation and rejects the previous own
 }) => {
   await page.goto("/view/screens/example-details.html");
   await markPage(page);
-  await expect
-    .poll(() => workspaceRoute(page))
-    .toBe("screens/example-details.html");
+  await expect.poll(() => workspaceRoute(page)).toBe("example-details");
   let fetches = 0;
   await page.route("**/view/screens/example-welcome.html", (route) =>
     route.request().resourceType() === "fetch"
@@ -358,16 +356,14 @@ test("failed route evidence keeps public navigation and rejects the previous own
   await expect(page).toHaveURL(/welcome\.html$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
   await expect.poll(() => fetches).toBe(1);
-  await expect
-    .poll(() => workspaceRoute(page))
-    .toBe("screens/example-welcome.html");
+  await expect.poll(() => workspaceRoute(page)).toBe("example-welcome");
   expect(await hasMarker(page)).toBe(true);
 });
 
 async function workspaceRoute(page: Page): Promise<string | undefined> {
   const state = await page.locator("script[data-workspace-data]").textContent();
   if (!state) return;
-  return (JSON.parse(state) as { entry?: { route?: string } }).entry?.route;
+  return (JSON.parse(state) as { entry?: { id?: string } }).entry?.id;
 }
 
 test("viewport controls switch device frames", async ({ page }) => {

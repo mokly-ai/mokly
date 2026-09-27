@@ -50,9 +50,6 @@ export interface MarkerState {
 }
 export interface ScreenNavigateEvent {
   screenId: string;
-  route: string;
-  snapshotId?: string;
-  variantId?: string;
   fragment?: string;
   navigation?: FrameNavigation;
 }

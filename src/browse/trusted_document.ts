@@ -4,6 +4,7 @@ import type { Viewport, ComponentViewRecord } from "@mokly/viewer";
 import {
   generatedViews,
   encodeUrlPath,
+  entryRoute,
   isManifestComponentVariant,
 } from "@mokly/viewer/data";
 import type { LogicalTarget } from "@mokly/viewer/data";
@@ -25,7 +26,7 @@ export function trustedDocument(
   catalogue: Catalogue,
 ): TrustedBrowseDocument | undefined {
   for (const entry of catalogue.manifest.entries) {
-    if (entry.kind === "page" && entry.route === route)
+    if (entry.kind === "page" && entryRoute("page", entry.id) === route)
       return {
         colorScheme: "light",
         sourcePath: entry.sourcePath,
@@ -77,7 +78,7 @@ export function expectedPortableHref(
     : [];
   const targetRoute =
     entry?.kind === "page"
-      ? entry.route
+      ? entryRoute("page", entry.id)
       : (views.find((view) => view.colorScheme === source.colorScheme)?.path ??
         views[0]!.path);
   const relative = path.posix.relative(

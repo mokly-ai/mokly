@@ -26,7 +26,6 @@ test("preview fragment routes update every applicable frame source", () => {
         {
           ...mobile,
           colorScheme: "dark",
-          fragmentPath: "static/screens/home.mobile.dark.html",
         },
       ],
     },

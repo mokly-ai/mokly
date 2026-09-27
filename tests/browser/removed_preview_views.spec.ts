@@ -92,7 +92,7 @@ for (const change of ["scheme", "viewport"] as const)
 
       now += 120_001;
       const pruning = await page.request.get(
-        `${host.url}/__mokly/diffs/review.json?page=pages%2Fremoved-page.html`,
+        `${host.url}/__mokly/diffs/review.json?page=removed-page`,
       );
       expect(pruning.ok()).toBe(true);
       expect((await page.request.get(expired!)).status()).toBe(404);
@@ -114,8 +114,8 @@ for (const change of ["scheme", "viewport"] as const)
         expired!,
       );
       expect(
-        selections.map((url) => url.searchParams.get("route")).filter(Boolean),
-      ).toEqual(["screens/removed-screen.html", "screens/removed-screen.html"]);
+        selections.map((url) => url.searchParams.get("id")).filter(Boolean),
+      ).toEqual(["removed-screen", "removed-screen"]);
       expect(selections.some((url) => url.searchParams.has("refresh"))).toBe(
         false,
       );

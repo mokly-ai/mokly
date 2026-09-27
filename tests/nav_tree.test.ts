@@ -20,19 +20,16 @@ function screen(
   variantOf?: string,
 ): ManifestV7["entries"][number] {
   return {
+    colorSchemes: ["light"],
     declaredDependencies: [],
-    dependencies: [],
     description: title,
-    fragments: { mobile: `${id}.mobile.html`, desktop: `${id}.desktop.html` },
     id,
     kind: "screen",
     navPath,
     relatedDocs: [],
-    route: `${id}.html`,
     sourcePath: `entries/${id}.tsx`,
     title,
     useCaseIds: [],
-    viewports: ["mobile", "desktop"],
     ...(variantOf ? { variantOf } : {}),
   };
 }
@@ -40,17 +37,15 @@ function screen(
 function page(
   id: string,
   title: string,
-  route: string,
+  _route: string,
 ): ManifestV7["entries"][number] {
   return {
     declaredDependencies: [],
-    dependencies: [],
     description: title,
     id,
     kind: "page",
     navPath: [],
     relatedDocs: [],
-    route,
     sourcePath: `entries/${id}.tsx`,
     title,
   };
@@ -168,14 +163,13 @@ test("removed rows follow the complete current hierarchy in route and id order",
     screen("current", "Zed current"),
     screen("nested", "Nested", ["Folders"]),
   ]);
-  const removed = (id: string, route: string): NavLeafNode => ({
+  const removed = (id: string, _route: string): NavLeafNode => ({
     entryId: id,
     entryKind: "page",
-    key: `removed:${route}:${id}`,
+    key: `removed:${id}`,
     kind: "leaf",
     label: `A ${id} · Removed`,
     removedPage: true,
-    route,
   });
   const sections = buildNavSections(hierarchy, [
     removed("last", "z.html"),
@@ -187,9 +181,9 @@ test("removed rows follow the complete current hierarchy in route and id order",
     [
       "folder:Folders",
       "entry:current",
-      "removed:a.html:first",
-      "removed:a.html:second",
-      "removed:z.html:last",
+      "removed:first",
+      "removed:last",
+      "removed:second",
     ],
   );
 });
@@ -251,13 +245,11 @@ test("declared screen and use-case tags reach their leaves without inventing pag
     },
     {
       declaredDependencies: [],
-      dependencies: [],
       description: "Tour",
       id: "tour",
       kind: "use-case",
       navPath: ["Screens"],
       relatedDocs: [],
-      route: "tour.html",
       sourcePath: "entries/tour.tsx",
       steps: [{ screenId: "welcome" }],
       tags: ["onboarding"],

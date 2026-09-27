@@ -1,10 +1,14 @@
 /** Changes-filter navigation shared by standalone and embedded shells. */
 
 import { isManifestComponentVariant } from "../components/manifest_types.js";
-import type { ManifestEntry } from "../registry/types.js";
+import { entryRoute } from "../navigation/routes.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
-import { catalogueSelectionEntry, type Catalogue } from "./catalogue.js";
+import {
+  catalogueSelectionEntry,
+  type Catalogue,
+  type CatalogueManifestEntry,
+} from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import type { ShellRoute } from "./routes.js";
 import { rowMatchesQuery } from "./search_query.js";
@@ -12,7 +16,7 @@ import { workspaceData } from "./workspace_data.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
 
 interface ChangedDestination {
-  entry: ManifestEntry;
+  entry: CatalogueManifestEntry;
   snapshotId?: string;
 }
 
@@ -25,19 +29,19 @@ export function changesActivation(
 ): ShellRoute {
   if (
     selection.view !== "changes" ||
-    !context.changedRoutes ||
+    !context.changedIds ||
     route.view.kind !== "target"
   )
     return route;
   const requested = route.view.target.entry;
-  const destination = context.changedRoutes.includes(requested.route)
+  const destination = context.changedIds.includes(requested.id)
     ? {
         entry: requested,
         ...(route.snapshot ? { snapshotId: route.snapshot } : {}),
       }
     : firstVisibleChangedVariant(catalogue, context, selection, requested.id);
   if (!destination) return route;
-  const redirected = destination.entry.route !== requested.route;
+  const redirected = destination.entry.id !== requested.id;
   const next: ShellRoute = redirected
     ? {
         ...route,
@@ -84,7 +88,7 @@ function selectionHasChangedRoute(
       )
     : undefined;
   return current !== undefined
-    ? context.changedRoutes?.includes(current.route) === true
+    ? context.changedIds?.includes(current.id) === true
     : false;
 }
 
@@ -98,7 +102,7 @@ function firstVisibleChangedVariant(
   if (
     parent?.kind !== "screen" ||
     parent.variantOf !== undefined ||
-    !catalogue.byRoute.has(parent.route)
+    !catalogue.manifest.entries.some((entry) => entry.id === parent.id)
   )
     return;
   const current = (catalogue.hierarchy.variantsById.get(parentId) ?? []).map(
@@ -113,14 +117,16 @@ function firstVisibleChangedVariant(
   );
   return [...current, ...removed].find(
     ({ entry }) =>
-      context.changedRoutes?.includes(entry.route) &&
+      context.changedIds?.includes(entry.id) &&
       rowMatchesQuery(
         { freeText: selection.search, tags: selection.tags },
         {
           id: entry.id,
-          route: entry.route,
+          route: entryRoute(entry.kind, entry.id),
           tags: entry.tags ?? [],
-          text: catalogue.byRoute.has(entry.route)
+          text: catalogue.manifest.entries.some(
+            (candidate) => candidate.id === entry.id,
+          )
             ? entry.title
             : `${entry.title} · Removed`,
         },

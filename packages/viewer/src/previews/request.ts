@@ -4,6 +4,7 @@ import { historicalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import { encodeUrlPath } from "../data/paths.js";
+import { entryRoute, viewRoute } from "../navigation/routes.js";
 import { parseRemovedPagePreview } from "../review/page_preview.js";
 import { parseReviewResult } from "../review/result_validation.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
@@ -75,10 +76,7 @@ export function previewEndpoint(
 ): PreviewRequest | undefined {
   if (!delivery) {
     const endpoint = new URL(STABLE_ENDPOINT, base);
-    endpoint.searchParams.set(
-      data.kind === "page" ? "page" : "route",
-      data.route,
-    );
+    endpoint.searchParams.set(data.kind === "page" ? "page" : "id", data.id);
     if (refresh) endpoint.searchParams.set("refresh", "1");
     return { endpoint };
   }
@@ -90,12 +88,11 @@ export function previewEndpoint(
   const generation = new URL(`/${comparisonPath}`, base);
   if (advertised.kind === "screen") return { endpoint: generation };
   const prefix = comparisonPath.slice(0, -REVIEW_FILE.length);
-  return advertised.path === `${prefix}pages/${data.route}.json`
-    ? {
-        endpoint: new URL(`/${encodeUrlPath(advertised.path)}`, base),
-        generation,
-      }
-    : undefined;
+  const path = `${prefix}pages/${data.id}.json`;
+  return {
+    endpoint: new URL(`/${encodeUrlPath(path)}`, base),
+    generation,
+  };
 }
 
 /**
@@ -110,7 +107,11 @@ export function advertisedPreviewPaths(
     files: [
       ...(comparison === null ? [] : [comparison]),
       ...model.removedEntries.flatMap((removed) =>
-        removed.preview?.kind === "page" ? [removed.preview.path] : [],
+        removed.preview?.kind === "page" && comparison !== null
+          ? [
+              `${comparison.slice(0, -REVIEW_FILE.length)}pages/${removed.entry.id}.json`,
+            ]
+          : [],
       ),
     ],
     prefixes:
@@ -135,16 +136,19 @@ function screenContent(
   base: string,
 ): ParsedPreview {
   const result = parseReviewResult(payload);
-  const screen = result.screens.find(
-    (candidate) => candidate.route === data.route,
-  );
-  if (!screen || screen.views.some((view) => view.afterPath)) unavailable();
+  const screen = result.screens.find((candidate) => candidate.id === data.id);
+  if (!screen || "after" in screen) unavailable();
   const views = screen.views.flatMap((view) =>
-    view.state === "removed" && view.beforePath
+    view.state === "removed"
       ? [
           {
             colorScheme: view.colorScheme,
-            url: new URL(encodeUrlPath(view.beforePath), base).href,
+            url: new URL(
+              encodeUrlPath(
+                `snapshots/before/${viewRoute("screen", data.id, view.viewport, view.colorScheme)}`,
+              ),
+              base,
+            ).href,
             viewport: view.viewport,
           },
         ]
@@ -163,12 +167,15 @@ function pageContent(
   base: string,
 ): ParsedPreview {
   const preview = parseRemovedPagePreview(payload);
-  if (preview.route !== data.route) unavailable();
+  if (preview.id !== data.id) unavailable();
   return {
     baseCommit: preview.baseCommit,
     content: {
       kind: "page",
-      url: new URL(encodeUrlPath(preview.documentPath), base).href,
+      url: new URL(
+        encodeUrlPath(`snapshots/before/${entryRoute("page", data.id)}`),
+        base,
+      ).href,
     },
   };
 }

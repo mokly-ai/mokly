@@ -2,7 +2,7 @@
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type {
   CatalogueReadModel,
-  CatalogueRoutedEntry,
+  CatalogueRecord,
   CatalogueView,
 } from "../catalogue/types.js";
 import type {
@@ -17,7 +17,7 @@ import type { ShellView } from "../shell/views.js";
 
 import type { ViewerSelection } from "./types.js";
 
-function metadata(entry: CatalogueRoutedEntry) {
+function metadata(entry: CatalogueRecord) {
   return {
     id: entry.id,
     title: entry.title,
@@ -41,30 +41,8 @@ export function usageView(
     resources: [],
   };
 }
-function fragments(
-  views: readonly CatalogueView[],
-  fallback: (axis: "mobile" | "desktop", scheme: "light" | "dark") => string,
-) {
-  const paths = (scheme: "light" | "dark") =>
-    Object.fromEntries(
-      ["mobile", "desktop"].map((axis) => [
-        axis,
-        views
-          .find((v) => v.viewport === axis && v.colorScheme === scheme)
-          ?.fragmentPath?.slice(7) ??
-          fallback(axis as "mobile" | "desktop", scheme),
-      ]),
-    ) as Record<"mobile" | "desktop", string>;
-  return {
-    fragments: paths("light"),
-    ...(views.some((v) => v.colorScheme === "dark")
-      ? { darkFragments: paths("dark") }
-      : {}),
-    componentViews: views.flatMap((view) => usageView(view) ?? []),
-  };
-}
-export function displayEntry(entry: CatalogueRoutedEntry): ManifestEntry {
-  const base = { ...metadata(entry), route: entry.route };
+export function displayEntry(entry: CatalogueRecord): ManifestEntry {
+  const base = { ...metadata(entry) };
   switch (entry.kind) {
     case "page":
       return { ...base, kind: "page" };
@@ -73,40 +51,30 @@ export function displayEntry(entry: CatalogueRoutedEntry): ManifestEntry {
     case "screen":
       return {
         ...base,
+        colorSchemes: entry.colorSchemes,
         kind: "screen",
-        viewports: entry.viewports,
+        componentViews: entry.views.flatMap((view) => usageView(view) ?? []),
         useCaseIds: entry.useCaseIds,
         ...(entry.address ? { address: entry.address } : {}),
         ...(entry.variantOf !== undefined
           ? { variantOf: entry.variantOf }
           : {}),
-        ...fragments(entry.views, (axis, scheme) =>
-          entry.route.replace(
-            /\.html$/,
-            `.${axis}${scheme === "dark" ? ".dark" : ""}.html`,
-          ),
-        ),
       };
     case "component":
       if ("variantOf" in entry)
         return {
           ...base,
+          colorSchemes: entry.colorSchemes,
+          componentViews: entry.views.flatMap((view) => usageView(view) ?? []),
           kind: "component",
-          viewports: ["mobile", "desktop"],
           variantOf: entry.variantOf,
           props: entry.props,
           suppliedSlots: entry.suppliedSlots,
-          ...fragments(entry.views, (axis, scheme) =>
-            entry.route.replace(
-              /\.html$/,
-              `.${axis}${scheme === "dark" ? ".dark" : ""}.html`,
-            ),
-          ),
         } as ManifestComponentVariant;
       return {
         ...base,
+        colorSchemes: entry.colorSchemes,
         kind: "component",
-        viewports: ["mobile", "desktop"],
         propSchema: entry.propSchema,
         slots: entry.slots,
         controls: entry.controls,
@@ -163,11 +131,11 @@ export function viewerContext(
     ...(model.changesStatus === "disabled"
       ? {}
       : { changesStatus: model.changesStatus }),
-    ...(selected ? { activeRoute: selected.route } : {}),
+    ...(selected ? { activeId: selected.id } : {}),
     ...(resolved?.snapshotId ? { snapshotId: resolved.snapshotId } : {}),
     ...(model.changesStatus === "ready"
       ? {
-          changedRoutes: [
+          changedIds: [
             ...model.screens,
             ...model.pages,
             ...model.useCases,
@@ -178,7 +146,7 @@ export function viewerContext(
               (entry) =>
                 entry.changes.status === "ready" && entry.changes.included,
             )
-            .map((entry) => entry.route),
+            .map((entry) => entry.id),
         }
       : {}),
   };
@@ -197,7 +165,7 @@ export function viewerView(
     : undefined;
   const entry = catalogue.publicModel
     ? selected
-      ? catalogueRouteEntry(catalogue, selected.entry.route)
+      ? catalogueRouteEntry(catalogue, selected.entry.id, selected.entry.kind)
       : undefined
     : selection.snapshotId === undefined
       ? catalogue.byId.get(selection.screenId)

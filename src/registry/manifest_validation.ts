@@ -4,7 +4,7 @@ import {
   legacyComponentVariantId,
   viewRoute,
 } from "@mokly/viewer/data";
-import type { HistoricalManifest } from "@mokly/viewer/data";
+import type { HistoricalManifest, ManifestV7 } from "@mokly/viewer/data";
 
 import {
   componentFragmentPaths,
@@ -12,6 +12,7 @@ import {
 } from "../components/manifest_validation.js";
 import { MoklyError } from "../errors.js";
 
+import { normalizeHistoricalManifest } from "./historical_manifest.js";
 import { validateEntry, validateCurrentFields } from "./manifest_entries.js";
 import { validateManifestRelationships } from "./manifest_relationships.js";
 import {
@@ -26,18 +27,36 @@ export function validateManifest(
   value: unknown,
   allowV2: boolean,
   historical = false,
-): HistoricalManifest {
-  const manifest = validateManifestMetadata(value, allowV2, historical);
+): HistoricalManifest | ManifestV7 {
+  const manifest = validateRawManifestMetadata(value, allowV2, historical);
   validateManifestComponentUsage(manifest);
-  return manifest;
+  return historical
+    ? normalizeHistoricalManifest(manifest)
+    : (manifest as unknown as ManifestV7);
 }
 
 /** Shared metadata validation; only the live index omits rendered-view validation. */
-export function validateManifestMetadata(
+export function validateManifestMetadata(value: unknown): ManifestV7 {
+  return validateRawManifestMetadata(
+    value,
+    false,
+    false,
+  ) as unknown as ManifestV7;
+}
+
+interface ValidatedRawManifest {
+  entries: readonly Record<string, unknown>[];
+  generatedBy: "mokly";
+  legacyPages?: readonly Record<string, unknown>[];
+  schemaVersion: 3 | 4 | 5 | 6 | 7;
+  sourceFiles?: readonly string[];
+}
+
+function validateRawManifestMetadata(
   value: unknown,
-  allowV2 = false,
-  historical = false,
-): HistoricalManifest {
+  allowV2: boolean,
+  historical: boolean,
+): ValidatedRawManifest {
   if (!record(value) || !Array.isArray(value.entries))
     throw new MoklyError(
       "manifest-invalid",
@@ -116,12 +135,7 @@ export function validateManifestMetadata(
       throw new MoklyError("manifest-invalid", `invalid manifest id: ${id}`);
     }
     if (pages) {
-      validateCurrentFields(
-        entry,
-        components,
-        historicalCollection,
-        current && !historical,
-      );
+      validateCurrentFields(entry, components, historicalCollection, current);
       if (
         !(normalized.sourceFiles as string[]).includes(
           entry.sourcePath as string,
@@ -137,33 +151,25 @@ export function validateManifestMetadata(
         "pages require the registered-page manifest format",
       );
     validateEntry(entry, components, historicalCollection, current);
-    if (
-      current &&
-      entry.kind !== "collection" &&
-      entry.route !==
-        entryRoute(
-          entry.kind as "component" | "page" | "screen" | "use-case",
-          id,
-        )
-    ) {
-      throw new MoklyError(
-        "manifest-invalid",
-        `${id} route does not match its kind and id`,
-      );
-    }
     if (byId.has(id)) {
       throw new MoklyError("manifest-invalid", `duplicate manifest id: ${id}`);
     }
     entries.push(entry);
     byId.set(id, entry);
     if (entry.kind !== "collection") {
-      if (typeof entry.route !== "string" || routes.has(entry.route)) {
+      const route = current
+        ? entryRoute(
+            entry.kind as "component" | "page" | "screen" | "use-case",
+            id,
+          )
+        : entry.route;
+      if (typeof route !== "string" || routes.has(route)) {
         throw new MoklyError(
           "manifest-invalid",
           `invalid or duplicate manifest route for ${entry.id}`,
         );
       }
-      routes.add(entry.route);
+      routes.add(route);
     }
   }
   if (historical) validateHistoricalComponentVariantIds(entries);
@@ -179,13 +185,12 @@ export function validateManifestMetadata(
         ? "historical"
         : "current",
   );
-  const manifest = {
+  return {
     ...normalized,
     entries: historicalCollection
       ? entries.filter((entry) => entry.kind !== "collection")
       : entries,
-  } as unknown as HistoricalManifest;
-  return manifest;
+  } as unknown as ValidatedRawManifest;
 }
 
 function validateHistoricalComponentVariantIds(
@@ -225,7 +230,16 @@ function validateFragmentRoutes(
   const outputRoutes = new Set(routedEntries);
   for (const entry of entries) {
     if (entry.kind === "component") {
-      for (const fragment of componentFragmentPaths(entry)) {
+      const fragments = derived
+        ? typeof entry.variantOf === "string"
+          ? (["mobile", "desktop"] as const).flatMap((viewport) =>
+              (entry.colorSchemes as ("light" | "dark")[]).map((scheme) =>
+                viewRoute("component", entry.id as string, viewport, scheme),
+              ),
+            )
+          : []
+        : componentFragmentPaths(entry);
+      for (const fragment of fragments) {
         if (outputRoutes.has(fragment))
           throw new MoklyError(
             "manifest-invalid",
@@ -235,12 +249,32 @@ function validateFragmentRoutes(
       }
       continue;
     }
-    if (entry.kind !== "screen" || !record(entry.fragments)) continue;
+    if (entry.kind !== "screen") continue;
+    if (derived) {
+      for (const viewport of ["mobile", "desktop"] as const)
+        for (const scheme of entry.colorSchemes as ("light" | "dark")[]) {
+          const fragment = viewRoute(
+            "screen",
+            entry.id as string,
+            viewport,
+            scheme,
+          );
+          if (outputRoutes.has(fragment))
+            throw new MoklyError(
+              "manifest-invalid",
+              `colliding screen view: ${fragment}`,
+            );
+          outputRoutes.add(fragment);
+        }
+      continue;
+    }
+    if (!record(entry.fragments)) continue;
     for (const viewport of ["mobile", "desktop"] as const) {
       const fragment = entry.fragments[viewport] as string;
-      const expected = derived
-        ? viewRoute("screen", entry.id as string, viewport, "light")
-        : (entry.route as string).replace(/\.html$/, `.${viewport}.html`);
+      const expected = (entry.route as string).replace(
+        /\.html$/,
+        `.${viewport}.html`,
+      );
       if (fragment !== expected || outputRoutes.has(fragment)) {
         throw new MoklyError(
           "manifest-invalid",
@@ -252,9 +286,10 @@ function validateFragmentRoutes(
     if (!record(entry.darkFragments)) continue;
     for (const viewport of ["mobile", "desktop"] as const) {
       const fragment = entry.darkFragments[viewport] as string;
-      const expected = derived
-        ? viewRoute("screen", entry.id as string, viewport, "dark")
-        : (entry.route as string).replace(/\.html$/, `.${viewport}.dark.html`);
+      const expected = (entry.route as string).replace(
+        /\.html$/,
+        `.${viewport}.dark.html`,
+      );
       if (fragment !== expected || outputRoutes.has(fragment)) {
         throw new MoklyError(
           "manifest-invalid",

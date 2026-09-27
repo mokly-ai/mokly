@@ -3,9 +3,10 @@
 // populated from the manifest entry for the selected route.
 
 import type { ColorScheme } from "../data/axes.js";
-import type { ManifestEntry, ManifestScreen } from "../registry/types.js";
+import { entryRoute, viewRoute } from "../navigation/routes.js";
+import type { ManifestScreen } from "../registry/types.js";
 
-import type { Catalogue } from "./catalogue.js";
+import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
 import {
   ChangedViewsRow,
   MetaRow,
@@ -22,25 +23,23 @@ import type { ChangedView } from "./view_marks.js";
 
 /** Generated fragment routes for a screen, dark renders after the light ones. */
 function generatedPaths(screen: ManifestScreen): string[] {
-  const paths = [screen.fragments.mobile, screen.fragments.desktop];
-  if (screen.darkFragments) {
-    paths.push(screen.darkFragments.mobile, screen.darkFragments.desktop);
-  }
-  return paths;
+  return (["mobile", "desktop"] as const).flatMap((viewport) =>
+    screen.colorSchemes.map((scheme) =>
+      viewRoute("screen", screen.id, viewport, scheme),
+    ),
+  );
 }
 
 /** The schemes a screen renders in, named for the reader. */
 function schemeNames(screen: ManifestScreen): string {
-  const schemes: readonly ColorScheme[] = screen.darkFragments
-    ? ["light", "dark"]
-    : ["light"];
+  const schemes: readonly ColorScheme[] = screen.colorSchemes;
   return schemes.join(", ");
 }
 
 export function EntryDetailsBody(props: {
   catalogue: Catalogue;
   changedViews?: readonly ChangedView[];
-  entry: ManifestEntry;
+  entry: CatalogueManifestEntry;
 }) {
   const entry = props.entry;
   return (
@@ -67,7 +66,7 @@ export function EntryDetailsBody(props: {
         ) : null}
         {entry.kind === "page" ? (
           <MetaRow label="Generated">
-            <PathChips values={[entry.route]} />
+            <PathChips values={[entryRoute("page", entry.id)]} />
           </MetaRow>
         ) : null}
         {entry.kind === "screen" && props.catalogue.hasDarkFragments ? (
@@ -77,11 +76,11 @@ export function EntryDetailsBody(props: {
           <ChangedViewsRow views={props.changedViews ?? []} />
         ) : null}
         {props.catalogue.removedEntries.find(
-          (removed) => removed.entry.route === entry.route,
+          (removed) => removed.entry.id === entry.id,
         ) ? (
           <MetaRow label="Location">
             {props.catalogue.removedEntries
-              .find((removed) => removed.entry.route === entry.route)
+              .find((removed) => removed.entry.id === entry.id)
               ?.entry.navPath.join(" › ")}
           </MetaRow>
         ) : null}
@@ -93,9 +92,9 @@ export function EntryDetailsBody(props: {
             <PathChips values={entry.relatedDocs} />
           </MetaRow>
         ) : null}
-        {entry.dependencies.length > 0 ? (
+        {entryDependencies(entry).length > 0 ? (
           <MetaRow label="Dependencies">
-            <PathChips values={entry.dependencies} />
+            <PathChips values={entryDependencies(entry)} />
           </MetaRow>
         ) : null}
         {entry.kind === "screen" ? (
@@ -107,6 +106,12 @@ export function EntryDetailsBody(props: {
       </div>
     </div>
   );
+}
+
+function entryDependencies(entry: CatalogueManifestEntry): readonly string[] {
+  return "dependencies" in entry
+    ? entry.dependencies
+    : [...new Set([entry.sourcePath, ...entry.declaredDependencies])].sort();
 }
 
 /** The collapsed-by-default details panel for the selected route. */

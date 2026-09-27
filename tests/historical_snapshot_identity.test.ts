@@ -10,9 +10,9 @@ import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import type { CatalogueReadModel } from "../packages/viewer/src/catalogue/types.js";
 import type {
   ManifestScreen,
-  ManifestV5,
+  ManifestV7,
 } from "../packages/viewer/src/registry/types.js";
-import type { ReviewResultV3 } from "../packages/viewer/src/review/component_types.js";
+import type { ReviewResultV4 } from "../packages/viewer/src/review/component_types.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
 import {
   displayEntry,
@@ -94,8 +94,11 @@ test("reader safely derives older generation-backed identities", () => {
   const identityLess = readCatalogue(value);
   assert.equal(identityLess.removedEntries[0]?.snapshotId, undefined);
   assert.equal(
-    resolveCatalogueRoute(identityLess, oldScreen.route)?.entry.route,
-    oldScreen.route,
+    resolveCatalogueRoute(identityLess, {
+      id: oldScreen.id,
+      kind: oldScreen.kind,
+    })?.entry.id,
+    oldScreen.id,
   );
 });
 
@@ -109,13 +112,13 @@ test("reader rejects malformed and duplicate published identities", () => {
     ...structuredClone(duplicated.removedEntries[0]),
     entry: {
       ...structuredClone(duplicated.removedEntries[0].entry),
-      route: "screens/another-old.html",
+      id: "another-old",
     },
   });
   assert.throws(() => readCatalogue(duplicated), /duplicate/i);
 });
 
-test("exact selection resolves every routed kind independently of stable id", () => {
+test("exact selection resolves current and historical records by stable id", () => {
   const fixture = readCatalogue(
     JSON.parse(requireFixture("../docs/protocol/fixtures/catalogue-v3.json")),
   );
@@ -128,7 +131,7 @@ test("exact selection resolves every routed kind independently of stable id", ()
   const removedEntries = current.map((entry, index) => ({
     entry: {
       ...structuredClone(entry),
-      route: `history/${entry.kind}-${index}.html`,
+      title: `Historical ${entry.title}`,
     },
     snapshotId: String(index + 1).repeat(64),
   }));
@@ -136,18 +139,18 @@ test("exact selection resolves every routed kind independently of stable id", ()
 
   for (const record of removedEntries) {
     assert.equal(
-      resolveCatalogueSelection(model, record.entry.id)?.entry.route,
-      current.find(({ id }) => id === record.entry.id)?.route,
+      resolveCatalogueSelection(model, record.entry.id)?.entry.title,
+      current.find(({ id }) => id === record.entry.id)?.title,
     );
     assert.equal(
       resolveCatalogueSelection(model, record.entry.id, record.snapshotId)
-        ?.entry.route,
-      record.entry.route,
+        ?.entry.title,
+      record.entry.title,
     );
   }
 });
 
-test("historical workspace resolution owns the old route and Removed status", () => {
+test("historical workspace resolution owns the old identity and Removed status", () => {
   const model = project(BASELINE_A);
   const catalogue = viewerCatalogue(model);
   const historical = model.removedEntries[0]!;
@@ -159,8 +162,8 @@ test("historical workspace resolution owns the old route and Removed status", ()
 
   const selected = catalogue.byId.get(currentScreen.id);
   assert.ok(selected);
-  assert.equal(selected.route, currentScreen.route);
-  assert.equal(workspace.entry.route, oldScreen.route);
+  assert.equal(selected.id, currentScreen.id);
+  assert.equal(workspace.entry.id, oldScreen.id);
   assert.equal(workspace.entry.title, oldScreen.title);
   assert.equal(workspace.removed, true);
   assert.equal(workspace.status, "Removed");
@@ -186,7 +189,7 @@ function projectionInput(commit: string | undefined) {
   return {
     catalogue: createCatalogue(current, removedEntries),
     changesStatus: "ready" as const,
-    changedRoutes: removedEntries.map(({ entry }) => entry.route),
+    changedIds: removedEntries.map(({ entry }) => entry.id),
     configPath: "mokly.config.ts",
     comparisonUrl: null,
     ...(commit
@@ -210,7 +213,7 @@ function snapshot(model: CatalogueReadModel): string {
   return model.removedEntries[0]?.snapshotId ?? "";
 }
 
-function review(baseCommit: string): ReviewResultV3 {
+function review(baseCommit: string): ReviewResultV4 {
   return {
     affectedConsumers: [],
     baseCommit,
@@ -219,17 +222,17 @@ function review(baseCommit: string): ReviewResultV3 {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 3,
+    schemaVersion: 4,
     screens: [],
     sharedImpact: [],
   };
 }
 
-function manifest(entries: readonly CurrentManifestScreen[]): ManifestV5 {
+function manifest(entries: readonly CurrentManifestScreen[]): ManifestV7 {
   return {
     entries,
     generatedBy: "mokly",
-    schemaVersion: 5,
+    schemaVersion: 7,
     sourceFiles: [
       ...new Set(entries.map(({ sourcePath }) => sourcePath)),
     ].sort(),
@@ -239,26 +242,19 @@ function manifest(entries: readonly CurrentManifestScreen[]): ManifestV5 {
 function screen(
   id: string,
   title: string,
-  route: string,
+  _route: string,
 ): CurrentManifestScreen {
-  const stem = route.slice(0, -5);
   return {
+    colorSchemes: ["light"],
     declaredDependencies: [],
-    dependencies: [],
     description: `${title} description`,
-    fragments: {
-      desktop: `${stem}.desktop.html`,
-      mobile: `${stem}.mobile.html`,
-    },
     id,
     kind: "screen",
     navPath: [],
     relatedDocs: [],
-    route,
     sourcePath: `entries/${id}.mockup.tsx`,
     title,
     useCaseIds: [],
-    viewports: ["mobile", "desktop"],
   };
 }
 

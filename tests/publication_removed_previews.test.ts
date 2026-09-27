@@ -12,13 +12,11 @@ import { advertisePublicationPreview } from "../dist/publication/shell_previews.
 
 const page: ManifestPage = {
   declaredDependencies: [],
-  dependencies: [],
   description: "Removed page",
   id: "removed-page",
   kind: "page",
   navPath: [],
   relatedDocs: [],
-  route: "archive/removed.html",
   sourcePath: "entries/removed.mockup.tsx",
   tags: [],
   title: "Removed page",
@@ -28,29 +26,23 @@ const result: ReviewResult = {
   baseRef: "main",
   changedPaths: [],
   ignoredImpact: [],
-  schemaVersion: 2,
+  schemaVersion: 4,
   screens: [],
   sharedImpact: [],
+  components: [],
+  changes: [],
+  affectedConsumers: [],
 };
 
 test("publication preview boundaries report typed MoklyError failures", () => {
   for (const operation of [
-    () =>
-      staticRemovedPreviews(
-        [{ entry: page }],
-        { result },
-        new Map(),
-        `__mokly/diffs/__generations/${"b".repeat(64)}`,
-      ),
+    () => staticRemovedPreviews([{ entry: page }], { result }, new Map()),
     () =>
       advertisePublicationPreview(
         "view/archive/removed.html",
         "<!doctype html><html><body>missing stage</body></html>",
         page,
-        {
-          kind: "page",
-          path: `__mokly/diffs/__generations/${"b".repeat(64)}/pages/archive/removed.html.json`,
-        },
+        { kind: "page" },
       ),
     () => publicationComparisonMetadata("/mutable/review.json"),
   ])

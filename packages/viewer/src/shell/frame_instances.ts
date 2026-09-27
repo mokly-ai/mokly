@@ -99,7 +99,7 @@ export function frameInstanceRef(
   };
 }
 
-/** Match the exact current workspace view, including route and effective axes. */
+/** Match the exact current workspace view, including entry id and effective axes. */
 export function matchesWorkspaceFrame(
   session: ShellFrameSession,
   data: WorkspaceData,
@@ -108,7 +108,6 @@ export function matchesWorkspaceFrame(
   const identity = session.identity;
   return (
     identity.entryId === data.entry.id &&
-    identity.route === data.entry.route &&
     identity.stepIndex === undefined &&
     identity.variantId === view.variantId &&
     identity.viewport === view.viewport &&

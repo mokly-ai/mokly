@@ -51,7 +51,7 @@ export async function capturePublicationPagePreviews(
         baseline: changes.componentChanges.baseline,
         baseCommit: changes.baseCommit,
         baseRef: changes.baseRef,
-        changedRoutes: changes.changedRoutes,
+        changedIds: changes.changedIds,
         removedEntries: changes.removedEntries,
         schemaVersion: 1,
       },
@@ -73,7 +73,6 @@ export function staticRemovedPreviews(
   removed: readonly RemovedEntrySnapshot[],
   comparison: Pick<ReviewArtifact, "result"> | undefined,
   files: ReadonlyMap<string, ReviewArtifactContent>,
-  prefix: string,
 ): ReadonlyMap<string, RemovedEntryPreview> | undefined {
   if (!comparison) return;
   try {
@@ -81,41 +80,40 @@ export function staticRemovedPreviews(
     for (const { entry } of removed) {
       if (entry.kind === "screen") {
         const screen = comparison.result.screens.find(
-          (candidate) => candidate.route === entry.route,
+          (candidate) => candidate.id === entry.id,
         );
         if (
           !screen ||
           screen.state !== "removed" ||
+          screen.before === undefined ||
+          screen.after !== undefined ||
           screen.views.length === 0 ||
-          screen.views.some((view) => !view.beforePath || view.afterPath)
+          screen.views.some((view) => view.state !== "removed")
         )
           throw publicationError(
-            `Removed screen preview is incomplete: ${entry.route}`,
+            `Removed screen preview is incomplete: ${entry.id}`,
           );
-        previews.set(entry.route, { kind: "screen" });
+        previews.set(entry.id, { kind: "screen" });
       }
       if (entry.kind === "page") {
-        const name = `pages/${entry.route}.json`;
+        const name = `pages/${entry.id}.json`;
         const bytes = files.get(name);
         if (bytes === undefined)
           throw publicationError(
-            `Removed page preview is missing: ${entry.route}`,
+            `Removed page preview is missing: ${entry.id}`,
           );
         const preview = parseRemovedPagePreview(
           JSON.parse(Buffer.from(bytes).toString("utf8")),
         );
         if (
-          preview.route !== entry.route ||
+          preview.id !== entry.id ||
           preview.baseCommit !== comparison.result.baseCommit ||
           preview.baseRef !== comparison.result.baseRef
         )
           throw publicationError(
-            `Removed page preview does not match the comparison: ${entry.route}`,
+            `Removed page preview does not match the comparison: ${entry.id}`,
           );
-        previews.set(entry.route, {
-          kind: "page",
-          path: `${prefix}/${name}`,
-        });
+        previews.set(entry.id, { kind: "page" });
       }
     }
     return previews;
@@ -149,7 +147,6 @@ export async function publishPublicationComparison(
       removed,
       { result: comparison.result },
       packaged,
-      directory,
     );
     if (!removedPreviews)
       throw publicationError("Removed-content descriptors are unavailable.");
