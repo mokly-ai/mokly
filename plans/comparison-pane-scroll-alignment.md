@@ -273,8 +273,8 @@ the design catalogue before the implementation lands.
       `npm run example:check`, then smoke-test the changed pages through
       `npm run dev` and save screenshots under `.context/`.
 - [x] Run the design tests, then `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the
       findings without changing the implementation.
@@ -404,3 +404,32 @@ side, and prove alignment in the browser.
   documents, the Milestone 3 and 4 TODO lists, CSP `base-uri`, keyboard
   scrolling, forward-looking design references, and the pane frame attribute)
   and were reported for a decision rather than applied.
+
+### Milestone 2
+
+- Base commit: `4982621`; the mockups landed as `93ca88a` and the review
+  fixes as `57feb31` on `calummoore/kelowna-v2`.
+- Checks: `npm run build`, `npm run example:build` (410 files) and
+  `npm run example:check` passed; the design unit tests passed 127/127; the
+  design, library and review browser specs passed; `cargo xtask check` passed
+  on the tree that became `93ca88a` and again on the tree that became
+  `57feb31` (repository and package suites, unit 2421/2421, browser 787/787
+  in 123 files). The new structure test failed three of its four cases
+  against `4982621`, so it captures the change.
+- Smoke: `npm run dev` served the long overlay, Overlay, Current, both
+  Difference mockups, both Side by side mockups and a stylesheet evidence
+  screen in both viewports and schemes; screenshots are under `.context/m2/`.
+- Environment: the sandbox's global npm 11.19.0 kept nine stale files from an
+  in-place Node upgrade, which broke `npx` and `npm audit`; it was replaced
+  with the identical npm from the checksum-verified Node 24.21.0 tarball
+  before the checks. No repository file was involved.
+- Finding 1 (the shared Comparison pane samples kept a working link) and
+  finding 4 (the shell design Delivery Status still said every recorded state
+  is implemented) contradicted statements this milestone added, so both were
+  fixed in `57feb31`; the inert-link test now covers every generated design
+  output and failed on the samples before the fix.
+- Findings 2 (the pane contract does not require both stack layers to paint an
+  opaque screen background), 3 (no mockup covers stacked component
+  comparisons before Milestone 4 restructures them) and 5 (the long overlay's
+  rationale implies layout alignment beyond scroll alignment, which rests on a
+  fixed introduction height) were reported for a decision rather than applied.
