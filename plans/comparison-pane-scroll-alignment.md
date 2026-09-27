@@ -212,8 +212,10 @@ and is specified by the
     target, then moves the shared viewport to the target's document position;
     every counterpart follows.
 12. **Readers can turn scroll syncing off.** A "Scroll together" toggle in
-    the comparison toolbar, shown whenever a comparison mode is selected, is
-    on by default and remembered in the browser like the viewer's other
+    the comparison toolbar applies only to the diff modes: it is shown in
+    Side by side, Overlay and Difference and hidden in Current, which shows
+    one version and has nothing to sync, as the Refresh control already is.
+    It is on by default and remembered in the browser like the viewer's other
     reader preferences; embedded viewers keep it for the session. Turned off
     in Side by side, each pane's page and inner regions scroll on their own.
     Turned off in Overlay or Difference, inner regions stop mirroring, while
@@ -730,7 +732,8 @@ anchors to regions first, and prove both in the browser.
       in order, an ambiguous candidate left unpaired, `data-mokly-scroll="off"`,
       nested and horizontal regions, a region without a counterpart scrolling
       alone without errors, and a shorter counterpart stopping at its end.
-- [ ] Cover the toggle: on by default, off unlinking Side by side pages and
+- [ ] Cover the toggle: hidden in Current and shown in every diff mode, on
+      by default, off unlinking Side by side pages and
       regions and stopping region mirroring in Overlay and Difference while
       the stack keeps one page offset, switching back on aligning every
       version to the pane scrolled last, remembered across screens and reloads
