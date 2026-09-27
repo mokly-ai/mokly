@@ -210,8 +210,8 @@ test("component comparison snapshots contain only the selected saved variant", a
   for (const query of [
     "id=..%2Fprivate",
     "id=action&id=home",
-    "id=action&variant=default",
-    "variant=default",
+    "id=action&page=removed-page",
+    "route=default",
   ])
     assert.equal(
       (await fetch(`${server.url}/__mokly/diffs/review.json?${query}`)).status,

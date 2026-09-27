@@ -98,9 +98,7 @@ test("snapshot recovery keeps the selected saved variant", async ({ page }) => {
     const url = new URL(request.url());
     if (url.pathname === "/__mokly/diffs/review.json") requests.push(url);
   });
-  await page.goto(
-    `${server.url}/view/components/action.html?variant=action-disabled`,
-  );
+  await page.goto(`${server.url}/view/components/action-disabled.html`);
   await chooseViewport(page, "desktop");
   await loadComparison(page, "Side by side");
   await expect(
@@ -126,5 +124,5 @@ test("snapshot recovery keeps the selected saved variant", async ({ page }) => {
   ).toBeDisabled();
   expect(requests).toHaveLength(2);
   expect(requests[1]!.searchParams.get("id")).toBe("action-disabled");
-  expect(requests[1]!.searchParams.has("variant")).toBe(false);
+  expect(requests[1]!.searchParams.size).toBe(1);
 });

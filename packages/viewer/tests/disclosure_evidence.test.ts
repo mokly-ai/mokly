@@ -39,7 +39,6 @@ function persistedStore(model: CatalogueReadModel, initial: ShellState) {
       onShellClick() {},
       onShellKeyDown() {},
       openFrame() {},
-      selectVariant() {},
     },
     propose() {},
     sections: catalogueNavSections(catalogue),

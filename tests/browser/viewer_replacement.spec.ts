@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { followupFixture } from "./viewer_followup_fixture.js";
+import { chooseVariant } from "./workspace_actions.js";
 
 import type {} from "./viewer_harness.js";
 
@@ -83,10 +84,7 @@ for (const cross of [false, true]) {
           await page.waitForFunction(
             () => (window as unknown as ProbeWindow).pickProbe.waiting,
           );
-        if (transition === "variant")
-          await page
-            .getByRole("combobox", { name: "Saved variant" })
-            .selectOption("pane-second");
+        if (transition === "variant") await chooseVariant(page, "Second");
         else
           await page.evaluate(
             (transition) =>

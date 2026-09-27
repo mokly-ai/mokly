@@ -15,6 +15,7 @@ export function DiffScreen({
   eligible = true,
   onComparisonChange,
   onModeChange,
+  owner,
   route,
   variantId,
 }: {
@@ -24,12 +25,14 @@ export function DiffScreen({
   eligible?: boolean;
   onComparisonChange?(loaded: LoadedComparison | undefined): void;
   onModeChange?(mode: ComparisonMode): void;
+  owner?: string;
   route: string;
   variantId?: string;
 }) {
   const comparison = useComparison({
     ...(effectiveColorScheme ? { effectiveColorScheme } : {}),
     eligible,
+    ...(owner ? { owner } : {}),
     route,
     ...(variantId ? { variantId } : {}),
   });

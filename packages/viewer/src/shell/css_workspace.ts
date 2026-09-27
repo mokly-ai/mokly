@@ -25,12 +25,20 @@ export const SHELL_WORKSPACE_CSS = `
 }
 .mbk-icon-button:disabled { opacity: .42; cursor: default; }
 .mbk-selection-bar {
-  display: flex; align-items: center; flex: none; gap: 12px; padding: 8px 24px;
+  display: flex; align-items: center; flex: none; flex-wrap: wrap; gap: 6px; padding: 10px 24px;
   background: var(--chrome-surface); border-bottom: 1px solid var(--chrome-border); font-size: 12px;
 }
 .mbk-selection-bar:has(> [hidden]:only-child) { display: none; }
-.mbk-selection-bar label { display: flex; align-items: center; gap: 10px; color: var(--chrome-muted); }
-.mbk-selection-bar select, .mbk-inspector select {
+.mbk-selection-bar > span:first-child { color: var(--chrome-muted); margin-right: 10px; }
+.mbk-selection-bar a {
+  border: 1px solid transparent; border-radius: 6px; color: var(--chrome-ink-2); padding: 5px 10px; text-decoration: none;
+}
+.mbk-selection-bar a:hover { background: var(--chrome-bg); }
+.mbk-selection-bar a:focus-visible { outline: 2px solid var(--mokly-accent); outline-offset: 2px; }
+.mbk-selection-bar a[aria-current="page"] {
+  background: var(--mokly-accent-soft); border-color: var(--mokly-accent); color: var(--mokly-accent); font-weight: 600;
+}
+.mbk-inspector select {
   background: var(--chrome-surface); color: var(--chrome-ink); border: 1px solid var(--chrome-border); border-radius: 6px; padding: 6px 28px 6px 8px; font: inherit;
 }
 .mbk-entry-status { border: 1px solid var(--chrome-border); border-radius: 5px; padding: 3px 7px; font-weight: 600; color: var(--chrome-ink-2); }
@@ -38,7 +46,6 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-entry-status[data-status="Changed"] { color: var(--mb-changed); background: var(--mb-changed-soft); }
 .mbk-entry-status[data-status="Removed"] { color: var(--mb-removed); background: var(--mb-removed-soft); }
 .mbk-variant-status { color: var(--chrome-muted); }
-.mbk-selection-error { margin: 0; padding: 10px 24px; color: var(--chrome-ink); }
 .mbk-workspace-panes { display: flex; flex: 1; flex-direction: column; position: relative; min-height: 0; min-width: 0; }
 .mbk-preview-pane { display: flex; flex: 1; flex-direction: column; min-height: 100px; min-width: 0; overflow: hidden; }
 .mbk-inspector { position: relative; flex: none; display: flex; flex-direction: column; min-height: 45px; background: var(--chrome-surface); border-top: 1px solid var(--chrome-border); z-index: 5; }

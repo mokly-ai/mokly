@@ -9,6 +9,7 @@ import type {
   CatalogueScreen,
   CatalogueView,
 } from "../catalogue/types.js";
+import { isManifestComponentVariant } from "../components/manifest_types.js";
 import { generatedViews } from "../components/views.js";
 import type { ReviewState } from "../review/types.js";
 import { orderChangedViews, type ChangedView } from "../shell/view_marks.js";
@@ -119,17 +120,53 @@ export function publicWorkspace(
   )
     throw new Error("The selected item is unavailable.");
   const removed = model.removedEntries.some((item) => item.entry === original);
+  const publicComponent: CatalogueComponent | undefined =
+    original.kind === "component"
+      ? "variantOf" in original
+        ? (model.components.find(
+            (candidate): candidate is CatalogueComponent =>
+              candidate.id === original.variantOf &&
+              !("variantOf" in candidate),
+          ) ??
+          model.removedEntries
+            .map(({ entry }) => entry)
+            .find(
+              (candidate): candidate is CatalogueComponent =>
+                candidate.kind === "component" &&
+                candidate.id === original.variantOf &&
+                !("variantOf" in candidate),
+            ))
+        : original
+      : undefined;
+  const projectedComponent = publicComponent
+    ? displayEntry(publicComponent)
+    : undefined;
+  const component =
+    projectedComponent?.kind === "component" &&
+    !isManifestComponentVariant(projectedComponent)
+      ? projectedComponent
+      : undefined;
+  if (publicComponent && !component)
+    throw new Error("The component parent is unavailable.");
+  const orphanVariant =
+    original.kind === "component" &&
+    "variantOf" in original &&
+    publicComponent === undefined;
+  const componentId =
+    component?.id ?? (orphanVariant ? original.variantOf : undefined);
+  const parentRemoved = publicComponent
+    ? model.removedEntries.some(({ entry }) => entry === publicComponent)
+    : false;
   const usedBy: UsageLink[] = [];
   for (const owner of routedEntries(model)) {
     if (owner.kind !== "screen" && owner.kind !== "component") continue;
     for (const view of generatedViews(displayEntry(owner)))
       for (const instance of view.usage?.instances ?? [])
-        if (instance.componentId === entry.id)
+        if (instance.componentId === (componentId ?? entry.id))
           usedBy.push({
             entryId: owner.id,
             entryKind: owner.kind,
-            title: owner.title,
-            ...(view.variantId ? { variantId: view.variantId } : {}),
+            title: publicEntryTitle(model, owner),
             viewport: view.viewport,
             colorScheme: view.colorScheme,
             instanceKey: instance.key,
@@ -141,46 +178,49 @@ export function publicWorkspace(
           });
   }
   const entryStatus = status(original);
-  const sourceVariants =
-    original.kind === "component" && !("variantOf" in original)
-      ? catalogueComponentVariants(model, original.id)
+  const sourceVariants = publicComponent
+    ? catalogueComponentVariants(model, publicComponent.id)
+    : orphanVariant
+      ? [original]
       : [];
   const variants =
-    entry.kind === "component" &&
-    !("variantOf" in entry) &&
-    original.kind === "component" &&
-    !("variantOf" in original)
+    component || orphanVariant
       ? sourceVariants.map((source) => {
           const value = displayEntry(source);
+          const snapshotId = model.removedEntries.find(
+            ({ entry: candidate }) => candidate === source,
+          )?.snapshotId;
           if (value.kind !== "component" || !("variantOf" in value))
             throw new Error("The component variant is unavailable.");
           return {
             value,
             removed:
-              removed ||
+              parentRemoved ||
+              model.removedEntries.some(
+                ({ entry: candidate }) => candidate === source,
+              ) ||
               (source.comparison.status === "ready" &&
                 source.comparison.kind === "removed"),
             comparisonEligible:
               source.comparison.status === "ready" &&
               source.comparison.eligible,
+            ...(snapshotId ? { snapshotId } : {}),
             ...(source.comparison.status === "ready"
               ? { status: statuses[source.comparison.kind] }
-              : {}),
+              : source.changes.status === "ready"
+                ? { status: statuses[source.changes.kind] }
+                : {}),
           };
         })
       : [];
-  const workspaceStatus =
-    entryStatus === "Unmodified" &&
-    variants.some(
-      (variant) =>
-        variant.status === "Added" ||
-        variant.status === "Changed" ||
-        variant.status === "Removed",
-    )
-      ? "Changed"
-      : entryStatus;
+  const selectedVariant =
+    entry.kind === "component" && isManifestComponentVariant(entry)
+      ? variants.find((variant) => variant.value.id === entry.id)
+      : undefined;
+  const workspaceStatus = selectedVariant?.status ?? entryStatus;
   return {
     entry,
+    ...(component ? { component } : {}),
     components: [
       ...model.components,
       ...model.removedEntries.flatMap(({ entry }) =>
@@ -193,11 +233,17 @@ export function publicWorkspace(
       )
       .map(({ id, title }) => ({ id, title })),
     views:
-      entry.kind === "component" && !("variantOf" in entry)
+      component || orphanVariant
         ? variants.flatMap(({ value }) => generatedViews(value))
         : generatedViews(entry),
-    changedViews: publishedChangedViewsBySelection(original, sourceVariants),
-    viewStates: publishedViewStatesBySelection(original, sourceVariants),
+    changedViews: publishedChangedViewsBySelection(
+      publicComponent ?? original,
+      sourceVariants,
+    ),
+    viewStates: publishedViewStatesBySelection(
+      publicComponent ?? original,
+      sourceVariants,
+    ),
     variants,
     usedBy,
     affected: [],
@@ -209,10 +255,29 @@ export function publicWorkspace(
             (view) =>
               view.comparison.status === "ready" && view.comparison.eligible,
           )
-        : variants.some((variant) => variant.comparisonEligible),
+        : (selectedVariant?.comparisonEligible ??
+          variants[0]?.comparisonEligible ??
+          false),
     removed,
     relatedComponents: [],
     inputChanges: [],
     ...(workspaceStatus ? { status: workspaceStatus } : {}),
   };
+}
+
+function publicEntryTitle(
+  model: CatalogueReadModel,
+  entry: Extract<CatalogueRecord, { kind: "component" | "screen" }>,
+): string {
+  if (entry.kind !== "component" || !("variantOf" in entry)) return entry.title;
+  const parent = [
+    ...model.components,
+    ...model.removedEntries.map(({ entry: candidate }) => candidate),
+  ].find(
+    (candidate) =>
+      candidate.kind === "component" &&
+      !("variantOf" in candidate) &&
+      candidate.id === entry.variantOf,
+  );
+  return parent ? `${parent.title} · ${entry.title}` : entry.title;
 }

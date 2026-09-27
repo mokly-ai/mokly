@@ -9,8 +9,8 @@ import type {
 import { catalogueComponentVariants } from "@mokly/viewer/data";
 
 import { followupFixture } from "./viewer_followup_fixture.js";
-
 import type {} from "./viewer_harness.js";
+import { chooseVariant } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof followupFixture>>;
 test.beforeAll(async () => {
@@ -182,9 +182,7 @@ for (const cross of [false, true]) {
       fixture.catalogue,
       component.id,
     )) {
-      await page
-        .getByRole("combobox", { name: "Saved variant" })
-        .selectOption(variant.id);
+      await chooseVariant(page, variant.title);
       await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
         0,
       );
@@ -193,7 +191,7 @@ for (const cross of [false, true]) {
       await highlight(
         page,
         {
-          screenId: "pane",
+          screenId: variant.id,
           variantId: variant.id,
           key: usage.instances[0]!.key,
           viewport: "desktop",

@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 
 import { catalogueViewHref } from "../navigation/delivery.js";
 
-import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
+import { catalogueVariantParent, type Catalogue } from "./catalogue.js";
 import { structuredCrumbTrail } from "./nav_tree.js";
 import type { CatalogueCrumb } from "./nav_tree.js";
 import { useOptionalShellStore } from "./store_context.js";
@@ -133,37 +133,6 @@ export function ScreenHead(props: {
   );
 }
 
-/**
- * The parent screen a variant belongs to. A variant's own ancestors are the
- * parent's folder ancestors, so the parent itself closes the trail; a
- * removed variant resolves through its retained `variantOf` instead of the
- * hierarchy, which holds current entries only.
- */
-function variantParent(
-  catalogue: Catalogue,
-  target: RouteTarget,
-): CatalogueManifestEntry | undefined {
-  const entry = target.entry;
-  if (entry.kind !== "screen") {
-    return undefined;
-  }
-  const historical = catalogue.removedEntries.some(
-    ({ entry: candidate }) => candidate.id === entry.id,
-  );
-  if (historical)
-    return entry.variantOf === undefined
-      ? undefined
-      : (catalogue.removedEntries.find(
-          ({ entry: candidate }) => candidate.id === entry.variantOf,
-        )?.entry ?? catalogue.byId.get(entry.variantOf));
-  return (
-    catalogue.hierarchy.variantParentById.get(entry.id) ??
-    (entry.variantOf === undefined
-      ? undefined
-      : catalogue.byId.get(entry.variantOf))
-  );
-}
-
 /** The breadcrumb trail, id, and title for one resolved route target. */
 export function targetHead(
   catalogue: Catalogue,
@@ -174,7 +143,7 @@ export function targetHead(
       .find(({ entry }) => entry.id === target.entry.id)
       ?.entry.navPath.map((label) => ({ label })) ??
     structuredCrumbTrail(catalogue.hierarchy, target.entry.id);
-  const parent = variantParent(catalogue, target);
+  const parent = catalogueVariantParent(catalogue, target.entry);
   const parentSnapshot = parent
     ? catalogue.removedEntries.find(({ entry }) => entry.id === parent.id)
         ?.snapshotId

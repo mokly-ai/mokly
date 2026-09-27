@@ -210,13 +210,17 @@ export function ShellMain(props: {
       {props.view.kind === "target" ? (
         props.view.target.kind === "entry" &&
         (props.view.target.entry.kind === "screen" ||
-          (props.view.target.entry.kind === "component" &&
-            !isManifestComponentVariant(props.view.target.entry))) ? (
+          props.view.target.entry.kind === "component") ? (
           <ComponentWorkspace
             catalogue={props.catalogue}
             context={props.context}
             entry={props.view.target.entry}
-            key={props.view.target.entry.id}
+            key={
+              props.view.target.entry.kind === "component" &&
+              isManifestComponentVariant(props.view.target.entry)
+                ? props.view.target.entry.variantOf
+                : props.view.target.entry.id
+            }
           />
         ) : (
           <TargetView

@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
-import { chooseViewport } from "./workspace_actions.js";
+import { chooseVariant, chooseViewport } from "./workspace_actions.js";
 
 for (const viewport of ["desktop", "mobile"] as const) {
   test(`${viewport}: design props are temporary, support unset/reset, and load newly visible nested styles`, async ({
@@ -52,9 +52,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await expect(frame.locator(".mbk-search-value")).toHaveCount(0);
     await page.getByRole("button", { name: "Reset", exact: true }).click();
     await expect(frame.locator(".mbk-tag-picker")).toHaveCount(0);
-    await page
-      .getByLabel("Saved variant", { exact: true })
-      .selectOption("design-ui-top-bar-search");
+    await chooseVariant(page, "Search");
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
     await expect(page.locator("[data-workspace-status]")).toHaveText(status!);
     expect(await contents()).toEqual(before);

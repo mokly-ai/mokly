@@ -7,7 +7,6 @@ import {
   orderedInstances,
   type GeneratedComponentView,
 } from "../components/views.js";
-import type { ManifestScreen } from "../registry/types.js";
 import type {
   ChangedEntry,
   ComponentReview,
@@ -25,10 +24,16 @@ import {
   type ViewStatesBySelection,
 } from "./view_status.js";
 import {
+  workspaceComponent,
+  workspaceEntryTitle,
+  type WorkspaceEntry,
+} from "./workspace_entry.js";
+import {
   inputChanges as entryInputChanges,
   type InputChange,
 } from "./workspace_input_changes.js";
 import {
+  standaloneWorkspaceVariant,
   workspaceVariants,
   type WorkspaceVariant,
 } from "./workspace_variants.js";
@@ -44,7 +49,6 @@ export interface UsageLink {
   entryId: string;
   entryKind: "component" | "screen";
   title: string;
-  variantId?: string;
   viewport: "mobile" | "desktop";
   colorScheme: "light" | "dark";
   instanceKey: string;
@@ -56,7 +60,10 @@ export interface WorkspaceData {
   previewGeneration?: string;
   usageComplete?: boolean;
   renderCapability?: RenderCapability;
-  entry: ManifestScreen | ManifestComponent;
+  /** The exact routed entry whose chrome and lifecycle own this workspace. */
+  entry: WorkspaceEntry;
+  /** Parent schema and controls for a component parent or variant route. */
+  component?: ManifestComponent;
   components: readonly Pick<ManifestComponent, "id" | "title">[];
   views: readonly GeneratedComponentView[];
   /**
@@ -99,6 +106,14 @@ export function workspaceData(
     );
   const snapshot = context.componentChanges;
   const result = snapshot?.result;
+  const component = workspaceComponent(catalogue, entry);
+  const orphanVariant =
+    entry.kind === "component" &&
+    isManifestComponentVariant(entry) &&
+    component === undefined;
+  const componentId =
+    component?.id ?? (orphanVariant ? entry.variantOf : undefined);
+  const evidenceEntry = component ?? entry;
   const currentEntriesById = new Map(
     catalogue.manifest.entries.map((candidate) => [candidate.id, candidate]),
   );
@@ -106,7 +121,7 @@ export function workspaceData(
     (screen) => screen.id === entry.id,
   )?.views;
   const baseline = snapshot?.baseline.entries.find(
-    (item) => item.id === entry.id,
+    (item) => item.id === evidenceEntry.id,
   );
   const removed = !catalogue.manifest.entries.some(
     (candidate) => candidate.id === entry.id,
@@ -114,59 +129,76 @@ export function workspaceData(
   const change = result?.changes.find(
     (item) => (item.after ?? item.before)?.id === entry.id,
   );
-  const comparison =
-    entry.kind === "component"
-      ? result?.components.find((item) => item.id === entry.id)
-      : result?.screens.find((item) => item.id === entry.id);
+  const comparison = componentId
+    ? result?.components.find((item) => item.id === componentId)
+    : result?.screens.find((item) => item.id === entry.id);
   const known = snapshot !== undefined || context.changedIds !== undefined;
-  const status: EntryStatus | undefined = !known
+  const entryStatus: EntryStatus | undefined = !known
     ? undefined
     : removed
       ? "Removed"
       : snapshot && !baseline
         ? "Added"
         : change ||
-            comparison?.state === "changed" ||
-            (entry.kind === "component" &&
-              comparison &&
-              "variants" in comparison &&
-              comparison.variants.some(
-                (variant) =>
-                  variant.state === "added" ||
-                  variant.state === "changed" ||
-                  variant.state === "removed",
-              )) ||
+            (entry.kind === "screen" && comparison?.state === "changed") ||
             context.changedIds?.includes(entry.id)
           ? "Changed"
           : "Unmodified";
-  const variantSet =
-    entry.kind === "component"
-      ? workspaceVariants(
-          catalogue,
+  const componentComparison =
+    comparison && "variants" in comparison ? comparison : undefined;
+  const variantSet = component
+    ? workspaceVariants(
+        catalogue,
+        component,
+        snapshot,
+        componentComparison,
+        known,
+        !catalogue.manifest.entries.some(
+          (candidate) => candidate.id === component.id,
+        ),
+        entry.id === component.id ? entryStatus : undefined,
+        context.changedIds,
+      )
+    : orphanVariant
+      ? standaloneWorkspaceVariant(
           entry,
           snapshot,
-          comparison && "variants" in comparison ? comparison : undefined,
+          componentComparison,
           known,
           removed,
-          status,
+          entryStatus,
+          context.snapshotId,
         )
       : { baseline: [], current: [], rows: [] };
   const currentVariants = variantSet.current;
   const baselineVariants = variantSet.baseline;
   const variants = variantSet.rows;
+  const selectedVariant =
+    entry.kind === "component" && isManifestComponentVariant(entry)
+      ? variants.find((variant) => variant.value.id === entry.id)
+      : undefined;
+  const status = selectedVariant?.status ?? entryStatus;
   const affected: UsageLink[] = (result?.affectedConsumers ?? [])
-    .filter((item) => item.changedComponentId === entry.id)
+    .filter((item) => item.changedComponentId === componentId)
     .flatMap((item) =>
       item.evidence.map((evidence) => {
-        const current = currentEntriesById.get(evidence.context.entry.id);
+        const entryId =
+          evidence.context.kind === "component"
+            ? evidence.context.variantId
+            : evidence.context.entry.id;
+        const destination =
+          currentEntriesById.get(entryId) ??
+          catalogue.removedEntries.find(
+            ({ entry: candidate }) => candidate.id === entryId,
+          )?.entry;
+        const current = currentEntriesById.get(entryId);
         const removed = current === undefined;
         return {
-          entryId: evidence.context.entry.id,
+          entryId,
           entryKind: evidence.context.kind,
-          title: evidence.context.entry.title,
-          ...(evidence.context.kind === "component"
-            ? { variantId: evidence.context.variantId }
-            : {}),
+          title: destination
+            ? workspaceEntryTitle(catalogue, destination)
+            : evidence.context.entry.title,
           viewport: evidence.context.viewport,
           colorScheme: evidence.context.colorScheme,
           instanceKey: evidence.via.at(-1)!.instanceKey,
@@ -181,7 +213,7 @@ export function workspaceData(
     );
   const inputChanges = entryInputChanges(
     catalogue,
-    entry,
+    evidenceEntry,
     baseline,
     currentVariants,
     baselineVariants,
@@ -191,7 +223,7 @@ export function workspaceData(
       .filter((item) =>
         item.consumer.kind === "screen"
           ? item.consumer.id === entry.id
-          : item.consumer.id === entry.id,
+          : item.consumer.id === componentId,
       )
       .map((item) => item.changedComponentId),
   );
@@ -208,9 +240,12 @@ export function workspaceData(
       ? { renderCapability: context.renderCapability }
       : {}),
     entry,
+    ...(component ? { component } : {}),
     removed,
     comparisons: context.comparisons ?? false,
-    comparisonEligible: shownComparisonEligible(status, entry.kind),
+    comparisonEligible:
+      selectedVariant?.comparisonEligible ??
+      shownComparisonEligible(status, entry.kind),
     base: context.base,
     inputChanges,
     relatedComponents: (result?.components ?? [])
@@ -225,7 +260,7 @@ export function workspaceData(
           item.kind === "component" && !isManifestComponentVariant(item),
       )
       .map(({ id, title }) => ({ id, title })),
-    views: (entry.kind === "component"
+    views: (component
       ? currentVariants.flatMap((variant) => generatedViews(variant))
       : generatedViews(entry)
     ).map((view) => {
@@ -235,13 +270,13 @@ export function workspaceData(
       return demand;
     }),
     changedViews: changedViewsBySelection(
-      entry,
+      evidenceEntry,
       context,
       comparison,
       variants.map(({ value }) => value.id),
     ),
     viewStates: viewStatesBySelection(
-      entry,
+      evidenceEntry,
       context,
       comparison,
       variants.map(({ value }) => value.id),
@@ -254,20 +289,13 @@ export function workspaceData(
       if (owner.kind !== "screen" && owner.kind !== "component") return [];
       return generatedViews(owner).flatMap((view) =>
         orderedInstances(view.usage)
-          .filter((instance) => instance.componentId === entry.id)
+          .filter((instance) => instance.componentId === evidenceEntry.id)
           .map((instance) => ({
-            entryId:
-              owner.kind === "component" && isManifestComponentVariant(owner)
-                ? owner.variantOf
-                : owner.id,
+            entryId: owner.id,
             entryKind: owner.kind,
-            title:
-              owner.kind === "component" && isManifestComponentVariant(owner)
-                ? (catalogue.byId.get(owner.variantOf)?.title ?? owner.title)
-                : owner.title,
+            title: workspaceEntryTitle(catalogue, owner),
             viewport: view.viewport,
             colorScheme: view.colorScheme,
-            ...(view.variantId ? { variantId: view.variantId } : {}),
             instanceKey: instance.key,
             direct: instance.owner.kind === "entry",
             removed: false,

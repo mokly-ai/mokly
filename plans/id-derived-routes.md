@@ -398,15 +398,15 @@ Component variants become nav rows, breadcrumbs, details, and Changes rows
 through the existing screen-variant presentation, and selecting a variant
 navigates to its entry.
 
-- [ ] Nav tree, breadcrumbs, head, details, and Changes rows treat component
+- [x] Nav tree, breadcrumbs, head, details, and Changes rows treat component
       variants like screen variants; the parent row discloses them.
-- [ ] The variant bar links to sibling variant entries; controls state,
+- [x] The variant bar links to sibling variant entries; controls state,
       comparison, and preview expiration key on the current entry; delete
       `?variant=` parsing, `variantValues`, and the unknown- or
       duplicate-variant selection error.
-- [ ] Removed component variants render as removed rows with the parent
+- [x] Removed component variants render as removed rows with the parent
       title, using the existing removed-variant presentation.
-- [ ] Failure-first viewer unit and browser tests: selecting a variant changes
+- [x] Failure-first viewer unit and browser tests: selecting a variant changes
       the URL, Back/Forward restore it, a removed variant opens with its
       `snapshot` query, and a `mock:` link to a variant lands on it;
       smoke-test through `npm run dev`; commit.

@@ -11,8 +11,6 @@ export interface ViewerSelection {
   screenId: string | null;
   /** Exact removed record; absent selects current or uniquely identified legacy history. */
   snapshotId?: string | undefined;
-  /** Saved variant of a selected component; absent means its default variant. */
-  variantId?: string | undefined;
   view: "all" | "changes";
   viewport: "mobile" | "desktop" | "both";
   colorScheme: "light" | "dark";

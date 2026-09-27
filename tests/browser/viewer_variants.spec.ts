@@ -32,8 +32,10 @@ async function openViewer(page: Page, cross: boolean, controlled = false) {
     { cross, controlled },
   );
   await expect(
-    page.getByRole("combobox", { name: "Saved variant" }),
-  ).toHaveValue("pane-default");
+    page
+      .getByRole("navigation", { name: "Saved variants" })
+      .getByRole("link", { name: "Default", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
 }
 
 function appendScreenVariant(
@@ -215,9 +217,11 @@ for (const cross of [false, true]) {
     page,
   }) => {
     await openViewer(page, cross);
-    const selector = page.getByRole("combobox", { name: "Saved variant" });
-    await selector.selectOption("pane-second");
-    await expect(selector).toHaveValue("pane-second");
+    const variants = page.getByRole("navigation", { name: "Saved variants" });
+    const first = variants.getByRole("link", { name: "Default", exact: true });
+    const second = variants.getByRole("link", { name: "Second", exact: true });
+    await second.click();
+    await expect(second).toHaveAttribute("aria-current", "page");
     await expect(
       page
         .frameLocator('iframe[data-workspace-frame="desktop"]')
@@ -226,9 +230,9 @@ for (const cross of [false, true]) {
     await page.evaluate(() =>
       window.viewerHarness
         .get("one")
-        .ref.current.select({ variantId: "pane-default" }),
+        .ref.current.select({ screenId: "pane-default" }),
     );
-    await expect(selector).toHaveValue("pane-default");
+    await expect(first).toHaveAttribute("aria-current", "page");
     await expect(
       page
         .frameLocator('iframe[data-workspace-frame="desktop"]')
@@ -244,24 +248,22 @@ for (const cross of [false, true]) {
     expect(events).toEqual([
       {
         name: "navigate",
-        value: { screenId: "pane" },
+        value: { screenId: "pane-second" },
       },
       {
         name: "selection",
         value: expect.objectContaining({
-          screenId: "pane",
-          variantId: "pane-second",
+          screenId: "pane-second",
         }),
       },
       {
         name: "navigate",
-        value: { screenId: "pane" },
+        value: { screenId: "pane-default" },
       },
       {
         name: "selection",
         value: expect.objectContaining({
-          screenId: "pane",
-          variantId: "pane-default",
+          screenId: "pane-default",
         }),
       },
     ]);
@@ -271,9 +273,11 @@ for (const cross of [false, true]) {
     page,
   }) => {
     await openViewer(page, cross, true);
-    const selector = page.getByRole("combobox", { name: "Saved variant" });
-    await selector.selectOption("pane-second");
-    await expect(selector).toHaveValue("pane-default");
+    const variants = page.getByRole("navigation", { name: "Saved variants" });
+    const first = variants.getByRole("link", { name: "Default", exact: true });
+    const second = variants.getByRole("link", { name: "Second", exact: true });
+    await second.click();
+    await expect(first).toHaveAttribute("aria-current", "page");
     await expect(
       page
         .frameLocator('iframe[data-workspace-frame="desktop"]')
@@ -286,14 +290,14 @@ for (const cross of [false, true]) {
           .events.find((event) => event.name === "selection")!.value,
     );
     expect(proposal).toEqual(
-      expect.objectContaining({ screenId: "pane", variantId: "pane-second" }),
+      expect.objectContaining({ screenId: "pane-second" }),
     );
     await page.evaluate((selection) => {
       window.viewerHarness
         .get("one")
         .setSelection(selection as ViewerSelection);
     }, proposal);
-    await expect(selector).toHaveValue("pane-second");
+    await expect(second).toHaveAttribute("aria-current", "page");
     await expect(
       page
         .frameLocator('iframe[data-workspace-frame="desktop"]')
@@ -313,42 +317,28 @@ for (const cross of [false, true]) {
             .get("one")
             .events.find((event) => event.name === "navigate")?.value,
       ),
-    ).toEqual({ screenId: "pane" });
+    ).toEqual({ screenId: "pane-second" });
   });
 
-  test(`${adapter} rejects an invalid imperative variant once`, async ({
+  test(`${adapter} treats an unknown imperative entry as unavailable`, async ({
     page,
   }) => {
     await openViewer(page, cross);
-    const message = await page.evaluate(() => {
-      try {
-        window.viewerHarness
-          .get("one")
-          .ref.current.select({ variantId: "missing" });
-        return "resolved";
-      } catch (error) {
-        return error instanceof Error ? error.message : "rejected";
-      }
+    await page.evaluate(() => {
+      window.viewerHarness.get("one").ref.current.select({
+        screenId: "missing",
+      });
     });
-    expect(message).toBe("The requested catalogue selection is unavailable.");
     await expect(
-      page.getByRole("combobox", { name: "Saved variant" }),
-    ).toHaveValue("pane-default");
+      page.getByRole("heading", { name: "Item not found" }),
+    ).toBeVisible();
     expect(
       await page.evaluate(() =>
         window.viewerHarness
           .get("one")
           .events.filter((event) => event.name === "error"),
       ),
-    ).toEqual([
-      {
-        name: "error",
-        value: {
-          code: "selection",
-          message: "The requested catalogue selection is unavailable.",
-        },
-      },
-    ]);
+    ).toEqual([]);
   });
 
   test(`${adapter} inspects only the selected non-default variant`, async ({
@@ -367,7 +357,7 @@ for (const cross of [false, true]) {
     )!;
     if (view.usage.status !== "ready") throw new Error("Expected ready usage");
     const instance: InstanceRef = {
-      screenId: "pane",
+      screenId: "pane-second",
       variantId: "pane-second",
       viewport: "desktop",
       colorScheme: "light",
@@ -376,7 +366,7 @@ for (const cross of [false, true]) {
     await page.evaluate(
       async ({ instance }) => {
         const viewer = window.viewerHarness.get("one").ref.current;
-        viewer.select({ variantId: "pane-second" });
+        viewer.select({ screenId: "pane-second" });
         await viewer.scrollToInstance(instance);
         await viewer.highlightInstance(instance);
       },

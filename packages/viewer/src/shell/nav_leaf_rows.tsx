@@ -1,4 +1,4 @@
-/** Leaf rows and screen-variant disclosures for the React shell. */
+/** Leaf rows and entry-variant disclosures for the React shell. */
 
 import { catalogueViewHref } from "../navigation/delivery.js";
 import { entryRoute } from "../navigation/routes.js";
@@ -111,7 +111,7 @@ function NavRowLink(props: {
 }
 
 /**
- * A leaf row. A screen that owns variants pairs its link with a chevron
+ * A leaf row. An entry that owns variants pairs its link with a chevron
  * button and is followed by the list that button discloses; the list is open
  * on the server only while the active route is the parent or one of them.
  */

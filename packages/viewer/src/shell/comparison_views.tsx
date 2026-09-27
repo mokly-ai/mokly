@@ -188,13 +188,18 @@ function comparisonEntry(
   route: string,
   variantId: string | undefined,
 ): { views: readonly ViewReview[] } | undefined {
+  const selectedVariant = variantId ?? route;
+  const variant = loaded.result.components
+    .flatMap((component) => component.variants)
+    .find((candidate) => candidate.id === selectedVariant);
+  if (variant) return variant;
   const component = loaded.result.components.find(
     (candidate) => candidate.id === route,
   );
-  const variant = component?.variants.find(
-    (candidate) => candidate.id === variantId,
-  );
-  if (component) return variant;
+  if (component)
+    return component.variants.find(
+      (candidate) => candidate.id === selectedVariant,
+    );
   return loaded.result.screens.find((candidate) => candidate.id === route);
 }
 

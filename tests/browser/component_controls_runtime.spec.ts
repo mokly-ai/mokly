@@ -12,7 +12,7 @@ import type { RunningServer } from "../../dist/server/http_types.js";
 import { controlsEntrySource } from "../helpers/component_controls_fixture.js";
 import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 
-import { chooseScheme } from "./workspace_actions.js";
+import { chooseScheme, chooseVariant } from "./workspace_actions.js";
 
 function withSecondControlledComponent(source: string): string {
   const actionStart = source.indexOf("const action = defineComponent");
@@ -151,9 +151,7 @@ for (const viewport of ["desktop", "mobile"] as const)
     await expect(
       frame.getByRole("button", { name: "Temporary" }),
     ).toBeVisible();
-    await page
-      .getByLabel("Saved variant", { exact: true })
-      .selectOption("action-disabled");
+    await chooseVariant(page, "Disabled");
     await expect(page.getByLabel("Label", { exact: true })).toHaveValue(
       "Continue",
     );

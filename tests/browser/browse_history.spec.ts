@@ -53,7 +53,7 @@ test("same-document history leaves focus with the native fragment target", async
   await expect(page.locator("#native-history-target")).toBeFocused();
 });
 
-test("saved-variant query history stays separate from native fragment history", async ({
+test("variant entry history stays separate from native fragment history", async ({
   page,
 }) => {
   const path = "/view/components/design-ui-inspector.html";
@@ -69,21 +69,32 @@ test("saved-variant query history stays separate from native fragment history", 
     )
       requests.push(new URL(request.url()).search);
   });
-  const variant = page.getByLabel("Saved variant", { exact: true });
-  await variant.selectOption("design-ui-inspector-props");
+  const variants = page.getByRole("navigation", { name: "Saved variants" });
+  const details = variants.getByRole("link", { name: "Details", exact: true });
+  const props = variants.getByRole("link", { name: "Props", exact: true });
+  await props.click();
   await page.locator(".mbk-skip-link").focus();
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\?variant=design-ui-inspector-props#mb-main$/);
+  await expect(page).toHaveURL(
+    /\/view\/components\/design-ui-inspector-props\.html#mb-main$/,
+  );
   await page.goBack();
-  await expect(page).toHaveURL(/\?variant=design-ui-inspector-props$/);
-  await expect(variant).toHaveValue("design-ui-inspector-props");
+  await expect(page).toHaveURL(
+    /\/view\/components\/design-ui-inspector-props\.html$/,
+  );
+  await expect(props).toHaveAttribute("aria-current", "page");
   await page.goBack();
-  await expect(variant).toHaveValue("design-ui-inspector-details");
+  await expect(page).toHaveURL(
+    /\/view\/components\/design-ui-inspector\.html$/,
+  );
+  await expect(details).toHaveAttribute("aria-current", "page");
   await page.goForward();
-  await expect(variant).toHaveValue("design-ui-inspector-props");
+  await expect(props).toHaveAttribute("aria-current", "page");
   await page.goForward();
-  await expect(page).toHaveURL(/\?variant=design-ui-inspector-props#mb-main$/);
-  await expect(variant).toHaveValue("design-ui-inspector-props");
+  await expect(page).toHaveURL(
+    /\/view\/components\/design-ui-inspector-props\.html#mb-main$/,
+  );
+  await expect(props).toHaveAttribute("aria-current", "page");
   await expect(page.locator("html")).toHaveAttribute(
     "data-history-session",
     "retained",

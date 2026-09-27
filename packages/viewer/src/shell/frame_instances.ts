@@ -107,7 +107,7 @@ export function matchesWorkspaceFrame(
 ): boolean {
   const identity = session.identity;
   return (
-    identity.entryId === data.entry.id &&
+    identity.entryId === (view.variantId ?? data.entry.id) &&
     identity.stepIndex === undefined &&
     identity.variantId === view.variantId &&
     identity.viewport === view.viewport &&

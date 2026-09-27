@@ -9,8 +9,6 @@ import {
   type ReactNode,
 } from "react";
 
-import { isManifestComponentVariant } from "../components/manifest_types.js";
-
 import { useShellStore } from "./store_context.js";
 import type { WorkspaceHydrationState } from "./store_state.js";
 import {
@@ -18,8 +16,9 @@ import {
   type WorkspaceDataState,
 } from "./use_workspace_data.js";
 import { viewMarks, type ViewMarks } from "./view_marks.js";
+import { workspaceEvidenceEntry } from "./workspace_entry.js";
 import {
-  selectedVariantId,
+  selectedVariant,
   type WorkspaceVariantSelection,
 } from "./workspace_selection.js";
 import {
@@ -53,16 +52,11 @@ export function WorkspaceProvider({
   const entry =
     target?.kind === "entry" &&
     (target.entry.kind === "screen" || target.entry.kind === "component")
-      ? target.entry.kind === "component" &&
-        isManifestComponentVariant(target.entry)
-        ? undefined
-        : target.entry
+      ? target.entry
       : undefined;
   const workspace = useWorkspaceData(store.catalogue, store.context, entry);
   const data = workspace?.data;
-  const selection = data
-    ? selectedVariantId(data, route.variantValues ?? route.variant)
-    : undefined;
+  const selection = data ? selectedVariant(data) : undefined;
   const variant = selection?.variant;
   const { viewport, colorScheme } = store.state.selection;
   const resolvedView = useMemo(
@@ -77,7 +71,6 @@ export function WorkspaceProvider({
       data?.views,
       data?.viewStates,
       selection?.comparisonEligible,
-      selection?.error,
       variant?.status,
       variant?.value.id,
       viewport,
@@ -90,7 +83,7 @@ export function WorkspaceProvider({
           comparisonEligible: resolvedView.comparisonEligible,
           marks: viewMarks(
             selectedChangedViews(
-              workspace.data.entry,
+              workspaceEvidenceEntry(workspace.data),
               workspace.data.changedViews,
               variant?.value.id,
             ),

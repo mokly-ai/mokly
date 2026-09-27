@@ -19,6 +19,7 @@ import { useWorkspaceUsage } from "./use_workspace_usage.js";
 import { useActiveWorkspace } from "./workspace_context.js";
 import { WorkspaceControls } from "./workspace_controls.js";
 import type { WorkspaceData } from "./workspace_data.js";
+import { workspaceEvidenceEntry } from "./workspace_entry.js";
 import { WorkspaceEvidence } from "./workspace_evidence.js";
 import { useWorkspaceInspection } from "./workspace_inspection.js";
 import { WorkspaceInstances } from "./workspace_instances.js";
@@ -48,7 +49,7 @@ export function ComponentWorkspace({
   const variant = selection.variant;
   const variantId = variant?.value.id;
   const changedViews = selectedChangedViews(
-    entry,
+    workspaceEvidenceEntry(data),
     data.changedViews,
     variantId,
   );
@@ -149,15 +150,15 @@ export function ComponentWorkspace({
   const inspection = useWorkspaceInspection({
     comparisonActive: comparing,
     data,
-    invalidSelection: Boolean(
-      data.removed || selection.error || variant?.removed,
-    ),
+    invalidSelection: Boolean(data.removed || variant?.removed),
     onSelect: selectInstance,
     ...(selectedKey ? { selectedKey } : {}),
     views,
   });
   const target = { kind: "entry" as const, entry };
   const head = targetHead(catalogue, target);
+  const headStatus =
+    data.component?.id === entry.id ? data.status : presentation.status;
   const preview = data.removed
     ? removedPreviewData(catalogue, context, entry)
     : undefined;
@@ -169,7 +170,6 @@ export function ComponentWorkspace({
       previewViews={controls.previewViews}
       target={target}
       variantRemoved={variant?.removed ?? false}
-      {...(selection.error ? { error: selection.error } : {})}
       {...(variantId ? { variantId } : {})}
     />
   );
@@ -214,27 +214,15 @@ export function ComponentWorkspace({
         status={
           <span
             className="mbk-entry-status"
-            data-status={presentation.status}
+            data-status={headStatus}
             data-workspace-status=""
-            hidden={!presentation.status}
+            hidden={!headStatus}
           >
-            {presentation.status}
+            {headStatus}
           </span>
         }
       />
-      <WorkspaceVariantBar
-        data={data}
-        onSelect={(value) => store?.selectVariant(value)}
-        {...(variant ? { variant } : {})}
-      />
-      <p
-        className="mbk-selection-error"
-        data-workspace-error=""
-        hidden={!selection.error}
-        role="status"
-      >
-        {selection.error}
-      </p>
+      <WorkspaceVariantBar data={data} {...(variant ? { variant } : {})} />
       <div className="mbk-workspace-panes">
         <div className="mbk-preview-pane" data-workspace-preview="">
           {preview ? (
@@ -246,6 +234,7 @@ export function ComponentWorkspace({
               eligible={presentation.comparisonEligible}
               onComparisonChange={setLoadedComparison}
               onModeChange={setComparisonMode}
+              {...(data.component ? { owner: data.component.id } : {})}
               route={entry.id}
               {...(variantId ? { variantId } : {})}
             >

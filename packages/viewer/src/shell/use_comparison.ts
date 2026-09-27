@@ -60,11 +60,13 @@ export interface ComparisonController {
 export function useComparison({
   effectiveColorScheme,
   eligible,
+  owner,
   route,
   variantId,
 }: {
   effectiveColorScheme?: "dark" | "light";
   eligible: boolean;
+  owner?: string;
   route: string;
   variantId?: string;
 }): ComparisonController {
@@ -80,7 +82,7 @@ export function useComparison({
     () => JSON.stringify([route, variantId]),
     [route, variantId],
   );
-  const ownerKey = `${route}\u0000${evidenceKey}`;
+  const ownerKey = `${owner ?? route}\u0000${evidenceKey}`;
   const [modeState, setModeState] = useReducer(
     (
       _current: { mode: ComparisonMode; ownerKey: string },
@@ -217,7 +219,7 @@ export function useComparison({
           ? "side"
           : "current",
     });
-  }, [eligible, environment, route]);
+  }, [eligible, environment, ownerKey]);
 
   useEffect(() => {
     if (!eligible) setModeState({ ownerKey, mode: "current" });

@@ -8,7 +8,7 @@ import { controlsEntrySource } from "../helpers/component_controls_fixture.js";
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 import { reparentedEntrySource } from "../helpers/fixture.js";
 
-import { expectFrameSource } from "./workspace_actions.js";
+import { chooseVariant, expectFrameSource } from "./workspace_actions.js";
 
 const HOME = "screens/home.html";
 const HOME_ID = "home";
@@ -277,9 +277,7 @@ test("component view evidence follows the selected saved variant", async ({
     await expect(row).toBeHidden();
     await expectShownStatus(page, "Unmodified", false);
 
-    await page
-      .getByLabel("Saved variant", { exact: true })
-      .selectOption("action-disabled");
+    await chooseVariant(page, "Disabled");
 
     await expect(page.locator(SCHEME_DOT)).toBeVisible();
     await expect(row).toBeVisible();

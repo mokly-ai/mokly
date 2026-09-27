@@ -198,7 +198,7 @@ test("server and React viewer IDs share one validation contract", async () => {
   );
 });
 
-test("SSR selects a requested saved variant in its control and preview", () => {
+test("SSR selects a component variant entry in navigation, chrome, and preview", () => {
   const model = structuredClone(fixture);
   const component = model.components[0]!;
   const original = catalogueComponentVariants(model, component.id)[0]!;
@@ -225,11 +225,21 @@ test("SSR selects a requested saved variant in its control and preview", () => {
     viewerId: "fixture",
     catalogue: model,
     baseUrl: "https://catalogue.example",
-    defaultSelection: { screenId: component.id, variantId: "action-second" },
+    defaultSelection: { screenId: "action-second" },
   });
+  assert.match(html, /<h2>Second<\/h2>/);
+  assert.match(html, /#<!-- -->action-second<\/button>/);
   assert.match(
     html,
-    /<option value="action-second" selected="">Second<\/option>/,
+    /aria-label="Catalogue location"[^]*href="\/view\/components\/action\.html"[^]*Action/,
+  );
+  assert.match(
+    html,
+    /aria-label="Saved variants"[^]*aria-current="page"[^]*href="\/view\/components\/action-second\.html"[^]*Second/,
+  );
+  assert.match(
+    html,
+    /data-nav-disclosure="variants:components:action"[^]*data-route="components\/action-second\.html"/,
   );
   assert.match(html, /action-second\.(?:mobile|desktop)\.html/);
 });

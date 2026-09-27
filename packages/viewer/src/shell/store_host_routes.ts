@@ -47,7 +47,6 @@ export function hostRoute(
     view,
     ...(selection.snapshotId ? { snapshot: selection.snapshotId } : {}),
     ...(fragment ? { fragment } : {}),
-    ...(selection.variantId ? { variant: selection.variantId } : {}),
   };
 }
 

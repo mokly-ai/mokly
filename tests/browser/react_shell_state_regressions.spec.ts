@@ -1,8 +1,9 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 const componentPath = "/view/components/design-ui-inspector.html";
-const componentRow =
-  'a[data-nav-row][data-route="components/design-ui-inspector.html"]';
+const variantPath = "/view/components/design-ui-inspector-props.html";
+const variantRow =
+  'a[data-nav-row][data-route="components/design-ui-inspector-props.html"]';
 const fragment = "react-native-stylesheet";
 
 test("sequential search editing preserves spaces and typed tag terms", async ({
@@ -21,79 +22,44 @@ test("sequential search editing preserves spaces and typed tag terms", async ({
   await expect(page.locator('[data-entry-id="example-welcome"]')).toBeVisible();
 });
 
-test("a direct Serve URL restores its variant and fragment after refresh", async ({
+test("a direct Serve URL restores its variant entry and fragment after refresh", async ({
   page,
 }) => {
-  const url = `${componentPath}?variant=design-ui-inspector-props&fragment=${fragment}`;
+  const url = `${variantPath}?fragment=${fragment}`;
   await page.goto(url);
-  await expectInitialComponentQuery(page);
+  await expectInitialVariantEntry(page);
 
   await page.reload();
-  await expectInitialComponentQuery(page);
+  await expectInitialVariantEntry(page);
 });
 
-test("invalid variant URLs remain unavailable through Back and Forward", async ({
-  page,
-}) => {
-  await page.goto(`${componentPath}?variant=`);
-  await expect(page.locator("[data-workspace-error]")).toHaveText(
-    "This saved variant is unavailable. Choose another variant.",
-  );
-
-  const duplicate = `${componentPath}?variant=design-ui-inspector-details&variant=design-ui-inspector-props`;
-  await page.goto(duplicate);
-  await expect(page.locator("[data-workspace-error]")).toHaveText(
-    "Choose one saved variant.",
-  );
-  await expect
-    .poll(() => variantValues(page))
-    .toEqual(["design-ui-inspector-details", "design-ui-inspector-props"]);
-
-  await page
-    .getByLabel("Saved variant", { exact: true })
-    .selectOption("design-ui-inspector-props");
-  await expect(page.locator("[data-workspace-error]")).toBeHidden();
-  await expect
-    .poll(() => variantValues(page))
-    .toEqual(["design-ui-inspector-props"]);
-
-  await page.goBack();
-  await expect(page.locator("[data-workspace-error]")).toHaveText(
-    "Choose one saved variant.",
-  );
-  await expect
-    .poll(() => variantValues(page))
-    .toEqual(["design-ui-inspector-details", "design-ui-inspector-props"]);
-
-  await page.goForward();
-  await expect(page.locator("[data-workspace-error]")).toBeHidden();
-  await expect
-    .poll(() => variantValues(page))
-    .toEqual(["design-ui-inspector-props"]);
-});
-
-test("query-only variant navigation scrolls the active row back into view", async ({
+test("variant entry navigation scrolls the active row back into view", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 620 });
   await page.goto(componentPath);
   const pane = page.locator("[data-mokly-nav-scroll]");
-  const row = page.locator(componentRow);
-  await moveOutsidePane(pane);
+  const row = page.locator(variantRow);
+  await moveOutsidePane(pane, variantRow);
   expect(await rowIsInsidePane(pane, row)).toBe(false);
 
   await page
-    .getByLabel("Saved variant", { exact: true })
-    .selectOption("design-ui-inspector-props");
+    .getByRole("navigation", { name: "Saved variants" })
+    .getByRole("link", { name: "Props", exact: true })
+    .click();
 
-  await expect(page).toHaveURL(/\?variant=design-ui-inspector-props$/);
+  await expect(page).toHaveURL(
+    /\/view\/components\/design-ui-inspector-props\.html$/,
+  );
   await expect.poll(() => rowIsInsidePane(pane, row)).toBe(true);
 });
 
-async function expectInitialComponentQuery(page: Page): Promise<void> {
-  await expect(page.getByLabel("Saved variant", { exact: true })).toHaveValue(
-    "design-ui-inspector-props",
-  );
+async function expectInitialVariantEntry(page: Page): Promise<void> {
+  await expect(
+    page
+      .getByRole("navigation", { name: "Saved variants" })
+      .getByRole("link", { name: "Props", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
   for (const viewport of ["mobile", "desktop"])
     await expect(
       page.locator(`iframe[data-workspace-frame="${viewport}"]`),
@@ -103,13 +69,7 @@ async function expectInitialComponentQuery(page: Page): Promise<void> {
     );
 }
 
-function variantValues(page: Page): Promise<string[]> {
-  return page.evaluate(() =>
-    new URL(location.href).searchParams.getAll("variant"),
-  );
-}
-
-async function moveOutsidePane(pane: Locator): Promise<void> {
+async function moveOutsidePane(pane: Locator, selector: string): Promise<void> {
   await pane.evaluate((element, selector) => {
     const active = element.querySelector<HTMLElement>(selector);
     if (!active) throw new Error("active catalogue row is unavailable");
@@ -121,7 +81,7 @@ async function moveOutsidePane(pane: Locator): Promise<void> {
     const rowBox = active.getBoundingClientRect();
     if (rowBox.top >= paneBox.top && rowBox.bottom <= paneBox.bottom)
       element.scrollTop = element.scrollHeight;
-  }, componentRow);
+  }, selector);
 }
 
 async function rowIsInsidePane(pane: Locator, row: Locator): Promise<boolean> {

@@ -1,6 +1,5 @@
 /** Changes-filter navigation shared by standalone and embedded shells. */
 
-import { isManifestComponentVariant } from "../components/manifest_types.js";
 import { entryRoute } from "../navigation/routes.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
@@ -13,6 +12,7 @@ import type { ShellContext } from "./context.js";
 import type { ShellRoute } from "./routes.js";
 import { rowMatchesQuery } from "./search_query.js";
 import { workspaceData } from "./workspace_data.js";
+import { workspaceEvidenceEntry } from "./workspace_entry.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
 
 interface ChangedDestination {
@@ -60,15 +60,15 @@ export function changesActivation(
     route.viewport !== undefined ||
     route.colorScheme !== undefined ||
     (destination.entry.kind !== "screen" &&
-      (destination.entry.kind !== "component" ||
-        isManifestComponentVariant(destination.entry)))
+      destination.entry.kind !== "component")
   )
     return next;
   const data = workspaceData(catalogue, context, destination.entry);
   const first = selectedChangedViews(
-    destination.entry,
+    workspaceEvidenceEntry(data),
     data.changedViews,
-    data.variants[0]?.value.id,
+    data.variants.find(({ value }) => value.id === destination.entry.id)?.value
+      .id ?? data.variants[0]?.value.id,
   )[0];
   return first
     ? { ...next, viewport: first.viewport, colorScheme: first.colorScheme }
@@ -100,8 +100,8 @@ function firstVisibleChangedVariant(
 ): ChangedDestination | undefined {
   const parent = catalogue.hierarchy.byId.get(parentId);
   if (
-    parent?.kind !== "screen" ||
-    parent.variantOf !== undefined ||
+    (parent?.kind !== "screen" && parent?.kind !== "component") ||
+    ("variantOf" in parent && parent.variantOf !== undefined) ||
     !catalogue.manifest.entries.some((entry) => entry.id === parent.id)
   )
     return;
@@ -109,7 +109,8 @@ function firstVisibleChangedVariant(
     (entry) => ({ entry }),
   );
   const removed = catalogue.removedEntries.flatMap(({ entry, snapshotId }) =>
-    entry.kind === "screen" &&
+    entry.kind === parent.kind &&
+    "variantOf" in entry &&
     entry.variantOf === parentId &&
     (snapshotId !== undefined || catalogue.byId.get(entry.id) === entry)
       ? [{ entry, ...(snapshotId ? { snapshotId } : {}) }]

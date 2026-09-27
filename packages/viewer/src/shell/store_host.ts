@@ -78,8 +78,7 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       const current = stateRef.current;
       const routeChanged =
         current.selection.screenId !== selection.screenId ||
-        current.selection.snapshotId !== selection.snapshotId ||
-        current.selection.variantId !== selection.variantId;
+        current.selection.snapshotId !== selection.snapshotId;
       const frameChanged =
         routeChanged ||
         current.selection.viewport !== selection.viewport ||
@@ -122,8 +121,7 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       }
       const routeChanged =
         current.screenId !== next.screenId ||
-        current.snapshotId !== next.snapshotId ||
-        current.variantId !== next.variantId;
+        current.snapshotId !== next.snapshotId;
       const navigation = routeChanged
         ? {
             selection: next,
@@ -155,7 +153,6 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
         {
           screenId,
           snapshotId: route.snapshot,
-          variantId: route.variant,
           ...(route.viewport ? { viewport: route.viewport } : {}),
           ...(route.colorScheme ? { colorScheme: route.colorScheme } : {}),
         },
@@ -240,17 +237,5 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       );
     },
     select,
-    selectVariant(value) {
-      const environment = environmentRef.current;
-      if (!environment) return;
-      const route = hostRoute(
-        input.catalogue,
-        mergeSelection(environment.model, stateRef.current.selection, {
-          variantId: value,
-        }),
-        stateRef.current.route.fragment,
-      );
-      requestRoute(route);
-    },
   };
 }

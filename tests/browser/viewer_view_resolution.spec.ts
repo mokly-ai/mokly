@@ -114,12 +114,13 @@ test("Viewer keeps an unknown saved variant comparison ineligible", async ({
   }));
 
   await openViewer(page, "unknown", catalogue, {
-    screenId: component.id,
-    variantId: variant.id,
+    screenId: variant.id,
     viewport: "desktop",
   });
 
   const root = page.locator("#unknown");
-  await expect(root.locator("[data-workspace-status]")).toHaveText("Changed");
+  await expect(root.locator("[data-workspace-status]")).toHaveText(
+    "Unmodified",
+  );
   await expect(root.locator(".mbk-diff-toolbar")).toBeHidden();
 });

@@ -67,7 +67,7 @@ test.beforeEach(async () => {
 test("a static direct URL restores its variant and fragment after refresh", async ({
   page,
 }) => {
-  const url = `${server.url}/view/components/action.html?variant=action-disabled&fragment=${fragment}`;
+  const url = `${server.url}/view/components/action-disabled.html?fragment=${fragment}`;
   await page.goto(url);
   await expectStaticComponentQuery(page, "action-disabled");
 
@@ -261,9 +261,12 @@ async function expectStaticComponentQuery(
   page: Page,
   variant: string,
 ): Promise<void> {
-  await expect(page.getByLabel("Saved variant", { exact: true })).toHaveValue(
-    variant,
-  );
+  const title = variant === "action-disabled" ? "Disabled" : "Default";
+  await expect(
+    page
+      .getByRole("navigation", { name: "Saved variants" })
+      .getByRole("link", { name: title, exact: true }),
+  ).toHaveAttribute("aria-current", "page");
   for (const viewport of ["mobile", "desktop"])
     await expectFrameSource(
       page.locator(`iframe[data-workspace-frame="${viewport}"]`),

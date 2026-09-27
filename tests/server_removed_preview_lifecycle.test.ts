@@ -165,7 +165,7 @@ test("page selections share immutable capture, refresh, and HTTP protections", a
   assert.equal(calls, 2);
   for (const query of [
     `page=${page.id}&id=removed-screen`,
-    `page=${page.id}&variant=default`,
+    `page=${page.id}&route=default`,
     `page=${page.id}&page=${page.id}`,
     "page=../private",
   ])

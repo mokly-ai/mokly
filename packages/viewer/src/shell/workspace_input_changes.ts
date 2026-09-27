@@ -28,7 +28,7 @@ export interface InputChange {
  * to compare, and an unmatched instance is a structural change, not an input. */
 export function inputChanges(
   catalogue: Catalogue,
-  entry: ManifestComponent | ManifestScreen,
+  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   baseline: ManifestEntry | undefined,
   currentVariants: readonly ManifestComponentVariant[] = [],
   baselineVariants: readonly ManifestComponentVariant[] = [],

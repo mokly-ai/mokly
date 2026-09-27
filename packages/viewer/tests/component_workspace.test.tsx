@@ -254,7 +254,7 @@ test("workspace view selection uses exact contexts and light fallback", () => {
       colorScheme: "light",
       comparisonEligible: false,
       evidence: "selection",
-      status: "Changed",
+      status: "Unmodified",
       views: [mixedEvidence.views[0]!],
     },
   );
@@ -275,7 +275,7 @@ test("workspace view selection uses exact contexts and light fallback", () => {
       colorScheme: "light",
       comparisonEligible: true,
       evidence: "selection",
-      status: "Changed",
+      status: "Unmodified",
       views: mixedEvidence.views,
     },
   );
@@ -304,7 +304,6 @@ test("control availability and usage URLs explain the active product state", () 
       title: "Home",
       entryId: "home",
       entryKind: "screen",
-      variantId: "action-default",
       viewport: "mobile",
       colorScheme: "dark",
       instanceKey: "a".repeat(64),
@@ -312,6 +311,6 @@ test("control availability and usage URLs explain the active product state", () 
       removed: true,
       comparisonEligible: true,
     }),
-    `/view/screens/home.html?viewport=mobile&scheme=dark&instance=${"a".repeat(64)}&variant=action-default&comparison=side`,
+    `/view/screens/home.html?viewport=mobile&scheme=dark&instance=${"a".repeat(64)}&comparison=side`,
   );
 });

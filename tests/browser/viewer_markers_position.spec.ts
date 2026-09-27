@@ -234,8 +234,7 @@ for (const cross of [false, true]) {
         const host = window.viewerHarness.start("one", {
           cross,
           defaultSelection: {
-            screenId: "pane",
-            variantId: "pane-second",
+            screenId: "pane-second",
             viewport: "mobile",
           },
         });

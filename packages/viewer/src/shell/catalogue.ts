@@ -88,6 +88,29 @@ export function catalogueSelectionEntry(
   return catalogue.byId.get(entryId);
 }
 
+/** Resolve a current or retained variant's eligible same-kind parent. */
+export function catalogueVariantParent(
+  catalogue: Catalogue,
+  entry: CatalogueManifestEntry,
+): CatalogueManifestEntry | undefined {
+  if (
+    (entry.kind !== "screen" && entry.kind !== "component") ||
+    !("variantOf" in entry) ||
+    entry.variantOf === undefined
+  )
+    return;
+  const candidate =
+    catalogue.hierarchy.variantParentById.get(entry.id) ??
+    catalogue.removedEntries.find(
+      ({ entry: historical }) => historical.id === entry.variantOf,
+    )?.entry ??
+    catalogue.byId.get(entry.variantOf);
+  return candidate?.kind === entry.kind &&
+    (!("variantOf" in candidate) || candidate.variantOf === undefined)
+    ? candidate
+    : undefined;
+}
+
 /** The union of the tags declared across every entry that can carry them. */
 function collectTags(entries: readonly ManifestEntry[]): readonly string[] {
   const declared: string[] = [];

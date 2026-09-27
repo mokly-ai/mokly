@@ -9,6 +9,7 @@ import type {
 import { viewerFixture } from "../../packages/viewer/tests/browser_fixture.js";
 
 import type {} from "./viewer_harness.js";
+import { chooseVariant } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof viewerFixture>>;
 test.beforeAll(async () => {
@@ -31,9 +32,7 @@ test("frame links and saved variants emit only committed navigation", async ({
   await expect(
     page.locator("#one").getByRole("heading", { name: "Action", exact: true }),
   ).toBeVisible();
-  await page
-    .getByRole("combobox", { name: "Saved variant" })
-    .selectOption("action-disabled");
+  await chooseVariant(page, "Disabled");
   const events = await page.evaluate(() =>
     window.viewerHarness
       .get("one")
@@ -49,7 +48,7 @@ test("frame links and saved variants emit only committed navigation", async ({
         activation: "primary",
       },
     }),
-    { screenId: "action" },
+    { screenId: "action-disabled" },
   ]);
 });
 

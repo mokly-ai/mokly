@@ -11,7 +11,7 @@ Serve, export and the public viewer converged on this tree.
 
 `nav.tsx` renders the catalogue column, `nav_rows.tsx` its folder groups as
 native `<details>`, and `nav_leaf_rows.tsx` its leaves: links carrying their
-entry-kind glyph, and a screen's variants as a container the row's chevron
+entry-kind glyph, and a screen or component's variants as a container the row's chevron
 button discloses, because a row cannot be both a link and a `<summary>`. A
 deleted variant whose non-variant parent survives joins that container as a
 Removed row. `nav_tree.ts` records actual attachment before removing the row
@@ -103,8 +103,10 @@ validated query/parser/resolver carries it through SSR, hydration, controlled
 hosts and history. Headings, crumbs, Details and previous-preview lookup consume
 the resolved historical record and route, never a colliding current-id lookup.
 
-`workspace_data.ts` describes shell data; the public viewer projects it only
-from validated catalogue records. Embedded bootstrap and workspace JSON use
+`workspace_data.ts` describes shell data. Its `entry` is always the exact
+routed screen, component parent, or component variant; component routes retain
+their parent schema separately for controls. The public viewer projects those
+values only from validated catalogue records. Embedded bootstrap and workspace JSON use
 canonical key ordering so their validated client projections retain the exact
 server bytes during hydration. `comparison_views.tsx` renders React-owned frame
 chrome around the snapshots from validated comparison metadata. The CLI
@@ -160,7 +162,7 @@ defines route loading, revision fencing and export omission.
 
 Before standalone hydration, stored disclosure and split-width preferences are
 applied to the server DOM. Disclosure helpers treat native `<details>` groups
-and the button-controlled screen-variant lists as the same persisted state.
+and the button-controlled entry-variant lists as the same persisted state.
 Folder identities follow the [navigation path contract](../../../../docs/protocol/mokly-nav-paths.md#order-and-keys),
 and persisted values and watched-reload recovery follow the
 [disclosure persistence contract](../../../../docs/protocol/mokly-disclosure-persistence.md).

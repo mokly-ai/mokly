@@ -193,8 +193,6 @@ export function selectionForRoute(
   const next = { ...selection, screenId: routeScreenId(route) };
   if (route.snapshot) next.snapshotId = route.snapshot;
   else delete next.snapshotId;
-  if (route.variant) next.variantId = route.variant;
-  else delete next.variantId;
   return next;
 }
 

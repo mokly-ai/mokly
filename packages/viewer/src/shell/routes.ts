@@ -24,9 +24,6 @@ export interface ShellRoute {
   fragment?: string;
   instance?: string;
   snapshot?: string;
-  variant?: string;
-  /** Every component variant query value, including invalid empty or duplicate values. */
-  variantValues?: readonly string[];
   viewport?: "both" | "desktop" | "mobile";
 }
 
@@ -80,16 +77,9 @@ export function routeFromUrl(
       ? { kind: "home" as const }
       : { kind: "missing" as const, requested: requestedPath(url.pathname) };
   const fragments = url.searchParams.getAll("fragment");
-  const variants = url.searchParams.getAll("variant");
   const axes = parseViewAxes(url.searchParams);
   const instances = url.searchParams.getAll("instance");
   const comparisons = url.searchParams.getAll("comparison");
-  const variant =
-    entry?.kind === "component" && variants.length === 1 && variants[0]
-      ? variants[0]
-      : undefined;
-  const variantValues =
-    entry?.kind === "component" && variants.length > 0 ? variants : undefined;
   return {
     view,
     ...axes,
@@ -103,8 +93,6 @@ export function routeFromUrl(
     ...(fragments.length === 1 && isLogicalFragment(fragments[0])
       ? { fragment: fragments[0] }
       : {}),
-    ...(variant ? { variant } : {}),
-    ...(variantValues ? { variantValues } : {}),
   };
 }
 
@@ -113,23 +101,13 @@ export function routeHref(
   kind: EntryRouteKind,
   id: string,
   fragment?: string,
-  variant?: string,
   workspace: Pick<
     ShellRoute,
-    | "colorScheme"
-    | "comparison"
-    | "instance"
-    | "snapshot"
-    | "variantValues"
-    | "viewport"
+    "colorScheme" | "comparison" | "instance" | "snapshot" | "viewport"
   > = {},
 ): string {
   const url = new URL(viewHref(kind, id), "https://mokly.invalid");
   if (fragment) url.searchParams.set("fragment", fragment);
-  if (workspace.variantValues)
-    for (const value of workspace.variantValues)
-      url.searchParams.append("variant", value);
-  else if (variant) url.searchParams.set("variant", variant);
   if (workspace.viewport) url.searchParams.set("viewport", workspace.viewport);
   if (workspace.colorScheme)
     url.searchParams.set("scheme", workspace.colorScheme);

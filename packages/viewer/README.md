@@ -159,6 +159,11 @@ or frame adapter intentionally remounts the viewer and cancels pending work.
 
 ### Selection
 
+`screenId` names one catalogue entry. Screen and component variants use their
+own global entry IDs, just like parents, pages and flows; there is no separate
+variant selection field. The component variant bar navigates between those
+entry IDs, so controlled hosts receive ordinary `screenId` proposals.
+
 Use `defaultSelection` for an uncontrolled viewer:
 
 ```tsx

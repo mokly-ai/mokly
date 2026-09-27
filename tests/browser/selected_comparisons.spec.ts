@@ -4,7 +4,11 @@ import type { RunningServer } from "../../dist/server/http_types.js";
 
 import { loadComparison } from "./comparison_actions.js";
 import { selectedComparisonFixture } from "./selected_comparison_fixture.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
+import {
+  chooseScheme,
+  chooseVariant,
+  chooseViewport,
+} from "./workspace_actions.js";
 
 let server: RunningServer;
 const cleanup: (() => Promise<void>)[] = [];
@@ -37,7 +41,7 @@ test("live Difference requests the active screen and keeps real before/current p
   ).toContainText("Updated screen");
   expect(requests).toHaveLength(1);
   expect(requests[0]!.searchParams.get("id")).toBe("home");
-  expect(requests[0]!.searchParams.has("variant")).toBe(false);
+  expect(requests[0]!.searchParams.size).toBe(1);
   await expect(page.locator(".mb-panes")).toHaveAttribute(
     "data-compare-mode",
     "difference",
@@ -68,10 +72,8 @@ test("saved variant selection and refresh keep the selected comparison scope", a
   });
   await page.goto(`${server.url}/view/components/action.html`);
   await chooseViewport(page, "mobile");
-  await page
-    .getByLabel("Saved variant", { exact: true })
-    .selectOption("action-disabled");
-  await expect(page).toHaveURL(/variant=action-disabled/);
+  await chooseVariant(page, "Disabled");
+  await expect(page).toHaveURL(/\/view\/components\/action-disabled\.html$/);
   await loadComparison(page, "Overlay");
   await expect(
     page
@@ -85,15 +87,13 @@ test("saved variant selection and refresh keep the selected comparison scope", a
   ).toBeDisabled();
   await loadComparison(page, "Refresh comparison");
   expect(requests).toHaveLength(2);
-  for (const request of requests) {
+  for (const [index, request] of requests.entries()) {
     expect(request.searchParams.get("id")).toBe("action-disabled");
-    expect(request.searchParams.has("variant")).toBe(false);
+    expect(request.searchParams.size).toBe(index === 0 ? 1 : 2);
   }
   expect(requests[1]!.searchParams.get("refresh")).toBe("1");
-  await page
-    .getByLabel("Saved variant", { exact: true })
-    .selectOption("action-default");
-  await expect(page).toHaveURL(/variant=action-default/);
+  await chooseVariant(page, "Default");
+  await expect(page).toHaveURL(/\/view\/components\/action-default\.html$/);
   await page.getByRole("button", { name: "Side by side", exact: true }).click();
   await expect(
     page

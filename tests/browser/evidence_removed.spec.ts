@@ -33,7 +33,12 @@ test("background baselines reconcile removed rows and invalidate changed histori
     const { manifest: baseline } = await compileCatalogue(
       await loadConfig(before.root),
     );
-    const changedIds = ["old-component", "old-page", "old-screen"];
+    const changedIds = [
+      "old-component",
+      "old-component-default",
+      "old-page",
+      "old-screen",
+    ];
     const publish = (entries = baseline.entries) =>
       server.publishUpdate({
         kind: "evidence",
@@ -66,7 +71,7 @@ test("background baselines reconcile removed rows and invalidate changed histori
     await expect(document).toBeHidden();
     const retained = await screen.elementHandle();
     publish();
-    await expect(removed).toHaveCount(3);
+    await expect(removed).toHaveCount(4);
     await expect(
       page.locator(
         '[data-nav-section="pages"] a[data-route="screens/old-screen.html"]',
@@ -93,6 +98,7 @@ test("background baselines reconcile removed rows and invalidate changed histori
       "pages/old-page.html",
       "screens/old-screen.html",
       "components/old-component.html",
+      "components/old-component-default.html",
     ]);
     expect(await retained!.evaluate((row) => row.isConnected)).toBe(true);
     await expect(component).toBeVisible();

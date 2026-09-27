@@ -194,18 +194,18 @@ export function PublicStage({
         fragment={fragment}
       />
     );
-  const views =
+  const selectedVariant =
     entry.kind === "component"
       ? (("variantOf" in entry
           ? [entry]
           : catalogueComponentVariants(catalogue, entry.id)
-        ).find(
-          (variant) => variant.id === (variantId ?? selection.variantId),
-        ) ??
-          ("variantOf" in entry
-            ? entry
-            : catalogueComponentVariants(catalogue, entry.id)[0]))!.views
-      : (entry as CatalogueScreen).views;
+        ).find((variant) => variant.id === variantId) ??
+        ("variantOf" in entry
+          ? entry
+          : catalogueComponentVariants(catalogue, entry.id)[0]))
+      : undefined;
+  const views = selectedVariant?.views ?? (entry as CatalogueScreen).views;
+  const frameEntry = selectedVariant ?? entry;
   return (
     <div
       className={`mbk-stage ${entry.kind === "component" ? "mbk-component-stage" : "mbk-live"}`}
@@ -217,7 +217,7 @@ export function PublicStage({
       {VIEWPORTS.map((viewport) => (
         <PublicFrame
           key={`${entry.id}:${variantId ?? ""}:${viewport}`}
-          entry={entry}
+          entry={frameEntry}
           views={views}
           viewport={viewport}
           fragment={fragment}

@@ -50,9 +50,7 @@ export function PublicStage({
       ? (("variantOf" in entry
           ? [entry]
           : catalogueComponentVariants(catalogue, entry.id)
-        ).find(
-          (variant) => variant.id === (variantId ?? selection.variantId),
-        ) ??
+        ).find((variant) => variant.id === variantId) ??
         ("variantOf" in entry
           ? entry
           : catalogueComponentVariants(catalogue, entry.id)[0]))
@@ -62,6 +60,7 @@ export function PublicStage({
       ? (selectedVariant?.views ?? [])
       : (entry as CatalogueScreen).views;
   const effectiveVariant = selectedVariant?.id;
+  const frameEntry = selectedVariant ?? entry;
   return (
     <div
       className={`mbk-stage ${entry.kind === "component" ? "mbk-component-stage" : "mbk-live"}`}
@@ -72,7 +71,7 @@ export function PublicStage({
     >
       {VIEWPORTS.map((viewport) => (
         <StageFrame
-          entry={entry}
+          entry={frameEntry}
           hasDarkFragments={hasDarkFragments}
           key={`${entry.id}:${effectiveVariant ?? ""}:${viewport}`}
           views={views}

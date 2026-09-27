@@ -16,7 +16,7 @@ import {
 import { serveStaticFiles } from "../helpers/static_server.js";
 
 import { assertServedShellMarker } from "./export_shell.js";
-import { chooseViewport } from "./workspace_actions.js";
+import { chooseVariant, chooseViewport } from "./workspace_actions.js";
 
 let site: Awaited<ReturnType<typeof serveStaticFiles>>;
 let root: string;
@@ -51,7 +51,7 @@ test.beforeAll(async () => {
   site = await serveStaticFiles(output);
   await assertServedShellMarker(
     site.url,
-    "/view/components/design-ui-top-bar.html?variant=design-ui-top-bar-search",
+    "/view/components/design-ui-top-bar-search.html",
   );
 });
 test.afterAll(async () => {
@@ -74,16 +74,14 @@ for (const viewport of ["desktop", "mobile"] as const)
       if (response.status() >= 400) failures.push(response.url());
     });
     await page.goto(
-      `${site.url}/view/components/design-ui-top-bar.html?variant=design-ui-top-bar-search`,
+      `${site.url}/view/components/design-ui-top-bar-search.html`,
     );
     await chooseViewport(page, viewport);
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     await expect(page.getByLabel("Query", { exact: true })).toBeDisabled();
     const frame = page.frameLocator(`[data-workspace-frame="${viewport}"]`);
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
-    await page
-      .getByLabel("Saved variant", { exact: true })
-      .selectOption("design-ui-top-bar-tag-picker");
+    await chooseVariant(page, "Tag picker");
     await expect(frame.locator(".mbk-tag-picker")).toBeVisible();
     await expect(frame.locator(".mbk-chip").first()).toContainText("revised");
     await page.goto(`${site.url}/view/components/design-ui-tag-chip.html`);

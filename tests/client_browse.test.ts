@@ -273,7 +273,7 @@ function shellAnchor(
 
 function shellLocation(): Location {
   return {
-    href: "https://example.test/view/screens/welcome.html?variant=default",
+    href: "https://example.test/view/screens/welcome.html?mode=default",
     origin: "https://example.test",
   } as Location;
 }

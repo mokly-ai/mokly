@@ -48,17 +48,13 @@ for (const viewport of ["desktop", "mobile"] as const)
       .getByRole("tabpanel", { name: "Usage", exact: true })
       .locator(".mbk-usage-list")
       .first();
-    for (const title of [
-      "Welcome",
-      "Details",
-      "Toolbar · example-toolbar-default",
-    ])
+    for (const title of ["Welcome", "Details", "Toolbar · Default"])
       await expect(
         usage.getByRole("link", { name: title, exact: true }),
       ).toBeVisible();
     await usage
       .getByRole("link", {
-        name: "Toolbar · example-toolbar-default",
+        name: "Toolbar · Default",
         exact: true,
       })
       .click();

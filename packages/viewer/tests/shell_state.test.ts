@@ -33,7 +33,7 @@ const model = readCatalogue(
 const catalogue = viewerCatalogue(model);
 const context = viewerContext(model, defaultSelection);
 
-test("shell routes derive targets, variants, fragments, aliases, and misses from URLs", () => {
+test("shell routes derive entry targets, fragments, aliases, and misses from URLs", () => {
   const screen = routeFromUrl(
     catalogue,
     new URL("https://example.test/view/screens/home.html?fragment=hero"),
@@ -43,12 +43,13 @@ test("shell routes derive targets, variants, fragments, aliases, and misses from
 
   const variant = routeFromUrl(
     catalogue,
-    new URL(
-      "https://example.test/view/components/action.html?variant=action-default",
-    ),
+    new URL("https://example.test/view/components/action-default.html"),
   );
-  assert.equal(variant.variant, "action-default");
-  assert.deepEqual(variant.variantValues, ["action-default"]);
+  assert.equal(variant.view.kind, "target");
+  assert.equal(
+    variant.view.kind === "target" ? variant.view.target.entry.id : undefined,
+    "action-default",
+  );
   assert.equal(
     routeFromUrl(catalogue, new URL("https://example.test/id/home")).view.kind,
     "target",
@@ -117,35 +118,13 @@ test("static routes accept only deployment-owned provider-normalized aliases", (
   );
 });
 
-test("shell routes retain invalid component variant requests", () => {
-  const duplicate = routeFromUrl(
-    catalogue,
-    new URL(
-      "https://example.test/view/components/action.html?variant=action-default&variant=missing",
-    ),
-  );
-  assert.equal(duplicate.variant, undefined);
-  assert.deepEqual(duplicate.variantValues, ["action-default", "missing"]);
+test("shell routes serialize workspace state without a second entry identity", () => {
   assert.equal(
-    routeHref(
-      "component",
-      "action",
-      duplicate.fragment,
-      duplicate.variant,
-      duplicate,
-    ),
-    "/view/components/action.html?variant=action-default&variant=missing",
-  );
-
-  const empty = routeFromUrl(
-    catalogue,
-    new URL("https://example.test/view/components/action.html?variant="),
-  );
-  assert.equal(empty.variant, undefined);
-  assert.deepEqual(empty.variantValues, [""]);
-  assert.equal(
-    routeHref("component", "action", undefined, undefined, empty),
-    "/view/components/action.html?variant=",
+    routeHref("component", "action-default", undefined, {
+      colorScheme: "dark",
+      viewport: "mobile",
+    }),
+    "/view/components/action-default.html?viewport=mobile&scheme=dark",
   );
 });
 
@@ -257,7 +236,6 @@ test("standalone store actions preserve every sequential search byte", () => {
       onShellClick() {},
       onShellKeyDown() {},
       openFrame() {},
-      selectVariant() {},
     },
     propose() {},
     sections: catalogueNavSections(catalogue),

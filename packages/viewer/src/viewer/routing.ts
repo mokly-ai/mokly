@@ -1,5 +1,4 @@
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
-import { catalogueComponentVariants } from "../catalogue/entry_selection.js";
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { FrameNavigation } from "../client/frame_adapter.js";
@@ -13,7 +12,6 @@ interface RouteIntent {
   colorScheme?: "dark" | "light";
   id: string | null;
   snapshotId?: string;
-  variantId?: string;
   fragment?: string;
   navigation?: FrameNavigation;
   viewport?: "both" | "desktop" | "mobile";
@@ -27,7 +25,7 @@ interface RouteActions {
   events(): ViewerEvents;
 }
 
-/** Fragments stay local; saved variants commit through public selection. */
+/** Fragments stay local while every entry commits through public selection. */
 export class ViewerRouting {
   fragment: string | undefined;
   private pending: RouteIntent | undefined;
@@ -49,22 +47,10 @@ export class ViewerRouting {
         )?.entry
       : undefined;
   }
-  private effectiveVariant() {
-    const entry = this.entry();
-    return (
-      this.actions.selection().variantId ??
-      (entry?.kind === "component"
-        ? "variantOf" in entry
-          ? entry.id
-          : catalogueComponentVariants(this.model, entry.id)[0]?.id
-        : undefined)
-    );
-  }
   private key() {
     return JSON.stringify([
       this.actions.selection().screenId,
       this.actions.selection().snapshotId,
-      this.effectiveVariant(),
       this.fragment,
     ]);
   }
@@ -72,7 +58,6 @@ export class ViewerRouting {
     const intent =
       this.pending?.id === selection.screenId &&
       this.pending.snapshotId === selection.snapshotId &&
-      this.pending.variantId === selection.variantId &&
       (this.pending.viewport === undefined ||
         this.pending.viewport === selection.viewport) &&
       (this.pending.colorScheme === undefined ||
@@ -98,14 +83,12 @@ export class ViewerRouting {
   shell(id: string | null, url: URL): void {
     const fragment = url.searchParams.getAll("fragment");
     const snapshots = url.searchParams.getAll("snapshot");
-    const variant = url.searchParams.getAll("variant");
     this.request({
       id,
       ...(snapshots.length === 1 && isHistoricalSnapshotId(snapshots[0])
         ? { snapshotId: snapshots[0] }
         : {}),
       ...parseViewAxes(url.searchParams),
-      ...(variant.length === 1 ? { variantId: variant[0]! } : {}),
       ...(fragment.length === 1 && isLogicalFragment(fragment[0]!)
         ? { fragment: fragment[0]! }
         : {}),
@@ -145,7 +128,6 @@ export class ViewerRouting {
     if (
       intent.id !== selection.screenId ||
       intent.snapshotId !== selection.snapshotId ||
-      intent.variantId !== selection.variantId ||
       (intent.viewport !== undefined &&
         intent.viewport !== selection.viewport) ||
       (intent.colorScheme !== undefined &&
@@ -154,7 +136,6 @@ export class ViewerRouting {
       this.actions.select({
         screenId: intent.id,
         ...(intent.snapshotId ? { snapshotId: intent.snapshotId } : {}),
-        variantId: intent.variantId,
         ...(intent.viewport ? { viewport: intent.viewport } : {}),
         ...(intent.colorScheme ? { colorScheme: intent.colorScheme } : {}),
       });

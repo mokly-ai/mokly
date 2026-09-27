@@ -16,7 +16,7 @@ export interface NavLeafNode {
    * removed page it is a Changes row: All hides it, Changes shows it.
    */
   removedVariant?: boolean;
-  /** Parent screen id a retained baseline variant still names. */
+  /** Parent entry id a retained baseline variant still names. */
   variantOf?: string;
   entryKind: "component" | "screen" | "use-case" | "page";
   key: string;
@@ -26,8 +26,8 @@ export interface NavLeafNode {
   /** Declared classification tags, present only when the entry has them. */
   tags?: readonly string[];
   /**
-   * Screens this row discloses as its variants, in manifest order. Present
-   * only on a parent screen; a variant never carries variants of its own.
+   * Entries this row discloses as variants, in manifest order. Present only
+   * on a screen or component parent; a variant never owns variants itself.
    */
   variants?: readonly NavLeafNode[];
 }
@@ -124,9 +124,8 @@ export function structuredCrumbTrail(
 }
 
 /**
- * Retained baseline variants grouped by the surviving parent screen that
- * still claims them. A variant whose parent is gone, or whose parent is not a
- * current screen, keeps the flat removed row the removal rules give it.
+ * Retained baseline variants grouped by the surviving same-kind parent that
+ * still claims them. An ineligible variant keeps its flat removed row.
  */
 function adoptedVariants(
   hierarchy: CatalogueHierarchy<ManifestEntry>,
@@ -137,7 +136,11 @@ function adoptedVariants(
     const parentId = leaf.variantOf;
     if (parentId === undefined) continue;
     const parent = hierarchy.byId.get(parentId);
-    if (parent?.kind !== "screen" || parent.variantOf !== undefined) continue;
+    if (
+      parent?.kind !== leaf.entryKind ||
+      ("variantOf" in parent && parent.variantOf !== undefined)
+    )
+      continue;
     byParent.set(parentId, [...(byParent.get(parentId) ?? []), leaf]);
   }
   return byParent;
@@ -202,11 +205,9 @@ function structuredNode(
     const entry = node.entry;
     return leafNode(
       entry,
-      entry.kind === "screen"
-        ? (hierarchy.variantsById.get(entry.id) ?? []).map((variant) =>
-            leafNode(variant, []),
-          )
-        : [],
+      (hierarchy.variantsById.get(entry.id) ?? []).map((variant) =>
+        leafNode(variant, []),
+      ),
     );
   }
   return {

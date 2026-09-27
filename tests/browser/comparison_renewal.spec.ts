@@ -4,7 +4,11 @@ import type { RunningServer } from "../../dist/server/http_types.js";
 
 import { loadComparison } from "./comparison_actions.js";
 import { selectedComparisonFixture } from "./selected_comparison_fixture.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
+import {
+  chooseScheme,
+  chooseVariant,
+  chooseViewport,
+} from "./workspace_actions.js";
 
 let server: RunningServer;
 const cleanup: (() => Promise<void>)[] = [];
@@ -156,9 +160,7 @@ test("renewal failure offers a retry that reacquires the selected comparison", a
 test("a pending renewal cannot restore a previously selected saved variant", async ({
   page,
 }) => {
-  await page.goto(
-    `${server.url}/view/components/action.html?variant=action-disabled`,
-  );
+  await page.goto(`${server.url}/view/components/action-disabled.html`);
   await chooseViewport(page, "desktop");
   await loadComparison(page, "Side by side");
   await expect(
@@ -170,9 +172,7 @@ test("a pending renewal cannot restore a previously selected saved variant", asy
   try {
     await chooseViewport(page, "mobile");
     await pending.arrived;
-    await page
-      .getByLabel("Saved variant", { exact: true })
-      .selectOption("action-default");
+    await chooseVariant(page, "Default");
     await expect(
       page
         .frameLocator(".mb-pane--after iframe")
@@ -180,7 +180,7 @@ test("a pending renewal cannot restore a previously selected saved variant", asy
     ).toBeEnabled();
     pending.release();
     await pending.finished;
-    await expect(page).toHaveURL(/variant=action-default/);
+    await expect(page).toHaveURL(/\/view\/components\/action-default\.html$/);
     await expect(
       page
         .frameLocator(".mb-pane--after iframe")

@@ -4,7 +4,10 @@
 // records. Unknown evidence stays an empty list, so the workspace never claims
 // a view is unmodified when it has not examined one.
 
-import type { ManifestComponent } from "../components/manifest_types.js";
+import type {
+  ManifestComponent,
+  ManifestComponentVariant,
+} from "../components/manifest_types.js";
 import type { ManifestScreen } from "../registry/types.js";
 import type {
   ComponentReview,
@@ -35,7 +38,7 @@ const CHANGED_STATES: ReadonlySet<ReviewState> = new Set<ReviewState>([
  * component's saved variant; a screen ignores it.
  */
 export function changedViews(
-  entry: ManifestComponent | ManifestScreen,
+  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
   comparison: ComponentReview | ScreenReviewV4 | undefined,
   variantId?: string,
@@ -49,7 +52,7 @@ export function changedViews(
 
 /** Every known state for one screen or component saved variant. */
 export function viewStates(
-  entry: ManifestComponent | ManifestScreen,
+  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
   comparison: ComponentReview | ScreenReviewV4 | undefined,
   variantId?: string,
@@ -64,7 +67,7 @@ export function viewStates(
  * are both retained, including reviews that are not present in the manifest.
  */
 export function changedViewsBySelection(
-  entry: ManifestComponent | ManifestScreen,
+  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
   comparison: ComponentReview | ScreenReviewV4 | undefined,
   variantIds: readonly string[] = [],
@@ -88,7 +91,7 @@ export function changedViewsBySelection(
  * reader can preserve its route-level status instead of inventing evidence.
  */
 export function viewStatesBySelection(
-  entry: ManifestComponent | ManifestScreen,
+  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
   comparison: ComponentReview | ScreenReviewV4 | undefined,
   variantIds: readonly string[] = [],
@@ -111,7 +114,7 @@ export function viewStatesBySelection(
 
 /** Read the screen or selected saved variant without a caller inventing a key. */
 export function selectedChangedViews(
-  entry: ManifestComponent | ManifestScreen,
+  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   evidence: ChangedViewsBySelection,
   variantId?: string,
 ): readonly ChangedView[] {
@@ -120,7 +123,7 @@ export function selectedChangedViews(
 }
 
 function evidenceViews(
-  entry: ManifestComponent | ManifestScreen,
+  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
   comparison: ComponentReview | ScreenReviewV4 | undefined,
   variantId?: string,

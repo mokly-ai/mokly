@@ -50,8 +50,11 @@ test("workspace badges, comparison eligibility and usage use recorded evidence",
     data.usedBy.filter((item) => item.entryId === "home").length,
     16,
   );
-  assert.equal(data.usedBy.filter((item) => item.entryId === "pane").length, 4);
-  const defaultSelection = selectedVariant(data, "");
+  assert.equal(
+    data.usedBy.filter((item) => item.entryId === "pane-default").length,
+    4,
+  );
+  const defaultSelection = selectedVariant(data);
   assert.equal(defaultSelection.variant?.value.id, "action-default");
   assert.equal(defaultSelection.comparisonEligible, false);
   assert.ok(data.views.every((view) => view.usage));
@@ -63,15 +66,11 @@ test("workspace badges, comparison eligibility and usage use recorded evidence",
   assert.deepEqual(live.usedBy, data.usedBy);
   assert.equal(live.previewGeneration, "live-generation");
   assert.ok(live.views.every((view) => view.usage === undefined));
-  assert.equal(
-    selectedVariant(data, "?variant=action-disabled").variant?.value.id,
-    "action-disabled",
-  );
-  assert.ok(
-    selectedVariant(data, "?variant=action-disabled&variant=action-default")
-      .error,
-  );
-  assert.ok(selectedVariant(data, "?variant=%2E%2E%2Fetc").error);
+  const disabled = catalogue.byId.get("action-disabled");
+  if (disabled?.kind !== "component" || !("variantOf" in disabled))
+    assert.fail("Expected component variant");
+  const disabledData = workspaceData(catalogue, context, disabled);
+  assert.equal(selectedVariant(disabledData).variant?.value.id, disabled.id);
   assert.equal(
     workspaceData(catalogue, { base: "main", updateVersion: 1 }, entry).status,
     undefined,
@@ -151,8 +150,8 @@ test("a removed component variant retains its previous comparison", async (t) =>
     },
     entry,
   );
-  assert.equal(data.status, "Changed");
-  assert.equal(data.comparisonEligible, true);
+  assert.equal(data.status, "Unmodified");
+  assert.equal(data.comparisonEligible, false);
   assert.deepEqual(
     data.variants.map((variant) => [
       variant.value.id,
@@ -165,7 +164,20 @@ test("a removed component variant retains its previous comparison", async (t) =>
     ],
   );
   assert.equal(
-    selectedVariant(data, "?variant=action-disabled").comparisonEligible,
+    selectedVariant(
+      workspaceData(
+        catalogue,
+        {
+          base: "main",
+          updateVersion: 1,
+          comparisons: true,
+          componentChanges: { baseline: fixture.before.manifest, result },
+        },
+        catalogue.removedEntries.find(
+          ({ entry }) => entry.id === "action-disabled",
+        )!.entry as Parameters<typeof workspaceData>[2],
+      ),
+    ).comparisonEligible,
     true,
   );
 });

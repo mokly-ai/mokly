@@ -14,6 +14,7 @@ export interface WorkspaceVariant {
   value: ManifestComponentVariant;
   removed: boolean;
   comparisonEligible: boolean;
+  snapshotId?: string;
   status?: EntryStatus;
 }
 
@@ -23,7 +24,7 @@ export interface WorkspaceVariantSet {
   rows: readonly WorkspaceVariant[];
 }
 
-/** Adapt current and removed variant entries to the query-based legacy workspace. */
+/** Adapt sibling variant entries to one routed component workspace. */
 export function workspaceVariants(
   catalogue: Catalogue,
   entry: ManifestComponent,
@@ -32,6 +33,7 @@ export function workspaceVariants(
   known: boolean,
   parentRemoved: boolean,
   parentStatus: EntryStatus | undefined,
+  changedIds?: readonly string[],
 ): WorkspaceVariantSet {
   const current = (catalogue.hierarchy.variantsById.get(entry.id) ?? []).filter(
     (candidate): candidate is ManifestComponentVariant =>
@@ -45,14 +47,19 @@ export function workspaceVariants(
         candidate.variantOf === entry.id,
     ) ?? []),
   ];
-  const removed = catalogue.removedEntries.flatMap(({ entry: candidate }) =>
-    candidate.kind === "component" &&
-    isManifestComponentVariant(candidate) &&
-    candidate.variantOf === entry.id
-      ? [candidate]
-      : [],
+  const removed = catalogue.removedEntries.flatMap(
+    ({ entry: candidate, snapshotId }) =>
+      candidate.kind === "component" &&
+      isManifestComponentVariant(candidate) &&
+      candidate.variantOf === entry.id
+        ? [{ value: candidate, snapshotId }]
+        : [],
   );
-  const rows = [...current, ...removed].map((value): WorkspaceVariant => {
+  const values = [
+    ...current.map((value) => ({ value, snapshotId: undefined })),
+    ...removed,
+  ];
+  const rows = values.map(({ value, snapshotId }): WorkspaceVariant => {
     const review = comparison?.variants.find((item) => item.id === value.id);
     const isRemoved =
       parentRemoved || !current.some((item) => item.id === value.id);
@@ -63,6 +70,7 @@ export function workspaceVariants(
         : review?.state === "added"
           ? "Added"
           : review?.state === "changed" ||
+              changedIds?.includes(value.id) ||
               (review?.before &&
                 review.after &&
                 JSON.stringify(review.before.props) !==
@@ -75,8 +83,53 @@ export function workspaceVariants(
       value,
       removed: isRemoved,
       comparisonEligible: shownComparisonEligible(status, "component"),
+      ...(snapshotId ? { snapshotId } : {}),
       ...(status ? { status } : {}),
     };
   });
   return { baseline, current, rows };
+}
+
+/** Build the only available row when a removed variant has no usable parent. */
+export function standaloneWorkspaceVariant(
+  entry: ManifestComponentVariant,
+  snapshot: ShellContext["componentChanges"],
+  comparison: ComponentReview | undefined,
+  known: boolean,
+  removed: boolean,
+  entryStatus: EntryStatus | undefined,
+  snapshotId?: string,
+): WorkspaceVariantSet {
+  const baseline = snapshot?.baseline.entries.flatMap((candidate) =>
+    candidate.kind === "component" &&
+    isManifestComponentVariant(candidate) &&
+    candidate.id === entry.id
+      ? [candidate]
+      : [],
+  ) ?? [entry];
+  const review = comparison?.variants.find(
+    (candidate) => candidate.id === entry.id,
+  );
+  const status = !known
+    ? undefined
+    : removed
+      ? "Removed"
+      : review?.state === "added"
+        ? "Added"
+        : review?.state === "changed"
+          ? "Changed"
+          : (entryStatus ?? "Unmodified");
+  return {
+    baseline,
+    current: removed ? [] : [entry],
+    rows: [
+      {
+        value: entry,
+        removed,
+        comparisonEligible: shownComparisonEligible(status, "component"),
+        ...(snapshotId ? { snapshotId } : {}),
+        ...(status ? { status } : {}),
+      },
+    ],
+  };
 }

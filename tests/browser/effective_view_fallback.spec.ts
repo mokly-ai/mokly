@@ -88,7 +88,7 @@ test("a light-only saved variant uses its displayed scheme for status and marks"
       componentChanges: { baseline: compilation.manifest, result },
     });
     await page.goto(
-      `${server.url}/view/components/action.html?variant=action-disabled&scheme=dark`,
+      `${server.url}/view/components/action-disabled.html?scheme=dark`,
     );
 
     await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");

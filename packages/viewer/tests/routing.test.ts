@@ -51,12 +51,11 @@ test("legacy shell routing parses valid explicit axes independently", () => {
   assert.deepEqual(proposals, [
     {
       screenId: "home",
-      variantId: undefined,
       viewport: "desktop",
       colorScheme: "dark",
     },
-    { screenId: "action", variantId: undefined, colorScheme: "dark" },
-    { screenId: "action", variantId: undefined, viewport: "mobile" },
+    { screenId: "action", colorScheme: "dark" },
+    { screenId: "action", viewport: "mobile" },
   ]);
 });
 
@@ -88,7 +87,6 @@ test("legacy shell routing carries exact history and clears it for current route
   assert.deepEqual(proposals.pop(), {
     screenId: historical.entry.id,
     snapshotId: historical.snapshotId,
-    variantId: undefined,
   });
   selection = {
     ...selection,
@@ -109,7 +107,6 @@ test("legacy shell routing carries exact history and clears it for current route
   );
   assert.deepEqual(proposals.pop(), {
     screenId: "home",
-    variantId: undefined,
   });
 });
 

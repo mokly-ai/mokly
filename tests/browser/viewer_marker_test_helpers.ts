@@ -41,7 +41,7 @@ export function variantInstance(fixture: MarkerFixture): InstanceRef {
   )!;
   if (view.usage.status !== "ready") throw new Error("Expected ready usage");
   return {
-    screenId: "pane",
+    screenId: "pane-second",
     variantId: "pane-second",
     viewport: "mobile",
     colorScheme: "light",

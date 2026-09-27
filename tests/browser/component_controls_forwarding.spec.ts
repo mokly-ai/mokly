@@ -6,6 +6,8 @@ import { componentRuntime } from "../../dist/build/component_runtime.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 
+import { chooseVariant } from "./workspace_actions.js";
+
 for (const hostname of ["127.0.0.1", "localhost"])
   test(`${hostname}: forwarded controls edit previews and restore a saved variant`, async ({
     page,
@@ -88,9 +90,7 @@ for (const hostname of ["127.0.0.1", "localhost"])
       await expect(
         frame.getByRole("button", { name: "Forwarded purchase" }),
       ).toBeVisible();
-      await page
-        .getByLabel("Saved variant", { exact: true })
-        .selectOption("action-disabled");
+      await chooseVariant(page, "Disabled");
       await expect(page.getByLabel("label", { exact: true })).toHaveValue(
         "Continue",
       );

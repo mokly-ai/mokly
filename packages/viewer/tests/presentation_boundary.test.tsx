@@ -113,8 +113,7 @@ test("SSR uses effective Light evidence for light-only screens and variants", ()
     catalogue: componentModel,
     baseUrl: "https://catalogue.example",
     defaultSelection: {
-      screenId: lightComponent.id,
-      variantId: selected.id,
+      screenId: selected.id,
       colorScheme: "dark",
       viewport: "both",
     },

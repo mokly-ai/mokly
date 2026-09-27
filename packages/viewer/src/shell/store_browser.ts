@@ -47,7 +47,6 @@ export interface ShellBrowserActions {
   onShellClick(event: MouseEvent<HTMLElement>): void;
   onShellKeyDown(event: KeyboardEvent<HTMLElement>): void;
   openFrame(href: string, target: string): void;
-  selectVariant(value: string): void;
 }
 
 /** Bind one store to standalone history without reading globals during SSR. */
@@ -114,7 +113,6 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
               requestedRoute.view.target.entry.kind,
               requestedRoute.view.target.entry.id,
               requestedRoute.fragment,
-              requestedRoute.variant,
               requestedRoute,
             ),
             providerNormalizedRoutes.current,
@@ -274,22 +272,12 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
     },
     [input.context.delivery],
   );
-  const selectVariant = useCallback(
-    (value: string) => {
-      const url = new URL(window.location.href);
-      url.searchParams.set("variant", value);
-      url.searchParams.delete("instance");
-      void navigate(url.href);
-    },
-    [navigate],
-  );
   return {
     navigateFrame: (href) => {
       const target = resolveDeliveryHref(href, input.context.delivery) ?? href;
       setTimeout(() => void navigate(target), 0);
     },
     openFrame,
-    selectVariant,
     onShellClick: (event) => {
       const target = event.target instanceof Element ? event.target : undefined;
       if (!target) return;
@@ -339,14 +327,10 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
         activated.view.target.entry.kind,
         activated.view.target.entry.id,
         activated.fragment,
-        activated.variant,
         {
           ...(activated.comparison ? { comparison: activated.comparison } : {}),
           ...(activated.instance ? { instance: activated.instance } : {}),
           ...(activated.snapshot ? { snapshot: activated.snapshot } : {}),
-          ...(activated.variantValues
-            ? { variantValues: activated.variantValues }
-            : {}),
         },
       );
       void transition(new URL(href, requested), true, {}, activated);
@@ -385,7 +369,6 @@ export function canonicalHistoricalUrl(
         route.view.target.entry.kind,
         route.view.target.entry.id,
         route.fragment,
-        route.variant,
         route,
       ),
       providerNormalized,

@@ -1,6 +1,5 @@
 /** Pure navigation-tree state used by SSR and the hydrated shell. */
 
-import { isManifestComponentVariant } from "../components/manifest_types.js";
 import { entryRoute } from "../navigation/routes.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
@@ -17,9 +16,11 @@ export function catalogueNavSections(
 ): readonly NavSectionNode[] {
   const removed: NavLeafNode[] = catalogue.removedEntries.flatMap(
     ({ entry, snapshotId }) => {
-      if (entry.kind === "component" && isManifestComponentVariant(entry))
-        return [];
-      const variantOf = entry.kind === "screen" ? entry.variantOf : undefined;
+      const variantOf =
+        (entry.kind === "screen" || entry.kind === "component") &&
+        "variantOf" in entry
+          ? entry.variantOf
+          : undefined;
       return [
         {
           kind: "leaf",

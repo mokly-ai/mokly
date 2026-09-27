@@ -3,7 +3,6 @@
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
 import { viewerCapabilityDescriptor } from "../client/host_capability_descriptor.js";
-import { isManifestComponentVariant } from "../components/manifest_types.js";
 import {
   externalShellBootstrap,
   shellBootstrap,
@@ -49,8 +48,7 @@ export function renderHydratedShellPage(
     view.kind === "target" &&
     view.target.kind === "entry" &&
     (view.target.entry.kind === "screen" ||
-      (view.target.entry.kind === "component" &&
-        !isManifestComponentVariant(view.target.entry)))
+      view.target.entry.kind === "component")
       ? workspaceData(privateCatalogue, context, view.target.entry)
       : undefined;
   const capabilityDescriptor = viewerCapabilityDescriptor(

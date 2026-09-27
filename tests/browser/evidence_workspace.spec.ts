@@ -4,7 +4,11 @@ import type { ReviewResultV4 } from "../../packages/viewer/dist/review/component
 import { controlsEntrySource } from "../helpers/component_controls_fixture.js";
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 
-import { chooseScheme, expectFrameLoaded } from "./workspace_actions.js";
+import {
+  chooseScheme,
+  chooseVariant,
+  expectFrameLoaded,
+} from "./workspace_actions.js";
 
 test("Usage and Changes completion preserve edited props and their live preview", async ({
   page,
@@ -76,9 +80,7 @@ test("Usage and Changes completion preserve edited props and their live preview"
     ).toBeVisible();
     await page.getByRole("button", { name: "Reset", exact: true }).click();
     await expect(frame.getByRole("button", { name: "Continue" })).toBeVisible();
-    await page
-      .getByLabel("Saved variant", { exact: true })
-      .selectOption("action-disabled");
+    await chooseVariant(page, "Disabled");
     await expect(
       frame.getByRole("button", { name: "Continue" }),
     ).toBeDisabled();

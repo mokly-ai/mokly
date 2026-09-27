@@ -57,7 +57,7 @@ test("invalid initial and incoming selection report a safe state without crashin
 });
 
 for (const cross of [false, true])
-  test(`${cross ? "postMessage" : "same-origin"} shell links retain variants and fragments without duplicate navigation`, async ({
+  test(`${cross ? "postMessage" : "same-origin"} shell links retain variant entry fragments without duplicate navigation`, async ({
     page,
   }) => {
     await page.evaluate(
@@ -66,13 +66,15 @@ for (const cross of [false, true])
     );
     const action = page.getByRole("link", { name: "Action", exact: true });
     await action.evaluate((link) => {
-      (link as HTMLAnchorElement).href +=
-        "?variant=action-disabled&fragment=details";
+      (link as HTMLAnchorElement).href =
+        "/view/components/action-disabled.html?fragment=details";
     });
     await action.click();
     await expect(
-      page.getByRole("combobox", { name: "Saved variant" }),
-    ).toHaveValue("action-disabled");
+      page
+        .getByRole("navigation", { name: "Saved variants" })
+        .getByRole("link", { name: "Disabled", exact: true }),
+    ).toHaveAttribute("aria-current", "page");
     await expect
       .poll(async () => {
         const element = await page
@@ -81,9 +83,6 @@ for (const cross of [false, true])
         return (await element?.contentFrame())?.url();
       })
       .toMatch(/disabled\.mobile\.html(?:\?[^#]*)?#details$/);
-    await page
-      .getByRole("combobox", { name: "Saved variant" })
-      .dispatchEvent("change");
     expect(
       await page.evaluate(() =>
         window.viewerHarness
@@ -93,7 +92,7 @@ for (const cross of [false, true])
       ),
     ).toEqual([
       {
-        screenId: "action",
+        screenId: "action-disabled",
         fragment: "details",
       },
     ]);
