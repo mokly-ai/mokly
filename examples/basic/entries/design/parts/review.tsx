@@ -224,3 +224,16 @@ export function ExcludedStyleCard() {
     </>
   );
 }
+
+/** Changed page styles that cannot apply to this screen. */
+export function ExcludedPageStyleCard() {
+  return (
+    <>
+      <p>
+        Styles on this page changed, but none of the changed styles apply to
+        this screen.
+      </p>
+      <p>No changes to this screen.</p>
+    </>
+  );
+}

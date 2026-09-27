@@ -180,6 +180,11 @@ const stylesheetEvidence = [
     "design/review/impact/stylesheets/excluded.html",
     "This stylesheet changed, but none of the changed styles apply to this screen",
   ],
+  [
+    "design-review-style-page-excluded",
+    "design/review/impact/stylesheets/page-excluded.html",
+    "Styles on this page changed, but none of the changed styles apply to this screen.",
+  ],
 ] as const;
 
 const comparedStyleScreens = [
@@ -198,7 +203,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
       assert.ok(evidence, id);
       const text = textContent(evidence);
       assert.ok(text.includes(copy), `${id}: ${text}`);
-      assert.match(text, /generated\/styles\.css/, id);
+      if (id === "design-review-style-page-excluded") {
+        assert.doesNotMatch(text, /generated\/styles\.css/, id);
+        assert.doesNotMatch(text, /Examined and excluded/, id);
+        assert.doesNotMatch(text, /Shared component changes affect/, id);
+      } else assert.match(text, /generated\/styles\.css/, id);
       const compared = comparedStyleScreens.includes(
         id as (typeof comparedStyleScreens)[number],
       );
@@ -257,6 +266,7 @@ test("stylesheet evidence states are entered and left through the filter", async
     ["design-review-style-unresolved", "All", "design-browse-screen"],
     ["design-review-style-unnamed", "All", "design-browse-screen"],
     ["design-review-style-excluded", "Changes0", "design-review-empty"],
+    ["design-review-style-page-excluded", "Changes0", "design-review-empty"],
   ] as const) {
     const { document } = await designDocument(source, "desktop");
     assert.deepEqual(

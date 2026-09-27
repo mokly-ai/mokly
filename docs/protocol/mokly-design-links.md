@@ -2,13 +2,13 @@
 
 ## Delivery Status
 
-Implemented in the 60 Browse/Changes design screens and two real example
+Implemented in the 61 Browse/Changes design screens and two real example
 screens using `MockLink` and `MockLink asChild`. Verification and delivery are tracked by the
 [implementation plan](../../plans/mokabook-design-mocklinks.md).
 
 The [component design inventory](./mokly-component-design.md) extend the
 catalogue with their own state contract and native component/control depictions.
-Those 60 Browse/Changes designs retain the canonical links below, including the
+Those 61 Browse/Changes designs retain the canonical links below, including the
 removed previous-version family added by
 [removed previews](./mokly-removed-previews.md).
 They now share native icon inspector tabs and working viewport dropdowns with
@@ -242,20 +242,23 @@ without comparison modes; factual evidence lives in Details. Their existing
 routes and All escape remain available. A future interactive mode needs its
 own contract and owning screen first.
 
-The three stylesheet-evidence states keep the same preview and inspector
+The five style-evidence states keep the same preview and inspector
 treatment and are entered through the existing filter controls:
 
-| Control/context                   | Destination                                                      |
-| --------------------------------- | ---------------------------------------------------------------- |
-| Shared impact: Changes filter     | Matched stylesheet evidence, `design-review-style-matched`       |
-| Ignored only: Changes filter      | Unresolved stylesheet evidence, `design-review-style-unresolved` |
-| Matched evidence: All filter      | Excluded stylesheet evidence, `design-review-style-excluded`     |
-| Unresolved evidence: All filter   | Canonical All Welcome, `design-browse-screen`                    |
-| Excluded evidence: Changes filter | Empty Changes, `design-review-empty`                             |
+| Control/context                        | Destination                                                      |
+| -------------------------------------- | ---------------------------------------------------------------- |
+| Shared impact: Changes filter          | Matched stylesheet evidence, `design-review-style-matched`       |
+| Ignored only: Changes filter           | Unresolved stylesheet evidence, `design-review-style-unresolved` |
+| Matched evidence: All filter           | Excluded stylesheet evidence, `design-review-style-excluded`     |
+| Unresolved evidence: All filter        | Canonical All Welcome, `design-browse-screen`                    |
+| Unnamed evidence: All filter           | Canonical All Welcome, `design-browse-screen`                    |
+| Excluded evidence: Changes filter      | Empty Changes, `design-review-empty`                             |
+| Page-excluded evidence: Changes filter | Empty Changes, `design-review-empty`                             |
 
-Matched and unresolved depict Changes holding only the screen their evidence
-keeps; excluded depicts All with no Changes. None of them offers comparison
-modes or tag transitions.
+Matched, unresolved, and unnamed depict Changes holding only the screen their
+evidence keeps and show Side by side selected; their comparison controls are
+non-link depictions. The linked-stylesheet and page-style excluded states depict
+All with no Changes and no comparison modes. None offers tag transitions.
 
 Tag interactions are restricted to the canonical Welcome states:
 

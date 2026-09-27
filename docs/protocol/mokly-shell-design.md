@@ -95,6 +95,7 @@ contract until their standalone screens are implemented.
 | `design-review-style-unresolved`      | `design/review/impact/stylesheets/unresolved.html`              | A style change that can reach anything on the screen       |
 | `design-review-style-unnamed`         | `design/review/impact/stylesheets/unnamed.html`                 | The same reach with no style name to list                  |
 | `design-review-style-excluded`        | `design/review/impact/stylesheets/excluded.html`                | Changed stylesheet examined and excluded                   |
+| `design-review-style-page-excluded`   | `design/review/impact/stylesheets/page-excluded.html`           | Changed page styles examined and excluded                  |
 | `design-review-preparing`             | `design/review/availability/preparing.html`                     | Changes selected while the comparison is prepared          |
 | `design-review-unavailable`           | `design/review/availability/unavailable.html`                   | Changes selected after the comparison could not be made    |
 | `design-page-view`                    | `design/browse/pages/view.html`                                 | Complete document in its declared collection               |
@@ -162,14 +163,15 @@ Additional owning groups keep each new page at no more than five screens:
   shown. `selected.html` is the group's canonical screen. Their behavior contract is
   [screen variants](./mokly-screen-variants.md).
 - `design/review/impact/stylesheets/matched.html`, `unresolved.html`,
-  `unnamed.html`, and `excluded.html` specify rule-aware stylesheet evidence
-  beneath the impact states, so the impact page itself keeps its three screens.
-  Matched, unresolved, and unnamed stay in Changes and open the loaded
-  side-by-side comparison with the "Styles this screen uses changed" stage
-  heading; `unnamed.html` is the same reach with no style name, so its lead
-  sentence ends with a full stop and no list. Excluded is viewed from All, stays
-  out, and shows the plain current preview with no comparison band, no stage
-  heading, and the terminal status line. Their evidence contract is
+  `unnamed.html`, `excluded.html`, and `page-excluded.html` specify rule-aware
+  style evidence beneath the impact states, so the impact page itself keeps its
+  three screens. Matched, unresolved, and unnamed stay in Changes and open the
+  loaded side-by-side comparison with the "Styles this screen uses changed"
+  stage heading; `unnamed.html` is the same reach with no style name, so its
+  lead sentence ends with a full stop and no list. Both excluded states are
+  viewed from All, stay out, and show the plain current preview with no
+  comparison band or stage heading and with the terminal status line. The page
+  state names no examined stylesheet. Their evidence contract is
   [CSS evidence in the shell](./mokly-css-evidence-shell.md).
 - `design/review/availability/preparing.html` and `unavailable.html` specify the
   two Changes states that carry no comparison data yet, keeping the impact group

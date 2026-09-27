@@ -425,27 +425,32 @@ stylesheet-evidence design group, so the shell milestone implements an
 approved design. The group currently renders four screens; this is the fifth
 and last the page may hold.
 
-- [ ] Add `ExcludedPageStyleCard` to
+- [x] Add `ExcludedPageStyleCard` to
       `examples/basic/entries/design/parts/review.tsx` with the lead sentence
       "Styles on this page changed, but none of the changed styles apply to
       this screen." and the terminal line "No changes to this screen.", with
       no "Examined and excluded" list.
-- [ ] Add the `design-review-style-page-excluded` screen to
+- [x] Add the `design-review-style-page-excluded` screen to
       `examples/basic/entries/design/review_style_screens.tsx`, rendered
       through the same `Shell`, `NavTree` and `PreviewWorkspace` composition
       as the excluded-stylesheet screen, with mobile and desktop variants,
       slug `page-excluded`, and a description that says the page's own styles
       changed, nothing applies, the screen stays out of Changes and offers no
       comparison.
-- [ ] Add the destination to `examples/basic/entries/design/parts/destinations.ts`
+- [x] Add the destination to `examples/basic/entries/design/parts/destinations.ts`
       and the inventory row
       `design/review/impact/stylesheets/page-excluded.html` to the
       [shell design inventory](../docs/protocol/mokly-shell-design.md).
-- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+- [x] Discovered: register the new route in the authored design navigation,
+      update the stylesheet-evidence group, design-link contract and example
+      README inventory, and extend the design tests for its route, inventory
+      counts, exact evidence omissions, filter destination, and
+      comparison-free presentation.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
       and visually smoke-test the new page and its siblings through
       `npm run dev`; commit only authored sources.
-- [ ] Run the relevant design tests and `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] Run the relevant design tests and `cargo xtask check`.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report

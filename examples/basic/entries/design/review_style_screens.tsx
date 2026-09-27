@@ -10,6 +10,7 @@ import { DetailsPanel } from "./parts/details.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
 import { NavTree } from "./parts/nav.js";
 import {
+  ExcludedPageStyleCard,
   ExcludedStyleCard,
   MatchedStyleCard,
   StyleReviewNav,
@@ -94,10 +95,18 @@ function UnnamedStyles({ viewport }: { viewport: ArtboardViewport }) {
   );
 }
 
-function ExcludedStyles({ viewport }: { viewport: ArtboardViewport }) {
+function ExcludedStyles({
+  design,
+  evidence,
+  viewport,
+}: {
+  design: DesignDestination;
+  evidence: ReactNode;
+  viewport: ArtboardViewport;
+}) {
   return (
     <Shell
-      design={DESTINATIONS.styleExcluded}
+      design={design}
       viewport={viewport}
       nav={<NavTree activeLabel="Welcome" changedCount={0} />}
     >
@@ -105,11 +114,7 @@ function ExcludedStyles({ viewport }: { viewport: ArtboardViewport }) {
       <PreviewWorkspace
         viewport={viewport}
         inspector={
-          <DetailsPanel
-            subject="welcome"
-            comparisonEvidence={<ExcludedStyleCard />}
-            open
-          />
+          <DetailsPanel subject="welcome" comparisonEvidence={evidence} open />
         }
         render={(previewViewport) => (
           <WelcomeShot viewport={previewViewport} comparison={false} />
@@ -157,10 +162,44 @@ export const reviewStyleScreens = [
     colorSchemes: ["light"],
     description:
       "A linked stylesheet changed but none of its changed styles apply here, so the screen stays out of Changes, offers no comparison, and Details lists the stylesheet as examined and excluded.",
-    desktop: <ExcludedStyles viewport="desktop" />,
+    desktop: (
+      <ExcludedStyles
+        design={DESTINATIONS.styleExcluded}
+        evidence={<ExcludedStyleCard />}
+        viewport="desktop"
+      />
+    ),
     id: "design-review-style-excluded",
-    mobile: <ExcludedStyles viewport="mobile" />,
+    mobile: (
+      <ExcludedStyles
+        design={DESTINATIONS.styleExcluded}
+        evidence={<ExcludedStyleCard />}
+        viewport="mobile"
+      />
+    ),
     slug: "excluded",
     title: "Excluded styles",
+  }),
+  screen({
+    colorSchemes: ["light"],
+    description:
+      "The page's own styles changed but none of the changed styles apply here, so the screen stays out of Changes, offers no comparison, and Details ends with its no-changes status without a style list.",
+    desktop: (
+      <ExcludedStyles
+        design={DESTINATIONS.stylePageExcluded}
+        evidence={<ExcludedPageStyleCard />}
+        viewport="desktop"
+      />
+    ),
+    id: "design-review-style-page-excluded",
+    mobile: (
+      <ExcludedStyles
+        design={DESTINATIONS.stylePageExcluded}
+        evidence={<ExcludedPageStyleCard />}
+        viewport="mobile"
+      />
+    ),
+    slug: "page-excluded",
+    title: "Excluded page styles",
   }),
 ];

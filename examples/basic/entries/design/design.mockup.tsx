@@ -128,7 +128,7 @@ const designMockups = defineRoot({
             collection({
               children: reviewStyleScreens,
               description:
-                "Rule-aware stylesheet evidence: styles that apply, styles that could apply anywhere with and without names to list, and a stylesheet examined and excluded.",
+                "Rule-aware style evidence: styles that apply, styles that could apply anywhere with and without names to list, and linked or page styles examined and excluded.",
               id: "design-review-stylesheets",
               segment: "stylesheets",
               title: "Stylesheet evidence",

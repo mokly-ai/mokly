@@ -60,6 +60,7 @@ export const DESTINATIONS = {
   styleUnresolved: "design-review-style-unresolved",
   styleUnnamed: "design-review-style-unnamed",
   styleExcluded: "design-review-style-excluded",
+  stylePageExcluded: "design-review-style-page-excluded",
   preparing: "design-review-preparing",
   unavailable: "design-review-unavailable",
 } as const;

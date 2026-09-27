@@ -29,7 +29,7 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 92 design screens now use 16 registered shared components, including
+Mokly's 93 design screens now use 16 registered shared components, including
 the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
 Inspector and Preview galleries with 66 saved variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
@@ -112,7 +112,7 @@ render plain React DOM need none of this and can keep a plain
 `renderToStaticMarkup` adapter.
 
 The `Design` navigation group is the owning design catalogue for Mokly's
-Browse and Changes views. Its sixty Browse, page, publication, appearance and Changes
+Browse and Changes views. Its sixty-one Browse, page, publication, appearance and Changes
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
 stylesheet evidence, the preparing and unavailable comparison states, and the
 previous-version states of removed documents and screens. Thirty-two component
@@ -166,7 +166,7 @@ galleries; `inspector` shows both closed-panel layouts.
 Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
-Seventy-one design screens use `colorSchemes: ["light"]` and draw only the light
+Seventy-two design screens use `colorSchemes: ["light"]` and draw only the light
 Mokly shell. Twenty-one screens instead inherit the catalogue's light/dark
 settings: thirteen Appearance screens, four Changes designs, two product
 screens, and two retained Welcome appearance variants. `mokly build` writes a
@@ -187,7 +187,7 @@ A shared implementation edit appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. This is tested against fully registered baseline snapshots.
 
-The shared inspector/workspace sheets cover all 92 design screens and standalone
+The shared inspector/workspace sheets cover all 93 design screens and standalone
 library hosts. Other mixed component-design sheets remain scoped to the 32
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. `review.sharedImpact` is fallback
@@ -226,8 +226,9 @@ Current preview. Dependency evidence remains available in Details, while
 unchanged output and paired ignored-only edits do not fill the review list.
 The nested `design/review/impact/stylesheets/` group adds the rule-aware
 stylesheet states: a changed stylesheet whose changed styles apply to the
-screen, one whose change can apply anywhere, and one examined and excluded so
-the screen stays out of Changes. Their contract is
+screen, one whose change can apply anywhere, one examined and excluded, and a
+page-style change that applies nowhere on the screen. Both excluded states keep
+the screen out of Changes. Their contract is
 [CSS change attribution](../../docs/protocol/mokly-css-attribution.md).
 
 From the repository root:
