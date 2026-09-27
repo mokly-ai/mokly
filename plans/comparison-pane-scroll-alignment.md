@@ -303,7 +303,7 @@ without changing removed-preview behaviour.
 - [x] Update `packages/viewer/src/previews/README.md`; run the preview unit
       tests and browser specs, then `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the
       findings without changing the implementation.
@@ -433,3 +433,25 @@ side, and prove alignment in the browser.
   comparisons before Milestone 4 restructures them) and 5 (the long overlay's
   rationale implies layout alignment beyond scroll alignment, which rests on a
   fixed introduction height) were reported for a decision rather than applied.
+
+### Milestone 3
+
+- Base commit: `91ce4c2`; the shared snapshot pipeline landed as `7ad4e44`
+  and its review fix as `abbeb20` on `calummoore/kelowna-v2`.
+- Checks: `npm run build`, `npm run typecheck`, `npm run lint` and
+  `npm run format:check` passed; the focused preview unit suite passed 23/23
+  and the five removed-preview browser specs passed 30/30. The complete
+  `cargo xtask check` passed before review (unit 2427/2427, browser 787/787 in
+  123 files) and after the review fix (unit 2428/2428, browser 787/787 in 123
+  files), with zero failures, skips or cancellations. The dependency audit,
+  Rust format/clippy/tests and file-length audit, 410-file example build/check,
+  and package verification/smoke all passed in both full runs.
+- Finding 1 (a loader whose owner aborted in the microtask after parsing but
+  before settlement could resolve and cache accepted work) was a Milestone 3
+  cancellation defect, so it was fixed in `abbeb20`. The new regression failed
+  before the fix, then proved the cancelled load rejects and the next load
+  fetches again.
+- No new findings remain open from Milestone 3. Earlier open Milestone 1
+  findings 2, 3, 4, 5 (the Milestone 4 portion), 7, 8 and 10, and Milestone 2
+  findings 2, 3 and 5 remain recorded for the user's decision; this milestone
+  resolved Milestone 1 finding 5's advertised-fetch-set portion.
