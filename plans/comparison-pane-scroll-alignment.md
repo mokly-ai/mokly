@@ -723,7 +723,7 @@ and the "Scroll together" toggle on and off, before the runtime changes.
       `npm run dev` in both schemes and save screenshots under `.context/`.
 - [x] Run the design tests, then `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the
       findings without changing the implementation.
@@ -1068,3 +1068,81 @@ anchors to regions first, and prove both in the browser.
      each result and names the missing proofs.
 - No Milestone 5 findings remain open. Earlier open findings recorded under
   Milestones 2, 3A and 4 are unchanged by this documentation milestone.
+
+### Milestone 6
+
+- Base commit: `c7d88a8`; the mockups and the heading fix landed as `d3e3c77`
+  on `calummoore/kelowna-v2`.
+- Delivered: `design-changes-overlay-panel` (Welcome built as an app shell in
+  Overlay, its top bar and navigation in place while both versions' panels sit
+  part-way down at one position with the panel's own scrollbar and no page
+  scrollbar) and `design-changes-side-by-side-apart` (Side by side with Scroll
+  together off, each version at its own place with its own scrollbar), both in
+  both viewports and schemes and reached from the Diff controls group, which
+  now holds five screens. Every diff-mode band draws the switch through the
+  shared comparison toolbar, and Current draws none. Rows have fixed heights,
+  and each drawn region declares its visible height, content height and offset
+  once in `design-review-scroll.css`, so drawn offsets and thumbs agree without
+  depending on text wrapping. Every pre-existing generated output differs from
+  `c7d88a8` only by the switch markup or the new stylesheet link.
+- Defect found while implementing: the stage heading rule also styled the
+  section headings inside every depicted Welcome with the interface's
+  secondary ink, so they turned tan in Dark, Milestone 2's long overlay
+  included. The regression "depicted screens keep their own ink inside a
+  comparison" failed in all four viewport and scheme cases (Dark received
+  `rgb(178, 171, 160)` instead of `rgb(238, 241, 239)`) before the rule was
+  scoped to the stage's own heading.
+- Checks: `npm run build`, `npm run typecheck`, `npm run lint`,
+  `npm run format:check`, `npm run example:build` (426 files) and
+  `npm run example:check` (valid and untracked) passed; the design unit tests
+  passed 155/155; the design and component-design browser specs passed 113/114
+  until the tracked-stylesheet guard was raised from 29 to 30 for the new
+  authored sheet, then that spec passed 2/2.
+- `cargo xtask check`, first run: the repository, package and unit suites
+  passed (unit 2465/2465) and the browser suite passed 835/836. The failure was
+  `preview_design_links.spec.ts` "desktop: published design states and styled
+  buttons use the same navigation": after choosing Dark on the published
+  Welcome it expected the Details frame at `…details.desktop.dark#details` and
+  received `…details.desktop#details`. An isolated run failed the mobile case
+  the same way once. The trace shows the Appearance select was chosen as the
+  shell hydrated and no dark document was ever requested, so the choice was
+  lost; the test waits only for the frame's `ready` state, which the old light
+  frame already satisfies. Milestone 6 changes no runtime code, and the
+  published `screens/` outputs and their manifest entries are byte-identical
+  to `c7d88a8`. On a `c7d88a8` worktree that test passed all 24 of its runs
+  (42 test runs in all: filtered, full file, CPU-throttled and with the shell
+  script delayed); on this tree it failed 2 of its first 4 runs, then passed
+  16 consecutive runs, including the second full check.
+- `cargo xtask check`, second run: passed completely (audit, formatting, lint,
+  Rust format, clippy, tests and file-length audit, typecheck, example check,
+  package check and smoke, unit 2465/2465, browser 836/836) with zero
+  failures, skips or cancellations.
+- Smoke: `npm run dev` served both new screens and the changed comparison,
+  appearance, component and library pages at 1440px and 390px in both
+  schemes, before and again after review on the final tree; all 38 served
+  views showed the expected switch state and scheme, no page error occurred,
+  and the only console messages were the pre-existing blocked `inspector.js`
+  injection inside sandboxed preview frames. Screenshots are under
+  `.context/m6/` and `.context/m6/served/`.
+- Review of the complete diff against `origin/main` (fresh reviewer, after the
+  push of `d3e3c77`) found four Low findings and none showing Milestone 6's
+  own work broken, so all were reported for a decision rather than applied:
+  1. The switch's colours are specified with mockup token names
+     (`--mbk-sage-deep`, `--mbk-accent-contrast`) that the runtime calls
+     `--mbk-accent-deep` and `--_mokly-private-on-accent-deep`, and the
+     contract does not say that the band wraps the switch to a second row when
+     a narrow desktop main region lacks room.
+  2. Nothing explains that the scrolled-apart artboard's "off" choice does not
+     carry into the other artboards its mode links open, while the product
+     remembers it.
+  3. Milestone 2 finding 5 now also applies to the panel artboard's
+     rationale, whose alignment rests on fixed introduction heights.
+  4. `mokly-comparison-scrolling.md` (302 lines) and `mokly-shell-design.md`
+     (663 lines, 40 added here) exceed the ~250-line guideline.
+- Also open from verification: the intermittent `preview_design_links.spec.ts`
+  failure above (Medium), and that the depicted switch draws its state only
+  with backgrounds, so a runtime copy would lose it in forced-colors mode
+  (Low). `CompareToolbar` in `parts/compare.tsx` has no callers, as on
+  `origin/main`, though the library inventory still names it.
+- Earlier open findings recorded under Milestones 2, 3A and 4 are unchanged,
+  except that Milestone 2 finding 5 now covers two artboards.
