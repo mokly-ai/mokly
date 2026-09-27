@@ -2,8 +2,6 @@
 // two-column body with prose on the left and metadata rows on the right —
 // populated from the manifest entry for the selected route.
 
-import type { ColorScheme } from "../data/axes.js";
-import { entryRoute, viewRoute } from "../navigation/routes.js";
 import type { ManifestScreen } from "../registry/types.js";
 
 import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
@@ -21,19 +19,9 @@ import { useOptionalShellStore } from "./store_context.js";
 import type { RouteTarget } from "./target.js";
 import type { ChangedView } from "./view_marks.js";
 
-/** Generated fragment routes for a screen, dark renders after the light ones. */
-function generatedPaths(screen: ManifestScreen): string[] {
-  return (["mobile", "desktop"] as const).flatMap((viewport) =>
-    screen.colorSchemes.map((scheme) =>
-      viewRoute("screen", screen.id, viewport, scheme),
-    ),
-  );
-}
-
 /** The schemes a screen renders in, named for the reader. */
 function schemeNames(screen: ManifestScreen): string {
-  const schemes: readonly ColorScheme[] = screen.colorSchemes;
-  return schemes.join(", ");
+  return screen.colorSchemes.join(", ");
 }
 
 export function EntryDetailsBody(props: {
@@ -59,16 +47,6 @@ export function EntryDetailsBody(props: {
         <MetaRow label="Source">
           <code className="mbk-code">{entry.sourcePath}</code>
         </MetaRow>
-        {entry.kind === "screen" ? (
-          <MetaRow label="Generated">
-            <PathChips values={generatedPaths(entry)} />
-          </MetaRow>
-        ) : null}
-        {entry.kind === "page" ? (
-          <MetaRow label="Generated">
-            <PathChips values={[entryRoute("page", entry.id)]} />
-          </MetaRow>
-        ) : null}
         {entry.kind === "screen" && props.catalogue.hasDarkFragments ? (
           <MetaRow label="Schemes">{schemeNames(entry)}</MetaRow>
         ) : null}

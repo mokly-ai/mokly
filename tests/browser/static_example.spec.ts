@@ -54,7 +54,9 @@ test("the owning example stays usable when HEAD is the unchanged baseline", asyn
   });
   for (const width of [1280, 390]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto(`${server.url}/id/example-welcome/?fragment=welcome`);
+    await page.goto(
+      `${server.url}/view/screens/example-welcome.html?fragment=welcome`,
+    );
     await expect(page).toHaveURL(
       `${server.url}/view/screens/example-welcome.html?fragment=welcome`,
     );

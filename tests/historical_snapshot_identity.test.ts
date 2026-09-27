@@ -118,7 +118,7 @@ test("reader rejects malformed and duplicate published identities", () => {
   assert.throws(() => readCatalogue(duplicated), /duplicate/i);
 });
 
-test("exact selection resolves current and historical records by stable id", () => {
+test("id-only selection prefers current while snapshots select exact history", () => {
   const fixture = readCatalogue(
     JSON.parse(requireFixture("../docs/protocol/fixtures/catalogue-v3.json")),
   );

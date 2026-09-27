@@ -144,9 +144,7 @@ function ownedCatalogueUrl(
     (url.origin === baseUrl.origin ||
       url.origin === ownerDocument.location.origin) &&
     url.hash === "" &&
-    (url.pathname === "/" ||
-      url.pathname.startsWith("/view/") ||
-      url.pathname.startsWith("/id/"))
+    (url.pathname === "/" || url.pathname.startsWith("/view/"))
   );
 }
 

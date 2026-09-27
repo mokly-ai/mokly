@@ -13,7 +13,6 @@ import { DocumentPane, Stage } from "./stage.js";
 interface RemovedDocument {
   description: string;
   design: DesignDestination;
-  generated: string;
   id: string;
   title: string;
 }
@@ -26,28 +25,24 @@ export const REMOVED_DOCUMENTS = {
   handbook: {
     description: "A handbook to accompany the example screens.",
     design: DESTINATIONS.pageRemoved,
-    generated: "handbook.html",
     id: "example-handbook",
     title: "Getting started",
   },
   fieldGuide: {
     description: "The long companion to the handbook, read section by section.",
     design: DESTINATIONS.pageRemovedLong,
-    generated: "field-guide.html",
     id: "example-field-guide",
     title: "Field guide",
   },
   printingTips: {
     description: "Notes on printing the example catalogue.",
     design: DESTINATIONS.pageRemovedLoading,
-    generated: "printing-tips.html",
     id: "example-printing-tips",
     title: "Printing tips",
   },
   styleNotes: {
     description: "House style for the example writing.",
     design: DESTINATIONS.pageRemovedUnavailable,
-    generated: "style-notes.html",
     id: "example-style-notes",
     title: "Style notes",
   },
@@ -75,9 +70,6 @@ function RemovedDetails({ entry }: { entry: RemovedDocument }) {
         <div className="mbk-meta">
           <MetaRow name="source" label="Source">
             Previous version
-          </MetaRow>
-          <MetaRow name="generated" label="Generated">
-            <code className="mbk-code">{entry.generated}</code>
           </MetaRow>
           <MetaRow name="tags" label="Tags">
             documents

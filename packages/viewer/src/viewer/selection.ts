@@ -4,7 +4,6 @@ import {
 } from "../catalogue/entry_selection.js";
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
-import { entryRoute } from "../navigation/routes.js";
 import { parseSearchQuery, rowMatchesQuery } from "../shell/search_query.js";
 
 import type { ViewerSelection } from "./types.js";
@@ -129,7 +128,6 @@ export function revealSelection(
     { freeText: value.search, tags: value.tags },
     {
       id: entry.id,
-      route: entryRoute(entry.kind, entry.id),
       tags: entry.tags,
       text: entry.title,
     },

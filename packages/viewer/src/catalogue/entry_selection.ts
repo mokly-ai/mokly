@@ -61,12 +61,11 @@ export function resolveCatalogueSelection(
   );
   if (historical.length !== 1) return undefined;
   const [record] = historical;
-  return record
-    ? {
-        entry: record.entry,
-        ...(record.snapshotId ? { snapshotId: record.snapshotId } : {}),
-      }
-    : undefined;
+  if (!record) return undefined;
+  return {
+    entry: record.entry,
+    ...(record.snapshotId ? { snapshotId: record.snapshotId } : {}),
+  };
 }
 
 /** Resolve one kind-and-id address, inferring its published snapshot when unique. */
@@ -75,29 +74,8 @@ export function resolveCatalogueRoute(
   identity: { id: string; kind: CatalogueRecord["kind"] },
   snapshotId?: string,
 ): ResolvedCatalogueEntry | undefined {
-  if (snapshotId !== undefined) {
-    const historical = model.removedEntries.find(
-      (record) =>
-        record.entry.id === identity.id &&
-        record.entry.kind === identity.kind &&
-        record.snapshotId === snapshotId,
-    );
-    return historical ? { entry: historical.entry, snapshotId } : undefined;
-  }
-  const current = currentCatalogueEntries(model).find(
-    (entry) => entry.id === identity.id && entry.kind === identity.kind,
-  );
-  if (current) return { entry: current };
-  const historical = model.removedEntries.filter(
-    (record) =>
-      record.entry.id === identity.id && record.entry.kind === identity.kind,
-  );
-  if (historical.length !== 1) return undefined;
-  const [record] = historical;
-  if (!record) return undefined;
-  if (record.snapshotId)
-    return { entry: record.entry, snapshotId: record.snapshotId };
-  return { entry: record.entry };
+  const selected = resolveCatalogueSelection(model, identity.id, snapshotId);
+  return selected?.entry.kind === identity.kind ? selected : undefined;
 }
 
 /** Resolve the public record corresponding to an already exact routed entry. */
@@ -105,18 +83,6 @@ export function resolveCatalogueRecord(
   model: CatalogueReadModel,
   entry: { id: string; kind: string },
 ): ResolvedCatalogueEntry | undefined {
-  const current = currentCatalogueEntries(model).find(
-    (candidate) => candidate.id === entry.id && candidate.kind === entry.kind,
-  );
-  if (current) return { entry: current };
-  const historical = model.removedEntries.find(
-    (record) =>
-      record.entry.id === entry.id && record.entry.kind === entry.kind,
-  );
-  return historical
-    ? {
-        entry: historical.entry,
-        ...(historical.snapshotId ? { snapshotId: historical.snapshotId } : {}),
-      }
-    : undefined;
+  const selected = resolveCatalogueSelection(model, entry.id);
+  return selected?.entry.kind === entry.kind ? selected : undefined;
 }

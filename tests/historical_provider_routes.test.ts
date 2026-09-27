@@ -4,7 +4,6 @@ import test from "node:test";
 
 import { readCatalogue } from "../packages/viewer/dist/catalogue/reader.js";
 import { viewHref } from "../packages/viewer/dist/data.js";
-import type { StaticDelivery } from "../packages/viewer/dist/navigation/delivery.js";
 import { routeFromUrl } from "../packages/viewer/dist/shell/routes.js";
 import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
 
@@ -16,37 +15,20 @@ const fixture = readCatalogue(
     ),
   ),
 );
-const current = fixture.pages[0]!;
-const source = fixture.removedEntries.find(
+const historical = fixture.removedEntries.find(
   ({ entry }) => entry.kind === "page",
 )!;
-const snapshotId = "f".repeat(64);
-const historical = {
-  ...source,
-  entry: {
-    ...source.entry,
-    id: current.id,
-    title: "Archived guide",
-  },
-  snapshotId,
-};
-const catalogue = viewerCatalogue({
-  ...fixture,
-  removedEntries: [...fixture.removedEntries, historical],
-});
-const delivery: StaticDelivery = {
-  schemaVersion: 2,
-  deploymentId: fixture.deploymentId,
-  canonicalPath: viewHref(current.kind, current.id),
-  comparisonUrl: null,
-  idRoutes: { [current.id]: viewHref(current.kind, current.id) },
-};
+const snapshotId = historical.snapshotId!;
+const catalogue = viewerCatalogue(fixture);
 
 test("provider-normalized history resolves the exact retained id", () => {
+  const href = viewHref(historical.entry.kind, historical.entry.id).replace(
+    /\.html$/,
+    "",
+  );
   const resolved = routeFromUrl(
     catalogue,
-    new URL(`https://catalogue.test/view/pages/guide?snapshot=${snapshotId}`),
-    delivery,
+    new URL(`https://catalogue.test${href}?snapshot=${snapshotId}`),
   );
   assert.equal(resolved.view.kind, "target");
   assert.equal(
@@ -57,26 +39,25 @@ test("provider-normalized history resolves the exact retained id", () => {
     resolved.view.kind === "target"
       ? resolved.view.target.entry.title
       : undefined,
-    "Archived guide",
+    historical.entry.title,
   );
   assert.equal(resolved.snapshot, snapshotId);
 
   const inferred = routeFromUrl(
     catalogue,
-    new URL("https://catalogue.test/view/pages/guide"),
-    delivery,
+    new URL(`https://catalogue.test${href}`),
   );
   assert.equal(inferred.view.kind, "target");
-  assert.equal(inferred.snapshot, undefined);
+  assert.equal(inferred.snapshot, snapshotId);
 });
 
 test("provider normalization does not loosen historical identity", () => {
   for (const url of [
-    `https://catalogue.test/view/pages/guide?snapshot=${"e".repeat(64)}`,
+    `https://catalogue.test/view/pages/${historical.entry.id}?snapshot=${"e".repeat(64)}`,
     `https://catalogue.test/view/pages/missing?snapshot=${snapshotId}`,
   ])
     assert.equal(
-      routeFromUrl(catalogue, new URL(url), delivery).view.kind,
+      routeFromUrl(catalogue, new URL(url)).view.kind,
       "missing",
       url,
     );

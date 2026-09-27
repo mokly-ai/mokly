@@ -49,7 +49,7 @@ export function ChangedViewsRow(props: { views: readonly ChangedView[] }) {
   );
 }
 
-/** Generated, source, or dependency paths rendered as monospace chips. */
+/** Source or dependency paths rendered as monospace chips. */
 export function PathChips(props: { values: readonly string[] }) {
   return (
     <span className="mbk-chips">

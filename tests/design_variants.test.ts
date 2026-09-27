@@ -101,7 +101,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
       assert.equal(byClass(document, "mbk-cmp-toolbar").length, 0, id);
       const details = byClass(document, "mbk-details-body")[0];
       assert.ok(details, id);
-      assert.match(textContent(details), /No current screen/, id);
+      assert.match(textContent(details), /Previous version/, id);
+      assert.doesNotMatch(textContent(details), /Generated/, id);
       assert.doesNotMatch(textContent(details), /screens\/welcome\.html/, id);
     }
   });

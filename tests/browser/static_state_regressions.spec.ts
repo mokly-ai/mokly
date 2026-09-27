@@ -75,11 +75,10 @@ test("a static direct URL restores its variant and fragment after refresh", asyn
   await expectStaticComponentQuery(page, "action-disabled");
 });
 
-test("a static alias retains its initial fragment through normalization and refresh", async ({
+test("a static component route retains its initial fragment through refresh", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/id/action/?fragment=${fragment}`);
-  await expect(page).toHaveURL(
+  await page.goto(
     `${server.url}/view/components/action.html?fragment=${fragment}`,
   );
   await expectStaticComponentQuery(page, "action-default");

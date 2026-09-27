@@ -208,10 +208,22 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
     navigateFrame(href, navigation) {
       const environment = environmentRef.current;
       if (!environment) return;
-      requestRoute(
-        routeFromUrl(input.catalogue, new URL(href, environment.baseUrl)),
-        navigation,
+      const route = routeFromUrl(
+        input.catalogue,
+        new URL(href, environment.baseUrl),
       );
+      if (route.view.kind === "missing") {
+        const next = withHostRoute(stateRef.current, route, input.sections);
+        stateRef.current = next;
+        input.setState(next);
+        environment.onNavigation();
+        environment.events().onError?.({
+          code: "selection",
+          message: "The requested catalogue selection is unavailable.",
+        });
+        return;
+      }
+      requestRoute(route, navigation);
     },
     onShellClick(event) {
       hostClick(

@@ -1,4 +1,3 @@
-import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import {
@@ -41,9 +40,7 @@ export function catalogueRouteEntry(
   id: string,
   kind?: ManifestEntry["kind"],
 ): CatalogueManifestEntry | undefined {
-  const entry =
-    catalogue.byId.get(id) ??
-    catalogue.removedEntries.find(({ entry }) => entry.id === id)?.entry;
+  const entry = catalogue.byId.get(id);
   return entry && (kind === undefined || entry.kind === kind)
     ? entry
     : undefined;
@@ -55,31 +52,6 @@ export function catalogueSelectionEntry(
   entryId: string,
   snapshotId?: string,
 ): CatalogueManifestEntry | undefined {
-  if (catalogue.publicModel) {
-    const selected = resolveCatalogueSelection(
-      catalogue.publicModel,
-      entryId,
-      snapshotId,
-    );
-    if (!selected) return;
-    if (selected.snapshotId !== undefined) {
-      const historical = catalogue.removedEntries.filter(
-        (record) =>
-          record.entry.id === selected.entry.id &&
-          record.entry.kind === selected.entry.kind,
-      );
-      return (
-        historical.find(
-          (record) => record.snapshotId === selected.snapshotId,
-        ) ?? historical.find((record) => record.snapshotId === undefined)
-      )?.entry;
-    }
-    return catalogueRouteEntry(
-      catalogue,
-      selected.entry.id,
-      selected.entry.kind,
-    );
-  }
   if (snapshotId !== undefined)
     return catalogue.removedEntries.find(
       (record) =>

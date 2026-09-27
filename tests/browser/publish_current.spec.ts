@@ -23,7 +23,7 @@ for (const width of [390, 1440]) {
       if (response.status() >= 400) failures.push(response.url());
     });
     await page.setViewportSize({ width, height: 1000 });
-    await page.goto(`${site.url}/id/home/`);
+    await page.goto(`${site.url}/view/screens/home.html`);
     await expect(page).toHaveURL(`${site.url}/view/screens/home.html`);
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
     await expect(

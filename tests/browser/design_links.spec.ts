@@ -1,5 +1,3 @@
-import { setTimeout } from "node:timers/promises";
-
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { chooseViewport } from "./workspace_actions.js";
@@ -69,10 +67,6 @@ for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport} comparison, tags, and flow links use canonical designs`, async ({
     page,
   }) => {
-    await page.route("**/id/design-browse-screen", async (route) => {
-      await setTimeout(200);
-      await route.continue();
-    });
     await page.setViewportSize({ width: 1600, height: 1000 });
     await page.goto("/view/screens/design-browse-screen.html");
     await chooseViewport(page, viewport);

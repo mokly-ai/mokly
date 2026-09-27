@@ -9,10 +9,6 @@ import type {
 } from "react";
 
 import type { FrameNavigation } from "../client/frame_adapter.js";
-import {
-  resolveDeliveryHref,
-  validFragmentQuery,
-} from "../navigation/delivery.js";
 import { standaloneAppearanceHost } from "../standalone/appearance_host.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -70,8 +66,7 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       activated?: ReturnType<typeof routeFromUrl>,
     ) => {
       const win = window;
-      const route =
-        activated ?? routeFromUrl(input.catalogue, url, input.context.delivery);
+      const route = activated ?? routeFromUrl(input.catalogue, url);
       if (push) {
         persistScroll(win, captureScrolls(document));
         win.history.pushState({ scrolls: {} }, "", url);
@@ -100,11 +95,7 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       const win = window;
       const sameDocument =
         installedDocumentKey.current === routeDocumentKey(requested);
-      const requestedRoute = routeFromUrl(
-        input.catalogue,
-        requested,
-        input.context.delivery,
-      );
+      const requestedRoute = routeFromUrl(input.catalogue, requested);
       let canonical = requested;
       if (requestedRoute.view.kind === "target")
         canonical = new URL(
@@ -173,23 +164,8 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       win.location.pathname,
       input.context.delivery?.canonicalPath,
     );
-    if (
-      input.context.delivery &&
-      win.location.pathname.startsWith("/id/") &&
-      !new URLSearchParams(win.location.search).has("snapshot")
-    ) {
-      win.history.replaceState(
-        win.history.state,
-        "",
-        `${input.context.delivery.canonicalPath}${validFragmentQuery(win.location.search)}`,
-      );
-    }
     let initialUrl = new URL(win.location.href);
-    let initialRoute = routeFromUrl(
-      input.catalogue,
-      initialUrl,
-      input.context.delivery,
-    );
+    let initialRoute = routeFromUrl(input.catalogue, initialUrl);
     const canonicalInitial = canonicalHistoricalUrl(
       initialUrl,
       initialRoute,
@@ -198,11 +174,7 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
     if (canonicalInitial.href !== initialUrl.href) {
       win.history.replaceState(win.history.state, "", canonicalInitial);
       initialUrl = canonicalInitial;
-      initialRoute = routeFromUrl(
-        input.catalogue,
-        initialUrl,
-        input.context.delivery,
-      );
+      initialRoute = routeFromUrl(input.catalogue, initialUrl);
     }
     installedDocumentKey.current = routeDocumentKey(initialUrl);
     persistScroll(win, captureScrolls(document));
@@ -265,17 +237,12 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
     }
   }, [input.catalogue, input.interactive, input.state.route]);
 
-  const openFrame = useCallback(
-    (href: string, target: string) => {
-      const resolved = resolveDeliveryHref(href, input.context.delivery);
-      if (resolved) window.open(resolved, target, "noopener");
-    },
-    [input.context.delivery],
-  );
+  const openFrame = useCallback((href: string, target: string) => {
+    window.open(href, target, "noopener");
+  }, []);
   return {
     navigateFrame: (href) => {
-      const target = resolveDeliveryHref(href, input.context.delivery) ?? href;
-      setTimeout(() => void navigate(target), 0);
+      setTimeout(() => void navigate(href), 0);
     },
     openFrame,
     onShellClick: (event) => {
@@ -306,11 +273,7 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
         return;
       event.preventDefault();
       const requested = new URL(anchor.href, window.location.href);
-      const route = routeFromUrl(
-        input.catalogue,
-        requested,
-        input.context.delivery,
-      );
+      const route = routeFromUrl(input.catalogue, requested);
       const activated = anchor.hasAttribute("data-nav-row")
         ? changesActivation(
             input.catalogue,

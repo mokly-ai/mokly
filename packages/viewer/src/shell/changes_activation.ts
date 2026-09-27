@@ -1,6 +1,5 @@
 /** Changes-filter navigation shared by standalone and embedded shells. */
 
-import { entryRoute } from "../navigation/routes.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
 import {
@@ -123,7 +122,6 @@ function firstVisibleChangedVariant(
         { freeText: selection.search, tags: selection.tags },
         {
           id: entry.id,
-          route: entryRoute(entry.kind, entry.id),
           tags: entry.tags ?? [],
           text: catalogue.manifest.entries.some(
             (candidate) => candidate.id === entry.id,

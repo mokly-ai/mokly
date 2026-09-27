@@ -96,13 +96,4 @@ test("new evidence adopts before making a replaced historical snapshot unavailab
   assert.equal(projected.snapshotId, undefined);
   assert.equal(projected.activeId, undefined);
   assert.equal(projected.updateVersion, 2);
-
-  const reusedRoute = viewerCatalogue({
-    ...nextModel,
-    pages: [...nextModel.pages, historical.entry],
-    removedEntries: nextModel.removedEntries.slice(1),
-  });
-  const noDowngrade = shellStateWithViewerEvidence(state, reusedRoute);
-  assert.ok(noDowngrade);
-  assert.equal(noDowngrade.route.view.kind, "missing");
 });

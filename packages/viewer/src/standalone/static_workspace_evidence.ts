@@ -123,16 +123,10 @@ function sameDeployment(
   candidate: StaticDelivery,
   installed: StaticDelivery,
 ): boolean {
-  const candidateIds = Object.keys(candidate.idRoutes);
-  const installedIds = Object.keys(installed.idRoutes);
   return (
     candidate.schemaVersion === installed.schemaVersion &&
     candidate.deploymentId === installed.deploymentId &&
-    candidate.comparisonUrl === installed.comparisonUrl &&
-    candidateIds.length === installedIds.length &&
-    candidateIds.every(
-      (id) => candidate.idRoutes[id] === installed.idRoutes[id],
-    )
+    candidate.comparisonUrl === installed.comparisonUrl
   );
 }
 

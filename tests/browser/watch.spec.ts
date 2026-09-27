@@ -62,7 +62,7 @@ test("watched serve rebuilds and reloads after an authored change", async ({
   await toggleDisclosure(screens);
   await expect(screens).not.toHaveAttribute("open", "");
   await expect(archive).not.toHaveAttribute("open", "");
-  await page.fill("[data-mokly-search]", "html");
+  await page.fill("[data-mokly-search]", "home");
   await expect(screens).toHaveAttribute("open", "");
   await expect(archive).toHaveAttribute("open", "");
   await chooseViewport(page, "mobile");
@@ -105,7 +105,7 @@ test("watched serve rebuilds and reloads after an authored change", async ({
       .locator('[data-watch-version="2"]'),
   ).toHaveText("Reloaded", { timeout: 45_000 });
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
-  await expect(page.locator("[data-mokly-search]")).toHaveValue("html");
+  await expect(page.locator("[data-mokly-search]")).toHaveValue("home");
   await expect(screens).toHaveAttribute("open", "");
   await expect(archive).toHaveAttribute("open", "");
   await expect(page.locator(".mbk-frame-mobile")).toBeVisible();
@@ -146,7 +146,7 @@ test("watched reload reopens collapsed active route ancestry", async ({
   await expect(screens).toHaveAttribute("open", "");
   await toggleDisclosure(screens);
   await expect(screens).not.toHaveAttribute("open", "");
-  await page.fill("[data-mokly-search]", "html");
+  await page.fill("[data-mokly-search]", "home");
   await expect(screens).toHaveAttribute("open", "");
   await toggleDisclosure(screens);
   await expect(screens).not.toHaveAttribute("open", "");
@@ -163,7 +163,7 @@ test("watched reload reopens collapsed active route ancestry", async ({
       .frameLocator(".mbk-frame-mobile iframe")
       .locator('[data-watch-version="3"]'),
   ).toHaveText("Active route", { timeout: 45_000 });
-  await expect(page.locator("[data-mokly-search]")).toHaveValue("html");
+  await expect(page.locator("[data-mokly-search]")).toHaveValue("home");
   await expect(screens).toHaveAttribute("open", "");
   await page.fill("[data-mokly-search]", "");
   await expect(screens).toHaveAttribute("open", "");

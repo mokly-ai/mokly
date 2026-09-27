@@ -45,8 +45,8 @@ for (const width of [390, 1280]) {
       page.frameLocator(".mbk-stage-embed iframe").locator("#next-steps"),
     ).toBeVisible();
     await page.locator("[data-mokly-details] summary").click();
-    await expect(page.locator("[data-mokly-details]")).toContainText(
-      "handbook.html",
+    await expect(page.locator("[data-mokly-details]")).not.toContainText(
+      "pages/example-handbook.html",
     );
     await expect(page.locator("[data-mokly-details]")).toContainText(
       "documents",
@@ -68,7 +68,6 @@ for (const width of [390, 1280]) {
     for (const query of [
       "example-handbook",
       "Getting started",
-      "handbook.html",
       "tag:documents",
     ]) {
       await search.fill(query);
@@ -76,6 +75,10 @@ for (const width of [390, 1280]) {
         page.locator('[data-entry-id="example-handbook"]'),
       ).toBeVisible();
     }
+    await search.fill("pages/example-handbook.html");
+    await expect(
+      page.locator('[data-entry-id="example-handbook"]'),
+    ).toBeHidden();
     await search.fill("");
     await page
       .locator('[data-nav-folder="folder:Example/Screens"] > summary')
@@ -110,7 +113,10 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await frame.locator(".ce-inspector-link").click();
     await expect(page).toHaveURL(/\/view\/screens\/design-page-details\.html$/);
     await expect(frame.locator(".mbk-details-body")).toContainText(
-      "handbook.html",
+      "entries/catalogue.mockup.tsx",
+    );
+    await expect(frame.locator(".mbk-details-body")).not.toContainText(
+      "Generated",
     );
     await frame.locator(".ce-inspector-link").click();
     await expect(page).toHaveURL(/\/view\/screens\/design-page-view\.html$/);

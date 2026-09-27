@@ -136,7 +136,8 @@ test("inspector metadata belongs to its depicted subject", async () => {
   const detailBody = byClass(detailPage.document, "mbk-details-body")[0];
   assert.ok(detailBody);
   const details = textContent(detailBody);
-  assert.match(details, /screens\/details\.html/);
+  assert.match(details, /Additional context for the example catalogue/);
+  assert.doesNotMatch(details, /Generated|screens\/details\.html/);
   assert.doesNotMatch(
     details,
     /screens\/welcome\.html|landing screen|onboarding/,

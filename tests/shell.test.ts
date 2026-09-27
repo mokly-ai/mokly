@@ -603,35 +603,21 @@ test("screen stage carries per-frame scheme fragment data", () => {
   assert.equal(lightFlow.includes("data-fragment-"), false);
 });
 
-test("details inspector lists dark fragments and the schemes row", () => {
+test("details inspector omits derived paths and lists the schemes row", () => {
   const dark = createCatalogue(darkManifest);
   const screen = routePage(dark, "screens/welcome.html");
-  assert.ok(
-    screen.includes(
-      '<span class="mbk-meta-k">Generated</span><span class="mbk-meta-v">' +
-        '<span class="mbk-chips">' +
-        '<code class="mbk-code">screens/welcome.mobile.html</code>' +
-        '<code class="mbk-code">screens/welcome.mobile.dark.html</code>' +
-        '<code class="mbk-code">screens/welcome.desktop.html</code>' +
-        '<code class="mbk-code">screens/welcome.desktop.dark.html</code>' +
-        "</span></span></div>" +
-        '<div class="mbk-meta-row"><span class="mbk-meta-k">Schemes</span>' +
-        '<span class="mbk-meta-v">light, dark</span></div>',
-    ),
+  assert.match(
+    screen,
+    /<div class="mbk-meta-row"><span class="mbk-meta-k">Schemes<\/span><span class="mbk-meta-v">light, dark<\/span><\/div>/,
   );
+  assert.equal(screen.includes('mbk-meta-k">Generated'), false);
 
   const fallback = routePage(dark, "screens/details.html");
-  assert.ok(
-    fallback.includes(
-      '<span class="mbk-meta-k">Generated</span><span class="mbk-meta-v">' +
-        '<span class="mbk-chips">' +
-        '<code class="mbk-code">screens/details.mobile.html</code>' +
-        '<code class="mbk-code">screens/details.desktop.html</code>' +
-        "</span></span></div>" +
-        '<div class="mbk-meta-row"><span class="mbk-meta-k">Schemes</span>' +
-        '<span class="mbk-meta-v">light</span></div>',
-    ),
+  assert.match(
+    fallback,
+    /<div class="mbk-meta-row"><span class="mbk-meta-k">Schemes<\/span><span class="mbk-meta-v">light<\/span><\/div>/,
   );
+  assert.equal(fallback.includes('mbk-meta-k">Generated'), false);
 
   const flow = routePage(dark, "user-flows/tour.html");
   assert.equal(flow.includes('mbk-meta-k">Schemes'), false);
@@ -639,15 +625,9 @@ test("details inspector lists dark fragments and the schemes row", () => {
   const lightOnly = createCatalogue(manifest);
   const lightScreen = routePage(lightOnly, "screens/welcome.html");
   assert.equal(lightScreen.includes('mbk-meta-k">Schemes'), false);
-  assert.ok(
-    lightScreen.includes(
-      '<span class="mbk-meta-k">Generated</span><span class="mbk-meta-v">' +
-        '<span class="mbk-chips">' +
-        '<code class="mbk-code">screens/welcome.mobile.html</code>' +
-        '<code class="mbk-code">screens/welcome.desktop.html</code>' +
-        "</span></span></div>",
-    ),
-  );
+  assert.equal(lightScreen.includes('mbk-meta-k">Generated'), false);
+  const page = routePage(lightOnly, "pages/overview.html");
+  assert.equal(page.includes('mbk-meta-k">Generated'), false);
 });
 
 test("details inspector chips the tags an entry declares", () => {

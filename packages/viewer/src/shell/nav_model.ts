@@ -1,6 +1,5 @@
 /** Pure navigation-tree state used by SSR and the hydrated shell. */
 
-import { entryRoute } from "../navigation/routes.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -82,7 +81,6 @@ export function navLeafVisible(
     { freeText: selection.search, tags: selection.tags },
     {
       id: leaf.entryId,
-      route: entryRoute(leaf.entryKind, leaf.entryId),
       tags: leaf.tags ?? [],
       text: leaf.label,
     },

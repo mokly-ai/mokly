@@ -28,7 +28,7 @@ test("an isolated export contains a complete exact-file resource graph", async (
   ).toBe(404);
 });
 
-test("aliases and frame activations retain canonical files, fragments, and history", async ({
+test("frame activations retain canonical files, fragments, and history", async ({
   page,
   context,
 }) => {
@@ -36,7 +36,7 @@ test("aliases and frame activations retain canonical files, fragments, and histo
   page.on("response", (response) => {
     if (response.status() >= 400) failures.push(response.url());
   });
-  await page.goto(`${site.url}/id/home/?fragment=home-mobile&ignored=1`);
+  await page.goto(`${site.url}/view/screens/home.html?fragment=home-mobile`);
   await expect(page).toHaveURL(
     `${site.url}/view/screens/home.html?fragment=home-mobile`,
   );
@@ -76,6 +76,11 @@ test("aliases and frame activations retain canonical files, fragments, and histo
   await page.goBack();
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   await page.goForward();
+  await expect(page.locator("#mb-main h2")).toHaveText("Details");
+  await page.reload();
+  await expect(page).toHaveURL(
+    `${site.url}/view/screens/details.html?fragment=details`,
+  );
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   expect(failures).toEqual([]);
 });

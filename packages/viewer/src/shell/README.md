@@ -80,10 +80,11 @@ selectors and shell-root `.mbk` selectors to the embedding scope without
 rewriting class names. Standalone Serve/export retain their original CSS and
 font delivery paths.
 
-`catalogue.ts` owns pure display indexing, including exact historical snapshot
-resolution when current and removed entries share an id. Current content remains
-the default only when no snapshot is selected. Historical
-repository access remains in the CLI's `src/server/baseline_catalogue.ts`.
+`catalogue.ts` owns pure display indexing. Its `byId` index installs current
+entries first and adds only non-conflicting historical entries, so current
+content takes precedence for id-only lookup. An explicit snapshot selects its
+exact retained historical record. Historical repository access remains in the
+CLI's `src/server/baseline_catalogue.ts`.
 `store.tsx` and the focused `store_*` modules own standalone route/history,
 selection, disclosure, drawer, details, recovery and scroll state. `routes.ts`,
 `nav_model.ts`, `search_query.ts` and `entry_wording.ts` are deterministic
@@ -93,10 +94,18 @@ remain static while `frame_event_router.tsx` routes authenticated logical-link
 events from visible sessions in the owning `frame_registry.tsx`.
 
 Static route parsing accepts a provider-normalized extensionless path only when
-its `.html` form names a published current route or an exact retained historical
-route. Historical resolution binds that route to its published snapshot; an
-explicit query must match, while an inferred identity is canonicalized into the
-URL. A same-id `idRoutes` entry can never retarget history to current content.
+the shared parser derives a kind and id that `byId` contains. Historical
+resolution binds that route to its published snapshot; an explicit query must
+match, while an inferred identity is canonicalized into the URL. Delivery v2's
+legacy `idRoutes` map is ignored by the shell until the writer removes it.
+
+Authenticated frame navigation stays logical until `frame_event_router.tsx`
+resolves its id through `byId` and derives the canonical URL with `viewHref`.
+Primary, modified, middle, and named-target activations therefore share the
+same `/view/` destination, while an unknown id installs the missing view.
+Search matches authored ids, titles, and tags only. Details omits derived route
+and generated-path rows because the address bar and id chip already identify
+the entry.
 
 Snapshot selection is route-owned state as well as public selection state. One
 validated query/parser/resolver carries it through SSR, hydration, controlled

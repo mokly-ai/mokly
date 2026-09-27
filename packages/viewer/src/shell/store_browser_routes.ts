@@ -26,9 +26,7 @@ export function eligibleShellAnchor(
       routeDocumentKey(url) === routeDocumentKey(new URL(location.href)) &&
       url.hash !== ""
     ) &&
-    (url.pathname === "/" ||
-      url.pathname.startsWith("/view/") ||
-      url.pathname.startsWith("/id/"))
+    (url.pathname === "/" || url.pathname.startsWith("/view/"))
   );
 }
 

@@ -84,29 +84,14 @@ export function shellStateWithViewerEvidence(
   let route = state.route;
   if (route.view.kind === "target") {
     const previous = route.view.target.entry;
-    const selected =
-      route.snapshot && catalogue.publicModel
-        ? catalogue.publicModel.removedEntries.find(
-            (record) =>
-              record.entry.id === previous.id &&
-              record.entry.kind === previous.kind &&
-              record.snapshotId === route.snapshot,
-          )?.entry
-        : undefined;
-    const legacy =
-      route.snapshot === undefined
-        ? catalogue.removedEntries.find(
-            (record) =>
-              record.snapshotId === undefined &&
-              record.entry.id === previous.id &&
-              record.entry.kind === previous.kind,
-          )?.entry
-        : undefined;
-    const entry = selected
-      ? catalogueRouteEntry(catalogue, selected.id, selected.kind)
-      : route.snapshot === undefined
-        ? (catalogue.byId.get(previous.id) ?? legacy)
-        : undefined;
+    const entry = route.snapshot
+      ? catalogue.removedEntries.find(
+          (record) =>
+            record.entry.id === previous.id &&
+            record.entry.kind === previous.kind &&
+            record.snapshotId === route.snapshot,
+        )?.entry
+      : catalogue.byId.get(previous.id);
     const target = entry && toRouteTarget(entry);
     route =
       target && entry.id === previous.id && entry.kind === previous.kind

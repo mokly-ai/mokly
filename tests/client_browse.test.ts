@@ -14,18 +14,19 @@ import {
 
 test("shell route resolution accepts catalogue routes and rejects other paths", () => {
   const catalogue = viewerCatalogue(catalogueModel());
-  for (const path of [
-    "/",
-    "/view/screens/home.html",
-    "/id/home",
-    "/id/home/index.html",
-  ])
+  for (const path of ["/", "/view/screens/home.html", "/view/screens/home"])
     assert.notEqual(
       routeFromUrl(catalogue, new URL(path, "https://example.test")).view.kind,
       "missing",
       path,
     );
-  for (const path of ["/static/screens/home.html", "/review", "/id/missing"])
+  for (const path of [
+    "/static/screens/home.html",
+    "/review",
+    "/id/home",
+    "/id/home/index.html",
+    "/id/missing",
+  ])
     assert.equal(
       routeFromUrl(catalogue, new URL(path, "https://example.test")).view.kind,
       "missing",
@@ -51,7 +52,7 @@ test("shell link interception leaves native and external activations alone", () 
       eligible: true,
     },
     { name: "catalogue home", href: "/", eligible: true },
-    { name: "catalogue id", href: "/id/details", eligible: true },
+    { name: "catalogue id", href: "/id/details", eligible: false },
     {
       name: "explicit self target",
       href: "/view/screens/details.html",

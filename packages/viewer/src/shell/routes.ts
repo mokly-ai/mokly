@@ -1,7 +1,6 @@
 /** URL-derived route state for the standalone hydrated shell. */
 
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
-import type { StaticDelivery } from "../navigation/delivery.js";
 import { isLogicalFragment } from "../navigation/logical.js";
 import { parseViewHref, viewHref } from "../navigation/routes.js";
 import type { EntryRouteKind } from "../navigation/routes.js";
@@ -28,12 +27,8 @@ export interface ShellRoute {
 }
 
 /** Resolve a browser URL strictly against the accepted catalogue snapshot. */
-export function routeFromUrl(
-  catalogue: Catalogue,
-  url: URL,
-  delivery?: StaticDelivery,
-): ShellRoute {
-  const entry = routeEntry(catalogue, url.pathname, delivery);
+export function routeFromUrl(catalogue: Catalogue, url: URL): ShellRoute {
+  const entry = routeEntry(catalogue, url.pathname);
   const snapshots = url.searchParams.getAll("snapshot");
   const historical = entry
     ? catalogue.removedEntries.find(
@@ -41,7 +36,6 @@ export function routeFromUrl(
           candidate.id === entry.id && candidate.kind === entry.kind,
       )
     : undefined;
-  const alias = /^\/id\//.test(url.pathname);
   const requestedSnapshot =
     snapshots.length === 1 && isHistoricalSnapshotId(snapshots[0])
       ? snapshots[0]
@@ -55,15 +49,11 @@ export function routeFromUrl(
   const snapshot =
     historical &&
     ((!currentEntry && snapshots.length === 0) ||
-      (!alias && requestedSnapshot === historical.snapshotId))
+      requestedSnapshot === historical.snapshotId)
       ? (requestedSnapshot ?? historical.snapshotId)
       : undefined;
-  const collidingLegacy =
-    historical !== undefined &&
-    historical.snapshotId === undefined &&
-    currentEntry;
   const validSnapshot = historical
-    ? snapshot !== undefined || (snapshots.length === 0 && !collidingLegacy)
+    ? snapshots.length === 0 || snapshot !== undefined
     : snapshots.length === 0;
   const selectedEntry =
     entry && snapshot
@@ -131,26 +121,11 @@ export function routeScreenId(route: ShellRoute): string | null {
 function routeEntry(
   catalogue: Catalogue,
   pathname: string,
-  delivery?: StaticDelivery,
 ): CatalogueManifestEntry | undefined {
-  if (pathname.startsWith("/view/")) {
-    const identity = parseViewHref(pathname);
-    if (!identity) return undefined;
-    const entry = catalogueRouteEntry(catalogue, identity.id, identity.kind);
-    if (!entry || !delivery || pathname.endsWith(".html")) return entry;
-    const canonicalPath = viewHref(identity.kind, identity.id);
-    const current = Object.values(delivery.idRoutes).includes(canonicalPath);
-    const historical = catalogue.removedEntries.some(
-      ({ entry }) => entry.id === identity.id && entry.kind === identity.kind,
-    );
-    return current || historical
-      ? catalogueRouteEntry(catalogue, identity.id, identity.kind)
-      : undefined;
-  }
-  const match = /^\/id\/([^/]+)(?:\/(?:index\.html)?)?$/.exec(pathname);
-  if (!match) return undefined;
-  const id = decodeSegment(match[1] ?? "");
-  return id === undefined ? undefined : catalogue.byId.get(id);
+  const identity = parseViewHref(pathname);
+  return identity
+    ? catalogueRouteEntry(catalogue, identity.id, identity.kind)
+    : undefined;
 }
 
 function decodePath(value: string): string | undefined {

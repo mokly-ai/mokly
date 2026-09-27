@@ -5,6 +5,7 @@ import { test } from "node:test";
 import { readCatalogue } from "../src/catalogue/reader.js";
 import { viewHref } from "../src/navigation/routes.js";
 import { entryWording } from "../src/shell/entry_wording.js";
+import { frameNavigationHref } from "../src/shell/frame_event_router.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";
 import { routeFromUrl, routeHref } from "../src/shell/routes.js";
 import {
@@ -33,7 +34,7 @@ const model = readCatalogue(
 const catalogue = viewerCatalogue(model);
 const context = viewerContext(model, defaultSelection);
 
-test("shell routes derive entry targets, fragments, aliases, and misses from URLs", () => {
+test("shell routes derive entry targets, fragments, and misses from view URLs", () => {
   const screen = routeFromUrl(
     catalogue,
     new URL("https://example.test/view/screens/home.html?fragment=hero"),
@@ -52,7 +53,7 @@ test("shell routes derive entry targets, fragments, aliases, and misses from URL
   );
   assert.equal(
     routeFromUrl(catalogue, new URL("https://example.test/id/home")).view.kind,
-    "target",
+    "missing",
   );
   assert.equal(
     routeFromUrl(catalogue, new URL("https://example.test/id/product")).view
@@ -64,6 +65,28 @@ test("shell routes derive entry targets, fragments, aliases, and misses from URL
       catalogue,
       new URL("https://example.test/view/not-present.html"),
     ).view.kind,
+    "missing",
+  );
+});
+
+test("logical frame destinations resolve through catalogue identity", () => {
+  assert.equal(
+    frameNavigationHref(catalogue, {
+      activation: "primary",
+      fragment: "hero",
+      id: "home",
+      target: { kind: "self" },
+    }),
+    "/view/screens/home.html?fragment=hero",
+  );
+  const unknown = frameNavigationHref(catalogue, {
+    activation: "primary",
+    id: "not-present",
+    target: { kind: "self" },
+  });
+  assert.equal(unknown, "/view/not-present");
+  assert.equal(
+    routeFromUrl(catalogue, new URL(unknown, "https://example.test")).view.kind,
     "missing",
   );
 });
@@ -92,19 +115,11 @@ test("an inferred historical route is pinned in the installed browser URL", () =
   );
 });
 
-test("static routes accept only deployment-owned provider-normalized aliases", () => {
-  const delivery = {
-    schemaVersion: 2 as const,
-    deploymentId: "0".repeat(64),
-    canonicalPath: "/view/screens/home.html",
-    comparisonUrl: null,
-    idRoutes: { home: "/view/screens/home.html" },
-  };
+test("provider-normalized routes resolve through the parser and catalogue", () => {
   assert.equal(
     routeFromUrl(
       catalogue,
       new URL("https://example.test/view/screens/home?fragment=hero"),
-      delivery,
     ).view.kind,
     "target",
   );
@@ -112,9 +127,8 @@ test("static routes accept only deployment-owned provider-normalized aliases", (
     routeFromUrl(
       catalogue,
       new URL("https://example.test/view/components/action"),
-      delivery,
     ).view.kind,
-    "missing",
+    "target",
   );
 });
 

@@ -3,7 +3,9 @@
 import { useEffect, useRef } from "react";
 
 import type { FrameNavigation } from "../client/frame_adapter.js";
+import { viewHref } from "../navigation/routes.js";
 
+import type { Catalogue } from "./catalogue.js";
 import { useOptionalShellFrameRegistry } from "./frame_registry.js";
 import { useShellStore } from "./store_context.js";
 
@@ -31,7 +33,7 @@ function routeNavigation(
   store: ReturnType<typeof useShellStore>,
   navigation: FrameNavigation,
 ): void {
-  const href = navigationHref(navigation);
+  const href = frameNavigationHref(store.catalogue, navigation);
   const target = navigation.target;
   if (
     target.kind === "blank" ||
@@ -42,9 +44,17 @@ function routeNavigation(
   } else store.navigateFrame(href, navigation);
 }
 
-function navigationHref(navigation: FrameNavigation): string {
-  const query = navigation.fragment
-    ? `?fragment=${encodeURIComponent(navigation.fragment)}`
-    : "";
-  return `/id/${encodeURIComponent(navigation.id)}${query}`;
+/** Resolve one logical frame destination without consulting delivery aliases. */
+export function frameNavigationHref(
+  catalogue: Catalogue,
+  navigation: FrameNavigation,
+): string {
+  const entry = catalogue.byId.get(navigation.id);
+  const pathname = entry
+    ? viewHref(entry.kind, entry.id)
+    : `/view/${encodeURIComponent(navigation.id)}`;
+  const url = new URL(pathname, "https://mokly.invalid");
+  if (navigation.fragment)
+    url.searchParams.set("fragment", navigation.fragment);
+  return `${url.pathname}${url.search}`;
 }

@@ -421,20 +421,22 @@ row and route search go, since the ID chip and id search carry the same
 information. The export still writes delivery v2 until Milestone 7; the shell
 ignores `idRoutes`.
 
-- [ ] `same_origin_navigation.ts` returns the logical destination (id,
+- [x] `same_origin_navigation.ts` returns the logical destination (id,
       fragment, target) and the shell resolves it through `catalogue.byId` and
       `viewHref`; `frame_event_router.tsx` stops building `/id/` hrefs; an
       unknown id yields the missing view.
-- [ ] Remove `/id/` handling from `store_browser.ts`, `store_host_routes.ts`,
+- [x] Remove `/id/` handling from `store_browser.ts`, `store_host_routes.ts`,
       and `store_browser_routes.ts`; remove the alias branch and
       `collidingLegacy` from `routeFromUrl`; extensionless `/view/`
       normalization resolves through the parser and `byId`.
-- [ ] Delete the reused-id precedence paths in `entry_selection.ts`,
+- [x] Delete the reused-id precedence paths in `entry_selection.ts`,
       `capability_adoption.ts`, and `catalogue.ts` while keeping current-entry
       precedence over historical content.
-- [ ] Remove the details Route row and route matching from search; search
+- [x] Remove the details Route row and route matching from search; search
       keeps id, title, and tags.
-- [ ] Failure-first viewer unit and browser tests: frame click, modifier
+- [x] Update watched-reload search coverage to use authored identity instead
+      of the removed derived-route match.
+- [x] Failure-first viewer unit and browser tests: frame click, modifier
       click, and named-target navigation land on `/view/` URLs; Back/Forward
       and reload keep entry identity; a removed entry still opens with its
       `snapshot` query; smoke-test through `npm run dev`; commit.

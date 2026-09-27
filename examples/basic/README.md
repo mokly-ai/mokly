@@ -66,7 +66,9 @@ transitions. These links open canonical design states. Every selected screen use
 footer, native viewport dropdown, desktop inspector resizing and mobile sheet.
 The catalogue-wide Appearance selector sits in the top bar while the header
 keeps its viewport control; component designs also show the local highlight
-control. Copy, refresh, collapse-all and unsupported combinations remain visual depictions.
+control. Details shows authored metadata without Generated or Route rows,
+matching the derived-route shell contract. Copy, refresh, collapse-all and
+unsupported combinations remain visual depictions.
 The actual outer shell provides its normal runtime controls. See the
 [design mockup links contract](../../docs/protocol/mokly-design-links.md)
 and the [complete design inventory](../../docs/protocol/mokly-shell-design.md#design-mockups).

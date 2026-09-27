@@ -57,9 +57,6 @@ function PageDetails({ open = false }: { open?: boolean }) {
           <MetaRow name="source" label="Source">
             <code className="mbk-code">entries/catalogue.mockup.tsx</code>
           </MetaRow>
-          <MetaRow name="generated" label="Generated">
-            <code className="mbk-code">handbook.html</code>
-          </MetaRow>
           <MetaRow name="tags" label="Tags">
             documents
           </MetaRow>
