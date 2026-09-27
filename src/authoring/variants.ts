@@ -69,6 +69,8 @@ function variantDefinition(
   const slug = typeof input.slug === "string" ? input.slug : "invalid";
   const address = variant.address ?? parent.address;
   const colorSchemes = variant.colorSchemes ?? parent.colorSchemes;
+  const interactive =
+    "interactive" in input ? input.interactive : parent.interactive;
   const tags = variant.tags ?? parent.tags;
   const definition: AuthoredVariantDefinition = {
     __viaDefine: true,
@@ -78,6 +80,9 @@ function variantDefinition(
     description: variant.description,
     desktop: variant.desktop,
     id: variant.id,
+    ...(interactive !== undefined || "interactive" in input
+      ? { interactive }
+      : {}),
     kind: "screen",
     mobile: variant.mobile,
     ...(variant.rationale !== undefined

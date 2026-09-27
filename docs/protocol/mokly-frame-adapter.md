@@ -342,9 +342,18 @@ Navigation ids are kebab-case, at most 256 ASCII characters; optional fragments
 use the [logical fragment grammar](./mokly-navigation.md), at most 256 characters.
 Named targets use its target grammar and the same limit; all other target
 objects contain only `kind`. Navigation contains no URL, href, label or HTML.
-The inspector classifies only authenticated immediate native-link activations;
-the host revalidates ids against its catalogue and resolves canonical routes.
-Primary versus modified/middle activation preserves the existing target rules.
+The inspector classifies authenticated immediate native-link activations. A
+Live runtime may instead dispatch the package-owned
+`mokly:interactive-navigation` DOM event whose detail is exactly
+`{ id, fragment?, target }`. The inspector applies the same bounded identity
+validators above and rejects non-plain objects, extra fields and invalid values.
+It adds `activation: "primary"` to the unchanged wire event. The DOM event has
+no href, label or URL. Because consumer JavaScript runs in a Live frame and can
+synthesize an event, this is validation rather than authentication; the host
+still revalidates the id against its catalogue and resolves the canonical route.
+The Live runtime prevents unmodified primary activation before dispatch, even
+without a host subscription. It emits nothing for modified or middle activation,
+which preserves native behavior on the resolved portable href and target.
 The host owns navigation/new-context actions, using `noopener`; the inspector
 never navigates a top window. Ordinary unmarked/download/external links stay
 frame-owned. Asynchronous popup restrictions fail safely without granting the
@@ -384,8 +393,13 @@ Links use `FrameNavigation` without `activation`, with at most 1,024 distinct
 identities. Overflow publishes an explicit error map, never a truncated map.
 Each accepted native link receives `data-mokly-inspector-link="n"`, indexing the
 deduplicated `links` array. Consumer-authored inspector markers and link indices
-are rejected. Both publication nodes are inserted into the head so body child
-positions and authored selectors remain unchanged, including implicit heads.
+are rejected. A fresh Live mount replaces these adapted body attributes and
+uses the validated logical-identity event above; its route table is independent
+of the static map's 1,024-link bound. If an uncaught Live render error restores
+the original adapted child nodes, their existing indices work through this
+static path again. The interactive composer validates but never augments this
+map. Both publication nodes are inserted into the head so body child positions
+and authored selectors remain unchanged, including implicit heads.
 
 On request the script draws the existing dimming mask and outlines in-frame;
 host labels and keyboard-accessible instance lists use public catalogue titles

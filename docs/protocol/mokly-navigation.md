@@ -315,6 +315,18 @@ never reads or changes `window.top` or `parent.location`. Cross-origin hosts
 grant `allow-same-origin allow-scripts` only under that explicit contract;
 default local Browse and all comparison snapshot restrictions remain unchanged.
 
+Live documents rebuild native `MockLink` and raw `mock:` hrefs from their
+bootstrap route table. Native links and `MockLink asChild` prevent unmodified
+primary activation and emit a package DOM event containing the validated
+logical identity `{ id, fragment?, target }`; the inspector adds primary
+activation and sends the same wire navigation event. The DOM event contains no
+href or arbitrary URL, and the host still validates the id and resolves its
+canonical route. Modified and middle activation emit no package event and keep
+native sandbox behavior on the resolved portable href. Missing route-table ids
+remain inert. The Live route table is independent of the static inspector map's
+1,024-link limit; restored static fallback nodes continue to use their original
+Browse-authenticated indices.
+
 ## Active Catalogue Visibility
 
 Every successful outer route change, including in-shell navigation, Back,

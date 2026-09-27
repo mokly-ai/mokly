@@ -12,11 +12,15 @@ export function compactRuntime(runtime: ComponentRuntime): ComponentRuntime {
       entries: runtime.manifest.entries.map((entry) => {
         if (entry.kind === "screen") {
           const { componentViews: _usage, ...metadata } = entry;
-          return metadata;
+          return {
+            ...metadata,
+            interactive: interactiveEntry(runtime, entry.id),
+          };
         }
         if (entry.kind === "component")
           return {
             ...entry,
+            interactive: interactiveEntry(runtime, entry.id),
             variants: entry.variants.map((variant) => ({
               ...variant,
               componentViews: [],
@@ -26,4 +30,11 @@ export function compactRuntime(runtime: ComponentRuntime): ComponentRuntime {
       }),
     },
   };
+}
+
+function interactiveEntry(runtime: ComponentRuntime, id: string): boolean {
+  const value = runtime.interactiveEntries[id];
+  if (typeof value !== "boolean")
+    throw new Error(`Component runtime is missing Live eligibility for ${id}`);
+  return value;
 }

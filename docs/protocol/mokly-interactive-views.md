@@ -3,9 +3,11 @@
 ## Delivery Status
 
 Approved target tracked by the [interactive views plan](../../plans/interactive-views.md).
-Milestone 1 defines this contract; later milestones implement the browser
-bundle, the interactive origin in Serve, and the Static/Live control in the
-shell. Until they land, every catalogue behaves as `interactive: "off"`.
+Milestone 3 implements configuration, the generation-cached browser bundle,
+Live document composition, fresh mounting, diagnostics reporting, and the
+validated DOM navigation channel. The interactive Serve origin and the
+Static/Live shell control remain later milestones, so normal Serve still shows
+Static only.
 
 ## Purpose
 
@@ -64,9 +66,10 @@ consumer document, a baseline-pinned document, or already a server render.
 
 ## Live Document Composition
 
-A Live document for a view is the exact static document the ordinary build
-path compiles for that view, with three additions inside `<head>` and no change
-to `<body>` bytes:
+A Live document starts from the exact static document the ordinary build path
+compiles for that view. The interactive origin first applies the Browse adapter,
+then composition leaves every byte from `<body` onward unchanged. The complete
+Live head contains these three scripts:
 
 1. one `<script type="application/json" data-mokly-interactive>` bootstrap;
 2. one classic `<script src="/__mokly/client/inspector.js">`;
@@ -76,36 +79,64 @@ The bootstrap is canonical JSON with inline-script escapes containing the entry
 id, entry kind, optional variant id, viewport, color scheme, the catalogue
 generation, and the route table: a map from every logical `mock:<id>` value
 resolvable from this view to its portable relative href for the same viewport
-and scheme, computed by the same resolver the build uses. The bootstrap
-contains no props, no source paths and no repository paths.
+and scheme, computed by the same resolver the build uses. Routes contain no
+inspector index and are not subject to the static metadata map's 1,024-link
+limit. The bootstrap contains no props, source paths or repository paths.
 
-Sentinels, range markers and adapted `MockLink` controls are produced by the
-static path and remain in the body unchanged. The document is served with
+Before composition, the interactive origin must pass the ordinary compiled
+document through the Browse document adapter. That layer authenticates the
+ownership header, links and component ranges and adds the inert inspector map;
+the composer validates but never augments or rewrites that map. The map and
+sole inspector script must be inside the explicit head. The composer inserts
+the bootstrap and module script adjacent to that adapter-owned inspector script.
+A component bootstrap must name one of the entry's saved variants. Sentinels,
+range markers and statically adapted `MockLink` controls remain byte-identical
+in the pre-mount body. Eligibility failures are
+`InteractiveViewEligibilityError` values with a typed reason of
+`unknown-entry`, `not-live-kind`, `opted-out`, `missing-variant`,
+`unknown-variant` or `unexpected-variant`; Milestone 4 maps every such request
+to 404. Invalid generations or malformed adapted documents are internal
+composition failures, never `interactive-bundle` failures. The document is served with
 `Cache-Control: no-store`, `X-Content-Type-Options: nosniff` and a
 `Content-Security-Policy` whose `frame-ancestors` names the app origin only.
 
-## Hydration Contract
+## Mount Contract
 
 The browser runtime reads the bootstrap, locates the entry and optional
-variant in the bundled registry, builds the React node for the view, and
-hydrates `document.body`. Screens hydrate their authored `mobile` or `desktop`
-node. Components call the registered `render` adapter with the saved variant's
-complete props and `{ viewport, colorScheme }`.
+variant in the bundled registry, and builds the React node for the view.
+Screens use their authored `mobile` or `desktop` node. Components call the
+registered `render` adapter with the saved variant's complete props and
+`{ viewport, colorScheme }`.
 
 In the browser, the component wrapper validates props as on the server but
 records nothing and emits no sentinels; Review-ignore and material sentinels
-also render nothing. React 19 skips comment nodes during hydration, so the
-existing comment markers do not cause mismatches. Adapted `MockLink` controls
-render as the same anchor element the build produced, from the same route
-table, so their element and attributes match.
+also render nothing. The ordinary static bytes paint first. The runtime then
+calls `createRoot(document.body, { onCaughtError, onUncaughtError })` and renders
+inside `flushSync`, replacing the static body children, range comments, Review
+sentinels and statically adapted controls in one task. React keeps the body
+element and its attributes, and the static head remains untouched.
 
-A hydration mismatch is recoverable: React falls back to client rendering for
-the affected subtree, the runtime reports a `hydration-mismatch` diagnostic
-through `onRecoverableError`, and the view remains usable. The runtime posts
-the diagnostic to the interactive origin at
+Before creating the root, the runtime retains the original body child-node
+objects. An uncaught root error reports once, then queues one idempotent recovery:
+it disposes Live-link handling, unmounts the failed root and calls
+`body.replaceChildren(...staticChildren)`. Reusing the original objects moves
+any React-retained body `style`, `script` or stylesheet nodes into their original
+positions instead of duplicating them. The Browse adapter's static link indices
+therefore work again through the inspector. A caught error reports once but lets
+the consumer error boundary own its rendered result. Strict bootstrap, registry,
+entry and variant validation occurs before `createRoot`; failure reports once,
+rethrows, and leaves the static document untouched.
+
+The diagnostic is a bounded `render-error`. The default reporter logs the
+failure in the frame and posts it to the interactive origin at
 `POST /__mokly/interactive/<generation>/diagnostics` as JSON limited to the
-entry id, view identity and a bounded message; Serve logs it to stderr once
-per view and generation. No consumer text enters the shell.
+validated view identity and a bounded message. A failure before valid bootstrap
+identity has only `code` and `message`; the reporter derives a safe endpoint
+generation from the package module URL. If neither source yields a valid
+generation it logs locally without inventing an endpoint. The reporter is
+injectable so runtime tests do not require HTTP. Serve's endpoint and
+once-per-view-and-generation stderr logging belong to Milestone 4. No consumer
+text enters the shell.
 
 ### Renderer participation
 
@@ -124,11 +155,11 @@ interface InteractiveRenderInput {
 export function interactive(input: InteractiveRenderInput): ReactNode;
 ```
 
-It receives the pure subset of `RenderInput` and returns the node to hydrate,
+It receives the pure subset of `RenderInput` and returns the node to mount,
 which lets the consumer wrap Live views in the same providers `render` uses.
-When absent, the runtime hydrates `node` directly, which matches the default
-renderer. The consumer keeps `render` and `interactive` structurally
-equivalent; a mismatch is reported as above, not masked. Styles that the
+When absent, the runtime mounts `node` directly, which matches the default
+renderer. The consumer keeps `render` and `interactive` visually equivalent at
+their initial state. A render failure is reported as above, not masked. Styles that the
 server renderer injects into `<head>` at render time, such as collected React
 Native Web rules, remain in the static head; the Live runtime does not inject
 a second copy, and a component that creates new rules at runtime relies on the
@@ -136,12 +167,26 @@ consumer's client-side style injection.
 
 ### Browser MockLink behaviour
 
-Every `MockLink` and `mockLink` value resolves through the bootstrap route
-table to the same portable href the build emitted. Primary activation is
-intercepted and reported to the shell as a frame-adapter navigation event; the
-frame never navigates itself. Modified and middle activation keep native link
-behaviour within the frame sandbox, which forbids top navigation and popups.
-An id absent from the route table renders an inert link and reports nothing.
+Every `MockLink` and complete logical value produced by `mockLink` resolves
+through the bootstrap route table to the same portable href the build emitted.
+Native `MockLink`, `MockLink asChild`, and a delegated handler for resolved raw
+`mock:` anchors own unmodified primary activation. They prevent the native click
+and dispatch the package-owned `mokly:interactive-navigation` DOM event with the
+exact logical identity `{ id, fragment?, target }`. The inspector accepts only a
+plain object with the existing bounded id, fragment and target grammars and no
+extra fields, then emits the unchanged frame-adapter `navigation` message with
+`activation: "primary"`. The event never carries an href, label or arbitrary URL.
+Consumer JavaScript can synthesize this in-frame event, so it is a validation
+boundary rather than an authentication boundary; the nonce/origin handshake and
+the host's independent catalogue destination validation remain authoritative.
+
+Primary activation is prevented before the frame can navigate, even without a
+host subscription. Modified and middle activation dispatch no Live event and
+keep native behaviour on the resolved portable href within the frame sandbox,
+which forbids top navigation and popups. An id absent from the route table
+renders inert and reports nothing. Valid fragments and browsing targets are
+carried as logical identity only; neither layer trusts the portable href as the
+host destination.
 
 ## Interactive Origin
 
@@ -179,10 +224,13 @@ resolution, React peer resolution and loaders, compiled by esbuild with
 browser entry. It is built lazily on the first Live request per catalogue
 generation, cached in memory, retained for the previous generation while
 frames unload, and invalidated by every watched rebuild and configuration
-change. Node built-ins and Node-only consumer modules fail the bundle with a
-typed `interactive-bundle` diagnostic naming the importing module; Static
-remains available. The bundle is served only from the interactive origin and
-is excluded from the source inventory, generated output, `check` and export.
+change. The cache retains the generation's rejected promise too: another
+request for that generation receives the same failure and does not retry until
+explicit invalidation; a later generation has its own attempt. Node built-ins
+and Node-only consumer modules fail the bundle with a typed
+`interactive-bundle` diagnostic naming the importing module; Static remains
+available. The bundle is served only from the interactive origin and is
+excluded from the source inventory, generated output, `check` and export.
 
 ## Shell Behaviour
 
@@ -207,22 +255,27 @@ shell copy.
 
 ## Failure States
 
-| State                | Cause                                 | Behaviour                                      |
-| -------------------- | ------------------------------------- | ---------------------------------------------- |
-| `interactive-bundle` | Node-only import or esbuild failure   | 503 on Live documents; diagnostic to stderr    |
-| Origin unavailable   | Second listener cannot bind           | Serve fails to start, naming the port          |
-| Hydration mismatch   | `render`/`interactive` disagreement   | Client render; one stderr line per view        |
-| Entry opted out      | `interactive: false`                  | 404 on the interactive origin; control hidden  |
-| Generation replaced  | Watched rebuild during a Live session | Frame reloads through the ordinary update path |
+| State                      | Cause                                       | Behaviour                                            |
+| -------------------------- | ------------------------------------------- | ---------------------------------------------------- |
+| `interactive-bundle`       | Node-only import or esbuild failure         | 503 on Live documents; failure cached for generation |
+| View ineligible            | Typed entry/kind/variant eligibility reason | 404 on the interactive origin                        |
+| Composition fault          | Invalid generation or adapted document      | 500; never presented as a bundle-input problem       |
+| Pre-mount failure          | Invalid bootstrap or missing registry view  | Static document untouched; one diagnostic            |
+| Uncaught Live render error | Consumer render throws in the root          | Static document restored; one diagnostic             |
+| Caught Live render error   | Consumer error boundary catches             | Boundary result retained; one diagnostic             |
+| Origin unavailable         | Second listener cannot bind                 | Serve fails to start, naming the port                |
+| Generation replaced        | Watched rebuild during a Live session       | Frame reloads through the ordinary update path       |
 
 ## Verification
 
 Unit tests cover config and per-entry validation, bundle failure diagnostics,
-document composition leaving body bytes unchanged, and route-table resolution.
+document composition leaving body bytes unchanged, typed eligibility reasons,
+route-table resolution beyond 1,024 entries, and compacted opt-outs.
 Serve tests cover origin binding, Host refusal, the exact route set, 503 during
-a build and 404 for opted-out entries. Browser tests hydrate a stateful control,
-assert no mismatch diagnostic, follow a catalogue link from a Live frame, and
-prove export contains no bundle, bootstrap or React beyond the shell's own.
+a build and 404 for opted-out entries. Browser tests mount a stateful control,
+assert no render-error diagnostic, follow every Live link form, restore the
+static document after an uncaught error, preserve it after a pre-mount error,
+and prove export contains no bundle, bootstrap or React beyond the shell's own.
 
 ## Related Docs
 

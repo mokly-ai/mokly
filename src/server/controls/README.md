@@ -47,7 +47,8 @@ It requires the already-resolved `publicExclude` array and uses the shared
 config validator to adopt a frozen copy without prepending defaults again.
 Missing, non-array or unsafe values reject the startup message.
 The controls worker evaluates a compact retained runtime once, without unrelated
-HTML or usage. A successful source update with an unchanged index applies its
+HTML or usage. The transfer retains the resolved per-entry Live eligibility map,
+so compaction cannot erase an authored opt-out. A successful source update with an unchanged index applies its
 runtime to the live child before publishing the reload event. A changed index or
 reconfiguration stages the runtime for
 the next child; the old child keeps its matching catalogue and controls until

@@ -17,15 +17,17 @@ that URL in your default browser as soon as the server is ready.
 
 ## Options
 
-| Option            | Meaning                                                        |
-| ----------------- | -------------------------------------------------------------- |
-| `--config <path>` | Use an explicit `mokly.config` file                            |
-| `--port <port>`   | Starting port; advances if occupied, `0` selects any free port |
-| `--base <ref>`    | Git base ref used to find the branch point                     |
-| `--watch`         | Watch your inputs; this is the default                         |
-| `--no-watch`      | Serve one deterministic snapshot                               |
-| `--open`          | Open the served URL in your default browser                    |
-| `--debug-timings` | Report phase timings and catalogue counts on standard error    |
+| Option                          | Meaning                                                        |
+| ------------------------------- | -------------------------------------------------------------- |
+| `--config <path>`               | Use an explicit `mokly.config` file                            |
+| `--port <port>`                 | Starting port; advances if occupied, `0` selects any free port |
+| `--interactive-port <port>`     | Live preview port, or `0` to select any free port              |
+| `--interactive-origin <origin>` | Canonical HTTP(S) origin advertised for Live previews          |
+| `--base <ref>`                  | Git base ref used to find the branch point                     |
+| `--watch`                       | Watch your inputs; this is the default                         |
+| `--no-watch`                    | Serve one deterministic snapshot                               |
+| `--open`                        | Open the served URL in your default browser                    |
+| `--debug-timings`               | Report phase timings and catalogue counts on standard error    |
 
 ## The port
 
@@ -33,6 +35,12 @@ Serve starts at port `4173`. If that port, or a port you named, is already
 taken, Mokly tries each following port until one is free. `--port 0` asks the
 operating system for any free port. A watched server keeps the port it first
 resolved, so its URL survives a restart.
+
+When the config selects `interactive: "serve"`, `--interactive-port` chooses
+the separate Live origin's port with the same numeric rules. Use
+`--interactive-origin` when Mokly must advertise a different canonical
+HTTP(S) origin; it cannot contain credentials, a path, query, or fragment.
+Both options are rejected while interactive views are off.
 
 ## What it serves
 

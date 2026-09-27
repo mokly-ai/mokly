@@ -1,7 +1,11 @@
 import type { Box, InstanceBoundary } from "../client/frame_adapter.js";
 
 import { inspection } from "./inspection.js";
-import { inspectorNavigation } from "./links.js";
+import {
+  INTERACTIVE_NAVIGATION_EVENT,
+  inspectorInteractiveNavigation,
+  inspectorNavigation,
+} from "./links.js";
 import type { InspectorMetadata } from "./metadata.js";
 import { drawOverlay } from "./overlay.js";
 import type { MessageBody, HostMessage } from "./schema.js";
@@ -139,6 +143,13 @@ export const inspectorRuntime = (
   });
   on("click", activate as EventListener);
   on("auxclick", activate as EventListener);
+  on(INTERACTIVE_NAVIGATION_EVENT, (event) => {
+    const navigation = inspectorInteractiveNavigation(event);
+    if (navigation && events.includes("navigation")) {
+      event.preventDefault();
+      emit({ type: "navigation", navigation });
+    }
+  });
   on("keydown", (event) => {
     if ((event as KeyboardEvent).key === "Escape" && active) {
       event.preventDefault();

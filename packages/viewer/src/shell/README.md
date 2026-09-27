@@ -93,7 +93,10 @@ from validated catalogue records. Embedded bootstrap and workspace JSON use
 canonical key ordering so their validated client projections retain the exact
 server bytes during hydration. `comparison_views.tsx` renders React-owned frame
 chrome around the snapshots from validated comparison metadata. The CLI
-supplies its private live capabilities through typed server context. Standalone
+supplies its private live capabilities through typed server context. The
+private `live-index-1` metadata also carries a resolved `interactive` boolean
+only on screen and component entries; public manifests never expose that local
+Serve capability. Standalone
 full-document composition lives in `src/standalone`: its bootstrap contains
 the validated public catalogue and shell delivery state for Serve. Static pages
 carry a compact identity/revision reference and resolve the shared finalized

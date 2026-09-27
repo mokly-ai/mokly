@@ -200,7 +200,9 @@ async function compileMeasured(
     validateGeneratedOutputPaths(outputs.keys(), config),
   );
   const compilation = { manifest, outputs };
-  timeSync("runtime.retain", () => rememberRuntime(compilation, graph, config));
+  timeSync("runtime.retain", () =>
+    rememberRuntime(compilation, graph, config, registry.entries),
+  );
   timingCounts("output", () => ({
     files: outputs.size,
     views: fragmentViews.size,

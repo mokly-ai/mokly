@@ -222,6 +222,7 @@ function transferredRuntime(runtime: ComponentRuntime) {
   return {
     bundle: runtime.bundle,
     generation: runtime.generation,
+    interactiveEntries: runtime.interactiveEntries,
     outputs: runtime.outputs,
   };
 }

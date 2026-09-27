@@ -80,6 +80,19 @@ Export and Review boundaries continue to use directories that hold resolved
 entry modules. Source locations do not enter instance keys, props keys, slot
 identities, or Changes projections.
 
+The Live browser compiler in `../interactive/bundle.ts` reuses entry discovery,
+the attributed API, module-resolution settings, loaders, and consumer React
+peer lookup. Its package-owned ESM entry omits compatibility transforms and the
+static renderer default, captures no Node-based JSX source location, and reads
+only an optional renderer `interactive` export. Node built-ins fail that graph
+with `interactive-bundle`; the ordinary Node build graph remains unchanged.
+Build, Check, Export, and Publish never call the browser compiler.
+
+The retained `ComponentRuntime` records resolved per-entry Live eligibility
+separately from the publishable manifest. Runtime compaction and watched-child
+IPC carry that map so controls, demand rendering, and later interactive services
+cannot turn an authored `interactive: false` back on.
+
 ## Development
 
 ```sh
@@ -97,8 +110,8 @@ manifest compatibility are tested with isolated consumers.
 - `compile.ts`, `render.ts`, `document_compiler.ts`: exhaustive and requested-view
   compilation using the same validation boundary.
 - `load_graph.ts`, `consumer_entry.ts`, `consumer_resolution.ts`: one consumer
-  graph, discovered through `config/entry_discovery.ts`, and its module
-  resolution.
+  graph, its browser projection, discovery through `config/entry_discovery.ts`,
+  and shared module resolution.
 - `jsx_dev_runtime.ts`, `component_source.ts`: invocation capture without output
   or input-identity changes.
 - `source_inventory.ts`: complete private authoring inventory, separate from

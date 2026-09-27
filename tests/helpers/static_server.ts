@@ -5,7 +5,15 @@ import path from "node:path";
 /** Exact files plus directory indexes: no extension guessing or provider rules. */
 export async function serveStaticFiles(
   root: string,
-  options: { allowedOrigin?: string; csp?: string } = {},
+  options: {
+    allowedOrigin?: string;
+    csp?: string;
+    onPost?: (request: {
+      body: Buffer;
+      headers: http.IncomingHttpHeaders;
+      pathname: string;
+    }) => Promise<void> | void;
+  } = {},
 ) {
   const allowedOrigins = new Set<string>();
   if (options.allowedOrigin)
@@ -24,6 +32,23 @@ export async function serveStaticFiles(
           "Access-Control-Allow-Origin",
           request.headers.origin,
         );
+    }
+    if (request.method === "POST" && options.onPost) {
+      void readBody(request)
+        .then((body) =>
+          options.onPost?.({ body, headers: request.headers, pathname }),
+        )
+        .then(() => {
+          response.writeHead(204);
+          response.end();
+        })
+        .catch(() => {
+          response.writeHead(500, {
+            "Content-Type": "text/plain; charset=utf-8",
+          });
+          response.end("POST handler failed");
+        });
+      return;
     }
     if (request.method !== "GET" && request.method !== "HEAD") {
       response.writeHead(405, { "Content-Type": "text/plain; charset=utf-8" });
@@ -76,6 +101,18 @@ export async function serveStaticFiles(
         server.close((error) => (error ? reject(error) : resolve()));
       }),
   };
+}
+
+async function readBody(request: http.IncomingMessage): Promise<Buffer> {
+  const chunks: Buffer[] = [];
+  let size = 0;
+  for await (const value of request) {
+    const chunk = Buffer.isBuffer(value) ? value : Buffer.from(value);
+    size += chunk.length;
+    if (size > 64 * 1024) throw new Error("Static fixture POST is too large");
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
 }
 
 function exactOrigin(value: string): string {

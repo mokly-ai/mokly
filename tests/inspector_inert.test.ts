@@ -77,6 +77,19 @@ function harness(query: string) {
       return String(this.index);
     }
   }
+  class HarnessCustomEvent {
+    readonly detail: unknown;
+    prevented = false;
+    constructor(
+      readonly type: string,
+      init: { detail?: unknown } = {},
+    ) {
+      this.detail = init.detail;
+    }
+    preventDefault() {
+      this.prevented = true;
+    }
+  }
   const win = {
     location: new URL(`https://frames.test/static/screen.html${query}`),
     parent,
@@ -103,7 +116,7 @@ function harness(query: string) {
       throw new Error("window.top accessed");
     },
   });
-  vm.runInNewContext(bundle, {
+  const context = vm.createContext({
     window: win,
     document: doc,
     URL,
@@ -112,7 +125,9 @@ function harness(query: string) {
     HTMLAnchorElement: Link,
     HTMLAreaElement: Link,
     SVGAElement: Link,
+    CustomEvent: HarnessCustomEvent,
   });
+  vm.runInContext(bundle, context);
   return {
     messages,
     listeners,
@@ -129,6 +144,17 @@ function harness(query: string) {
         },
       } as unknown as Event);
       return prevented;
+    },
+    activateInteractive(detail: unknown) {
+      Object.assign(context, { __detail: JSON.stringify(detail) });
+      const realmDetail = vm.runInContext("JSON.parse(__detail)", context);
+      const event = new HarnessCustomEvent("mokly:interactive-navigation", {
+        detail: realmDetail,
+      });
+      documentListeners.get("mokly:interactive-navigation")?.(
+        event as unknown as Event,
+      );
+      return event.prevented;
     },
     send(data: unknown, origin = "https://app.test", source: unknown = parent) {
       listeners.get("message")?.({
@@ -216,6 +242,12 @@ test("top, parent and named navigation never access trapped outer windows", () =
   assert.equal(fixture.activate(0), false);
   assert.equal(fixture.messages.length, 0);
   fixture.send(encodeMessage(nonce, { type: "hello" }));
+  assert.equal(fixture.activate(0), false);
+  assert.equal(
+    fixture.activateInteractive({ id: "screen", target: { kind: "self" } }),
+    false,
+  );
+  assert.equal(fixture.messages.length, 1);
   fixture.send(
     encodeMessage(nonce, {
       type: "subscribe",
@@ -224,12 +256,36 @@ test("top, parent and named navigation never access trapped outer windows", () =
     }),
   );
   for (let i = 0; i < 3; i++) assert.equal(fixture.activate(i), true);
+  for (const detail of [
+    0,
+    { id: "screen", target: { kind: "self" }, extra: true },
+    { id: "Screen", target: { kind: "self" } },
+    { id: "screen", target: { kind: "named", name: "bad name" } },
+  ])
+    assert.equal(fixture.activateInteractive(detail), false);
+  assert.equal(
+    fixture.activateInteractive({
+      fragment: "section",
+      id: "interactive-screen",
+      target: { kind: "parent" },
+    }),
+    true,
+  );
   const navigation = fixture.messages
     .map(({ data }) => JSON.parse(data))
     .filter((message) => message.type === "navigation");
   assert.deepEqual(
-    navigation.map((message) => message.navigation.target),
-    [{ kind: "top" }, { kind: "parent" }, { kind: "named", name: "preview" }],
+    navigation.map((message) => [
+      message.navigation.id,
+      message.navigation.fragment,
+      message.navigation.target,
+    ]),
+    [
+      ["screen", undefined, { kind: "top" }],
+      ["screen", undefined, { kind: "parent" }],
+      ["screen", undefined, { kind: "named", name: "preview" }],
+      ["interactive-screen", "section", { kind: "parent" }],
+    ],
   );
   assert.equal(fixture.facts().trapped, 0);
   fixture.send(encodeMessage(nonce, { type: "dispose" }));

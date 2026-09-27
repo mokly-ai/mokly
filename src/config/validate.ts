@@ -27,7 +27,7 @@ import {
   validateStylesheets,
   validateWatchRules,
 } from "./rules.js";
-import type { MoklyConfig, ResolvedConfig } from "./types.js";
+import type { InteractiveMode, MoklyConfig, ResolvedConfig } from "./types.js";
 
 /** Validate an imported config and resolve every filesystem path. */
 export function resolveConfig(
@@ -99,6 +99,7 @@ export function resolveConfig(
   );
   validateSourceRoots(repoRoot, entriesDir, mockupsDir);
   const colorSchemes = validateColorSchemes(input.colorSchemes);
+  const interactive = interactiveMode(input.interactive);
   const stylesheets = validateStylesheets(input.stylesheets ?? []);
   const watchRules = validateWatchRules(input.watch?.rules ?? []);
   if (input.review?.base !== undefined)
@@ -136,6 +137,7 @@ export function resolveConfig(
     configPath,
     entryGlobs: entryGlobs.globs,
     ...(entriesDir ? { entriesDir } : {}),
+    interactive,
     mockupsDir,
     moduleResolution,
     ...(renderer ? { renderer } : {}),
@@ -161,6 +163,15 @@ export function resolveConfig(
   };
   validateReviewOut(reviewOut, discovered);
   return discovered;
+}
+
+function interactiveMode(value: MoklyConfig["interactive"]): InteractiveMode {
+  if (value === undefined) return "off";
+  if (value === "off" || value === "serve") return value;
+  throw new MoklyError(
+    "config-invalid",
+    'interactive must be either "off" or "serve"',
+  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

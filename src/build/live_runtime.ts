@@ -41,6 +41,13 @@ export async function prepareLiveRuntime(
       bundle: consumerBundle(graph),
       config,
       generation: randomBytes(16).toString("hex"),
+      interactiveEntries: Object.fromEntries(
+        manifest.entries.flatMap((entry) =>
+          entry.kind === "screen" || entry.kind === "component"
+            ? [[entry.id, entry.interactive] as const]
+            : [],
+        ),
+      ),
       manifest,
       outputs: [],
     };

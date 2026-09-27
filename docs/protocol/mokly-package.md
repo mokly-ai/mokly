@@ -185,7 +185,7 @@ literals, and package boundary.
 - Owning or publishing consumer application screens.
 - Replacing a consumer's product component library or design tokens.
 - Deploying a hosted Mokly service.
-- Hydrating product fragments into interactive application replicas.
+- Shipping consumer application JavaScript in static exports or publications.
 - Requiring a monorepo, npm-workspace layout, or one fixed mockup directory.
 
 ## Related Docs

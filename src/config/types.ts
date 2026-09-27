@@ -3,6 +3,9 @@ import type { ColorScheme } from "@mokly/viewer";
 /** Filesystem changes understood by the watched development runtime. */
 export type WatchAction = "ignore" | "rebuild" | "reload" | "restart";
 
+/** Whether local Serve may offer browser-mounted Live previews. */
+export type InteractiveMode = "off" | "serve";
+
 /** One glob-to-stylesheet mapping evaluated in declaration order. */
 export interface StylesheetRule {
   /** POSIX glob matched against a screen route. */
@@ -93,6 +96,8 @@ export interface MoklyConfig {
   entriesDir?: string;
   /** Config-relative generated catalogue/output root. */
   mockupsDir: string;
+  /** Local Live-preview behavior; defaults to off. */
+  interactive?: InteractiveMode;
   /** Additional private POSIX globs relative to mockupsDir; extends shipped defaults. */
   publicExclude?: readonly string[];
   /** Config-relative repository root; defaults to the config directory. */
@@ -130,6 +135,7 @@ export interface ResolvedConfig {
   entryModules?: readonly string[];
   /** Absolute shorthand directory when `entriesDir` supplied the single glob. */
   entriesDir?: string;
+  interactive: InteractiveMode;
   mockupsDir: string;
   /** Shipped defaults followed by validated consumer exclusions. */
   readonly publicExclude: readonly string[];

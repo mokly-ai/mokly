@@ -1,6 +1,9 @@
+import path from "node:path";
+
 import type { ColorScheme, Viewport } from "@mokly/viewer";
 import {
   componentFragmentRoute,
+  encodeUrlPath,
   effectiveColorSchemes,
 } from "@mokly/viewer/data";
 
@@ -42,6 +45,21 @@ export function artifactRouteForEntry(
     ? colorScheme
     : "light";
   return fragmentRoute(screen.route, viewport, targetScheme);
+}
+
+/** Resolve one artifact route to the same portable href emitted by Build. */
+export function portableArtifactHref(
+  sourceRoute: string,
+  targetRoute: string,
+  fragment?: string,
+): string {
+  const relative = path.posix.relative(
+    path.posix.dirname(sourceRoute),
+    targetRoute,
+  );
+  const encoded = encodeUrlPath(relative);
+  const route = encoded.startsWith(".") ? encoded : `./${encoded}`;
+  return `${route}${fragment ? `#${fragment}` : ""}`;
 }
 
 /** Map logical catalogue routes to concrete view artifacts. */

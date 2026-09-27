@@ -25,6 +25,8 @@ takes no value. There are no silent positional arguments.
 | `--config <path>`                    | every command                | Use an explicit `mokly.config` file                            |
 | `--debug-timings`                    | every command                | Report phase timings and catalogue counts on standard error    |
 | `--port <port>`                      | `serve`                      | Starting port; advances if occupied, `0` selects any free port |
+| `--interactive-port <port>`          | `serve`                      | Live preview port; `0` selects any free port                   |
+| `--interactive-origin <origin>`      | `serve`                      | Canonical HTTP(S) origin advertised for Live previews          |
 | `--watch`                            | `serve`                      | Watch your inputs; the default                                 |
 | `--no-watch`                         | `serve`                      | Serve one deterministic snapshot                               |
 | `--base <ref>`                       | `serve`, `export`, `publish` | Git base ref used to find the branch point                     |
@@ -65,6 +67,7 @@ stack trace:
 | `config-missing`               | No configuration file was found                        |
 | `config-invalid`               | The configuration is not valid                         |
 | `build-invalid`                | The catalogue could not be built or validated          |
+| `interactive-bundle`           | A browser-safe Live bundle could not be produced       |
 | `manifest-invalid`             | A manifest could not be read or does not match         |
 | `review-invalid`               | A comparison could not be produced from the inputs     |
 | `export-invalid`               | An export destination or artifact was refused          |

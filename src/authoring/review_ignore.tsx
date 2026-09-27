@@ -1,5 +1,7 @@
 import { createContext, Fragment, type ReactNode, useContext } from "react";
 
+import { ComponentContext } from "../components/render_context.js";
+
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const MATERIAL_PATTERN = /^[a-f0-9]{64}$/;
 const ReviewIgnoreEnabled = createContext(true);
@@ -29,7 +31,9 @@ export function ReviewIgnoreScope(props: ReviewIgnoreScopeProps) {
 /** Mark repeated chrome without adding a layout wrapper. */
 export function ReviewIgnore(props: ReviewIgnoreProps) {
   assertReviewIgnoreId(props.id, props.materialKey);
-  if (!useContext(ReviewIgnoreEnabled))
+  const componentScope = useContext(ComponentContext);
+  const enabled = useContext(ReviewIgnoreEnabled);
+  if (componentScope?.kind === "interactive" || !enabled)
     return <Fragment>{props.children}</Fragment>;
   return (
     <Fragment>

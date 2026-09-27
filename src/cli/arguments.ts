@@ -1,3 +1,4 @@
+import type { InteractiveMode } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
 /** Supported user-visible and hidden process commands. */
@@ -16,6 +17,8 @@ export interface CliArguments {
   noChanges?: boolean;
   open?: boolean;
   help: boolean;
+  interactiveOrigin?: string;
+  interactivePort?: number;
   out?: string;
   port?: number;
   strictPort?: boolean;
@@ -74,7 +77,16 @@ export function parseArguments(argv: readonly string[]): CliArguments {
       parsed.repository = takeValue(option, values, assigned);
     else if (argument === "--no-changes") parsed.noChanges = true;
     else if (option === "--port")
-      parsed.port = parsePort(takeValue(option, values, assigned));
+      parsed.port = parsePort(option, takeValue(option, values, assigned));
+    else if (option === "--interactive-port")
+      parsed.interactivePort = parsePort(
+        option,
+        takeValue(option, values, assigned),
+      );
+    else if (option === "--interactive-origin")
+      parsed.interactiveOrigin = parseOrigin(
+        takeValue(option, values, assigned),
+      );
     else if (option === "--update-version")
       parsed.updateVersion = parseUpdateVersion(
         takeValue(option, values, assigned),
@@ -108,15 +120,35 @@ function takeValue(
   return value;
 }
 
-function parsePort(value: string): number {
+function parsePort(
+  option: "--interactive-port" | "--port",
+  value: string,
+): number {
   const port = Number(value);
   if (!Number.isInteger(port) || port < 0 || port > 65_535) {
     throw new MoklyError(
       "cli-invalid",
-      "--port must be an integer from 0 to 65535",
+      `${option} must be an integer from 0 to 65535`,
     );
   }
   return port;
+}
+
+function parseOrigin(value: string): string {
+  try {
+    const origin = new URL(value);
+    if (
+      (origin.protocol === "http:" || origin.protocol === "https:") &&
+      origin.origin === value
+    )
+      return value;
+  } catch {
+    // The typed diagnostic below owns every invalid URL shape.
+  }
+  throw new MoklyError(
+    "cli-invalid",
+    "--interactive-origin must be a canonical HTTP(S) origin",
+  );
 }
 
 function validateCommandOptions(arguments_: CliArguments): void {
@@ -167,6 +199,16 @@ function validateCommandOptions(arguments_: CliArguments): void {
       "--port and --watch options belong to serve",
     );
   }
+  if (
+    arguments_.command !== "serve" &&
+    (arguments_.interactivePort !== undefined ||
+      arguments_.interactiveOrigin !== undefined)
+  ) {
+    throw new MoklyError(
+      "cli-invalid",
+      "--interactive-port and --interactive-origin belong to serve",
+    );
+  }
   if (arguments_.open && arguments_.command !== "serve")
     throw new MoklyError("cli-invalid", "--open belongs to serve");
   if (
@@ -193,5 +235,22 @@ function validateCommandOptions(arguments_: CliArguments): void {
         "cli-invalid",
         "--base belongs to serve, export or publish",
       );
+  }
+}
+
+/** Validate options whose availability depends on the resolved configuration. */
+export function validateInteractiveArguments(
+  arguments_: CliArguments,
+  mode: InteractiveMode,
+): void {
+  if (
+    mode === "off" &&
+    (arguments_.interactivePort !== undefined ||
+      arguments_.interactiveOrigin !== undefined)
+  ) {
+    throw new MoklyError(
+      "cli-invalid",
+      '--interactive-port and --interactive-origin require interactive: "serve"',
+    );
   }
 }

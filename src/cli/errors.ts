@@ -62,6 +62,10 @@ const ERROR_COPY: Readonly<Record<MoklyErrorCode, ErrorCopy>> = {
     headline: "Git information could not be read.",
     hint: "Check the repository and configured base.",
   },
+  "interactive-bundle": {
+    headline: "The Live preview could not be prepared.",
+    hint: "Fix the reported browser bundle input and retry.",
+  },
   "manifest-invalid": {
     headline: "The generated catalogue is invalid.",
     hint: "Rebuild the catalogue and fix the reported entry.",

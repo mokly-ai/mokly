@@ -9,7 +9,10 @@ import { MoklyError } from "../errors.js";
 import { runtimeModule } from "./consumer_entry.js";
 
 /** Resolve React peers from consumer package roots before the executing package. */
-export function consumerReactPlugin(config: ResolvedConfig): Plugin {
+export function consumerReactPlugin(
+  config: ResolvedConfig,
+  options: { browser?: boolean } = {},
+): Plugin {
   const consumerRequires = [
     createRequire(config.configPath),
     ...config.moduleResolution.packageRoots.map((root) =>
@@ -26,11 +29,17 @@ export function consumerReactPlugin(config: ResolvedConfig): Plugin {
       pluginBuild.onLoad(
         { filter: /.*/, namespace: "mokly-jsx-dev-runtime" },
         () => ({
-          contents: [
-            `export { Fragment } from "react/jsx-runtime";`,
-            `import { createJsxDEV } from ${JSON.stringify(runtimeModule("./jsx_dev_runtime.js", "./jsx_dev_runtime.ts"))};`,
-            `export const jsxDEV = createJsxDEV(${JSON.stringify(path.dirname(config.configPath))}, ${JSON.stringify(config.repoRoot)});`,
-          ].join("\n"),
+          contents: options.browser
+            ? [
+                `export { Fragment } from "react/jsx-runtime";`,
+                `import { jsx } from "react/jsx-runtime";`,
+                `export const jsxDEV = (type, props, key) => jsx(type, props, key);`,
+              ].join("\n")
+            : [
+                `export { Fragment } from "react/jsx-runtime";`,
+                `import { createJsxDEV } from ${JSON.stringify(runtimeModule("./jsx_dev_runtime.js", "./jsx_dev_runtime.ts"))};`,
+                `export const jsxDEV = createJsxDEV(${JSON.stringify(path.dirname(config.configPath))}, ${JSON.stringify(config.repoRoot)});`,
+              ].join("\n"),
           loader: "js",
           resolveDir: path.dirname(config.configPath),
         }),
@@ -38,9 +47,13 @@ export function consumerReactPlugin(config: ResolvedConfig): Plugin {
       pluginBuild.onResolve(
         { filter: /^(react|react-dom)(\/.*)?$/ },
         (arguments_) => {
+          const specifier = browserReactSpecifier(
+            arguments_.path,
+            options.browser === true,
+          );
           for (const consumerRequire of consumerRequires) {
             try {
-              return { path: consumerRequire.resolve(arguments_.path) };
+              return { path: consumerRequire.resolve(specifier) };
             } catch {
               continue;
             }
@@ -53,6 +66,13 @@ export function consumerReactPlugin(config: ResolvedConfig): Plugin {
       );
     },
   };
+}
+
+function browserReactSpecifier(specifier: string, browser: boolean): string {
+  if (!browser) return specifier;
+  if (specifier === "react-dom/server") return "react-dom/server.browser";
+  if (specifier === "react-dom/static") return "react-dom/static.browser";
+  return specifier;
 }
 
 /** Return dependency directories searched after normal importer resolution. */

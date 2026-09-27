@@ -21,6 +21,9 @@ export interface RenderInput {
   viewport: Viewport;
 }
 
+/** Pure browser-render input used by an optional Live renderer export. */
+export type InteractiveRenderInput = Omit<RenderInput, "stylesheets">;
+
 /** Optional exact ownership of component-generated style/resource material. */
 export interface RenderResult {
   html: string;
@@ -30,3 +33,12 @@ export interface RenderResult {
 
 /** Synchronous complete-document renderer contract. */
 export type Renderer = (input: RenderInput) => string | RenderResult;
+
+/** Optional browser wrapper that mirrors the providers used by `Renderer`. */
+export type InteractiveRenderer = (input: InteractiveRenderInput) => ReactNode;
+
+/** Consumer renderer module loaded at the static and Live boundaries. */
+export interface RendererModule {
+  default: Renderer;
+  interactive?: InteractiveRenderer;
+}

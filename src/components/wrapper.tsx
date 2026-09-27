@@ -9,13 +9,16 @@ import {
 } from "@mokly/viewer/data";
 
 import { componentInputs } from "./inputs.js";
-import { ComponentContext, type ComponentScope } from "./render_context.js";
+import {
+  ComponentContext,
+  type StaticComponentScope,
+} from "./render_context.js";
 import type { ComponentDefinition } from "./types.js";
 
 interface CapturedSlot {
   record: ComponentSlotRecord;
   node: ReactNode;
-  scope: ComponentScope;
+  scope: StaticComponentScope;
 }
 
 /** The wrapper records real invocation, then gives its implementation a new owner. */
@@ -29,11 +32,13 @@ export function renderInstance(
       definition.id,
       "registered component requires a catalogue render and an exported entry",
     );
+  const label =
+    scope.kind === "static" ? scope.collector.label : `${definition.id} / Live`;
   const descriptors = Object.getOwnPropertyDescriptors(rawProps);
   if (descriptors.key && !descriptors.key.enumerable) delete descriptors.key;
   const instanceDescriptor = descriptors.moklyInstance;
   if (instanceDescriptor && !("value" in instanceDescriptor))
-    invalidData(scope.collector.label, "instance id cannot be an accessor");
+    invalidData(label, "instance id cannot be an accessor");
   const id: unknown =
     instanceDescriptor?.value === undefined
       ? definition.id
@@ -41,13 +46,12 @@ export function renderInstance(
   delete descriptors.moklyInstance;
   const sourceDescriptor = descriptors.__moklySource;
   if (sourceDescriptor && !("value" in sourceDescriptor))
-    invalidData(scope.collector.label, "instance source cannot be an accessor");
+    invalidData(label, "instance source cannot be an accessor");
   const source: unknown = sourceDescriptor?.value;
   delete descriptors.__moklySource;
-  if (source !== undefined)
-    validateComponentSource(source, `${scope.collector.label}.source`);
+  if (source !== undefined) validateComponentSource(source, `${label}.source`);
   if (!isCatalogueId(id))
-    invalidData(scope.collector.label, "moklyInstance must be a kebab-case id");
+    invalidData(label, "moklyInstance must be a kebab-case id");
   const input = Object.defineProperties({}, descriptors) as Record<
     string,
     unknown
@@ -55,8 +59,10 @@ export function renderInstance(
   const { data, slots } = componentInputs(
     definition,
     input,
-    `${scope.collector.label} / ${definition.id}`,
+    `${label} / ${definition.id}`,
   );
+  if (scope.kind === "interactive")
+    return definition.render({ ...data, ...slots }, scope.context);
   const instance = scope.collector.register(
     definition,
     id,
@@ -85,8 +91,9 @@ export function renderInstance(
     };
     wrapped[name] = <OwnedSlot capture={capture} />;
   }
-  const childScope: ComponentScope = {
+  const childScope: StaticComponentScope = {
     collector: scope.collector,
+    kind: "static",
     owner: { kind: "instance", instanceKey: instance.key },
     placement: scope.placement,
   };
@@ -124,7 +131,7 @@ function Boundary({
   target,
   children,
 }: {
-  scope: ComponentScope;
+  scope: StaticComponentScope;
   target: ComponentRangeTarget;
   children: ReactNode;
 }): ReactNode {

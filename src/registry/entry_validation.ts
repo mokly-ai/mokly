@@ -68,6 +68,7 @@ export function validateEntry(
     );
   }
   validateTags(entry, violations);
+  validateInteractive(entry, violations);
   if (entry.kind === "collection") {
     validateTextList(entry, "childIds", entry.childIds, true, violations);
   } else {
@@ -168,4 +169,30 @@ export function validateEntry(
   }
   violations.push(...variantEntryViolations(entry));
   return violations;
+}
+
+function validateInteractive(
+  entry: ResolvedRegistryEntry,
+  violations: RegistryViolation[],
+): void {
+  const candidate = entry as ResolvedRegistryEntry & { interactive?: unknown };
+  if (!Object.hasOwn(candidate, "interactive")) return;
+  if (candidate.kind !== "screen" && candidate.kind !== "component") {
+    violations.push(
+      problem(
+        entry,
+        "invalid-interactive",
+        `interactive is not supported on ${candidate.kind} entries`,
+      ),
+    );
+    return;
+  }
+  if (candidate.interactive !== false)
+    violations.push(
+      problem(
+        entry,
+        "invalid-interactive",
+        "interactive must be false when supplied",
+      ),
+    );
 }

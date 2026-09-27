@@ -12,6 +12,7 @@ import type {
   NestedScreenInput,
   NestedScreenMarker,
   RegistryDefinition,
+  RootCollectionInput,
   RootInput,
   ScreenDefinition,
   ScreenInput,
@@ -125,6 +126,15 @@ export function defineRoot(input: RootInput): RegistryDefinition[] {
         dependencies: input.collection.dependencies ?? [],
         description: input.collection.description,
         id: input.collection.id,
+        ...(Object.hasOwn(input.collection, "interactive")
+          ? {
+              interactive: (
+                input.collection as RootCollectionInput & {
+                  interactive?: unknown;
+                }
+              ).interactive,
+            }
+          : {}),
         ...(input.collection.rationale
           ? { rationale: input.collection.rationale }
           : {}),
@@ -165,6 +175,9 @@ function flattenChild(
       description: node.description,
       desktop: node.desktop,
       id: node.id,
+      ...(Object.hasOwn(node, "interactive")
+        ? { interactive: node.interactive }
+        : {}),
       mobile: node.mobile,
       ...(node.rationale ? { rationale: node.rationale } : {}),
       relatedDocs: effective.relatedDocs ?? [],
@@ -188,6 +201,13 @@ function flattenChild(
     dependencies: effective.dependencies ?? [],
     description: node.description,
     id: node.id,
+    ...(Object.hasOwn(node, "interactive")
+      ? {
+          interactive: (
+            node as NestedCollectionInput & { interactive?: unknown }
+          ).interactive,
+        }
+      : {}),
     ...(node.rationale ? { rationale: node.rationale } : {}),
     relatedDocs: effective.relatedDocs ?? [],
     title: node.title,

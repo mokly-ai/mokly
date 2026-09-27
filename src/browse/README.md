@@ -22,6 +22,12 @@ their selectors, including documents with implicit head/body tags. Accepted nati
 links receive indices into the deduplicated `links` array; authored occurrences
 of this private index attribute are rejected too.
 
+Live composition must run after this adapter. The interactive layer validates
+but never extends or rewrites the map. Its independent id-to-href route table is
+not subject to the map's 1,024-link bound. That ordering keeps the pre-mount body
+byte-identical and lets an uncaught Live render recover the original adapted
+nodes, including their working static inspector indices.
+
 ```bash
 npm run build
 node --import tsx --test tests/browse_document_adapter.test.ts tests/inspector_publication.test.ts

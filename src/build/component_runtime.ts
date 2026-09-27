@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 
 import type { ManifestV5 } from "@mokly/viewer/data";
 
+import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import type { ResolvedConfig } from "../config/types.js";
 import type { CatalogueIndex } from "../registry/catalogue_index.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
@@ -15,6 +16,7 @@ export interface ComponentRuntime {
   bundle: ConsumerBundle;
   config: ResolvedConfig;
   generation: string;
+  interactiveEntries: Readonly<Record<string, boolean>>;
   manifest: ManifestV5 | CatalogueIndex;
   outputs: readonly (readonly [string, string])[];
 }
@@ -23,11 +25,19 @@ export function rememberRuntime(
   compilation: Compilation,
   graph: LoadedGraph,
   config: ResolvedConfig,
+  entries: readonly ResolvedRegistryEntry[],
 ): void {
   runtimes.set(compilation, {
     bundle: consumerBundle(graph),
     config,
     generation: randomBytes(16).toString("hex"),
+    interactiveEntries: Object.fromEntries(
+      entries.flatMap((entry) =>
+        entry.kind === "screen" || entry.kind === "component"
+          ? [[entry.id, entry.interactive !== false] as const]
+          : [],
+      ),
+    ),
     manifest: compilation.manifest,
     outputs: [...compilation.outputs].filter(
       ([route]) => route !== MANIFEST_NAME,

@@ -10,6 +10,8 @@ import type { ResolvedConfig } from "../config/types.js";
 
 /** Virtual module name for the complete consumer-owned build graph. */
 export const CONSUMER_ENTRY_PATH = "mokly:consumer-entry";
+/** Virtual module name for definitions and the optional Live renderer. */
+export const INTERACTIVE_CONSUMER_PATH = "mokly:interactive-consumer";
 
 /** Load every registry entry, renderer, and document transformer. */
 export function consumerEntryPlugin(
@@ -28,6 +30,30 @@ export function consumerEntryPlugin(
         loader: "ts",
         resolveDir: path.dirname(config.configPath),
       }));
+    },
+  };
+}
+
+/** Load browser-safe registry values and only the renderer's Live export. */
+export function interactiveConsumerPlugin(
+  config: ResolvedConfig,
+  entries: readonly string[],
+): Plugin {
+  return {
+    name: "mokly-interactive-consumer",
+    setup(pluginBuild: PluginBuild): void {
+      pluginBuild.onResolve({ filter: /^mokly:interactive-consumer$/ }, () => ({
+        namespace: "mokly-interactive-entry",
+        path: INTERACTIVE_CONSUMER_PATH,
+      }));
+      pluginBuild.onLoad(
+        { filter: /.*/, namespace: "mokly-interactive-entry" },
+        () => ({
+          contents: interactiveEntryContents(config, entries),
+          loader: "ts",
+          resolveDir: path.dirname(config.configPath),
+        }),
+      );
     },
   };
 }
@@ -105,6 +131,31 @@ function virtualEntryContents(
       : []),
     `export { renderer };`,
     `export { renderWithComponents } from ${quote(runtimeModule("../components/render.js", "../components/render.tsx"))};`,
+  ].join("\n");
+}
+
+function interactiveEntryContents(
+  config: ResolvedConfig,
+  entries: readonly string[],
+): string {
+  const imports = entries.map(
+    (source, index) => `import * as entry${index} from ${quote(source)};`,
+  );
+  const entryValues = entries.map(
+    (_source, index) =>
+      `(entry${index}.mockups ?? entry${index}.default ?? [])`,
+  );
+  const renderer = config.renderer
+    ? [
+        `import * as rendererModule from ${quote(config.renderer)};`,
+        `export const interactiveRenderer = rendererModule.interactive;`,
+      ]
+    : [`export const interactiveRenderer = undefined;`];
+  return [
+    ...imports,
+    ...renderer,
+    `const flatten = (values) => values.flat(Infinity);`,
+    `export const definitions = flatten([${entryValues.join(",")}]);`,
   ].join("\n");
 }
 

@@ -17,6 +17,7 @@ import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
   colorSchemes: ["light", "dark"],
   entries: ["src/**/*.mockup.{ts,tsx}"],
+  interactive: "serve",
   mockupsDir: "docs/mockups/generated",
   renderer: "docs/mockups/renderer.tsx",
   repoRoot: ".",
@@ -41,6 +42,7 @@ Globs are relative to `repoRoot`.
 | `mockupsDir`       | Where the generated catalogue is written                                          |
 | `generatedOutput`  | `"derived"` (default) requires untracked output; `"committed"` verifies Git bytes |
 | `colorSchemes`     | Schemes rendered for every screen; defaults to `["light"]`                        |
+| `interactive`      | `"off"` (default) or local Serve browser previews with `"serve"`                  |
 | `repoRoot`         | The root every path is confined to; defaults to the config directory              |
 | `renderer`         | Your module that wraps a screen in your theme and returns a document              |
 | `stylesheets`      | Ordered route-to-stylesheet rules                                                 |
@@ -124,7 +126,8 @@ beside the viewport, the color scheme, the entry and the stylesheets that rule
 matched. Return the complete document.
 
 ```tsx
-import type { RenderInput } from "@mokly/mokly";
+import type { ReactNode } from "react";
+import type { InteractiveRenderInput, RenderInput } from "@mokly/mokly";
 import { renderToStaticMarkup } from "react-dom/server";
 
 export default function render(input: RenderInput): string {
@@ -136,10 +139,22 @@ export default function render(input: RenderInput): string {
     .join("");
   return `<!doctype html><html lang="en"><head>${links}</head><body>${body}</body></html>`;
 }
+
+export function interactive(input: InteractiveRenderInput): ReactNode {
+  return <ThemeProvider scheme={input.colorScheme}>{input.node}</ThemeProvider>;
+}
 ```
 
 React and React DOM resolve from the config's own location, so the screens use
 one React runtime even when the executable came from an npx cache.
+
+The optional `interactive` export wraps the browser-mounted node with the same
+pure providers as the static renderer. It receives no stylesheet list because
+the static document's head has already painted. Keep the two exports visually
+equivalent at their initial state. A Live browser graph cannot import Node-only
+consumer modules. Screens and components may opt out individually with
+`interactive: false`; Build, Check, Export, and Publish stay byte-identical for
+both config modes.
 
 ## Public files
 
@@ -150,13 +165,14 @@ are matched case-insensitively; an empty list keeps them.
 
 ## Exported types
 
-| Type                                                      | Use                                           |
-| --------------------------------------------------------- | --------------------------------------------- |
-| `MoklyConfig`                                             | The object `defineConfig` takes               |
-| `StylesheetRule`                                          | One entry of `stylesheets`                    |
-| `ReviewConfig`                                            | The `review` object                           |
-| `WatchConfig`, `WatchRule`, `WatchAction`                 | The `watch` object and its rules              |
-| `ModuleResolutionConfig`, `ModuleLoader`                  | The `moduleResolution` object and its loaders |
-| `CompatibilityConfig`                                     | The `compatibility` object                    |
-| `Renderer`, `RenderInput`, `RenderResult`                 | Your renderer, its context and its result     |
-| `CompatibilityTransformer`, `CompatibilityTransformInput` | A temporary document bridge                   |
+| Type                                                        | Use                                               |
+| ----------------------------------------------------------- | ------------------------------------------------- |
+| `MoklyConfig`, `InteractiveMode`                            | The config object and local Live mode             |
+| `StylesheetRule`                                            | One entry of `stylesheets`                        |
+| `ReviewConfig`                                              | The `review` object                               |
+| `WatchConfig`, `WatchRule`, `WatchAction`                   | The `watch` object and its rules                  |
+| `ModuleResolutionConfig`, `ModuleLoader`                    | The `moduleResolution` object and its loaders     |
+| `CompatibilityConfig`                                       | The `compatibility` object                        |
+| `RendererModule`, `Renderer`, `RenderInput`, `RenderResult` | Your renderer module, static renderer, and result |
+| `InteractiveRenderer`, `InteractiveRenderInput`             | Optional browser wrapper and its pure context     |
+| `CompatibilityTransformer`, `CompatibilityTransformInput`   | A temporary document bridge                       |

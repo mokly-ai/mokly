@@ -8,7 +8,11 @@ import { runServerChild } from "../server/child.js";
 import { receiveComponentRuntimeStartup } from "../server/controls/runtime_ipc.js";
 import { serve, type RunningServe } from "../server/serve.js";
 
-import { parseArguments, type CliArguments } from "./arguments.js";
+import {
+  parseArguments,
+  type CliArguments,
+  validateInteractiveArguments,
+} from "./arguments.js";
 import { openServedBrowser } from "./browser.js";
 import { runExport } from "./export.js";
 import { HELP } from "./help.js";
@@ -78,6 +82,7 @@ async function execute(
       "Configuration loaded",
       () => timeAsync("config.load", () => loadConfig(cwd, arguments_.config)),
     ));
+  validateInteractiveArguments(arguments_, config.interactive);
   if (arguments_.command === "export") {
     const result = await reportPhase(
       reporter,

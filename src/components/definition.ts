@@ -45,6 +45,8 @@ export function validateComponentDefinition(
     invalidData(at, "propSchema must be an object schema");
   if (typeof value.render !== "function")
     invalidData(at, "render must be a function");
+  if ("interactive" in value && value.interactive !== false)
+    invalidData(at, "interactive must be false when supplied");
   const slots = value.slots ?? [];
   if (
     !Array.isArray(slots) ||

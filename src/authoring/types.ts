@@ -27,6 +27,8 @@ export interface ScreenVariantInput {
   description: string;
   desktop: ReactNode;
   id: string;
+  /** Opt this variant out of local Live previews. */
+  interactive?: false;
   mobile: ReactNode;
   rationale?: string;
   relatedDocs?: readonly string[];
@@ -42,6 +44,8 @@ export interface ScreenInput extends RoutedEntryInput {
   colorSchemes?: readonly ColorScheme[];
   desktop: ReactNode;
   mobile: ReactNode;
+  /** Opt this screen and inherited variants out of local Live previews. */
+  interactive?: false;
   /** Lowercase kebab-case classification tags, e.g. ["forms"]. */
   tags?: readonly string[];
   useCaseIds?: readonly string[];
@@ -122,6 +126,8 @@ export interface NestedScreenInput extends NestedInherited {
   description: string;
   desktop: ReactNode;
   id: string;
+  /** Opt this screen and inherited variants out of local Live previews. */
+  interactive?: false;
   mobile: ReactNode;
   rationale?: string;
   slug: string;

@@ -1,4 +1,6 @@
 /** Last-good runtime transfer over the watched child's private IPC channel. */
+import { isCatalogueId } from "@mokly/viewer/data";
+
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { validatePublicExclude } from "../../config/public_exclusions.js";
 import type { ResolvedConfig } from "../../config/types.js";
@@ -14,7 +16,7 @@ export interface RuntimeStartupMessage {
 /** Heavy retained fields not already supplied in the startup message. */
 export type TransferredComponentRuntime = Pick<
   ComponentRuntime,
-  "bundle" | "generation" | "outputs"
+  "bundle" | "generation" | "interactiveEntries" | "outputs"
 >;
 
 export interface RuntimeMessage {
@@ -33,6 +35,7 @@ export function componentRuntimeMessage(
     runtime: {
       bundle: runtime.bundle,
       generation: runtime.generation,
+      interactiveEntries: runtime.interactiveEntries,
       outputs: runtime.outputs,
     },
     type: "component-runtime",
@@ -164,6 +167,7 @@ export function parseRuntimeMessage(
     !runtime ||
     typeof runtime.generation !== "string" ||
     typeof runtime.bundle?.code !== "string" ||
+    !interactiveEntries(runtime.interactiveEntries) ||
     !Array.isArray(runtime.outputs) ||
     (version !== undefined &&
       (!Number.isSafeInteger(version) || (version as number) <= 0))
@@ -174,8 +178,23 @@ export function parseRuntimeMessage(
     runtime: {
       bundle: runtime.bundle,
       generation: runtime.generation,
+      interactiveEntries: runtime.interactiveEntries,
       outputs: runtime.outputs,
     },
     ...(version === undefined ? {} : { version: version as number }),
   };
+}
+
+function interactiveEntries(
+  value: unknown,
+): value is Readonly<Record<string, boolean>> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.entries(value).every(
+      ([id, interactive]) =>
+        isCatalogueId(id) && typeof interactive === "boolean",
+    )
+  );
 }

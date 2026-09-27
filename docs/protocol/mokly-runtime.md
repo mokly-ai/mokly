@@ -39,9 +39,9 @@ documents render the complete shell on the server and hydrate it in the browser;
 embedded hosts mount the same components with host-owned selection and slots.
 Consumer frames and comparisons remain static HTML in script-disabled sandboxes.
 An optional Live preview mode for local Serve is an approved target defined by
-the [interactive views contract](./mokly-interactive-views.md); it hydrates the
-same static document on a separate loopback origin and never changes the bytes
-that comparisons read.
+the [interactive views contract](./mokly-interactive-views.md); it paints the
+same static document first and then mounts the consumer tree on a separate
+loopback origin, without changing the bytes that comparisons read.
 Selecting a removed page or screen captures and renders its pinned previous
 version in that shared tree through the lifecycle implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).

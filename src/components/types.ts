@@ -31,6 +31,8 @@ export interface ComponentInput<
   S extends ObjectPropSchema,
   Slots extends readonly string[],
 > extends RoutedEntryInput {
+  /** Opt this component out of local Live previews. */
+  interactive?: false;
   propSchema: S;
   slots?: Slots;
   controls?: {
@@ -55,6 +57,7 @@ export interface ComponentDefinition extends RoutedEntryInput {
   readonly __viaDefine: true;
   definedIn?: string;
   kind: "component";
+  interactive?: false;
   propSchema: ObjectPropSchema;
   slots: readonly string[];
   controls: Readonly<Record<string, ComponentControl>>;

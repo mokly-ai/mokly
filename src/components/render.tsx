@@ -36,7 +36,12 @@ export const renderWithComponents: ComponentGraphRenderer = (
   );
   const node = (
     <ComponentContext
-      value={{ collector, owner: { kind: "entry" }, placement: 0 }}
+      value={{
+        collector,
+        kind: "static",
+        owner: { kind: "entry" },
+        placement: 0,
+      }}
     >
       {input.entry.kind === "component" ? (
         <ComponentRoot definition={input.entry} input={input} />

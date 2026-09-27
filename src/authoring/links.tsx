@@ -1,12 +1,20 @@
 import {
+  cloneElement,
   Fragment,
   isValidElement,
   type AnchorHTMLAttributes,
   type ReactElement,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from "react";
 
 import { isCatalogueId, isLogicalFragment } from "@mokly/viewer/data";
+
+import {
+  activateInteractiveLink,
+  interactiveRoutesConfigured,
+  resolveInteractiveLink,
+} from "../interactive/runtime/route_context.js";
 
 /** Create an id-addressed link resolved during static generation. */
 export function mockLink(id: string, fragment?: string): string {
@@ -40,13 +48,39 @@ interface ChildLinkProps {
 /** Ordinary anchor props or an explicitly adapted single child control. */
 export type MockLinkProps = AnchorLinkProps | ChildLinkProps;
 
+interface InteractiveChildProps {
+  onClick?: (event: ReactMouseEvent<Element>) => void;
+  target?: string;
+}
+
 /** Render an anchor, or mark a styled control for static link adaptation. */
 export function MockLink({ asChild, fragment, to, ...props }: MockLinkProps) {
   const href = mockLink(to, fragment);
   if (asChild !== undefined && typeof asChild !== "boolean") {
     throw new TypeError("MockLink asChild must be a boolean");
   }
-  if (!asChild) return <a {...props} href={href} />;
+  if (!asChild) {
+    const anchorProps = props as Omit<
+      AnchorLinkProps,
+      "asChild" | "fragment" | "to"
+    >;
+    if (!interactiveRoutesConfigured())
+      return <a {...anchorProps} href={href} />;
+    const resolved = resolveInteractiveLink(href, anchorProps.target);
+    if (!resolved) return <a {...anchorProps} />;
+    const { onClick, ...attributes } = anchorProps;
+    return (
+      <a
+        {...attributes}
+        href={resolved.href}
+        onClick={(event) => {
+          onClick?.(event);
+          if (!event.defaultPrevented)
+            activateInteractiveLink(event, resolved.identity);
+        }}
+      />
+    );
+  }
   if (Object.keys(props).some((key) => key !== "children")) {
     throw new TypeError("MockLink asChild attributes belong on the child");
   }
@@ -54,6 +88,18 @@ export function MockLink({ asChild, fragment, to, ...props }: MockLinkProps) {
     throw new TypeError(
       "MockLink asChild requires one non-Fragment React element",
     );
+  }
+  if (interactiveRoutesConfigured()) {
+    const child = props.children as ReactElement<InteractiveChildProps>;
+    const resolved = resolveInteractiveLink(href, child.props.target);
+    if (!resolved) return child;
+    return cloneElement(child, {
+      onClick(event: ReactMouseEvent<Element>) {
+        child.props.onClick?.(event);
+        if (!event.defaultPrevented)
+          activateInteractiveLink(event, resolved.identity);
+      },
+    });
   }
   return (
     <>

@@ -63,6 +63,14 @@ combination of controls. Both viewports and every configured scheme are built
 for each variant. `MockLink to="action"` opens the default variant; canonical
 page URLs use `?variant=default` to select a specific saved example.
 
+Set `interactive: false` on a component definition to remove its local Live
+preview. In a Live tree, the registered wrapper still validates authored props
+and slots, then calls the component adapter with `{ viewport, colorScheme }`.
+It deliberately records no instances, slots, ownership ranges, or source
+sentinels: those records belong to deterministic static compilation. Saved
+component views enter Live through their complete variant props, not manifest
+projections or temporary control edits.
+
 Local Serve edits declared text, boolean, number, and primitive preset controls.
 Complex props remain inspectable; an adapter can map a primitive preset key to
 a complex consumer value. Optional controls distinguish unset from empty text
@@ -101,6 +109,8 @@ node --import tsx --test tests/component_*.test.ts
 - `definition.ts`, `types.ts`: public authoring boundary and inference.
 - `props.ts`, `schema.ts`, `codec.ts`: declarative validation and lossless data.
 - `collector.ts`, `render.tsx`, `ranges.ts`: actual usage and neutral ranges.
+- `render_context.ts`, `wrapper.tsx`: static collection versus non-recording
+  browser rendering.
 - `resolve_instance.ts`: pure resolution for scoped, validated instance records.
 - `source.ts`, `../build/jsx_dev_runtime.ts`: source validation and capture.
 - `instance_structure.ts`: explicit logical inputs, excluding source metadata.

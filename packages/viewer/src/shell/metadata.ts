@@ -2,11 +2,19 @@ import type { Manifest, ManifestEntry, ManifestV5 } from "../registry/types.js";
 import type { ReviewResultV3 } from "../review/component_types.js";
 import type { ScreenResourceEvidence, ViewReview } from "../review/types.js";
 
+/** One private live-index entry with resolved Live-preview eligibility. */
+export type CatalogueIndexEntry =
+  | (Extract<
+      ManifestV5["entries"][number],
+      { kind: "component" | "screen" }
+    > & { interactive: boolean })
+  | Exclude<ManifestV5["entries"][number], { kind: "component" | "screen" }>;
+
 export type CatalogueMetadata =
   | Manifest
   | {
       schemaVersion: "live-index-1";
-      entries: ManifestV5["entries"];
+      entries: readonly CatalogueIndexEntry[];
       generatedBy: "mokly";
       sourceFiles: readonly string[];
     };

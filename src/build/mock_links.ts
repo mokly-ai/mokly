@@ -1,10 +1,7 @@
-import path from "node:path";
-
 import { parse } from "parse5";
 
 import type { ColorScheme, Viewport } from "@mokly/viewer";
 import {
-  encodeUrlPath,
   logicalMarker,
   parseLogicalTarget,
   type LogicalTarget,
@@ -21,7 +18,10 @@ import {
   type LogicalAttributeRecord,
   type LogicalReferenceRecord,
 } from "./logical_record_types.js";
-import { artifactRouteForEntry } from "./logical_routes.js";
+import {
+  artifactRouteForEntry,
+  portableArtifactHref,
+} from "./logical_routes.js";
 
 interface HtmlAttribute {
   name: string;
@@ -127,7 +127,11 @@ export function rewriteMockLinks(
     if (!targetRoute) {
       throw invalid(sourceRoute, `links to collection id: ${destination.id}`);
     }
-    const linked = portableTarget(sourceRoute, targetRoute, destination);
+    const linked = portableArtifactHref(
+      sourceRoute,
+      targetRoute,
+      destination.fragment,
+    );
     const rewrittenAttributes = logicalAttributes.map(({ attribute }) => {
       replacements.push(
         attributeReplacement(html, sourceRoute, node, attribute.name, linked),
@@ -181,20 +185,6 @@ function oneDestination(
     );
   }
   return first;
-}
-
-function portableTarget(
-  sourceRoute: string,
-  targetRoute: string,
-  target: LogicalTarget,
-): string {
-  const relative = path.posix.relative(
-    path.posix.dirname(sourceRoute),
-    targetRoute,
-  );
-  const encoded = encodeUrlPath(relative);
-  const route = encoded.startsWith(".") ? encoded : `./${encoded}`;
-  return `${route}${target.fragment ? `#${target.fragment}` : ""}`;
 }
 
 function attributeReplacement(

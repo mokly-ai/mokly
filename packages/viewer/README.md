@@ -302,6 +302,11 @@ cancellation and evidence-refresh behavior are defined in the
 React applications normally need only the root entry and stylesheet. Do not
 import `@mokly/viewer/browser` in an application-owned React root; it
 automatically hydrates a matching standalone Mokly document.
+The browser-safe `runtime` entry also exposes the inert inspector metadata
+types and Mokly's package-owned Live navigation event name. Those values let
+the CLI's fresh-mounted Live runtime reuse the frame adapter with strictly
+validated logical identities; consumer applications should not synthesize
+inspector metadata or dispatch that event themselves.
 
 ## Server Rendering
 

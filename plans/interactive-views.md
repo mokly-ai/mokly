@@ -24,10 +24,15 @@ Decisions:
   and are mounted through the existing cross-origin frame adapter in
   `packages/viewer/src/client/post_message_adapter.ts`. Opaque-origin frames
   stay rejected; the frame adapter's origin checks are reused, not relaxed.
-- Live documents hydrate the static document produced by the ordinary build
-  path. Range and Review sentinels are not rendered in the browser, so React
-  skips the existing comment markers during hydration. A hydration mismatch
-  falls back to client rendering and is reported as a Serve diagnostic.
+- Live documents paint the static document produced by the ordinary build path,
+  then mount a fresh React root on `document.body` inside `flushSync`. The mount
+  replaces static children and sentinels while retaining body attributes. An
+  uncaught error unmounts and restores the original static child nodes; a
+  pre-mount failure leaves them untouched. Each reports one Serve diagnostic.
+- Live links resolve portable hrefs from an unbounded id-to-href route table.
+  Unmodified primary activation emits a validated logical-identity DOM event;
+  the inspector keeps its existing wire protocol and the host remains the
+  catalogue-navigation authority. Modified and middle activation stays native.
 - Component inspection (highlight, pick, boundary geometry) and editable
   controls stay on the Static frame in this plan. Live frames subscribe to
   navigation only, which the frame adapter already supports for pending or
@@ -58,16 +63,16 @@ Documentation only. Every later milestone implements this contract.
       the Live document composition (the ordinary static document for the
       view plus one module script and the inspector script in `<head>`, and
       one JSON bootstrap element naming entry, variant, viewport, scheme and
-      the resolved route table); the hydration contract (sentinels omitted in
-      the browser, comment markers tolerated, mismatch falls back to client
-      rendering with a diagnostic); the browser runtime's `MockLink`
+      the resolved route table); the mount contract (static bytes paint first,
+      then sentinels and static children are replaced by one synchronous fresh
+      mount with render-error diagnostics); the browser runtime's `MockLink`
       behaviour (resolved relative href from the route table, `asChild`
       children keep their element and emit navigation through the inspector
       transport); the material rule (the bundle, its bootstrap and the second
       origin never enter `mockupsDir`, the manifest, Changes, `check`,
       derived baselines, export or publication); and explicit failure states
       (bundle failed, Node-only import in the graph, live origin unavailable,
-      hydration mismatch, entry opted out).
+      Live render failure, entry opted out).
 - [x] Define the interactive origin: a second HTTP listener bound to loopback,
       default port `serve port + 1` advancing past occupied ports unless
       `--strict-port`, overridable with `--interactive-port <port>`; the
@@ -92,11 +97,11 @@ Documentation only. Every later milestone implements this contract.
 - [x] Define the optional renderer export `interactive(input): ReactNode` in
       `mokly-rendering.md`, with `InteractiveRenderInput` as the pure subset
       of `RenderInput` (`entry`, `variantId`, `componentProps`, `node`,
-      `viewport`, `colorScheme`). When absent, the runtime hydrates `node`
+      `viewport`, `colorScheme`). When absent, the runtime mounts `node`
       directly, which matches the default renderer. Document that the
       consumer keeps `render` and `interactive` structurally equivalent and
       that head-injected server styles (for example collected React Native
-      Web styles) are replaced by the runtime's own injection in Live.
+      Web styles) remain in the static head without a duplicate Live injection.
 - [x] Update `mokly-runtime.md` so "Browse frames are sandboxed without
       script permission" becomes "Static frames are sandboxed without script
       permission; Live frames use the cross-origin frame-adapter policy on the
@@ -160,52 +165,57 @@ at most five screens per page, split into nested pages if needed.
 - [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
       smoke the pages through `npm run dev`, commit and push.
 
-## Milestone 3: Browser bundle and hydration runtime
+## Milestone 3: Browser bundle and mount runtime — completed
 
-Backend. After this milestone a Live document can be built and hydrated in a
+Backend. After this milestone a Live document can be built and mounted in a
 test browser, with no server or UI changes yet.
 
-- [ ] Add `interactive` to `src/config/types.ts`, `validate.ts` and
+- [x] Add `interactive` to `src/config/types.ts`, `validate.ts` and
       `define.ts` as a typed value with `off` default; reject unknown strings;
       add `--interactive-port` and `--interactive-origin` to
       `src/cli/arguments.ts` and `help.ts`, valid only for `serve`.
-- [ ] Update the packaged guide `docs/guides/authoring/config.md` with the
+- [x] Update the packaged guide `docs/guides/authoring/config.md` with the
       `interactive` row and the renderer's optional `interactive` export.
-- [ ] Add per-entry `interactive?: boolean` to screen and component
+- [x] Add per-entry `interactive?: false` to screen and component
       definitions in `src/authoring`, validated like `tags`, and carry it into
       the catalogue index so the shell can hide the toggle.
-- [ ] Add `src/interactive/bundle.ts` behind an `InteractiveBundler` trait:
+- [x] Add `src/interactive/bundle.ts` behind an `InteractiveBundler` trait:
       esbuild browser build of the consumer graph plus a package-owned entry,
       reusing `consumer_resolution.ts`, keyed by generation, with a typed
       diagnostic for Node-only imports.
-- [ ] Add the browser runtime under `src/interactive/runtime/`: read the
+- [x] Add the browser runtime under `src/interactive/runtime/`: read the
       bootstrap element, look up the entry and variant in the bundled
       registry, build the node for the view (component views call the
       registered render adapter with the saved variant props), wrap it with
-      the renderer's `interactive` export when present, and hydrate
-      `document.body` with `onRecoverableError` reporting to the console and
-      to Serve.
-- [ ] Add an interactive component scope in `src/components/render_context.ts`
+      the renderer's `interactive` export when present, and mount fresh on
+      `document.body` inside `flushSync`, with caught/uncaught render errors
+      reported through an injectable reporter and to Serve's documented path;
+      leave static bytes untouched on pre-mount failure and restore the retained
+      static child nodes after an uncaught root error.
+- [x] Add an interactive component scope in `src/components/render_context.ts`
       so `renderInstance` in `wrapper.tsx` validates props but records nothing
       and renders no sentinels; make the Review-ignore sentinels in
       `src/authoring/review_ignore.tsx` render nothing in that scope.
-- [ ] Add the browser `MockLink` behaviour: resolved href from the bootstrap
+- [x] Add the browser `MockLink` behaviour: resolved href from the bootstrap
       route table, `asChild` children unchanged with a click handler that
-      emits the existing navigation event through the inspector transport.
-- [ ] Add `src/interactive/document.ts`: compose the Live document from the
+      emits a validated logical-identity event through the inspector transport;
+      cover native, child-control and delegated raw `mock:` activation without
+      the static metadata map's 1,024-link cap.
+- [x] Add `src/interactive/document.ts`: compose the Live document from the
       ordinary compiled static document by inserting the bootstrap element and
       the two head scripts, without touching the body bytes.
-- [ ] Export `InteractiveRenderInput` from the package; add the `interactive`
+- [x] Export `InteractiveRenderInput` from the package; add the `interactive`
       export to the default renderer's types.
-- [ ] Tests: bundle succeeds for the example graph and fails with the typed
+- [x] Tests: bundle succeeds for the example graph and fails with the typed
       diagnostic for a fixture importing `node:fs`; document composition keeps
       body bytes identical; a Playwright test loads a Live document from a
       temporary static server and verifies a stateful control responds after
-      hydration and that no hydration error was reported; a mismatch fixture
-      still renders and reports the diagnostic.
-- [ ] Add `src/interactive/README.md`; update `src/components/README.md` and
+      mount and that no render error was reported; render-error and pre-mount
+      fixtures retain or restore static content and report once; cover every
+      eligibility reason, more than 1,024 routes, and compacted opt-outs.
+- [x] Add `src/interactive/README.md`; update `src/components/README.md` and
       `src/renderer/README.md` if present.
-- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+- [x] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check` and the
       workspace `cargo xtask check` command; commit and push.
 
@@ -294,8 +304,8 @@ Tags: ui
 
 ## Post-merge follow-up (non-blocking)
 
-- Live inspection: measure boundaries in the hydrated DOM and re-enable
+- Live inspection: measure boundaries in the mounted DOM and re-enable
   highlight and pick for Live frames.
-- Live controls: apply prop edits to the hydrated tree directly.
+- Live controls: apply prop edits to the mounted tree directly.
 - `interactive: "export"`: ship the bundle in static exports on a separate
   host origin, after a decision on export size and hosting requirements.

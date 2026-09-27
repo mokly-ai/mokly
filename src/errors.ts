@@ -10,6 +10,7 @@ export type MoklyErrorCode =
   | "config-missing"
   | "export-invalid"
   | "git-failed"
+  | "interactive-bundle"
   | "manifest-invalid"
   | "review-invalid"
   | "server-failed"

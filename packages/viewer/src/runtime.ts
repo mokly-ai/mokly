@@ -8,7 +8,8 @@ export {
 export { localFramePath } from "./client/same_origin_adapter.js";
 export { BYTE_LIMIT } from "./inspector/values.js";
 export { compactRanges, readMetadata } from "./inspector/metadata.js";
-export type { LinkIdentity } from "./inspector/metadata.js";
+export type { InspectorMetadata, LinkIdentity } from "./inspector/metadata.js";
+export { INTERACTIVE_NAVIGATION_EVENT } from "./inspector/links.js";
 export { adoptCatalogueRevision } from "./client/catalogue_updates.js";
 export {
   readViewerCapabilityDescriptor,
