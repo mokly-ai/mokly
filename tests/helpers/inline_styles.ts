@@ -1,3 +1,5 @@
+import assert from "node:assert/strict";
+
 import { parse } from "parse5";
 
 import type {
@@ -14,6 +16,7 @@ import {
   type InlineAttributionInput,
   type InlineAttributionResult,
 } from "../../src/review/css/inline_attribution.js";
+import type { InlineRuleAttribution } from "../../src/review/css/inline_rule_matching.js";
 import { LightningCssRuleParser } from "../../src/review/css/rules.js";
 import type { CssRuleParser } from "../../src/review/css/types.js";
 import {
@@ -149,4 +152,25 @@ export function analyzeInline(options: Parameters<typeof inlineInput>[0]): {
 } {
   const input = inlineInput(options);
   return { input, result: attributeInlineRules(input) };
+}
+
+export function changedStyle(selector = ".target") {
+  return {
+    before: `<style>${selector}{color:red}</style>`,
+    after: `<style>${selector}{color:blue}</style>`,
+  };
+}
+
+export function resolved(result: InlineAttributionResult) {
+  assert.equal(result.status, "resolved");
+  assert.ok(result.status === "resolved");
+  return result;
+}
+
+export function oneAttribution(
+  result: InlineAttributionResult,
+): InlineRuleAttribution {
+  const value = resolved(result);
+  assert.equal(value.rules.length, 1);
+  return value.rules[0]!.attribution;
 }
