@@ -148,6 +148,37 @@ test("an aborted in-flight presentation is not reused", async () => {
   assert.equal(fetches, 2);
 });
 
+test("an abort before settlement cannot publish accepted work", async () => {
+  let fetches = 0;
+  let parses = 0;
+  const controller = new AbortController();
+  const loader = createSnapshotPresentationLoader(
+    GENERATION,
+    ["before", "after"],
+    { kind: "live" },
+    {
+      baseUrl: GENERATION,
+      fetch: async () => {
+        fetches += 1;
+        return response(AFTER);
+      },
+      parse: () => {
+        parses += 1;
+        if (parses === 1) queueMicrotask(() => controller.abort());
+        return documentFixture();
+      },
+    },
+  );
+  await assert.rejects(loader.load(AFTER, controller.signal), {
+    name: "AbortError",
+  });
+  assert.equal(
+    (await loader.load(AFTER, AbortSignal.timeout(5_000))).snapshotAddress,
+    AFTER,
+  );
+  assert.equal(fetches, 2);
+});
+
 test("failed entries are removed and comparison failures keep their copy", async () => {
   let fetches = 0;
   const loader = createSnapshotPresentationLoader(

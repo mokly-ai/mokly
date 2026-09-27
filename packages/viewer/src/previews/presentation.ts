@@ -95,6 +95,7 @@ export function createSnapshotPresentationLoader(
       cache.set(requested.href, pending);
       try {
         const presentation = await pending.promise;
+        signal.throwIfAborted();
         if (cache.get(requested.href) === pending)
           cache.set(requested.href, presentation);
         return presentation;
