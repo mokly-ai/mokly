@@ -3,9 +3,10 @@
 ## Scope
 
 This contract defines the user-visible terminal behavior of the `mokly` CLI.
-It covers output-mode selection, rich progress, plain compatibility, errors,
-watched Serve events, and interactive shortcuts. It does not change catalogue
-HTTP errors, `MoklyError` messages, generated files, or timing records.
+It covers output-mode selection, rich progress, plain compatibility, build
+warnings, errors, watched Serve events, and interactive shortcuts. It does not
+change catalogue HTTP errors, `MoklyError` messages, generated files, or timing
+records.
 
 ## Output mode
 
@@ -112,7 +113,10 @@ watched catalogue then reports existing lifecycle boundaries:
 Catalogue counts come from accepted manifest entries. Zero-valued kinds are
 omitted. A baseline cache hit says `Baseline ready · reused <short-sha>`; a
 committed catalogue omits baseline preparation. Unavailable Changes says
-`! Changes unavailable` and preserves All browsing.
+`! Changes unavailable` and preserves All browsing. A generation's build
+warnings print as `  ! <route>: <message>` lines immediately before its
+`Catalogue ready` line and are not repeated for on-demand previews; plain
+Serve writes the same `[mokly/warning]` lines as one-shot commands.
 
 Watched actions use one durable line after the action settles:
 
@@ -162,6 +166,19 @@ Completion summaries are:
 Export follows its summary with the unstyled guidance
 `Deploy this directory at your site's root with your hosting provider.`
 
+### Build warnings
+
+A compilation that reports [build warnings](./mokly-build-warnings.md) prints
+one stderr line per warning after the rendering phase completes and before the
+summary, which is unchanged:
+
+```text
+  ! screens/home.desktop.html: MockLink child control is inside <button>; one click or key press has two targets
+```
+
+With `--strict`, the warnings print and the command then fails with
+`build-invalid` and the message `<n> build warnings with --strict`.
+
 ## Plain compatibility
 
 Successful plain commands retain these exact strings, including punctuation,
@@ -179,9 +196,12 @@ Published Mokly catalogue.
 ```
 
 Plain commands add no phase or watch-event lines. Successful plain commands
-write nothing to stderr unless `--debug-timings` was requested. Expected plain
-errors remain exactly `[mokly/<code>] <message>\n`. Timing mode retains the
-same stdout and writes only its documented JSON lines plus existing failures.
+write nothing to stderr unless `--debug-timings` was requested or the
+compilation reported build warnings. Each warning is exactly
+`[mokly/warning] <route>: <message>\n` on stderr, in the compilation's sorted
+order, and stdout keeps its established bytes. Expected plain errors remain
+exactly `[mokly/<code>] <message>\n`. Timing mode retains the same stdout and
+writes only its documented JSON lines plus existing failures.
 
 ## Rich errors
 

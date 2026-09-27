@@ -80,6 +80,14 @@ Export and Review boundaries continue to use directories that hold resolved
 entry modules. Source locations do not enter instance keys, props keys, slot
 identities, or Changes projections.
 
+## Build Warnings
+
+Approved target. The child-control adapter and the compatibility transform
+return non-fatal diagnostics beside their output, and `compile.ts` sorts them
+onto the compilation result as `diagnostics`. They never enter generated files
+or the manifest. See the
+[build warnings contract](../../docs/protocol/mokly-build-warnings.md).
+
 ## Development
 
 ```sh

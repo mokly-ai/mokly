@@ -18,6 +18,13 @@ npx mokly build
 | `--config <path>` | Use an explicit `mokly.config` file                         |
 | `--debug-timings` | Report phase timings and catalogue counts on standard error |
 
+## Warnings
+
+A build can succeed with warnings, for example a styled link placed inside a
+button. Each warning is one line on standard error naming the route and the
+element, the output is still written, and the exit status stays `0`. Pass
+`--strict` to print the warnings and then fail without writing anything.
+
 ## What it writes
 
 Under `mockupsDir`, one document per screen for each effective viewport and

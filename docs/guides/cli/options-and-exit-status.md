@@ -49,6 +49,10 @@ combined with `--base`.
 | `0`  | The command succeeded |
 | `1`  | The command failed    |
 
+A command that finishes with build warnings still exits `0`. `--strict`, which
+`build`, `check`, `export` and `publish` accept, prints the warnings and then
+exits `1` under the `build-invalid` category.
+
 ## Errors
 
 A failure prints one line on standard error that begins with its category, so

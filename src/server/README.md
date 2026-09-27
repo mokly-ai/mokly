@@ -125,7 +125,10 @@ compositions. Plain mode emits only the historical readiness and diagnostic
 bytes. Rich mode presents accepted catalogue, baseline, Changes, reference, and
 watch-action boundaries. Diagnostics originating in a supervised child cross a
 validated IPC message so the parent remains the sole terminal owner; a child
-without IPC retains direct diagnostic output.
+without IPC retains direct diagnostic output. As an approved target, a
+generation's [build warnings](../../docs/protocol/mokly-build-warnings.md)
+arrive on the background compilation result and are reported once before
+`Catalogue ready`, never per on-demand document.
 
 The [public-exclusion policy](../../docs/protocol/mokly-source-protection.md#public-exclusions)
 adds config-owned `publicExclude` globs to the shared source classifier.

@@ -64,8 +64,9 @@ preference, rather than per-screen dark renders, keeps a whole session dark.
   misleading keyboard stop. Keep the selected state visibly identified.
   Inactive controls must remain non-interactive after static generation. Native
   inspector tabs and viewport selections operate in place without navigation.
-  Links inside inspector bodies use ordinary `MockLink` anchors; `asChild`
-  deliberately rejects interactive ancestors including `details`.
+  Links inside inspector bodies use ordinary `MockLink` anchors. `asChild`
+  inside `details` content builds silently, while a `summary`, button, or tab
+  ancestor produces a build warning; keep design mockups warning-free.
 - Keep reusable mockup controls in `entries/design/parts/`. Share the existing
   miniature screens between their owning standalone design screens and the
   depicted use case. Keep new files near 200 lines and below 300 lines.

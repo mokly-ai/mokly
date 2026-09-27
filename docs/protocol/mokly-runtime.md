@@ -71,7 +71,9 @@ Changes. Screen-owned prop and slot changes still count as screen changes.
 8. Atomically replace generated files and remove proven generated orphans.
 
 An error leaves the last-good generated tree unchanged. Build output and
-diagnostics use repo-relative paths and deterministic ordering.
+diagnostics use repo-relative paths and deterministic ordering. Non-fatal
+[build warnings](./mokly-build-warnings.md) are reported after rendering and
+fail the command only with `--strict`.
 
 ## Check
 

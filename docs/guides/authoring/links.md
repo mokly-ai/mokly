@@ -44,9 +44,29 @@ element:
 ```
 
 Mokly turns that one control into a native link during the build, keeping its
-classes, inline styles, label and icons. Put attributes on the child, which
-must have no interactive descendants. A disabled or busy control stays
-inactive, and an adapted link keeps a visible keyboard focus outline.
+classes, inline styles, label and icons. Put attributes on the child. A
+disabled or busy control stays inactive, and an adapted link keeps a visible
+keyboard focus outline.
+
+## Where a styled control can go
+
+The control becomes the link, so nothing inside it may be a control of its
+own. A link, button, form field, summary or editable element inside the child
+fails the build, and so does an inline event handler. Focusable content inside
+the child, such as an element with `tabindex`, builds with a warning because
+it adds a second keyboard stop to one link.
+
+Placement around the control matters too. Inside another link or inside
+editable content the build fails, because the browser cannot give both
+elements the same click. Inside a button, a label, a summary or an element
+with a control role such as `menuitem` or `tab`, the build succeeds with a
+warning that one click has two targets. A focus target such as
+`<main tabIndex={-1}>`, the body of a `<details>` element and grouping roles
+such as `menubar` or `tablist` need no change and produce no warning.
+
+A warning names the route and the element on standard error and leaves the
+exit status at `0`. Pass `--strict` to `build` or `check` when a warning should
+fail the command instead.
 
 ## Metadata without an interaction
 

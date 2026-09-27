@@ -32,6 +32,11 @@ redaction, and controls the exit code.
 Publish-only modules are loaded after command selection. Build, Check, Export,
 and supervised Serve children therefore do not initialize the upload archiver.
 
+Build warnings are non-fatal compile diagnostics carried on the compilation
+result. `run.ts` prints them through the reporter after the rendering phase
+and, with `--strict`, fails the command afterwards; this is an approved target
+tracked by the build warnings contract.
+
 Rich presentation never changes `MoklyError`, generated output, HTTP responses,
 or timing JSON. The supervised Serve child stays plain and forwards diagnostics
 to the parent so only one reporter owns the terminal.
@@ -71,6 +76,7 @@ ordinary test runners pipe stdout and intentionally select plain mode.
 ### Related Docs
 
 - [Terminal output contract](../../docs/protocol/mokly-terminal-output.md)
+- [Build warnings](../../docs/protocol/mokly-build-warnings.md)
 - [Package and CLI contract](../../docs/protocol/mokly-package.md)
 - [Timing diagnostics](../../docs/protocol/mokly-timings.md)
 - [Watched development](../../docs/protocol/mokly-watch.md)

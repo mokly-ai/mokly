@@ -103,38 +103,42 @@ One helper describes the offending element as `<tag>` or
   descendants fail are inverted on purpose. This is the only mainline behavior
   this plan removes.
 
-## Milestone 1: Define the contract
+## Milestone 1: Define the contract — completed
 
 Write the tiers, messages, and warning channel into the protocol documents and
 guides before any code changes.
 
-- [ ] Fetch `origin/main`, record the source tip, and audit main's additions
+- [x] Fetch `origin/main`, record the source tip, and audit main's additions
       from the branch point so the integration preserves mainline features.
-- [ ] Add `docs/protocol/mokly-build-warnings.md` defining the diagnostic
+      Source tip `b1bb0f1`, branch point `3699c56`; main had no additions.
+- [x] Add `docs/protocol/mokly-build-warnings.md` defining the diagnostic
       record, ordering, exclusion from generated output, the producer seams,
       which commands print which compilation's diagnostics, Serve's
       once-per-generation rule, and `--strict`; index it in
       `docs/protocol/README.md`.
-- [ ] Update `docs/protocol/mokly-terminal-output.md`: the plain warning line,
+- [x] Update `docs/protocol/mokly-terminal-output.md`: the plain warning line,
       the rich warning line and its position, the plain-stderr exception, the
       `--strict` failure, and Serve's warning lines before `Catalogue ready`.
-- [ ] Rewrite the ancestor and descendant paragraphs of
+- [x] Rewrite the ancestor and descendant paragraphs of
       `docs/protocol/mokly-link-controls.md` as the two tier tables, the
       message templates, and the unchanged root contract; point Delivery
       Status at this plan until the code lands.
-- [ ] Replace the `mokly-design-links.md` sentence that says `asChild`
+- [x] Replace the `mokly-design-links.md` sentence that says `asChild`
       deliberately rejects interactive ancestors including `details`.
-- [ ] Extend "Style your own control" in `docs/guides/authoring/links.md` with
+- [x] Extend "Style your own control" in `docs/guides/authoring/links.md` with
       both halves of the rule in reader-facing copy: what fails, what warns,
-      what is fine, and that `--strict` turns warnings into failures, linking
-      `/docs/cli/options-and-exit-status/`.
-- [ ] Add `--strict` to `docs/guides/cli/options-and-exit-status.md`,
-      `build.md`, `check.md`, `export.md`, and `publish.md`, and a short
-      warnings paragraph to `check.md`'s CI section and `serve.md`.
-- [ ] Update `src/cli/README.md`, `src/build/README.md`, and
-      `src/server/README.md` for the channel, and check the root `README.md`
-      for the old rule wording.
-- [ ] Validate the changed Markdown with `npx prettier --check`, run the guide
+      what is fine, and that `--strict` turns warnings into failures. The
+      guide corpus permits no links, so the CLI guide is named in prose.
+- [x] Describe warnings and `--strict` in prose in
+      `docs/guides/cli/options-and-exit-status.md`, `build.md`, `check.md`,
+      `export.md`, `publish.md`, and `serve.md`. The option-table rows move to
+      Milestone 2 because the guide tests tie table rows to the parser and
+      `--help`.
+- [x] Update `src/cli/README.md`, `src/build/README.md`, and
+      `src/server/README.md` for the channel, and the root `README.md`,
+      `docs/architecture/build-pipeline.md`, `mokly-runtime.md`, and
+      `mokly-on-demand.md` for the new outcome.
+- [x] Validate the changed Markdown with `npx prettier --check`, run the guide
       tests, and review the diff.
 
 ## Milestone 2: Build warning channel
@@ -158,6 +162,10 @@ existing catalogue builds with identical bytes and output.
       `publish` through the export result.
 - [ ] Add `--strict` to `src/cli/arguments.ts`, `help.ts`, and the command
       validation; fail after printing when diagnostics exist.
+- [ ] Add the `--strict` rows to the option tables in
+      `docs/guides/cli/options-and-exit-status.md`, `build.md`, `check.md`,
+      `export.md`, and `publish.md` in the same change as the parser and help,
+      so `tests/guides_cli.test.ts` stays green.
 - [ ] Report a generation's diagnostics once in Serve: extend the
       `catalogueReady` path for `BackgroundGeneration` and `WatchedBackground`,
       and implement the lines in both CLI reporters and `PlainServeReporter`.

@@ -29,6 +29,12 @@ of static files. Export never uploads anything.
 Deploy the directory's contents at the root of an HTTP(S) origin. Hosting
 requirements are on the Catalogue page for export and hosting.
 
+## Warnings
+
+Export prints the warnings of the build it packages on standard error and
+still exports. With `--strict` it prints them and stops before writing the
+destination.
+
 ## The destination
 
 `--out` resolves beside the loaded config rather than your working directory,

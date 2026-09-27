@@ -28,6 +28,11 @@ contract.
 | `--repository <host>/<owner>/<name>` | Override the detected repository identity                              |
 | `--debug-timings`                    | Report phase timings and catalogue counts on standard error            |
 
+## Warnings
+
+Publish reports the export's build warnings the same way `export` does. With
+`--strict` it prints them and stops before uploading.
+
 ## Credentials
 
 Set `MOKLY_ENDPOINT` and `MOKLY_TOKEN` in your shell or your CI secrets;
