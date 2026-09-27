@@ -12,6 +12,7 @@ type Viewport = "desktop" | "mobile";
 const STACKED = [
   ["design/review/controls/overlay", "overlay"],
   ["design/review/controls/overlay-long", "overlay"],
+  ["design/review/controls/overlay-panel", "overlay"],
   ["design/review/outcomes/difference", "difference"],
   ["design/browse/appearance/workspaces/difference", "difference"],
 ] as const;

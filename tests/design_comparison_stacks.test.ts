@@ -22,6 +22,7 @@ import {
 const STACKED = [
   ["design-changes-overlay", "overlay"],
   ["design-changes-overlay-long", "overlay"],
+  ["design-changes-overlay-panel", "overlay"],
   ["design-review-difference", "difference"],
   ["design-appearance-difference", "difference"],
 ] as const;
@@ -29,6 +30,7 @@ const STACKED = [
 /** Designs that keep one device chrome per version. */
 const SIDE_BY_SIDE = [
   "design-review-changed",
+  "design-changes-side-by-side-apart",
   "design-appearance-side-by-side",
   "design-review-style-matched",
   "design-review-style-unresolved",

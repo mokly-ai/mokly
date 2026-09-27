@@ -28,7 +28,7 @@ to depict a different setting, as the `auto-appearance` sample does.
 | chrome / catalogue-navigation | `parts/nav.tsx`, scenario data in `components/parts/navigation.tsx` | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable`, `variants`, `changed-variants` |
 | chrome / screen-header        | `parts/shell.tsx: ScreenHead`                                       | `screen`, `component`, `changed`, `removed`                                                                |
 | chrome / appearance-selector  | new for the appearance mockups                                      | `auto`, `light`, `dark`, `compact`                                                                         |
-| controls / comparison-toolbar | `parts/compare.tsx: CompareToolbar`                                 | `current`, `side-by-side`, `overlay`, `difference`                                                         |
+| controls / comparison-toolbar | `parts/compare.tsx: CompareToolbar`                                 | `current`, `side-by-side`, `overlay`, `difference`, `side-by-side-apart`                                   |
 | controls / view-controls      | `components/parts/view_controls.tsx`, `parts/shell.tsx: ViewSwitch` | `default`, `both`, `highlighted`, `unavailable`, `changed-views`                                           |
 | controls / tag-picker         | `parts/tag_filter.tsx: TagPicker`                                   | `all`, `selected`, `empty`                                                                                 |
 | controls / tag-chip           | `parts/tag_filter.tsx: TagChips`                                    | `default`, `selected`, `inactive`                                                                          |
@@ -93,14 +93,18 @@ Controls below use text, boolean, number and primitive enum selections only.
    sidebar/mobile drawer; the drawer variant explicitly depicts the drawer.
 3. **Screen header:** title, breadcrumb records, optional entry-id chip,
    optional `unmodified/added/changed/removed` status, explicit comparison
-   eligibility/mode and destinations. An `actions` slot holds caller controls.
-   Controls: title and optional status. Compose the status/toolbar implementations
-   without introducing a comparison band into ineligible screen states.
+   eligibility/mode, the Scroll together state and destinations. An `actions`
+   slot holds caller controls. Controls: title and optional status. Compose the
+   status/toolbar implementations without introducing a comparison band into
+   ineligible screen states.
 4. **Comparison toolbar:** `current/side-by-side/overlay/difference` mode,
-   explicit eligible state, accessibility flag and available mode destinations.
-   Controls: mode and eligibility. Ineligible renders no band; stories depicting
-   a band supply eligible fixture data. Preserve the opaque background, refresh
-   depiction and current linked/native/inactive behavior for each screen family.
+   explicit eligible state, accessibility flag, Scroll together state and
+   available mode destinations. Controls: mode, eligibility and Scroll together.
+   Ineligible renders no band; stories depicting a band supply eligible fixture
+   data. A diff mode draws the native Scroll together switch between the mode
+   group and Refresh, and `side-by-side-apart` saves it off; Current draws
+   neither. Preserve the opaque background, refresh depiction and current
+   linked/native/inactive behavior for each screen family.
 5. **View controls:** selected preview `mobile/desktop/both`, optional
    highlight state, unavailable reason `empty/unavailable/comparison/removed`,
    and optional changed views as viewport/scheme records. Controls: selection,

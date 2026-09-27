@@ -11,9 +11,11 @@ import type { ReviewState } from "./review.js";
 export function CompareToolbar({
   mode,
   accessible = false,
+  scrollTogether = true,
 }: {
   mode: ComparisonMode;
   accessible?: boolean | undefined;
+  scrollTogether?: boolean | undefined;
 }) {
   const navigation = useDesignNavigation();
   return (
@@ -22,6 +24,7 @@ export function CompareToolbar({
       mode={mode}
       eligible
       accessible={accessible}
+      scrollTogether={scrollTogether}
       destinations={navigation.comparison ?? {}}
     />
   );

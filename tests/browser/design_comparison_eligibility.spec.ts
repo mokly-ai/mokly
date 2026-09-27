@@ -20,6 +20,8 @@ const changedDesigns = new Set([
   "design-changes-current",
   "design-changes-overlay",
   "design-changes-overlay-long",
+  "design-changes-overlay-panel",
+  "design-changes-side-by-side-apart",
   "design-review-changed",
   "design-review-difference",
   "design-review-style-matched",

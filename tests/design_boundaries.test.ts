@@ -83,6 +83,8 @@ const AUDITED_BOUNDARIES = [
   "design-library/controls/change-status.css .ce-added",
   "design-library/controls/change-status.css .ce-changed",
   "design-library/controls/change-status.css .ce-removed",
+  "design-library/controls/comparison-toolbar.css .mbk-cmp-sync:has(input:checked) .mbk-cmp-sync-track",
+  "design-library/controls/comparison-toolbar.css .mbk-cmp-sync:has(input:focus-visible) .mbk-cmp-sync-track",
   "design-library/controls/tag-chip.css .mbk-chip.tag:is(a).active",
   "design-library/controls/view-controls.css .ce-icon-control:focus-within",
   "design-library/controls/view-controls.css .ce-icon-control:hover, .ce-icon-control:has(input:checked)",

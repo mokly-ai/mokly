@@ -684,7 +684,7 @@ Tags: mockup
 Summary: depict an app-shell screen whose panel scrolls as one in Overlay,
 and the "Scroll together" toggle on and off, before the runtime changes.
 
-- [ ] Add a `design-changes-overlay-panel` screen to
+- [x] Add a `design-changes-overlay-panel` screen to
       `examples/basic/entries/design/changes_screens.tsx` with desktop and
       mobile variants in both schemes: an app-shell screen in Overlay inside
       one chrome whose top bar and navigation stay in place while its main
@@ -692,27 +692,37 @@ and the "Scroll together" toggle on and off, before the runtime changes.
       panel's own scrollbar drawn part-way and no page scrollbar on the chrome
       viewport. Reuse `ComparisonStack` and the Milestone 2 parts, keep the
       depicted panes inert, and put no annotations inside the screen area.
-- [ ] Add the "Scroll together" toggle, on, to the comparison toolbar of every
+- [x] Add the "Scroll together" toggle, on, to the comparison toolbar of every
       comparison mockup through the shared toolbar part, and add a
       `design-changes-side-by-side-apart` screen with desktop and mobile
       variants in both schemes showing Side by side with the toggle off and
       the two panes at different offsets.
-- [ ] Register both destinations, reach them from their Diff controls group
+- [x] Register both destinations, reach them from their Diff controls group
       like their siblings, add their inventory rows at
       `design/review/controls/overlay-panel.html` and
       `design/review/controls/side-by-side-apart.html` to the table in
       `docs/protocol/mokly-shell-design.md`, change the Milestone 5 Design
       References wording from planned to existing, and keep the Changes page
       within five screens.
-- [ ] Extend the design inventory, link-state, stack and screen-count tests
+- [x] Extend the design inventory, link-state, stack and screen-count tests
       the new screens and the toolbar toggle touch; assert structure, layer order, blending, opaque
       backgrounds and offsets fixed by CSS, never font metrics or text
       wrapping.
-- [ ] Run `npm run build`, `npm run example:build` and
+- [x] Scope the stage heading rule in `design-review.css` to the stage's own
+      heading: it also styled the section headings of every depicted Welcome
+      with the interface's secondary ink, so they turned tan in Dark instead of
+      keeping the screen's ink. The new regression in
+      `tests/browser/design_comparison_scrolling.spec.ts` failed first.
+- [x] Keep the new drawn-position rules in their own authored
+      `examples/basic/generated/design-review-scroll.css`, linked only on the
+      Diff controls routes, so `design-review.css` stays near 150 lines, and
+      raise the tracked-stylesheet guard in
+      `tests/browser/design_library_export.spec.ts` from 29 to 30.
+- [x] Run `npm run build`, `npm run example:build` and
       `npm run example:check`, then smoke-test the changed pages through
       `npm run dev` in both schemes and save screenshots under `.context/`.
-- [ ] Run the design tests, then `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] Run the design tests, then `cargo xtask check`.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the
@@ -762,7 +772,11 @@ anchors to regions first, and prove both in the browser.
       scroll enclosing regions first.
 - [ ] Add the "Scroll together" toggle to the comparison toolbar with its
       remembered preference, and make the section controller honour it
-      without reloading panes.
+      without reloading panes. Match the Milestone 6 mockup: a `<label>`
+      after the mode group and before Refresh holding a native
+      `input type="checkbox" role="switch"`, an `aria-hidden` track and the
+      text “Scroll together”, drawn and placed as
+      `docs/protocol/mokly-shell-design.md` specifies.
 - [ ] Add unit tests with fake documents for region detection, every pairing
       rule, ambiguity, mirroring, the echo rule, match discarding, key routing,
       anchors and the toggle.
@@ -773,6 +787,14 @@ anchors to regions first, and prove both in the browser.
 - [ ] Update `packages/viewer/src/shell/README.md`, the scrolling contract and
       the Changes guide for the delivered modules, then run the comparison,
       preview, review and design browser specs and `cargo xtask check`.
+- [ ] Remove the pending-runtime wording Milestone 6 added: the exception to
+      “Every state recorded here is implemented” in the Delivery Status of
+      `docs/protocol/mokly-shell-design.md`, the Milestone 7 sentence in the
+      Delivery Status of `docs/protocol/mokly-component-design.md`, “the
+      runtime delivers these in Milestone 7” in the Design References of
+      `docs/protocol/mokly-comparison-panes.md`, and the Milestone 6 and 7
+      sentences in the Delivery Status of
+      `docs/protocol/mokly-comparison-scrolling.md`.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)

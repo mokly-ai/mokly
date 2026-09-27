@@ -46,6 +46,8 @@ export const DESTINATIONS = {
   current: "design-changes-current",
   overlay: "design-changes-overlay",
   overlayLong: "design-changes-overlay-long",
+  overlayPanel: "design-changes-overlay-panel",
+  sideBySideApart: "design-changes-side-by-side-apart",
   changed: "design-review-changed",
   added: "design-review-added",
   removed: "design-review-removed",

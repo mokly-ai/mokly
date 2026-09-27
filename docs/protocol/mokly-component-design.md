@@ -16,7 +16,11 @@ consumer's previous-version state is implemented by the
 The stacked component comparisons depict the implemented
 [comparison pane contract](./mokly-comparison-panes.md): the explorer holds a
 saved variant's two versions in one bordered frame whose viewport scrolls both
-as one.
+as one. Their comparison bands also depict the Scroll together switch of the
+[comparison scrolling contract](./mokly-comparison-scrolling.md#reader-control),
+which Milestone 7 of the
+[comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
+implements.
 
 ## Owning Catalogue
 
@@ -71,7 +75,7 @@ depictions of shell controls do not implement the separate runtime inspector.
 The shared shell retains the [existing design navigation](./mokly-design-links.md)
 for brand, home breadcrumb, and the canonical mobile drawer. Component artboards
 select their own typed navigation state; they never inherit Welcome's tag,
-scheme, inspector, or comparison transitions. Their viewport dropdown and highlight switch work through native form state and CSS. Comparison depictions retain native button focus and pressed states only in eligible change scenarios.
+scheme, inspector, or comparison transitions. Their viewport dropdown and highlight switch work through native form state and CSS. Comparison depictions retain native button focus and pressed states only in eligible change scenarios. In Side by side, Overlay and Difference the band also draws the Scroll together switch, on, after the mode control and before Refresh, as the [shell design](./mokly-shell-design.md#in-place-comparisons) specifies; it toggles in place.
 Action's changed Default variant is one comparison family: its mode control
 links Current to `design-component-affected`, Side by side to
 `design-component-comparison`, and Overlay and Difference to

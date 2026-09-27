@@ -117,6 +117,26 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
   screenful, part-way down, with one section reworded in place so every other
   section stays aligned. A static artboard cannot scroll, so its offset and
   scrollbar are drawn.
+- The stage's heading style applies only to its own heading, so the section
+  headings of a depicted Welcome keep the screen's ink in either scheme.
+- Every diff-mode band draws the Scroll together switch, on, after its modes
+  and before Refresh. It is a native checkbox that toggles in place and opens
+  no artboard; below the breakpoint the modes take the first row and the
+  switch starts the second.
+- The panel-overlay artboard shows Welcome built as an app shell: its top bar
+  and navigation, a tab bar on the phone, stay in place while both versions'
+  main panels are drawn part-way down at one position with the panel's own
+  scrollbar and one section reworded. The chrome's viewport has nothing to
+  scroll, so it draws no scrollbar.
+- The scrolled-apart artboard shows Side by side with Scroll together off:
+  each version is drawn at its own place down a long Welcome with its own
+  scrollbar, and both land in the sections rather than the introduction's
+  reserved space.
+- Those two artboards draw every row at a fixed height. Each drawn region
+  states its visible height, content height and offset once in
+  `generated/design-review-scroll.css`, and both the content's offset and its
+  scrollbar thumb follow those numbers, so they always agree and never depend
+  on text wrapping.
 - Component Overlay and Difference draw one bordered component frame holding
   both versions of a saved variant, at the height of each Side by side canvas,
   with its caption above the viewport both versions share. Each version paints

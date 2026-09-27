@@ -6,8 +6,9 @@ The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-a
 delivered the presentation below through Milestone 4: the existing design
 references, generation-confined snapshot loader, and device-sized pane runtime.
 Its [scrolling contract](./mokly-comparison-scrolling.md) records that delivered
-page scroller and the approved inner-region and Scroll together target for
-Milestones 6 and 7. This contract governs the Before and Current panes that
+page scroller and the approved inner-region and Scroll together target, which
+Milestone 6 depicts in the design catalogue and Milestone 7 implements. This
+contract governs the Before and Current panes that
 [Changes and screen comparisons](./mokly-changes.md) offer for changed screens
 and eligible component variants in Side by side, Overlay and Difference. It
 changes nothing about comparison eligibility, capture, generation, publishing,
@@ -239,9 +240,16 @@ variant's two versions in one bordered component frame, and
 `design-component-overlay-tall` depicts a component taller than that frame
 scrolled part-way inside it, with both versions at one scroll position and the
 frame's scrollbar drawn to match; `design-component-comparison` keeps one frame
-per version in Side by side. Links inside every depicted pane are inert. See
-[the shell design](./mokly-shell-design.md) and
+per version in Side by side. Links inside every depicted pane are inert.
+
+`design-changes-overlay-panel` at `design/review/controls/overlay-panel.html`
+depicts an app-shell screen in Overlay whose top bar and navigation stay in
+place while both versions' main panels sit part-way down at one position, with
+the panel's own scrollbar drawn and no page scrollbar on the chrome's viewport.
+`design-changes-side-by-side-apart` at
+`design/review/controls/side-by-side-apart.html` depicts Side by side with
+Scroll together off, each version at its own place with its own scrollbar.
+Every diff-mode screen design draws the Scroll together switch after its mode
+group, on everywhere but that one; the runtime delivers these in Milestone 7.
+See [the shell design](./mokly-shell-design.md) and
 [the component design](./mokly-component-design.md) for the complete tables.
-Milestone 6 plans `design-changes-overlay-panel`, an app-shell panel aligned in
-Overlay, and `design-changes-side-by-side-apart`, independent offsets with
-Scroll together off. They are planned references, not existing inventory rows.

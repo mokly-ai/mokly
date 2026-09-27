@@ -8,7 +8,8 @@
   device-sized presentations driven by one shared chrome viewport
   (Milestones 1 to 4, delivered), and
   Milestones 5 to 7 mirror inner scroll regions such as app-shell panels and
-  add a "Scroll together" toggle.
+  add a "Scroll together" toggle; the contract (Milestone 5) and mockups
+  (Milestone 6) are delivered, and Milestone 7 implements the runtime.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align

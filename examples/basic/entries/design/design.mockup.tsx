@@ -100,7 +100,7 @@ const designMockups = defineRoot({
         collection({
           children: changesScreens,
           description:
-            "Current, on-demand Overlay, and Overlay part-way down a long screen within the catalogue.",
+            "Current, on-demand Overlay, Overlay part-way down a long screen and inside a scrolling panel, and Side by side with Scroll together off, within the catalogue.",
           id: "design-changes-controls",
           segment: "controls",
           title: "Diff controls",

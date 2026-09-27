@@ -29,9 +29,9 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 96 design screens now use 16 registered shared components, including
+Mokly's 98 design screens now use 16 registered shared components, including
 the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
-Inspector and Preview galleries with 66 saved variants, real mobile/desktop
+Inspector and Preview galleries with 67 saved variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
 recorded relationships; pictured example data inside an artboard stays separate.
 See the [library authoring guide](./entries/design/library/README.md),
@@ -112,9 +112,9 @@ render plain React DOM need none of this and can keep a plain
 `renderToStaticMarkup` adapter.
 
 The `Design` navigation group is the owning design catalogue for Mokly's
-Browse and Changes views. Its sixty-one Browse, page, publication, appearance and Changes
-screens cover navigation, Details, tags, color schemes, comparison outcomes,
-stylesheet evidence, the preparing and unavailable comparison states, and the
+Browse and Changes views. Its sixty-three Browse, page, publication, appearance and Changes
+screens cover navigation, Details, tags, color schemes, comparison outcomes and
+scrolling, stylesheet evidence, the preparing and unavailable comparison states, and the
 previous-version states of removed documents and screens. Thirty-five component
 explorer screens add component pages, saved variants, stacked comparisons, affected screens,
 repeated/nested inspection, highlighting, and empty or removed states. The shared icon inspector and complete controls
@@ -170,8 +170,8 @@ Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
 Seventy-four design screens use `colorSchemes: ["light"]` and draw only the light
-Mokly shell. Twenty-two screens instead inherit the catalogue's light/dark
-settings: thirteen Appearance screens, five Changes designs, two product
+Mokly shell. Twenty-four screens instead inherit the catalogue's light/dark
+settings: thirteen Appearance screens, seven Changes designs, two product
 screens, and two retained Welcome appearance variants. `mokly build` writes a
 Light and a Dark file for each viewport, and the outer Appearance control moves
 between them.
@@ -190,7 +190,7 @@ A shared implementation edit appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. This is tested against fully registered baseline snapshots.
 
-The shared inspector/workspace sheets cover all 96 design screens and standalone
+The shared inspector/workspace sheets cover all 98 design screens and standalone
 library hosts. Other mixed component-design sheets remain scoped to the 35
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. `review.sharedImpact` is fallback
@@ -212,7 +212,12 @@ routes, fixture relationships, mask geometry, and delivery status live in the
 
 All unchanged Browse designs, including the tag picker, omit comparison controls.
 Changed screens and changed or removed component variants retain an opaque
-comparison band. Added designs show their current preview and status without
+comparison band; in Side by side, Overlay and Difference it draws the Scroll
+together switch after the modes. The Diff controls group adds Overlay on an
+app-shell screen, whose panel scrolls as one while its top bar and navigation
+stay in place, and Side by side with the switch off, each version left at its
+own place. Their rows keep fixed heights, so the drawn positions never depend
+on text wrapping. Added designs show their current preview and status without
 comparison controls; removed screens and documents show their status and their
 previous version, labelled “Showing previous version”, without them. Their
 nested `design/browse/pages/previous-version/` and
@@ -265,7 +270,7 @@ Both `npm test` and `npm run test:browser` build the example before tests read i
 generated files. Baseline fixtures copy authored inputs and use the normal cached
 rebuild through the historical commit's own package source and lockfile. The
 hand-authored stylesheets (`styles.css`, `design.css`, `design-stage.css`,
-`design-review.css`, and the component design stylesheets) also live under `generated/` because it doubles as the
+`design-review.css`, `design-review-scroll.css`, and the component design stylesheets) also live under `generated/` because it doubles as the
 public static root and remain tracked. The config's `review.baselineBuild` runs
 `npm ci`, `npm run build`, then `npm run example:build` in the historical commit's
 extraction. The package build step ensures comparisons use that commit's own

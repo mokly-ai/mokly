@@ -4,9 +4,12 @@
 
 The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
 delivered the page-scrolling rules in Milestone 4. Milestone 5 defines the
-approved inner-region, key, anchor, and reader-control target below; Milestone 6
-will depict it and Milestone 7 will implement and prove it. Until then, the
-runtime retains the plan's recorded inner-region limitation.
+approved inner-region, key, anchor, and reader-control target below. Milestone 6
+depicts it in the design catalogue: `design-changes-overlay-panel`,
+`design-changes-side-by-side-apart`, and the switch in every diff-mode band of
+the [shell design](./mokly-shell-design.md#in-place-comparisons). Milestone 7
+will implement and prove it; until then, the runtime retains the plan's
+recorded inner-region limitation.
 
 This contract owns every scroll interaction in the Before and Current panes
 defined by the [pane presentation contract](./mokly-comparison-panes.md).

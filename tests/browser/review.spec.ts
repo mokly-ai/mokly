@@ -226,7 +226,13 @@ test("narrow diffs fit the shell and retain the catalogue drawer", async ({
 });
 
 test("approved changes mockups render directly from disk", async ({ page }) => {
-  for (const mode of ["current", "overlay", "overlay-long"]) {
+  for (const mode of [
+    "current",
+    "overlay",
+    "overlay-long",
+    "overlay-panel",
+    "side-by-side-apart",
+  ]) {
     for (const viewport of ["desktop", "mobile"]) {
       const file = path.join(
         repositoryRoot,

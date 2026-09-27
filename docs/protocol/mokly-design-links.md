@@ -2,13 +2,13 @@
 
 ## Delivery Status
 
-Implemented in the 61 Browse/Changes design screens and two real example
+Implemented in the 63 Browse/Changes design screens and two real example
 screens using `MockLink` and `MockLink asChild`. Verification and delivery are tracked by the
 [implementation plan](../../plans/mokabook-design-mocklinks.md).
 
 The [component design inventory](./mokly-component-design.md) extend the
 catalogue with their own state contract and native component/control depictions.
-Those 61 Browse/Changes designs retain the canonical links below, including the
+Those 63 Browse/Changes designs retain the canonical links below, including the
 removed previous-version family added by
 [removed previews](./mokly-removed-previews.md).
 They now share native icon inspector tabs and working viewport dropdowns with
@@ -207,7 +207,8 @@ Browse holds one Appearance setting, so every artboard that draws a top bar
 draws the depicted Appearance selector in it, which has no authored
 transitions. `design-browse-screen`, `design-browse-details-screen`, the Welcome comparison
 family (`design-changes-current`, `design-changes-overlay`,
-`design-changes-overlay-long`, `design-review-changed`,
+`design-changes-overlay-long`, `design-changes-overlay-panel`,
+`design-changes-side-by-side-apart`, `design-review-changed`,
 `design-review-difference`) and the appearance entries
 render in Light and in Dark instead, and the outer Appearance control moves
 between those two generated files at the same route. A link out of a dark
@@ -233,10 +234,14 @@ its Current action returns to `design-changes-current`. Current is already
 selected in `design-changes-current`, so it has no
 transition there. Returning to All uses the navigation table above.
 `design-changes-overlay-long` depicts the same Overlay part-way down a long
-Welcome, so its controls map to the same destinations with Overlay selected,
-and it keeps the Welcome filters and Changes rows. No comparison control links
-into it, because scrolling is not a link; readers reach it beside Current and
-Overlay in its owning Diff controls group. The Welcome sketch inside every
+Welcome, and `design-changes-overlay-panel` depicts it on a Welcome built as an
+app shell whose panel is scrolled part-way, so their controls map to the same
+destinations with Overlay selected. `design-changes-side-by-side-apart`
+depicts Side by side with Scroll together off, so its controls map to the same
+destinations with Side by side selected. All three keep the Welcome filters and
+Changes rows. No comparison control links into them, because scrolling and
+switching are not links; readers reach them beside Current and Overlay in
+their owning Diff controls group. The Welcome sketch inside every
 depicted comparison carries its link as inert text, because links inside a
 comparison pane do nothing.
 
@@ -292,6 +297,10 @@ grips, and collapse-all are not catalogue destinations in this change. Keep
 their existing visual depictions and document their non-interactive status
 outside the rendered artboard; do not add fake hrefs, clipboard-success copy,
 or scripts. Existing native `details` disclosures may keep working locally.
+The Scroll together switch in every diff-mode band is a native checkbox that
+toggles in place, like the viewport dropdown; it opens no destination because
+a native control cannot be a link, and the switched-off state has its own
+artboard, `design-changes-side-by-side-apart`.
 The real outer shell continues to provide its implemented runtime controls.
 
 ## Basic Example And Portability

@@ -6,7 +6,8 @@
   padding: 24px;
 }
 
-.mbk-comparison-stage h3 {
+/* Only the stage's own heading; a depicted screen's headings keep its ink. */
+.mbk-comparison-stage > h3 {
   color: var(--chrome-ink-2);
   font-size: 12px;
   font-weight: 600;
@@ -100,7 +101,8 @@
   transform: translateY(-326px);
 }
 
-.mbk-stack-scrollbar {
+.mbk-stack-scrollbar,
+.mbk-scrollbar {
   background-color: color-mix(in srgb, var(--mbk-screen-ink) 4%, var(--mbk-screen-bg));
   border-left: 1px solid color-mix(in srgb, var(--mbk-screen-ink) 10%, var(--mbk-screen-bg));
   bottom: 0;
@@ -111,7 +113,8 @@
   width: 12px;
 }
 
-.mbk-stack-thumb {
+.mbk-stack-thumb,
+.mbk-scrollbar-thumb {
   background-color: color-mix(in srgb, var(--mbk-screen-ink) 38%, var(--mbk-screen-bg));
   border-radius: 999px;
   height: 54%;
@@ -136,7 +139,9 @@
   right: 3px;
   top: 32%;
 }
-.mbk-shell--mobile .mbk-cmp-toolbar .mbk-seg { display: flex; flex: 1; }
+/* On a narrow layout the modes take the whole first row, so Scroll together
+   starts the second row and Refresh closes it. */
+.mbk-shell--mobile .mbk-cmp-toolbar .mbk-seg { display: flex; flex: 1 1 100%; }
 .mbk-shell--mobile .mbk-cmp-toolbar .mbk-seg > :is(span, a, button) {
   flex: 1;
   font-size: 11px;

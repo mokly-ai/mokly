@@ -64,17 +64,17 @@ function WelcomeSections({ revised }: { revised?: boolean | undefined }) {
   );
 }
 
-/** Miniature depiction of the example Welcome fragment. */
-export function MiniWelcome({
-  compact,
+/** Welcome's heading, the revision's new introduction, and its one link. */
+function WelcomeIntroduction({
   empty,
-  error,
   inert,
-  long,
-  restyled,
   revised,
-}: MiniScreenProps) {
-  const introduction = (
+}: {
+  empty?: boolean | undefined;
+  inert?: boolean | undefined;
+  revised?: boolean | undefined;
+}) {
+  return (
     <>
       <h2>{revised ? "Welcome to the Mokly example" : "Welcome to Mokly"}</h2>
       {revised ? <p>A short introduction now welcomes new readers.</p> : null}
@@ -88,6 +88,21 @@ export function MiniWelcome({
         <span className="mbk-shot-link">Open the details screen</span>
       </DesignLink>
     </>
+  );
+}
+
+/** Miniature depiction of the example Welcome fragment. */
+export function MiniWelcome({
+  compact,
+  empty,
+  error,
+  inert,
+  long,
+  restyled,
+  revised,
+}: MiniScreenProps) {
+  const introduction = (
+    <WelcomeIntroduction empty={empty} inert={inert} revised={revised} />
   );
   return (
     <div className={restyled ? "mbk-shot mbk-shot--restyled" : "mbk-shot"}>
@@ -109,6 +124,42 @@ export function MiniWelcome({
           introduction
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Welcome's long content for a drawn scroll position, always inside a
+ * comparison and so without a working link. The introduction and every
+ * section keep one fixed height and clip what does not fit, so an offset drawn
+ * in CSS lands on the same rows whatever the text wrapping, and the reworded
+ * section moves nothing else.
+ */
+export function WelcomeRows({ revised }: { revised?: boolean | undefined }) {
+  return (
+    <div className="mbk-shot-rows">
+      <div className="mbk-shot-hero">
+        <WelcomeIntroduction inert revised={revised} />
+      </div>
+      <WelcomeSections revised={revised} />
+    </div>
+  );
+}
+
+/** Welcome as one long page of fixed-height rows below its navigation bar. */
+export function MiniWelcomePage({
+  compact,
+  revised,
+}: {
+  compact?: boolean | undefined;
+  revised?: boolean | undefined;
+}) {
+  return (
+    <div className="mbk-shot mbk-shot--page">
+      <div className="mbk-shot-nav">
+        {compact ? "Menu" : "Example navigation"}
+      </div>
+      <WelcomeRows revised={revised} />
     </div>
   );
 }
