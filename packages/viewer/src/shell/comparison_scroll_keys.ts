@@ -57,6 +57,22 @@ function clamp(value: number, maximum: number): number {
   return Math.min(Math.max(value, 0), Math.max(maximum, 0));
 }
 
+/** A shared viewport's visible height and scroll range. */
+export function scrollArea(viewport: {
+  clientHeight: number;
+  clientWidth: number;
+  scrollHeight: number;
+  scrollWidth: number;
+}): ScrollArea {
+  return {
+    height: viewport.clientHeight,
+    range: {
+      x: viewport.scrollWidth - viewport.clientWidth,
+      y: viewport.scrollHeight - viewport.clientHeight,
+    },
+  };
+}
+
 /**
  * The offset a scroll key moves the shared viewport to, or `undefined` when
  * the key is not a scroll key, carries a command modifier, was already

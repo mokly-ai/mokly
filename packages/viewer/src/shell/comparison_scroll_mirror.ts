@@ -1,4 +1,4 @@
-/** One shared scroll offset mirrored across a comparison's viewports. */
+/** The page offsets of a comparison section's viewports, linked or apart. */
 
 /** A two-dimensional scroll offset in CSS pixels. */
 export interface ScrollOffset {
@@ -17,14 +17,21 @@ export interface InstantScroller {
 export type MirroredViewport = InstantScroller &
   Pick<HTMLElement, "addEventListener" | "removeEventListener">;
 
-/** Viewports that always show one offset, whichever the reader scrolls. */
+/**
+ * Viewports that show one offset while linked, whichever the reader scrolls,
+ * and keep their own offsets while apart.
+ */
 export interface ScrollMirror {
-  /** Mirror a viewport; the first one defines the offset, later ones adopt it. */
+  /** Mirror a viewport; while linked, it adopts the offset the others show. */
   add(viewport: MirroredViewport): () => void;
-  /** Move every viewport to a target, returning the offset they settle on. */
-  moveTo(target: ScrollOffset): ScrollOffset;
-  /** The offset every mirrored viewport shows. */
-  offset(): ScrollOffset;
+  /** Link or unlink the viewports; linking moves every other one to `from`. */
+  link(linked: boolean, from?: MirroredViewport): void;
+  /** Move a viewport, and every viewport while linked, towards a target. */
+  moveTo(viewport: MirroredViewport, target: ScrollOffset): ScrollOffset;
+  /** The offset a viewport shows. */
+  offset(viewport: MirroredViewport): ScrollOffset;
+  /** Settle every viewport at its offset again after its range changed. */
+  resettle(): void;
 }
 
 function read(viewport: MirroredViewport): ScrollOffset {
@@ -49,52 +56,87 @@ export function scrollInstantly(
   scroller.scrollTo({ behavior: "instant", left: offset.x, top: offset.y });
 }
 
-function write(viewport: MirroredViewport, offset: ScrollOffset): void {
-  scrollInstantly(viewport, offset);
-}
-
 /**
- * Mirror scroll offsets between viewports. A scroll event whose viewport
- * already shows the shared offset is the echo of a write made here and is
- * ignored, so writes never recurse; no timer is involved. `changed` hears
- * every new offset a reader scrolls to.
+ * Mirror scroll offsets between viewports. Each viewport records the offset
+ * it last settled on; a scroll event reporting exactly that offset is the
+ * echo of a write made here and is ignored, so writes never recurse and no
+ * timer is involved. `changed` hears every new offset a reader scrolls to.
  */
 export function createScrollMirror(
-  changed: (offset: ScrollOffset) => void,
+  changed: (viewport: MirroredViewport, offset: ScrollOffset) => void,
+  linked = true,
 ): ScrollMirror {
-  const viewports = new Set<MirroredViewport>();
-  let current: ScrollOffset = { x: 0, y: 0 };
+  const offsets = new Map<MirroredViewport, ScrollOffset>();
+  let joined = linked;
+
+  function settle(
+    viewports: readonly MirroredViewport[],
+    target: ScrollOffset,
+  ): void {
+    let settled = target;
+    for (const viewport of viewports) {
+      scrollInstantly(viewport, settled);
+      settled = read(viewport);
+    }
+    for (const viewport of viewports) {
+      if (!same(read(viewport), settled)) scrollInstantly(viewport, settled);
+      offsets.set(viewport, read(viewport));
+    }
+  }
+
   const scrolled = (source: MirroredViewport): void => {
     const next = read(source);
-    if (same(next, current)) return;
-    current = next;
-    for (const viewport of viewports)
-      if (viewport !== source) write(viewport, next);
-    changed(next);
+    const last = offsets.get(source);
+    if (!last || same(next, last)) return;
+    offsets.set(source, next);
+    if (joined)
+      for (const viewport of offsets.keys())
+        if (viewport !== source) {
+          scrollInstantly(viewport, next);
+          offsets.set(viewport, read(viewport));
+        }
+    changed(source, next);
   };
+
+  const first = () => offsets.keys().next().value;
+
   return {
     add(viewport) {
-      if (viewports.size === 0) current = read(viewport);
-      else write(viewport, current);
-      viewports.add(viewport);
+      const leader = first();
+      if (joined && leader) scrollInstantly(viewport, offsets.get(leader)!);
+      offsets.set(viewport, read(viewport));
       const listener = () => scrolled(viewport);
       viewport.addEventListener("scroll", listener, { passive: true });
       return () => {
         viewport.removeEventListener("scroll", listener);
-        viewports.delete(viewport);
+        offsets.delete(viewport);
       };
     },
-    moveTo(target) {
-      let settled = target;
-      for (const viewport of viewports) {
-        write(viewport, settled);
-        settled = read(viewport);
-      }
-      for (const viewport of viewports)
-        if (!same(read(viewport), settled)) write(viewport, settled);
-      current = settled;
-      return current;
+    link(linked, from) {
+      joined = linked;
+      const target = from && offsets.get(from);
+      if (!joined || !from || !target) return;
+      const others = [...offsets.keys()].filter(
+        (viewport) => viewport !== from,
+      );
+      settle([from, ...others], target);
     },
-    offset: () => current,
+    moveTo(viewport, target) {
+      if (!offsets.has(viewport)) {
+        scrollInstantly(viewport, target);
+        return read(viewport);
+      }
+      settle(joined ? [...offsets.keys()] : [viewport], target);
+      return offsets.get(viewport)!;
+    },
+    offset: (viewport) => offsets.get(viewport) ?? read(viewport),
+    resettle() {
+      const leader = first();
+      if (joined) {
+        if (leader) settle([...offsets.keys()], offsets.get(leader)!);
+        return;
+      }
+      for (const [viewport, offset] of [...offsets]) settle([viewport], offset);
+    },
   };
 }

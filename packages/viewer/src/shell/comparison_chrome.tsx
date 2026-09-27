@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import type { SnapshotPresentation } from "../previews/presentation.js";
 import type { ViewReview } from "../review/types.js";
 
+import type { ComparisonSide } from "./comparison_scroll_owner.js";
 import { BrowserFrame, PhoneFrame } from "./frames.js";
 
 /** Draws one chrome around the viewport it is given. */
@@ -13,6 +14,8 @@ export type ComparisonChrome = (viewport: ReactNode) => ReactNode;
 /** One version's accepted presentation and the frame title naming it. */
 export interface PaneDocument {
   presentation: SnapshotPresentation;
+  /** Which version the document is. */
+  side: ComparisonSide;
   title: string;
 }
 

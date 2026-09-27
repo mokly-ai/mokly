@@ -1,10 +1,15 @@
 /** React rendering for the aligned Before and Current comparison panes. */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { SnapshotPresentation } from "../previews/presentation.js";
 
 import { comparisonChrome, type PaneDocument } from "./comparison_chrome.js";
+import {
+  createScrollOwner,
+  type ComparisonSide,
+  type ScrollOwner,
+} from "./comparison_scroll_owner.js";
 import { createComparisonScrollSync } from "./comparison_scroll_sync.js";
 import type { SelectedComparisonView } from "./comparison_selection.js";
 import { SideBySideComparison } from "./comparison_side.js";
@@ -23,19 +28,27 @@ const stateLabels = {
 
 interface SectionProps {
   component: boolean;
+  /** The last-scrolled version, shared by every section of the comparison. */
+  owner: ScrollOwner;
   presentation: ComparisonPresentation;
   presentations: ReadonlyMap<string, SnapshotPresentation>;
   route: string;
   selected: SelectedComparisonView;
+  /** Whether Scroll together is on; switching it never reloads a pane. */
+  together: boolean;
 }
 
-/** Render every selected viewport section from its presented documents. */
+/**
+ * Render every selected viewport section from its presented documents. The
+ * sections of one shown comparison share its last-scrolled version.
+ */
 export function ComparisonViews({
   views,
   ...props
-}: Omit<SectionProps, "selected"> & {
+}: Omit<SectionProps, "owner" | "selected"> & {
   views: readonly SelectedComparisonView[] | undefined;
 }) {
+  const [owner] = useState(createScrollOwner);
   if (!views) return <p>This screen has no comparison available.</p>;
   return (
     <>
@@ -43,6 +56,7 @@ export function ComparisonViews({
         <ComparisonSection
           key={selected.viewport}
           {...props}
+          owner={owner}
           selected={selected}
         />
       ))}
@@ -53,23 +67,29 @@ export function ComparisonViews({
 /** One viewport's heading and panes, owning the section's scroll offset. */
 function ComparisonSection({
   component,
+  owner,
   presentation,
   presentations,
   route,
   selected,
+  together,
 }: SectionProps) {
-  const [sync] = useState(createComparisonScrollSync);
+  const [sync] = useState(() =>
+    createComparisonScrollSync({ owner, together }),
+  );
+  useEffect(() => sync.setTogether(together), [sync, together]);
   const { documents, mode, view, viewport } = selected;
   const wording = entryWording(component ? "component" : "screen");
   const label = isStyleOnlyView(view)
     ? "Styles this screen uses changed"
     : stateLabels[view.state];
-  const pane = (side: "after" | "before"): PaneDocument | undefined => {
+  const pane = (side: ComparisonSide): PaneDocument | undefined => {
     const address = documents[side];
     const document = address ? presentations.get(address) : undefined;
     if (!document) return;
     return {
       presentation: document,
+      side,
       title: `${side === "before" ? "Before" : "Current"} — ${view.viewport} — ${view.colorScheme}`,
     };
   };

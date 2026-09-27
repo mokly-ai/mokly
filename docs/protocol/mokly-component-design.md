@@ -16,11 +16,9 @@ consumer's previous-version state is implemented by the
 The stacked component comparisons depict the implemented
 [comparison pane contract](./mokly-comparison-panes.md): the explorer holds a
 saved variant's two versions in one bordered frame whose viewport scrolls both
-as one. Their comparison bands also depict the Scroll together switch of the
-[comparison scrolling contract](./mokly-comparison-scrolling.md#reader-control),
-which Milestone 7 of the
-[comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-implements.
+as one. Their comparison bands also depict the implemented Scroll together
+switch of the
+[Scroll together contract](./mokly-comparison-scroll-together.md#reader-control).
 
 ## Owning Catalogue
 

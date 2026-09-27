@@ -8,7 +8,7 @@
 import type {
   ComparisonScrollEnvironment,
   SizeObserver,
-} from "../src/shell/comparison_scroll_sync.js";
+} from "../src/shell/comparison_scroll_types.js";
 
 /** Scroll events queued by writes, dispatched by `flushScrolls`. */
 const queued = new Set<FakeScroller>();
@@ -31,6 +31,8 @@ export class FakeScroller extends EventTarget {
   clientWidth: number;
   contentHeight: number;
   contentWidth: number;
+  /** A right-to-left scroller's horizontal offset runs from 0 down to minus its range. */
+  rtl = false;
   smooth = false;
   #animation: Target | undefined;
   #left = 0;
@@ -102,6 +104,11 @@ export class FakeScroller extends EventTarget {
     return this;
   }
 
+  /** Dispatch the scroll event the browser queued for this scroller. */
+  dispatchScroll(): void {
+    this.eventTarget().dispatchEvent(new Event("scroll"));
+  }
+
   #write(target: Target, instant: boolean): void {
     if (!this.smooth || instant) {
       this.#land(target);
@@ -114,10 +121,12 @@ export class FakeScroller extends EventTarget {
   #land(target: Target): void {
     const clamp = (value: number, client: number, size: number) =>
       Math.min(Math.max(value, 0), size - client);
+    const horizontal = (value: number) =>
+      this.rtl
+        ? Math.max(Math.min(value, 0), this.clientWidth - this.scrollWidth)
+        : clamp(value, this.clientWidth, this.scrollWidth);
     const left =
-      target.left === undefined
-        ? this.#left
-        : clamp(target.left, this.clientWidth, this.scrollWidth);
+      target.left === undefined ? this.#left : horizontal(target.left);
     const top =
       target.top === undefined
         ? this.#top
@@ -139,8 +148,7 @@ export function flushScrolls(): void {
   for (let pass = 0; pass < 10 && queued.size > 0; pass += 1) {
     const pending = [...queued];
     queued.clear();
-    for (const scroller of pending)
-      scroller.eventTarget().dispatchEvent(new Event("scroll"));
+    for (const scroller of pending) scroller.dispatchScroll();
   }
 }
 
@@ -199,10 +207,13 @@ export class FakeDocument extends EventTarget {
   readonly fonts = new EventTarget();
   readonly scroller: DocumentScroller;
   readonly defaultView = {
-    getComputedStyle: (element: unknown) => ({
-      backgroundColor:
-        element === this.documentElement ? this.canvas.root : this.canvas.body,
-    }),
+    getComputedStyle: (element: unknown) =>
+      (element as { computed?: object }).computed ?? {
+        backgroundColor:
+          element === this.documentElement
+            ? this.canvas.root
+            : this.canvas.body,
+      },
   };
 
   constructor(size: { height: number; width: number }) {

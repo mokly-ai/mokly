@@ -34,6 +34,7 @@ function renderComparison(
         ]),
       ),
       route,
+      together: true,
       views,
     }),
   );

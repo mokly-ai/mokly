@@ -1,79 +1,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import {
-  CANVAS_PROPERTY,
-  createComparisonScrollSync,
-} from "../src/shell/comparison_scroll_sync.js";
+import { CANVAS_PROPERTY } from "../src/shell/comparison_section_measure.js";
 
-import {
-  FakeDocument,
-  FakeFrame,
-  FakeStyle,
-  FakeViewport,
-  fakeEnvironment,
-  flushScrolls,
-  stepAnimations,
-} from "./comparison_scroll_fakes.js";
-
-const SIZE = { height: 700, width: 1000 };
-
-function setup(viewports = 1) {
-  const fake = fakeEnvironment();
-  const sync = createComparisonScrollSync(fake.environment);
-  const shared = Array.from(
-    { length: viewports },
-    () => new FakeViewport(SIZE),
-  );
-  for (const viewport of shared)
-    sync.attachViewport(
-      viewport as unknown as HTMLElement,
-      viewport.spacer as unknown as HTMLElement,
-    );
-  const layer = (viewport = shared[0]!) => {
-    const frame = new FakeFrame();
-    const surface = { style: new FakeStyle() };
-    const release = sync.attachLayer({
-      frame: frame as unknown as HTMLIFrameElement,
-      surface: surface as unknown as HTMLElement,
-      viewport: viewport as unknown as HTMLElement,
-    });
-    return { frame, release, surface };
-  };
-  return { fake, layer, shared, sync };
-}
-
-function presented(content: { height: number; width?: number }) {
-  const doc = new FakeDocument(SIZE);
-  return {
-    doc,
-    content: { height: content.height, width: content.width ?? SIZE.width },
-  };
-}
-
-function key(
-  name: string,
-  target: unknown = null,
-  modifiers: Partial<Record<"ctrlKey" | "shiftKey", boolean>> = {},
-): Event {
-  const event = Object.assign(new Event("keydown", { cancelable: true }), {
-    altKey: false,
-    ctrlKey: false,
-    isComposing: false,
-    key: name,
-    metaKey: false,
-    shiftKey: false,
-    ...modifiers,
-  });
-  if (target) Object.defineProperty(event, "target", { value: target });
-  return event;
-}
+import { flushScrolls, stepAnimations } from "./comparison_scroll_fakes.js";
+import { key, presented, setup } from "./comparison_sync_harness.js";
 
 test("a viewport scroll writes one offset to every version", () => {
   const { layer, shared } = setup();
   const before = presented({ height: 2400 });
   const after = presented({ height: 2400 });
-  layer().frame.present(before.doc, before.content);
+  layer(shared[0], "before").frame.present(before.doc, before.content);
   layer().frame.present(after.doc, after.content);
   assert.equal(shared[0]!.spacer.style.height, "1700px");
   assert.equal(shared[0]!.spacer.style.width, "calc(100% + 0px)");
@@ -122,7 +59,7 @@ test("side by side viewports mirror each other in both directions", () => {
   const { layer, shared } = setup(2);
   const before = presented({ height: 2000 });
   const after = presented({ height: 1500 });
-  layer(shared[0]).frame.present(before.doc, before.content);
+  layer(shared[0], "before").frame.present(before.doc, before.content);
   layer(shared[1]).frame.present(after.doc, after.content);
   for (const viewport of shared)
     assert.equal(viewport.spacer.style.height, "1300px");

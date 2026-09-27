@@ -9,9 +9,9 @@ import { PreviewFrame } from "./preview_frame.js";
 /**
  * Reuse the viewer-owned `srcdoc` frame and read-only guard for one version,
  * registered with the enclosing viewport so its document follows the shared
- * offset and its anchors move the shared viewport.
+ * offset and its anchors reach its regions and the shared viewport.
  */
-export function ComparisonFrame({ presentation, title }: PaneDocument) {
+export function ComparisonFrame({ presentation, side, title }: PaneDocument) {
   const scope = useComparisonViewport();
   const surface = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLIFrameElement>(null);
@@ -20,10 +20,11 @@ export function ComparisonFrame({ presentation, title }: PaneDocument) {
     if (!scope || !viewport || !surface.current || !frame.current) return;
     return scope.sync.attachLayer({
       frame: frame.current,
+      side,
       surface: surface.current,
       viewport,
     });
-  }, [scope]);
+  }, [scope, side]);
   const reveal = useCallback(
     (target: Element) => {
       if (scope && frame.current) scope.sync.reveal(frame.current, target);

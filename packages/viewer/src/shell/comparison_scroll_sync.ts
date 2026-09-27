@@ -4,67 +4,54 @@ import {
   browserFrameScheduler,
   followPresentedDocument,
   presentedDocument,
-  type FrameScheduler,
 } from "../previews/presented_document.js";
 
 import {
-  canvasColour,
-  documentOffset,
-  documentRange,
-  scrollDocument,
-} from "./comparison_layer_document.js";
-import { scrollKeyTarget } from "./comparison_scroll_keys.js";
+  keyStart,
+  movableRegion,
+  scrollKeyDirection,
+} from "./comparison_key_route.js";
+import { documentOffset, scrollDocument } from "./comparison_layer_document.js";
+import {
+  listenToLayerDocument,
+  type LayerDocumentListeners,
+} from "./comparison_layer_listeners.js";
+import {
+  createRegionMirror,
+  type RegionLayer,
+} from "./comparison_region_mirror.js";
+import {
+  enclosingRegions,
+  nearestEdge,
+  revealOffset,
+} from "./comparison_region_reveal.js";
+import { scrollArea, scrollKeyTarget } from "./comparison_scroll_keys.js";
 import {
   createScrollMirror,
   type ScrollOffset,
 } from "./comparison_scroll_mirror.js";
-
-/** Custom property carrying a layer document's canvas colour to its surface. */
-export const CANVAS_PROPERTY = "--mbk-comparison-canvas";
-
-/** The elements of one layer: its viewport, opaque surface and frame. */
-export interface ComparisonLayerElements {
-  /** The device-sized, never user-scrolled frame showing one version. */
-  frame: HTMLIFrameElement;
-  /** The opaque surface shown wherever the version's document has ended. */
-  surface: HTMLElement;
-  /** The shared viewport, the only user-scrollable container of the layer. */
-  viewport: HTMLElement;
-}
-
-/** The scroll owner of one comparison section's viewports and layers. */
-export interface ComparisonScrollSync {
-  /** Track a layer until the returned function releases it. */
-  attachLayer(layer: ComparisonLayerElements): () => void;
-  /** Mirror a viewport whose spacer extends its range to the tallest version. */
-  attachViewport(viewport: HTMLElement, spacer: HTMLElement): () => void;
-  /** Move every version to a same-document anchor target inside one frame. */
-  reveal(frame: HTMLIFrameElement, target: Element): void;
-}
-
-/** Observes element sizes on behalf of the controller. */
-export interface SizeObserver {
-  observe(target: Element, options?: ResizeObserverOptions): void;
-  unobserve(target: Element): void;
-}
-
-/** Browser observation and scheduling the controller depends on. */
-export interface ComparisonScrollEnvironment extends FrameScheduler {
-  observeSizes(changed: () => void): SizeObserver;
-}
+import { createScrollOwner } from "./comparison_scroll_owner.js";
+import type {
+  ComparisonLayerElements,
+  ComparisonScrollEnvironment,
+  ComparisonScrollOptions,
+  ComparisonScrollSync,
+  SizeObserver,
+} from "./comparison_scroll_types.js";
+import {
+  CANVAS_PROPERTY,
+  measureSection,
+  type MeasuredSpacer,
+} from "./comparison_section_measure.js";
 
 interface Layer {
   applied: ScrollOffset;
   canvas: string;
   document?: Document | undefined;
   elements: ComparisonLayerElements;
-  release?: (() => void) | undefined;
+  listeners?: LayerDocumentListeners | undefined;
+  observed: Set<Element>;
   transform: string;
-}
-
-interface Spacer {
-  element: HTMLElement;
-  range?: ScrollOffset;
 }
 
 const browserEnvironment: ComparisonScrollEnvironment = {
@@ -72,32 +59,52 @@ const browserEnvironment: ComparisonScrollEnvironment = {
   observeSizes: (changed) => new ResizeObserver(() => changed()),
 };
 
-/** The start of a target on one axis, scrolled as little as possible. */
-function nearest(start: number, end: number, from: number, size: number) {
-  if (start < from || end - start > size) return start;
-  return end > from + size ? end - size : from;
+function same(first: ScrollOffset, second: ScrollOffset): boolean {
+  return first.x === second.x && first.y === second.y;
+}
+
+function isElement(target: EventTarget | null): target is Element {
+  return (target as Partial<Node> | null)?.nodeType === 1;
 }
 
 /**
- * One offset drives every layer: a viewport scroll, a scroll key pressed in a
- * pane, an anchor, or a scroll the browser made inside one document (find in
- * page, focus, selection) moves every viewport and writes the offset to every
- * document. A document shorter than the offset stops at its own end and its
- * frame is shifted by the remainder. Documents are measured on load and on
- * size changes, and every spacer takes the largest range of the section.
+ * One offset drives every layer of a viewport: a viewport scroll, a scroll
+ * key, an anchor, or a scroll the browser made inside one document moves the
+ * viewport and writes its offset to the document. While Scroll together is on
+ * every viewport shows one offset and paired inner regions follow each other;
+ * a stack's layers always share their one viewport. A document shorter than
+ * its offset stops at its end and its frame is shifted by the remainder.
  */
 export function createComparisonScrollSync(
-  environment: ComparisonScrollEnvironment = browserEnvironment,
+  options: ComparisonScrollOptions = {},
 ): ComparisonScrollSync {
+  const environment = options.environment ?? browserEnvironment;
+  const owner = options.owner ?? createScrollOwner();
+  let together = options.together ?? true;
   const layers = new Set<Layer>();
-  const spacers = new Map<HTMLElement, Spacer>();
+  const spacers = new Map<HTMLElement, MeasuredSpacer>();
   let observer: SizeObserver | undefined;
   let pending: number | undefined;
   const sizes = () => (observer ??= environment.observeSizes(() => schedule()));
+  const shown = (layer: Layer): RegionLayer | undefined =>
+    layer.document && { document: layer.document, side: layer.elements.side };
+  const regions = createRegionMirror({
+    claim: (side) => owner.claim(side),
+    layers: () => [...layers].flatMap((layer) => shown(layer) ?? []),
+    together: () => together,
+  });
+  const mirror = createScrollMirror((viewport) => {
+    apply();
+    const inside = [...layers].filter(
+      (layer) => layer.elements.viewport === viewport,
+    );
+    if (inside.length === 1) owner.claim(inside[0]!.elements.side);
+  }, together);
 
-  function apply(offset: ScrollOffset): void {
+  function apply(): void {
     for (const layer of layers) {
       if (!layer.document) continue;
+      const offset = mirror.offset(layer.elements.viewport);
       const settled = scrollDocument(layer.document, offset);
       layer.applied = settled;
       const x = offset.x - settled.x;
@@ -109,43 +116,13 @@ export function createComparisonScrollSync(
     }
   }
 
-  const mirror = createScrollMirror(apply);
-
-  function paint(layer: Layer, colour: string): void {
-    if (colour === layer.canvas) return;
-    layer.canvas = colour;
-    if (colour)
-      layer.elements.surface.style.setProperty(CANVAS_PROPERTY, colour);
-    else layer.elements.surface.style.removeProperty(CANVAS_PROPERTY);
-  }
-
-  function extend(range: ScrollOffset): boolean {
-    let changed = false;
-    for (const spacer of spacers.values()) {
-      if (spacer.range?.x === range.x && spacer.range.y === range.y) continue;
-      spacer.range = range;
-      spacer.element.style.width = `calc(100% + ${range.x}px)`;
-      spacer.element.style.height = `${range.y}px`;
-      changed = true;
-    }
-    return changed;
-  }
-
   function measure(): void {
     if (pending !== undefined) environment.cancelFrame(pending);
     pending = undefined;
-    for (let pass = 0; pass < 3; pass += 1) {
-      const range = { x: 0, y: 0 };
-      for (const layer of layers) {
-        if (!layer.document) continue;
-        const extent = documentRange(layer.document);
-        range.x = Math.max(range.x, extent.x);
-        range.y = Math.max(range.y, extent.y);
-        paint(layer, canvasColour(layer.document));
-      }
-      if (!extend(range)) break;
-    }
-    apply(mirror.moveTo(mirror.offset()));
+    regions.discard();
+    measureSection(layers, spacers.values());
+    mirror.resettle();
+    apply();
   }
 
   function schedule(): void {
@@ -155,63 +132,74 @@ export function createComparisonScrollSync(
     });
   }
 
+  /** A page scroll the viewer did not make moves its viewport first. */
   function adopt(layer: Layer): void {
     if (!layer.document) return;
     const offset = documentOffset(layer.document);
-    if (offset.x === layer.applied.x && offset.y === layer.applied.y) return;
-    apply(mirror.moveTo(offset));
+    if (same(offset, layer.applied)) return;
+    owner.claim(layer.elements.side);
+    mirror.moveTo(layer.elements.viewport, offset);
+    apply();
   }
 
+  /** Leave a key to a region that can move, else move the viewport. */
   function press(layer: Layer, event: KeyboardEvent): void {
     const viewport = layer.elements.viewport;
-    const target = scrollKeyTarget(event, mirror.offset(), {
-      height: viewport.clientHeight,
-      range: {
-        x: viewport.scrollWidth - viewport.clientWidth,
-        y: viewport.scrollHeight - viewport.clientHeight,
-      },
-    });
-    if (!target) return;
+    const target = scrollKeyTarget(
+      event,
+      mirror.offset(viewport),
+      scrollArea(viewport),
+    );
+    const direction = scrollKeyDirection(event.key, event.shiftKey);
+    if (!target || !direction || !layer.document) return;
+    const start = keyStart(layer.document, layer.listeners?.pointer());
+    if (start && movableRegion(start, direction)) return;
     event.preventDefault();
-    apply(mirror.moveTo(target));
+    mirror.moveTo(viewport, target);
+    apply();
   }
 
-  function listen(layer: Layer, doc: Document): () => void {
-    const scrolled = () => adopt(layer);
-    const pressed = (event: KeyboardEvent) => press(layer, event);
-    const observed = new Set<Element>();
-    const parsed = (): void => {
-      for (const element of [doc.documentElement, doc.body])
-        if (element && !observed.has(element)) {
-          observed.add(element);
-          sizes().observe(element);
-        }
-      schedule();
-    };
-    doc.addEventListener("readystatechange", parsed);
-    doc.addEventListener("scroll", scrolled);
-    doc.addEventListener("keydown", pressed, true);
-    doc.addEventListener("load", schedule, true);
-    doc.addEventListener("toggle", schedule, true);
-    doc.fonts.addEventListener("loadingdone", schedule);
-    parsed();
-    return () => {
-      doc.removeEventListener("readystatechange", parsed);
-      doc.removeEventListener("scroll", scrolled);
-      doc.removeEventListener("keydown", pressed, true);
-      doc.removeEventListener("load", schedule, true);
-      doc.removeEventListener("toggle", schedule, true);
-      doc.fonts.removeEventListener("loadingdone", schedule);
-      for (const element of observed) sizes().unobserve(element);
-    };
+  /** Observe the root and body once the parser has created them. */
+  function observe(layer: Layer, doc: Document): void {
+    for (const element of [doc.documentElement, doc.body])
+      if (element && !layer.observed.has(element)) {
+        layer.observed.add(element);
+        sizes().observe(element);
+      }
+    schedule();
+  }
+
+  function listen(layer: Layer, doc: Document): LayerDocumentListeners {
+    return listenToLayerDocument(doc, {
+      acted: () => owner.claim(layer.elements.side),
+      changed: schedule,
+      keyed: (event) => press(layer, event),
+      parsed: () => observe(layer, doc),
+      scrolled(target) {
+        const version = shown(layer);
+        if (target === doc) adopt(layer);
+        else if (version && isElement(target))
+          regions.scrolled(version, target);
+      },
+    });
+  }
+
+  function release(layer: Layer): void {
+    layer.listeners?.release();
+    layer.listeners = undefined;
+    for (const element of layer.observed) sizes().unobserve(element);
+    layer.observed.clear();
   }
 
   function connect(layer: Layer, doc: Document | undefined): void {
     if (doc !== layer.document) {
-      layer.release?.();
-      layer.release = doc ? listen(layer, doc) : undefined;
+      release(layer);
       layer.document = doc;
       layer.applied = { x: 0, y: 0 };
+      if (doc) {
+        layer.listeners = listen(layer, doc);
+        observe(layer, doc);
+      }
     }
     measure();
   }
@@ -222,6 +210,7 @@ export function createComparisonScrollSync(
         applied: { x: 0, y: 0 },
         canvas: "",
         elements,
+        observed: new Set(),
         transform: "",
       };
       layers.add(layer);
@@ -232,7 +221,7 @@ export function createComparisonScrollSync(
       );
       return () => {
         unfollow();
-        layer.release?.();
+        release(layer);
         layers.delete(layer);
         elements.frame.style.transform = "";
         elements.surface.style.removeProperty(CANVAS_PROPERTY);
@@ -241,30 +230,45 @@ export function createComparisonScrollSync(
     },
     attachViewport(viewport, spacer) {
       spacers.set(viewport, { element: spacer });
-      const release = mirror.add(viewport);
+      const detach = mirror.add(viewport);
       sizes().observe(viewport, { box: "border-box" });
       measure();
       return () => {
-        release();
+        detach();
         sizes().unobserve(viewport);
         spacers.delete(viewport);
       };
     },
     reveal(frame, target) {
-      const layer = [...layers].find(
-        (candidate) => candidate.elements.frame === frame,
-      );
-      if (!layer?.document) return;
+      const layer = [...layers].find((each) => each.elements.frame === frame);
+      const version = layer && shown(layer);
+      if (!layer?.document || !version) return;
+      owner.claim(version.side);
+      for (const region of enclosingRegions(target))
+        regions.scrollTo(version, region, revealOffset(region, target));
       const at = documentOffset(layer.document);
       const box = target.getBoundingClientRect();
       const width = layer.document.documentElement.clientWidth;
-      const from = mirror.offset();
-      apply(
-        mirror.moveTo({
-          x: nearest(box.left + at.x, box.right + at.x, from.x, width),
-          y: box.top + at.y,
-        }),
-      );
+      const from = mirror.offset(layer.elements.viewport);
+      const left = box.left + at.x;
+      mirror.moveTo(layer.elements.viewport, {
+        x: from.x + nearestEdge(left, box.right + at.x, from.x, width),
+        y: box.top + at.y,
+      });
+      apply();
+    },
+    setTogether(on) {
+      if (on === together) return;
+      together = on;
+      const present = [...layers].filter((layer) => layer.document);
+      const authority =
+        present.find((layer) => layer.elements.side === owner.side()) ??
+        present[0];
+      mirror.link(on, authority?.elements.viewport);
+      if (!on || !authority) return;
+      apply();
+      const version = shown(authority);
+      if (version) regions.realign(version);
     },
   };
 }

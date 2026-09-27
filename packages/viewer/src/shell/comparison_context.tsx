@@ -5,6 +5,10 @@ import type { ReactNode } from "react";
 
 import type { SnapshotPresentationEnvironment } from "../previews/presentation.js";
 
+import {
+  storedScrollTogether,
+  type ScrollTogetherPreference,
+} from "./comparison_scroll_preference.js";
 import type { ShellContext } from "./context.js";
 import { readShellDelivery } from "./delivery.js";
 
@@ -19,6 +23,11 @@ export interface ComparisonEnvironment {
   fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
   initialMode?(): "side" | undefined;
   reportError?(error: unknown): void;
+  /**
+   * The reader's Scroll together choice for this viewer; without one, Scroll
+   * together stays on.
+   */
+  scrollTogether?: ScrollTogetherPreference;
 }
 
 const ComparisonEnvironmentContext = createContext<
@@ -87,5 +96,6 @@ function standaloneEnvironment(
       new URL(window.location.href).searchParams.get("comparison") === "side"
         ? "side"
         : undefined,
+    scrollTogether: storedScrollTogether(() => window.localStorage),
   };
 }

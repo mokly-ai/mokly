@@ -228,7 +228,9 @@ test("fixed bars and sticky headers stay on the chrome viewport edges", async ({
   }
 });
 
-test("inner scroll regions stay independent per version", async ({ page }) => {
+test("an inner scroll region scrolls every version while the page stays", async ({
+  page,
+}) => {
   await openComparison(
     page,
     `${fixture.url}/view/screens/inner.html`,
@@ -248,10 +250,11 @@ test("inner scroll regions stay independent per version", async ({ page }) => {
       .locator("#al-inner")
       .evaluate((node) => node.scrollTop);
   await expect.poll(() => inner("after")).toBe(300);
-  expect(await inner("before")).toBe(0);
-  expect(await documentOffset(paneFrame(desktop, "after"))).toEqual({
-    x: 0,
-    y: 0,
-  });
+  await expect.poll(() => inner("before")).toBe(300);
+  for (const side of ["before", "after"] as const)
+    expect(await documentOffset(paneFrame(desktop, side))).toEqual({
+      x: 0,
+      y: 0,
+    });
   expect((await viewportOffset(sharedViewports(desktop))).y).toBe(0);
 });

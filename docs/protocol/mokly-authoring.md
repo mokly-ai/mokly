@@ -143,7 +143,7 @@ normal value uses the same id grammar, `^[a-z0-9]+(?:-[a-z0-9]+)*$`, and the
 same exact value belongs on that region in both versions. The value `off` is
 reserved to keep that region independent. Duplicate names in one generated
 document are ambiguous; a name on a non-scrollable element is ignored. The
-[comparison scrolling contract](./mokly-comparison-scrolling.md#counterpart-algorithm)
+[comparison region pairing contract](./mokly-comparison-region-pairing.md#counterpart-algorithm)
 defines fallback matching when a valid name is absent on either side.
 
 This is consumer metadata in the rendered document, not a TypeScript authoring

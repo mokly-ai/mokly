@@ -16,10 +16,8 @@ ancestor disclosure, conditional filter clearing, nearest-row scrolling, the
 `tag:` search term, the details inspector's tag chips, the search field's tag
 control with its picker panel, the mark-only narrow brand, and the top bar's
 stacking above the navigation drawer scrim. Every state recorded here is
-implemented except the Scroll together switch and the mirrored inner panels
-that the comparison designs below depict, which Milestone 7 of the
-[comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-implements. The
+implemented, including the Scroll together switch and the mirrored inner
+panels that the comparison designs below depict. The
 [React Browse shell plan](../../plans/react-browse-shell.md)
 changes how the shell is rendered and enhanced, not how it looks or behaves:
 this design, its tokens, dimensions, responsive rules and the design catalogue
@@ -622,7 +620,7 @@ shown. Baseline, affected files, and excluded content belong in secondary
 comparison details. Loading and failure states keep the catalogue available.
 
 Side by side, Overlay and Difference draw the Scroll together switch that the
-[scrolling contract](./mokly-comparison-scrolling.md#reader-control) places
+[Scroll together contract](./mokly-comparison-scroll-together.md#reader-control) places
 immediately after the mode group and before Refresh; Current draws none. It is
 a native checkbox with switch semantics whose visible label, “Scroll together”,
 is its accessible name. A 30×18px pill track with a 1px border holds a 12px
@@ -631,12 +629,16 @@ track and its border take `--mbk-sage-deep` and the knob `--mbk-accent-contrast`
 at the far end; off, the track takes `--chrome-bg` and its border and knob
 `--chrome-control-edge`, with the knob at the start. Keyboard focus draws a 2px
 `--mbk-sage-deep` ring 2px outside the track, and the transparent checkbox
-covers the whole control as its hit area. The band keeps 16px between its
-controls on a row and 8px between rows: on desktop the switch follows the mode
-group on its row and Refresh closes the band at the far end; below the
-breakpoint the mode group takes the whole first row, the switch starts the
-second and Refresh ends it. The switch toggles in place in the artboards; every
-diff-mode screen draws it on except `design-changes-side-by-side-apart`.
+covers the whole control as its hit area. The runtime draws those colours with
+`--mbk-accent-deep` and `--_mokly-private-on-accent-deep`, never the
+consumer-tunable `--mokly-accent-contrast`, and paints the knob with its border
+so forced colours keep it visible without opting out. The band keeps 16px
+between its controls on a row and 8px between rows and wraps whenever a row
+lacks room: on desktop the switch follows the mode group on its row and Refresh
+closes the band at the far end; below the breakpoint the mode group takes the
+whole first row, the switch starts the second and Refresh ends it. The switch
+toggles in place in the artboards; every diff-mode screen draws it on except
+`design-changes-side-by-side-apart`.
 
 `design-changes-overlay-panel` depicts Welcome built as an app shell in
 Overlay: a 44px top bar (40px on the phone) and a 148px navigation column, or a

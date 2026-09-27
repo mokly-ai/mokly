@@ -5,9 +5,11 @@
 The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
 delivered the presentation below through Milestone 4: the existing design
 references, generation-confined snapshot loader, and device-sized pane runtime.
-Its [scrolling contract](./mokly-comparison-scrolling.md) records that delivered
-page scroller and the approved inner-region and Scroll together target, which
-Milestone 6 depicts in the design catalogue and Milestone 7 implements. This
+Its [scrolling contract](./mokly-comparison-scrolling.md) records the delivered
+page scroller and inner-region mirroring, with the
+[region pairing](./mokly-comparison-region-pairing.md) and
+[Scroll together](./mokly-comparison-scroll-together.md) contracts, which
+Milestone 6 depicts in the design catalogue and Milestone 7 delivered. This
 contract governs the Before and Current panes that
 [Changes and screen comparisons](./mokly-changes.md) offer for changed screens
 and eligible component variants in Side by side, Overlay and Difference. It
@@ -79,8 +81,10 @@ stay byte-identical. The edits above exist only in the in-memory presentation.
 
 The [comparison scrolling contract](./mokly-comparison-scrolling.md) owns frame
 sizing, page spacers and measurement, instant writes, shorter-document
-translation, value-based echoes, inner-region pairing, keys, anchors, and the
-Scroll together preference. Sizing a frame to its document remains rejected:
+translation, value-based echoes, inner-region mirroring, keys, and anchors; the
+[region pairing contract](./mokly-comparison-region-pairing.md) owns how regions
+pair, and the [Scroll together contract](./mokly-comparison-scroll-together.md)
+owns the reader preference. Sizing a frame to its document remains rejected:
 it distorted viewport units, fixed bars, and sticky headers and could feed a
 document's height back into itself without converging.
 
@@ -168,15 +172,16 @@ each request to its immutable generation and configured sides.
 
 ## Acceptance
 
-Regressions prove the delivered page items below in live Serve through the
-selected comparison path (`tests/browser/comparison_alignment.spec.ts` and
+Regressions prove the page items below in live Serve through the selected
+comparison path (`tests/browser/comparison_alignment.spec.ts` and
 `comparison_alignment_input.spec.ts`). Against a static export and an embedded
 viewer through both frame adapters, `comparison_alignment_hosts.spec.ts` proves
 stacked wheel alignment, frame attributes, inert links and anchors, and export
-Side by side mirroring; the pane failure path runs embedded. Unit tests under
-`packages/viewer/tests/` cover the delivered controllers. The scrolling
-contract names the complete Milestone 7 region and toggle proof, including the
-planned `tests/browser/comparison_regions.spec.ts`.
+Side by side mirroring; the pane failure path runs embedded. The region, key,
+anchor, and Scroll together items are proved by the five
+`tests/browser/comparison_regions*.spec.ts` suites, which the scrolling,
+region pairing, and Scroll together contracts name case by case. Unit tests
+under `packages/viewer/tests/` cover the controllers.
 
 - Wheel scrolling over an Overlay and a Difference stack puts both pane
   documents and the shared viewport at one offset with coincident layer
@@ -185,25 +190,23 @@ planned `tests/browser/comparison_regions.spec.ts`.
 - With the default control on, scrolling one Side by side viewport moves the
   other to the same offset in both directions, and an anchor in either pane
   moves both.
-- Milestone 7 must prove Space, Shift+Space, PageUp, PageDown, Home, End, and
-  the arrow keys reach the nearest movable inner region first and otherwise
-  move the applicable page viewport; editable and Space-activated controls
-  keep their keys.
-- Milestone 7 must prove a same-document anchor reveals enclosing regions
-  innermost first and then the page; with Scroll together on, its paired
-  counterparts follow while the shell URL and heading stay unchanged.
+- Space, Shift+Space, PageUp, PageDown, Home, End, and the arrow keys reach the
+  nearest movable inner region first and otherwise move the applicable page
+  viewport; editable and Space-activated controls keep their keys.
+- A same-document anchor reveals enclosing regions innermost first and then
+  the page; with Scroll together on, its paired counterparts follow while the
+  shell URL and heading stay unchanged.
 - A document shorter than its pair stops at its end, its frame is shifted by the
   remainder so its content stays aligned, and its surface shows its canvas.
 - A `min-height: 100vh` hero keeps spacer and frame sizes stable across
   animation frames and after a late image loads, the spacer grows by exactly the
   image, fixed bars stay at the viewport's bottom and sticky headers at its top.
-- Milestone 7 must prove inner regions pair in the specified order and mirror
-  both axes in every mode, viewport, and component comparison; unmatched and
-  `off` regions scroll alone, and shorter counterparts clamp without snapshot
-  restyling.
-- Milestone 7 must prove Scroll together is placed, persisted, and
-  session-scoped as specified; its off behavior and last-scrolled-version
-  realignment are live and reload no pane.
+- Inner regions pair in the specified order and mirror both axes in every
+  mode, viewport, and component comparison; unmatched and `off` regions scroll
+  alone, and shorter counterparts clamp without snapshot restyling.
+- Scroll together is placed, persisted, and session-scoped as specified; its
+  off behavior and last-scrolled-version realignment are live and reload no
+  pane.
 - Every pane frame carries `data-mokly-comparison-frame`, exactly
   `sandbox="allow-same-origin"`, `scrolling="no"`, a `srcdoc`, and
   `data-mokly-preview-source` naming an address beneath the accepted
@@ -250,6 +253,6 @@ the panel's own scrollbar drawn and no page scrollbar on the chrome's viewport.
 `design/review/controls/side-by-side-apart.html` depicts Side by side with
 Scroll together off, each version at its own place with its own scrollbar.
 Every diff-mode screen design draws the Scroll together switch after its mode
-group, on everywhere but that one; the runtime delivers these in Milestone 7.
+group, on everywhere but that one, as the runtime does.
 See [the shell design](./mokly-shell-design.md) and
 [the component design](./mokly-component-design.md) for the complete tables.

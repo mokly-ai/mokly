@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef } from "react";
 import type { ReactNode, RefObject } from "react";
 
-import type { ComparisonScrollSync } from "./comparison_scroll_sync.js";
+import type { ComparisonScrollSync } from "./comparison_scroll_types.js";
 
 /** The scroll owner and viewport element a layer registers with. */
 export interface ViewportScope {

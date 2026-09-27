@@ -8,7 +8,7 @@ import {
   type PaneDocument,
 } from "./comparison_chrome.js";
 import { ComparisonFrame } from "./comparison_frame.js";
-import type { ComparisonScrollSync } from "./comparison_scroll_sync.js";
+import type { ComparisonScrollSync } from "./comparison_scroll_types.js";
 import { ComparisonViewport } from "./comparison_viewport.js";
 
 const labels = { after: "Current", before: "Before" } as const;

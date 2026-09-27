@@ -735,7 +735,7 @@ Tags: ui
 Summary: mirror inner scroll regions between versions, route scroll keys and
 anchors to regions first, and prove both in the browser.
 
-- [ ] Add an app-shell comparison fixture under `tests/helpers/` whose Before
+- [x] Add an app-shell comparison fixture under `tests/helpers/` whose Before
       and Current versions each hold a scrolling main panel, a scrolling side
       list and a nested horizontally scrolling region, including an
       `id`-paired panel whose position changed and an unpaired panel whose
@@ -744,50 +744,50 @@ anchors to regions first, and prove both in the browser.
       marked `off`; add `tests/browser/comparison_regions.spec.ts` and
       run it before the runtime changes, recording the failing assertions in
       the review record.
-- [ ] Cover in that spec: the wheel over a panel in Overlay and Difference,
+- [x] Cover in that spec: the wheel over a panel in Overlay and Difference,
       Side by side in both directions, both viewports at once, a component
       comparison, PageDown, Space and ArrowDown after a click inside a panel,
       focus moving into a panel, an anchor inside a panel, every pairing rule
       in order, an ambiguous candidate left unpaired, `data-mokly-scroll="off"`,
       nested and horizontal regions, a region without a counterpart scrolling
       alone without errors, and a shorter counterpart stopping at its end.
-- [ ] Cover the toggle: hidden in Current and shown in every diff mode, on
+- [x] Cover the toggle: hidden in Current and shown in every diff mode, on
       by default, off unlinking Side by side pages and
       regions and stopping region mirroring in Overlay and Difference while
       the stack keeps one page offset, switching back on aligning every
       version to the pane scrolled last, remembered across screens and reloads
       in Serve and static export, kept for the session in an embedded viewer,
       and never reloading a pane.
-- [ ] Replace the Milestone 4 case "inner scroll regions stay independent per
+- [x] Replace the Milestone 4 case "inner scroll regions stay independent per
       version" in `tests/browser/comparison_alignment.spec.ts` with the
       mirrored behaviour.
-- [ ] Add a pure region matcher (region detection and the four pairing rules
+- [x] Add a pure region matcher (region detection and the four pairing rules
       in order) and a region mirror (one capturing `scroll` listener per pane
       document, the per-element echo rule, and matches discarded on every
       measurement), wired into `comparison_scroll_sync.ts` without pushing any
       module past 300 lines.
-- [ ] Route scroll keys to the region the browser would scroll, tracking the
+- [x] Route scroll keys to the region the browser would scroll, tracking the
       last pointer press in each pane document, and fall back to the shared
       viewport only when no region can move; extend the anchor reveal to
       scroll enclosing regions first.
-- [ ] Add the "Scroll together" toggle to the comparison toolbar with its
+- [x] Add the "Scroll together" toggle to the comparison toolbar with its
       remembered preference, and make the section controller honour it
       without reloading panes. Match the Milestone 6 mockup: a `<label>`
       after the mode group and before Refresh holding a native
       `input type="checkbox" role="switch"`, an `aria-hidden` track and the
       text “Scroll together”, drawn and placed as
       `docs/protocol/mokly-shell-design.md` specifies.
-- [ ] Add unit tests with fake documents for region detection, every pairing
+- [x] Add unit tests with fake documents for region detection, every pairing
       rule, ambiguity, mirroring, the echo rule, match discarding, key routing,
       anchors and the toggle.
-- [ ] Smoke-test through `npm run dev` with a temporary app-shell example
+- [x] Smoke-test through `npm run dev` with a temporary app-shell example
       screen: Overlay, Difference and Side by side on desktop and mobile, with
       the wheel, scroll keys and an anchor; save screenshots under `.context/`
       and revert the temporary change.
-- [ ] Update `packages/viewer/src/shell/README.md`, the scrolling contract and
+- [x] Update `packages/viewer/src/shell/README.md`, the scrolling contract and
       the Changes guide for the delivered modules, then run the comparison,
       preview, review and design browser specs and `cargo xtask check`.
-- [ ] Remove the pending-runtime wording Milestone 6 added: the exception to
+- [x] Remove the pending-runtime wording Milestone 6 added: the exception to
       “Every state recorded here is implemented” in the Delivery Status of
       `docs/protocol/mokly-shell-design.md`, the Milestone 7 sentence in the
       Delivery Status of `docs/protocol/mokly-component-design.md`, “the
@@ -795,6 +795,26 @@ anchors to regions first, and prove both in the browser.
       `docs/protocol/mokly-comparison-panes.md`, and the Milestone 6 and 7
       sentences in the Delivery Status of
       `docs/protocol/mokly-comparison-scrolling.md`.
+- [x] Split the scrolling contract, which the region rules pushed past 300
+      lines, into `mokly-comparison-scrolling.md` (page, regions, keys,
+      anchors), `mokly-comparison-region-pairing.md` (the four rules and the
+      scored fallback) and `mokly-comparison-scroll-together.md` (the reader
+      control, last-scrolled version and realignment), and record the
+      clarifications implementation needed: a candidate must scroll on every
+      axis the source scrolls on (a `hidden` axis is not a source axis), a
+      region found without a counterpart is not offered back, a
+      whitespace-only `role` falls back to the implicit role, the fingerprint
+      counts its first 200 runs before dropping short ones, key routing needs
+      `auto` or `scroll` overflow on the key's axis, and scores compare with a
+      `1e-9` tolerance.
+- [x] Draw the switch's knob with its border, because forced colours paint a
+      background-drawn knob like its track and the appearance contract forbids
+      opting out with `forced-color-adjust: none`; prove it with forced colours
+      emulated in `comparison_regions_switch.spec.ts`.
+- [x] Share the Git-backed comparison catalogue setup between the alignment and
+      region fixtures in `tests/helpers/comparison_repository.ts`, and give the
+      embedded test entry `removed_preview_viewer_entry.tsx` a source
+      replacement hook so the mount-scoped choice is proved across it.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
@@ -1146,3 +1166,76 @@ anchors to regions first, and prove both in the browser.
   `origin/main`, though the library inventory still names it.
 - Earlier open findings recorded under Milestones 2, 3A and 4 are unchanged,
   except that Milestone 2 finding 5 now covers two artboards.
+
+### Milestone 7
+
+- Base commit: `8467250`; the mirrored regions, key and anchor routing, the
+  Scroll together switch, their tests and documents landed on
+  `calummoore/kelowna-v2` in the commit that follows this record's base.
+- Failing-first: the new `comparison_regions.spec.ts`,
+  `comparison_regions_input.spec.ts`, `comparison_regions_toggle.spec.ts`,
+  `comparison_regions_switch.spec.ts` and `comparison_regions_hosts.spec.ts`
+  and the rewritten alignment case ran against `8467250` before the runtime
+  changed: 25 failed and the 7 unchanged alignment cases passed. Every region
+  case failed on the defect itself, the lower version's panel staying at 0 while
+  the top one scrolled (`[before, after]` received `[0, 400]` for the Overlay
+  main panel, `[0, 500]` Side by side, `[0, 250]` for the timeline, `[0, 300]`
+  for the desktop section with both viewports, `[0, 240]` for the component
+  list, `[0, 300]` in a static export and in an embedded viewer through both
+  adapters, and `300` expected but `0` received for the alignment fixture's
+  inner panel); PageDown after a click inside the panel and from a focused
+  panel moved nothing, because the key was cancelled and moved the zero-range
+  page; right-to-left ArrowLeft received `[0, 0]` instead of `[-40, -40]`;
+  focus, an anchor, a touch drag and a scroll the browser made in the lower
+  version left the other version behind; the smooth two-axis write left Before
+  at `0,0`; and the eight switch cases found no Scroll together switch.
+- Delivered modules under `packages/viewer/src/shell/`: the pure
+  `comparison_scroll_regions.ts` (detection, ranges, axes, per-document index),
+  `comparison_region_identity.ts` (names, ids, roles, accessible names,
+  fingerprints) and `comparison_region_match.ts` (the four rules and the scored
+  fallback); `comparison_region_mirror.ts` (collection and matches at most once
+  per measurement, reservations, the per-element echo rule, two-axis instant
+  writes and realignment); `comparison_key_route.ts` and
+  `comparison_region_reveal.ts`; `comparison_layer_listeners.ts`,
+  `comparison_section_measure.ts`, `comparison_scroll_types.ts` and
+  `comparison_scroll_owner.ts`, extracted so `comparison_scroll_sync.ts` stays at
+  274 lines; `comparison_scroll_mirror.ts` now keeps each viewport's settled
+  offset and links viewports only while Scroll together is on;
+  `comparison_toolbar.tsx`, `comparison_scroll_preference.ts` and
+  `use_scroll_together.ts` for the switch, with the embedded store held by
+  `MoklyViewer` above source replacement.
+- Contract clarifications found while implementing, recorded in the split
+  contracts and the Milestone 7 TODO above: axes are the source's scrollable
+  axes, so an `overflow-x: hidden` panel with wider content still pairs; a
+  region found without a counterpart is not offered back; a whitespace-only
+  `role` uses the implicit role; the fingerprint's 200 words are runs counted
+  before short runs are dropped; key routing needs `auto` or `scroll` on the
+  key's axis; scores compare with a `1e-9` tolerance. The knob is drawn by its
+  border because forced colours painted a background-drawn knob like its track
+  (white on white in Chrome) and the appearance contract forbids opting out.
+- Checks: `npm run build`, `npm run typecheck`, `npm run lint`,
+  `npm run format:check`, `npm run example:build` (426 files) and
+  `npm run example:check` (valid and untracked) passed; the viewer unit suite
+  passed 239/239; the comparison, preview, review, removed-preview,
+  component-runtime and design browser specs passed 228/228 in 47 files,
+  including `preview_design_links.spec.ts`; the doc-parsing unit tests passed
+  66/66; and the complete `cargo xtask check` passed (audit with 0
+  vulnerabilities, formatting, lint, Rust format, clippy, tests and
+  file-length audit, typecheck, example check, package check and smoke, unit
+  2521/2521, browser 860/860) with zero failures, skips or cancellations.
+  `git diff --diff-filter=D --name-status origin/main` lists nothing.
+- Smoke: `npm run dev` served the changed app-shell design screen
+  `design/review/outcomes/difference.html`, whose preview pane scrolls inside a
+  `height: 100vh; overflow: hidden` shell, on desktop and at 800px for the
+  phone. After a click inside the panel, PageDown, Space, ArrowUp, ArrowDown and
+  Home moved both versions' panels together (236, 278, 238, 278, 0); the wheel
+  did too in Overlay and Difference; Side by side mirrored; turning Scroll
+  together off let Before move alone (347 against 250), on realigned Current to
+  Before at its own end (321), and off again parted them. The phone's shorter
+  Before panel stopped at 110 while Current reached 118. A temporary jump link
+  inside the shared preview pane revealed its target in Overlay, Side by side
+  and phone Difference with the shell URL unchanged and Before following until
+  its shorter end; that change was reverted. No page error occurred.
+  Screenshots are under `.context/m7/`. The design screens' invisible native
+  resize handle covers the top half of their preview pane, so a wheel there
+  never reaches the pane, in Current as well; that is the example's layout.

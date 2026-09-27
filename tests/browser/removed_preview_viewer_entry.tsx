@@ -41,17 +41,25 @@ const selection: ViewerSelection = {
   tags: [],
 };
 
-createRoot(element).render(
-  <MoklyViewer
-    baseUrl={cross ? data.frameOrigin : location.origin}
-    catalogue={data.catalogue}
-    defaultSelection={selection}
-    frameAdapter={
-      cross
-        ? postMessageAdapter({ frameOrigin: data.frameOrigin })
-        : sameOriginAdapter()
-    }
-    onError={(error) => errors.push(error)}
-    viewerId="removed-preview"
-  />,
-);
+const adapter = cross
+  ? postMessageAdapter({ frameOrigin: data.frameOrigin })
+  : sameOriginAdapter();
+const root = createRoot(element);
+
+function render(catalogue: CatalogueReadModel): void {
+  root.render(
+    <MoklyViewer
+      baseUrl={cross ? data.frameOrigin : location.origin}
+      catalogue={catalogue}
+      defaultSelection={selection}
+      frameAdapter={adapter}
+      onError={(error) => errors.push(error)}
+      viewerId="removed-preview"
+    />,
+  );
+}
+
+render(data.catalogue);
+/** Replace the catalogue source with an equal copy, as a host refresh does. */
+(window as unknown as { replaceSource: () => void }).replaceSource = () =>
+  render({ ...data.catalogue });

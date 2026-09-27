@@ -407,13 +407,15 @@ Shell state is one store scoped to a mounted viewer:
   Serve and export persist `on` or `off` under
   `mokly:comparison-scroll-together`; an embedded viewer retains it only for
   that mounted session, including source replacement, outside the
-  source-specific shell remount. The scrolling contract defines its default
-  and live mode behavior.
+  source-specific shell remount. The
+  [Scroll together contract](./mokly-comparison-scroll-together.md) defines
+  its default and live mode behavior.
 - **Scroll** is tracked per viewer-owned shell `data-mokly-scroll` region and
   saved into the history entry for Back/Forward restoration; route-change
   focus never overrides a restored position. Consumer elements with the same
   attribute live inside separate comparison documents and instead use the
-  scrolling contract's author hint.
+  [region pairing contract's](./mokly-comparison-region-pairing.md) author
+  hint.
 - **Workspace** state (component variant, props under edit, inspector tab and
   pane size, active pick, highlight scope) lives with the mounted view and is
   discarded on route change or source replacement.

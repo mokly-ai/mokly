@@ -355,8 +355,9 @@ Scroll together appears after the comparison modes in Side by side, Overlay,
 and Difference. It updates the open comparison without reloading panes. An
 embedded `MoklyViewer` never reads this storage key; it keeps the choice only
 for the lifetime of that mounted viewer. The
-[comparison scrolling contract](../../docs/protocol/mokly-comparison-scrolling.md)
-defines panel pairing, per-mode behavior, and re-alignment.
+[region pairing](../../docs/protocol/mokly-comparison-region-pairing.md) and
+[Scroll together](../../docs/protocol/mokly-comparison-scroll-together.md)
+contracts define panel pairing, per-mode behavior, and re-alignment.
 
 ## Theming
 
