@@ -227,6 +227,13 @@ still run diffing and matching. Compare its interval union with the enclosing
 background `changes.classify` duration in the same session; do not sum parent
 and child spans. See the [timing contract](../../docs/protocol/mokly-timings.md).
 
+The pure inline-style engine discovers eligible unowned HTML CSS elements in
+original coordinates, parses each element independently, attributes diffed
+rules through normalized component ranges and renders canonical actual and
+projected material. It is not yet called by classification; that wiring is a
+separate plan milestone. Direct calls emit `review.inline-style-analysis`;
+they log no document or CSS.
+
 ## Development
 
 ```bash
@@ -274,6 +281,8 @@ Key code:
   ordered keep policy, per-rule decisions, and contained selector errors.
 - `css/document.ts`, `css/document_query.ts`: default parse5 adapter and queries
   that retain HTML/SVG/MathML name semantics.
+- `css/inline_*.ts`, `css/element_owners.ts`: the pure, not-yet-wired inline
+  span, attribution, ownership and canonical-material engine.
 - `css/nesting.ts`, `css/pseudos.ts`: parent substitution and static match bounds.
 - `css/material.ts`: changed custom-property and URL-reference detection.
 - `css/paths.ts`: shared public stylesheet analysis scope.

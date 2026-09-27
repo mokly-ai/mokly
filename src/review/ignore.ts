@@ -36,6 +36,7 @@ export interface NormalizedReviewPair {
   base: string;
   head: string;
   ignoredIds: readonly string[];
+  pairedIgnoreIds: readonly string[];
 }
 
 /** Normalize historical comparison material, never HTML with unconsumed offsets. */
@@ -83,7 +84,12 @@ export function normalizeReviewPair(
       (id) => base.regions.get(id)?.content !== head.regions.get(id)?.content,
     )
     .sort();
-  return { base: normalizedBase, head: normalizedHead, ignoredIds };
+  return {
+    base: normalizedBase,
+    head: normalizedHead,
+    ignoredIds,
+    pairedIgnoreIds: [...paired].sort(),
+  };
 }
 
 /** Validate and strip markers while retaining real child content. */

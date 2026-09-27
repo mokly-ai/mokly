@@ -4,7 +4,7 @@ import test from "node:test";
 import { parse, serialize } from "parse5";
 
 import { diffCssRules } from "../src/review/css/diff.js";
-import { matchCssRules } from "../src/review/css/match.js";
+import { matchCssRules, prepareCssRule } from "../src/review/css/match.js";
 import { LightningCssRuleParser } from "../src/review/css/rules.js";
 import type { CssRuleParser } from "../src/review/css/types.js";
 
@@ -249,4 +249,17 @@ test("CSS reference detection requires a URL function, not a separated identifie
     ),
     excluded,
   );
+});
+
+test("CSS keep preparation has one switch for changed inline references", () => {
+  const diff = diffCssRules(
+    "",
+    ".unused{background:url(icon.svg)}",
+    new LightningCssRuleParser(),
+  );
+  assert.equal(diff.status, "resolved");
+  assert.ok(diff.status === "resolved");
+  const change = { kind: "added" as const, after: diff.added[0]! };
+  assert.equal(prepareCssRule(change).status, "unresolved");
+  assert.equal(prepareCssRule(change, "matchable").status, "matchable");
 });

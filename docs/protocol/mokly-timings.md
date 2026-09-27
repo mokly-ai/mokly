@@ -88,14 +88,14 @@ Review phases use the same session, role and parent context as their caller:
 - `review.inline-style-analysis` measures the synchronous span, diff, match and
   attribution pass of the
   [inline style ownership contract](./mokly-inline-styles.md) for one paired
-  view, including parser-cache lookups. It runs only when the view's unowned
-  inline style text differs between sides or carries references. The span is
-  the approved target of the
-  [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md) and is
-  emitted once its analysis lands. Contained
-  parse or selector failures return unresolved attributions with span status
-  `ok`; an escaping error ends the span with `error`. It logs no paths,
-  selectors, CSS or document text.
+  view, including span discovery and parser-cache lookups. A direct call to the
+  pure engine emits the span even when identical outer style sources let it
+  skip parsing. Classification starts calling the engine in Milestone 4; the
+  reference-only fast-path calls arrive in Milestone 5. Contained parse or
+  selector failures return unresolved attributions with span status `ok`; an
+  escaping error ends the span with `error`. It logs no paths, selectors, CSS
+  or document text. See the
+  [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md).
 - `review.write-artifact` surrounds the owned Review directory transaction,
   including validation and cleanup. Export uses it for the complete artifact's
   staged file-write loop, including comparison files; export validation and

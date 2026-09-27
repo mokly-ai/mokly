@@ -81,7 +81,7 @@ class RuleCollector {
       const rule = byOffset.get(token.start);
       if (rule) this.rule(rule, []);
       else if (/^@charset\s/i.test(sourceRule.header))
-        this.atRule(sourceRule.header, "", []);
+        this.atRule(sourceRule.header, undefined, []);
       else
         throw new CssRuleParseError({
           kind: "unrepresented-rule",
@@ -138,7 +138,9 @@ class RuleCollector {
           : serializeRuleHeader(rule);
       this.atRule(
         header,
-        raw.body ? this.source.text.slice(raw.body.start, raw.body.end) : "",
+        raw.body
+          ? this.source.text.slice(raw.body.start, raw.body.end)
+          : undefined,
         conditions,
       );
     }
@@ -179,7 +181,7 @@ class RuleCollector {
 
   private atRule(
     header: string,
-    body: string,
+    body: string | undefined,
     conditions: readonly CssRuleCondition[],
   ): void {
     const tokens = tokenizeCss(header);
@@ -191,8 +193,9 @@ class RuleCollector {
       selectors: [],
       atRule: name.value,
       prelude: header.slice(name.end).trim(),
+      block: body !== undefined,
       conditions,
-      ...serializeBlock(body),
+      ...serializeBlock(body ?? ""),
     });
   }
 }

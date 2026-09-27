@@ -8,14 +8,16 @@ import type {
   CssRuleParseResult,
 } from "./types.js";
 
+type ResolvedCssRuleDiff = Extract<CssRuleDiffResult, { status: "resolved" }>;
+
 /** Compare rule multisets, cancelling exact identities before pairing edits. */
 export function diffCssRules(
   before: string,
   after: string,
   parser: CssRuleParser,
 ): CssRuleDiffResult {
-  const base = parse(parser, before);
-  const head = parse(parser, after);
+  const base = parseCssRules(parser, before);
+  const head = parseCssRules(parser, after);
   if (base.status === "unresolved" || head.status === "unresolved") {
     return {
       status: "unresolved",
@@ -29,8 +31,16 @@ export function diffCssRules(
       ],
     };
   }
-  const baseGroups = groupRules(base.rules);
-  const headGroups = groupRules(head.rules);
+  return diffCssRuleLists(base.rules, head.rules);
+}
+
+/** Diff already-parsed rule lists without crossing stylesheet boundaries. */
+export function diffCssRuleLists(
+  before: readonly CssRule[],
+  after: readonly CssRule[],
+): ResolvedCssRuleDiff {
+  const baseGroups = groupRules(before);
+  const headGroups = groupRules(after);
   const added: CssRule[] = [];
   const removed: CssRule[] = [];
   const changed: CssRuleChange[] = [];
@@ -69,7 +79,11 @@ export function diffCssRules(
   };
 }
 
-function parse(parser: CssRuleParser, stylesheet: string): CssRuleParseResult {
+/** Contain parser exceptions behind the same unresolved result as parser errors. */
+export function parseCssRules(
+  parser: CssRuleParser,
+  stylesheet: string,
+): CssRuleParseResult {
   try {
     return parser.parse(stylesheet);
   } catch (cause) {

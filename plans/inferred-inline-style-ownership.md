@@ -463,42 +463,67 @@ Summary: build the pure analysis under `src/review/css/` with unit tests,
 without changing classification yet. Every module stays under the file-size
 target and depends on the existing parser, diff and matcher.
 
-- [ ] Move the `<style>` span discovery from `src/components/style_ownership.ts`
-      into `src/review/css/inline_styles.ts` as a span finder that takes the
-      document and its validated ranges and returns ordered
-      `{ start, end, text }` spans, covering each element from start tag to
-      end tag, for style elements whose start offset lies inside no range and
-      no paired ignored region; leave `rebaseStyleOwnership` and its callers
-      in place until Milestone 4.
-- [ ] Expose the paired ignored-region spans of a document from
-      `src/review/ignore.ts` so the span finder can exclude style elements
-      inside them, with a unit test for a style element inside a paired
-      ignored region.
-- [ ] Add `src/review/css/element_owners.ts`: build an owner index from
+- [x] Add `src/review/css/inline_styles.ts` beside the legacy renderer-record
+      discovery in `src/components/style_ownership.ts`. Its span finder takes
+      an original document, its own-dialect validated ranges and paired ignore
+      ids, and returns ordered `{ start, end, source, text }` records in the
+      original coordinates for eligible unowned HTML CSS `<style>` elements.
+      Leave `rebaseStyleOwnership` and its callers unchanged until Milestone 4.
+- [x] Expose every paired ignored-region id from `normalizeReviewPair` in
+      `src/review/ignore.ts`, sharing its one-sided-material pairing rule; the
+      span finder walks original current/retired marker comments rather than
+      consuming normalized offsets.
+- [x] Add `src/review/css/element_owners.ts`: build an owner index from
       validated ranges, instance records, slot records and both sides'
       instance maps, and resolve `ownerAt(offset)` to `{ kind: "entry" }` or
       `{ kind: "component"; componentId }` using the innermost enclosing
       range, the equal-`propsKey` pairing rule with its input-owner fallback,
       and the root rule in the design summary.
-- [ ] Extend `src/review/css/document_query.ts` with `selectDocument` that
+- [x] Extend `src/review/css/document_query.ts` with `selectDocument` that
       returns every matched element, sharing the existing token rewrite and
       contained error boundary with `matchesDocument`.
-- [ ] Add `src/review/css/inline_attribution.ts` exposing
+- [x] Add `src/review/css/inline_attribution.ts` exposing
       `attributeInlineRules(input)` for one view: inputs are both sides'
       normalized marker-retaining documents, their validated ranges and usage
-      records, the paired instance map, the root component id and the cached
-      parser; output is the analyzed rules with attributions, the retained
-      selectors by status, and the owned component set. Apply the keep list
-      before matching in the documented order.
-- [ ] Add `src/review/css/inline_rendering.ts` with the deterministic
+      records used to build the paired instance maps, the root component id
+      and the cached parser; output is the analyzed rules with attributions,
+      the retained selectors by status, and the owned component set. Apply the
+      keep list before matching in the documented order.
+- [x] Add `src/review/css/inline_rendering.ts` with the deterministic
       canonical rendering of a rule list to CSS text, and
       `inlineMaterialReplacements` that produce the actual and projected
       removal lists for a side's unowned spans plus the appended `<style>`
       fragment, keeping the verbatim text when the diff is unresolved.
-- [ ] Wrap the per-view analysis in the `review.inline-style-analysis`
+- [x] Wrap the per-view analysis in the `review.inline-style-analysis`
       timing span with the same `ok`/`error` status rules as
       `review.css-analysis`, logging no paths, selectors or CSS.
-- [ ] Add `tests/review_css_inline_attribution.test.ts` covering: owned by
+- [x] Discovered: refine the inline-style Scope contract and span tests for
+      HTML/CSS namespace, `type`, `media`, template, outer-source/content and
+      original-coordinate rules, including historical headers and dialects,
+      attribute-only edits, and paired versus one-sided ignored regions.
+- [x] Discovered: refactor `diffCssRules` into a shared rule-list diff and
+      string entry point, parse each style element independently, rebase its
+      ordinals, and test element-split equality and per-element failures.
+- [x] Discovered: extract the stylesheet keep preparation into one shared
+      ordered function with a changed-reference switch; Milestone 3 keeps
+      changed inline references unresolved and Milestone 5 relaxes it.
+- [x] Discovered: make owner lookup use normalized source offsets, innermost
+      range content, direct slot owners, recursive changed-input ownership,
+      the root rule and a defensive cycle guard.
+- [x] Discovered: make `selectDocument` and `matchesDocument` share one
+      rewritten selector predicate and contained `CssSelectorError` boundary.
+- [x] Discovered: preserve statement versus block at-rules in parsed rules and
+      canonical rendering, order sheet-leading statements first, and prove
+      nested parents, conditions, keyframes and references render faithfully.
+- [x] Discovered: make identical outer-source sequences skip without parsing
+      and unresolved diffs retain both documents verbatim with no appended
+      fragment; reference-only fast-path work remains Milestone 5.
+- [x] Discovered: align the timing contract with the pure engine: the span
+      includes discovery and direct skipped calls now, classification wiring
+      follows in Milestone 4 and reference-only calls in Milestone 5.
+- [x] Discovered: update `src/review/README.md` for the pure inline-style
+      engine and its not-yet-wired Milestone 3 boundary.
+- [x] Add `tests/review_css_inline_attribution.test.ts` covering: owned by
       one component; owned by two components; entry match on one side only;
       unpaired instance resolves to entry; paired instance with changed
       `propsKey` resolves to its input owner, for an entry-supplied and a
@@ -507,16 +532,16 @@ target and depends on the existing parser, diff and matcher.
       instance; excluded on both sides; every keep-list construct; parse
       failure on one side; ignored-region elements never match; nesting
       parents; and stripped state pseudo-classes widening the owner set.
-- [ ] Add `tests/review_css_inline_rendering.test.ts` covering ordering,
+- [x] Add `tests/review_css_inline_rendering.test.ts` covering ordering,
       condition wrapping, selector-less at-rules, reference survival through
       `extractCssReferences` from the appended fragment, element removal
       regardless of count or attributes, and verbatim retention on a parse
       failure.
-- [ ] Add `tests/review_css_inline_timings.test.ts` mirroring the existing
+- [x] Add `tests/review_css_inline_timings.test.ts` mirroring the existing
       timings test for the new span.
-- [ ] Run the new tests and the existing `review_css_*` tests, then
+- [x] Run the new tests and the existing `review_css_*` tests, then
       `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report

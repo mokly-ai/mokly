@@ -16,8 +16,19 @@ interface CssRuleMaterial {
 /** A style rule, or a complete selector-less at-rule retained conservatively. */
 export type CssRule = CssRuleMaterial &
   (
-    | { selectors: readonly string[]; atRule?: never; prelude?: never }
-    | { selectors: readonly []; atRule: string; prelude: string }
+    | {
+        selectors: readonly string[];
+        atRule?: never;
+        prelude?: never;
+        block?: never;
+      }
+    | {
+        selectors: readonly [];
+        atRule: string;
+        prelude: string;
+        /** Distinguishes statement at-rules from braced blocks. */
+        block: boolean;
+      }
   );
 
 /** A parsing or serialization failure; the original error remains its cause. */

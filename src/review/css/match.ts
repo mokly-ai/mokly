@@ -17,6 +17,15 @@ import { resolveRuleSelectors } from "./nesting.js";
 import { selectorFeatures, staticSelectors } from "./pseudos.js";
 import type { CssRuleDiffResult } from "./types.js";
 
+/** Shared keep-list result before document-specific selector traversal. */
+export type PreparedCssRule =
+  | {
+      status: "matchable";
+      selectors: readonly string[];
+      queries: Selector[][][];
+    }
+  | { status: "unresolved"; selectors: readonly string[] };
+
 /** Match every diffed rule against both view documents without changing classification. */
 export function matchCssRules(
   diff: CssRuleDiffResult,
@@ -41,39 +50,14 @@ function matchRule(
   change: CssRuleDelta,
   documents: CssDocumentPair,
 ): CssAnalysisOutcome {
-  const rules = [change.before, change.after].filter(
-    (rule) => rule !== undefined,
-  );
-  const selectors = [
-    ...new Set(rules.flatMap((rule) => rule.selectors)),
-  ].sort();
+  const prepared = prepareCssRule(change);
+  const { selectors } = prepared;
   const kept = (status: "matched" | "unresolved"): CssAnalysisOutcome => ({
     kind: "kept",
     status,
     selectors,
   });
-  const prepared = prepareSelectors(change);
-  if (
-    prepared.status === "unresolved" &&
-    prepared.error.kind === "selector-parse-failed"
-  )
-    return kept("unresolved");
-  if (
-    prepared.status === "parsed" &&
-    prepared.queries.some((query) => selectorFeatures(query).shadow)
-  )
-    return kept("unresolved");
-  if (
-    prepared.status === "parsed" &&
-    prepared.queries.some((query) => selectorFeatures(query).global)
-  )
-    return kept("unresolved");
   if (prepared.status === "unresolved") return kept("unresolved");
-  if (changedCustomProperties(change.before, change.after))
-    return kept("unresolved");
-  if (rules.some((rule) => rule.selectors.length === 0))
-    return kept("unresolved");
-  if (changedReferences(change.before, change.after)) return kept("unresolved");
   const available = [documents.before, documents.after].filter(
     (document) => document !== undefined,
   );
@@ -86,6 +70,48 @@ function matchRule(
     throw error;
   }
   return { kind: "excluded" };
+}
+
+/** Apply the shared ordered keep list, with one switch for changed references. */
+export function prepareCssRule(
+  change: CssRuleDelta,
+  changedReferencePolicy: "unresolved" | "matchable" = "unresolved",
+): PreparedCssRule {
+  const rules = [change.before, change.after].filter(
+    (rule) => rule !== undefined,
+  );
+  const selectors = [
+    ...new Set(rules.flatMap((rule) => rule.selectors)),
+  ].sort();
+  const unresolved = (): PreparedCssRule => ({
+    status: "unresolved",
+    selectors,
+  });
+  const prepared = prepareSelectors(change);
+  if (
+    prepared.status === "unresolved" &&
+    prepared.error.kind === "selector-parse-failed"
+  )
+    return unresolved();
+  if (
+    prepared.status === "parsed" &&
+    prepared.queries.some((query) => selectorFeatures(query).shadow)
+  )
+    return unresolved();
+  if (
+    prepared.status === "parsed" &&
+    prepared.queries.some((query) => selectorFeatures(query).global)
+  )
+    return unresolved();
+  if (prepared.status === "unresolved") return unresolved();
+  if (changedCustomProperties(change.before, change.after)) return unresolved();
+  if (rules.some((rule) => rule.selectors.length === 0)) return unresolved();
+  if (
+    changedReferencePolicy === "unresolved" &&
+    changedReferences(change.before, change.after)
+  )
+    return unresolved();
+  return { status: "matchable", selectors, queries: prepared.queries };
 }
 
 function prepareSelectors(
