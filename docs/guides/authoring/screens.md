@@ -48,8 +48,8 @@ landmark such as `main`.
 Mokly normally pairs scrolling panels across Before and Current from their
 position, words, element type, and accessible role. If an edit moves a panel
 or rewrites most of it, give the panel the same stable `id` in both versions.
-When that id belongs to your application for another purpose, name the pair
-directly with `data-mokly-scroll`:
+If adding a product `id` would be inappropriate, name the comparison pair
+directly with `data-mokly-scroll` instead:
 
 ```tsx
 <main data-mokly-scroll="account-activity" className="activity-panel">

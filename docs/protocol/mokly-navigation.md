@@ -144,7 +144,7 @@ Browse shell. Comparison snapshot trees copy the same portable documents and do
 not promote their marked links into Browse routes. Inside a comparison pane the
 viewer's read-only guard cancels every link and form activation. A
 same-document anchor reveals its enclosing inner regions before the pane's page
-viewport, with counterparts following under the
+viewport, with counterparts following while Scroll together is on under the
 [comparison scrolling contract](./mokly-comparison-scrolling.md#anchors).
 
 ## Browse Presentation

@@ -205,9 +205,10 @@ state, match cache, and two-axis writer. It will extend
 anchor reveal with innermost-first region scrolling. The planned
 `comparison_scroll_preference.ts` owns `on`/`off` normalization and the
 `mokly:comparison-scroll-together` storage key; `use_scroll_together.ts` keeps
-the standalone or mounted-viewer state and supplies the live native switch in
-`diffs.tsx`. No planned module may reload pane presentations when that switch
-changes. The [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md)
+the standalone or mounted-viewer state, above the embedded source-replacement
+boundary, and supplies the live native switch in `diffs.tsx`. No planned module
+may reload pane presentations when that switch changes. The
+[comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md)
 owns presentation and layout; the
 [comparison scrolling contract](../../../../docs/protocol/mokly-comparison-scrolling.md)
 owns the delivered page rules and these planned extensions.

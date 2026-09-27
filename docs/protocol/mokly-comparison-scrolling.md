@@ -43,8 +43,7 @@ With Scroll together on, every chrome-viewport scroll writes its `scrollLeft`
 and `scrollTop` to every layer document in that section in the same handler.
 Side by side first mirrors its two chrome viewports in both directions. The
 off behavior is defined under [Reader Control](#reader-control). Every page
-write uses `scrollTo({ behavior: "instant", left, top })`, regardless of CSS
-`scroll-behavior`.
+write uses `scrollTo({ behavior: "instant", left, top })`, regardless of CSS `scroll-behavior`.
 
 A shorter or narrower document clamps at its own range. Its frame is translated
 back by the unmet x and y remainder, without changing the snapshot document, so
@@ -57,8 +56,7 @@ selection autoscroll, or fragment behavior, is written back to its chrome
 viewport first and then applied under the current Scroll together mode. Loops
 are value-based, never timer-based: after a write, the controller records the
 offset at which each scroller actually settled; an event reporting exactly
-that x/y pair is the write's echo and is ignored. A different value is a new
-source scroll.
+that x/y pair is the write's echo and is ignored. A different value is a new source scroll.
 
 ## Inner Scroll Regions
 
@@ -72,15 +70,14 @@ When a region scrolls for any reason, the viewer resolves one counterpart in
 every other version of the same section. A candidate must be scrollable on
 every axis on which the source region has a positive range. A source with both
 x and y range therefore cannot pair with a y-only candidate; a y-only source
-may pair with a candidate that also has x range. Both offsets are still written
-together.
+may pair with a candidate that also has x range. Both offsets are still written together.
 
 ## Counterpart Algorithm
 
-Matches are per pair of pane documents. On a region's first scroll
-after measurement, apply the rules below in order and stop at the first
-unambiguous result. Cache the result, including no match, until the next
-measurement. An accepted match reserves the target and records the reverse
+For each source region and other pane document, cache one counterpart or no
+match. On the region's first scroll after measurement, apply the rules below
+in order and stop at the first unambiguous result. Keep that result until the
+next measurement. An accepted match reserves the target and records the reverse
 association so one target cannot serve two source regions. A target already
 reserved for another source is ineligible. Switching Scroll together on also
 resolves unmatched regions as described under [Reader Control](#reader-control).
@@ -111,9 +108,9 @@ that exact value is ineligible under every rule. Otherwise apply:
 
 Duplicate and uniqueness counts include every region with the identity, even
 one that is off, axis-incompatible, or already reserved. The selected element
-must separately be eligible. This conservative rule follows the invariant that
-a wrong pair is worse than no pair. Class names and DOM-tree positions are
-never matching inputs.
+must separately be eligible; otherwise skip that rule. This conservative rule
+follows the invariant that a wrong pair is worse than no pair. Class names and
+DOM-tree positions are never matching inputs.
 
 ### Role And Accessible Name
 
@@ -133,7 +130,7 @@ resolve each id in order within the same document, join each target's
 `textContent` with one space, then trim and collapse whitespace the same way.
 Missing targets contribute no text. An empty name is valid for another role,
 so one unnamed `main` can pair with one unnamed `main`; uniqueness still
-applies in both documents.
+applies in both documents. Name equality is exact after this normalization.
 
 ### Scored Fallback
 
@@ -156,17 +153,17 @@ by the first 200 words of the region's own `textContent`. Lowercase with
 shorter than two Unicode code points, and deduplicate. `text` is the Jaccard
 index, intersection size divided by union size; two empty sets score zero.
 
-| Situation                                               | Governing values                    | Result                                |
-| ------------------------------------------------------- | ----------------------------------- | ------------------------------------- |
-| Same unique authored name; ids disagree                 | Rule 1                              | Pair by authored name                 |
-| Authored name duplicated; same unique id                | Rule 1 skipped, rule 2 unique       | Pair by id                            |
-| Name only on source, no ids, unique equal role/name     | Rules 1-2 unavailable               | Pair by role/name                     |
-| Either proposed side is `off`                           | Excluded before matching            | Do not pair                           |
-| Source has x/y range; candidate has y range only        | Candidate fails axis rule           | Do not select that candidate          |
-| Same place, rewritten text, different element names     | overlap `0.90`, text `0`: `0.495`   | Pair if runner-up is at most `0.345`  |
-| Moved, identical text, different element names          | overlap `0`, text `1`: `0.45`       | Pair if runner-up is at most `0.30`   |
-| Two candidates fall within the margin                   | best `0.64`, runner-up `0.53`       | Do not pair; lead is only `0.11`      |
-| Weak overlap and text, even with the element-name bonus | overlap `0.19`, text `0.19`: `0.29` | Do not pair; below the `0.45` minimum |
+| Situation                                               | Governing values                       | Result                                |
+| ------------------------------------------------------- | -------------------------------------- | ------------------------------------- |
+| Same unique authored name; ids disagree                 | Rule 1                                 | Pair by authored name                 |
+| Authored name duplicated; same unique id                | Rule 1 skipped, rule 2 unique          | Pair by id                            |
+| Name only on source, no ids, unique equal role/name     | Rules 1-2 unavailable                  | Pair by role/name                     |
+| Either proposed side is `off`                           | Excluded before matching               | Do not pair                           |
+| Source has x/y range; candidate has y range only        | Candidate fails axis rule              | Do not select that candidate          |
+| Same place, rewritten text, different element names     | overlap `0.90`, text `0`: `0.495`      | Pair if runner-up is at most `0.345`  |
+| Moved, identical text, different element names          | overlap `0`, text `1`: `0.45`          | Pair if runner-up is at most `0.30`   |
+| Two candidates fall within the margin                   | best `0.64`, runner-up `0.53`          | Do not pair; lead is only `0.11`      |
+| Weak overlap and text, even with the element-name bonus | overlap `<0.20`, text `<0.20`: `<0.30` | Do not pair; below the `0.45` minimum |
 
 ## Region Writes And Echoes
 
@@ -207,6 +204,9 @@ inner region that can still move in the key's direction:
 | ArrowRight                         | `scrollLeft < horizontal range` |
 | ArrowLeft                          | `scrollLeft > 0`                |
 
+For a right-to-left region, replace the table's horizontal tests: ArrowRight
+can move when `scrollLeft < 0`, and ArrowLeft when `scrollLeft > -horizontal range`.
+
 When such a region exists, do not prevent the key and do not move a page
 viewport; the browser scrolls that region and its scroll event drives region
 mirroring. When none exists, prevent the key and move the applicable chrome
@@ -224,13 +224,14 @@ border box. The region's visible box starts at its border rect plus
 target starts before that box, or is larger than it, add the start-edge
 difference to the region offset; otherwise, if it ends after the box, add the
 end-edge difference; otherwise leave that axis unchanged. Scroll instantly and
-mirror the settled offsets before processing the next ancestor.
+mirror the settled offsets when Scroll together is on before processing the
+next ancestor.
 
 After the regions, move the source section's page viewport to the target's
 current document position and apply that page offset under the current mode.
 Horizontal page movement uses the same nearest-edge rule; vertical movement
-aligns the target's top. Thus every enclosing counterpart follows before the
-page viewport moves.
+aligns the target's top. With Scroll together on, every enclosing counterpart
+follows before the page viewport moves.
 
 ## Reader Control
 
@@ -240,17 +241,14 @@ Refresh. Its visible label, accessible name, and product copy are all
 **Scroll together**. It is visible in Side by side, Overlay, and Difference,
 including loading or failure states, and absent in Current. It is on by default.
 
-Standalone Serve and export store `on` or `off` in origin-local
-`localStorage` under `mokly:comparison-scroll-together`. A missing, invalid, or
-unreadable value means on; a failed write leaves the in-memory choice active.
+Standalone Serve and export store `on` or `off` under the origin-local key
+`mokly:comparison-scroll-together`; missing, invalid, or unreadable means on, and a failed write leaves the in-memory choice active.
 Embedded viewers never access browser storage: each mounted viewer keeps the
-choice across routes, comparisons, and source replacement for that mount, then
-resets to on after the viewer root unmounts and mounts again. Independent
-viewer roots have independent choices.
+choice across routes, comparisons, and source replacement for that mount. It
+resets to on after the viewer root remounts; independent roots have independent choices.
 
 - In Side by side, on mirrors page viewports and paired regions; off leaves
-  each version's page and regions independent. Each viewport still drives and
-  clamps only its own document.
+  each version's page and regions independent. Each viewport still drives and clamps only its own document.
 - In Overlay and Difference, on mirrors paired regions. Off stops region
   mirroring, but the page still has one structural offset because both layers
   remain in one chrome and its lower layer has no separate page scrollbar.
@@ -285,15 +283,17 @@ version that exists there.
 The existing page cases remain proved by the three
 `tests/browser/comparison_alignment*.spec.ts` suites and controller unit tests
 under `packages/viewer/tests/`. Milestone 7 must make the old app-shell failure
-pass and add `comparison_regions.spec.ts` plus focused unit coverage for:
+pass and add `tests/browser/comparison_regions.spec.ts` plus focused unit
+coverage for:
 
 - every pairing rule in order, duplicate and runner-up ambiguity, axis
-  eligibility, `off`, invalid/one-sided authored names, and match invalidation;
+  eligibility, `off`, non-region/invalid/one-sided authored names, and match
+  invalidation;
 - Overlay, Difference, Side by side in both directions, Both, and component
   regions, including nested, horizontal, unmatched, and shorter regions;
-- wheel, touch, browser-originated scroll, keys from focus and the last pointer
-  target, editable/Space-owned keys, anchors, echoes, and instant two-axis
-  writes under smooth-scroll CSS;
-- switch placement and semantics in every mode, no pane reload, preserved
-  positions when disabled, deterministic authority on re-enable, storage in
+- wheel, touch, browser-originated scroll, every listed key from focus and the
+  last pointer target, editable/Space-owned keys, anchors, echoes, and instant
+  two-axis writes under smooth-scroll CSS;
+- switch placement, default, and semantics in every mode, no pane reload,
+  preserved positions when disabled, deterministic authority on re-enable, storage in
   Serve/export/an embedded session, and unchanged removed-preview scrolling.

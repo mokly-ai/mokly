@@ -406,8 +406,9 @@ Shell state is one store scoped to a mounted viewer:
 - **Comparison scrolling** includes the Scroll together choice. Standalone
   Serve and export persist `on` or `off` under
   `mokly:comparison-scroll-together`; an embedded viewer retains it only for
-  that mounted session. The scrolling contract defines its default and live
-  mode behavior.
+  that mounted session, including source replacement, outside the
+  source-specific shell remount. The scrolling contract defines its default
+  and live mode behavior.
 - **Scroll** is tracked per viewer-owned shell `data-mokly-scroll` region and
   saved into the history entry for Back/Forward restoration; route-change
   focus never overrides a restored position. Consumer elements with the same

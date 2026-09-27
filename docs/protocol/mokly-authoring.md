@@ -147,10 +147,11 @@ document are ambiguous; a name on a non-scrollable element is ignored. The
 defines fallback matching when a valid name is absent on either side.
 
 This is consumer metadata in the rendered document, not a TypeScript authoring
-field or Mokly-owned build marker. The builder and compatibility transformer do
-not validate, rewrite, remove, or require it. Viewer-owned shell elements also
-use the name outside pane documents for history restoration; the separate DOM
-scopes keep those meanings independent.
+field or Mokly-owned build marker. Mokly does not validate, rewrite, or remove
+it and imposes no special preservation rule on a consumer-supplied
+compatibility transformer. Viewer-owned shell elements also use the name
+outside pane documents for history restoration; the separate DOM scopes keep
+those meanings independent.
 
 Imports of `@mokly/mokly` from any repository-owned module bind the authoring
 helpers to that importing module. A module is repository-owned when its real

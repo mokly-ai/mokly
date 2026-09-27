@@ -217,7 +217,7 @@ and is specified by the
     delivered. A same-document anchor whose target sits inside regions
     scrolls each enclosing region, innermost first, just enough to show the
     target, then moves the shared viewport to the target's document position;
-    every counterpart follows.
+    every counterpart follows while scroll syncing is on.
 12. **Readers can turn scroll syncing off.** A native checkbox with switch
     semantics and the visible label "Scroll together" in the comparison
     toolbar applies only to the diff modes: it is shown in

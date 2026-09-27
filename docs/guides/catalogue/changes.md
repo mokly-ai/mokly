@@ -58,9 +58,9 @@ or give it the same `data-mokly-scroll` name. When one version's page or panel
 is shorter, it stops at its own end while the other can continue; Mokly never
 stretches or moves content inside the screen to hide that difference.
 
-Links and forms inside a comparison do nothing, and an anchor moves both
-versions to its target, so compare a linked screen through the catalogue, where
-it has its own comparison.
+Links and forms inside a comparison do nothing. An anchor reveals its target in
+that pane, and the other version follows while Scroll together is on. Compare a
+linked screen through the catalogue, where it has its own comparison.
 
 ## Variants and views
 

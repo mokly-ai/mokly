@@ -181,15 +181,16 @@ planned `tests/browser/comparison_regions.spec.ts`.
   documents and the shared viewport at one offset with coincident layer
   rectangles, for desktop, mobile, both viewports at once, and a component
   comparison; the same spec failed before the implementation landed.
-- Scrolling one Side by side viewport moves the other to the same offset in
-  both directions, and an anchor in either pane moves both.
+- With the default control on, scrolling one Side by side viewport moves the
+  other to the same offset in both directions, and an anchor in either pane
+  moves both.
 - Milestone 7 must prove Space, Shift+Space, PageUp, PageDown, Home, End, and
   the arrow keys reach the nearest movable inner region first and otherwise
   move the applicable page viewport; editable and Space-activated controls
   keep their keys.
 - Milestone 7 must prove a same-document anchor reveals enclosing regions
-  innermost first and then the page; its paired counterparts follow, while the
-  shell URL and heading stay unchanged.
+  innermost first and then the page; with Scroll together on, its paired
+  counterparts follow while the shell URL and heading stay unchanged.
 - A document shorter than its pair stops at its end, its frame is shifted by the
   remainder so its content stays aligned, and its surface shows its canvas.
 - A `min-height: 100vh` hero keeps spacer and frame sizes stable across
