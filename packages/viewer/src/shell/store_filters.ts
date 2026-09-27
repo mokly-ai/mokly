@@ -10,12 +10,15 @@ import type { ShellRoute } from "./routes.js";
 import { routeScreenId } from "./routes.js";
 import { openDisclosures, type ShellState } from "./store_state.js";
 
-/** Apply a user-authored search or filter and reveal its matching groups. */
+/** Reveal matching groups only when the selection's filters actually change. */
 export function withFilterSelection(
   state: ShellState,
   selection: ViewerSelection,
 ): ShellState {
-  return withSelection(state, selection, true);
+  const filtersChanged =
+    !sameQuery(state.selection, selection) ||
+    state.selection.view !== selection.view;
+  return withSelection(state, selection, filtersChanged);
 }
 
 /** Install a route, revealing only the destination path and hidden constraints. */
@@ -26,6 +29,8 @@ export function withRoute(
   sections: readonly NavSectionNode[],
 ): ShellState {
   let selection = { ...state.selection, screenId: routeScreenId(route) };
+  if (route.snapshot) selection.snapshotId = route.snapshot;
+  else delete selection.snapshotId;
   const entry =
     route.view.kind === "target" ? route.view.target.entry : undefined;
   if (
@@ -36,10 +41,6 @@ export function withRoute(
     selection.variantId = route.variant;
   else delete selection.variantId;
   if (route.viewport) selection.viewport = route.viewport;
-  if (route.colorScheme)
-    selection.colorScheme = catalogue.hasDarkFragments
-      ? route.colorScheme
-      : "light";
   if (catalogue.publicModel)
     selection = revealSelection(catalogue.publicModel, selection);
   let next = withSelection(state, selection, false);
@@ -105,6 +106,5 @@ function sameQuery(left: ViewerSelection, right: ViewerSelection): boolean {
 function routeTitle(catalogue: Catalogue, route: ShellRoute): string {
   if (route.view.kind === "home") return "Mokly";
   if (route.view.kind === "missing") return "Not found · Mokly";
-  const entry = catalogue.byId.get(route.view.target.entry.id);
-  return `${entry?.title ?? route.view.target.entry.title} · Mokly`;
+  return `${route.view.target.entry.title} · Mokly`;
 }

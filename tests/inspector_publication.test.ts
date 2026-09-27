@@ -139,6 +139,7 @@ test("export includes the inspector while generated and comparison bytes stay un
   const before = await directoryFiles(fixture.config.mockupsDir);
   const result = await exportCatalogue(fixture.config, { outDir: "site" });
   const files = await directoryFiles(fixture.output);
+  assert.ok(files.has("__mokly/client/appearance-startup.js"));
   assert.ok(files.has("__mokly/client/inspector.js"));
   assert.deepEqual(await directoryFiles(fixture.config.mockupsDir), before);
   const snapshotFiles = [...files].filter(
@@ -156,6 +157,7 @@ test("export includes the inspector while generated and comparison bytes stay un
       "utf8",
     ),
   );
+  assert.ok(inventory.files.includes("__mokly/client/appearance-startup.js"));
   assert.ok(inventory.files.includes("__mokly/client/inspector.js"));
   assert.ok(result.comparisonUrl);
 });
@@ -167,6 +169,7 @@ test("repository preview adds its inspector after validating portable consumer r
   const original = await directoryFiles(fixture.config.mockupsDir);
   await buildPreview(fixture.config, output);
   const published = await directoryFiles(output);
+  assert.ok(published.has("__mokly/client/appearance-startup.js"));
   assert.ok(published.has("__mokly/client/inspector.js"));
   assert.match(
     published.get("static/screens/home.mobile.html")!.toString(),

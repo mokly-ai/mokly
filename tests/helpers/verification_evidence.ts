@@ -7,8 +7,8 @@ export function unitReport(
     schemaVersion: 1,
     suite: "unit",
     commit: "a".repeat(40),
-    runtime: "node-24",
-    nodeVersion: "24.14.1",
+    runtime: "node-24.21.0",
+    nodeVersion: "24.21.0",
     shard: { index, total: 4 },
     fullFiles,
     assignedFiles,
@@ -40,8 +40,10 @@ export function browserTest(id: string, file: string) {
   };
 }
 
-export function ciReports() {
-  return ["node-22.14.0", "node-24"].flatMap((runtime) =>
+export function ciReports(
+  runtimes: readonly string[] = ["node-22.14.0", "node-24"],
+) {
+  return runtimes.flatMap((runtime) =>
     ["unit", "browser"].flatMap((suite) => {
       const files = [1, 2, 3, 4].map(
         (index) =>
@@ -53,7 +55,7 @@ export function ciReports() {
       return files.map((file, index) => ({
         ...unitReport(index + 1, [file], files),
         runtime,
-        nodeVersion: runtime === "node-22.14.0" ? "22.14.0" : "24.14.1",
+        nodeVersion: runtime === "node-22.14.0" ? "22.14.0" : "24.21.0",
         suite,
         fullTests: suite === "browser" ? tests : [],
         assignedTests: suite === "browser" ? [tests[index]!] : [],

@@ -21,6 +21,7 @@ test("a material change with matched stylesheet evidence reads Screen changed", 
       presentation: {
         colorScheme: "light",
         mode: "side",
+        requestedColorScheme: "light",
         viewport: "mobile",
       },
       route: "screens/auth.html",
@@ -30,4 +31,23 @@ test("a material change with matched stylesheet evidence reads Screen changed", 
   assert.match(markup, /<h3>Mobile · Screen changed<\/h3>/);
   assert.doesNotMatch(markup, /Styles this screen uses changed/);
   assert.equal(isStyleOnlyView(view), false);
+});
+
+test("an effective Light comparison retains the requested Dark fallback label", () => {
+  const result = cssSchemaFixture(2);
+  const markup = renderToStaticMarkup(
+    createElement(ComparisonViews, {
+      component: false,
+      loaded: { result, url: "https://example.test/review.json" },
+      presentation: {
+        colorScheme: "light",
+        mode: "side",
+        requestedColorScheme: "dark",
+        viewport: "mobile",
+      },
+      route: "screens/auth.html",
+    }),
+  );
+
+  assert.match(markup, /<h3>Mobile · Screen changed · Light only<\/h3>/);
 });

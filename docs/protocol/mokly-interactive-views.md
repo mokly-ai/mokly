@@ -186,10 +186,11 @@ is excluded from the source inventory, generated output, `check` and export.
 
 ## Shell Behaviour
 
-The view toolbar shows a Static/Live segmented control beside the viewport and
-scheme controls when the private descriptor carries an interactive origin and
-the entry offers Live. The selection persists in memory like viewport and
-scheme, and is discarded on reload. Static frames mount exactly as today. Live
+The view toolbar shows a Static/Live segmented control after the viewport
+control when the private descriptor carries an interactive origin and the
+entry offers Live. The standalone top-bar Appearance selector remains the only
+color-scheme control. Preview mode persists across view changes in the current
+document and is discarded on reload. Static frames mount exactly as today. Live
 frames mount through the cross-origin adapter with `sandbox="allow-same-origin
 allow-scripts"` on the interactive origin, and supply pending usage, so they
 subscribe to navigation only. Highlight, pick and controls stay Static-only;

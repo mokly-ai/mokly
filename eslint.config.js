@@ -1,9 +1,15 @@
+import path from "node:path";
+
 import eslint from "@eslint/js";
+import { includeIgnoreFile } from "eslint/config";
 import importPlugin from "eslint-plugin-import-x";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
+const gitignorePath = path.join(import.meta.dirname, ".gitignore");
+
 export default tseslint.config(
+  includeIgnoreFile(gitignorePath, "Repository .gitignore patterns"),
   {
     ignores: [
       "**/.context/**",

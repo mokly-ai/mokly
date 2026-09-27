@@ -210,7 +210,7 @@ test("workspace data keeps changed views with current and removed variants", () 
   );
 });
 
-test("the view controls and details name a dark-only change", () => {
+test("standalone Appearance and details name a dark-only change", () => {
   const catalogue = createCatalogue(screenManifest);
   const shellContext = context({
     baseline: screenManifest,
@@ -229,11 +229,12 @@ test("the view controls and details name a dark-only change", () => {
   );
   assert.equal(
     attribute(
-      workspaceControl(html, "data-workspace-scheme"),
+      shellControl(html, "data-mokly-appearance-select"),
       "aria-describedby",
     ),
     "mb-view-changed-scheme",
   );
+  assert.doesNotMatch(html, /data-workspace-scheme/);
   assert.equal(attribute(viewMark(html, "viewport"), "hidden"), "");
   assert.doesNotMatch(html, /aria-describedby="mb-view-changed-viewport"/);
   assert.match(
@@ -265,7 +266,7 @@ function viewMark(html: string, kind: "scheme" | "viewport") {
   return marks[0]!;
 }
 
-function workspaceControl(html: string, name: string) {
+function shellControl(html: string, name: string) {
   const controls = documentElements(
     html,
     (element) => attribute(element, name) !== undefined,

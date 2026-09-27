@@ -81,6 +81,10 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
   const index = await read("index.html");
   const publicCatalogue = JSON.parse(await read("__mokly/catalogue.json")) as {
     identity: { id: string };
+    removedEntries: readonly {
+      entry: { id: string; route: string };
+      snapshotId?: string;
+    }[];
     revision: { content: number; evidence: number };
   };
   const bootstrapScripts = documentElements(
@@ -99,7 +103,20 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
     identity: publicCatalogue.identity.id,
     revision: publicCatalogue.revision,
   });
-  assert.match(index, /href="\/view\/screens\/removed"/);
+  const removed = publicCatalogue.removedEntries.find(
+    ({ entry }) =>
+      entry.id === "removed" && entry.route === "screens/removed.html",
+  );
+  assert.match(removed?.snapshotId ?? "", /^[a-f0-9]{64}$/);
+  assert.ok(
+    documentElements(
+      index,
+      (element) =>
+        element.tagName === "a" &&
+        attribute(element, "href") ===
+          `/view/screens/removed?snapshot=${removed?.snapshotId}`,
+    ).length > 0,
+  );
   assert.match(
     index,
     /data-entry-id="removed"[^>]*data-route="screens\/removed.html"/,

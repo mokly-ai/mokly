@@ -5,7 +5,10 @@ import path from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 
-import { loadBrowserClientModulesFrom } from "../dist/server/client_modules.js";
+import {
+  loadBrowserClientModules,
+  loadBrowserClientModulesFrom,
+} from "../dist/server/client_modules.js";
 
 type BrowserGraphModule = {
   inspectBrowserGraph(): number;
@@ -60,6 +63,10 @@ test("browser build enumeration rejects unexpected output files", (context) => {
 });
 
 test("delivered browser graph resolves every import", async () => {
+  assert.ok(
+    loadBrowserClientModules().has("appearance-startup.js"),
+    "the standalone appearance startup is not delivered",
+  );
   const graph = await loadBrowserGraph();
   assert.ok(graph.inspectBrowserGraph() > 0);
 });

@@ -30,7 +30,7 @@ test("the shared footer exposes only the icon panel and its current variants", (
     assert.equal(Object.hasOwn(footer.propSchema.properties, key), false, key);
 });
 
-test("view options have one icon presentation and no separate top-bar scheme control", () => {
+test("view options have one icon presentation and no view-controls scheme control", () => {
   const controls = component("design-ui-view-controls");
   const topBar = component("design-ui-top-bar");
   if (
@@ -38,11 +38,23 @@ test("view options have one icon presentation and no separate top-bar scheme con
     topBar.propSchema.kind !== "object"
   )
     throw new Error("Invalid control schema");
+  for (const key of [
+    "presentation",
+    "scheme",
+    "schemeDisabled",
+    "schemeControl",
+    "destinations",
+  ])
+    assert.equal(
+      Object.hasOwn(controls.propSchema.properties, key),
+      false,
+      key,
+    );
   assert.equal(
-    Object.hasOwn(controls.propSchema.properties, "presentation"),
-    false,
+    Object.hasOwn(topBar.propSchema.properties, "appearance"),
+    true,
+    "the top bar owns the catalogue's one appearance setting",
   );
-  assert.equal(Object.hasOwn(topBar.propSchema.properties, "scheme"), false);
   assert.equal(
     Object.hasOwn(topBar.propSchema.properties, "schemeDestinations"),
     false,
@@ -64,7 +76,7 @@ test("every owning design and shared sample omits legacy footer and view markup"
         assert.doesNotMatch(html, /class="mbk-details(?:-bar|-hint)?"/, file);
         assert.doesNotMatch(
           html,
-          /role="group" aria-label="(?:Viewport|Color scheme)"/,
+          /role="group" aria-label="(?:Viewport|Preview color scheme)"/,
           file,
         );
       }

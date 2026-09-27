@@ -66,7 +66,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     );
   });
 
-  test(`${viewport} scheme, comparison, tags, and flow links use canonical designs`, async ({
+  test(`${viewport} comparison, tags, and flow links use canonical designs`, async ({
     page,
   }) => {
     await page.route("**/id/design-browse-screen", async (route) => {
@@ -77,13 +77,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await page.goto("/view/design/browse/views/screen.html");
     await chooseViewport(page, viewport);
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
-    await frame.getByRole("link", { name: "Switch to dark mode" }).click();
-    await expect(page).toHaveURL(
-      /\/design\/browse\/states\/dark-scheme\.html$/,
-    );
     await frame.locator(".mbk-shot-link:visible").first().click();
-    await expect(page).toHaveURL(/\/design\/browse\/states\/light-only\.html$/);
-    await frame.getByRole("link", { name: "Switch to light mode" }).click();
     await expect(page).toHaveURL(
       /\/design\/browse\/views\/details-screen\.html$/,
     );
@@ -91,14 +85,14 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await expect(page).toHaveURL(/\/design\/browse\/views\/screen\.html$/);
     await frame.locator(".mbk-search-tag").click();
     await expect(page).toHaveURL(
-      /\/design\/browse\/states\/tags\/picker\.html$/,
+      /\/design\/browse\/views\/screen\.variants\/picker\.html$/,
     );
     await frame
       .getByRole("group", { name: "Tags", exact: true })
       .getByRole("link", { name: "forms", exact: true })
       .click();
     await expect(page).toHaveURL(
-      /\/design\/browse\/states\/tags\/forms\.html$/,
+      /\/design\/browse\/views\/screen\.variants\/forms\.html$/,
     );
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
     await frame.locator(".mbk-search-tag").click();

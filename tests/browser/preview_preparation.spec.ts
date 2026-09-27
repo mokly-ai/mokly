@@ -2,26 +2,43 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { expect, test } from "@playwright/test";
+import { expect, test as base } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
+import { FULL_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.js";
 
 import { startPreviewFixture } from "./preview_fixture.js";
+import type { OwnedPreviewFixture } from "./preview_fixture_owner.js";
+
+interface PreparedPreview {
+  readonly before: string;
+  readonly after: string;
+  readonly preview: OwnedPreviewFixture;
+}
+
+const test = base.extend<{ preparedPreview: PreparedPreview }>({
+  preparedPreview: [
+    async ({ browserName: _browserName }, use) => {
+      const before = await generatedDigest();
+      const preview = await startPreviewFixture();
+      try {
+        await use({ before, after: await generatedDigest(), preview });
+      } finally {
+        await preview.close();
+      }
+    },
+    { timeout: FULL_CATALOGUE_SETUP_TIMEOUT_MS },
+  ],
+});
 
 test("the real preview build preserves generated output and serves fresh publication bytes", async ({
   page,
+  preparedPreview: { before, after, preview },
 }) => {
-  test.setTimeout(180_000);
-  const before = await generatedDigest();
-  const preview = await startPreviewFixture();
-  try {
-    expect(await generatedDigest()).toBe(before);
-    expect(preview.freshness.outputWasAbsent).toBe(true);
-    await page.goto(`${preview.url}/view/screens/welcome`);
-    await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
-  } finally {
-    await preview.close();
-  }
+  expect(after).toBe(before);
+  expect(preview.freshness.outputWasAbsent).toBe(true);
+  await page.goto(`${preview.url}/view/screens/welcome`);
+  await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
 });
 
 async function generatedDigest(): Promise<string> {

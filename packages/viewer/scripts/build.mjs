@@ -34,10 +34,16 @@ await build({
 });
 await build({
   bundle: true,
-  entryPoints: [path.join(root, "src/standalone/navigation_resize.ts")],
+  entryPoints: {
+    "appearance-startup": path.join(
+      root,
+      "src/standalone/appearance_startup.ts",
+    ),
+    "navigation-resize": path.join(root, "src/standalone/navigation_resize.ts"),
+  },
   format: "iife",
   logLevel: "silent",
-  outfile: path.join(target, "browser/navigation-resize.js"),
+  outdir: path.join(target, "browser"),
   platform: "browser",
   target: "es2023",
 });

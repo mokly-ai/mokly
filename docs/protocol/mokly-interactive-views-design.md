@@ -12,10 +12,10 @@ runtime Static/Live control implements these designs in a later milestone.
 ## Static/Live Control
 
 Add a two-option segmented control labelled Static and Live to the view
-toolbar, immediately after the light/dark toggle and before Highlight
-components. It uses the same segmented style, selected state, accessible
-group name ("Preview mode"), hover tooltips and visible keyboard focus as the
-viewport and scheme controls. Static is selected by default. The control
+toolbar, immediately after the viewport control and before Highlight
+components. It uses the existing segmented style, selected state, accessible
+group name ("Preview mode"), hover tooltips and visible keyboard focus. Static
+is selected by default. The control
 appears only on screen fragments and component saved variants of a catalogue
 whose local Serve offers Live; pages, use-case steps, comparison panes and
 removed previous versions never show it. A static-only catalogue, or an entry
@@ -73,9 +73,9 @@ the control do not implement the separate runtime behaviour.
 
 ## Reaching These States
 
-The control itself carries every transition, exactly as the theme and
-comparison controls do; no design-only navigation is added inside or under an
-artboard.
+The control itself carries every transition; no design-only navigation is
+added inside or under an artboard. The top-bar Appearance selector remains the
+standalone catalogue's only color-scheme control.
 
 | Source                         | Segment | Destination                    |
 | ------------------------------ | ------- | ------------------------------ |

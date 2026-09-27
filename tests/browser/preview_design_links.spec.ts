@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
 
 import { validEntrySource } from "../helpers/fixture.js";
+import { FULL_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.js";
 import { createPreviewComparisonFixture } from "../helpers/preview_comparison_fixture.js";
 
 import { focusDesignLink } from "./design_test_helpers.js";
@@ -22,7 +23,7 @@ let preview: OwnedPreviewFixture;
 test.describe.configure({ timeout: 90_000 });
 
 test.beforeAll(async ({ ordinaryPreview }) => {
-  test.setTimeout(180_000);
+  test.setTimeout(FULL_CATALOGUE_SETUP_TIMEOUT_MS);
   preview = ordinaryPreview;
   comparisonFixture = await createPreviewComparisonFixture(linkEntrySource);
   comparisonPreview = await servePreviewFixture(comparisonFixture.output);
@@ -82,18 +83,18 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen$/);
     await frame.locator(".mbk-search-tag").click();
     await expect(page).toHaveURL(
-      /\/view\/design\/browse\/states\/tags\/picker$/,
+      /\/view\/design\/browse\/views\/screen\.variants\/picker$/,
     );
     await frame
       .getByRole("group", { name: "Tags", exact: true })
       .getByRole("link", { name: "onboarding", exact: true })
       .click();
     await expect(page).toHaveURL(
-      /\/view\/design\/browse\/states\/tags\/onboarding$/,
+      /\/view\/design\/browse\/views\/screen\.variants\/onboarding$/,
     );
     await frame.locator(".mbk-search-tag").click();
     await expect(page).toHaveURL(
-      /\/view\/design\/browse\/states\/tags\/onboarding-picker$/,
+      /\/view\/design\/browse\/views\/screen\.variants\/onboarding-picker$/,
     );
     await frame
       .getByRole("group", { name: "Tags", exact: true })

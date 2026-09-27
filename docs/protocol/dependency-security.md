@@ -10,9 +10,12 @@ vulnerability fails the command. Registry or transport errors also fail; they
 are not an audit exemption or a successful security result.
 
 `cargo xtask check` runs this audit first and stops on failure. The release
-workflow retains that complete audit-first command. Parallel CI assigns the
-same live audit to the shared repository prerequisite, which
-must succeed before any package, unit, browser or native job starts. A cache hit
+workflow always runs the live audit immediately after installing dependencies,
+before it selects reusable CI evidence or the complete fallback. Complete mode
+therefore repeats the audit when the full gate starts; evidence mode never
+relies on an earlier CI audit for time-sensitive security evidence. Parallel CI
+assigns the same live audit to the shared repository prerequisite, which must
+succeed before any package, unit, browser or native job starts. A cache hit
 never replaces an audit. Verification requires registry access and is
 deliberately sensitive to newly published advisories, even when source and
 lockfile have not changed. An audit is evidence about known advisories at
@@ -21,13 +24,14 @@ execution time, not a guarantee that every dependency is safe. See the
 fail-closed aggregate.
 
 The packed ESM-consumer smoke also audits its freshly resolved production,
-optional, and peer dependencies before exercising the installed CLI on both
-supported Node runtimes in CI. This is a separate boundary: npm does not apply
-Mokly's workspace overrides or lockfile to downstream installations. Other
-consumer fixtures continue to exercise their respective integration contracts
-without duplicating registry requests. Consumers must maintain and audit their
-own lockfiles, including dependencies they bring to their renderer or
-application.
+optional, and peer dependencies before exercising the installed CLI on every
+runtime selected for that CI event. Ordinary changes use the minimum supported
+Node 22.14 runtime; Release Please pull requests repeat this boundary on Node 24
+before publication. This is a separate boundary: npm does not apply Mokly's
+workspace overrides or lockfile to downstream installations. Other consumer
+fixtures continue to exercise their respective integration contracts without
+duplicating registry requests. Consumers must maintain and audit their own
+lockfiles, including dependencies they bring to their renderer or application.
 
 ## Update Policy
 
@@ -66,10 +70,11 @@ The current maintenance choices are:
 - Lightning CSS is a production dependency for stylesheet rule parsing. Its
   MPL-2.0 native packages and Apache-2.0 `detect-libc` dependency participate in
   the workspace and packed-consumer audits. Retain every platform's optional
-  lockfile entry when updating it; Ubuntu Node 22.14/24 and the minimum-Node
-  macOS/Windows jobs exercise its parser. Native binaries must remain installed;
-  the Node package does not automatically fall back to WASM. See the
-  [release platform contract](./npm-release.md#continuous-integration).
+  lockfile entry when updating it; ordinary Ubuntu and native macOS/Windows
+  jobs exercise the minimum Node 22.14 runtime, and the release-gated Ubuntu
+  matrix adds Node 24. Native binaries must remain installed; the Node package
+  does not automatically fall back to WASM. See the [release platform
+  contract](./npm-release.md#continuous-integration).
 
 ## Required Evidence
 

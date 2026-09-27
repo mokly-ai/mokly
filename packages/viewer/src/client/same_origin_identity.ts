@@ -2,7 +2,7 @@
 
 const authenticatedDocument: unique symbol = Symbol("authenticated-document");
 const authenticatedDocuments = new WeakSet<Document>();
-const mountedFrames = new WeakSet<HTMLIFrameElement>();
+const mountedResources = new WeakMap<HTMLIFrameElement, string>();
 
 /** A document whose frame and assigned resource identity were authenticated. */
 export type AuthenticatedDocument = Document & {
@@ -12,6 +12,8 @@ export type AuthenticatedDocument = Document & {
 
 /** Mount-scoped document transfer and assigned-resource authentication. */
 export interface MountAuthentication {
+  /** Last adapter assignment; absence identifies the first hydration mount. */
+  readonly previousResource: string | undefined;
   /** The authenticated starting document eligible for ownership transfer. */
   readonly transferredDocument: AuthenticatedDocument | undefined;
   /** Authenticate a candidate without promoting an excluded starting object. */
@@ -25,16 +27,20 @@ export interface MountAuthentication {
 export function createMountAuthentication(
   frame: HTMLIFrameElement,
   startingDocument: Document | null | undefined,
+  expected: URL,
 ): MountAuthentication {
-  const firstMount = !mountedFrames.has(frame);
-  mountedFrames.add(frame);
+  const previousResource = mountedResources.get(frame);
+  mountedResources.set(frame, expected.href);
   const transferredDocument = transferAuthenticatedDocument(
     frame,
     startingDocument,
   );
   const excludedDocument =
-    firstMount || transferredDocument ? undefined : startingDocument;
+    previousResource === undefined || transferredDocument
+      ? undefined
+      : startingDocument;
   return {
+    previousResource,
     transferredDocument,
     authenticateAssignedDocument: (doc, expected) =>
       doc === excludedDocument

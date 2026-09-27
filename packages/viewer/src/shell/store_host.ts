@@ -78,6 +78,7 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       const current = stateRef.current;
       const routeChanged =
         current.selection.screenId !== selection.screenId ||
+        current.selection.snapshotId !== selection.snapshotId ||
         current.selection.variantId !== selection.variantId;
       const frameChanged =
         routeChanged ||
@@ -85,7 +86,8 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
         current.selection.colorScheme !== selection.colorScheme;
       const fragment =
         pending?.fragment ??
-        (current.selection.screenId === selection.screenId
+        (current.selection.screenId === selection.screenId &&
+        current.selection.snapshotId === selection.snapshotId
           ? current.route.fragment
           : undefined);
       let next = withFilterSelection(current, selection);
@@ -120,11 +122,13 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
       }
       const routeChanged =
         current.screenId !== next.screenId ||
+        current.snapshotId !== next.snapshotId ||
         current.variantId !== next.variantId;
       const navigation = routeChanged
         ? {
             selection: next,
             ...(current.screenId === next.screenId &&
+            current.snapshotId === next.snapshotId &&
             stateRef.current.route.fragment
               ? { fragment: stateRef.current.route.fragment }
               : {}),
@@ -150,6 +154,7 @@ export function useShellHost(input: HostStoreInput): ShellHostActions {
         stateRef.current.selection,
         {
           screenId,
+          snapshotId: route.snapshot,
           variantId: route.variant,
           ...(route.viewport ? { viewport: route.viewport } : {}),
           ...(route.colorScheme ? { colorScheme: route.colorScheme } : {}),

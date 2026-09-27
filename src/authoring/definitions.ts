@@ -21,11 +21,17 @@ import type {
 } from "./types.js";
 import { flattenScreenVariants } from "./variants.js";
 
-type DefineScreenResult<T extends ScreenInput> = T extends ScreenInput & {
-  variants: readonly ScreenVariantInput[];
-}
-  ? readonly ScreenDefinition[]
-  : ScreenDefinition;
+type DefineScreenVariantsResult<T> = [T] extends [never]
+  ? ScreenDefinition
+  : T extends readonly ScreenVariantInput[]
+    ? readonly ScreenDefinition[]
+    : ScreenDefinition;
+
+type DefineScreenResult<T extends ScreenInput> = T extends unknown
+  ? DefineScreenVariantsResult<
+      "variants" extends keyof T ? T["variants" & keyof T] : undefined
+    >
+  : never;
 
 /** Loader hook used by module-bound consumer authoring facades. */
 export function __attributeDefinition<T extends object>(

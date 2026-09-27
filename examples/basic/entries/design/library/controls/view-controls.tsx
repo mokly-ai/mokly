@@ -1,13 +1,7 @@
 import { defineComponent, type ComponentProps } from "@mokly/mokly";
 
 import { libraryMetadata } from "../metadata.js";
-import {
-  destination,
-  optionalFlag,
-  previewViewport,
-  scheme,
-  schemeDestinations,
-} from "../schemas.js";
+import { destination, optionalFlag, previewViewport } from "../schemas.js";
 
 import { ViewControlsView } from "./view-controls.view.js";
 
@@ -19,7 +13,6 @@ const propSchema = {
   kind: "object",
   properties: {
     selection: previewViewport,
-    scheme,
     highlight: optionalFlag,
     unavailable: {
       schema: {
@@ -28,7 +21,6 @@ const propSchema = {
       },
       optional: true,
     },
-    schemeDisabled: optionalFlag,
     previewMode,
     previewModeDisabled: optionalFlag,
     previewModeDestinations: {
@@ -47,27 +39,22 @@ const propSchema = {
             viewport: {
               schema: { kind: "enum", values: ["mobile", "desktop"] },
             },
-            scheme,
+            scheme: { schema: { kind: "enum", values: ["light", "dark"] } },
           },
         },
       },
       optional: true,
     },
-    destinations: schemeDestinations,
   },
 } as const;
 export type ViewControlsProps = ComponentProps<typeof propSchema, []>;
-const sample = {
-  selection: "desktop",
-  scheme: "light",
-  destinations: {},
-} as const;
+const sample = { selection: "desktop" } as const;
 export const viewControls = defineComponent({
   ...libraryMetadata(
     "controls",
     "view-controls",
     "View controls",
-    "Viewport, theme, preview mode and component highlighting controls.",
+    "Viewport, preview mode and component highlighting controls.",
   ),
   propSchema,
   controls: {
@@ -78,11 +65,6 @@ export const viewControls = defineComponent({
         label: value,
         value,
       })),
-    },
-    scheme: {
-      kind: "select",
-      label: "Theme",
-      options: scheme.schema.values.map((value) => ({ label: value, value })),
     },
     previewMode: {
       kind: "select",

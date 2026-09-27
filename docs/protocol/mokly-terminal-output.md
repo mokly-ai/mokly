@@ -80,6 +80,10 @@ and config path, followed by its stable URL in a compact bordered panel. The
 panel contains only the address so it remains the primary action; watch state
 and shortcut guidance are dim secondary copy beneath it:
 
+Serve installs its `SIGINT` and `SIGTERM` shutdown handling before it writes
+the ready layout or opens the browser. Once a URL is visible, an immediate
+interrupt must close Serve cleanly rather than terminate it by signal.
+
 ```text
   mokly 0.10.0                          derived · comparing against origin/main
   examples/basic/mokly.config.ts

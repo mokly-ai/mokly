@@ -30,7 +30,6 @@ test("comparison designs use screen context instead of report chrome", async ({
     "outcomes/added",
     "outcomes/removed",
     "outcomes/difference",
-    "outcomes/dark-scheme",
     "impact/shared-impact",
     "impact/ignored-only",
   ]) {

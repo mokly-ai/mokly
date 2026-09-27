@@ -17,6 +17,7 @@
 }
 .ce-inspector .ce-usage-list,
 .ce-inspector .ce-props,
+.ce-inspector .ce-control-row,
 .ce-inspector .ce-instance-tree {
   max-width: 680px;
 }

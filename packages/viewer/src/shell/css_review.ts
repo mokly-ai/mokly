@@ -38,7 +38,7 @@ export const SHELL_REVIEW_CSS = `
   min-height: 0;
   overflow: auto;
   padding: 24px;
-  background: radial-gradient(circle, rgba(20,28,22,.05) 1px, transparent 1px) 0 0 / 22px 22px;
+  background: radial-gradient(circle, var(--mbk-dot) 1px, transparent 1px) 0 0 / 22px 22px;
 }
 .mbk-diff-view { margin-bottom: 24px; }
 .mbk-diff-view h3 {

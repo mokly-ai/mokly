@@ -15,6 +15,7 @@ import {
 interface WorkflowStep {
   env?: Readonly<Record<string, string>>;
   id?: string;
+  if?: string;
   name?: string;
   run?: string;
   uses?: string;
@@ -22,10 +23,12 @@ interface WorkflowStep {
 }
 
 interface WorkflowJob {
+  env?: Readonly<Record<string, string>>;
   environment?: string;
   if?: string;
   name?: string;
   needs?: readonly string[];
+  outputs?: Readonly<Record<string, string>>;
   permissions?: Readonly<Record<string, string>>;
   steps: readonly WorkflowStep[];
   strategy?: {
@@ -39,6 +42,20 @@ interface Workflow {
   jobs: Readonly<Record<string, WorkflowJob>>;
   on: Readonly<Record<string, unknown>>;
   permissions: Readonly<Record<string, string>>;
+}
+
+interface WorkflowDispatch {
+  inputs: Readonly<
+    Record<
+      string,
+      {
+        default?: string;
+        options?: readonly string[];
+        required?: boolean;
+        type?: string;
+      }
+    >
+  >;
 }
 
 interface ReleaseContextModule {
@@ -70,14 +87,32 @@ test("release workflow selects only releases and isolates OIDC publish", async (
   const source = await workflowSource("release.yml");
   const workflow = parse(source) as Workflow;
   const publish = workflow.jobs.publish;
+  const selection = workflow.jobs["select-release"];
   assert.ok(publish);
-  assert.ok(workflow.on.workflow_dispatch);
+  assert.ok(selection);
+  const dispatch = workflow.on.workflow_dispatch as WorkflowDispatch;
+  assert.deepEqual(dispatch.inputs.verification, {
+    description: "Reuse exact-tree CI evidence or run complete verification",
+    required: true,
+    type: "choice",
+    options: ["evidence", "complete"],
+    default: "evidence",
+  });
   assert.equal(workflow.concurrency["cancel-in-progress"], false);
   assert.equal(publish.environment, "npm");
   assert.deepEqual(publish.permissions, {
+    actions: "read",
     contents: "read",
     "id-token": "write",
   });
+  assert.equal(
+    selection.outputs?.verification,
+    "${{ steps.select.outputs.verification }}",
+  );
+  assert.equal(
+    publish.env?.RELEASE_VERIFICATION,
+    "${{ needs.select-release.outputs.verification }}",
+  );
   assert.equal(source.includes("NPM_TOKEN"), false);
   assert.equal(source.includes("NODE_AUTH_TOKEN"), false);
   assert.match(source, /package-manager-cache: false/);
@@ -88,9 +123,51 @@ test("release workflow selects only releases and isolates OIDC publish", async (
   assert.match(source, /outputs\['packages\/viewer--release_created'\]/);
   assert.match(source, /outputs\['packages\/viewer--tag_name'\]/);
   const names = publish.steps.map((step) => step.name);
-  assert.ok(
-    names.indexOf("Run complete verification") <
-      names.indexOf("Prepare exact publish artifacts"),
+  const gateOrder = [
+    "Verify immutable tags",
+    "Install dependencies",
+    "Audit workspace dependencies",
+    "Select verification evidence",
+    "Set up Rust",
+    "Install Chromium",
+    "Run complete verification",
+    "Prepare exact publish artifacts",
+  ];
+  for (const [index, name] of gateOrder.entries()) {
+    assert.ok(names.includes(name), name);
+    if (index > 0)
+      assert.ok(
+        names.indexOf(gateOrder[index - 1]) < names.indexOf(name),
+        name,
+      );
+  }
+  const fallbackCondition = "steps.evidence.outputs.mode != 'evidence'";
+  for (const name of [
+    "Set up Rust",
+    "Install Chromium",
+    "Run complete verification",
+  ])
+    assert.equal(
+      publish.steps.find((step) => step.name === name)?.if,
+      fallbackCondition,
+    );
+  const evidence = publish.steps.find(
+    (step) => step.name === "Select verification evidence",
+  );
+  assert.equal(evidence?.id, "evidence");
+  assert.deepEqual(evidence?.env, { GITHUB_TOKEN: "${{ github.token }}" });
+  assert.deepEqual(
+    publish.steps
+      .filter((step) => step.env?.GITHUB_TOKEN)
+      .map((step) => step.name),
+    ["Select verification evidence"],
+  );
+  const preserve = publish.steps.find(
+    (step) => step.name === "Preserve checked artifacts",
+  );
+  assert.match(
+    String(preserve?.with?.path),
+    /\.context\/release-evidence\/record\.json/,
   );
   assert.ok(
     names.indexOf("Guard existing viewer version") <
@@ -116,6 +193,10 @@ test("release workflow selects only releases and isolates OIDC publish", async (
   assert.match(source, /group: npm-release/);
   assert.match(source, /verify-ref\.mjs "\$CLI_REF" "\$VIEWER_REF"/);
   assert.match(source, /--artifacts .context\/release-artifact/);
+  const setupNode = publish.steps.find((step) =>
+    step.uses?.startsWith("actions/setup-node@"),
+  );
+  assert.equal(setupNode?.with?.["node-version"], 24);
   assertPinnedActions(workflow);
 });
 

@@ -153,9 +153,13 @@ test("watched serve rebuilds and reloads after an authored change", async ({
     page.locator(".mbk-frame-mobile iframe"),
     /screens\/home\.mobile\.dark\.html$/,
   );
-  await expect(page.locator("[data-workspace-scheme]")).toHaveAttribute(
-    "aria-pressed",
-    "true",
+  // The reload recovers the appearance itself, not just the frames it picks.
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-mokly-theme",
+    "dark",
+  );
+  await expect(page.locator("[data-mokly-appearance-select]")).toHaveValue(
+    "dark",
   );
   await expect(details).not.toHaveAttribute("data-open", "true");
   await expect(page.locator("[data-mokly-shell]")).toHaveAttribute(

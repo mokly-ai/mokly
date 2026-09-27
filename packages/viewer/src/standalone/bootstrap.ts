@@ -1,5 +1,6 @@
 /** Serializable state shared by standalone shell SSR and browser hydration. */
 
+import { resolveCatalogueRoute } from "../catalogue/entry_selection.js";
 import { readCatalogue } from "../catalogue/reader.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import { canonicalJson } from "../components/data.js";
@@ -14,6 +15,8 @@ import { toRouteTarget } from "../shell/target.js";
 import type { ShellView } from "../shell/views.js";
 import { viewerCatalogue, viewerContext } from "../viewer/projection.js";
 import { defaultSelection } from "../viewer/selection.js";
+import { normalizeTheme } from "../viewer/theme.js";
+import type { ViewerTheme } from "../viewer/types.js";
 
 import {
   catalogueReferenceMatches,
@@ -36,6 +39,7 @@ interface BootstrapContext {
   comparisons: boolean;
   delivery?: StaticDelivery;
   fragment?: string;
+  theme?: ViewerTheme;
 }
 
 /** Public-catalogue state embedded in one server-rendered standalone page. */
@@ -75,6 +79,9 @@ export function shellBootstrap(
         : { previewGeneration: context.previewGeneration }),
       ...(context.delivery === undefined ? {} : { delivery: context.delivery }),
       ...(context.fragment === undefined ? {} : { fragment: context.fragment }),
+      ...(context.theme === undefined
+        ? {}
+        : { theme: normalizeTheme(context.theme) }),
     },
     view:
       view.kind === "target"
@@ -142,16 +149,24 @@ export function serializeShellBootstrap(
 /** Recreate the exact component inputs used by standalone SSR. */
 export function shellBootstrapProps(bootstrap: ShellBootstrap) {
   const catalogue = viewerCatalogue(bootstrap.catalogue);
-  const selectedEntry =
+  const selected =
     bootstrap.view.kind === "target"
-      ? catalogueRouteEntry(catalogue, bootstrap.view.route)
+      ? resolveCatalogueRoute(bootstrap.catalogue, bootstrap.view.route)
       : undefined;
+  const selectedEntry = selected
+    ? catalogueRouteEntry(catalogue, selected.entry.route)
+    : undefined;
   const selectedId = selectedEntry?.id ?? null;
-  const selection = { ...defaultSelection, screenId: selectedId };
+  const selection = {
+    ...defaultSelection,
+    screenId: selectedId,
+    ...(selected?.snapshotId ? { snapshotId: selected.snapshotId } : {}),
+  };
   const projected = viewerContext(bootstrap.catalogue, selection);
   const context: ShellContext = {
     ...projected,
     base: bootstrap.context.base,
+    embedded: false,
     updateVersion: bootstrap.context.updateVersion,
     comparisons: bootstrap.context.comparisons,
     ...(bootstrap.context.contentVersion === undefined
@@ -166,6 +181,9 @@ export function shellBootstrapProps(bootstrap: ShellBootstrap) {
     ...(bootstrap.context.fragment === undefined
       ? {}
       : { fragment: bootstrap.context.fragment }),
+    ...(bootstrap.context.theme === undefined
+      ? {}
+      : { theme: bootstrap.context.theme }),
     ...(bootstrap.view.kind === "target"
       ? { activeRoute: bootstrap.view.route }
       : {}),
@@ -201,12 +219,20 @@ function readContext(value: Record<string, unknown>): BootstrapContext {
   const contentVersion = value["contentVersion"];
   const previewGeneration = value["previewGeneration"];
   const fragment = value["fragment"];
+  const theme = value["theme"];
   if (contentVersion !== undefined && !isVersion(contentVersion))
     throw new Error("Invalid shell content version.");
   if (previewGeneration !== undefined && typeof previewGeneration !== "string")
     throw new Error("Invalid shell preview generation.");
   if (fragment !== undefined && !isLogicalFragment(fragment))
     throw new Error("Invalid shell fragment.");
+  if (
+    theme !== undefined &&
+    theme !== "auto" &&
+    theme !== "dark" &&
+    theme !== "light"
+  )
+    throw new Error("Invalid shell appearance.");
   const delivery =
     value["delivery"] === undefined
       ? undefined
@@ -221,6 +247,7 @@ function readContext(value: Record<string, unknown>): BootstrapContext {
     ...(previewGeneration === undefined ? {} : { previewGeneration }),
     ...(delivery === undefined ? {} : { delivery }),
     ...(fragment === undefined ? {} : { fragment }),
+    ...(theme === undefined ? {} : { theme }),
   };
 }
 
@@ -243,10 +270,7 @@ function validateTarget(
   catalogue: CatalogueReadModel,
   view: BootstrapView,
 ): void {
-  if (
-    view.kind === "target" &&
-    !catalogueRouteEntry(viewerCatalogue(catalogue), view.route)
-  )
+  if (view.kind === "target" && !resolveCatalogueRoute(catalogue, view.route))
     throw new Error("Invalid shell hydration target.");
 }
 

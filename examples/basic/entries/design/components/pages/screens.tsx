@@ -50,7 +50,7 @@ export const pageScreens = [
     title: "Saved variant",
     colorSchemes: ["light"],
     description:
-      "Disabled selected, with the actual saved prop value visible in Props.",
+      "Disabled selected and Unmodified while another saved variant makes the component Changed; no unavailable comparison is offered.",
     desktop: <SavedVariantDesktop />,
     mobile: <SavedVariantMobile />,
   }),

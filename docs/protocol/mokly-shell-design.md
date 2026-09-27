@@ -24,6 +24,13 @@ are part of that plan. The separate
 [component explorer designs](./mokly-component-design.md) are implemented
 mockups whose runtime-backed states are identified in their own contract.
 
+Auto/Light/Dark interface appearance is designed in the
+`design/browse/appearance/` mockups and specified by the
+[semantic palette](./mokly-viewer-palette.md). The shell now carries that
+palette in both appearances, selected on a viewer root, and an embedded host
+chooses one with `theme`. A standalone document carries the delivered Appearance
+control at every width and uses it for both the shell and the previews.
+
 The page and publication designs are implemented in the example catalogue and
 shared shell. Whole documents use a plain bordered pane and omit
 device/comparison controls. Removed pages are flat Changes rows; baseline
@@ -54,21 +61,22 @@ contract until their standalone screens are implemented.
 | ------------------------------------- | --------------------------------------------------------------- | ---------------------------------------------------------- |
 | `design-browse-home`                  | `design/browse/views/home.html`                                 | Catalogue home with navigation tree                        |
 | `design-browse-screen`                | `design/browse/views/screen.html`                               | Selected screen with framed fragments                      |
-| `design-browse-details-screen`        | `design/browse/views/details-screen.html`                       | Normal Details screen, light selected                      |
+| `design-browse-details-screen`        | `design/browse/views/details-screen.html`                       | Normal Details screen, a light-only subject                |
 | `design-browse-use-case`              | `design/browse/views/use-case.html`                             | Selected use case with ordered steps                       |
 | `design-browse-details`               | `design/browse/states/details.html`                             | Expanded details inspector                                 |
 | `design-browse-missing-route`         | `design/browse/states/missing-route.html`                       | Not-found view with navigation                             |
 | `design-browse-navigation`            | `design/browse/states/navigation.html`                          | Collapsed navigation drawer                                |
 | `design-browse-tag-filter`            | `design/browse/states/tag-filter.html`                          | Tag picker over a filtered tree                            |
-| `design-browse-tag-picker`            | `design/browse/states/tags/picker.html`                         | Empty query, tag picker open                               |
-| `design-browse-tag-forms`             | `design/browse/states/tags/forms.html`                          | Forms filter, picker closed                                |
-| `design-browse-tag-onboarding`        | `design/browse/states/tags/onboarding.html`                     | Onboarding filter, picker closed                           |
-| `design-browse-tag-onboarding-picker` | `design/browse/states/tags/onboarding-picker.html`              | Onboarding filter, picker open                             |
-| `design-browse-dark-scheme`           | `design/browse/states/dark-scheme.html`                         | Dark selected, dark device screens                         |
-| `design-browse-light-only`            | `design/browse/states/light-only.html`                          | Light-only screen under dark                               |
+| `design-browse-tag-picker`            | `design/browse/views/screen.variants/picker.html`               | Empty query, tag picker open                               |
+| `design-browse-tag-forms`             | `design/browse/views/screen.variants/forms.html`                | Forms filter, picker closed                                |
+| `design-browse-tag-onboarding`        | `design/browse/views/screen.variants/onboarding.html`           | Onboarding filter, picker closed                           |
+| `design-browse-tag-onboarding-picker` | `design/browse/views/screen.variants/onboarding-picker.html`    | Onboarding filter, picker open                             |
+| `design-browse-dark-scheme`           | `design/browse/views/screen.variants/dark-scheme.html`          | Welcome with one catalogue-wide Appearance setting         |
+| `design-browse-light-only`            | `design/browse/views/screen.variants/light-only.html`           | Details keeps a light preview under Dark                   |
 | `design-browse-variant-selected`      | `design/browse/variants/selected.html`                          | Selected variant under its parent screen                   |
 | `design-browse-variant-changes`       | `design/browse/variants/changes.html`                           | Changed variant row inside its parent group                |
 | `design-browse-variant-removed`       | `design/browse/variants/removed.html`                           | Removed variant under a surviving parent                   |
+| `design-browse-variant-reparented`    | `design/browse/variants/reparented.html`                        | Removed variant kept flat after its parent becomes variant |
 | `design-browse-changed-views`         | `design/browse/variants/changed-views.html`                     | Change confined to the views that are not shown            |
 | `design-changes-current`              | `design/review/controls/current.html`                           | Current screen in Changes                                  |
 | `design-changes-overlay`              | `design/review/controls/overlay.html`                           | On-demand overlay comparison                               |
@@ -80,7 +88,6 @@ contract until their standalone screens are implemented.
 | `design-review-removed-unavailable`   | `design/review/outcomes/previous-version/unavailable.html`      | Previous views unavailable, with Retry                     |
 | `design-review-removed-no-view`       | `design/review/outcomes/previous-version/no-captured-view.html` | A viewport with no captured previous view                  |
 | `design-review-difference`            | `design/review/outcomes/difference.html`                        | Blend-mode difference comparison                           |
-| `design-review-dark-scheme`           | `design/review/outcomes/dark-scheme.html`                       | Dark view compared side by side                            |
 | `design-review-shared-impact`         | `design/review/impact/shared-impact.html`                       | Unchanged screen from All with evidence                    |
 | `design-review-ignored-only`          | `design/review/impact/ignored-only.html`                        | Ignored-only Current view with evidence                    |
 | `design-review-empty`                 | `design/review/impact/empty.html`                               | Empty Changes filter retaining Current                     |
@@ -99,6 +106,26 @@ contract until their standalone screens are implemented.
 | `design-page-removed-unavailable`     | `design/browse/pages/previous-version/unavailable.html`         | Previous document unavailable, with Retry                  |
 | `design-publication-catalogue`        | `design/browse/publication/catalogue.html`                      | Current catalogue with review omitted                      |
 | `design-publication-changes`          | `design/browse/publication/changes.html`                        | Catalogue with optional comparisons                        |
+| `design-appearance-overview`          | `design/browse/appearance/overview.html`                        | Canonical catalogue appearance around a selected screen    |
+| `design-appearance-auto`              | `design/browse/appearance/states/auto.html`                     | Appearance left on Auto                                    |
+| `design-appearance-light-only`        | `design/browse/appearance/states/light-only.html`               | A screen with no dark render keeping its light frames      |
+| `design-appearance-props`             | `design/browse/appearance/workspaces/props.html`                | Props panel with a rejected value                          |
+| `design-appearance-instance`          | `design/browse/appearance/workspaces/instance.html`             | Selected component instance panel                          |
+| `design-appearance-drawer`            | `design/browse/appearance/workspaces/drawer.html`               | Catalogue drawer on a narrow layout                        |
+| `design-appearance-side-by-side`      | `design/browse/appearance/workspaces/side-by-side.html`         | Side-by-side comparison                                    |
+| `design-appearance-difference`        | `design/browse/appearance/workspaces/difference.html`           | Difference comparison                                      |
+| `design-appearance-home`              | `design/browse/appearance/status/home.html`                     | Home guidance with nothing selected                        |
+| `design-appearance-loading`           | `design/browse/appearance/status/loading.html`                  | Catalogue checking for changes                             |
+| `design-appearance-error`             | `design/browse/appearance/status/error.html`                    | A screen that could not be shown, with another attempt     |
+| `design-appearance-unavailable`       | `design/browse/appearance/status/unavailable.html`              | Changes unavailable                                        |
+| `design-appearance-flow`              | `design/browse/appearance/status/flow.html`                     | Use-case steps around light screens                        |
+
+The six entries under `screen.variants/` are variants of
+`design-browse-screen` and are absent from every collection's `childIds`. The
+stable `design-browse-tags` collection remains present with no children and
+directs readers to Welcome's variants. `design-browse-states` retains all other
+memberships, including `design-browse-tag-filter`; no other id or route changes
+in this conversion.
 
 Additional owning groups keep each new page at no more than five screens:
 
@@ -126,12 +153,13 @@ Additional owning groups keep each new page at no more than five screens:
   previews are identical, so no static-delivery variant is designed.
 - `design/browse/publication/catalogue.html` and `changes.html` specify review
   omitted and included, using the existing Welcome stage.
-- `design/browse/variants/selected.html`, `changes.html`, `removed.html`, and
-  `changed-views.html` specify a screen's variants: the disclosed variant list
-  with one variant selected, a changed variant row under a parent whose own
-  render is unmodified, a deleted variant retained under its surviving parent,
-  and a change confined to views other than the one shown. `selected.html`
-  is the group's canonical screen. Their behavior contract is
+- `design/browse/variants/selected.html`, `changes.html`, `removed.html`,
+  `reparented.html`, and `changed-views.html` specify a screen's variants: the
+  disclosed variant list with one variant selected, a changed variant row under
+  a parent whose own render is unmodified, a deleted variant retained under its
+  surviving parent, a deleted variant kept flat when its former parent becomes
+  another screen's variant, and a change confined to views other than the one
+  shown. `selected.html` is the group's canonical screen. Their behavior contract is
   [screen variants](./mokly-screen-variants.md).
 - `design/review/impact/stylesheets/matched.html`, `unresolved.html`,
   `unnamed.html`, and `excluded.html` specify rule-aware stylesheet evidence
@@ -146,6 +174,27 @@ Additional owning groups keep each new page at no more than five screens:
 - `design/review/availability/preparing.html` and `unavailable.html` specify the
   two Changes states that carry no comparison data yet, keeping the impact group
   to its own three aggregate outcomes.
+- `design/browse/appearance/overview.html` is the canonical appearance screen;
+  the `states/` group beneath it owns two screens and `workspaces/` and
+  `status/` own five each. Their previews follow the artboard. They specify the
+  delivered Auto/Light/Dark interface appearance from
+  [viewer appearance](./mokly-viewer-appearance.md). Every one of them renders in
+  both schemes, so the outer Appearance control moves between its two generated
+  files at the same route. Existing light-interface routes keep their ids.
+
+`design-browse-screen`, `design-browse-details-screen` and the whole Welcome
+comparison family — `design-changes-current`, `design-changes-overlay`,
+`design-review-changed` and `design-review-difference` — also render in both
+schemes, so the outer Appearance control shows the selected Welcome, the
+light-only Details subject and every comparison mode under either appearance at
+their own routes. A comparison family publishes the same schemes for every
+member, so switching mode inside a dark catalogue never lands on a light
+document.
+
+Every artboard that draws a top bar draws exactly one scheme control in it, the
+depicted Appearance selector, because the standalone shell always offers that
+setting. The selector names the scheme its file was rendered for, except on the
+Auto artboard, which names Auto in both renders.
 
 Every screen ships one mobile and one desktop variant. Mockup implementation
 notes live in entry descriptions, rationale, and related docs — never inside
@@ -168,21 +217,24 @@ Consumers may set exactly these CSS custom properties to tune the shell accent.
 The shell reads them with the defaults below; every other shell style is
 package-owned and not a compatibility surface.
 
-| Property                  | Default                   | Used for                          |
-| ------------------------- | ------------------------- | --------------------------------- |
-| `--mokly-accent`          | `#4f7864`                 | Brand mark, active pills and rows |
-| `--mokly-accent-contrast` | `#ffffff`                 | Text and glyphs on the accent     |
-| `--mokly-accent-soft`     | `rgba(79, 120, 100, 0.1)` | Hover and highlight surfaces      |
+| Property                  | Default                   | Used for                      |
+| ------------------------- | ------------------------- | ----------------------------- |
+| `--mokly-accent`          | `#4f7864`                 | Active pills and rows         |
+| `--mokly-accent-contrast` | `#ffffff`                 | Text and glyphs on the accent |
+| `--mokly-accent-soft`     | `rgba(79, 120, 100, 0.1)` | Hover and highlight surfaces  |
 
 A consumer accent pair must keep at least WCAG AA contrast between
 `--mokly-accent` and `--mokly-accent-contrast`; the shell does not
-recompute contrast at runtime.
+recompute contrast at runtime. The Mokly brand mark is identity rather than
+accent: it keeps its package-owned `--chrome-brand` color whatever accent a
+consumer sets.
 
 ## Package-Owned Tokens
 
-The shell chrome is light-only (`color-scheme: light`); only the inside of a
-device screen follows the selected color scheme (see Color Scheme below). The
-chrome family is neutral and sage-tinted:
+The shell chrome supports Light and Dark independently of the preview's color
+scheme. Light retains its neutral/sage family; Dark uses Mokly Cloud's warm
+Folio neutrals with sage accents. The complete mapping and both palettes live in
+the [semantic palette](./mokly-viewer-palette.md). The Light values are:
 
 | Token                    | Value                            | Role                     |
 | ------------------------ | -------------------------------- | ------------------------ |
@@ -190,16 +242,26 @@ chrome family is neutral and sage-tinted:
 | `--chrome-surface`       | `#ffffff`                        | Cards, bars, panes       |
 | `--chrome-ink`           | `#1a1d1c`                        | Primary text             |
 | `--chrome-ink-2`         | `#4a4f4d`                        | Secondary text           |
-| `--chrome-muted`         | `#7d8480`                        | Tertiary and labels      |
+| `--chrome-muted`         | `#676e6a`                        | Tertiary and labels      |
 | `--chrome-border`        | `#e3e5e0`                        | Hairline borders         |
 | `--chrome-border-strong` | `#c8ccc4`                        | Frame and strong borders |
+| `--chrome-control-edge`  | `#868e88`                        | Interactive boundaries   |
 | `--chrome-accent`        | `#2a4733`                        | Deep-accent prose links  |
+| `--chrome-brand`         | `#2f5945`                        | Mokly brand mark         |
 | `--chrome-shadow`        | `0 30px 90px rgba(20,28,22,.14)` | Overlay elevation        |
+
+The shipped shell and appearance mockups share the two corrected Light values:
+`--chrome-muted` is `#676e6a`, and control outlines, grips and field borders use
+`--chrome-control-edge` `#868e88` so `--chrome-border-strong` remains limited to
+device and pane frames. Both are recorded, with their contrast, in the
+[semantic palette](./mokly-viewer-palette.md).
 
 Typography is **Inter** (a variable font packaged with the shell and served at
 `/__mokly/fonts/InterVariable.woff2` under its SIL OFL license) via
 `--sans: "Inter", ui-sans-serif, system-ui, …` at a 13px shell base, with
 `--mono: "SFMono-Regular", Consolas, …` for routes, ids, addresses, and paths.
+Only the brand wordmark uses `--serif: Georgia, "Times New Roman", serif`, the
+Mokly wordmark's system serif stack; no serif font file is packaged.
 The nav indent guides use the faint `--mbk-guide: #dbded8` tint. The shell
 ships no consumer product fonts beyond Inter, and no consumer-specific color,
 name, or route family may appear in shell styles or copy.
@@ -209,21 +271,30 @@ name, or route family may appear in shell styles or copy.
 The shell fills the viewport (`100vh`, document scrolling disabled); every
 scrollable region scrolls internally:
 
-- **Top bar** — 48px, surface background, hairline bottom border: brand mark
-  (a non-shrinking 24px accent square with 6px corners and a 17px inline SVG
-  of overlapping mobile and desktop screen outlines), the product name in
-  its own `mbk-name` span, a centred search field (max-width 440px, led by a
-  15px stroked magnifier icon that holds its size while the field flexes)
+- **Top bar** — 48px, surface background, hairline bottom border: the Mokly
+  logo (a non-shrinking 22px brand mark followed, 8px later, by the lowercase
+  `mokly.` wordmark in its own `mbk-name` span), a centred search field
+  (max-width 440px, led by a 15px stroked magnifier icon that holds its size
+  while the field flexes)
   that flexes down to whatever room the bar leaves it. Below the breakpoint a menu button opens the
-  catalogue drawer. The product name hides in the narrow header so the search
-  retains space; the brand link keeps its accessible name. Search uses
+  catalogue drawer. The wordmark hides in the narrow header so the search
+  retains space; the brand link keeps its `Mokly` accessible name. Search uses
   `Search catalogue` as its accessible name and `Search catalogue…` as its
   placeholder in both viewport sizes, covering screens, pages, and flows.
-  The decorative mark
-  inherits the accent-contrast color and uses two-unit strokes on a 24-unit
-  viewBox, with the mobile outline in front and a gap in the desktop outline
-  at the overlap. There is no mode
-  switch. A query splits into terms: every `tag:<tag>`
+  The decorative mark is a 22px SVG on a 32-unit viewBox, the size Mokly
+  Cloud's product header draws it at, so a host showing its own header before
+  the viewer loads keeps the mark the same size. It matches the published
+  Mokly logo: two overlapping rounded screens (20×21 units with
+  4-unit corners at 3,3 and 9,8), the back one at 30% opacity, both filled in
+  `--chrome-brand`, and the front one carrying two short rules (`M14 15h10`
+  and `M14 20h7`, two-unit round-capped strokes) in `--chrome-surface`. Both
+  roles follow the interface appearance, so Dark draws the light-green mark
+  with dark rules exactly as Mokly Cloud's dark logo does. The wordmark is
+  20px `--serif` at regular weight in the chrome ink, with `-0.01em`
+  tracking, and never wraps. The bar carries no preview mode switch; the
+  delivered Auto/Light/Dark Appearance control is the one setting that
+  belongs here.
+  A query splits into terms: every `tag:<tag>`
   term matches only rows whose entry declares that tag, and the remaining words
   rejoin into one phrase that must appear in a row's authored ID, title, or
   route. A row stays visible only when it matches every tag term and that phrase;
@@ -338,16 +409,15 @@ scrollable region scrolls internally:
   button uses the standard pointer cursor, moves down 1px with an inset shadow
   while pressed, and copies the unprefixed ID without navigating.
   Selected screen routes place one right-aligned group of icon controls here:
-  Mobile/Desktop/Both dropdown, theme toggle, and component highlighting when
-  applicable. Tooltips name each action; the top bar has no theme selector.
+  Mobile/Desktop/Both dropdown and component highlighting when applicable.
+  Tooltips name each action. The head band carries no scheme control; the
+  catalogue's one Appearance control lives in the top bar.
   A control whose axis hides a changed view carries a 6px accent dot in its
-  top-right corner, ringed 1.5px in the surface colour so it reads over the
-  glyph: the theme control when a changed view uses the other scheme, the
-  viewport control when a changed view uses the other viewport, and neither
-  while Both is selected. The dot is decorative; the control names a visually
-  hidden `Other theme changed` or `Other viewport changed` through
-  `aria-describedby`, so the mark never relies on color alone and stays
-  distinct from the pressed state. No control draws an edge rail.
+  top-right corner, ringed 1.5px in the surface colour: Appearance when a
+  changed view uses another scheme and the viewport dropdown when another
+  viewport changed. Both never marks the viewport dropdown. The control names
+  a visually hidden `Other theme changed` or `Other viewport changed` through
+  `aria-describedby`; the dot stays distinct from selection and draws no rail.
 - **Stage** — dotted-grid background (22px radial dots), centred frames with
   40px gap, internal `overflow: auto`, `MOBILE` / `DESKTOP` uppercase frame
   labels, and no separate toolbar above the grid.
@@ -415,9 +485,12 @@ or flow; shared controls and missing-route messages cover the whole catalogue.
 
 ## Color Scheme
 
-A catalogue may render dark fragments beside its light ones. The selection
-changes only what a device screen shows; every shell surface around the frames
-keeps the light chrome palette in both schemes.
+A catalogue may render dark fragments beside its light ones. The preview scheme
+changes what a device screen shows; the interface around the frames follows its
+own appearance, described in
+[mokly-viewer-appearance.md](./mokly-viewer-appearance.md). In a standalone
+catalogue the two are one choice, made once in the top bar; an embedded root
+keeps them apart, so a host can hold a light interface over a dark preview.
 
 | Token                   | Value     | Role                             |
 | ----------------------- | --------- | -------------------------------- |
@@ -439,10 +512,13 @@ of those two.
   embedded document cannot occlude it:
   `color-mix(in srgb, var(--mbk-dark-screen-ink) 12%, var(--mbk-dark-screen-bg))`.
   The browser viewport needs none; its light bar already draws that edge.
-- **Control** — a theme icon beside the viewport dropdown in the screen header
-  at every width. Authored design pairs navigate through their canonical scheme
-  links. Component designs toggle their local preview; unavailable choices are
-  disabled with an explanation.
+- **Control** — a standalone catalogue carries one Appearance selector in the
+  top bar at every width, setting the interface and the previews together; see
+  [mokly-viewer-appearance.md](./mokly-viewer-appearance.md). An embedded root
+  instead carries a Dark preview toggle beside the viewport dropdown, and only
+  when the catalogue has dark fragments. Authored design pairs navigate through
+  their canonical scheme links. Component designs toggle their local preview;
+  unavailable choices are disabled with an explanation.
 - **Light-only screens** — a screen with no dark render keeps its light frames
   under a dark selection and states the fallback in its frame label, which
   gains an `mbk-frame-scheme-note` span so the caption reads
@@ -450,9 +526,9 @@ of those two.
   lighter-weight tail of the same uppercase label, not a separate badge.
   A use-case step frame carries the same fallback state but has no label, so it
   shows no scheme caption.
-- **Diff views** — keep the normal viewport and color-scheme controls in the
-  screen heading. The compact diff band changes only how the
-  selected screen is displayed. Light-only comparisons name their fallback;
+- **Diff views** — keep the normal viewport control in the screen heading and
+  the Appearance control in the top bar. The compact diff band changes only how
+  the selected screen is displayed. Light-only comparisons name their fallback;
   dark styling remains contained within device screens.
 
 ## Responsive Behavior
@@ -488,8 +564,9 @@ mockups omit it on every Browse, Added or Unmodified shown view, Removed screen,
 shared-impact-only, ignored-only, excluded-stylesheet-only, and empty state.
 Removed screens show a status badge over their previous version labelled “Showing previous
 version” under [removed previews](./mokly-removed-previews.md). A removed screen
-keeps the grouped viewport and theme controls, with the theme control disabled
-because Light is the only scheme its previous views were rendered in.
+keeps the grouped viewport control. The catalogue-wide Appearance selector
+remains the only theme control, while the historical frame stays Light because
+that is the only scheme captured for its previous views.
 Comparison bands always retain
 an opaque surface and their border. Static catalogues without comparison data
 omit the band.

@@ -5,9 +5,22 @@
 - [Interactive Views](./interactive-views.md) — Milestones 1 and 2 complete:
   the contract documentation and the Static/Live design catalogue; the browser
   bundle, interactive origin and shell control follow.
-- [Screen Variants Follow-up](./screen-variants-follow-up.md) — deferred
-  design-catalogue conversion, five open review findings, and later navigation
-  ideas from PR #101; planned for a separate PR, with no implementation started.
+- [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
+  standalone Auto/Light/Dark control for interface and previews, and
+  host-owned theme with independent previews when embedded. Dark neutrals align
+  with Mokly Cloud. Implementation is complete; move this plan to Completed when
+  its implementation PR merges.
+- [Release-Gated Node Compatibility](./release-gated-node-compatibility.md) —
+  run the minimum supported runtime on ordinary changes and reserve the full
+  Node 22.14/24 compatibility matrix for Release Please pull requests.
+- [Screen Variants Follow-up](./screen-variants-follow-up.md) — implementation
+  verified for the six-route design-catalogue conversion and five review
+  fixes from PR #101; pushed and reviewed in
+  [PR #115](https://github.com/mokly-ai/mokly/pull/115). The historical
+  snapshot-selection and mockup parity fixes are verified, pushed and
+  reviewed. Mainline Appearance integration is verified, pushed and reviewed.
+  The plan stays Active until merge. Later navigation ideas
+  remain non-blocking follow-ups.
 - [Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md)
   — all deferred seventh/eighth-round findings, the latest entry-layout
   documentation finding, and the remaining follow-up tasks from PR #101;
@@ -35,6 +48,10 @@
   — closes the removed content previews High finding by presenting every
   historical document through a viewer-owned same-origin document so the
   read-only guard applies in cross-origin embedded viewers too.
+- [Evidence-First Release Publish](./evidence-first-release-publish.md)
+  — publish consumes the release PR's validated CI evidence for the same
+  tree instead of re-running the complete gate, with the complete gate as
+  the fail-closed fallback.
 
 ## Completed
 

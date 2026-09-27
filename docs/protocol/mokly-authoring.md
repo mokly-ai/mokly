@@ -42,8 +42,13 @@ address, color schemes, dependencies, related docs, and tags when it omits
 them. Its use-case membership never inherits: `useCaseIds` defaults to an empty
 list because a variant must reciprocate only the flows whose steps name that
 variant. `defineScreen` returns one `ScreenDefinition` when `variants` is absent
-and a readonly parent-first array of screen definitions when it is present.
-Entry-module loading flattens that array one level.
+or definitely `undefined`, and a readonly parent-first array of screen
+definitions when it is definitely an array, including an empty array. An input
+whose type allows either form, such as an annotated `ScreenInput`, returns their
+union. The conditional result distributes across union inputs and preserves
+literal results through generic wrappers; code must narrow a broad result before
+using it as one definition. Entry-module loading flattens an array result one
+level.
 
 Each entry provides a title, description, related docs, and dependency paths.
 A dependency may identify an existing repository file or directory; Review
@@ -66,6 +71,12 @@ provide a separate breadcrumb or navigation-label path. A variant screen is
 the one exception to direct claiming: it belongs to its parent's collection
 through `variantOf`, is never listed in `childIds`, and its breadcrumbs end
 with the parent title.
+
+`childIds` is required but may be empty. An empty collection retains its stable
+id, metadata, and place in an ancestor collection without inventing a child or
+route. It remains a structural, viewless folder; the public Pages projection
+keeps it while an empty Components projection omits it. Duplicate, unknown,
+multi-parent, and cyclic relationships remain invalid for non-empty lists.
 
 The common and nested-root input boundary is:
 

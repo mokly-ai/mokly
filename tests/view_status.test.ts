@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  aggregateViewStatus,
+  resolveViewPresentation,
   shownComparisonEligible,
   shownStatus,
   type ViewState,
@@ -88,4 +90,101 @@ test("comparison eligibility follows shown status and entry kind", () => {
   assert.equal(shownComparisonEligible("Added", "component"), false);
   assert.equal(shownComparisonEligible("Unmodified", "screen"), false);
   assert.equal(shownComparisonEligible(undefined, "component"), false);
+});
+
+test("matching view evidence owns status and eligibility together", () => {
+  assert.deepEqual(
+    resolveViewPresentation({
+      displayedViews: [{ viewport: "mobile", colorScheme: "light" }],
+      fallbackComparisonEligible: false,
+      fallbackStatus: "Changed",
+      kind: "screen",
+      states: [view("unchanged")],
+    }),
+    {
+      comparisonEligible: false,
+      evidence: "matching",
+      status: "Unmodified",
+    },
+  );
+  assert.deepEqual(
+    resolveViewPresentation({
+      displayedViews: [{ viewport: "mobile", colorScheme: "light" }],
+      fallbackComparisonEligible: false,
+      fallbackStatus: "Unmodified",
+      kind: "component",
+      states: [view("removed")],
+    }),
+    {
+      comparisonEligible: true,
+      evidence: "matching",
+      status: "Removed",
+    },
+  );
+});
+
+test("missing, partial, or nonmatching evidence preserves fallback eligibility", () => {
+  for (const states of [
+    undefined,
+    [],
+    [view("changed", "mobile", "dark")],
+    [view("changed", "mobile", "light")],
+  ] as const)
+    assert.deepEqual(
+      resolveViewPresentation({
+        displayedViews: [
+          { viewport: "mobile", colorScheme: "light" },
+          { viewport: "desktop", colorScheme: "light" },
+        ],
+        fallbackComparisonEligible: false,
+        fallbackStatus: "Changed",
+        kind: "screen",
+        states,
+      }),
+      {
+        comparisonEligible: false,
+        evidence: "fallback",
+        status: "Changed",
+      },
+    );
+});
+
+test("complete single-view status follows the selected view state", () => {
+  for (const [state, expected] of [
+    ["changed", "Changed"],
+    ["added", "Added"],
+    ["removed", "Removed"],
+    ["unchanged", "Unmodified"],
+    ["ignored-only", "Unmodified"],
+  ] as const)
+    assert.equal(aggregateViewStatus([view(state)]), expected);
+});
+
+test("complete Both aggregates Changed, Added, Removed, then Unmodified", () => {
+  assert.equal(
+    aggregateViewStatus([
+      view("removed", "mobile"),
+      view("changed", "desktop"),
+    ]),
+    "Changed",
+  );
+  assert.equal(
+    aggregateViewStatus([view("removed", "mobile"), view("added", "desktop")]),
+    "Added",
+  );
+  assert.equal(
+    aggregateViewStatus([
+      view("unchanged", "mobile"),
+      view("removed", "desktop"),
+    ]),
+    "Removed",
+  );
+  assert.equal(
+    aggregateViewStatus([
+      view("ignored-only", "mobile"),
+      view("unchanged", "desktop"),
+    ]),
+    "Unmodified",
+  );
+  assert.equal(aggregateViewStatus([]), undefined);
 });

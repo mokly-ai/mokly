@@ -13,6 +13,7 @@ import {
   resolveDeliveryHref,
   validFragmentQuery,
 } from "../navigation/delivery.js";
+import { standaloneAppearanceHost } from "../standalone/appearance_host.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { changesActivation } from "./changes_activation.js";
@@ -81,6 +82,7 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
         pendingScroll.current = scrolls;
         pendingFocus.current = true;
       }
+      standaloneAppearanceHost(win)?.applyRoute(route.colorScheme);
       input.setState((state) =>
         withRoute(state, route, input.catalogue, input.sections),
       );
@@ -172,22 +174,40 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       win.location.pathname,
       input.context.delivery?.canonicalPath,
     );
-    if (input.context.delivery && win.location.pathname.startsWith("/id/")) {
+    if (
+      input.context.delivery &&
+      win.location.pathname.startsWith("/id/") &&
+      !new URLSearchParams(win.location.search).has("snapshot")
+    ) {
       win.history.replaceState(
         win.history.state,
         "",
         `${input.context.delivery.canonicalPath}${validFragmentQuery(win.location.search)}`,
       );
     }
-    const initialUrl = new URL(win.location.href);
-    installedDocumentKey.current = routeDocumentKey(initialUrl);
-    persistScroll(win, captureScrolls(document));
-    restoreScrolls(document, stateRef.current.regionScrolls);
-    const initialRoute = routeFromUrl(
+    let initialUrl = new URL(win.location.href);
+    let initialRoute = routeFromUrl(
       input.catalogue,
       initialUrl,
       input.context.delivery,
     );
+    const canonicalInitial = canonicalHistoricalUrl(
+      initialUrl,
+      initialRoute,
+      providerNormalizedRoutes.current,
+    );
+    if (canonicalInitial.href !== initialUrl.href) {
+      win.history.replaceState(win.history.state, "", canonicalInitial);
+      initialUrl = canonicalInitial;
+      initialRoute = routeFromUrl(
+        input.catalogue,
+        initialUrl,
+        input.context.delivery,
+      );
+    }
+    installedDocumentKey.current = routeDocumentKey(initialUrl);
+    persistScroll(win, captureScrolls(document));
+    restoreScrolls(document, stateRef.current.regionScrolls);
     if (!sameShellRoute(stateRef.current.route, initialRoute))
       install(initialUrl, false, {}, false);
     const controller = new AbortController();
@@ -321,6 +341,7 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
         {
           ...(activated.comparison ? { comparison: activated.comparison } : {}),
           ...(activated.instance ? { instance: activated.instance } : {}),
+          ...(activated.snapshot ? { snapshot: activated.snapshot } : {}),
           ...(activated.variantValues
             ? { variantValues: activated.variantValues }
             : {}),
@@ -342,6 +363,32 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       }
     },
   };
+}
+
+/** Pin an inferred historical route before later catalogue evidence can change. */
+export function canonicalHistoricalUrl(
+  url: URL,
+  route: ReturnType<typeof routeFromUrl>,
+  providerNormalized: boolean,
+): URL {
+  if (
+    route.view.kind !== "target" ||
+    !route.snapshot ||
+    url.searchParams.has("snapshot")
+  )
+    return url;
+  return new URL(
+    browserRouteHref(
+      routeHref(
+        route.view.target.entry.route,
+        route.fragment,
+        route.variant,
+        route,
+      ),
+      providerNormalized,
+    ),
+    url,
+  );
 }
 
 function isProviderNormalizedRoute(

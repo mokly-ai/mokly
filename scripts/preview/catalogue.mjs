@@ -264,8 +264,8 @@ function staticPage(html) {
     )
     .replace(liveHostScript, staticHydrationScript)
     .replace(
-      /(href|src|data-fragment-light|data-fragment-dark)="\/(static|view)\/([^"]+)\.html"/g,
-      '$1="/$2/$3"',
+      /(href|src|data-fragment-light|data-fragment-dark)="\/(static|view)\/([^"?#]+)\.html((?:\?|#)[^"]*)?"/g,
+      '$1="/$2/$3$4"',
     );
 }
 

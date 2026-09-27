@@ -83,7 +83,7 @@
   padding: 5px 8px 5px 16px;
 }
 .ce-instance-tree a[aria-current] {
-  background: #edf3ef;
+  background: var(--mbk-accent-surface);
   color: var(--mbk-sage-deep);
   font-weight: 600;
 }
@@ -94,7 +94,7 @@
   font-weight: 400;
 }
 .ce-nested-instance {
-  border-left: 1px solid #c5d6ca;
+  border-left: 1px solid var(--mbk-guide);
   margin-left: 16px;
 }
 .ce-detail-links {

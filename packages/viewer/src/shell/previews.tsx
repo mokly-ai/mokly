@@ -22,6 +22,10 @@ export interface RemovedPreviewData {
   kind: "page" | "screen";
   route: string;
   title: string;
+  /** Catalogue that owns the selected historical record. */
+  catalogueIdentity?: string;
+  /** Exact historical record whose preview bytes may be displayed. */
+  snapshotId?: string;
   /** Address shown in a screen preview's browser chrome. */
   address?: string;
   /** The delivery's advertised descriptor; absent when nothing is published. */
@@ -40,14 +44,21 @@ export function removedPreviewData(
 ): RemovedPreviewData | undefined {
   if (entry.kind !== "page" && entry.kind !== "screen") return undefined;
   const model = catalogue.publicModel ?? context.readModel;
-  const published = model?.removedEntries.find(
+  const removed = model?.removedEntries.find(
     (removed) => removed.entry.route === entry.route,
-  )?.preview;
+  );
+  const published = removed?.preview;
   return {
     id: entry.id,
     kind: entry.kind,
     route: entry.route,
     title: entry.title,
+    ...(model && removed?.snapshotId
+      ? {
+          catalogueIdentity: model.identity.id,
+          snapshotId: removed.snapshotId,
+        }
+      : {}),
     ...(entry.kind === "screen" && entry.address
       ? { address: entry.address }
       : {}),
@@ -90,6 +101,7 @@ function ScreenFrame(props: {
     <div
       className={`mbk-frame-wrap mbk-frame-${props.viewport}`}
       data-color-scheme-fallback={fallback ? "" : undefined}
+      data-preview-color-scheme={props.view.colorScheme}
     >
       <p className="mbk-frame-label">
         {props.viewport === "mobile" ? "Mobile" : "Desktop"}
@@ -125,7 +137,11 @@ export function ReadyPreview(props: {
     const presentation = presentationFor(props.presentations, content.url);
     if (!presentation) return <PreviewUnavailable retry={props.retry} />;
     return (
-      <div className="mbk-stage-embed" data-mokly-scroll="embed">
+      <div
+        className="mbk-stage-embed"
+        data-mokly-scroll="embed"
+        data-preview-color-scheme="light"
+      >
         <PreviewFrame presentation={presentation} title={props.data.title} />
       </div>
     );
@@ -243,19 +259,6 @@ export function RemovedPreviewStage(props: { data: RemovedPreviewData }) {
           viewport={viewport}
         />
       </div>
-      {props.data.kind === "screen" ? (
-        <>
-          <template data-mokly-preview-template="mobile">
-            <PhoneFrame />
-          </template>
-          <template data-mokly-preview-template="desktop">
-            <BrowserFrame
-              address={props.data.address ?? props.data.route}
-              expandable={false}
-            />
-          </template>
-        </>
-      ) : null}
     </>
   );
 }

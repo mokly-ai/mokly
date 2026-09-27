@@ -69,6 +69,7 @@ function PublicFrame({
           : `${component ? "mbk-component-canvas" : "mbk-frame-wrap"} mbk-frame-${viewport}`
       }
       data-color-scheme-fallback={!dark ? "" : undefined}
+      data-preview-color-scheme={selected?.colorScheme ?? "light"}
     >
       {!flow && (
         <p className="mbk-frame-label">
@@ -166,7 +167,12 @@ export function PublicStage({
   const selection = useContext(DisplaySelection);
   if (entry.kind === "page")
     return (
-      <div className="mbk-stage-embed" data-mokly-scroll="embed" key={entry.id}>
+      <div
+        className="mbk-stage-embed"
+        data-mokly-scroll="embed"
+        data-preview-color-scheme="light"
+        key={entry.id}
+      >
         {entry.documentPath ? (
           <iframe
             className="mbk-frag"

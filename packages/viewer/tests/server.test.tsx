@@ -222,6 +222,67 @@ test("SSR selects a requested saved variant in its control and preview", () => {
   assert.match(html, /action\.variants\/second\.(?:mobile|desktop)\.html/);
 });
 
+test("SSR resolves light fallback evidence across status, marks and comparison", () => {
+  const model = structuredClone(fixture);
+  const screen = model.screens.find((entry) => entry.id === "home");
+  const component = model.components.find((entry) => entry.id === "action");
+  if (!screen || !component) throw new Error("Missing mixed-view fixture");
+  screen.changes = { status: "ready", kind: "changed", included: true };
+  screen.views = screen.views.map((view) => ({
+    ...view,
+    comparison: {
+      status: "ready",
+      kind: view.viewport === "mobile" ? "unmodified" : "changed",
+      eligible: view.viewport !== "mobile",
+    },
+  }));
+  component.colorSchemes = ["light", "dark"];
+  component.variants = component.variants.map((variant) => ({
+    ...variant,
+    views: variant.views.flatMap((view) => [
+      view,
+      {
+        ...structuredClone(view),
+        colorScheme: "dark" as const,
+        fragmentPath: view.fragmentPath?.replace(".html", ".dark.html") ?? null,
+      },
+    ]),
+  }));
+
+  const html = renderViewer({
+    viewerId: "mixed",
+    catalogue: model,
+    baseUrl: "https://catalogue.example",
+    defaultSelection: {
+      screenId: screen.id,
+      viewport: "mobile",
+      colorScheme: "dark",
+    },
+  });
+
+  assert.match(html, /data-workspace-status="">Unmodified</);
+  assert.match(html, /class="mbk-diff-toolbar" hidden=""/);
+  assert.match(html, /data-view-changed="scheme" hidden=""/);
+  assert.doesNotMatch(html, /data-view-changed="viewport" hidden=""/);
+});
+
+test("SSR preserves comparison ineligibility while view evidence is unknown", () => {
+  const model = structuredClone(fixture);
+  const component = model.components.find((entry) => entry.id === "action");
+  if (!component) throw new Error("Missing component fixture");
+  component.changes = { status: "ready", kind: "changed", included: true };
+
+  const html = renderViewer({
+    viewerId: "unknown-evidence",
+    catalogue: model,
+    baseUrl: "https://catalogue.example",
+    defaultSelection: { screenId: component.id },
+  });
+
+  assert.match(html, /data-workspace-status="">Changed</);
+  assert.match(html, /class="mbk-diff-toolbar" hidden=""/);
+});
+
 test("invalid current paths are rejected instead of replaced with guessed URLs", () => {
   const model = structuredClone(fixture);
   const screen = model.screens[0]!;

@@ -23,9 +23,24 @@ const props = {viewerId: "catalogue", catalogue, baseUrl: "https://artifact.exam
 const html = renderViewer(props);
 assert.equal(html, renderToString(createElement(MoklyViewer, props)));
 assert.ok(html.includes(catalogue.screens[0].title));
+const themedProps = {...props, defaultSelection: {...props.defaultSelection, colorScheme: "dark"}};
+const lightHtml = renderViewer({...themedProps, theme: "light"});
+const darkHtml = renderViewer({...themedProps, theme: "dark"});
+assert.match(lightHtml, /data-mokly-theme="light"/);
+assert.match(lightHtml, /data-mokly-color-scheme="dark"/);
+assert.equal(
+  lightHtml.replace('data-mokly-theme="light"', 'data-mokly-theme="dark"'),
+  darkHtml,
+);
 assert.equal(typeof sameOriginAdapter().mount, "function");
 assert.equal(typeof postMessageAdapter({frameOrigin: "https://frames.example"}).mount, "function");
-assert.ok(fs.readFileSync(new URL(import.meta.resolve("@mokly/viewer/styles.css")), "utf8").includes("@scope (.mokly-viewer)"));
+const styles = fs.readFileSync(new URL(import.meta.resolve("@mokly/viewer/styles.css")), "utf8");
+assert.ok(styles.includes("@scope (.mokly-viewer)"));
+for (const declaration of [
+  /--chrome-bg:\\s*#f4f4f1;/,
+  /--chrome-surface:\\s*#(?:fff|ffffff);/,
+  /--chrome-ink:\\s*#1a1d1c;/,
+]) assert.match(styles, declaration);
 const browserBundle = await build({bundle: true, format: "esm", logLevel: "silent", platform: "browser", stdin: {contents: 'import "@mokly/viewer/browser";', resolveDir: process.cwd(), sourcefile: "browser-entry.js"}, treeShaking: true, write: false});
 assert.ok(browserBundle.outputFiles[0].contents.length > 0);
 assert.match(browserBundle.outputFiles[0].text, /hydrateRoot/);

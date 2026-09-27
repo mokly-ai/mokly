@@ -1,5 +1,6 @@
 import { defineCollection } from "@mokly/mokly";
 
+import { appearanceSelector } from "./chrome/appearance-selector.js";
 import { catalogueNavigation } from "./chrome/catalogue-navigation.js";
 import { screenHeader } from "./chrome/screen-header.js";
 import { topBar } from "./chrome/top-bar.js";
@@ -20,7 +21,12 @@ const groups = [
   {
     id: "chrome",
     title: "Chrome",
-    entries: [topBar.entry, catalogueNavigation.entry, screenHeader.entry],
+    entries: [
+      topBar.entry,
+      catalogueNavigation.entry,
+      screenHeader.entry,
+      appearanceSelector.entry,
+    ],
   },
   {
     id: "controls",

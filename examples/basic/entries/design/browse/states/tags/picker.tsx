@@ -1,4 +1,4 @@
-import { screen } from "@mokly/mokly";
+import type { ScreenVariantInput } from "@mokly/mokly";
 
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { TagScreen } from "../../../parts/tag_screen.js";
@@ -13,7 +13,7 @@ export function TagPickerMobile() {
   return <TagScreen design={DESTINATIONS.tagPicker} picker viewport="mobile" />;
 }
 
-export const tagPickerScreen = screen({
+export const tagPickerVariant = {
   colorSchemes: ["light"],
   description: "Welcome with an empty query and the tag picker open.",
   desktop: <TagPickerDesktop />,
@@ -21,4 +21,4 @@ export const tagPickerScreen = screen({
   mobile: <TagPickerMobile />,
   slug: "picker",
   title: "Tag picker",
-});
+} satisfies ScreenVariantInput;

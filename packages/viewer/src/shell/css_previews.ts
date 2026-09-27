@@ -76,7 +76,7 @@ export const SHELL_PREVIEW_CSS = `
   padding: 0;
   font: inherit;
   font-weight: 600;
-  color: var(--mokly-accent);
+  color: var(--chrome-accent);
   cursor: pointer;
 }
 

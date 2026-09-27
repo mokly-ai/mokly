@@ -9,6 +9,7 @@ import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { changesActivation } from "../packages/viewer/dist/shell/changes_activation.js";
 import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
 import type { ShellRoute } from "../packages/viewer/dist/shell/routes.js";
+import { routeFromUrl } from "../packages/viewer/dist/shell/routes.js";
 import { defaultSelection } from "../packages/viewer/dist/viewer/selection.js";
 
 type CurrentManifestScreen = ManifestScreen & {
@@ -138,6 +139,59 @@ test("navigation within Changes still redirects an aggregate parent", () => {
   assert.equal(activated.colorScheme, undefined);
 });
 
+test("a removed variant redirect retains its exact snapshot despite an id collision", () => {
+  const currentCollision = screen(
+    empty.id,
+    "Current empty screen",
+    "screens/current-empty.html",
+  );
+  const collisionManifest = {
+    ...manifest,
+    entries: [parent, currentCollision, failure],
+  };
+  const snapshotId = "a".repeat(64);
+  const collisionCatalogue = createCatalogue(collisionManifest, [
+    { ancestors: [], entry: empty, snapshotId },
+  ]);
+  const collisionContext = {
+    ...context,
+    changedRoutes: [empty.route, failure.route],
+  };
+  const redirected = changesActivation(
+    collisionCatalogue,
+    collisionContext,
+    { ...defaultSelection, search: "empty workspace", view: "changes" },
+    route(parent),
+  );
+  assert.equal(target(redirected).route, empty.route);
+  assert.equal(redirected.snapshot, snapshotId);
+
+  const sticky = changesActivation(
+    collisionCatalogue,
+    collisionContext,
+    {
+      ...defaultSelection,
+      screenId: empty.id,
+      snapshotId,
+      view: "changes",
+    },
+    route(failure),
+  );
+  assert.equal(sticky.viewport, undefined);
+  assert.equal(sticky.colorScheme, undefined);
+
+  const legacyCatalogue = createCatalogue(collisionManifest, [
+    { ancestors: [], entry: empty },
+  ]);
+  const rejected = changesActivation(
+    legacyCatalogue,
+    collisionContext,
+    { ...defaultSelection, search: "empty workspace", view: "changes" },
+    route(parent),
+  );
+  assert.equal(target(rejected).route, parent.route);
+});
+
 test("an explicit axis prevents automatic view selection", () => {
   const activated = changesActivation(
     catalogue,
@@ -149,6 +203,40 @@ test("an explicit axis prevents automatic view selection", () => {
   assert.equal(target(activated).id, failure.id);
   assert.equal(activated.viewport, "mobile");
   assert.equal(activated.colorScheme, undefined);
+});
+
+test("only a valid explicit axis suppresses first-changed-view landing", () => {
+  const partial = routeFromUrl(
+    catalogue,
+    new URL(
+      `https://example.test/view/${parent.route}?viewport=invalid&scheme=light`,
+    ),
+  );
+  const partialActivation = changesActivation(
+    catalogue,
+    context,
+    { ...defaultSelection, view: "changes", search: "failure" },
+    partial,
+  );
+  assert.equal(target(partialActivation).id, failure.id);
+  assert.equal(partialActivation.viewport, undefined);
+  assert.equal(partialActivation.colorScheme, "light");
+
+  const invalid = routeFromUrl(
+    catalogue,
+    new URL(
+      `https://example.test/view/${parent.route}?viewport=mobile&viewport=desktop&scheme=invalid`,
+    ),
+  );
+  const automatic = changesActivation(
+    catalogue,
+    context,
+    { ...defaultSelection, view: "changes", search: "failure" },
+    invalid,
+  );
+  assert.equal(target(automatic).id, failure.id);
+  assert.equal(automatic.viewport, "desktop");
+  assert.equal(automatic.colorScheme, "dark");
 });
 
 test("All activation keeps the requested row and sticky axes", () => {

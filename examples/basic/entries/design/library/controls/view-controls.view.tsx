@@ -1,7 +1,6 @@
 import { useId } from "react";
 
 import { ViewIcon } from "../../components/parts/view_icons.js";
-import { DesignLink } from "../../parts/design_navigation.js";
 import { SelectionControl } from "../../parts/selection_control.js";
 import { useDesignStyle } from "../style_context.js";
 
@@ -77,26 +76,18 @@ function PreviewModeControl({
 
 export function ViewControlsView({
   selection,
-  scheme,
   highlight,
   unavailable,
-  schemeDisabled,
   previewMode,
   previewModeDisabled,
   previewModeDestinations,
   changedViews,
-  destinations,
 }: ViewControlsProps) {
   useDesignStyle("view-controls");
   const reasonId = useId();
   const changed = changedViews ?? [];
-  const schemeChanged = changed.some((view) => view.scheme !== scheme);
   const viewportChanged =
     selection !== "both" && changed.some((view) => view.viewport !== selection);
-  const nextScheme = scheme === "light" ? "dark" : "light";
-  const schemeDestination = schemeDisabled
-    ? undefined
-    : destinations[nextScheme];
   const reason = unavailable ? reasons[unavailable] : undefined;
   return (
     <div
@@ -125,41 +116,6 @@ export function ViewControlsView({
         </select>
         {viewportChanged ? <ChangedMark /> : null}
       </label>
-      {schemeDestination ? (
-        <DesignLink to={schemeDestination}>
-          <span
-            className="ce-icon-control ce-theme-control"
-            data-scheme={scheme}
-            aria-label={`Switch to ${nextScheme} mode`}
-            title={`Switch to ${nextScheme} mode`}
-          >
-            <ViewIcon kind="light" />
-            <ViewIcon kind="dark" />
-            {schemeChanged ? <ChangedMark /> : null}
-          </span>
-        </DesignLink>
-      ) : (
-        <label
-          className="ce-icon-control ce-theme-control"
-          title={
-            schemeDisabled
-              ? "No alternate theme for this view"
-              : "Toggle light/dark mode"
-          }
-        >
-          <input
-            type="checkbox"
-            role="switch"
-            className="ce-theme-toggle"
-            aria-label="Dark mode"
-            defaultChecked={scheme === "dark"}
-            disabled={schemeDisabled}
-          />
-          <ViewIcon kind="light" />
-          <ViewIcon kind="dark" />
-          {schemeChanged ? <ChangedMark /> : null}
-        </label>
-      )}
       {previewMode === undefined ? null : (
         <PreviewModeControl
           mode={previewMode}

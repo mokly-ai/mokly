@@ -1,3 +1,8 @@
+import {
+  currentCatalogueEntries,
+  resolveCatalogueSelection,
+} from "../catalogue/entry_selection.js";
+import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import { parseSearchQuery, rowMatchesQuery } from "../shell/search_query.js";
 
@@ -13,6 +18,7 @@ export const defaultSelection: ViewerSelection = {
 };
 const selectionKeys = new Set([
   "screenId",
+  "snapshotId",
   "variantId",
   "view",
   "viewport",
@@ -25,13 +31,20 @@ export function normalizeSelection(
   model: CatalogueReadModel,
   value: ViewerSelection,
 ): ViewerSelection {
-  const entry = routedEntries(model).find(
-    (candidate) => candidate.id === value?.screenId,
-  );
+  const resolved =
+    typeof value?.screenId === "string"
+      ? resolveCatalogueSelection(model, value.screenId, value.snapshotId)
+      : undefined;
+  const entry = resolved?.entry;
   if (
     !value ||
     !Object.keys(value).every((key) => selectionKeys.has(key)) ||
     !(value.screenId === null || typeof value.screenId === "string") ||
+    !(
+      value.snapshotId === undefined ||
+      (isHistoricalSnapshotId(value.snapshotId) && value.screenId !== null)
+    ) ||
+    (value.snapshotId !== undefined && entry === undefined) ||
     !(
       value.variantId === undefined ||
       (typeof value.variantId === "string" &&
@@ -52,6 +65,7 @@ export function normalizeSelection(
   const query = parseSearchQuery(value.search);
   return {
     screenId: value.screenId,
+    ...(resolved?.snapshotId ? { snapshotId: resolved.snapshotId } : {}),
     ...(value.variantId === undefined ? {} : { variantId: value.variantId }),
     view: value.view,
     viewport: value.viewport,
@@ -68,6 +82,7 @@ export function normalizeSelection(
 export function sameSelection(a: ViewerSelection, b: ViewerSelection): boolean {
   return (
     a.screenId === b.screenId &&
+    a.snapshotId === b.snapshotId &&
     a.variantId === b.variantId &&
     a.view === b.view &&
     a.viewport === b.viewport &&
@@ -84,14 +99,23 @@ export function mergeSelection(
   partial: Partial<ViewerSelection>,
 ): ViewerSelection {
   const candidate: ViewerSelection = { ...current, ...partial };
+  const screenSupplied = Object.hasOwn(partial, "screenId");
+  const snapshotSupplied = Object.hasOwn(partial, "snapshotId");
   if (
-    partial.screenId !== undefined &&
-    partial.screenId !== current.screenId &&
+    (screenSupplied && !snapshotSupplied) ||
+    (snapshotSupplied && partial.snapshotId === undefined)
+  )
+    delete candidate.snapshotId;
+  if (
+    (candidate.screenId !== current.screenId ||
+      candidate.snapshotId !== current.snapshotId) &&
     !Object.hasOwn(partial, "variantId")
   )
     delete candidate.variantId;
   const next = normalizeSelection(model, candidate);
-  return partial.screenId === undefined ? next : revealSelection(model, next);
+  return screenSupplied || snapshotSupplied
+    ? revealSelection(model, next)
+    : next;
 }
 export function selectionQuery(value: ViewerSelection): string {
   return [value.search, ...value.tags.map((tag) => `tag:${tag}`)]
@@ -100,10 +124,7 @@ export function selectionQuery(value: ViewerSelection): string {
 }
 export function routedEntries(model: CatalogueReadModel) {
   return [
-    ...model.screens,
-    ...model.pages,
-    ...model.useCases,
-    ...model.components,
+    ...currentCatalogueEntries(model),
     ...model.removedEntries.map(({ entry }) => entry),
   ];
 }
@@ -112,9 +133,11 @@ export function revealSelection(
   model: CatalogueReadModel,
   value: ViewerSelection,
 ): ViewerSelection {
-  const entry = routedEntries(model).find(
-    (entry) => entry.id === value.screenId,
-  );
+  const entry =
+    typeof value.screenId === "string"
+      ? resolveCatalogueSelection(model, value.screenId, value.snapshotId)
+          ?.entry
+      : undefined;
   if (!entry) return value;
   const matches = rowMatchesQuery(
     { freeText: value.search, tags: value.tags },

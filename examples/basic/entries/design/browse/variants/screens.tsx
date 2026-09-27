@@ -1,4 +1,4 @@
-import { screen } from "@mokly/mokly";
+import { MockLink, screen } from "@mokly/mokly";
 
 import { PreviewWorkspace } from "../../components/parts/workspace.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
@@ -9,6 +9,7 @@ import {
   CHANGED_VARIANT_ROWS,
   CHANGED_VIEW_ROWS,
   NAV_TREE_VARIANTS_OPEN,
+  REPARENTED_REMOVED_VARIANT_ROWS,
   REMOVED_VARIANT_ROWS,
 } from "../../parts/nav_data.js";
 import { PreviousVersionLabel } from "../../parts/removed_preview.js";
@@ -136,10 +137,62 @@ function RemovedVariant({ viewport }: { viewport: ArtboardViewport }) {
   );
 }
 
+function ReparentedRemovedVariant({
+  viewport,
+}: {
+  viewport: ArtboardViewport;
+}) {
+  return (
+    <Shell
+      design={DESTINATIONS.variantReparented}
+      viewport={viewport}
+      nav={
+        viewport === "desktop" ? (
+          <NavTree
+            activeLabel="Save failed · Removed"
+            changedCount={1}
+            changedOnly
+            nodes={REPARENTED_REMOVED_VARIANT_ROWS}
+          />
+        ) : null
+      }
+    >
+      <ScreenHead
+        action={<ViewSwitch active={viewport} />}
+        crumbs={VARIANT_CRUMBS}
+        idChip="example-welcome-error"
+        status="removed"
+        title="Save failed"
+      />
+      <PreviousVersionLabel />
+      <PreviewWorkspace
+        viewport={viewport}
+        inspector={
+          <DetailsPanel
+            comparisonEvidence
+            open
+            subject="welcomeErrorReparented"
+          />
+        }
+        render={(previewViewport) => (
+          <RemovedView
+            address="example.test/welcome"
+            compact={viewport === "mobile"}
+            viewport={previewViewport}
+          >
+            <MiniSaveFailed compact={previewViewport === "mobile"} />
+          </RemovedView>
+        )}
+      />
+    </Shell>
+  );
+}
+
 function ChangedViews({ viewport }: { viewport: ArtboardViewport }) {
   return (
     <Shell
       design={DESTINATIONS.changedViews}
+      changedViews={DARK_VIEWS}
       viewport={viewport}
       nav={
         viewport === "desktop" ? (
@@ -160,7 +213,11 @@ function ChangedViews({ viewport }: { viewport: ArtboardViewport }) {
         title="Welcome"
       />
       <ExampleWorkspace
-        changedViews="Mobile · Dark, Desktop · Dark"
+        changedViews={
+          <MockLink to={DESTINATIONS.changed}>
+            Mobile · Dark, Desktop · Dark
+          </MockLink>
+        }
         open
         subject="welcome"
         viewport={viewport}
@@ -210,12 +267,24 @@ export const variantScreens = [
   screen({
     colorSchemes: ["light"],
     description:
+      "A removed variant kept as a flat Changes row because its former parent is now another screen's variant.",
+    desktop: <ReparentedRemovedVariant viewport="desktop" />,
+    id: "design-browse-variant-reparented",
+    mobile: <ReparentedRemovedVariant viewport="mobile" />,
+    rationale:
+      "A current variant cannot own its own variant list. When the former parent id is reused as a variant, only the historical child changes: Changes hides the unmodified parent and its variant and shows the child once as a flat Removed row.",
+    slug: "reparented",
+    title: "Removed variant after reparenting",
+  }),
+  screen({
+    colorSchemes: ["light"],
+    description:
       "A screen opened from Changes whose change is confined to its dark views, with the shown view unmodified.",
     desktop: <ChangedViews viewport="desktop" />,
     id: "design-browse-changed-views",
     mobile: <ChangedViews viewport="mobile" />,
     rationale:
-      "Color scheme and viewport stay view axes rather than variants, so a change confined to one view is evidence on the view controls: a mark on the theme control and on the viewport dropdown points at the views that changed, the status beside the title describes the shown view, and the details list names them exactly. The theme control opens the dark comparison so the reviewer can reach the change in one step.",
+      "Color scheme and viewport stay view axes rather than variants, so a change confined to one view is evidence on the view controls: a mark on top-bar Appearance and on the viewport dropdown points at the views that changed, the status beside the title describes the shown view, and the details list names them exactly. Appearance selects the scheme; the navigation and Details retain the links to the changed screen.",
     slug: "changed-views",
     title: "Changed views",
   }),

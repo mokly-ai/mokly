@@ -102,7 +102,7 @@ export function StageFrame({
     mounted.frameRef,
     source,
     registry?.baseUrl,
-    temporary,
+    temporary || Boolean(store?.interactive && registry),
   );
   const component = entry.kind === "component";
   const frame = source ? (
@@ -156,6 +156,9 @@ export function StageFrame({
       data-color-scheme-fallback={
         hasDarkFragments && !previewDark && !dark ? "" : undefined
       }
+      data-preview-color-scheme={
+        preview?.colorScheme ?? selected?.colorScheme ?? "light"
+      }
     >
       {!flow ? (
         <FrameLabel
@@ -200,9 +203,14 @@ export function DocumentStageFrame({
     mounted.frameRef,
     source,
     registry?.baseUrl,
+    Boolean(store?.interactive && registry),
   );
   return (
-    <div className="mbk-stage-embed" data-mokly-scroll="embed">
+    <div
+      className="mbk-stage-embed"
+      data-mokly-scroll="embed"
+      data-preview-color-scheme="light"
+    >
       {source ? (
         <iframe
           aria-busy={mounted.status === "loading" ? true : undefined}

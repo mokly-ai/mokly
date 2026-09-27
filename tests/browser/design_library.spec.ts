@@ -102,6 +102,40 @@ for (const viewport of ["desktop", "mobile"] as const) {
       expect(isolated).toEqual(inScreen);
     });
 
+    test("the top-bar logo keeps the in-screen colors in isolation", async ({
+      page,
+    }) => {
+      const logo = () =>
+        page.locator(".mbk-brand").evaluate((brand) => {
+          const color = (selector: string) => {
+            const node = brand.querySelector(selector);
+            return node && getComputedStyle(node).color;
+          };
+          return {
+            brand: getComputedStyle(brand).color,
+            mark: color(".mbk-mark"),
+            rules: getComputedStyle(brand.querySelector(".mbk-mark-rules")!)
+              .stroke,
+            name: color(".mbk-name"),
+          };
+        });
+      await page.goto(
+        fileUrl(
+          `design/library/chrome/top-bar.variants/default.${viewport}.html`,
+        ),
+      );
+      const isolated = await logo();
+      await page.goto(fileUrl(`design/browse/views/home.${viewport}.html`));
+      const inScreen = await logo();
+      expect(inScreen).toEqual({
+        brand: "rgb(26, 29, 28)",
+        mark: "rgb(47, 89, 69)",
+        rules: "rgb(255, 255, 255)",
+        name: viewport === "desktop" ? "rgb(26, 29, 28)" : null,
+      });
+      expect(isolated).toEqual(inScreen);
+    });
+
     test("the last flow step has no trailing connector after registered boundaries", async ({
       page,
     }) => {

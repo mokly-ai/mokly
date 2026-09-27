@@ -13,6 +13,7 @@ export type CatalogueMetadata =
 export interface RemovedEntrySnapshot {
   entry: Exclude<ManifestEntry, { kind: "collection" }>;
   ancestors: readonly { id: string; title: string }[];
+  snapshotId?: string;
 }
 /**
  * Per-view classification a screen-only catalogue records without generating

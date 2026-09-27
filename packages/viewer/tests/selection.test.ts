@@ -86,6 +86,54 @@ test("screen changes drop omitted variants while explicit variants round trip", 
   );
 });
 
+test("same-id current and historical components reset record-specific variants", () => {
+  const current = fixture.components[0]!;
+  const historical = {
+    ...structuredClone(current),
+    route: "archive/action.html",
+    variants: [
+      {
+        ...structuredClone(current.variants[0]!),
+        id: "historical",
+        title: "Historical",
+      },
+    ],
+  };
+  const snapshotId = "f".repeat(64);
+  const model = {
+    ...fixture,
+    removedEntries: [
+      ...fixture.removedEntries,
+      { ancestors: [], entry: historical, snapshotId },
+    ],
+  };
+  const currentSelection = normalizeSelection(model, {
+    ...defaultSelection,
+    screenId: current.id,
+    variantId: current.variants[0]!.id,
+  });
+  const selectedHistory = mergeSelection(model, currentSelection, {
+    screenId: current.id,
+    snapshotId,
+  });
+  assert.equal(selectedHistory.snapshotId, snapshotId);
+  assert.equal(selectedHistory.variantId, undefined);
+
+  const historicalVariant = normalizeSelection(model, {
+    ...selectedHistory,
+    variantId: "historical",
+  });
+  const selectedCurrent = mergeSelection(model, historicalVariant, {
+    screenId: current.id,
+  });
+  assert.equal(selectedCurrent.snapshotId, undefined);
+  assert.equal(selectedCurrent.variantId, undefined);
+  assert.equal(
+    mergeSelection(model, historicalVariant, { viewport: "mobile" }).variantId,
+    "historical",
+  );
+});
+
 test("variant identity participates in equality and survives reveal", () => {
   const component = fixture.components[0]!;
   const selected = normalizeSelection(fixture, {

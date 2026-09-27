@@ -1,3 +1,4 @@
+import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { ManifestComponent } from "../components/manifest_types.js";
 import {
@@ -36,6 +37,28 @@ export function catalogueRouteEntry(
     catalogue.byRoute.get(route) ??
     catalogue.removedEntries.find(({ entry }) => entry.route === route)?.entry
   );
+}
+
+/** Resolve one public current or historical selection into its display entry. */
+export function catalogueSelectionEntry(
+  catalogue: Catalogue,
+  entryId: string,
+  snapshotId?: string,
+): ManifestEntry | undefined {
+  if (snapshotId !== undefined)
+    return catalogue.removedEntries.find(
+      (record) =>
+        record.entry.id === entryId && record.snapshotId === snapshotId,
+    )?.entry;
+  if (!catalogue.publicModel) return catalogue.byId.get(entryId);
+  const selected = resolveCatalogueSelection(
+    catalogue.publicModel,
+    entryId,
+    snapshotId,
+  );
+  return selected
+    ? catalogueRouteEntry(catalogue, selected.entry.route)
+    : undefined;
 }
 
 /** The union of the tags declared across every entry that can carry them. */

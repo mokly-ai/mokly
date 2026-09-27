@@ -1,5 +1,5 @@
 .mbk-comparison-stage {
-  background: radial-gradient(circle, rgba(20, 28, 22, 0.05) 1px, transparent 1px) 0 0 / 22px 22px;
+  background: radial-gradient(circle, var(--mbk-dot) 1px, transparent 1px) 0 0 / 22px 22px;
   flex: 1;
   min-height: 0;
   overflow: auto;
@@ -54,6 +54,21 @@
 
 .mbk-compare[data-compare-mode="difference"] {
   grid-template-columns: 1fr;
+}
+
+/* The blended stack sits on an opaque base the width of the compared frames,
+   taken from their own colour scheme, so the difference result reads the same
+   in either interface appearance. */
+.mbk-compare[data-compare-mode="difference"]
+  .mbk-compare-side--before
+  .mbk-frame-wrap {
+  background-color: var(--mbk-screen-bg);
+}
+
+.mbk-compare[data-compare-mode="difference"]
+  .mbk-compare-side--before:has(.mbk-screen-dark)
+  .mbk-frame-wrap {
+  background-color: var(--mbk-dark-screen-bg);
 }
 
 .mbk-compare[data-compare-mode="difference"] .mbk-compare-side {

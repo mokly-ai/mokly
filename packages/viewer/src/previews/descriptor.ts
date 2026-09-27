@@ -1,5 +1,6 @@
 /** Read the shell-rendered preview descriptor back out of one stage host. */
 
+import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { RemovedEntryPreview } from "../catalogue/types.js";
 import { isSafeCatalogueRoute } from "../data/paths.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
@@ -44,17 +45,35 @@ export function readPreviewDescriptor(
   if (kind !== "page" && kind !== "screen") return undefined;
   const address = text(record["address"]);
   const advertised = published(record["published"]);
+  const catalogueIdentity = record["catalogueIdentity"];
+  const snapshotId = record["snapshotId"];
+  const hasIdentity =
+    isHistoricalSnapshotId(catalogueIdentity) &&
+    isHistoricalSnapshotId(snapshotId);
+  if (
+    (catalogueIdentity !== undefined || snapshotId !== undefined) &&
+    !hasIdentity
+  )
+    return undefined;
   return {
     id,
     kind,
     route,
     title,
     ...(address ? { address } : {}),
+    ...(hasIdentity ? { catalogueIdentity, snapshotId } : {}),
     ...(advertised ? { published: advertised } : {}),
   };
 }
 
 /** Identity of one requested preview; a different entry can never adopt it. */
 export function previewKey(data: RemovedPreviewData): string {
-  return JSON.stringify([data.id, data.kind, data.route, data.published]);
+  return JSON.stringify([
+    data.id,
+    data.kind,
+    data.route,
+    data.catalogueIdentity,
+    data.snapshotId,
+    data.published,
+  ]);
 }

@@ -10,19 +10,19 @@ border: 1px solid var(--chrome-border);
 }
 
 .ce-added {
-background: #edf3ef;
-  border-color: #b9cfc2;
+background: var(--mbk-accent-surface);
+  border-color: var(--mbk-accent-edge);
   color: var(--mbk-sage-deep);
 }
 
 .ce-changed {
-background: #fff7e6;
-  border-color: #ead6ac;
-  color: #805d1d;
+background: var(--mbk-status-changed-bg);
+  border-color: var(--mbk-status-changed-edge);
+  color: var(--mbk-status-changed-ink);
 }
 
 .ce-removed {
-background: #fcefee;
-  border-color: #ecc5c1;
-  color: #9b433c;
+background: var(--mbk-status-removed-bg);
+  border-color: var(--mbk-status-removed-edge);
+  color: var(--mbk-status-removed-ink);
 }

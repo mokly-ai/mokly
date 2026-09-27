@@ -42,6 +42,7 @@ export function sameShellRoute(
     left.colorScheme !== right.colorScheme ||
     left.comparison !== right.comparison ||
     left.instance !== right.instance ||
+    left.snapshot !== right.snapshot ||
     left.variant !== right.variant ||
     !sameValues(left.variantValues, right.variantValues) ||
     left.viewport !== right.viewport ||

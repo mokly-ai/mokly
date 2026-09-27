@@ -12,6 +12,8 @@ import type { RunningServer } from "../../dist/server/http_types.js";
 import { controlsEntrySource } from "../helpers/component_controls_fixture.js";
 import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 
+import { chooseScheme } from "./workspace_actions.js";
+
 function withSecondControlledComponent(source: string): string {
   const actionStart = source.indexOf("const action = defineComponent");
   const paneStart = source.indexOf("const pane = defineComponent");
@@ -127,7 +129,7 @@ for (const viewport of ["desktop", "mobile"] as const)
     ).toBeDisabled();
     await page.getByLabel("Supply Hint", { exact: true }).uncheck();
     await expect(frame.locator("[data-hint]")).toHaveCount(0);
-    await page.getByRole("button", { name: "Dark mode", exact: true }).click();
+    await chooseScheme(page, "dark");
     await expect(
       frame.getByRole("button", { name: "Purchase" }),
     ).toHaveAttribute("data-scheme", "dark");
@@ -281,7 +283,7 @@ test("changing context while the first edit is pending cannot apply an obsolete 
   );
   await page.getByLabel("Label", { exact: true }).fill("Context edit");
   await pending;
-  await page.getByRole("button", { name: "Dark mode", exact: true }).click();
+  await chooseScheme(page, "dark");
   await expect(
     page
       .frameLocator('[data-workspace-frame="desktop"]')

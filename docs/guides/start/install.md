@@ -51,7 +51,8 @@ npm install --save-dev @mokly/mokly@0.12.0
 
 ## What you need
 
-- Node.js 22.14 or newer.
+- Node.js 22.14 or newer, except Node 24.14 through 24.18. If you use Node 24,
+  select 24.19 or later to avoid the affected runtime releases.
 - A repository with React components, or somewhere to write new ones.
 - Git, once you want to compare a branch with its base.
 

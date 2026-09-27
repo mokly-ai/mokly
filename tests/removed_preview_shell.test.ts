@@ -145,8 +145,8 @@ test("a removed screen opens historical frames without comparison controls", () 
     html,
     /data-diff-screen|data-diff-mode|data-diff-refresh/,
   );
-  assert.match(html, /data-mokly-preview-template="mobile"/);
-  assert.match(html, /data-mokly-preview-template="desktop"/);
+  assert.doesNotMatch(html, /data-mokly-preview-template|<template/);
+  assert.doesNotMatch(html, /data-workspace-frame|<iframe/);
   assert.match(html, /example\.test\/farewell/);
   assert.deepEqual(descriptor(html), {
     address: "example.test/farewell",

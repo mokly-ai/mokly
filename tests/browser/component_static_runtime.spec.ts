@@ -10,6 +10,7 @@ import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
 import { assertServedShellMarker } from "./export_shell.js";
+import { chooseScheme } from "./workspace_actions.js";
 
 let site: Awaited<ReturnType<typeof serveStaticFiles>>;
 let directory: string;
@@ -75,7 +76,7 @@ for (const viewport of ["desktop", "mobile"] as const)
         .frameLocator(`[data-workspace-frame="${viewport}"]`)
         .getByRole("button", { name: "Continue" }),
     ).toBeDisabled();
-    await page.getByRole("button", { name: "Dark mode", exact: true }).click();
+    await chooseScheme(page, "dark");
     await expect
       .poll(() =>
         page

@@ -47,7 +47,6 @@ export function ScreenPage({
         action={
           <ViewControls
             viewport={viewport}
-            schemeDisabled={removed}
             highlight={{
               active: highlighting,
               unavailable: removed

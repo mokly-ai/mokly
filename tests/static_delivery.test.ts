@@ -28,6 +28,10 @@ test("static metadata never authorizes external URLs, traversal, or unknown ids"
     resolveDeliveryHref("/id/home?fragment=heading", valid),
     "/view/screens/home.html?fragment=heading",
   );
+  assert.equal(
+    resolveDeliveryHref(`/id/home?snapshot=${"f".repeat(64)}`, valid),
+    undefined,
+  );
   assert.equal(resolveDeliveryHref("/id/missing", valid), undefined);
   assert.equal(resolveDeliveryHref("/id/homeindex.html", valid), undefined);
   for (const path of [

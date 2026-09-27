@@ -1,4 +1,5 @@
 /** Workspace values derived only from the validated public catalogue. */
+import { resolveCatalogueRecord } from "../catalogue/entry_selection.js";
 import type {
   CatalogueComponent,
   CatalogueReadModel,
@@ -104,9 +105,7 @@ export function publicWorkspace(
   entry: WorkspaceData["entry"],
   comparisons = model.comparisonUrl !== null,
 ): WorkspaceData {
-  const original = routedEntries(model).find(
-    (candidate) => candidate.id === entry.id,
-  );
+  const original = resolveCatalogueRecord(model, entry)?.entry;
   if (
     !original ||
     (original.kind !== "screen" && original.kind !== "component")

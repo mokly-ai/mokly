@@ -44,7 +44,7 @@ function inspectModule(modules, name, bytes) {
   } else {
     assert.doesNotMatch(
       code,
-      /react-dom|hydrateRoot|react\.production|from\s*["']react(?:["'/])/,
+      /react-dom|hydrateRoot|react\.production|from\s*["'](?:react(?:["'/])|@mokly\/mokly)|(?:^|\/)dist\/cli\//,
       `Unexpected React runtime in ${name}`,
     );
   }

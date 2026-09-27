@@ -14,6 +14,7 @@ import { readViewerWorkspace } from "./client/workspace_descriptor.js";
 import type { StaticDelivery } from "./navigation/delivery.js";
 import { readShellDelivery } from "./shell/delivery.js";
 import { catalogueNavSections, disclosurePath } from "./shell/nav_model.js";
+import { refreshStandaloneAppearance } from "./standalone/appearance_host.js";
 import {
   readShellBootstrapState,
   resolveShellBootstrap,
@@ -112,6 +113,7 @@ function hydrateResolvedShell(
   capabilityDescriptor: ViewerCapabilityDescriptor | undefined,
 ): void {
   if (hydratedDocuments.has(doc)) return;
+  refreshStandaloneAppearance(doc);
   const props = shellBootstrapProps(bootstrap);
   const delivery = bootstrap.context.delivery;
   const workspaceState =

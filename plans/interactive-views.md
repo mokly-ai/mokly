@@ -115,7 +115,7 @@ Documentation only. Every later milestone implements this contract.
       (bundle invalidation on rebuild), and `mokly-timings.md` (bundle timing).
 - [x] Create `docs/protocol/mokly-interactive-views-design.md` describing the
       approved mockup scope for Milestone 2: the Static/Live segmented control
-      in the view toolbar beside viewport and scheme, the preparing state, the
+      in the view toolbar after viewport, the preparing state, the
       unavailable state, the inspector's Static-only notice, and the hidden
       toggle when the catalogue or entry is not interactive.
 - [x] Add both docs to `docs/protocol/README.md`; update the README's
@@ -246,9 +246,10 @@ Live documents, but the shell still shows Static only.
 Tags: ui
 
 - [ ] Add the segmented Static/Live control to the view toolbar in the React
-      shell (`packages/viewer/src/shell/head.tsx` beside `ViewportSwitch` and
-      `SchemeSwitch`, with a `previewMode` selection in the shell store and
-      actions), kept in memory like viewport and scheme, hidden when the
+      shell (`packages/viewer/src/shell/views.tsx` and
+      `packages/viewer/src/shell/head.tsx`, after `ViewportSwitch`, with a
+      `previewMode` selection in the shell store and actions), kept across view
+      changes in the current document, hidden when the
       private descriptor has no interactive origin or the entry opted out, and
       never shown for pages, use-case steps or comparisons.
 - [ ] Mount Live frames through `postMessageAdapter({ frameOrigin })` in

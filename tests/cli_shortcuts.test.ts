@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import path from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
 
 import { parseArguments } from "../dist/cli/arguments.js";
 import {
@@ -139,7 +140,23 @@ test(
     t.after(() => removeFixture(fixture));
     const child = spawn(
       process.execPath,
-      [cli, "serve", "--config", fixture.configPath, "--port", "0"],
+      [
+        "--import",
+        "tsx",
+        "--import",
+        pathToFileURL(
+          path.join(
+            repositoryRoot,
+            "tests/helpers/serve_ready_signal_preload.ts",
+          ),
+        ).href,
+        cli,
+        "serve",
+        "--config",
+        fixture.configPath,
+        "--port",
+        "0",
+      ],
       {
         cwd: fixture.root,
         env: { ...process.env, MOKLY_OUTPUT: "plain" },
@@ -151,20 +168,25 @@ test(
         child.kill("SIGKILL");
     });
     let stdout = "";
+    let stderr = "";
     child.stdout.on("data", (chunk: Buffer) => {
       stdout += chunk.toString();
     });
+    child.stderr.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString();
+    });
+    child.stdin.on("error", () => undefined);
     for (let attempt = 0; attempt < 300; attempt++) {
-      if (stdout.includes("Mokly listening at")) break;
+      if (stdout.includes("MOKLY_TEST_READY_REPORT_BLOCKED")) break;
       await new Promise((resolve) => setTimeout(resolve, 25));
     }
     assert.match(stdout, /Mokly listening at/);
-    child.kill("SIGINT");
-    assert.equal(
-      await new Promise<number | null>((resolve) =>
-        child.once("exit", (code) => resolve(code)),
-      ),
-      0,
+    assert.match(stdout, /MOKLY_TEST_READY_REPORT_BLOCKED/);
+    const exited = new Promise<number | null>((resolve) =>
+      child.once("exit", (code) => resolve(code)),
     );
+    child.kill("SIGINT");
+    child.stdin.end("\n");
+    assert.equal(await exited, 0, stderr);
   },
 );

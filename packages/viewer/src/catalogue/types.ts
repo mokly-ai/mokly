@@ -37,6 +37,7 @@ export interface CatalogueReadModel {
   removedEntries: readonly {
     entry: CatalogueRoutedEntry;
     ancestors: readonly { id: string; title: string }[];
+    snapshotId?: string;
     preview?: RemovedEntryPreview;
   }[];
 }

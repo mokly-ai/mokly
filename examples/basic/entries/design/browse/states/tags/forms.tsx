@@ -1,4 +1,4 @@
-import { screen } from "@mokly/mokly";
+import type { ScreenVariantInput } from "@mokly/mokly";
 
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { TagScreen } from "../../../parts/tag_screen.js";
@@ -15,7 +15,7 @@ export function FormsFilterMobile() {
   );
 }
 
-export const formsFilterScreen = screen({
+export const formsFilterVariant = {
   colorSchemes: ["light"],
   description: "Welcome with tag:forms and the tag picker closed.",
   desktop: <FormsFilterDesktop />,
@@ -23,4 +23,4 @@ export const formsFilterScreen = screen({
   mobile: <FormsFilterMobile />,
   slug: "forms",
   title: "Forms filter",
-});
+} satisfies ScreenVariantInput;

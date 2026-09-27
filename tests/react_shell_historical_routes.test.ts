@@ -47,12 +47,64 @@ test("hydrated Serve and export distinguish renamed routes", async (context) => 
   const server = await startReviewedServer(fixture);
   context.after(() => server.close());
 
+  const catalogue = (await (
+    await fetch(`${server.url}/__mokly/catalogue.json`)
+  ).json()) as {
+    removedEntries: readonly {
+      entry: { id: string; route: string };
+      snapshotId: string;
+    }[];
+  };
+  const historical = catalogue.removedEntries.find(
+    ({ entry }) => entry.id === "handbook" && entry.route === "handbook.html",
+  );
+  assert.ok(historical);
+
   const oldRoute = await fetch(`${server.url}/view/handbook.html`);
   assert.equal(oldRoute.status, 200);
   assert.match(await oldRoute.text(), /Showing previous version/);
+  const exactOldRoute = await fetch(
+    `${server.url}/view/handbook.html?snapshot=${historical.snapshotId}`,
+  );
+  assert.equal(exactOldRoute.status, 200);
+  assert.match(await exactOldRoute.text(), /Showing previous version/);
   const currentRoute = await fetch(`${server.url}/view/guides/handbook.html`);
   assert.equal(currentRoute.status, 200);
   assert.doesNotMatch(await currentRoute.text(), /Showing previous version/);
+  assert.equal(
+    (
+      await fetch(
+        `${server.url}/view/guides/handbook.html?snapshot=${historical.snapshotId}`,
+      )
+    ).status,
+    404,
+  );
+  assert.equal(
+    (await fetch(`${server.url}/view/handbook.html?snapshot=${"f".repeat(64)}`))
+      .status,
+    404,
+  );
+  assert.equal(
+    (await fetch(`${server.url}/view/handbook.html?snapshot=invalid`)).status,
+    400,
+  );
+  const currentAlias = await fetch(`${server.url}/id/handbook`, {
+    redirect: "manual",
+  });
+  assert.equal(currentAlias.status, 302);
+  assert.equal(
+    currentAlias.headers.get("location"),
+    "/view/guides/handbook.html",
+  );
+  assert.equal(
+    (
+      await fetch(
+        `${server.url}/id/handbook?snapshot=${historical.snapshotId}`,
+        { redirect: "manual" },
+      )
+    ).status,
+    400,
+  );
 
   await exportCatalogue(fixture.config, { outDir: "site" });
   const read = (name: string) =>

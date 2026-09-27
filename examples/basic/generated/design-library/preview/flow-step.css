@@ -28,7 +28,7 @@ align-items: flex-start;
 .flow-step-num {
 background: var(--mbk-sage);
   border-radius: 9px;
-  color: #ffffff;
+  color: var(--mbk-accent-contrast);
   display: grid;
   flex-shrink: 0;
   font-size: 13px;

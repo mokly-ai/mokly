@@ -26,7 +26,6 @@ export const CSS_CHROME_EXPANSION = `
 .browser-viewport {
   height: calc(100% - 40px);
   overflow: hidden;
-  background: var(--chrome-surface);
 }
 
 .browser-expand {
@@ -50,7 +49,7 @@ export const CSS_CHROME_EXPANSION = `
 }
 
 .browser-expand:hover {
-  background: #ffffff;
+  background: var(--chrome-surface);
   color: var(--chrome-accent);
   border-color: var(--chrome-border-strong);
 }
@@ -86,7 +85,7 @@ body.frame-expanded::before {
   position: fixed;
   inset: 0;
   z-index: 900;
-  background: rgba(20, 28, 22, 0.55);
+  background: var(--chrome-scrim);
 }
 
 .browser-frame.is-expanded {
@@ -96,53 +95,7 @@ body.frame-expanded::before {
   width: auto;
   max-width: none;
   height: auto;
-  box-shadow: 0 40px 120px rgba(20, 28, 22, 0.4);
-}
-
-body[data-mokly-color-scheme="dark"]
-  :is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback])
-  .phone-screen {
-  background: var(--mbk-dark-screen-bg);
-}
-
-body[data-mokly-color-scheme="dark"]
-  :is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback])
-  .phone-screen::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: inset 0 0 0 1px
-    color-mix(
-      in srgb,
-      var(--mbk-dark-screen-ink) 12%,
-      var(--mbk-dark-screen-bg)
-    );
-  pointer-events: none;
-}
-
-body[data-mokly-color-scheme="dark"]
-  :is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback])
-  .phone-status {
-  color: var(--mbk-dark-screen-ink);
-}
-
-body[data-mokly-color-scheme="dark"]
-  :is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback])
-  .phone-home {
-  background: color-mix(in srgb, var(--mbk-dark-screen-ink) 40%, transparent);
-}
-
-body[data-mokly-color-scheme="dark"]
-  :is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback])
-  .browser-viewport {
-  background: var(--mbk-dark-screen-bg);
-}
-
-body[data-mokly-color-scheme="dark"]
-  :is(.mbk-frame-wrap, .mbk-flow-screen):not([data-color-scheme-fallback])
-  .mbk-frag {
-  background: var(--mbk-dark-screen-bg);
+  box-shadow: var(--chrome-shadow);
 }
 
 .flow-track {

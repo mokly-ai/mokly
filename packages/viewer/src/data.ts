@@ -34,6 +34,19 @@ export {
 } from "./catalogue/component_values.js";
 export { projectTree } from "./catalogue/tree.js";
 export {
+  currentCatalogueEntries,
+  resolveCatalogueRecord,
+  resolveCatalogueRoute,
+  resolveCatalogueSelection,
+} from "./catalogue/entry_selection.js";
+export type { ResolvedCatalogueEntry } from "./catalogue/entry_selection.js";
+export {
+  comparisonGeneration,
+  historicalSnapshotId,
+  isHistoricalSnapshotId,
+} from "./catalogue/snapshot_identity.js";
+export type { HistoricalSnapshotSource } from "./catalogue/snapshot_identity.js";
+export {
   counter,
   repositoryPath,
   publicPath,

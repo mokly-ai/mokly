@@ -62,7 +62,9 @@ export function ViewportSwitch() {
 }
 
 /**
- * Color scheme selection for catalogues that render dark fragments. The shell
+ * Preview color scheme selection for catalogues that render dark fragments. It
+ * chooses what a device screen shows, not the appearance of the interface
+ * around it, which an embedding host supplies. The shell
  * renders one instance in the top bar and one in the screen head band; the
  * stylesheet reveals whichever fits the current width.
  */
@@ -74,7 +76,7 @@ export function SchemeSwitch() {
   ] as const;
   return (
     <span
-      aria-label="Color scheme"
+      aria-label="Preview color scheme"
       className="mbk-seg"
       data-mokly-schemeswitch=""
       role="group"
@@ -146,6 +148,15 @@ function variantParent(
   if (entry.kind !== "screen") {
     return undefined;
   }
+  const historical = catalogue.removedEntries.some(
+    ({ entry: candidate }) => candidate.route === entry.route,
+  );
+  if (historical)
+    return entry.variantOf === undefined
+      ? undefined
+      : (catalogue.removedEntries.find(
+          ({ entry: candidate }) => candidate.id === entry.variantOf,
+        )?.entry ?? catalogue.byId.get(entry.variantOf));
   return (
     catalogue.hierarchy.variantParentById.get(entry.id) ??
     (entry.variantOf === undefined
@@ -165,13 +176,24 @@ export function targetHead(
       ?.ancestors.map(({ title }) => ({ label: title })) ??
     structuredCrumbTrail(catalogue.hierarchy, target.entry.id);
   const parent = variantParent(catalogue, target);
+  const parentSnapshot =
+    parent && parent.kind !== "collection"
+      ? catalogue.removedEntries.find(
+          ({ entry }) => entry.route === parent.route,
+        )?.snapshotId
+      : undefined;
   return {
     crumbs:
       parent === undefined || parent.kind === "collection"
         ? ancestors
         : [
             ...ancestors,
-            { href: catalogueViewHref(parent.route), label: parent.title },
+            {
+              href: `${catalogueViewHref(parent.route)}${
+                parentSnapshot ? `?snapshot=${parentSnapshot}` : ""
+              }`,
+              label: parent.title,
+            },
           ],
     id: target.entry.id,
     title: target.entry.title,

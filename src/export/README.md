@@ -93,10 +93,14 @@ repository reader; the default build performs no Git or historical capture.
 The finalized projection carries validated packaged preview descriptors, and
 externalized shells resolve them from that shared model.
 
-The browser inventory publishes the hydrated `react-shell.js` bundle and the
-React-free `inspector.js` consumer module. Removed-preview validation and
-request handling are part of the shared shell bundle, not a parallel browser
-runtime. Generated files and immutable comparison snapshots remain
+The browser inventory publishes the hydrated `react-shell.js` bundle, the
+package-owned classic `appearance-startup.js` and `navigation-resize.js`
+bundles, and the React-free `inspector.js` consumer module. The startup and
+navigation bundles come from the same explicit Serve allowlist and contain no
+React, Node or CLI dependency. Removed-preview validation and request handling
+are part of the shared shell bundle, not a parallel browser runtime. The Browse
+adapter adds the inspector's deferred script and bounded inert identity map only
+to owned current HTML copies. Generated files and immutable comparison snapshots remain
 byte-unmodified. Local frames retain `allow-same-origin`, with scripts disabled
 and parent-owned highlighting; an explicit cross-origin host uses the
 [frame adapter handshake](../../packages/viewer/src/inspector/README.md). The script and maps enter the

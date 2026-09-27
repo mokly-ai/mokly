@@ -11,6 +11,7 @@ import {
   resolveShellBootstrap,
   serializeShellBootstrap,
   shellBootstrap,
+  shellBootstrapProps,
   shellBootstrapWithDelivery,
 } from "../src/standalone/bootstrap.js";
 import { viewerCatalogue, viewerView } from "../src/viewer/projection.js";
@@ -109,5 +110,41 @@ test("external shell bootstrap retains only the shared catalogue identity", () =
         },
       }),
     /does not match the page/,
+  );
+});
+
+test("historical hydration reconstructs the exact removed selection", () => {
+  const model = structuredClone(catalogue);
+  const current = model.pages[0]!;
+  const source = model.removedEntries[0]!;
+  const snapshotId = "f".repeat(64);
+  model.removedEntries = [
+    {
+      ...source,
+      entry: {
+        ...source.entry,
+        id: current.id,
+        route: "archive/guide.html",
+        title: "Archived guide",
+      },
+      snapshotId,
+    },
+  ];
+  const display = viewerCatalogue(model);
+  const selection = { ...defaultSelection, screenId: current.id, snapshotId };
+  const bootstrap = shellBootstrap(model, viewerView(display, selection), {
+    base: "origin/main",
+    comparisons: true,
+    snapshotId,
+    updateVersion: 2,
+  });
+
+  const props = shellBootstrapProps(bootstrap);
+  assert.equal(props.context.activeRoute, "archive/guide.html");
+  assert.equal(props.context.snapshotId, snapshotId);
+  assert.equal(props.view.kind, "target");
+  assert.equal(
+    props.view.kind === "target" ? props.view.target.entry.title : undefined,
+    "Archived guide",
   );
 });

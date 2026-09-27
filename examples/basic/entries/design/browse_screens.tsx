@@ -1,9 +1,17 @@
 import { screen } from "@mokly/mokly";
 
+import { formsFilterVariant } from "./browse/states/tags/forms.js";
+import { onboardingPickerVariant } from "./browse/states/tags/onboarding-picker.js";
+import { onboardingFilterVariant } from "./browse/states/tags/onboarding.js";
+import { tagPickerVariant } from "./browse/states/tags/picker.js";
+import { browseSchemeVariants } from "./browse/variants/appearance_screens.js";
 import { useCaseScreen } from "./browse/views/use-case.js";
 import { DesignNavigation } from "./parts/design_navigation.js";
 import { DESTINATIONS } from "./parts/destinations.js";
-import { ExampleWorkspace } from "./parts/example_workspace.js";
+import {
+  ExampleWorkspace,
+  SchemeWorkspace,
+} from "./parts/example_workspace.js";
 import { NavDrawer, NavTree } from "./parts/nav.js";
 import { WelcomeHead } from "./parts/screen_heads.js";
 import { Shell } from "./parts/shell.js";
@@ -45,7 +53,7 @@ function SelectedScreenDesktop() {
       nav={<NavTree activeLabel="Welcome" />}
     >
       <WelcomeHead active="both" />
-      <ExampleWorkspace subject="welcome" viewport="desktop" />
+      <SchemeWorkspace subject="welcome" viewport="desktop" />
     </Shell>
   );
 }
@@ -54,7 +62,7 @@ function SelectedScreenMobile() {
   return (
     <Shell design={DESTINATIONS.welcome} viewport="mobile" nav={null}>
       <WelcomeHead active="mobile" />
-      <ExampleWorkspace subject="welcome" viewport="mobile" />
+      <SchemeWorkspace subject="welcome" viewport="mobile" />
     </Shell>
   );
 }
@@ -149,14 +157,20 @@ export const browseViewScreens = [
     title: "Home",
   }),
   screen({
-    colorSchemes: ["light"],
     description:
-      "A selected screen with viewport switching and framed fragments.",
+      "A selected screen with viewport switching and framed fragments, in either catalogue scheme.",
     desktop: <SelectedScreenDesktop />,
     id: "design-browse-screen",
     mobile: <SelectedScreenMobile />,
     slug: "screen",
     title: "Selected screen",
+    variants: [
+      ...browseSchemeVariants,
+      tagPickerVariant,
+      formsFilterVariant,
+      onboardingFilterVariant,
+      onboardingPickerVariant,
+    ],
   }),
   useCaseScreen,
 ];

@@ -246,7 +246,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       toolbar.childNodes
         .filter((node): node is Element => "tagName" in node)
         .map((node) => attribute(node, "class")?.split(/\s+/)[1]),
-      ["ce-viewport-control", "ce-theme-control", "ce-highlight-control"],
+      ["ce-viewport-control", "ce-highlight-control"],
     );
     const highlight = byClass(document, "ce-highlight-toggle")[0];
     assert.ok(highlight);

@@ -95,14 +95,20 @@ empty designs retain Current without comparison controls.
 
 All is a catalogue filter, not evidence that the selected example changed.
 Known examples show Added, Changed, Removed, or Unmodified beside the title,
-using the shown view's state. One selected viewport and scheme maps `changed`,
+using the shown view's state. Resolve the selected screen or saved variant's
+effective displayed scheme before reading that state: a light-only preview uses
+Light status and marks while the catalogue's Dark preference stays selected.
+One selected viewport and scheme maps `changed`,
 `added`, and `removed` to their matching status, and `unchanged` or
 `ignored-only` to Unmodified. Both uses the first status present in this order:
 Changed, Added, Removed, Unmodified. Comparison controls follow that result:
 Changed is eligible, as is Removed only for a component saved variant. If
-neither a ready result nor screen-view evidence exists, retain route-level status and
-eligibility. Viewport, scheme, saved-variant, and background-evidence changes
-recompute both without a page load. When the shown view is Unmodified, its band
+neither a ready result nor matching screen-view evidence exists, retain the
+route-level status and the entry or saved variant's independently supplied
+eligibility. Never derive eligibility from fallback status. Evidence provenance
+travels with both values, and viewport, effective-scheme, saved-variant, and
+background-evidence changes recompute the shared decision without a page load.
+When the shown view is Unmodified, its band
 is absent and the view-control marks and `Changed views` row identify changed
 views elsewhere. Removed screens show their badge without a comparison mode
 row, over their previous version under
@@ -117,13 +123,19 @@ its previous version.
 Missing inspection metadata is distinct from comparison availability.
 
 The runtime uses actual comparison eligibility for the selected saved example.
-Missing per-view evidence uses the route-level fallback and cannot trigger eager
-screenshot work merely to decide whether to show a mode row.
+Missing, pending, or nonmatching per-view evidence uses the route-level status
+fallback without changing that eligibility and cannot trigger eager screenshot
+work merely to decide whether to show a mode row. The same rule gates comparison
+deep links during server render, controlled selection, and later evidence
+updates.
 Affected consumers may still expose comparisons while staying out of Changes.
 
 Entry status and variant status are distinct. Removing Compact from Action is
 a Changed component with a comparable Removed variant; Farewell is a Removed
 screen with no comparison controls.
+The `design-component-variants` mockup depicts the inverse boundary: Action is
+Changed because another saved example changed, while selected Disabled is
+Unmodified and ineligible, so no comparison band appears.
 The Added Badge example lives in States → Additions and shows its current saved
 preview without comparison controls, plus one Changes entry. The existing unused Badge
 example remains Unmodified. Status must never be inferred from usage counts.

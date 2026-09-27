@@ -40,6 +40,11 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
     ), "tree must project the collection forest");
   const all = [...current, ...model.removedEntries.map(({ entry }) => entry)];
   unique(model.removedEntries.map(({ entry }) => entry.route));
+  unique(
+    model.removedEntries.flatMap(({ snapshotId }) =>
+      snapshotId ? [snapshotId] : [],
+    ),
+  );
   const components = new Map(
     all
       .filter((entry) => entry.kind === "component")
