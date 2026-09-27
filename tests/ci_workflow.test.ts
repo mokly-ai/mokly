@@ -184,18 +184,26 @@ test("CI shards complete verification behind one prerequisite", async () => {
     [unit, "unit"],
     [browser, "browser"],
   ] as const) {
+    const installIndex = job.steps.findIndex((step) => step.run === "npm ci");
+    const chromiumIndex = job.steps.findIndex((step) =>
+      step.run?.includes("playwright install --with-deps chromium"),
+    );
     const removalIndex = job.steps.findIndex(
       (step) => step.name === "Remove remote-tracking test inputs",
     );
     const suiteIndex = job.steps.findIndex((step) =>
       step.run?.includes(`cargo xtask check --suite ${suite}`),
     );
+    assert.ok(installIndex >= 0 && installIndex < removalIndex);
+    if (suite === "browser")
+      assert.ok(chromiumIndex >= 0 && chromiumIndex < removalIndex);
     assert.ok(removalIndex >= 0 && removalIndex < suiteIndex);
     const removal = job.steps[removalIndex]?.run ?? "";
-    assert.match(removal, /refs\/remotes\//u);
-    assert.match(removal, /git update-ref --stdin/u);
-    assert.match(removal, /git rev-parse --git-path FETCH_HEAD/u);
-    assert.match(removal, /test ! -e/u);
+    assert.equal(removal, "node scripts/verification/remove-remote-state.mjs");
+    assert.doesNotMatch(
+      job.steps.map((step) => step.run ?? "").join("\n"),
+      /git (?:for-each-ref|update-ref)\b/u,
+    );
   }
   assert.doesNotMatch(source, /origin\/main/u);
   assert.doesNotMatch(source, /baseline-package-lock/u);

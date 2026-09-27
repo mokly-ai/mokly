@@ -97,33 +97,57 @@ meaningful. The browser suite's example server compares with the checked-out
 `HEAD`. A fixture repository may create and read its own remotes because those
 references are fixture-owned inputs inside the test tree.
 
-CI keys the package, unit and browser npm cache directly from
-`package-lock.json` in the checked-out `HEAD`; it carries no extra remote
-branch-point lockfile. Before unit and browser execution it removes the real
-checkout's remote-tracking references and `FETCH_HEAD`. Delivery also runs the
-complete unit and browser suites in a local copy with neither remote-tracking
-references nor `FETCH_HEAD`. Identical trees must therefore produce identical
-test results; the release workflow's exact-tree evidence reuse depends on that
-determinism.
+Before their suites, CI's unit and browser jobs run
+`node scripts/verification/remove-remote-state.mjs`. This one boundary:
 
-`tests/test_repository_refs.test.ts` is a best-effort static lint behind that
-remote-free runtime proof. It examines direct subprocess calls whose first
-argument is the literal `"git"` and whose argv is a literal array. Repository
-targeting comes from the last `-C` value when present, otherwise from a `cwd`
-option. A call with neither targets the real checkout, and a target expression
-containing `repositoryRoot` identifies that checkout. Other target expressions
-are treated as fixture-owned; a `repositoryRoot` occurrence in `env`, `input`
-or another non-target argument does not select the real checkout.
+- removes each configured remote, including its remote-tracking references and
+  branch upstream settings;
+- deletes leftover `refs/remotes/*` entries with no symbolic-reference
+  dereference;
+- deletes the checkout's `FETCH_HEAD`; and
+- fails unless the configured-remote list and remote-tracking namespace are
+  empty and `FETCH_HEAD` is absent.
 
-For calls targeting the real checkout, the lint recognizes `origin/` and
-`remotes/` anywhere in a literal argument, `refs/remotes`, `-r`, `--all`,
-`--remotes` including its assigned form, `FETCH_HEAD`, upstream spellings such
-as `@{u}`, `@{upstream}` and `@{push}` in any letter case, configured upstream
-keys shaped like `branch.<name>.remote` or `branch.<name>.merge`, and the
-`fetch` and `ls-remote` subcommands. It cannot see Git calls hidden behind
-helper closures, argv held in variables or spreads, shell command strings, or
-product-code defaults such as a configured comparison base. The remote-free
-unit and browser runs enforce the runtime promise across those blind spots.
+Delivery repeats the proof in a separate copy or clone of the tree under test,
+including uncommitted and untracked files when they are part of that tree:
+
+```bash
+node scripts/verification/remove-remote-state.mjs
+npm ci
+npm run build
+cargo xtask check --suite unit
+cargo xtask check --suite browser
+```
+
+Identical trees must therefore produce identical test results; the release
+workflow's exact-tree evidence reuse depends on that determinism.
+
+`tests/test_repository_refs.test.ts` is a best-effort static lint behind the
+runtime proof. It examines direct subprocess calls whose first argument is the
+literal `"git"` and whose argv is an inline literal array. Before finding the
+subcommand, it skips global options and the values of `-C`, `-c`, `--git-dir`,
+`--work-tree`, `--namespace` and `--config-env`; separated and `=` forms follow
+the same rule. The target comes from the last `-C` or `--git-dir` before that
+subcommand; otherwise it comes from an inline options object's `cwd` property,
+including shorthand `{ cwd }`. A call with no options argument, or with an
+inline options object that omits `cwd`, targets the real checkout. An options
+variable or call, or an inline object with a spread, leaves the target unknown
+and is not reported.
+
+For calls attributed to the real checkout, the lint recognizes literals that
+contain `origin/`, `remotes/` or `refs/remotes`; the literal `FETCH_HEAD`;
+case-insensitive `@{u}`, `@{upstream}` and `@{push}` spellings; configured
+upstream keys shaped like `branch.<name>.remote` or `branch.<name>.merge`; and
+the `fetch` and `ls-remote` subcommands. The reference-listing flags `-r`, `-a`,
+`--all`, `--remotes` and `--remotes=…` count only for `branch`, `show-branch`,
+`log`, `rev-list`, `rev-parse`, `describe`, `name-rev` and `shortlog`.
+
+The lint does not follow Git calls hidden behind helper closures, argv stored in
+variables or spreads, shell command strings, a relative `-C` layered after a
+real-root `-C`, `for-each-ref` without a remote pattern, `git remote`, compound
+ranges such as `HEAD..FETCH_HEAD`, modules under `scripts/` that tests execute,
+or product-code defaults such as a configured comparison base. The remote-free
+unit and browser runs cover the runtime boundary beyond those blind spots.
 
 ## Pull Request Title Contract
 
@@ -300,10 +324,9 @@ evidence falls back to the complete gate.
 ## Dependency Cache And Security
 
 CI caches npm's download cache only. `actions/setup-node` keys it from the
-committed `package-lock.json`; jobs that can run historical installs also add a
-lockfile read from the merge-base commit. `npm ci` always runs, including after
-a cache hit, and every platform's optional native package remains available.
-A cache miss is an ordinary cold install and never permits a skipped command.
+committed `package-lock.json`. `npm ci` always runs, including after a cache
+hit, and each platform's optional native package remains available. A cache
+miss is an ordinary cold install and never permits a skipped command.
 
 The live workspace audit runs first in the repository prerequisite and does not
 depend on cache state. The complete local and release commands retain the same

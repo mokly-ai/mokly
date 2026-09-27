@@ -8,7 +8,10 @@ export interface RepositoryGitReferenceViolation {
   reference: string;
 }
 
-/** Find literal direct Git calls that read remote state from the real checkout. */
+/**
+ * Find literal remote reads in direct Git calls whose pre-subcommand target or
+ * inline `cwd` is the real checkout; unknown option objects are not reported.
+ */
 export function findRealRepositoryGitReferences(
   source: string,
   file = "synthetic.ts",
@@ -57,10 +60,17 @@ function remoteReference(
   if (!argv) return;
   const values = argv.elements.map(literalValue);
   for (const value of values) {
-    if (value !== undefined && isRemoteReference(value)) return value;
+    if (value !== undefined && isDirectRemoteReference(value)) return value;
   }
-  const subcommand = gitSubcommand(values);
+  const { subcommand, subcommandIndex } = parseGitInvocation(argv);
   if (subcommand === "fetch" || subcommand === "ls-remote") return subcommand;
+  if (
+    subcommand !== undefined &&
+    subcommandIndex !== undefined &&
+    REFERENCE_LISTING_SUBCOMMANDS.has(subcommand)
+  )
+    for (const value of values.slice(subcommandIndex + 1))
+      if (value !== undefined && isReferenceListingFlag(value)) return value;
 }
 
 function literalValue(node: ts.Expression): string | undefined {
@@ -72,17 +82,13 @@ function literalValue(node: ts.Expression): string | undefined {
     .join("")}`;
 }
 
-function isRemoteReference(value: string): boolean {
+function isDirectRemoteReference(value: string): boolean {
   const lower = value.toLowerCase();
   return (
     value.includes("origin/") ||
     value.includes("remotes/") ||
     value.includes("refs/remotes") ||
     value === "FETCH_HEAD" ||
-    value === "-r" ||
-    value === "--all" ||
-    value === "--remotes" ||
-    value.startsWith("--remotes=") ||
     ["@{u}", "@{upstream}", "@{push}"].some((suffix) =>
       lower.includes(suffix),
     ) ||
@@ -90,18 +96,81 @@ function isRemoteReference(value: string): boolean {
   );
 }
 
-function gitSubcommand(
-  values: readonly (string | undefined)[],
-): string | undefined {
-  for (let index = 0; index < values.length; index++) {
-    const value = values[index];
-    if (value === undefined) return;
-    if (value === "-C") {
+const GLOBAL_VALUE_OPTIONS = [
+  "-C",
+  "-c",
+  "--git-dir",
+  "--work-tree",
+  "--namespace",
+  "--config-env",
+] as const;
+const TARGET_OPTIONS = new Set<string>(["-C", "--git-dir"]);
+const REFERENCE_LISTING_SUBCOMMANDS = new Set([
+  "branch",
+  "show-branch",
+  "log",
+  "rev-list",
+  "rev-parse",
+  "describe",
+  "name-rev",
+  "shortlog",
+]);
+
+function isReferenceListingFlag(value: string): boolean {
+  return (
+    value === "-r" ||
+    value === "-a" ||
+    value === "--all" ||
+    value === "--remotes" ||
+    value.startsWith("--remotes=")
+  );
+}
+
+interface GitInvocation {
+  readonly subcommand?: string;
+  readonly subcommandIndex?: number;
+  readonly target?: ts.Expression | undefined;
+  readonly targetKnown: boolean;
+}
+
+function parseGitInvocation(argv: ts.ArrayLiteralExpression): GitInvocation {
+  let target: ts.Expression | undefined;
+  for (let index = 0; index < argv.elements.length; index++) {
+    const element = argv.elements[index];
+    if (!element || !ts.isExpression(element))
+      return { target, targetKnown: false };
+    const value = literalValue(element);
+    if (value === undefined) return { target, targetKnown: false };
+    const option = globalValueOption(value);
+    if (option) {
+      if (option.assigned) {
+        if (TARGET_OPTIONS.has(option.name)) target = element;
+        continue;
+      }
+      const candidate = argv.elements[index + 1];
+      if (!candidate || !ts.isExpression(candidate))
+        return { target, targetKnown: false };
+      if (TARGET_OPTIONS.has(option.name)) target = candidate;
       index++;
       continue;
     }
     if (value.startsWith("-")) continue;
-    return value;
+    return {
+      subcommand: value,
+      subcommandIndex: index,
+      target,
+      targetKnown: true,
+    };
+  }
+  return { target, targetKnown: true };
+}
+
+function globalValueOption(
+  value: string,
+): { assigned: boolean; name: string } | undefined {
+  for (const option of GLOBAL_VALUE_OPTIONS) {
+    if (value === option) return { assigned: false, name: option };
+    if (value.startsWith(`${option}=`)) return { assigned: true, name: option };
   }
 }
 
@@ -109,10 +178,11 @@ function targetsRealRepository(
   arguments_: ts.NodeArray<ts.Expression>,
 ): boolean {
   const argv = argumentArray(arguments_);
-  const gitTarget = argv ? lastGitTarget(argv) : undefined;
-  if (gitTarget) return referencesRepositoryRoot(gitTarget);
-  const cwd = cwdTarget(arguments_);
-  return cwd === undefined || referencesRepositoryRoot(cwd);
+  if (!argv) return false;
+  const invocation = parseGitInvocation(argv);
+  if (!invocation.targetKnown) return false;
+  if (invocation.target) return referencesRepositoryRoot(invocation.target);
+  return optionsTarget(arguments_) === "real";
 }
 
 function argumentArray(
@@ -122,34 +192,26 @@ function argumentArray(
   return argv && ts.isArrayLiteralExpression(argv) ? argv : undefined;
 }
 
-function lastGitTarget(
-  argv: ts.ArrayLiteralExpression,
-): ts.Expression | undefined {
-  let target: ts.Expression | undefined;
-  for (let index = 0; index < argv.elements.length - 1; index++) {
-    const element = argv.elements[index];
-    if (element && literalValue(element) === "-C") {
-      const candidate = argv.elements[index + 1];
-      if (candidate && ts.isExpression(candidate)) target = candidate;
-      index++;
-    }
-  }
-  return target;
-}
-
-function cwdTarget(
+function optionsTarget(
   arguments_: ts.NodeArray<ts.Expression>,
-): ts.Expression | undefined {
-  for (const argument of arguments_.slice(2)) {
-    if (!ts.isObjectLiteralExpression(argument)) continue;
-    for (const property of argument.properties) {
-      if (
-        ts.isPropertyAssignment(property) &&
-        propertyName(property.name) === "cwd"
-      )
-        return property.initializer;
-    }
+): "real" | "other" | "unknown" {
+  const options = arguments_[2];
+  if (options === undefined) return "real";
+  if (!ts.isObjectLiteralExpression(options)) return "unknown";
+  if (options.properties.some(ts.isSpreadAssignment)) return "unknown";
+  for (const property of options.properties) {
+    if (
+      ts.isPropertyAssignment(property) &&
+      propertyName(property.name) === "cwd"
+    )
+      return referencesRepositoryRoot(property.initializer) ? "real" : "other";
+    if (
+      ts.isShorthandPropertyAssignment(property) &&
+      property.name.text === "cwd"
+    )
+      return referencesRepositoryRoot(property.name) ? "real" : "other";
   }
+  return "real";
 }
 
 function propertyName(name: ts.PropertyName): string | undefined {

@@ -30,6 +30,86 @@ test("real-checkout targeting uses only cwd and Git -C", () => {
   assert.deepEqual(findRealRepositoryGitReferences(fixtureTarget), []);
 });
 
+test("target inference distinguishes fixture, real and unknown options", () => {
+  const fixtureShorthand = `
+    const cwd = fixture.root;
+    execute("git", ["show", "origin/main"], { cwd });
+  `;
+  const optionsVariable = `
+    const options = { cwd: repositoryRoot };
+    execute("git", ["show", "origin/main"], options);
+  `;
+  const spreadOptions = `
+    execute("git", ["show", "origin/main"], { ...options });
+  `;
+  const fixtureGitDir = `
+    execute("git", ["--git-dir", fixture.gitDir, "show", "origin/main"], {
+      cwd: repositoryRoot,
+    });
+  `;
+  const assignedFixtureGitDir = `
+    execute("git", ["--git-dir=/fixture/.git", "show", "origin/main"], {
+      cwd: repositoryRoot,
+    });
+  `;
+  const realBeforeSubcommand = `
+    execute("git", ["-C", repositoryRoot, "show", "origin/main"]);
+  `;
+  const lastTargetIsFixture = `
+    execute("git", ["-C", repositoryRoot, "--git-dir", fixture.gitDir, "show", "origin/main"]);
+  `;
+  const lastTargetIsReal = `
+    execute("git", ["--git-dir", fixture.gitDir, "-C", repositoryRoot, "show", "origin/main"]);
+  `;
+  const optionAfterSubcommand = `
+    execute("git", ["log", "-C", "origin/main"]);
+  `;
+  const inlineOptionsWithoutCwd = `
+    execute("git", ["show", "origin/main"], { env: process.env });
+  `;
+
+  for (const source of [
+    fixtureShorthand,
+    optionsVariable,
+    spreadOptions,
+    fixtureGitDir,
+    assignedFixtureGitDir,
+    lastTargetIsFixture,
+  ])
+    assert.deepEqual(findRealRepositoryGitReferences(source), [], source);
+  for (const source of [
+    realBeforeSubcommand,
+    lastTargetIsReal,
+    optionAfterSubcommand,
+    inlineOptionsWithoutCwd,
+  ])
+    assert.equal(findRealRepositoryGitReferences(source).length, 1, source);
+});
+
+test("subcommand parsing scopes remote-listing flags and skips option values", () => {
+  const localRecursiveTree = `
+    execute("git", ["ls-tree", "-r", "HEAD"], { cwd: repositoryRoot });
+  `;
+  assert.deepEqual(findRealRepositoryGitReferences(localRecursiveTree), []);
+
+  for (const [source, reference] of [
+    ['execute("git", ["branch", "-r"], { cwd: repositoryRoot });', "-r"],
+    ['execute("git", ["log", "--all"], { cwd: repositoryRoot });', "--all"],
+    [
+      'execute("git", ["-c", "name=value", "fetch", "origin"], { cwd: repositoryRoot });',
+      "fetch",
+    ],
+    [
+      'execute("git", ["-c=name=value", "fetch", "origin"], { cwd: repositoryRoot });',
+      "fetch",
+    ],
+  ] as const) {
+    const violations = findRealRepositoryGitReferences(source);
+    assert.equal(violations.length, 1, source);
+    assert.equal(violations[0]?.reference, reference, source);
+  }
+});
+
 test("every documented remote or upstream reference shape is guarded", () => {
   for (const reference of [
     "origin/main",
@@ -39,15 +119,11 @@ test("every documented remote or upstream reference shape is guarded", () => {
     "refs/remotes",
     "refs/remotes/origin/main",
     "FETCH_HEAD",
-    "-r",
-    "--all",
-    "--remotes=origin",
     "HEAD@{u}",
     "HEAD@{U}",
     "HEAD@{upstream}",
     "HEAD@{UPSTREAM}",
     "HEAD@{Push}",
-    "--remotes",
     "branch.main.remote",
     "branch.feature/test.merge",
   ]) {
@@ -59,6 +135,19 @@ test("every documented remote or upstream reference shape is guarded", () => {
   const template =
     'execute("git", ["show", `origin/${branch}`], { cwd: repositoryRoot });';
   assert.equal(findRealRepositoryGitReferences(template).length, 1, template);
+
+  for (const [subcommand, reference] of [
+    ["branch", "-r"],
+    ["show-branch", "-a"],
+    ["log", "--all"],
+    ["rev-list", "--remotes=origin"],
+    ["shortlog", "--remotes"],
+  ] as const) {
+    const source = `execute("git", [${JSON.stringify(subcommand)}, ${JSON.stringify(reference)}], { cwd: repositoryRoot });`;
+    const violations = findRealRepositoryGitReferences(source);
+    assert.equal(violations.length, 1, source);
+    assert.equal(violations[0]?.reference, reference);
+  }
 
   for (const [subcommand, args] of [
     ["fetch", '["fetch", "origin", "main"]'],

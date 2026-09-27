@@ -37,6 +37,7 @@ const verification = read("docs/protocol/ci-verification.md").replace(
   /\s+/gu,
   " ",
 );
+const release = read("docs/protocol/npm-release.md").replace(/\s+/gu, " ");
 const sources = new Map(
   GUIDES.filter((page) => page.frontmatter.section === "ci").map((page) => [
     page.id,
@@ -236,7 +237,24 @@ test("Complete idempotency, accounting and cancellation copy stay explicit", () 
   );
   assert.match(
     recovery,
-    /If a step in this window fails after the command's cancellation signal fired, the failure is a cancellation while keeping its existing error code and message/u,
+    /lets the event loop complete one full turn that includes an I\/O poll, then checks once more/u,
+  );
+  assert.match(recovery, /uses no wall-clock delay/u);
+  for (const phase of [
+    "changed-path evidence",
+    "Comparison generation",
+    "Changes calculation",
+    "removed-page preview",
+  ])
+    assert.ok(recovery.includes(phase), phase);
+  assert.match(
+    recovery,
+    /keeps the original error object, class, fields, message and stack/u,
+  );
+  assert.match(recovery, /`MOKLY_DIAGNOSTIC=1`.*stack/u);
+  assert.match(
+    recovery,
+    /hold a referenced Node handle.*esbuild startup.*status 1/u,
   );
   assert.match(
     prose,
@@ -269,27 +287,40 @@ test("test repository inputs are deterministic and title types stay fixed", () =
   );
   assert.match(
     verification,
-    /npm cache directly from `package-lock\.json` in the checked-out `HEAD`/u,
+    /node scripts\/verification\/remove-remote-state\.mjs/u,
   );
   assert.match(
     verification,
-    /removes the real checkout's remote-tracking references/u,
+    /removes each configured remote.*branch upstream settings/u,
   );
   assert.match(
     verification,
-    /local copy with neither remote-tracking references nor `FETCH_HEAD`/u,
+    /deletes leftover `refs\/remotes\/\*` entries with no symbolic-reference dereference/u,
+  );
+  assert.match(verification, /cargo xtask check --suite unit/u);
+  assert.match(verification, /cargo xtask check --suite browser/u);
+  assert.match(
+    verification,
+    /target comes from the last `-C` or `--git-dir` before that subcommand/u,
   );
   assert.match(
     verification,
-    /targeting comes from the last `-C` value when present, otherwise from a `cwd` option/u,
+    /An options variable or call, or an inline object with a spread, leaves the target unknown and is not reported/u,
   );
-  assert.match(verification, /call with neither targets the real checkout/u);
+  assert.match(verification, /separated and `=` forms follow the same rule/u);
+  assert.match(verification, /including shorthand `\{ cwd \}`/u);
+  assert.match(verification, /`-r`, `-a`, `--all`, `--remotes`/u);
   assert.match(
     verification,
-    /`repositoryRoot` occurrence in `env`, `input` or another non-target argument does not select the real checkout/u,
+    /reference-listing flags.*count only for `branch`, `show-branch`, `log`/u,
   );
-  assert.match(verification, /argv held in variables or spreads/u);
+  assert.match(verification, /argv stored in variables or spreads/u);
   assert.match(verification, /shell command strings/u);
+  assert.match(verification, /relative `-C` layered after a real-root `-C`/u);
+  assert.match(verification, /`for-each-ref` without a remote pattern/u);
+  assert.match(verification, /`git remote`/u);
+  assert.match(verification, /`HEAD\.\.FETCH_HEAD`/u);
+  assert.match(verification, /modules under `scripts\/`/u);
   assert.match(verification, /product-code defaults/u);
   assert.match(
     verification,
@@ -298,6 +329,26 @@ test("test repository inputs are deterministic and title types stay fixed", () =
   assert.match(verification, /This type list is fixed/u);
   assert.match(verification, /examples in `AGENTS\.md`/u);
   assert.match(verification, /does not derive policy from Git history/u);
+  assert.doesNotMatch(
+    verification,
+    /lockfile read from the merge-base commit/u,
+  );
+  assert.match(
+    release,
+    /CI verification contract.*dependency-cache-and-security.*owns cache inputs/u,
+  );
+  assert.match(
+    release,
+    /CI graph and checkout contract.*ci-graph-and-checkout-ownership.*owns verification history/u,
+  );
+  assert.doesNotMatch(
+    release,
+    /includes the merge-base lockfile in cache keys/u,
+  );
+  assert.doesNotMatch(
+    release,
+    /Full Git history is available where baseline resolution requires/u,
+  );
 });
 
 test("receiver limits, stored blobs and plan URL protocols are unambiguous", () => {

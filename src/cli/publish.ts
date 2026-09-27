@@ -9,6 +9,7 @@ import type { PublishResult } from "../publish/types.js";
 import { NodeGitCommandRunner } from "../review/git.js";
 
 import type { CliArguments } from "./arguments.js";
+import { withCommandKeepAlive } from "./keep_alive.js";
 import { publishFailure } from "./publish_failure.js";
 import { publishProgressLabel } from "./publish_output.js";
 import { reportPhase } from "./reporter/phase.js";
@@ -22,73 +23,75 @@ export async function runPublish(
   reporter: CliReporter,
   env: NodeJS.ProcessEnv,
 ): Promise<PublishResult> {
-  const options = resolvePublishOptions(arguments_, env);
-  const controller = new AbortController();
-  const cancel = (): void => controller.abort();
-  process.on("SIGINT", cancel);
-  process.on("SIGTERM", cancel);
-  let uploadPhase: ReporterPhase | undefined;
-  const progress: PublishProgress = {
-    run: async (phase, action) => {
-      const copy = {
-        export: ["Exporting catalogue", "Catalogue exported"],
-        prepare: ["Preparing upload", "Upload prepared"],
-        upload: ["Uploading catalogue", "Catalogue uploaded"],
-      } as const;
-      const [label, success] = copy[phase];
-      if (phase !== "upload")
-        return reportPhase(reporter, label, success, action);
-      const active = reporter.startPhase(label);
-      uploadPhase = active;
-      try {
-        const result = await action();
-        active.succeed(success);
-        return result;
-      } catch (error) {
-        active.fail();
-        throw error;
-      } finally {
-        if (uploadPhase === active) uploadPhase = undefined;
-      }
-    },
-    update: (upload) => uploadPhase?.update(publishProgressLabel(upload)),
-  };
-  try {
-    const config = await reportPhase(
-      reporter,
-      "Loading configuration",
-      "Configuration loaded",
-      () =>
-        withPreInstallationCancellation(controller.signal, () =>
-          loadConfig(cwd, arguments_.config),
-        ),
-    );
-    return await publishCatalogue(
-      config,
-      {
-        ...arguments_,
-        ...options,
-        diagnostic: (message) => reporter.runtimeDiagnostic(message),
+  return withCommandKeepAlive(async () => {
+    const options = resolvePublishOptions(arguments_, env);
+    const controller = new AbortController();
+    const cancel = (): void => controller.abort();
+    process.on("SIGINT", cancel);
+    process.on("SIGTERM", cancel);
+    let uploadPhase: ReporterPhase | undefined;
+    const progress: PublishProgress = {
+      run: async (phase, action) => {
+        const copy = {
+          export: ["Exporting catalogue", "Catalogue exported"],
+          prepare: ["Preparing upload", "Upload prepared"],
+          upload: ["Uploading catalogue", "Catalogue uploaded"],
+        } as const;
+        const [label, success] = copy[phase];
+        if (phase !== "upload")
+          return reportPhase(reporter, label, success, action);
+        const active = reporter.startPhase(label);
+        uploadPhase = active;
+        try {
+          const result = await action();
+          active.succeed(success);
+          return result;
+        } catch (error) {
+          active.fail();
+          throw error;
+        } finally {
+          if (uploadPhase === active) uploadPhase = undefined;
+        }
       },
-      packageVersion(),
-      env,
-      {
-        git: new NodeGitCommandRunner(config.repoRoot, controller.signal),
-        export: exportCatalogue,
-        fetch,
-        now: () => new Date(),
-        random: Math.random,
-        sleep: async (milliseconds, signal) => {
-          await delay(milliseconds, undefined, { signal });
+      update: (upload) => uploadPhase?.update(publishProgressLabel(upload)),
+    };
+    try {
+      const config = await reportPhase(
+        reporter,
+        "Loading configuration",
+        "Configuration loaded",
+        () =>
+          withPreInstallationCancellation(controller.signal, () =>
+            loadConfig(cwd, arguments_.config),
+          ),
+      );
+      return await publishCatalogue(
+        config,
+        {
+          ...arguments_,
+          ...options,
+          diagnostic: (message) => reporter.runtimeDiagnostic(message),
         },
-        progress,
-      },
-      controller.signal,
-    );
-  } catch (error) {
-    throw publishFailure(error);
-  } finally {
-    process.off("SIGINT", cancel);
-    process.off("SIGTERM", cancel);
-  }
+        packageVersion(),
+        env,
+        {
+          git: new NodeGitCommandRunner(config.repoRoot, controller.signal),
+          export: exportCatalogue,
+          fetch,
+          now: () => new Date(),
+          random: Math.random,
+          sleep: async (milliseconds, signal) => {
+            await delay(milliseconds, undefined, { signal });
+          },
+          progress,
+        },
+        controller.signal,
+      );
+    } catch (error) {
+      throw publishFailure(error);
+    } finally {
+      process.off("SIGINT", cancel);
+      process.off("SIGTERM", cancel);
+    }
+  });
 }

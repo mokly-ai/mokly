@@ -3,7 +3,8 @@ import { publishCancelled } from "../publish/errors.js";
 
 /** Map one publish-boundary failure without hiding typed recovery guidance. */
 export function publishFailure(error: unknown): MoklyError {
-  if (isCancellation(error)) return publishCancelled();
+  if (isCancellation(error))
+    return error instanceof MoklyError ? error : publishCancelled();
   if (error instanceof MoklyError) return error;
   return new MoklyError(
     "upload-failed",

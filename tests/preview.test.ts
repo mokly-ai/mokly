@@ -36,14 +36,50 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   const index = await read(output, "index.html");
   assert.match(index, /<title>Mokly<\/title>/);
   assert.match(index, /data-mokly-filter/);
-  assert.match(index, /class="mbk-nav-filter-count">\d+</);
   assert.match(index, /\/__mokly\/client\/react-shell\.js/);
   assert.doesNotMatch(index, /\/__mokly\/client\/browser\.js/);
   assert.match(index, /href="\/view\/screens\/welcome"/);
   assert.doesNotMatch(index, /href="\/view\/screens\/welcome\.html"/);
+  const catalogue = JSON.parse(
+    await read(output, "__mokly/catalogue.json"),
+  ) as PublishedCatalogue;
+  const changedIds = [
+    ...catalogue.components,
+    ...catalogue.pages,
+    ...catalogue.screens,
+    ...catalogue.useCases,
+  ]
+    .filter((entry) => entry.changes.included)
+    .map((entry) => entry.id)
+    .sort();
+  assert.deepEqual(changedIds, ["example-tour", "example-welcome"]);
+  const changedCount = changedIds.length;
+  assert.equal(changedCount, 2);
+  const filterCount = /class="mbk-nav-filter-count">(\d+)</u.exec(index);
+  assert.ok(filterCount);
+  assert.equal(Number(filterCount[1]), changedCount);
+  assert.match(navigationRow(index, "example-welcome"), /data-changed="true"/u);
+  assert.doesNotMatch(
+    navigationRow(index, "example-details"),
+    /data-changed=/u,
+  );
+  assert.deepEqual(publishedScreen(catalogue, "example-welcome").changes, {
+    included: true,
+    kind: "changed",
+    status: "ready",
+  });
+  assert.deepEqual(publishedScreen(catalogue, "example-details").changes, {
+    included: false,
+    kind: "unmodified",
+    status: "ready",
+  });
   const welcome = await read(output, "view/screens/welcome.html");
   assert.match(welcome, /Welcome · Mokly/);
   assert.match(welcome, /data-diff-screen="screens\/welcome.html"/);
+  assert.match(
+    welcome,
+    /class="mbk-entry-status" data-status="Changed" data-workspace-status="">Changed<\/span>/u,
+  );
   for (const mode of ["current", "side", "overlay", "difference"])
     assert.match(welcome, new RegExp(`data-diff-mode="${mode}"`));
   // A static export carries the one Appearance control, and requests the asset
@@ -77,6 +113,10 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   assert.match(
     await read(output, "static/screens/welcome.desktop.dark.html"),
     /data-color-scheme="dark"/,
+  );
+  assert.match(
+    await read(output, "view/screens/details.html"),
+    /class="mbk-entry-status" data-status="Unmodified" data-workspace-status="">Unmodified<\/span>/u,
   );
   assert.match(await read(output, "__mokly/shell.css"), /--mbk-/);
   assert.match(
@@ -164,4 +204,38 @@ function relativeImports(source: string): string[] {
     if (match[1] !== undefined) targets.push(match[1]);
   }
   return targets;
+}
+
+interface PublishedEntry {
+  readonly changes: {
+    readonly included: boolean;
+    readonly kind: string;
+    readonly status: string;
+  };
+  readonly id: string;
+}
+
+interface PublishedCatalogue {
+  readonly components: readonly PublishedEntry[];
+  readonly pages: readonly PublishedEntry[];
+  readonly screens: readonly PublishedEntry[];
+  readonly useCases: readonly PublishedEntry[];
+}
+
+function navigationRow(source: string, id: string): string {
+  const rows = source.match(/<a\b[^>]*data-nav-row=""[^>]*>/gu) ?? [];
+  const row = rows.find((candidate) =>
+    candidate.includes(`data-entry-id="${id}"`),
+  );
+  assert.ok(row, `missing navigation row for ${id}`);
+  return row;
+}
+
+function publishedScreen(
+  catalogue: PublishedCatalogue,
+  id: string,
+): PublishedEntry {
+  const screen = catalogue.screens.find((entry) => entry.id === id);
+  assert.ok(screen, `missing published screen ${id}`);
+  return screen;
 }

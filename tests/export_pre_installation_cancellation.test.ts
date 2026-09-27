@@ -94,10 +94,10 @@ test("pre-installation cancellation preserves every wrapped Git failure", async 
       }),
     );
     assert.ok(classified instanceof MoklyError, label);
+    assert.equal(classified, original, label);
     assert.equal(classified.code, original.code, label);
     assert.equal(classified.message, original.message, label);
     assert.equal(classified.presentation, original.presentation, label);
-    assert.equal(classified.cause, original, label);
     assert.equal(isCancellation(classified), true, label);
   }
 });
@@ -114,9 +114,9 @@ test("pre-installation cancellation preserves presentation and existing cancella
     }),
   );
   assert.ok(classified instanceof MoklyError);
+  assert.equal(classified, transport);
   assert.equal(classified.message, transport.message);
   assert.equal(classified.presentation, transport.presentation);
-  assert.equal(classified.cause, transport);
   assert.equal(isCancellation(classified), true);
 
   const marked = new MoklyError("export-invalid", "Already cancelled", {
@@ -145,6 +145,44 @@ test("pre-installation cancellation preserves presentation and existing cancella
   );
   assert.equal(wrapped.cause, unexpected);
   assert.equal(isCancellation(wrapped), true);
+});
+
+test("pre-installation cancellation waits for a queued abort", async () => {
+  const controller = new AbortController();
+  const original = new MoklyError("build-invalid", "compile failed");
+  const pending = withPreInstallationCancellation(
+    controller.signal,
+    async () => {
+      setImmediate(() => controller.abort());
+      throw original;
+    },
+  );
+
+  assert.equal(await rejection(pending), original);
+  assert.equal(isCancellation(original), true);
+});
+
+test("a live signal preserves a genuine failure after one event-loop turn", async () => {
+  const controller = new AbortController();
+  const original = new MoklyError("build-invalid", "real compile failure");
+  let immediateTurns = 0;
+  setImmediate(() => {
+    immediateTurns += 1;
+    setImmediate(() => {
+      immediateTurns += 1;
+    });
+  });
+
+  assert.equal(
+    await rejection(
+      withPreInstallationCancellation(controller.signal, async () => {
+        throw original;
+      }),
+    ),
+    original,
+  );
+  assert.equal(immediateTurns, 2);
+  assert.equal(isCancellation(original), false);
 });
 
 test("generated-output write failures remain unmarked after cancellation", async (context) => {

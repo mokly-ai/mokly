@@ -46,13 +46,16 @@ smoke exercises a leading-dash token and both public upload fixtures without
 importing package internals.
 
 The CLI maps an explicitly marked cancellation or platform `AbortError` to the
-publication-cancelled line. During the export recovery contract's
-pre-installation window, it also marks a failure after the command signal fires
-while retaining that failure's code and message. Every recovery or cleanup
-failure passes through unchanged with its recovery paths; export transaction
-setup and generated-output writes keep their own errors. Outside that one
-window, cancellation is never inferred from causes, aggregate members, messages
-or the command signal after another failure has already occurred.
+publication-cancelled line while retaining the original typed failure for
+diagnostic stacks. During the export recovery contract's pre-installation
+window, it lets already-delivered signals run for one event-loop turn, then
+marks the original `MoklyError` without replacing its class, fields, message or
+stack. Every recovery or cleanup failure passes through unchanged with its
+recovery paths; export transaction setup and generated-output writes keep their
+own errors. `runPublish` keeps a referenced handle from signal listener
+installation through completion, so helper shutdown still reaches the Mokly
+reporter and status 1. Outside that one window, cancellation is never inferred
+from causes, aggregate members, messages or a later command signal.
 
 ```bash
 npm run build

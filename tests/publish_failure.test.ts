@@ -12,17 +12,17 @@ test("publish failure maps only real cancellations", () => {
   const abort = new Error("aborted", { cause: new Error("private cause") });
   abort.name = "AbortError";
 
-  for (const cancellation of [marked, abort]) {
-    const mapped = publishFailure(cancellation);
-    assert.ok(mapped instanceof PublishCancelledError);
-    assert.equal(mapped.code, "upload-failed");
-    assert.equal(mapped.cancelled, true);
-    assert.equal(mapped.cause, undefined);
-    assert.equal(
-      mapped.message,
-      "[mokly/upload-failed] Publication was cancelled. Run mokly publish again when you are ready.",
-    );
-  }
+  assert.equal(publishFailure(marked), marked);
+
+  const mapped = publishFailure(abort);
+  assert.ok(mapped instanceof PublishCancelledError);
+  assert.equal(mapped.code, "upload-failed");
+  assert.equal(mapped.cancelled, true);
+  assert.equal(mapped.cause, undefined);
+  assert.equal(
+    mapped.message,
+    "[mokly/upload-failed] Publication was cancelled. Run mokly publish again when you are ready.",
+  );
 });
 
 test("publish failure preserves every non-cancellation Mokly error", () => {

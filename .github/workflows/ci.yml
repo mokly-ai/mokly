@@ -136,13 +136,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Remove remote-tracking test inputs
-        run: |
-          git for-each-ref --format='delete %(refname)' refs/remotes/ |
-            git update-ref --stdin
-          fetch_head="$(git rev-parse --git-path FETCH_HEAD)"
-          rm -f "${fetch_head}"
-          test -z "$(git for-each-ref --format='%(refname)' refs/remotes/)"
-          test ! -e "${fetch_head}"
+        run: node scripts/verification/remove-remote-state.mjs
       - name: Run unit shard
         run: cargo xtask check --suite unit --shard ${{ matrix.shard }}/4
       - name: Retain unit inventory and timings
@@ -192,13 +186,7 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Remove remote-tracking test inputs
-        run: |
-          git for-each-ref --format='delete %(refname)' refs/remotes/ |
-            git update-ref --stdin
-          fetch_head="$(git rev-parse --git-path FETCH_HEAD)"
-          rm -f "${fetch_head}"
-          test -z "$(git for-each-ref --format='%(refname)' refs/remotes/)"
-          test ! -e "${fetch_head}"
+        run: node scripts/verification/remove-remote-state.mjs
       - name: Run browser shard
         run: cargo xtask check --suite browser --shard ${{ matrix.shard }}/4
       - name: Retain browser inventory and timings

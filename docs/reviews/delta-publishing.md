@@ -678,7 +678,8 @@ follow-ups 1 and 2 above.
    derived catalogues, send SIGINT to the whole process group during
    comparison preparation, staging, the input recheck and configuration
    loading, and a unit matrix covers each Git reader. A timing race with
-   esbuild remains; see [fourth review](#fourth-review) finding 1.
+   esbuild remained; see [fourth review](#fourth-review) finding 1, since
+   fixed.
 2. **Addressed (option B).** `tests/preview.test.ts` builds an isolated copy
    of the example with a fixture-owned baseline and one deterministic edit,
    and the browser suite's server compares with `--base HEAD`. CI no longer
@@ -686,9 +687,9 @@ follow-ups 1 and 2 above.
    remote-tracking reference and `FETCH_HEAD` before the unit and browser
    suites, and [`ci-verification.md`](../protocol/ci-verification.md) states
    the rule; the fourth review found the removal step fragile, the preview
-   edit unasserted and two stale sentences (findings 2–4). Before delivery, the full unit suite (2,532/2,532)
-   and browser suite (781/781) passed in a clone with no remote-tracking
-   references.
+   edit unasserted and two stale sentences (findings 2–4, since fixed).
+   Before delivery, the full unit suite (2,532/2,532) and browser suite
+   (781/781) passed in a clone with no remote-tracking references.
 3. **Addressed (options B and C, with A's cheap cases).** The static test is
    documented as a best-effort lint behind the remote-free runs. It takes the
    target only from `cwd` or `-C` (a call with neither targets the real
@@ -696,7 +697,8 @@ follow-ups 1 and 2 above.
    argument, `refs/remotes`, `-r`, `--all`, `--remotes`, `FETCH_HEAD`,
    upstream spellings in any letter case and the `fetch` and `ls-remote`
    subcommands; `ci-verification.md` describes what it recognises and cannot
-   see, though not exactly (see [fourth review](#fourth-review) finding 5).
+   see, though not exactly (see [fourth review](#fourth-review) finding 5,
+   since fixed).
 
 Follow-up verification: `cargo xtask check` passed with Node 24.21.0 (unit
 2,532/2,532 across 470 files, browser 781/781 across 122 files, packed-consumer
@@ -711,8 +713,10 @@ fix commit `78f259d` was pushed, against `origin/main` (`3699c56`). Two
 independent read-only reviewers covered the pre-installation window and the
 tree-only tests, CI step and lint, and rechecked the plan, this document and
 every changed link. They confirmed the third-review fixes work in the common
-case. Seven new findings follow: one Medium and six Low. None was changed;
-each awaits the user's decision. Second-review findings 3–11 stay open.
+case. Seven new findings follow: one Medium and six Low. None was changed
+during the review. The user then asked to fix all seven with their
+recommended options, which are fixed (see **Fourth Review Follow-up**).
+Second-review findings 3–11 stay open.
 
 1. **P2 / Medium — Ctrl+C during an esbuild step can still print a build
    error.** `withPreInstallationCancellation` in
@@ -826,3 +830,58 @@ the release workflow's complete-verification fallback still runs with remote
 references present, an unused `includeChanges` path in
 `tests/browser/preview_fixture.ts` would read `origin/main`, and the preview
 test now rebuilds a baseline on every run (about 6.6 minutes).
+
+### Fourth Review Follow-up
+
+On 2026-09-27 the user asked to fix all seven findings with their recommended
+options. [Delta Publishing](../../plans/delta-publishing.md) Milestones 23–27
+record the decisions and work.
+
+1. **Addressed (options A and D).** When a window step fails while the
+   command's signal is not yet set, `withPreInstallationCancellation` lets the
+   event loop complete one full turn with an I/O poll (two `setImmediate`
+   hops, no wall-clock delay) and checks again, so a terminal Ctrl+C that
+   stops esbuild is classified correctly. The
+   [recovery contract](../protocol/mokly-export-recovery.md#pre-installation-window)
+   defines this and lists every covered step. A spawned compile test for
+   committed and derived catalogues signals the process group from inside
+   esbuild work and waits for esbuild to exit, and a 50-press process-group
+   sweep during compile printed the cancellation line every time.
+2. **Addressed (option B).** `scripts/verification/remove-remote-state.mjs`
+   removes every configured remote with its references and upstream
+   settings, deletes leftover `refs/remotes/*` without following symbolic
+   references, deletes `FETCH_HEAD` and verifies nothing remains. CI's unit
+   and browser jobs and the documented local procedure use it; a fixture
+   clone with a symbolic `origin/HEAD`, packed references, a pull reference,
+   an upstream setting and `FETCH_HEAD` proves it, and `git fetch origin`
+   then fails.
+3. **Addressed (option A).** The preview test asserts that its edit changes
+   exactly the Welcome and tour destinations, that the navigation count is 2,
+   that Welcome is marked changed and that Details is unmodified; the test
+   fails without the edit.
+4. **Addressed (option B).** The stale merge-base lockfile sentences are gone,
+   and [`npm-release.md`](../protocol/npm-release.md) links to
+   [`ci-verification.md`](../protocol/ci-verification.md) for CI caching and
+   Git history instead of repeating them.
+5. **Addressed (options A and B).** The lint accepts shorthand `{ cwd }`,
+   treats non-inline options as an unknown target, finds the subcommand after
+   skipping global option values, reads `-C` and `--git-dir` only before it,
+   and counts `-r`, `-a`, `--all` and `--remotes` only for reference-listing
+   subcommands; `ci-verification.md` documents its behaviour and blind spots
+   without claiming completeness.
+6. **Addressed (option A).** `mokly export` and `mokly publish` hold a
+   referenced handle (`src/cli/keep_alive.ts`) from installing their signal
+   listeners until they finish, so a Ctrl+C during esbuild startup settles
+   through Mokly's output with status 1; a spawned test shows the same work
+   exits with status 13 without the handle.
+7. **Addressed (option A).** Cancellation marks live in a private registry
+   in `src/errors.ts` that `isCancellation` and `MoklyError.cancelled` read;
+   the window marks the original error in place, so its class, fields and
+   stack survive, and publish substitutes its fixed cancellation copy only
+   when rendering. `MOKLY_DIAGNOSTIC=1` now shows the failing operation's
+   stack.
+
+Follow-up verification: `cargo xtask check` passed with Node 24.21.0 (unit
+2,546/2,546 across 473 files, browser 781/781 across 122 files,
+packed-consumer smoke and every static check), and the unit and browser suites
+passed again in a copy prepared with the shared remote-free script.

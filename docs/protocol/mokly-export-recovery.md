@@ -116,25 +116,49 @@ transactions apply it:
 
 ### Pre-installation Window
 
-The pre-installation window ends immediately before installation begins. For
-`mokly export`, it starts after configuration is loaded and the command's
-cancellation signal is installed; it covers comparison preparation and the
-base-manifest read, compile, public-file capture, assembly and the adapter
-transform, staging with its finalized export capture, and the final input
-recheck. For `mokly publish`, it starts when that command installs its
-cancellation signal, so it additionally covers publish configuration loading
-and repository identity before the same export steps. Two steps inside that
-span are excluded because their failures carry their own recovery guidance:
-opening the export transaction (its reservation message) and writing the
-generated build output (the build output transaction owns its rollback).
+The pre-installation window ends immediately before installation begins. Its
+boundary treats the command's signal as fired only after the event loop has
+processed all signals the operating system already delivered. If a covered step
+fails while the signal is not set, the boundary lets the event loop complete
+one full turn that includes an I/O poll, then checks once more. This uses no
+wall-clock delay; two consecutive `setImmediate` continuations provide the
+turn. The extra check closes the terminal race where Ctrl+C stops esbuild and
+its failure reaches Mokly before Node invokes the SIGINT listener.
 
-If a step in this window fails after the command's cancellation signal fired,
-the failure is a cancellation while keeping its existing error code and
-message. `mokly export` therefore prints that code and message unchanged;
-`mokly publish` prints the publication-cancelled output. This window is the
-only place cancellation may be inferred from the command signal. It is safe
-to do so because installation has not begun: no backup or reservation holds
-the previous export, and the previous output has not moved.
+For `mokly export`, the signal listener is installed after configuration is
+loaded. The window covers these operations:
+
+1. Comparison preparation and the base-manifest read.
+2. Catalogue compilation.
+3. Public-file capture and changed-path evidence collection.
+4. Comparison generation, Changes calculation and removed-page preview
+   capture.
+5. Site assembly, adapter transformation and publication-metadata validation.
+6. Staging, including the finalized export capture callback.
+7. The final input recheck, prepared-baseline recheck and output-location
+   recheck.
+
+`mokly publish` installs its listener earlier, so the same window additionally
+covers publish configuration loading and repository identity. Two operations
+remain outside it because their failures carry separate recovery guarantees:
+opening the export transaction keeps its reservation error, and writing the
+generated build output keeps the build transaction's rollback error.
+
+If the signal is set after the event-loop check, the failure is a cancellation.
+Marking a `MoklyError` as cancellation keeps the original error object, class,
+fields, message and stack; `MOKLY_DIAGNOSTIC=1` therefore shows the stack from
+the failing operation. A non-`MoklyError` keeps the existing marked
+`Could not export catalogue` wrapper. `mokly export` prints the original code
+and message, while `mokly publish` prints the publication-cancelled output.
+This window is the only place cancellation may be inferred from the command
+signal. It is safe because installation has not begun: no backup or reservation
+holds the previous export, and the previous output has not moved.
+
+From the moment each command installs its signal listeners until its work and
+cleanup finish, `mokly export` and `mokly publish` hold a referenced Node
+handle. Ctrl+C during unreferenced helper startup, including esbuild startup,
+therefore still settles through Mokly's reporter and exits with status 1 rather
+than letting Node end early with unsettled work.
 
 Stage and reservation cleanup still run. If cleanup fails after a
 pre-installation cancellation, the combined recovery error is not a

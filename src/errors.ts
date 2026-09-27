@@ -29,11 +29,17 @@ export interface MoklyErrorOptions extends ErrorOptions {
   readonly presentation?: MoklyErrorPresentation;
 }
 
+const cancellationMarks = new WeakSet<MoklyError>();
+
 /** Typed user-facing failure from a Mokly boundary. */
 export class MoklyError extends Error {
-  readonly cancelled: boolean;
   readonly code: MoklyErrorCode;
   readonly presentation: MoklyErrorPresentation | undefined;
+
+  /** Whether this exact failure was explicitly classified as cancellation. */
+  get cancelled(): boolean {
+    return cancellationMarks.has(this);
+  }
 
   constructor(
     code: MoklyErrorCode,
@@ -42,10 +48,18 @@ export class MoklyError extends Error {
   ) {
     super(`[mokly/${code}] ${message}`, options);
     this.name = "MoklyError";
-    this.cancelled = options?.cancelled ?? false;
     this.code = code;
     this.presentation = options?.presentation;
+    if (options?.cancelled) cancellationMarks.add(this);
   }
+}
+
+/** Mark one existing Mokly failure as cancellation without replacing it. */
+export function markCancellation<Failure extends MoklyError>(
+  error: Failure,
+): Failure {
+  cancellationMarks.add(error);
+  return error;
 }
 
 /** Identify only explicitly marked failures and platform AbortError values. */

@@ -362,7 +362,8 @@ test("an identity failure after cancellation is classified before export", async
         "[mokly/git-failed] Publish needs a committed Git checkout and a valid remote; use --repository <host>/<owner>/<name> to set repository identity.",
       );
       assert.equal(isCancellation(error), true);
-      assert.ok(error.cause instanceof MoklyError);
+      assert.equal(error.cause, undefined);
+      assert.match(error.stack ?? "", /readUploadIdentity/u);
       return true;
     },
   );

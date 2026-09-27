@@ -39,12 +39,16 @@ progress labels and re-plan resets cannot retain stale characters.
 Publish cancellation and transport exhaustion retain the `upload-failed` code
 but carry distinct typed presentation variants. Plain mode prints each complete
 actionable message; rich mode splits it into a non-repeating headline and hint.
-`publish_failure.ts` maps only an explicit cancellation to the cancellation
-presentation. The export boundary explicitly marks failures in its
-pre-installation window when the command signal has fired, while preserving
-their code and message. Transaction setup, generated-output writes and every
-recovery or cleanup error remain unmarked and pass through with their guidance
-even when the signal is also aborted.
+`publish_failure.ts` preserves a typed cancellation object, while `main.ts`
+selects the fixed publish cancellation copy only for terminal rendering and
+keeps the original for diagnostics. The export boundary explicitly marks
+failures in its pre-installation window after one event-loop turn gives
+already-delivered signals time to run. It marks the original typed error,
+preserving its class, fields, message and diagnostic stack. Transaction setup,
+generated-output writes and every recovery or cleanup error retain their
+guidance. Export and publish also hold a referenced handle for the lifetime of
+their signal listeners, so an interrupted unreferenced helper cannot make Node
+exit before the reporter sets status 1.
 
 Publish-only modules are loaded after command selection. Build, Check, Export,
 and supervised Serve children therefore do not initialize the upload exchange.

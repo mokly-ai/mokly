@@ -134,8 +134,8 @@ requests add Node 24 to every functional suite, while the shared repository job
 resolves the latest Node 24 patch for every event. An explicit capture step
 passes that exact patch to every selected Node 24 job. Chromium is installed
 only by browser jobs. Every npm-running job installs npm 11.7.0 and runs
-`npm ci`. CI caches only npm downloads and includes the merge-base lockfile in
-cache keys for jobs that build historical baselines.
+`npm ci`. The [CI verification contract](./ci-verification.md#dependency-cache-and-security)
+owns cache inputs and install guarantees.
 
 The stable `Required CI` branch-rule status fails unless every prerequisite
 result is exactly successful and the event-selected eight or sixteen
@@ -143,12 +143,12 @@ unit/browser reports prove the expected commit, runtimes, shards, and complete
 test inventories. Only a same-repository branch with the Release Please prefix
 or autorelease label can select the dual-runtime profile. Stable report artifact
 names support failed-job and whole-workflow reruns by replacing each shard's
-evidence; browser traces remain attempt-specific. Full Git history is available
-where baseline resolution requires `origin/main`. Action revisions are
+evidence; browser traces remain attempt-specific. Action revisions are
 immutable commit hashes with reviewed version comments, runtime versions are
 explicit, and fork pull requests receive no release secrets or write
-permissions. The [CI verification contract](./ci-verification.md) defines the
-complete graph, evidence, caching, and failure semantics.
+permissions. The [CI graph and checkout contract](./ci-verification.md#ci-graph-and-checkout-ownership)
+owns verification history and checkout behavior; the CI verification contract
+also defines the complete graph, evidence and failure semantics.
 
 ## Preview Deployments
 

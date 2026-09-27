@@ -875,28 +875,28 @@ CI proves the suites do not need remote-tracking references.
       without changing the implementation. Seven findings (one Medium, six
       Low) are recorded in its Fourth Review for the user's decision.
 
-## Milestone 23: Fourth review fix contract
+## Milestone 23: Fourth review fix contract — completed
 
 Documentation and contract only. Validate with Prettier and the guide tests;
 `cargo xtask check` is not required.
 
-- [ ] In [`mokly-export-recovery.md`](../docs/protocol/mokly-export-recovery.md),
+- [x] In [`mokly-export-recovery.md`](../docs/protocol/mokly-export-recovery.md),
       define when the signal counts as fired, list every step the window
       covers exactly as implemented, state the keep-alive guarantee and state
       that marking keeps the original error and its diagnostic stack
       (fourth #1, #6, #7).
-- [ ] In [`ci-verification.md`](../docs/protocol/ci-verification.md), name the
+- [x] In [`ci-verification.md`](../docs/protocol/ci-verification.md), name the
       shared removal script and the local remote-free procedure that uses it,
       remove the stale merge-base lockfile sentences, and describe the lint's
       behaviour and blind spots without claiming completeness; make
       [`npm-release.md`](../docs/protocol/npm-release.md) link to it for CI
       caching and Git history (fourth #2, #4, #5).
-- [ ] Update the READMEs these rules touch; run Prettier and the guide tests;
+- [x] Update the READMEs these rules touch; run Prettier and the guide tests;
       check every changed link.
 
 ## Milestone 24: Cancellation timing, keep-alive and in-place marks
 
-- [ ] Add failing tests first: spawned compile cases for committed and derived
+- [x] Add failing tests first: spawned compile cases for committed and derived
       catalogues whose preload sends SIGINT to the process group from inside
       esbuild work and waits for esbuild to exit before returning, asserting
       the exact cancellation line; a unit case where a window step fails in
@@ -905,42 +905,42 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       with status 13; marking that preserves identity, class, fields and
       stack, including a `BaselineCommandError`; and `MOKLY_DIAGNOSTIC=1`
       showing the original stack after a classified Ctrl+C.
-- [ ] Implement the event-loop turn in `withPreInstallationCancellation`, the
+- [x] Implement the event-loop turn in `withPreInstallationCancellation`, the
       in-place registry in `src/errors.ts`, and one keep-alive helper used by
       `runExport` and `runPublish`.
-- [ ] Keep every earlier cancellation and recovery test passing unchanged.
+- [x] Keep every earlier cancellation and recovery test passing unchanged.
 
-## Milestone 25: Shared remote-free script
+## Milestone 25: Shared remote-free script — completed
 
-- [ ] Add failing tests first: run the script in a fixture clone with a
+- [x] Add failing tests first: run the script in a fixture clone with a
       symbolic `origin/HEAD`, packed references, `refs/remotes/pull/1/merge`,
       an upstream setting and `FETCH_HEAD`; assert nothing remote remains,
       `git fetch origin` fails, and `HEAD` and the working tree are unchanged;
       assert the script fails when it cannot remove something.
-- [ ] Add `scripts/verification/remove-remote-state.mjs`, use it in CI's unit
+- [x] Add `scripts/verification/remove-remote-state.mjs`, use it in CI's unit
       and browser jobs, and make the workflow tests require the script
       instead of inline shell.
 
-## Milestone 26: Preview assertions and lint precision
+## Milestone 26: Preview assertions and lint precision — completed
 
-- [ ] Assert the preview edit's changed count, Welcome as changed and an
+- [x] Assert the preview edit's changed count, Welcome as changed and an
       unedited screen as unmodified (fourth #3).
-- [ ] Add failing lint cases first: shorthand `{ cwd }` with a fixture, an
+- [x] Add failing lint cases first: shorthand `{ cwd }` with a fixture, an
       options variable and a spread (not flagged); `ls-tree -r HEAD` in the
       real checkout (not flagged); `branch -r` and `log --all` in the real
       checkout (flagged); `-c name=value fetch` in the real checkout
       (flagged); `--git-dir` pointing at a fixture (not flagged); and
       `log -C origin/main` (a `-C` after the subcommand is not a target).
       Then implement the decided rules (fourth #5).
-- [ ] Keep zero lint violations across the tree.
+- [x] Keep zero lint violations across the tree.
 
 ## Milestone 27: Fourth review fix verification and delivery
 
-- [ ] Run the focused publish, export, baseline, CLI, guides, package and CI
+- [x] Run the focused publish, export, baseline, CLI, guides, package and CI
       suites; make a local copy without remote state using the shared script
       and run the unit and browser suites there; then run
       `cargo xtask check`; resolve every failure.
-- [ ] Mark the fourth-review findings addressed in
+- [x] Mark the fourth-review findings addressed in
       `docs/reviews/delta-publishing.md` and summarize what changed.
 - [ ] After checks pass, `git add -A`, commit with a Conventional Commits
       title of at most 50 characters, and push the branch.
