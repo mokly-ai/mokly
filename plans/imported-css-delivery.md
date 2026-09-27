@@ -8,7 +8,8 @@ authorized review findings; finding 3 was resolved in the separate `922c1ec`
 merge. M12-4, M12-6, M12-7 and M14-1 remain open by user direction in the
 [final review record](../docs/reviews/imported-css-delivery.md#milestone-12-review)
 and [Milestone 14 review record](../docs/reviews/imported-css-delivery-milestone-14.md).
-Milestone 17's independent review remains for the parent session.
+The Milestone 17 review found 15 new issues that await the user's decision in
+the [Milestone 17 review record](../docs/reviews/imported-css-delivery-milestone-17.md).
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -765,10 +766,10 @@ findings left for a later user decision.
 - [x] Complete historical Milestone 9 bookkeeping and point Milestones 11/12 to the review record (M12-16).
 - [x] Run Build, focused suites, example Build/Check, lint, typecheck, applicable preview verification and `cargo xtask check`; commit and push this milestone.
 
-## Milestone 17: Commit, push, and review
+## Milestone 17: Commit, push, and review (complete)
 
 - [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
-- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Fifteen new findings (3 Medium, 12 Low) are recorded in the [Milestone 17 review record](../docs/reviews/imported-css-delivery-milestone-17.md) for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
