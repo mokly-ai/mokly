@@ -76,21 +76,19 @@ on-demand document.
 
 Implementation changes belong to the component in Changes. Consuming pages are
 listed as affected; their own prop, slot, structure, layout, or explicit resource
-changes still count directly. Exact `ownedDependencies` handle files outside
-the component's body; head style rules are attributed at comparison time by
-matching each changed rule against the rendered markup and its component
-ranges, under the
-[inline style ownership contract](../../docs/protocol/mokly-inline-styles.md).
-Global or mixed material remains conservatively attributed. Dependency
-declarations and adopting an unrelated component alone do not invent a visible
-screen change. Internal marker renames alone do not create consumer changes or
-alter the retained snapshots.
+changes still count directly. Exact `ownedDependencies` and renderer style or
+resource ownership records handle material outside the component's body. Global
+or mixed resources remain conservatively attributed. Dependency declarations
+and adopting an unrelated component alone do not invent a visible screen change.
+Historical Mokabook comparisons preserve the original document coordinates when
+applying recorded style ownership; internal marker renames alone do not create
+consumer changes or alter the retained snapshots.
 
 Comparison projection can expose caller-owned slot material that HTML parsing
 discarded from contexts such as `template` or `select`. Removing component
 implementation text can likewise expose a sibling hidden by its unclosed HTML. The review shortcut
 therefore proves both actual and ownership-projected resource closures for
-views with instances or entry-owned slots, using the same root-specific ownership and
+views with instances, styles, or entry-owned slots, using the same root-specific ownership and
 resource exclusion policy as the complete comparison.
 
 ## Development

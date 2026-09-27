@@ -7,7 +7,8 @@ share this attribution policy. The [component explorer plan](../../plans/compone
 records delivery. Unregistered catalogue and legacy behavior remains intact.
 Inferred head-style ownership replacing renderer-returned records is the
 approved target of the
-[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md); until its Milestone 4 lands, the
+[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md);
+until its Milestone 4 lands, the
 classifier still applies stored `styles` and `resources` records.
 
 ## Changes Membership

@@ -7,9 +7,11 @@ Approved target tracked by the
 Until its Milestone 4 lands, the builder still accepts renderer-returned
 ownership records and applies them as the
 [component change attribution contract](./mokly-component-changes.md)
-described before that plan. This document owns the analysis, attribution,
-comparison material, membership and evidence rules for style material that a
-renderer places outside component markup. The
+described before that plan; the reference-bearing rule analysis and
+reference-following arrive with Milestone 5, the `inlineStyles` evidence with
+Milestone 6, and the shell presentation with Milestone 7. This document owns
+the analysis, attribution, comparison material, membership and evidence rules
+for style material that a renderer places outside component markup. The
 [CSS change attribution contract](./mokly-css-attribution.md) owns the
 parser, rule diff, keep list and matcher that this analysis reuses; the
 [changes contract](./mokly-changes.md) owns the definition of a view's
@@ -44,15 +46,23 @@ reference, so that projected resource discovery applies the same exclusion on
 both paths.
 
 The unowned style elements of a document are its `<style>` elements whose
-start offset lies inside no recorded range. Style elements inside an instance
-range already belong to that instance through markup ownership; style elements
-inside a slot range belong to the slot's owner. Only unowned style elements are
-analysed. The renderer reports nothing; `RenderResult`, `styles` and
-`resources` records are retired.
+start offset lies inside no recorded range and inside no paired manual-ignore
+region. They are located on each side's original document with the ranges
+validated in that side's own marker dialect; their spans, from start tag
+through end tag, and their texts are taken from that document and used for
+removal and for the skip test below. Style elements inside an instance range
+already belong to that instance through markup ownership; style elements
+inside a slot range belong to the slot's owner; a style element inside a
+paired ignored region stays in place and is neutralised by paired
+normalization as today. Only unowned style elements are analysed. The
+renderer reports nothing; `RenderResult`, `styles` and `resources` records
+are retired.
 
-When both sides' unowned style text is byte-identical and no unowned rule
-carries a reference, the analysis is skipped and both materials keep the
-documents unchanged.
+When the ordered sequence of unowned span texts is identical on both sides
+and no unowned rule carries a reference, the analysis is skipped and both
+materials keep the documents unchanged. Two sequences that split the same
+rules across different elements are not identical; they run the analysis,
+which finds no diffed rule and renders equal fragments.
 
 ## Analysis
 
@@ -60,8 +70,9 @@ documents unchanged.
    documents, normalizing the base to the current marker dialect first, then
    validate both sides' ranges against those texts and parse each side with
    source locations. Elements inside paired manual-ignore regions therefore
-   never grant a match, exactly as in stylesheet matching. Original
-   coordinates are not required because no stored offsets exist.
+   never grant a match, exactly as in stylesheet matching. Matching and
+   owner resolution use these normalized documents; span removal uses the
+   original documents, so the two coordinate spaces never mix.
 2. **Rules.** Parse each side's unowned style texts through the
    classification's shared cached `CssRuleParser` and diff the two sides as
    one multiset with `diffCssRules`, so element order and formatting carry no
@@ -100,8 +111,8 @@ Every analyzed rule receives exactly one attribution, decided in this order:
 
 - `unresolved` when the closed keep list of the stylesheet analysis applies: a
   selector the matcher cannot parse, a shadow-scoped or global selector, an
-  unresolvable nesting parent, a changed custom property, a selector-less
-  at-rule, or a parse failure. A changed reference alone does not keep a rule;
+  unresolvable nesting parent, a changed custom property, or a selector-less
+  at-rule. A changed reference alone does not keep a rule;
   reference-bearing rules are attributed by matching so that the reference can
   follow the rule's owner.
 - `excluded` when the rule's selectors match no element on either side.
@@ -201,11 +212,11 @@ interface ViewReview {
 diffed rule; `selectors` lists those rules' selectors in their original
 serialized form, sorted lexically by UTF-16 code units and duplicate-free.
 `unresolved` takes precedence when both apply and may have an empty list;
-`matched` requires at least one selector. `excluded` means the analysis ran,
-every analyzed diffed rule was excluded, the view's actual materials are
-equal, and the view retains no reason of its own. When excluded rules exist
-but the view is otherwise `changed`, retains any reason, or has owned rules,
-the field is omitted, because the view's other evidence explains it.
+`matched` requires at least one selector. `excluded` means the diff produced
+at least one rule, every diffed rule was excluded, and the view's resulting
+state is `unchanged`. When excluded rules exist but the view's state is
+`changed` or `ignored-only`, the view retains any reason, or owned rules
+exist, the field is omitted, because the view's other evidence explains it.
 Reference-bearing rules that are not diffed contribute no evidence. Views
 settled by the unchanged decision, one-sided views and views without unowned
 inline style differences carry no field.

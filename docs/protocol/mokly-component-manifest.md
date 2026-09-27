@@ -18,7 +18,8 @@ All existing v5 fields retain their contracts. Updated readers accept
 instances with or without `source`; the manifest version remains 5.
 
 Retiring the `styles` and `resources` view fields is the approved target of
-the [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md); until its Milestone 4 lands,
+the [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md);
+until its Milestone 4 lands,
 current records still carry both arrays and the builder still validates them.
 
 ## Entries And Variants

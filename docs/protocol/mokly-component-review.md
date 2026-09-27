@@ -9,7 +9,8 @@ existing [schema-v2 contract](./mokly-changes.md) and
 [named result interfaces](../../packages/viewer/src/review/types.ts). Manifest/usage types come
 from the [component manifest](./mokly-component-manifest.md). The optional
 `inlineStyles` view evidence below is the approved target of the
-[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md) and lands with its evidence
+[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md)
+and lands with its evidence
 milestone.
 
 ## Normative Result

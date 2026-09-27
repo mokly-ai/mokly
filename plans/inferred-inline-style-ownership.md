@@ -75,9 +75,9 @@ record: `{ startOffset, endOffset, componentIds }` for style text and
    shadow-scoped, global, custom-property, selector-less, parse failure) is
    kept here too and stays with the entry as `unresolved`.
 5. **Materiality follows attribution, not style bytes.** The comparison
-   material for a view replaces the text of its unowned `<style>` elements
-   with a deterministic canonical rendering of the rules that stay with the
-   material being compared. Reordered, reformatted or reflowed inline CSS with
+   material for a view removes its unowned `<style>` elements and appends one
+   deterministic canonical rendering of the rules that stay with the material
+   being compared. Reordered, reformatted or reflowed inline CSS with
    the same rules is therefore not a change, while an entry-retained rule
    edit still is. Snapshots keep the real bytes.
 6. **Manifest schema version stays 5.** `ComponentViewRecord` loses `styles`
@@ -131,7 +131,8 @@ cached `CssRuleParser`, and the two sides' rule lists are diffed as one
 multiset with the existing `diffCssRules`. The analyzed rules are the diff's
 added, removed and changed rules and, from Milestone 5, every rule on either
 side that carries a `url()` or `@import` reference. A parse failure on either
-side makes every rule of that side's unowned styles `unresolved`.
+side yields no rules and no attribution; both materials keep the unowned style
+text verbatim.
 
 ### Attribution
 
@@ -217,11 +218,11 @@ interface ViewReview {
 `matched` and `unresolved` mean the entry retained at least one analyzed
 diffed rule and list that rule's selectors, sorted and duplicate-free, with
 `unresolved` taking precedence and permitted to be empty; `matched` requires
-at least one selector. `excluded` means the analysis ran, every analyzed
-diffed rule was excluded, the actual materials are equal and the view retains
-no reason of its own. When excluded rules exist but the view is otherwise
-changed, retains a reason or has owned rules, the field is omitted, because
-the view's other evidence explains it. Views settled by the
+at least one selector. `excluded` means the diff produced at least one rule,
+every diffed rule was excluded and the view's resulting state is `unchanged`.
+When excluded rules exist but the view is `changed` or `ignored-only`,
+retains a reason or has owned rules, the field is omitted, because the view's
+other evidence explains it. Views settled by the
 unchanged decision, one-sided views and views without unowned inline style
 differences carry no field. The live classification snapshot, static exports
 and the selected live endpoint carry the field beside `reasons` and
@@ -289,24 +290,22 @@ review rather than `cargo xtask check`.
       to this screen." followed by the entry's terminal no-changes line; the
       shared-component note appears only when a changed component affects the
       entry; and name the new design screen from Milestone 2.
-- [x] In [`mokly-derived-baselines.md`](../docs/protocol/mokly-derived-baselines.md),
-      [`mokly-timings.md`](../docs/protocol/mokly-timings.md),
-      [`mokly-catalogue.md`](../docs/protocol/mokly-catalogue.md),
-      [`mokly-source-protection.md`](../docs/protocol/mokly-source-protection.md),
-      [`mokly-on-demand.md`](../docs/protocol/mokly-on-demand.md) and
-      [`mokly-component-controls.md`](../docs/protocol/mokly-component-controls.md),
-      remove the style-offset and style/resource-record mentions, update the
-      eligibility phrase, and add the `review.inline-style-analysis` span to
-      the timings contract beside `review.css-analysis`.
+- [x] In [`mokly-timings.md`](../docs/protocol/mokly-timings.md), add the
+      `review.inline-style-analysis` span beside `review.css-analysis`. The
+      passing-mention edits first made here to `mokly-derived-baselines.md`,
+      `mokly-catalogue.md`, `mokly-source-protection.md`,
+      `mokly-on-demand.md` and `mokly-component-controls.md` were reverted
+      after the second review's finding 5, because those documents describe
+      shipped behavior; they move to Milestone 4.
 - [x] In [`build-pipeline.md`](../docs/architecture/build-pipeline.md) and
       [`package-boundary.md`](../docs/architecture/package-boundary.md),
       describe the string-only renderer and remove the structured-result
       sentences. The guide edits first made here were reverted after review
       finding 8, because packaged guides describe shipped behavior; they move
       to Milestone 4.
-- [x] Update `src/components/README.md`, `src/review/README.md` and
-      `src/build/README.md` where they describe records, rebasing, or the
-      eligibility phrase.
+- [x] Check `src/components/README.md`, `src/review/README.md` and
+      `src/build/README.md`; the first two describe the shipped record
+      behavior and are updated in Milestone 4, the third mentions no records.
 - [x] Validate the changed Markdown with `npx prettier --check` and review
       the diff; documentation-only work does not require `cargo xtask check`.
 - [x] Discovered: the CSS attribution contract already exceeds the ~250-line
@@ -383,6 +382,40 @@ retained for traceability, with the applied resolution per item.
 Residual: reference detection in `src/review/css/material.ts` handles
 `url()` only; Milestone 5 now carries the `@import` detection TODO.
 
+### Milestone 1 second review findings
+
+Reported by the review of commit `0d85872` and applied by the following
+documentation commit.
+
+1. Medium. `excluded` emission required only equal actual materials and no
+   reason, but `ignored-only` and derived-mode byte-change views satisfy
+   that while failing the `unchanged` validation rule, and a reference-only
+   pass with no diffed rule satisfied it vacuously. Applied: `excluded`
+   requires at least one diffed rule, all excluded, and a resulting
+   `unchanged` state; Milestone 6 tests cover the other states.
+2. Medium. The contract never said whether unowned spans come from the
+   original or the normalized document, or how a style element inside a
+   paired ignored region behaves, and the skip test was undefined for split
+   elements. Applied: spans and texts come from the original document with
+   own-dialect ranges, matching uses the normalized documents, style elements
+   inside paired ignored regions are not unowned material, and the skip test
+   compares the ordered span sequence; Milestone 3 gains the ignore-span
+   helper and test.
+3. Medium. Milestone 3 deleted `rebaseStyleOwnership` while the build still
+   called it. Applied: the deletion moved to Milestone 4.
+4. Medium. Decision 5 and the Inputs sentence kept pre-review wording, and
+   the attribution bullet listed a parse failure as a rule outcome. Applied:
+   all three rewritten.
+5. Low. Five small contracts and two READMEs described the target without
+   the approved-target label. Applied: reverted to shipped behavior and
+   moved to Milestone 4.
+6. Low. One added line exceeded 120 columns. Applied: every long link line
+   re-wrapped.
+7. Low. The contract described Milestone 5 behavior while its Delivery
+   Status named only Milestone 4, and no task updated the `material` comment
+   in the viewer types. Applied: the Delivery Status names Milestones 4 to
+   7 and Milestone 4 carries the comment task.
+
 ## Milestone 2: Excluded Page Styles Design Screen
 
 Tags: mockup
@@ -429,8 +462,13 @@ target and depends on the existing parser, diff and matcher.
       into `src/review/css/inline_styles.ts` as a span finder that takes the
       document and its validated ranges and returns ordered
       `{ start, end, text }` spans, covering each element from start tag to
-      end tag, for style elements whose start offset lies inside no range;
-      delete `rebaseStyleOwnership`.
+      end tag, for style elements whose start offset lies inside no range and
+      no paired ignored region; leave `rebaseStyleOwnership` and its callers
+      in place until Milestone 4.
+- [ ] Expose the paired ignored-region spans of a document from
+      `src/review/ignore.ts` so the span finder can exclude style elements
+      inside them, with a unit test for a style element inside a paired
+      ignored region.
 - [ ] Add `src/review/css/element_owners.ts`: build an owner index from
       validated ranges, instance records, slot records and both sides'
       instance maps, and resolve `ownerAt(offset)` to `{ kind: "entry" }` or
@@ -499,7 +537,19 @@ naming the renderer contract and the removed manifest fields.
       `src/build/compile.ts`, `src/build/document_compiler.ts`,
       `src/components/manifest_build.ts` and
       `src/components/output_validation.ts`; delete
-      `validateComponentResources` and the compile-time rebase step.
+      `validateComponentResources`, `src/components/style_ownership.ts` and
+      every `rebaseStyleOwnership` call.
+- [ ] Update the `material` doc comment in
+      `packages/viewer/src/review/types.ts` to the changes contract's
+      definition.
+- [ ] Remove the style-offset and record mentions and the "instances,
+      styles, or entry-owned slots" eligibility phrase from
+      `docs/protocol/mokly-derived-baselines.md`, `mokly-catalogue.md`,
+      `mokly-source-protection.md`, `mokly-on-demand.md` and
+      `mokly-component-controls.md`, and describe inferred ownership in
+      `src/components/README.md` and `src/review/README.md`; these edits
+      were reverted from Milestone 1 because those documents describe
+      shipped behavior.
 - [ ] Update `packages/viewer/src/components/view_validation.ts` and
       `src/components/manifest_validation.ts`: current records use exact keys
       without the retired fields; historical validation accepts arrays under
@@ -628,9 +678,11 @@ publication and the selected endpoint.
 - [ ] Extend `tests/review_css_schema.test.ts`, the producer-scope and
       delivery tests, and `tests/changes_inline_styles.test.ts` with the
       field's presence, absence and validation failures, including
-      `excluded` on a `changed` view or beside a reason, and `matched` on an
-      `unchanged` view; prove identical evidence across live, complete,
-      published and selected results.
+      `excluded` on a `changed` or `ignored-only` view or beside a reason,
+      `excluded` omitted for a derived-mode resource byte change with no
+      reason, `excluded` omitted for a reference-only pass with no diffed
+      rule, and `matched` on an `unchanged` view; prove identical evidence
+      across live, complete, published and selected results.
 - [ ] Run the suite and `cargo xtask check`.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use

@@ -116,7 +116,7 @@ The same reachable-resource byte comparison gates the
 a view with identical normalized documents still takes the complete comparison
 when independently discovered historical and current resource closures differ,
 or when any resource present on both sides has different bytes, even without
-Git evidence. For views with instances or entry-owned slots, the same independent
+Git evidence. For views with instances, styles, or entry-owned slots, the same independent
 closure and byte proof also applies to ownership-projected documents; actual and
 projected memberships are compared separately.
 

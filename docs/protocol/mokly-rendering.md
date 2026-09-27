@@ -6,7 +6,8 @@ for the [authoring API](./mokly-authoring.md) and
 [source protection](./mokly-source-protection.md), including configured
 public exclusions. The string-only renderer result below is the approved
 target of the
-[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md); until its Milestone 4 lands, the
+[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md);
+until its Milestone 4 lands, the
 builder still accepts the retired structured result.
 
 ## Rendering Boundary

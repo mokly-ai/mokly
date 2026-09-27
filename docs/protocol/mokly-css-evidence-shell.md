@@ -8,7 +8,8 @@ the comparison stage present the evidence defined by
 [inline style ownership](./mokly-inline-styles.md); those contracts own the
 analysis, membership rules, evidence schemas, and validation. The inline
 style presentation is the approved target of the
-[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md) and lands with its shell milestone.
+[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md)
+and lands with its shell milestone.
 
 ## Shell Presentation
 
