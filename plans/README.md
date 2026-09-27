@@ -9,9 +9,10 @@
   approved [review findings](../docs/reviews/delta-publishing.md) were fixed
   in Milestones 7–13, second-review findings 1 and 2 in Milestones 14–17 and
   the third-review findings in Milestones 18–22 and the fourth-review findings
-  in Milestones 23–27; the remote-state cleanup script is being removed in
-  Milestones 28–29, and second-review findings 3–11 and fifth-review findings
-  2–5 stay open. The plan stays Active until its pull request merges.
+  in Milestones 23–27, and the remote-state cleanup script was removed in
+  Milestones 28–29. Second-review findings 3–11, fifth-review findings 2–5
+  and the sixth review's findings await the user's decision. The plan stays
+  Active until its pull request merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align

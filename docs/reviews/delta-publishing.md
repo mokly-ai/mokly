@@ -1030,3 +1030,61 @@ Findings 3–5 stay open.
 Follow-up verification: `cargo xtask check` passed with Node 24.21.0 (unit
 2,544/2,544 across 472 files, browser 781/781 across 122 files,
 packed-consumer smoke and every static check).
+
+## Sixth Review
+
+Reviewed on 2026-09-28 with
+[the implementation review prompt](../implementation-review-prompt.md), after
+commit `820849d` (`ci: remove the remote-state cleanup script`) was pushed,
+against `origin/main`. One independent read-only reviewer confirmed the
+removal is complete: no command in the repository removes remotes, nothing
+references the deleted files, both CI steps are gone, the unit and browser
+jobs never read `origin/main`, and every link resolves. Three findings follow,
+all Low. None was changed; each awaits the user's decision.
+
+1. **P3 / Low — Nothing stops a remote-cleanup step from coming back.** The
+   commit deleted the workflow test's check that the unit and browser jobs
+   contain no inline `for-each-ref`/`update-ref` cleanup, and the lint scans
+   only `tests/` and does not flag `git remote remove`. A reviewer re-added
+   `git remote remove origin`, and separately the old inline step, to both
+   jobs, and every workflow test still passed; this branch added cleanup in two
+   review rounds in a row. **Impact of no change:** a later fix could bring
+   back the command that deletes the remotes Conductor worktrees share, with
+   every test green. **Options:** **A)** restore the negative check and widen
+   it to every job in every workflow (no `git remote remove`/`rm`,
+   reference-deleting `update-ref`, `--unset-upstream` or
+   `remove-remote-state`); **B)** A, plus make the lint flag commands that
+   change the real checkout's remote state and scan `scripts/` too;
+   **C)** rely on the plan's recorded decision. **Recommended: B.**
+
+2. **P3 / Low — A guide test dropped a check instead of updating it.**
+   `tests/guides_ci.test.ts` used to require the sentence that identical trees
+   must produce identical test results; the commit reworded the sentence and
+   deleted the assertion, so no test checks it now. A reviewer replaced the
+   sentence with a promise of a remote-free runtime proof and all guide tests
+   still passed. **Impact of no change:** the rule, which release evidence
+   reuse depends on, and the removal can drift out of the shipped contract
+   unnoticed. **Options:** **A)** restore the assertion with the new wording;
+   **B)** A, plus assert the contract no longer names the script or promises a
+   runtime proof; **C)** leave it. **Recommended: B.**
+
+3. **P3 / Low — Two sentences misstate the remaining checks.**
+   [`ci-verification.md`](../protocol/ci-verification.md) calls the lint "the
+   only automated check for this rule", but `tests/deployment.test.ts` checks
+   the browser server's `--base HEAD` and `tests/ci_workflow.test.ts` checks
+   CI's lockfile input and the absence of `origin/main`. The plan's Script
+   Removal Decision says CI "keeps reading the baseline lockfile from the
+   checked-out tree", but CI reads no baseline lockfile; it keys npm's cache
+   from `package-lock.json`. **Impact of no change:** maintainers may miss
+   those tests, and the plan wording could lead someone to restore a step the
+   tests reject. **Options:** **A)** reword both (the lint is "the only general
+   check", naming the two tests; the plan names the npm cache key) and update
+   the guide test's pattern; **B)** fix only the plan; **C)** leave both.
+   **Recommended: A.**
+
+Sixth-review verification: the reviewer's focused reruns passed 24, 10, 6 and
+10 tests, and 245 relative links and anchors resolve. Residual risk: CI's unit
+and browser jobs now run with `origin/*` references present, so an accidental
+read of the real checkout's `origin/main` would pass silently; one unused
+browser helper (`startPreviewFixture(true)` in `tests/browser/preview_fixture.ts`)
+would do exactly that if a spec started using it.
