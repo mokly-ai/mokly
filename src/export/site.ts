@@ -3,11 +3,11 @@ import path from "node:path";
 import type { HistoricalManifest, ReviewArtifact } from "@mokly/viewer/data";
 import {
   canonicalJson,
-  catalogueViewHref,
   entryRoute,
   parseStaticDelivery,
   type StaticDelivery,
   parseReviewResult,
+  viewHref,
 } from "@mokly/viewer/data";
 import { createCatalogue, SHELL_CSS } from "@mokly/viewer/server";
 import type { ShellContext } from "@mokly/viewer/server";
@@ -60,7 +60,6 @@ export function assembleExport(
   delivery: StaticDelivery;
   shells: ReadonlyMap<string, StaticDelivery>;
 } {
-  const current = createCatalogue(compilation.manifest);
   const removedSnapshots = removedManifestEntries(
     compilation.manifest,
     baseline,
@@ -68,18 +67,6 @@ export function assembleExport(
   const removed = removedSnapshots.map(({ entry }) => entry);
   const catalogue = createCatalogue(compilation.manifest, removedSnapshots);
   const entries = [...compilation.manifest.entries, ...removed];
-  const idRoutes: Record<string, string> = Object.create(null) as Record<
-    string,
-    string
-  >;
-  for (const entry of [...compilation.manifest.entries, ...removed]) {
-    if (
-      removed.some((candidate) => candidate === entry) &&
-      current.byId.has(entry.id)
-    )
-      continue;
-    idRoutes[entry.id] = catalogueViewHref(entry.kind, entry.id);
-  }
   const comparisonFiles = new Map(comparison?.files);
   if (comparison) parseReviewResult(comparison.result);
   if (comparison)
@@ -95,11 +82,10 @@ export function assembleExport(
     comparisonFiles,
   );
   const delivery = parseStaticDelivery({
-    schemaVersion: 2,
+    schemaVersion: 3,
     deploymentId: STAGED_DEPLOYMENT_ID,
     canonicalPath: "/",
     comparisonUrl: comparison ? `/${prefix}/review.json` : null,
-    idRoutes,
   });
   if (!delivery)
     throw exportError("Invalid static catalogue delivery metadata.");
@@ -212,7 +198,7 @@ export function assembleExport(
   );
   for (const entry of entries) {
     const route = entryRoute(entry.kind, entry.id);
-    const canonicalPath = catalogueViewHref(entry.kind, entry.id);
+    const canonicalPath = viewHref(entry.kind, entry.id);
     const descriptor = { ...delivery, canonicalPath };
     const html = viewPage(entry, catalogue, {
       ...context,
@@ -220,12 +206,6 @@ export function assembleExport(
       delivery: descriptor,
     });
     addShell(`view/${route}`, html, descriptor);
-    if (
-      "id" in entry &&
-      typeof entry.id === "string" &&
-      idRoutes[entry.id] === canonicalPath
-    )
-      addShell(`id/${entry.id}/index.html`, html, descriptor);
   }
   for (const [name, bytes] of publicFiles) {
     const adapted = /\.html?$/i.test(name)

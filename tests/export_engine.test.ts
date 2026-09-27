@@ -32,11 +32,14 @@ test("export builds a complete consumer catalogue with an isolated comparison", 
     "index.html",
     "404.html",
     "view/screens/home.html",
-    "id/home/index.html",
     "view/user-flows/tour.html",
     "static/screens/home.mobile.html",
   ])
     assert.ok(files.has(name), name);
+  assert.equal(
+    [...files.keys()].some((name) => name.startsWith("id/")),
+    false,
+  );
   assert.ok(result.comparisonUrl);
   const review = JSON.parse(
     files.get(result.comparisonUrl.slice(1))!.toString(),

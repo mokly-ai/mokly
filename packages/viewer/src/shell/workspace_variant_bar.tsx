@@ -1,6 +1,6 @@
 /** Saved component variant selection and branch status. */
 
-import { catalogueViewHref } from "../navigation/delivery.js";
+import { viewHref } from "../navigation/routes.js";
 
 import type { WorkspaceData, WorkspaceVariant } from "./workspace_data.js";
 
@@ -20,7 +20,7 @@ export function WorkspaceVariantBar({
         <a
           aria-current={candidate === variant ? "page" : undefined}
           data-workspace-variant={candidate.value.id}
-          href={`${catalogueViewHref("component", candidate.value.id)}${
+          href={`${viewHref("component", candidate.value.id)}${
             candidate.snapshotId ? `?snapshot=${candidate.snapshotId}` : ""
           }`}
           key={candidate.value.id}

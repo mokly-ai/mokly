@@ -111,13 +111,15 @@ test("static search, tags, Changes, details, and flows retain the existing shell
     await expectFrameSource(frame, /\.dark\.html$/);
 });
 
-test("static aliases contain a real screen with JavaScript disabled", async ({
+test("removed aliases are absent and canonical screens work without JavaScript", async ({
   browser,
 }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   try {
     const page = await context.newPage();
-    await page.goto(`${site.url}/id/home/index.html`);
+    const removedAlias = await page.goto(`${site.url}/id/home/index.html`);
+    expect(removedAlias?.status()).toBe(404);
+    await page.goto(`${site.url}/view/screens/home.html`);
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
     await expect(
       page.frameLocator(".mbk-frame-mobile iframe").locator("h1"),

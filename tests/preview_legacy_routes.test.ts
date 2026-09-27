@@ -10,7 +10,7 @@ import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
 
 for (const includeChanges of [false, true]) {
-  test(`preview publishes ids that match build-directory names (changes: ${includeChanges})`, async (context) => {
+  test(`preview publishes routes for ids that match build-directory names (changes: ${includeChanges})`, async (context) => {
     const source = `${validEntrySource()}
 import { definePage } from "@mokly/mokly";
 for (const directory of ["target", "node_modules"])
@@ -22,9 +22,16 @@ for (const directory of ["target", "node_modules"])
       : {};
     await buildPreview(fixture.config, output, options);
     await fs.rm(path.join(output, EXPORT_MARKER));
-    await fs.rm(path.join(output, "id"), { recursive: true });
     await fs.rm(path.join(output, "__mokly/catalogue.json"));
     await buildPreview(fixture.config, output, options);
+    for (const id of ["target", "node-modules"])
+      assert.match(
+        await fs.readFile(
+          path.join(output, "view/pages", `${id}.html`),
+          "utf8",
+        ),
+        new RegExp(`data-entry-id="${id}"`),
+      );
     for (const id of ["target", "node-modules"])
       assert.match(
         await fs.readFile(

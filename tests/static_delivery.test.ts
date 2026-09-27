@@ -5,7 +5,6 @@ import test from "node:test";
 import { readCatalogue } from "../packages/viewer/dist/catalogue/reader.js";
 import {
   parseStaticDelivery,
-  resolveDeliveryHref,
   validFragmentQuery,
 } from "../packages/viewer/dist/navigation/delivery.js";
 import {
@@ -14,26 +13,15 @@ import {
 } from "../packages/viewer/dist/shell/delivery.js";
 
 const descriptor = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   deploymentId: "a".repeat(64),
   canonicalPath: "/view/screens/home.html",
-  idRoutes: { home: "/view/screens/home.html" },
   comparisonUrl: `/__mokly/diffs/__generations/${"a".repeat(64)}/review.json`,
 };
 
-test("static metadata never authorizes external URLs, traversal, or unknown ids", () => {
+test("delivery v3 accepts only same-origin canonical and comparison paths", () => {
   const valid = parseStaticDelivery(descriptor);
   assert.ok(valid);
-  assert.equal(
-    resolveDeliveryHref("/id/home?fragment=heading", valid),
-    "/view/screens/home.html?fragment=heading",
-  );
-  assert.equal(
-    resolveDeliveryHref(`/id/home?snapshot=${"f".repeat(64)}`, valid),
-    undefined,
-  );
-  assert.equal(resolveDeliveryHref("/id/missing", valid), undefined);
-  assert.equal(resolveDeliveryHref("/id/homeindex.html", valid), undefined);
   for (const path of [
     "//example.com/home.html",
     "/view/../secret.html",
@@ -41,7 +29,7 @@ test("static metadata never authorizes external URLs, traversal, or unknown ids"
     "/view/page.html?next=evil",
   ])
     assert.equal(
-      parseStaticDelivery({ ...descriptor, idRoutes: { home: path } }),
+      parseStaticDelivery({ ...descriptor, canonicalPath: path }),
       undefined,
     );
   assert.equal(
@@ -53,6 +41,31 @@ test("static metadata never authorizes external URLs, traversal, or unknown ids"
   );
   assert.equal(validFragmentQuery("?fragment=a&fragment=b"), "");
   assert.equal(validFragmentQuery("?fragment=%23bad"), "");
+});
+
+test("delivery canonical paths round trip through the shared entry route grammar", () => {
+  for (const canonicalPath of [
+    "/",
+    "/404.html",
+    "/view/components/action.html",
+    "/view/pages/guide.html",
+    "/view/screens/home.html",
+    "/view/user-flows/tour.html",
+  ])
+    assert.ok(parseStaticDelivery({ ...descriptor, canonicalPath }));
+
+  for (const canonicalPath of [
+    "/view/screens/nested/home.html",
+    "/view/unknown/home.html",
+    "/view/screens/con.html",
+    "/view/screens/home",
+    "/view/screens/Home.html",
+  ])
+    assert.equal(
+      parseStaticDelivery({ ...descriptor, canonicalPath }),
+      undefined,
+      canonicalPath,
+    );
 });
 
 test("a static document with missing or malformed metadata never falls back to the server", () => {
@@ -119,8 +132,9 @@ test("different deployment identities never validate the current route", async (
   ]);
 });
 
-test("old and malformed deployment descriptors fail closed", () => {
+test("delivery v2 and malformed deployment descriptors fail closed", () => {
   for (const value of [
+    { ...descriptor, schemaVersion: 2 },
     { ...descriptor, schemaVersion: 1 },
     { ...descriptor, deploymentId: undefined },
     { ...descriptor, deploymentId: "newest" },
@@ -129,14 +143,10 @@ test("old and malformed deployment descriptors fail closed", () => {
     assert.equal(parseStaticDelivery(value), undefined);
 });
 
-test("current-only publication explicitly disables comparisons without losing id routes", () => {
+test("current-only publication explicitly disables comparisons", () => {
   const delivery = parseStaticDelivery({ ...descriptor, comparisonUrl: null });
   assert.ok(delivery);
   assert.equal(delivery.comparisonUrl, null);
-  assert.equal(
-    resolveDeliveryHref("/id/home?fragment=heading", delivery),
-    "/view/screens/home.html?fragment=heading",
-  );
   assert.equal(
     parseStaticDelivery({ ...descriptor, comparisonUrl: undefined }),
     undefined,

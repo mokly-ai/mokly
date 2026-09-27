@@ -1,7 +1,4 @@
-export {
-  catalogueViewHref,
-  parseStaticDelivery,
-} from "./navigation/delivery.js";
+export { parseStaticDelivery } from "./navigation/delivery.js";
 export type { StaticDelivery } from "./navigation/delivery.js";
 export {
   isCatalogueId,

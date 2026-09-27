@@ -41,9 +41,11 @@ test("server validates before bind and supports safe no-watch routes on port zer
   const shellCss = await fetch(`${server.url}/__mokly/shell.css`);
   assert.equal(shellCss.status, 200);
   assert.match(await shellCss.text(), /--mokly-accent/);
-  const redirect = await fetch(`${server.url}/id/home`, { redirect: "manual" });
-  assert.equal(redirect.status, 302);
-  assert.equal(redirect.headers.get("location"), "/view/screens/home.html");
+  const removedAlias = await fetch(`${server.url}/id/home`, {
+    redirect: "manual",
+  });
+  assert.equal(removedAlias.status, 404);
+  assert.match(await removedAlias.text(), /Item not found/);
   assert.equal(
     (await fetch(`${server.url}/view/screens/home.html`)).status,
     200,

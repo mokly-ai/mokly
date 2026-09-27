@@ -20,7 +20,6 @@ export const mockups = [
     id: "packed-handbook",
     title: "Handbook",
     description: "Whole document in the packed API",
-    route: "handbook.html",
     render: () =>
       '<html><body><main id="handbook">Handbook</main><a href="mock:packed-home">Home</a></body></html>',
   }),
@@ -46,7 +45,6 @@ export const mockups = [
         </MockLink>
       </main>
     ),
-    route: "screens/home.html",
     title: "Packed home",
     useCaseIds: ["packed-tour"],
     variants: [
@@ -55,7 +53,6 @@ export const mockups = [
         desktop: <main data-fixture="esm-empty-desktop">Empty</main>,
         id: "packed-home-empty",
         mobile: <main data-fixture="esm-empty-mobile">Empty</main>,
-        slug: "empty",
         title: "Packed home, empty",
       },
     ],
@@ -75,7 +72,6 @@ export const mockups = [
         Packed details
       </main>
     ),
-    route: "screens/detail.html",
     title: "Packed details",
     useCaseIds: ["packed-tour"],
   }),
@@ -84,7 +80,6 @@ export const mockups = [
     navPath: ["Packed ESM"],
     description: "A two-step packed package journey.",
     id: "packed-tour",
-    route: "user-flows/packed-tour.html",
     steps: [{ screenId: "packed-home" }, { screenId: "packed-detail" }],
     title: "Packed tour",
   }),

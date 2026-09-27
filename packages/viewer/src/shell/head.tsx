@@ -3,7 +3,7 @@
 
 import type { ReactNode } from "react";
 
-import { catalogueViewHref } from "../navigation/delivery.js";
+import { viewHref } from "../navigation/routes.js";
 
 import { catalogueVariantParent, type Catalogue } from "./catalogue.js";
 import { structuredCrumbTrail } from "./nav_tree.js";
@@ -155,7 +155,7 @@ export function targetHead(
         : [
             ...ancestors,
             {
-              href: `${catalogueViewHref(parent.kind, parent.id)}${
+              href: `${viewHref(parent.kind, parent.id)}${
                 parentSnapshot ? `?snapshot=${parentSnapshot}` : ""
               }`,
               label: parent.title,

@@ -22,7 +22,6 @@ const component = defineComponent({
   id: "typed-component",
   title: "Typed component",
   description: "Packed declaration inference.",
-  route: "components/typed.html",
   dependencies: [],
   relatedDocs: [],
   propSchema: schema,

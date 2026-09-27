@@ -18,11 +18,10 @@ mockups.push(definePage({ id: "handbook", title: ${JSON.stringify(title)}, descr
 test("consumer export builds unified pages and preserves a removed page's baseline context", async (context) => {
   const fixture = await createExportFixture(pageSource());
   context.after(() => fixture.close());
-  const initial = await exportCatalogue(fixture.config, { outDir: "site" });
-  assert.equal(initial.idRoutes["handbook"], "/view/pages/handbook.html");
+  await exportCatalogue(fixture.config, { outDir: "site" });
   const read = (name: string) =>
     fs.readFile(path.join(fixture.output, name), "utf8");
-  assert.match(await read("id/handbook/index.html"), /Handbook/);
+  await assert.rejects(fs.access(path.join(fixture.output, "id")));
   assert.match(
     await read("static/pages/handbook.html"),
     /data-mokly-link="home"/,
@@ -32,8 +31,7 @@ test("consumer export builds unified pages and preserves a removed page's baseli
     /data-diff-screen|data-viewport-option/,
   );
   await fs.writeFile(fixture.entryPath, validEntrySource());
-  const removed = await exportCatalogue(fixture.config, { outDir: "site" });
-  assert.equal(removed.idRoutes["handbook"], "/view/pages/handbook.html");
+  await exportCatalogue(fixture.config, { outDir: "site" });
   assert.match(
     documentText(await read("view/pages/handbook.html")),
     /Showing previous version/,
@@ -53,17 +51,12 @@ test("consumer export builds unified pages and preserves a removed page's baseli
   );
 });
 
-test("renamed pages retain one derived route and current static id alias", async (context) => {
+test("renamed pages retain one derived route without a static alias", async (context) => {
   const fixture = await createExportFixture(pageSource());
   context.after(() => fixture.close());
   await fs.writeFile(fixture.entryPath, pageSource("Updated handbook"));
-  const result = await exportCatalogue(fixture.config, { outDir: "site" });
-  assert.equal(result.idRoutes["handbook"], "/view/pages/handbook.html");
-  const alias = await fs.readFile(
-    path.join(fixture.output, "id/handbook/index.html"),
-    "utf8",
-  );
-  assert.doesNotMatch(documentText(alias), /Showing previous version/);
+  await exportCatalogue(fixture.config, { outDir: "site" });
+  await assert.rejects(fs.access(path.join(fixture.output, "id")));
   const current = await fs.readFile(
     path.join(fixture.output, "view/pages/handbook.html"),
     "utf8",

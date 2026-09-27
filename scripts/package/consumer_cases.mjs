@@ -49,16 +49,16 @@ export async function smokeEsmConsumer(context) {
   await runBin(root, ["build"], { cwd: nested });
   await runBin(root, ["check"]);
   const fragment = await fs.promises.readFile(
-    path.join(root, "mockups/screens/home.desktop.html"),
+    path.join(root, "mockups/screens/packed-home.desktop.html"),
     "utf8",
   );
   assert.match(fragment, /data-fixture="esm-desktop"/);
   assert.match(
     fragment,
-    /href="\.\/detail\.desktop\.html#packed-section"[^>]+data-mokly-link="packed-detail#packed-section"/,
+    /href="\.\/packed-detail\.desktop\.html#packed-section"[^>]+data-mokly-link="packed-detail#packed-section"/,
   );
   const coLocated = await fs.promises.readFile(
-    path.join(root, "mockups/screens/card.desktop.html"),
+    path.join(root, "mockups/screens/packed-card.desktop.html"),
     "utf8",
   );
   assert.match(coLocated, /data-packed-card=""/);
@@ -102,7 +102,7 @@ export async function smokeEsmConsumer(context) {
     cwd: nested,
   });
   const exported = await inspectConsumerExport(root, "published", "HEAD", [
-    "id/packed-home/index.html",
+    "view/screens/packed-home.html",
   ]);
   assert.equal(
     exported.screens.find((screen) => screen.id === "packed-home")?.state,
@@ -225,11 +225,11 @@ export async function smokeThemedConsumer(context) {
   await runBin(root, ["build"]);
   await runBin(root, ["check"]);
   const appFragment = await fs.promises.readFile(
-    path.join(root, "docs/mockups/app/dashboard.desktop.html"),
+    path.join(root, "docs/mockups/screens/themed-dashboard.desktop.html"),
     "utf8",
   );
   const campaignFragment = await fs.promises.readFile(
-    path.join(root, "docs/mockups/marketing/campaign.desktop.html"),
+    path.join(root, "docs/mockups/screens/themed-campaign.desktop.html"),
     "utf8",
   );
   assert.match(appFragment, /data-themed-renderer="desktop"/);
@@ -242,7 +242,7 @@ export async function smokeThemedConsumer(context) {
   assert.match(appFragment, /href="\.\.\/app\.css"/);
   assert.match(campaignFragment, /href="\.\.\/marketing\.css"/);
   assert.equal(
-    fs.existsSync(path.join(root, "docs/mockups/archive/legacy-notice.html")),
+    fs.existsSync(path.join(root, "docs/mockups/pages/themed-notice.html")),
     true,
   );
   const pageManifest = JSON.parse(
@@ -281,8 +281,8 @@ export async function smokeThemedConsumer(context) {
   assert.ok(review.screens.every((screen) => screen.sharedImpact.length === 1));
   await runBin(root, ["export", "--out", "published"]);
   await inspectConsumerExport(root, "published", "HEAD", [
-    "view/archive/legacy-notice.html",
-    "static/app/dashboard.desktop.html",
+    "view/pages/themed-notice.html",
+    "static/screens/themed-dashboard.desktop.html",
   ]);
   await smokeRegisteredComponents(context, root, true);
 }
@@ -300,7 +300,7 @@ export async function smokeJunoFixture(context) {
   await runBin(root, ["build", ...config]);
   await runBin(root, ["check", ...config]);
   const fragment = await fs.promises.readFile(
-    path.join(root, "site/mockups/workspace/overview.mobile.html"),
+    path.join(root, "site/mockups/screens/workspace-overview.mobile.html"),
     "utf8",
   );
   assert.match(fragment, /data-juno-layout="compact"/);
@@ -315,6 +315,6 @@ export async function smokeJunoFixture(context) {
     "HEAD",
   ]);
   await inspectConsumerExport(root, "tools/published", "HEAD", [
-    "view/workspace/overview.html",
+    "view/screens/workspace-overview.html",
   ]);
 }

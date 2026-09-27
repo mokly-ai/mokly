@@ -4,7 +4,6 @@ import {
   isHistoricalSnapshotId,
   parseViewHref,
   resolveCatalogueRoute,
-  viewHref,
 } from "@mokly/viewer/data";
 import { catalogueRouteEntry } from "@mokly/viewer/server";
 import type { Catalogue, ShellContext } from "@mokly/viewer/server";
@@ -12,64 +11,9 @@ import type { Catalogue, ShellContext } from "@mokly/viewer/server";
 import type { ResolvedConfig } from "../config/types.js";
 
 import type { DocumentService } from "./demand/service.js";
-import { requestedFragment, withFragmentQuery } from "./fragments.js";
+import { requestedFragment } from "./fragments.js";
 import { notFoundPage, viewPage } from "./pages.js";
-import { safeDecode, safeDecodePath, send } from "./respond.js";
-
-export async function redirectId(
-  response: ServerResponse,
-  url: URL,
-  encodedId: string,
-  catalogue: Catalogue,
-  config: ResolvedConfig,
-  context: ShellContext,
-  method: string,
-  documents?: DocumentService,
-): Promise<void> {
-  if (url.searchParams.has("snapshot"))
-    return send(
-      response,
-      400,
-      "text/plain",
-      "This version is unavailable. Open it from Changes.",
-      method,
-    );
-  const entry = catalogue.byId.get(safeDecode(encodedId));
-  if (!entry)
-    return send(
-      response,
-      404,
-      "text/html",
-      notFoundPage(encodedId, catalogue, context),
-      method,
-    );
-  const fragment = await requestedFragment(
-    url,
-    entry,
-    catalogue,
-    config,
-    documents,
-  );
-  if (fragment === null) {
-    return send(response, 400, "text/plain", "Invalid fragment query", method);
-  }
-  const selected = context.readModel
-    ? resolveCatalogueRoute(context.readModel, {
-        id: entry.id,
-        kind: entry.kind,
-      })
-    : undefined;
-  const location = new URL(
-    withFragmentQuery(viewHref(entry.kind, entry.id), fragment),
-    "https://mokly.invalid",
-  );
-  if (selected?.snapshotId)
-    location.searchParams.set("snapshot", selected.snapshotId);
-  response.writeHead(302, {
-    location: `${location.pathname}${location.search}`,
-  });
-  response.end();
-}
+import { safeDecodePath, send } from "./respond.js";
 
 export async function renderView(
   response: ServerResponse,

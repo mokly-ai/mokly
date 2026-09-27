@@ -115,10 +115,7 @@ for (const includeChanges of [false, true]) {
       await read("static/pages/publication-added.html"),
       /Added document/,
     );
-    assert.match(
-      await read("_redirects"),
-      /\/id\/publication-added \/view\/pages\/publication-added 302/,
-    );
+    assert.doesNotMatch(await read("_redirects"), /^\/id\//m);
     if (includeChanges)
       assert.match(
         await read("index.html"),

@@ -46,6 +46,20 @@ test("the public ownership fixtures describe the exporter's accepted marker shap
   );
   assert.ok(cases.cases.some(({ valid }) => valid));
   assert.ok(cases.cases.some(({ valid }) => !valid));
+  for (const sample of cases.cases) {
+    if (
+      !sample.document ||
+      typeof sample.document !== "object" ||
+      !("files" in sample.document) ||
+      !Array.isArray(sample.document.files)
+    )
+      continue;
+    for (const file of sample.document.files) {
+      if (typeof file !== "string") continue;
+      assert.equal(file.startsWith("id/"), false, sample.name);
+      assert.equal(file.includes(".variants/"), false, sample.name);
+    }
+  }
   for (const sample of cases.cases)
     assert.equal(
       parseExportOwnership(JSON.stringify(sample.document)) !== undefined,

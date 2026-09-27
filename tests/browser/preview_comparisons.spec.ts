@@ -79,7 +79,7 @@ test("published comparisons retain mobile, dark, and current-only added and remo
     if (response.status() >= 400) failures.push(response.url());
   });
   await page.setViewportSize({ height: 844, width: 390 });
-  await page.goto(`${preview.url}/id/removed`);
+  await page.goto(`${preview.url}/view/screens/removed`);
   await expect(page.locator(".mbk-previous")).toHaveText(
     "Showing previous version",
   );

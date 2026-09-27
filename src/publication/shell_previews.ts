@@ -1,7 +1,7 @@
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
 import type { RemovedEntryPreview } from "@mokly/viewer";
-import { catalogueViewHref } from "@mokly/viewer/data";
+import { viewHref } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 import type { RemovedEntrySnapshot } from "../registry/changes.js";
@@ -18,8 +18,7 @@ export function advertisePublicationShell(
 ): string {
   if (!previews) return html;
   const entry = removed.find(
-    (candidate) =>
-      catalogueViewHref(candidate.kind, candidate.id) === canonicalPath,
+    (candidate) => viewHref(candidate.kind, candidate.id) === canonicalPath,
   );
   if (!entry || (entry.kind !== "page" && entry.kind !== "screen")) return html;
   const published = previews.get(entry.id);

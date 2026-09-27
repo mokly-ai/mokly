@@ -45,11 +45,10 @@ for (const route of fixtureRoutes) {
   });
 }
 
-for (const route of [
-  "/",
-  "/view/not-in-catalogue.html",
-  "/id/example-welcome",
-]) {
+for (const [route, expectedStatus] of [
+  ["/", 200],
+  ["/view/not-in-catalogue.html", 200],
+] as const) {
   test(`development React hydrates shell route ${route}`, async ({ page }) => {
     const errors = captureBrowserErrors(page);
     await installDevelopmentBundle(page, developmentBundle);
@@ -61,7 +60,7 @@ for (const route of [
       });
     }
     const response = await page.goto(route);
-    expect(response?.status(), route).toBe(200);
+    expect(response?.status(), route).toBe(expectedStatus);
     await expectCleanHydration(page, errors, route);
   });
 }

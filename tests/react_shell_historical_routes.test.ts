@@ -92,18 +92,17 @@ test("hydrated Serve and export distinguish removed and replacement ids", async 
       .status,
     400,
   );
-  const currentAlias = await fetch(`${server.url}/id/guide`, {
+  const removedAlias = await fetch(`${server.url}/id/guide`, {
     redirect: "manual",
   });
-  assert.equal(currentAlias.status, 302);
-  assert.equal(currentAlias.headers.get("location"), "/view/pages/guide.html");
+  assert.equal(removedAlias.status, 404);
   assert.equal(
     (
       await fetch(`${server.url}/id/guide?snapshot=${historical.snapshotId}`, {
         redirect: "manual",
       })
     ).status,
-    400,
+    404,
   );
 
   await exportCatalogue(fixture.config, { outDir: "site" });

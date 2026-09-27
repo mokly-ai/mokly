@@ -15,11 +15,10 @@ const COMPARISON = `/__mokly/diffs/__generations/${GENERATION}/review.json`;
 const BASE = "https://catalogue.test/view/archive/removed.html";
 
 const delivery: StaticDelivery = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   deploymentId: "c".repeat(64),
   canonicalPath: "/view/archive/removed.html",
   comparisonUrl: COMPARISON,
-  idRoutes: {},
 };
 
 const removedPage: RemovedPreviewData = {

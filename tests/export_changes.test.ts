@@ -175,7 +175,7 @@ test("material Changes can use captured documents without reading current file b
   assert.ok(reads.includes(fragment));
 });
 
-test("review export retains a removed variant route, id redirect, and parent context", async (context) => {
+test("review export retains a removed variant route and parent context", async (context) => {
   const fixture = await createExportFixture(screenVariantEntrySource());
   context.after(() => fixture.close());
   await fs.writeFile(
@@ -183,9 +183,8 @@ test("review export retains a removed variant route, id redirect, and parent con
     screenVariantEntrySource({ includeVariant: false }),
   );
 
-  const result = await exportCatalogue(fixture.config, { outDir: "site" });
+  await exportCatalogue(fixture.config, { outDir: "site" });
   const route = "screens/home-empty.html";
-  assert.equal(result.idRoutes["home-empty"], `/view/${route}`);
   const removed = await fs.readFile(
     path.join(fixture.output, "view", route),
     "utf8",
@@ -198,12 +197,7 @@ test("review export retains a removed variant route, id redirect, and parent con
     /<div class="mbk-nav-variants" data-nav-disclosure="variants:pages:home"[^>]*id="mb-nav-variants-pages-home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""/,
   );
   assert.match(removed, /Home empty · Removed/);
-  const redirect = await fs.readFile(
-    path.join(fixture.output, "id/home-empty/index.html"),
-    "utf8",
-  );
-  assert.match(documentText(redirect), /Showing previous version/);
-  assert.match(documentText(redirect), /Previous version unavailable/);
+  await assert.rejects(fs.access(path.join(fixture.output, "id")));
 
   const catalogue = JSON.parse(
     await fs.readFile(

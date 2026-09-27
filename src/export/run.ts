@@ -147,7 +147,6 @@ async function generateExport(
     const routes: ExportRoutes = Object.freeze({
       outDir: output,
       comparisonUrl: site.delivery.comparisonUrl,
-      idRoutes: Object.freeze({ ...site.delivery.idRoutes }),
     });
     const aliases = new Map(
       (await options.adapter?.transform(site.inventory.files, routes)) ?? [],

@@ -446,24 +446,27 @@ ignores `idRoutes`.
 Stop writing the alias, move static delivery to v3 in the parser and the
 writer together, and remove the development redirect and preview redirects.
 
-- [ ] `parseStaticDelivery` accepts only `schemaVersion: 3` without
+- [x] `parseStaticDelivery` accepts only `schemaVersion: 3` without
       `idRoutes`; delete `resolveDeliveryHref`; remove `idRoutes` from
       `site.ts` and `run.ts`; `site.ts` writes each shell once at
       `view/<route>`.
-- [ ] Delete `redirectId` and the `/id/` branch in `http_routes.ts`; `/id/`
+- [x] Delete `redirectId` and the `/id/` branch in `http_routes.ts`; `/id/`
       now returns the not-found view.
-- [ ] `scripts/preview/artifact.mjs` drops `idRoutes` and the `/id/`
+- [x] `scripts/preview/artifact.mjs` drops `idRoutes` and the `/id/`
       `_redirects` lines.
-- [ ] Regenerate `docs/protocol/fixtures/export-ownership-v1.json` and the
+- [x] Regenerate `docs/protocol/fixtures/export-ownership-v1.json` and the
       export inventory tests so no `id/` or `.variants/` path remains.
-- [ ] Failure-first tests: delivery v2 is rejected, export inventory has no
+- [x] Failure-first tests: delivery v2 is rejected, export inventory has no
       `id/` files, the server answers `/id/…` with 404, package smoke passes.
-- [ ] Static export smoke: run `mokly export` on the example, serve the
+- [x] Static export smoke: run `mokly export` on the example, serve the
       directory with a plain static file server, and check
       `/view/screens/example-welcome.html`, a component variant entry, frame
       links, `?fragment=`, Back/Forward, and a removed entry with
       `?snapshot=`.
-- [ ] Commit.
+- [x] Coordinator review follow-up: validate delivery `canonicalPath` by
+      round-tripping the shared `/view/<route>` parser and audit remaining
+      hand-written view-path checks.
+- [x] Commit.
 
 ## Milestone 8: Verification, close-out, and review
 

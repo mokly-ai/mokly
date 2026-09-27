@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { entryRoute } from "@mokly/viewer/data";
+import { viewHref } from "@mokly/viewer/data";
 
 import { projectCatalogue } from "../../dist/catalogue/projection.js";
 import {
@@ -106,14 +106,9 @@ export async function buildPreview(config, output, options = {}) {
           await capturePage(server.url, "/", stage, "index.html");
           capturedShells.add("index.html");
           for (const entry of [...manifest.entries, ...removed]) {
-            const route = entryRoute(entry.kind, entry.id);
-            const name = `view/${route}`;
-            await capturePage(
-              server.url,
-              `/view/${encodePath(route)}`,
-              stage,
-              name,
-            );
+            const route = viewHref(entry.kind, entry.id);
+            const name = route.slice(1);
+            await capturePage(server.url, route, stage, name);
             capturedShells.add(name);
           }
           await capturePage(
@@ -285,10 +280,6 @@ function assertSafeOutput(output, repoRoot) {
   ) {
     throw new Error(`preview output must be inside ${contextRoot}`);
   }
-}
-
-function encodePath(value) {
-  return value.split("/").map(encodeURIComponent).join("/");
 }
 
 async function writeText(root, relative, content) {

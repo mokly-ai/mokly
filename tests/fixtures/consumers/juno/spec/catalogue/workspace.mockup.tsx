@@ -18,7 +18,6 @@ export const mockups = [
     desktop: <WorkspacePanel layout="wide" />,
     id: "workspace-overview",
     mobile: <WorkspacePanel layout="compact" />,
-    route: "workspace/overview.html",
     title: "Workspace overview",
   }),
 ];

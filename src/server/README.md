@@ -40,6 +40,10 @@ evidence revisions advance independently. Failed candidates preserve the last
 snapshot, and superseded generations cannot replace it. `catalogue_update.ts`
 prepares updates before publication; `http_types.ts` owns the lifecycle types.
 
+Entry shells are served only at their derived `/view/<route>` locations.
+Legacy ID-shaped paths receive the ordinary not-found shell; Serve does not
+redirect them or interpret their fragment and snapshot queries.
+
 Shell pages render through `@mokly/viewer/server` with CLI-owned live context.
 `public_catalogue_model.ts` validates each serialized public revision once and
 reuses it across shell requests until the bytes change. CSS, browser modules,

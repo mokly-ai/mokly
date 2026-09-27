@@ -12,7 +12,7 @@ for (const width of [390, 1280]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 1000 });
-    await page.goto("/id/example-welcome");
+    await page.goto("/view/screens/example-welcome.html");
     await chooseViewport(page, "mobile");
     const home = page.locator(".mbk-frame-mobile > .phone-frame > .phone-home");
     await home.scrollIntoViewIfNeeded();

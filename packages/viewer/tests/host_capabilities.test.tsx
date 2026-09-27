@@ -229,11 +229,10 @@ test("live SSR carries a private descriptor while export carries no host loader"
   const exported = renderHydratedShellPage(view, {
     base: source.base,
     delivery: {
-      schemaVersion: 2,
+      schemaVersion: 3,
       deploymentId,
       canonicalPath: "/",
       comparisonUrl: null,
-      idRoutes: {},
     },
     readModel: { ...catalogue, deploymentId },
     updateVersion: 0,

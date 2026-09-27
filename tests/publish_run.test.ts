@@ -53,7 +53,6 @@ function dependencies() {
       const routes = {
         outDir: "/repo/site",
         comparisonUrl: `/${comparisonPath}`,
-        idRoutes: {},
       };
       await selected.adapter?.transform(files, routes);
       metadata = JSON.parse(String(files.get("mokly-upload.json")));

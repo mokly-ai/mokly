@@ -1,10 +1,8 @@
 /** Route-scoped workspace evidence read from another page in one static deployment. */
 
 import { readViewerWorkspace } from "../client/workspace_descriptor.js";
-import {
-  catalogueViewHref,
-  type StaticDelivery,
-} from "../navigation/delivery.js";
+import type { StaticDelivery } from "../navigation/delivery.js";
+import { viewHref } from "../navigation/routes.js";
 import { readShellDelivery } from "../shell/delivery.js";
 import type { WorkspaceData } from "../shell/workspace_data.js";
 
@@ -49,10 +47,7 @@ async function loadWorkspace(
   entry: WorkspaceData["entry"],
   signal: AbortSignal,
 ): Promise<WorkspaceData | undefined> {
-  const requested = new URL(
-    catalogueViewHref(entry.kind, entry.id),
-    win.location.href,
-  );
+  const requested = new URL(viewHref(entry.kind, entry.id), win.location.href);
   try {
     const response = await win.fetch(requested, {
       cache: "no-store",
@@ -68,7 +63,7 @@ async function loadWorkspace(
     if (
       !delivery ||
       !sameDeployment(delivery, installedDelivery) ||
-      delivery.canonicalPath !== catalogueViewHref(entry.kind, entry.id)
+      delivery.canonicalPath !== viewHref(entry.kind, entry.id)
     )
       return;
     const bootstrapValue = scriptValue(

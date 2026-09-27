@@ -27,12 +27,12 @@ test("manifest and hierarchy keep authored sibling variant order", () => {
   const parent = resolvedScreen("welcome", "screens/welcome.html");
   const zeta = resolvedScreen(
     "welcome-zeta",
-    "screens/welcome.variants/zeta.html",
+    "screens/welcome-zeta.html",
     parent.id,
   );
   const alpha = resolvedScreen(
     "welcome-alpha",
-    "screens/welcome.variants/alpha.html",
+    "screens/welcome-alpha.html",
     parent.id,
   );
   const manifest = createManifest([parent, zeta, alpha], [], ["light"]);
@@ -127,12 +127,8 @@ test("manifest validation rejects nested variants and mismatched paths", () => {
   const nested = createManifest(
     [
       resolvedScreen("base", "screens/base.html"),
-      resolvedScreen("welcome", "screens/base.variants/welcome.html", "base"),
-      resolvedScreen(
-        "welcome-empty",
-        "screens/base.variants/welcome.variants/empty.html",
-        "welcome",
-      ),
+      resolvedScreen("welcome", "screens/welcome.html", "base"),
+      resolvedScreen("welcome-empty", "screens/welcome-empty.html", "welcome"),
     ],
     [],
     ["light"],
@@ -168,11 +164,7 @@ function variantManifest() {
   return createManifest(
     [
       resolvedScreen("welcome", "screens/welcome.html"),
-      resolvedScreen(
-        "welcome-empty",
-        "screens/welcome.variants/empty.html",
-        "welcome",
-      ),
+      resolvedScreen("welcome-empty", "screens/welcome-empty.html", "welcome"),
     ],
     [],
     ["light"],

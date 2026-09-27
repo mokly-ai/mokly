@@ -5,7 +5,7 @@
 
 import type { ReactNode } from "react";
 
-import { catalogueViewHref } from "../navigation/delivery.js";
+import { viewHref } from "../navigation/routes.js";
 import type { ManifestUseCase } from "../registry/types.js";
 
 import {
@@ -102,7 +102,7 @@ export function UsedByChips(props: {
         {useCases.map((useCase) => (
           <a
             className="mbk-chip flow"
-            href={catalogueViewHref(useCase.kind, useCase.id)}
+            href={viewHref(useCase.kind, useCase.id)}
             key={useCase.id}
           >
             <FlowIcon size={11} />
@@ -197,7 +197,7 @@ function entryHref(
   const snapshotId = catalogue.removedEntries.find(
     ({ entry: candidate }) => candidate.id === entry.id,
   )?.snapshotId;
-  return `${catalogueViewHref(entry.kind, entry.id)}${
+  return `${viewHref(entry.kind, entry.id)}${
     snapshotId ? `?snapshot=${snapshotId}` : ""
   }`;
 }

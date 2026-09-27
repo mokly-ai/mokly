@@ -60,8 +60,14 @@ test("static export keeps component Changes, affected screens, saved variants an
     home.relatedComponents.map((item) => item.title),
     ["Action"],
   );
-  assert.ok(files.has("id/action/index.html"));
-  assert.equal(exported.idRoutes["action"], "/view/components/action.html");
+  assert.ok(files.has("view/components/action.html"));
+  assert.ok(files.has("view/components/action-default.html"));
+  assert.equal(
+    [...files.keys()].some(
+      (name) => name.startsWith("id/") || name.includes(".variants/"),
+    ),
+    false,
+  );
   for (const view of action.views) assert.ok(files.has(`static/${view.path}`));
   assert.ok(files.has("__mokly/client/component_geometry.js"));
   assert.ok(!files.has("__mokly/client/browser.js"));

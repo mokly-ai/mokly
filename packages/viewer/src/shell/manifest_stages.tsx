@@ -2,8 +2,7 @@
 
 import type { Viewport } from "../data/axes.js";
 import { encodeUrlPath } from "../data/paths.js";
-import { catalogueViewHref } from "../navigation/delivery.js";
-import { entryRoute, viewRoute } from "../navigation/routes.js";
+import { entryRoute, viewHref, viewRoute } from "../navigation/routes.js";
 import type { ManifestScreen, ManifestUseCase } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -192,7 +191,7 @@ export function UseCaseFlowStage(props: {
                   {screen ? (
                     <a
                       className="flow-step-link"
-                      href={catalogueViewHref(screen.kind, screen.id)}
+                      href={viewHref(screen.kind, screen.id)}
                     >
                       This screen in the catalogue: {screen.title} →
                     </a>

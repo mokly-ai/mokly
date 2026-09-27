@@ -59,27 +59,6 @@ test("static navigation retains the destination's route-specific evidence", asyn
   await expectAffectedHome(page);
 });
 
-test("static route evidence ignores the delivery v2 id map", async ({
-  page,
-}) => {
-  await page.route("**/view/components/action.html", async (route) => {
-    await route.fulfill({
-      body: actionPage.replace(
-        /&quot;idRoutes&quot;:\{[^}]*\}/,
-        "&quot;idRoutes&quot;:{}",
-      ),
-      contentType: "text/html",
-    });
-  });
-
-  await page.goto(`${server.url}/view/screens/home.html`);
-  await retainHydratedDocument(page);
-  await page.locator('a[data-route="components/action.html"]').click();
-  await expect(page).toHaveURL(`${server.url}/view/components/action.html`);
-  await expectRetainedDocument(page);
-  await expectAffectedHome(page);
-});
-
 test("static route evidence cannot cross a rapid Back and Forward replacement", async ({
   page,
 }) => {

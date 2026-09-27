@@ -40,7 +40,6 @@ export const mockups = [
     id: "themed-notice",
     title: "Notice",
     description: "A complete consumer-composed document.",
-    route: "archive/legacy-notice.html",
     render: () =>
       "<!doctype html>" +
       renderToStaticMarkup(
@@ -58,7 +57,6 @@ export const mockups = [
     desktop: <Dashboard compact={false} />,
     id: "themed-dashboard",
     mobile: <Dashboard compact />,
-    route: "app/dashboard.html",
     title: "Workspace overview",
     useCaseIds: ["themed-tour"],
   }),
@@ -69,7 +67,6 @@ export const mockups = [
     desktop: <main data-campaign="desktop">Campaign desktop</main>,
     id: "themed-campaign",
     mobile: <main data-campaign="mobile">Campaign mobile</main>,
-    route: "marketing/campaign.html",
     title: "Campaign",
     useCaseIds: ["themed-tour"],
   }),
@@ -78,7 +75,6 @@ export const mockups = [
     navPath: ["Flows"],
     description: "A synthetic cross-style journey.",
     id: "themed-tour",
-    route: "user-flows/themed-tour.html",
     steps: [{ screenId: "themed-dashboard" }, { screenId: "themed-campaign" }],
     title: "Themed tour",
   }),

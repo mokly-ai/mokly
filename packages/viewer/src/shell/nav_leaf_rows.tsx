@@ -1,7 +1,6 @@
 /** Leaf rows and entry-variant disclosures for the React shell. */
 
-import { catalogueViewHref } from "../navigation/delivery.js";
-import { entryRoute } from "../navigation/routes.js";
+import { entryRoute, viewHref } from "../navigation/routes.js";
 
 import type { ShellContext } from "./context.js";
 import {
@@ -90,7 +89,7 @@ function NavRowLink(props: {
       hidden={props.hidden}
       data-route={entryRoute(props.node.entryKind, props.node.entryId)}
       data-tags={tags.length > 0 ? tags.join(" ") : undefined}
-      href={`${catalogueViewHref(props.node.entryKind, props.node.entryId)}${
+      href={`${viewHref(props.node.entryKind, props.node.entryId)}${
         props.node.snapshotId ? `?snapshot=${props.node.snapshotId}` : ""
       }`}
       style={navRowStyle(props.depth)}

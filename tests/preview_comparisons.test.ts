@@ -131,7 +131,7 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
     documentText(await read("view/screens/removed.html")),
     /Showing previous version/,
   );
-  assert.match(redirects, /\/id\/removed \/view\/screens\/removed 302/);
+  assert.doesNotMatch(redirects, /^\/id\//m);
   assert.match(await read("_headers"), /Cache-Control: no-store/);
   assert.match(
     documentText(await read("view/pages/removed-document.html")),
@@ -268,7 +268,7 @@ test("capture mutation aborts atomically and default replacement removes old rev
   );
 });
 
-test("a published renamed screen keeps one derived route and id redirect", async (context) => {
+test("a published renamed screen keeps one derived route without an id redirect", async (context) => {
   const fixture = await createPreviewComparisonFixture();
   context.after(() => fixture.close());
   const source = await fs.promises.readFile(fixture.entryPath, "utf8");
@@ -285,8 +285,7 @@ test("a published renamed screen keeps one derived route and id redirect", async
     path.join(fixture.output, "_redirects"),
     "utf8",
   );
-  assert.match(redirects, /\/id\/home \/view\/screens\/home 302/);
-  assert.equal(redirects.match(/^\/id\/home /gm)?.length, 1);
+  assert.doesNotMatch(redirects, /^\/id\//m);
   const current = await fs.promises.readFile(
     path.join(fixture.output, "view/screens/home.html"),
     "utf8",

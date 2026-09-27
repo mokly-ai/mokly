@@ -22,7 +22,7 @@ import { send } from "./respond.js";
 import type { ReviewRoutes } from "./review_routes.js";
 import { serveStatic } from "./static_routes.js";
 import type { ChangesStatus } from "./update_messages.js";
-import { redirectId, renderView } from "./view_routes.js";
+import { renderView } from "./view_routes.js";
 
 /** Dispatch a request against one validated catalogue generation. */
 export async function handleCatalogueRequest(
@@ -137,17 +137,6 @@ export async function handleCatalogueRequest(
       "text/html",
       homePage(catalogue, context),
       method,
-    );
-  if (url.pathname.startsWith("/id/"))
-    return redirectId(
-      response,
-      url,
-      url.pathname.slice(4),
-      catalogue,
-      config,
-      context,
-      method,
-      documents,
     );
   if (url.pathname.startsWith("/view/"))
     return renderView(

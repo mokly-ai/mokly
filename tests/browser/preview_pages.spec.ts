@@ -23,7 +23,7 @@ for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     const requests: string[] = [];
     page.on("request", (request) => requests.push(request.url()));
-    await page.goto(`${preview.url}/id/removed-document`);
+    await page.goto(`${preview.url}/view/pages/removed-document`);
     await expect(page.locator(".mbk-screen-head h2")).toHaveText(
       "Former handbook",
     );
@@ -64,7 +64,7 @@ for (const width of [390, 1280]) {
     await page.locator('[data-filter="all"]').click();
     await expect(removed).toBeHidden();
     await expect(page.locator('[data-entry-id="removed"]')).toBeVisible();
-    await page.goto(`${preview.url}/id/handbook?fragment=overview`);
+    await page.goto(`${preview.url}/view/pages/handbook?fragment=overview`);
     await expect(
       page.frameLocator(".mbk-stage-embed iframe").locator("#overview"),
     ).toBeVisible();

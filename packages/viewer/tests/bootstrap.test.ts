@@ -37,21 +37,19 @@ test("static hydration adopts the finalized authenticated deployment", () => {
       comparisons: false,
       updateVersion: 0,
       delivery: {
-        schemaVersion: 2,
+        schemaVersion: 3,
         deploymentId: "0".repeat(64),
         canonicalPath: "/",
         comparisonUrl: null,
-        idRoutes: {},
       },
     },
     view: { kind: "home" },
   });
   const delivery: StaticDelivery = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     deploymentId: "a".repeat(64),
     canonicalPath: "/",
     comparisonUrl: null,
-    idRoutes: {},
   };
   const finalized = shellBootstrapWithDelivery(staged, delivery);
   assert.equal(staged.catalogue.deploymentId, "0".repeat(64));

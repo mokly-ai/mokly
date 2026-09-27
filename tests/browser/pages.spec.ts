@@ -27,7 +27,7 @@ for (const width of [390, 1280]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/id/example-handbook?fragment=next-steps");
+    await page.goto("/view/pages/example-handbook.html?fragment=next-steps");
     await expect(page.locator("#mb-main h2")).toHaveText("Getting started");
     const frame = page.locator(".mbk-stage-embed iframe");
     await expect(frame).toHaveCount(1);
@@ -107,7 +107,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
-    await page.goto("/id/design-page-view");
+    await page.goto("/view/screens/design-page-view.html");
     await chooseViewport(page, viewport);
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
     await frame.locator(".ce-inspector-link").click();

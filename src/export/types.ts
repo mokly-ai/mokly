@@ -1,4 +1,4 @@
-import type { StaticDelivery, ReviewArtifactContent } from "@mokly/viewer/data";
+import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import type { LegacyExportOwnership } from "./ownership.js";
 
@@ -6,7 +6,6 @@ import type { LegacyExportOwnership } from "./ownership.js";
 export interface ExportRoutes {
   readonly outDir: string;
   readonly comparisonUrl: string | null;
-  readonly idRoutes: StaticDelivery["idRoutes"];
 }
 
 /** Final identity and paths produced by one completed static export. */

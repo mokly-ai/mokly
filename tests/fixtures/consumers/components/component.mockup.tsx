@@ -11,7 +11,6 @@ const action = defineComponent({
   id: "packed-action",
   title: "Packed action",
   description: "A registered consumer component.",
-  route: "components/action.html",
   propSchema: {
     kind: "object",
     properties: {
@@ -45,7 +44,6 @@ const panel = defineComponent({
   id: "packed-panel",
   title: "Packed panel",
   description: "Nested components and a caller-owned slot.",
-  route: "components/panel.html",
   propSchema: { kind: "object", properties: {} },
   slots: ["children"],
   render: (props) => (
@@ -70,7 +68,6 @@ export const mockups = [
     id: "packed-components",
     title: "Component consumer",
     description: "Repeated and nested component use.",
-    route: "components/consumer.html",
     mobile: (
       <main>
         <panel.Component>

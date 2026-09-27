@@ -9,7 +9,7 @@ export async function inspectConsumerExport(
   relative,
   base,
   expected = [],
-  schemaVersion = 2,
+  schemaVersion = 4,
 ) {
   const output = path.join(root, relative);
   const read = (name) => fs.promises.readFile(path.join(output, name), "utf8");
@@ -30,6 +30,8 @@ export async function inspectConsumerExport(
     assert.ok(marker.files.includes(name), `export missing ${name}`);
   for (const name of marker.files) {
     assert.ok(!name.split("/").includes(".."));
+    assert.equal(name.startsWith("id/"), false);
+    assert.equal(name.includes(".variants/"), false);
     assert.equal(
       /(?:^|\/)(?:node_modules|\.git|scripts|entries)\//.test(name),
       false,
