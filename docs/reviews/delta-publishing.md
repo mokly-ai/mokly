@@ -303,11 +303,12 @@ record the decisions and work; each item below links a finding to its fix.
 7. **Addressed.** The unreachable 16 s cap is gone; `src/publish/retry.ts`
    exports the attempt count, base delay and `Retry-After` ceiling, and the
    guide test derives "five", 1/2/4/8 s and sixty seconds from them.
-8. **Addressed.** One count formatter serves publish progress, publish
-   summaries and Serve. Cancellation and transport exhaustion keep
+8. **Partly addressed.** One count formatter serves publish progress,
+   publish summaries and Serve. Cancellation and transport exhaustion keep
    `upload-failed` but carry typed presentations with their own messages,
-   headlines and hints, so rich output never repeats a sentence and never
-   tells a user who cancelled to check the connection.
+   headlines and hints, so neither repeats a sentence nor tells a user who
+   cancelled to check the connection. Other publish rejections still repeat
+   their hint; see [second review](#second-review) finding 3.
 9. **Addressed.** Over-limit declared sizes and paths are `413` with a new
    `too-large` fixture class, receivers answer `missing` from blobs stored
    for the same project, a test cross-checks fixture classes against the
@@ -368,3 +369,152 @@ Residual test risk: no terminal-emulated rich rendering test, no lost-response
 tests, no check that progress and summary agree, no export-level test of the
 path rules or the 64 MiB marker ceiling, and guide tests that compare
 documents with each other rather than with the code.
+
+## Second Review
+
+Reviewed on 2026-09-27 with
+[the implementation review prompt](../implementation-review-prompt.md), after
+fix commit `b012d69` was pushed. Three independent read-only reviewers again
+covered export, the publish exchange and CLI, and tests, fixtures, packaging
+and documentation, using the complete diff against `origin/main` (`3699c56`).
+They confirmed findings 1–7 and 9–15 above are fixed; finding 8 is partly
+fixed. Eleven new findings follow: two Medium and nine Low. None was changed;
+each awaits the user's decision.
+
+1. **P2 / Medium — After Ctrl+C, publish hides where the previous site was
+   left.** [`src/cli/publish.ts`](../../src/cli/publish.ts) (lines 85–86)
+   turns any error into "Publication was cancelled." once the abort signal has
+   fired. `mokly publish` runs the same transactional export as
+   `mokly export`, and if cancellation lands while the export swaps folders
+   and the restore or cleanup then fails, the export's error names the backup
+   and reservation paths the
+   [recovery contract](../protocol/mokly-export-recovery.md) requires the user
+   to see. A reviewer's fault-injection run showed `mokly export` printing
+   "Export rollback failed; recover the previous site from …/backup…" while
+   `mokly publish` printed only the cancellation line, with `site/` gone; the
+   suggested retry then failed on the retained reservation. **Impact of no
+   change:** rare, but the previous site sits in a hidden backup with no
+   pointer to it. **Options:** **A)** rethrow export errors that carry a
+   recovery path; **B)** mark cancellation with a type where it originates
+   (the export's cancellation check, Git readers, baseline interruption,
+   publish) so `runPublish` maps only those to the cancellation copy, with a
+   publish subprocess test reusing `tests/helpers/export_failure_preload.ts`
+   and the precedence stated in the contracts; **C)** document it.
+   **Recommended: B;** inferring cancellation from the signal is the cause.
+
+2. **P2 / Medium — A unit test depends on the live history of
+   `origin/main`.** [`tests/verification_pull_request_title.test.ts`](../../tests/verification_pull_request_title.test.ts)
+   (lines 48–66) runs `git log origin/main` and fails when any subject on
+   `main` uses a type the validator does not list. It fails in a
+   single-branch clone, and one commit such as `deps: bump tar` landing on
+   `main` would fail `cargo xtask check`, CI and release verification on every
+   branch, forcing the validator to follow history. **Impact of no change:**
+   an unrelated merge can break every build. **Options:** **A)** drop the
+   history scan and keep the fixed type list and the `AGENTS.md` example
+   check; **B)** move the history audit into a report-only script; **C)** skip
+   when the ref is missing. **Recommended: A,** plus a small static test that
+   unit tests never read the real repository's remote-tracking refs.
+
+3. **P3 / Low — Rich errors still repeat their hint.** The 400, 401, 403 and
+   422 messages and the default `uploadFailed()` message in
+   [`src/publish/errors.ts`](../../src/publish/errors.ts) end with exactly the
+   rich hint for their category, so a bad token prints "The service denied
+   the upload. Check the token and repository access." and then "Check the
+   token and repository access." The
+   [terminal contract](../protocol/mokly-terminal-output.md) says a detail
+   and hint must never repeat, and local packaging failures get the network
+   hint. **Options:** **A)** reword the five messages; **B)** drop detail
+   sentences equal to the hint in `cliErrorPresentation` for every category;
+   **C)** add a table test rendering every publish error and rejection status
+   through the rich reporter. **Recommended: B plus C,** one rule at the
+   presentation boundary with a test over every factory.
+
+4. **P3 / Low — Documented progress and summary examples cannot occur.**
+   `mokly-upload.json` is always both a marker entry and a Plan-archive file,
+   so a shown label starts at 1 or more of 2 or more files and a summary
+   uploads at least one file. The exchange and terminal contracts, both
+   guides and the plan still show "Uploading 0 of 1 file" as an exact form
+   and "0 files uploaded", `guides_*` tests pin that text, and
+   `mokly-terminal-output.md` line 219 says "the first three lines" show the
+   plural rule when they are Serve and build strings. **Options:** **A)** use
+   reachable examples such as "Uploading 1 of 2 files" and state both counts
+   are at least one; **B)** do A and derive the documented example in a test
+   from a real accounting round. **Recommended: B.**
+
+5. **P3 / Low — Some mockups file names still get unhelpful errors.** Public
+   files are found in `src/export/public_files.ts` and copied to `static/…`
+   before the portability check runs. Names that are not valid UTF-8 (common
+   after unzipping Windows archives) are decoded with `�`, so they fail with
+   "is not a regular file" or a raw `ENOENT` instead; other export errors
+   print control characters raw (a FIFO named with `ESC[2K` erases the
+   line); and the refused path names `static/…` without the reason.
+   **Options:** **A)** check names where they are found, reading directory
+   entries as bytes, and name the source path and reason; **B)** pass every
+   path in an export error through the one escaping helper, enforced by a
+   test or lint; **C)** document the `static/` mapping. **Recommended: A
+   plus B.**
+
+6. **P3 / Low — "Earlier Mokly release" is shown for every unsupported
+   version.** [`src/export/ownership.ts`](../../src/export/ownership.ts)
+   (lines 241–244) uses that copy for schema 3, `"2"` and `null` too, so a
+   folder written by a newer Mokly is described as older and the user is told
+   to delete it. **Options:** **A)** keep the copy for schema 1, use neutral
+   copy ("a different Mokly version") for other numbers and treat non-numbers
+   as invalid, with tests for 1, 3 and `"2"`; **B)** make the message
+   version-neutral; **C)** leave it. **Recommended: A.**
+
+7. **P3 / Low — Watch caches a one-off marker read failure.** The finding 13
+   cache in [`src/export/ignored.ts`](../../src/export/ignored.ts) (lines
+   105–113) also stores "not an export" when reading throws (for example
+   `EMFILE`), so the folder is treated as ordinary files until the marker
+   changes; stale versions of one marker also occupy up to 64 entries
+   (about 122 MB measured for 20,000-file exports). **Options:** **A)** cache
+   only results derived from file content; **B)** do A and keep one entry per
+   marker path, replaced when its stats change; **C)** leave it.
+   **Recommended: B,** with a reader that fails once then succeeds.
+
+8. **P3 / Low — The packed-consumer smoke receiver still has the old
+   Complete behaviour.** [`scripts/package/publish.mjs`](../../scripts/package/publish.mjs)
+   decides "already published" at Plan time, returns 409 before 200 and
+   overwrites the stored publication on each 201. It is latent because the
+   smoke never republishes, but it is the only receiver exercising the
+   installed package. **Options:** **A)** delete the unused branch; **B)**
+   align it with the contract and add a same-commit republish asserting the
+   already-published line; **C)** share the fake receiver's core.
+   **Recommended: B.**
+
+9. **P3 / Low — Rejection order is undefined for markers with several bad
+   entries.** The ownership and exchange contracts order checks within one
+   entry only. All three readers classify the first bad entry in array order
+   and check collisions last, but a receiver applying the documented order to
+   the whole document passes all 55 fixture cases and still returns 413
+   where the CLI returns 400 for a marker with one bad digest and one
+   over-limit size. **Options:** **A)** specify array-order, first-failure
+   classification with collisions last and add multi-entry fixture cases;
+   **B)** specify whole-document phases and change all three readers.
+   **Recommended: A,** which matches the code.
+
+10. **P3 / Low — Three shipped statements are stale.**
+    [`ci-verification.md`](../protocol/ci-verification.md) says the title
+    check is not enforced yet; it and [`npm-release.md`](../protocol/npm-release.md)
+    give `chore(main): release 0.13.0` as the release-please title, while
+    every release pull request is titled `chore: release main`; and
+    [`the-upload.md`](../guides/ci/the-upload.md) points to "the catalogue
+    upload document" for rules now in the exchange document. **Options:**
+    **A)** fix the three sentences; **B)** also add prose tests.
+    **Recommended: A.**
+
+11. **P3 / Low — Byte sizes show "1024.0 KiB" below a unit boundary.**
+    `formatBytes` in [`src/cli/reporter/terminal.ts`](../../src/cli/reporter/terminal.ts)
+    picks the unit before rounding, so 1,048,575 bytes prints "1024.0 KiB".
+    **Options:** **A)** move to the next unit when the rounded value reaches
+    1024, with boundary tests; **B)** leave it. **Recommended: A.**
+
+Second-review verification: `cargo xtask check` passed on the fix commit with
+Node 24.21.0 (unit 2,498/2,498 across 464 files, browser 781/781 across 122
+files, packed-consumer smoke and every static check). Reviewers' focused
+reruns passed 52, 73 and 50 tests, mutation checks for finding 4 failed as
+intended, and a link check found no new broken links. Residual test risk:
+cancellation during export, a public file identical to a Plan-archive file,
+IPv6, IDNA or trailing-dot endpoints, an end-to-end terminal-emulated
+publish, and the fake receiver's archive rejection order are untested.

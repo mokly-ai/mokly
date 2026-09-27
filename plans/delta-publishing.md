@@ -557,19 +557,21 @@ Release notes depend on the squash title, so CI checks it.
 - [x] Document the check in `docs/protocol/ci-verification.md` and the
       release contract (#15).
 
-## Milestone 13: Review fix verification and delivery
+## Milestone 13: Review fix verification and delivery — completed
 
 - [x] Run the focused publish, export, guides, package, CI and browser
       suites, then `cargo xtask check`; resolve every failure.
 - [x] Mark each finding in `docs/reviews/delta-publishing.md` addressed and
       summarize what changed.
-- [ ] After checks pass, `git add -A`, commit with a Conventional Commits
-      title of at most 50 characters, and push the branch.
-- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After checks pass, `git add -A`, commit with a Conventional Commits
+      title of at most 50 characters, and push the branch. Committed as
+      `b012d69 fix(publish): apply the delta publishing review`.
+- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
-      without changing the implementation.
+      without changing the implementation. Eleven findings (two Medium, nine
+      Low) are recorded in its Second Review for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
