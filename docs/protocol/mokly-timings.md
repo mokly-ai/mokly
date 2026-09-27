@@ -74,7 +74,7 @@ Review phases use the same session, role and parent context as their caller:
   inventory keeps its own stages.
   For fast-path-eligible views in a component-aware classification where no
   view differs, the loop emits at most one actual occurrence per paired view
-  in committed mode and two in derived mode. Views with instances, styles, or
+  in committed mode and two in derived mode. Views with instances or
   entry-owned slots may add one committed or two derived projected occurrences. One-sided views add
   one occurrence. A repeated discovery for the same side,
   route, content digest, and exclusion callback identity is a defect.
@@ -85,6 +85,14 @@ Review phases use the same session, role and parent context as their caller:
   embedded documents remain outside this span. A contained parse or selector
   failure returns unresolved evidence with span status `ok`; an escaping error
   ends the span with `error`. It logs no paths, selectors, CSS or document text.
+- `review.inline-style-analysis` measures the synchronous span, diff, match and
+  attribution pass of the
+  [inline style ownership contract](./mokly-inline-styles.md) for one paired
+  view, including parser-cache lookups. It runs only when the view's unowned
+  inline style text differs between sides or carries references. Contained
+  parse or selector failures return unresolved attributions with span status
+  `ok`; an escaping error ends the span with `error`. It logs no paths,
+  selectors, CSS or document text.
 - `review.write-artifact` surrounds the owned Review directory transaction,
   including validation and cleanup. Export uses it for the complete artifact's
   staged file-write loop, including comparison files; export validation and

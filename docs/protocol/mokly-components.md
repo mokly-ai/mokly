@@ -187,6 +187,7 @@ Implementations must not silently register an unreachable component page.
 ## Related Contracts
 
 - [Component change attribution](./mokly-component-changes.md)
+- [Inline style ownership](./mokly-inline-styles.md)
 - [Runtime prop schema and codec](./mokly-component-props.md)
 - [Manifest v5 schema](./mokly-component-manifest.md)
 - [Comparison v3 schema](./mokly-component-review.md)

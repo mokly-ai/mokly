@@ -112,10 +112,13 @@ propSchema: {
 
 ## Ownership
 
-`ownedDependencies` names material outside the component's own body that
-belongs to it. A renderer may also return exact style and resource ownership,
-so a change to a component's implementation is attributed to the component and
-its consumers are listed as affected.
+`ownedDependencies` names files outside the component's own body that belong
+to it, such as a stylesheet or an icon. Styles that a library writes into the
+page head, as React Native Web and CSS-in-JS libraries do, need no declaration:
+Mokly matches each changed head rule against the rendered page and attributes
+it to the components whose markup it can match. Either way, a change to a
+component's implementation is attributed to the component and its consumers
+are listed as affected.
 
 ## Resolve a saved instance
 
@@ -145,6 +148,5 @@ catalogue, inspect rendered markup or classify a visual change.
 | `ComponentControl`, `ComponentControlLabel`, `ControlFor`       | The editable controls                   |
 | `ObjectPropSchema`, `DataPropSchema`, `DataPropField`           | The schema of a component's data        |
 | `InferProp`, `ComponentPropsData`, `PropValue`, `PropPrimitive` | The values a schema allows              |
-| `ComponentStyleOwnership`, `ComponentResourceOwnership`         | Exact ownership a renderer may report   |
 | `ComponentInstanceRecord`, `ComponentSourceLocation`            | Saved instance identity and source      |
 | `InstanceResolution`                                            | The result of `resolveInstance`         |

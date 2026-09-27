@@ -5,6 +5,10 @@
 The classifier, Browse/watch cache, comparison artifacts, and static exporter
 share this attribution policy. The [component explorer plan](../../plans/component-explorer.md)
 records delivery. Unregistered catalogue and legacy behavior remains intact.
+Inferred head-style ownership replacing renderer-returned records is the
+approved target of the
+[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md); until its Milestone 4 lands, the
+classifier still applies stored `styles` and `resources` records.
 
 ## Changes Membership
 
@@ -111,8 +115,8 @@ catalogues without component boundaries remain byte-compatible.
 Classification cost must follow the size of the change, not the size of the
 catalogue. For a view present on both sides, the classifier first decides
 whether the view can differ at all. The decision validates ranges and projects
-ownership only for views whose usage can edit text through instances, styles,
-or entry-owned slots, then performs CSS rule analysis and implementation
+ownership only for views whose usage can edit text through instances or
+entry-owned slots, then performs CSS rule analysis and implementation
 diffing only on complete-path fall-through. That decision is part of the
 materiality policy and must produce output equal to the complete
 comparison for every view produced by the validated builder; a differential
@@ -133,8 +137,7 @@ The decision, in order:
    records exist, every field must match except `props` and `propsKey` on
    entry-owned instances. In particular, viewport, color scheme, instance
    `componentId`, `key`, `id`, `owner`, `slotKey`, and `order`, instance-owned
-   `props` and `propsKey`, and every slot, range, style, and resource record
-   must match. Optional invocation `source` metadata is excluded from this
+   `props` and `propsKey`, and every slot and range record must match. Optional invocation `source` metadata is excluded from this
    comparison, as it is from every Changes projection. Any other difference
    takes the complete path.
 3. If the paired view routes differ, take the complete path. Otherwise form
@@ -143,13 +146,17 @@ The decision, in order:
    applying paired manual-ignore normalization. If the normalized documents
    differ, take the complete path. Discover the head closure in committed
    mode and both closures independently in derived mode.
-4. When either usage record has instances, styles, or entry-owned slots,
+4. When either usage record has instances or entry-owned slots,
    compute the same ownership projection as the complete comparison, including
    historical/current range validation in each side's marker dialect and
    root-specific ownership.
    Require the projected HTML pair to be equal and discover its resources with
    the same exclusion policy. In committed mode discover the head closure; in
-   derived mode discover both closures.
+   derived mode discover both closures. Equal retained documents have equal
+   unowned inline styles, so the
+   [inline style analysis](./mokly-inline-styles.md) has nothing to diff here;
+   only reference-bearing unowned rules run it, so projected discovery applies
+   the same exclusion as the complete path.
 5. If any actual or projected resource is a changed Git path, take the complete
    path; ownership, exclusion, and rule analysis are decided there.
 6. In derived mode, compare historical and current closure membership and
@@ -178,7 +185,7 @@ HTML parsing can discard caller slot content in contexts such as `template` or
 `select`, while ownership projection can expose that content. Removing
 component implementation text can also expose a later sibling that the
 implementation's unclosed HTML had hidden. Views whose usage cannot edit
-document text retain the actual-only proof. Views with instances, styles, or
+document text retain the actual-only proof. Views with instances or
 entry-owned slots remain eligible after both actual and projected resource
 comparisons are proved safe. Identical `(route, document, exclusion)` discovery
 work is reused on fall-through.
@@ -233,19 +240,23 @@ Entry reasons combine retained view selectors by path, with unresolved evidence
 taking precedence, while excluded resources stay on their own views. Formatting
 alone therefore leaves every consumer out of Changes for that stylesheet.
 Retained CSS evidence at an actual invocation also keeps its explicit or
-renderer-proven component owner in Changes when saved variants do not match.
+inferred component owner in Changes when saved variants do not match.
 Their own view exclusions stay intact; affected-consumer links retain the actual
 invocation context. An exact screen dependency can independently retain the same
 stylesheet only when its actual view analysis keeps it. Non-CSS dependencies
 retain the existing file-level policy.
 
 Component-generated style material can live in the document head rather than
-inside a component boundary. Extend the renderer result with optional typed
-style/resource ownership records while continuing to accept a plain HTML string.
-Records identify exact style ranges or public resource paths and component
-owners. Validate them against the rendered document and final compatibility
-output. Only proven component-owned material is excluded from the consuming
-screen projection; mixed or unclaimed head material remains material.
+inside a component boundary. The renderer returns only a document string and
+asserts no ownership. Mokly infers the owner of each changed head rule at
+comparison time from the paired documents and validated ranges under the
+[inline style ownership contract](./mokly-inline-styles.md): a rule whose
+matches all lie in paired component instances belongs to those components and
+is excluded from the consuming screen projection; a rule with any entry-owned
+match, or one the analysis cannot resolve, remains screen material; a rule
+that matches nothing on either side is excluded from both materials. Owned
+rule edits join the implementation-impact set, and references inside owned
+rules follow their owner.
 
 Owned asset edits must flag component pages even when HTML is byte-identical.
 Retain actual styles, fonts, and images in screenshots and snapshot trees. Never
@@ -255,11 +266,12 @@ consumer document to make a component-only example pass.
 ## Baselines And Migration
 
 Historical Git documents may carry retired `mokabook-component` and
-`mokabook-review-*` comments. Parse their boundaries against the original HTML:
-style ownership offsets and component ranges must share its UTF-16 coordinate
-space. Normalize retired comments only in comparison material after projection,
-never before applying stored style offsets. Current output remains `mokly`-only;
-historical and current snapshots retain their original bytes. A marker-only
+`mokabook-review-*` comments. Validate component ranges against the original
+HTML in the historical dialect for projection; the inline style analysis
+instead normalizes retired comments to the current dialect first and validates
+ranges again on the normalized text, because no stored offsets remain. Current
+output remains `mokly`-only; historical and current snapshots retain their
+original bytes. A marker-only
 rename is not a content change, while owned CSS edits still affect the component
 and independent caller edits still affect the consumer.
 
@@ -290,9 +302,11 @@ applies once both sides carry matching validated boundaries.
 Unit/integration and browser fixtures must establish agreement between Changes
 rows/count, on-demand results, watch updates, and published output. Cover all
 rows in the table, repeated/nested/empty instances, caller-owned slots, invalid
-markers, unchanged-render prop edits, both viewports/themes, owned external and
-head styles, shared-impact overlap, independent screen edits, historical
-manifests, removed consumers, and concurrent watched updates. Component styling
+markers, unchanged-render prop edits, both viewports/themes, owned external
+styles, inferred head-style ownership in its owned, shared-by-two-components,
+entry-retained, unresolved, excluded, unpaired-instance and root cases,
+shared-impact overlap, independent screen edits, historical manifests, removed
+consumers, and concurrent watched updates. Component styling
 must remain visibly changed in an affected screen's comparison.
 
 Dependency declaration provenance is attribution input, not display metadata.

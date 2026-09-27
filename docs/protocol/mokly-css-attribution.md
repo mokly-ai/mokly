@@ -8,7 +8,12 @@ inspector receives retained and excluded stylesheet evidence for component
 catalogues and screen-only catalogues, including before a comparison is loaded.
 Screen-only delivery reuses the existing v2 classification; it does not run
 component classification or an additional resource analysis. See
-[CSS Change Attribution](../../plans/css-change-attribution.md).
+[CSS Change Attribution](../../plans/css-change-attribution.md). Applying the
+same parser, diff, keep list and matcher to a page's own inline styles is the
+approved target of the
+[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md); the
+[inline style ownership contract](./mokly-inline-styles.md) owns that
+analysis.
 
 ## Purpose
 
@@ -267,7 +272,7 @@ feed normalized ignore tokens back into the marker parser.
 
 Entry dependency reasons merge by path across views, unioning selectors and
 giving `unresolved` precedence. Keep a stylesheet in entry `sharedImpact`
-only when some eligible view retains it. Explicit or renderer-proven ownership
+only when some eligible view retains it. Explicit or inferred ownership
 also attributes retained actual-invocation CSS evidence to its component owner,
 even when every saved variant excludes the stylesheet. Saved view states and
 exclusions remain unchanged; no synthetic variant is created. An exact screen
@@ -318,10 +323,21 @@ paths and sides. Parsing a shared stylesheet therefore does not repeat per view.
 The inspector and comparison-stage presentation of this evidence is specified
 in [CSS evidence in the shell](./mokly-css-evidence-shell.md).
 
+## Inline Styles
+
+A page's own unowned `<style>` elements are analysed with this contract's
+parser, rule diff, keep list and matcher under the
+[inline style ownership contract](./mokly-inline-styles.md), which owns the
+rule attribution, comparison material, membership and `inlineStyles` evidence
+for that material. Two differences apply there: every matched element is
+mapped to its enclosing component range to find an owner, and a changed
+reference does not by itself keep a rule, because the reference follows the
+rule's owner.
+
 ## Non-goals
 
 - Evaluating media, container, or supports conditions.
 - Specificity, cascade order, or override detection.
 - Inheritance beyond the custom-property keep rule.
 - Pixel or screenshot comparison.
-- Inferring ownership from CSS Modules, CSS-in-JS, or bundled output.
+- Inferring ownership from import graphs or bundled stylesheet output.

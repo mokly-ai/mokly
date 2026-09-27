@@ -4,7 +4,10 @@ This implemented contract expands the [package contract](./mokly-package.md)
 for the [authoring API](./mokly-authoring.md) and
 [configuration](./mokly-configuration.md). Public-resource eligibility follows
 [source protection](./mokly-source-protection.md), including configured
-public exclusions.
+public exclusions. The string-only renderer result below is the approved
+target of the
+[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md); until its Milestone 4 lands, the
+builder still accepts the retired structured result.
 
 ## Rendering Boundary
 
@@ -26,8 +29,6 @@ import type {
   ColorScheme,
   ScreenDefinition,
   ComponentDefinition,
-  ComponentStyleOwnership,
-  ComponentResourceOwnership,
   Viewport,
 } from "@mokly/mokly";
 
@@ -41,19 +42,15 @@ interface RenderInput {
   viewport: Viewport;
 }
 
-interface RenderResult {
-  html: string;
-  styles?: readonly ComponentStyleOwnership[];
-  resources?: readonly ComponentResourceOwnership[];
-}
-
-export default function render(input: RenderInput): string | RenderResult;
+export default function render(input: RenderInput): string;
 ```
 
-The string or `html` field must contain a complete `<html>` document. Optional
-style/resource records provide exact component ownership; unclaimed or mixed
-material stays conservative. The [component contract](./mokly-components.md)
-and [attribution contract](./mokly-component-changes.md) define validation. Mokly
+The result must be a string containing a complete `<html>` document. Any other
+result, including an object, fails the build with a typed `build-invalid`
+diagnostic that names the entry, viewport and color scheme. A renderer reports
+nothing about ownership: style material it places outside component markup is
+attributed at comparison time under the
+[inline style ownership contract](./mokly-inline-styles.md). Mokly
 serializes Review-ignore markers, adapts opt-in `MockLink asChild` controls,
 and rewrites every complete
 `mock:<id>[#fragment]` value found in `href` or `data-nav-href` after this

@@ -384,13 +384,18 @@ interface ReviewResult {
         path: string;
         reason: "no-matching-rule";
       }[];
+      inlineStyles?:
+        | { status: "matched" | "unresolved"; selectors: readonly string[] }
+        | { status: "excluded" };
     }[];
   }[];
 }
 ```
 
 Optional view `material`, `reasons`, and `excludedResources` implement
-[CSS change attribution](./mokly-css-attribution.md). `material` is present
+[CSS change attribution](./mokly-css-attribution.md); optional `inlineStyles`
+implements [inline style ownership](./mokly-inline-styles.md) and is emitted
+only by the component-aware classifier. `material` is present
 exactly when the view's normalized documents differ. Empty optional lists are
 omitted; historical results without them remain valid. Retained resource reasons
 make paired views changed. Entry `sharedImpact` includes a stylesheet only if

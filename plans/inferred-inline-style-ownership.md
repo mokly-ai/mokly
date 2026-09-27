@@ -231,13 +231,13 @@ field and the shell presentation in the specs before any code changes, and
 register the plan. Documentation-only; validated with Prettier and a diff
 review rather than `cargo xtask check`.
 
-- [ ] Register this plan in [`plans/README.md`](./README.md).
-- [ ] In [`mokly-rendering.md`](../docs/protocol/mokly-rendering.md), make
+- [x] Register this plan in [`plans/README.md`](./README.md).
+- [x] In [`mokly-rendering.md`](../docs/protocol/mokly-rendering.md), make
       the renderer contract `(input: RenderInput) => string`, delete
       `RenderResult` and the ownership sentence, and state that a non-string
       result fails the build with a typed diagnostic naming the entry,
       viewport and color scheme.
-- [ ] In [`mokly-component-manifest.md`](../docs/protocol/mokly-component-manifest.md),
+- [x] In [`mokly-component-manifest.md`](../docs/protocol/mokly-component-manifest.md),
       remove `ComponentStyleOwnership`, `ComponentResourceOwnership` and the
       `styles`/`resources` fields from `ComponentViewRecord`; rewrite the
       styles paragraph of "Styles, Validation, And Serialization" as the
@@ -245,7 +245,7 @@ review rather than `cargo xtask check`.
       historical v5 records accept arrays under those keys and discard them,
       and the schema version stays 5. Drop "style offsets" from the
       inspection-coordinates sentence.
-- [ ] In [`mokly-component-changes.md`](../docs/protocol/mokly-component-changes.md),
+- [x] In [`mokly-component-changes.md`](../docs/protocol/mokly-component-changes.md),
       replace the renderer-record paragraph of "Dependencies And Styles" with
       the inferred-ownership contract (inputs, attribution, materials,
       exclusion, implementation impact), replace every "instances, styles, or
@@ -257,25 +257,25 @@ review rather than `cargo xtask check`.
       "Baselines And Migration" to the normalized-document rule, and update
       "Required Evidence" from "owned external and head styles" to the
       inferred cases listed in Milestone 4.
-- [ ] In [`mokly-component-review.md`](../docs/protocol/mokly-component-review.md),
+- [x] In [`mokly-component-review.md`](../docs/protocol/mokly-component-review.md),
       add `inlineStyles` to the normative `ViewReview` fields with its
       validation rules, remove "styles, and resources" from the
       complete-comparison list, and state the excluded-only membership rule.
-- [ ] In [`mokly-css-attribution.md`](../docs/protocol/mokly-css-attribution.md),
+- [x] In [`mokly-css-attribution.md`](../docs/protocol/mokly-css-attribution.md),
       add an "Inline Styles" section that defines the analysis scope, the
       attribution outcomes, the two renderings, the evidence field and the
       Milestone 5 reference rule; rewrite the non-goal "Inferring ownership
       from CSS Modules, CSS-in-JS, or bundled output" to name only import
       graphs and bundled output; and replace "explicit or renderer-proven
       ownership" with "explicit or inferred ownership".
-- [ ] In [`mokly-css-evidence-shell.md`](../docs/protocol/mokly-css-evidence-shell.md),
+- [x] In [`mokly-css-evidence-shell.md`](../docs/protocol/mokly-css-evidence-shell.md),
       add the inline evidence presentation: matched and unresolved inline
       selectors join the existing outcome lists; an excluded-only view leads
       with "Styles on this page changed, but none of the changed styles apply
       to this screen." followed by the entry's terminal no-changes line; the
       shared-component note appears only when a changed component affects the
       entry; and name the new design screen from Milestone 2.
-- [ ] In [`mokly-derived-baselines.md`](../docs/protocol/mokly-derived-baselines.md),
+- [x] In [`mokly-derived-baselines.md`](../docs/protocol/mokly-derived-baselines.md),
       [`mokly-timings.md`](../docs/protocol/mokly-timings.md),
       [`mokly-catalogue.md`](../docs/protocol/mokly-catalogue.md),
       [`mokly-source-protection.md`](../docs/protocol/mokly-source-protection.md),
@@ -284,18 +284,32 @@ review rather than `cargo xtask check`.
       remove the style-offset and style/resource-record mentions, update the
       eligibility phrase, and add the `review.inline-style-analysis` span to
       the timings contract beside `review.css-analysis`.
-- [ ] In [`build-pipeline.md`](../docs/architecture/build-pipeline.md) and
+- [x] In [`build-pipeline.md`](../docs/architecture/build-pipeline.md) and
       [`package-boundary.md`](../docs/architecture/package-boundary.md),
       describe the string-only renderer and remove the structured-result
       sentences; in [`components.md`](../docs/guides/authoring/components.md)
       and [`config.md`](../docs/guides/authoring/config.md) remove the
       ownership-record row and `RenderResult` from the exported-type tables
       and describe inferred head-style attribution in the components guide.
-- [ ] Update `src/components/README.md`, `src/review/README.md` and
+- [x] Update `src/components/README.md`, `src/review/README.md` and
       `src/build/README.md` where they describe records, rebasing, or the
       eligibility phrase.
-- [ ] Validate the changed Markdown with `npx prettier --check` and review
+- [x] Validate the changed Markdown with `npx prettier --check` and review
       the diff; documentation-only work does not require `cargo xtask check`.
+- [x] Discovered: the CSS attribution contract already exceeds the ~250-line
+      guideline, so the inline-style contract lives in a new
+      [`mokly-inline-styles.md`](../docs/protocol/mokly-inline-styles.md)
+      and the CSS contract's "Inline Styles" section is a pointer; register
+      the new document in the [protocol index](../docs/protocol/README.md),
+      link it from the registered-components contract, and add the
+      `inlineStyles` view field to the schema-v2 shape in
+      [`mokly-changes.md`](../docs/protocol/mokly-changes.md).
+- [x] Discovered: mark each edited contract's Delivery Status with the
+      approved-target sentence naming this plan, so the protocol index rule
+      holds while the implementation milestones are pending; Milestone 8
+      removes those sentences.
+- [x] Discovered: `src/build/README.md` mentions no records and needs no
+      change.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)

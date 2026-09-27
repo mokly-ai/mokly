@@ -7,7 +7,10 @@ implement this component-aware Review schema v3 for [change attribution](./mokly
 `ReviewResult`, `ScreenReview`, `ViewReview`, and `ReviewState` refer to the
 existing [schema-v2 contract](./mokly-changes.md) and
 [named result interfaces](../../packages/viewer/src/review/types.ts). Manifest/usage types come
-from the [component manifest](./mokly-component-manifest.md).
+from the [component manifest](./mokly-component-manifest.md). The optional
+`inlineStyles` view evidence below is the approved target of the
+[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md) and lands with its evidence
+milestone.
 
 ## Normative Result
 
@@ -168,8 +171,9 @@ repeat range validation.
 Eligibility requires equality with component markers retained outside paired
 ignored regions and canonical equality of usage topology. Only `props` and
 `propsKey` on entry-owned instances may differ, and invocation `source`
-metadata is ignored; nested inputs, ownership, identity, slots, ranges, styles,
-and resources require the complete comparison. Views with instances, styles, or entry-owned slots also prove the reachable resources of the ownership-projected documents before
+metadata is ignored; nested inputs, ownership, identity, slots and ranges
+require the complete comparison. Views with instances or entry-owned slots also
+prove the reachable resources of the ownership-projected documents before
 the shortcut can settle them, because HTML parsing can discard content that
 projection exposes.
 One-sided views always validate their available range records in the side's
@@ -179,7 +183,14 @@ record.
 Views carry optional dependency-only `reasons` alongside optional
 `excludedResources` in both schemas. Omit either list when empty and sort it
 uniquely by path. `matched` analysis requires selectors; `unresolved` permits an
-empty selector list. Entry reasons merge retained view evidence by path with a
+empty selector list. Views may also carry optional `inlineStyles` evidence from
+the [inline style ownership contract](./mokly-inline-styles.md): `status` is
+`matched`, `unresolved` or `excluded`; sorted, duplicate-free `selectors` are
+present exactly for the first two and non-empty for `matched`. A view with
+`excluded` inline evidence is `unchanged`, carries no `material` and no
+reason of its own, and is not in Changes; `matched` or `unresolved` inline
+evidence accompanies a `changed` view with `material`. The field never
+appears on one-sided or fast-path views and is omitted when absent. Entry reasons merge retained view evidence by path with a
 sorted selector union and unresolved precedence. Entry ownership can suppress
 a view resource reason from direct membership; one view excluding a path does
 not conflict with another keeping it. A component's reasons also aggregate owned

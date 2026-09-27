@@ -186,9 +186,8 @@ Do not spread a manifest, entry, or internal evidence object into public JSON.
 
 Never emit `sourceFiles`, `declaredDependencies`, `ownedDependencies`, resolved
 dependency evidence, changed-path inventories, source graphs, Git commands,
-baseline manifest envelopes, content digests for source inputs, style offsets
-(`startOffset`/`endOffset`), style/resource ownership tables, absolute filesystem
-paths, credentials, render-capability tokens, or legacy manifests. No source
+baseline manifest envelopes, content digests for source inputs, absolute
+filesystem paths, credentials, render-capability tokens, or legacy manifests. No source
 bytes, HTML, runtime React values, or source maps belong in this JSON. This
 privacy rule applies recursively, including removed entries and extension fields.
 `snapshotId` is a one-way digest, never a public commit, manifest, or generation

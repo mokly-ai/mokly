@@ -194,7 +194,7 @@ worker before accepting more work. This makes synchronous consumer render
 failures unable to hang Browse or shutdown. No second independently configured
 renderer or React resolution graph is permitted.
 
-Keep transient HTML, usage/props metadata, and generated style/resource bytes
+Keep transient HTML, usage/props metadata, and generated asset bytes
 only in a process-local memory store behind opaque render ids. Mokly never
 spills these artifacts to disk, including `.context`, the OS temporary directory,
 or any source/output root. They never enter a manifest, Check/orphan transaction,

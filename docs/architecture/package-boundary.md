@@ -24,9 +24,8 @@ React Native, React Native Web, `@firna/ui`, consumer applications, or their
 workspace layouts. At build time, React imports are resolved from the consumer's
 config file and every React-bearing source is bundled in one graph.
 
-The renderer is synchronous and returns a complete HTML document, either as a
-string or as `RenderResult` with optional validated style/resource ownership. This is the
-only place an app should install theme providers, collect React Native Web's
+The renderer is synchronous and returns a complete HTML document as a string.
+This is the only place an app should install theme providers, collect React Native Web's
 `AppRegistry` styles, inject product fonts, or establish other render context.
 Those actions depend on app-owned packages and policy, so moving them into the
 library would make Mokly app-specific and risk two React runtimes.

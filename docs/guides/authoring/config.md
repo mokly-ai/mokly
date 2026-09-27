@@ -158,5 +158,5 @@ are matched case-insensitively; an empty list keeps them.
 | `WatchConfig`, `WatchRule`, `WatchAction`                 | The `watch` object and its rules              |
 | `ModuleResolutionConfig`, `ModuleLoader`                  | The `moduleResolution` object and its loaders |
 | `CompatibilityConfig`                                     | The `compatibility` object                    |
-| `Renderer`, `RenderInput`, `RenderResult`                 | Your renderer, its context and its result     |
+| `Renderer`, `RenderInput`                                 | Your renderer and its context                 |
 | `CompatibilityTransformer`, `CompatibilityTransformInput` | A temporary document bridge                   |

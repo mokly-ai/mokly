@@ -252,11 +252,11 @@ Key code:
   produce identical records for valid builder output. Identical handcrafted
   malformed ownership markers are outside that equivalence guarantee because
   views without ownership text edits do not repeat range validation. Views with
-  instances, styles, or entry-owned slots validate ranges while preparing their resource projection. The
+  instances or entry-owned slots validate ranges while preparing their resource projection. The
   internal `useFastPath` classification input and trailing `compareReview`
   options object exist only for differential tests and default to enabled. The decision rule lives in the
   [component change attribution contract](../../docs/protocol/mokly-component-changes.md#unchanged-view-decision).
-  Views with instances, styles, or entry-owned slots additionally run the same ownership projection
+  Views with instances or entry-owned slots additionally run the same ownership projection
   and excluded-resource discovery as the complete comparison. This proves
   resources that HTML parsing may discard in contexts such as `template` or
   `select`, including siblings exposed when component implementation text is

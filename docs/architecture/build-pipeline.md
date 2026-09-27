@@ -147,12 +147,13 @@ interface RenderInput {
   colorScheme: "light" | "dark";
 }
 
-type Renderer = (input: RenderInput) => string | RenderResult;
+type Renderer = (input: RenderInput) => string;
 ```
 
-The returned string, or `RenderResult.html`, must be a complete HTML document.
-The optional structured result supplies exact component style/resource ownership;
-see the [component manifest](../protocol/mokly-component-manifest.md).
+The returned string must be a complete HTML document; any other result fails
+the build with a typed diagnostic. Ownership of head styles the renderer emits
+is inferred at comparison time; see
+[inline style ownership](../protocol/mokly-inline-styles.md).
 Registered entries render each saved variant in every configured context through
 the same consumer graph. Wrappers record actual invocations, data, caller-owned
 slots, and layout-neutral ranges. The root saved variant is not its own instance.

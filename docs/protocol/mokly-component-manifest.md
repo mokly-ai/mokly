@@ -17,6 +17,10 @@ The optional instance `source` field below is implemented in
 All existing v5 fields retain their contracts. Updated readers accept
 instances with or without `source`; the manifest version remains 5.
 
+Retiring the `styles` and `resources` view fields is the approved target of
+the [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md); until its Milestone 4 lands,
+current records still carry both arrays and the builder still validates them.
+
 ## Entries And Variants
 
 ```ts
@@ -131,25 +135,12 @@ interface ComponentRangeRecord {
   parentId?: string;
 }
 
-interface ComponentStyleOwnership {
-  startOffset: number;
-  endOffset: number;
-  componentIds: readonly string[];
-}
-
-interface ComponentResourceOwnership {
-  path: string;
-  componentIds: readonly string[];
-}
-
 interface ComponentViewRecord {
   viewport: Viewport;
   colorScheme: ColorScheme;
   instances: readonly ComponentInstanceRecord[];
   slots: readonly ComponentSlotRecord[];
   ranges: readonly ComponentRangeRecord[];
-  styles: readonly ComponentStyleOwnership[];
-  resources: readonly ComponentResourceOwnership[];
 }
 ```
 
@@ -202,24 +193,24 @@ Every recorded instance has a matched comment pair for each of its rendered
 ranges in that view, including an empty pair for null output. A replayed
 instance can have multiple ranges; this does not create additional logical keys.
 
-Range ids, physical parentage, style offsets, and repeated placement counts are
+Range ids, physical parentage, and repeated placement counts are
 inspection coordinates, not direct input identity. A component implementation
 moving or duplicating an unchanged slot must not itself mark the caller changed.
 Comparison projects each original slot's material once under its input owner,
 then applies the [attribution rules](./mokly-component-changes.md). Caller
 changes to logical instance ids/order/props still remain material.
 
-## Styles, Validation, And Serialization
+## Retired Fields, Validation, And Serialization
 
-Style offsets are nonnegative safe integers delimiting a nonempty half-open
-UTF-16 range in the final generated HTML, within a parsed style element's text.
-The builder rebases renderer offsets through its own transformations and
-validates ownership after compatibility output; it never trusts stale offsets.
-Ranges must not overlap and sort by start offset. Resource paths are exact
-mockups-root-relative public files and sort lexically, with one record per path.
-Owner lists are nonempty, sorted, duplicate-free component ids that actually
-render in the view, including its component root when applicable. Ownership is
-an explicit renderer/author assertion, not CSS-selector inference.
+Earlier v5 records carried `styles` and `resources` arrays asserting
+renderer-supplied ownership of head style text and public files. Those fields
+are retired: current v5 records must not carry either key, and current loading
+rejects them. Historical v5 records read at the Git boundary or from the
+rebuilt baseline cache may still carry them, because a merge-base commit built
+by an earlier Mokly emits them; historical validation accepts an array under
+either key and discards it before the record is used. The schema version stays 5. Ownership of head style material is inferred at comparison time under the
+[inline style ownership contract](./mokly-inline-styles.md); explicit file
+ownership stays declared through `ownedDependencies`.
 
 Use one schema implementation for Build output, Browse, historical manifest
 parsing, and publishing. Reject unknown fields in current v5 structures, incorrect

@@ -2,10 +2,13 @@
 
 ## Delivery Status
 
-Implemented. This document owns how the inspector and the comparison stage
-present the evidence defined by
-[CSS change attribution](./mokly-css-attribution.md); that contract owns the
-analysis, membership rule, evidence schema, and validation.
+Implemented for stylesheet evidence. This document owns how the inspector and
+the comparison stage present the evidence defined by
+[CSS change attribution](./mokly-css-attribution.md) and
+[inline style ownership](./mokly-inline-styles.md); those contracts own the
+analysis, membership rules, evidence schemas, and validation. The inline
+style presentation is the approved target of the
+[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md) and lands with its shell milestone.
 
 ## Shell Presentation
 
@@ -19,8 +22,8 @@ The approved design is the stylesheet-evidence group of the design catalogue,
 recorded in the
 [shell design inventory](./mokly-shell-design.md#design-mockups) as
 `design-review-style-matched`, `design-review-style-unresolved`,
-`design-review-style-unnamed`, and `design-review-style-excluded`. It fixes
-these presentation rules:
+`design-review-style-unnamed`, `design-review-style-excluded`, and
+`design-review-style-page-excluded`. It fixes these presentation rules:
 
 - A `matched` or `unresolved` reason reads as one outcome in the comparison
   stage heading, "Styles this screen uses changed". That heading is rendered
@@ -45,6 +48,19 @@ these presentation rules:
 - No design screen without a comparison toolbar renders a comparison stage
   heading. A screen depicted in Current mode, whether unchanged, excluded-only,
   or ignored-only, shows the plain preview with no heading.
+- Inline style evidence joins the same presentation. `matched` and
+  `unresolved` inline selectors are unioned into the existing outcome lists,
+  so one screen still shows at most one matched list and one unresolved list.
+  A view whose inline evidence is `excluded` leads with "Styles on this page
+  changed, but none of the changed styles apply to this screen." followed
+  directly by the entry's terminal no-changes line; it lists nothing under
+  "Examined and excluded", is not in Changes, offers no comparison, and shows
+  no stage heading. The approved design is
+  `design-review-style-page-excluded`.
+- The note "Shared component changes affect this preview. This page has no
+  independent entry in Changes." appears only when a changed component
+  affects the entry, never for a view whose only evidence is excluded inline
+  styles.
 - Selector text, status names, and analysis vocabulary never appear in a
   heading or in the catalogue tree; they appear only inside the secondary
   details list, and only where the detail has review value.
@@ -52,8 +68,9 @@ these presentation rules:
 ### Shell Derivation
 
 The live classification snapshot retains screen-only `screenEvidence` records
-with a route and per-view `viewport`, `colorScheme`, optional `reasons`, and
-optional `excludedResources`. Paths remain repository-relative. The workspace
+with a route and per-view `viewport`, `colorScheme`, optional `reasons`,
+optional `excludedResources`, and optional `inlineStyles`. Paths remain
+repository-relative. The workspace
 projects the selected screen's views as optional `resourceEvidence`; it does not
 invent v3 entry reasons, component results, or comparison states. Static exports
 project this same slice from the existing v2 comparison. Schema versions remain
@@ -62,7 +79,7 @@ replace the slice, clearing stale evidence while Changes is pending/unavailable.
 
 One inspector renderer merges classification evidence with the loaded selected
 comparison. Dependency reasons merge by path with sorted selector unions and
-unresolved precedence. Retained paths suppress exclusions across all selected
+unresolved precedence; inline selectors merge into the same outcome groups. Retained paths suppress exclusions across all selected
 views; loaded v2 shared-impact and ignored-content details remain available.
 Loaded evidence is selection-scoped and cleared on classification invalidation.
 Component ownership facts continue to come from entry reasons and the complete
