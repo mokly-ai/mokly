@@ -39,3 +39,35 @@ test("guide prose never cites engineering specs or process", () => {
       assert.doesNotMatch(text, pattern, `${guide.id}: ${pattern}`);
   }
 });
+
+const REPOSITORY_PATHS = [
+  /\bdocs\/(?:architecture|protocol|reviews|superpowers)\/(?!fixtures\/)/u,
+  /(?:^|[\s`'"(])plans\//u,
+  /\bmokly-[a-z0-9-]+\.md\b/u,
+  /\bimplementation-review-prompt\b/u,
+];
+
+test("guides never name Mokly's own specs or plans, even in code spans", () => {
+  const cited = (text: string) =>
+    REPOSITORY_PATHS.filter((pattern) => pattern.test(text));
+  for (const guide of GUIDES) {
+    const text = withoutFencedCode(guide.body).replace(
+      /<!--[\s\S]*?-->/gu,
+      " ",
+    );
+    assert.deepEqual(cited(text), [], guide.id);
+  }
+  for (const citation of [
+    "see `docs/protocol/mokly-upload.md`",
+    "`plans/package-documentation.md`",
+    "the mokly-guides.md contract",
+    "docs/architecture/build-pipeline.md",
+  ])
+    assert.notDeepEqual(cited(citation), [], citation);
+  for (const allowed of [
+    "`node_modules/@mokly/mokly/docs/protocol/fixtures/export-ownership-v1.json`",
+    "`src/plans/checkout.tsx`",
+    "`docs/mockups/entries`",
+  ])
+    assert.deepEqual(cited(allowed), [], allowed);
+});

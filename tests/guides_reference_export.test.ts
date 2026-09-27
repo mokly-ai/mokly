@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import fs, { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
+import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
 import {
   EXPORT_MARKER,
   parseExportOwnership,
@@ -122,12 +123,48 @@ test("the documented ownership marker rules are the reader's rules", () => {
   assert.ok(packaged.some((entry) => fixture.startsWith(`${entry}/`)));
   const cases = (
     JSON.parse(read(fixture)) as {
-      cases: Array<Record<string, unknown>>;
+      cases: Array<{ document: unknown; name: string; valid: boolean }>;
     }
   ).cases;
   assert.ok(cases.length > 0);
-  for (const item of cases)
+  assert.match(
+    flat(marker),
+    /Use `JSON\.stringify` before passing it to a parser that reads text/u,
+  );
+  for (const item of cases) {
     assert.deepEqual(Object.keys(item).sort(), ["document", "name", "valid"]);
+    assert.equal(
+      parseExportOwnership(JSON.stringify(item.document)) !== undefined,
+      item.valid,
+      item.name,
+    );
+  }
+});
+
+test("static files include every public file below mockupsDir", async (context) => {
+  const layout = guideSection(guide, "Layout");
+  const row = tableRows(layout).find(([path]) => path === "`static/`");
+  assert.match(row?.[1] ?? "", /every other public file under `mockupsDir`/u);
+  const defaults = codeSpans(
+    /Its defaults are (.*?)\.(?=\s+[A-Z])/u.exec(flat(layout))?.[1] ?? "",
+  );
+  assert.deepEqual(defaults, [...DEFAULT_PUBLIC_EXCLUDE]);
+  assert.match(flat(layout), /included even when no screen uses them/u);
+  const fixture = await createExportFixture();
+  context.after(() => fixture.close());
+  await fs.promises.mkdir(path.join(fixture.mockupsDir, "drafts"));
+  await fs.promises.writeFile(
+    path.join(fixture.mockupsDir, "drafts", "notes.txt"),
+    "notes",
+  );
+  await fs.promises.writeFile(
+    path.join(fixture.mockupsDir, "README.md"),
+    "# Private",
+  );
+  await exportCatalogue(fixture.config, { outDir: "current", noChanges: true });
+  const files = await directoryFiles(path.join(fixture.root, "current"));
+  assert.equal(files.get("static/drafts/notes.txt")?.toString(), "notes");
+  assert.equal(files.has("static/README.md"), false);
 });
 
 test("serving headers agree with the delivery and preview contracts", () => {

@@ -9,6 +9,9 @@ support. Verification is tracked in
 [Unified Catalogue Pages](../../plans/unified-catalogue-pages.md). The
 [removed content previews plan](../../plans/removed-content-previews.md)
 implements the page-only historical capture and delivery boundary.
+The [Pages guide](../guides/authoring/pages.md) restates this contract's
+author-facing rules for readers; a change to those rules updates the guide in
+the same change.
 
 ## Purpose And Boundary
 

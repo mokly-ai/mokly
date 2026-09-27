@@ -4,6 +4,9 @@
 
 Implemented. Verification and delivery are tracked by the
 [MockLink child controls plan](../../plans/mocklink-child-controls.md).
+The [Links guide](../guides/authoring/links.md) restates this contract's
+author-facing rules for readers; a change to those rules updates the guide in
+the same change.
 
 ## Authoring Contract
 

@@ -56,6 +56,24 @@ test("bundle limits stop oversized files, file counts, tar bytes and compressed 
   );
 });
 
+test("paths longer than the byte limit are too large, not invalid", async () => {
+  assert.equal(UPLOAD_LIMITS.pathBytes, 1024);
+  for (const name of ["x".repeat(1024), `${"é".repeat(511)}ab`])
+    await bundleUpload(new Map([[name, Buffer.from("a")]]));
+  for (const name of ["x".repeat(1025), `${"é".repeat(512)}a`])
+    await assert.rejects(
+      bundleUpload(new Map([[name, Buffer.from("a")]])),
+      /upload-too-large/,
+    );
+  await assert.rejects(
+    bundleUpload(new Map([["a/b", Buffer.from("a")]]), undefined, {
+      ...UPLOAD_LIMITS,
+      pathBytes: 2,
+    }),
+    /upload-too-large/,
+  );
+});
+
 test("bundle rejects unsafe paths and case-folded file/directory collisions", async () => {
   for (const name of [
     "../escape",
@@ -65,7 +83,6 @@ test("bundle rejects unsafe paths and case-folded file/directory collisions", as
     "a/./b",
     "a\nb",
     "a//b",
-    "x".repeat(1025),
   ])
     await assert.rejects(
       bundleUpload(new Map([[name, Buffer.from("a")]])),

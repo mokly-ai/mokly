@@ -3,15 +3,14 @@
 ## Delivery Status And Boundary
 
 Implementation is tracked in [Publish Catalogue](../../plans/publish-catalogue.md).
-This is the public contract for hosted and self-hosted receivers. Receivers need
-only the published `@mokly/mokly` package and these documented file artifacts;
-Mokly Cloud has no special protocol or access to package internals.
-`mokly export` remains local-only. `mokly publish` exports, then uploads once.
-
-Integrators read the reader-facing
-[upload receiver guide](../guides/reference/upload-receiver.md). A change to a
-header, status, manifest field, archive rule or limit here updates that guide
-in the same change; root tests compare it with the implementation.
+This document defines the implementation contract behind the reader-facing
+[upload receiver guide](../guides/reference/upload-receiver.md). Receivers need
+only the published `@mokly/mokly` package and its documented artifacts; Mokly
+Cloud has no special access to package internals or separate upload format.
+`mokly export` remains local-only, while `mokly publish` exports and uploads
+once. A change to a header, status, manifest field, archive rule or limit here
+updates the guide in the same change; root tests compare it with the
+implementation.
 
 ## CLI
 
@@ -189,8 +188,9 @@ lower quotas and return 413. Units are binary (1 MiB = 1,048,576 bytes).
 | Relative path                                            | 1,024 UTF-8 bytes |
 
 Reject invalid gzip/tar, truncated entries, trailing non-padding tar data,
-duplicate JSON keys, missing/extra upload-manifest fields, wrong types, unsupported
-versions and invalid field values. Receivers reject duplicate or case-folded
+duplicate JSON keys in `mokly-upload.json` or `.mokly-export-artifact`,
+missing/extra upload-manifest fields, wrong types, unsupported versions and
+invalid field values. Receivers reject duplicate or case-folded
 colliding file paths, file/directory conflicts, absolute paths, empty segments,
 `.`/`..` segments, backslashes, colons and control characters. Paths must be
 valid UTF-8; Unicode is allowed. Collision keys use locale-independent Unicode

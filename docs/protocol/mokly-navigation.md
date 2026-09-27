@@ -5,6 +5,9 @@
 This contract is implemented. Its delivery and verification history is recorded
 in the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
+The [Links guide](../guides/authoring/links.md) restates this contract's
+author-facing rules for readers; a change to those rules updates the guide in
+the same change.
 
 [Whole-document pages](./mokly-pages.md) use the same logical links, IDs,
 source ownership, and collection ancestry as screens and use cases.

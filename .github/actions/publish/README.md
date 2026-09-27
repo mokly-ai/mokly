@@ -2,7 +2,8 @@
 
 This public composite action installs an exact `@mokly/mokly` npm release in
 runner temporary storage and runs its `mokly publish` command. It supports any
-receiver implementing [upload v1](../../../docs/protocol/mokly-upload.md),
+receiver implementing the upload format described in the
+[upload receiver guide](../../../docs/guides/reference/upload-receiver.md),
 including self-hosted services. It uses no private repository or package API.
 
 The action is maintained here at `mokly-ai/mokly/.github/actions/publish`.

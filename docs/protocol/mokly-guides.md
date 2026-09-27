@@ -116,11 +116,29 @@ implementation contracts behind them. A change to a public value in one of
 those contracts updates the matching reference guide in the same change, and
 root tests compare both reference guides with the implementation.
 
-Package versions up to and including 0.12.0 asked the site to publish six
-protocol documents under `/docs/reference/<slug>/`. Later versions withdraw
-that allowlist: the site renders the `reference` section from
-`docs/guides/reference/` like every other package section and publishes no
-protocol document.
+The Links and Pages guides under Authoring restate the author-facing rules of
+the [navigation](./mokly-navigation.md),
+[styled link control](./mokly-link-controls.md), and
+[pages](./mokly-pages.md) contracts. A change to those rules updates the
+matching guide in the same change, and root tests compare those facts with the
+implementation.
+
+### Withdrawn Routes
+
+Versions 0.11.0 and 0.12.0 had the site publish six protocol documents at
+`/docs/reference/<slug>/`; earlier versions had no guides. Later versions
+withdraw these routes. The site redirects each withdrawn route permanently to
+its replacement and never reuses a withdrawn route for other content. A release
+that removes or renames a published route adds it to this table.
+
+| Withdrawn route                     | Replacement                        |
+| ----------------------------------- | ---------------------------------- |
+| `/docs/reference/export-delivery/`  | `/docs/reference/export-files/`    |
+| `/docs/reference/export-ownership/` | `/docs/reference/export-files/`    |
+| `/docs/reference/upload/`           | `/docs/reference/upload-receiver/` |
+| `/docs/reference/navigation/`       | `/docs/authoring/links/`           |
+| `/docs/reference/link-controls/`    | `/docs/authoring/links/`           |
+| `/docs/reference/pages/`            | `/docs/authoring/pages/`           |
 
 ## Versions And Releases
 
@@ -172,7 +190,10 @@ package versions.
 - Name Mokly's own files only when they are part of the public interface, such
   as exported artifacts or the packaged compatibility fixtures. Never cite
   protocol documents, plans, milestones, delivery status, source modules, or
-  tests; root tests reject that vocabulary in guide prose.
+  tests; root tests reject that vocabulary in guide prose. Root tests also
+  reject Mokly repository paths such as `docs/protocol/...` and `plans/...`
+  outside fenced code, including inside code spans. The installed fixture path
+  under `node_modules/@mokly/mokly/docs/protocol/fixtures/...` is the exception.
 - Root tests validate structure, links, versions, copy, the CLI surface,
   configuration fields, public authoring exports, the upload/CI contract, and
   the reference formats.

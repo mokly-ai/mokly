@@ -170,13 +170,14 @@ rendering pipeline, exact routes, inheritance, and schema validation.
 
 The root package ships the plain-Markdown CLI guides under `docs/guides` and
 the protocol sources under `docs/protocol`. The package version is the
-documentation version. The private cloud repository renders those files into
-the public documentation site and owns its cloud, review, changelog, legal, and
-marketing pages; this repository owns no site runtime or deployment.
+documentation version. The private cloud repository renders the guides,
+including the Reference section, into the public documentation site and
+publishes no protocol document. It owns its cloud, review, changelog, legal,
+and marketing pages; this repository owns no site runtime or deployment.
 
 The [guides contract](./mokly-guides.md) defines the source tree, frontmatter,
-sections, link mapping, published Reference allowlist, release-managed version
-literals, and package boundary.
+sections, link rules, withdrawn routes, release-managed version literals, and
+package boundary.
 
 ## Non-Goals
 

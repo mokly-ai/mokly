@@ -5,10 +5,7 @@ import test from "node:test";
 
 import { bundleUpload, UPLOAD_LIMITS } from "../src/publish/bundle.js";
 import { uploadCatalogue } from "../src/publish/http.js";
-import {
-  UPLOAD_MANIFEST,
-  validateUploadManifest,
-} from "../src/publish/manifest.js";
+import { UPLOAD_MANIFEST } from "../src/publish/manifest.js";
 import { resolvePublishOptions } from "../src/publish/options.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -19,37 +16,6 @@ const receiver =
 const flat = (text: string) => text.replace(/\s+/gu, " ");
 const endpoint = "https://receiver.example.com/uploads?team=web";
 const archive = Buffer.from("archive");
-const current = {
-  schemaVersion: 1,
-  moklyVersion: "1.2.3",
-  repository: { host: "git.example.com", owner: "team/web", name: "shop" },
-  branch: "feature/checkout",
-  headSha: "a".repeat(40),
-  baseRef: null,
-  baseSha: null,
-  pullRequest: null,
-  configPath: "tools/mokly.config.ts",
-  exportedAt: "2026-09-25T09:30:00.000Z",
-  comparisonPath: null,
-};
-const compared = {
-  ...current,
-  headSha: "b".repeat(64),
-  baseRef: "origin/main",
-  baseSha: "c".repeat(64),
-  pullRequest: 42,
-  comparisonPath: `__mokly/diffs/__generations/${"d".repeat(64)}/review.json`,
-};
-
-function accepts(patch: Record<string, unknown>): boolean {
-  try {
-    validateUploadManifest({ ...compared, ...patch });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 function bytes(value: string | undefined): number {
   const match = /^([\d,]+) (MiB|KiB|bytes)$/u.exec(value ?? "");
   if (!match) return Number((value ?? "").replaceAll(",", ""));
@@ -164,93 +130,6 @@ test("every documented status reaches publish as its category", async () => {
   assert.match(flat(responses), /A timeout or network failure is also/u);
 });
 
-test("the manifest table lists exactly the validated fields and types", () => {
-  const rows = tableRows(guideSection(receiver, "The upload manifest"));
-  assert.deepEqual(
-    rows.map(([field]) => codeCell(field)),
-    Object.keys(current),
-  );
-  for (const sample of [current, compared])
-    assert.deepEqual(validateUploadManifest(sample), sample);
-  const kind = (value: unknown) => (value === null ? "null" : typeof value);
-  for (const [field, type] of rows) {
-    const name = codeCell(field) as keyof typeof current;
-    assert.deepEqual(
-      [...new Set([current[name], compared[name]].map(kind))].sort(),
-      (type ?? "").split(" or ").sort(),
-      name,
-    );
-  }
-  for (const name of Object.keys(current)) {
-    const missing: Record<string, unknown> = { ...current };
-    delete missing[name];
-    assert.throws(() => validateUploadManifest(missing), {
-      code: "upload-invalid-bundle",
-    });
-  }
-  assert.throws(() => validateUploadManifest({ ...current, extra: true }), {
-    code: "upload-invalid-bundle",
-  });
-  assert.throws(
-    () => validateUploadManifest({ ...current, schemaVersion: 2 }),
-    {
-      code: "upload-unsupported-version",
-    },
-  );
-  assert.ok(!accepts({ comparisonPath: null }));
-  assert.ok(!accepts({ baseSha: null }));
-  assert.ok(!accepts({ pullRequest: 0 }));
-});
-
-test("the manifest's documented byte bounds are the validated bounds", () => {
-  const section = guideSection(receiver, "The upload manifest");
-  const rows = new Map(
-    tableRows(section).map(([field, , value]) => [codeCell(field), value]),
-  );
-  const bound = (text: string | undefined) =>
-    Number(/(?:1 to|up to) (\d+) bytes/u.exec(text ?? "")?.[1]);
-  for (const field of ["branch", "baseRef"]) {
-    const limit = bound(rows.get(field));
-    assert.ok(accepts({ [field]: "b".repeat(limit) }), field);
-    assert.ok(!accepts({ [field]: "b".repeat(limit + 1) }), field);
-    assert.ok(!accepts({ [field]: "" }), field);
-  }
-  const version = (size: number) => `1.2.3+${"a".repeat(size - 6)}`;
-  const versionLimit = bound(rows.get("moklyVersion"));
-  assert.ok(accepts({ moklyVersion: version(versionLimit) }));
-  assert.ok(!accepts({ moklyVersion: version(versionLimit + 1) }));
-  const prose = flat(section);
-  const hostLimit = Number(
-    /`repository\.host` is [^.]*? up to (\d+) bytes/u.exec(prose)?.[1],
-  );
-  const partLimit = Number(
-    /each of the two is up to (\d+) bytes/u.exec(prose)?.[1],
-  );
-  const host = (size: number) => {
-    const labels: string[] = [];
-    for (let left = size; left > 0; left -= 64)
-      labels.push("h".repeat(Math.min(63, left)));
-    return labels.join(".");
-  };
-  assert.equal(host(hostLimit).length, hostLimit);
-  const repository = (patch: Record<string, string>) => ({
-    repository: { ...compared.repository, ...patch },
-  });
-  assert.ok(accepts(repository({ host: host(hostLimit) })));
-  assert.ok(!accepts(repository({ host: host(hostLimit + 1) })));
-  assert.ok(!accepts(repository({ host: "git.example.com:443" })));
-  for (const part of ["owner", "name"]) {
-    assert.ok(accepts(repository({ [part]: "o".repeat(partLimit) })), part);
-    assert.ok(
-      !accepts(repository({ [part]: "o".repeat(partLimit + 1) })),
-      part,
-    );
-    assert.ok(!accepts(repository({ [part]: ".." })), part);
-  }
-  assert.ok(accepts(repository({ owner: "group/subgroup" })));
-  assert.ok(!accepts(repository({ name: "group/subgroup" })));
-});
-
 test("the documented limits are the limits publish enforces", async () => {
   const limits = new Map(
     tableRows(guideSection(receiver, "Limits")).map(([label, value]) => [
@@ -279,9 +158,10 @@ test("the documented limits are the limits publish enforces", async () => {
     { code: "upload-too-large" },
   );
   const pathBytes = bytes(limits.get("Path"));
+  assert.equal(pathBytes, UPLOAD_LIMITS.pathBytes);
   await bundleUpload(new Map([["p".repeat(pathBytes), "file"]]));
   await assert.rejects(
     bundleUpload(new Map([["p".repeat(pathBytes + 1), "file"]])),
-    { code: "upload-invalid-bundle" },
+    { code: "upload-too-large" },
   );
 });

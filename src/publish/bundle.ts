@@ -17,6 +17,7 @@ export interface UploadLimits {
   tarBytes: number;
   fileBytes: number;
   files: number;
+  pathBytes: number;
 }
 
 /** Protocol v1 resource ceilings; overrides exist only for focused unit tests. */
@@ -25,6 +26,7 @@ export const UPLOAD_LIMITS: Readonly<UploadLimits> = Object.freeze({
   tarBytes: 512 * 1024 * 1024,
   fileBytes: 64 * 1024 * 1024,
   files: 20_000,
+  pathBytes: 1024,
 });
 
 /** Encode an already finalized export snapshot without traversing the filesystem. */
@@ -35,7 +37,7 @@ export async function bundleUpload(
 ): Promise<Buffer> {
   if (signal?.aborted) throw interrupted();
   if (files.size > limits.files) throw tooLarge();
-  const entries = validateEntries(files, limits.fileBytes);
+  const entries = validateEntries(files, limits);
   const archive = pack();
   const chunks: Buffer[] = [];
   let tarBytes = 0;
@@ -93,11 +95,12 @@ export async function bundleUpload(
 
 function validateEntries(
   files: ReadonlyMap<string, ReviewArtifactContent>,
-  fileLimit: number,
+  limits: Readonly<UploadLimits>,
 ): Map<string, Buffer> {
   const names = new Set<string>();
   const entries = new Map<string, Buffer>();
   for (const [name, content] of files) {
+    if (Buffer.byteLength(name) > limits.pathBytes) throw pathTooLong();
     const folded = name.toLowerCase();
     if (!uploadPath(name) || names.has(folded)) throw invalidPath();
     names.add(folded);
@@ -105,7 +108,10 @@ function validateEntries(
       typeof content === "string"
         ? Buffer.byteLength(content)
         : content.byteLength;
-    if (size > fileLimit || (name === UPLOAD_MANIFEST && size > 16 * 1024))
+    if (
+      size > limits.fileBytes ||
+      (name === UPLOAD_MANIFEST && size > 16 * 1024)
+    )
       throw tooLarge();
     entries.set(
       name,
@@ -129,6 +135,13 @@ function tooLarge(): MoklyError {
   return new MoklyError(
     "upload-too-large",
     "The catalogue exceeds an upload v1 size limit. Reduce the catalogue or its assets.",
+  );
+}
+
+function pathTooLong(): MoklyError {
+  return new MoklyError(
+    "upload-too-large",
+    "An upload path exceeds the 1,024-byte limit. Shorten an entry route or ID, or a public file path.",
   );
 }
 

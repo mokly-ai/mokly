@@ -93,8 +93,19 @@ asset or a complete document.
 ## In the catalogue
 
 An eligible link opens its destination's canonical page, carries the fragment
-and reveals the destination in the navigation tree. With a modifier key, the
-middle mouse button, `target="_blank"` or a named target, it opens that page in
-a new tab instead. External, download, same-page and other relative links
-stay inside the screen's frame. Scripts in your screens do not run in the
-catalogue, so show each state as its own screen or variant.
+and reveals the destination in the navigation tree. A plain click or keyboard
+activation, including a link targeting `_self`, `_top` or `_parent`, opens that
+page in the catalogue. Ctrl-, Cmd- or Shift-click and a middle click open it in
+a new tab or window when the target is `_self` or omitted. A link targeting
+`_blank` or a named window also opens it in a new tab or window. Links targeting
+`_top` or `_parent` stay in the catalogue when clicked with a modifier.
+Alt-click and links with `download` behave as ordinary links inside the
+screen's frame. External, same-page and other relative links also stay inside
+the frame.
+
+Screen scripts do not run in `mokly serve`, in an exported catalogue opened
+directly, or when `@mokly/viewer` embeds the catalogue from the same origin.
+When `@mokly/viewer` embeds the catalogue from a separate origin, scripts in
+your screens run. Comparisons and previous versions of removed screens never
+run scripts. Show each state as its own screen or variant, and do not rely on
+scripts staying inert.

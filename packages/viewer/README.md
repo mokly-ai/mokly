@@ -393,9 +393,12 @@ an HTTP(S) origin with correct MIME types and without an SPA fallback.
 - **Isolation:** the cross-origin adapter pins both origins and a per-session
   nonce. It requires a real origin and never relies on an opaque `null` origin.
 
-The [export and hosting guide](../../docs/guides/catalogue/export-and-host.md)
-and [delivery contract](../../docs/protocol/mokly-export-delivery.md) define the
-complete path, header, sandbox and CSP requirements.
+The [export files guide](../../docs/guides/reference/export-files.md) lists
+every path and header a host serves, including cross-origin headers. The
+[export and hosting guide](../../docs/guides/catalogue/export-and-host.md)
+walks through deployment, and the
+[delivery contract](../../docs/protocol/mokly-export-delivery.md) defines the
+sandbox and CSP requirements.
 
 ## Responsibilities
 

@@ -10,18 +10,25 @@ order: 1
 `mokly export` and `mokly publish` write one directory of static files. Paths
 are relative to its root:
 
-| Path                                | Contents                                                       |
-| ----------------------------------- | -------------------------------------------------------------- |
-| `index.html`                        | The catalogue home                                             |
-| `404.html`                          | The catalogue's not-found page                                 |
-| `view/<route>`                      | The catalogue page for each entry                              |
-| `id/<id>/index.html`                | The same page, addressed by the entry's id                     |
-| `static/`                           | Your rendered screens and pages with the files they use        |
-| `__mokly/catalogue.json`            | The entries, collections and changes the viewer reads          |
-| `__mokly/diffs/__generations/<id>/` | The comparison with your base: `review.json` and its snapshots |
-| Other files under `__mokly/`        | The catalogue's scripts, styles and fonts                      |
-| `.mokly-export-artifact`            | The ownership marker described below                           |
-| `mokly-upload.json`                 | The upload manifest, written only by `mokly publish`           |
+| Path                                | Contents                                                                         |
+| ----------------------------------- | -------------------------------------------------------------------------------- |
+| `index.html`                        | The catalogue home                                                               |
+| `404.html`                          | The catalogue's not-found page                                                   |
+| `view/<route>`                      | The catalogue page for each entry                                                |
+| `id/<id>/index.html`                | The same page, addressed by the entry's id                                       |
+| `static/`                           | Your rendered screens and pages, plus every other public file under `mockupsDir` |
+| `__mokly/catalogue.json`            | The entries, collections and changes the viewer reads                            |
+| `__mokly/diffs/__generations/<id>/` | The comparison with your base: `review.json` and its snapshots                   |
+| Other files under `__mokly/`        | The catalogue's scripts, styles and fonts                                        |
+| `.mokly-export-artifact`            | The ownership marker described below                                             |
+| `mokly-upload.json`                 | The upload manifest, written only by `mokly publish`                             |
+
+Everything below `mockupsDir` is public except source modules, hidden files
+and folders, dependency and build folders, and files matched by
+`publicExclude`. Its defaults are `**/README`, `**/README.*`,
+`**/tsconfig.json` and `**/tsconfig.*.json`. The Config page under Authoring
+explains `publicExclude`. Files below `mockupsDir` are included even when no
+screen uses them.
 
 Catalogue pages keep their `.html` suffix. An export has exactly one comparison
 directory under `__mokly/diffs/__generations/`, and a catalogue published with
@@ -58,7 +65,9 @@ complete. It describes the files; it does not prove where they came from.
 The package ships marker test cases at
 `node_modules/@mokly/mokly/docs/protocol/fixtures/export-ownership-v1.json`.
 Each item in its `cases` array has a `name`, a `document` to parse and a
-`valid` flag saying whether that document is a well-formed marker.
+`valid` flag saying whether that document is a well-formed marker. `document`
+is a JSON value, not JSON text. Use `JSON.stringify` before passing it to a
+parser that reads text.
 
 ## Serving an export
 
