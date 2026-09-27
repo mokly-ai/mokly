@@ -9,6 +9,7 @@ import {
   privateStaticPathReason,
 } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { extractCssReferences } from "../css_references.js";
 import { MoklyError } from "../errors.js";
 import {
   fragmentViolation,
@@ -16,10 +17,7 @@ import {
   type ParsedResource,
   type ResourceReference,
 } from "../html_link_validation.js";
-import {
-  extractCssReferences,
-  extractHtmlReferences,
-} from "../html_references.js";
+import { extractHtmlReferences } from "../html_references.js";
 
 import { isOwned, pendingGeneratedOrphanRoutes } from "./ownership.js";
 

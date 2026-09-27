@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { extractCssReferences } from "../src/html_references.js";
+import { extractCssReferences } from "../src/css_references.js";
 import {
   inlineMaterialReplacements,
   renderInlineRules,

@@ -12,10 +12,8 @@ import {
   publicFileFailureReason,
 } from "../../config/public_files.js";
 import type { ResolvedConfig } from "../../config/types.js";
-import {
-  extractCssReferences,
-  extractHtmlReferences,
-} from "../../html_references.js";
+import { extractCssReferences } from "../../css_references.js";
+import { extractHtmlReferences } from "../../html_references.js";
 import type { CatalogueMetadata } from "../../registry/catalogue_index.js";
 import { contentType } from "../respond.js";
 

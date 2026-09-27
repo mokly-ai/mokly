@@ -241,12 +241,17 @@ stylesheet glob or dependency declaration cannot restore an excluded stylesheet.
 Entry reasons combine retained view selectors by path, with unresolved evidence
 taking precedence, while excluded resources stay on their own views. Formatting
 alone therefore leaves every consumer out of Changes for that stylesheet.
-Retained CSS evidence at an actual invocation also keeps its explicit or
-inferred component owner in Changes when saved variants do not match.
-Their own view exclusions stay intact; affected-consumer links retain the actual
-invocation context. An exact screen dependency can independently retain the same
-stylesheet only when its actual view analysis keeps it. Non-CSS dependencies
-retain the existing file-level policy.
+Retained resource evidence at an actual invocation keeps the union of its
+declared `ownedDependencies` owners and inferred inline-rule owners in Changes
+when saved variants do not render that path. This applies to stylesheets and
+non-CSS public resources. In committed mode a changed Git path supplies the
+component dependency reason; in derived mode a byte-only difference supplies
+component `material` without inventing dependency evidence. Their own view
+exclusions stay intact; affected-consumer links retain the actual invocation
+context. An exact screen dependency can independently retain the same
+stylesheet only when its actual view analysis keeps it. Non-public
+implementation dependencies have no rendered resource edge and retain their
+existing declarative ownership policy.
 
 Component-generated style material can live in the document head rather than
 inside a component boundary. The renderer returns only a document string and

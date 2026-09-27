@@ -282,8 +282,11 @@ even when every saved variant excludes the stylesheet. Saved view states and
 exclusions remain unchanged; no synthetic variant is created. An exact screen
 dependency remains independent when its actual view keeps the stylesheet.
 A broad public stylesheet glob or declaration cannot bypass rule exclusion.
-Non-CSS and non-public implementation dependencies retain their existing
-ownership policy. Resource evidence makes a paired view
+The same actual-invocation owner union applies to non-CSS public resources:
+committed Git evidence gives each present declared or inferred owner the
+dependency reason, while a derived byte-only difference gives it `material`.
+Non-public implementation dependencies remain on their existing declarative
+path because resource discovery cannot reach them. Resource evidence makes a paired view
 `changed`; exclusions alone do not. Diagnostic summary counts use those states
 and, for v3, the resulting `changes` membership.
 

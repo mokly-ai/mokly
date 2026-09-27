@@ -2,8 +2,6 @@ import { parse } from "parse5";
 
 import { extractCssReferences } from "./css_references.js";
 
-export { extractCssReferences } from "./css_references.js";
-
 interface HtmlAttribute {
   name: string;
   value: string;
