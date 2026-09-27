@@ -9,7 +9,10 @@ never user-scrollable, and every stacked comparison scrolls inside one shared
 device-chrome viewport that drives both documents. Side by side keeps two
 chromes whose viewports mirror each other. It is the user's chosen option C
 from the 2026-09-26 discussion; Milestone 4 revised how frames are sized, as
-Decision 3 records.
+Decision 3 records. Milestones 5 to 7, added at the user's request on
+2026-09-27, extend the alignment to inner scroll regions, such as the
+scrolling panel of an app shell, which Milestone 4 left independent per
+version.
 
 ## Base And Prerequisites
 
@@ -52,6 +55,16 @@ and is specified by the
   pane dimensions and withholds browser expansion "so it cannot misalign an
   overlay", but says nothing about scroll offset. The intent exists; the
   contract does not cover the scroll axis.
+- Milestone 4 aligns documents that scroll as a page. A document that scrolls
+  inside an inner region instead, such as an app shell whose
+  `height: 100vh; overflow: hidden` root holds a scrolling panel (this
+  repository's own design screens are built this way), still drifts: its
+  document range is zero, so the shared viewport cannot scroll, and the wheel
+  scrolls only the top version's panel. Scroll keys are worse than before
+  Milestone 4: its key handler cancels them and moves the zero-range shared
+  viewport instead, so after a click inside such a panel PageDown and
+  ArrowDown leave the panel where it is. Both were verified in Chrome on
+  2026-09-27 against a temporary app-shell example screen.
 
 ## Decisions
 
@@ -124,8 +137,9 @@ and is specified by the
    `read_only.ts` applies to every comparison frame from the moment its
    document commits: link and form activation is cancelled, a same-document
    anchor moves the shared viewport to its target's document position, scroll
-   keys pressed inside a pane scroll the shared viewport except in editable
-   targets, and the presentation is restored if the frame ever navigates. In a stack, any navigation of one layer would break the
+   keys pressed inside a pane scroll the region the browser would scroll or
+   else the shared viewport (Decision 11), except in editable targets, and the
+   presentation is restored if the frame ever navigates. In a stack, any navigation of one layer would break the
    comparison outright; in Side by side, a navigation would leave `srcdoc`
    for an artifact-origin document that a cross-origin host cannot measure or
    guard, and the shell never tracked that navigation in its URL or heading.
@@ -155,6 +169,42 @@ and is specified by the
    document renders in no-quirks mode, which is accepted as it is for removed
    previews. Both versions of a comparison share that mode, so they remain
    comparable with each other.
+10. **Inner scroll regions scroll together too.** An inner scroll region is
+    any element of a pane document, other than the document's scrolling
+    element, whose computed `overflow-x` or `overflow-y` is `auto` or
+    `scroll`. Whenever a region scrolls, for any reason (wheel or touch over
+    the top layer, a scroll key, find in page, focus, selection or an
+    anchor), the viewer sets its counterpart in every other version of the
+    section to the same `scrollLeft` and `scrollTop` at once, in the same
+    handler and with `behavior: "instant"`, clamped by the browser to the
+    counterpart's own range; the value-based echo rule of Decision 3 prevents
+    loops, per element. The counterpart is, in order: the element with the
+    same non-empty `id`, if it is a region; otherwise the region whose border
+    box, in document coordinates, overlaps the scrolled region's by the
+    largest area, provided the overlap covers at least half of each box, with
+    ties going to the same element name and then to document order; otherwise
+    none, and the region scrolls alone. A match is made when a region first
+    scrolls and discarded whenever the section measures its documents again,
+    so a changed layout is matched afresh. Class names and DOM positions are
+    not used: utility class lists and generated class names change with
+    ordinary style edits and inserted content shifts positions, whereas
+    geometry follows what the reader sees and a shared `id` gives authors an
+    explicit pairing. A counterpart shorter than the offset stops at its own
+    end; the viewer never restyles or moves elements inside a snapshot, so
+    past that end the two regions differ, and the contract says so. Side by
+    side, both viewports at once, component comparisons and nested regions
+    follow the same rules; removed previews are unchanged.
+11. **Keys and anchors reach inner regions first.** A scroll key pressed
+    inside a pane goes to the region the browser would scroll: starting at the
+    focused element, or at the element the reader last pressed a pointer on
+    when focus is on the body, the nearest region, inclusive, that can still
+    move in the key's direction. When one exists, the viewer leaves the key to
+    the browser and mirrors the region's scroll under Decision 10; only when
+    none exists does the key move the shared viewport as Milestone 4
+    delivered. A same-document anchor whose target sits inside regions
+    scrolls each enclosing region, innermost first, just enough to show the
+    target, then moves the shared viewport to the target's document position;
+    every counterpart follows.
 
 ## Non-Goals
 
@@ -166,6 +216,8 @@ and is specified by the
   authenticated navigation and inspection; comparison frames never enter an
   adapter and expose no inspection, geometry or highlight.
 - Browser expansion stays available only in Current.
+- No restyling or moving of elements inside a snapshot, and no pairing of
+  inner scroll regions by class name or DOM position (Decision 10).
 
 ## Milestone 1: Protocol And Documentation Contract
 
@@ -537,6 +589,133 @@ frames and awaits the user's confirmation.
       guard installs from commit.
 - [x] Re-run the checks and `cargo xtask check`, commit the fixes with
       Conventional Commits, and push the branch.
+
+## Milestone 5: Inner Scroll Region Contract
+
+Summary: define inner scroll region mirroring, counterpart matching, key
+routing and anchors inside regions (Decisions 10 and 11) in the specs and
+guides, so Milestones 6 and 7 have a complete contract.
+
+- [ ] Move the Scrolling section of
+      [`mokly-comparison-panes.md`](../docs/protocol/mokly-comparison-panes.md)
+      into a new `docs/protocol/mokly-comparison-scrolling.md` that owns the
+      shared scroller, the echo rule, key routing and inner scroll regions;
+      link it from the pane contract, the
+      [protocol index](../docs/protocol/README.md) and every doc that cites
+      the moved rules, keeping both contracts near 250 lines.
+- [ ] Specify Decisions 10 and 11 completely in the scrolling contract: what
+      counts as a region, when and how a counterpart is written, the matching
+      order with its overlap threshold, tie-breaks and coordinate space,
+      match discarding on every measurement, clamping at a shorter
+      counterpart, the per-element echo rule, nested and horizontal regions,
+      key routing from the focused element or the last pointer press, anchors
+      inside regions, and the Side by side, both-viewports and component
+      cases.
+- [ ] Replace the inner-scroll limitation paragraph and the "Only document
+      scrolling is shared" sentence in the pane contract's Layout section,
+      extend its Alignment Invariant and Acceptance sections with the region
+      proofs Milestone 7 must deliver, and name the Milestone 6 mockup
+      `design-changes-overlay-panel` in its Design References as planned, not
+      as existing.
+- [ ] Update [`docs/guides/catalogue/changes.md`](../docs/guides/catalogue/changes.md)
+      so app-shell panels scroll together and a panel whose position changed
+      pairs by carrying the same `id` in both versions, and correct every
+      other statement that only document scrolling is shared
+      (`grep -rn "inner scroll\|inner region\|Only document scrolling" docs packages examples/basic/notes.md`).
+- [ ] Describe the region modules Milestone 7 will add in
+      [`packages/viewer/src/shell/README.md`](../packages/viewer/src/shell/README.md).
+- [ ] Validate with `npm run format:check`, run the Node tests that parse
+      protocol docs (at least `tests/design_links.test.ts` and
+      `tests/design_screen_counts.test.ts`), and review the diff;
+      documentation-only work does not require `cargo xtask check`.
+- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main` and report the
+      findings without changing the implementation.
+
+## Milestone 6: Inner Scroll Region Mockup
+
+Tags: mockup
+
+Summary: depict an app-shell screen whose panel scrolls as one in Overlay
+before the runtime changes.
+
+- [ ] Add a `design-changes-overlay-panel` screen to
+      `examples/basic/entries/design/changes_screens.tsx` with desktop and
+      mobile variants in both schemes: an app-shell screen in Overlay inside
+      one chrome whose top bar and navigation stay in place while its main
+      panel is scrolled part-way, both versions' panels at one offset, the
+      panel's own scrollbar drawn part-way and no page scrollbar on the chrome
+      viewport. Reuse `ComparisonStack` and the Milestone 2 parts, keep the
+      depicted panes inert, and put no annotations inside the screen area.
+- [ ] Register its destination, reach it from its Diff controls group like
+      its siblings, add its inventory row at
+      `design/review/controls/overlay-panel.html` to the table in
+      `docs/protocol/mokly-shell-design.md`, change the Milestone 5 Design
+      References wording from planned to existing, and keep the Changes page
+      within five screens.
+- [ ] Extend the design inventory, link-state, stack and screen-count tests
+      the new screen touches; assert structure, layer order, blending, opaque
+      backgrounds and offsets fixed by CSS, never font metrics or text
+      wrapping.
+- [ ] Run `npm run build`, `npm run example:build` and
+      `npm run example:check`, then smoke-test the changed pages through
+      `npm run dev` in both schemes and save screenshots under `.context/`.
+- [ ] Run the design tests, then `cargo xtask check`.
+- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main` and report the
+      findings without changing the implementation.
+
+## Milestone 7: Mirrored Inner Scroll Regions
+
+Tags: ui
+
+Summary: mirror inner scroll regions between versions, route scroll keys and
+anchors to regions first, and prove both in the browser.
+
+- [ ] Add an app-shell comparison fixture under `tests/helpers/` whose Before
+      and Current versions each hold a scrolling main panel, a scrolling side
+      list and a nested horizontally scrolling region, including an
+      `id`-paired panel whose position changed and an unpaired panel whose
+      class names changed; add `tests/browser/comparison_regions.spec.ts` and
+      run it before the runtime changes, recording the failing assertions in
+      the review record.
+- [ ] Cover in that spec: the wheel over a panel in Overlay and Difference,
+      Side by side in both directions, both viewports at once, a component
+      comparison, PageDown, Space and ArrowDown after a click inside a panel,
+      focus moving into a panel, an anchor inside a panel, `id` pairing,
+      geometric pairing, nested and horizontal regions, a region without a
+      counterpart scrolling alone without errors, and a shorter counterpart
+      stopping at its end.
+- [ ] Replace the Milestone 4 case "inner scroll regions stay independent per
+      version" in `tests/browser/comparison_alignment.spec.ts` with the
+      mirrored behaviour.
+- [ ] Add a pure region matcher (region detection, `id` pairing and geometric
+      overlap) and a region mirror (one capturing `scroll` listener per pane
+      document, the per-element echo rule, and matches discarded on every
+      measurement), wired into `comparison_scroll_sync.ts` without pushing any
+      module past 300 lines.
+- [ ] Route scroll keys to the region the browser would scroll, tracking the
+      last pointer press in each pane document, and fall back to the shared
+      viewport only when no region can move; extend the anchor reveal to
+      scroll enclosing regions first.
+- [ ] Add unit tests with fake documents for region detection, matching,
+      mirroring, the echo rule, match discarding, key routing and anchors.
+- [ ] Smoke-test through `npm run dev` with a temporary app-shell example
+      screen: Overlay, Difference and Side by side on desktop and mobile, with
+      the wheel, scroll keys and an anchor; save screenshots under `.context/`
+      and revert the temporary change.
+- [ ] Update `packages/viewer/src/shell/README.md`, the scrolling contract and
+      the Changes guide for the delivered modules, then run the comparison,
+      preview, review and design browser specs and `cargo xtask check`.
+- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main` and report the
+      findings without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 
