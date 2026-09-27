@@ -219,8 +219,11 @@ and is specified by the
     Turned off in Overlay or Difference, inner regions stop mirroring, while
     the page itself keeps one scroll position, because both versions sit in
     one chrome with one scrollbar and the lower version cannot be reached to
-    scroll it separately. The toggle changes no comparison data and never
-    reloads a pane.
+    scroll it separately. It is a live control: switching it takes effect at
+    once on the open comparison, without reloading a pane. Switching it off
+    leaves every page and region where it is; switching it back on moves every
+    other version to the offsets of the pane the reader scrolled last. It
+    changes no comparison data.
 
 ## Non-Goals
 
@@ -632,8 +635,8 @@ complete contract.
       counterpart, the per-element echo rule, nested and horizontal regions,
       key routing from the focused element or the last pointer press, anchors
       inside regions, the Side by side, both-viewports and component cases,
-      and the toggle's placement, product copy, default, storage and
-      behaviour in each mode.
+      and the toggle's placement, product copy, default, storage, behaviour
+      in each mode and realignment when it is switched back on.
 - [ ] Confirm `data-mokly-scroll` conflicts with no reserved attribute or
       transformer rule, and document it for authors beside the other
       authoring attributes in `docs/guides/authoring/` and
@@ -729,7 +732,8 @@ anchors to regions first, and prove both in the browser.
       alone without errors, and a shorter counterpart stopping at its end.
 - [ ] Cover the toggle: on by default, off unlinking Side by side pages and
       regions and stopping region mirroring in Overlay and Difference while
-      the stack keeps one page offset, remembered across screens and reloads
+      the stack keeps one page offset, switching back on aligning every
+      version to the pane scrolled last, remembered across screens and reloads
       in Serve and static export, kept for the session in an embedded viewer,
       and never reloading a pane.
 - [ ] Replace the Milestone 4 case "inner scroll regions stay independent per
