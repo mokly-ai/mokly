@@ -129,10 +129,13 @@ both documents are parsed with source locations.
 Each side's unowned style texts are parsed through the classification's shared
 cached `CssRuleParser`, and the two sides' rule lists are diffed as one
 multiset with the existing `diffCssRules`. The analyzed rules are the diff's
-added, removed and changed rules and, from Milestone 5, every rule on either
-side that carries a `url()` or `@import` reference. A parse failure on either
-side yields no rules and no attribution; both materials keep the unowned style
-text verbatim.
+added, removed and changed rules and every rule on either side that carries a
+resource reference in its declarations, own at-rule prelude or non-nesting
+condition preludes. One shared detector covers tokenized `url()` plus string-
+and `url()`-form `@import`, consistently with resource discovery. An unchanged
+reference identity becomes one distinct delta with both sides' rule records.
+A parse failure on either side yields no rules and no attribution; both
+materials keep the unowned style text verbatim.
 
 ### Attribution
 
@@ -141,8 +144,8 @@ Every analyzed rule receives exactly one attribution:
 - `unresolved` when the closed keep list of the stylesheet analysis applies:
   a selector the matcher cannot parse, shadow-scoped or global selectors, an
   unresolvable nesting parent, a changed custom property, a selector-less
-  at-rule, or a parse failure. Until Milestone 5 a changed reference is also
-  unresolved; after it, reference-bearing rules are attributed by matching.
+  at-rule, or a parse failure. Changed references in selector rules are
+  attributed by matching; selector-less imports remain unresolved.
 - `excluded` when the rule's selectors match no element on either side.
 - `entry` when any matched element on either side is entry-owned.
 - `owned` with a sorted, non-empty set of component ids when every matched
@@ -198,6 +201,14 @@ Owned attributions feed the implementation-impact set that
 `material` reason and its consumers become affected, even when no saved
 variant exercises the edited rule. A component's own saved-variant page still
 reports root-owned rule edits as material through the ordinary entry path.
+
+Each distinct owner set's reference-bearing rules are rendered into a
+canonical fragment and traversed with the corresponding side's ordinary
+resource reader at the view path. Retained actual-view dependency reasons use
+the union of inferred and declarative owners present in the view. Derived
+byte-only changes give those owners `material` impact without inventing Git
+evidence. Unchanged reference deltas remove owned/excluded rules symmetrically
+from both sides and contribute no inline evidence.
 
 ### Evidence
 
@@ -685,29 +696,45 @@ Summary: let a `url()` or `@import` reference inside an owned inline rule
 belong to that rule's owner, completing the replacement of the `resources`
 records for files reached only through component styles.
 
-- [ ] Extend the analyzed rule set with every unowned rule on either side
+- [x] Extend the analyzed rule set with every unowned rule on either side
       that carries a reference, using the parser's declaration and prelude
       text, and run the analysis on the fast path when such rules exist so
       projected discovery applies the same exclusion on both paths.
-- [ ] Extend the reference detector in `src/review/css/material.ts` to
+- [x] Extend the reference detector in `src/review/css/material.ts` to
       `@import` preludes; it currently recognizes `url()` only.
-- [ ] Relax the keep list for inline rules so a changed reference no longer
+- [x] Discovered: share one reference detector with `extractCssReferences` for
+      declarations, an at-rule's own prelude and non-nesting condition
+      preludes, including escaped `url()` and string-form `@import` syntax.
+- [x] Relax the keep list for inline rules so a changed reference no longer
       forces `unresolved`; the reference-bearing rule is attributed by
       matching like any other rule. Keep the stylesheet-file rule unchanged.
-- [ ] Generalize `ownedCssReasons` to `ownedResourceReasons`: an actual-view
+- [x] Generalize `ownedCssReasons` to `ownedResourceReasons`: an actual-view
       dependency reason for a path reached only through owned inline rules
       is attributed to those owners, joining the `ownedDependencies` owners,
       and propagated through the existing `propagateOwnedCss` path.
-- [ ] Add `tests/changes_inline_references.test.ts` covering: a changed
+- [x] Discovered: represent unchanged reference-bearing rules with both source
+      records, remove owned or excluded instances symmetrically from both
+      projected sides, and omit those unchanged rules from future inline
+      evidence inputs.
+- [x] Discovered: discover each distinct inline owner set's rule references
+      through the side's ordinary resource graph, union those owners with
+      declarative owners, and preserve entry reasons for independently
+      entry-reachable paths.
+- [x] Add focused `tests/changes_inline_references_*.test.ts` files under 300
+      lines covering: a changed
       image referenced only by an owned rule (component row, screen
       affected, screen has no dependency reason); the same image also in
       entry markup (screen row too); an image in an excluded rule (nothing);
       an inline `@import` (unresolved, entry retained); and derived-mode byte
       changes without Git evidence on both paths.
-- [ ] Update the CSS attribution and component-changes contracts if the
+- [x] Discovered: gate fast-path inline span discovery behind the shared cheap
+      reference prefilter and prove fast/complete equality for owned, excluded
+      and entry references plus derived byte-only changes; add nested-parent,
+      mixed entry-markup and two-owner coverage.
+- [x] Update the CSS attribution and component-changes contracts if the
       implementation exposes a gap, then run the suite and
       `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report

@@ -119,6 +119,9 @@ or when any resource present on both sides has different bytes, even without
 Git evidence. For views with instances or entry-owned slots, the same
 independent closure and byte proof also applies to ownership-projected
 documents; actual and projected memberships are compared separately.
+Reference-bearing inferred inline rules use the same proof: byte-only changes
+reached solely through owned rules become component `material` impact, while
+entry-retained rules remain entry material and excluded rules add no closure.
 
 ## Preparation And Storage
 

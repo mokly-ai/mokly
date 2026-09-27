@@ -38,9 +38,9 @@ import {
 import { variantAddress, viewPairs } from "./component_pairing.js";
 import {
   exactScreenCssReasons,
-  propagateOwnedCss,
+  propagateOwnedResources,
   resourceImpact,
-  type OwnedCssReason,
+  type OwnedResourceReason,
 } from "./component_resource_attribution.js";
 import { ComponentMaterialReader } from "./component_resources.js";
 import { validateComponentReviewSources } from "./component_result_sources.js";
@@ -114,7 +114,7 @@ export async function classifyComponents(
   const changes: ChangedEntry[] = [];
   const impacting = new Set<string>();
   const actualImplementations = new Set<string>();
-  const ownedResources: OwnedCssReason[] = [];
+  const ownedResources: OwnedResourceReason[] = [];
   const pairs = entryPairs(before, after);
   const beforeHierarchy = analyzeHierarchy<ManifestEntry>(
     before.entries as readonly ManifestEntry[],
@@ -263,7 +263,7 @@ export async function classifyComponents(
     }
     timingCounts("review.compare-screens", () => comparisonCounts.record());
   });
-  propagateOwnedCss(ownedResources, impacting, components, changes);
+  propagateOwnedResources(ownedResources, impacting, components, changes);
   propagateImplementations(
     actualImplementations,
     impacting,

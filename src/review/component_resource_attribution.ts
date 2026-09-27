@@ -10,6 +10,7 @@ import { isStylesheetPath } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 
+import type { InlineResourceOwners } from "./component_inline_resources.js";
 import {
   uniqueReasons,
   type ComponentDependencyPolicy,
@@ -17,32 +18,45 @@ import {
 } from "./component_metadata.js";
 
 /** Retained actual-invocation evidence can affect an owner without a saved variant. */
-export interface OwnedCssReason {
+export interface OwnedResourceReason {
   componentId: string;
   reason: DependencyReason;
 }
 
-export function ownedCssReasons(
+export function ownedResourceReasons(
   reasons: readonly DependencyReason[],
   policy: ComponentDependencyPolicy,
+  inlineOwners: InlineResourceOwners,
   before?: ComponentViewRecord,
   after?: ComponentViewRecord,
   root?: string,
-): OwnedCssReason[] {
-  const usages = [before, after].filter((usage) => usage !== undefined);
-  const present = new Set([
-    ...(root ? [root] : []),
-    ...usages.flatMap((usage) =>
-      usage.instances.map((instance) => instance.componentId),
-    ),
-  ]);
+): OwnedResourceReason[] {
+  const present = presentComponents(before, after, root);
   return reasons.flatMap((reason) => {
-    if (!reason.analysis) return [];
-    const owners = policy.owners(reason.path);
+    const owners = resourceOwners(reason.path, policy, inlineOwners);
     return [...owners]
       .filter((componentId) => present.has(componentId))
       .map((componentId) => ({ componentId, reason }));
   });
+}
+
+/** Resolve derived byte-only resource changes to components without inventing Git evidence. */
+export function ownedResourceComponents(
+  paths: readonly string[],
+  policy: ComponentDependencyPolicy,
+  inlineOwners: InlineResourceOwners,
+  before?: ComponentViewRecord,
+  after?: ComponentViewRecord,
+  root?: string,
+): ReadonlySet<string> {
+  const present = presentComponents(before, after, root);
+  return new Set(
+    paths.flatMap((path) =>
+      [...resourceOwners(path, policy, inlineOwners)].filter((id) =>
+        present.has(id),
+      ),
+    ),
+  );
 }
 
 /** Exact caller declarations remain independent, but cannot bypass CSS exclusion. */
@@ -79,8 +93,8 @@ export function resourceImpact(
   ].sort();
 }
 
-export function propagateOwnedCss(
-  evidence: readonly OwnedCssReason[],
+export function propagateOwnedResources(
+  evidence: readonly OwnedResourceReason[],
   impacting: Set<string>,
   components: readonly ComponentReview[],
   changes: ChangedEntry[],
@@ -88,7 +102,7 @@ export function propagateOwnedCss(
   for (const { componentId, reason } of evidence) {
     const component = components.find((entry) => entry.id === componentId);
     if (!component)
-      throw new MoklyError("review-invalid", "CSS owner has no component");
+      throw new MoklyError("review-invalid", "resource owner has no component");
     impacting.add(componentId);
     const existing = changes.find(
       (entry) =>
@@ -108,4 +122,25 @@ export function propagateOwnedCss(
       ...new Set([...component.sharedImpact, reason.path]),
     ].sort();
   }
+}
+
+function presentComponents(
+  before?: ComponentViewRecord,
+  after?: ComponentViewRecord,
+  root?: string,
+): ReadonlySet<string> {
+  return new Set([
+    ...(root ? [root] : []),
+    ...[before, after].flatMap((usage) =>
+      usage ? usage.instances.map((instance) => instance.componentId) : [],
+    ),
+  ]);
+}
+
+function resourceOwners(
+  path: string,
+  policy: ComponentDependencyPolicy,
+  inlineOwners: InlineResourceOwners,
+): ReadonlySet<string> {
+  return new Set([...policy.owners(path), ...(inlineOwners.get(path) ?? [])]);
 }

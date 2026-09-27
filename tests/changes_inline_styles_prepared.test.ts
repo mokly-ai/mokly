@@ -113,3 +113,57 @@ test("all-excluded status remains prepared for later evidence delivery", async (
   );
   assert.deepEqual(comparison.inlineEvidence, { allExcluded: true });
 });
+
+test("unchanged reference analysis prepares no future inline evidence", async (t) => {
+  const styles = '<style>.action{background:url("../image.svg")}</style>';
+  const fixture = await inlineChangesFixture(t, styles, styles, {
+    files: {
+      before: {
+        "image.svg": "image",
+        "components/image.svg": "component-image",
+      },
+      after: {
+        "image.svg": "image",
+        "components/image.svg": "component-image",
+      },
+    },
+  });
+  const compilation = await compileCatalogue(fixture.config);
+  const screen = compilation.manifest.entries.find(
+    (entry) => entry.id === "home",
+  )!;
+  const view = generatedViews(screen)[0]!;
+  const document = compilation.outputs.get(view.path)!;
+  const reader = () =>
+    new ComponentMaterialReader({
+      read: async (route) => {
+        if (route === view.path) return Buffer.from(document);
+        return Buffer.from("image");
+      },
+    });
+  const beforeReader = reader();
+  const afterReader = reader();
+  const comparison = await compareComponentView(
+    {
+      beforeReader,
+      afterReader,
+      dependencies: new ComponentDependencyPolicy(
+        compilation.manifest,
+        compilation.manifest,
+        [],
+      ),
+      changed: new Set(),
+      prefix: "mockups",
+      resources: new ResourceComparison(
+        beforeReader,
+        afterReader,
+        new Set(),
+        "mockups",
+      ),
+      useFastPath: false,
+    },
+    view,
+    view,
+  );
+  assert.equal(comparison.inlineEvidence, undefined);
+});

@@ -235,8 +235,13 @@ original coordinates, parses each element independently, attributes diffed
 rules through normalized component ranges and renders canonical actual and
 projected material. Complete paired component-aware comparisons call it with
 the classification-scoped cached parser, including zero-instance usage records.
-One-sided and missing-usage comparisons keep their existing behavior. Each call
-emits `review.inline-style-analysis`; it logs no document or CSS.
+Reference-bearing rules additionally run on the fast path behind the shared
+cheap CSS-reference prefilter. Rules grouped by each inferred owner set traverse
+the ordinary cached resource graph, preserving relative and transitive paths;
+unchanged owned or excluded reference rules are removed symmetrically without
+creating inline evidence. One-sided and missing-usage comparisons keep their
+existing behavior. Each call emits `review.inline-style-analysis`; it logs no
+document or CSS.
 
 ## Development
 
@@ -273,8 +278,10 @@ Key code:
   `select`, including siblings exposed when component implementation text is
   removed. Views without ownership text edits use actual-document evidence
   alone.
-- `component_resource_attribution.ts`: actual-invocation CSS ownership and entry
-  evidence aggregation without inventing saved variants.
+- `component_resource_attribution.ts`: actual-invocation resource ownership and
+  entry evidence aggregation without inventing saved variants.
+- `component_inline_resources.ts`: inferred owner-set resource traversal for
+  inline rules, including transitive references.
 - `assets.ts`, `component_resources.ts`, `resource_graph.ts`: confined reads and
   traversal shared by resource evidence and snapshots.
 - `css/types.ts`: rule records, the parser interface, and result/error contracts.

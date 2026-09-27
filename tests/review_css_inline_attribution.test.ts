@@ -88,7 +88,6 @@ for (const [name, after, parser] of [
   ],
   ["custom property", ".missing{--tone:red}"],
   ["selector-less at-rule", '@font-face{font-family:"A"}'],
-  ["changed reference", ".missing{background:url(icon.svg)}"],
 ] as const) {
   test(`inline attribution shares the keep rule for ${name}`, () => {
     const result = analyzeInline({
@@ -99,6 +98,36 @@ for (const [name, after, parser] of [
     assert.deepEqual(oneAttribution(result), { kind: "unresolved" });
   });
 }
+
+test("changed inline references use matching instead of the stylesheet keep rule", () => {
+  const excluded = analyzeInline({
+    before: html("", "<main></main>"),
+    after: html(
+      '<style>.missing{background:url("icon.svg")}</style>',
+      "<main></main>",
+    ),
+  }).result;
+  assert.deepEqual(oneAttribution(excluded), { kind: "excluded" });
+
+  const retained = analyzeInline({
+    before: html("", '<main class="target"></main>'),
+    after: html(
+      '<style>.target{background:url("icon.svg")}</style>',
+      '<main class="target"></main>',
+    ),
+  }).result;
+  assert.deepEqual(oneAttribution(retained), { kind: "entry" });
+});
+
+test("an unchanged string-form import remains unresolved without evidence selectors", () => {
+  const document = html('<style>@import "theme.css";</style>', "<main></main>");
+  const result = resolved(
+    analyzeInline({ before: document, after: document }).result,
+  );
+  assert.equal(result.rules[0]?.change.kind, "unchanged");
+  assert.deepEqual(result.rules[0]?.attribution, { kind: "unresolved" });
+  assert.equal(result.retainedSelectors, undefined);
+});
 
 test("one failed style element makes the whole side unresolved", () => {
   const result = analyzeInline({

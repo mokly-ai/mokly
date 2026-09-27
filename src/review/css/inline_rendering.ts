@@ -1,6 +1,7 @@
 /** Canonically render inline rules and material replacements for one source side. */
 import type { InlineAttributionResult } from "./inline_attribution.js";
 import type { AttributedInlineRule } from "./inline_rule_matching.js";
+import { cssRuleIdentity } from "./rule_identity.js";
 import { decodeCssIdentifier } from "./source.js";
 import type { CssRule, CssRuleCondition } from "./types.js";
 
@@ -66,24 +67,43 @@ export function inlineMaterialReplacements(
     appendix: `<style>${renderInlineRules(retained)}</style>`,
   });
   return {
-    actual: projection(rules.filter((rule) => !excluded.has(rule))),
+    actual: projection(rules.filter((rule) => !selected(excluded, rule))),
     projected: projection(
-      rules.filter((rule) => !excluded.has(rule) && !owned.has(rule)),
+      rules.filter(
+        (rule) => !selected(excluded, rule) && !selected(owned, rule),
+      ),
     ),
   };
+}
+
+interface SelectedRules {
+  identities: ReadonlySet<string>;
+  rules: ReadonlySet<CssRule>;
 }
 
 function selectedRules(
   rules: readonly AttributedInlineRule[],
   side: "before" | "after",
   kind: "excluded" | "owned",
-): ReadonlySet<CssRule> {
-  return new Set(
-    rules.flatMap(({ change, attribution }) => {
-      if (attribution.kind !== kind) return [];
-      const rule = side === "before" ? change.before : change.after;
-      return rule ? [rule] : [];
-    }),
+): SelectedRules {
+  const selected = rules.flatMap(({ change, attribution }) => {
+    if (attribution.kind !== kind) return [];
+    const rule = side === "before" ? change.before : change.after;
+    return rule ? [{ change, rule }] : [];
+  });
+  return {
+    identities: new Set(
+      selected.flatMap(({ change, rule }) =>
+        change.kind === "unchanged" ? [cssRuleIdentity(rule)] : [],
+      ),
+    ),
+    rules: new Set(selected.map(({ rule }) => rule)),
+  };
+}
+
+function selected(selection: SelectedRules, rule: CssRule): boolean {
+  return (
+    selection.rules.has(rule) || selection.identities.has(cssRuleIdentity(rule))
   );
 }
 
@@ -115,14 +135,7 @@ function leadingRank(rule: CssRule): number {
 }
 
 function identity(rule: CssRule): string {
-  return JSON.stringify([
-    rule.conditions.map(({ kind, prelude }) => [kind, prelude]),
-    rule.selectors,
-    rule.atRule ?? null,
-    rule.prelude ?? null,
-    rule.block ?? null,
-    rule.declarations,
-  ]);
+  return cssRuleIdentity(rule);
 }
 
 function renderRule(rule: CssRule): string {

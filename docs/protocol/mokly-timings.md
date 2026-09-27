@@ -91,8 +91,9 @@ Review phases use the same session, role and parent context as their caller:
   view, including span discovery and parser-cache lookups. A direct call to the
   pure engine emits the span even when identical outer style sources let it
   skip parsing. Complete paired component-aware comparisons call the engine;
-  reference-only fast-path calls arrive in Milestone 5. Contained parse or
-  selector failures return unresolved attributions with span status `ok`; an
+  fast-path views call it only when the shared cheap prefilter finds a possible
+  reference. Contained parse or selector failures return unresolved
+  attributions with span status `ok`; an
   escaping error ends the span with `error`. It logs no paths, selectors, CSS
   or document text. See the
   [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md).

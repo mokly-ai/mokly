@@ -7,9 +7,10 @@ Approved target tracked by the
 The span, diff, attribution and canonical-material engine is implemented and
 the component-aware classifier calls it on complete paired views. The renderer
 is string-only, current manifests no longer carry ownership records, and
-historical readers discard the retired arrays. Reference-bearing rule analysis
-and reference-following remain for Milestone 5, `inlineStyles` evidence delivery
-for Milestone 6, and shell presentation for Milestone 7. This document owns the
+historical readers discard the retired arrays. References inside inferred-owned
+rules now follow their owners through the ordinary resource graph, including on
+the fast path. `inlineStyles` evidence delivery remains for Milestone 6 and
+shell presentation for Milestone 7. This document owns the
 analysis, attribution, comparison material, membership and evidence rules for
 style material that a renderer places outside component markup. The
 [CSS change attribution contract](./mokly-css-attribution.md) owns the
@@ -35,10 +36,11 @@ entry-owned markup.
 
 ## Scope
 
-The analysis runs inside the component-aware classifier on the complete path
-for a paired view with usage records on both sides, including a component-aware
-view whose records contain no instances. A one-sided view or a paired view
-missing either usage record keeps the existing comparison behavior.
+The analysis runs inside the component-aware classifier for a paired view with
+usage records on both sides, including a component-aware view whose records
+contain no instances. The complete path always considers it; the fast path runs
+it only for possible references. A one-sided view or a paired view missing
+either usage record keeps the existing comparison behavior.
 Catalogues without registered components keep the schema-v2 classifier, where
 an inline style edit remains an ordinary material change. One-sided views run
 no analysis. Views settled by the
@@ -46,7 +48,9 @@ no analysis. Views settled by the
 have equal marker-retaining documents, so there is nothing to diff; the
 analysis runs there only when an unowned rule carries a `url()` or `@import`
 reference, so that projected resource discovery applies the same exclusion on
-both paths.
+both paths. Before doing span discovery on this fast path, test both original
+documents with the same `/url\(|@import|\\/i` prefilter as resource discovery.
+If neither can contain a reference, skip inline analysis entirely.
 
 The eligible style elements of a document are HTML-namespace `<style>`
 elements in the document tree, excluding template contents and SVG/MathML
@@ -69,23 +73,25 @@ current and retired ignore prefixes and leaves an element inside a paired id
 in place. A one-sided region remains ordinary analyzed material. The renderer
 reports nothing; `RenderResult`, `styles` and `resources` records are retired.
 
-When the ordered sequence of unowned outer sources is identical on both sides,
-the analysis is skipped and both materials keep the documents unchanged. An
-attribute-only difference runs the analysis even when the content text is
-equal. Two sequences that split the same rules across different elements also
-run it and render equal fragments when their rule multisets are equal. From
-Milestone 5, a reference-bearing rule additionally prevents the skip so
-projected discovery can apply its attribution on the fast path.
+When the ordered sequence of unowned outer sources is identical on both sides
+and neither side can contain a reference, the analysis is skipped and both
+materials keep the documents unchanged. A possible reference prevents that
+skip: the cached parser confirms it and owner attribution decides projected
+resource discovery. An attribute-only difference runs the analysis even when
+the content text is equal. Two sequences that split the same rules across
+different elements also run it and render equal fragments when their rule
+multisets are equal.
 
 ## Analysis
 
 1. **Documents.** Derive the paired ignore ids and marker-retaining texts once
    with `normalizeReviewPair(normalizeHistoricalDocument(base), head, path)`.
    Span discovery runs first against the original documents and their
-   own-dialect ranges. If the eligible outer-source sequences are identical,
-   stop before validating ranges against the normalized texts or parsing
-   source-located trees. Otherwise validate both sides' ranges against those
-   texts and parse each side once with source locations. Elements inside paired
+   own-dialect ranges. If the eligible outer-source sequences are identical and
+   their parsed rules contain no reference, stop before validating ranges
+   against the normalized texts or parsing source-located trees. Otherwise
+   validate both sides' ranges against those texts and parse each side once
+   with source locations. Elements inside paired
    manual-ignore regions therefore never grant a match, exactly as in
    stylesheet matching. Matching and owner resolution use these normalized
    documents; span removal uses the original documents, so the two coordinate
@@ -95,13 +101,18 @@ projected discovery can apply its attribution on the fast path.
    browser stylesheet. Concatenate a side's successful rule lists in document
    order while rebasing ordinals to one unique monotonic sequence, then diff
    the two lists as one multiset, so element order and formatting carry no
-   identity. The Milestone 3 engine analyzes the added, removed and changed
-   rules of that diff. Milestone 5 additionally analyzes every rule on either
-   side that carries a `url()` or `@import` reference. One failed element makes
-   the side and diff unresolved: there are no rule lists, no attribution, no
-   owned set, no removals and no appended fragment. Both materials keep every
-   unowned style element verbatim, and a view whose materials differ carries
-   `inlineStyles` with status `unresolved` and an empty selector list.
+   identity. Analyze the added, removed and changed rules of that diff plus
+   every eligible rule on either side that carries a reference. A rule carries
+   a reference when its declarations, its own at-rule prelude, or a
+   non-nesting condition prelude contains a tokenized `url()` or string-form or
+   `url()`-form `@import`. This is the same detector as HTML/CSS resource
+   discovery, including escaped identifier forms. Pair an unchanged reference
+   identity with both sides' rule records and analyze it once. One failed
+   element makes the side and diff unresolved: there are no rule lists, no
+   attribution, no owned set, no removals and no appended fragment. Both
+   materials keep every unowned style element verbatim, and a view whose
+   materials differ carries `inlineStyles` with status `unresolved` and an
+   empty selector list.
 3. **Matching.** Test each analyzed rule's selectors against both documents
    with the stylesheet matcher after its state-pseudo stripping, collecting
    every matched element rather than the first. Stripping can only widen the
@@ -133,9 +144,10 @@ Every analyzed rule receives exactly one attribution, decided in this order:
 - `unresolved` when the shared closed keep list of the stylesheet analysis applies: a
   selector the matcher cannot parse, a shadow-scoped or global selector, an
   unresolvable nesting parent, a changed custom property, or a selector-less
-  at-rule. Until Milestone 5 a changed reference also keeps the rule unresolved
-  through the keep policy's single reference switch. Milestone 5 disables that
-  switch for inline rules so the reference can follow the matched rule's owner.
+  at-rule. Inline analysis selects the keep policy's matchable-reference switch,
+  so a changed reference can follow the matched rule's owner. Stylesheet-file
+  analysis keeps its unresolved-reference policy. An `@import` remains
+  unresolved because it is selector-less, independently of that switch.
 - `excluded` when the rule's selectors match no element on either side.
 - `entry` when any matched element on either side resolves to the entry.
 - `owned`, with a sorted non-empty set of component ids, when every matched
@@ -201,6 +213,24 @@ reached only through owned rules is attributed to those owners in the same
 way `ownedDependencies` owners are. A reference inside an `excluded` rule is
 discovered by neither material. A reference inside an `unresolved` or `entry`
 rule remains entry material.
+
+For ownership, canonically render the reference-bearing rules for each distinct
+component-owner set and traverse that fragment through the corresponding
+side's ordinary resource reader at the view route. Relative paths, the
+catalogue prefix, CSS imports and all transitive resources therefore resolve
+exactly as they do for actual material. Owners for one retained actual-view
+dependency reason are the union of matching inline owner sets and
+`ownedDependencies`, filtered to components present in that view. If projected
+entry material independently reaches the same path, its entry reason remains.
+In derived mode, a byte-only difference without Git evidence gives inferred
+owners a component `material` reason, matching `ownedDependencies`; it does not
+invent a dependency reason or changed path.
+
+An unchanged reference-bearing rule renders on both actual sides. If it is
+owned or excluded, its paired rule objects remove it symmetrically from both
+projected sides (and from both actual sides when excluded). It never contributes
+retained selectors, all-excluded evidence, material inequality or inline-style
+evidence; its sole purpose is resource ownership and exclusion.
 
 ## Membership And States
 

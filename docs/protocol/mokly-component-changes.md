@@ -8,8 +8,8 @@ records delivery. Unregistered catalogue and legacy behavior remains intact.
 The [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md)
 has replaced renderer-returned records with document-derived head-style
 ownership in complete paired component-aware comparisons. Reference-bearing
-inline rules remain for that plan's Milestone 5, result evidence for Milestone
-6, and shell presentation for Milestone 7.
+rules now follow inferred owners through resource discovery. Result evidence
+remains for that plan's Milestone 6 and shell presentation for Milestone 7.
 
 ## Changes Membership
 
@@ -261,6 +261,16 @@ match, or one the analysis cannot resolve, remains screen material; a rule
 that matches nothing on either side is excluded from both materials. Owned
 rule edits join the implementation-impact set, and references inside owned
 rules follow their owner.
+
+Reference ownership uses the same per-side resource traversal as actual
+material, rooted at the view path, so relative paths and transitive imports keep
+their normal meaning. A retained actual-view dependency reason is attributed to
+the union of inferred inline owners and `ownedDependencies` owners present in
+the view. Entry-projected reachability remains an independent screen reason.
+In derived mode, an owned referenced resource whose bytes differ without a Git
+changed path gives its component a `material` reason and affected consumers,
+but invents neither a dependency reason nor `changedPaths` evidence. The fast
+and complete paths apply this same rule.
 
 Owned asset edits must flag component pages even when HTML is byte-identical.
 Retain actual styles, fonts, and images in screenshots and snapshot trees. Never

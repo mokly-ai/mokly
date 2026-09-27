@@ -22,6 +22,7 @@ import {
   inlineMaterialReplacements,
   type InlineMaterialReplacements,
 } from "./css/inline_rendering.js";
+import { sameInlineOuterSources } from "./css/inline_styles.js";
 import { normalizeHistoricalDocument, normalizeReviewPair } from "./ignore.js";
 
 export interface PreparedInlineStyleEvidence {
@@ -40,7 +41,12 @@ export interface PreparedComponentComparison {
   excluded: (path: string) => boolean;
   matching: { before: string; after: string };
   ownedComponentIds: ReadonlySet<string>;
+  inlineAnalysis?: InlineAttributionResult;
   inlineEvidence?: PreparedInlineStyleEvidence;
+}
+
+interface ProjectionPreparationOptions {
+  analyzeInline?: boolean;
 }
 
 /** Validate ranges, project ownership, and bind the matching resource policy. */
@@ -51,6 +57,7 @@ export function prepareComponentProjection(
   base: string,
   head: string,
   root?: string,
+  options: ProjectionPreparationOptions = {},
 ): PreparedComponentComparison {
   const baseRanges = before.usage
     ? validateComponentRanges(base, before.usage.ranges, "historical")
@@ -64,7 +71,11 @@ export function prepareComponentProjection(
     after.path,
   );
   const analysis =
-    before.usage && after.usage && baseRanges && headRanges
+    options.analyzeInline !== false &&
+    before.usage &&
+    after.usage &&
+    baseRanges &&
+    headRanges
       ? attributeInlineRules({
           before: {
             source: base,
@@ -116,6 +127,7 @@ export function prepareComponentProjection(
     matching: { before: matching.base, after: matching.head },
     ownedComponentIds:
       analysis?.status === "resolved" ? analysis.ownedComponentIds : new Set(),
+    ...(analysis ? { inlineAnalysis: analysis } : {}),
     ...inlineEvidence(analysis),
     excluded: projectedResourceExclusion(
       context,
@@ -147,6 +159,11 @@ function inlineEvidence(analysis: InlineAttributionResult | undefined): {
   inlineEvidence?: PreparedInlineStyleEvidence;
 } {
   if (!analysis || analysis.status === "skipped") return {};
+  if (
+    analysis.status === "unresolved" &&
+    sameInlineOuterSources(analysis.beforeSpans, analysis.afterSpans)
+  )
+    return {};
   if (analysis.status === "unresolved")
     return {
       inlineEvidence: {
@@ -154,10 +171,13 @@ function inlineEvidence(analysis: InlineAttributionResult | undefined): {
         retainedSelectors: analysis.retainedSelectors,
       },
     };
-  if (!analysis.rules.length) return {};
+  const diffed = analysis.rules.filter(
+    ({ change }) => change.kind !== "unchanged",
+  );
+  if (!diffed.length) return {};
   return {
     inlineEvidence: {
-      allExcluded: analysis.rules.every(
+      allExcluded: diffed.every(
         ({ attribution }) => attribution.kind === "excluded",
       ),
       ...(analysis.retainedSelectors

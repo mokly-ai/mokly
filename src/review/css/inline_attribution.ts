@@ -2,11 +2,13 @@
 import type { ComponentViewRecord } from "@mokly/viewer";
 
 import type { RenderedRange } from "../../components/ranges.js";
+import { mayContainCssReferences } from "../../css_references.js";
 import { timeSync } from "../../diagnostics/timings.js";
 
 import { diffCssRuleLists } from "./diff.js";
 import type { CssDocument } from "./document.js";
 import { createElementOwnerIndex } from "./element_owners.js";
+import { inlineRuleDeltas } from "./inline_rule_deltas.js";
 import { parseInlineRuleList } from "./inline_rule_lists.js";
 import {
   attributeInlineRule,
@@ -14,6 +16,7 @@ import {
 } from "./inline_rule_matching.js";
 import {
   findUnownedInlineStyles,
+  sameInlineOuterSources,
   type InlineStyleSpan,
 } from "./inline_styles.js";
 import type { CssRule, CssRuleDiffResult, CssRuleParser } from "./types.js";
@@ -97,7 +100,13 @@ function analyze(input: InlineAttributionInput): InlineAttributionResult {
     paired,
   );
   const common = { beforeSpans, afterSpans };
-  if (sameOuterSources(beforeSpans, afterSpans))
+  const outerSourcesEqual = sameInlineOuterSources(beforeSpans, afterSpans);
+  if (
+    outerSourcesEqual &&
+    ![...beforeSpans, ...afterSpans].some((span) =>
+      mayContainCssReferences(span.text),
+    )
+  )
     return { ...common, status: "skipped" };
 
   const before = parseInlineRuleList(beforeSpans, input.parser);
@@ -118,16 +127,18 @@ function analyze(input: InlineAttributionInput): InlineAttributionResult {
     };
 
   const diff = diffCssRuleLists(before.rules, after.rules);
-  const changes = deltas(diff);
-  if (!changes.length)
-    return {
-      ...common,
-      status: "resolved",
-      beforeRules: before.rules,
-      afterRules: after.rules,
-      rules: [],
-      ownedComponentIds: new Set(),
-    };
+  const analyzed = inlineRuleDeltas(diff, before.rules, after.rules);
+  if (!analyzed.length)
+    if (outerSourcesEqual) return { ...common, status: "skipped" };
+    else
+      return {
+        ...common,
+        status: "resolved",
+        beforeRules: before.rules,
+        afterRules: after.rules,
+        rules: [],
+        ownedComponentIds: new Set(),
+      };
   const matching = input.prepare();
   const beforeOwners = createElementOwnerIndex({
     ranges: matching.before.ranges,
@@ -141,14 +152,15 @@ function analyze(input: InlineAttributionInput): InlineAttributionResult {
     counterpart: input.before.usage,
     rootComponentId: input.rootComponentId,
   });
-  const rules = changes.map((change) =>
+  const rules = analyzed.map((change) =>
     attributeInlineRule(
       change,
       { document: matching.before.document, owners: beforeOwners },
       { document: matching.after.document, owners: afterOwners },
     ),
   );
-  const retained = rules.filter(({ attribution }) =>
+  const diffedRules = rules.filter(({ change }) => change.kind !== "unchanged");
+  const retained = diffedRules.filter(({ attribution }) =>
     ["entry", "unresolved"].includes(attribution.kind),
   );
   const retainedSelectors = retained.length
@@ -164,7 +176,7 @@ function analyze(input: InlineAttributionInput): InlineAttributionResult {
       }
     : undefined;
   const ownedComponentIds = new Set(
-    rules
+    diffedRules
       .flatMap(({ attribution }) =>
         attribution.kind === "owned" ? attribution.componentIds : [],
       )
@@ -179,22 +191,4 @@ function analyze(input: InlineAttributionInput): InlineAttributionResult {
     ...(retainedSelectors ? { retainedSelectors } : {}),
     ownedComponentIds,
   };
-}
-
-function deltas(diff: Extract<CssRuleDiffResult, { status: "resolved" }>) {
-  return [
-    ...diff.added.map((after) => ({ kind: "added" as const, after })),
-    ...diff.removed.map((before) => ({ kind: "removed" as const, before })),
-    ...diff.changed.map((change) => ({ kind: "changed" as const, ...change })),
-  ];
-}
-
-function sameOuterSources(
-  before: readonly InlineStyleSpan[],
-  after: readonly InlineStyleSpan[],
-): boolean {
-  return (
-    before.length === after.length &&
-    before.every((span, index) => span.source === after[index]?.source)
-  );
 }

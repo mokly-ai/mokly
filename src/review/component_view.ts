@@ -12,6 +12,10 @@ import { changedComponentImplementations } from "../components/comparison_projec
 import { validateComponentRanges } from "../components/ranges.js";
 import { MoklyError } from "../errors.js";
 
+import {
+  discoverInlineResourceOwners,
+  type InlineResourceOwners,
+} from "./component_inline_resources.js";
 import type { ComponentDependencyPolicy } from "./component_metadata.js";
 import {
   prepareComponentProjection,
@@ -19,8 +23,9 @@ import {
   type PreparedInlineStyleEvidence,
 } from "./component_projection_resources.js";
 import {
-  ownedCssReasons,
-  type OwnedCssReason,
+  ownedResourceComponents,
+  ownedResourceReasons,
+  type OwnedResourceReason,
 } from "./component_resource_attribution.js";
 import { changedResourceBytes } from "./component_resource_changes.js";
 import type { ComponentMaterialReader } from "./component_resources.js";
@@ -34,7 +39,7 @@ export interface ComparedComponentView {
   view: ViewReview;
   reasons: readonly EntryChangeReason[];
   changedImplementations: ReadonlySet<string>;
-  ownedResources: readonly OwnedCssReason[];
+  ownedResources: readonly OwnedResourceReason[];
   inlineEvidence?: PreparedInlineStyleEvidence;
 }
 export interface ComponentViewContext {
@@ -47,6 +52,8 @@ export interface ComponentViewContext {
   compareResourceBytes?: boolean;
   useFastPath?: boolean;
 }
+const EMPTY_INLINE_OWNERS: InlineResourceOwners = new Map();
+
 /** Compare material and declared inputs without altering the retained view documents. */
 export async function compareComponentView(
   context: ComponentViewContext,
@@ -86,9 +93,10 @@ export async function compareComponentView(
       view: { ...view, ...evidence, material: true },
       reasons: [{ kind: "material" }, ...(evidence.reasons ?? [])],
       changedImplementations: new Set(),
-      ownedResources: ownedCssReasons(
+      ownedResources: ownedResourceReasons(
         evidence.reasons ?? [],
         context.dependencies,
+        EMPTY_INLINE_OWNERS,
         before?.usage,
         after?.usage,
         root,
@@ -124,6 +132,7 @@ export async function compareComponentView(
     excluded,
     matching,
     ownedComponentIds,
+    inlineAnalysis,
     inlineEvidence,
   } = prepared;
   const reasons: EntryChangeReason[] = [];
@@ -145,6 +154,12 @@ export async function compareComponentView(
     { path: after!.path, html: actual.head },
     undefined,
     matching,
+  );
+  const inlineOwners = await discoverInlineResourceOwners(
+    inlineAnalysis,
+    { path: before!.path, reader: context.beforeReader },
+    { path: after!.path, reader: context.afterReader },
+    context.prefix,
   );
   const byteChanges = context.compareResourceBytes
     ? await changedResourceBytes(
@@ -177,11 +192,22 @@ export async function compareComponentView(
     [...actualByteChanges].some(
       (route) => !context.changed.has(repoPath(route)),
     );
+  const derivedOwnedComponents = ownedResourceComponents(
+    [...actualByteChanges]
+      .map(repoPath)
+      .filter((path) => !context.changed.has(path)),
+    context.dependencies,
+    inlineOwners,
+    before?.usage,
+    after?.usage,
+    root,
+  );
   return {
     comparisonPath: "complete",
-    ownedResources: ownedCssReasons(
+    ownedResources: ownedResourceReasons(
       actualEvidence.reasons ?? [],
       context.dependencies,
+      inlineOwners,
       before?.usage,
       after?.usage,
       root,
@@ -196,6 +222,7 @@ export async function compareComponentView(
         headRanges,
       ),
       ...ownedComponentIds,
+      ...derivedOwnedComponents,
     ]),
     ...(inlineEvidence ? { inlineEvidence } : {}),
     view: {

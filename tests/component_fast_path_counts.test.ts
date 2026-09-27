@@ -65,4 +65,12 @@ for (const generatedOutput of ["committed", "derived"] as const)
       ).length,
       (views + projectedViews) * (generatedOutput === "derived" ? 2 : 1),
     );
+    assert.equal(
+      events.filter(
+        (event) =>
+          event.stage === "review.inline-style-analysis" &&
+          event.event === "start",
+      ).length,
+      0,
+    );
   });

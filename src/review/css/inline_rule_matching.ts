@@ -16,7 +16,7 @@ export type InlineRuleAttribution =
   | { kind: "entry" }
   | { kind: "owned"; componentIds: readonly string[] };
 
-/** Diff material, retained selectors, and its inferred owner. */
+/** Analyzed diff/reference material, its selectors, and inferred owner. */
 export interface AttributedInlineRule {
   change: CssRuleDelta;
   attribution: InlineRuleAttribution;
@@ -34,7 +34,7 @@ export function attributeInlineRule(
   before: MatchSide,
   after: MatchSide,
 ): AttributedInlineRule {
-  const prepared = prepareCssRule(change, "unresolved");
+  const prepared = prepareCssRule(change, "matchable");
   if (prepared.status === "unresolved")
     return {
       change,

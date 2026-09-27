@@ -6,6 +6,7 @@ import {
   stripComponentMarkers,
   stripHistoricalMarkers,
 } from "../components/comparison_material.js";
+import { mayContainCssReferences } from "../css_references.js";
 
 import {
   prepareComponentProjection,
@@ -57,9 +58,13 @@ export async function compareUnchangedComponentView(
       (usage.instances.length > 0 ||
         usage.slots.some((slot) => slot.owner.kind === "entry")),
   );
-  const prepared = hasOwnershipEdits
-    ? prepareComponentProjection(context, before, after, base, head, root)
-    : undefined;
+  const hasInlineReferences = [base, head].some(mayContainCssReferences);
+  const prepared =
+    hasOwnershipEdits || hasInlineReferences
+      ? prepareComponentProjection(context, before, after, base, head, root, {
+          analyzeInline: hasInlineReferences,
+        })
+      : undefined;
   const projected = prepared?.projected;
   const excluded = prepared?.excluded;
   const fallback = (): UnchangedComponentAttempt =>

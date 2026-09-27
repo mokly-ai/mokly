@@ -36,6 +36,10 @@ export async function inlineChangesFixture(
     source?: string;
     afterSource?: string;
     colorSchemes?: boolean;
+    files?: {
+      before: Readonly<Record<string, string>>;
+      after: Readonly<Record<string, string>>;
+    };
     renderer?: { before: string; after: string };
   } = {},
 ) {
@@ -45,11 +49,13 @@ export async function inlineChangesFixture(
     {
       extraConfig: `renderer: "renderer.tsx", ${options.colorSchemes === false ? "" : 'colorSchemes: ["light", "dark"], '}`,
     },
-    ({ root }) =>
-      fs.writeFile(
+    async ({ root, mockupsDir }) => {
+      await fs.writeFile(
         path.join(root, "renderer.tsx"),
         options.renderer?.before ?? inlineRenderer(beforeStyles),
-      ),
+      );
+      await writeFiles(mockupsDir, options.files?.before ?? {});
+    },
   );
   if (options.afterSource)
     await fs.writeFile(fixture.entryPath, options.afterSource);
@@ -57,6 +63,7 @@ export async function inlineChangesFixture(
     path.join(fixture.root, "renderer.tsx"),
     options.renderer?.after ?? inlineRenderer(afterStyles),
   );
+  await writeFiles(fixture.mockupsDir, options.files?.after ?? {});
   await fixture.build();
   const repository = () => committedReviewRepository(fixture.config);
   return {
@@ -79,4 +86,15 @@ export async function inlineChangesFixture(
     },
     live: () => computeCatalogueChanges(fixture.config, "main", repository()),
   };
+}
+
+async function writeFiles(
+  root: string,
+  files: Readonly<Record<string, string>>,
+): Promise<void> {
+  for (const [route, content] of Object.entries(files)) {
+    const target = path.join(root, route);
+    await fs.mkdir(path.dirname(target), { recursive: true });
+    await fs.writeFile(target, content);
+  }
 }

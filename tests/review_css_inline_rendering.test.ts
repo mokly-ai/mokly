@@ -16,6 +16,7 @@ import {
   instance,
   markedRange,
   range,
+  resolved,
   view,
 } from "./helpers/inline_styles.js";
 
@@ -197,10 +198,7 @@ test("parse failures and identical outer sources retain verbatim elements", () =
   assert.deepEqual(failedMaterial.actual, { replacements: [], appendix: "" });
   assert.equal(apply(failedAfter, failedMaterial.actual), failedAfter);
 
-  const identical = html(
-    '<style>.same{background:url("same.svg")}</style>',
-    "",
-  );
+  const identical = html("<style>.same{color:red}</style>", "");
   const skipped = analyzeInline({
     before: identical,
     after: identical,
@@ -213,4 +211,58 @@ test("parse failures and identical outer sources retain verbatim elements", () =
   assert.equal(skipped.status, "skipped");
   const skippedMaterial = inlineMaterialReplacements(skipped, "before");
   assert.equal(apply(identical, skippedMaterial.actual), identical);
+});
+
+test("unchanged reference rules omit owned and excluded material symmetrically", () => {
+  const item = instance(1, "component");
+  const usage = view({
+    instances: [item],
+    ranges: [range(0, { kind: "instance", instanceKey: item.key })],
+  });
+  const body = markedRange(0, '<main class="target"></main>');
+  const ownedDocument = html(
+    '<style>.target{background:url("owned.svg")}</style>',
+    body,
+  );
+  const owned = resolved(
+    analyzeInline({
+      before: ownedDocument,
+      after: ownedDocument,
+      beforeUsage: usage,
+      afterUsage: usage,
+    }).result,
+  );
+  assert.equal(owned.rules.length, 1);
+  assert.equal(owned.rules[0]?.change.kind, "unchanged");
+  assert.deepEqual(owned.rules[0]?.attribution, {
+    kind: "owned",
+    componentIds: ["component"],
+  });
+  assert.deepEqual([...owned.ownedComponentIds], []);
+  assert.equal(owned.retainedSelectors, undefined);
+  const ownedBefore = inlineMaterialReplacements(owned, "before");
+  const ownedAfter = inlineMaterialReplacements(owned, "after");
+  assert.equal(ownedBefore.projected.appendix, "<style></style>");
+  assert.equal(
+    apply(ownedDocument, ownedBefore.projected),
+    apply(ownedDocument, ownedAfter.projected),
+  );
+  assert.deepEqual(extractCssReferences(ownedBefore.actual.appendix), [
+    "owned.svg",
+  ]);
+
+  const excludedDocument = html(
+    '<style>.missing{background:url("excluded.svg")}</style>',
+    "<main></main>",
+  );
+  const excluded = resolved(
+    analyzeInline({ before: excludedDocument, after: excludedDocument }).result,
+  );
+  assert.equal(excluded.rules[0]?.change.kind, "unchanged");
+  assert.deepEqual(excluded.rules[0]?.attribution, { kind: "excluded" });
+  for (const side of ["before", "after"] as const) {
+    const replacements = inlineMaterialReplacements(excluded, side);
+    assert.equal(replacements.actual.appendix, "<style></style>");
+    assert.equal(replacements.projected.appendix, "<style></style>");
+  }
 });

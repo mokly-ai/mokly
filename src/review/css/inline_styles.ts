@@ -17,6 +17,17 @@ export interface InlineStyleSpan {
   text: string;
 }
 
+/** Whether both documents expose the same ordered style-element source bytes. */
+export function sameInlineOuterSources(
+  before: readonly InlineStyleSpan[],
+  after: readonly InlineStyleSpan[],
+): boolean {
+  return (
+    before.length === after.length &&
+    before.every((span, index) => span.source === after[index]?.source)
+  );
+}
+
 /** Find HTML CSS style elements outside ownership and paired ignored regions. */
 export function findUnownedInlineStyles(
   source: string,

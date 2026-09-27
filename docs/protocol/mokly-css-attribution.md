@@ -14,8 +14,9 @@ approved target of the
 [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md);
 the [inline style ownership contract](./mokly-inline-styles.md) owns that
 analysis. Diffed inline rules now use the shared parser, keep list and matcher
-in component-aware comparisons; reference-bearing inline rules remain for that
-plan's Milestone 5.
+in component-aware comparisons. Reference-bearing inline rules also reuse the
+resource detector and follow inferred owners; evidence and presentation remain
+for that plan's later milestones.
 
 ## Purpose
 
@@ -335,7 +336,9 @@ rule attribution, comparison material, membership and `inlineStyles` evidence
 for that material. Two differences apply there: every matched element is
 mapped to its enclosing component range to find an owner, and a changed
 reference does not by itself keep a rule, because the reference follows the
-rule's owner.
+rule's owner. The shared detector covers declarations, an at-rule's own prelude
+and non-nesting condition preludes, including escaped `url()` and string-form
+or `url()`-form `@import`; selector-less imports still remain unresolved.
 
 ## Non-goals
 

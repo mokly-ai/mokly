@@ -51,7 +51,7 @@ export async function assertFastPathEquivalent(
   return fast;
 }
 
-function memoryReader(files: ReadonlyMap<string, FixtureFile>) {
+export function memoryReader(files: ReadonlyMap<string, FixtureFile>) {
   const find = (route: string): Uint8Array | undefined => {
     const value = files.get(route);
     return typeof value === "string" ? Buffer.from(value) : value;
