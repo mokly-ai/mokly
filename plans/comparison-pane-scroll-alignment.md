@@ -672,7 +672,7 @@ complete contract.
       `tests/design_screen_counts.test.ts`), and review the diff;
       documentation-only work does not require `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the
       findings without changing the implementation.
@@ -998,3 +998,51 @@ anchors to regions first, and prove both in the browser.
 - On 2026-09-27 the user confirmed Decision 3 (option A), which resolves
   review finding 4; the awaiting-confirmation notes were removed from the
   plan, the pane contract and the plans index.
+
+### Milestone 5
+
+- Base commit: `7835742`; the inner-scroll contract landed as `f444f67` and
+  its review fixes as `4f15512` on `calummoore/kelowna-v2`.
+- Scope stayed documentation-only: 17 Markdown files changed in the contract
+  commit, no runtime, CSS, mockup or test file changed, and the two planned
+  screen ids remain prose rather than design-inventory rows.
+- Checks before and after review fixes: `npm run format:check` passed; the
+  focused documentation suite
+  (`design_links.test.ts`, `design_screen_counts.test.ts`,
+  `guides_structure.test.ts`, and `component_protocol_docs.test.ts`) passed
+  17/17 with zero failures, skips, cancellations or TODOs; and
+  `git diff --diff-filter=D --name-status origin/main` returned no output.
+  Per the repository's documentation-only rule, `cargo xtask check` was not
+  run.
+- The attribute audit found no generated-document reservation, validator or
+  compatibility-preservation rule for `data-mokly-scroll`. Viewer-owned shell
+  history regions already use the same spelling, but pane matching scans a
+  separate snapshot document, so the scopes do not collide.
+- Contract choices: the fallback score is
+  `min(1, 0.55 * overlap + 0.45 * text + nameBonus)`, where `nameBonus` is
+  `0.10` for an equal element name, with a `0.45` minimum and `0.15` runner-up
+  margin. The switch is a native checkbox with `role="switch"` and visible copy
+  “Scroll together”; standalone storage is
+  `mokly:comparison-scroll-together` with `on`/`off` values.
+- Decision 10's ambiguous “same axis” wording was corrected to require a
+  candidate on every axis where the source has range, and Decisions 10 to 12
+  now record the final score, starting-node rule, control semantics and storage
+  key. This keeps the plan from contradicting the implementation contract.
+- Review of the complete diff against `origin/main`, after `f444f67`, found
+  five Milestone 5 gaps, all fixed in `4f15512`:
+  1. **Medium:** anchor wording still mirrored counterparts with Scroll
+     together off. The scrolling, navigation, pane, guide and plan wording now
+     makes the enabled-state condition explicit.
+  2. **Low:** the authoring contract implied a consumer compatibility
+     transformer could not remove the hint. It now states only Mokly's
+     ownership and lack of a preservation rule.
+  3. **Medium:** “embedded session” did not say whether source replacement
+     retained the choice. The contract now keeps it above the source-remount
+     boundary for the mounted viewer.
+  4. **Medium:** horizontal key boundaries assumed left-to-right scrolling.
+     The contract now gives exact right-to-left ArrowLeft/ArrowRight tests.
+  5. **Low:** cache keys, an identity match whose candidate is ineligible, and
+     several acceptance cases still required inference. The contract now fixes
+     each result and names the missing proofs.
+- No Milestone 5 findings remain open. Earlier open findings recorded under
+  Milestones 2, 3A and 4 are unchanged by this documentation milestone.
