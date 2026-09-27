@@ -107,9 +107,9 @@ and is specified by the
    sticky headers from sticking and stretched viewport-height sections, so
    comparisons stopped looking like Current; Mokly Cloud's own mockups use
    those patterns. The user was offered this fix (A, recommended) or
-   document-sized frames with a height cap (B) and has not answered;
-   Milestone 4 proceeds with A, the announced default, because B knowingly
-   ships the distortions above. **Decision 3 awaits the user's confirmation.**
+   document-sized frames with a height cap (B); Milestone 4 proceeded with A,
+   the announced default, because B knowingly ships the distortions above,
+   and the user confirmed A on 2026-09-27.
    Each chrome viewport is the only user-scrollable container: a
    `position: sticky` box of exactly the viewport's size holds the frames at
    device size, and a spacer after it extends the range to the section's
@@ -484,8 +484,8 @@ Tags: ui
 Summary: present comparison panes through the shared pipeline, keep every
 frame at the device viewport size, drive every stack's documents from one
 shared chrome viewport, mirror Side by side, and prove alignment in the
-browser. Decision 3's shared scroller replaces the approved document-sized
-frames and awaits the user's confirmation.
+browser. Decision 3's shared scroller replaces the originally approved
+document-sized frames; the user confirmed it on 2026-09-27.
 
 - [x] Add a dedicated tall-screen comparison fixture under `tests/helpers/`
       and a browser spec `tests/browser/comparison_alignment.spec.ts` that
@@ -983,6 +983,9 @@ anchors to regions first, and prove both in the browser.
     `base-uri` policy that ignores the presented `<base>`) and 6 (low: a frame
     reused for a new scheme accepts its outgoing document and reloads the new
     one once) were reported for a decision rather than applied.
-- Still open for the user's decision: Decision 3 and review findings 2, 5 and
-  6; Milestone 2 finding 5 (the long overlay's rationale); and the Milestone 3A
-  question whether every caption should name the recorded reason.
+- Still open for the user's decision: review findings 2, 5 and 6; Milestone 2
+  finding 5 (the long overlay's rationale); and the Milestone 3A question
+  whether every caption should name the recorded reason.
+- On 2026-09-27 the user confirmed Decision 3 (option A), which resolves
+  review finding 4; the awaiting-confirmation notes were removed from the
+  plan, the pane contract and the plans index.

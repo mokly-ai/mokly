@@ -6,7 +6,7 @@
   — Overlay and Difference drift apart when scrolled because each snapshot
   scrolls inside its own opaque frame; comparison panes become viewer-owned,
   device-sized presentations driven by one shared chrome viewport
-  (Milestones 1 to 4, delivered; the sizing change awaits confirmation), and
+  (Milestones 1 to 4, delivered), and
   Milestones 5 to 7 mirror inner scroll regions such as app-shell panels and
   add a "Scroll together" toggle.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one

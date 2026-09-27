@@ -8,7 +8,7 @@ listed at the end, Milestone 3 the generation-confined shared snapshot loader
 and documented embedded fetch set, and Milestone 4 the aligned pane runtime.
 Milestone 4 replaced the approved rule that sized each frame to its document
 with device-sized frames driven by one shared scroller, recorded in the plan's
-Decision 3, which awaits the user's confirmation. This contract governs the
+Decision 3 and confirmed by the user on 2026-09-27. This contract governs the
 Before and Current panes that
 [Changes and screen comparisons](./mokly-changes.md) offer for changed screens
 and eligible component variants in Side by side, Overlay and Difference. It
