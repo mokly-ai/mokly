@@ -8,9 +8,10 @@
   the next minor release. Implemented, verified, pushed and reviewed; the
   approved [review findings](../docs/reviews/delta-publishing.md) were fixed
   in Milestones 7–13, second-review findings 1 and 2 in Milestones 14–17 and
-  the third-review findings in Milestones 18–22; the fourth-review findings
-  are being fixed in Milestones 23–27, and second-review findings 3–11 stay
-  open. The plan stays Active until its pull request merges.
+  the third-review findings in Milestones 18–22 and the fourth-review findings
+  in Milestones 23–27; second-review findings 3–11 and the fifth review's
+  findings await the user's decision. The plan stays Active until its pull
+  request merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align

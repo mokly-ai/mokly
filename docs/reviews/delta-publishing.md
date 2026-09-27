@@ -845,16 +845,19 @@ record the decisions and work.
    [recovery contract](../protocol/mokly-export-recovery.md#pre-installation-window)
    defines this and lists every covered step. A spawned compile test for
    committed and derived catalogues signals the process group from inside
-   esbuild work and waits for esbuild to exit, and a 50-press process-group
-   sweep during compile printed the cancellation line every time.
+   esbuild work and waits for esbuild to exit; it fails 3 of 3 without the
+   fix and is the real guard, because a sweep on an idle machine cannot tell
+   fixed from broken code. A 280-press sweep on a loaded machine printed the
+   cancellation line every time.
 2. **Addressed (option B).** `scripts/verification/remove-remote-state.mjs`
    removes every configured remote with its references and upstream
    settings, deletes leftover `refs/remotes/*` without following symbolic
    references, deletes `FETCH_HEAD` and verifies nothing remains. CI's unit
    and browser jobs and the documented local procedure use it; a fixture
    clone with a symbolic `origin/HEAD`, packed references, a pull reference,
-   an upstream setting and `FETCH_HEAD` proves it, and `git fetch origin`
-   then fails.
+   an upstream setting and `FETCH_HEAD` exercises it, and `git fetch origin`
+   then fails. Its safety and failure checks need more work; see
+   [fifth review](#fifth-review) findings 1 and 2.
 3. **Addressed (option A).** The preview test asserts that its edit changes
    exactly the Welcome and tour destinations, that the navigation count is 2,
    that Welcome is marked changed and that Details is unmodified; the test
@@ -879,9 +882,122 @@ record the decisions and work.
    the window marks the original error in place, so its class, fields and
    stack survive, and publish substitutes its fixed cancellation copy only
    when rendering. `MOKLY_DIAGNOSTIC=1` now shows the failing operation's
-   stack.
+   stack for Mokly errors; a Git abort during repository identity still shows
+   the publish boundary (see [fifth review](#fifth-review) finding 4).
 
 Follow-up verification: `cargo xtask check` passed with Node 24.21.0 (unit
 2,546/2,546 across 473 files, browser 781/781 across 122 files,
 packed-consumer smoke and every static check), and the unit and browser suites
 passed again in a copy prepared with the shared remote-free script.
+
+## Fifth Review
+
+Reviewed on 2026-09-28 with
+[the implementation review prompt](../implementation-review-prompt.md), after
+fix commit `4f230ad` was pushed, against `origin/main` (`3699c56`). Two
+independent read-only reviewers covered cancellation timing, keep-alive and
+in-place marks, and the remote-free script, CI, preview assertions and lint,
+and rechecked the plan, this document and every changed link. They confirmed
+the seven fourth-review fixes work: 280 timed process-group presses during
+compile and 140 during configuration loading all printed the cancellation line
+with status 1. Five new findings follow: one Medium and four Low. None was
+changed; each awaits the user's decision. A stale title-check sentence in
+`ci-verification.md` that a reviewer also reported is already open as
+second-review finding 10, and the missing "completed" marker on Milestone 24
+was corrected in the plan while recording this review. Second-review findings
+3–11 stay open.
+
+1. **P2 / Medium — The documented local run can delete the real repository's
+   remotes.** [`remove-remote-state.mjs`](../../scripts/verification/remove-remote-state.mjs)
+   changes whichever Git store the current folder uses. Conductor workspaces
+   are Git worktrees that share one store, so running it in a linked worktree,
+   or in a `cp -a` copy of one (its `.git` file still points at the shared
+   store), deletes `origin`, every remote-tracking reference and every
+   upstream setting of the main checkout too; the lead reproduced this. In a
+   partial clone (this workspace is one), removing the promisor remote also
+   makes history that was never downloaded unreadable. The
+   [CI contract](../protocol/ci-verification.md) and Milestone 27 tell
+   developers to run it in "a separate copy". **Impact of no change:** a
+   routine delivery step can silently break fetch, push, upstream tracking
+   and history reads in the real repository and all its workspaces.
+   **Options:** **A)** refuse before changing anything unless the Git
+   directory is the common directory, there is one worktree and no promisor
+   remote; **B)** provide a script that creates the disposable copy with its
+   own `.git` and cleans only that copy; **C)** only document the hazard.
+   **Recommended: A + B,** with fixtures for a linked worktree, a copied
+   worktree and a partial clone.
+
+2. **P3 / Low — The script's fail-closed checks are weaker than documented
+   and untested.** Its final check fails on any branch upstream, including a
+   branch that tracks a local branch (`branch.<name>.remote = .`), which is
+   not remote state and which the contract does not mention; the script then
+   exits 1 after removing every remote. Mutation runs showed that removing
+   the final check, or dropping `--no-deref`, still passes
+   `tests/verification_remote_state.test.ts`, whose only failure case runs
+   outside a repository. Its entry guard compares `import.meta.url` with the
+   unresolved script path, so run through a symlinked path (for example
+   macOS `/tmp`) it exits 0 having done nothing; `pull-request-title.mjs`
+   uses the same guard. **Impact of no change:** wrong failures for stacked
+   branches, and a regression in either protection or a symlinked run would
+   let the suites run with remote state unnoticed. **Options:** **A)** ignore
+   local upstreams and document the upstream check; **B)** add failure
+   fixtures, including a leftover symbolic reference that must keep its
+   target; **C)** one shared, real-path entry helper for all scripts, tested
+   through a symlink. **Recommended: A + B + C;** C stops the fail-open
+   pattern recurring.
+
+3. **P3 / Low — The lint still contradicts its documentation and flags
+   fixture code.** [`test_repository_refs.ts`](../../tests/helpers/test_repository_refs.ts)
+   treats a callback argument (`execFile("git", [...], callback)`) and inline
+   options written with `as`, `satisfies` or parentheses as unknown options,
+   although the contract says a call with no options targets the real
+   checkout. It counts a target as the real checkout whenever its expression
+   mentions `repositoryRoot`, so `cwd: path.join(repositoryRoot, ".context", "fixture")`
+   — where this repository keeps fixtures — is flagged when a fixture reads
+   its own `origin/main`, while `process.cwd()`, `"."` and a relative `-C` are
+   never reported and are not listed blind spots. For `log`, `-r` and `-a`
+   are diff options, so `git log -r --name-status HEAD` is still flagged.
+   **Impact of no change:** legitimate fixture code can fail the unit suite,
+   and the contract misleads authors. **Options:** **A)** unwrap
+   `as`/`satisfies`/parentheses, treat a function argument as no options,
+   keep `-r`/`-a` only for `branch` and `show-branch`, and treat `.context`
+   paths as fixtures, each with synthetic cases; **B)** document the target
+   rule and remaining blind spots; **C)** retire the lint.
+   **Recommended: A for the false positives and contradictions, B for the
+   rest,** without growing a fuller parser.
+
+4. **P3 / Low — Some publish cancellations still replace the original
+   error.** When a Git command is stopped by Ctrl+C, Node produces a platform
+   `AbortError`, and [`publish_failure.ts`](../../src/cli/publish_failure.ts)
+   swaps it for a fresh `PublishCancelledError` with no cause (the test
+   requires this). Now that `main.ts` substitutes the cancellation copy when
+   rendering, the swap is redundant, and with `MOKLY_DIAGNOSTIC=1` a Ctrl+C
+   during repository identity or the final HEAD check prints the publish
+   boundary's stack instead of the Git abort. **Impact of no change:**
+   misleading diagnostics, and the READMEs overstate the fix. **Options:**
+   **A)** return every cancellation unchanged from `publishFailure`; **B)**
+   keep the swap, set `cause` and print the cause chain in diagnostic mode;
+   **C)** document it. **Recommended: A,** with an identity assertion, a
+   spawned diagnostic test for Ctrl+C during repository identity, and one
+   table test pushing every cancellation source through `runPublish`.
+
+5. **P3 / Low — Files have grown past the size rules.** `AGENTS.md` asks for
+   files under about 300 lines and protocol documents near 250. This branch
+   grew `tests/guides_ci.test.ts` to 532 lines, `tests/publish_run.test.ts`
+   to 386, `tests/ci_workflow.test.ts` to 356, `scripts/package/publish.mjs`
+   to 307, `ci-verification.md` to 448, `mokly-terminal-output.md` to 311 and
+   the new `mokly-upload-exchange.md` to 318. **Impact of no change:** harder
+   reviews, and each round adds more. **Options:** **A)** split them by
+   contract (the guides test per document, the workflow test per job, the
+   lint and title contracts into their own protocol documents); **B)** A plus
+   a size audit for non-Rust files in `cargo xtask check`, with an allowlist
+   for plans, reviews and fixtures; **C)** leave it. **Recommended: B.**
+
+Fifth-review verification: the reviewers' focused reruns passed 16, 3, 14 and
+32 tests; every relative link and anchor in the 31 changed Markdown files
+resolves. Residual test risk: Windows (Ctrl+C arrives on a console-handler
+thread and the process-group tests are skipped), the exit-13 race is only
+reproducible statistically, the release workflow's complete-verification
+fallback still runs with `origin` present, the script is untested on macOS
+and Windows, and a pre-existing `npm-release.md` sentence names a
+GitHub-hosted release runner while `release.yml` uses Blacksmith.

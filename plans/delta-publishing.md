@@ -894,7 +894,7 @@ Documentation and contract only. Validate with Prettier and the guide tests;
 - [x] Update the READMEs these rules touch; run Prettier and the guide tests;
       check every changed link.
 
-## Milestone 24: Cancellation timing, keep-alive and in-place marks
+## Milestone 24: Cancellation timing, keep-alive and in-place marks — completed
 
 - [x] Add failing tests first: spawned compile cases for committed and derived
       catalogues whose preload sends SIGINT to the process group from inside
@@ -934,7 +934,7 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       Then implement the decided rules (fourth #5).
 - [x] Keep zero lint violations across the tree.
 
-## Milestone 27: Fourth review fix verification and delivery
+## Milestone 27: Fourth review fix verification and delivery — completed
 
 - [x] Run the focused publish, export, baseline, CLI, guides, package and CI
       suites; make a local copy without remote state using the shared script
@@ -942,13 +942,15 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       `cargo xtask check`; resolve every failure.
 - [x] Mark the fourth-review findings addressed in
       `docs/reviews/delta-publishing.md` and summarize what changed.
-- [ ] After checks pass, `git add -A`, commit with a Conventional Commits
-      title of at most 50 characters, and push the branch.
-- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After checks pass, `git add -A`, commit with a Conventional Commits
+      title of at most 50 characters, and push the branch. Committed as
+      `4f230ad fix(publish): settle Ctrl+C races and remote state`.
+- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
-      without changing the implementation.
+      without changing the implementation. Five findings (one Medium, four
+      Low) are recorded in its Fifth Review for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
