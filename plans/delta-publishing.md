@@ -250,6 +250,28 @@ review.
   the original stack. Non-Mokly failures keep the existing marked
   `Could not export catalogue` wrapper.
 
+## Script Removal Decision
+
+On 2026-09-28 the user judged `scripts/verification/remove-remote-state.mjs`
+too dangerous and asked to remove it:
+[fifth-review](../docs/reviews/delta-publishing.md#fifth-review) finding 1
+showed that, run in a Conductor worktree or a copy of one, it deletes the
+shared repository's remotes. Milestones 28–29 carry this work.
+
+- Delete the script, its declaration file and
+  `tests/verification_remote_state.test.ts`, and remove its step from CI's unit
+  and browser jobs. No replacement cleanup step is added, in CI or locally.
+- `ci-verification.md` keeps the rule that tests depend only on the tree under
+  test and its two fixes: the example preview test builds a fixture-owned
+  baseline, and the browser server compares with `HEAD`. It no longer promises
+  a runtime proof that tests never read remote-tracking references; the static
+  lint stays as the only automated guard and remains best-effort. CI keeps
+  reading the baseline lockfile from the checked-out tree, not `origin/main`.
+- This resolves fifth-review finding 1 and the script-specific parts of
+  finding 2. The symlinked-path entry guard in finding 2 still applies to
+  `scripts/verification/pull-request-title.mjs`, and fifth-review findings
+  3–5 and second-review findings 3–11 stay open.
+
 ## Milestone 1: Protocol and guide contract — completed
 
 Define the complete receiver and CLI contract before any code changes. Docs
@@ -951,6 +973,36 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       recommendation to `docs/reviews/delta-publishing.md` and report them
       without changing the implementation. Five findings (one Medium, four
       Low) are recorded in its Fifth Review for the user's decision.
+
+## Milestone 28: Remove the remote-state cleanup script
+
+- [ ] Rewrite the "Deterministic Test Repository Inputs" section of
+      [`ci-verification.md`](../docs/protocol/ci-verification.md) without the
+      removal step, the local procedure or the runtime-proof wording, keeping
+      the rule, the two tree-owned bases and the lint as the remaining
+      best-effort guard; check every link to that section.
+- [ ] Delete `scripts/verification/remove-remote-state.mjs`,
+      `scripts/verification/remove-remote-state.d.mts` and
+      `tests/verification_remote_state.test.ts`, and remove the "Remove
+      remote-tracking test inputs" steps from `.github/workflows/ci.yml`.
+- [ ] Update `tests/ci_workflow.test.ts` and `tests/guides_ci.test.ts` to the
+      new contract, keeping the checks that the unit and browser jobs do not
+      read `origin/main`; confirm no reference to the script remains outside
+      historical plans and reviews.
+
+## Milestone 29: Script removal verification and delivery
+
+- [ ] Run the CI, verification, workflow, guides and preview tests, then
+      `cargo xtask check`; resolve every failure.
+- [ ] Record the removal in `docs/reviews/delta-publishing.md` against
+      fifth-review findings 1 and 2.
+- [ ] After checks pass, `git add -A`, commit with a Conventional Commits
+      title of at most 50 characters, and push the branch.
+- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; append the
+      numbered, severity-rated findings with lettered options and a
+      recommendation to `docs/reviews/delta-publishing.md` and report them
+      without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 
