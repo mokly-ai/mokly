@@ -221,8 +221,8 @@ checked the Milestone 10 fixes, the Milestone 11 fixes, and the documentation
 and length gate. They confirmed that fixes 2, 5, 6, 7, 12, 13, 15, 16, 18 and
 20 are correct. The parent session checked, with its own fixture, derived
 export Changes and CSS Module `image-set()`. The 16 findings below were each
-reproduced in a scratch copy. They await the user's decision; the
-implementation has not changed in response to them.
+reproduced in a scratch copy. Finding 1 was authorized and fixed in Milestone
+13; the other 15 findings remain open for the user's decision.
 
 1. **High — CSS Modules drop `@import` rules and reject `url()` in custom
    properties.** The finding 4 fix enabled Lightning CSS
@@ -232,6 +232,12 @@ implementation has not changed in response to them.
    Recommended: disable the option, turn quoted `image-set()` sources back into
    `url()` after Lightning, keep the second string check, and add a test that
    plain and module CSS deliver the same output.
+
+   Resolved in `d474975`: Lightning dependency analysis is disabled for CSS
+   Modules, and a CSS-tokenizer pass restores local `image-set()` URLs while
+   preserving module imports and custom-property assets. Plain/module parity
+   and exact diagnostics are covered by regression tests.
+
 2. **Medium — committed mode loses package assets to ordinary `.gitignore`
    rules.** Assets are mirrored under `mokly-generated/assets/node_modules/…`
    (or `dist/…`), which common ignore rules exclude. Fresh clones then fail

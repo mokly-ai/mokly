@@ -5,8 +5,8 @@
 Active until the implementation PR merges. Created 2026-09-24 from the
 CSS-in-JS investigation on this branch. All implementation milestones and the
 bookkeeping push are complete; finding 3 was resolved in the separate
-`922c1ec` merge. Milestone 13 resolves Milestone 12 review finding 1;
-the other 15 findings remain open for the user in the
+`922c1ec` merge. Milestone 13 resolves Milestone 12 review finding 1 in
+`d474975`; the other 15 findings remain open for the user in the
 [review record](../docs/reviews/imported-css-delivery.md#milestone-12-review).
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
@@ -728,7 +728,7 @@ without changing any other Milestone 12 review finding.
 
 ## Milestone 14: Commit, push, and review
 
-- [ ] Commit and push final resolution-reference bookkeeping with a clean tree.
+- [x] Commit and push final resolution-reference bookkeeping with a clean tree.
 - [ ] Review the complete local diff against `origin/main` using
       `docs/implementation-review-prompt.md` after the push. Report findings
       without changing the implementation; the parent session owns this review.
