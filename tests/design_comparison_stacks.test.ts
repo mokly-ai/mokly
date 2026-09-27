@@ -165,30 +165,57 @@ test("Side by side keeps one chrome per version", async () => {
   }
 });
 
-test("links inside a depicted comparison do nothing", async () => {
-  const { manifest, outputs } = await designCatalogue;
-  let comparisons = 0;
-  for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.id.startsWith("design-")) continue;
-    for (const route of [
-      ...Object.values(entry.fragments),
-      ...Object.values(entry.darkFragments ?? {}),
-    ]) {
-      const html = outputs.get(route);
-      assert.ok(html, route);
-      for (const comparison of byClass(parse(html), "mbk-compare")) {
-        comparisons += 1;
-        assert.deepEqual(
-          elements(comparison, (node) => node.tagName === "a").map((link) =>
-            attribute(link, "data-mokly-link"),
-          ),
-          [],
-          route,
-        );
-      }
+/** Every generated design output: each screen view and saved sample view. */
+async function designOutputs(): Promise<string[]> {
+  const { manifest } = await designCatalogue;
+  return manifest.entries.flatMap((entry) => {
+    if (entry.kind === "screen" && entry.route.startsWith("design/"))
+      return [
+        ...Object.values(entry.fragments),
+        ...Object.values(entry.darkFragments ?? {}),
+      ];
+    if (entry.kind === "component" && entry.route.startsWith("design/"))
+      return entry.variants.flatMap((variant) => [
+        ...Object.values(variant.fragments),
+        ...Object.values(variant.darkFragments ?? {}),
+      ]);
+    return [];
+  });
+}
+
+/** Regions that depict a comparison, one of its panes, or a stacked layer. */
+const COMPARISON_REGIONS = [
+  "mbk-compare",
+  "mbk-compare-side",
+  "mbk-stack-layer",
+];
+
+test("links inside every depicted comparison and pane sample do nothing", async () => {
+  const { outputs } = await designCatalogue;
+  let regions = 0;
+  let samples = 0;
+  for (const route of await designOutputs()) {
+    const html = outputs.get(route);
+    assert.ok(html, route);
+    const document = parse(html);
+    const depicted = COMPARISON_REGIONS.flatMap((name) =>
+      byClass(document, name),
+    );
+    if (depicted.length > 0 && route.startsWith("design/library/"))
+      samples += 1;
+    for (const region of depicted) {
+      regions += 1;
+      assert.deepEqual(
+        elements(region, (node) => node.tagName === "a").map((link) =>
+          attribute(link, "data-mokly-link"),
+        ),
+        [],
+        route,
+      );
     }
   }
-  assert.ok(comparisons > 0, "no depicted comparison was checked");
+  assert.ok(regions > 0, "no depicted comparison was checked");
+  assert.ok(samples > 0, "no shared pane sample was checked");
 });
 
 test("the long overlay rewords one section and keeps the rest in place", async () => {

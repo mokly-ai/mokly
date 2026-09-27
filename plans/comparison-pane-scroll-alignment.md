@@ -364,7 +364,8 @@ side, and prove alignment in the browser.
       comparison and preview browser specs and `cargo xtask check`.
 - [ ] Remove the pending-runtime sentences that Milestone 2 added to the
       Delivery Status sections of `docs/protocol/mokly-shell-design.md` and
-      `docs/protocol/mokly-comparison-panes.md`.
+      `docs/protocol/mokly-comparison-panes.md`, including the exception now
+      attached to "Every state recorded here is implemented".
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)

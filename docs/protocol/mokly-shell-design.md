@@ -16,7 +16,8 @@ ancestor disclosure, conditional filter clearing, nearest-row scrolling, the
 `tag:` search term, the details inspector's tag chips, the search field's tag
 control with its picker panel, the mark-only narrow brand, and the top bar's
 stacking above the navigation drawer scrim. Every state recorded here is
-implemented. The [React Browse shell plan](../../plans/react-browse-shell.md)
+implemented except the comparison presentation described below. The
+[React Browse shell plan](../../plans/react-browse-shell.md)
 changes how the shell is rendered and enhanced, not how it looks or behaves:
 this design, its tokens, dimensions, responsive rules and the design catalogue
 remain binding on the hydrated React implementation, and no mockup changes
@@ -45,7 +46,7 @@ viewport scrolls them as one, and links inside every depicted comparison do
 nothing. Until Milestones 3 and 4 of the
 [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
 land, the shipped shell still stacks two chromes and keeps comparison links
-active; every other state recorded here is implemented.
+active.
 
 The removed-document and removed-screen designs depict the shipped
 [removed previews](./mokly-removed-previews.md) behavior: the previous version
