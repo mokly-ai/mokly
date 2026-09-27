@@ -75,11 +75,28 @@ for (const viewport of ["mobile", "desktop"] as const) {
       const { document } = await designDocument(source, viewport);
       assert.equal(byClass(document, "mbk-cmp-toolbar").length, 0, source);
     }
-    for (const source of [
-      "design-review-style-matched",
-      "design-review-style-unresolved",
-      "design-review-style-unnamed",
-    ]) {
+    const actionModes = [
+      ["Current", "design-component-affected"],
+      ["Side by side", "design-component-comparison"],
+      ["Overlay", "design-component-overlay"],
+      ["Difference", "design-component-difference"],
+    ] as const;
+    for (const [active, source] of actionModes) {
+      const { document } = await designDocument(source, viewport);
+      const toolbar = byClass(document, "mbk-cmp-toolbar")[0];
+      assert.ok(toolbar, source);
+      assert.deepEqual(
+        destinations(elements(toolbar, (node) => node.tagName === "a")),
+        actionModes.filter(([label]) => label !== active),
+        source,
+      );
+    }
+    for (const [source, active] of [
+      ["design-review-style-matched", "Side by side"],
+      ["design-review-style-unresolved", "Side by side"],
+      ["design-review-style-unnamed", "Side by side"],
+      ["design-component-overlay-tall", "Overlay"],
+    ] as const) {
       const { document } = await designDocument(source, viewport);
       const toolbar = byClass(document, "mbk-cmp-toolbar")[0];
       assert.ok(toolbar, source);
@@ -90,7 +107,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       );
       assert.deepEqual(
         byClass(toolbar, "active").map((node) => textContent(node).trim()),
-        ["Side by side"],
+        [active],
         source,
       );
     }

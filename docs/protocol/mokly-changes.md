@@ -277,7 +277,10 @@ configured comparison directory.
 The synthetic design catalogue owns distinct mobile and desktop examples at
 `design/review/controls/current.html`, `design/review/controls/overlay.html`,
 and `design/review/controls/overlay-long.html`, the last depicting a long
-screen scrolled inside its one shared chrome.
+screen scrolled inside its one shared chrome. Component variant comparisons in
+Overlay and Difference, including a component taller than its frame, live
+under `design/components/pages/stacked/` in the
+[component design inventory](./mokly-component-design.md).
 Existing outcome and impact examples now depict the same catalogue shell.
 Their stable authoring ids and routes are retained to preserve links.
 

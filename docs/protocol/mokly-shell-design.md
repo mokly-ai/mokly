@@ -41,9 +41,10 @@ same navigation, search, tags, and screen variants.
 
 The comparison designs depict the
 [comparison pane contract](./mokly-comparison-panes.md) ahead of its runtime
-delivery: Overlay and Difference hold both versions in one device chrome whose
-viewport scrolls them as one, and links inside every depicted comparison do
-nothing. Until Milestones 3 and 4 of the
+delivery: Overlay and Difference hold both versions in one device chrome, or in
+one bordered frame for a saved component variant in the
+[component explorer designs](./mokly-component-design.md), whose viewport
+scrolls them as one, and links inside every depicted comparison do nothing. Until Milestones 3 and 4 of the
 [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
 land, the shipped shell still stacks two chromes and keeps comparison links
 active.

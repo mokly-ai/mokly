@@ -125,6 +125,7 @@ stable id and points readers to Welcome; no unrelated route or membership moves.
 | Removed screen All filter                       | `design-browse-home`, because the depicted product screen has no current entry                                 |
 | Empty Changes All filter                        | `design-browse-screen`                                                                                         |
 | Removed consumer return, component explorer     | `design-component-removed`, from the desktop Action row and the narrow Changes shortcut, never from the stage  |
+| Action comparison modes, component explorer     | `design-component-affected` / `-comparison` / `-overlay` / `-difference`, owned by the component design        |
 
 Collection headings and collection-only breadcrumbs are not catalogue-link
 targets: the public API rejects collection ids. Leave grouping labels as text,

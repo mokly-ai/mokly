@@ -10,7 +10,7 @@ import {
   FramedShot,
   type CompareViewport,
 } from "../../../parts/compare_page.js";
-import { ComparisonStack } from "../../../parts/compare_stack.js";
+import { ComparisonStack, deviceChrome } from "../../../parts/compare_stack.js";
 import { DesignNavigation } from "../../../parts/design_navigation.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { MiniWelcome } from "../../../parts/mini_screens.js";
@@ -97,12 +97,14 @@ function WelcomePanes({ viewport }: { viewport: CompareViewport }) {
 function WelcomeStack({ viewport }: { viewport: CompareViewport }) {
   return (
     <ComparisonStack
-      address="example.test/welcome"
       after={<MiniWelcome compact={viewport === "mobile"} inert revised />}
       before={<MiniWelcome compact={viewport === "mobile"} inert />}
-      dark={useDarkPreview()}
+      chrome={deviceChrome({
+        address: "example.test/welcome",
+        dark: useDarkPreview(),
+        viewport,
+      })}
       mode="difference"
-      viewport={viewport}
     />
   );
 }

@@ -1,10 +1,14 @@
 import type { ReactNode } from "react";
 
 import { CompareGrid, MissingPane, Pane } from "../../parts/compare.js";
+import { ComparisonStack } from "../../parts/compare_stack.js";
+import type { ComparisonMode } from "../../parts/destinations.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 
 import type { ActionProps } from "./action_props.js";
+import { ChecklistExample } from "./checklist.js";
 import { toolbarPrompt } from "./fixtures.js";
+import type { ComponentId } from "./metadata.js";
 import { PreviewScheme } from "./view_controls.js";
 
 /** The same synthetic Action is composed by component and consuming-screen designs. */
@@ -42,8 +46,8 @@ export function ToolbarExample() {
   );
 }
 
-/** Component canvases keep viewport context without phone or browser decoration. */
-export function ComponentCanvas({
+/** The bordered component frame: a context caption above its viewport. */
+function ComponentFrame({
   children,
   viewport,
 }: {
@@ -58,16 +62,58 @@ export function ComponentCanvas({
       <span className="ce-canvas-label">
         {viewport} · <PreviewScheme />
       </span>
-      <div className="ce-canvas-content">{children}</div>
+      {children}
     </section>
   );
 }
 
-export function ComponentComparison({
-  removed = false,
+/** Component canvases keep viewport context without phone or browser decoration. */
+export function ComponentCanvas({
+  children,
   viewport,
 }: {
+  children: ReactNode;
+  viewport: ArtboardViewport;
+}) {
+  return (
+    <ComponentFrame viewport={viewport}>
+      <div className="ce-canvas-content">{children}</div>
+    </ComponentFrame>
+  );
+}
+
+/** The saved variants a comparison depicts; only the Checklist outgrows its frame. */
+export type ComparedComponent = Extract<ComponentId, "action" | "checklist">;
+
+function ComparedVersion({
+  before,
+  subject,
+}: {
+  before: boolean;
+  subject: ComparedComponent;
+}) {
+  const version =
+    subject === "checklist" ? (
+      <ChecklistExample before={before} />
+    ) : (
+      <ActionExample before={before} />
+    );
+  return <div className="ce-canvas-content">{version}</div>;
+}
+
+/**
+ * Side by side keeps a bordered frame per version. Overlay and Difference hold
+ * both versions in one bordered frame whose viewport they share.
+ */
+export function ComponentComparison({
+  mode = "side-by-side",
+  removed = false,
+  subject = "action",
+  viewport,
+}: {
+  mode?: Exclude<ComparisonMode, "current">;
   removed?: boolean;
+  subject?: ComparedComponent;
   viewport: ArtboardViewport;
 }) {
   return (
@@ -75,28 +121,42 @@ export function ComponentComparison({
       <p className="ce-caption">
         {removed
           ? "Compact variant removed"
-          : "Default variant · Appearance changed"}
+          : subject === "checklist"
+            ? "Default variant · Wording changed"
+            : "Default variant · Appearance changed"}
       </p>
-      <CompareGrid>
-        <Pane label="Before" side="before">
-          <ComponentCanvas viewport={viewport}>
-            <ActionExample before />
-          </ComponentCanvas>
-        </Pane>
-        {removed ? (
-          <MissingPane
-            label="Current"
-            side="after"
-            message="This variant has been removed."
-          />
-        ) : (
-          <Pane label="Current" side="after">
-            <ComponentCanvas viewport={viewport}>
-              <ActionExample />
-            </ComponentCanvas>
+      {mode === "side-by-side" ? (
+        <CompareGrid>
+          <Pane label="Before" side="before">
+            <ComponentFrame viewport={viewport}>
+              <ComparedVersion before subject={subject} />
+            </ComponentFrame>
           </Pane>
-        )}
-      </CompareGrid>
+          {removed ? (
+            <MissingPane
+              label="Current"
+              side="after"
+              message="This variant has been removed."
+            />
+          ) : (
+            <Pane label="Current" side="after">
+              <ComponentFrame viewport={viewport}>
+                <ComparedVersion before={false} subject={subject} />
+              </ComponentFrame>
+            </Pane>
+          )}
+        </CompareGrid>
+      ) : (
+        <ComparisonStack
+          after={<ComparedVersion before={false} subject={subject} />}
+          before={<ComparedVersion before subject={subject} />}
+          chrome={(scroller) => (
+            <ComponentFrame viewport={viewport}>{scroller}</ComponentFrame>
+          )}
+          mode={mode}
+          scrolled={subject === "checklist"}
+        />
+      )}
     </div>
   );
 }

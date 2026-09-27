@@ -3,9 +3,9 @@
 ## Delivery Status
 
 The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-defines the presentation below. Its Milestone 2 delivered the design references
-listed at the end, and Milestone 3 delivered the generation-confined shared
-snapshot loader and documented embedded fetch set. Milestone 4 connects that
+defines the presentation below. Its Milestones 2 and 3A delivered the design
+references listed at the end, and Milestone 3 delivered the generation-confined
+shared snapshot loader and documented embedded fetch set. Milestone 4 connects that
 pipeline to the pane UI, so until it lands the shell still frames each pane
 directly. This contract governs the Before and Current panes that
 [Changes and screen comparisons](./mokly-changes.md) offer for changed screens
@@ -178,8 +178,9 @@ both output modes and through both frame adapters:
 
 ## Design References
 
-The implemented design mockups depict this contract in both viewports and both
-schemes. `design-changes-overlay` at `design/review/controls/overlay.html`
+The implemented design mockups depict this contract in both viewports, the
+screen comparisons in both schemes and the component comparisons in Light like
+every component design. `design-changes-overlay` at `design/review/controls/overlay.html`
 depicts a short screen in Overlay inside one chrome, and
 `design-changes-overlay-long` at `design/review/controls/overlay-long.html`
 depicts a long screen scrolled part-way inside its shared chrome viewport, with
@@ -188,5 +189,12 @@ showing both versions, and the viewport's scrollbar drawn part-way down.
 `design-review-difference` and `design-appearance-difference` depict Difference
 with the same single-chrome stack over an opaque Before layer, and
 `design-review-changed` and `design-appearance-side-by-side` depict Side by
-side with one chrome per version. Links inside every depicted pane are inert.
-See [the shell design](./mokly-shell-design.md) for the complete table.
+side with one chrome per version. For component comparisons,
+`design-component-overlay` and `design-component-difference` depict a saved
+variant's two versions in one bordered component frame, and
+`design-component-overlay-tall` depicts a component taller than that frame
+scrolled part-way inside it, with both versions at one scroll position and the
+frame's scrollbar drawn to match; `design-component-comparison` keeps one frame
+per version in Side by side. Links inside every depicted pane are inert. See
+[the shell design](./mokly-shell-design.md) and
+[the component design](./mokly-component-design.md) for the complete tables.

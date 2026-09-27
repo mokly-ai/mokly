@@ -3,7 +3,7 @@ import { screen } from "@mokly/mokly";
 import { PreviewWorkspace } from "./components/parts/workspace.js";
 import { useDarkPreview } from "./parts/appearance.js";
 import { ComparisonStage } from "./parts/compare.js";
-import { ComparisonStack } from "./parts/compare_stack.js";
+import { ComparisonStack, deviceChrome } from "./parts/compare_stack.js";
 import { DESTINATIONS, type DesignDestination } from "./parts/destinations.js";
 import { DetailsPanel } from "./parts/details.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
@@ -49,13 +49,15 @@ function OverlayPreview({
   const compact = viewport === "mobile";
   return (
     <ComparisonStack
-      address="example.test/welcome"
       after={<MiniWelcome compact={compact} inert long={long} revised />}
       before={<MiniWelcome compact={compact} inert long={long} />}
-      dark={useDarkPreview()}
+      chrome={deviceChrome({
+        address: "example.test/welcome",
+        dark: useDarkPreview(),
+        viewport,
+      })}
       mode="overlay"
       scrolled={long}
-      viewport={viewport}
     />
   );
 }

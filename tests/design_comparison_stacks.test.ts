@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parse, type DefaultTreeAdapterMap } from "parse5";
+import { parse } from "parse5";
 
 import {
   attribute,
@@ -9,11 +9,14 @@ import {
   designCatalogue,
   elements,
   textContent,
-  type Element,
 } from "./helpers/design_catalogue.js";
-
-type Document = DefaultTreeAdapterMap["document"];
-type Viewport = "desktop" | "mobile";
+import {
+  children,
+  hasClass,
+  previews,
+  renders,
+  type Viewport,
+} from "./helpers/design_stacks.js";
 
 /** Designs that stack both versions inside one device chrome. */
 const STACKED = [
@@ -41,44 +44,6 @@ const SCREEN: Record<Viewport, string> = {
   desktop: "browser-viewport",
   mobile: "phone-screen",
 };
-
-/** Every generated view of one design, in each scheme it renders in. */
-async function renders(
-  id: string,
-): Promise<{ dark: boolean; document: Document; route: string }[]> {
-  const { manifest, outputs } = await designCatalogue;
-  const entry = manifest.entries.find((candidate) => candidate.id === id);
-  assert.ok(entry?.kind === "screen", id);
-  return [
-    ...Object.values(entry.fragments).map((route) => [route, false] as const),
-    ...Object.values(entry.darkFragments ?? {}).map(
-      (route) => [route, true] as const,
-    ),
-  ].map(([route, dark]) => {
-    const html = outputs.get(route);
-    assert.ok(html, route);
-    return { dark, document: parse(html), route };
-  });
-}
-
-/** Both depicted previews of an artboard, each with its viewport. */
-function previews(document: Document): [Viewport, Element][] {
-  return byClass(document, "ce-preview-view").map((view) => {
-    const viewport = attribute(view, "data-preview-viewport");
-    assert.ok(viewport === "desktop" || viewport === "mobile");
-    return [viewport, view];
-  });
-}
-
-function children(node: Element): Element[] {
-  return node.childNodes.filter(
-    (child): child is Element => "tagName" in child,
-  );
-}
-
-function hasClass(node: Element, name: string): boolean {
-  return (attribute(node, "class") ?? "").split(/\s+/u).includes(name);
-}
 
 test("Overlay and Difference draw one chrome holding both versions", async () => {
   for (const [id, mode] of STACKED) {

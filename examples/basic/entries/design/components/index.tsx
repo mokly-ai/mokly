@@ -5,6 +5,7 @@ import { inspectionScreens } from "./inspection/screens.js";
 import { selectionScreens } from "./inspection/selection/screens.js";
 import { inspectorScreens } from "./inspector/screens.js";
 import { pageScreens } from "./pages/screens.js";
+import { stackedDesigns } from "./pages/stacked/screens.js";
 import { ComponentPage } from "./parts/component_page.js";
 import { componentDesignDocs } from "./parts/fixtures.js";
 import { componentStyleDependencies } from "./parts/styles.js";
@@ -53,7 +54,7 @@ export const componentDesign = collection({
       title: "Pages and comparisons",
       description:
         "Saved variants, component comparisons, and usage relationships.",
-      children: pageScreens,
+      children: [...pageScreens, stackedDesigns],
     }),
     collection({
       id: "design-component-inspection",

@@ -7,7 +7,7 @@ import {
   FramedShot,
   type CompareViewport,
 } from "./parts/compare_page.js";
-import { ComparisonStack } from "./parts/compare_stack.js";
+import { ComparisonStack, deviceChrome } from "./parts/compare_stack.js";
 import { DESTINATIONS } from "./parts/destinations.js";
 import { ExampleWorkspace } from "./parts/example_workspace.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
@@ -114,14 +114,16 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
       viewport={viewport}
       render={(previewViewport) => (
         <ComparisonStack
-          address="example.test/welcome"
           after={
             <MiniWelcome compact={previewViewport === "mobile"} inert revised />
           }
           before={<MiniWelcome compact={previewViewport === "mobile"} inert />}
-          dark={dark}
+          chrome={deviceChrome({
+            address: "example.test/welcome",
+            dark,
+            viewport: previewViewport,
+          })}
           mode="difference"
-          viewport={previewViewport}
         />
       )}
     />

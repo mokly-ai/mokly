@@ -115,6 +115,14 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
   screenful, part-way down, with one section reworded in place so every other
   section stays aligned. A static artboard cannot scroll, so its offset and
   scrollbar are drawn.
+- Component Overlay and Difference draw one bordered component frame holding
+  both versions of a saved variant, at the height of each Side by side canvas,
+  with its caption above the viewport both versions share. Each version paints
+  the canvas surface, and the frame and caption never blend. Action's mode
+  control links its four modes to their own artboards.
+- The tall-component artboard shows a synthetic Checklist taller than its
+  frame, part-way down, with one step reworded. Its rows keep fixed heights and
+  never wrap, so the drawn offset and scrollbar never depend on text layout.
 - The approved tokens, consumer-tunable accent properties, and responsive
   breakpoints are recorded in `docs/protocol/mokly-shell-design.md`.
 
@@ -142,7 +150,8 @@ following presentation differences are intentional:
   design routes retain their old identifiers to preserve catalogue links.
 - Comparison artboards draw shorter browser frames than the served shell so two
   versions fit side by side, and every comparison mode keeps that one frame
-  size.
+  size. Component comparison artboards likewise draw a shorter bordered frame
+  than the served one, the same in every mode.
 - Difference mockups use CSS blending, as does the served comparison; no pixel
   percentages or invented diff metrics appear. Classification and impact facts
   come from the comparison engine in the runtime and from synthetic fixture data

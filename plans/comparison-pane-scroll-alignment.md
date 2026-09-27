@@ -308,6 +308,75 @@ without changing removed-preview behaviour.
       to review the complete local diff against `origin/main` and report the
       findings without changing the implementation.
 
+## Milestone 3A: Component Comparison Mockups
+
+Tags: mockup
+
+Summary: depict Overlay and Difference for component comparisons before
+Milestone 4 rebuilds them, closing [Milestone 2 review](#milestone-2) finding
+3, because the design catalogue shows component comparisons only in Side by
+side. A saved component variant's two versions share one bordered component
+frame whose interior is the only scroll container, and a component taller than
+that frame is shown scrolled part-way inside it. Descriptions and rationale
+state what a reader sees, one frame and one scroll position shared by both
+versions, so they hold whether Milestone 4 sizes frames to their documents or
+drives both documents from one shared scroller.
+
+- [x] Generalize `ComparisonStack` in
+      `examples/basic/entries/design/parts/compare_stack.tsx` so its caller
+      supplies the one chrome, a device frame for a screen or the bordered
+      component frame for a saved variant, and keep the three existing screen
+      stacks rendering unchanged.
+- [x] Add a `Stacked comparisons` collection beneath Pages and comparisons in
+      `examples/basic/entries/design/components/pages/stacked/`, so that page
+      keeps its five screens, with desktop and mobile variants of
+      `design-component-overlay` and `design-component-difference` (Action's
+      Default variant in one bordered frame, Current on top at half opacity or
+      difference-blended over the opaque Before layer) and
+      `design-component-overlay-tall` (a synthetic Checklist taller than its
+      frame, scrolled part-way inside it with the frame's scrollbar drawn and
+      both layers at one offset, in its own one-entry Changes scenario).
+- [x] Keep the comparison band, caption, variants and inspector consistent with
+      `design-component-comparison`, keep every depicted pane free of links,
+      and give the Checklist fixed row heights so its depicted offset and
+      scrollbar never depend on text wrapping.
+- [x] Link Action's Default comparison family through its mode control,
+      Current to `design-component-affected`, Side by side to
+      `design-component-comparison`, and Overlay and Difference to the new
+      screens, so they are reached from the existing comparison screen the way
+      the Welcome family's modes are; register the destinations and navigation
+      states.
+- [x] Add the three rows, the family transitions, the collection and the
+      Checklist fixture to `docs/protocol/mokly-component-design.md`, with a
+      Delivery Status sentence that the stacked component designs precede
+      their runtime; name the component stacks in the Design References of
+      `docs/protocol/mokly-comparison-panes.md` and the other docs that list
+      the comparison designs; update the design-screen counts; record the
+      depiction notes in `examples/basic/notes.md`; and extend the Milestone 4
+      Delivery Status TODO to the new sentence.
+- [x] Update the inventories and link-state tests that enumerate design
+      screens (`tests/design_links.test.ts`,
+      `tests/design_library_usage.test.ts`,
+      `tests/component_design_attribution.test.ts`,
+      `tests/component_design_navigation.test.ts`,
+      `tests/design_link_states.test.ts`, `tests/component_design_review.test.ts`,
+      `tests/browser/component_evidence.spec.ts`), and cover the component
+      stacks in `tests/design_component_stacks.test.ts` and
+      `tests/browser/design_component_stacks.spec.ts`, siblings of the screen
+      stack tests sharing `tests/helpers/design_stacks.ts`, with no assertion
+      that depends on font metrics or text wrapping.
+- [x] Run `npm run build`, `npm run example:build` and
+      `npm run example:check`, then smoke-test the new and changed pages
+      through `npm run dev` at desktop and mobile widths and save screenshots
+      under `.context/m3a/`.
+- [x] Run the design unit tests and the component and design browser specs,
+      then `cargo xtask check`.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main` and report the
+      findings without changing the implementation.
+
 ## Milestone 4: Aligned Comparison Panes
 
 Tags: ui
@@ -365,7 +434,8 @@ side, and prove alignment in the browser.
 - [ ] Remove the pending-runtime sentences that Milestone 2 added to the
       Delivery Status sections of `docs/protocol/mokly-shell-design.md` and
       `docs/protocol/mokly-comparison-panes.md`, including the exception now
-      attached to "Every state recorded here is implemented".
+      attached to "Every state recorded here is implemented", and the one
+      Milestone 3A added to `docs/protocol/mokly-component-design.md`.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
@@ -433,6 +503,9 @@ side, and prove alignment in the browser.
   comparisons before Milestone 4 restructures them) and 5 (the long overlay's
   rationale implies layout alignment beyond scroll alignment, which rests on a
   fixed introduction height) were reported for a decision rather than applied.
+- Finding 3 is addressed by
+  [Milestone 3A](#milestone-3a-component-comparison-mockups), which adds the
+  stacked component comparison mockups before Milestone 4.
 
 ### Milestone 3
 
