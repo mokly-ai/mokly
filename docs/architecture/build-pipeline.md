@@ -153,7 +153,11 @@ type Renderer = (input: RenderInput) => string;
 The returned string must be a complete HTML document; any other result fails
 the build with a typed diagnostic. Ownership of head styles the renderer emits
 is inferred at comparison time; see
-[inline style ownership](../protocol/mokly-inline-styles.md).
+[inline style ownership](../protocol/mokly-inline-styles.md). This string-only
+contract is the approved target of the
+[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md);
+the builder still accepts the retired structured result until its Milestone 4
+lands.
 Registered entries render each saved variant in every configured context through
 the same consumer graph. Wrappers record actual invocations, data, caller-owned
 slots, and layout-neutral ranges. The root saved variant is not its own instance.

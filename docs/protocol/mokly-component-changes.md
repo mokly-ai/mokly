@@ -137,8 +137,9 @@ The decision, in order:
    records exist, every field must match except `props` and `propsKey` on
    entry-owned instances. In particular, viewport, color scheme, instance
    `componentId`, `key`, `id`, `owner`, `slotKey`, and `order`, instance-owned
-   `props` and `propsKey`, and every slot and range record must match. Optional invocation `source` metadata is excluded from this
-   comparison, as it is from every Changes projection. Any other difference
+   `props` and `propsKey`, and every slot and range record must match.
+   Optional invocation `source` metadata is excluded from this comparison, as
+   it is from every Changes projection. Any other difference
    takes the complete path.
 3. If the paired view routes differ, take the complete path. Otherwise form
    the actual normalized pair by stripping historical component markers
@@ -251,8 +252,10 @@ inside a component boundary. The renderer returns only a document string and
 asserts no ownership. Mokly infers the owner of each changed head rule at
 comparison time from the paired documents and validated ranges under the
 [inline style ownership contract](./mokly-inline-styles.md): a rule whose
-matches all lie in paired component instances belongs to those components and
-is excluded from the consuming screen projection; a rule with any entry-owned
+matches all lie in paired component instances with unchanged inputs belongs to
+those components and is excluded from the consuming screen projection; a
+match inside an instance whose inputs changed belongs to whoever supplied
+those inputs; a rule with any entry-owned
 match, or one the analysis cannot resolve, remains screen material; a rule
 that matches nothing on either side is excluded from both materials. Owned
 rule edits join the implementation-impact set, and references inside owned
@@ -304,8 +307,10 @@ rows/count, on-demand results, watch updates, and published output. Cover all
 rows in the table, repeated/nested/empty instances, caller-owned slots, invalid
 markers, unchanged-render prop edits, both viewports/themes, owned external
 styles, inferred head-style ownership in its owned, shared-by-two-components,
-entry-retained, unresolved, excluded, unpaired-instance and root cases,
-shared-impact overlap, independent screen edits, historical manifests, removed
+entry-retained, unresolved, excluded, formatting-only, unpaired-instance,
+caller-prop-edit, nested-slot-child and root cases with identical membership
+across live, complete, published and selected results, shared-impact
+overlap, independent screen edits, historical manifests, removed
 consumers, and concurrent watched updates. Component styling
 must remain visibly changed in an affected screen's comparison.
 

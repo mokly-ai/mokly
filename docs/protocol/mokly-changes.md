@@ -393,10 +393,17 @@ interface ReviewResult {
 ```
 
 Optional view `material`, `reasons`, and `excludedResources` implement
-[CSS change attribution](./mokly-css-attribution.md); optional `inlineStyles`
-implements [inline style ownership](./mokly-inline-styles.md) and is emitted
-only by the component-aware classifier. `material` is present
-exactly when the view's normalized documents differ. Empty optional lists are
+[CSS change attribution](./mokly-css-attribution.md). Optional `inlineStyles`
+implements [inline style ownership](./mokly-inline-styles.md), is emitted only
+by the component-aware classifier, and is the approved target of the
+[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md).
+This contract owns the definition of `material`: it is present exactly when
+the view's actual comparison material differs. That material is the pair of
+ignore-normalized documents, after the inline style canonicalization of the
+inline style ownership contract when the component-aware classifier runs; the
+single-document normalizations of the same material decide `unchanged`
+against `ignored-only`. Until that plan's Milestone 4 lands, the material is
+the pair of ignore-normalized documents alone. Empty optional lists are
 omitted; historical results without them remain valid. Retained resource reasons
 make paired views changed. Entry `sharedImpact` includes a stylesheet only if
 some view kept it, and summary counts follow these states.

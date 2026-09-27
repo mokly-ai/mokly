@@ -12,6 +12,8 @@ comparison material, membership and evidence rules for style material that a
 renderer places outside component markup. The
 [CSS change attribution contract](./mokly-css-attribution.md) owns the
 parser, rule diff, keep list and matcher that this analysis reuses; the
+[changes contract](./mokly-changes.md) owns the definition of a view's
+`material` flag and states; the
 [CSS evidence shell contract](./mokly-css-evidence-shell.md) owns the
 presentation.
 
@@ -31,12 +33,15 @@ entry-owned markup.
 
 ## Scope
 
-The analysis runs inside the component-aware classifier for a paired view on
-the complete comparison path. Catalogues without registered components keep
-the schema-v2 classifier, where an inline style edit remains an ordinary
-material change. One-sided views and views settled by the
+The analysis runs inside the component-aware classifier for a paired view.
+Catalogues without registered components keep the schema-v2 classifier, where
+an inline style edit remains an ordinary material change. One-sided views run
+no analysis. Views settled by the
 [unchanged view decision](./mokly-component-changes.md#unchanged-view-decision)
-run no analysis: equal marker-retaining documents have equal unowned styles.
+have equal marker-retaining documents, so there is nothing to diff; the
+analysis runs there only when an unowned rule carries a `url()` or `@import`
+reference, so that projected resource discovery applies the same exclusion on
+both paths.
 
 The unowned style elements of a document are its `<style>` elements whose
 start offset lies inside no recorded range. Style elements inside an instance
@@ -46,10 +51,8 @@ analysed. The renderer reports nothing; `RenderResult`, `styles` and
 `resources` records are retired.
 
 When both sides' unowned style text is byte-identical and no unowned rule
-carries a `url()` or `@import` reference, the analysis is skipped and the
-documents pass through unchanged. A reference-bearing unowned rule runs the
-analysis even on the unchanged decision, because projected resource discovery
-must apply the same exclusion on both paths.
+carries a reference, the analysis is skipped and both materials keep the
+documents unchanged.
 
 ## Analysis
 
@@ -64,20 +67,32 @@ must apply the same exclusion on both paths.
    one multiset with `diffCssRules`, so element order and formatting carry no
    identity. The analyzed rules are the added, removed and changed rules of
    that diff plus every rule on either side that carries a `url()` or
-   `@import` reference in its declarations or prelude. A parse failure on one
-   side makes every rule of that side's unowned styles `unresolved`.
+   `@import` reference in its declarations or prelude. When either side's
+   unowned styles fail to parse, the diff is unresolved: there are no rule
+   lists, no attribution and no owned set. Both materials then keep every
+   unowned style element verbatim on both sides, and a view whose materials
+   differ carries `inlineStyles` with status `unresolved` and an empty
+   selector list.
 3. **Matching.** Test each analyzed rule's selectors against both documents
    with the stylesheet matcher after its state-pseudo stripping, collecting
    every matched element rather than the first. Stripping can only widen the
    matched set, which can only widen the owner set, so the result stays
    conservative.
 4. **Owners.** Resolve each matched element to its innermost enclosing range.
-   An instance range resolves to that instance's component; a slot range
-   resolves to the slot's owner, which is the entry or the instance that
-   supplied the slot; no enclosing range resolves to the entry. An instance is
-   paired only when the same key names the same component id on both sides.
-   An unpaired instance, the root component of a saved-variant page, and any
-   element outside every range resolve to the entry.
+   An instance range resolves to that instance; a slot range resolves to the
+   slot's owner, which is the entry or the instance that supplied the slot; no
+   enclosing range resolves to the entry. An instance then resolves by this
+   rule: an instance is paired when the same key names the same component id
+   on both sides; an unpaired instance resolves to the entry; a paired
+   instance whose `propsKey` is equal on both sides resolves to its
+   component; a paired instance whose `propsKey` differs passes the element
+   to the owner of its inputs, which is the entry or another instance resolved
+   by the same rule. This is the pairing condition the implementation diff
+   already uses, so a caller prop edit that produces a new instance-only head
+   rule stays with the caller and a parent that changed the props it passes to
+   a child owns the resulting child rule. The root component of a
+   saved-variant page resolves to the entry, as does any resolved owner equal
+   to the root component id.
 
 ## Attribution
 
@@ -92,7 +107,8 @@ Every analyzed rule receives exactly one attribution, decided in this order:
 - `excluded` when the rule's selectors match no element on either side.
 - `entry` when any matched element on either side resolves to the entry.
 - `owned`, with a sorted non-empty set of component ids, when every matched
-  element on both sides resolves to a paired component instance.
+  element on both sides resolves to a paired component instance with equal
+  inputs.
 
 `unresolved` and `entry` rules are retained by the entry. `owned` rules belong
 to their components. `excluded` rules cannot change the rendered result and
@@ -101,11 +117,16 @@ one view and entry-retained on another.
 
 ## Comparison Material
 
-One analysis produces two renderings. Each replaces the text of every unowned
-style element in the original document coordinates, in the same replacement
-pass that applies instance identity tokens, so validated range offsets stay
-usable. The first unowned style element receives the whole rendering and every
-later unowned style element becomes empty.
+One analysis produces two renderings. Each removes every unowned style
+element, from its start tag through its end tag, from the original document in
+the original coordinates, and appends one `<style>` element containing the
+canonical rendering after the document, in the same way caller-slot material
+is appended. The projected rendering makes those removals in the same
+replacement pass as its instance identity tokens and caller-slot projection;
+the actual rendering applies no tokens. The count, order and attributes of
+unowned style elements therefore carry no identity, so a library that emits
+one style element per component, or none when nothing is styled, compares by
+its rules alone.
 
 - The **actual material** decides the view `state`, its `material` flag and
   its actual resource discovery. It renders every rule except `excluded` ones.
@@ -142,8 +163,14 @@ rule remains entry material.
 
 ## Membership And States
 
+The view `state` and `material` flag derive from the actual materials under
+the [changes contract's definition](./mokly-changes.md): the paired
+ignore-normalized actual materials decide whether a paired view is `changed`
+with `material`, and the single-document normalizations of the two actual
+materials decide `unchanged` against `ignored-only`.
+
 - A view whose unowned inline styles differ only through `excluded` rules has
-  equal actual material: its state is `unchanged`, it carries no `material`
+  equal actual materials: its state is `unchanged`, it carries no `material`
   flag, it contributes no reason and it is not in Changes.
 - A view with `owned` rule edits and no entry-retained edit is `changed` with
   `material`, contributes no entry reason for those rules, and is affected
@@ -174,13 +201,14 @@ interface ViewReview {
 diffed rule; `selectors` lists those rules' selectors in their original
 serialized form, sorted lexically by UTF-16 code units and duplicate-free.
 `unresolved` takes precedence when both apply and may have an empty list;
-`matched` requires at least one selector. `excluded` means every analyzed
-diffed rule was excluded: none was retained by the entry and none was owned.
-When owned rules exist and nothing is retained, the field is omitted, because
-the affected-consumer evidence already explains the view. Reference-bearing
-rules that are not diffed contribute no evidence. Views settled by the
-unchanged decision, one-sided views and views without unowned inline style
-differences carry no field.
+`matched` requires at least one selector. `excluded` means the analysis ran,
+every analyzed diffed rule was excluded, the view's actual materials are
+equal, and the view retains no reason of its own. When excluded rules exist
+but the view is otherwise `changed`, retains any reason, or has owned rules,
+the field is omitted, because the view's other evidence explains it.
+Reference-bearing rules that are not diffed contribute no evidence. Views
+settled by the unchanged decision, one-sided views and views without unowned
+inline style differences carry no field.
 
 The live classification snapshot's `screenEvidence` records, the static export
 projection, publication and the selected live endpoint carry `inlineStyles`
@@ -194,8 +222,8 @@ remain valid and mean the analysis did not run.
   present exactly for `matched` and `unresolved`, sorted and duplicate-free,
   and non-empty for `matched`.
 - A view carrying `inlineStyles` with status `matched` or `unresolved` has
-  state `changed` and `material`; a view carrying status `excluded` has
-  neither `material` nor any reason of its own.
+  state `changed` and `material`; a view carrying status `excluded` has state
+  `unchanged`, no `material` and no reason of its own.
 - The field never appears on one-sided views. Unknown keys and inconsistent
   shapes fail rather than being dropped.
 - Browse's lightweight classification, complete comparison generation,

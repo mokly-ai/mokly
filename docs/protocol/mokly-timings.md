@@ -89,7 +89,10 @@ Review phases use the same session, role and parent context as their caller:
   attribution pass of the
   [inline style ownership contract](./mokly-inline-styles.md) for one paired
   view, including parser-cache lookups. It runs only when the view's unowned
-  inline style text differs between sides or carries references. Contained
+  inline style text differs between sides or carries references. The span is
+  the approved target of the
+  [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md) and is
+  emitted once its analysis lands. Contained
   parse or selector failures return unresolved attributions with span status
   `ok`; an escaping error ends the span with `error`. It logs no paths,
   selectors, CSS or document text.

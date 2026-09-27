@@ -234,9 +234,10 @@ interface ViewReview {
 }
 ```
 
-`material` is present exactly when the paired ignore-normalized before and
-after documents differ, in both result versions. It is omitted otherwise and
-never carries `false`. Historical results without it remain valid: the style
+`material` follows the [changes contract's definition](./mokly-changes.md):
+it is present exactly when the view's actual comparison material differs, in
+both result versions. It is omitted otherwise and never carries `false`.
+Historical results without it remain valid: the style
 label additionally requires an `analysis`-bearing reason, which only producers
 that also emit `material` ever write, so an absent flag on a historical view can
 never select the style label.

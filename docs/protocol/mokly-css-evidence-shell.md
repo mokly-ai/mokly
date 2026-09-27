@@ -23,7 +23,8 @@ recorded in the
 [shell design inventory](./mokly-shell-design.md#design-mockups) as
 `design-review-style-matched`, `design-review-style-unresolved`,
 `design-review-style-unnamed`, `design-review-style-excluded`, and
-`design-review-style-page-excluded`. It fixes these presentation rules:
+`design-review-style-page-excluded`, which the plan's design milestone adds.
+It fixes these presentation rules:
 
 - A `matched` or `unresolved` reason reads as one outcome in the comparison
   stage heading, "Styles this screen uses changed". That heading is rendered
@@ -79,8 +80,9 @@ replace the slice, clearing stale evidence while Changes is pending/unavailable.
 
 One inspector renderer merges classification evidence with the loaded selected
 comparison. Dependency reasons merge by path with sorted selector unions and
-unresolved precedence; inline selectors merge into the same outcome groups. Retained paths suppress exclusions across all selected
-views; loaded v2 shared-impact and ignored-content details remain available.
+unresolved precedence; inline selectors merge into the same outcome groups.
+Retained paths suppress exclusions across all selected views; loaded v2
+shared-impact and ignored-content details remain available.
 Loaded evidence is selection-scoped and cleared on classification invalidation.
 Component ownership facts continue to come from entry reasons and the complete
 classification; a v2 resource change never implies a changed shared component.

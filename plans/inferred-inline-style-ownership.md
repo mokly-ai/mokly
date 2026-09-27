@@ -145,25 +145,33 @@ Every analyzed rule receives exactly one attribution:
 - `excluded` when the rule's selectors match no element on either side.
 - `entry` when any matched element on either side is entry-owned.
 - `owned` with a sorted, non-empty set of component ids when every matched
-  element on both sides belongs to a component instance that is paired.
+  element on both sides belongs to a paired component instance with equal
+  inputs.
 
 An element's owner is its innermost enclosing range: an instance range gives
-that instance's component; a slot range gives the slot's owner, which is the
-entry or the instance that supplied the slot; no enclosing range means the
-entry. An instance counts as paired only when the same key names the same
-component id on both sides. An unpaired instance, the root component of a
-saved-variant page, and any element in no range all resolve to the entry.
+that instance; a slot range gives the slot's owner, which is the entry or the
+instance that supplied the slot; no enclosing range means the entry. An
+instance counts as paired only when the same key names the same component id
+on both sides. A paired instance with an equal `propsKey` owns its matches; a
+paired instance whose `propsKey` changed passes them to whoever supplied its
+inputs, resolved by the same rule, so a caller prop edit under atomic CSS
+stays with the caller. An unpaired instance, the root component of a
+saved-variant page, and any element in no range all resolve to the entry. A
+parse failure on either side yields no attribution and no owned set; both
+materials keep the unowned style text verbatim.
 State-dependent pseudo-classes and pseudo-elements are stripped before
 matching exactly as the stylesheet analysis strips them, so matching can only
 widen the owner set, which keeps the result conservative.
 
 ### Comparison Material
 
-Two renderings are produced from one analysis. Both replace each unowned
-style element's text in the original document coordinates, so range offsets
-and instance tokens are applied in the same pass as today's
-`projectOwnedMaterial`; the first unowned style element receives the whole
-rendering and any later unowned style elements become empty.
+Two renderings are produced from one analysis. Both remove every unowned
+style element from the original document in the original coordinates, in the
+same replacement pass as today's `projectOwnedMaterial`, and append one
+`<style>` element with the canonical rendering after the document, as
+caller-slot material is appended, so the count and attributes of the
+library's style elements carry no identity. The projected rendering applies
+instance tokens in that pass; the actual rendering applies none.
 
 - The actual material, which decides the view `state` and `material` flag,
   renders every rule except `excluded` ones. Owned rules stay, so an affected
@@ -171,6 +179,11 @@ rendering and any later unowned style elements become empty.
 - The projected material, which decides the entry's `material` reason and
   its projected resource discovery, renders every rule except `excluded` and
   `owned` ones, alongside the existing instance identity tokens.
+
+The view `state` and `material` flag derive from the actual materials: the
+changes contract defines `material` as "the actual comparison material
+differs", and the single-document normalizations of the actual materials
+decide `unchanged` against `ignored-only`.
 
 The canonical rendering sorts rules by their identity, ignores ordinals,
 wraps each rule in its conditions outermost first, and emits valid CSS whose
@@ -204,10 +217,11 @@ interface ViewReview {
 `matched` and `unresolved` mean the entry retained at least one analyzed
 diffed rule and list that rule's selectors, sorted and duplicate-free, with
 `unresolved` taking precedence and permitted to be empty; `matched` requires
-at least one selector. `excluded` means every analyzed diffed rule was
-excluded: none was retained by the entry and none was owned. When owned
-rules exist and nothing is retained, the field is omitted, because the
-affected-consumer evidence already explains the view. Views settled by the
+at least one selector. `excluded` means the analysis ran, every analyzed
+diffed rule was excluded, the actual materials are equal and the view retains
+no reason of its own. When excluded rules exist but the view is otherwise
+changed, retains a reason or has owned rules, the field is omitted, because
+the view's other evidence explains it. Views settled by the
 unchanged decision, one-sided views and views without unowned inline style
 differences carry no field. The live classification snapshot, static exports
 and the selected live endpoint carry the field beside `reasons` and
@@ -287,10 +301,9 @@ review rather than `cargo xtask check`.
 - [x] In [`build-pipeline.md`](../docs/architecture/build-pipeline.md) and
       [`package-boundary.md`](../docs/architecture/package-boundary.md),
       describe the string-only renderer and remove the structured-result
-      sentences; in [`components.md`](../docs/guides/authoring/components.md)
-      and [`config.md`](../docs/guides/authoring/config.md) remove the
-      ownership-record row and `RenderResult` from the exported-type tables
-      and describe inferred head-style attribution in the components guide.
+      sentences. The guide edits first made here were reverted after review
+      finding 8, because packaged guides describe shipped behavior; they move
+      to Milestone 4.
 - [x] Update `src/components/README.md`, `src/review/README.md` and
       `src/build/README.md` where they describe records, rebasing, or the
       eligibility phrase.
@@ -319,51 +332,56 @@ review rather than `cargo xtask check`.
 
 ### Milestone 1 review findings
 
-Reported by the post-push review of commit `0fc24de`; each awaits the user's
-decision and is not yet applied.
+Reported by the post-push review of commit `0fc24de`. All nine were applied
+by the follow-up documentation commit at the user's request; the list is
+retained for traceability, with the applied resolution per item.
 
 1. High. `excluded` inline evidence is defined by rule outcome alone, but its
    validation rule requires an `unchanged` view with no `material` and no
    reason; a view with excluded head rules plus a markup edit satisfies one
-   and fails the other. Recommended: emit `excluded` only when the actual
+   and fails the other. Applied: `excluded` is emitted only when the actual
    materials are equal and the view retains no reason.
 2. High. `mokly-changes.md`, `mokly-component-review.md` and
    `mokly-css-attribution.md` still define `material` as "the paired
    ignore-normalized documents differ", which contradicts the new contract
-   for excluded-only inline edits. Recommended: define `material` once as
-   "the view's actual comparison material differs" in `mokly-changes.md` and
-   reference it elsewhere.
+   for excluded-only inline edits. Applied: `mokly-changes.md` now owns the
+   definition as "the view's actual comparison material differs" and the
+   other contracts reference it.
 3. High. Owner pairing uses key and component id only. A caller prop edit
    under atomic CSS adds a head rule matching only that instance, which the
    contract would attribute to the component and turn into a false component
-   row. Recommended: pair only instances with equal `propsKey`, resolving
-   matches inside input-changed instances to the entry.
+   row. Applied: a paired instance owns its matches only with an equal
+   `propsKey`; otherwise the match passes to whoever supplied its inputs.
 4. Medium. The Scope section says fast-path views run no analysis while the
    same document and `mokly-component-changes.md` say reference-bearing
-   rules do. Recommended: say "no diff" and state the reference-only pass.
+   rules do. Applied: the Scope section now says there is nothing to diff
+   and states the reference-only pass.
 5. Medium. `unchanged` versus `ignored-only` still derives from stripped raw
    documents, so an excluded-only inline edit would report `ignored-only`;
    the actual material is also described as applying instance tokens, which
-   it does not. Recommended: state that both normalizations use the actual
-   material and correct the wording.
+   it does not. Applied: both normalizations use the actual materials and
+   the actual rendering applies no tokens.
 6. Medium. A parse failure is said to make "every rule" unresolved, but an
    unresolved diff carries no rules and no rendering is defined.
-   Recommended: retain both sides' unowned text verbatim, report
-   `unresolved` with serializable selectors and no owned set.
+   Applied: both sides' unowned text stays verbatim, the view reports
+   `unresolved` with an empty selector list and no owned set.
 7. Medium. Replacing style text only cannot make materials equal when the
    number of unowned style elements or their attributes differ, as Emotion
    output does. Recommended: remove unowned style elements from both
    materials and append one canonical fragment, as caller-slot material is.
+   Applied as recommended.
 8. Medium. `mokly-changes.md`, `mokly-timings.md` and the components guide
-   present the target as implemented. Recommended: add the plan sentence to
-   the two contracts and defer the guide wording to Milestone 4.
+   present the target as implemented. Applied: the plan sentence was added
+   to the two contracts and the architecture docs, and the guide edits were
+   reverted and moved to Milestone 4.
 9. Low. The evidence-shell contract cites an inventory row Milestone 2 adds;
    Required Evidence omits the formatting-only, nested-slot-child and
-   cross-path cases; several spliced lines exceed 120 columns. Recommended:
-   qualify the inventory citation, extend Required Evidence and re-wrap.
+   cross-path cases; several spliced lines exceed 120 columns. Applied: the
+   citation is qualified, Required Evidence is extended and the spliced lines
+   are re-wrapped.
 
 Residual: reference detection in `src/review/css/material.ts` handles
-`url()` only, so Milestone 5 must add `@import` detection.
+`url()` only; Milestone 5 now carries the `@import` detection TODO.
 
 ## Milestone 2: Excluded Page Styles Design Screen
 
@@ -410,13 +428,15 @@ target and depends on the existing parser, diff and matcher.
 - [ ] Move the `<style>` span discovery from `src/components/style_ownership.ts`
       into `src/review/css/inline_styles.ts` as a span finder that takes the
       document and its validated ranges and returns ordered
-      `{ start, end, text }` spans for style elements whose start offset
-      lies inside no range; delete `rebaseStyleOwnership`.
+      `{ start, end, text }` spans, covering each element from start tag to
+      end tag, for style elements whose start offset lies inside no range;
+      delete `rebaseStyleOwnership`.
 - [ ] Add `src/review/css/element_owners.ts`: build an owner index from
-      validated ranges, instance records, slot records and the paired
-      instance set, and resolve `ownerAt(offset)` to `{ kind: "entry" }` or
+      validated ranges, instance records, slot records and both sides'
+      instance maps, and resolve `ownerAt(offset)` to `{ kind: "entry" }` or
       `{ kind: "component"; componentId }` using the innermost enclosing
-      range and the pairing and root rules in the design summary.
+      range, the equal-`propsKey` pairing rule with its input-owner fallback,
+      and the root rule in the design summary.
 - [ ] Extend `src/review/css/document_query.ts` with `selectDocument` that
       returns every matched element, sharing the existing token rewrite and
       contained error boundary with `matchesDocument`.
@@ -430,21 +450,25 @@ target and depends on the existing parser, diff and matcher.
 - [ ] Add `src/review/css/inline_rendering.ts` with the deterministic
       canonical rendering of a rule list to CSS text, and
       `inlineMaterialReplacements` that produce the actual and projected
-      replacement lists for a side's unowned spans.
+      removal lists for a side's unowned spans plus the appended `<style>`
+      fragment, keeping the verbatim text when the diff is unresolved.
 - [ ] Wrap the per-view analysis in the `review.inline-style-analysis`
       timing span with the same `ok`/`error` status rules as
       `review.css-analysis`, logging no paths, selectors or CSS.
 - [ ] Add `tests/review_css_inline_attribution.test.ts` covering: owned by
       one component; owned by two components; entry match on one side only;
-      unpaired instance resolves to entry; root resolves to entry on its own
-      page; slot content owned by the entry; slot content owned by a nested
+      unpaired instance resolves to entry; paired instance with changed
+      `propsKey` resolves to its input owner, for an entry-supplied and a
+      parent-supplied child; root resolves to entry on its own page; slot
+      content owned by the entry; slot content owned by a nested
       instance; excluded on both sides; every keep-list construct; parse
       failure on one side; ignored-region elements never match; nesting
       parents; and stripped state pseudo-classes widening the owner set.
 - [ ] Add `tests/review_css_inline_rendering.test.ts` covering ordering,
       condition wrapping, selector-less at-rules, reference survival through
-      `extractCssReferences`, and the first-element/empty-later-elements
-      replacement layout.
+      `extractCssReferences` from the appended fragment, element removal
+      regardless of count or attributes, and verbatim retention on a parse
+      failure.
 - [ ] Add `tests/review_css_inline_timings.test.ts` mirroring the existing
       timings test for the new span.
 - [ ] Run the new tests and the existing `review_css_*` tests, then
@@ -487,9 +511,10 @@ naming the renderer contract and the removed manifest fields.
       projected materials, and return the owned component set and the
       evidence input; pass an empty replacement list for clipped instance
       projections in `changedComponentImplementations`.
-- [ ] In `src/review/component_view.ts`, compute `actual` and `rawEqual`
-      from the actual material, union the owned set into
-      `changedImplementations`, and keep every other reason rule unchanged.
+- [ ] In `src/review/component_view.ts`, compute `actual`, `material` and
+      `rawEqual` from the actual material so an excluded-only inline edit is
+      `unchanged`, union the owned set into `changedImplementations`, and
+      keep every other reason rule unchanged.
 - [ ] In `src/review/component_view_fast_path.ts` and
       `tests/component_fast_path_counts.test.ts`, drop `styles` from the
       ownership-edit eligibility; remove the record cases from
@@ -523,12 +548,22 @@ naming the renderer contract and the removed manifest fields.
       affected); a rule shared by two components (both rows, screen
       affected); a rule matching entry markup (screen row); an unresolved
       construct (screen row); a formatting-only inline edit (nothing); the
-      root component's own page; a nested child inside a caller slot; both
-      viewports and color schemes; committed and derived modes; and identical
-      results from live classification, complete comparison, publication and
-      the selected endpoint.
+      root component's own page; a nested child inside a caller slot; a
+      caller prop edit under atomic CSS (screen row with `inputs` and
+      `material`, no component row); a parent changing the props it passes
+      to a child (parent row); Emotion-style per-component style elements
+      that appear and disappear; a parse failure on one side (screen row,
+      `unresolved`, empty selectors); both viewports and color schemes;
+      committed and derived modes; and identical results from live
+      classification, complete comparison, publication and the selected
+      endpoint.
 - [ ] Add the inline cases to the fast-path differential fixtures so the
       unchanged decision and the complete comparison still agree.
+- [ ] Update the packaged guides: remove the ownership-record row and
+      `RenderResult` from the exported-type tables in
+      `docs/guides/authoring/components.md` and
+      `docs/guides/authoring/config.md`, and describe inferred head-style
+      attribution in the components guide's Ownership section.
 - [ ] Update `src/components/README.md`, `src/review/README.md` and the
       CHANGELOG-generating commit body; run the full test suite,
       `npm run package:smoke`, and `cargo xtask check`.
@@ -549,6 +584,8 @@ records for files reached only through component styles.
       that carries a reference, using the parser's declaration and prelude
       text, and run the analysis on the fast path when such rules exist so
       projected discovery applies the same exclusion on both paths.
+- [ ] Extend the reference detector in `src/review/css/material.ts` to
+      `@import` preludes; it currently recognizes `url()` only.
 - [ ] Relax the keep list for inline rules so a changed reference no longer
       forces `unresolved`; the reference-bearing rule is attributed by
       matching like any other rule. Keep the stylesheet-file rule unchanged.
@@ -590,8 +627,10 @@ publication and the selected endpoint.
       live endpoint, with canonical key ordering and omission when absent.
 - [ ] Extend `tests/review_css_schema.test.ts`, the producer-scope and
       delivery tests, and `tests/changes_inline_styles.test.ts` with the
-      field's presence, absence and validation failures; prove identical
-      evidence across live, complete, published and selected results.
+      field's presence, absence and validation failures, including
+      `excluded` on a `changed` view or beside a reason, and `matched` on an
+      `unchanged` view; prove identical evidence across live, complete,
+      published and selected results.
 - [ ] Run the suite and `cargo xtask check`.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use

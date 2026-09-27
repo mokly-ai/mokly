@@ -151,9 +151,12 @@ under the ownership rules. A stylesheet dependency reason may carry the
 [CSS change attribution](./mokly-css-attribution.md) `analysis` record;
 its `selectors` are sorted and duplicate-free, `analysis` appears only on
 stylesheet paths in analysis scope, a view carries `material: true` exactly
-when its normalized documents differ, and a view's `excludedResources` paths must be in
-`changedPaths` and never coincide with that view's dependency reasons. A screen reason is allowed only on a use case and
-must reference a directly changed screen actually used on at least one side.
+when its actual comparison material differs under the
+[changes contract's definition](./mokly-changes.md), and a view's
+`excludedResources` paths must be in `changedPaths` and never coincide with
+that view's dependency reasons. A screen reason is allowed only on a use case
+and must reference a directly changed screen actually used on at least one
+side.
 Use cases also retain their own metadata/dependency reasons. One screen with
 only affected component evidence cannot produce a use-case screen reason.
 An affected-only consumer has no ChangedEntry unless it has another direct
@@ -190,8 +193,9 @@ present exactly for the first two and non-empty for `matched`. A view with
 `excluded` inline evidence is `unchanged`, carries no `material` and no
 reason of its own, and is not in Changes; `matched` or `unresolved` inline
 evidence accompanies a `changed` view with `material`. The field never
-appears on one-sided or fast-path views and is omitted when absent. Entry reasons merge retained view evidence by path with a
-sorted selector union and unresolved precedence. Entry ownership can suppress
+appears on one-sided or fast-path views and is omitted when absent. Entry
+reasons merge retained view evidence by path with a sorted selector union and
+unresolved precedence. Entry ownership can suppress
 a view resource reason from direct membership; one view excluding a path does
 not conflict with another keeping it. A component's reasons also aggregate owned
 CSS retained at actual invocations, even if its saved variants all exclude that

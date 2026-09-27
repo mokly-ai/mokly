@@ -208,8 +208,9 @@ are retired: current v5 records must not carry either key, and current loading
 rejects them. Historical v5 records read at the Git boundary or from the
 rebuilt baseline cache may still carry them, because a merge-base commit built
 by an earlier Mokly emits them; historical validation accepts an array under
-either key and discards it before the record is used. The schema version stays 5. Ownership of head style material is inferred at comparison time under the
-[inline style ownership contract](./mokly-inline-styles.md); explicit file
+either key and discards it before the record is used. The schema version
+stays 5. Ownership of head style material is inferred at comparison time under
+the [inline style ownership contract](./mokly-inline-styles.md); explicit file
 ownership stays declared through `ownedDependencies`.
 
 Use one schema implementation for Build output, Browse, historical manifest
