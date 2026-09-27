@@ -3,13 +3,12 @@
 ## Status
 
 Active until the implementation PR merges. Created 2026-09-24 from the
-CSS-in-JS investigation on this branch. All implementation milestones and the
-bookkeeping push are complete; finding 3 was resolved in the separate
-`922c1ec` merge. Milestone 13 resolves Milestone 12 review finding 1 in
-`d474975`; the other 15 findings remain open for the user in the
-[review record](../docs/reviews/imported-css-delivery.md#milestone-12-review).
-The Milestone 14 review confirmed that fix and found three new issues, recorded
-in the [Milestone 14 review record](../docs/reviews/imported-css-delivery-milestone-14.md).
+CSS-in-JS investigation on this branch. Milestones 13, 15 and 16 resolve the
+authorized review findings; finding 3 was resolved in the separate `922c1ec`
+merge. M12-4, M12-6, M12-7 and M14-1 remain open by user direction in the
+[final review record](../docs/reviews/imported-css-delivery.md#milestone-12-review)
+and [Milestone 14 review record](../docs/reviews/imported-css-delivery-milestone-14.md).
+Milestone 17's independent review remains for the parent session.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -663,7 +662,7 @@ Close the remaining edge cases without changing successful delivery bytes.
 - [x] Sort paths/diagnostics by plain code-unit comparison and prevent localeCompare regressions where practical.
 - [x] Update protocol docs and README files, add red-first tests, run the full verification gate, commit and push Milestone 8B.
 
-## Milestone 9: Commit, push, and review
+## Milestone 9: Commit, push, and review (complete)
 
 - [x] Run `git add -A`, commit using Conventional Commits, and push the branch.
 - [x] Review the complete local diff against `origin/main` using
@@ -693,7 +692,7 @@ findings 1, 2, 4, 5, 6 and 7. Finding 3 was resolved by the separate
 Close review findings 8–20 without changing the accepted-generation model.
 
 - [x] Recognize an EOF CSS `@import` and cross-check import-prelude parsing with esbuild edges.
-- [x] Reject only local quoted `image-set()` strings; document the behavior change for the PR: quoted `data:`, HTTP(S), and `//` sources are now accepted unchanged in imported and authored public CSS.
+- [x] Reject only local quoted `image-set()` strings. Relative to `origin/main`, authored public CSS with a quoted local source now fails Build, while public CSS `//` URLs are accepted; external quoted sources remain unchanged.
 - [x] Use one alias-aware package-code predicate throughout graph, CSS, transformer and PostCSS inventory.
 - [x] Validate every root's direct CSS imports after graph build, including extensionless, `require()` and dynamic imports.
 - [x] Pass typed accepted-generation Changes inputs and avoid committed graph reloads and edit races.
@@ -704,11 +703,11 @@ Close review findings 8–20 without changing the accepted-generation model.
 - [x] Correct protocol drift, stale status text, and the Milestone 7 test names.
 - [x] Split oversized server modules and protocol pages; add a changed-file TypeScript/JavaScript and protocol-Markdown length lint to `xtask` and document it.
 - [x] Exercise CSS Modules, assets and local PostCSS in packed-consumer smoke and require the runtime worker artifact.
-- [x] Update contracts, guides and READMEs; add red-first regressions, run the full verification gate, commit and push Milestone 11. Record exact review-resolution commit references in Milestone 12.
+- [x] Update contracts, guides and READMEs; add red-first regressions, run the full verification gate, commit and push Milestone 11. Record exact review-resolution commit references in the review record.
 
-## Milestone 12: Commit, push, and review
+## Milestone 12: Commit, push, and review (complete)
 
-- [x] Commit and push final bookkeeping, including exact resolution commit references, with a clean intended diff.
+- [x] Commit and push final bookkeeping, with exact resolution references in the review record and a clean intended diff.
 - [x] Review the complete local diff against `origin/main` using
       `docs/implementation-review-prompt.md` after the push. Report findings
       without changing the implementation; the parent session owns this review.
@@ -749,22 +748,22 @@ normalization respect consumer browser targets without weakening import tests.
 - [x] Strengthen plain/module equivalence with shared target-aware normalization and explicit import condition/order assertions (M14-3).
 - [x] Run Build, focused suites, example Build/Check, Chrome Welcome smoke, lint, typecheck and `cargo xtask check`; commit and push this milestone.
 
-## Milestone 16: Diagnostics, length gate, docs and release notes
+## Milestone 16: Diagnostics, length gate, docs and release notes (complete)
 
 Resolve the authorized low-severity findings without changing the four
 findings left for a later user decision.
 
-- [ ] Remove per-edge physical projections from successful graph loads, share one metafile path mapper, add a timed inventory test and report before/after `graph.load` (M12-5).
-- [ ] Defer missing directory-dependency errors behind generated/public/regular-file errors; add a combined diagnostic test (M12-8).
-- [ ] Replace virtual CSS importers with delivery roots in every diagnostic; add a virtual-name regression test (M12-9).
-- [ ] Audit changed behavior against `origin/main`, correct the review/plan note, prepare the ignored PR draft and include an accurate `BREAKING CHANGE:` commit footer (M12-10).
-- [ ] Make every xtask subprocess run from the workspace root; add unimock parse/dispatch tests and Rust verification (M12-11).
-- [ ] Cover all repository TypeScript/JavaScript and protocol Markdown in the length gate, document exclusions, and split newly oversized files (M12-12).
-- [ ] Test committed, staged, exact-limit and `--all` length-gate cases across new directories/extensions (M12-13).
-- [ ] Repair protocol links, check repository Markdown links and anchors, and include split-page families in stale-text tests (M12-14).
-- [ ] Correct CI, packed-consumer, Lightning scope and Config guide wording without brittle counts (M12-15).
-- [ ] Complete historical Milestone 9 bookkeeping and point Milestones 11/12 to the review record (M12-16).
-- [ ] Run Build, focused suites, example Build/Check, lint, typecheck, applicable preview verification and `cargo xtask check`; commit and push this milestone.
+- [x] Remove per-edge physical projections from successful graph loads, share one metafile path mapper, add a timed inventory test and report before/after `graph.load` (M12-5).
+- [x] Defer missing directory-dependency errors behind generated/public/regular-file errors; add a combined diagnostic test (M12-8).
+- [x] Replace virtual CSS importers with delivery roots in every diagnostic; add a virtual-name regression test (M12-9).
+- [x] Audit changed behavior against `origin/main`, correct the review/plan note, prepare the ignored PR draft and include an accurate `BREAKING CHANGE:` commit footer (M12-10).
+- [x] Make every xtask subprocess run from the workspace root; add unimock parse/dispatch tests and Rust verification (M12-11).
+- [x] Cover all repository TypeScript/JavaScript and protocol Markdown in the length gate, document exclusions, and split newly oversized files (M12-12).
+- [x] Test committed, staged, exact-limit and `--all` length-gate cases across new directories/extensions (M12-13).
+- [x] Repair protocol links, check repository Markdown links and anchors, and include split-page families in stale-text tests (M12-14).
+- [x] Correct CI, packed-consumer, Lightning scope and Config guide wording without brittle counts (M12-15).
+- [x] Complete historical Milestone 9 bookkeeping and point Milestones 11/12 to the review record (M12-16).
+- [x] Run Build, focused suites, example Build/Check, lint, typecheck, applicable preview verification and `cargo xtask check`; commit and push this milestone.
 
 ## Milestone 17: Commit, push, and review
 

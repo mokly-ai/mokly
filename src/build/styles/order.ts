@@ -1,6 +1,9 @@
 import type { Metafile } from "esbuild";
 
-import { metafileKey, metafilePath } from "../metafile_paths.js";
+import {
+  createMetafilePathMapper,
+  type MetafilePathMapper,
+} from "../metafile_paths.js";
 
 /** Ordered, first-reachable CSS files for a JavaScript delivery root. */
 export function orderedStyles(
@@ -8,6 +11,7 @@ export function orderedStyles(
   root: string,
   workingDir: string,
   excluded: ReadonlySet<string> = new Set(),
+  mapper: MetafilePathMapper = createMetafilePathMapper(workingDir),
 ): string[] {
   const seen = new Set<string>();
   const styles = new Set<string>();
@@ -15,7 +19,7 @@ export function orderedStyles(
     if (seen.has(file)) return;
     seen.add(file);
     if (file.endsWith(".css")) {
-      const absolute = metafilePath(workingDir, file);
+      const absolute = mapper.path(file);
       if (!excluded.has(absolute)) styles.add(absolute);
     }
     for (const imported of metafile.inputs[file]?.imports ?? []) {
@@ -23,6 +27,6 @@ export function orderedStyles(
       visit(imported.path);
     }
   };
-  visit(metafileKey(workingDir, root));
+  visit(mapper.key(root));
   return [...styles];
 }

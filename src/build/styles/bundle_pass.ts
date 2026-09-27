@@ -8,7 +8,10 @@ import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError, errorMessage } from "../../errors.js";
 import { packageNodePaths } from "../consumer_resolution.js";
 import type { GeneratedFile } from "../generated_file.js";
-import { metafileKey, metafilePath } from "../metafile_paths.js";
+import {
+  createMetafilePathMapper,
+  type MetafilePathMapper,
+} from "../metafile_paths.js";
 import { graphSourceFiles } from "../source_inventory.js";
 
 import { recordFirstFailure } from "./failures.js";
@@ -42,9 +45,13 @@ export async function bundleStylePass(
   preprocessor: StylePreprocessor,
   graphClassMaps: ReadonlyMap<string, Readonly<Record<string, string>>>,
 ): Promise<StylePass> {
-  const resolution = new StyleResolution(config, graphInputs);
-  const closures = new Map(roots.map((root) => [root.path, new Set<string>()]));
   const virtual = roots.map((_, index) => `mokly:styles:${index}`);
+  const virtualRoots = new Map(
+    virtual.map((name, index) => [name, roots[index]!.path]),
+  );
+  const resolution = new StyleResolution(config, graphInputs, virtualRoots);
+  const mapper = createMetafilePathMapper(config.repoRoot);
+  const closures = new Map(roots.map((root) => [root.path, new Set<string>()]));
   const pluginFailures = new Map<string, MoklyError>();
   const plugin: Plugin = {
     name: "mokly-style-entry",
@@ -184,24 +191,31 @@ export async function bundleStylePass(
     const failure = error as BuildFailure;
     const ranked = [...(failure.errors ?? [])].sort(
       (first, second) =>
-        rootIndex(first.location?.file, roots, closures, config) -
-        rootIndex(second.location?.file, roots, closures, config),
+        rootIndex(first.location?.file, roots, closures, mapper) -
+        rootIndex(second.location?.file, roots, closures, mapper),
     );
     const root =
-      roots[rootIndex(ranked[0]?.location?.file, roots, closures, config)]!;
+      roots[rootIndex(ranked[0]?.location?.file, roots, closures, mapper)]!;
+    const detail = (ranked[0]?.text ?? errorMessage(error)).replace(
+      /(?:mokly-styles:)?mokly:styles:(\d+)/g,
+      (_, index: string) =>
+        toPosixPath(
+          path.relative(
+            config.repoRoot,
+            roots[Number(index)]?.path ?? roots[0]!.path,
+          ),
+        ),
+    );
     throw new MoklyError(
       "build-invalid",
-      `could not bundle CSS ${toPosixPath(path.relative(config.repoRoot, root.path))}: ${ranked[0]?.text ?? errorMessage(error)}; fix the stylesheet and rebuild`,
+      `could not bundle CSS ${toPosixPath(path.relative(config.repoRoot, root.path))}: ${detail}; fix the stylesheet and rebuild`,
       { cause: error },
     );
   }
 
   const inputs = new Map<string, readonly string[]>();
   for (const root of roots) {
-    const output = metafileKey(
-      config.repoRoot,
-      path.join(config.mockupsDir, root.route),
-    );
+    const output = mapper.key(path.join(config.mockupsDir, root.route));
     const cssInputs = metafile.outputs[output]?.inputs ?? {};
     const rootMetafile: Metafile = {
       inputs: Object.fromEntries(
@@ -218,6 +232,7 @@ export async function bundleStylePass(
         config.repoRoot,
         config.repoRoot,
         config.mockupsDir,
+        mapper,
       ).map((file) => path.join(config.repoRoot, file)),
     );
   }
@@ -234,11 +249,11 @@ function rootIndex(
   source: string | undefined,
   roots: readonly StyleRoot[],
   closures: ReadonlyMap<string, ReadonlySet<string>>,
-  config: ResolvedConfig,
+  mapper: MetafilePathMapper,
 ): number {
   const virtual = source && /^mokly-styles:mokly:styles:(\d+)$/.exec(source);
   if (virtual) return Number(virtual[1]);
-  const absolute = source && metafilePath(config.repoRoot, source);
+  const absolute = source && mapper.path(source);
   const index = roots.findIndex(
     (root) => absolute && closures.get(root.path)?.has(absolute),
   );

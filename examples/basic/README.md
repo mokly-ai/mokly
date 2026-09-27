@@ -8,7 +8,8 @@ The Welcome screen also includes a small `WorkspaceNote` built from a CSS
 Module, an authored PNG-backed stylesheet, and Tailwind v4 utilities, including
 a small `note-title` utility. Its
 PostCSS module pins Tailwind's base and optimization, scans only `src/` with
-`source(none)` plus `@source`, and runs autoprefixer against Safari 14.
+`source(none)` plus `@source`, and shares `.browserslistrc` Safari 14 targets
+between autoprefixer and CSS Modules.
 In `src/components/workspace-note/utilities.css`, `@source "../..";` scans
 only this example's `src/` tree, and `@utility note-title` applies to the
 Welcome component. The example sets `BROWSERSLIST_IGNORE_OLD_DATA=1` in its
@@ -358,4 +359,4 @@ Output is config-relative. This command builds the example itself, retains exact
 The consumer export command requires the configured Git history and rebuilds its
 baseline with the recipe above. The default repository preview exports current
 content without a baseline; preview Changes uses the same cached rebuild.
-See the [consumer publishing recipe](../../README.md#export-and-publish-a-consumer-build).
+See the [consumer publishing recipe](../../README.md#review-and-share).

@@ -224,8 +224,8 @@ checked the Milestone 10 fixes, the Milestone 11 fixes, and the documentation
 and length gate. They confirmed that fixes 2, 5, 6, 7, 12, 13, 15, 16, 18 and
 20 are correct. The parent session checked, with its own fixture, derived
 export Changes and CSS Module `image-set()`. The 16 findings below were each
-reproduced in a scratch copy. Finding 1 was authorized and fixed in Milestone
-13; the other 15 findings remain open for the user's decision.
+reproduced in a scratch copy. Finding 1 was authorized and fixed in Milestone 13. Milestone 15 resolved findings 2 and 3 in `7b454b0`; the remaining
+findings are open unless separately marked resolved below.
 
 1. **High — CSS Modules drop `@import` rules and reject `url()` in custom
    properties.** The finding 4 fix enabled Lightning CSS
@@ -248,11 +248,19 @@ reproduced in a scratch copy. Finding 1 was authorized and fixed in Milestone
    10 and 11, and Milestone 11 widened it. Recommended: committed Build and
    Check fail when a generated route is ignored by Git, naming a negation rule,
    and a guide note documents it.
+
+   Resolved in `7b454b0`: committed Build and Check reject effective Git
+   ignores before writing or comparing and name the winning rule and negation.
+
 3. **Medium — required files under `dist`-like folders inside a watched root
    stop being watched when they appear during Serve.** Finding 1 removed
    covered files from the target list, and the watcher keeps its original
    skip list. Recommended: keep such files as explicit targets when a skipped
    segment lies between the root and the file, with real-watcher tests.
+
+   Resolved in `7b454b0`: covered required files below skipped directory
+   names remain explicit targets; real entry and PostCSS watchers reload them.
+
 4. **Low — per-event watch classification still scans every source and
    recompiles directory globs** (13.9 ms per event at 20,000 sources).
    Recommended: use the per-generation index, compile globs once, and add a

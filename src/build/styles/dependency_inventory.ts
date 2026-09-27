@@ -44,6 +44,7 @@ export function collectPostcssDependencies(
 ): PostcssDependencies {
   const explicit: Candidate[] = [];
   const expanded: Candidate[] = [];
+  const missingDirectories: Candidate[] = [];
   const directories = new Map<string, PostcssWatchDirectory>();
   const scanned = new Map<string, readonly string[]>();
   const ownership: DependencyPathCache = createDependencyPathCache(config);
@@ -76,11 +77,14 @@ export function collectPostcssDependencies(
         report: normalizedReport,
       });
     } else {
-      if (!fs.statSync(file, { throwIfNoEntry: false })?.isDirectory())
-        throw new MoklyError(
-          "build-invalid",
-          `PostCSS plugin ${report.plugin} reported a missing directory dependency for ${relative(config, source)}: ${relative(config, file)}; create the directory or correct the plugin`,
-        );
+      if (!fs.statSync(file, { throwIfNoEntry: false })?.isDirectory()) {
+        missingDirectories.push({
+          file,
+          relativePath: relative(config, file),
+          report: normalizedReport,
+        });
+        continue;
+      }
       const glob = report.glob ?? "**/*";
       const key = `${file}\0${glob}`;
       if (dependencyOwnership(file, config, ownership) !== "generated")
@@ -131,6 +135,14 @@ export function collectPostcssDependencies(
         `PostCSS plugin ${candidate.report.plugin} reported a missing dependency for ${relative(config, candidate.report.source)}: ${relative(config, candidate.file)}; make it a regular file or correct the plugin`,
       );
     sourceFiles.add(candidate.file);
+  }
+  missingDirectories.sort(byPath);
+  if (missingDirectories.length) {
+    const first = missingDirectories[0]!;
+    throw new MoklyError(
+      "build-invalid",
+      `PostCSS plugin ${first.report.plugin} reported a missing directory dependency for ${relative(config, first.report.source)}: ${first.relativePath}; create the directory or correct the plugin`,
+    );
   }
   return {
     sourceFiles,

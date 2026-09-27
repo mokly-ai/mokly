@@ -26,6 +26,7 @@ import {
   packageNodePaths,
 } from "./consumer_resolution.js";
 import type { GeneratedFile } from "./generated_file.js";
+import { createMetafilePathMapper } from "./metafile_paths.js";
 import { assertSafeGeneratedTree } from "./reserved_tree.js";
 import { graphSourceFiles, normalizeSourceFiles } from "./source_inventory.js";
 import { bundleStyles } from "./styles/bundle.js";
@@ -132,12 +133,14 @@ async function loadGraph(
         "build-invalid",
         `consumer graph emitted an undelivered file: ${path.relative(config.repoRoot, extraOutputs[0]!.path).split(path.sep).join("/")}; use a dataurl or binary loader for JavaScript assets instead of file`,
       );
-    const roots = graphStyleRoots(config, built.metafile, entrySources);
+    const mapper = createMetafilePathMapper(path.dirname(config.configPath));
+    const roots = graphStyleRoots(config, built.metafile, entrySources, mapper);
     const graphFiles = graphSourceFiles(
       built.metafile,
       path.dirname(config.configPath),
       config.repoRoot,
       config.mockupsDir,
+      mapper,
     );
     const deliveryRoots = roots.filter((root) => root.emit);
     const transformerStyles = roots.find((root) => !root.emit)?.styles ?? [];

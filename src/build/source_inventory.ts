@@ -14,7 +14,10 @@ import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
-import { metafilePath } from "./metafile_paths.js";
+import {
+  createMetafilePathMapper,
+  type MetafilePathMapper,
+} from "./metafile_paths.js";
 import type { SourceDenial } from "./source_denial.js";
 import { GENERATED_DIRECTORY } from "./styles/routes.js";
 
@@ -150,17 +153,20 @@ export function graphSourceFiles(
   workingDir: string,
   repoRoot: string,
   mockupsDir: string,
+  mapper: MetafilePathMapper = createMetafilePathMapper(workingDir),
 ): string[] {
   const runtime = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
   const viewerRuntime = fs.realpathSync(
     path.dirname(fileURLToPath(import.meta.resolve("@mokly/viewer/data"))),
   );
+  const realRepoRoot = projectRealPath(repoRoot);
   const candidates = Object.keys(metafile.inputs).flatMap((input) => {
-    const absolute = metafilePath(workingDir, input);
+    const absolute = mapper.path(input);
     if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) return [];
     const real = fs.realpathSync(absolute);
     if (isInside(runtime, real) || isInside(viewerRuntime, real)) return [];
-    if (isPackageCode(absolute, repoRoot)) return [];
+    if (isPackageCode(absolute, repoRoot, { file: real, root: realRepoRoot }))
+      return [];
     return [absolute];
   });
   return normalizeSourceFiles(candidates, repoRoot, mockupsDir);

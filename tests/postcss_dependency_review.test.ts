@@ -37,6 +37,59 @@ test("public PostCSS dependency diagnostics precede missing-file diagnostics", a
   );
 });
 
+test("missing directory diagnostics follow generated, public and missing-file checks", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  const config = await loadConfig(fixture.root);
+  const source = path.join(fixture.entriesDir, "fixture.css");
+  const generated = path.join(
+    fixture.mockupsDir,
+    "mokly-generated/styles/old.css",
+  );
+  const publicFile = path.join(fixture.mockupsDir, "public.css");
+  await fs.mkdir(path.dirname(generated), { recursive: true });
+  await fs.writeFile(generated, ".old{}");
+  await fs.writeFile(publicFile, ".public{}");
+  const report = (file: string) => ({
+    type: "dependency" as const,
+    plugin: "fixture",
+    source,
+    file,
+    malformed: false,
+  });
+  const missingDirectory = {
+    type: "dir-dependency" as const,
+    plugin: "fixture",
+    source,
+    directory: path.join(fixture.root, "absent-directory"),
+    glob: "**/*",
+    malformed: false,
+  };
+  const missingFile = report(path.join(fixture.root, "absent-file.css"));
+  const first = [
+    missingDirectory,
+    missingFile,
+    report(publicFile),
+    report(generated),
+  ];
+  assert.throws(
+    () => collectPostcssDependencies(config, first, new Set()),
+    /scanned Mokly-generated output/,
+  );
+  assert.throws(
+    () => collectPostcssDependencies(config, first.slice(0, 3), new Set()),
+    /scanned a public mockups file/,
+  );
+  assert.throws(
+    () => collectPostcssDependencies(config, first.slice(0, 2), new Set()),
+    /reported a missing dependency for entries\/fixture.css: absent-file.css/,
+  );
+  assert.throws(
+    () => collectPostcssDependencies(config, [missingDirectory], new Set()),
+    /reported a missing directory dependency for entries\/fixture.css: absent-directory/,
+  );
+});
+
 test(
   "Tailwind-shaped 20,000-file reports classify without repeated sort or root projection",
   {

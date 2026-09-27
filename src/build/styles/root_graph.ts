@@ -3,6 +3,10 @@ import path from "node:path";
 import type { Metafile } from "esbuild";
 
 import type { ResolvedConfig } from "../../config/types.js";
+import {
+  createMetafilePathMapper,
+  type MetafilePathMapper,
+} from "../metafile_paths.js";
 
 import { orderedStyles } from "./order.js";
 import { validateRootStyleImports } from "./root_validation.js";
@@ -12,6 +16,9 @@ export function graphStyleRoots(
   config: ResolvedConfig,
   metafile: Metafile,
   entries: readonly string[],
+  mapper: MetafilePathMapper = createMetafilePathMapper(
+    path.dirname(config.configPath),
+  ),
 ): readonly {
   readonly path: string;
   readonly emit: boolean;
@@ -26,13 +33,19 @@ export function graphStyleRoots(
       : []),
   ].map((root) => ({
     ...root,
-    styles: orderedStyles(metafile, root.path, workingDir).filter(
+    styles: orderedStyles(
+      metafile,
+      root.path,
+      workingDir,
+      new Set(),
+      mapper,
+    ).filter(
       (file) =>
         config.moduleResolution.loaders[".css"] !== "empty" &&
         (!file.endsWith(".module.css") ||
           config.moduleResolution.loaders[".module.css"] !== "empty"),
     ),
   }));
-  validateRootStyleImports(config, metafile, roots, workingDir);
+  validateRootStyleImports(config, metafile, roots, mapper);
   return roots;
 }

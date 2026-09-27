@@ -18,6 +18,10 @@ Lightning dependency analysis off so local/remote `@import`s and custom-property
 `url()` values reach the same bundle and inventory as plain CSS. A tokenized
 post-transform pass restores local `image-set()` first-option strings to
 `url()`; a separate guard catches any unhandled Lightning rewrite.
+Graph and stylesheet metafiles each resolve their physical working directory
+once for path mapping. Root-import diagnostics build edge provenance only
+when an outside-repository CSS file actually fails validation; successful
+graphs do not project every edge through the filesystem.
 CSS `url()` assets become
 byte-preserving files under `mokly-generated/assets/`, and CSS/asset inputs
 join the private source inventory in both full and inventory-only graph loads.

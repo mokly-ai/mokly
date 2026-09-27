@@ -7,20 +7,13 @@ if (process.argv.slice(2).some((argument) => argument !== "--all")) {
   process.stderr.write("usage: source-file-length [--all]\n");
   process.exitCode = 2;
 } else {
-  const root = process.cwd();
-  const directories = [
-    "src",
-    "scripts",
-    "tests",
-    "packages/viewer/src",
-    "docs/protocol",
-  ];
-  const code =
-    /^(?:src|scripts|tests|packages\/viewer\/src)\/.*\.(?:ts|tsx|js|jsx|mjs|cjs)$/u;
+  const root = execFileSync("git", ["rev-parse", "--show-toplevel"], {
+    cwd: process.cwd(),
+    encoding: "utf8",
+  }).trim();
+  const code = /\.(?:ts|tsx|js|jsx|mjs|cjs|mts|cts)$/u;
   const protocol = /^docs\/protocol\/.*\.md$/u;
-  const files = all
-    ? directories.flatMap((directory) => visit(path.join(root, directory)))
-    : changedFiles(directories);
+  const files = all ? trackedAndUntracked(root) : changedFiles(root);
   const violations = [...new Set(files)]
     .filter((file) => code.test(file) || protocol.test(file))
     .sort()
@@ -47,26 +40,25 @@ if (process.argv.slice(2).some((argument) => argument !== "--all")) {
     );
 }
 
-function changedFiles(directories) {
+function changedFiles(root) {
   const commands = [
-    ["diff", "--name-only", "-z", "origin/main...HEAD", "--", ...directories],
-    ["diff", "--name-only", "-z", "HEAD", "--", ...directories],
-    ["ls-files", "--others", "--exclude-standard", "-z", "--", ...directories],
+    ["diff", "--name-only", "-z", "origin/main...HEAD"],
+    ["diff", "--name-only", "-z", "HEAD"],
+    ["ls-files", "--others", "--exclude-standard", "-z"],
   ];
   return commands.flatMap((arguments_) =>
-    execFileSync("git", arguments_, { encoding: "utf8" })
+    execFileSync("git", arguments_, { cwd: root, encoding: "utf8" })
       .split("\0")
       .filter(Boolean),
   );
 }
 
-function visit(directory) {
-  if (!fs.existsSync(directory)) return [];
-  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const candidate = path.join(directory, entry.name);
-    if (entry.isDirectory()) return visit(candidate);
-    return entry.isFile()
-      ? [path.relative(process.cwd(), candidate).split(path.sep).join("/")]
-      : [];
-  });
+function trackedAndUntracked(root) {
+  return execFileSync(
+    "git",
+    ["ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+    { cwd: root, encoding: "utf8" },
+  )
+    .split("\0")
+    .filter(Boolean);
 }

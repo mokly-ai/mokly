@@ -1,6 +1,6 @@
 //! Verification ordering, selection, and fail-closed subprocess coverage.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -52,11 +52,11 @@ fn complete_gate_is_the_ordered_union_of_every_suite() {
 fn selected_unit_shard_prepares_then_propagates_the_shard() {
     let command_runner = Arc::new(Unimock::new((
         CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "npm run prepare:verification"))
+            .next_call(matching!((command) if command.display() == "npm run prepare:verification" && command.working_directory() == Some(Path::new("/workspace"))))
             .returns(Ok(())),
         CommandRunnerRunMock
             .next_call(
-                matching!((command) if command.display() == "npm run test:prepared -- --shard 2/4"),
+                matching!((command) if command.display() == "npm run test:prepared -- --shard 2/4" && command.working_directory() == Some(Path::new("/workspace"))),
             )
             .returns(Ok(())),
     )));
@@ -84,7 +84,7 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
             .next_call(matching!((command) if command.display() == "npm run lint"))
             .returns(Ok(())),
         CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "node scripts/verification/source-file-length.mjs"))
+            .next_call(matching!((command) if command.display() == "node scripts/verification/source-file-length.mjs" && command.working_directory() == Some(Path::new("/workspace"))))
             .returns(Ok(())),
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "cargo fmt --all -- --check"))

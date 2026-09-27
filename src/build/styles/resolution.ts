@@ -34,6 +34,7 @@ export class StyleResolution {
   constructor(
     private readonly config: ResolvedConfig,
     private readonly graphInputs: ReadonlySet<string>,
+    private readonly virtualRoots: ReadonlyMap<string, string> = new Map(),
   ) {}
 
   /** Resolve CSS imports using the CSS pass's style-first package conditions. */
@@ -59,7 +60,7 @@ export class StyleResolution {
     )
       throw new MoklyError(
         "build-invalid",
-        `could not resolve CSS @import in ${this.relative(importer)}: ${specifier}; use an existing stylesheet inside repoRoot`,
+        `could not resolve CSS @import in ${this.relative(importer)}: ${this.displaySpecifier(specifier, importer)}; use an existing stylesheet inside repoRoot`,
       );
     if (
       wouldPrivatizePublicFile(
@@ -162,7 +163,16 @@ export class StyleResolution {
   };
 
   private relative(file: string): string {
-    return toPosixPath(path.relative(this.config.repoRoot, file));
+    return toPosixPath(
+      path.relative(this.config.repoRoot, this.virtualRoots.get(file) ?? file),
+    );
+  }
+
+  private displaySpecifier(specifier: string, importer: string): string {
+    const root = this.virtualRoots.get(importer);
+    if (!root || !path.isAbsolute(specifier)) return specifier;
+    const relative = toPosixPath(path.relative(path.dirname(root), specifier));
+    return relative.startsWith(".") ? relative : `./${relative}`;
   }
 }
 

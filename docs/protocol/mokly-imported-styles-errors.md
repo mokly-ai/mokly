@@ -81,6 +81,11 @@ their existing messages. Module suffix/path aliases are checked before load.
 | Explicit public file below `mockupsDir`                                        | `PostCSS plugin {plugin} scanned a public mockups file in {stylesheet}: {file}; exclude mockupsDir from the plugin's sources (Tailwind: @source not "{relative-mockups-dir}")`                                                                                                                                                                                               |
 | Directory glob reaches a public mockups file                                   | `PostCSS plugin {plugin} directory dependency scans a public mockups file in {stylesheet}: {file}; exclude mockupsDir by excluding the matching scan root (Tailwind: @source not "{relative-reported-dir}" or source(none) with explicit @source)`                                                                                                                           |
 
+Every CSS-pass `{stylesheet}` or `{root}` names the authored file or delivery
+root, never `mokly:styles:N` or its esbuild namespace. Synthetic absolute
+imports are displayed relative to the delivery root; only `{detail}` may
+contain raw esbuild text after virtual names have been replaced.
+
 An imported CSS asset that is a public file inside `mockupsDir` and is not
 already a graph source fails with `build-invalid` and the exact message:
 `CSS asset is already public in {stylesheet}: {file}; move the imported asset outside mockupsDir or keep it as a separately linked public file`.

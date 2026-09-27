@@ -68,7 +68,9 @@ validate each delivery root's direct CSS imports against `repoRoot`. Read the
 metafile edge's original specifier and importing module, including extensionless
 package imports, `require()` and dynamic `import()`. The error names that
 authored importer; virtual stylesheet modules and absolute resolved paths must
-not appear in it.
+not appear in it. Every CSS-pass diagnostic replaces a synthetic virtual
+importer with the root's authored module path; a synthetic absolute import is
+displayed relative to that root rather than leaking its working directory.
 
 Collect CSS in first-reachability depth-first traversal of each root's
 JavaScript imports (including re-exports and dynamic imports esbuild bundles),

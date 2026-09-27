@@ -64,13 +64,16 @@ dependencies.
 The exporter's Koffi dependency supplies OS-enforced exclusive directory rename;
 its optional platform binaries must remain available for export. The native
 bridge is lazy and does not load for build/check/serve or help.
-The standalone CSS rule parser and imported CSS Modules transformation use the
-production `lightningcss` dependency.
+The standalone CSS rule parser, imported CSS Modules transformation, and
+transformer-only stylesheet inventory use the production `lightningcss`
+dependency. CSS Module transforms use consumer Browserslist targets or fixed
+conservative defaults; the other two uses do not rewrite delivered CSS.
 Packed-consumer smoke also exercises a CSS Module, its binary `url()` asset,
 and a local PostCSS plugin through the URL-loaded `postcss_worker.js`; package
 inspection requires that worker file in the published archive.
-Keep its optional native packages installed: Linux x64 glibc, macOS arm64/x64,
-and Windows x64 binaries cover the CI runners. Its Node floor is below Mokly's
+Keep Lightning CSS's optional native packages installed: Linux x64 glibc,
+macOS arm64/x64, and Windows x64 binaries cover the CI runners. Lightning CSS's
+Node floor is below Mokly's
 22.14 floor. The installed Node package has no automatic WASM fallback;
 upstream's separate `lightningcss-wasm` package is not a Mokly dependency.
 Publish uses `tar-stream` to encode finalized export bytes as portable USTAR/PAX
@@ -78,8 +81,8 @@ without invoking a platform tar executable or walking the output again.
 
 ## Local Verification
 
-`cargo xtask check` is the complete repository and release gate. It delegates
-to npm scripts and includes:
+`cargo xtask check` is the complete repository and release gate. It orchestrates
+npm, Node and Rust commands from the workspace root and includes:
 
 - a live audit of all workspace dependency categories, failing on any known
   advisory or registry error;
@@ -102,7 +105,8 @@ to npm scripts and includes:
   watched-runtime regressions;
 - Playwright Browse and Review regressions using Chromium, including isolated
   exact-file exports after source removal and the actual Cloudflare runtime; and
-- Rust formatting, Clippy, tests, and file-length audits for `xtask`.
+- Rust formatting, Clippy and tests, plus repository-wide changed-source and
+  Rust file-length audits.
 
 Tests that mutate files use isolated temporary directories and clean up child
 processes. Package smokes execute the packed artifact, not the source tree or a

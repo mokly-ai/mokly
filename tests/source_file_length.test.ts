@@ -40,5 +40,94 @@ test("changed and untracked source/protocol files enforce their separate limits"
   );
   assert.doesNotMatch(changed.stderr, /untouched.ts/);
   const audit = check(["--all"]);
+  assert.equal(audit.status, 1);
   assert.match(audit.stderr, /src\/untouched.ts: 310 lines \(limit 300\)/);
+});
+
+test("clean committed branch changes are audited against origin/main", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-length-branch-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const git = (...args: string[]) => execFileSync("git", args, { cwd: root });
+  git("init", "-q");
+  git("config", "user.name", "Mokly Test");
+  git("config", "user.email", "mokly@example.invalid");
+  await fs.mkdir(path.join(root, "docs/protocol"), { recursive: true });
+  await fs.writeFile(path.join(root, "README.md"), "baseline\n");
+  git("add", ".");
+  git("commit", "-qm", "baseline");
+  git("update-ref", "refs/remotes/origin/main", "HEAD");
+  await fs.mkdir(path.join(root, "examples"));
+  await fs.writeFile(
+    path.join(root, "examples/oversize.mts"),
+    "x\n".repeat(301),
+  );
+  await fs.writeFile(
+    path.join(root, "docs/protocol/oversize.md"),
+    "x\n".repeat(251),
+  );
+  git("add", ".");
+  git("commit", "-qm", "oversized branch files");
+  const result = spawnSync(process.execPath, [script], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /examples\/oversize\.mts: 301 lines/);
+  assert.match(result.stderr, /docs\/protocol\/oversize\.md: 251 lines/);
+});
+
+test("staged-only, exact-limit and subdirectory invocation use the repository root", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-length-stage-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const git = (...args: string[]) => execFileSync("git", args, { cwd: root });
+  git("init", "-q");
+  git("config", "user.name", "Mokly Test");
+  git("config", "user.email", "mokly@example.invalid");
+  await fs.mkdir(path.join(root, "packages/viewer/tests"), { recursive: true });
+  await fs.mkdir(path.join(root, "packages/viewer/scripts"), {
+    recursive: true,
+  });
+  await fs.writeFile(path.join(root, "README.md"), "baseline\n");
+  git("add", ".");
+  git("commit", "-qm", "baseline");
+  git("update-ref", "refs/remotes/origin/main", "HEAD");
+  await fs.writeFile(
+    path.join(root, "packages/viewer/tests/exact.cts"),
+    "x\n".repeat(300),
+  );
+  await fs.writeFile(
+    path.join(root, "packages/viewer/scripts/long.jsx"),
+    "x\n".repeat(301),
+  );
+  await fs.mkdir(path.join(root, "examples"));
+  const newScopeCases = [
+    "examples/long.cts",
+    "packages/viewer/tests/long.ts",
+    "packages/viewer/tests/long.tsx",
+    "packages/viewer/tests/long.js",
+    "packages/viewer/tests/long.mjs",
+    "packages/viewer/tests/long.cjs",
+  ];
+  for (const file of newScopeCases)
+    await fs.writeFile(path.join(root, file), "x\n".repeat(301));
+  git("add", ".");
+  const check = (...args: string[]) =>
+    spawnSync(process.execPath, [script, ...args], {
+      cwd: path.join(root, "packages/viewer"),
+      encoding: "utf8",
+    });
+  const changed = check();
+  assert.equal(changed.status, 1);
+  assert.match(
+    changed.stderr,
+    /packages\/viewer\/scripts\/long\.jsx: 301 lines/,
+  );
+  for (const file of newScopeCases)
+    await context.test(`${file} is in scope`, () =>
+      assert.ok(changed.stderr.includes(`${file}: 301 lines`)),
+    );
+  assert.doesNotMatch(changed.stderr, /exact\.cts/);
+  const all = check("--all");
+  assert.equal(all.status, 1);
+  assert.match(all.stderr, /packages\/viewer\/scripts\/long\.jsx/);
 });

@@ -117,6 +117,7 @@ impl CheckRequest {
 }
 
 /// Runs complete or selected repository verification.
+#[cfg_attr(test, unimock::unimock(api = [CheckRunnerRunMock, CheckRunnerSourceFileLengthMock]))]
 pub(crate) trait CheckRunner: Send + Sync {
     /// Execute the validated request in dependency order.
     fn run(&self, request: CheckRequest) -> Result<()>;
@@ -147,12 +148,17 @@ impl DefaultCheckRunner {
 
     fn run_suite(&self, suite: VerificationSuite, shard: Option<Shard>) -> Result<()> {
         for command in commands_for(suite, shard) {
-            self.command_runner.run(&command)?;
+            self.run_command(command)?;
         }
         if suite == VerificationSuite::Repository {
             self.rust_file_length_auditor.run(&self.workspace)?;
         }
         Ok(())
+    }
+
+    fn run_command(&self, command: CommandSpec) -> Result<()> {
+        self.command_runner
+            .run(&command.in_directory(self.workspace.clone()))
     }
 }
 
@@ -163,7 +169,7 @@ impl CheckRunner for DefaultCheckRunner {
         if all {
             command = command.args(["--all"]);
         }
-        self.command_runner.run(&command)
+        self.run_command(command)
     }
 
     fn run(&self, request: CheckRequest) -> Result<()> {

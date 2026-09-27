@@ -8,14 +8,19 @@ internal binary and is not published to npm or crates.io.
 - Run the current source-level TypeScript, package, example, and Rust suite.
 - Fail verification when the live dependency audit reports an advisory or error.
 - Enforce the Rust file-length limit.
-- Enforce changed TypeScript/JavaScript (300 lines) and protocol Markdown
-  (250 lines) limits against the fetched `origin/main` baseline.
+- Enforce changed repository-wide TypeScript/JavaScript (300 lines) and
+  protocol Markdown (250 lines) limits against the fetched `origin/main` baseline.
 - Keep the complete local gate aligned with the approved independent CI suites.
 
 ## What This Crate Does
 
 The crate provides the implementation behind `cargo xtask check`,
 `cargo xtask rust-file-length-lint`, and `cargo xtask source-file-length-lint`.
+Every spawned command runs from the workspace root even if xtask starts in a
+subdirectory. The source audit finds that root with Git, covers `.ts`, `.tsx`,
+`.js`, `.jsx`, `.mjs`, `.cjs`, `.mts` and `.cts` anywhere in the repository plus
+`docs/protocol/**/*.md`, and excludes only Git-ignored untracked files.
+`--all` audits every tracked or non-ignored untracked scoped file.
 The Node unit/integration suite runs at most two test files concurrently;
 individual concurrency tests and their existing timeouts remain unchanged.
 The complete check starts with `npm run dependencies:check`, covering all

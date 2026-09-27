@@ -113,7 +113,10 @@ within the graph load, and expanded files already checked as explicit
 dependencies are not checked again. Resolve fixed logical/physical roots once
 per dependency collection, compute each candidate's repository-relative path
 once, sort each candidate class once, then apply generated-output, public-file,
-and regular-file checks in that order. Diagnostics and inventory ordering compare
+and regular-file checks in that order. A missing directory report is deferred
+until the regular-file pass, after any generated-output or public-file error;
+among missing exact files and directories, exact-file errors come first.
+Diagnostics and inventory ordering compare
 path UTF-16 code units without locale-sensitive collation.
 
 **Validation precedence:** Explicit `dependency` naming Mokly-owned output

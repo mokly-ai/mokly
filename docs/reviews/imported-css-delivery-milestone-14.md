@@ -21,8 +21,8 @@ dependency analysis is re-enabled or the restorer is removed. The example CSS
 is byte-identical to the pre-fix build.
 
 The three findings below were reproduced in a scratch copy. The parent
-session independently confirmed finding 2's fallback deletion. They await the
-user's decision, and the implementation has not changed in response to them.
+session independently confirmed finding 2's fallback deletion. Findings 2
+and 3 were resolved in `7b454b0`; finding 1 remains open by user direction.
 
 ## Findings
 
@@ -73,6 +73,9 @@ user's decision, and the implementation has not changed in response to them.
    patterns survive under a Safari 14 target. C is the cheapest acceptable
    alternative.
 
+   Resolved in `7b454b0`: consumer Browserslist targets or fixed conservative
+   defaults preserve fallback/prefix declarations in CSS Modules.
+
 3. **Low — the new tests would not catch lost import conditions or reordered
    imports.** The module import and equivalence tests only check that marker
    rules are present. Two mutations pass all 25 new tests while materially
@@ -85,3 +88,6 @@ user's decision, and the implementation has not changed in response to them.
    explicit assertions for the condition wrappers and the rule order; C) a
    byte snapshot of the module output. Recommended: A plus B's assertions, so
    failures are readable.
+
+   Resolved in `7b454b0`: shared target-aware normalization compares whole
+   stylesheets, with explicit condition-wrapper and import-order assertions.

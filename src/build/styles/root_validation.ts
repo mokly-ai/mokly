@@ -6,7 +6,7 @@ import { locatePath } from "../../config/file_locations.js";
 import { toPosixPath } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
-import { metafilePath } from "../metafile_paths.js";
+import type { MetafilePathMapper } from "../metafile_paths.js";
 
 /** Reject CSS reached through JavaScript before a virtual CSS entry can leak. */
 export function validateRootStyleImports(
@@ -16,24 +16,24 @@ export function validateRootStyleImports(
     readonly path: string;
     readonly styles: readonly string[];
   }[],
-  workingDir: string,
+  mapper: MetafilePathMapper,
 ): void {
-  const edges = Object.entries(metafile.inputs).flatMap(([input, record]) =>
-    record.imports
-      .filter((edge) => !edge.external && edge.kind !== "import-rule")
-      .map((edge) => ({
-        importer: metafilePath(workingDir, input),
-        target: metafilePath(workingDir, edge.path),
-        original: edge.original,
-      })),
-  );
   for (const root of roots) {
     for (const file of root.styles) {
       if (locatePath(file, config.repoRoot)) continue;
-      const edge = edges.find((candidate) => candidate.target === file);
-      const importer = edge?.importer ?? root.path;
+      const edge = Object.entries(metafile.inputs)
+        .flatMap(([input, record]) =>
+          record.imports
+            .filter(
+              (imported) =>
+                !imported.external && imported.kind !== "import-rule",
+            )
+            .map((imported) => ({ input, imported })),
+        )
+        .find(({ imported }) => mapper.path(imported.path) === file);
+      const importer = edge ? mapper.path(edge.input) : root.path;
       const specifier =
-        edge?.original ??
+        edge?.imported.original ??
         toPosixPath(path.relative(path.dirname(importer), file));
       throw new MoklyError(
         "build-invalid",
