@@ -1,4 +1,4 @@
-/** In-place comparison controls and isolated snapshot panes. */
+/** In-place comparison controls and aligned snapshot panes. */
 
 /** Styles appended to the catalogue shell. */
 export const SHELL_REVIEW_CSS = `
@@ -50,8 +50,8 @@ export const SHELL_REVIEW_CSS = `
 .mb-panes {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
   gap: 24px;
-  isolation: isolate;
 }
 .mbk-diff-mobile .mb-panes {
   grid-template-columns: repeat(2, 390px);
@@ -62,7 +62,7 @@ export const SHELL_REVIEW_CSS = `
   font-size: 12px;
   margin: 0 0 8px;
 }
-.mb-pane-doc { width: 100%; }
+.mb-pane-chrome { width: 100%; }
 .mb-pane-missing {
   display: grid;
   place-content: center;
@@ -77,10 +77,48 @@ export const SHELL_REVIEW_CSS = `
 .mb-panes[data-compare-mode="overlay"],
 .mb-panes[data-compare-mode="difference"] { grid-template-columns: minmax(0, 1fr); }
 .mbk-diff-mobile .mb-panes:not([data-compare-mode="side"]) { grid-template-columns: 390px; }
-.mb-panes:not([data-compare-mode="side"]) .mb-pane { grid-area: 1 / 1; }
-.mb-panes:not([data-compare-mode="side"]) .mb-pane-label { visibility: hidden; }
+/* The shared viewport is its chrome's only user-scrollable container. */
+.mb-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  overflow-anchor: none;
+}
+.phone-screen > .mb-viewport {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  border-radius: 0 0 36px 36px;
+}
+/* A sticky box the size of the viewport holds the device-sized frames, and
+   the spacer after it extends the range to the largest document. */
+.mb-viewport-box {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+}
+.mb-viewport-spacer { pointer-events: none; }
+.mb-viewport-box > .mb-pane,
+.mb-viewport .mb-pane-doc {
+  position: absolute;
+  inset: 0;
+}
+.mb-viewport .mb-pane-doc { overflow: hidden; }
+.mb-viewport .mb-pane-doc > .mbk-frag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
 .mb-panes[data-compare-mode="overlay"] .mb-pane--after { opacity: .5; }
-.mb-panes[data-compare-mode="difference"] .mb-pane--after .mb-pane-doc { mix-blend-mode: difference; }
+.mb-panes[data-compare-mode="difference"] .mb-pane--after { mix-blend-mode: difference; }
 @media (max-width: 56.25rem) {
   .mbk-diff-toolbar { padding: 8px 12px; }
   .mbk-diff-toolbar .mbk-seg { flex: 1; }

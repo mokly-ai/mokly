@@ -15,7 +15,10 @@ import {
   type LoadedPreview,
 } from "../previews/request.js";
 
-import { useComparisonEnvironment } from "./comparison_context.js";
+import {
+  snapshotPresentationEnvironment,
+  useComparisonEnvironment,
+} from "./comparison_context.js";
 import type { RemovedPreviewData } from "./previews.js";
 
 /** Display state for one route-owned previous-version request. */
@@ -143,12 +146,7 @@ export function useRemovedPreview({
             value.generation,
             ["before"],
             delivery,
-            {
-              baseUrl: environment.baseUrl,
-              fetch: (input, init) => environment.fetch(input, init),
-              parse: (source) =>
-                new DOMParser().parseFromString(source, "text/html"),
-            },
+            snapshotPresentationEnvironment(environment),
           ),
           request: requestKey,
           value,

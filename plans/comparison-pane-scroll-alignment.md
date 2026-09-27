@@ -4,10 +4,12 @@ Overlay and Difference compare two versions of a screen by stacking the Before
 and Current snapshots on top of each other. Today each snapshot is its own
 scrollable iframe, so scrolling over the stack moves only the top layer and the
 two versions drift apart. This plan makes alignment structural: comparison
-panes are presented as viewer-owned, script-disabled documents whose frames
-never scroll internally, and every stacked comparison scrolls inside one shared
-device-chrome viewport. Side by side keeps two chromes whose viewports mirror
-each other. It is the user's chosen option C from the 2026-09-26 discussion.
+panes are presented as viewer-owned, script-disabled documents whose frames are
+never user-scrollable, and every stacked comparison scrolls inside one shared
+device-chrome viewport that drives both documents. Side by side keeps two
+chromes whose viewports mirror each other. It is the user's chosen option C
+from the 2026-09-26 discussion; Milestone 4 revised how frames are sized, as
+Decision 3 records.
 
 ## Base And Prerequisites
 
@@ -53,13 +55,16 @@ and is specified by the
 
 ## Decisions
 
-1. **Alignment is structural, not event-driven.** A stacked comparison has
-   exactly one scroll container, the device chrome's viewport, and both
-   layers live inside it at their full document height. There is no scroll
-   state to mirror between the layers, so they cannot diverge. Scroll
-   mirroring between two frames was rejected for Overlay and Difference
-   because it is stateful, drifts when the two versions lay out differently
-   above the fold, and must be rewired on every renewal and reload.
+1. **Alignment has one owner.** A stacked comparison has exactly one
+   user-scrollable container, the device chrome's viewport, and both layers
+   live inside it. Every scroll of that viewport writes its one offset to both
+   layer documents in the same handler, and any scroll a document makes on its
+   own is written back to the viewport first, so the layers cannot diverge.
+   Mirroring two independently user-scrollable frames was rejected for Overlay
+   and Difference because it is stateful, drifts when the two versions lay out
+   differently above the fold, and must be rewired on every renewal and
+   reload. Milestone 4 replaced "both layers at their full document height" with
+   Decision 3's device-sized frames.
 2. **Comparison panes become viewer-owned presentations.** Each pane
    document is fetched, validated, transformed and presented through the
    same pipeline the removed previews use: accepted only under the
@@ -77,17 +82,33 @@ and is specified by the
    Recording heights at capture time was rejected because capture copies
    files and renders nothing. Disabling pointer events on the stack was
    rejected as a fix because it hides everything below the first viewport.
-3. **Frames are sized to their documents.** After a presentation loads, the
-   parent reads `documentElement.scrollHeight`, observes the document element
-   with a `ResizeObserver`, and sets the frame height to the rounded-up value.
-   Both layers of a stack take the taller of the two heights so the shorter
-   document paints its own background below its content. A frame whose
-   document is unavailable to the parent, which cannot happen for an accepted
-   `srcdoc` presentation, falls back to the chrome's default viewport height
-   with interior pointer scrolling disabled, so alignment is never lost even
-   if measurement is. Wheel and touch input over a non-scrollable frame
-   chains to the nearest scrollable ancestor in the parent, which is the
-   shared viewport.
+3. **Frames stay at the device viewport size and one shared scroller drives
+   every document.** This replaces the rule the user approved, which sized each
+   frame to its document's `scrollHeight` and re-measured it with a
+   `ResizeObserver`. While preparing Milestone 4 that rule proved defective in
+   Chrome: viewport units, `position: fixed` and `position: sticky` resolve
+   against the frame, so growing the frame changes the document. A
+   `min-height: 100vh` hero followed by 600px of content grew the frame 1338 →
+   1956 → … → 8136px over twelve observer cycles without converging, and even
+   a converging document moved fixed tab bars to the end of the page, stopped
+   sticky headers from sticking and stretched viewport-height sections, so
+   comparisons stopped looking like Current; Mokly Cloud's own mockups use
+   those patterns. The user was offered this fix (A, recommended) or
+   document-sized frames with a height cap (B) and has not answered;
+   Milestone 4 proceeds with A, the announced default, because B knowingly
+   ships the distortions above. **Decision 3 awaits the user's confirmation.**
+   Each chrome viewport is the only user-scrollable container: a
+   `position: sticky` box of exactly the viewport's size holds the frames at
+   device size, and a spacer after it extends the range to the section's
+   largest document. Frames carry `scrolling="no"` and are scrolled only
+   programmatically. Every viewport scroll writes one offset to every layer
+   document; a shorter document stops at its end and its frame is translated
+   by the remainder over its own canvas colour; a scroll the viewer did not
+   make is written back to the viewport; loops are broken by comparing values,
+   never with timers. Documents are re-measured on commit, load and observed
+   size changes, and because no frame size depends on its document the
+   measurement cannot feed back. Wheel and touch input over a non-scrollable
+   frame chains to the shared viewport.
 4. **One chrome per stacked comparison.** Overlay and Difference render one
    browser or phone chrome containing two stacked layers, not two stacked
    chromes with hidden labels. The top layer keeps 50% opacity in Overlay and
@@ -95,15 +116,16 @@ and is specified by the
    layer. The existing overlay mockup already depicts this structure; the
    difference mockups move to it in Milestone 2.
 5. **Side by side keeps two chromes and mirrors their viewports.** Each chrome
-   viewport scrolls its own full-height frame; a parent-side listener copies
-   `scrollTop` and `scrollLeft` between the two viewports with a re-entrancy
-   guard. No frame access is needed for this because the scrollers are shell
-   elements.
+   viewport drives its one device-sized frame as Decision 3 describes; both
+   spacers use the pair maximum so the two ranges always match, and the two
+   viewports' `scrollTop` and `scrollLeft` are mirrored in both directions
+   with a value-based re-entrancy guard and no timers.
 6. **Comparison panes are read-only in every mode.** The existing guard from
-   `read_only.ts` applies to every comparison frame: link and form activation
-   is cancelled, a same-document anchor scrolls its target into view, Space
-   keeps scrolling, and the presentation is restored if the frame ever
-   navigates. In a stack, any navigation of one layer would break the
+   `read_only.ts` applies to every comparison frame from the moment its
+   document commits: link and form activation is cancelled, a same-document
+   anchor moves the shared viewport to its target's document position, scroll
+   keys pressed inside a pane scroll the shared viewport except in editable
+   targets, and the presentation is restored if the frame ever navigates. In a stack, any navigation of one layer would break the
    comparison outright; in Side by side, a navigation would leave `srcdoc`
    for an artifact-origin document that a cross-origin host cannot measure or
    guard, and the shell never tracked that navigation in its URL or heading.
@@ -117,8 +139,10 @@ and is specified by the
    viewports when both are shown, has an accepted presentation, so a stack
    never appears with one layer missing. Any fetch, validation or
    presentation failure renders the existing failure copy with Retry.
-   Renewal, refresh, route replacement and mode changes cancel and discard
-   superseded work exactly as comparison requests do today.
+   The loaded comparison and its per-address presentation cache survive mode,
+   viewport and scheme switches; Current, route changes, evidence or source
+   replacement, unmount and a newly loaded comparison (Refresh, Retry or a
+   renewal that found a new generation) cancel and discard them.
 8. **The embedded fetch set grows by the current tree.** An embedded viewer
    may already fetch historical HTML beneath the advertised generation's
    `snapshots/before/`; it may now also fetch beneath `snapshots/after/` of
@@ -381,61 +405,121 @@ drives both documents from one shared scroller.
 
 Tags: ui
 
-Summary: present comparison panes through the shared pipeline, size frames to
-their documents, scroll every stack inside one chrome viewport, mirror Side by
-side, and prove alignment in the browser.
+Summary: present comparison panes through the shared pipeline, keep every
+frame at the device viewport size, drive every stack's documents from one
+shared chrome viewport, mirror Side by side, and prove alignment in the
+browser. Decision 3's shared scroller replaces the approved document-sized
+frames and awaits the user's confirmation.
 
-- [ ] Add a dedicated tall-screen comparison fixture under `tests/helpers/`
+- [x] Add a dedicated tall-screen comparison fixture under `tests/helpers/`
       and a browser spec `tests/browser/comparison_alignment.spec.ts` that
       opens Overlay, scrolls over the stack with the wheel, and asserts both
-      pane documents keep a zero scroll offset while their layer rectangles
-      coincide; repeat for Difference, for mobile, for both viewports at once
-      and for a component comparison. Run it before the fix and record the
-      failing assertions in the review record; do not change the shared
-      fixture's classified counts.
-- [ ] Add a Side by side case to the same spec: scrolling one chrome viewport
-      moves the other to the same offset in both directions.
-- [ ] Add `packages/viewer/src/shell/use_comparison_documents.ts`: after a
-      comparison loads, present every selected pane document through the
-      shared loader, report ready only when all are presented, expose the
-      existing failure and retry states, and discard superseded work on mode,
-      viewport, scheme, route, renewal and refresh changes.
-- [ ] Split `packages/viewer/src/shell/comparison_views.tsx` into a stack
-      renderer for Overlay and Difference (one chrome, two layers, shared
-      viewport scroller), a side-by-side renderer (two chromes, mirrored
-      viewports), and a comparison frame that reuses the `srcdoc` frame and
-      guard from `preview_frame.tsx`; keep the `data-compare-mode` and
-      `data-diff-*` attributes tests rely on.
-- [ ] Add `packages/viewer/src/shell/use_frame_document_height.ts`: measure on
-      load, observe the document element, round up, take the pair maximum and
-      apply the unmeasurable fallback; add
-      `packages/viewer/src/shell/comparison_scroll_mirror.ts` for Side by side
-      with a re-entrancy guard and cleanup.
-- [ ] Update `css_review.ts` and the chrome styles: the stacked chrome viewport
-      and phone screen scroll, layers stack at full width, the top layer keeps
-      the overlay opacity or difference blend, component comparisons scroll
-      inside their bordered wrapper, and narrow layouts keep the existing
-      responsive rules.
-- [ ] Rewrite the assertions that expect `sandbox=""` and direct
-      `src` values in `tests/browser/preview_comparisons.spec.ts`,
-      `tests/browser/static_comparisons.spec.ts` and
-      `tests/browser/preview_design_links.spec.ts`, and turn the comparison
-      links test into a read-only proof; update `tests/changes.test.ts` if it
-      inspects frame markup.
-- [ ] Add unit tests for the height hook, the documents controller and the
-      scroll mirror using fake frames and documents.
-- [ ] Smoke-test through `npm run dev` with a temporarily changed tall example
-      screen: Overlay, Difference and Side by side on desktop and mobile,
-      Refresh, and Current; save screenshots under `.context/` and revert the
-      temporary change.
-- [ ] Update `packages/viewer/src/shell/README.md` and
-      `packages/viewer/README.md` for the delivered modules, then run the
-      comparison and preview browser specs and `cargo xtask check`.
-- [ ] Remove the pending-runtime sentences that Milestone 2 added to the
+      pane documents and the shared viewport reach one offset while their
+      layer rectangles coincide; repeat for Difference, for mobile, for both
+      viewports at once and for a component comparison, and cover a document
+      shorter than its pair, a `min-height: 100vh` hero that must not grow its
+      comparison before and after a late image loads, a fixed bar and a sticky
+      header on the viewport's edges, and the documented inner-scroll
+      limitation. Run it before the fix and record the failing assertions in
+      the review record; do not change the shared fixture's classified counts.
+- [x] Add the input cases in `tests/browser/comparison_alignment_input.spec.ts`
+      with helpers in `tests/browser/comparison_alignment_helpers.ts`: Side by
+      side mirrors in both directions; Space, Shift+Space, PageUp, PageDown,
+      Home, End and ArrowDown pressed inside a pane move the shared viewport
+      while an input keeps its keys; a same-document anchor moves every
+      version in Overlay and Side by side without changing the shell URL or
+      heading; and a scroll the viewer did not make pulls every version along.
+- [x] Add `packages/viewer/src/shell/use_comparison_documents.ts` over the
+      framework-free `comparison_documents.ts`, with the pure selection in
+      `comparison_selection.ts`: after a comparison loads, present every
+      selected pane document through the shared loader, report ready only when
+      all are presented, show the existing failure copy with Try again and the
+      loader's failure text as details, and keep the per-address cache across
+      mode, viewport and scheme switches while discarding it for Current,
+      route, evidence or source replacement, unmount and a newly loaded
+      comparison (Milestone 1 finding 3, option A).
+- [x] Split `packages/viewer/src/shell/comparison_views.tsx` into the section
+      renderer, a stack renderer for Overlay and Difference
+      (`comparison_stack.tsx`: one chrome, two layers, one shared viewport), a
+      side-by-side renderer (`comparison_side.tsx`: two chromes, mirrored
+      viewports), the chrome choice (`comparison_chrome.tsx`), the shared
+      viewport (`comparison_viewport.tsx`), and a comparison frame
+      (`comparison_frame.tsx`) that reuses the `srcdoc` frame and guard from
+      `preview_frame.tsx`; keep the `data-compare-mode` and `data-diff-*`
+      attributes and the pane classes tests rely on, the missing-pane messages
+      and the Side by side fallback.
+- [x] Add the scroll-sync controller
+      `packages/viewer/src/shell/comparison_scroll_sync.ts` in place of the
+      planned `use_frame_document_height.ts`: follow each layer document from
+      its commit, measure it on load and on observed size changes, size every
+      spacer to the section's largest range, write one offset to every
+      document, translate a shorter document's frame by the remainder over its
+      canvas colour, write back scrolls it did not make, forward scroll keys
+      (`comparison_scroll_keys.ts`) and move the viewport to anchors; add
+      `comparison_scroll_mirror.ts` for Side by side with a value-based
+      re-entrancy guard, pair-maximum ranges (Milestone 1 finding 2, option A)
+      and cleanup, and `comparison_layer_document.ts` for document reads.
+- [x] Mark comparison frames `data-mokly-comparison-frame` with
+      `data-mokly-preview-source`, exactly `sandbox="allow-same-origin"`,
+      `scrolling="no"`, a `srcdoc` and never a `src` (Milestone 1 finding 10,
+      option A), and give the guard a `reveal` hook so a comparison anchor
+      moves the shared viewport while removed previews keep scrolling into
+      view (Milestone 1 finding 8, option B).
+- [x] Install the read-only guard and follow layer documents from the moment a
+      `srcdoc` document commits, through the shared
+      `packages/viewer/src/previews/presented_document.ts`, because a slow
+      resource can hold back a frame's `load` event; a link clicked in that
+      window navigated the frame before this change. Tolerate the refused
+      listener release once the frame's window turns cross-origin.
+- [x] Update `css_review.ts`, `css_preview_scheme.ts` and `css_workspace.ts`:
+      the stacked chrome viewport, phone screen and bordered component frame
+      scroll; the sticky box holds layers at full size, each on an opaque
+      screen background in the selected scheme (Milestone 2 finding 2,
+      option B); the top layer keeps the overlay opacity or difference blend
+      and the chrome never blends; the viewport's scrollbar follows the
+      preview scheme; and narrow layouts keep the existing responsive rules.
+- [x] Rewrite the assertions that expect `sandbox=""` and direct `src` values
+      in `tests/browser/preview_comparisons.spec.ts`,
+      `static_comparisons.spec.ts`, `review.spec.ts`,
+      `selected_comparisons.spec.ts`, `comparison_renewal.spec.ts`,
+      `comparison_expiry.spec.ts`, `component_explorer_runtime.spec.ts`,
+      `component_static_runtime.spec.ts` and `preview_backgrounds.spec.ts`
+      through the shared `expectPresentedPane` and `PANE_SOURCE` helpers, and
+      turn the comparison links test in `preview_design_links.spec.ts` into a
+      read-only proof (links and forms inert, anchors move both viewports,
+      shell URL and heading unchanged) (Milestone 1 finding 5).
+      `design_links.spec.ts` and `removed_comparison_eligibility.spec.ts`
+      assert Current frames and the missing-pane copy only and need no change,
+      and `tests/changes.test.ts` inspects no frame markup;
+      `tests/client_css_material.test.ts` renders the new section inputs.
+- [x] Add unit tests with fakes for the scroll-sync controller, the documents
+      controller and selection, the scroll mirror, the key forwarding and the
+      presented-document follower under `packages/viewer/tests/`.
+- [x] Smoke-test through `npm run dev` with a temporarily changed tall example
+      screen containing a `min-height: 100vh` hero, a sticky header and a
+      fixed bar: Overlay, Difference and Side by side on desktop and mobile,
+      both viewports in Dark, Refresh, and Current; save screenshots under
+      `.context/m4/` and revert the temporary change.
+- [x] Rewrite the Sizing, Layout, Alignment Invariant, Lifecycle and
+      Acceptance sections of `docs/protocol/mokly-comparison-panes.md` for the
+      shared scroller, the inner-scroll limitation (Milestone 1 finding 4,
+      option A), key forwarding and the frame attributes; align the changes,
+      viewer, frame adapter, navigation and protocol index docs, the Changes
+      guide, `examples/basic/notes.md` and the design stylesheet comment.
+- [x] Update `packages/viewer/src/shell/README.md`,
+      `packages/viewer/src/previews/README.md`,
+      `packages/viewer/src/client/README.md` and `packages/viewer/README.md`
+      for the delivered modules and attributes, and re-check
+      `docs/guides/catalogue/changes.md`, `docs/guides/authoring/links.md`
+      and `packages/viewer/README.md` against the delivered behaviour
+      (Milestone 3A finding 4, option B).
+- [x] Remove the pending-runtime sentences that Milestone 2 added to the
       Delivery Status sections of `docs/protocol/mokly-shell-design.md` and
       `docs/protocol/mokly-comparison-panes.md`, including the exception now
       attached to "Every state recorded here is implemented", and the one
       Milestone 3A added to `docs/protocol/mokly-component-design.md`.
+- [x] Run the comparison, preview, review and design browser specs and
+      `cargo xtask check`.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)

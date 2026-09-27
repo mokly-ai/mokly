@@ -91,13 +91,7 @@ the resolved historical record and route, never a colliding current-id lookup.
 `workspace_data.ts` describes shell data; the public viewer projects it only
 from validated catalogue records. Embedded bootstrap and workspace JSON use
 canonical key ordering so their validated client projections retain the exact
-server bytes during hydration. `comparison_views.tsx` renders React-owned frame
-chrome around the snapshots from validated comparison metadata; the
-[comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md)
-defines the viewer-owned, document-sized panes that scroll inside one shared
-chrome, which the
-[comparison pane scroll alignment plan](../../../../plans/comparison-pane-scroll-alignment.md)
-delivers in its Milestone 4. The CLI
+server bytes during hydration. The CLI
 supplies its private live capabilities through typed server context. Standalone
 full-document composition lives in `src/standalone`: its bootstrap contains
 the validated public catalogue and shell delivery state for Serve. Static pages
@@ -173,6 +167,34 @@ hook preserves initial markup and updates sources only for frames without an
 active adapter; it must not race adapter-owned history-replacing navigation.
 Display-only selection updates preserve manually collapsed filtered groups;
 only changed search, tag or Changes filters reveal their matching groups.
+
+`diffs.tsx` owns the comparison band and stage. `use_comparison.ts` requests,
+renews and fences the selected comparison; `comparison_selection.ts` picks the
+views and snapshot addresses the selection shows; and
+`use_comparison_documents.ts` presents every selected pane document through the
+shared snapshot loader of the comparison's immutable generation before the stage
+reports ready. Its framework-free core, `comparison_documents.ts`, keeps one
+loaded comparison's presentations across mode, viewport and scheme switches and
+discards them when Refresh, Try again, a new generation, Current or navigation
+replaces the comparison; a failure shows the existing failure copy with Try
+again. `comparison_views.tsx` renders one section per viewport, choosing
+`comparison_stack.tsx` for Overlay and Difference (one chrome whose viewport
+holds the Before layer and the blended Current layer) or `comparison_side.tsx`
+for Side by side and for views missing a side. `comparison_chrome.tsx` picks the
+browser, phone or bordered component frame, `comparison_viewport.tsx` renders
+the shared viewport, its sticky device-sized box and range spacer, and
+`comparison_frame.tsx` reuses `preview_frame.tsx` and the read-only guard for
+each version, marked `data-mokly-comparison-frame` with `scrolling="no"`.
+`comparison_scroll_sync.ts` is the per-section scroll controller: it follows
+each layer document from commit, measures it, sizes every spacer to the
+section's largest range, writes one offset to every document, shifts a shorter
+document's frame by the remainder, adopts scrolls it did not make, forwards
+scroll keys (`comparison_scroll_keys.ts`) and moves the viewport to anchors.
+`comparison_scroll_mirror.ts` mirrors Side by side viewports by comparing
+values, never with timers, and `comparison_layer_document.ts` reads a layer
+document's range, offset and canvas colour. The
+[comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md)
+defines this behaviour.
 
 `previews.tsx` renders the one previous-version presentation a removed page and
 a removed screen share: the "Showing previous version" label, the stage host

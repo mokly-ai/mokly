@@ -207,12 +207,12 @@ Diffs render inside the existing main region with the catalogue, title, details,
 viewport, and scheme controls retained. Both viewports are supported. Snapshot
 documents are presented under the
 [comparison pane contract](./mokly-comparison-panes.md): viewer-owned,
-script-disabled documents whose frames never scroll internally and whose links
-and forms are inert. Overlay places the current version at 50% opacity above
-its baseline and Difference uses CSS difference blending, each inside one
-device chrome whose viewport is the only scroll container, so both versions
-always share one scroll offset. Side by side keeps two chromes whose viewports
-mirror each other. These are document comparisons, not pixel measurements.
+script-disabled documents in device-sized frames that are never
+user-scrollable, whose links and forms are inert. Overlay places the current
+version at 50% opacity above its baseline and Difference uses CSS difference
+blending, each inside one device chrome whose viewport is the only scroll
+container and writes its one offset to both documents, so both versions always
+stay aligned. Side by side keeps two chromes whose viewports mirror each other. These are document comparisons, not pixel measurements.
 They must never display invented pixel counts or percentages. Missing current
 views for removed component variants remain explicit and legible in every
 mode. Comparison frames retain matching dimensions; individual browser

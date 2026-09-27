@@ -1,11 +1,16 @@
 /** On-demand React comparison controls inside the catalogue. */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { ReactNode } from "react";
 
 import type { LoadedComparison } from "./comparison_request.js";
+import {
+  selectedComparisonDocuments,
+  selectedComparisonViews,
+} from "./comparison_selection.js";
 import { ComparisonViews } from "./comparison_views.js";
 import { useComparison, type ComparisonMode } from "./use_comparison.js";
+import { useComparisonDocuments } from "./use_comparison_documents.js";
 
 /** Keep the current screen mounted until a comparison is explicitly selected. */
 export function DiffScreen({
@@ -42,7 +47,26 @@ export function DiffScreen({
     () => comparisonCallback.current?.(comparison.loaded),
     [comparison.loaded],
   );
+  const views = useMemo(
+    () =>
+      comparison.loaded && comparison.presentation
+        ? selectedComparisonViews(
+            comparison.loaded,
+            comparison.presentation,
+            route,
+            variantId,
+          )
+        : undefined,
+    [comparison.loaded, comparison.presentation, route, variantId],
+  );
+  const documents = useComparisonDocuments(
+    comparison.presentation ? comparison.loaded : undefined,
+    selectedComparisonDocuments(views),
+  );
   const current = comparison.mode === "current";
+  const failure =
+    comparison.failure ??
+    (documents.status === "failed" ? documents.message : undefined);
   return (
     <section
       className="mbk-diff-screen"
@@ -66,24 +90,23 @@ export function DiffScreen({
         {children}
       </div>
       <div
-        aria-busy={comparison.busy ? true : undefined}
+        aria-busy={
+          comparison.busy || documents.status === "loading" ? true : undefined
+        }
         aria-live="polite"
         className="mbk-diff-stage"
         data-diff-stage=""
         hidden={current}
       >
-        {comparison.failure ? (
-          <ComparisonFailure
-            details={comparison.failure}
-            retry={comparison.retry}
-          />
-        ) : comparison.loaded && comparison.presentation ? (
+        {failure ? (
+          <ComparisonFailure details={failure} retry={comparison.retry} />
+        ) : comparison.presentation && documents.status === "ready" ? (
           <ComparisonViews
             component={component}
-            loaded={comparison.loaded}
             presentation={comparison.presentation}
+            presentations={documents.presentations}
             route={route}
-            {...(variantId ? { variantId } : {})}
+            views={views}
           />
         ) : (
           "Loading comparison…"

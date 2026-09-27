@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { createPreviewComparisonFixture } from "../helpers/preview_comparison_fixture.js";
 
+import { expectPresentedPane, PANE_SOURCE } from "./comparison_actions.js";
 import { servePreviewFixture, type PreviewFixture } from "./preview_fixture.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
@@ -48,10 +49,7 @@ test("published Mokly exposes lazy comparisons in the actual shell", async ({
   await expect(
     page.frameLocator("[data-diff-stage] iframe").first().locator("body"),
   ).not.toBeEmpty();
-  for (const frame of await frames.all()) {
-    await expect(frame).toHaveAttribute("sandbox", "");
-    await expect(frame).toHaveAttribute("src", /\/diffs\/__generations\//);
-  }
+  for (const frame of await frames.all()) await expectPresentedPane(frame);
   for (const [label, mode] of [
     ["Side by side", "side"],
     ["Difference", "difference"],
@@ -116,7 +114,7 @@ test("published comparisons retain mobile, dark, and current-only added and remo
     page.frameLocator("[data-diff-stage] iframe").last().locator("h1"),
   ).toHaveText("Current home");
   for (const frame of await frames.all())
-    await expect(frame).toHaveAttribute("src", /\.mobile\.dark\.html$/);
+    await expect(frame).toHaveAttribute(PANE_SOURCE, /\.mobile\.dark\.html$/);
   await expect
     .poll(() =>
       page.evaluate(

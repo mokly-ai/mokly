@@ -9,6 +9,7 @@ import { createExportFixture } from "../helpers/export_fixture.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
+import { PANE_SOURCE } from "./comparison_actions.js";
 import { assertServedShellMarker } from "./export_shell.js";
 import { chooseScheme } from "./workspace_actions.js";
 
@@ -92,7 +93,7 @@ for (const viewport of ["desktop", "mobile"] as const)
     await expect(
       page.locator("[data-diff-stage] iframe").last(),
     ).toHaveAttribute(
-      "src",
+      PANE_SOURCE,
       new RegExp(`disabled\\.${viewport}\\.dark\\.html$`),
     );
     await page.getByRole("button", { name: "Current", exact: true }).click();

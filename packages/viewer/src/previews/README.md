@@ -54,9 +54,15 @@ using the same device chrome components as current screens. A selected viewport
 with no captured view keeps a note where its frame would be rather than an empty
 stage; its `mbk-preview-note` and `mbk-preview-switch` classes match the design
 catalogue, and the stylesheet hides the closing sentence while both viewports
-are shown. `read_only.ts` guards every viewer-owned presentation. It cancels all
-link and form activation, scrolls a same-document fragment itself without
-applying `:target`, preserves Space for scrolling, and reapplies the accepted
+are shown. `presented_document.ts` recognises a frame's viewer-owned `srcdoc`
+document from the moment it commits and follows its replacements: it inspects
+the frame on attach, on every `load`, and one animation frame after the current
+window's `pagehide`, so slow resources that hold back `load` never delay the
+guard. `read_only.ts` guards every viewer-owned presentation from that commit.
+It cancels all link and form activation, shows a same-document fragment itself
+without applying `:target` (scrolling it into view for removed previews, or
+through the caller's `reveal` hook, which comparison panes use to move their
+shared viewport), preserves Space for scrolling, and reapplies the accepted
 `srcdoc` if the frame navigates away. `shell/use_removed_preview.ts` is the
 route-owned controller: its first effect replaces the honest server-rendered
 unavailable state with loading, requests on selection, fetches every document
@@ -76,10 +82,13 @@ npx playwright test tests/browser/removed_previews.spec.ts tests/browser/removed
 ```
 
 The [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md)
-reuses this pipeline for the Before and Current panes of a comparison. The
+reuses this pipeline for the Before and Current panes of a comparison:
+`shell/use_comparison_documents.ts` creates a `before` and `after` loader for
+the accepted comparison's immutable generation and presents every selected pane
+document before the comparison is ready. The
 [comparison pane scroll alignment plan](../../../../plans/comparison-pane-scroll-alignment.md)
-delivered the shared loader and documented fetch set in Milestone 3; Milestone
-4 connects comparison panes to it. Removed previews keep accepting
+delivered the shared loader and documented fetch set in Milestone 3 and the
+aligned panes in Milestone 4. Removed previews keep accepting
 `snapshots/before/` only.
 
 Related boundaries: [the Browse client](../client/README.md), the

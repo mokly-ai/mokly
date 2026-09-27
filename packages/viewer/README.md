@@ -35,7 +35,8 @@ collaboration UI.
 
 - **A complete catalogue experience.** Render pages, screens, component
   variants and user flows with search, tags, responsive previews, color
-  schemes, Changes filtering and inspection.
+  schemes, Changes filtering, inspection, and Overlay, Difference and Side by
+  side comparisons whose two versions always scroll as one.
 - **Designed to be embedded.** Connect the viewer to application state through
   controlled selection, typed events, host-owned slots and an imperative ref.
 - **Component-aware collaboration.** Resolve saved component references,

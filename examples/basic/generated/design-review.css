@@ -67,7 +67,7 @@
   position: relative;
 }
 
-/* Both layers take the taller of their two heights and fill the viewport. */
+/* Both layers fill the viewport at device size and share one scroll offset. */
 .mbk-stack {
   display: grid;
   isolation: isolate;

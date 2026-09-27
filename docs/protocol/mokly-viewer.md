@@ -384,9 +384,10 @@ the appearance controller retains preference and system-theme listening.
 Frames remain static documents in sandboxed iframes. Hydration reaches inside
 only the viewer-owned, same-origin `srcdoc` documents used for a historical
 removed preview and for [comparison panes](./mokly-comparison-panes.md), where
-it installs and restores the read-only guard and, for panes, measures the
-document to size its frame. Current documents retain their existing adapter
-and sandbox boundaries.
+it installs and restores the read-only guard and, for panes, measures each
+document, writes the shared scroll offset to it and forwards its scroll keys to
+the shared viewport. Current documents retain their existing adapter and
+sandbox boundaries.
 
 Shell state is one store scoped to a mounted viewer:
 

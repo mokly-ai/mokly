@@ -16,7 +16,7 @@ ancestor disclosure, conditional filter clearing, nearest-row scrolling, the
 `tag:` search term, the details inspector's tag chips, the search field's tag
 control with its picker panel, the mark-only narrow brand, and the top bar's
 stacking above the navigation drawer scrim. Every state recorded here is
-implemented except the comparison presentation described below. The
+implemented. The
 [React Browse shell plan](../../plans/react-browse-shell.md)
 changes how the shell is rendered and enhanced, not how it looks or behaves:
 this design, its tokens, dimensions, responsive rules and the design catalogue
@@ -39,15 +39,12 @@ breadcrumbs are text even after their parents are deleted. Ordinary
 publications omit the Changes filter and comparison band while preserving the
 same navigation, search, tags, and screen variants.
 
-The comparison designs depict the
-[comparison pane contract](./mokly-comparison-panes.md) ahead of its runtime
-delivery: Overlay and Difference hold both versions in one device chrome, or in
-one bordered frame for a saved component variant in the
+The comparison designs depict the implemented
+[comparison pane contract](./mokly-comparison-panes.md): Overlay and Difference
+hold both versions in one device chrome, or in one bordered frame for a saved
+component variant in the
 [component explorer designs](./mokly-component-design.md), whose viewport
-scrolls them as one, and links inside every depicted comparison do nothing. Until Milestones 3 and 4 of the
-[comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-land, the shipped shell still stacks two chromes and keeps comparison links
-active.
+scrolls them as one, and links inside every depicted comparison do nothing.
 
 The removed-document and removed-screen designs depict the shipped
 [removed previews](./mokly-removed-previews.md) behavior: the previous version
@@ -599,9 +596,10 @@ Difference stack both versions inside one device chrome whose viewport is the
 only scroll container: Overlay composites the current layer at 50% opacity and
 Difference uses CSS difference blending, and the long-overlay depiction shows
 that chrome scrolled part-way with both layers at one offset. Both layers fill
-the viewport at the taller of their two heights and each paints its own opaque
-screen background in its scheme, so the blend never reaches the stage; the
-browser bar, phone status band, notch and home pill stay outside the blend.
+the chrome's viewport at device size, always share one scroll offset, and each
+paints its own opaque screen background in its scheme, so the blend never
+reaches the stage; the browser bar, phone status band, notch and home pill stay
+outside the blend.
 Stacked comparisons show no Before or Current caption. The long depiction draws
 its scrollbar part-way down the viewport, a thin indicator on the phone, because
 a static artboard cannot scroll itself. Side by side keeps one chrome per

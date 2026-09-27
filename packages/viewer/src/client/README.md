@@ -73,13 +73,16 @@ for completion before inspection becomes ready. Matching URLs alone do not
 authorize reuse.
 
 Frames holding a previous version carry `data-mokly-preview-frame` and
-`data-mokly-preview-source`. They are owned directly by the
-[React preview controller](../previews/README.md), not a frame adapter, so no
-inspector or logical-navigation handshake happens for historical documents.
-The controller fetches each historical document and presents it as a
-viewer-origin, script-disabled `srcdoc`; its parent guard therefore cancels
-every link and form in every host, owns same-document anchor scrolling, and
-restores the accepted presentation if the frame navigates.
+`data-mokly-preview-source`; comparison pane frames carry
+`data-mokly-comparison-frame`, `data-mokly-preview-source` and
+`scrolling="no"`. Both are owned directly by React controllers, the
+[preview controller](../previews/README.md) and the comparison pane modules in
+[the shell](../shell/README.md), not a frame adapter, so no inspector or
+logical-navigation handshake happens for them. Each controller fetches every
+snapshot document and presents it as a viewer-origin, script-disabled
+`srcdoc`; its parent guard therefore cancels every link and form in every host,
+owns same-document anchors, and restores the accepted presentation if the frame
+navigates. Comparison panes are also scrolled only by their shared viewport.
 
 `post_message_adapter.ts` explicitly opts into a separate HTTP(S) origin. It sets
 the cross-origin sandbox, replaces iframe history, and negotiates a fresh random

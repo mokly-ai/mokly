@@ -3,6 +3,8 @@
 import { createContext, useContext, useMemo } from "react";
 import type { ReactNode } from "react";
 
+import type { SnapshotPresentationEnvironment } from "../previews/presentation.js";
+
 import type { ShellContext } from "./context.js";
 import { readShellDelivery } from "./delivery.js";
 
@@ -49,6 +51,17 @@ export function ComparisonEnvironmentProvider({
 /** Read the comparison boundary owned by the current shell root. */
 export function useComparisonEnvironment(): ComparisonEnvironment | undefined {
   return useContext(ComparisonEnvironmentContext);
+}
+
+/** The browser boundaries a snapshot loader needs, from the comparison host. */
+export function snapshotPresentationEnvironment(
+  environment: ComparisonEnvironment,
+): SnapshotPresentationEnvironment {
+  return {
+    baseUrl: environment.baseUrl,
+    fetch: (input, init) => environment.fetch(input, init),
+    parse: (source) => new DOMParser().parseFromString(source, "text/html"),
+  };
 }
 
 function standaloneEnvironment(

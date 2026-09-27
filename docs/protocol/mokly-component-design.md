@@ -13,12 +13,10 @@ extend the [shell design](./mokly-shell-design.md) and depict the
 [component explorer contract](./mokly-component-explorer.md). The former
 consumer's previous-version state is implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
-The stacked component comparisons depict the
-[comparison pane contract](./mokly-comparison-panes.md) ahead of its runtime
-delivery in Milestone 4 of the
-[comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md);
-until it lands, the shipped explorer still stacks two separately scrolling
-frames.
+The stacked component comparisons depict the implemented
+[comparison pane contract](./mokly-comparison-panes.md): the explorer holds a
+saved variant's two versions in one bordered frame whose viewport scrolls both
+as one.
 
 ## Owning Catalogue
 

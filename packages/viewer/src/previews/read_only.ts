@@ -1,9 +1,29 @@
 /** Keep a viewer-owned snapshot document readable but inert. */
 
 import type { SnapshotPresentation } from "./presentation.js";
+import {
+  browserFrameScheduler,
+  followPresentedDocument,
+  type FrameScheduler,
+} from "./presented_document.js";
 
 const guarded = new WeakSet<Document>();
 const XLINK_NAMESPACE = "http://www.w3.org/1999/xlink";
+
+/** How a guarded presentation shows anchors and follows its documents. */
+export interface PreviewReadOnlyOptions {
+  /**
+   * Show the target without navigating; defaults to scrolling it into view
+   * inside the frame. Comparison panes move their shared viewport instead.
+   */
+  reveal?(target: Element): void;
+  /** Animation frames used to follow replacement documents. */
+  scheduler?: FrameScheduler;
+}
+
+function scrollIntoView(target: Element): void {
+  target.scrollIntoView();
+}
 
 function accessible(frame: HTMLIFrameElement): Document | undefined {
   try {
@@ -51,6 +71,7 @@ function scrollToFragment(
   link: Element,
   doc: Document,
   presentation: SnapshotPresentation,
+  reveal: (target: Element) => void,
 ): void {
   const name = fragmentName(link, doc, presentation.snapshotAddress);
   if (!name) return;
@@ -59,17 +80,21 @@ function scrollToFragment(
     Array.from(doc.getElementsByName(name)).find(
       (candidate) => candidate.localName === "a",
     );
-  target?.scrollIntoView();
+  if (target) reveal(target);
 }
 
-function guard(doc: Document, presentation: SnapshotPresentation): void {
+function guard(
+  doc: Document,
+  presentation: SnapshotPresentation,
+  reveal: (target: Element) => void,
+): void {
   if (guarded.has(doc)) return;
   guarded.add(doc);
   const block = (event: Event): void => {
     const link = activated(event, doc);
     if (!link) return;
     event.preventDefault();
-    scrollToFragment(link, doc, presentation);
+    scrollToFragment(link, doc, presentation, reveal);
   };
   doc.addEventListener("click", block, true);
   doc.addEventListener("auxclick", block, true);
@@ -85,11 +110,16 @@ function guard(doc: Document, presentation: SnapshotPresentation): void {
   doc.addEventListener("submit", (event) => event.preventDefault(), true);
 }
 
-/** Guard one accepted presentation and restore it after any later navigation. */
+/**
+ * Guard one accepted presentation from the moment its document commits, not
+ * only once slow resources let it load, and restore it after any navigation.
+ */
 export function enforcePreviewReadOnly(
   frame: HTMLIFrameElement,
   presentation: SnapshotPresentation,
+  options: PreviewReadOnlyOptions = {},
 ): () => void {
+  const reveal = options.reveal ?? scrollIntoView;
   let recorded: Document | undefined;
   let restoring = false;
   const attach = (): void => {
@@ -104,7 +134,7 @@ export function enforcePreviewReadOnly(
     if (doc.URL === "about:srcdoc" && (!recorded || restoring)) {
       recorded = doc;
       restoring = false;
-      guard(doc, presentation);
+      guard(doc, presentation, reveal);
       return;
     }
     if (recorded && doc !== recorded && !restoring) {
@@ -112,9 +142,11 @@ export function enforcePreviewReadOnly(
       frame.srcdoc = presentation.srcdoc;
       return;
     }
-    if (doc === recorded) guard(doc, presentation);
+    if (doc === recorded) guard(doc, presentation, reveal);
   };
-  frame.addEventListener("load", attach);
-  attach();
-  return () => frame.removeEventListener("load", attach);
+  return followPresentedDocument(
+    frame,
+    options.scheduler ?? browserFrameScheduler,
+    attach,
+  );
 }

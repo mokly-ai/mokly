@@ -40,9 +40,16 @@ comparison is reacquired for you.
 
 Overlay and Difference show both versions inside one frame that scrolls as one,
 so the two can never drift apart, and Side by side scrolls its two frames
-together. Links and forms inside a comparison do nothing, and an anchor scrolls
-within the same version, so compare a linked screen through the catalogue,
-where it has its own comparison.
+together. Each version keeps the size of the device, so full-height sections,
+fixed bars and sticky headers look just as they do in Current. The wheel,
+touch, and the scroll keys pressed inside a comparison all scroll both
+versions; past the end of a shorter version you see its page background while
+the other keeps scrolling. A screen that scrolls only inside an inner region,
+rather than as a whole page, scrolls that region in the top version only.
+
+Links and forms inside a comparison do nothing, and an anchor moves both
+versions to its target, so compare a linked screen through the catalogue, where
+it has its own comparison.
 
 ## Variants and views
 
