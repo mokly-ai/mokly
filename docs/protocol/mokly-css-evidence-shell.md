@@ -24,7 +24,7 @@ recorded in the
 [shell design inventory](./mokly-shell-design.md#design-mockups) as
 `design-review-style-matched`, `design-review-style-unresolved`,
 `design-review-style-unnamed`, `design-review-style-excluded`, and
-`design-review-style-page-excluded`, which the plan's design milestone adds.
+`design-review-style-page-excluded`.
 It fixes these presentation rules:
 
 - A `matched` or `unresolved` reason reads as one outcome in the comparison
