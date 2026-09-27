@@ -23,8 +23,10 @@ directory status comes from watcher stats, else its event kind, else one stat
 that treats any error as a file.
 `watch_index.ts` caches the exact required inputs and their ancestors once per
 accepted config. `watchTargets` drops individually covered files when an entry
-glob or PostCSS directory root already watches them; a new file under such a
-root changes the inventory without replacing the watcher. Physical event paths
+glob, PostCSS directory or watch-rule root already watches them, except
+required files below a skipped directory segment. Those remain explicit
+targets and their arrival replaces the watcher; ordinary covered files do not.
+Physical event paths
 under a symlinked repository root map back to configured logical paths.
 `addDir` and `unlinkDir` identify directories; `add`, `change`, and `unlink`
 identify files. Supplied stats avoid that stat, but traversal still reads export

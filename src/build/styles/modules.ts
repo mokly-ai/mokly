@@ -1,3 +1,5 @@
+import type { Targets } from "lightningcss";
+
 import { MoklyError, errorMessage } from "../../errors.js";
 
 import { restoreModuleImageSetUrls } from "./image_set_restore.js";
@@ -11,7 +13,11 @@ export interface ScopedStyle {
 }
 
 /** Scope CSS Modules by repository path without touching global custom properties. */
-export function scopeModule(css: string, relative: string): ScopedStyle {
+export function scopeModule(
+  css: string,
+  relative: string,
+  targets: Targets,
+): ScopedStyle {
   let result;
   try {
     result = lightningTransform()({
@@ -27,6 +33,7 @@ export function scopeModule(css: string, relative: string): ScopedStyle {
         pure: false,
       },
       minify: false,
+      targets,
     });
   } catch (error) {
     throw new MoklyError(

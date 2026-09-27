@@ -1,7 +1,9 @@
 import type { ResolvedConfig } from "../config/types.js";
 import { NodeGitCommandRunner } from "../review/git.js";
+import type { GitCommandRunner } from "../review/git.js";
 
 import { checkCompilation } from "./check.js";
+import { assertCommittableOutput } from "./committable_output.js";
 import type { Compilation } from "./compile.js";
 import {
   GitTrackedGeneratedOutput,
@@ -17,7 +19,10 @@ export interface GeneratedOutputStore {
 
 /** Transactional operating-system generated-output store. */
 export class FileSystemGeneratedOutputStore implements GeneratedOutputStore {
-  constructor(private readonly tracked?: TrackedGeneratedOutput) {}
+  constructor(
+    private readonly tracked?: TrackedGeneratedOutput,
+    private readonly committedGit?: GitCommandRunner,
+  ) {}
 
   check(
     compilation: Compilation,
@@ -28,10 +33,14 @@ export class FileSystemGeneratedOutputStore implements GeneratedOutputStore {
         this.tracked ??
         new GitTrackedGeneratedOutput(new NodeGitCommandRunner(config.repoRoot))
       ).check(compilation, config);
-    checkCompilation(compilation, config);
+    return assertCommittableOutput(
+      compilation.outputs.keys(),
+      config,
+      this.committedGit,
+    ).then(() => checkCompilation(compilation, config));
   }
 
   write(compilation: Compilation, config: ResolvedConfig): Promise<void> {
-    return writeCompilation(compilation, config);
+    return writeCompilation(compilation, config, this.committedGit);
   }
 }

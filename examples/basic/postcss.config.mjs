@@ -6,6 +6,6 @@ process.env.BROWSERSLIST_IGNORE_OLD_DATA ??= "1";
 export default {
   plugins: [
     tailwindcss({ base: import.meta.dirname, optimize: false }),
-    autoprefixer({ overrideBrowserslist: ["Safari 14"] }),
+    autoprefixer(),
   ],
 };

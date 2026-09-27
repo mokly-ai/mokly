@@ -5,11 +5,11 @@
 - [Imported CSS Delivery](./imported-css-delivery.md) — shipped implementation
   and authorized final-review fixes complete; finding 3 was resolved by the
   separate `922c1ec` merge. Milestone 12 finding 1 was resolved in `d474975`;
-  the other 15 findings remain open in the
-  [review record](../docs/reviews/imported-css-delivery.md), and three new
-  findings from the
+  authorized findings from the
+  [review record](../docs/reviews/imported-css-delivery.md) and
   [Milestone 14 review](../docs/reviews/imported-css-delivery-milestone-14.md)
-  await the user's decision. Move this plan to Completed when its
+  are in Milestones 15–16. The four unselected findings remain open.
+  Move this plan to Completed when its
   implementation PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and

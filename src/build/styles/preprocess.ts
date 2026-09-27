@@ -10,6 +10,7 @@ import {
   validateImageSetStrings,
   validateTransformedImageSetStrings,
 } from "./image_set.js";
+import { ModuleBrowserTargets } from "./module_targets.js";
 import { scopeModule, type ScopedStyle } from "./modules.js";
 import { nestedExcludedImports } from "./nested_imports.js";
 import type { StyleDependencyReport } from "./postcss.js";
@@ -53,11 +54,14 @@ export class StylePreprocessor {
   readonly sourceFiles = new Set<string>();
   /** Raw reports awaiting package-owned source inventory validation. */
   readonly reports: StyleDependencyReport[] = [];
+  private readonly moduleTargets: ModuleBrowserTargets;
 
   constructor(
     private readonly config: ResolvedConfig,
     private readonly processor: StyleTextProcessor = new IdentityStyleProcessor(),
-  ) {}
+  ) {
+    this.moduleTargets = new ModuleBrowserTargets(config);
+  }
 
   /** Memoize by file and effectively excluded local imports across both passes. */
   async prepare(
@@ -140,7 +144,11 @@ export class StylePreprocessor {
         ...(processed.reports ? { reports: processed.reports } : {}),
       };
     const relative = toPosixPath(path.relative(this.config.repoRoot, source));
-    const scoped = scopeModule(text, relative);
+    const scoped = scopeModule(
+      text,
+      relative,
+      this.moduleTargets.forFile(source),
+    );
     validateTransformedImageSetStrings(
       scoped.css,
       source,

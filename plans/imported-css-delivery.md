@@ -738,6 +738,39 @@ without changing any other Milestone 12 review finding.
       [Milestone 14 review record](../docs/reviews/imported-css-delivery-milestone-14.md)
       for the user's decision.
 
+## Milestone 15: Committed output, watch and CSS Module targets (complete)
+
+Fix authorized committed-output and watch regressions, then make CSS Module
+normalization respect consumer browser targets without weakening import tests.
+
+- [x] Add failing Git-repository tests for ignored generated routes, nested ignore rules, negations, tracked files and ignored mockups ancestors; document and enforce committed Build/Check diagnostics through the injectable Git runner (M12-2).
+- [x] Add failing real-watcher tests for required entry and PostCSS files beneath denied-name directories; retain their explicit targets and document watch-root precedence (M12-3).
+- [x] Add failing CSS Module fallback tests, consumer Browserslist resolution tests and missing-package/default tests; document and implement per-stylesheet targets and align the example (M14-2).
+- [x] Strengthen plain/module equivalence with shared target-aware normalization and explicit import condition/order assertions (M14-3).
+- [x] Run Build, focused suites, example Build/Check, Chrome Welcome smoke, lint, typecheck and `cargo xtask check`; commit and push this milestone.
+
+## Milestone 16: Diagnostics, length gate, docs and release notes
+
+Resolve the authorized low-severity findings without changing the four
+findings left for a later user decision.
+
+- [ ] Remove per-edge physical projections from successful graph loads, share one metafile path mapper, add a timed inventory test and report before/after `graph.load` (M12-5).
+- [ ] Defer missing directory-dependency errors behind generated/public/regular-file errors; add a combined diagnostic test (M12-8).
+- [ ] Replace virtual CSS importers with delivery roots in every diagnostic; add a virtual-name regression test (M12-9).
+- [ ] Audit changed behavior against `origin/main`, correct the review/plan note, prepare the ignored PR draft and include an accurate `BREAKING CHANGE:` commit footer (M12-10).
+- [ ] Make every xtask subprocess run from the workspace root; add unimock parse/dispatch tests and Rust verification (M12-11).
+- [ ] Cover all repository TypeScript/JavaScript and protocol Markdown in the length gate, document exclusions, and split newly oversized files (M12-12).
+- [ ] Test committed, staged, exact-limit and `--all` length-gate cases across new directories/extensions (M12-13).
+- [ ] Repair protocol links, check repository Markdown links and anchors, and include split-page families in stale-text tests (M12-14).
+- [ ] Correct CI, packed-consumer, Lightning scope and Config guide wording without brittle counts (M12-15).
+- [ ] Complete historical Milestone 9 bookkeeping and point Milestones 11/12 to the review record (M12-16).
+- [ ] Run Build, focused suites, example Build/Check, lint, typecheck, applicable preview verification and `cargo xtask check`; commit and push this milestone.
+
+## Milestone 17: Commit, push, and review
+
+- [ ] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
+
 ## Post-merge follow-up (non-blocking)
 
 - Watch the first derived comparison on a consumer catalogue that adopts this

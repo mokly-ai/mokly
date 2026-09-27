@@ -11,7 +11,9 @@ imports in JavaScript import order, traverses prelude `@import`s, and emits
 one deterministic stylesheet per nonempty root. The renderer's complete CSS
 closure is pruned before processing entry CSS; separate entries still share
 sources independently. CSS Modules use path-stable Lightning CSS names and
-expose default and named bindings to JavaScript. Module transformation leaves
+expose default and named bindings to JavaScript. Target resolution is lazy:
+each module uses its consumer Browserslist config or a fixed conservative
+default, while plain CSS remains authored text. Module transformation leaves
 Lightning dependency analysis off so local/remote `@import`s and custom-property
 `url()` values reach the same bundle and inventory as plain CSS. A tokenized
 post-transform pass restores local `image-set()` first-option strings to
@@ -66,6 +68,10 @@ Derived Check rejects every indexed file there and suggests only the directory
 `.gitignore` rule, not redundant per-file rules. Only portable stylesheet and supported asset routes may be
 written beneath it. The exact diagnostics and precedence are in the
 [imported-styles error contract](../../docs/protocol/mokly-imported-styles-errors.md).
+Committed Build and Check ask Git whether each generated route is committable
+when `repoRoot` is the Git work-tree top level. Nested/non-Git fixtures skip
+the check; effective ignore rules and precise negations are reported before
+committed output is written or compared.
 
 ## Consumer Graph
 

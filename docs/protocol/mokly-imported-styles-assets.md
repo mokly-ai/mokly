@@ -7,6 +7,19 @@ Continuation of [Imported Stylesheet Delivery](./mokly-imported-styles.md).
 CSS `url()` values beginning `data:`, `http:`, `https:` (schemes matched
 case-insensitively), `//` or `#` remain unchanged. A root-absolute `/...`
 URL is invalid.
+
+In committed output mode, every generated fragment, page, manifest, stylesheet
+and asset must be committable. When `repoRoot` is the top level of an available
+Git work tree, Build checks Git ignore rules before writing and Check checks
+them before comparing bytes; watched Serve uses the same Build path. Tracked
+files and effective negations are not ignored. A rule excluding `mockupsDir`
+or one of its ancestors fails first. Otherwise the diagnostic lists ignored
+routes and their winning rules, with negation lines for the matching
+`.gitignore` file. A root `.gitignore` overrides global excludes and
+`.git/info/exclude`, but a nested `.gitignore` must be corrected in that same
+nested file. If Git is unavailable or `repoRoot` is not its work-tree top
+level, this optional committability check is skipped; derived output does not
+run it.
 Quoted local string URLs inside `image-set()` are not validated by esbuild's
 `url-token` hook; reject them, including in authored public CSS, with guidance
 to write `image-set(url("./a.png") 1x)` instead. Resource reference extraction

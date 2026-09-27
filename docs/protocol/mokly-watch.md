@@ -132,7 +132,11 @@ set using the same readiness and recovery rules as configuration adoption.
 Build a generation-scoped index of exact required files and their ancestors
 once per accepted config/inventory. Ignore callbacks consult that index in
 constant time; watch targets omit individual files already covered by an entry
-glob root or PostCSS directory-dependency root. Reconfigure replaces the
+glob root, PostCSS directory-dependency root or watch-rule root unless a
+denied-name directory lies between that root and a required file. Such files
+remain explicit targets, including when they appear after watcher readiness;
+their arrival changes the effective watch-target set and replaces the watcher.
+Reconfigure replaces the
 watcher only when the set of effective watch roots changes, not when another
 file joins an already-watched reported directory. A newly added matching file
 there causes one rebuild and browser reload without extra graph loads for

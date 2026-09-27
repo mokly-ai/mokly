@@ -44,4 +44,8 @@ reserved directory after a successful transaction.
 With the default `generatedOutput: "derived"`, keep the generated routes, the
 manifest, `mokly-generated/` and `.mokly-cache/` out of Git; build still
 writes them locally in the same transaction. With `generatedOutput:
-"committed"`, commit what build writes.
+"committed"`, commit what build writes. When the repository is a Git work-tree
+root, Build and Check reject generated files hidden by `.gitignore`; the error
+names the matching rule and a negation to add in that rule's `.gitignore` file.
+Do not ignore the mockups directory itself: remove that rule or choose derived
+output.

@@ -162,6 +162,8 @@ export default { plugins: [{ postcssPlugin: "shape", Once(_root, { result }) {
     );
     const config = await loadConfig(fixture.root);
     const actions: string[] = [];
+    let sourceWatcherCreates = 0;
+    const watcherFactory = new ChokidarWatcherFactory();
     class CountingReporter extends PlainServeReporter {
       override watchFinished(report: WatchReport): void {
         actions.push(report.action);
@@ -173,10 +175,17 @@ export default { plugins: [{ postcssPlugin: "shape", Once(_root, { result }) {
       { port: 0, watch: true },
       {
         reporter: new CountingReporter(() => {}),
+        watcherFactory: {
+          create(targets, ignore, options) {
+            if (targets.includes(directory)) sourceWatcherCreates += 1;
+            return watcherFactory.create(targets, ignore, options);
+          },
+        },
       },
     );
     fixture.beforeRemove(() => running.close());
     const readyMs = performance.now() - started;
+    const initialWatcherCreates = sourceWatcherCreates;
     assert.ok(
       readyMs < 12_000,
       `watched Serve readiness took ${readyMs.toFixed(1)} ms`,
@@ -200,5 +209,6 @@ export default { plugins: [{ postcssPlugin: "shape", Once(_root, { result }) {
       actions.filter((action) => action !== "evidence"),
       ["rebuild"],
     );
+    assert.equal(sourceWatcherCreates, initialWatcherCreates);
   },
 );

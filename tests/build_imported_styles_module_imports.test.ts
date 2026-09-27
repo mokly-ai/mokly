@@ -37,6 +37,10 @@ test("CSS Module imports local and remote rules without losing inventory", async
   assert.match(stylesheet, /\.base\b/);
   assert.match(stylesheet, /\.layered\b/);
   assert.match(stylesheet, /@layer base/);
+  assert.match(stylesheet, /@supports\s*\(display:\s*grid\)/);
+  assert.match(stylesheet, /@media\s+screen\s+and\s+\(min-width:\s*1px\)/);
+  assert.ok(stylesheet.indexOf(".base") < stylesheet.indexOf(".layered"));
+  assert.ok(stylesheet.indexOf(".layered") < stylesheet.indexOf("color: red"));
   for (const source of [
     "entries/fixture.module.css",
     "entries/base.css",

@@ -54,6 +54,16 @@ Local and remote `@import`s and relative `url()` values inside custom
 properties work the same way in a CSS Module as in plain CSS. For a local
 `image-set()` image, write `url("./image.png")`; Mokly preserves it through
 module scoping and copies the asset.
+Mokly reads your project's Browserslist configuration for each module file
+to preserve prefixes and fallback values for your target browsers. Put one
+`.browserslistrc` near your styles so both Mokly and autoprefixer use the
+same targets; install `browserslist` in your repository if you configure it.
+Without either a package or configuration, Mokly uses a fixed conservative
+Chrome/Edge 109, Firefox 115, Safari/iOS 14 target set for modules. Plain CSS
+is delivered as authored. Browserslist environment sections follow
+`BROWSERSLIST_ENV` or `NODE_ENV`, and output depends on your installed browser
+data. Mokly suppresses only the stale-data warning during its target lookup;
+update Browserslist data to keep your targets current.
 
 ```tsx
 import styles from "./card.module.css";
@@ -76,6 +86,10 @@ TypeScript declarations for consumer stylesheets.
 
 Mokly copies local font/image URLs to generated assets, mirrors their paths
 under `mokly-generated/assets/`, and preserves query/hash suffixes. Keep
+committed generated assets visible to Git: broad rules such as `dist/` and
+`node_modules/` also match mirrored asset paths. Build and Check name an
+effective ignore rule and a negation to add to the matching `.gitignore`.
+In derived mode, keep `mokly-generated/` ignored instead. Keep
 asset filenames and directories URL-safe: no spaces, trailing dots or Windows
 device names. An npm scope following `node_modules` may begin with `@`;
 Mokly encodes that character in view links and serves the original package

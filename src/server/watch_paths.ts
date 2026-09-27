@@ -141,7 +141,15 @@ export function watchTargets(config: ResolvedConfig): string[] {
   const targets = [
     ...directoryRoots,
     ...fileTargets.filter(
-      (file) => !directoryRoots.some((root) => isInside(root, file)),
+      (file) =>
+        !directoryRoots.some(
+          (root) =>
+            isInside(root, file) &&
+            !path
+              .relative(root, path.dirname(file))
+              .split(path.sep)
+              .some(isDeniedSourceSegment),
+        ),
     ),
   ];
   return [...new Set(targets)]

@@ -4,6 +4,8 @@ import path from "node:path";
 import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
+import { lightningTransform } from "../dist/build/styles/lightning.js";
+import { ModuleBrowserTargets } from "../dist/build/styles/module_targets.js";
 import { loadConfig } from "../dist/config/load.js";
 import { extractCssReferences } from "../dist/html_references.js";
 import { classifyResourceUrl } from "../dist/resource_url.js";
@@ -95,6 +97,7 @@ interface CompiledStyle {
   readonly assets: ReadonlyMap<string, Buffer>;
   readonly localReferences: readonly string[];
   readonly sourceFiles: readonly string[];
+  readonly normalized: string;
 }
 
 async function buildScenario(
@@ -128,19 +131,38 @@ async function buildScenario(
         ([route, bytes]) => [route, Buffer.from(bytes as Uint8Array)] as const,
       ),
   );
-  const localReferences = extractCssReferences(stylesheet)
-    .filter(
-      (reference) => classifyResourceUrl(reference, "css").kind === "local",
-    )
-    .map((reference) => {
-      const suffixAt = reference.search(/[?#]/);
-      const pathname = suffixAt < 0 ? reference : reference.slice(0, suffixAt);
-      const suffix = suffixAt < 0 ? "" : reference.slice(suffixAt);
-      return `${path.posix.normalize(path.posix.join(path.posix.dirname(entryStyle), decodeURIComponent(pathname)))}${suffix}`;
-    })
-    .sort();
+  const localReferences = [
+    ...new Set(
+      extractCssReferences(stylesheet)
+        .filter(
+          (reference) => classifyResourceUrl(reference, "css").kind === "local",
+        )
+        .map((reference) => {
+          const suffixAt = reference.search(/[?#]/);
+          const pathname =
+            suffixAt < 0 ? reference : reference.slice(0, suffixAt);
+          const suffix = suffixAt < 0 ? "" : reference.slice(suffixAt);
+          return `${path.posix.normalize(path.posix.join(path.posix.dirname(entryStyle), decodeURIComponent(pathname)))}${suffix}`;
+        }),
+    ),
+  ].sort();
+  const normalized = lightningTransform()({
+    filename: "comparison.css",
+    code: Buffer.from(stylesheet.replace(/mokly_[A-Za-z0-9]+_/g, "")),
+    minify: false,
+    targets: new ModuleBrowserTargets(await loadConfig(fixture.root)).forFile(
+      path.join(
+        fixture.entriesDir,
+        module ? "fixture.module.css" : "fixture.css",
+      ),
+    ),
+  }).code.toString();
   return {
     stylesheet,
+    normalized: normalized
+      .split("\n")
+      .filter((line, index, lines) => line !== lines[index - 1])
+      .join("\n"),
     assets,
     localReferences,
     sourceFiles: compiled.manifest.sourceFiles
@@ -158,6 +180,7 @@ for (const scenario of scenarios)
     assert.deepEqual(module.assets, plain.assets);
     assert.deepEqual(module.localReferences, plain.localReferences);
     assert.deepEqual(module.sourceFiles, plain.sourceFiles);
+    assert.equal(module.normalized, plain.normalized);
     if (scenario.imports) {
       for (const marker of [
         ".base",

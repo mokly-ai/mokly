@@ -4,7 +4,9 @@ import path from "node:path";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync } from "../diagnostics/timings.js";
 import { MoklyError, errorMessage } from "../errors.js";
+import type { GitCommandRunner } from "../review/git.js";
 
+import { assertCommittableOutput } from "./committable_output.js";
 import type { Compilation } from "./compile.js";
 import { generatedBytes } from "./generated_file.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
@@ -21,13 +23,17 @@ import {
 export async function writeCompilation(
   compilation: Compilation,
   config: ResolvedConfig,
+  runner?: GitCommandRunner,
 ): Promise<void> {
-  return timeAsync("output.write", () => writeMeasured(compilation, config));
+  return timeAsync("output.write", () =>
+    writeMeasured(compilation, config, runner),
+  );
 }
 
 async function writeMeasured(
   compilation: Compilation,
   config: ResolvedConfig,
+  runner?: GitCommandRunner,
 ): Promise<void> {
   const destinationConfig = config;
   config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
@@ -35,6 +41,7 @@ async function writeMeasured(
   timeSync("output.validate-targets", () =>
     rejectUnsafeTargets(compilation, config),
   );
+  await assertCommittableOutput(compilation.outputs.keys(), config, runner);
   await fs.promises.mkdir(path.dirname(config.mockupsDir), { recursive: true });
   const temporaryRoot = await fs.promises.mkdtemp(
     path.join(path.dirname(config.mockupsDir), ".mokly-write-"),

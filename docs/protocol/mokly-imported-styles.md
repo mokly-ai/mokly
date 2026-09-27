@@ -123,7 +123,23 @@ For `*.module.css`, call Lightning CSS `transform` with
 `filename` equal to the **repository-relative POSIX** file path,
 `cssModules: { pattern: "mokly_[hash]_[local]", dashedIdents: false,
 animation: true, grid: false, container: false, customIdents: true,
-pure: false }`, `minify: false`, and no browser targets. Lightning's
+pure: false }`, `minify: false`, and browser targets resolved per stylesheet.
+Load `browserslist` using Node resolution from the consumer config directory
+then `moduleResolution.packageRoots`, call it with `path` set to the physical
+stylesheet and convert its result using Lightning's `browserslistToTargets`.
+Cache targets per stylesheet directory within a graph load. Browserslist
+environment sections follow `BROWSERSLIST_ENV` and `NODE_ENV`; results also
+depend on the consumer's installed Browserslist data. If the package is absent
+and a Browserslist file, nearest package `browserslist` key, or the
+`BROWSERSLIST`/`BROWSERSLIST_CONFIG` environment is present, fail with the
+catalogued install guidance. Without any configuration, use fixed targets
+whether or not the package is installed: Chrome 109, Edge
+109, Firefox 115 ESR, Safari 14 and iOS Safari 14 (major versions shifted by
+16 bits for Lightning); these deliberately retain older fallback and prefix
+declarations. Plain CSS is delivered as authored and never transformed with
+these targets. Suppress only Browserslist's outdated-data warning while
+computing targets so the example's main process and PostCSS worker stay quiet;
+consumers should update their Browserslist data independently. Lightning's
 filename-derived `[hash]` (not a content hash) scopes classes, IDs,
 `@keyframes` names and **all** their `animation`/`animation-name` references.
 It also scopes `@counter-style` and its `list-style`/`list-style-type`

@@ -10,3 +10,9 @@ export function lightningTransform(): (typeof LightningCss)["transform"] {
   lightning ??= requireLightning("lightningcss") as typeof LightningCss;
   return lightning.transform;
 }
+
+/** Convert consumer Browserslist results without eagerly loading Lightning CSS. */
+export function lightningBrowserTargets(): (typeof LightningCss)["browserslistToTargets"] {
+  lightning ??= requireLightning("lightningcss") as typeof LightningCss;
+  return lightning.browserslistToTargets;
+}
