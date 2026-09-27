@@ -31,9 +31,10 @@ when the historical primary file is absent, never when it is invalid.
 - [CI verification](./ci-verification.md) — implemented suite, shard, evidence,
   cache and aggregation contract; hosted acceptance measurements remain tracked
   by the active CI performance plan.
-- [Catalogue upload v1](./mokly-upload.md) — public CLI and the
-  content-addressed plan, blob and complete exchange for hosted/self-hosted
-  receivers, implemented and verified by the Delta Publishing plan.
+- [Catalogue upload v1](./mokly-upload.md) — public CLI, repository identity,
+  upload manifest, output entry point and composite action boundary.
+- [Catalogue upload exchange v1](./mokly-upload-exchange.md) — Plan, Blob and
+  Complete requests, retries, accounting, limits and receiver validation.
 - [Package and authoring contract](./mokly-package.md)
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
   interactive progress, errors, watched events, and shortcuts.

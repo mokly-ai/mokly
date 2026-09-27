@@ -47,6 +47,22 @@ export interface PlanResponse {
   completeUrl: string;
 }
 
+/** Optional command-presentation observer around publication work. */
+export interface PublishProgress {
+  run<Result>(
+    phase: "export" | "prepare" | "upload",
+    action: () => Promise<Result>,
+  ): Promise<Result>;
+  update?(progress: PublishUploadProgress): void;
+}
+
+/** One Plan round's marker-entry progress and distinct-content byte size. */
+export interface PublishUploadProgress {
+  completed: number;
+  total: number;
+  totalBytes: number;
+}
+
 /** Completed publication counts and optional receiver destination. */
 export interface PublishResult {
   outcome: "published" | "already-published";

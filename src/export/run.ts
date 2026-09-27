@@ -26,6 +26,7 @@ import {
 } from "./inputs.js";
 import { resolveExportOutput } from "./paths.js";
 import { capturePublicFiles } from "./public_files.js";
+import { publicationMetadataPaths } from "./publication_metadata.js";
 import { assembleExport } from "./site.js";
 import { stageExport } from "./stage.js";
 import { ExportTransaction } from "./transaction.js";
@@ -147,8 +148,15 @@ async function generateExport(
       comparisonUrl: site.delivery.comparisonUrl,
       idRoutes: Object.freeze({ ...site.delivery.idRoutes }),
     });
+    const pathsBeforeAdapter = new Set(site.inventory.files.keys());
     const aliases = new Map(
       (await options.adapter?.transform(site.inventory.files, routes)) ?? [],
+    );
+    const publicationMetadata = publicationMetadataPaths(
+      options.adapter?.publicationMetadata,
+      pathsBeforeAdapter,
+      site.inventory.files,
+      site.shells,
     );
     const deploymentId = await stageExport(
       transaction.stage,
@@ -157,6 +165,7 @@ async function generateExport(
       aliases,
       options.signal,
       options.capture,
+      publicationMetadata,
     );
     await assertInputsUnchanged(
       config,

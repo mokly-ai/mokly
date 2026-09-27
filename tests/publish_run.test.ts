@@ -118,8 +118,8 @@ test("publish exchanges the pinned export and returns counts", async () => {
   assert.equal(fixture.uploaded(), true);
   assert.deepEqual(result, {
     outcome: "published",
-    uploaded: 1,
-    unchanged: fixture.entries().length - 1,
+    uploaded: 3,
+    unchanged: fixture.entries().length - 3,
     viewerUrl: "https://mokly.ai/catalogues/one",
   });
   assert.deepEqual(fixture.metadata(), {
@@ -148,7 +148,10 @@ test("one incomplete completion re-plans and unions uploaded digests", async () 
   fixture.boundaries.fetch = async (url, init) => {
     if (url === options.endpoint) {
       await extractUploadArchive(init?.body as Buffer);
-      const selected = fixture.entries()[plans++];
+      const round = plans++;
+      const selected = fixture
+        .entries()
+        .find(({ path }) => path === (round === 0 ? "404.html" : "index.html"));
       return Response.json({
         schemaVersion: 1,
         upload: {
@@ -174,8 +177,8 @@ test("one incomplete completion re-plans and unions uploaded digests", async () 
   );
   assert.equal(plans, 2);
   assert.equal(completes, 2);
-  assert.equal(result.uploaded, 2);
-  assert.equal(result.unchanged, fixture.entries().length - 2);
+  assert.equal(result.uploaded, 4);
+  assert.equal(result.unchanged, fixture.entries().length - 4);
 });
 
 test("entries sharing a digest upload once but both count as uploaded", async () => {
@@ -187,8 +190,52 @@ test("entries sharing a digest upload once but both count as uploaded", async ()
     {},
     fixture.boundaries,
   );
-  assert.equal(result.uploaded, 2);
-  assert.equal(result.unchanged, fixture.entries().length - 2);
+  assert.equal(result.uploaded, 4);
+  assert.equal(result.unchanged, fixture.entries().length - 4);
+});
+
+test("a lost Blob response still counts when the next plan has it stored", async () => {
+  const fixture = dependencies();
+  let plans = 0;
+  let now = new Date("2026-09-26T12:00:00.000Z");
+  const attempted = () =>
+    fixture.entries().find(({ path }) => path === "index.html")!;
+  fixture.boundaries.now = () => now;
+  fixture.boundaries.sleep = async () => {
+    now = new Date("2026-09-26T12:00:00.001Z");
+  };
+  fixture.boundaries.fetch = async (url) => {
+    if (url === options.endpoint) {
+      const first = plans++ === 0;
+      return Response.json({
+        schemaVersion: 1,
+        upload: {
+          id: `upload-${plans}`,
+          expiresAt: first
+            ? "2026-09-26T12:00:00.001Z"
+            : "2026-09-26T13:00:00.000Z",
+        },
+        missing: first ? [attempted().sha256] : [],
+        blobUrl: `https://example.com/uploads/${plans}/blobs/{sha256}`,
+        completeUrl: `https://example.com/uploads/${plans}/complete`,
+      });
+    }
+    if (String(url).includes("/blobs/"))
+      throw new Error(
+        "the receiver stored the bytes but the response was lost",
+      );
+    return new Response(null, { status: 201 });
+  };
+  const result = await publishCatalogue(
+    config,
+    options,
+    "1.2.3",
+    {},
+    fixture.boundaries,
+  );
+  assert.equal(plans, 2);
+  assert.equal(result.uploaded, 3);
+  assert.equal(result.unchanged, fixture.entries().length - 3);
 });
 
 test("blob expiry and local expiry each consume the single re-plan", async () => {

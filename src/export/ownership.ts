@@ -2,16 +2,18 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-import { isSafeRepositoryPath } from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import { exportError } from "./error.js";
+import {
+  assertPortableExportPath,
+  classifyPortableExportPath,
+} from "./portable_path.js";
 
 /** Public-safe proof that a directory was installed by the exporter. */
 export const EXPORT_MARKER = ".mokly-export-artifact";
 
 const MAX_EXPORT_FILE_BYTES = 64 * 1024 * 1024;
-const MAX_EXPORT_PATH_BYTES = 1024;
 const SHA256 = /^[a-f0-9]{64}$/;
 
 /** Digest and byte-size record for one exporter-owned regular file. */
@@ -28,12 +30,14 @@ export interface ExportOwnership {
 }
 
 /** Stable rejection classes shared with the public compatibility fixture. */
-export type ExportOwnershipRejection = "unsupported-version" | "invalid";
+export type ExportOwnershipRejection =
+  "unsupported-version" | "too-large" | "invalid";
 
 /** Classified ownership parse result for local and receiver-facing validation. */
 export type ExportOwnershipParseResult =
   | { kind: "valid"; value: ExportOwnership }
   | { kind: "unsupported-version" }
+  | { kind: "too-large" }
   | { kind: "invalid" };
 
 /** Build the schema 2 inventory from the exact bytes that will be written. */
@@ -41,10 +45,7 @@ export function buildExportOwnership(
   files: ReadonlyMap<string, ReviewArtifactContent>,
 ): ExportOwnership {
   const entries = [...files.keys()].sort().map((name) => {
-    if (!isOwnershipPath(name))
-      throw exportError(
-        "The export contains a file path that is not portable. Rename the file before exporting again.",
-      );
+    assertPortableExportPath(name);
     const content = files.get(name);
     if (content === undefined)
       throw exportError(`Export file disappeared before staging: ${name}.`);
@@ -101,17 +102,22 @@ export function parseExportOwnership(
   if (!Object.hasOwn(value, "files") || !Array.isArray(value.files))
     return { kind: "invalid" };
   const entries: ExportOwnershipEntry[] = [];
-  const paths = new Set<string>();
+  const paths = [EXPORT_MARKER.toLowerCase()];
   for (const entry of value.files) {
-    if (!isOwnershipEntry(entry)) return { kind: "invalid" };
-    const folded = entry.path.toLowerCase();
-    if (paths.has(folded)) return { kind: "invalid" };
-    paths.add(folded);
-    entries.push({
-      path: entry.path,
-      sha256: entry.sha256,
-      size: entry.size,
-    });
+    const parsed = parseOwnershipEntry(entry);
+    if (parsed.kind !== "valid") return parsed;
+    paths.push(parsed.value.path.toLowerCase());
+    entries.push(parsed.value);
+  }
+  const unique = new Set(paths);
+  if (unique.size !== paths.length) return { kind: "invalid" };
+  for (const name of unique) {
+    const parts = name.split("/");
+    parts.pop();
+    while (parts.length > 0) {
+      if (unique.has(parts.join("/"))) return { kind: "invalid" };
+      parts.pop();
+    }
   }
   return { kind: "valid", value: { schemaVersion: 2, files: entries } };
 }
@@ -120,34 +126,43 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
-function isOwnershipEntry(value: unknown): value is ExportOwnershipEntry {
+function parseOwnershipEntry(
+  value: unknown,
+):
+  | { kind: "valid"; value: ExportOwnershipEntry }
+  | { kind: "too-large" | "invalid" } {
   if (
     !isRecord(value) ||
     !Object.hasOwn(value, "path") ||
     !Object.hasOwn(value, "sha256") ||
     !Object.hasOwn(value, "size")
   )
-    return false;
-  return (
-    typeof value.path === "string" &&
-    value.path !== EXPORT_MARKER &&
-    isOwnershipPath(value.path) &&
-    typeof value.sha256 === "string" &&
-    SHA256.test(value.sha256) &&
-    typeof value.size === "number" &&
-    Number.isInteger(value.size) &&
-    value.size >= 0 &&
-    value.size <= MAX_EXPORT_FILE_BYTES
-  );
-}
-
-function isOwnershipPath(value: string): boolean {
-  return (
-    Buffer.byteLength(value) <= MAX_EXPORT_PATH_BYTES &&
-    Buffer.from(value).toString("utf8") === value &&
-    !/\p{Cc}/u.test(value) &&
-    isSafeRepositoryPath(value)
-  );
+    return { kind: "invalid" };
+  if (
+    typeof value.path !== "string" ||
+    typeof value.sha256 !== "string" ||
+    typeof value.size !== "number" ||
+    !Number.isInteger(value.size)
+  )
+    return { kind: "invalid" };
+  const pathKind = classifyPortableExportPath(value.path);
+  if (pathKind === "too-large" || value.size > MAX_EXPORT_FILE_BYTES)
+    return { kind: "too-large" };
+  if (
+    pathKind !== "valid" ||
+    value.path === EXPORT_MARKER ||
+    !SHA256.test(value.sha256) ||
+    value.size < 0
+  )
+    return { kind: "invalid" };
+  return {
+    kind: "valid",
+    value: {
+      path: value.path,
+      sha256: value.sha256,
+      size: value.size,
+    },
+  };
 }
 
 /** Enumerate a real directory and reject symlinks or special filesystem entries. */
@@ -225,9 +240,9 @@ export async function assertExportOwnership(
   );
   if (parsed.kind === "unsupported-version")
     throw exportError(
-      `This export was created by an unsupported Mokly version. Remove ${output} before exporting again.`,
+      `This folder holds an export from an earlier Mokly release. Move any files you added, then delete ${output} and export again.`,
     );
-  if (parsed.kind === "invalid")
+  if (parsed.kind === "invalid" || parsed.kind === "too-large")
     throw exportError("Invalid export ownership inventory.");
   const paths = parsed.value.files.map(({ path: name }) => name);
   const allowed = new Set([...paths, EXPORT_MARKER]);

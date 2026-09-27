@@ -5,16 +5,26 @@ import test from "node:test";
 
 import { uploadMissingBlobs } from "../src/publish/blobs.js";
 import { completeUpload } from "../src/publish/complete.js";
-import { statusError } from "../src/publish/http.js";
+import { statusError } from "../src/publish/errors.js";
 import { validateUploadManifest } from "../src/publish/manifest.js";
 import { requestUploadPlan } from "../src/publish/plan.js";
+import {
+  MAX_REQUEST_ATTEMPTS,
+  MAX_RETRY_AFTER_SECONDS,
+  RETRY_BASE_DELAY_MS,
+} from "../src/publish/retry.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 import { GUIDES } from "./helpers/guides.js";
+import { assertUploadRequest } from "./helpers/upload_request.js";
 
 const read = (...parts: string[]) =>
   readFileSync(path.join(repositoryRoot, ...parts), "utf8");
 const protocol = read("docs/protocol/mokly-upload.md").replace(/\s+/gu, " ");
+const exchange = read("docs/protocol/mokly-upload-exchange.md").replace(
+  /\s+/gu,
+  " ",
+);
 const sources = new Map(
   GUIDES.filter((page) => page.frontmatter.section === "ci").map((page) => [
     page.id,
@@ -40,8 +50,8 @@ const manifest = {
 test("CI code fences never invent a receiver request path", () => {
   assert.equal(sources.size, 5);
   assert.match(
-    protocol,
-    /POST to the exact endpoint, without appending a path/u,
+    exchange,
+    /POST to the exact configured endpoint, preserving its path and query string without appending anything/u,
   );
   assert.match(prose, /exact endpoint/u);
   assert.match(prose, /path is never extended/u);
@@ -86,7 +96,9 @@ test("documented request headers and acceptance match the transport", async () =
     Accept: "application/json",
     "Content-Length": "0",
   });
-  const protocolFences = fenceHeaders(read("docs/protocol/mokly-upload.md"));
+  const protocolFences = fenceHeaders(
+    read("docs/protocol/mokly-upload-exchange.md"),
+  );
   assert.deepEqual(protocolFences, fences);
   const retry = {
     now: () => new Date("2026-09-26T12:00:00.000Z"),
@@ -102,12 +114,11 @@ test("documented request headers and acceptance match the transport", async () =
       ...retry,
       fetch: async (url, init) => {
         assert.equal(url, endpoint);
-        assert.equal(init?.method, "POST");
-        assert.equal(init?.redirect, "manual");
+        const headers = assertUploadRequest(init, "POST", "TOKEN");
         for (const [key, value] of Object.entries(plan ?? {}).filter(
           ([key]) => key !== "Content-Length",
         ))
-          assert.equal(new Headers(init?.headers).get(key), value);
+          assert.equal(headers.get(key), value);
         return Response.json({
           schemaVersion: 1,
           upload: {
@@ -129,10 +140,11 @@ test("documented request headers and acceptance match the transport", async () =
     {
       ...retry,
       fetch: async (_url, init) => {
+        const headers = assertUploadRequest(init, "PUT", "TOKEN");
         for (const [key, value] of Object.entries(blob ?? {}).filter(
           ([key]) => key !== "Content-Length",
         ))
-          assert.equal(new Headers(init?.headers).get(key), value);
+          assert.equal(headers.get(key), value);
         return new Response(null, { status: 204 });
       },
     },
@@ -143,49 +155,117 @@ test("documented request headers and acceptance match the transport", async () =
     {
       ...retry,
       fetch: async (_url, init) => {
+        const headers = assertUploadRequest(init, "POST", "TOKEN");
         for (const [key, value] of Object.entries(complete ?? {}))
-          assert.equal(new Headers(init?.headers).get(key), value);
+          assert.equal(headers.get(key), value);
         return new Response(null, { status: 201 });
       },
     },
   );
   assert.match(prose, /Any `2xx` answer means the file is stored/u);
-  assert.match(protocol, /Any 2xx means stored/u);
-  assert.match(prose, /`201` means a new publication is live/u);
-  assert.match(protocol, /`201` means a new publication is live/u);
+  assert.match(exchange, /Any 2xx means stored/u);
+  assert.match(prose, /`201` means this upload created the publication/u);
+  assert.match(exchange, /`201` means this upload created/u);
   assert.match(prose, /none follows a redirect/u);
-  assert.match(protocol, /follows no redirect/u);
+  assert.match(exchange, /follows no redirect/u);
   const seconds = /times out after (\d+) seconds/u.exec(prose)?.[1];
   assert.ok(seconds);
-  assert.ok(protocol.includes(`times out after ${seconds} seconds`));
+  assert.ok(exchange.includes(`times out after ${seconds} seconds`));
   const timeout = /AbortSignal\.timeout\(([\d_]+)\)/u.exec(
     read("src/publish/http.ts"),
   )?.[1];
   assert.equal(Number(timeout?.replaceAll("_", "")), Number(seconds) * 1000);
 });
 
+test("Complete idempotency, accounting and cancellation copy stay explicit", () => {
+  assert.match(
+    exchange,
+    /Repeating Complete for that upload returns the same status and body and never creates another publication/u,
+  );
+  assert.match(
+    prose,
+    /Repeating Complete for that upload returns its first status and body and never publishes again/u,
+  );
+  assert.match(exchange, /`200` means a different upload already completed/u);
+  assert.match(prose, /`200` means a different upload already completed/u);
+  for (const source of [exchange, prose]) {
+    assert.match(source, /Plan(?:-| )archive/u);
+    assert.match(source, /Uploading 0 of 1 file/u);
+    assert.match(source, /empty `missing`/u);
+    assert.match(source, /Publication was cancelled/u);
+  }
+  assert.match(exchange, /first publish to an empty receiver.*`0 unchanged`/u);
+  assert.match(exchange, /entries sharing one digest each count/u);
+  assert.match(exchange, /Blob PUT attempt in any round/u);
+  assert.match(exchange, /marker's own byte length participates/u);
+  assert.match(
+    exchange,
+    /The catalogue upload did not complete\. Check the endpoint and connection, then retry/u,
+  );
+});
+
+test("receiver limits, stored blobs and plan URL protocols are unambiguous", () => {
+  for (const source of [exchange, prose]) {
+    assert.match(source, /unfinished/u);
+    assert.match(source, /1,024 UTF-8 bytes/u);
+    assert.match(source, /`413`|413/u);
+    assert.match(source, /`400` or `422`|400\/422/u);
+  }
+  assert.match(exchange, /absolute `http:` or\s+`https:` URLs/u);
+  assert.match(exchange, /`blob:`, `data:`, `file:`/u);
+  assert.match(prose, /`blob:` and other\s+schemes are refused/u);
+});
+
 test("documented retries agree with the protocol", () => {
-  for (const source of [prose, protocol]) {
+  const attemptWord = numberWord(MAX_REQUEST_ATTEMPTS);
+  for (const source of [prose, exchange]) {
     assert.match(source, /408/u);
     for (const status of ["429", "500", "502", "503", "504"])
       assert.ok(source.includes(status), status);
-    assert.match(source, /five/u);
+    assert.ok(source.includes(attemptWord));
     assert.match(source, /Retry-After/u);
     assert.match(source, /expir/u);
   }
-  assert.match(prose, /at most sixteen seconds/u);
-  assert.match(protocol, /min\(16 s, 1 s × 2\^\(k−2\)\)/u);
-  assert.match(prose, /up to sixty seconds/u);
-  assert.match(protocol, /from 0 to 60 seconds/u);
+  const retrySource = read("src/publish/retry.ts");
+  const waits = Array.from(
+    { length: MAX_REQUEST_ATTEMPTS - 1 },
+    (_, index) => (RETRY_BASE_DELAY_MS * 2 ** index) / 1_000,
+  );
+  assert.deepEqual(waits, [1, 2, 4, 8]);
+  const waitWording = `${waits.slice(0, -1).join(", ")} and ${waits.at(-1)} seconds`;
+  for (const source of [prose, exchange])
+    assert.ok(source.includes(waitWording));
+  assert.doesNotMatch(retrySource, /16_?000|Math\.min/u);
+  assert.doesNotMatch(prose, /sixteen seconds/u);
+  assert.doesNotMatch(exchange, /16 s/u);
+  assert.ok(
+    prose.includes(`up to ${numberWord(MAX_RETRY_AFTER_SECONDS)} seconds`),
+  );
+  assert.ok(
+    exchange.includes(`from 0 through ${MAX_RETRY_AFTER_SECONDS} seconds`),
+  );
   assert.match(prose, /plans once more/u);
-  assert.match(protocol, /run Plan once more/u);
+  assert.match(exchange, /one fresh Plan/u);
   assert.match(prose, /second `409` or `410` fails/u);
-  assert.match(protocol, /second `409` or\s+`410` is `upload-failed`/u);
+  assert.match(
+    exchange,
+    /A second `409`,\s+`410`, or local expiry is `upload-failed`/u,
+  );
   assert.match(prose, /already published for this commit/u);
-  assert.match(protocol, /already published for this commit/u);
+  assert.match(exchange, /already published for this commit/u);
   assert.match(prose, /Any other `2xx` fails/u);
-  assert.match(protocol, /Any other 2xx is `upload-failed`/u);
+  assert.match(exchange, /Any other 2xx is `upload-failed`/u);
 });
+
+function numberWord(value: number): string {
+  const words = new Map([
+    [5, "five"],
+    [60, "sixty"],
+  ]);
+  const word = words.get(value);
+  assert.ok(word, `missing documented number word for ${value}`);
+  return word;
+}
 
 test("comparison fields stay required nulls without comparisons", () => {
   const rule =
@@ -220,7 +300,7 @@ test("comparison fields stay required nulls without comparisons", () => {
 });
 
 test("archive rules accept only regular files and authenticate before decompression", () => {
-  assert.match(protocol, /Accept only regular files/u);
+  assert.match(exchange, /contains only regular root-relative files/u);
   assert.match(prose, /accept only regular files/u);
   for (const entry of [
     "symlinks",
@@ -229,9 +309,9 @@ test("archive rules accept only regular files and authenticate before decompress
     "FIFOs",
     "sparse files",
   ])
-    assert.ok(prose.includes(entry) && protocol.includes(entry), entry);
+    assert.ok(prose.includes(entry) && exchange.includes(entry), entry);
   assert.match(prose, /empty private (?:staging )?directory/u);
-  assert.match(protocol, /authenticate before decompression/u);
+  assert.match(exchange, /Authenticate before decompression/u);
   const receiver =
     upload.split("## What the receiver must do")[1]?.split("\n## ")[0] ?? "";
   const authentication = receiver.search(
@@ -253,7 +333,7 @@ test("documented rejections agree with the protocol", () => {
     ...upload.matchAll(/^\|[^\n]+\| `(upload-[a-z-]+)`\s*\|/gmu),
   ].map(([, category]) => category ?? "");
   const statuses = [
-    ...read("src/publish/http.ts").matchAll(
+    ...read("src/publish/errors.ts").matchAll(
       /(\d{3}): \[\s*"(upload-[a-z-]+)"/gu,
     ),
   ];
@@ -276,7 +356,7 @@ test("documented rejections agree with the protocol", () => {
     const category =
       statuses.find(([, value]) => Number(value) === status)?.[2] ??
       "upload-failed";
-    assert.ok(protocol.includes(category));
+    assert.ok(exchange.includes(category));
     assert.equal(statusError(status).code, category);
   }
 });

@@ -4,15 +4,21 @@ import type { ManifestV5 } from "@mokly/viewer/data";
 
 import type { WatchReport } from "../../server/reporter.js";
 
-import { truncateTerminalLine, type TerminalGlyphs } from "./terminal.js";
+import {
+  formatCount,
+  truncateTerminalLine,
+  type TerminalGlyphs,
+} from "./terminal.js";
 
 /** Render nonzero user-facing kinds from one accepted manifest. */
 export function catalogueCounts(manifest: ManifestV5): string[] {
-  return [
-    ["screen", "screen"],
-    ["page", "page"],
-    ["component", "component"],
-  ]
+  return (
+    [
+      ["screen", "screen"],
+      ["page", "page"],
+      ["component", "component"],
+    ] as const
+  )
     .map(
       ([kind, label]) =>
         [
@@ -21,7 +27,7 @@ export function catalogueCounts(manifest: ManifestV5): string[] {
         ] as const,
     )
     .filter(([count]) => count > 0)
-    .map(([count, label]) => `${count} ${label}${count === 1 ? "" : "s"}`);
+    .map(([count, label]) => formatCount(count, label));
 }
 
 /** Format up to three repository-relative candidates from a watch burst. */

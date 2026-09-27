@@ -31,7 +31,14 @@ redaction, and controls the exit code.
 
 Publish updates the active rich upload phase as missing blobs complete, then
 renders its counted or already-published `PublishResult`. Plain mode emits only
-the stable result line and optional credential-safe viewer URL.
+the stable result line and optional credential-safe viewer URL. One terminal
+count formatter owns singular and plural nouns for publish and Serve output.
+Every in-place TTY frame erases the full current line before drawing, so shorter
+progress labels and re-plan resets cannot retain stale characters.
+
+Publish cancellation and transport exhaustion retain the `upload-failed` code
+but carry distinct typed presentation variants. Plain mode prints each complete
+actionable message; rich mode splits it into a non-repeating headline and hint.
 
 Publish-only modules are loaded after command selection. Build, Check, Export,
 and supervised Serve children therefore do not initialize the upload exchange.

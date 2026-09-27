@@ -63,7 +63,7 @@ export function assertPlanResponse(value, endpoint, marker) {
     typeof value.blobUrl !== "string" ||
     !blobUrl(value.blobUrl, endpoint) ||
     typeof value.completeUrl !== "string" ||
-    !sameOrigin(value.completeUrl, endpoint)
+    !requestUrl(value.completeUrl, endpoint)
   )
     throw new Error("invalid plan URL");
   return value;
@@ -129,22 +129,26 @@ function blobUrl(value, endpoint) {
     .filter((index) => index >= 0)
     .sort((left, right) => left - right)[0];
   if (boundary !== undefined && first > boundary) return false;
-  try {
-    const url = new URL(value.replace(PLACEHOLDER, PROBE));
-    return sameOrigin(url.href, endpoint) && url.pathname.includes(PROBE);
-  } catch {
-    return false;
-  }
+  const url = requestUrl(value.replace(PLACEHOLDER, PROBE), endpoint);
+  return !!url && url.pathname.includes(PROBE);
 }
 
-function sameOrigin(value, endpoint) {
+function requestUrl(value, endpoint) {
   try {
     const url = new URL(value);
-    return (
-      !url.username && !url.password && url.origin === new URL(endpoint).origin
-    );
+    const configured = new URL(endpoint);
+    if (
+      !["http:", "https:"].includes(url.protocol) ||
+      url.protocol !== configured.protocol ||
+      url.hostname !== configured.hostname ||
+      url.port !== configured.port ||
+      url.username ||
+      url.password
+    )
+      return undefined;
+    return url;
   } catch {
-    return false;
+    return undefined;
   }
 }
 

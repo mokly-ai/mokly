@@ -9,6 +9,7 @@ import { requestUploadPlan } from "../dist/publish/plan.js";
 import { ReplanRequired } from "../dist/publish/retry.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
+import { assertUploadRequest } from "./helpers/upload_request.js";
 
 interface FixtureCase {
   name: string;
@@ -49,14 +50,28 @@ function response(sample: FixtureCase): Response {
   const raw = Object.hasOwn(sample, "document")
     ? JSON.stringify(sample.document)
     : (sample.body ?? "");
-  const body = status === 204 ? null : raw;
+  const body = status === 204 ? null : responseBytes(raw);
   const headers = new Headers();
   const contentType = Object.hasOwn(sample, "contentType")
     ? sample.contentType
     : "application/json";
-  if (contentType !== null && body !== null)
+  if (contentType !== null)
     headers.set("Content-Type", contentType ?? "application/json");
-  return new Response(body, { status, headers });
+  const built = new Response(body, { status, headers });
+  assert.equal(built.status, status, sample.name);
+  assert.equal(
+    built.headers.get("Content-Type"),
+    contentType ?? null,
+    sample.name,
+  );
+  return built;
+}
+
+function responseBytes(value: string): Uint8Array<ArrayBuffer> {
+  const source = Buffer.from(value);
+  const bytes = new Uint8Array(source.length);
+  bytes.set(source);
+  return bytes;
 }
 
 test("the CLI plan reader conforms to every public plan fixture case", async () => {
@@ -69,7 +84,13 @@ test("the CLI plan reader conforms to every public plan fixture case", async () 
       { endpoint: contract.endpoint, token: "secret" },
       Buffer.from("plan"),
       new Set(contract.marker),
-      { ...retryDependencies, fetch: async () => response(sample) },
+      {
+        ...retryDependencies,
+        fetch: async (_url, init) => {
+          assertUploadRequest(init, "POST", "secret");
+          return response(sample);
+        },
+      },
     );
     if (sample.valid) await assert.doesNotReject(read, sample.name);
     else await assert.rejects(read, /upload-failed/, sample.name);
@@ -94,7 +115,8 @@ test("the CLI Complete reader conforms to every public Complete fixture case", a
       { endpoint: contract.endpoint, token: "secret" },
       {
         ...retryDependencies,
-        fetch: async () => {
+        fetch: async (_url, init) => {
+          assertUploadRequest(init, "POST", "secret");
           calls++;
           if (sample.outcome === "retry" && calls > 1)
             return Response.json({}, { status: 201 });

@@ -1,11 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { PublishCancelledError } from "../dist/publish/errors.js";
 import {
+  MAX_REQUEST_ATTEMPTS,
+  RETRY_BASE_DELAY_MS,
   ReplanRequired,
   retryRequest,
   RetryableRequest,
 } from "../dist/publish/retry.js";
+
+const transportFailure =
+  "[mokly/upload-failed] The catalogue upload did not complete. Check the endpoint and connection, then retry.";
 
 test("retry uses five attempts with exponential full jitter", async () => {
   let attempts = 0;
@@ -22,10 +28,16 @@ test("retry uses five attempts with exponential full jitter", async () => {
         throw new RetryableRequest();
       },
     ),
-    /upload-failed/,
+    (error: unknown) => (error as Error).message === transportFailure,
   );
-  assert.equal(attempts, 5);
-  assert.deepEqual(waits, [500, 1_000, 2_000, 4_000]);
+  assert.equal(attempts, MAX_REQUEST_ATTEMPTS);
+  assert.deepEqual(
+    waits,
+    Array.from(
+      { length: MAX_REQUEST_ATTEMPTS - 1 },
+      (_, index) => RETRY_BASE_DELAY_MS * 0.5 * 2 ** index,
+    ),
+  );
 });
 
 test("Retry-After replaces jitter and expiry requests a re-plan", async () => {
@@ -61,7 +73,7 @@ test("Retry-After replaces jitter and expiry requests a re-plan", async () => {
   );
 });
 
-test("cancellation during retry sleep is upload-failed", async () => {
+test("cancellation during retry sleep keeps its typed upload-failed copy", async () => {
   const controller = new AbortController();
   await assert.rejects(
     retryRequest(
@@ -78,6 +90,13 @@ test("cancellation during retry sleep is upload-failed", async () => {
       },
       { signal: controller.signal },
     ),
-    /upload-failed/,
+    (error: unknown) => {
+      assert.ok(error instanceof PublishCancelledError);
+      assert.equal(
+        error.message,
+        "[mokly/upload-failed] Publication was cancelled. Run mokly publish again when you are ready.",
+      );
+      return true;
+    },
   );
 });

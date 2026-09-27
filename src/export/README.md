@@ -65,12 +65,17 @@ define the emitted inventory and reader compatibility. Tests exercise them
 against this parser and an independent reader in the packed-consumer smoke.
 The shipped contract is schema 2 with a SHA-256 digest and byte size per entry.
 `stage.ts` builds it from exact finalized bytes and every local reader accepts
-only that version. `deployment.ts` finalizes a separate artifact identity after
-provider transformation and non-marker assembly. `content_id.ts` uses
+only that version. `portable_path.ts` owns the path rule applied by the
+inventory, marker builder/parser and upload metadata validation.
+`publication_metadata.ts` accepts only new root files explicitly declared by
+the adapter. `deployment.ts` finalizes a separate artifact identity after
+provider transformation, that declaration and non-marker assembly.
+`content_id.ts` uses
 deterministic file hashes and alias edges; `shell_metadata.ts` normalizes and
 stamps only known shell roots while preserving other bytes and rejecting
-adapter metadata drift. The ownership marker is added last and excluded from
-the identity hash because it is derived from the finalized files.
+adapter metadata drift. The ownership marker and adapter-declared publication
+metadata are excluded from the identity hash; both remain in the ownership
+inventory, and the marker is added last from every finalized file.
 Descriptor version 2 lets both old and current clients reload across incompatible
 deployments. Comparison generation URLs retain their separate content identity.
 
@@ -125,7 +130,9 @@ platform dependencies when installing the package.
 `path_index.ts` for one case-folded file/alias collision policy, including
 directory prefixes and the final ownership marker. Reference validation also
 proves local resource closure. `ignored.ts` keeps schema 2 owned outputs and
-transactions out of broad Watch rules. Retired schema 1 outputs are
+transactions out of broad Watch rules. It caches parsed ownership by file
+identity and timestamps as bounded path/prefix sets, revalidating with one
+metadata read per lookup. Retired schema 1 outputs are
 intentionally treated as unowned, so their events are not suppressed and their
 files never gain replacement authority. The repository-only preview
 adapter supplies validated host aliases and legacy ownership explicitly. It

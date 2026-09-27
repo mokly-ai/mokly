@@ -147,6 +147,34 @@
       }
     },
     {
+      "name": "format-character-u200d",
+      "valid": true,
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "static/a‍b.html",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "size": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "maximum-path-byte-length",
+      "valid": true,
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.html",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "size": 1
+          }
+        ]
+      }
+    },
+    {
       "name": "schema-1-marker",
       "valid": false,
       "rejection": "unsupported-version",
@@ -171,6 +199,20 @@
       "document": {
         "schemaVersion": "2",
         "files": []
+      }
+    },
+    {
+      "name": "unsupported-version-precedes-entry-validation",
+      "valid": false,
+      "rejection": "unsupported-version",
+      "document": {
+        "schemaVersion": 3,
+        "files": [
+          {
+            "path": 1,
+            "size": 67108865
+          }
+        ]
       }
     },
     {
@@ -399,7 +441,7 @@
     {
       "name": "size-over-limit",
       "valid": false,
-      "rejection": "invalid",
+      "rejection": "too-large",
       "document": {
         "schemaVersion": 2,
         "files": [
@@ -607,6 +649,61 @@
       }
     },
     {
+      "name": "file-directory-prefix-collision",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "a",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "size": 1
+          },
+          {
+            "path": "a/b",
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "size": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "case-folded-prefix-collision",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "A",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "size": 1
+          },
+          {
+            "path": "a/b",
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "size": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "marker-prefix-collision",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": ".mokly-export-artifact/child",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "size": 1
+          }
+        ]
+      }
+    },
+    {
       "name": "control-character",
       "valid": false,
       "rejection": "invalid",
@@ -615,6 +712,36 @@
         "files": [
           {
             "path": "static/\tlogo.svg",
+            "sha256": "da0ada9bb4e28d3a590fdcbe195c593eefe0239f4e76eb218950f1b40f0e97e7",
+            "size": 16
+          }
+        ]
+      }
+    },
+    {
+      "name": "delete-control-character",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "static/\u007flogo.svg",
+            "sha256": "da0ada9bb4e28d3a590fdcbe195c593eefe0239f4e76eb218950f1b40f0e97e7",
+            "size": 16
+          }
+        ]
+      }
+    },
+    {
+      "name": "c1-control-character",
+      "valid": false,
+      "rejection": "invalid",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "static/\u0085logo.svg",
             "sha256": "da0ada9bb4e28d3a590fdcbe195c593eefe0239f4e76eb218950f1b40f0e97e7",
             "size": 16
           }
@@ -637,9 +764,24 @@
       }
     },
     {
+      "name": "multibyte-path-byte-limit-exceeded",
+      "valid": false,
+      "rejection": "too-large",
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé.html",
+            "sha256": "da0ada9bb4e28d3a590fdcbe195c593eefe0239f4e76eb218950f1b40f0e97e7",
+            "size": 16
+          }
+        ]
+      }
+    },
+    {
       "name": "path-byte-limit-exceeded",
       "valid": false,
-      "rejection": "invalid",
+      "rejection": "too-large",
       "document": {
         "schemaVersion": 2,
         "files": [

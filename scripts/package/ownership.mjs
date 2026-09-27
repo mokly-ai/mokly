@@ -24,18 +24,28 @@ export function assertOwnershipMarker(value) {
     throw new OwnershipMarkerError("unsupported-version");
   if (!Object.hasOwn(value, "files") || !Array.isArray(value.files))
     throw new OwnershipMarkerError("invalid");
-  const seen = new Set();
+  const paths = [MARKER.toLowerCase()];
   const entries = [];
   for (const entry of value.files) {
-    if (!isOwnershipEntry(entry)) throw new OwnershipMarkerError("invalid");
-    const folded = entry.path.toLowerCase();
-    if (seen.has(folded)) throw new OwnershipMarkerError("invalid");
-    seen.add(folded);
+    const rejection = ownershipEntryRejection(entry);
+    if (rejection) throw new OwnershipMarkerError(rejection);
+    paths.push(entry.path.toLowerCase());
     entries.push({
       path: entry.path,
       sha256: entry.sha256,
       size: entry.size,
     });
+  }
+  const unique = new Set(paths);
+  if (unique.size !== paths.length) throw new OwnershipMarkerError("invalid");
+  for (const name of unique) {
+    const parts = name.split("/");
+    parts.pop();
+    while (parts.length > 0) {
+      if (unique.has(parts.join("/")))
+        throw new OwnershipMarkerError("invalid");
+      parts.pop();
+    }
   }
   return entries;
 }
@@ -93,27 +103,35 @@ function isRecord(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
-function isOwnershipEntry(value) {
-  return (
-    isRecord(value) &&
-    Object.hasOwn(value, "path") &&
-    typeof value.path === "string" &&
-    value.path !== MARKER &&
-    Buffer.byteLength(value.path) <= MAX_PATH_BYTES &&
-    Buffer.from(value.path).toString("utf8") === value.path &&
-    !/\p{Cc}/u.test(value.path) &&
-    !value.path.startsWith("/") &&
-    !/[\\:]/.test(value.path) &&
+function ownershipEntryRejection(value) {
+  if (
+    !isRecord(value) ||
+    !Object.hasOwn(value, "path") ||
+    !Object.hasOwn(value, "sha256") ||
+    !Object.hasOwn(value, "size") ||
+    typeof value.path !== "string" ||
+    typeof value.sha256 !== "string" ||
+    typeof value.size !== "number" ||
+    !Number.isInteger(value.size)
+  )
+    return "invalid";
+  if (
+    Buffer.byteLength(value.path) > MAX_PATH_BYTES ||
+    value.size > MAX_FILE_BYTES
+  )
+    return "too-large";
+  return value.path === MARKER ||
+    Buffer.from(value.path).toString("utf8") !== value.path ||
+    /\p{Cc}/u.test(value.path) ||
+    value.path.startsWith("/") ||
+    /[\\:]/u.test(value.path) ||
     value.path
       .split("/")
-      .every((segment) => segment && segment !== "." && segment !== "..") &&
-    Object.hasOwn(value, "sha256") &&
-    typeof value.sha256 === "string" &&
-    SHA256.test(value.sha256) &&
-    Object.hasOwn(value, "size") &&
-    typeof value.size === "number" &&
-    Number.isInteger(value.size) &&
-    value.size >= 0 &&
-    value.size <= MAX_FILE_BYTES
-  );
+      .some(
+        (segment) => segment === "" || segment === "." || segment === "..",
+      ) ||
+    !SHA256.test(value.sha256) ||
+    value.size < 0
+    ? "invalid"
+    : undefined;
 }

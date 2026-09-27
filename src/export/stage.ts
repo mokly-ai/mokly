@@ -25,10 +25,16 @@ export async function stageExport(
   capture?: (
     files: ReadonlyMap<string, ReviewArtifactContent>,
   ) => Promise<void>,
+  publicationMetadata: ReadonlySet<string> = new Set(),
 ): Promise<string> {
   const files = new ExportInventory();
   for (const [name, bytes] of contents) files.add(name, Buffer.from(bytes));
-  const deploymentId = finalizeDeployment(files.files, shells, aliases);
+  const deploymentId = finalizeDeployment(
+    files.files,
+    shells,
+    aliases,
+    publicationMetadata,
+  );
   const ownership = buildExportOwnership(files.files);
   files.add(EXPORT_MARKER, serializeExportOwnership(ownership));
   validateExportReferences(files.files, aliases);

@@ -1,11 +1,5 @@
-import { MoklyError } from "../errors.js";
-
-import {
-  cancelResponse,
-  requestAttempt,
-  retryableResponse,
-  statusError,
-} from "./http.js";
+import { invalidBundle, statusError } from "./errors.js";
+import { cancelResponse, requestAttempt, retryableResponse } from "./http.js";
 import type { UploadRequestDependencies } from "./plan.js";
 import { ReplanRequired, retryRequest } from "./retry.js";
 import type { PlanResponse, UploadOptions } from "./types.js";
@@ -26,6 +20,7 @@ export async function uploadMissingBlobs(
   dependencies: UploadRequestDependencies,
   signal?: AbortSignal,
   onUploaded?: (digest: string) => void,
+  onStarted?: (digest: string) => void,
 ): Promise<Set<string>> {
   const controller = new AbortController();
   const poolSignal = signal
@@ -39,12 +34,16 @@ export async function uploadMissingBlobs(
       if (digest === undefined) return;
       const blob = blobs.get(digest);
       if (!blob) {
-        failure = invalidBundle();
+        failure = invalidBundle(
+          "The upload plan requested a file outside the finalized export.",
+        );
         controller.abort();
         return;
       }
       try {
-        await uploadBlob(plan, blob, options, dependencies, poolSignal);
+        await uploadBlob(plan, blob, options, dependencies, poolSignal, () =>
+          onStarted?.(digest),
+        );
         onUploaded?.(digest);
       } catch (error) {
         if (failure === undefined) {
@@ -68,7 +67,9 @@ async function uploadBlob(
   options: UploadOptions,
   dependencies: UploadRequestDependencies,
   signal: AbortSignal,
+  onStarted: () => void,
 ): Promise<void> {
+  let started = false;
   await retryRequest(
     dependencies,
     () =>
@@ -100,14 +101,12 @@ async function uploadBlob(
           if (response.ok) return;
           throw statusError(response.status);
         },
+        () => {
+          if (started) return;
+          started = true;
+          onStarted();
+        },
       ),
     { signal, expiresAt: plan.upload.expiresAt },
-  );
-}
-
-function invalidBundle(): MoklyError {
-  return new MoklyError(
-    "upload-invalid-bundle",
-    "The upload plan requested a file outside the finalized export.",
   );
 }

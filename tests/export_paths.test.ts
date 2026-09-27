@@ -73,7 +73,8 @@ test("export refuses unowned, malformed, and mixed output", async (context) => {
       "code" in error &&
       error.code === "export-invalid" &&
       error.message.includes(output) &&
-      /remove/i.test(error.message),
+      error.message.includes("Move any files you added") &&
+      error.message.includes(`delete ${output} and export again`),
   );
   await fs.promises.writeFile(
     marker,

@@ -1,21 +1,20 @@
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
-import { MoklyError } from "../errors.js";
 import { EXPORT_MARKER } from "../export/ownership.js";
 
 import { bundleUpload } from "./bundle.js";
+import { invalidBundle, statusError, uploadFailed } from "./errors.js";
 import {
   cancelResponse,
   readBoundedBody,
   requestAttempt,
+  responseMediaType,
   retryableResponse,
-  statusError,
-  uploadFailed,
 } from "./http.js";
 import { UPLOAD_MANIFEST } from "./manifest.js";
 import { retryRequest, type RetryDependencies } from "./retry.js";
 import type { PlanResponse, UploadManifest, UploadOptions } from "./types.js";
-import { uploadTimestamp } from "./validation.js";
+import { isRecord, uploadRequestUrl, uploadTimestamp } from "./validation.js";
 
 const SHA256 = /^[a-f0-9]{64}$/;
 const PLACEHOLDER = "{sha256}";
@@ -32,6 +31,14 @@ export async function buildPlanArchive(
   manifest: UploadManifest,
   signal?: AbortSignal,
 ): Promise<Buffer> {
+  return bundleUpload(selectPlanArchiveFiles(files, manifest), signal);
+}
+
+/** Select the exact finalized files sent in each deterministic Plan archive. */
+export function selectPlanArchiveFiles(
+  files: ReadonlyMap<string, ReviewArtifactContent>,
+  manifest: UploadManifest,
+): Map<string, Buffer> {
   const names = [
     UPLOAD_MANIFEST,
     EXPORT_MARKER,
@@ -40,10 +47,18 @@ export async function buildPlanArchive(
   const selected = new Map<string, Buffer>();
   for (const name of names) {
     const content = files.get(name);
-    if (content === undefined) throw invalidBundle();
-    selected.set(name, Buffer.from(content));
+    if (content === undefined)
+      throw invalidBundle(
+        "The export is missing a required upload artifact. Rebuild it and retry.",
+      );
+    selected.set(
+      name,
+      typeof content === "string"
+        ? Buffer.from(content)
+        : Buffer.from(content.buffer, content.byteOffset, content.byteLength),
+    );
   }
-  return bundleUpload(selected, signal);
+  return selected;
 }
 
 /** POST one plan archive and return its strictly validated response. */
@@ -83,7 +98,7 @@ export async function requestUploadPlan(
             if (response.ok) throw uploadFailed();
             throw statusError(response.status);
           }
-          if (mediaType(response) !== "application/json") {
+          if (responseMediaType(response) !== "application/json") {
             await cancelResponse(response);
             throw uploadFailed();
           }
@@ -108,10 +123,10 @@ export function validatePlanResponse(
   endpoint: string,
   markerDigests: ReadonlySet<string>,
 ): PlanResponse {
-  if (!record(value) || value["schemaVersion"] !== 1) throw uploadFailed();
+  if (!isRecord(value) || value["schemaVersion"] !== 1) throw uploadFailed();
   const upload = value["upload"];
   if (
-    !record(upload) ||
+    !isRecord(upload) ||
     !opaqueId(upload["id"]) ||
     !uploadTimestamp(upload["expiresAt"])
   )
@@ -133,7 +148,7 @@ export function validatePlanResponse(
     typeof value["blobUrl"] !== "string" ||
     !validBlobUrl(value["blobUrl"], endpoint) ||
     typeof value["completeUrl"] !== "string" ||
-    !validAbsoluteUrl(value["completeUrl"], endpoint)
+    !uploadRequestUrl(value["completeUrl"], endpoint)
   )
     throw uploadFailed();
   return {
@@ -153,36 +168,10 @@ function validBlobUrl(value: string, endpoint: string): boolean {
     .sort((left, right) => left - right)[0];
   if (boundary !== undefined && first > boundary) return false;
   const replaced = value.replace(PLACEHOLDER, PROBE_DIGEST);
-  try {
-    const url = new URL(replaced);
-    return (
-      !url.username &&
-      !url.password &&
-      url.origin === new URL(endpoint).origin &&
-      url.pathname.includes(PROBE_DIGEST)
-    );
-  } catch {
-    return false;
-  }
-}
-
-function validAbsoluteUrl(value: string, endpoint: string): boolean {
-  try {
-    const url = new URL(value);
-    return (
-      !url.username && !url.password && url.origin === new URL(endpoint).origin
-    );
-  } catch {
-    return false;
-  }
-}
-
-function mediaType(response: Response): string | undefined {
-  return response.headers
-    .get("Content-Type")
-    ?.split(";", 1)[0]
-    ?.trim()
-    .toLowerCase();
+  return (
+    uploadRequestUrl(replaced, endpoint)?.pathname.includes(PROBE_DIGEST) ??
+    false
+  );
 }
 
 function opaqueId(value: unknown): value is string {
@@ -191,16 +180,5 @@ function opaqueId(value: unknown): value is string {
     value.length > 0 &&
     Buffer.byteLength(value) <= 255 &&
     Buffer.from(value).toString("utf8") === value
-  );
-}
-
-function record(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value);
-}
-
-function invalidBundle(): MoklyError {
-  return new MoklyError(
-    "upload-invalid-bundle",
-    "The export is missing a required upload artifact. Rebuild it and retry.",
   );
 }

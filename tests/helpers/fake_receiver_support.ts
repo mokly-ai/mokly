@@ -12,6 +12,7 @@ export type FakeRequestKind = "plan" | "blob" | "complete" | "unknown";
 /** One bounded scripted response returned before the normal route behavior. */
 export interface FakeReceiverOverride {
   body?: string;
+  headers?: Readonly<Record<string, string>>;
   retryAfter?: string;
   status: number;
   times?: number;
@@ -39,18 +40,26 @@ export interface FakeReceiverPlan extends ValidatedFakePlan {
 export interface FakeReceiverPublication {
   body: Readonly<Record<string, string>>;
   manifest: UploadManifest;
+  responseBody: Buffer;
 }
 
 /** Mutable timing controls used by expiry and concurrency tests. */
 export interface FakeReceiverControl {
   blobDelayMs: number;
   defaultExpiryMs: number;
+  dropCompleteResponses: number;
   expiryMs: number[];
+}
+
+/** First successful status and exact response bytes retained per upload id. */
+export interface FakeUploadCompletion {
+  body?: Buffer;
+  status: number;
 }
 
 /** Internal upload state extending the publicly inspectable plan. */
 export interface FakeUpload extends FakeReceiverPlan {
-  existing?: FakeReceiverPublication;
+  completion?: FakeUploadCompletion;
 }
 
 /** Remaining uses of one queued response override. */

@@ -20,6 +20,7 @@ const options = {
 
 function fixture(rounds: "one" | "empty" | "replan" | "replan-empty") {
   let entries: Array<{ path: string; sha256: string; size: number }> = [];
+  let planBytes = 0;
   let plans = 0;
   let completes = 0;
   const updates: PublishUploadProgress[] = [];
@@ -48,7 +49,11 @@ function fixture(rounds: "one" | "empty" | "replan" | "replan-empty") {
       await selected.adapter?.transform(files, routes);
       const marker = ownershipMarkerFromFiles(files);
       entries = marker.files;
-      files.set(".mokly-export-artifact", JSON.stringify(marker));
+      const markerBytes = JSON.stringify(marker);
+      files.set(".mokly-export-artifact", markerBytes);
+      planBytes =
+        Buffer.byteLength(markerBytes) +
+        entries.find(({ path }) => path === "mokly-upload.json")!.size;
       await selected.capture?.(files);
       return { ...routes, deploymentId: "d".repeat(64) };
     },
@@ -81,17 +86,37 @@ function fixture(rounds: "one" | "empty" | "replan" | "replan-empty") {
       update: (progress) => updates.push({ ...progress }),
     },
   };
-  return { dependencies, entries: () => entries, updates };
+  return {
+    dependencies,
+    entries: () => entries,
+    planBytes: () => planBytes,
+    updates,
+  };
 }
 
 test("publish progress reports total requested bytes and each completion", async () => {
   const selected = fixture("one");
-  await publishCatalogue(config, options, "1.2.3", {}, selected.dependencies);
+  const result = await publishCatalogue(
+    config,
+    options,
+    "1.2.3",
+    {},
+    selected.dependencies,
+  );
   const entry = selected.entries()[0]!;
   assert.deepEqual(selected.updates, [
-    { completed: 0, total: 1, totalBytes: entry.size },
-    { completed: 1, total: 1, totalBytes: entry.size },
+    {
+      completed: 1,
+      total: 2,
+      totalBytes: selected.planBytes() + entry.size,
+    },
+    {
+      completed: 2,
+      total: 2,
+      totalBytes: selected.planBytes() + entry.size,
+    },
   ]);
+  assert.equal(selected.updates.at(-1)?.completed, result.uploaded);
 });
 
 test("empty plans emit no upload progress", async () => {
@@ -106,10 +131,10 @@ test("a re-plan restarts progress for the second missing set", async () => {
   assert.deepEqual(
     selected.updates.map(({ completed, total }) => [completed, total]),
     [
-      [0, 1],
-      [1, 1],
-      [0, 1],
-      [1, 1],
+      [1, 2],
+      [2, 2],
+      [1, 2],
+      [2, 2],
     ],
   );
 });
@@ -120,8 +145,8 @@ test("a re-plan with no missing blobs restores the base phase label", async () =
   assert.deepEqual(
     selected.updates.map(({ completed, total }) => [completed, total]),
     [
-      [0, 1],
-      [1, 1],
+      [1, 2],
+      [2, 2],
       [0, 0],
     ],
   );

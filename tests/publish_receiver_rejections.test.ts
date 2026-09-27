@@ -66,7 +66,14 @@ test("plan, blob and complete rejection statuses keep fixed secret-free output",
   ];
   for (const kind of kinds) {
     for (const [status, code, message] of statuses) {
-      receiver.queue(kind, { status, body: token });
+      const redirectPath = `/redirect-target/${kind}`;
+      receiver.queue(kind, {
+        status,
+        body: token,
+        ...(status === 302
+          ? { headers: { Location: `${receiver.origin}${redirectPath}` } }
+          : {}),
+      });
       await assert.rejects(
         runPublishedCli(fixture.root, receiver.endpoint, token, [
           "--no-changes",
@@ -84,6 +91,14 @@ test("plan, blob and complete rejection statuses keep fixed secret-free output",
           return true;
         },
       );
+      if (status === 302)
+        assert.equal(
+          receiver.requests.some(({ path: requestPath }) =>
+            requestPath.startsWith(redirectPath),
+          ),
+          false,
+          `${kind} redirect followed`,
+        );
     }
   }
   const output = path.join(fixture.root, "site");

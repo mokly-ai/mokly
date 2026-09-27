@@ -5,6 +5,8 @@ import { uploadMissingBlobs } from "../dist/publish/blobs.js";
 import { ReplanRequired } from "../dist/publish/retry.js";
 import type { PlanResponse } from "../dist/publish/types.js";
 
+import { assertUploadRequest } from "./helpers/upload_request.js";
+
 const digests = ["1".repeat(64), "2".repeat(64), "3".repeat(64)];
 const plan: PlanResponse = {
   schemaVersion: 1,
@@ -33,10 +35,7 @@ test("blob uploads use exact URLs, headers and bytes", async () => {
     fetch: async (url, init) => {
       const digest = String(url).split("/").at(-1)!;
       const blob = blobs.get(digest)!;
-      const headers = new Headers(init?.headers);
-      assert.equal(init?.method, "PUT");
-      assert.equal(init?.redirect, "manual");
-      assert.equal(headers.get("Authorization"), "Bearer secret");
+      const headers = assertUploadRequest(init, "PUT", "secret");
       assert.equal(headers.get("Content-Type"), "application/octet-stream");
       assert.equal(headers.get("Content-Length"), String(blob.size));
       assert.deepEqual(init?.body, blob.bytes);
@@ -61,7 +60,10 @@ test("blob rejection categories and expiry are stable", async () => {
         1,
         {
           ...retryDependencies,
-          fetch: async () => new Response(null, { status }),
+          fetch: async (_url, init) => {
+            assertUploadRequest(init, "PUT", "secret");
+            return new Response(null, { status });
+          },
         },
       ),
       (error: unknown) => (error as { code: string }).code === code,
@@ -69,7 +71,10 @@ test("blob rejection categories and expiry are stable", async () => {
   await assert.rejects(
     uploadMissingBlobs({ ...plan, missing: [digests[0]!] }, blobs, options, 1, {
       ...retryDependencies,
-      fetch: async () => new Response(null, { status: 410 }),
+      fetch: async (_url, init) => {
+        assertUploadRequest(init, "PUT", "secret");
+        return new Response(null, { status: 410 });
+      },
     }),
     ReplanRequired,
   );
@@ -85,7 +90,10 @@ test("blob rejection categories and expiry are stable", async () => {
       1,
       {
         ...retryDependencies,
-        fetch: async () => assert.fail("expired uploads must not issue a PUT"),
+        fetch: async (_url, init) => {
+          assertUploadRequest(init, "PUT", "secret");
+          return assert.fail("expired uploads must not issue a PUT");
+        },
       },
     ),
     ReplanRequired,
@@ -97,7 +105,8 @@ test("blob workers stay bounded and stop after the first failure", async () => {
   let maximum = 0;
   await uploadMissingBlobs(plan, blobs, options, 2, {
     ...retryDependencies,
-    fetch: async () => {
+    fetch: async (_url, init) => {
+      assertUploadRequest(init, "PUT", "secret");
       active++;
       maximum = Math.max(maximum, active);
       await Promise.resolve();
@@ -117,6 +126,7 @@ test("blob workers stay bounded and stop after the first failure", async () => {
     uploadMissingBlobs(plan, blobs, options, 2, {
       ...retryDependencies,
       fetch: async (_url, init) => {
+        assertUploadRequest(init, "PUT", "secret");
         calls++;
         if (calls === 1) {
           await failureReady;
@@ -148,7 +158,8 @@ test("blob transport retries honor Retry-After without leaking tokens", async ()
     {
       ...retryDependencies,
       sleep: async (milliseconds) => void waits.push(milliseconds),
-      fetch: async () => {
+      fetch: async (_url, init) => {
+        assertUploadRequest(init, "PUT", "private-token");
         if (++calls === 1)
           return new Response("private-token", {
             status: 503,
@@ -173,8 +184,12 @@ test("successful digests are reported before a later blob re-plans", async () =>
       1,
       {
         ...retryDependencies,
-        fetch: async () =>
-          new Response(null, { status: ++calls === 1 ? 204 : 410 }),
+        fetch: async (_url, init) => {
+          assertUploadRequest(init, "PUT", "secret");
+          return new Response(null, {
+            status: ++calls === 1 ? 204 : 410,
+          });
+        },
       },
       undefined,
       (digest) => uploaded.push(digest),

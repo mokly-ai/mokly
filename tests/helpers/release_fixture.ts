@@ -21,6 +21,7 @@ export function packageReport(): PackageReport {
       { path: "dist/browser.manifest.json", size: 1 },
       ...GUIDE_PATHS.map((path) => ({ path, size: 1 })),
       { path: "docs/protocol/mokly-upload.md", size: 1 },
+      { path: "docs/protocol/mokly-upload-exchange.md", size: 1 },
       { path: "docs/protocol/mokly-export-ownership.md", size: 1 },
       { path: "docs/protocol/fixtures/export-ownership-v2.json", size: 1 },
       { path: "docs/protocol/fixtures/upload-plan-v1.json", size: 1 },

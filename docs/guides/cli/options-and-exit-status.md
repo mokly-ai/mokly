@@ -82,3 +82,8 @@ stack trace:
 | `upload-too-large`             | An upload limit was exceeded                           |
 | `upload-unsupported-version`   | The service does not support this upload version       |
 | `upload-failed`                | The upload failed for any other reason                 |
+
+Cancelling publish keeps `upload-failed` but prints
+`Publication was cancelled. Run mokly publish again when you are ready.` An
+exhausted request prints
+`The catalogue upload did not complete. Check the endpoint and connection, then retry.`

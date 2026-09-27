@@ -17,7 +17,7 @@ import {
 } from "./helpers/fixture.js";
 import { ownershipMarkerFromFiles } from "./helpers/ownership_marker.js";
 
-type OwnershipRejection = "unsupported-version" | "invalid";
+type OwnershipRejection = "unsupported-version" | "too-large" | "invalid";
 
 interface OwnershipFixtures {
   schemaVersion: number;
@@ -137,6 +137,59 @@ test("the ownership builder has no upload file-count ceiling", () => {
   assert.equal(
     JSON.parse(serializeExportOwnership(ownership)).files.length,
     fileCount,
+  );
+});
+
+test("ownership parsing classifies limits and rejects prefix collisions", () => {
+  const entry = {
+    path: "a",
+    sha256: "a".repeat(64),
+    size: 1,
+  };
+  for (const document of [
+    { schemaVersion: 2, files: [{ ...entry, size: 64 * 1024 * 1024 + 1 }] },
+    { schemaVersion: 2, files: [{ ...entry, path: "é".repeat(513) }] },
+  ])
+    assert.deepEqual(parseExportOwnership(JSON.stringify(document)), {
+      kind: "too-large",
+    });
+  for (const paths of [
+    ["a", "a/b"],
+    ["A", "a/b"],
+    ["a", "a-", "a/b"],
+    [".mokly-export-artifact/child"],
+  ])
+    assert.deepEqual(
+      parseExportOwnership(
+        JSON.stringify({
+          schemaVersion: 2,
+          files: paths.map((name) => ({ ...entry, path: name })),
+        }),
+      ),
+      { kind: "invalid" },
+      paths.join(", "),
+    );
+  assert.deepEqual(
+    parseExportOwnership(
+      JSON.stringify({ schemaVersion: 3, files: [{ path: 1 }] }),
+    ),
+    { kind: "unsupported-version" },
+  );
+});
+
+test("the serialized marker enforces its 64 MiB ceiling", () => {
+  const repeated = {
+    path: "a",
+    sha256: "a".repeat(64),
+    size: 0,
+  };
+  assert.throws(
+    () =>
+      serializeExportOwnership({
+        schemaVersion: 2,
+        files: Array(510_000).fill(repeated),
+      }),
+    /larger than 64 MiB/u,
   );
 });
 

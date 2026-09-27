@@ -85,6 +85,6 @@ export class RichPhaseRenderer {
       `  ${glyph} ${active.label}…`,
       terminalWidth(this.environment.stdout, this.environment.env),
     );
-    this.environment.stdout.write(newline ? `${value}\n` : `\r${value}`);
+    this.environment.stdout.write(newline ? `${value}\n` : `\r\x1b[2K${value}`);
   }
 }

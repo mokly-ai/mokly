@@ -10,6 +10,7 @@ import { parseArguments } from "../dist/cli/arguments.js";
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { startFakeReceiver } from "./helpers/fake_receiver.js";
 import { repositoryRoot } from "./helpers/fixture.js";
+import { expectedUploadedEntries } from "./helpers/publish_counts.js";
 
 const execute = promisify(execFile);
 const cli = path.join(repositoryRoot, "dist/cli/bin.js");
@@ -140,12 +141,11 @@ test("publish POSTs gzip using environment credentials and keeps a replaceable o
   const firstMarker = JSON.parse(
     receiver.plans[0]!.files.get(".mokly-export-artifact")!.toString("utf8"),
   ) as { files: Array<{ sha256: string }> };
-  const firstUploaded = firstMarker.files.filter(({ sha256 }) =>
-    receiver.plans[0]!.missing.includes(sha256),
-  ).length;
+  const firstUploaded = expectedUploadedEntries(receiver.plans[0]!);
+  assert.equal(firstUploaded, firstMarker.files.length);
   assert.equal(
     stdout,
-    `Published Mokly catalogue. ${firstUploaded} files uploaded, ${firstMarker.files.length - firstUploaded} unchanged.\n` +
+    `Published Mokly catalogue. ${firstUploaded} ${firstUploaded === 1 ? "file" : "files"} uploaded, ${firstMarker.files.length - firstUploaded} unchanged.\n` +
       `${receiver.origin}/catalogues/publication-1/view\n`,
   );
   assert.doesNotMatch(stdout + stderr, /fixture-token/);

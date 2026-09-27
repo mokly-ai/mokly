@@ -5,6 +5,8 @@ import { completeUpload } from "../dist/publish/complete.js";
 import { ReplanRequired } from "../dist/publish/retry.js";
 import type { PlanResponse } from "../dist/publish/types.js";
 
+import { assertUploadRequest } from "./helpers/upload_request.js";
+
 const options = { endpoint: "https://api.example.com/plan", token: "secret" };
 const plan: PlanResponse = {
   schemaVersion: 1,
@@ -24,10 +26,8 @@ async function complete(response: Response) {
     ...retryDependencies,
     fetch: async (url, init) => {
       assert.equal(url, plan.completeUrl);
-      assert.equal(init?.method, "POST");
+      const headers = assertUploadRequest(init, "POST", "secret");
       assert.equal(init?.body, undefined);
-      const headers = new Headers(init?.headers);
-      assert.equal(headers.get("Authorization"), "Bearer secret");
       assert.equal(headers.get("Accept"), "application/json");
       assert.equal(headers.get("Content-Length"), "0");
       return response;
@@ -106,7 +106,8 @@ test("Complete retries temporary statuses", async () => {
   let calls = 0;
   const result = await completeUpload(plan, options, {
     ...retryDependencies,
-    fetch: async () => {
+    fetch: async (_url, init) => {
+      assertUploadRequest(init, "POST", "secret");
       if (++calls === 1) return new Response(null, { status: 503 });
       return Response.json({ viewerUrl: null }, { status: 201 });
     },

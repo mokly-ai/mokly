@@ -1,7 +1,12 @@
-import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import { classifyPortableExportPath } from "../export/portable_path.js";
 
 /** Full Git SHA-1 or SHA-256 object id. */
 export const GIT_SHA = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/;
+
+/** True for a non-null JSON-style object rather than an array. */
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
 
 /** Exact UTC millisecond timestamp used by upload envelopes and plans. */
 export function uploadTimestamp(value: unknown): value is string {
@@ -26,7 +31,30 @@ export function boundedText(value: unknown, bytes: number): value is string {
 
 /** Safe portable archive/config path; paths never authorize filesystem access. */
 export function uploadPath(value: unknown): value is string {
-  return boundedText(value, 1024) && isSafeRepositoryPath(value);
+  return classifyPortableExportPath(value) === "valid";
+}
+
+/** Parse an absolute same-endpoint HTTP(S) request URL without userinfo. */
+export function uploadRequestUrl(
+  value: string,
+  endpoint: string,
+): URL | undefined {
+  try {
+    const candidate = new URL(value);
+    const configured = new URL(endpoint);
+    if (
+      !["http:", "https:"].includes(candidate.protocol) ||
+      candidate.protocol !== configured.protocol ||
+      candidate.hostname !== configured.hostname ||
+      candidate.port !== configured.port ||
+      candidate.username ||
+      candidate.password
+    )
+      return undefined;
+    return candidate;
+  } catch {
+    return undefined;
+  }
 }
 
 /** Exact SemVer release, including numeric prerelease identifier restrictions. */

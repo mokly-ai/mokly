@@ -221,6 +221,14 @@ the root lockfile and the release manifest. The CLI keeps `vX.Y.Z` tags
 `viewer-vX.Y.Z`, with component `viewer` and `packages/viewer/CHANGELOG.md`.
 Both tags must identify the same reviewed release commit.
 
+The [Pull Request Title Contract](./ci-verification.md#pull-request-title-contract)
+checks every proposed squash title before merge because release-please reads
+that title from `main`. It accepts generated release titles such as
+`chore(main): release 0.13.0`. A breaking change uses a title such as
+`feat(publish)!: upload catalogue content deltas` and retains its explanatory
+`BREAKING CHANGE:` footer in the squash body; the title check does not replace
+or generate that body.
+
 The root component also owns the literal documentation version in
 `docs/guides/start/install.md` and `docs/guides/ci/github-action.md` through
 `generic` `extra-files`. Each version-bearing region is bounded by the

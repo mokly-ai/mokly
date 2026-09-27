@@ -6,6 +6,7 @@ import type { UploadManifest } from "../dist/publish/types.js";
 
 import { ownershipMarkerFromFiles } from "./helpers/ownership_marker.js";
 import { extractUploadArchive } from "./helpers/upload_archive.js";
+import { assertUploadRequest } from "./helpers/upload_request.js";
 
 const digestA = "1".repeat(64);
 const digestB = "2".repeat(64);
@@ -99,11 +100,8 @@ test("plan requests preserve the endpoint and validate the response", async () =
       fetch: async (url, init) => {
         calls++;
         assert.equal(url, endpoint);
-        assert.equal(init?.method, "POST");
-        assert.equal(init?.redirect, "manual");
+        const headers = assertUploadRequest(init, "POST", "private-token");
         assert.equal(init?.body, archive);
-        const headers = new Headers(init?.headers);
-        assert.equal(headers.get("Authorization"), "Bearer private-token");
         assert.equal(headers.get("Content-Type"), "application/gzip");
         assert.equal(headers.get("Accept"), "application/json");
         assert.equal(headers.get("Content-Length"), String(archive.length));
@@ -132,7 +130,13 @@ test("plan response failures stay fixed and never echo remote content", async ()
         { endpoint, token: "private-token" },
         Buffer.from("plan"),
         new Set([digestA, digestB]),
-        { ...retryDependencies, fetch: async () => response },
+        {
+          ...retryDependencies,
+          fetch: async (_url, init) => {
+            assertUploadRequest(init, "POST", "private-token");
+            return response;
+          },
+        },
       ),
       (error: unknown) => {
         assert.equal((error as { code: string }).code, "upload-failed");
@@ -150,7 +154,8 @@ test("plan retries interrupted bodies and fails transport errors safely", async 
     new Set([digestA, digestB]),
     {
       ...retryDependencies,
-      fetch: async () => {
+      fetch: async (_url, init) => {
+        assertUploadRequest(init, "POST", "private-token");
         if (++calls === 1)
           return new Response(
             new ReadableStream({
@@ -175,7 +180,8 @@ test("plan retries interrupted bodies and fails transport errors safely", async 
       new Set([digestA, digestB]),
       {
         ...retryDependencies,
-        fetch: async () => {
+        fetch: async (_url, init) => {
+          assertUploadRequest(init, "POST", "private-token");
           calls++;
           throw new Error("private-token transport failure");
         },
@@ -184,6 +190,10 @@ test("plan retries interrupted bodies and fails transport errors safely", async 
     (error: unknown) => {
       assert.equal((error as { code?: string }).code, "upload-failed");
       assert.equal((error as Error).cause, undefined);
+      assert.equal(
+        (error as Error).message,
+        "[mokly/upload-failed] The catalogue upload did not complete. Check the endpoint and connection, then retry.",
+      );
       assert.doesNotMatch(String(error), /private-token/);
       return true;
     },
@@ -200,7 +210,8 @@ test("plan non-retryable statuses fail after one attempt", async () => {
       new Set([digestA]),
       {
         ...retryDependencies,
-        fetch: async () => {
+        fetch: async (_url, init) => {
+          assertUploadRequest(init, "POST", "secret");
           calls++;
           return new Response(null, { status: 404 });
         },

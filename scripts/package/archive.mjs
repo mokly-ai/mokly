@@ -96,6 +96,7 @@ export function validatePackageReport(report, name = "@mokly/mokly") {
     "dist/publish/run.js",
     ...GUIDE_FILES,
     "docs/protocol/mokly-upload.md",
+    "docs/protocol/mokly-upload-exchange.md",
     "docs/protocol/mokly-export-ownership.md",
     "docs/protocol/fixtures/export-ownership-v2.json",
     "docs/protocol/fixtures/upload-plan-v1.json",

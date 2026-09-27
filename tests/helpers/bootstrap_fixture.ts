@@ -112,6 +112,8 @@ export async function bootstrapFixture(
       ]),
     ),
     "docs/protocol/mokly-upload.md": "# Upload protocol test fixture\n",
+    "docs/protocol/mokly-upload-exchange.md":
+      "# Upload exchange protocol test fixture\n",
     "docs/protocol/mokly-export-ownership.md":
       "# Ownership protocol test fixture\n",
     "docs/protocol/fixtures/export-ownership-v2.json":

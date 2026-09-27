@@ -1,10 +1,23 @@
 import type { PublishResult } from "../publish/types.js";
 
+import { formatBytes, formatCount } from "./reporter/terminal.js";
+
 /** Plain/rich summary copy and a credential-safe optional viewer destination. */
 export interface PublishOutput {
   plain: string;
   rich: string;
   viewerUrl: string | null;
+}
+
+/** Format one upload phase update, including the empty-round reset label. */
+export function publishProgressLabel(progress: {
+  completed: number;
+  total: number;
+  totalBytes: number;
+}): string {
+  return progress.total === 0
+    ? "Uploading catalogue"
+    : `Uploading ${progress.completed} of ${formatCount(progress.total, "file")} · ${formatBytes(progress.totalBytes)}`;
 }
 
 /** Build the documented publication output without exposing bearer credentials. */
@@ -13,12 +26,13 @@ export function publishOutput(
   token: string | undefined,
 ): PublishOutput {
   const published = result.outcome === "published";
+  const uploaded = formatCount(result.uploaded, "file");
   return {
     plain: published
-      ? `Published Mokly catalogue. ${result.uploaded} files uploaded, ${result.unchanged} unchanged.\n`
+      ? `Published Mokly catalogue. ${uploaded} uploaded, ${result.unchanged} unchanged.\n`
       : "Mokly catalogue already published for this commit.\n",
     rich: published
-      ? `Published Mokly catalogue · ${result.uploaded} files uploaded, ${result.unchanged} unchanged`
+      ? `Published Mokly catalogue · ${uploaded} uploaded, ${result.unchanged} unchanged`
       : "Mokly catalogue already published for this commit",
     viewerUrl: safeViewerUrl(result.viewerUrl, token),
   };

@@ -168,12 +168,15 @@ export async function smokeConsumerPublish(context, root) {
         { cwd: root, env },
       );
       const plan = plans.at(-1);
+      const sent = new Set(plan.received.keys());
+      for (const bytes of plan.files.values())
+        sent.add(crypto.createHash("sha256").update(bytes).digest("hex"));
       const uploaded = plan.entries.filter(({ sha256 }) =>
-        plan.missing.includes(sha256),
+        sent.has(sha256),
       ).length;
       assert.equal(
         stdout,
-        `Published Mokly catalogue. ${uploaded} files uploaded, ${plan.entries.length - uploaded} unchanged.\n` +
+        `Published Mokly catalogue. ${uploaded} ${uploaded === 1 ? "file" : "files"} uploaded, ${plan.entries.length - uploaded} unchanged.\n` +
           `${origin}/catalogues/upload-${plans.length}/view\n`,
       );
       assert.doesNotMatch(stdout + stderr, /package-smoke-token/);
@@ -257,6 +260,11 @@ export async function smokeConsumerPublish(context, root) {
     assert.equal(plans.length, 2);
     assert.ok(
       fs.existsSync(path.join(packageRoot, "docs/protocol/mokly-upload.md")),
+    );
+    assert.ok(
+      fs.existsSync(
+        path.join(packageRoot, "docs/protocol/mokly-upload-exchange.md"),
+      ),
     );
   } finally {
     await new Promise((resolve) => server.close(resolve));

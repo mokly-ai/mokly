@@ -72,18 +72,26 @@ every digest receives no blob PUT; the plan artifacts still go first so the
 service can validate and complete the publication.
 
 A request that fails in transit or is answered with a temporary status is
-retried up to five times with growing delays. When the plan's expiry time
-passes, or the service reports that the upload expired, publish plans once
-more and continues from what the service already holds. Redirects are never
-followed.
+tried up to five times. Before attempts two through five, publish waits a
+random duration of at most 1, 2, 4 and 8 seconds respectively, unless a valid
+`Retry-After` asks for up to sixty seconds. When the Plan expires, or the
+service reports expiry, publish plans once more and continues from content
+already stored for the project. Redirects are never followed.
 
 ## What you see
 
 Success prints one line, for example
-`Published Mokly catalogue. 12 files uploaded, 266 unchanged.`, and, when the
-service returns one, the address of the published catalogue on the line after
-it. In a terminal, publish also shows how many of the requested files have
-been uploaded so far.
+`Published Mokly catalogue. 1 file uploaded, 266 unchanged.` or
+`Published Mokly catalogue. 12 files uploaded, 255 unchanged.`, and, when the
+service returns one, the catalogue address on the next line. The uploaded count
+includes marker entries whose digest matches a Plan-archive file and every
+entry sharing a digest whose Blob PUT was attempted; the others are unchanged. A first
+publish to an empty service therefore reports `0 unchanged`.
+
+In a terminal, progress includes marker entries matching Plan files from its first
+frame and advances all entries sharing each completed digest. It reads
+`Uploading 0 of 1 file · <size>` for one file and uses `files` otherwise. A
+re-plan restarts the round label; an empty missing set shows no progress label.
 
 A service keeps the first publication it completed for a commit and config
 path. Publishing that commit again prints
@@ -93,3 +101,6 @@ way to replace a published commit.
 
 A failed publish leaves the complete local export in place for you to inspect,
 and running it again resumes from whatever the service already stored.
+Cancelling prints
+`[mokly/upload-failed] Publication was cancelled. Run mokly publish again when you are ready.`
+instead of telling you to check the connection.

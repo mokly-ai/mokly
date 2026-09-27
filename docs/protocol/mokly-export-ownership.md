@@ -12,7 +12,7 @@ Every complete [export](./mokly-export.md) contains a regular root file named
 `.mokly-export-artifact`. This public inventory is independent of the source
 catalogue manifest, the upload envelope and the comparison result. Receivers
 read it without importing Mokly's internal modules. In the
-[upload exchange](./mokly-upload.md#upload-exchange) it is the content
+[upload exchange](./mokly-upload-exchange.md#upload-exchange) it is the content
 address list: a receiver learns every file's digest from the marker before any
 catalogue bytes are sent and asks only for the digests it does not hold.
 
@@ -47,25 +47,31 @@ interface ExportOwnershipEntry {
 }
 ```
 
-Both root fields are required. The root must be an object; `schemaVersion`
-must be the number `2`, and `files` must be an array containing only entry
+Both root fields are required. The root must be an object. A missing
+`schemaVersion` is invalid. Any present value other than the number `2`,
+including string `"2"`, is an unsupported version; readers classify it before
+inspecting `files`. For version 2, `files` is an array containing only entry
 objects. Each entry requires all three fields:
 
-- `path` is a nonempty slash-separated path relative to the export root, at
-  most 1,024 UTF-8 bytes. Reject absolute paths, empty segments, `.`/`..`
-  segments, backslashes, colons, NUL and other control characters. Do not list
-  `.mokly-export-artifact` itself. Reject repeated paths and paths equal after
-  locale-independent Unicode lowercasing (JavaScript
-  `String.prototype.toLowerCase`), without Unicode normalization or additional
-  case folding. `A.html` and `a.html` collide; `ß.html` and `ss.html` are
-  distinct.
+- `path` is nonempty, slash-separated and relative to the export root, with at
+  most 1,024 UTF-8 bytes. It must be well-formed Unicode: encoding as UTF-8 and
+  decoding must preserve the same string. Reject Unicode category Cc
+  characters (U+0000–U+001F and U+007F–U+009F), a leading `/`, backslashes,
+  colons, and empty, `.` or `..` segments. Format characters such as U+200D
+  are allowed. Do not list `.mokly-export-artifact` itself.
+- Reject repeated paths, paths equal after JavaScript
+  `String.prototype.toLowerCase()`, and file/directory prefix collisions after
+  the same lowercasing. Prefix comparison includes the marker path: `a` beside
+  `a/b`, `A` beside `a/b`, or `.mokly-export-artifact/child` is invalid. Do not
+  normalize Unicode or apply additional case folding. `A.html` and `a.html`
+  collide; `ß.html` and `ss.html` are distinct.
 - `sha256` is the SHA-256 digest of the file's exact bytes as exactly 64
   lowercase hexadecimal characters. Uppercase, shorter, longer or non-hex
   values are invalid.
 - `size` is the file's byte length as an integer from 0 to 67108864 (64 MiB)
-  inclusive. Fractional, negative, non-finite, string or larger values are
-  invalid. A receiver verifies both the digest and the size of every file it
-  stores against the entry.
+  inclusive. Fractional, negative, non-finite or nonnumeric values are invalid.
+  A larger integer is well-formed but exceeds the upload limit. A receiver
+  verifies both the digest and size of every stored file against the entry.
 
 Readers ignore additional root and entry fields for forward compatibility;
 those fields never extend the owned inventory or authorize filesystem
@@ -73,6 +79,12 @@ operations. Writers emit only the documented fields, with unique JSON keys.
 Whitespace and object-key order do not affect meaning. Upload receivers reject
 duplicate JSON keys. Readers do not require sorted entries; writers sort by
 `path` using JavaScript's default string sort (UTF-16 code-unit order).
+
+Classification order is deterministic. Check a present root version before
+`files`. For version 2, require each field's documented primitive type, then
+classify an integer size above 64 MiB or a string path above 1,024 UTF-8 bytes
+as too large before applying the remaining entry grammar. Wrong field types,
+including a nonnumeric size or non-string path, remain invalid.
 
 ## Complete Artifact And Upload Validation
 
@@ -88,23 +100,25 @@ The marker describes generated files; it is not proof of origin or permission
 to delete, overwrite, extract, or serve them. Local export recovery can tolerate
 missing owned files but rejects unexpected files. The exporter accepts only
 schema 2 in an existing output directory: a directory holding a schema 1 marker
-from an earlier release fails with an `export-invalid` message naming the
-directory to remove. Upload acceptance requires the complete inventory with
+from an earlier release fails with an `export-invalid` message that tells the
+user to move files they added before deleting the named directory. Upload
+acceptance requires the complete inventory with
 neither missing nor unexpected files and every stored blob matching its entry.
 
 Receivers validate the marker before answering a plan request:
 
-| Violation                                                   | Result                           |
-| ----------------------------------------------------------- | -------------------------------- |
-| `schemaVersion` other than the number `2`                   | 426 `upload-unsupported-version` |
-| Malformed root, entry shape, missing or wrongly typed field | 400 or 422 invalid bundle        |
-| `sha256` not 64 lowercase hexadecimal characters            | 400 or 422 invalid bundle        |
-| `size` outside 0 to 67108864 or not an integer              | 400 or 422 invalid bundle        |
-| Repeated, case-colliding, unsafe or marker-owning `path`    | 400 or 422 invalid bundle        |
-| Blob bytes whose digest or length differ from the entry     | 400 on that blob                 |
-| Complete requested while a listed digest is still missing   | 409 on complete                  |
+| Violation                                                           | Result                           |
+| ------------------------------------------------------------------- | -------------------------------- |
+| Present `schemaVersion` other than the number `2`                   | 426 `upload-unsupported-version` |
+| Malformed root, missing version, entry shape or wrongly typed field | 400 or 422 invalid bundle        |
+| `sha256` not 64 lowercase hexadecimal characters                    | 400 or 422 invalid bundle        |
+| `size` negative, fractional, non-finite or nonnumeric               | 400 or 422 invalid bundle        |
+| Integer `size` above 67108864 or `path` above 1,024 UTF-8 bytes     | 413 `upload-too-large`           |
+| Repeated, case-colliding, prefix-colliding or unsafe `path`         | 400 or 422 invalid bundle        |
+| Blob bytes whose digest or length differ from the entry             | 400 on that Blob                 |
+| Complete requested while a listed digest is still missing           | 409 on Complete                  |
 
-[Upload limits](./mokly-upload.md#export-files-and-limits) also apply to
+[Upload limits](./mokly-upload-exchange.md#export-files-and-limits) also apply to
 every inventory path and file: at most 20,000 regular files including this
 marker and the per-file, path and manifest ceilings. The marker uses the
 regular-file limit (64 MiB), not the upload envelope's 16 KiB limit. An empty
@@ -121,15 +135,18 @@ inventory is a valid marker shape but cannot be a valid upload: `index.html`,
 - `valid`: whether the parsed `document` has the ownership marker shape above.
 - `document`: the JSON value to validate; serialize it when testing a text parser.
 - `rejection`: present only when `valid` is false; `"unsupported-version"` for
-  a wrong `schemaVersion` (426) and `"invalid"` for every other rejection
-  (400/422).
+  a present version other than number 2 (426), `"too-large"` for an over-limit
+  integer size or path byte length (413), and `"invalid"` for every other
+  rejection (400/422).
 
 Cases cover a valid complete inventory, an empty inventory, unsorted entries,
-ignored unknown fields, Unicode paths and lowercase-only collisions, then
-rejections for schema 1 and other versions, entries missing `path`, `sha256`
-or `size`, uppercase or short hex, negative, fractional and over-limit sizes,
-duplicate and case-colliding paths, the marker owning itself, invalid Unicode,
-control characters, the UTF-8 byte ceiling and every other path grammar rule.
+ignored unknown fields, Unicode paths, an accepted U+200D, and a path of
+exactly 1,024 UTF-8 bytes. Rejections cover a missing version, schema 1, string
+`"2"` and other versions; missing entry fields; uppercase or short hex;
+negative, fractional, nonnumeric and over-limit sizes; duplicate, case and
+exact/case-folded prefix collisions; marker ownership; invalid Unicode; DEL,
+U+0085 and other category Cc characters; a multibyte path over 1,024 bytes;
+and every other path grammar rule.
 They test marker shape, not gzip/tar parsing, raw JSON decoding, archive
 completeness, digest verification, authorization or all upload limits. The
 packed-consumer smoke checks these installed fixtures with an independent

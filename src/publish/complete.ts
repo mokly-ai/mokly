@@ -1,14 +1,15 @@
+import { publishCancelled, statusError, uploadFailed } from "./errors.js";
 import {
   cancelResponse,
   readBoundedBody,
   requestAttempt,
+  responseMediaType,
   retryableResponse,
-  statusError,
-  uploadFailed,
 } from "./http.js";
 import type { UploadRequestDependencies } from "./plan.js";
 import { ReplanRequired, retryRequest } from "./retry.js";
 import type { PlanResponse, PublishResult, UploadOptions } from "./types.js";
+import { isRecord } from "./validation.js";
 
 /** Complete one upload plan, retrying safe failures until its expiry. */
 export async function completeUpload(
@@ -68,7 +69,7 @@ async function optionalViewerUrl(
   response: Response,
   signal?: AbortSignal,
 ): Promise<string | null> {
-  if (mediaType(response) !== "application/json") {
+  if (responseMediaType(response) !== "application/json") {
     await cancelResponse(response);
     return null;
   }
@@ -76,7 +77,7 @@ async function optionalViewerUrl(
   try {
     body = await readBoundedBody(response);
   } catch {
-    if (signal?.aborted) throw uploadFailed();
+    if (signal?.aborted) throw publishCancelled();
     return null;
   }
   if (body === undefined) return null;
@@ -86,23 +87,11 @@ async function optionalViewerUrl(
   } catch {
     return null;
   }
-  if (!record(value) || typeof value["viewerUrl"] !== "string") return null;
+  if (!isRecord(value) || typeof value["viewerUrl"] !== "string") return null;
   try {
     const url = new URL(value["viewerUrl"]);
     return ["http:", "https:"].includes(url.protocol) ? url.href : null;
   } catch {
     return null;
   }
-}
-
-function mediaType(response: Response): string | undefined {
-  return response.headers
-    .get("Content-Type")
-    ?.split(";", 1)[0]
-    ?.trim()
-    .toLowerCase();
-}
-
-function record(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value);
 }

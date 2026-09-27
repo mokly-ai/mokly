@@ -50,3 +50,9 @@ replaces only the output it owns and restores the previous site if installing
 the new one fails and recovery is safe. Choose a destination that is missing
 or empty and outside your source, generated, dependency and comparison
 directories.
+
+Exported paths are relative, slash-separated, well-formed Unicode without
+control characters, backslashes, colons, empty segments, `.` or `..`, and at
+most 1,024 UTF-8 bytes. A refusal prints the escaped path so invisible
+characters can be found. Before deleting a destination created by an earlier
+Mokly release, move out any files you added yourself.

@@ -1,8 +1,10 @@
 # Delta Publishing Review
 
 Fifteen findings: five Medium and ten Low. None is a security leak or data
-loss in the shipped CLI, and none was changed during the review. Each finding
-awaits the user's decision; see [the plan](../../plans/delta-publishing.md).
+loss in the shipped CLI, and none was changed during the read-only review. The
+user then approved every recommended option; all fifteen are fixed, and their
+original analysis is preserved below. See **Approved Follow-up** for the
+changes and [the plan](../../plans/delta-publishing.md) for the milestones.
 
 Background for readers new to the feature: `mokly publish` exports a static
 catalogue, then sends it to a receiver (for example Mokly Cloud) in three
@@ -13,7 +15,7 @@ comparisons, the review file. The receiver answers with the digests it does
 not hold. **Blobs** uploads those files one request each. **Complete** asks
 the receiver to publish. The marker's format is "schema 2".
 
-## Findings
+## Initial Findings — addressed
 
 1. **P2 / Medium — Export now fails on some file names it used to accept,
    without naming the file.** The schema 2 marker builder rejects paths with
@@ -43,7 +45,7 @@ the receiver to publish. The marker's format is "schema 2".
 2. **P2 / Medium — A repeated Complete for the same upload is unspecified,
    and the test receiver breaks "keep the first publication".** The CLI
    retries Complete after a lost response, and the
-   [upload contract](../protocol/mokly-upload.md#complete) calls Complete
+   [exchange contract](../protocol/mokly-upload-exchange.md#complete) calls Complete
    idempotent, but it only defines `201` (new publication) and `200` (the
    receiver already had one for this commit and config path). The fake
    receiver decides "already published" at plan time
@@ -262,6 +264,77 @@ the receiver to publish. The marker's format is "schema 2".
     **B)** do A and add a CI check that pull request titles are Conventional
     Commits of at most 50 characters. **Recommended: B,** which protects
     every future plan.
+
+## Approved Follow-up
+
+On 2026-09-26 the user approved fixing every finding with its recommended
+option. [Delta Publishing](../../plans/delta-publishing.md) Milestones 7–13
+record the decisions and work; each item below links a finding to its fix.
+
+1. **Addressed.** One portability rule (`src/export/portable_path.ts`) runs
+   where every file enters the export inventory and is reused by the marker
+   builder, the marker parser and upload path validation. The export error
+   names the path escaped with `JSON.stringify`, so every control character
+   appears as an escape sequence; the rule is documented in the export and
+   ownership contracts and guides, with export-level tests for every rejected
+   shape.
+2. **Addressed.** The exchange contract makes Complete idempotent per upload
+   and reserves `200` for a publication completed by a different upload,
+   resolved before the stored-digest check. The fake receiver decides at
+   Complete time, replays a completed upload's first status and body, and can
+   drop a response after processing it; tests cover overlapping uploads, a
+   repeated Complete and a CLI publish whose first Complete response is lost.
+3. **Addressed.** `src/publish/accounting.ts` is the only counter: counting is
+   by digest, Plan-archive files count as uploaded, a digest counts once its
+   first PUT attempt starts, and the rich progress total, count and size come
+   from the same round accounting. A first publish reports `0 unchanged`, and
+   a single-round progress label ends at the summary's count.
+4. **Addressed.** Fixture responses are built from bytes and checked against
+   their declared status and content type; one shared request assertion
+   covers plan, blob and Complete (including `redirect: "manual"`); `302`
+   cases send a same-origin `Location` that is never requested. Mutations
+   accepting a missing content type or following redirects now fail tests.
+5. **Addressed.** Export adapters declare publication metadata
+   (`ExportAdapter.publicationMetadata`); publish declares only
+   `mokly-upload.json`, which stays in the marker but no longer changes the
+   deployment identity, so republishing unchanged content uploads no blob.
+6. **Addressed.** Every in-place TTY frame starts with `\r\x1b[2K`; an
+   emulated-terminal test covers a shrinking label and a re-plan reset.
+7. **Addressed.** The unreachable 16 s cap is gone; `src/publish/retry.ts`
+   exports the attempt count, base delay and `Retry-After` ceiling, and the
+   guide test derives "five", 1/2/4/8 s and sixty seconds from them.
+8. **Addressed.** One count formatter serves publish progress, publish
+   summaries and Serve. Cancellation and transport exhaustion keep
+   `upload-failed` but carry typed presentations with their own messages,
+   headlines and hints, so rich output never repeats a sentence and never
+   tells a user who cancelled to check the connection.
+9. **Addressed.** Over-limit declared sizes and paths are `413` with a new
+   `too-large` fixture class, receivers answer `missing` from blobs stored
+   for the same project, a test cross-checks fixture classes against the
+   status table, and the upload contract is split into
+   [`mokly-upload.md`](../protocol/mokly-upload.md) and
+   [`mokly-upload-exchange.md`](../protocol/mokly-upload-exchange.md).
+10. **Addressed.** Control characters are Unicode category Cc; the fixture
+    adds DEL, U+0085, an accepted U+200D, an exactly-1,024-byte path, a
+    multibyte over-limit path and exact and case-folded prefix collisions,
+    which both readers reject; version precedence is documented.
+11. **Addressed.** The earlier-release message now reads "This folder holds
+    an export from an earlier Mokly release. Move any files you added, then
+    delete `<output>` and export again."
+12. **Addressed.** One helper accepts only absolute `http:`/`https:` plan
+    URLs whose scheme, hostname and port equal the endpoint's; `blob:` cases
+    were added to the plan fixture and the independent reader.
+13. **Addressed.** Watch caches parsed markers in a bounded LRU keyed by
+    device, inode, size and times, holds owned paths and directory prefixes,
+    and reads markers up to 64 MiB; a parse-count test uses an injected
+    reader.
+14. **Addressed.** `src/publish/run.ts` is split into orchestration, snapshot,
+    exchange and accounting modules; response helpers live in `http.ts` and
+    every error factory in `src/publish/errors.ts`.
+15. **Addressed.** The plan records the squash-merge title and footer, and
+    `.github/workflows/pull-request-title.yml` runs a tested validator for
+    Conventional Commits titles of at most 50 characters. Making it a
+    required check is a post-merge follow-up.
 
 ## Scope And Delivery
 

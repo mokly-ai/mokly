@@ -10,7 +10,9 @@ authoritative complete local and complete-mode release gate remains
 `cargo xtask check`; the full hosted aggregate is reusable evidence for its
 exact tree. The public package forwarding and hierarchical cancellation
 additions below are implemented by the corresponding review-follow-up
-milestones.
+milestones. The pull-request title check below is the approved contract tracked
+by [Delta Publishing Milestone 12](../../plans/delta-publishing.md); the current
+workflow does not enforce it yet.
 
 ## Verification Boundary
 
@@ -84,6 +86,41 @@ allowlist inspection retains its existing `--ignore-scripts` boundary, while
 real packing keeps its lifecycle builds. Historical baseline reconstruction,
 clean consumer installation, clean-cache npx execution, source mutation,
 startup, and cache-invalidation regressions retain independent preparation.
+
+## Pull Request Title Contract
+
+A separate pull-request workflow validates titles on `opened`, `edited`,
+`reopened` and `synchronize`. It passes the untrusted title through an
+environment variable to a repository script; workflow expressions never
+interpolate the title into shell source. The workflow runs
+`scripts/verification/pull-request-title.mjs`, which reads only
+`PULL_REQUEST_TITLE` and needs no installed dependencies.
+
+The complete title is at most 50 Unicode code points, has no leading or
+trailing whitespace or newline, and has this Conventional Commits shape:
+
+```text
+<type>(<optional-scope>)<optional-!>: <description>
+```
+
+`type` is exactly one of `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`,
+`refactor`, `revert`, `style` or `test`. When present, `scope` is lowercase
+ASCII matching `[a-z0-9._/-]+`. `!` may follow the type or closing scope. The
+separator is exactly colon plus one space. `description` is nonempty, begins
+and ends with a non-whitespace character, and contains no newline. Examples
+include `fix: preserve upload counts`, `chore(main): release 0.13.0` and
+`feat(publish)!: upload catalogue content deltas`.
+
+An invalid title exits unsuccessfully and prints exactly:
+
+```text
+Pull request titles must use type(scope)!: description with type build, chore, ci, docs, feat, fix, perf, refactor, revert, style, or test. Keep any scope lowercase and the whole title to 50 characters or fewer.
+```
+
+The check protects release notes because this repository squash-merges pull
+requests and release-please reads the squash title on `main`. A breaking title
+retains its `BREAKING CHANGE:` explanation in the squash body; title validation
+does not inspect or synthesize that body.
 
 ## CI Graph And Checkout Ownership
 

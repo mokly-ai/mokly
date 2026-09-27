@@ -1,6 +1,7 @@
 import http from "node:http";
 
 import { FakeReceiverRejection } from "./fake_receiver_archive.js";
+import { resolveFakeComplete } from "./fake_receiver_completion.js";
 import {
   delay,
   expired,
@@ -72,6 +73,7 @@ export async function startFakeReceiver(
   const control: FakeReceiverControl = {
     blobDelayMs: 0,
     defaultExpiryMs: 60 * 60 * 1_000,
+    dropCompleteResponses: 0,
     expiryMs: [],
   };
   let origin = "";
@@ -107,8 +109,19 @@ export async function startFakeReceiver(
         status: 500,
       };
       requests.push(log);
-      const send = (status: number, document?: unknown, headers = {}): void => {
+      const sendBytes = (
+        status: number,
+        bytes?: Buffer,
+        headers = {},
+      ): void => {
         log.status = status;
+        response.writeHead(status, {
+          ...(bytes ? { "Content-Length": String(bytes.length) } : {}),
+          ...headers,
+        });
+        response.end(bytes);
+      };
+      const send = (status: number, document?: unknown, headers = {}): void => {
         const bytes =
           document === undefined
             ? undefined
@@ -117,14 +130,12 @@ export async function startFakeReceiver(
                   ? document
                   : JSON.stringify(document),
               );
-        response.writeHead(status, {
-          ...(bytes ? { "Content-Length": String(bytes.length) } : {}),
+        sendBytes(status, bytes, {
           ...(document !== undefined
             ? { "Content-Type": "application/json" }
             : {}),
           ...headers,
         });
-        response.end(bytes);
       };
       if (request.headers.authorization !== `Bearer ${token}`) {
         send(401);
@@ -135,6 +146,7 @@ export async function startFakeReceiver(
         if (kind === "blob" && control.blobDelayMs)
           await delay(control.blobDelayMs);
         send(override.status, override.body, {
+          ...override.headers,
           ...(override.retryAfter === undefined
             ? {}
             : { "Retry-After": override.retryAfter }),
@@ -154,14 +166,14 @@ export async function startFakeReceiver(
           return;
         }
         const id = `upload-${plans.length + 1}`;
-        const existing = publications.get(publicationKey(validated.manifest));
+        const published = publications.has(publicationKey(validated.manifest));
         for (const [name, bytes] of validated.files) {
           const entry = validated.ownership.files.find(
             (candidate) => candidate.path === name,
           );
           if (entry) blobs.set(entry.sha256, bytes);
         }
-        const missing = existing
+        const missing = published
           ? []
           : [...validated.entriesByDigest.keys()]
               .filter((digest) => !blobs.has(digest))
@@ -173,7 +185,6 @@ export async function startFakeReceiver(
           expiresAt: new Date(Date.now() + expiry).toISOString(),
           id,
           missing,
-          ...(existing ? { existing } : {}),
         };
         uploads.set(id, plan);
         plans.push(plan);
@@ -219,38 +230,24 @@ export async function startFakeReceiver(
         const match = /^\/uploads\/([^/]+)\/complete$/u.exec(
           new URL(path, origin).pathname,
         );
-        const upload = match ? uploads.get(match[1] ?? "") : undefined;
-        if (!upload) {
-          send(404);
+        const result = resolveFakeComplete(
+          match ? uploads.get(match[1] ?? "") : undefined,
+          blobs,
+          publications,
+          origin,
+          () => `publication-${++publicationNumber}`,
+        );
+        if (result.firstCompletion && control.dropCompleteResponses > 0) {
+          control.dropCompleteResponses--;
+          log.status = result.status;
+          response.destroy();
           return;
         }
-        if (expired(upload)) {
-          send(410);
-          return;
-        }
-        if (upload.existing) {
-          send(200, upload.existing.body);
-          return;
-        }
-        if (
-          [...upload.entriesByDigest].some(([digest]) => !blobs.has(digest))
-        ) {
-          send(409);
-          return;
-        }
-        const publicationId = `publication-${++publicationNumber}`;
-        const publication: FakeReceiverPublication = {
-          manifest: upload.manifest,
-          body: {
-            id: publicationId,
-            projectId: "fake-project",
-            state: "published",
-            catalogueUrl: `${origin}/catalogues/${publicationId}`,
-            viewerUrl: `${origin}/catalogues/${publicationId}/view`,
-          },
-        };
-        publications.set(publicationKey(upload.manifest), publication);
-        send(201, publication.body);
+        sendBytes(
+          result.status,
+          result.body,
+          result.body ? { "Content-Type": "application/json" } : {},
+        );
         return;
       }
       send(404);

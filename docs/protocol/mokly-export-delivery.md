@@ -278,28 +278,34 @@ replacement and its compatibility checks.
 
 ## Deployment Identity
 
-Comparison generations identify only the comparison JSON and snapshot inventory.
-The separate `deploymentId` identifies every non-marker file and every
-alias-to-file mapping in the installed artifact, including shell pages,
-navigation metadata, public files, CSS, client/navigation modules, fonts and
-provider files. The ownership marker is excluded from the hash input because it
-is derived from those finalized file paths and bytes. An export with unchanged
-comparisons but changed deployment content must get a different deployment
-identity. Identical content and aliases retain the same identity and therefore
-the same derived marker, independent of file/alias insertion order or the output
-directory.
+Comparison generations identify only their comparison JSON and snapshot
+inventory. The separate `deploymentId` identifies every alias-to-file mapping
+and every installed file except the ownership marker and publication metadata
+paths explicitly declared by the provider adapter. Identity-participating files
+include shell pages, navigation metadata, public files, CSS,
+client/navigation modules, fonts and ordinary provider files. Publish declares
+only `mokly-upload.json` as publication metadata.
 
-Finalize identity after the provider adapter and non-marker inventory are complete.
-Only exporter-owned shell roots may carry the stamped descriptor. Require every
-such shell page to retain its original canonical path, id map, comparison URL,
+The marker is excluded because it is derived from finalized paths and bytes.
+Publication metadata is excluded because commit, branch and export-time fields
+describe delivery rather than browser content. Both remain owned files and are
+hashed by the marker. Changing only publication metadata can therefore change
+the marker without changing `deploymentId`; unchanged identity-participating
+content and aliases retain the same identity independently of insertion order
+or output directory.
+
+Finalize identity after the provider adapter, its publication-metadata
+declaration and the complete non-marker inventory are fixed. Only exporter-owned
+shell roots may carry the stamped descriptor. Require every such shell page to retain its original canonical path, id map, comparison URL,
 and one valid root descriptor; adapters cannot remove or rewrite that contract.
 Normalize each owned root descriptor to its canonical JSON serialization with
 `deploymentId` set to 64 zeroes. Hash each resulting file's exact bytes, sort
 the `[path, contentHash]` pairs by JavaScript string order, sort alias pairs by
 alias path, and SHA-256 the JSON encoding of `[filePairs, aliasPairs]`.
-Do not normalize lookalike metadata inside consumer documents, scripts, or other
-non-shell files. Their bytes participate unchanged, except for the explicitly
-owned catalogue field below.
+Do not normalize lookalike metadata inside consumer documents, scripts, or
+other non-shell files. Their bytes participate unchanged unless their exact
+path was declared as publication metadata, except for the explicitly owned
+catalogue field below.
 
 Finalization includes the exporter-owned
 `__mokly/catalogue.json`: canonicalize its JSON with only its top-level
@@ -313,12 +319,13 @@ delivery descriptor v2, ownership v2, upload v1 or the review schema.
 Stamp the resulting identity into those owned root descriptors and the owned
 catalogue field, changing no other non-marker bytes. Then compute the ownership
 entries from the exact finalized bytes and add the marker through the same
-collision-checked inventory. No adapter or non-marker inventory mutation may
-follow identity finalization. Every owned root's staging placeholder is replaced
-before the marker is built and before installation. This avoids both identity
-and marker self-reference: the identity calculation determines the finalized
-bytes, and the marker is a pure function of their paths and bytes. The
-comparison generation keeps its separate URL/hash.
+collision-checked inventory. No adapter, publication-metadata declaration or
+non-marker byte may change after identity finalization. Every owned root's
+staging placeholder is replaced before the marker is built and before
+installation. This avoids identity and marker self-reference: the identity
+determines finalized browser content, while the marker is a pure function of
+all final paths and bytes, including publication metadata. The comparison
+generation keeps its separate URL/hash.
 
 In-shell navigation requires both deployment identity and comparison URL to
 match; otherwise it performs a full document load before adopting any new view.

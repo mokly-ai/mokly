@@ -1,6 +1,6 @@
-import { MoklyError } from "../errors.js";
 import type { GitCommandRunner } from "../review/git.js";
 
+import { publishIdentityFailed } from "./errors.js";
 import type { UploadIdentity, UploadRepository } from "./types.js";
 import {
   boundedText,
@@ -9,17 +9,20 @@ import {
   repositorySegment,
 } from "./validation.js";
 
+const IDENTITY_ERROR_MESSAGE =
+  "Publish needs a committed Git checkout and a valid remote; use --repository <host>/<owner>/<name> to set repository identity.";
+
 /** Parse a remote URL or explicit host/owner/name without retaining credentials. */
 export function parseRepository(source: string): UploadRepository {
   let host: string;
   let repositoryPath: string;
   if (source.includes("://")) {
     const parts = /^(https?|ssh):\/\/[^/?#]+\/([^?#]+)$/.exec(source);
-    if (!parts) throw identityError();
+    if (!parts) throw publishIdentityFailed(IDENTITY_ERROR_MESSAGE);
     try {
       host = new URL(source).hostname.toLowerCase();
     } catch {
-      throw identityError();
+      throw publishIdentityFailed(IDENTITY_ERROR_MESSAGE);
     }
     repositoryPath = parts[2]!;
   } else {
@@ -43,7 +46,7 @@ export function parseRepository(source: string): UploadRepository {
     !boundedText(name, 255) ||
     !repositorySegment(name)
   )
-    throw identityError();
+    throw publishIdentityFailed(IDENTITY_ERROR_MESSAGE);
   return { host, owner, name };
 }
 
@@ -67,7 +70,7 @@ export async function readUploadIdentity(
         : names.length === 1
           ? names[0]
           : undefined;
-      if (!name) throw identityError();
+      if (!name) throw publishIdentityFailed(IDENTITY_ERROR_MESSAGE);
       remote = (await runner.run(["remote", "get-url", name])).trim();
     }
     let branch = "HEAD";
@@ -95,7 +98,7 @@ export async function readUploadIdentity(
       !boundedText(branch, 255) ||
       (pullRequest !== null && !Number.isSafeInteger(pullRequest))
     )
-      throw identityError();
+      throw publishIdentityFailed(IDENTITY_ERROR_MESSAGE);
     return {
       repository: parseRepository(remote),
       branch,
@@ -104,7 +107,7 @@ export async function readUploadIdentity(
       gitRoot,
     };
   } catch {
-    throw identityError();
+    throw publishIdentityFailed(IDENTITY_ERROR_MESSAGE);
   }
 }
 
@@ -112,16 +115,9 @@ export async function readUploadIdentity(
 export async function readHeadSha(runner: GitCommandRunner): Promise<string> {
   try {
     const sha = (await runner.run(["rev-parse", "--verify", "HEAD"])).trim();
-    if (!GIT_SHA.test(sha)) throw identityError();
+    if (!GIT_SHA.test(sha)) throw publishIdentityFailed(IDENTITY_ERROR_MESSAGE);
     return sha;
   } catch {
-    throw identityError();
+    throw publishIdentityFailed(IDENTITY_ERROR_MESSAGE);
   }
-}
-
-function identityError(): MoklyError {
-  return new MoklyError(
-    "git-failed",
-    "Publish needs a committed Git checkout and a valid remote; use --repository <host>/<owner>/<name> to set repository identity.",
-  );
 }

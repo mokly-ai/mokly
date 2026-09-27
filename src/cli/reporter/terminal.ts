@@ -95,6 +95,15 @@ export function formatBytes(bytes: number): string {
   return `${value.toFixed(1)} ${unit}`;
 }
 
+/** Format a count with a singular noun only when its value is exactly one. */
+export function formatCount(
+  count: number,
+  singular: string,
+  plural = `${singular}s`,
+): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 /** Bound one rendered line and avoid retaining incomplete ANSI sequences. */
 export function truncateTerminalLine(value: string, columns: number): string {
   const width = Number.isSafeInteger(columns) && columns > 0 ? columns : 80;

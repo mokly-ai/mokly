@@ -1,11 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  readBoundedBody,
-  retryableResponse,
-  statusError,
-} from "../dist/publish/http.js";
+import { statusError } from "../dist/publish/errors.js";
+import { readBoundedBody, retryableResponse } from "../dist/publish/http.js";
 import { resolvePublishOptions } from "../dist/publish/options.js";
 
 const options = {

@@ -8,6 +8,7 @@ import { promisify } from "node:util";
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { startFakeReceiver } from "./helpers/fake_receiver.js";
 import { repositoryRoot } from "./helpers/fixture.js";
+import { expectedUploadedEntries } from "./helpers/publish_counts.js";
 
 const execute = promisify(execFile);
 const cli = path.join(repositoryRoot, "dist/cli/bin.js");
@@ -46,12 +47,10 @@ test("publish sends assigned leading-dash credentials and paths, preserving secr
       "utf8",
     ),
   ) as { files: Array<{ sha256: string }> };
-  const uploaded = ownership.files.filter(({ sha256 }) =>
-    receiver.plans[0]!.missing.includes(sha256),
-  ).length;
+  const uploaded = expectedUploadedEntries(receiver.plans[0]!);
   assert.equal(
     stdout,
-    `Published Mokly catalogue. ${uploaded} files uploaded, ${ownership.files.length - uploaded} unchanged.\n` +
+    `Published Mokly catalogue. ${uploaded} ${uploaded === 1 ? "file" : "files"} uploaded, ${ownership.files.length - uploaded} unchanged.\n` +
       `${receiver.origin}/catalogues/publication-1/view\n`,
   );
   assert.equal((stdout + stderr).includes(token), false);

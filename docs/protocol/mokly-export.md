@@ -124,15 +124,18 @@ broad rules, without ignoring unrelated authored files with similar names.
    graph, and comparison engine as development. An ephemeral loopback server
    may be used, but no watcher or persistent process is started.
 5. Assemble all routes and resources defined by the static delivery contract.
-   Finalize the deployment identity from every staged file except the ownership
-   marker, stamp that identity into the owned catalogue and shell documents,
-   then hash those final bytes and add the schema 2 marker to the
-   collision-checked inventory last. Verify internal references, ownership,
-   route collisions, including the marker path, and complete local dependency
-   closure before writing the stage. A regular file over 64 MiB, the
-   inventory's size ceiling, fails as `export-invalid` before staging. The
-   marker is excluded from the identity input because it is derived entirely
-   from the paths and finalized bytes that the identity calculation determines.
+   Validate every file path against the ownership contract's portable-path
+   rule when it enters the collision-checked inventory. Finalize the deployment
+   identity from every staged file except the ownership marker and any
+   publication metadata path declared by the adapter. Stamp that identity into
+   the owned catalogue and shell documents, then hash the exact final bytes of
+   every file, including publication metadata, and add the schema 2 marker
+   last. Verify internal references, ownership, all route and directory-prefix
+   collisions including the marker path, and complete local dependency closure
+   before writing the stage. A regular file over 64 MiB fails as
+   `export-invalid` before staging. The marker and declared publication
+   metadata are excluded from identity only; both remain owned and hashed by
+   the marker.
 6. Drain generation work and close temporary servers before installing the
    stage. Replace owned output with rollback protection, then clean owned
    temporary resources and release the writer reservation.
@@ -150,6 +153,19 @@ for arbitrary edits to the repository or private reservation namespace.
 Cancellation is checked again after ownership validation and after the old
 directory moves to backup. The final stage-to-output rename is the commit point;
 once started it is drained along with cleanup, not interrupted mid-rename.
+
+A non-portable candidate fails with this exact product message, where `path`
+is interpolated with `JSON.stringify` so invisible characters are visible and
+no file content is exposed:
+
+```text
+[mokly/export-invalid] The export path ${JSON.stringify(path)} is not portable. Rename that file or folder, then export again.
+```
+
+`JSON.stringify` supplies the quoted representation. Because JSON permits DEL
+and C1 controls as literal characters, the exporter renders any category Cc
+character still present in that representation as lowercase `\uXXXX` before it
+reaches the terminal.
 
 ## Output Ownership And Confinement
 
@@ -173,13 +189,25 @@ repository root, Git metadata, dependency directories, and package runtime
 directories as targets. These checks also apply when the requested directory
 does not yet exist.
 
+Every regular file path, whether produced by core export assembly, copied from
+consumer public files, or added by an adapter, must satisfy the
+[single portable-path rule](./mokly-export-ownership.md#file-contract) before it
+can enter the inventory. No producer can defer that check to marker writing or
+publication.
+
 Accept a missing destination or an empty real directory. A nonempty directory
 must have a regular `.mokly-export-artifact` ownership file using the
 [public schema 2](./mokly-export-ownership.md) and its generated-file inventory.
 Reject missing/malformed markers, unexpected files outside the inventory,
 unsafe inventory paths, symlink entries, and unsupported versions, including
-schema 1 markers written by earlier releases; that failure names the stale
-directory to remove. Treat the marker as public-safe metadata: no absolute
+schema 1 markers written by earlier releases. That case uses this exact message,
+where `<output>` is the resolved destination:
+
+```text
+[mokly/export-invalid] This folder holds an export from an earlier Mokly release. Move any files you added, then delete <output> and export again.
+```
+
+Treat the marker as public-safe metadata: no absolute
 checkout paths, credentials, or timestamps. Never use its strings as unchecked
 deletion targets. Export owns replacement of its recorded output files.
 

@@ -31,7 +31,8 @@ The service answers `200` with JSON: an upload id and its expiry time, the
 sorted list of digests it does not yet hold, a blob URL containing the literal
 placeholder `{sha256}`, and a completion URL. Publish takes both URLs only from
 this answer and never builds them from the endpoint. Both must be on the
-endpoint's own scheme, host and port; publish never sends the token elsewhere.
+endpoint's own scheme, host and port and use HTTP or HTTPS; `blob:` and other
+schemes are refused before a request. Publish never sends the token elsewhere.
 
 ## The blobs
 
@@ -59,13 +60,15 @@ Accept: application/json
 Content-Length: 0
 ```
 
-`201` means a new publication is live, and `200` means the service already had
-one for this revision and config path and kept it, in which case publish
-prints `Mokly catalogue already published for this commit.` instead of the
-upload counts. Any other `2xx` fails. When the JSON answer carries an absolute
-`viewerUrl`, publish prints it after its success line. `409` means the service
-still lacks files and `410` means the upload expired: publish plans once more,
-uploads what comes back, and completes again; a second `409` or `410` fails.
+`201` means this upload created the publication. Repeating Complete for that
+upload returns its first status and body and never publishes again. `200` means
+a different upload already completed this revision and config path, so the
+service kept and returned the first publication; publish then prints
+`Mokly catalogue already published for this commit.` instead of counts. Any
+other `2xx` fails. When the JSON answer carries an accepted absolute
+`viewerUrl`, publish prints it after success. `409` means the service still
+lacks files and `410` means expiry: publish plans once more, uploads what comes
+back, and completes again; a second `409` or `410` fails.
 
 ## What the manifest says
 
@@ -85,12 +88,14 @@ decompress the plan archive, enforcing size and file-count limits before
 reporting version or structural failures. It validates the manifest's fields
 and version, the marker's schema, digests, sizes and paths, stores the two or
 three archived artifacts once their bytes match their digests, and compares the
-remaining digests with what it already holds for that project. Each stored
-blob must match its declared digest and size. The service commits only once
-every listed digest is present and answers `409` until then, and it keeps the
-first publication it completed for a revision and config path. Before exposing
-any catalogue, it checks that the credential is allowed to publish for the
-repository the manifest names.
+remaining digests with every verified Blob stored for that project, including
+content received for an unfinished or expired upload. Each stored Blob must
+match its declared digest and size. An integer declared size above 64 MiB or a
+path above 1,024 UTF-8 bytes receives `413`; malformed values and path grammar
+receive `400` or `422`. The service commits only when every listed digest is
+present and answers `409` until then. It keeps the first publication completed
+for a revision and config path. Before exposure, it checks that the credential
+is allowed to publish for the repository named by the manifest.
 
 Receivers accept only regular files. They reject symlinks, hard links,
 devices, FIFOs, sparse files and other special entries in the plan archive,
@@ -99,21 +104,35 @@ and extract into an empty private directory so no path can escape it.
 ## Retries and timeouts
 
 Each request times out after 120 seconds. A request that fails in transit, or
-is answered `408`, `429`, `500`, `502`, `503` or `504`, is retried up to five
-times with a growing, randomised delay of at most sixteen seconds, or the
-delay a `Retry-After` header of up to sixty seconds asks for. Nothing is
-retried after the plan's expiry time; instead publish plans once more, as it
-does after a `410`, and everything already stored stays held.
+is answered `408`, `429`, `500`, `502`, `503` or `504`, is tried at most five
+times. Random waits before attempts two through five are at most 1, 2, 4 and 8
+seconds, or the delay a valid `Retry-After` of up to sixty seconds asks for.
+Nothing is retried at or past Plan expiry; publish instead plans once more, as
+after a `410`, and everything already stored stays held.
+
+## Counts and cancellation
+
+The uploaded count includes marker entries whose digest matches a file sent in
+the Plan archive and every entry sharing a digest whose Blob PUT was attempted
+in this command. Every other marker entry is unchanged. Progress applies the same rule
+per round, begins with Plan files, and advances all entries sharing a completed
+digest. It says `Uploading 0 of 1 file · <size>` for one file and uses `files`
+otherwise; an empty `missing` set shows no progress label.
+
+Cancellation prints
+`[mokly/upload-failed] Publication was cancelled. Run mokly publish again when you are ready.`
+An exhausted transport failure instead tells the reader to check the endpoint
+and connection, then retry.
 
 ## When it is refused
 
-| Result                                                                                          | Category                     |
-| ----------------------------------------------------------------------------------------------- | ---------------------------- |
-| The token or the repository was refused                                                         | `upload-unauthorized`        |
-| The plan archive, manifest or marker was rejected, or a file's bytes did not match their digest | `upload-invalid-bundle`      |
-| An upload limit was exceeded                                                                    | `upload-too-large`           |
-| The manifest or marker declares an unknown version                                              | `upload-unsupported-version` |
-| Anything else, including a timeout or a second `409` or `410`                                   | `upload-failed`              |
+| Result                                                                          | Category                     |
+| ------------------------------------------------------------------------------- | ---------------------------- |
+| The token or the repository was refused                                         | `upload-unauthorized`        |
+| The Plan archive, manifest or marker was malformed, or Blob bytes did not match | `upload-invalid-bundle`      |
+| An upload limit or declared size/path byte limit was exceeded                   | `upload-too-large`           |
+| The manifest or marker declares an unknown version                              | `upload-unsupported-version` |
+| Anything else, including a timeout or a second `409` or `410`                   | `upload-failed`              |
 
 A failed publish leaves the complete local export where it was written, so you
 can look at exactly what would have been sent, and running it again resumes

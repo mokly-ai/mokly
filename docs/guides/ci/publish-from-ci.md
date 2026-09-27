@@ -37,12 +37,14 @@ to workflows you trust. A pull request from a fork should not receive them.
 
 ## What success prints
 
-The last line of a successful job is
-`Published Mokly catalogue. 12 files uploaded, 266 unchanged.` with the
-counts of that run, followed by the published catalogue's address when the
-service returns one. Only missing file blobs are sent, so a job that publishes
-an unchanged catalogue uploads no blobs and still succeeds; it still sends the
-small Plan archive.
+The counted line of a successful job is, for example,
+`Published Mokly catalogue. 1 file uploaded, 266 unchanged.` or
+`Published Mokly catalogue. 12 files uploaded, 255 unchanged.` It is followed
+by the catalogue address when the service returns one. Plan-archive files count
+as uploaded when their digest matches an ownership entry; every other entry
+counts after its digest's Blob PUT is attempted. Only missing Blobs are sent, so a job publishing an unchanged
+catalogue can send no Blob PUT and still succeed; it still sends the Plan
+archive.
 A rerun for a commit the service already published prints
 `Mokly catalogue already published for this commit.` with the existing address
 and also succeeds.

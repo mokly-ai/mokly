@@ -77,37 +77,56 @@ export function readFakeOwnership(value: unknown): ExportOwnership {
   if (value["schemaVersion"] !== 2) throw unsupported();
   if (!Array.isArray(value["files"])) throw invalid();
   const files: ExportOwnershipEntry[] = [];
-  const paths = new Set<string>();
+  const paths = [MARKER.toLowerCase()];
   for (const candidate of value["files"]) {
-    if (!ownershipEntry(candidate)) throw invalid();
-    const folded = candidate.path.toLowerCase();
-    if (paths.has(folded)) throw invalid();
-    paths.add(folded);
+    const rejection = ownershipEntryRejection(candidate);
+    if (rejection === "too-large") throw tooLarge();
+    if (rejection === "invalid") throw invalid();
+    paths.push(candidate.path.toLowerCase());
     files.push({
       path: candidate.path,
       sha256: candidate.sha256,
       size: candidate.size,
     });
   }
+  const unique = new Set(paths);
+  if (unique.size !== paths.length) throw invalid();
+  for (const name of unique) {
+    const parts = name.split("/");
+    parts.pop();
+    while (parts.length > 0) {
+      if (unique.has(parts.join("/"))) throw invalid();
+      parts.pop();
+    }
+  }
   return { schemaVersion: 2, files };
 }
 
-function ownershipEntry(value: unknown): value is ExportOwnershipEntry {
-  return (
-    record(value) &&
-    Object.hasOwn(value, "path") &&
-    typeof value["path"] === "string" &&
-    value["path"] !== MARKER &&
+function ownershipEntryRejection(
+  value: unknown,
+): "invalid" | "too-large" | undefined {
+  if (
+    !record(value) ||
+    !Object.hasOwn(value, "path") ||
+    !Object.hasOwn(value, "sha256") ||
+    !Object.hasOwn(value, "size") ||
+    typeof value["path"] !== "string" ||
+    typeof value["sha256"] !== "string" ||
+    typeof value["size"] !== "number" ||
+    !Number.isInteger(value["size"])
+  )
+    return "invalid";
+  if (
+    Buffer.byteLength(value["path"]) > 1024 ||
+    value["size"] > 64 * 1024 * 1024
+  )
+    return "too-large";
+  return value["path"] !== MARKER &&
     safePath(value["path"]) &&
-    Object.hasOwn(value, "sha256") &&
-    typeof value["sha256"] === "string" &&
     SHA256.test(value["sha256"]) &&
-    Object.hasOwn(value, "size") &&
-    typeof value["size"] === "number" &&
-    Number.isInteger(value["size"]) &&
-    value["size"] >= 0 &&
-    value["size"] <= 64 * 1024 * 1024
-  );
+    value["size"] >= 0
+    ? undefined
+    : "invalid";
 }
 
 function safePath(value: unknown): value is string {
@@ -185,4 +204,8 @@ function invalid(): FakeReceiverRejection {
 
 function unsupported(): FakeReceiverRejection {
   return new FakeReceiverRejection(426);
+}
+
+function tooLarge(): FakeReceiverRejection {
+  return new FakeReceiverRejection(413);
 }

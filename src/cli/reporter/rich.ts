@@ -13,6 +13,7 @@ import {
 } from "./serve_lines.js";
 import { renderServeReady } from "./serve_ready.js";
 import {
+  formatCount,
   formatDuration,
   terminalGlyphs,
   terminalStyle,
@@ -92,7 +93,7 @@ export class RichReporter implements CliReporter {
     this.settleServePhase();
     this.line(
       this.environment.stdout,
-      `  ${this.#success} Changes ready · ${changed} changed ${changed === 1 ? "screen" : "screens"} (${formatDuration(durationMs)})`,
+      `  ${this.#success} Changes ready · ${formatCount(changed, "changed screen")} (${formatDuration(durationMs)})`,
     );
   }
 
