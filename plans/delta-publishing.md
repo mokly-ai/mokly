@@ -151,7 +151,7 @@ other nine second-review findings are not approved and stay open. Milestones
   fixture repositories may create their own. The pull request title test
   keeps its fixed type list and its `AGENTS.md` example check and drops the
   `origin/main` history scan. A static test enforces the rule for every test
-  source.
+  source at `tests/test_repository_refs.test.ts`.
 
 ## Milestone 1: Protocol and guide contract — completed
 
@@ -605,12 +605,12 @@ Release notes depend on the squash title, so CI checks it.
       without changing the implementation. Eleven findings (two Medium, nine
       Low) are recorded in its Second Review for the user's decision.
 
-## Milestone 14: Second review fix contract
+## Milestone 14: Second review fix contract — completed
 
 Documentation and contract only. Validate with Prettier and the guide tests;
 `cargo xtask check` is not required.
 
-- [ ] State the cancellation precedence in the exchange contract
+- [x] State the cancellation precedence in the exchange contract
       ([`mokly-upload-exchange.md`](../docs/protocol/mokly-upload-exchange.md)
       Accounting And Output and Rejections), the
       [terminal contract](../docs/protocol/mokly-terminal-output.md) and the
@@ -618,20 +618,20 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       what counts as a cancellation, that a recovery failure after
       cancellation is shown unchanged with its paths, and that `mokly export`
       output is unchanged (second #1).
-- [ ] Update the publish cancellation sentences in
+- [x] Update the publish cancellation sentences in
       [`cli/publish.md`](../docs/guides/cli/publish.md) and
       [`ci/the-upload.md`](../docs/guides/ci/the-upload.md) to match
       (second #1).
-- [ ] Add the deterministic-test rule and its enforcing test to
+- [x] Add the deterministic-test rule and its enforcing test to
       [`ci-verification.md`](../docs/protocol/ci-verification.md) (second #2).
-- [ ] Run Prettier and the guide tests; check every changed link.
+- [x] Run Prettier and the guide tests; check every changed link.
 
-## Milestone 15: Typed cancellation
+## Milestone 15: Typed cancellation — completed
 
 Publish shows the cancellation output only for a real cancellation, and
 export recovery errors reach the user unchanged.
 
-- [ ] Add failing tests first: `isCancellation` accepts a marked
+- [x] Add failing tests first: `isCancellation` accepts a marked
       `MoklyError` and a platform abort error and rejects combined, wrapped
       and unrelated errors without reading causes; export rollback success
       after cancellation is a cancellation, while rollback failure and
@@ -640,7 +640,7 @@ export recovery errors reach the user unchanged.
       cancellation; baseline interruption is a cancellation; the publish
       identity readers rethrow a cancellation instead of `git-failed`; the
       publish error mapping keeps every non-cancellation `MoklyError`.
-- [ ] Add spawned `mokly publish` tests with
+- [x] Add spawned `mokly publish` tests with
       `tests/helpers/export_failure_preload.ts` (adding modes as needed):
       cancellation with a clean rollback prints exactly the cancellation line
       and restores the previous `site/`; cancellation with a failed restore
@@ -648,26 +648,27 @@ export recovery errors reach the user unchanged.
       a reservation cleanup failure prints the export error naming the
       reservation; the Blob-upload cancellation test still passes. Cover
       plain and rich output for the failed-restore case.
-- [ ] Add the cancellation mark to `MoklyError` and `isCancellation` to
+- [x] Add the cancellation mark to `MoklyError` and `isCancellation` to
       `src/errors.ts`; mark the export cancellation check, baseline
       interruption, publish cancellation and the cancellation-only wrappers;
       make the publish identity readers rethrow cancellations.
-- [ ] Replace the abort-signal check in `src/cli/publish.ts` with
+- [x] Replace the abort-signal check in `src/cli/publish.ts` with
       `isCancellation`, so only cancellations map to the cancellation output.
-- [ ] Confirm `mokly export` and Serve output are unchanged, including
+- [x] Confirm `mokly export` and Serve output are unchanged, including
       `tests/export_cli_failures.test.ts`, and update the export, publish and
       CLI READMEs.
 
-## Milestone 16: Deterministic pull request title test
+## Milestone 16: Deterministic pull request title test — completed
 
 The title test no longer depends on the state of `origin/main`, and a static
 test keeps every test independent of remote-tracking references.
 
-- [ ] Remove the `origin/main` history scan from
+- [x] Remove the `origin/main` history scan from
       `tests/verification_pull_request_title.test.ts`; keep the fixed type
       list, the `AGENTS.md` example check and every boundary case
       (second #2).
-- [ ] Add a static test that fails when a test or test helper runs Git in the
+- [x] Add `tests/test_repository_refs.test.ts`, a static test that fails when
+      a test or test helper runs Git in the
       real repository with a remote-tracking reference, with synthetic
       positive cases (including the removed code) and negative cases (fixture
       repositories, local references); it reports no violation on the
@@ -675,9 +676,9 @@ test keeps every test independent of remote-tracking references.
 
 ## Milestone 17: Second review fix verification and delivery
 
-- [ ] Run the focused publish, export, baseline, CLI, guides, package and CI
+- [x] Run the focused publish, export, baseline, CLI, guides, package and CI
       suites, then `cargo xtask check`; resolve every failure.
-- [ ] Mark second-review findings 1 and 2 addressed in
+- [x] Mark second-review findings 1 and 2 addressed in
       `docs/reviews/delta-publishing.md` and summarize what changed.
 - [ ] After checks pass, `git add -A`, commit with a Conventional Commits
       title of at most 50 characters, and push the branch.

@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
+import { isCancellation } from "../dist/errors.js";
 import { fileExportOperations } from "../dist/export/operations.js";
 import { ExportTransaction } from "../dist/export/transaction.js";
 
@@ -104,8 +105,103 @@ test("cancellation during replacement restores the previous output", async (cont
   );
   await assert.rejects(
     transaction.install(controller.signal),
-    /previous output was restored/,
+    (error: unknown) => {
+      assert.equal(isCancellation(error), true);
+      assert.equal(
+        (error as Error).message,
+        "[mokly/export-invalid] Could not install export; the previous output was restored. [mokly/export-invalid] Export cancelled; retry when ready.",
+      );
+      return true;
+    },
   );
   assert.deepEqual(await fs.promises.readdir(output), []);
   await transaction.close();
+});
+
+test("failed cancellation rollback is recovery, not cancellation", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  const output = path.join(fixture.root, "site");
+  await fs.promises.mkdir(output);
+  const controller = new AbortController();
+  const transaction = await ExportTransaction.open(output, undefined, {
+    ...fileExportOperations,
+    rename: async (from, to) => {
+      if (from === transaction.backup)
+        throw new Error("injected restore failure");
+      await fs.promises.rename(from, to);
+      if (from === output) controller.abort();
+    },
+  });
+  await fs.promises.writeFile(
+    path.join(transaction.stage, "index.html"),
+    "Next",
+  );
+  await assert.rejects(transaction.install(controller.signal), (error) => {
+    assert.equal(isCancellation(error), false);
+    assert.match((error as Error).message, /Export rollback failed/u);
+    assert.match((error as Error).message, new RegExp(transaction.backup, "u"));
+    return true;
+  });
+  await assert.rejects(transaction.close(), /recovery files retained/u);
+});
+
+test("cancellation without previous output keeps its install wrapper marked", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  const output = path.join(fixture.root, "site");
+  const abort = new Error("injected stage cancellation");
+  abort.name = "AbortError";
+  const transaction = await ExportTransaction.open(output, undefined, {
+    ...fileExportOperations,
+    rename: async (from, to) => {
+      if (from === transaction.stage) throw abort;
+      await fs.promises.rename(from, to);
+    },
+  });
+  await fs.promises.writeFile(
+    path.join(transaction.stage, "index.html"),
+    "Next",
+  );
+  await assert.rejects(transaction.install(), (error) => {
+    assert.equal(isCancellation(error), true);
+    assert.equal(
+      (error as Error).message,
+      "[mokly/export-invalid] Could not install export; no previous output was moved. injected stage cancellation",
+    );
+    assert.equal((error as Error).cause, abort);
+    return true;
+  });
+  await transaction.close();
+});
+
+test("backup cleanup failure outranks a later cancellation", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  const output = path.join(fixture.root, "site");
+  await fs.promises.mkdir(output);
+  const controller = new AbortController();
+  const transaction = await ExportTransaction.open(output, undefined, {
+    ...fileExportOperations,
+    rename: async (from, to) => {
+      await fs.promises.rename(from, to);
+      if (from === transaction.stage) controller.abort();
+    },
+    rmdir: async (candidate) => {
+      if (candidate === transaction.backup)
+        throw new Error("injected backup cleanup failure");
+      await fs.promises.rmdir(candidate);
+    },
+  });
+  await fs.promises.writeFile(
+    path.join(transaction.stage, "index.html"),
+    "Next",
+  );
+  await assert.rejects(transaction.install(controller.signal), (error) => {
+    assert.equal(isCancellation(error), false);
+    assert.match((error as Error).message, /backup cleanup failed/u);
+    assert.match((error as Error).message, new RegExp(transaction.backup, "u"));
+    return true;
+  });
+  await assert.rejects(transaction.close(), /recovery files retained/u);
 });

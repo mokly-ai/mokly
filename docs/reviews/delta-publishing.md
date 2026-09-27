@@ -378,8 +378,10 @@ fix commit `b012d69` was pushed. Three independent read-only reviewers again
 covered export, the publish exchange and CLI, and tests, fixtures, packaging
 and documentation, using the complete diff against `origin/main` (`3699c56`).
 They confirmed findings 1–7 and 9–15 above are fixed; finding 8 is partly
-fixed. Eleven new findings follow: two Medium and nine Low. None was changed;
-each awaits the user's decision.
+fixed. Eleven new findings follow: two Medium and nine Low. None was changed
+during the review. The user then approved option B for finding 1 and option A
+for finding 2, which are fixed (see **Second Review Follow-up**); findings
+3–11 stay open for the user's decision.
 
 1. **P2 / Medium — After Ctrl+C, publish hides where the previous site was
    left.** [`src/cli/publish.ts`](../../src/cli/publish.ts) (lines 85–86)
@@ -518,3 +520,36 @@ intended, and a link check found no new broken links. Residual test risk:
 cancellation during export, a public file identical to a Plan-archive file,
 IPv6, IDNA or trailing-dot endpoints, an end-to-end terminal-emulated
 publish, and the fake receiver's archive rejection order are untested.
+
+### Second Review Follow-up
+
+On 2026-09-27 the user chose option B for finding 1 and option A for finding 2. [Delta Publishing](../../plans/delta-publishing.md) Milestones 14–17
+record the decisions and work.
+
+1. **Addressed (option B).** `MoklyError` has an explicit cancellation mark,
+   and `isCancellation` in `src/errors.ts` accepts only that mark or a
+   platform `AbortError`; it never reads causes or messages. The export's
+   cancellation check, baseline interruption, publish cancellation and the
+   cancellation-only wrappers (a rollback that restored the previous export,
+   and the export's wrapper around a non-Mokly abort) set the mark; rollback,
+   backup and reservation cleanup failures never do. The publish identity
+   readers pass a cancellation through instead of reporting a Git failure,
+   and `src/cli/publish_failure.ts` maps only cancellations to the
+   cancellation output. Spawned publish tests prove a clean rollback prints
+   the cancellation line and restores the previous site, while a failed
+   restore or reservation cleanup prints the export recovery error with its
+   backup or reservation path. `mokly export` output is unchanged, and the
+   exchange, terminal and export recovery contracts state the precedence.
+2. **Addressed (option A).** The pull request title test no longer reads
+   `origin/main`; it keeps the fixed type list and the `AGENTS.md` example
+   check, and passes in a single-branch clone. `tests/test_repository_refs.test.ts`
+   uses the TypeScript compiler API to fail on any direct Git call in the
+   real checkout that names a remote-tracking or upstream reference, with
+   synthetic positive and negative cases. `docs/protocol/ci-verification.md`
+   states the rule, its reason (release evidence reuse needs identical trees
+   to give identical results) and the analyser's limit: Git calls hidden
+   behind helper closures still need review.
+
+Follow-up verification: `cargo xtask check` passed with Node 24.21.0 (unit
+2,519/2,519 across 468 files, browser 781/781 across 122 files, packed-consumer
+smoke and every static check).

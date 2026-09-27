@@ -34,7 +34,7 @@ export class PublishCancelledError extends MoklyError {
     super(
       "upload-failed",
       "Publication was cancelled. Run mokly publish again when you are ready.",
-      { presentation: "publish-cancelled" },
+      { cancelled: true, presentation: "publish-cancelled" },
     );
     this.name = "PublishCancelledError";
   }

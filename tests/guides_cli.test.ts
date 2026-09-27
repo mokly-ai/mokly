@@ -141,6 +141,10 @@ test("publish and export guides carry the reviewed contract copy", () => {
   assert.match(publish, /Uploading 0 of 1 file/u);
   assert.match(publish, /empty missing set shows no progress label/u);
   assert.match(publish, /Publication was cancelled/u);
+  assert.match(
+    publish,
+    /could not put your previous export back.*recovery error.*folder to recover/u,
+  );
 
   const exportGuide = (sources.get("cli/export") ?? "").replace(/\s+/gu, " ");
   assert.match(exportGuide, /at most 1,024 UTF-8 bytes/u);

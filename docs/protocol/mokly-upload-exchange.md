@@ -199,7 +199,24 @@ with `Mokly catalogue already published for this commit.` and may print the
 kept publication's viewer URL. Rich mode uses the same wording after its
 success glyph and before its duration.
 
-Cancellation keeps category `upload-failed`. Plain mode prints exactly:
+This document owns cancellation classification and precedence for
+`mokly publish`. A failure is a cancellation only when it is a platform abort
+error whose `name` is `AbortError` (as produced by an `AbortSignal` or the Git
+runner), or a `MoklyError` explicitly marked as a cancellation where the
+cancellation was detected. Never infer cancellation from a cause chain,
+`AggregateError` members, error text or an already-aborted command signal.
+Never put the mark on an error that combines cancellation with a rollback,
+backup or reservation-cleanup failure.
+
+`mokly publish` uses the cancellation output below only for a cancellation. It
+prints every other error unchanged with that error's own category, whether or
+not the command was also cancelled. This includes an export recovery error
+that names the backup or reservation path required for recovery. Every failed
+publish exits with status 1. The
+[export recovery contract](./mokly-export-recovery.md#cancellation-and-recovery-precedence)
+owns export transaction outcomes and keeps `mokly export` output unchanged.
+
+A cancellation keeps category `upload-failed`. Plain mode prints exactly:
 
 ```text
 [mokly/upload-failed] Publication was cancelled. Run mokly publish again when you are ready.
@@ -236,7 +253,9 @@ does not read a rejection body.
 | Complete while a listed digest is missing                                       | 409                    | one re-plan, then `upload-failed` |
 | Expired upload, or locally reached `expiresAt`                                  | 410                    | one re-plan, then `upload-failed` |
 | Retryable status after five attempts                                            | 408, 429, 500, 502–504 | `upload-failed`                   |
-| Other non-2xx or 2xx, redirect, invalid response, or cancellation               | any other              | `upload-failed`                   |
+| Other non-2xx or 2xx, redirect, or invalid response                             | any other              | `upload-failed`                   |
+| Command cancellation classified under Accounting And Output                     | local                  | cancellation `upload-failed`      |
+| Any non-cancellation local error, including an export recovery failure          | local                  | its existing category and message |
 
 Local validation uses the same categories. Other local typed failures remain
 unchanged, and no request follows export failure. Unexpected preparation is

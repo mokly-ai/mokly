@@ -4,7 +4,7 @@ import { compileCatalogue } from "../build/compile.js";
 import { writeCompilation } from "../build/transaction.js";
 import { projectRealPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { MoklyError, errorMessage } from "../errors.js";
+import { MoklyError, errorMessage, isCancellation } from "../errors.js";
 import { removedManifestEntries } from "../registry/changes.js";
 import { readBaseManifest } from "../review/base_manifest.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
@@ -190,6 +190,7 @@ async function generateExport(
     throw exportError(
       `Could not export catalogue: ${errorMessage(error)}`,
       error,
+      { cancelled: isCancellation(error) },
     );
   }
 }

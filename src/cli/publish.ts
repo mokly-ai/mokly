@@ -1,15 +1,14 @@
 import { setTimeout as delay } from "node:timers/promises";
 
 import { loadConfig } from "../config/load.js";
-import { MoklyError } from "../errors.js";
 import { exportCatalogue } from "../export/run.js";
-import { publishCancelled } from "../publish/errors.js";
 import { resolvePublishOptions } from "../publish/options.js";
 import { publishCatalogue, type PublishProgress } from "../publish/run.js";
 import type { PublishResult } from "../publish/types.js";
 import { NodeGitCommandRunner } from "../review/git.js";
 
 import type { CliArguments } from "./arguments.js";
+import { publishFailure } from "./publish_failure.js";
 import { publishProgressLabel } from "./publish_output.js";
 import { reportPhase } from "./reporter/phase.js";
 import type { CliReporter, ReporterPhase } from "./reporter/types.js";
@@ -83,12 +82,7 @@ export async function runPublish(
       controller.signal,
     );
   } catch (error) {
-    if (controller.signal.aborted) throw publishCancelled();
-    if (error instanceof MoklyError) throw error;
-    throw new MoklyError(
-      "upload-failed",
-      "Could not prepare the publication. Check local configuration and temporary storage before retrying.",
-    );
+    throw publishFailure(error);
   } finally {
     process.off("SIGINT", cancel);
     process.off("SIGTERM", cancel);

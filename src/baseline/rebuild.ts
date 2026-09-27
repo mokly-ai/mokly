@@ -216,6 +216,7 @@ export class CachedBaselineBuilder implements BaselineBuilder {
             "baseline-interrupted",
             "Baseline preparation was interrupted",
             error,
+            { cancelled: true },
           )
         : error instanceof BaselineError
           ? error

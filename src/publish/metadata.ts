@@ -1,3 +1,4 @@
+import { isCancellation } from "../errors.js";
 import type { GitCommandRunner } from "../review/git.js";
 
 import { publishIdentityFailed } from "./errors.js";
@@ -78,7 +79,8 @@ export async function readUploadIdentity(
       branch = (
         await runner.run(["symbolic-ref", "--quiet", "--short", "HEAD"])
       ).trim();
-    } catch {
+    } catch (error) {
+      if (isCancellation(error)) throw error;
       branch = "HEAD";
     }
     let pullRequest: number | null = null;
@@ -106,7 +108,8 @@ export async function readUploadIdentity(
       pullRequest,
       gitRoot,
     };
-  } catch {
+  } catch (error) {
+    if (isCancellation(error)) throw error;
     throw publishIdentityFailed(IDENTITY_ERROR_MESSAGE);
   }
 }
@@ -117,7 +120,8 @@ export async function readHeadSha(runner: GitCommandRunner): Promise<string> {
     const sha = (await runner.run(["rev-parse", "--verify", "HEAD"])).trim();
     if (!GIT_SHA.test(sha)) throw publishIdentityFailed(IDENTITY_ERROR_MESSAGE);
     return sha;
-  } catch {
+  } catch (error) {
+    if (isCancellation(error)) throw error;
     throw publishIdentityFailed(IDENTITY_ERROR_MESSAGE);
   }
 }

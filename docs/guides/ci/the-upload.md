@@ -121,6 +121,8 @@ otherwise; an empty `missing` set shows no progress label.
 
 Cancellation prints
 `[mokly/upload-failed] Publication was cancelled. Run mokly publish again when you are ready.`
+If Mokly could not put your previous export back, it prints the recovery error
+with the folder to recover instead, even when you cancelled.
 An exhausted transport failure instead tells the reader to check the endpoint
 and connection, then retry.
 

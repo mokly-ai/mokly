@@ -227,7 +227,10 @@ write nothing to stderr unless `--debug-timings` was requested. Expected plain
 errors remain exactly `[mokly/<code>] <message>\n`. Timing mode retains the
 same stdout and writes only its documented JSON lines plus existing failures.
 
-Publish cancellation has exact plain output:
+The
+[exchange cancellation rule](./mokly-upload-exchange.md#accounting-and-output)
+decides whether a publish failure is a cancellation or another error. Only a
+classified cancellation has this exact plain output:
 
 ```text
 [mokly/upload-failed] Publication was cancelled. Run mokly publish again when you are ready.
@@ -246,9 +249,11 @@ by the original safe detail when it adds information and one indented hint.
 Secrets are redacted before every line and optional stack. `MOKLY_DIAGNOSTIC=1`
 still appends the redacted stack; otherwise expected failures show no stack.
 
-Cancellation renders headline `Publication was cancelled.`, no detail line,
-and hint `Run mokly publish again when you are ready.` It never shows a
-connection hint. An exhausted retry or transport failure renders headline
+For a failure classified as cancellation by the exchange contract, rich mode
+renders headline `Publication was cancelled.`, no detail line, and hint
+`Run mokly publish again when you are ready.` It never shows a connection
+hint. Every other error keeps its own category and safe recovery detail. An
+exhausted retry or transport failure renders headline
 `The catalogue upload did not complete.`, no detail line, and the distinct hint
 `Check the endpoint and connection, then retry.` A rich detail and hint must
 never repeat the same sentence.

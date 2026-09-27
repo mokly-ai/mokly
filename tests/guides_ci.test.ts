@@ -25,6 +25,18 @@ const exchange = read("docs/protocol/mokly-upload-exchange.md").replace(
   /\s+/gu,
   " ",
 );
+const recovery = read("docs/protocol/mokly-export-recovery.md").replace(
+  /\s+/gu,
+  " ",
+);
+const terminal = read("docs/protocol/mokly-terminal-output.md").replace(
+  /\s+/gu,
+  " ",
+);
+const verification = read("docs/protocol/ci-verification.md").replace(
+  /\s+/gu,
+  " ",
+);
 const sources = new Map(
   GUIDES.filter((page) => page.frontmatter.section === "ci").map((page) => [
     page.id,
@@ -202,6 +214,47 @@ test("Complete idempotency, accounting and cancellation copy stay explicit", () 
     exchange,
     /The catalogue upload did not complete\. Check the endpoint and connection, then retry/u,
   );
+  assert.match(
+    exchange,
+    /Never infer cancellation from a cause chain, `AggregateError` members, error text or an already-aborted command signal/u,
+  );
+  assert.match(
+    exchange,
+    /prints every other error unchanged with that error's own category/u,
+  );
+  assert.match(
+    terminal,
+    /exchange cancellation rule.*decides whether a publish failure is a cancellation or another error/u,
+  );
+  assert.match(
+    recovery,
+    /restoring the previous export fails, `mokly publish` prints the export rollback error naming the retained backup/u,
+  );
+  assert.match(
+    prose,
+    /could not put your previous export back.*recovery error.*folder to recover/u,
+  );
+});
+
+test("test repository inputs are deterministic and title types stay fixed", () => {
+  for (const reference of [
+    "origin/…",
+    "refs/remotes/…",
+    "FETCH_HEAD",
+    "upstream settings",
+    "@{upstream}",
+    "branch.<name>.remote",
+    "branch.<name>.merge",
+  ])
+    assert.ok(verification.includes(reference), reference);
+  assert.match(verification, /tests\/test_repository_refs\.test\.ts/u);
+  assert.match(
+    verification,
+    /Identical trees must produce identical test results/u,
+  );
+  assert.match(verification, /This type list is fixed/u);
+  assert.match(verification, /examples in `AGENTS\.md`/u);
+  assert.match(verification, /does not derive policy from Git history/u);
 });
 
 test("receiver limits, stored blobs and plan URL protocols are unambiguous", () => {

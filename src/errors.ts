@@ -25,11 +25,13 @@ export type MoklyErrorPresentation =
 
 /** Standard Error options plus a typed rich-presentation variant. */
 export interface MoklyErrorOptions extends ErrorOptions {
+  readonly cancelled?: boolean;
   readonly presentation?: MoklyErrorPresentation;
 }
 
 /** Typed user-facing failure from a Mokly boundary. */
 export class MoklyError extends Error {
+  readonly cancelled: boolean;
   readonly code: MoklyErrorCode;
   readonly presentation: MoklyErrorPresentation | undefined;
 
@@ -40,9 +42,19 @@ export class MoklyError extends Error {
   ) {
     super(`[mokly/${code}] ${message}`, options);
     this.name = "MoklyError";
+    this.cancelled = options?.cancelled ?? false;
     this.code = code;
     this.presentation = options?.presentation;
   }
+}
+
+/** Identify only explicitly marked failures and platform AbortError values. */
+export function isCancellation(error: unknown): boolean {
+  if (error instanceof MoklyError) return error.cancelled;
+  const platformError =
+    error instanceof Error ||
+    (typeof DOMException !== "undefined" && error instanceof DOMException);
+  return platformError && error.name === "AbortError";
 }
 
 /** Convert an unknown caught value into a display-safe message. */

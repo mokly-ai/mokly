@@ -36,13 +36,20 @@ digest-based command counts and per-round marker-entry progress, including Plan
 files and Blob attempts. `http.ts` shares bounded response reads, media-type
 handling, a 120-second timeout and redirect refusal; `errors.ts` owns every
 fixed publish error factory, including typed cancellation and transport-failure
-presentations with the shared `upload-failed` category.
+presentations with the shared `upload-failed` category. Git identity reads
+preserve cancellation rather than converting it to `git-failed`.
 Remote bodies and exceptions never become user diagnostics. `cli/secrets.ts`
 also redacts tokens from parser/config/build errors and diagnostic stacks.
 Shared CLI value parsing accepts `--name=value`, preserving leading dashes and
 token padding; boolean flags retain their no-value syntax. The packed-consumer
 smoke exercises a leading-dash token and both public upload fixtures without
 importing package internals.
+
+The CLI maps only an explicitly marked cancellation or platform `AbortError`
+to the publication-cancelled line. Every other typed failure passes through
+unchanged, including export rollback and cleanup errors that identify recovery
+paths. Cancellation is never inferred from causes, aggregate members, messages
+or the command signal after another failure has already occurred.
 
 ```bash
 npm run build

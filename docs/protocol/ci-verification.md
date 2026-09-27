@@ -87,6 +87,25 @@ real packing keeps its lifecycle builds. Historical baseline reconstruction,
 clean consumer installation, clean-cache npx execution, source mutation,
 startup, and cache-invalidation regressions retain independent preparation.
 
+## Deterministic Test Repository Inputs
+
+Unit and browser tests depend only on the tree under test. A test or test
+helper must never read the real checkout's remote-tracking references,
+including `origin/…`, `refs/remotes/…`, `FETCH_HEAD` or configured upstream
+settings such as `@{upstream}`, `branch.<name>.remote` and
+`branch.<name>.merge`. A fixture repository may create and read its own remotes
+because those references are fixture-owned inputs inside the test tree.
+
+`tests/test_repository_refs.test.ts` statically enforces this rule for every
+unit test, browser spec and test helper.
+Identical trees must produce identical test results; the release workflow's
+exact-tree evidence reuse depends on that determinism.
+
+The static analysis recognizes direct subprocess calls whose literal Git argv
+and `repositoryRoot` use appear in the same call expression. It cannot see Git
+calls hidden behind helper closures; those helpers require review when their
+arguments or repository ownership change.
+
 ## Pull Request Title Contract
 
 A separate pull-request workflow validates titles on `opened`, `edited`,
@@ -110,6 +129,10 @@ separator is exactly colon plus one space. `description` is nonempty, begins
 and ends with a non-whitespace character, and contains no newline. Examples
 include `fix: preserve upload counts`, `chore(main): release 0.13.0` and
 `feat(publish)!: upload catalogue content deltas`.
+
+This type list is fixed. Its unit test checks that it covers the Conventional
+Commit examples in `AGENTS.md`; it does not derive policy from Git history or
+remote-tracking references.
 
 An invalid title exits unsuccessfully and prints exactly:
 

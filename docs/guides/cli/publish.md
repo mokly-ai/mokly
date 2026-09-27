@@ -103,4 +103,6 @@ A failed publish leaves the complete local export in place for you to inspect,
 and running it again resumes from whatever the service already stored.
 Cancelling prints
 `[mokly/upload-failed] Publication was cancelled. Run mokly publish again when you are ready.`
-instead of telling you to check the connection.
+instead of telling you to check the connection. If Mokly could not put your
+previous export back, it prints the recovery error with the folder to recover
+instead, even when you cancelled.

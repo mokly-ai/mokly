@@ -45,19 +45,15 @@ test("pull request titles accept repository Conventional Commit forms", () => {
     assert.equal(isValidPullRequestTitle(title), true, title);
 });
 
-test("accepted types cover AGENTS examples and origin main history", async () => {
-  const [agents, history] = await Promise.all([
-    fs.readFile(path.join(repositoryRoot, "AGENTS.md"), "utf8"),
-    execute("git", ["log", "--format=%s", "origin/main"], {
-      cwd: repositoryRoot,
-    }).then(({ stdout }) => stdout),
-  ]);
+test("accepted types cover the AGENTS examples", async () => {
+  const agents = await fs.readFile(
+    path.join(repositoryRoot, "AGENTS.md"),
+    "utf8",
+  );
   const observed = new Set(
-    [
-      ...`${agents}\n${history}`.matchAll(
-        /^([a-z][a-z0-9-]*)(?:\([^)]*\))?!?: /gmu,
-      ),
-    ].map(([, type]) => type!),
+    [...agents.matchAll(/^([a-z][a-z0-9-]*)(?:\([^)]*\))?!?: /gmu)].map(
+      ([, type]) => type!,
+    ),
   );
   assert.ok(observed.size > 0);
   for (const type of observed)

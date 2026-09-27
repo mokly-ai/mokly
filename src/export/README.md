@@ -170,7 +170,11 @@ unlisted authored files while ignoring the recorded generated files.
 allowlisted, non-recursive cleanup. `operations.ts` is the injectable filesystem
 boundary; recursive removal is reserved for the private generated stage.
 `cleanup.ts` preserves primary and secondary failures through setup, orchestration,
-and CLI output. See the [recovery contract](../../docs/protocol/mokly-export-recovery.md).
+and CLI output. Cancellation is marked where it is detected and remains a
+cancellation only when rollback and cleanup succeed. A restore, backup or
+reservation-cleanup failure instead keeps its normal `export-invalid` recovery
+message and path; `mokly export` presentation is unchanged. See the
+[recovery contract](../../docs/protocol/mokly-export-recovery.md).
 
 Focused verification:
 

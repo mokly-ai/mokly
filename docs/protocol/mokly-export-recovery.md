@@ -108,6 +108,30 @@ normal export error categorization occurs before this policy handles that failur
 The normal CLI prints actionable combined messages without requiring diagnostic
 mode or printing stacks. It never prints the success message when cleanup fails.
 
+## Cancellation And Recovery Precedence
+
+The [publish exchange contract](./mokly-upload-exchange.md#accounting-and-output)
+owns the shared cancellation classification. This document owns how export
+transactions apply it:
+
+- Cancellation before installation is a cancellation when stage and
+  reservation cleanup succeed.
+- Cancellation after capturing the previous export is a cancellation when
+  rollback restores that export and all remaining cleanup succeeds. The
+  restored export remains installed even though the command fails.
+- A failed restore, backup cleanup or reservation cleanup is a recovery error,
+  not a cancellation. If it accompanies cancellation, the combined
+  `export-invalid` error retains both failures and names every backup or
+  reservation path the user needs.
+- `mokly export` keeps its existing messages and exit behavior. Publish may
+  replace only a cancellation with its cancellation output; it must show every
+  recovery error unchanged.
+
+For example, if cancellation occurs during installation and restoring the
+previous export fails, `mokly publish` prints the export rollback error naming
+the retained backup. It does not print the publication-cancelled line. All of
+these failed commands exit with status 1.
+
 ## Verification
 
 Tests inject mutations immediately before capture, after capture, during backup
