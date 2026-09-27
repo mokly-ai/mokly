@@ -42,12 +42,14 @@ test("Live CLI values are serve-only, canonical and config-gated", () => {
       "serve",
       "--interactive-port=0",
       "--interactive-origin=https://catalogue.example:8443",
+      "--strict-port",
     ]),
     {
       command: "serve",
       help: false,
       interactiveOrigin: "https://catalogue.example:8443",
       interactivePort: 0,
+      strictPort: true,
       version: false,
     },
   );

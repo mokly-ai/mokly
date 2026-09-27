@@ -32,13 +32,18 @@ import {
 /** Public Serve options after CLI validation. */
 export interface ServeOptions {
   base?: string;
+  interactiveOrigin?: string;
+  interactivePort?: number;
   port: number;
+  strictPort?: boolean;
   watch: boolean;
 }
 
 /** Closable Serve lifecycle returned to CLI and integration tests. */
 export interface RunningServe {
   close(): Promise<void>;
+  interactiveOrigin?: string;
+  interactivePort?: number;
   port: number;
   /** Enqueue the same serialized source rebuild used by watched edits. */
   rebuild?(): void;
@@ -143,12 +148,27 @@ export async function serve(
       onForeground: (active) => background.foreground(active),
       manifest: runtime.manifest,
       componentRuntime: runtime,
+      ...(options.interactiveOrigin
+        ? { interactiveOrigin: options.interactiveOrigin }
+        : {}),
+      ...(options.interactivePort !== undefined
+        ? { interactivePort: options.interactivePort }
+        : {}),
       port: options.port,
       review: configuredServedReview(config, base, repository),
       onDiagnostic: (error) => reporter.runtimeDiagnostic(error),
+      ...(options.strictPort !== undefined
+        ? { strictPort: options.strictPort }
+        : {}),
     });
     background.start(runtime, base);
     return {
+      ...(server.interactiveOrigin
+        ? { interactiveOrigin: server.interactiveOrigin }
+        : {}),
+      ...(server.interactivePort !== undefined
+        ? { interactivePort: server.interactivePort }
+        : {}),
       port: server.port,
       url: server.url,
       async close() {

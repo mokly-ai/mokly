@@ -174,6 +174,9 @@ socket port: forwarded local ports are supported. Serve binds only to
 widen the Host surface without a working path; IPv6 support is out of scope.
 Forwarded headers (`x-forwarded-*`) grant nothing; never use those headers to
 repair Host, Origin, or authorization.
+The separate Live listener has its own explicit `--interactive-origin` Host
+exception for forwarded frames; it does not widen this app-origin controls
+rule.
 
 On render POST, Origin must equal `http://` plus the accepted Host exactly,
 including its explicit port, and `X-Mokly-Render-Token` must match the shell-issued

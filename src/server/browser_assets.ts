@@ -2,6 +2,8 @@
 
 import type { ServerResponse } from "node:http";
 
+import type { ViewerInteractiveDescriptor } from "@mokly/viewer/runtime";
+
 import { send } from "./respond.js";
 
 /** In-memory package assets served by one Browse child. */
@@ -53,6 +55,7 @@ export function openEventStream(
   streams: Set<ServerResponse>,
   version: number,
   method: string,
+  interactive?: ViewerInteractiveDescriptor,
 ): void {
   response.writeHead(200, {
     "cache-control": "no-cache",
@@ -64,6 +67,10 @@ export function openEventStream(
     return;
   }
   response.write(`event: ready\ndata: ${version}\n\n`);
+  if (interactive)
+    response.write(
+      `event: interactive\ndata: ${JSON.stringify(interactive)}\n\n`,
+    );
   streams.add(response);
   response.on("close", () => streams.delete(response));
 }

@@ -34,10 +34,14 @@ and supervised Serve children therefore do not initialize the upload archiver.
 
 `arguments.ts` accepts `--interactive-port` and
 `--interactive-origin` only for public Serve. The latter must be one canonical
-HTTP(S) origin, while the port follows the ordinary `--port` range. After
-configuration loads, both are rejected unless `interactive: "serve"`. The
-interactive-origin server consumes these parsed values in its own milestone;
-the CLI does not broaden Build, Check, Export, or Publish behavior.
+HTTP(S) origin and is required when forwarding changes browser-facing host names
+or port numbers, while the port follows the ordinary `--port` range. After
+configuration loads, both are rejected unless `interactive: "serve"`.
+`--strict-port` is also public Serve behavior and prevents both the app and
+Live listener from advancing. A resolved app port of 65535 makes the default
+Live port OS-selected because no adjacent port exists. The CLI announces the
+browser-facing Live origin after both listeners are ready; Build, Check,
+Export, and Publish remain unchanged.
 
 Rich presentation never changes `MoklyError`, generated output, HTTP responses,
 or timing JSON. The supervised Serve child stays plain and forwards diagnostics

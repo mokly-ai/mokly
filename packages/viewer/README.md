@@ -303,10 +303,11 @@ React applications normally need only the root entry and stylesheet. Do not
 import `@mokly/viewer/browser` in an application-owned React root; it
 automatically hydrates a matching standalone Mokly document.
 The browser-safe `runtime` entry also exposes the inert inspector metadata
-types and Mokly's package-owned Live navigation event name. Those values let
-the CLI's fresh-mounted Live runtime reuse the frame adapter with strictly
-validated logical identities; consumer applications should not synthesize
-inspector metadata or dispatch that event themselves.
+types, Mokly's package-owned Live navigation event name, and the validated
+private interactive-descriptor primitives used by the CLI host. Those values
+let the CLI's fresh-mounted Live runtime reuse the frame adapter with strictly
+validated logical identities and generation state; consumer applications
+should not synthesize inspector metadata, descriptors, or navigation events.
 
 ## Server Rendering
 
@@ -339,8 +340,10 @@ including a Dark interface around Light-only previews. A reader's choice wins
 over later URL pins during navigation and Back/Forward. Missing startup assets
 leave Appearance hidden; back/forward-cache restoration retains and refreshes
 the controller. Final disposal removes both system and selector listeners.
-Serve loads live capabilities separately; static navigation reads inert
-workspace evidence from the same finalized deployment.
+Serve loads live capabilities separately, including optional private Live
+origin and bundle-readiness state; static navigation reads inert workspace
+evidence from the same finalized deployment. Neither capability enters public
+catalogue JSON or exported documents.
 
 ## Theming
 

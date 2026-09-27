@@ -3,24 +3,28 @@ import type { Page } from "@playwright/test";
 
 import {
   interactiveFixture,
+  interactiveServeFixture,
   mountInteractiveFrame,
   type InteractiveTestWindow,
 } from "./interactive_fixture.js";
 
 let fixture: Awaited<ReturnType<typeof interactiveFixture>>;
+let serveFixture: Awaited<ReturnType<typeof interactiveServeFixture>>;
 
 test.beforeAll(async () => {
   fixture = await interactiveFixture();
+  serveFixture = await interactiveServeFixture();
 });
 
 test.afterAll(async () => {
   await fixture?.close();
+  await serveFixture?.close();
 });
 
 test("Live mounts state and sends MockLink navigation through the frame adapter", async ({
   page,
 }) => {
-  await mountInteractiveFrame(page, fixture);
+  await mountInteractiveFrame(page, serveFixture);
   const frame = page.frameLocator("#frame");
   const count = frame.locator("#count");
 
@@ -54,7 +58,7 @@ test("Live mounts state and sends MockLink navigation through the frame adapter"
     await frame.locator("body").evaluate((body) => body.innerHTML),
   ).not.toContain("mokly-review");
   await page.waitForTimeout(100);
-  expect(fixture.diagnostics).toEqual([]);
+  expect(serveFixture.diagnostics).toEqual([]);
 
   await frame.locator("#mock-link").click();
   await expect.poll(() => navigationIds(page)).toEqual(["details", "details"]);

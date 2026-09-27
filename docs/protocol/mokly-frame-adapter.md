@@ -273,6 +273,16 @@ exactly one valid HTTP(S) host-origin parameter distinct from its own origin.
 The static host must ignore queries for file lookup. Never derive trust from
 `document.referrer`, a message-supplied origin, or a wildcard.
 
+The local interactive listener admits this parameter as a separate
+authentication axis, not a view-selection axis. It accepts at most one
+canonical HTTP(S) origin distinct from the frame. Without an explicit
+forwarded Live origin, it must equal either loopback spelling at the resolved
+app port; explicit forwarded mode accepts the otherwise-unknown canonical app
+origin and uses the broader frame-ancestor policy documented by the
+[interactive views contract](./mokly-interactive-views.md). Unknown or
+duplicate query parameters remain invalid. A manual document request may omit
+`mokly-host`, but its inspector then has no host and stays inert.
+
 After load, the adapter sends `hello` to the exact `frameOrigin`. The inspector
 accepts it only from `event.source === window.parent` and
 `event.origin === expectedHostOrigin`; it pins the first accepted nonce for

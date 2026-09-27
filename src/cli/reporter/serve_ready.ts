@@ -4,6 +4,7 @@ import { serveUrlPanel } from "./serve_lines.js";
 import {
   terminalStyle,
   terminalWidth,
+  truncateTerminalLine,
   type TerminalGlyphs,
 } from "./terminal.js";
 import type { TerminalEnvironment } from "./types.js";
@@ -35,6 +36,18 @@ export function renderServeReady(
       ),
     );
   }
+  if (report.interactiveOrigin)
+    line(
+      terminalStyle(
+        environment,
+        environment.stdout,
+        "dim",
+        truncateTerminalLine(
+          `  Live frames  ${report.interactiveOrigin}`,
+          width,
+        ),
+      ),
+    );
   const shortcut =
     report.watch && environment.stdin.isTTY ? " · press h for shortcuts" : "";
   const status = report.watch

@@ -25,10 +25,12 @@ by generated output:
   `dist`, `target`, coverage, browser-test output, comparison output, and Mokly
   transaction trees are pruned from broad watches and classify as ignored;
 - additional inputs use the explicit action declared in config;
-- every rebuild and configuration reload also invalidates the in-memory Live
-  browser bundle defined by the
-  [interactive views contract](./mokly-interactive-views.md), which is rebuilt
-  lazily on the next Live request.
+- every accepted source rebuild, reload/restart watch action, and configuration
+  replacement gives the in-memory Live runtime a fresh 32-lowercase-hex
+  generation; its browser bundle from the
+  [interactive views contract](./mokly-interactive-views.md) is rebuilt lazily
+  on the next Live request while one predecessor is retained for unloading
+  frames. Evidence-only updates and recovery restarts keep the generation.
 
 An entry glob's stable prefix is a traversal waypoint, not an exemption for its
 whole subtree. A candidate that is an ancestor of, or equal to, the prefix is
@@ -127,7 +129,14 @@ port in order when the address is occupied; port `0` delegates selection to the
 operating system. The resolved port remains stable across child restarts, which
 bind strictly rather than changing the published URL. Exhausting the valid port
 range or encountering another bind error exits non-zero without leaking
-watchers. An unexpected child failure after readiness reports its diagnostic
+watchers. When interactive Serve is enabled, the same HTTP child owns a second
+loopback listener, starting at the resolved app port plus one or the explicit
+interactive start; a resolved app port of 65535 makes the default Live port
+OS-selected because no adjacent port exists. The supervisor retains both
+resolved ports, and the public `--strict-port` flag prevents either listener
+from advancing. This ownership
+keeps Live documents on the same accepted runtime and document service as the
+app listener. An unexpected child failure after readiness reports its diagnostic
 once, starts cleanup if the process remains alive, and enqueues a restart through
 the same serialized action queue used for authored changes. The supervisor
 retains ownership until terminal confirmation; a replacement cannot bypass an
@@ -255,7 +264,9 @@ one regeneration and snapshots remain pinned to their immutable generation.
 
 Shutdown first stops queued work, aborts active Git classification, and waits
 for any active configuration transaction, then closes all final adopted
-watchers, timers, child processes, HTTP servers, event streams, and ports. A
+watchers, timers, child processes, both HTTP listeners, event streams, and
+ports. The child closes active connections on both listeners, so a Live frame
+cannot keep shutdown waiting. A
 candidate watcher is discarded if shutdown begins before adoption: shutdown
 interrupts an outstanding candidate readiness wait and closes that watcher
 before the action queue finishes draining. No later child restart is started.

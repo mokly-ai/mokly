@@ -1,4 +1,5 @@
 import type { CatalogueReadModel } from "../catalogue/types.js";
+import type { ViewerInteractiveDescriptor } from "../client/interactive_capability.js";
 import type { RenderCapability } from "../components/render_types.js";
 import type { StaticDelivery } from "../navigation/delivery.js";
 import type { ViewerTheme } from "../viewer/types.js";
@@ -8,6 +9,8 @@ import type { LiveChangesStatus } from "./metadata.js";
 
 /** Server-side context shared by every shell page. */
 export interface ShellContext {
+  /** Private Live listener identity and current browser-bundle readiness. */
+  interactive?: ViewerInteractiveDescriptor;
   /** Accepted public snapshot supplied by the first-party server integration. */
   readModel?: CatalogueReadModel;
   /** Revision of the rendered content, independent of background evidence. */

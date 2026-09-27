@@ -122,10 +122,30 @@ owns child shutdown. HTTP readiness precedes exhaustive compilation and baseline
 preparation, so All remains usable while Changes is pending or preparing.
 The CLI injects the terminal reporter's server-facing subset into both Serve
 compositions. Plain mode emits only the historical readiness and diagnostic
-bytes. Rich mode presents accepted catalogue, baseline, Changes, reference, and
+bytes plus the optional Live-origin announcement. Rich mode presents accepted catalogue, baseline, Changes, reference, and
 watch-action boundaries. Diagnostics originating in a supervised child cross a
 validated IPC message so the parent remains the sole terminal owner; a child
 without IPC retains direct diagnostic output.
+
+When `interactive: "serve"` is resolved, `http_interactive.ts` composes a
+second loopback listener through the `InteractiveServer` factory after the app
+port is known. It defaults to app port plus one, or an OS-selected port when
+the app owns 65535, supports an explicit start, and shares public
+`--strict-port` behavior with the app listener. In watched Serve the HTTP child owns both listeners and reports the
+resolved Live port in its readiness message, so the supervisor can bind both
+strictly on later restarts. `http_shutdown.ts` closes the interactive service
+beside documents, controls, Review, event streams, and the app listener.
+
+The Live listener never owns shell routes. The app listener puts
+`{ generation, port, origin?, state }` only in its private capability descriptor
+and interactive SSE events, and exposes the private current-generation prepare
+POST. That POST requires Origin to equal `http://` plus its accepted loopback
+Host exactly. Public catalogue JSON and exports receive none of this state. The Live
+listener itself serves the exact document, public-file, bundle, diagnostic, and
+inspector allowlist described by the
+[interactive views contract](../../docs/protocol/mokly-interactive-views.md).
+Eligibility precedes lazy bundle work; the current `ComponentRuntime.generation`
+binds the document, bootstrap, bundle, diagnostics, and descriptor.
 
 The [public-exclusion policy](../../docs/protocol/mokly-source-protection.md#public-exclusions)
 adds config-owned `publicExclude` globs to the shared source classifier.

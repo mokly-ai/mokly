@@ -1,27 +1,24 @@
 import assert from "node:assert/strict";
-import path from "node:path";
 import test from "node:test";
 
-import type { ResolvedRegistryEntry } from "../dist/authoring/types.js";
 import { buildInteractiveBootstrap } from "../dist/interactive/document.js";
 import {
   InteractiveViewEligibilityError,
   InteractiveViewEligibilityReason,
 } from "../dist/interactive/errors.js";
-
-import { repositoryRoot } from "./helpers/fixture.js";
+import type { InteractiveSourceEntry } from "../dist/interactive/route_table.js";
 
 const screen = entry("screen", "home") as Extract<
-  ResolvedRegistryEntry,
+  InteractiveSourceEntry,
   { kind: "screen" }
 >;
 const component = entry("component", "panel") as Extract<
-  ResolvedRegistryEntry,
+  InteractiveSourceEntry,
   { kind: "component" }
 >;
 
 interface EligibilityCase {
-  entries?: readonly ResolvedRegistryEntry[];
+  entries?: readonly InteractiveSourceEntry[];
   entryId?: string;
   expected: InteractiveViewEligibilityReason;
   name: string;
@@ -94,16 +91,16 @@ for (const { entries, entryId, expected, name, variantId } of cases) {
 function entry(
   kind: "collection" | "component" | "screen",
   id: string,
-): ResolvedRegistryEntry {
+): InteractiveSourceEntry {
   const sourceRelativePath = "entries/interactive.mockup.tsx";
   const common = {
-    __viaDefine: true as const,
+    declaredDependencies: [],
     dependencies: [],
     description: id,
     id,
+    navPath: [],
     relatedDocs: [],
-    sourcePath: path.join(repositoryRoot, sourceRelativePath),
-    sourceRelativePath,
+    sourcePath: sourceRelativePath,
     title: id,
   };
   if (kind === "collection")
@@ -111,11 +108,14 @@ function entry(
   if (kind === "screen")
     return {
       ...common,
-      desktop: "Desktop",
+      fragments: {
+        desktop: `screens/${id}.desktop.html`,
+        mobile: `screens/${id}.mobile.html`,
+      },
       kind: "screen",
-      mobile: "Mobile",
       route: `screens/${id}.html`,
       useCaseIds: [],
+      viewports: ["mobile", "desktop"],
     };
   return {
     ...common,
@@ -123,9 +123,21 @@ function entry(
     kind: "component",
     ownedDependencies: [],
     propSchema: { kind: "object", properties: {} },
-    render: () => null,
     route: `components/${id}.html`,
     slots: [],
-    variants: [{ id: "default", props: {}, title: "Default" }],
+    variants: [
+      {
+        componentViews: [],
+        fragments: {
+          desktop: `components/${id}.variants/default.desktop.html`,
+          mobile: `components/${id}.variants/default.mobile.html`,
+        },
+        id: "default",
+        props: {},
+        suppliedSlots: [],
+        title: "Default",
+      },
+    ],
+    viewports: ["mobile", "desktop"],
   };
 }

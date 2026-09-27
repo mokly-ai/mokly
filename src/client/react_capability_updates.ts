@@ -3,6 +3,8 @@
 import {
   readViewerCapabilityDescriptor,
   readViewerEvidenceRevision,
+  readViewerInteractiveDescriptor,
+  sameViewerInteractiveOrigin,
   viewerCapabilityRequestMatches,
 } from "@mokly/viewer/runtime";
 import type {
@@ -68,6 +70,23 @@ export function createReactUpdateCapability(
         return;
       }
       if (!source) return;
+      source.addEventListener("interactive", (event) => {
+        try {
+          const interactive = readViewerInteractiveDescriptor(
+            JSON.parse(event.data),
+          );
+          const installed = descriptor.interactive;
+          if (
+            installed &&
+            installed.generation === interactive.generation &&
+            installed.origin === interactive.origin &&
+            installed.port === interactive.port
+          )
+            actions.adoptInteractive?.(interactive);
+        } catch (error) {
+          environment.reportError?.(error);
+        }
+      });
       const controller = new ReactUpdateController(
         new EventSourceStream(source),
         environment.storage,
@@ -171,6 +190,7 @@ async function refreshEvidence(
     next.source,
     catalogue,
     next.workspace,
+    next.interactive,
   );
 }
 
@@ -181,7 +201,8 @@ function sameRenderCapability(
   return (
     current.renderCapability?.generation ===
       next.renderCapability?.generation &&
-    current.renderCapability?.token === next.renderCapability?.token
+    current.renderCapability?.token === next.renderCapability?.token &&
+    sameViewerInteractiveOrigin(current.interactive, next.interactive)
   );
 }
 

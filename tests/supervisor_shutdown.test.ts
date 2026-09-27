@@ -61,6 +61,45 @@ test("supervisor waits for readiness and shuts down before restart", async () =>
   await supervisor.close();
 });
 
+test("supervisor retains the resolved Live port across child restarts", async () => {
+  const factory = new ResponsiveChildFactory();
+  const supervisor = new ReadyProcessSupervisor(
+    factory,
+    ["__serve-child"],
+    0,
+    undefined,
+    {
+      interactiveOrigin: "https://live.example.test",
+      interactivePort: 0,
+      strictPort: true,
+    },
+  );
+  const starting = supervisor.start();
+  assert.deepEqual(factory.arguments_[0], [
+    "__serve-child",
+    "--port",
+    "0",
+    "--strict-port",
+    "--interactive-port",
+    "0",
+    "--interactive-origin",
+    "https://live.example.test",
+    "--update-version",
+    "1",
+  ]);
+  factory.children[0]!.ready(48123, 48124);
+  await starting;
+  assert.equal(supervisor.interactivePort(), 48124);
+
+  const restarting = supervisor.restart();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.ok(factory.arguments_[1]!.includes("48124"));
+  assert.ok(factory.arguments_[1]!.includes("--strict-port"));
+  factory.children[1]!.ready(48123, 48124);
+  await restarting;
+  await supervisor.close();
+});
+
 test(
   "supervisor close waits for an unresponsive child to exit",
   { timeout: 5_000 },
@@ -143,8 +182,12 @@ class ResponsiveChild implements ChildHandle {
     this.exitCallback?.(null);
   }
 
-  ready(port: number): void {
-    this.messageCallback?.({ port, type: "ready" });
+  ready(port: number, interactivePort?: number): void {
+    this.messageCallback?.({
+      ...(interactivePort === undefined ? {} : { interactivePort }),
+      port,
+      type: "ready",
+    });
   }
 }
 

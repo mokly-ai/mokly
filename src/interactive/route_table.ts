@@ -1,22 +1,24 @@
 import type { ColorScheme, Viewport } from "@mokly/viewer";
+import type { ManifestEntry } from "@mokly/viewer/data";
 
-import type { ResolvedRegistryEntry } from "../authoring/types.js";
-import {
-  artifactRouteForEntry,
-  portableArtifactHref,
-} from "../build/logical_routes.js";
+import { portableArtifactHref } from "../build/logical_routes.js";
 
 import type { InteractiveRouteTable } from "./types.js";
+
+/** Retained-manifest entry accepted by Live document composition. */
+export type InteractiveSourceEntry = ManifestEntry & {
+  interactive?: boolean;
+};
 
 export interface InteractiveRouteTableInput {
   catalogueSchemes: readonly ColorScheme[];
   colorScheme: ColorScheme;
-  entries: readonly ResolvedRegistryEntry[];
+  entries: readonly InteractiveSourceEntry[];
   sourceRoute: string;
   viewport: Viewport;
 }
 
-/** Resolve Live destinations through the ordinary Build artifact resolver. */
+/** Resolve Live destinations from the accepted generation's manifest routes. */
 export function buildInteractiveRouteTable(
   input: InteractiveRouteTableInput,
 ): InteractiveRouteTable {
@@ -26,12 +28,11 @@ export function buildInteractiveRouteTable(
     .sort((left, right) => left.id.localeCompare(right.id));
   const routes: Record<string, InteractiveRouteTable[string]> = {};
   for (const entry of routed) {
-    const artifact = artifactRouteForEntry(
+    const artifact = manifestArtifactRoute(
       entry,
       input.viewport,
       input.colorScheme,
       byId,
-      input.catalogueSchemes,
     );
     if (!artifact) continue;
     routes[entry.id] = {
@@ -39,4 +40,30 @@ export function buildInteractiveRouteTable(
     };
   }
   return routes;
+}
+
+function manifestArtifactRoute(
+  entry: InteractiveSourceEntry,
+  viewport: Viewport,
+  colorScheme: ColorScheme,
+  byId: ReadonlyMap<string, InteractiveSourceEntry>,
+): string | undefined {
+  if (entry.kind === "page") return entry.route;
+  if (entry.kind === "component") {
+    const variant = entry.variants[0];
+    if (!variant) return;
+    return colorScheme === "dark"
+      ? (variant.darkFragments?.[viewport] ?? variant.fragments[viewport])
+      : variant.fragments[viewport];
+  }
+  const screen =
+    entry.kind === "screen"
+      ? entry
+      : entry.kind === "use-case" && entry.steps[0]
+        ? byId.get(entry.steps[0].screenId)
+        : undefined;
+  if (!screen || screen.kind !== "screen") return;
+  return colorScheme === "dark"
+    ? (screen.darkFragments?.[viewport] ?? screen.fragments[viewport])
+    : screen.fragments[viewport];
 }

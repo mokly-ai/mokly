@@ -6,7 +6,7 @@ import test from "node:test";
 import { repositoryRoot } from "./helpers/fixture.js";
 import { GUIDES } from "./helpers/guides.js";
 
-const HIDDEN = ["--retained-runtime", "--strict-port", "--update-version"];
+const HIDDEN = ["--retained-runtime", "--update-version"];
 const parser = readFileSync(
   path.join(repositoryRoot, "src", "cli", "arguments.ts"),
   "utf8",

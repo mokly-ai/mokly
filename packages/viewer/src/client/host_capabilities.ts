@@ -19,10 +19,15 @@ import type {
   ViewerCapabilityRequest,
   ViewerCapabilitySource,
 } from "./host_capability_descriptor.js";
+import type {
+  InteractivePrepareResponse,
+  ViewerInteractiveDescriptor,
+} from "./interactive_capability.js";
 
 /** Validated same-content catalogue revision delivered by a live host. */
 export interface ViewerEvidenceRevision {
   catalogue: CatalogueReadModel;
+  interactive?: ViewerInteractiveDescriptor;
   source: ViewerCapabilitySource;
   workspace?: WorkspaceData;
 }
@@ -38,8 +43,18 @@ export interface ViewerEvidenceCapability {
 
 /** Store transitions supplied when the shell subscribes to watched updates. */
 export interface ViewerUpdateActions {
+  adoptInteractive?(interactive: ViewerInteractiveDescriptor): void;
   adoptEvidence(revision: ViewerEvidenceRevision): boolean | Promise<boolean>;
   captureRecovery(): ShellRecoverySnapshot | undefined;
+}
+
+/** Same-origin preparation transport for the current Live generation. */
+export interface ViewerInteractiveCapability {
+  prepare(
+    request: ViewerCapabilityRequest,
+    generation: string,
+    signal: AbortSignal,
+  ): Promise<InteractivePrepareResponse>;
 }
 
 /** Watched update and one-shot recovery capability. */
@@ -83,6 +98,7 @@ export interface ViewerOnDemandCapability {
 /** Optional private services exposed to one hydrated shell tree. */
 export interface ViewerHostCapabilities {
   evidence: ViewerEvidenceCapability;
+  interactive?: ViewerInteractiveCapability;
   onDemand?: ViewerOnDemandCapability;
   source: ViewerCapabilitySource;
   temporaryPreviews?: ViewerTemporaryPreviewCapability;
@@ -96,6 +112,7 @@ export function readViewerEvidenceRevision(
   nextSource: ViewerCapabilitySource,
   value: unknown,
   workspace?: WorkspaceData,
+  interactive?: ViewerInteractiveDescriptor,
 ): ViewerEvidenceRevision | undefined {
   return readEvidenceRevision(
     installed,
@@ -103,6 +120,7 @@ export function readViewerEvidenceRevision(
     nextSource,
     value,
     workspace,
+    interactive,
     true,
   );
 }
@@ -114,6 +132,7 @@ export function readViewerRouteEvidenceRevision(
   nextSource: ViewerCapabilitySource,
   value: unknown,
   workspace?: WorkspaceData,
+  interactive?: ViewerInteractiveDescriptor,
 ): ViewerEvidenceRevision | undefined {
   const bootstrap = readShellBootstrap(value);
   const route = bootstrap.view.kind === "target" ? bootstrap.view.route : null;
@@ -131,6 +150,7 @@ export function readViewerRouteEvidenceRevision(
     nextSource,
     bootstrap.catalogue,
     workspace,
+    interactive,
     false,
   );
 }
@@ -141,6 +161,7 @@ function readEvidenceRevision(
   nextSource: ViewerCapabilitySource,
   value: unknown,
   workspace: WorkspaceData | undefined,
+  interactive: ViewerInteractiveDescriptor | undefined,
   requireAdvance: boolean,
 ): ViewerEvidenceRevision | undefined {
   if (
@@ -172,6 +193,7 @@ function readEvidenceRevision(
   return {
     catalogue,
     source: nextSource,
+    ...(interactive ? { interactive } : {}),
     ...(workspace ? { workspace } : {}),
   };
 }

@@ -2,9 +2,10 @@
 
 ## Active
 
-- [Interactive Views](./interactive-views.md) — Milestones 1–3 complete: the
-  contract documentation, Static/Live design catalogue, browser bundle, and
-  fresh-mount runtime; the interactive origin and shell control follow.
+- [Interactive Views](./interactive-views.md) — Milestones 1–4 complete: the
+  contract documentation, Static/Live design catalogue, browser bundle,
+  fresh-mount runtime, and isolated interactive origin; the shell control
+  follows.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align

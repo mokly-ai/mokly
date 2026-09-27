@@ -3,7 +3,8 @@ export const HELP = `Mokly — app-independent React mockup catalogues
 
 Usage:
   mokly [serve] [--config <path>] [--port <port>] [--interactive-port <port>]
-                [--interactive-origin <origin>] [--base <ref>] [--no-watch] [--open]
+                [--interactive-origin <origin>] [--strict-port] [--base <ref>]
+                [--no-watch] [--open]
   mokly build [--config <path>]
   mokly check [--config <path>]
   mokly export --out <path> [--config <path>] [--base <ref>]
@@ -23,7 +24,8 @@ Options:
   --debug-timings  Report phase timings and catalogue counts to stderr
   --port <port>    Starting port; advances if occupied, 0 selects any free port
   --interactive-port <port>  Starting Live-preview port; 0 selects any free port
-  --interactive-origin <origin>  Canonical browser-facing HTTP(S) Live origin
+  --interactive-origin <origin>  Live origin for different browser-facing hosts or ports
+  --strict-port    Fail instead of advancing either requested Serve port
   --base <ref>     Git base ref used to find the branch point
   --out <path>     Config-relative export directory (required for export)
                    Publish default: .context/mokly-publish

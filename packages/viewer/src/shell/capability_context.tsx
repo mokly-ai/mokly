@@ -14,6 +14,7 @@ import type {
   ViewerCapabilityRequest,
   ViewerCapabilitySource,
 } from "../client/host_capability_descriptor.js";
+import type { ViewerInteractiveDescriptor } from "../client/interactive_capability.js";
 import type { StaticWorkspaceEvidence } from "../standalone/static_workspace_evidence.js";
 
 import type { WorkspaceData } from "./workspace_data.js";
@@ -21,6 +22,7 @@ import type { WorkspaceData } from "./workspace_data.js";
 interface ViewerCapabilityContextValue {
   capabilities?: ViewerHostCapabilities;
   initialSource?: ViewerCapabilitySource;
+  initialInteractive?: ViewerInteractiveDescriptor;
   initialWorkspace?: WorkspaceData;
   staticEvidence?: StaticWorkspaceEvidence;
 }
@@ -28,6 +30,7 @@ interface ViewerCapabilityContextValue {
 /** Current revision and route-private data accepted by the shell store. */
 export interface ViewerLiveState {
   capabilities?: ViewerHostCapabilities;
+  interactive?: ViewerInteractiveDescriptor;
   request?: ViewerCapabilityRequest;
   workspace?: WorkspaceData;
 }
@@ -39,6 +42,7 @@ const ViewerLiveContext = createContext<ViewerLiveState>({});
 export function ViewerCapabilityBoundary({
   capabilities,
   children,
+  initialInteractive,
   initialSource,
   initialWorkspace,
   staticEvidence,
@@ -46,6 +50,7 @@ export function ViewerCapabilityBoundary({
   capabilities?: ViewerHostCapabilities;
   children: ReactNode;
   initialSource?: ViewerCapabilitySource;
+  initialInteractive?: ViewerInteractiveDescriptor;
   initialWorkspace?: WorkspaceData;
   staticEvidence?: StaticWorkspaceEvidence;
 }) {
@@ -57,10 +62,17 @@ export function ViewerCapabilityBoundary({
     () => ({
       ...(activeCapabilities ? { capabilities: activeCapabilities } : {}),
       ...(initialSource ? { initialSource } : {}),
+      ...(initialInteractive ? { initialInteractive } : {}),
       ...(initialWorkspace ? { initialWorkspace } : {}),
       ...(staticEvidence ? { staticEvidence } : {}),
     }),
-    [activeCapabilities, initialSource, initialWorkspace, staticEvidence],
+    [
+      activeCapabilities,
+      initialInteractive,
+      initialSource,
+      initialWorkspace,
+      staticEvidence,
+    ],
   );
   return (
     <ViewerCapabilityContext.Provider value={value}>
@@ -77,6 +89,12 @@ export function useViewerCapabilities(): ViewerHostCapabilities | undefined {
 /** Read the descriptor source identically during SSR and hydration. */
 export function useViewerInitialSource(): ViewerCapabilitySource | undefined {
   return useContext(ViewerCapabilityContext).initialSource;
+}
+
+/** Read the private Live listener state identically during SSR and hydration. */
+export function useViewerInitialInteractive():
+  ViewerInteractiveDescriptor | undefined {
+  return useContext(ViewerCapabilityContext).initialInteractive;
 }
 
 /** Read route-scoped private evidence identically during SSR and hydration. */

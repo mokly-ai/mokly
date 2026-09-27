@@ -219,36 +219,40 @@ test browser, with no server or UI changes yet.
       `npm test`, `npm run test:browser`, `npm run example:check` and the
       workspace `cargo xtask check` command; commit and push.
 
-## Milestone 4: Interactive origin in Serve
+## Milestone 4: Interactive origin in Serve — completed
 
 Backend. After this milestone Serve announces the interactive origin and serves
 Live documents, but the shell still shows Static only.
 
-- [ ] Add `src/interactive/server.ts` behind an `InteractiveServer` trait:
+- [x] Add `src/interactive/server.ts` behind an `InteractiveServer` trait:
       bind the second loopback listener through `src/server/ports.ts`, serve
       the routes defined in Milestone 1 using the confined public file reader,
       apply the loopback Host rule from `src/server/controls/http.ts`, set
       `frame-ancestors`, `no-store` and `nosniff`, and refuse every other
       path with 404.
-- [ ] Wire it into `src/server/serve.ts`, `http.ts` and the watched child
+- [x] Wire it into `src/server/serve.ts`, `http.ts` and the watched child
       lifecycle: open only when `interactive` is `serve`, announce the origin
       and port in the catalogue bootstrap and Serve's startup line, close it
       with the main server, and invalidate the bundle cache on each catalogue
       generation.
-- [ ] Build the bundle lazily on the first Live document request per
+- [x] Build the bundle lazily on the first Live document request per
       generation, coalescing concurrent requests, and return a typed 503 body
       the shell can present as the unavailable state while a build is in
       progress or after it failed; log the diagnostic to stderr.
-- [ ] Record bundle build time in `src/diagnostics/timings.ts` output.
-- [ ] Update the packaged CLI guides `docs/guides/cli/serve.md` and
+- [x] Add the private interactive descriptor with the resolved port, optional
+      explicit origin, exact generation, and `idle | building | ready | failed`
+      state; add its validated SSE updates and the app-origin preparation POST
+      so the shell can learn readiness without reading a cross-origin response.
+- [x] Record bundle build time in `src/diagnostics/timings.ts` output.
+- [x] Update the packaged CLI guides `docs/guides/cli/serve.md` and
       `docs/guides/cli/options-and-exit-status.md` with `--interactive-port`
       and `--interactive-origin` once they exist.
-- [ ] Tests: origin opens only when configured; forwarded and non-loopback
+- [x] Tests: origin opens only when configured; forwarded and non-loopback
       hosts are refused; shell, controls and review paths are 404 on the
       interactive origin; bundle rebuild after a watched change; 503 during
       build then 200; the Playwright test from Milestone 3 now runs against
       real Serve.
-- [ ] Update `src/server/README.md`; run the full check set and
+- [x] Update `src/server/README.md`; run the full check set and
       `cargo xtask check`; commit and push.
 
 ## Milestone 5: Static/Live toggle in the shell
@@ -259,19 +263,21 @@ Tags: ui
       shell (`packages/viewer/src/shell/views.tsx` and
       `packages/viewer/src/shell/head.tsx`, after `ViewportSwitch`, with a
       `previewMode` selection in the shell store and actions), kept across view
-      changes in the current document, hidden when the
-      private descriptor has no interactive origin or the entry opted out, and
+      changes in the current document, hidden when the private descriptor has
+      no interactive capability or the entry opted out, and
       never shown for pages, use-case steps or comparisons.
 - [ ] Mount Live frames through `postMessageAdapter({ frameOrigin })` in
       `packages/viewer/src/shell/frame_registry.tsx` with pending usage, the
       same `/static/` path and query parameters, and the device frame
-      unchanged; mount Static frames exactly as today. Carry the interactive
-      origin in the private capability descriptor
-      (`packages/viewer/src/client/host_capability_descriptor.ts`), never in
-      the public catalogue.
+      unchanged; mount Static frames exactly as today. Consume the Milestone 4
+      descriptor's optional explicit origin or derive the frame origin from
+      its port and the shell's own scheme/host name; never read this from the
+      public catalogue.
 - [ ] Present the preparing and unavailable states from the design milestone,
-      keep Static reachable in both, and disable highlight, pick and controls
-      with the Static-only notice while Live is selected.
+      consuming the descriptor state, preparation capability, and private SSE
+      updates delivered in Milestone 4; keep Static reachable in both, and
+      disable highlight, pick and controls with the Static-only notice while
+      Live is selected.
 - [ ] Apply the chosen controls rule from Milestone 1 when switching to Live
       with unsaved prop edits.
 - [ ] Browser tests: toggle visibility per catalogue and entry, frame origin

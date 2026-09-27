@@ -35,12 +35,46 @@ export function createWatchedSupervisor(
       ...(options.base !== undefined ? ["--base", options.base] : []),
     ],
     options.port,
+    {
+      ...(options.interactiveOrigin
+        ? { interactiveOrigin: options.interactiveOrigin }
+        : {}),
+      ...(options.interactivePort !== undefined
+        ? { interactivePort: options.interactivePort }
+        : {}),
+      strictPort: options.strictPort ?? false,
+    },
   );
 }
 
 /** Present a deterministic child server through the public Serve lifecycle. */
 export function serverLifecycle(server: RunningServer): RunningServe {
-  return { close: () => server.close(), port: server.port, url: server.url };
+  return {
+    close: () => server.close(),
+    ...(server.interactiveOrigin
+      ? { interactiveOrigin: server.interactiveOrigin }
+      : {}),
+    ...(server.interactivePort !== undefined
+      ? { interactivePort: server.interactivePort }
+      : {}),
+    port: server.port,
+    url: server.url,
+  };
+}
+
+/** Project the child-resolved Live address into watched Serve readiness. */
+export function watchedInteractiveAddress(
+  options: ServeOptions,
+  supervisor: ProcessSupervisor,
+): Pick<RunningServe, "interactiveOrigin" | "interactivePort"> {
+  const port = supervisor.interactivePort?.();
+  return port === undefined
+    ? {}
+    : {
+        interactiveOrigin:
+          options.interactiveOrigin ?? `http://127.0.0.1:${String(port)}`,
+        interactivePort: port,
+      };
 }
 
 /** Stop waiting for a candidate watcher as soon as watched shutdown begins. */

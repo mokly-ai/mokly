@@ -32,6 +32,8 @@ The descriptor contains:
   version, optional on-demand preview generation, and optional temporary
   renderer generation;
 - an optional temporary-render capability owned by the CLI host;
+- an optional interactive descriptor `{ generation, port, origin?, state }`,
+  where state is `idle | building | ready | failed`;
 - optional route-scoped `WorkspaceData` for screen and component routes.
 
 The workspace copy omits `renderCapability`. React invokes authenticated
@@ -41,6 +43,11 @@ shape, base and on-demand preview generation are validated before use. The
 temporary-render capability is bound independently to the renderer generation.
 When both generations exist they must agree, but a complete compiled catalogue
 can expose temporary rendering without enabling on-demand Usage loading.
+The interactive descriptor exists only for `interactive: "serve"`; its
+generation is 32 lowercase hexadecimal characters, its port is the resolved
+loopback listener port, and `origin` is present only for an explicit forwarded
+origin. It never enters the public catalogue, public shell bootstrap, export,
+or publication.
 
 ## React Context
 
@@ -50,6 +57,9 @@ can expose temporary rendering without enabling on-demand Usage loading.
   server rendering and first client render. This makes private status,
   comparison eligibility, affected usage, input changes, related components
   and evidence identical across hydration.
+- the initial interactive descriptor follows the same SSR/hydration path, and
+  `useViewerLiveState()` exposes its latest state without exposing bundle
+  errors or consumer text;
 - `useViewerLiveState()` returns the exact adopted request and its matching
   private workspace from the shell store. A workspace from an older route or
   revision is never exposed.
@@ -70,6 +80,8 @@ deployment identity, and returns its inert workspace JSON. It never implements
   private evidence read after same-shell navigation;
 - `updates.consumeRecovery(request)` and
   `updates.subscribe(request, actions, signal)`;
+- optional `interactive.prepare(request, generation, signal)`, which starts or
+  awaits the same-origin current-generation bundle preparation request;
 - optional `temporaryPreviews.render` and `temporaryPreviews.expired`;
 - optional `onDemand.loadWorkspace` for Usage records.
 
@@ -119,6 +131,29 @@ holding, failing or aborting the request cannot delay the URL and main-view
 transition or replace their React-owned DOM. Same-document Back cancels an
 obsolete request while retaining the mounted shell.
 
+## Interactive Bundle State
+
+The app-origin endpoint is
+`POST /__mokly/interactive/<generation>/prepare`. It exists only when the
+interactive descriptor exists, accepts only the current generation, starts or
+joins its one lazy build, and waits for a terminal result. Its exact JSON is
+`{ "generation": <32-lowercase-hex>, "state": "ready" | "failed" }`.
+Status is 200 for ready, 503 for a typed browser-bundle failure, 500 for an
+internal failure, and 404 for an absent capability or stale generation. The
+request Origin must equal `http://` plus the accepted loopback Host exactly;
+other origins receive 403. The browser transport validates the body,
+generation, state, and status before returning it. No consumer diagnostic text
+crosses this boundary.
+
+The descriptor state is the nonblocking transport for preparing and
+unavailable presentation. `/__mokly/events` emits a private `interactive`
+event containing the complete descriptor whenever the current generation
+enters `building`, `ready`, or `failed`, and sends the current descriptor when
+the stream opens. The client adopts a state event only when generation, port,
+and optional explicit origin exactly match the installed descriptor. Milestone
+5 starts the preparation call, presents preparing while it awaits, and mounts
+the cross-origin frame only after ready.
+
 ## Watched Updates
 
 The CLI keeps the existing event protocol and `LiveUpdateController`. One
@@ -130,15 +165,17 @@ Evidence adoption is atomic. The page descriptor's source and private
 workspace must describe the exact same evidence revision as the public
 catalogue response. Catalogue identity, content revision, evidence revision,
 update version, base ref, preview generation, route and render capability are
-fenced before `adoptEvidence` runs. A mixed response from two server snapshots
-is rejected and follows the existing reload recovery path. Successful adoption
-returns a `ViewerEvidenceRevision` containing the public catalogue, private
+fenced before `adoptEvidence` runs. Interactive generation, port, and explicit
+origin are fenced too; readiness state may advance for the same identity. A
+mixed response from two server snapshots is rejected and follows the existing
+reload recovery path. Successful adoption returns a `ViewerEvidenceRevision`
+containing the public catalogue, matching interactive descriptor, private
 workspace when the route owns one, and the source for the next request. Frames
 and shell state are updated in place by the consumer; the capability does not
 mutate DOM.
 
-Content revision or render-generation changes are never adopted as evidence.
-They retain the full reload lifecycle.
+Content, render-generation, or interactive-generation changes are never
+adopted as evidence. They retain the full reload lifecycle.
 
 ## Recovery And Optional Transports
 
@@ -164,11 +201,12 @@ exists when its server capability is absent.
 Serve exposes `react-host.js`, `react_capabilities.js`,
 `react_capability_updates.js`, `react_transports.js`,
 `react_update_controller.js`, `host_capabilities.js` and
-`host_capability_descriptor.js`. The package graph requires every import to
-resolve within the served inventory and permits React only in `react-shell.js`.
-The CLI build rewrites the host's viewer-browser import to that relative bundle
-so delivery contains one React and context instance.
+`host_capability_descriptor.js`, plus `interactive_capability.js`. The package
+graph requires every import to resolve within the served inventory and permits
+React only in `react-shell.js`. The CLI build rewrites the host's viewer-browser
+import to that relative bundle so delivery contains one React and context
+instance.
 
-Static export and generated preview catalogues exclude all seven live-only
+Static export and generated preview catalogues exclude all eight live-only
 modules named above. Export tests also reject the host marker, private state
 script and host loader in every rendered document.

@@ -16,6 +16,7 @@ import {
   type ViewerCapabilityRequest,
   type ViewerCapabilitySource,
 } from "../client/host_capability_descriptor.js";
+import { sameViewerInteractiveOrigin } from "../client/interactive_capability.js";
 
 import {
   shellContextWithViewerEvidence,
@@ -28,6 +29,7 @@ import {
 } from "./capability_commit.js";
 import {
   useViewerCapabilities,
+  useViewerInitialInteractive,
   useViewerInitialSource,
   useViewerInitialWorkspace,
   type ViewerLiveState,
@@ -59,6 +61,7 @@ export function useViewerCapabilityStore(input: {
 }): ViewerCapabilityStore {
   const capabilities = useViewerCapabilities();
   const initialSource = useViewerInitialSource();
+  const initialInteractive = useViewerInitialInteractive();
   const initialWorkspace = useViewerInitialWorkspace();
   const initialRequest = capabilityRequest(
     capabilities?.source ?? initialSource,
@@ -66,6 +69,7 @@ export function useViewerCapabilityStore(input: {
   );
   const [snapshot, setSnapshot] = useState<ViewerCapabilitySnapshot>(() => ({
     catalogue: input.catalogue,
+    ...(initialInteractive ? { interactive: initialInteractive } : {}),
     ...(initialRequest ? { source: initialRequest.source } : {}),
     ...(initialRequest && initialWorkspace?.entry.route === initialRequest.route
       ? { workspace: { request: initialRequest, value: initialWorkspace } }
@@ -107,6 +111,15 @@ export function useViewerCapabilityStore(input: {
     capabilities.updates.subscribe(
       request,
       {
+        adoptInteractive(interactive) {
+          setSnapshot((current) => {
+            if (!sameViewerInteractiveOrigin(current.interactive, interactive))
+              return current;
+            const next = { ...current, interactive };
+            snapshotRef.current = next;
+            return next;
+          });
+        },
         adoptEvidence(revision) {
           if (controller.signal.aborted) return true;
           const current = snapshotRef.current;
@@ -155,10 +168,11 @@ export function useViewerCapabilityStore(input: {
   const liveState = useMemo<ViewerLiveState>(
     () => ({
       ...(capabilities ? { capabilities } : {}),
+      ...(snapshot.interactive ? { interactive: snapshot.interactive } : {}),
       ...(request ? { request } : {}),
       ...(workspace ? { workspace } : {}),
     }),
-    [capabilities, request, workspace],
+    [capabilities, request, snapshot.interactive, workspace],
   );
   return { catalogue: snapshot.catalogue, context, liveState };
 }

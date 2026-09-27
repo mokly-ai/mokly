@@ -148,7 +148,24 @@ defined by the [interactive views contract](./mokly-interactive-views.md);
 unknown strings are `config-invalid`. Build, check, export and publication
 ignore the option and emit identical bytes in both values. Serve's
 `--interactive-port` and `--interactive-origin` options are rejected when the
-resolved value is `"off"`.
+resolved value is `"off"`. The Live listener starts at the resolved app port
+plus one unless `--interactive-port` supplies another start; either listener
+advances past occupied ports, `0` delegates to the operating system, and
+`--strict-port` makes both fail instead. When the app port is 65535, the
+otherwise-default Live port delegates to the operating system even in strict
+mode because no adjacent port exists. A watched child retains both resolved
+ports across restarts.
+
+`--interactive-origin` is a canonical browser-facing HTTP(S) origin for a
+forwarding layer; it does not change the loopback bind. Its exact authority is
+the only additional Live Host value admitted, and forwarded headers never
+grant access. Because the forwarded shell authority is not otherwise known,
+this explicit mode permits HTTP(S) frame ancestors and accepts the frame
+adapter's canonical, non-frame `mokly-host`; default local mode names only both
+loopback spellings at the resolved app port. Forwarding that changes either a
+browser-facing host name or only a port number requires this explicit origin;
+local derivation and policy always use Serve's socket ports. The private shell descriptor
+carries the resolved Live port and the explicit origin only when supplied.
 Derived Check accepts absent local generated output, rejects Git-tracked routes,
 the manifest and cache files, and prints their paths plus ignore guidance.
 Build writes transactionally in both modes. Serve and export await preparation

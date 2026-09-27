@@ -23,6 +23,7 @@ import {
 
 /** Restartable child interface used by watched Serve. */
 export interface ProcessSupervisor {
+  interactivePort?(): number | undefined;
   completeCatalogue?(manifest: ManifestV5, generation: string): void;
   onForeground?(callback: (active: boolean) => void): void;
   onDiagnostic?(callback: (message: string) => void): void;
@@ -54,7 +55,15 @@ export interface ProcessSupervisorFactory {
     binPath: string,
     baseArguments: readonly string[],
     requestedPort: number,
+    options?: ProcessSupervisorOptions,
   ): ProcessSupervisor;
+}
+
+/** Listener options retained across watched child restarts. */
+export interface ProcessSupervisorOptions {
+  interactiveOrigin?: string;
+  interactivePort?: number;
+  strictPort?: boolean;
 }
 
 /** Node child-process supervisor factory. */
@@ -63,11 +72,14 @@ export class NodeProcessSupervisorFactory implements ProcessSupervisorFactory {
     binPath: string,
     baseArguments: readonly string[],
     requestedPort: number,
+    options: ProcessSupervisorOptions = {},
   ): ProcessSupervisor {
     return new ReadyProcessSupervisor(
       new NodeChildFactory(binPath),
       baseArguments,
       requestedPort,
+      undefined,
+      options,
     );
   }
 }
@@ -77,6 +89,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   #child: ManagedChild | undefined;
   #unexpectedExit: ((error: Error) => void) | undefined;
   #resolvedPort: number | undefined;
+  #resolvedInteractivePort: number | undefined;
   #updateVersion = 0;
   #runtime: ComponentRuntime | undefined;
   #foreground: ((active: boolean) => void) | undefined;
@@ -88,7 +101,12 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     private readonly baseArguments: readonly string[],
     private readonly requestedPort: number,
     private readonly shutdownTimings?: ChildShutdownTimings,
+    private readonly options: ProcessSupervisorOptions = {},
   ) {}
+
+  interactivePort(): number | undefined {
+    return this.#resolvedInteractivePort;
+  }
 
   async start(): Promise<number> {
     if (this.#child)
@@ -102,6 +120,17 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
       "--port",
       String(resolvedPort ?? this.requestedPort),
       ...(resolvedPort === undefined ? [] : ["--strict-port"]),
+      ...(this.options.strictPort && resolvedPort === undefined
+        ? ["--strict-port"]
+        : []),
+      ...(this.#resolvedInteractivePort !== undefined
+        ? ["--interactive-port", String(this.#resolvedInteractivePort)]
+        : this.options.interactivePort !== undefined
+          ? ["--interactive-port", String(this.options.interactivePort)]
+          : []),
+      ...(this.options.interactiveOrigin
+        ? ["--interactive-origin", this.options.interactiveOrigin]
+        : []),
       "--update-version",
       String(this.#updateVersion),
     ]);
@@ -181,6 +210,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
           "server child stopped during startup",
         );
       this.#resolvedPort = readyPort;
+      this.#resolvedInteractivePort = child.interactivePort;
       started = true;
       return readyPort;
     } catch (error) {

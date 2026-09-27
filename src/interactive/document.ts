@@ -2,14 +2,13 @@ import type { ColorScheme, Viewport } from "@mokly/viewer";
 import { canonicalJson } from "@mokly/viewer/data";
 import { readMetadata } from "@mokly/viewer/runtime";
 
-import type { ResolvedRegistryEntry } from "../authoring/types.js";
-
 import {
   InteractiveDocumentError,
   InteractiveViewEligibilityError,
   InteractiveViewEligibilityReason,
 } from "./errors.js";
 import { buildInteractiveRouteTable } from "./route_table.js";
+import type { InteractiveSourceEntry } from "./route_table.js";
 import type { InteractiveBootstrap } from "./types.js";
 
 const INSPECTOR_SCRIPT =
@@ -18,7 +17,7 @@ const INSPECTOR_SCRIPT =
 export interface InteractiveBootstrapInput {
   catalogueSchemes: readonly ColorScheme[];
   colorScheme: ColorScheme;
-  entries: readonly ResolvedRegistryEntry[];
+  entries: readonly InteractiveSourceEntry[];
   entryId: string;
   generation: string;
   sourceRoute: string;

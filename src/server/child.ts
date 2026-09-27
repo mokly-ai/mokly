@@ -24,6 +24,8 @@ export async function runServerChild(
   strictPort: boolean,
   retainedRuntime: boolean,
   manifest?: ComponentRuntime["manifest"],
+  interactivePort?: number,
+  interactiveOrigin?: string,
 ): Promise<void> {
   const initial =
     retainedRuntime && manifest?.schemaVersion === "live-index-1"
@@ -43,6 +45,8 @@ export async function runServerChild(
     onPreviewResources: (observation) =>
       process.send?.({ type: "preview-resources", ...observation }),
     ...(manifest ? { manifest } : {}),
+    ...(interactiveOrigin ? { interactiveOrigin } : {}),
+    ...(interactivePort !== undefined ? { interactivePort } : {}),
     ...(initial && manifest
       ? { componentRuntime: { ...initial.runtime, config, manifest } }
       : {}),
@@ -52,8 +56,19 @@ export async function runServerChild(
     updateVersion,
   });
   const shutdown = waitForChildShutdown(server, config, repository, manifest);
-  process.send?.({ port: server.port, type: "ready", version: updateVersion });
-  if (!process.send) process.stdout.write(`Mokly listening at ${server.url}\n`);
+  process.send?.({
+    ...(server.interactivePort !== undefined
+      ? { interactivePort: server.interactivePort }
+      : {}),
+    port: server.port,
+    type: "ready",
+    version: updateVersion,
+  });
+  if (!process.send) {
+    process.stdout.write(`Mokly listening at ${server.url}\n`);
+    if (server.interactiveOrigin)
+      process.stdout.write(`Mokly Live at ${server.interactiveOrigin}\n`);
+  }
   if (retainedRuntime && !initial) requestComponentRuntime();
   try {
     await shutdown;

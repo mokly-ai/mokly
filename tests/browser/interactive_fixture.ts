@@ -5,15 +5,15 @@ import type { Page } from "@playwright/test";
 
 import { adaptBrowseDocument } from "../../dist/browse/document_adapter.js";
 import { compileCatalogue } from "../../dist/build/compile.js";
-import { loadConsumerGraph } from "../../dist/build/load_graph.js";
+import { prepareLiveRuntime } from "../../dist/build/live_runtime.js";
 import { loadConfig } from "../../dist/config/load.js";
 import { EsbuildInteractiveBundleCompiler } from "../../dist/interactive/bundle.js";
 import {
   buildInteractiveBootstrap,
   composeInteractiveDocument,
 } from "../../dist/interactive/document.js";
-import { prepareRegistry } from "../../dist/registry/prepare.js";
 import { loadBrowserClientModules } from "../../dist/server/client_modules.js";
+import { startCatalogueServer } from "../../dist/server/http.js";
 import type {
   FrameEvent,
   MountedFrame,
@@ -35,8 +35,6 @@ export async function interactiveFixture() {
   await fs.writeFile(path.join(fixture.root, "renderer.tsx"), rendererSource);
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
-  const graph = await loadConsumerGraph(config);
-  const registry = prepareRegistry(graph.definitions, config);
   const catalogue = createCatalogue(compilation.manifest);
   const generation = "browser_generation";
   const component = compilation.manifest.entries.find(
@@ -73,7 +71,7 @@ export async function interactiveFixture() {
     const built = buildInteractiveBootstrap({
       catalogueSchemes: config.colorSchemes,
       colorScheme: "light",
-      entries: registry.entries,
+      entries: compilation.manifest.entries,
       entryId,
       generation,
       sourceRoute: route,
@@ -89,7 +87,7 @@ export async function interactiveFixture() {
   const homeBootstrap = buildInteractiveBootstrap({
     catalogueSchemes: config.colorSchemes,
     colorScheme: "light",
-    entries: registry.entries,
+    entries: compilation.manifest.entries,
     entryId: "home",
     generation,
     sourceRoute: homePath,
@@ -140,12 +138,66 @@ export async function interactiveFixture() {
   };
 }
 
+/** Real Serve listener pair for the Milestone 4 happy-path browser contract. */
+export async function interactiveServeFixture() {
+  const fixture = await createFixture(interactiveSource(), {
+    extraConfig: 'interactive: "serve", renderer: "renderer.tsx",',
+  });
+  await fs.writeFile(path.join(fixture.root, "renderer.tsx"), rendererSource);
+  const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
+  const diagnostics: unknown[] = [];
+  const server = await startCatalogueServer(runtime.config, {
+    base: "main",
+    changesStatus: "unavailable",
+    componentRuntime: runtime,
+    manifest: runtime.manifest,
+    onDiagnostic: (error) => diagnostics.push(error),
+    port: 0,
+  });
+  fixture.beforeRemove(() => server.close());
+  const component = runtime.manifest.entries.find(
+    (entry) => entry.kind === "component" && entry.id === "live-panel",
+  );
+  const livePath =
+    component?.kind === "component"
+      ? component.variants[0]?.fragments.mobile
+      : undefined;
+  if (!livePath || !server.interactiveOrigin)
+    throw new Error("Real Serve interactive fixture did not start");
+  const prepared = await fetch(
+    `${server.url}/__mokly/interactive/${runtime.generation}/prepare`,
+    { headers: { origin: server.url }, method: "POST" },
+  );
+  if (!prepared.ok)
+    throw new Error(`Real Serve bundle preparation failed: ${prepared.status}`);
+  return {
+    diagnostics,
+    frames: { url: server.interactiveOrigin },
+    host: { url: server.url },
+    livePath: `/static/${livePath}`,
+    async close() {
+      await removeFixture(fixture);
+    },
+  };
+}
+
 export async function mountInteractiveFrame(
   page: Page,
-  fixture: Awaited<ReturnType<typeof interactiveFixture>>,
+  fixture: {
+    frames: { url: string };
+    host: { url: string };
+    livePath: string;
+  },
   framePath = fixture.livePath,
 ): Promise<void> {
   await page.goto(fixture.host.url);
+  await page.evaluate(() => {
+    if (document.querySelector("#frame")) return;
+    const frame = document.createElement("iframe");
+    frame.id = "frame";
+    frame.style.cssText = "width:390px;height:700px;border:0";
+    document.body.append(frame);
+  });
   await page.evaluate(
     async ({ framePath, frameOrigin }) => {
       const state = window as unknown as InteractiveTestWindow;

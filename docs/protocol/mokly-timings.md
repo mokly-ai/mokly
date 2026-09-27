@@ -33,8 +33,11 @@ shuts down. Complete rendering and Changes run separately after listener readine
 for both watched and non-watched Serve. `catalogue.prepare-index` measures foreground
 metadata preparation; `preview.render` measures requested documents;
 `interactive.bundle` measures one lazy browser-bundle build for a catalogue
-generation when [interactive views](./mokly-interactive-views.md) are enabled. Exhaustive
-Serve compilation has role `background`, not `serve`. Timings
+generation when [interactive views](./mokly-interactive-views.md) are enabled.
+Concurrent requests share that span; a failed build ends it with `error`, and
+the retained failed state emits no duplicate span for that generation. In
+watched Serve the span belongs to the HTTP child that owns the interactive
+listener. Exhaustive Serve compilation has role `background`, not `serve`. Timings
 continue for rebuilds and later classification. The parent forwards the flag to
 every replacement child; the child reports startup transfer, source-inventory
 validation, catalogue preparation, and listening separately.

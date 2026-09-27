@@ -56,6 +56,8 @@ export class PlainReporter implements CliReporter {
     this.write(
       `Mokly listening at ${report.url}${report.watch ? " (watching)" : ""}\n`,
     );
+    if (report.interactiveOrigin)
+      this.write(`Mokly Live at ${report.interactiveOrigin}\n`);
   }
 
   startPhase(_label: string): ReporterPhase {

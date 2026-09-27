@@ -1,9 +1,8 @@
 # Interactive Browser Runtime
 
 This directory prepares Live preview documents without changing Mokly's static
-build artifacts. Milestone 3 exposes the bundle, document-composition, and
-browser-mount boundaries for the interactive-origin server to consume. The
-second listener and shell control are separate delivery milestones.
+build artifacts. It owns the browser bundle and runtime plus Serve's isolated
+Live listener. The shell control is a separate delivery milestone.
 
 ## Responsibilities
 
@@ -18,6 +17,10 @@ second listener and shell control are separate delivery milestones.
   synchronously mount a fresh root on `document.body` after static first paint.
 - Preserve host-owned catalogue navigation through a validated Live identity
   event and the existing frame-adapter transport.
+- Bind a second loopback listener, enforce its exact route and Host policies,
+  and coordinate current/previous generation state with Serve.
+- Validate bounded browser diagnostics and expose consumer-text-free readiness
+  through the app origin's private capability channel.
 
 ## Boundaries
 
@@ -34,9 +37,10 @@ emits no props or source paths in the bootstrap, escapes canonical JSON for an
 inline script, requires the metadata and sole inspector script to remain inside
 the explicit head, and preserves every byte from the body start onward.
 `InteractiveViewEligibilityError` exposes typed entry/kind/variant reasons for
-the future 404 boundary; malformed composition inputs are internal document
-errors, not `interactive-bundle` failures. The future interactive origin owns
-route selection, response policy, and when composition runs.
+the 404 boundary; malformed composition inputs are internal document errors,
+not `interactive-bundle` failures. `server_static.ts` refuses ineligible views
+before bundle preparation and composes only the current generation's ordinary
+on-demand document.
 
 `runtime/` strictly validates the bootstrap, configures the route table, finds
 the bundled registry entry, and mounts with React's `createRoot` inside
@@ -50,13 +54,40 @@ to the generation-scoped diagnostics path. Pre-root validation failures leave
 the static body untouched. An uncaught root error reports once, unmounts, and
 restores the retained original child nodes without duplicating body styles or
 scripts; caught errors leave the consumer boundary result in place. The endpoint
-and its Serve stderr policy belong to the interactive-origin server.
+strictly validates 16 KiB of JSON and logs one line per view and generation.
+
+## Serve Origin
+
+`server.ts` defines `InteractiveServer` and its factory boundary. The watched
+HTTP child owns this listener because it already owns the current catalogue,
+document service, and runtime. `server_router.ts` admits only Live documents,
+confined public files, retained generation bundles and diagnostics, and the
+inspector. All responses are uncached and `nosniff`; documents also restrict
+frame ancestors. No route sends CORS headers.
+
+Local Hosts use the controls listener's exact loopback rule. An explicit
+browser-facing origin adds only its exact authority. Forwarded headers grant
+nothing. Default CSP names both loopback app spellings; explicit forwarding
+uses the documented HTTP(S) ancestor policy because the forwarded shell origin
+is unknown. Forwarded host names or port numbers therefore require an explicit
+origin. The frame adapter's optional request parameter is separately validated
+as a canonical origin distinct from the frame.
+
+`bundle_state.ts` tracks `idle`, `building`, `ready`, or `failed`, coalesces one
+timed build, and retains one predecessor. Typed `interactive-bundle` failures
+become consumer-text-free 503 responses; internal faults remain 500. The app
+origin owns the current-generation preparation POST and private descriptor/SSE
+transport, so the future shell can wait for readiness without reading a
+cross-origin response. That POST follows the component-control rule: its Origin
+must be exactly `http://` plus the accepted loopback Host.
 
 ## Navigation
 
-The bootstrap route table reuses the static artifact resolver and maps every
-routable id to only its portable href, without the inspector map's 1,024-link
-limit. Native `MockLink`, `MockLink asChild`, and resolved raw `mock:` anchors
+The bootstrap route table resolves every routable id from the accepted
+generation's manifest and maps it to only its portable href, without the
+inspector map's 1,024-link limit. Parity tests pin those manifest routes to the
+authored-entry Build resolver. Native `MockLink`, `MockLink asChild`, and
+resolved raw `mock:` anchors
 prevent unmodified primary activation and emit `mokly:interactive-navigation`
 with `{ id, fragment?, target }`. The inspector strictly validates that logical
 identity and sends the unchanged frame navigation protocol; the host remains
@@ -67,7 +98,7 @@ native behavior on the resolved href.
 
 ```sh
 npm run build
-node --import tsx --test tests/interactive_*.test.ts tests/interactive_*.test.tsx
+node --import tsx --test tests/interactive_*.test.ts tests/client_interactive_capability.test.ts
 npx playwright test tests/browser/interactive.spec.ts
 npm run package:check
 ```

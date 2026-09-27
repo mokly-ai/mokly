@@ -82,7 +82,8 @@ async function execute(
       "Configuration loaded",
       () => timeAsync("config.load", () => loadConfig(cwd, arguments_.config)),
     ));
-  validateInteractiveArguments(arguments_, config.interactive);
+  if (arguments_.command !== "__serve-child")
+    validateInteractiveArguments(arguments_, config.interactive);
   if (arguments_.command === "export") {
     const result = await reportPhase(
       reporter,
@@ -168,6 +169,8 @@ async function execute(
       arguments_.strictPort ?? false,
       arguments_.retainedRuntime ?? false,
       runtimeStartup?.manifest,
+      arguments_.interactivePort,
+      arguments_.interactiveOrigin,
     );
     return 0;
   }
@@ -176,7 +179,16 @@ async function execute(
       config,
       {
         ...(arguments_.base !== undefined ? { base: arguments_.base } : {}),
+        ...(arguments_.interactiveOrigin
+          ? { interactiveOrigin: arguments_.interactiveOrigin }
+          : {}),
+        ...(arguments_.interactivePort !== undefined
+          ? { interactivePort: arguments_.interactivePort }
+          : {}),
         port,
+        ...(arguments_.strictPort !== undefined
+          ? { strictPort: arguments_.strictPort }
+          : {}),
         watch: arguments_.watch ?? true,
       },
       { reporter },
@@ -193,6 +205,9 @@ async function execute(
     configPath:
       path.relative(cwd, config.configPath) || path.basename(config.configPath),
     generatedOutput: config.generatedOutput,
+    ...(running.interactiveOrigin
+      ? { interactiveOrigin: running.interactiveOrigin }
+      : {}),
     url: running.url,
     version: packageVersion(),
     watch: arguments_.watch ?? true,

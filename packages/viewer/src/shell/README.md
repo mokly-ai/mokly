@@ -100,10 +100,13 @@ Serve capability. Standalone
 full-document composition lives in `src/standalone`: its bootstrap contains
 the validated public catalogue and shell delivery state for Serve. Static pages
 carry a compact identity/revision reference and resolve the shared finalized
-catalogue before `src/browser.tsx` hydrates that exact server tree. Live Serve places private
-route evidence in a separate descriptor; the capability store adopts the
-fetched page's public bootstrap, source and private workspace as one monotonic
-revision. `use_workspace_data.ts` keeps one route-owned workspace object so
+catalogue before `src/browser.tsx` hydrates that exact server tree. Live Serve
+places private route evidence and optional `{ generation, port, origin?, state }`
+interactive readiness in a separate descriptor. The capability store adopts
+same-identity readiness events in place and adopts a fetched page's public
+bootstrap, source, interactive descriptor, and private workspace as one
+monotonic revision. A changed Live generation keeps the existing full-reload
+boundary. `use_workspace_data.ts` keeps one route-owned workspace object so
 matching evidence refreshes retain already loaded usage and local editor state.
 Versioned historical selection adopts new evidence and becomes unavailable if
 that exact snapshot disappears. Identity-less legacy history adopts only an
@@ -132,7 +135,8 @@ stage overlays against the current preview, keeping sibling viewers,
 navigation and the inspector outside an overlay's bounds. Browser transport
 remains behind `useViewerCapabilities`. The
 [live capability contract](../../../../docs/protocol/mokly-live-capabilities.md)
-defines route loading, revision fencing and export omission.
+defines route loading, bundle preparation, revision fencing, and export
+omission.
 
 Before standalone hydration, stored disclosure and split-width preferences are
 applied to the server DOM. Disclosure helpers treat native `<details>` groups

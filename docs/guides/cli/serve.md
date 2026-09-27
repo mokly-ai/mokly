@@ -22,7 +22,8 @@ that URL in your default browser as soon as the server is ready.
 | `--config <path>`               | Use an explicit `mokly.config` file                            |
 | `--port <port>`                 | Starting port; advances if occupied, `0` selects any free port |
 | `--interactive-port <port>`     | Live preview port, or `0` to select any free port              |
-| `--interactive-origin <origin>` | Canonical HTTP(S) origin advertised for Live previews          |
+| `--interactive-origin <origin>` | Live origin for different browser-facing host names or ports   |
+| `--strict-port`                 | Fail instead of advancing either requested Serve port          |
 | `--base <ref>`                  | Git base ref used to find the branch point                     |
 | `--watch`                       | Watch your inputs; this is the default                         |
 | `--no-watch`                    | Serve one deterministic snapshot                               |
@@ -37,10 +38,27 @@ operating system for any free port. A watched server keeps the port it first
 resolved, so its URL survives a restart.
 
 When the config selects `interactive: "serve"`, `--interactive-port` chooses
-the separate Live origin's port with the same numeric rules. Use
+the separate Live origin's starting port with the same numeric rules. Without
+it, Live starts at the resolved app port plus one. `--strict-port` makes an
+occupied app or Live port fail startup instead of advancing; a watched server
+retains both resolved ports across restarts. Serve prints the Live origin on a
+second startup line. If the app resolves to port 65535 and no Live port was
+named, Live asks the operating system for a free port because no next port
+exists; this also applies under `--strict-port`.
+
+Use
 `--interactive-origin` when Mokly must advertise a different canonical
-HTTP(S) origin; it cannot contain credentials, a path, query, or fragment.
-Both options are rejected while interactive views are off.
+HTTP(S) origin because a forwarding layer changes browser-facing host names or
+port numbers. The derived local Live origin, Host checks and frame policy use
+Serve's actual socket ports, so an override is required even when forwarding
+changes only a port number.
+It cannot contain credentials, a path, query, or fragment, does not change the
+loopback bind, and must route to that listener. Mokly accepts exactly its Host
+authority in addition to local loopback Hosts; forwarded headers alone grant
+nothing. Because the forwarded app origin is not known, this explicit mode
+allows HTTP(S) frame ancestors while the frame handshake still pins the exact
+app origin. Both interactive options are rejected while interactive views are
+off.
 
 ## What it serves
 
@@ -53,6 +71,11 @@ A watched server also notices Git ref changes, reloads the page when your
 sources change and keeps your place. `--no-watch` starts the same way but does
 not follow later edits.
 
+With `interactive: "serve"`, the announced second origin prepares Live screen
+and saved-component documents lazily. The current shipped shell still displays
+Static only; the Static/Live control is the next interactive-views milestone.
+Build, Check, export, publication, Changes, and comparisons remain static.
+
 ## Access
 
 While the local controls are active, every request must address
@@ -60,3 +83,10 @@ While the local controls are active, every request must address
 port is supported; a request that arrives with another host is refused for the
 whole catalogue. Rendering requests additionally require the exact matching
 origin and the render token.
+
+The Live listener applies the same loopback Host rule and serves only Live
+documents, confined public assets, generation bundles, diagnostics, and the
+inspector. It does not serve the shell, catalogue JSON, controls, review,
+comparisons, or uploads. Local Live documents allow the app opened as either
+`localhost` or `127.0.0.1`; an explicit `--interactive-origin` admits only that
+additional Live authority.

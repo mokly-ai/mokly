@@ -23,6 +23,16 @@ export type {
   ViewerCapabilitySource,
 } from "./client/host_capability_descriptor.js";
 export {
+  readInteractivePrepareResponse,
+  readViewerInteractiveDescriptor,
+  sameViewerInteractiveOrigin,
+} from "./client/interactive_capability.js";
+export type {
+  InteractiveBundleState,
+  InteractivePrepareResponse,
+  ViewerInteractiveDescriptor,
+} from "./client/interactive_capability.js";
+export {
   readViewerEvidenceRevision,
   readViewerRouteEvidenceRevision,
 } from "./client/host_capabilities.js";
@@ -30,6 +40,7 @@ export type {
   ViewerEvidenceCapability,
   ViewerEvidenceRevision,
   ViewerHostCapabilities,
+  ViewerInteractiveCapability,
   ViewerOnDemandCapability,
   ViewerTemporaryPreviewCapability,
   ViewerUpdateActions,

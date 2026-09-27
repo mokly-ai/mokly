@@ -9,6 +9,7 @@ export interface ServeReadyReport {
   readonly base: string;
   readonly configPath: string;
   readonly generatedOutput: "committed" | "derived";
+  readonly interactiveOrigin?: string;
   readonly url: string;
   readonly version: string;
   readonly watch: boolean;

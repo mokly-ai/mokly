@@ -201,6 +201,7 @@ function validateCommandOptions(arguments_: CliArguments): void {
   }
   if (
     arguments_.command !== "serve" &&
+    arguments_.command !== "__serve-child" &&
     (arguments_.interactivePort !== undefined ||
       arguments_.interactiveOrigin !== undefined)
   ) {
@@ -222,12 +223,10 @@ function validateCommandOptions(arguments_: CliArguments): void {
   }
   if (
     arguments_.command !== "__serve-child" &&
+    arguments_.command !== "serve" &&
     arguments_.strictPort !== undefined
   ) {
-    throw new MoklyError(
-      "cli-invalid",
-      "--strict-port is reserved for the watched server child",
-    );
+    throw new MoklyError("cli-invalid", "--strict-port belongs to serve");
   }
   if (arguments_.command === "build" || arguments_.command === "check") {
     if (arguments_.base !== undefined)

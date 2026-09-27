@@ -1,8 +1,10 @@
 /** CLI-owned live capabilities passed into the hydrated React shell. */
 
 import {
+  readInteractivePrepareResponse,
   readViewerCapabilityDescriptor,
   readViewerRouteEvidenceRevision,
+  sameViewerInteractiveOrigin,
   viewerCapabilityRequestMatches,
   viewerCapabilitySourceEquals,
 } from "@mokly/viewer/runtime";
@@ -26,7 +28,7 @@ import type {
 /** EventSource subset needed by the live update adapter. */
 export interface ReactCapabilityEventSource {
   addEventListener(
-    type: "ready" | "update",
+    type: "interactive" | "ready" | "update",
     callback: (event: { data: string }) => void,
   ): void;
   close(): void;
@@ -69,6 +71,7 @@ export function createReactViewerCapabilities(
   };
   const updates = createReactUpdateCapability(descriptor, environment);
   const renderCapability = descriptor.renderCapability;
+  const interactive = descriptor.interactive;
   return {
     evidence: {
       initialWorkspace(request) {
@@ -86,6 +89,38 @@ export function createReactViewerCapabilities(
     },
     source,
     updates,
+    ...(interactive
+      ? {
+          interactive: {
+            async prepare(request, generation, signal) {
+              requireCurrent(request);
+              if (generation !== interactive.generation)
+                throw new Error("The live preview generation changed.");
+              const endpoint = new URL(
+                `/__mokly/interactive/${generation}/prepare`,
+                environment.location.href,
+              );
+              const response = await environment.fetch(endpoint, {
+                cache: "no-store",
+                method: "POST",
+                signal,
+              });
+              const result = readInteractivePrepareResponse(
+                await response.json(),
+              );
+              if (
+                result.generation !== generation ||
+                !(
+                  (response.status === 200 && result.state === "ready") ||
+                  (response.status === 503 && result.state === "failed")
+                )
+              )
+                throw new Error("Invalid live preview preparation response.");
+              return result;
+            },
+          },
+        }
+      : {}),
     ...(source.previewGeneration
       ? {
           onDemand: {
@@ -174,6 +209,7 @@ async function loadRouteEvidence(
     next.source,
     JSON.parse(publicState.textContent),
     next.workspace,
+    next.interactive,
   );
 }
 
@@ -184,6 +220,7 @@ function sameRenderCapability(
   return (
     current.renderCapability?.generation ===
       next.renderCapability?.generation &&
-    current.renderCapability?.token === next.renderCapability?.token
+    current.renderCapability?.token === next.renderCapability?.token &&
+    sameViewerInteractiveOrigin(current.interactive, next.interactive)
   );
 }

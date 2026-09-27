@@ -6,6 +6,10 @@ import type { RenderCapability } from "../components/render_types.js";
 import type { ShellContext } from "../shell/context.js";
 import type { WorkspaceData } from "../shell/workspace_data.js";
 
+import {
+  readViewerInteractiveDescriptor,
+  type ViewerInteractiveDescriptor,
+} from "./interactive_capability.js";
 import { readViewerWorkspace } from "./workspace_descriptor.js";
 
 /** Stable source identity plus the revisions seen by one shell transition. */
@@ -27,6 +31,7 @@ export interface ViewerCapabilityRequest {
 
 /** Private server-to-CLI bootstrap kept outside public catalogue JSON. */
 export interface ViewerCapabilityDescriptor {
+  interactive?: ViewerInteractiveDescriptor;
   renderCapability?: RenderCapability;
   schemaVersion: 1;
   source: ViewerCapabilitySource;
@@ -71,6 +76,7 @@ export function viewerCapabilityDescriptor(
   return {
     schemaVersion: 1,
     source,
+    ...(context.interactive ? { interactive: context.interactive } : {}),
     ...(context.renderCapability
       ? { renderCapability: context.renderCapability }
       : {}),
@@ -89,13 +95,22 @@ export function readViewerCapabilityDescriptor(
     value["renderCapability"],
     source,
   );
+  const interactive = readInteractive(value["interactive"]);
   const workspace = readWorkspace(value["workspace"], source);
   return {
     schemaVersion: 1,
     source,
+    ...(interactive ? { interactive } : {}),
     ...(renderCapability ? { renderCapability } : {}),
     ...(workspace ? { workspace } : {}),
   };
+}
+
+function readInteractive(
+  value: unknown,
+): ViewerInteractiveDescriptor | undefined {
+  if (value === undefined) return;
+  return readViewerInteractiveDescriptor(value);
 }
 
 /** Serialize private bootstrap JSON without allowing an inline-script escape. */

@@ -195,6 +195,11 @@ test("live SSR carries a private descriptor while export carries no host loader"
   const liveContext = {
     base: source.base,
     contentVersion: source.contentRevision,
+    interactive: {
+      generation,
+      port: 4174,
+      state: "idle" as const,
+    },
     previewGeneration: generation,
     readModel: catalogue,
     renderCapability: { generation, token },
@@ -213,6 +218,11 @@ test("live SSR carries a private descriptor while export carries no host loader"
   )?.[1];
   assert.ok(state);
   const descriptor = JSON.parse(state);
+  assert.deepEqual(descriptor.interactive, {
+    generation,
+    port: 4174,
+    state: "idle",
+  });
   assert.equal(view.kind, "target");
   if (view.kind !== "target")
     throw new Error("Expected a target fixture view.");
@@ -235,11 +245,18 @@ test("live SSR carries a private descriptor while export carries no host loader"
       comparisonUrl: null,
       idRoutes: {},
     },
+    interactive: {
+      generation,
+      origin: "https://private-live.example",
+      port: 4174,
+      state: "ready",
+    },
     readModel: { ...catalogue, deploymentId },
     updateVersion: 0,
   });
   assert.doesNotMatch(exported, /data-mokly-host-capabilities/);
   assert.doesNotMatch(exported, /client\/react-host\.js/);
   assert.doesNotMatch(exported, new RegExp(token));
+  assert.doesNotMatch(exported, /private-live\.example|"port":4174/);
   assert.match(exported, /client\/react-shell\.js/);
 });

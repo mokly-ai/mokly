@@ -1,10 +1,11 @@
-import type { ServerResponse } from "node:http";
+import type { IncomingHttpHeaders, ServerResponse } from "node:http";
 
 import type { RenderCapability } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 import { shellContext, SHELL_CSS } from "@mokly/viewer/server";
 
 import type { ResolvedConfig } from "../config/types.js";
+import type { InteractiveServer } from "../interactive/server.js";
 
 import {
   openEventStream,
@@ -15,6 +16,7 @@ import {
 import type { ComponentChangeSnapshot } from "./component_changes.js";
 import { handleDemandRequest } from "./demand/http.js";
 import type { DocumentService } from "./demand/service.js";
+import { handleInteractivePreparation } from "./interactive_prepare.js";
 import { homePage, notFoundPage } from "./pages.js";
 import type { PublicCatalogueSource } from "./public_catalogue.js";
 import { readPublicCatalogue } from "./public_catalogue_model.js";
@@ -43,10 +45,22 @@ export async function handleCatalogueRequest(
   changesStatus?: ChangesStatus,
   contentVersion?: number,
   publicCatalogue?: PublicCatalogueSource,
+  interactive?: InteractiveServer,
+  requestHeaders: IncomingHttpHeaders = {},
 ): Promise<void> {
+  const url = new URL(rawUrl, "http://mokly.invalid");
+  if (
+    await handleInteractivePreparation(
+      url,
+      method,
+      response,
+      requestHeaders,
+      interactive,
+    )
+  )
+    return;
   if (method !== "GET" && method !== "HEAD")
     return send(response, 405, "text/plain", "Method not allowed", method);
-  const url = new URL(rawUrl, "http://mokly.invalid");
   if (url.pathname === "/__mokly/catalogue.json" && publicCatalogue) {
     response.setHeader("Cache-Control", "no-store");
     return send(
@@ -70,7 +84,13 @@ export async function handleCatalogueRequest(
   if (url.pathname === "/__mokly/shell.css")
     return send(response, 200, "text/css", SHELL_CSS, method);
   if (url.pathname === "/__mokly/events")
-    return openEventStream(response, streams, requestVersion, method);
+    return openEventStream(
+      response,
+      streams,
+      requestVersion,
+      method,
+      interactive?.descriptor(),
+    );
   if (url.pathname.startsWith("/__mokly/client/")) {
     return serveClientModule(
       response,
@@ -130,6 +150,7 @@ export async function handleCatalogueRequest(
   if (changesStatus) context.changesStatus = changed ? "ready" : changesStatus;
   if (componentChanges) context.componentChanges = componentChanges;
   if (renderCapability) context.renderCapability = renderCapability;
+  if (interactive) context.interactive = interactive.descriptor();
   if (url.pathname === "/")
     return send(
       response,

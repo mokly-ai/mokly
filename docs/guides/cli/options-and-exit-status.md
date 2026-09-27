@@ -26,7 +26,8 @@ takes no value. There are no silent positional arguments.
 | `--debug-timings`                    | every command                | Report phase timings and catalogue counts on standard error    |
 | `--port <port>`                      | `serve`                      | Starting port; advances if occupied, `0` selects any free port |
 | `--interactive-port <port>`          | `serve`                      | Live preview port; `0` selects any free port                   |
-| `--interactive-origin <origin>`      | `serve`                      | Canonical HTTP(S) origin advertised for Live previews          |
+| `--interactive-origin <origin>`      | `serve`                      | Live origin when browser-facing host names or ports differ     |
+| `--strict-port`                      | `serve`                      | Fail instead of advancing either requested Serve port          |
 | `--watch`                            | `serve`                      | Watch your inputs; the default                                 |
 | `--no-watch`                         | `serve`                      | Serve one deterministic snapshot                               |
 | `--base <ref>`                       | `serve`, `export`, `publish` | Git base ref used to find the branch point                     |
@@ -42,7 +43,9 @@ takes no value. There are no silent positional arguments.
 
 An option given to a command that does not take it is refused by name rather
 than ignored. `--out` is required by `export`, and `--no-changes` cannot be
-combined with `--base`.
+combined with `--base`. Interactive port/origin options require
+`interactive: "serve"`; the Live port otherwise starts one above the resolved
+app port. `--strict-port` applies to both listeners.
 
 ## Exit status
 

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
-import path from "node:path";
 import test from "node:test";
 
-import type { ResolvedRegistryEntry } from "../dist/authoring/types.js";
+import type { ManifestEntry } from "@mokly/viewer/data";
+
 import {
   buildInteractiveBootstrap,
   composeInteractiveDocument,
@@ -15,8 +15,6 @@ import {
   resolveInteractiveLink,
 } from "../dist/interactive/runtime/route_context.js";
 import type { InteractiveBootstrap } from "../dist/interactive/types.js";
-
-import { repositoryRoot } from "./helpers/fixture.js";
 
 const entries = [screen("home"), screen("details")];
 const metadata = {
@@ -201,23 +199,24 @@ function documentFailure(error: unknown): boolean {
   return true;
 }
 
-function screen(
-  id: string,
-): Extract<ResolvedRegistryEntry, { kind: "screen" }> {
+function screen(id: string): Extract<ManifestEntry, { kind: "screen" }> {
   const sourceRelativePath = "entries/interactive.mockup.tsx";
   return {
-    __viaDefine: true,
+    declaredDependencies: [],
     dependencies: [],
     description: id,
-    desktop: "Desktop",
+    fragments: {
+      desktop: `screens/${id}.desktop.html`,
+      mobile: `screens/${id}.mobile.html`,
+    },
     id,
     kind: "screen",
-    mobile: "Mobile",
+    navPath: [],
     relatedDocs: [],
     route: `screens/${id}.html`,
-    sourcePath: path.join(repositoryRoot, sourceRelativePath),
-    sourceRelativePath,
+    sourcePath: sourceRelativePath,
     title: id,
     useCaseIds: [],
+    viewports: ["mobile", "desktop"],
   };
 }

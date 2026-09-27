@@ -38,10 +38,11 @@ tree shared by standalone Serve, static export and embedded hosts. Standalone
 documents render the complete shell on the server and hydrate it in the browser;
 embedded hosts mount the same components with host-owned selection and slots.
 Consumer frames and comparisons remain static HTML in script-disabled sandboxes.
-An optional Live preview mode for local Serve is an approved target defined by
-the [interactive views contract](./mokly-interactive-views.md); it paints the
-same static document first and then mounts the consumer tree on a separate
-loopback origin, without changing the bytes that comparisons read.
+The optional Live backend for local Serve is implemented as defined by the
+[interactive views contract](./mokly-interactive-views.md): it paints the same
+static document first and then mounts the consumer tree on a separate loopback
+origin, without changing comparison bytes. The shell's Static/Live control is
+the remaining delivery milestone.
 Selecting a removed page or screen captures and renders its pinned previous
 version in that shared tree through the lifecycle implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
@@ -138,6 +139,11 @@ worker isolation and generation-local caches. Browse exposes:
 Serve also exposes [`/__mokly/catalogue.json`](./mokly-catalogue.md)
 as the public read model, refreshed atomically on watched content/evidence
 updates. It keeps the private manifest and on-demand readiness boundary intact.
+When interactive Serve is enabled, the app origin additionally owns the
+private generation-scoped bundle-preparation POST, while a second loopback
+listener owns only Live documents, public resources, bundles, diagnostics, and
+the inspector. The second listener never serves the shell, public catalogue,
+controls, review, comparisons, or uploads.
 
 Browse does not run Git classification on its HTTP event loop or request path.
 The watched child receives the accepted config, live index and retained bundle
@@ -181,8 +187,9 @@ Serve/export mount it without slots using the
 [same-origin adapter](./mokly-frame-adapter.md) and load the standalone
 hydration entry, which bundles React. Slots, theming and host-triggered pick
 mode are public embedding APIs; they add no local UI. First-party Serve
-supplies its private control/evidence capabilities to the tree through a typed
-context outside the public catalogue; export supplies none.
+supplies its private control/evidence and optional Live origin/readiness
+capabilities to the tree through a typed context outside the public catalogue;
+export supplies none.
 
 The package owns a neutral, responsive Mokly shell: a top bar with brand,
 search with its tag picker; a catalogue navigation

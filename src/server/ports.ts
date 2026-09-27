@@ -29,6 +29,14 @@ export async function listenOnAvailablePort(
   }
 }
 
+/** Read one resolved TCP port after a successful listener bind. */
+export function listeningPort(server: http.Server): number {
+  const address = server.address();
+  if (address && typeof address !== "string") return address.port;
+  server.close();
+  throw new MoklyError("server-failed", "server did not expose a TCP address");
+}
+
 function listen(server: http.Server, port: number): Promise<void> {
   return new Promise((resolve, reject) => {
     const cleanup = (): void => {

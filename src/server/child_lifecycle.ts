@@ -31,6 +31,7 @@ export class ManagedChild {
   #readinessTimer: ReturnType<typeof setTimeout> | undefined;
   #terminateTimer: ReturnType<typeof setTimeout> | undefined;
   #forceTimer: ReturnType<typeof setTimeout> | undefined;
+  #interactivePort: number | undefined;
 
   constructor(
     private readonly handle: ChildHandle,
@@ -54,6 +55,7 @@ export class ManagedChild {
     handle.onMessage((message) => {
       if (this.#state === "waiting" && isReady(message)) {
         this.#state = "ready";
+        this.#interactivePort = message.interactivePort;
         clearTimeout(this.#readinessTimer);
         this.#resolveReady(message.port);
       }
@@ -73,6 +75,10 @@ export class ManagedChild {
   /** First failure, retained through subsequent shutdown errors. */
   get failure(): MoklyError | undefined {
     return this.#failure;
+  }
+  /** Resolved Live listener port announced with readiness, when enabled. */
+  get interactivePort(): number | undefined {
+    return this.#interactivePort;
   }
 
   /** Observe messages while this lifecycle still owns a starting or ready child. */
@@ -174,11 +180,22 @@ function serverFailure(error: unknown): MoklyError {
   });
 }
 
-function isReady(message: unknown): message is { port: number; type: "ready" } {
+function isReady(message: unknown): message is {
+  interactivePort?: number;
+  port: number;
+  type: "ready";
+} {
   return (
     typeof message === "object" &&
     message !== null &&
     (message as { type?: unknown }).type === "ready" &&
-    Number.isInteger((message as { port?: unknown }).port)
+    Number.isInteger((message as { port?: unknown }).port) &&
+    ((message as { interactivePort?: unknown }).interactivePort === undefined ||
+      (Number.isInteger(
+        (message as { interactivePort?: unknown }).interactivePort,
+      ) &&
+        ((message as { interactivePort?: number }).interactivePort ?? 0) >= 1 &&
+        ((message as { interactivePort?: number }).interactivePort ?? 0) <=
+          65_535))
   );
 }

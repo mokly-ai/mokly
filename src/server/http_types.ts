@@ -1,6 +1,7 @@
 import type { ManifestV5 } from "@mokly/viewer/data";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
+import type { InteractiveServerFactory } from "../interactive/server.js";
 
 import type { CatalogueSnapshot } from "./catalogue_snapshot.js";
 import type {
@@ -29,6 +30,12 @@ export interface ServerOptions {
   componentChangeSource?: ComponentChangeSource;
   /** Parent-validated manifest supplied to a watched server child. */
   manifest?: ComponentRuntime["manifest"];
+  /** Browser-facing Live origin when a forwarding layer changes authority. */
+  interactiveOrigin?: string;
+  /** Requested starting port for the isolated Live listener. */
+  interactivePort?: number;
+  /** Injectable construction boundary for the isolated Live listener. */
+  interactiveServerFactory?: InteractiveServerFactory;
   port: number;
   /** Enables on-demand comparison JSON and isolated snapshots. */
   review?: ServedReview;
@@ -40,6 +47,8 @@ export interface ServerOptions {
 export interface RunningServer {
   completeCatalogue?(manifest: ManifestV5, generation: string): boolean;
   close(): Promise<void>;
+  interactiveOrigin?: string;
+  interactivePort?: number;
   publishUpdate(update?: CatalogueUpdate): void;
   replaceComponentRuntime(runtime: ComponentRuntime): void;
   port: number;

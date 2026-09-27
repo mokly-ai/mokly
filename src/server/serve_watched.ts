@@ -20,6 +20,7 @@ import {
   closeWatched,
   createWatchedSupervisor,
   restartWithRecovery,
+  watchedInteractiveAddress,
   watcherReadyBeforeShutdown,
 } from "./serve_lifecycle.js";
 import type { ProcessSupervisor } from "./supervisor.js";
@@ -283,6 +284,7 @@ export async function serveWatched(
     options.base ?? activeConfig.review.base,
   );
   return {
+    ...watchedInteractiveAddress(options, running),
     port,
     rebuild: () => queue.notify("rebuild"),
     url: `http://127.0.0.1:${port}`,
