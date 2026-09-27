@@ -1,6 +1,6 @@
-/** Keep a viewer-owned historical document readable but inert. */
+/** Keep a viewer-owned snapshot document readable but inert. */
 
-import type { PreviewPresentation } from "./presentation.js";
+import type { SnapshotPresentation } from "./presentation.js";
 
 const guarded = new WeakSet<Document>();
 const XLINK_NAMESPACE = "http://www.w3.org/1999/xlink";
@@ -50,7 +50,7 @@ function fragmentName(link: Element, doc: Document, source: string) {
 function scrollToFragment(
   link: Element,
   doc: Document,
-  presentation: PreviewPresentation,
+  presentation: SnapshotPresentation,
 ): void {
   const name = fragmentName(link, doc, presentation.snapshotAddress);
   if (!name) return;
@@ -62,7 +62,7 @@ function scrollToFragment(
   target?.scrollIntoView();
 }
 
-function guard(doc: Document, presentation: PreviewPresentation): void {
+function guard(doc: Document, presentation: SnapshotPresentation): void {
   if (guarded.has(doc)) return;
   guarded.add(doc);
   const block = (event: Event): void => {
@@ -88,7 +88,7 @@ function guard(doc: Document, presentation: PreviewPresentation): void {
 /** Guard one accepted presentation and restore it after any later navigation. */
 export function enforcePreviewReadOnly(
   frame: HTMLIFrameElement,
-  presentation: PreviewPresentation,
+  presentation: SnapshotPresentation,
 ): () => void {
   let recorded: Document | undefined;
   let restoring = false;

@@ -4,9 +4,9 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 import { previewKey } from "../previews/descriptor.js";
 import {
-  createPreviewPresentationLoader,
-  type PreviewPresentation,
-  type PreviewPresentationLoader,
+  createSnapshotPresentationLoader,
+  type SnapshotPresentation,
+  type SnapshotPresentationLoader,
 } from "../previews/presentation.js";
 import {
   previewEndpoint,
@@ -25,7 +25,7 @@ export type RemovedPreviewState =
   | {
       status: "ready";
       loaded: LoadedPreview;
-      presentations: ReadonlyMap<string, PreviewPresentation>;
+      presentations: ReadonlyMap<string, SnapshotPresentation>;
     }
   | { status: "failed" };
 
@@ -38,7 +38,7 @@ interface OwnedState {
 interface LoadedOwner {
   environment: NonNullable<ReturnType<typeof useComparisonEnvironment>>;
   key: string;
-  loader: PreviewPresentationLoader;
+  loader: SnapshotPresentationLoader;
   request: string;
   value: LoadedPreview;
 }
@@ -139,12 +139,17 @@ export function useRemovedPreview({
         owner = {
           environment,
           key,
-          loader: createPreviewPresentationLoader(value, delivery, {
-            baseUrl: environment.baseUrl,
-            fetch: (input, init) => environment.fetch(input, init),
-            parse: (source) =>
-              new DOMParser().parseFromString(source, "text/html"),
-          }),
+          loader: createSnapshotPresentationLoader(
+            value.generation,
+            ["before"],
+            delivery,
+            {
+              baseUrl: environment.baseUrl,
+              fetch: (input, init) => environment.fetch(input, init),
+              parse: (source) =>
+                new DOMParser().parseFromString(source, "text/html"),
+            },
+          ),
           request: requestKey,
           value,
         };

@@ -4,9 +4,10 @@
 
 The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
 defines the presentation below. Its Milestone 2 delivered the design references
-listed at the end, which already depict the stacked layout and inert panes; its
-Milestones 3 and 4 deliver the runtime presentation, so until they land the
-shell still frames each pane directly. This contract governs the Before and Current panes that
+listed at the end, and Milestone 3 delivered the generation-confined shared
+snapshot loader and documented embedded fetch set. Milestone 4 connects that
+pipeline to the pane UI, so until it lands the shell still frames each pane
+directly. This contract governs the Before and Current panes that
 [Changes and screen comparisons](./mokly-changes.md) offer for changed screens
 and eligible component variants in Side by side, Overlay and Difference. It
 changes nothing about comparison eligibility, capture, generation, publishing,
@@ -144,7 +145,10 @@ CORS requirement already covers `__mokly/diffs/__generations/**`, so pane
 documents need no new hosting rule. A `srcdoc` document inherits the embedding
 document's Content Security Policy; an embedded host must allow the artifact
 origin and generated inline styles for the resources a pane document needs.
-No comparison document is fetched until a reader selects a diff mode.
+No comparison document is fetched until a reader selects a diff mode. The
+internal advertised-path model records this documented fetch set for regression
+tests; it is not a runtime allowlist. The snapshot loader independently confines
+each request to its immutable generation and configured sides.
 
 ## Acceptance
 

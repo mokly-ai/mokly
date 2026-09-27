@@ -284,25 +284,25 @@ the design catalogue before the implementation lands.
 Summary: let the viewer-owned presentation pipeline serve comparison panes
 without changing removed-preview behaviour.
 
-- [ ] Generalize `packages/viewer/src/previews/presentation.ts` so a loader is
+- [x] Generalize `packages/viewer/src/previews/presentation.ts` so a loader is
       created for one immutable generation and a typed set of snapshot sides
       (`before`, `after`), confining every address to those subtrees, keeping
       the per-address cache, cancellation and acceptance rules, and keeping
       removed previews on `before` only.
-- [ ] Extend `advertisedPreviewPaths` in
+- [x] Extend `advertisedPreviewPaths` in
       `packages/viewer/src/previews/request.ts` so a comparison generation
       advertises both subtrees to the embedded fetch boundary, and keep page
       previews unchanged.
-- [ ] Keep every module near 200 lines; split `presentation.ts` if the
+- [x] Keep every module near 200 lines; split `presentation.ts` if the
       generalization pushes it past 300.
-- [ ] Add Node tests beside the existing preview tests under `tests/`:
+- [x] Add Node tests beside the existing preview tests under `tests/`:
       `after` addresses accepted for comparison loaders and rejected for
       removed-preview loaders, other generations and other prefixes rejected,
       cached and in-flight presentations reused, cancellation honoured, and the
       advertised prefixes for a comparison generation.
-- [ ] Update `packages/viewer/src/previews/README.md`; run the preview unit
+- [x] Update `packages/viewer/src/previews/README.md`; run the preview unit
       tests and browser specs, then `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the

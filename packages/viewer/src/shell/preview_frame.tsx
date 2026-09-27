@@ -2,12 +2,12 @@
 
 import { useEffect, useRef } from "react";
 
-import type { PreviewPresentation } from "../previews/presentation.js";
+import type { SnapshotPresentation } from "../previews/presentation.js";
 import { enforcePreviewReadOnly } from "../previews/read_only.js";
 
-/** Render a reachable, script-disabled historical document from `srcdoc`. */
+/** Render a reachable, script-disabled snapshot document from `srcdoc`. */
 export function PreviewFrame(props: {
-  presentation: PreviewPresentation;
+  presentation: SnapshotPresentation;
   title: string;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);

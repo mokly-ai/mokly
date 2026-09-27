@@ -1,15 +1,22 @@
-/** Fetch and prepare viewer-owned documents for historical previews. */
+/** Fetch and prepare viewer-owned snapshot presentations. */
 
 import type { ComparisonDelivery } from "../shell/comparison_context.js";
 
-import { presentPreviewDocument } from "./presentation_document.js";
-import type { LoadedPreview } from "./request.js";
+import { presentSnapshotDocument } from "./presentation_document.js";
+import {
+  confinedSnapshot,
+  snapshotGeneration,
+  snapshotSideSet,
+  type SnapshotSides,
+} from "./snapshot_address.js";
 
-/** Maximum historical HTML body accepted by the viewer. */
-export const MAX_PREVIEW_DOCUMENT_BYTES = 67_108_864;
+export type { SnapshotSide, SnapshotSides } from "./snapshot_address.js";
+
+/** Maximum snapshot HTML body accepted by the viewer. */
+export const MAX_SNAPSHOT_DOCUMENT_BYTES = 67_108_864;
 
 /** The immutable source identity and transformed `srcdoc` for one document. */
-export interface PreviewPresentation {
+export interface SnapshotPresentation {
   /** The requested snapshot address, before provider URL normalization. */
   snapshotAddress: string;
   /** Inert HTML serialization presented by the viewer-owned frame. */
@@ -17,46 +24,72 @@ export interface PreviewPresentation {
 }
 
 /** Browser boundaries injected into the presentation pipeline. */
-export interface PreviewPresentationEnvironment {
+export interface SnapshotPresentationEnvironment {
   /** Configured catalogue source whose origin owns the generation. */
   baseUrl: string | URL;
-  /** Fetch one confined historical document. */
+  /** Fetch one confined snapshot document. */
   fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
   /** Parse HTML into an inert document. */
   parse(source: string): Document;
 }
 
-/** A per-loaded-preview cache of accepted historical presentations. */
-export interface PreviewPresentationLoader {
-  /** Load one metadata-named snapshot beneath the preview generation. */
+/** A per-generation cache of accepted snapshot presentations. */
+export interface SnapshotPresentationLoader {
+  /** Load one metadata-named snapshot beneath the configured generation. */
   load(
     snapshotAddress: string,
     signal: AbortSignal,
-  ): Promise<PreviewPresentation>;
+  ): Promise<SnapshotPresentation>;
 }
 
 interface PendingPresentation {
-  promise: Promise<PreviewPresentation>;
+  promise: Promise<SnapshotPresentation>;
   signal: AbortSignal;
 }
 
-/** Create the confined presentation cache owned by one loaded preview. */
-export function createPreviewPresentationLoader(
-  loaded: LoadedPreview,
+const COMPARISON_UNAVAILABLE = "The comparison is unavailable.";
+const PREVIOUS_VERSION_UNAVAILABLE = "The previous version is unavailable.";
+
+/** Create one generation-confined cache for the selected snapshot sides. */
+export function createSnapshotPresentationLoader(
+  generationAddress: string | URL,
+  sides: SnapshotSides,
   delivery: ComparisonDelivery,
-  environment: PreviewPresentationEnvironment,
-): PreviewPresentationLoader {
-  const generation = generationUrl(loaded.generation, environment.baseUrl);
-  const prefix = new URL("snapshots/before/", generation);
-  const cache = new Map<string, PendingPresentation | PreviewPresentation>();
+  environment: SnapshotPresentationEnvironment,
+): SnapshotPresentationLoader {
+  const allowedSides = snapshotSideSet(sides);
+  const failureCopy = allowedSides.has("after")
+    ? COMPARISON_UNAVAILABLE
+    : PREVIOUS_VERSION_UNAVAILABLE;
+  const generation = snapshotGeneration(
+    generationAddress,
+    environment.baseUrl,
+    failureCopy,
+  );
+  const prefixes = Array.from(
+    allowedSides,
+    (side) => new URL(`snapshots/${side}/`, generation),
+  );
+  const cache = new Map<string, PendingPresentation | SnapshotPresentation>();
   return {
     async load(snapshotAddress, signal) {
-      const requested = confinedSnapshot(snapshotAddress, generation, prefix);
+      const requested = confinedSnapshot(
+        snapshotAddress,
+        generation,
+        prefixes,
+        failureCopy,
+      );
       const cached = cache.get(requested.href);
       if (cached && "srcdoc" in cached) return cached;
       if (cached && !cached.signal.aborted) return cached.promise;
       const pending: PendingPresentation = {
-        promise: loadPresentation(requested, delivery, environment, signal),
+        promise: loadPresentation(
+          requested,
+          delivery,
+          environment,
+          signal,
+          failureCopy,
+        ),
         signal,
       };
       cache.set(requested.href, pending);
@@ -76,66 +109,30 @@ export function createPreviewPresentationLoader(
 async function loadPresentation(
   requested: URL,
   delivery: ComparisonDelivery,
-  environment: PreviewPresentationEnvironment,
+  environment: SnapshotPresentationEnvironment,
   signal: AbortSignal,
-): Promise<PreviewPresentation> {
-  signal.throwIfAborted();
-  const response = await environment.fetch(requested, {
-    credentials: delivery.kind === "pinned" ? "omit" : "same-origin",
-    headers: { accept: "text/html" },
-    signal,
-  });
-  if (
-    !response.ok ||
-    !sameResponseUrl(response.url, requested) ||
-    mimeEssence(response.headers.get("content-type")) !== "text/html"
-  )
-    return unavailable();
-  const source = await readBoundedBody(response, signal);
-  signal.throwIfAborted();
-  return presentPreviewDocument(environment.parse(source), requested.href);
-}
-
-function generationUrl(value: string, baseUrl: string | URL): URL {
-  let generation: URL;
-  let source: URL;
+  failureCopy: string,
+): Promise<SnapshotPresentation> {
   try {
-    generation = new URL(value);
-    source = new URL(baseUrl);
+    signal.throwIfAborted();
+    const response = await environment.fetch(requested, {
+      credentials: delivery.kind === "pinned" ? "omit" : "same-origin",
+      headers: { accept: "text/html" },
+      signal,
+    });
+    if (
+      !response.ok ||
+      !sameResponseUrl(response.url, requested) ||
+      mimeEssence(response.headers.get("content-type")) !== "text/html"
+    )
+      return unavailable(failureCopy);
+    const source = await readBoundedBody(response, signal);
+    signal.throwIfAborted();
+    return presentSnapshotDocument(environment.parse(source), requested.href);
   } catch {
-    return unavailable();
+    signal.throwIfAborted();
+    return unavailable(failureCopy);
   }
-  if (
-    !["http:", "https:"].includes(generation.protocol) ||
-    generation.username ||
-    generation.password ||
-    generation.search ||
-    generation.hash ||
-    generation.origin !== source.origin ||
-    !generation.pathname.endsWith("/")
-  )
-    return unavailable();
-  return generation;
-}
-
-function confinedSnapshot(value: string, generation: URL, prefix: URL): URL {
-  let snapshot: URL;
-  try {
-    snapshot = new URL(value);
-  } catch {
-    return unavailable();
-  }
-  if (
-    snapshot.origin !== generation.origin ||
-    snapshot.username ||
-    snapshot.password ||
-    snapshot.search ||
-    snapshot.hash ||
-    !snapshot.pathname.startsWith(prefix.pathname) ||
-    snapshot.pathname === prefix.pathname
-  )
-    return unavailable();
-  return snapshot;
 }
 
 function sameResponseUrl(responseUrl: string, requested: URL): boolean {
@@ -183,9 +180,9 @@ async function readBoundedBody(
       signal.throwIfAborted();
       if (next.done) break;
       length += next.value.byteLength;
-      if (length > MAX_PREVIEW_DOCUMENT_BYTES) {
+      if (length > MAX_SNAPSHOT_DOCUMENT_BYTES) {
         await cancelReader(reader);
-        return unavailable();
+        throw new RangeError("The snapshot document exceeds the body limit.");
       }
       chunks.push(next.value);
     }
@@ -211,6 +208,6 @@ async function cancelReader(
   }
 }
 
-function unavailable(): never {
-  throw new Error("The previous version is unavailable.");
+function unavailable(message: string): never {
+  throw new Error(message);
 }
