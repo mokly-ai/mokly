@@ -203,7 +203,11 @@ Run `npm run example:build`, `npm run example:check`, and
 The browser suite opens every artboard directly from disk, checks links,
 selection semantics, counts, missing states, responsive overflow, mask
 geometry, and the stacked frames' layers, blending, single scroller and drawn
-offset; `tests/design_component_stacks.test.ts` pins their structure. Visually inspect
+offset; `tests/design_component_stacks.test.ts` pins their structure,
+`tests/design_component_comparison_states.test.ts` ties every comparison
+caption to its recorded change and pins the Checklist's Changes, and
+`tests/design_screen_counts.test.ts` keeps the documented screen counts
+aligned with the catalogue. Visually inspect
 all generated mobile and desktop pages, including both selected-instance states.
 Run `cargo xtask check` before committing and pushing. After the push, use the
 [implementation review prompt](../implementation-review-prompt.md) against

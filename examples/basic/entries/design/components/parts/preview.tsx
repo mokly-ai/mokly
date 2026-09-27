@@ -121,9 +121,7 @@ export function ComponentComparison({
       <p className="ce-caption">
         {removed
           ? "Compact variant removed"
-          : subject === "checklist"
-            ? "Default variant · Wording changed"
-            : "Default variant · Appearance changed"}
+          : "Default variant · Appearance changed"}
       </p>
       {mode === "side-by-side" ? (
         <CompareGrid>

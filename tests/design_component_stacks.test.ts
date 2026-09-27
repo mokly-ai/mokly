@@ -1,18 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  attribute,
-  byClass,
-  textContent,
-  type Element,
-} from "./helpers/design_catalogue.js";
+import { attribute, byClass, textContent } from "./helpers/design_catalogue.js";
 import {
   children,
+  comparison,
   hasClass,
+  openPanel,
   previews,
   renders,
-  type Document,
 } from "./helpers/design_stacks.js";
 
 /** Component designs that stack both versions inside one bordered frame. */
@@ -28,31 +24,6 @@ const SIDE_BY_SIDE = [
   ["design-component-controls-comparison", 2],
   ["design-component-removed", 1],
 ] as const;
-
-/** The one comparison a preview depicts, with its caption. */
-function comparison(preview: Element, where: string) {
-  const [depicted, ...others] = byClass(preview, "ce-component-comparison");
-  assert.ok(depicted, where);
-  assert.equal(others.length, 0, where);
-  const compares = byClass(depicted, "mbk-compare");
-  assert.equal(compares.length, 1, where);
-  const captions = byClass(depicted, "ce-caption");
-  assert.equal(captions.length, 1, where);
-  return { caption: textContent(captions[0]!), compare: compares[0]! };
-}
-
-/** The panel an artboard's inspector opens with. */
-function openPanel(document: Document): string | undefined {
-  const [inspector, ...others] = byClass(document, "ce-inspector");
-  assert.ok(inspector);
-  assert.equal(others.length, 0);
-  const open = children(inspector).filter(
-    (node) =>
-      node.tagName === "details" && attribute(node, "open") !== undefined,
-  );
-  assert.ok(open.length <= 1);
-  return open[0] && attribute(open[0], "data-panel");
-}
 
 test("component Overlay and Difference hold both versions in one bordered frame", async () => {
   for (const [id, mode, version] of STACKED) {

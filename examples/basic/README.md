@@ -169,9 +169,9 @@ galleries; `inspector` shows both closed-panel layouts.
 Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
-Seventy-one design screens use `colorSchemes: ["light"]` and draw only the light
-Mokly shell. Twenty-one screens instead inherit the catalogue's light/dark
-settings: thirteen Appearance screens, four Changes designs, two product
+Seventy-four design screens use `colorSchemes: ["light"]` and draw only the light
+Mokly shell. Twenty-two screens instead inherit the catalogue's light/dark
+settings: thirteen Appearance screens, five Changes designs, two product
 screens, and two retained Welcome appearance variants. `mokly build` writes a
 Light and a Dark file for each viewport, and the outer Appearance control moves
 between them.

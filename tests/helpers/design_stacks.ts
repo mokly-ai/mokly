@@ -6,6 +6,7 @@ import {
   attribute,
   byClass,
   designCatalogue,
+  textContent,
   type Element,
 } from "./design_catalogue.js";
 
@@ -48,4 +49,32 @@ export function children(node: Element): Element[] {
 
 export function hasClass(node: Element, name: string): boolean {
   return (attribute(node, "class") ?? "").split(/\s+/u).includes(name);
+}
+
+/** The one component comparison a preview depicts, with its caption. */
+export function comparison(
+  preview: Element,
+  where: string,
+): { caption: string; compare: Element } {
+  const [depicted, ...others] = byClass(preview, "ce-component-comparison");
+  assert.ok(depicted, where);
+  assert.equal(others.length, 0, where);
+  const compares = byClass(depicted, "mbk-compare");
+  assert.equal(compares.length, 1, where);
+  const captions = byClass(depicted, "ce-caption");
+  assert.equal(captions.length, 1, where);
+  return { caption: textContent(captions[0]!), compare: compares[0]! };
+}
+
+/** The panel an artboard's inspector opens with. */
+export function openPanel(document: Document): string | undefined {
+  const [inspector, ...others] = byClass(document, "ce-inspector");
+  assert.ok(inspector);
+  assert.equal(others.length, 0);
+  const open = children(inspector).filter(
+    (node) =>
+      node.tagName === "details" && attribute(node, "open") !== undefined,
+  );
+  assert.ok(open.length <= 1);
+  return open[0] && attribute(open[0], "data-panel");
 }
