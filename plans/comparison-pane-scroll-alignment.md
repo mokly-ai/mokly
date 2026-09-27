@@ -372,7 +372,7 @@ drives both documents from one shared scroller.
 - [x] Run the design unit tests and the component and design browser specs,
       then `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the
       findings without changing the implementation.
@@ -528,3 +528,38 @@ side, and prove alignment in the browser.
   findings 2, 3, 4, 5 (the Milestone 4 portion), 7, 8 and 10, and Milestone 2
   findings 2, 3 and 5 remain recorded for the user's decision; this milestone
   resolved Milestone 1 finding 5's advertised-fetch-set portion.
+
+### Milestone 3A
+
+- Base commit: `884ef5d`; the component comparison mockups landed as
+  `33f76cd` and the review fixes as `4fd059b` on `calummoore/kelowna-v2`.
+- Checks: `npm run build`, `npm run example:build` (416 files) and
+  `npm run example:check` passed; the design unit tests passed 134/134 before
+  review and 137/137 after; the component and design browser specs, including
+  the new component stack spec, passed 71/71 both times. The complete
+  `cargo xtask check` passed before review (unit 2432/2432, browser 798/798 in
+  124 files) and after the review fixes (unit 2435/2435, browser 798/798 in
+  124 files), with zero failures, skips or cancellations. Generalizing
+  `ComparisonStack` left the three screen stacks' generated HTML
+  byte-identical.
+- Smoke: `npm run dev` served the component comparison, affected, Overlay,
+  Difference and tall Overlay pages at desktop and 390px widths, and each mode
+  link inside the framed artboards opened its own page; screenshots are under
+  `.context/m3a/`.
+- Finding 1 (the tall Checklist's caption named a "Wording changed" category
+  the runtime cannot know, contradicting its recorded "Rendered output
+  changed" reason) and finding 2 (the example README's scheme counts were
+  stale, 71 and 21 with four Changes designs instead of 74 and 22 with five,
+  partly missed in Milestone 2) were Milestone 3A defects, and finding 3 (the
+  Checklist's one-entry Changes scenario had no test) was a coverage gap in
+  its new behaviour, so all three were fixed in `4fd059b`. The new caption and
+  count regressions failed before the fixes. Whether every caption should name
+  the recorded reason instead of the pre-existing "Appearance changed" wording
+  remains for the user's decision.
+- Findings 4 (the published guides and the viewer README describe the
+  Milestone 4 pane behaviour without a pending-delivery caveat) and 5
+  (`mokly-shell-design.md` still waits for "Milestones 3 and 4") concern
+  Milestones 1 and 3 and were reported for a decision rather than applied.
+- Milestone 2 finding 3 is resolved by this milestone. Milestone 1 findings 2,
+  3, 4, 5 (the Milestone 4 portion), 7, 8 and 10, and Milestone 2 findings 2
+  and 5, remain recorded for the user's decision.
