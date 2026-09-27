@@ -89,22 +89,41 @@ startup, and cache-invalidation regressions retain independent preparation.
 
 ## Deterministic Test Repository Inputs
 
-Unit and browser tests depend only on the tree under test. A test or test
-helper must never read the real checkout's remote-tracking references,
-including `origin/…`, `refs/remotes/…`, `FETCH_HEAD` or configured upstream
-settings such as `@{upstream}`, `branch.<name>.remote` and
-`branch.<name>.merge`. A fixture repository may create and read its own remotes
-because those references are fixture-owned inputs inside the test tree.
+Unit and browser tests depend only on the tree under test and fixture-owned
+state. The example preview unit test copies the checked-out example and tooling
+into an isolated fixture repository, commits that fixture-owned baseline and
+applies one deterministic source edit so its comparison assertions remain
+meaningful. The browser suite's example server compares with the checked-out
+`HEAD`. A fixture repository may create and read its own remotes because those
+references are fixture-owned inputs inside the test tree.
 
-`tests/test_repository_refs.test.ts` statically enforces this rule for every
-unit test, browser spec and test helper.
-Identical trees must produce identical test results; the release workflow's
-exact-tree evidence reuse depends on that determinism.
+CI keys the package, unit and browser npm cache directly from
+`package-lock.json` in the checked-out `HEAD`; it carries no extra remote
+branch-point lockfile. Before unit and browser execution it removes the real
+checkout's remote-tracking references and `FETCH_HEAD`. Delivery also runs the
+complete unit and browser suites in a local copy with neither remote-tracking
+references nor `FETCH_HEAD`. Identical trees must therefore produce identical
+test results; the release workflow's exact-tree evidence reuse depends on that
+determinism.
 
-The static analysis recognizes direct subprocess calls whose literal Git argv
-and `repositoryRoot` use appear in the same call expression. It cannot see Git
-calls hidden behind helper closures; those helpers require review when their
-arguments or repository ownership change.
+`tests/test_repository_refs.test.ts` is a best-effort static lint behind that
+remote-free runtime proof. It examines direct subprocess calls whose first
+argument is the literal `"git"` and whose argv is a literal array. Repository
+targeting comes from the last `-C` value when present, otherwise from a `cwd`
+option. A call with neither targets the real checkout, and a target expression
+containing `repositoryRoot` identifies that checkout. Other target expressions
+are treated as fixture-owned; a `repositoryRoot` occurrence in `env`, `input`
+or another non-target argument does not select the real checkout.
+
+For calls targeting the real checkout, the lint recognizes `origin/` and
+`remotes/` anywhere in a literal argument, `refs/remotes`, `-r`, `--all`,
+`--remotes` including its assigned form, `FETCH_HEAD`, upstream spellings such
+as `@{u}`, `@{upstream}` and `@{push}` in any letter case, configured upstream
+keys shaped like `branch.<name>.remote` or `branch.<name>.merge`, and the
+`fetch` and `ls-remote` subcommands. It cannot see Git calls hidden behind
+helper closures, argv held in variables or spreads, shell command strings, or
+product-code defaults such as a configured comparison base. The remote-free
+unit and browser runs enforce the runtime promise across those blind spots.
 
 ## Pull Request Title Contract
 
@@ -150,8 +169,11 @@ does not inspect or synthesize that body.
 The repository job is the shared prerequisite for every verification job. Each
 downstream job starts from a fresh checkout and owns its writable build,
 example, fixture, report, and trace output. No live checkout or writable build
-directory is transferred between jobs. All jobs that resolve `origin/main` or
-create historical baselines receive complete Git history.
+directory is transferred between jobs. Verification jobs retain complete Git
+history for fixture-owned historical baselines but do not read remote-tracking
+references. The Preview workflow's same-repository pull-request deployment is
+the only job that intentionally resolves `origin/main`; it receives complete
+history to build that branch comparison and its branch-point lockfile input.
 
 For ordinary pull requests and pushes to `main`, the workflow fans out to:
 

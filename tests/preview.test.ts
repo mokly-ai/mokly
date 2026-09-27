@@ -1,33 +1,36 @@
 import assert from "node:assert/strict";
-import { execFile } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { promisify } from "node:util";
 
+import { compileCatalogue } from "../dist/build/compile.js";
+import { writeCompilation } from "../dist/build/transaction.js";
+import { buildPreview } from "../scripts/preview/catalogue.mjs";
+
+import { createExampleBaseline } from "./helpers/example_baseline.js";
 import { repositoryRoot } from "./helpers/fixture.js";
-
-const execute = promisify(execFile);
 
 test("preview build snapshots a static Browse catalogue", async (context) => {
   const contextDir = path.join(repositoryRoot, ".context");
   await fs.promises.mkdir(contextDir, { recursive: true });
-  const output = await fs.promises.mkdtemp(
-    path.join(contextDir, "preview-test-"),
+  const root = await fs.promises.mkdtemp(
+    path.join(contextDir, "preview-test-repository-"),
   );
-  await fs.promises.rm(output, { recursive: true });
-  context.after(() => fs.promises.rm(output, { force: true, recursive: true }));
-
-  await execute(
-    process.execPath,
-    ["scripts/preview/build.mjs", "--include-changes", "--out", output],
-    { cwd: repositoryRoot },
+  context.after(() => fs.promises.rm(root, { force: true, recursive: true }));
+  const config = await createExampleBaseline(root);
+  const entry = path.join(root, "examples/basic/entries/catalogue.mockup.tsx");
+  const source = await fs.promises.readFile(entry, "utf8");
+  const current = source.replace(
+    '<Badge tone="primary">Example</Badge>',
+    '<Badge tone="primary">Tree-owned example</Badge>',
   );
-  await execute(
-    process.execPath,
-    ["scripts/preview/build.mjs", "--include-changes", "--out", output],
-    { cwd: repositoryRoot },
-  );
+  assert.notEqual(current, source);
+  await fs.promises.writeFile(entry, current);
+  await writeCompilation(await compileCatalogue(config), config);
+  const output = path.join(root, ".context/preview");
+  const options = { includeChanges: true as const, base: "HEAD" };
+  await buildPreview(config, output, options);
+  await buildPreview(config, output, options);
 
   await assertClientGraphIsComplete(output);
   const index = await read(output, "index.html");
@@ -101,20 +104,17 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
 test("preview build refuses to replace an unowned directory", async (context) => {
   const contextDir = path.join(repositoryRoot, ".context");
   await fs.promises.mkdir(contextDir, { recursive: true });
-  const output = await fs.promises.mkdtemp(
-    path.join(contextDir, "preview-unowned-"),
+  const root = await fs.promises.mkdtemp(
+    path.join(contextDir, "preview-unowned-repository-"),
   );
+  context.after(() => fs.promises.rm(root, { force: true, recursive: true }));
+  const config = await createExampleBaseline(root);
+  const output = path.join(root, ".context/preview");
+  await fs.promises.mkdir(output, { recursive: true });
   await fs.promises.writeFile(path.join(output, "keep.txt"), "owned by user\n");
-  context.after(() => fs.promises.rm(output, { force: true, recursive: true }));
 
   await assert.rejects(
-    execute(
-      process.execPath,
-      ["scripts/preview/build.mjs", "--include-changes", "--out", output],
-      {
-        cwd: repositoryRoot,
-      },
-    ),
+    buildPreview(config, output, { includeChanges: true, base: "HEAD" }),
     /refusing to replace unowned preview directory/,
   );
   assert.equal(await read(output, "keep.txt"), "owned by user\n");

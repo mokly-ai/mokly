@@ -1,6 +1,7 @@
 import { setTimeout as delay } from "node:timers/promises";
 
 import { loadConfig } from "../config/load.js";
+import { withPreInstallationCancellation } from "../export/error.js";
 import { exportCatalogue } from "../export/run.js";
 import { resolvePublishOptions } from "../publish/options.js";
 import { publishCatalogue, type PublishProgress } from "../publish/run.js";
@@ -57,7 +58,10 @@ export async function runPublish(
       reporter,
       "Loading configuration",
       "Configuration loaded",
-      () => loadConfig(cwd, arguments_.config),
+      () =>
+        withPreInstallationCancellation(controller.signal, () =>
+          loadConfig(cwd, arguments_.config),
+        ),
     );
     return await publishCatalogue(
       config,

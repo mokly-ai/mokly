@@ -45,10 +45,13 @@ token padding; boolean flags retain their no-value syntax. The packed-consumer
 smoke exercises a leading-dash token and both public upload fixtures without
 importing package internals.
 
-The CLI maps only an explicitly marked cancellation or platform `AbortError`
-to the publication-cancelled line. Every other typed failure passes through
-unchanged, including export rollback and cleanup errors that identify recovery
-paths. Cancellation is never inferred from causes, aggregate members, messages
+The CLI maps an explicitly marked cancellation or platform `AbortError` to the
+publication-cancelled line. During the export recovery contract's
+pre-installation window, it also marks a failure after the command signal fires
+while retaining that failure's code and message. Every recovery or cleanup
+failure passes through unchanged with its recovery paths; export transaction
+setup and generated-output writes keep their own errors. Outside that one
+window, cancellation is never inferred from causes, aggregate members, messages
 or the command signal after another failure has already occurred.
 
 ```bash

@@ -114,8 +114,36 @@ The [publish exchange contract](./mokly-upload-exchange.md#accounting-and-output
 owns the shared cancellation classification. This document owns how export
 transactions apply it:
 
-- Cancellation before installation is a cancellation when stage and
-  reservation cleanup succeed.
+### Pre-installation Window
+
+The pre-installation window ends immediately before installation begins. For
+`mokly export`, it starts after configuration is loaded and the command's
+cancellation signal is installed; it covers comparison preparation and the
+base-manifest read, compile, public-file capture, assembly and the adapter
+transform, staging with its finalized export capture, and the final input
+recheck. For `mokly publish`, it starts when that command installs its
+cancellation signal, so it additionally covers publish configuration loading
+and repository identity before the same export steps. Two steps inside that
+span are excluded because their failures carry their own recovery guidance:
+opening the export transaction (its reservation message) and writing the
+generated build output (the build output transaction owns its rollback).
+
+If a step in this window fails after the command's cancellation signal fired,
+the failure is a cancellation while keeping its existing error code and
+message. `mokly export` therefore prints that code and message unchanged;
+`mokly publish` prints the publication-cancelled output. This window is the
+only place cancellation may be inferred from the command signal. It is safe
+to do so because installation has not begun: no backup or reservation holds
+the previous export, and the previous output has not moved.
+
+Stage and reservation cleanup still run. If cleanup fails after a
+pre-installation cancellation, the combined recovery error is not a
+cancellation and retains the cleanup diagnostic and recovery path.
+
+### Installation And Recovery
+
+- Cancellation during installation is a cancellation when no previous output
+  was moved and all cleanup succeeds.
 - Cancellation after capturing the previous export is a cancellation when
   rollback restores that export and all remaining cleanup succeeds. The
   restored export remains installed even though the command fails.
@@ -123,9 +151,10 @@ transactions apply it:
   not a cancellation. If it accompanies cancellation, the combined
   `export-invalid` error retains both failures and names every backup or
   reservation path the user needs.
-- `mokly export` keeps its existing messages and exit behavior. Publish may
-  replace only a cancellation with its cancellation output; it must show every
-  recovery error unchanged.
+- Outside the pre-installation window, cancellation comes only from the shared
+  explicit classification. `mokly export` keeps its existing messages and exit
+  behavior. Publish may replace only a cancellation with its cancellation
+  output; it must show every recovery error unchanged.
 
 For example, if cancellation occurs during installation and restoring the
 previous export fails, `mokly publish` prints the export rollback error naming

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { ResolvedConfig } from "../dist/config/types.js";
+import { isCancellation, MoklyError } from "../dist/errors.js";
 import {
   publishCatalogue,
   type PublishDependencies,
@@ -328,6 +329,44 @@ test("a moved HEAD or failed export prevents the HTTP side effect", async () => 
     /export failed/,
   );
   assert.equal(failed.uploaded(), false);
+});
+
+test("an identity failure after cancellation is classified before export", async () => {
+  const fixture = dependencies();
+  const controller = new AbortController();
+  let exported = false;
+  fixture.boundaries.git = {
+    run: async () => {
+      controller.abort();
+      throw new MoklyError("git-failed", "identity reader failed");
+    },
+  };
+  fixture.boundaries.export = async () => {
+    exported = true;
+    throw new Error("export must not start");
+  };
+  await assert.rejects(
+    publishCatalogue(
+      config,
+      options,
+      "1.2.3",
+      {},
+      fixture.boundaries,
+      controller.signal,
+    ),
+    (error: unknown) => {
+      assert.ok(error instanceof MoklyError);
+      assert.equal(error.code, "git-failed");
+      assert.equal(
+        error.message,
+        "[mokly/git-failed] Publish needs a committed Git checkout and a valid remote; use --repository <host>/<owner>/<name> to set repository identity.",
+      );
+      assert.equal(isCancellation(error), true);
+      assert.ok(error.cause instanceof MoklyError);
+      return true;
+    },
+  );
+  assert.equal(exported, false);
 });
 
 test("invalid metadata prevents capture and upload", async () => {

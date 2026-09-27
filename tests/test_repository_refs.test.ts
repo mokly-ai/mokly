@@ -6,7 +6,7 @@ import test from "node:test";
 import { repositoryRoot } from "./helpers/fixture.js";
 import { findRealRepositoryGitReferences } from "./helpers/test_repository_refs.js";
 
-test("real-repository remote Git calls are identified per call expression", () => {
+test("real-checkout targeting uses only cwd and Git -C", () => {
   const removedHistoryScan = `
     execute("git", ["log", "--format=%s", "origin/main"], {
       cwd: repositoryRoot,
@@ -15,18 +15,38 @@ test("real-repository remote Git calls are identified per call expression", () =
   const explicitGitRoot = `
     execFileSync("git", ["-C", repositoryRoot, "show", "origin/main:file"]);
   `;
+  const implicitGitRoot = `
+    spawnSync("git", ["show", "origin/main:file"]);
+  `;
+  const fixtureTarget = `
+    execFileSync("git", ["-C", fixture.root, "show", "origin/main:file"], {
+      env: { ...process.env, REPOSITORY_ROOT: repositoryRoot },
+      input: repositoryRoot,
+    });
+  `;
   assert.equal(findRealRepositoryGitReferences(removedHistoryScan).length, 1);
   assert.equal(findRealRepositoryGitReferences(explicitGitRoot).length, 1);
+  assert.equal(findRealRepositoryGitReferences(implicitGitRoot).length, 1);
+  assert.deepEqual(findRealRepositoryGitReferences(fixtureTarget), []);
 });
 
 test("every documented remote or upstream reference shape is guarded", () => {
   for (const reference of [
     "origin/main",
+    "HEAD..origin/main",
+    "^origin/main",
+    "remotes/origin/main",
+    "refs/remotes",
     "refs/remotes/origin/main",
     "FETCH_HEAD",
+    "-r",
+    "--all",
+    "--remotes=origin",
     "HEAD@{u}",
+    "HEAD@{U}",
     "HEAD@{upstream}",
-    "HEAD@{push}",
+    "HEAD@{UPSTREAM}",
+    "HEAD@{Push}",
     "--remotes",
     "branch.main.remote",
     "branch.feature/test.merge",
@@ -36,11 +56,19 @@ test("every documented remote or upstream reference shape is guarded", () => {
     assert.equal(violations.length, 1, reference);
     assert.equal(violations[0]?.reference, reference);
   }
-  for (const source of [
-    'execute("git", ["show", `origin/${branch}`], { cwd: repositoryRoot });',
-    'execute("git", ["config", `branch.${branch}.remote`], { cwd: repositoryRoot });',
-  ])
-    assert.equal(findRealRepositoryGitReferences(source).length, 1, source);
+  const template =
+    'execute("git", ["show", `origin/${branch}`], { cwd: repositoryRoot });';
+  assert.equal(findRealRepositoryGitReferences(template).length, 1, template);
+
+  for (const [subcommand, args] of [
+    ["fetch", '["fetch", "origin", "main"]'],
+    ["ls-remote", '["ls-remote", "origin"]'],
+  ] as const) {
+    const source = `execute("git", ${args}, { cwd: repositoryRoot });`;
+    const violations = findRealRepositoryGitReferences(source);
+    assert.equal(violations.length, 1, source);
+    assert.equal(violations[0]?.reference, subcommand);
+  }
 });
 
 test("fixture Git, local refs and non-Git subprocesses stay allowed", () => {
@@ -55,9 +83,20 @@ test("fixture Git, local refs and non-Git subprocesses stay allowed", () => {
       cwd: repositoryRoot,
     });
   `;
+  const fixtureTargetWithRealCheckoutData = `
+    execute("git", ["-C", fixture.root, "show", "origin/main"], {
+      cwd: repositoryRoot,
+      env: { ROOT: repositoryRoot },
+      input: repositoryRoot,
+    });
+  `;
   assert.deepEqual(findRealRepositoryGitReferences(fixtureGit), []);
   assert.deepEqual(findRealRepositoryGitReferences(localGit), []);
   assert.deepEqual(findRealRepositoryGitReferences(nodeEval), []);
+  assert.deepEqual(
+    findRealRepositoryGitReferences(fixtureTargetWithRealCheckoutData),
+    [],
+  );
 });
 
 test("test sources never read real remote-tracking references", async () => {

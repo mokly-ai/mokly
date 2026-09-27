@@ -165,6 +165,40 @@ test("CI shards complete verification behind one prerequisite", async () => {
     assert.equal(setupNode?.with?.cache, "npm");
     assert.ok(job.steps.some((step) => step.run === "npm ci"));
   }
+  for (const job of [packageJob, unit, browser]) {
+    assert.equal(
+      job.steps.some(
+        (step) => step.name === "Read baseline dependency lockfile",
+      ),
+      false,
+    );
+    const setupNode = job.steps.find((step) =>
+      step.uses?.startsWith("actions/setup-node@"),
+    );
+    assert.equal(
+      setupNode?.with?.["cache-dependency-path"],
+      "package-lock.json",
+    );
+  }
+  for (const [job, suite] of [
+    [unit, "unit"],
+    [browser, "browser"],
+  ] as const) {
+    const removalIndex = job.steps.findIndex(
+      (step) => step.name === "Remove remote-tracking test inputs",
+    );
+    const suiteIndex = job.steps.findIndex((step) =>
+      step.run?.includes(`cargo xtask check --suite ${suite}`),
+    );
+    assert.ok(removalIndex >= 0 && removalIndex < suiteIndex);
+    const removal = job.steps[removalIndex]?.run ?? "";
+    assert.match(removal, /refs\/remotes\//u);
+    assert.match(removal, /git update-ref --stdin/u);
+    assert.match(removal, /git rev-parse --git-path FETCH_HEAD/u);
+    assert.match(removal, /test ! -e/u);
+  }
+  assert.doesNotMatch(source, /origin\/main/u);
+  assert.doesNotMatch(source, /baseline-package-lock/u);
   assert.equal(setupNodeVersion(repository), 24);
   assert.equal(setupNodeVersion(native), minimumTestedNode);
   assert.equal(

@@ -40,8 +40,11 @@ Publish cancellation and transport exhaustion retain the `upload-failed` code
 but carry distinct typed presentation variants. Plain mode prints each complete
 actionable message; rich mode splits it into a non-repeating headline and hint.
 `publish_failure.ts` maps only an explicit cancellation to the cancellation
-presentation. It preserves every other typed error unchanged, including export
-recovery guidance, even when the command's signal has also been aborted.
+presentation. The export boundary explicitly marks failures in its
+pre-installation window when the command signal has fired, while preserving
+their code and message. Transaction setup, generated-output writes and every
+recovery or cleanup error remain unmarked and pass through with their guidance
+even when the signal is also aborted.
 
 Publish-only modules are loaded after command selection. Build, Check, Export,
 and supervised Serve children therefore do not initialize the upload exchange.

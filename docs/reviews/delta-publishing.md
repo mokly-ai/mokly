@@ -539,7 +539,7 @@ record the decisions and work.
    backup or reservation path, and `mokly export` output is unchanged. A
    clean Ctrl+C before installation still often prints a Git, configuration
    or build error instead of the cancellation line; see
-   [third review](#third-review) finding 1.
+   [third review](#third-review) finding 1, since fixed.
 2. **Addressed for the title test (option A).** The pull request title test
    no longer reads `origin/main`; it keeps the fixed type list and the
    `AGENTS.md` example check, and passes in a single-branch clone.
@@ -549,7 +549,7 @@ record the decisions and work.
    `docs/protocol/ci-verification.md` states the rule and its reason. The
    rule is not yet true for the whole suite, and the analyser recognises
    fewer forms than documented; see [third review](#third-review) findings 2
-   and 3.
+   and 3, since fixed.
 
 Follow-up verification: `cargo xtask check` passed with Node 24.21.0 (unit
 2,519/2,519 across 468 files, browser 781/781 across 122 files, packed-consumer
@@ -563,7 +563,8 @@ fix commit `bf63380` was pushed, against `origin/main` (`3699c56`). Two
 independent read-only reviewers covered typed cancellation and the
 deterministic-test rule, and rechecked the plan, this document and every
 changed link. Three new findings follow: two Medium and one Low. None was
-changed; each awaits the user's decision. Second-review findings 3–11 are
+changed during the review. The user then asked to fix all three with their
+recommended options, which are fixed (see **Third Review Follow-up**). Second-review findings 3–11 are
 still accurate against the current tree; the fix for finding 10 must also
 update the title test, which pins `chore(main): release 0.13.0`.
 
@@ -653,3 +654,49 @@ Markdown files resolves. Residual test risk: Ctrl+C on Windows (Git is not
 in its own process group there), a Ctrl+C while reading the Complete body
 after the receiver published, and no run of the suites in a checkout
 without remote-tracking references.
+
+### Third Review Follow-up
+
+On 2026-09-27 the user asked to fix all three findings with their recommended
+options. [Delta Publishing](../../plans/delta-publishing.md) Milestones 18–22
+record the decisions and work. The fixes also complete second-review
+follow-ups 1 and 2 above.
+
+1. **Addressed (options B and D).** The
+   [export recovery contract](../protocol/mokly-export-recovery.md#pre-installation-window)
+   defines a pre-installation window: publish configuration loading,
+   repository identity, comparison preparation and the base-manifest read,
+   compile, public-file capture, assembly, the adapter transform, staging
+   with its capture, and the input recheck. Opening the export transaction
+   and writing the generated build output are excluded because their
+   failures carry recovery guidance. A failure in the window after the
+   command's signal fired becomes a cancellation that keeps its code and
+   message (`withPreInstallationCancellation` in `src/export/error.ts`), so
+   `mokly export` output is unchanged and `mokly publish` prints the
+   cancellation line; installation, rollback and cleanup keep the explicit
+   marks. Spawned publish tests without `--no-changes`, for committed and
+   derived catalogues, send SIGINT to the whole process group during
+   comparison preparation, staging, the input recheck and configuration
+   loading, and a unit matrix covers each Git reader.
+2. **Addressed (option B).** `tests/preview.test.ts` builds an isolated copy
+   of the example with a fixture-owned baseline and one deterministic edit,
+   and the browser suite's server compares with `--base HEAD`. CI no longer
+   reads `origin/main` for the baseline lockfile and deletes every
+   remote-tracking reference and `FETCH_HEAD` before the unit and browser
+   suites, and [`ci-verification.md`](../protocol/ci-verification.md) states
+   the rule truthfully. Before delivery, the full unit suite (2,532/2,532)
+   and browser suite (781/781) passed in a clone with no remote-tracking
+   references.
+3. **Addressed (options B and C, with A's cheap cases).** The static test is
+   documented as a best-effort lint behind the remote-free runs. It takes the
+   target only from `cwd` or `-C` (a call with neither targets the real
+   checkout), and recognises `origin/` and `remotes/` anywhere in an
+   argument, `refs/remotes`, `-r`, `--all`, `--remotes`, `FETCH_HEAD`,
+   upstream spellings in any letter case and the `fetch` and `ls-remote`
+   subcommands; `ci-verification.md` lists exactly what it recognises and
+   cannot see.
+
+Follow-up verification: `cargo xtask check` passed with Node 24.21.0 (unit
+2,532/2,532 across 470 files, browser 781/781 across 122 files, packed-consumer
+smoke and every static check), and the remote-free unit and browser runs above
+passed.

@@ -4,6 +4,7 @@ import { parseReviewResult } from "@mokly/viewer/data";
 
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { withPreInstallationCancellation } from "../export/error.js";
 import type { exportCatalogue } from "../export/run.js";
 import type { GitCommandRunner } from "../review/git.js";
 
@@ -45,7 +46,9 @@ export async function publishCatalogue(
   signal?: AbortSignal,
 ): Promise<PublishResult> {
   const identity = await withProgress(dependencies, "prepare", () =>
-    readUploadIdentity(dependencies.git, env, options.repository),
+    withPreInstallationCancellation(signal, () =>
+      readUploadIdentity(dependencies.git, env, options.repository),
+    ),
   );
   let snapshot: UploadSnapshot | undefined;
   await withProgress(dependencies, "export", () =>

@@ -203,8 +203,11 @@ This document owns cancellation classification and precedence for
 `mokly publish`. A failure is a cancellation only when it is a platform abort
 error whose `name` is `AbortError` (as produced by an `AbortSignal` or the Git
 runner), or a `MoklyError` explicitly marked as a cancellation where the
-cancellation was detected. Never infer cancellation from a cause chain,
-`AggregateError` members, error text or an already-aborted command signal.
+cancellation was detected. The only signal-based exception is the
+[pre-installation window](./mokly-export-recovery.md#pre-installation-window)
+owned by the export recovery contract. Outside that window, never infer
+cancellation from a cause chain, `AggregateError` members, error text or an
+already-aborted command signal.
 Never put the mark on an error that combines cancellation with a rollback,
 backup or reservation-cleanup failure.
 

@@ -84,20 +84,13 @@ jobs:
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
-      - name: Read baseline dependency lockfile
-        run: |
-          mkdir -p .context
-          baseline_commit="$(git merge-base HEAD origin/main)"
-          git show "${baseline_commit}:package-lock.json" > .context/baseline-package-lock.json
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            .context/baseline-package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.7.0
       - name: Set up Rust
@@ -127,20 +120,13 @@ jobs:
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
-      - name: Read baseline dependency lockfile
-        run: |
-          mkdir -p .context
-          baseline_commit="$(git merge-base HEAD origin/main)"
-          git show "${baseline_commit}:package-lock.json" > .context/baseline-package-lock.json
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            .context/baseline-package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.7.0
       - name: Set up Rust
@@ -149,6 +135,14 @@ jobs:
           rustup default 1.95.0
       - name: Install dependencies
         run: npm ci
+      - name: Remove remote-tracking test inputs
+        run: |
+          git for-each-ref --format='delete %(refname)' refs/remotes/ |
+            git update-ref --stdin
+          fetch_head="$(git rev-parse --git-path FETCH_HEAD)"
+          rm -f "${fetch_head}"
+          test -z "$(git for-each-ref --format='%(refname)' refs/remotes/)"
+          test ! -e "${fetch_head}"
       - name: Run unit shard
         run: cargo xtask check --suite unit --shard ${{ matrix.shard }}/4
       - name: Retain unit inventory and timings
@@ -180,20 +174,13 @@ jobs:
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
-      - name: Read baseline dependency lockfile
-        run: |
-          mkdir -p .context
-          baseline_commit="$(git merge-base HEAD origin/main)"
-          git show "${baseline_commit}:package-lock.json" > .context/baseline-package-lock.json
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            .context/baseline-package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.7.0
       - name: Set up Rust
@@ -204,6 +191,14 @@ jobs:
         run: npm ci
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+      - name: Remove remote-tracking test inputs
+        run: |
+          git for-each-ref --format='delete %(refname)' refs/remotes/ |
+            git update-ref --stdin
+          fetch_head="$(git rev-parse --git-path FETCH_HEAD)"
+          rm -f "${fetch_head}"
+          test -z "$(git for-each-ref --format='%(refname)' refs/remotes/)"
+          test ! -e "${fetch_head}"
       - name: Run browser shard
         run: cargo xtask check --suite browser --shard ${{ matrix.shard }}/4
       - name: Retain browser inventory and timings

@@ -216,7 +216,11 @@ test("Complete idempotency, accounting and cancellation copy stay explicit", () 
   );
   assert.match(
     exchange,
-    /Never infer cancellation from a cause chain, `AggregateError` members, error text or an already-aborted command signal/u,
+    /The only signal-based exception is the \[pre-installation window\]\(\.\/mokly-export-recovery\.md#pre-installation-window\)/u,
+  );
+  assert.match(
+    exchange,
+    /Outside that window, never infer cancellation from a cause chain, `AggregateError` members, error text or an already-aborted command signal/u,
   );
   assert.match(
     exchange,
@@ -231,6 +235,10 @@ test("Complete idempotency, accounting and cancellation copy stay explicit", () 
     /restoring the previous export fails, `mokly publish` prints the export rollback error naming the retained backup/u,
   );
   assert.match(
+    recovery,
+    /If a step in this window fails after the command's cancellation signal fired, the failure is a cancellation while keeping its existing error code and message/u,
+  );
+  assert.match(
     prose,
     /could not put your previous export back.*recovery error.*folder to recover/u,
   );
@@ -238,19 +246,54 @@ test("Complete idempotency, accounting and cancellation copy stay explicit", () 
 
 test("test repository inputs are deterministic and title types stay fixed", () => {
   for (const reference of [
-    "origin/…",
-    "refs/remotes/…",
+    "origin/",
+    "remotes/",
+    "refs/remotes",
     "FETCH_HEAD",
-    "upstream settings",
+    "-r",
+    "--all",
+    "--remotes",
+    "fetch",
+    "ls-remote",
     "@{upstream}",
     "branch.<name>.remote",
     "branch.<name>.merge",
   ])
     assert.ok(verification.includes(reference), reference);
   assert.match(verification, /tests\/test_repository_refs\.test\.ts/u);
+  assert.match(verification, /best-effort static lint/u);
+  assert.match(verification, /isolated fixture repository/u);
   assert.match(
     verification,
-    /Identical trees must produce identical test results/u,
+    /browser suite's example server compares with the checked-out `HEAD`/u,
+  );
+  assert.match(
+    verification,
+    /npm cache directly from `package-lock\.json` in the checked-out `HEAD`/u,
+  );
+  assert.match(
+    verification,
+    /removes the real checkout's remote-tracking references/u,
+  );
+  assert.match(
+    verification,
+    /local copy with neither remote-tracking references nor `FETCH_HEAD`/u,
+  );
+  assert.match(
+    verification,
+    /targeting comes from the last `-C` value when present, otherwise from a `cwd` option/u,
+  );
+  assert.match(verification, /call with neither targets the real checkout/u);
+  assert.match(
+    verification,
+    /`repositoryRoot` occurrence in `env`, `input` or another non-target argument does not select the real checkout/u,
+  );
+  assert.match(verification, /argv held in variables or spreads/u);
+  assert.match(verification, /shell command strings/u);
+  assert.match(verification, /product-code defaults/u);
+  assert.match(
+    verification,
+    /Identical trees must therefore produce identical test results/u,
   );
   assert.match(verification, /This type list is fixed/u);
   assert.match(verification, /examples in `AGENTS\.md`/u);
