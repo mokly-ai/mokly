@@ -153,6 +153,44 @@ other nine second-review findings are not approved and stay open. Milestones
   `origin/main` history scan. A static test enforces the rule for every test
   source at `tests/test_repository_refs.test.ts`.
 
+## Third Review Fix Decisions
+
+On 2026-09-27 the user asked to fix the three
+[third-review](../docs/reviews/delta-publishing.md#third-review) findings with
+their recommended options: B + D for finding 1, B for finding 2 and B + C plus
+the cheap cases of A for finding 3. Second-review findings 3–11 stay open.
+Milestones 18–22 carry this work; `third #n` refers to finding _n_ of that
+review.
+
+- **Pre-installation cancellation (third #1).** Before the export's
+  installation begins (publish configuration loading, repository identity,
+  comparison preparation, compile, staging, capture and the input recheck) no
+  backup holds the previous export. A failure in this window after the
+  command's cancellation signal fired is a cancellation: it keeps its own code
+  and message, so `mokly export` output is unchanged, and `mokly publish`
+  prints the cancellation output. From the start of installation only the
+  explicit marks of second #1 apply. A cleanup failure after a
+  pre-installation cancellation still produces the combined recovery error.
+  This window is the only place a cancellation is inferred from the signal,
+  and the export recovery contract owns it. Spawned publish tests without
+  `--no-changes`, for committed and derived catalogues, send SIGINT to the
+  whole process group, as a terminal does.
+- **Tree-only example tests (third #2).** The preview unit test and the
+  browser suite's server compare the example against a tree-owned base (the
+  checked-out `HEAD` or a fixture repository), never `origin/main`. CI removes
+  remote-tracking references before the unit and browser suites and stops
+  reading `origin/main` for the baseline lockfile, so a test that needs a
+  remote reference fails in CI. Before delivery the unit and browser suites
+  also pass in a local copy that has no remote-tracking references.
+- **Remote-reference lint (third #3).** The static test is a best-effort lint
+  behind CI's remote-free run. It takes the target repository only from `cwd`
+  or `-C`; a Git call with neither targets the real checkout (the unit
+  runner's working directory). It matches `origin/` and `remotes/` anywhere in
+  an argument, `refs/remotes`, `-r`, `--all`, `--remotes`, `FETCH_HEAD`,
+  upstream spellings in any letter case, and the `fetch` and `ls-remote`
+  subcommands. The contract lists exactly what it recognises and what it
+  cannot see.
+
 ## Milestone 1: Protocol and guide contract — completed
 
 Define the complete receiver and CLI contract before any code changes. Docs
@@ -689,6 +727,92 @@ test keeps every test independent of remote-tracking references.
       recommendation to `docs/reviews/delta-publishing.md` and report them
       without changing the implementation. Three findings (two Medium, one
       Low) are recorded in its Third Review for the user's decision.
+
+## Milestone 18: Third review fix contract
+
+Documentation and contract only. Validate with Prettier and the guide tests;
+`cargo xtask check` is not required.
+
+- [ ] Add the pre-installation window to the
+      [export recovery contract](../docs/protocol/mokly-export-recovery.md)
+      and reference it from the cancellation rule in
+      [`mokly-upload-exchange.md`](../docs/protocol/mokly-upload-exchange.md),
+      replacing the unconditional "never infer from the signal" sentence with
+      the window's single exception (third #1).
+- [ ] Rewrite the deterministic-test rule in
+      [`ci-verification.md`](../docs/protocol/ci-verification.md) so it is
+      true: tree-owned bases for the example, CI's removal of
+      remote-tracking references before the unit and browser suites, the
+      local remote-free proof, and the full-history sentence corrected
+      (third #2).
+- [ ] Describe the lint in `ci-verification.md` as best-effort and list
+      exactly what it recognises and cannot see (third #3).
+- [ ] Update the publish guides, the export, publish and CLI READMEs and the
+      review follow-up wording where they describe these rules; run Prettier
+      and the guide tests; check every changed link.
+
+## Milestone 19: Pre-installation cancellation
+
+A clean Ctrl+C before the export's installation prints the cancellation line
+in every catalogue mode.
+
+- [ ] Add failing tests first: spawned `mokly publish` without `--no-changes`
+      for committed and derived catalogues, with SIGINT sent to the whole
+      process group during comparison preparation, compile or staging, and
+      the input recheck, asserting the exact plain cancellation line (and
+      rich output for one case), exit status 1 and an unchanged `site/`;
+      one spawned case during configuration loading; a unit matrix that
+      passes each Git reader's aborted failure (Git commands, batch reads,
+      review asset reads) through the pre-installation boundary and expects
+      a cancellation with its code and message kept, while the same failure
+      without an abort stays unmarked.
+- [ ] Implement the window at the export boundary (`generateExport` before
+      `transaction.install`) and at the publish boundary before the export
+      starts, preserving code, message and presentation, with the original
+      error as the cause; installation, rollback and cleanup keep their
+      rules.
+- [ ] Keep `tests/export_cli_failures.test.ts`, the second-review
+      cancellation tests and `mokly export` output unchanged.
+
+## Milestone 20: Tree-only example tests and remote-free CI
+
+The example's preview test and browser server stop reading `origin/main`, and
+CI proves the suites do not need remote-tracking references.
+
+- [ ] Point `tests/preview.test.ts` and the browser server in
+      `playwright.config.ts` at a tree-owned base, keeping their assertions
+      meaningful, and update any test or setup that assumed `origin/main`.
+- [ ] In `.github/workflows/ci.yml`, read the baseline lockfile from the
+      tree-owned base and remove remote-tracking references before the unit
+      and browser suites; update the workflow tests.
+- [ ] Run `tests/preview.test.ts` and the browser global setup with one spec
+      in a local copy without remote-tracking references.
+
+## Milestone 21: Best-effort remote-reference lint
+
+- [ ] Add failing synthetic cases first for calls without `cwd`, `-C`
+      targets, `HEAD..origin/main`, `^origin/main`, `remotes/origin/main`,
+      `refs/remotes`, `-r`, `--all`, `--remotes=origin`, `@{U}`,
+      `@{UPSTREAM}`, `fetch` and `ls-remote`, and a negative case with
+      `repositoryRoot` only in `env`.
+- [ ] Widen `tests/helpers/test_repository_refs.ts` to the decided scope and
+      keep zero violations on the tree, fixing any real violation it finds.
+
+## Milestone 22: Third review fix verification and delivery
+
+- [ ] Run the focused publish, export, baseline, CLI, guides, package and CI
+      suites, then the unit and browser suites in a local copy without
+      remote-tracking references, then `cargo xtask check`; resolve every
+      failure.
+- [ ] Mark the third-review findings addressed in
+      `docs/reviews/delta-publishing.md` and summarize what changed.
+- [ ] After checks pass, `git add -A`, commit with a Conventional Commits
+      title of at most 50 characters, and push the branch.
+- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; append the
+      numbered, severity-rated findings with lettered options and a
+      recommendation to `docs/reviews/delta-publishing.md` and report them
+      without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 
