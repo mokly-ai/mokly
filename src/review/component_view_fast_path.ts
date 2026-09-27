@@ -55,7 +55,6 @@ export async function compareUnchangedComponentView(
     (usage) =>
       usage &&
       (usage.instances.length > 0 ||
-        usage.styles.length > 0 ||
         usage.slots.some((slot) => slot.owner.kind === "entry")),
   );
   const prepared = hasOwnershipEdits

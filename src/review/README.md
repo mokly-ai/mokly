@@ -201,10 +201,13 @@ material resource-byte changes without inventing dependency paths.
 Unexpected parser or matcher failures keep only the failing resource
 unresolved, with any recoverable changed selectors, and classification continues.
 
-Both result versions retain `material: true` exactly when the actual paired,
-ignore-normalized documents differ, including added and removed views. Ownership
-projections do not define this flag. A material change keeps the ordinary screen
-heading even when stylesheet evidence is also present. Both versions retain
+Both result versions retain `material: true` exactly when the actual comparison
+material differs, including added and removed views. Component-aware paired
+views remove eligible unowned style elements, append the canonical retained
+rules, then apply marker stripping and ignore normalization; linked stylesheet
+selectors still match the real paired-normalized documents. Ownership projections
+do not define this flag. A material change keeps the ordinary screen heading
+even when stylesheet evidence is also present. Both versions retain
 optional view `reasons` (with stylesheet `analysis`) and `excludedResources`.
 Entry reasons merge by path and union selectors, with
 unresolved evidence taking precedence. The shared browser/server decoder rejects
@@ -230,9 +233,10 @@ and child spans. See the [timing contract](../../docs/protocol/mokly-timings.md)
 The pure inline-style engine discovers eligible unowned HTML CSS elements in
 original coordinates, parses each element independently, attributes diffed
 rules through normalized component ranges and renders canonical actual and
-projected material. It is not yet called by classification; that wiring is a
-separate plan milestone. Direct calls emit `review.inline-style-analysis`;
-they log no document or CSS.
+projected material. Complete paired component-aware comparisons call it with
+the classification-scoped cached parser, including zero-instance usage records.
+One-sided and missing-usage comparisons keep their existing behavior. Each call
+emits `review.inline-style-analysis`; it logs no document or CSS.
 
 ## Development
 
@@ -259,11 +263,11 @@ Key code:
   produce identical records for valid builder output. Identical handcrafted
   malformed ownership markers are outside that equivalence guarantee because
   views without ownership text edits do not repeat range validation. Views with
-  instances, styles, or entry-owned slots validate ranges while preparing their resource projection. The
+  instances or entry-owned slots validate ranges while preparing their resource projection. The
   internal `useFastPath` classification input and trailing `compareReview`
   options object exist only for differential tests and default to enabled. The decision rule lives in the
   [component change attribution contract](../../docs/protocol/mokly-component-changes.md#unchanged-view-decision).
-  Views with instances, styles, or entry-owned slots additionally run the same ownership projection
+  Views with instances or entry-owned slots additionally run the same ownership projection
   and excluded-resource discovery as the complete comparison. This proves
   resources that HTML parsing may discard in contexts such as `template` or
   `select`, including siblings exposed when component implementation text is
@@ -281,8 +285,9 @@ Key code:
   ordered keep policy, per-rule decisions, and contained selector errors.
 - `css/document.ts`, `css/document_query.ts`: default parse5 adapter and queries
   that retain HTML/SVG/MathML name semantics.
-- `css/inline_*.ts`, `css/element_owners.ts`: the pure, not-yet-wired inline
-  span, attribution, ownership and canonical-material engine.
+- `css/inline_*.ts`, `css/element_owners.ts`: inline span discovery,
+  attribution, ownership and canonical-material rendering used by complete
+  component-aware comparisons.
 - `css/nesting.ts`, `css/pseudos.ts`: parent substitution and static match bounds.
 - `css/material.ts`: changed custom-property and URL-reference detection.
 - `css/paths.ts`: shared public stylesheet analysis scope.

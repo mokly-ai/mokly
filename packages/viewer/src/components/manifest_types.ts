@@ -36,23 +36,12 @@ export interface ComponentRangeRecord {
   target: ComponentRangeTarget;
   parentId?: string;
 }
-export interface ComponentStyleOwnership {
-  startOffset: number;
-  endOffset: number;
-  componentIds: readonly string[];
-}
-export interface ComponentResourceOwnership {
-  path: string;
-  componentIds: readonly string[];
-}
 export interface ComponentViewRecord {
   viewport: Viewport;
   colorScheme: ColorScheme;
   instances: readonly ComponentInstanceRecord[];
   slots: readonly ComponentSlotRecord[];
   ranges: readonly ComponentRangeRecord[];
-  styles: readonly ComponentStyleOwnership[];
-  resources: readonly ComponentResourceOwnership[];
 }
 export interface ManifestComponentVariant {
   id: string;

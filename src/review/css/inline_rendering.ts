@@ -23,6 +23,22 @@ export interface InlineMaterialReplacements {
   projected: InlineMaterialProjection;
 }
 
+/** Apply original-coordinate replacements before appending canonical material. */
+export function applyInlineMaterial(
+  source: string,
+  projection: InlineMaterialProjection,
+): string {
+  let material = source;
+  for (const replacement of [...projection.replacements].sort(
+    (a, b) => b.start - a.start,
+  ))
+    material =
+      material.slice(0, replacement.start) +
+      replacement.text +
+      material.slice(replacement.end);
+  return material + projection.appendix;
+}
+
 /** Render a rule multiset independently of source order and local ordinals. */
 export function renderInlineRules(rules: readonly CssRule[]): string {
   return [...rules].sort(compareRules).map(renderRule).join("");

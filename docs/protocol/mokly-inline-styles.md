@@ -4,15 +4,14 @@
 
 Approved target tracked by the
 [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md).
-Its pure span, diff, attribution and canonical-material engine is implemented.
-Until Milestone 4 lands, the classifier does not call it and the builder still
-accepts renderer-returned ownership records and applies them as the
-[component change attribution contract](./mokly-component-changes.md)
-described before that plan; the reference-bearing rule analysis and
-reference-following arrive with Milestone 5, the `inlineStyles` evidence with
-Milestone 6, and the shell presentation with Milestone 7. This document owns
-the analysis, attribution, comparison material, membership and evidence rules
-for style material that a renderer places outside component markup. The
+The span, diff, attribution and canonical-material engine is implemented and
+the component-aware classifier calls it on complete paired views. The renderer
+is string-only, current manifests no longer carry ownership records, and
+historical readers discard the retired arrays. Reference-bearing rule analysis
+and reference-following remain for Milestone 5, `inlineStyles` evidence delivery
+for Milestone 6, and shell presentation for Milestone 7. This document owns the
+analysis, attribution, comparison material, membership and evidence rules for
+style material that a renderer places outside component markup. The
 [CSS change attribution contract](./mokly-css-attribution.md) owns the
 parser, rule diff, keep list and matcher that this analysis reuses; the
 [changes contract](./mokly-changes.md) owns the definition of a view's
@@ -36,7 +35,10 @@ entry-owned markup.
 
 ## Scope
 
-The analysis runs inside the component-aware classifier for a paired view.
+The analysis runs inside the component-aware classifier on the complete path
+for a paired view with usage records on both sides, including a component-aware
+view whose records contain no instances. A one-sided view or a paired view
+missing either usage record keeps the existing comparison behavior.
 Catalogues without registered components keep the schema-v2 classifier, where
 an inline style edit remains an ordinary material change. One-sided views run
 no analysis. Views settled by the
@@ -77,13 +79,17 @@ projected discovery can apply its attribution on the fast path.
 
 ## Analysis
 
-1. **Documents.** Build the paired ignore-normalized, marker-retaining
-   documents, normalizing the base to the current marker dialect first, then
-   validate both sides' ranges against those texts and parse each side with
-   source locations. Elements inside paired manual-ignore regions therefore
-   never grant a match, exactly as in stylesheet matching. Matching and
-   owner resolution use these normalized documents; span removal uses the
-   original documents, so the two coordinate spaces never mix.
+1. **Documents.** Derive the paired ignore ids and marker-retaining texts once
+   with `normalizeReviewPair(normalizeHistoricalDocument(base), head, path)`.
+   Span discovery runs first against the original documents and their
+   own-dialect ranges. If the eligible outer-source sequences are identical,
+   stop before validating ranges against the normalized texts or parsing
+   source-located trees. Otherwise validate both sides' ranges against those
+   texts and parse each side once with source locations. Elements inside paired
+   manual-ignore regions therefore never grant a match, exactly as in
+   stylesheet matching. Matching and owner resolution use these normalized
+   documents; span removal uses the original documents, so the two coordinate
+   spaces never mix.
 2. **Rules.** Parse each element's content separately through the
    classification's shared cached `CssRuleParser`, because each element is a
    browser stylesheet. Concatenate a side's successful rule lists in document
@@ -173,6 +179,13 @@ parser's normalized text, so `url()` and `@import` references survive resource
 discovery. Equal rule multisets render identically regardless of source order,
 element split, whitespace or comments; an entry-retained rule edit still
 changes material.
+
+Resource discovery uses the actual or projected material appropriate to that
+comparison. Linked-stylesheet selector matching does not use either rewritten
+material: both resource comparisons match against the real paired-normalized,
+marker-retaining documents. Removing a style element or appending a canonical
+fragment therefore cannot alter sibling selectors such as `style + main` or
+`:last-child` during linked-stylesheet analysis.
 
 Owned attributions join the implementation-impact set that
 `changedComponentImplementations` produces for the view, so each owning

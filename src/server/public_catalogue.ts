@@ -82,8 +82,6 @@ export class LivePublicCatalogue implements PublicCatalogueSource {
         instances: [],
         slots: [],
         ranges: [],
-        styles: [],
-        resources: [],
       },
     );
     this.publish(input, content);

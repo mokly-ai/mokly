@@ -25,7 +25,6 @@ export interface OwnedCssReason {
 export function ownedCssReasons(
   reasons: readonly DependencyReason[],
   policy: ComponentDependencyPolicy,
-  prefix: string,
   before?: ComponentViewRecord,
   after?: ComponentViewRecord,
   root?: string,
@@ -39,17 +38,7 @@ export function ownedCssReasons(
   ]);
   return reasons.flatMap((reason) => {
     if (!reason.analysis) return [];
-    const publicPath = prefix
-      ? reason.path.slice(prefix.length + 1)
-      : reason.path;
-    const owners = new Set([
-      ...policy.owners(reason.path),
-      ...usages.flatMap((usage) =>
-        usage.resources.flatMap((resource) =>
-          resource.path === publicPath ? resource.componentIds : [],
-        ),
-      ),
-    ]);
+    const owners = policy.owners(reason.path);
     return [...owners]
       .filter((componentId) => present.has(componentId))
       .map((componentId) => ({ componentId, reason }));

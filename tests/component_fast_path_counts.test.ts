@@ -46,7 +46,6 @@ for (const generatedOutput of ["committed", "derived"] as const)
       .filter((view) =>
         view.usage
           ? view.usage.instances.length > 0 ||
-            view.usage.styles.length > 0 ||
             view.usage.slots.some((slot) => slot.owner.kind === "entry")
           : false,
       ).length;

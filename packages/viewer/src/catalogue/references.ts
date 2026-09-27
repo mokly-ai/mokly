@@ -202,12 +202,9 @@ function validateViews(
           instances: view.usage.instances,
           slots: view.usage.slots,
           ranges: view.usage.ranges,
-          styles: [],
-          resources: [],
         },
         components,
         entry.id,
-        entry.kind === "component" ? entry.id : undefined,
         historical,
       );
   }

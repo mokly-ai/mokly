@@ -17,7 +17,7 @@ import { parseReviewResult } from "../packages/viewer/dist/review/result_validat
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 
-for (const ownership of ["dependency", "renderer"] as const)
+for (const ownership of ["dependency", "migrated-renderer"] as const)
   for (const exact of [false, true])
     for (const matches of [false, true])
       test(`actual invocation CSS ownership=${ownership}, exact screen=${exact}, matches=${matches}`, async (t) => {
@@ -27,9 +27,7 @@ for (const ownership of ["dependency", "renderer"] as const)
         })
           .replace(
             'id: "action",',
-            ownership === "dependency"
-              ? 'id: "action", dependencies: ["mockups/action.css"], ownedDependencies: ["mockups/action.css"],'
-              : 'id: "action",',
+            'id: "action", dependencies: ["mockups/action.css"], ownedDependencies: ["mockups/action.css"],',
           )
           .replace(
             'id: "home",',
@@ -41,18 +39,18 @@ for (const ownership of ["dependency", "renderer"] as const)
           t,
           source,
           {
-            extraConfig: `colorSchemes: ["light", "dark"], stylesheets: [{ match: "**", stylesheets: ["action.css"] }], ${ownership === "renderer" ? 'renderer: "renderer.tsx",' : ""}`,
+            extraConfig: `colorSchemes: ["light", "dark"], stylesheets: [{ match: "**", stylesheets: ["action.css"] }], ${ownership === "migrated-renderer" ? 'renderer: "renderer.tsx",' : ""}`,
           },
           async ({ root, mockupsDir }) => {
             await fs.writeFile(
               path.join(mockupsDir, "action.css"),
               ".actual-only { color: red; }",
             );
-            if (ownership === "renderer")
+            if (ownership === "migrated-renderer")
               await fs.writeFile(
                 path.join(root, "renderer.tsx"),
                 `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' + input.stylesheets[0] + '"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>', resources: [{ path: "action.css", componentIds: ["action"] }] });`,
+export default (input) => '<html><head><link rel="stylesheet" href="' + input.stylesheets[0] + '"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
               );
           },
         );

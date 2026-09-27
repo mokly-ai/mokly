@@ -556,23 +556,23 @@ authored records so the same attribution is proven from documents alone.
 This is the breaking change; its commit carries a `BREAKING CHANGE` footer
 naming the renderer contract and the removed manifest fields.
 
-- [ ] Make `Renderer` return `string` in `src/renderer/types.ts`; remove
+- [x] Make `Renderer` return `string` in `src/renderer/types.ts`; remove
       `RenderResult`, `ComponentStyleOwnership` and
       `ComponentResourceOwnership` from `src/index.ts`, `@mokly/viewer`
       `data.ts` and `manifest_types.ts`; fail non-string results in
       `src/build/render.ts` and `src/components/render.tsx` with a
       `build-invalid` diagnostic naming the entry, viewport and color scheme.
-- [ ] Remove `styles` and `resources` from `ComponentViewRecord` and every
+- [x] Remove `styles` and `resources` from `ComponentViewRecord` and every
       producer: `src/components/render.tsx`, `src/build/render.ts`,
       `src/build/compile.ts`, `src/build/document_compiler.ts`,
       `src/components/manifest_build.ts` and
       `src/components/output_validation.ts`; delete
       `validateComponentResources`, `src/components/style_ownership.ts` and
       every `rebaseStyleOwnership` call.
-- [ ] Update the `material` doc comment in
+- [x] Update the `material` doc comment in
       `packages/viewer/src/review/types.ts` to the changes contract's
       definition.
-- [ ] Remove the style-offset and record mentions and the "instances,
+- [x] Remove the style-offset and record mentions and the "instances,
       styles, or entry-owned slots" eligibility phrase from
       `docs/protocol/mokly-derived-baselines.md`, `mokly-catalogue.md`,
       `mokly-source-protection.md`, `mokly-on-demand.md` and
@@ -580,39 +580,63 @@ naming the renderer contract and the removed manifest fields.
       `src/components/README.md` and `src/review/README.md`; these edits
       were reverted from Milestone 1 because those documents describe
       shipped behavior.
-- [ ] Update `packages/viewer/src/components/view_validation.ts` and
+- [x] Update `packages/viewer/src/components/view_validation.ts` and
       `src/components/manifest_validation.ts`: current records use exact keys
       without the retired fields; historical validation accepts arrays under
       `styles` and `resources` and discards them before the record is used.
-- [ ] Replace the `styles` set and `usage.styles` loop in
+- [x] Replace the `styles` set and `usage.styles` loop in
       `projectOwnedMaterial` with a replacement list parameter; extend
       `projectComponentPair` and `prepareComponentProjection` to run the
       analysis when unowned style text differs, produce the actual and
       projected materials, and return the owned component set and the
       evidence input; pass an empty replacement list for clipped instance
       projections in `changedComponentImplementations`.
-- [ ] In `src/review/component_view.ts`, compute `actual`, `material` and
+- [x] In `src/review/component_view.ts`, compute `actual`, `material` and
       `rawEqual` from the actual material so an excluded-only inline edit is
       `unchanged`, union the owned set into `changedImplementations`, and
       keep every other reason rule unchanged.
-- [ ] In `src/review/component_view_fast_path.ts` and
+- [x] Discovered: keep linked-stylesheet matching on the real paired-normalized
+      documents in both projected and actual resource comparisons; add a
+      sibling-structure selector regression that material documents would
+      falsely exclude.
+- [x] Discovered: expose the classification-scoped cached CSS parser and make
+      inline analysis lazily prepare one marker-retaining normalized document,
+      current-dialect range set and source-located parse per side only after
+      differing eligible outer sources are discovered.
+- [x] Discovered: run inline analysis only for complete-path paired views with
+      usage records on both sides, including zero-instance views; keep
+      one-sided and missing-usage behavior unchanged.
+- [x] Discovered: carry actual and projected inline replacements through one
+      projection pass, omit them from clipped implementation projections, and
+      retain owned ids plus selector/all-excluded evidence for later delivery.
+- [x] Discovered: retain `styles`, `resources`, `styleOwnership` and
+      `resourceOwnership` in the public-catalogue privacy denylist as defence
+      in depth after deleting their manifest/API meanings.
+- [x] Discovered: update every affected protocol Delivery Status and the
+      architecture/package documentation to describe the delivered string-only
+      renderer, retired manifest fields and wired comparison material while
+      keeping Milestones 5 to 7 explicit.
+- [x] Discovered: extend export and Serve timing integration assertions to
+      admit and require `review.inline-style-analysis` for component-aware
+      classification.
+- [x] In `src/review/component_view_fast_path.ts` and
       `tests/component_fast_path_counts.test.ts`, drop `styles` from the
       ownership-edit eligibility; remove the record cases from
       `suppressResource` and `ownedCssReasons` so only `ownedDependencies`
       remain.
-- [ ] Remove record handling from the Serve, on-demand and watch paths that
+- [x] Remove record handling from the Serve, on-demand and watch paths that
       copy `ComponentViewRecord` (`src/server/**`), the viewer projection and
       adapters (`packages/viewer/src/**`), and the test harnesses that build
       records (`packages/viewer/tests/frame_hook_harness.tsx`,
       `tests/component_render_store.test.ts`, `tests/resource_denials.test.ts`,
       `tests/helpers/design_library_fixture.ts`).
-- [ ] Rewrite `tests/component_historical_styles.test.ts`: the renderer
+- [x] Rewrite `tests/component_historical_styles.test.ts`: the renderer
       returns a string, the historical manifest still carries legacy
       `styles` records that the reader must discard, and every existing edit
       case produces the same Changes membership and affected consumers from
       inference; add a retired-dialect base with reordered head rules to
       prove marker renames and reordering alone change nothing.
-- [ ] Rewrite the renderer-record cases in `tests/changes_css_ownership.test.ts`,
+- [x] Rewrite the renderer-record cases in `tests/changes_css_ownership.test.ts`,
       `tests/component_asset_changes.test.ts`,
       `tests/component_build_edges.test.ts`,
       `tests/component_rendering.test.ts`, `tests/component_manifest.test.ts`,
@@ -620,7 +644,8 @@ naming the renderer contract and the removed manifest fields.
       `tests/component_fast_path_equivalence.test.ts` to the string contract
       and to historical tolerance, and add the non-string renderer diagnostic
       case.
-- [ ] Add `tests/changes_inline_styles.test.ts` proving Changes rows, view
+- [x] Add focused `tests/changes_inline_styles_*.test.ts` files under 300 lines
+      with a shared helper, proving Changes rows, view
       states, reasons and affected consumers for: a cumulative sheet that
       adds another component's rules to a later screen (excluded, screen out
       of Changes, state `unchanged`); a component style edit at an actual
@@ -637,17 +662,17 @@ naming the renderer contract and the removed manifest fields.
       committed and derived modes; and identical results from live
       classification, complete comparison, publication and the selected
       endpoint.
-- [ ] Add the inline cases to the fast-path differential fixtures so the
+- [x] Add the inline cases to the fast-path differential fixtures so the
       unchanged decision and the complete comparison still agree.
-- [ ] Update the packaged guides: remove the ownership-record row and
+- [x] Update the packaged guides: remove the ownership-record row and
       `RenderResult` from the exported-type tables in
       `docs/guides/authoring/components.md` and
       `docs/guides/authoring/config.md`, and describe inferred head-style
       attribution in the components guide's Ownership section.
-- [ ] Update `src/components/README.md`, `src/review/README.md` and the
+- [x] Update `src/components/README.md`, `src/review/README.md` and the
       CHANGELOG-generating commit body; run the full test suite,
       `npm run package:smoke`, and `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report

@@ -76,20 +76,24 @@ on-demand document.
 
 Implementation changes belong to the component in Changes. Consuming pages are
 listed as affected; their own prop, slot, structure, layout, or explicit resource
-changes still count directly. Exact `ownedDependencies` and renderer style or
-resource ownership records handle material outside the component's body. Global
-or mixed resources remain conservatively attributed. Dependency declarations
-and adopting an unrelated component alone do not invent a visible screen change.
-Historical Mokabook comparisons preserve the original document coordinates when
-applying recorded style ownership; internal marker renames alone do not create
-consumer changes or alter the retained snapshots.
+changes still count directly. Exact `ownedDependencies` assign files whose
+effects are confined to the component. For eligible style elements outside
+component markup, Review diffs their rules and infers ownership from every
+element each rule can match in the paired documents. Rules that also reach
+entry-owned markup or cannot be resolved stay with the entry; rules that match
+nothing are excluded. The renderer returns only the complete HTML document and
+reports no style or resource ownership. Global or mixed resources remain
+conservatively attributed. Dependency declarations and adopting an unrelated
+component alone do not invent a visible screen change. Historical Mokabook
+markers are normalized for matching and range validation; marker renames alone
+do not create consumer changes or alter the retained snapshots.
 
 Comparison projection can expose caller-owned slot material that HTML parsing
 discarded from contexts such as `template` or `select`. Removing component
 implementation text can likewise expose a sibling hidden by its unclosed HTML. The review shortcut
 therefore proves both actual and ownership-projected resource closures for
-views with instances, styles, or entry-owned slots, using the same root-specific ownership and
-resource exclusion policy as the complete comparison.
+views with instances or entry-owned slots, using the same root-specific
+ownership and resource exclusion policy as the complete comparison.
 
 ## Development
 

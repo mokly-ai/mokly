@@ -30,13 +30,13 @@ export interface ResourceEvidence {
 /** One parser cache per classification, shared across paths, views and source sides. */
 export class CssResourceAnalysis {
   private readonly parsed = new Map<string, CssRuleParseResult>();
-  private readonly cached: CssRuleParser;
+  readonly parser: CssRuleParser;
 
   constructor(
     parser: CssRuleParser = new LightningCssRuleParser(),
     private readonly matcher: typeof matchCssRules = matchCssRules,
   ) {
-    this.cached = {
+    this.parser = {
       parse: (source) => {
         let result = this.parsed.get(source);
         if (!result) {
@@ -76,7 +76,7 @@ export class CssResourceAnalysis {
             resource.before ?? "",
             resource.after ?? "",
             pair,
-            this.cached,
+            this.parser,
             this.matcher,
           ),
         );
@@ -121,7 +121,7 @@ export class CssResourceAnalysis {
       const diff = diffCssRules(
         resource.before ?? "",
         resource.after ?? "",
-        this.cached,
+        this.parser,
       );
       if (diff.status === "unresolved") return [];
       return [

@@ -4,11 +4,11 @@ This implemented contract expands the [package contract](./mokly-package.md)
 for the [authoring API](./mokly-authoring.md) and
 [configuration](./mokly-configuration.md). Public-resource eligibility follows
 [source protection](./mokly-source-protection.md), including configured
-public exclusions. The string-only renderer result below is the approved
-target of the
-[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md);
-until its Milestone 4 lands, the
-builder still accepts the retired structured result.
+public exclusions. The string-only renderer result below is the approved and
+implemented contract from the
+[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md).
+The builder rejects the retired structured result, and current component view
+records contain no renderer-supplied style or resource ownership.
 
 ## Rendering Boundary
 

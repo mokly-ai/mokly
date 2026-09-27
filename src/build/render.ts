@@ -13,7 +13,6 @@ import {
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import type { ComponentGraphRenderer } from "../components/render.js";
-import { rebaseStyleOwnership } from "../components/style_ownership.js";
 import { toPosixPath } from "../config/paths.js";
 import {
   isPublicStaticFile,
@@ -22,6 +21,7 @@ import {
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { fragmentRoute } from "../registry/manifest.js";
+import { rendererDocument } from "../renderer/result.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { Renderer } from "../renderer/types.js";
 
@@ -102,26 +102,12 @@ export function renderFragments(
             if (components.length) {
               const output = graphRenderer(input, renderer, components);
               rendered = output.html;
-              componentViews.set(route, {
-                ...output.view,
-                styles: rebaseStyleOwnership(
-                  rendered,
-                  generatedHeader(entry.sourceRelativePath) + rendered,
-                  output.view.styles,
-                ),
-              });
+              componentViews.set(route, output.view);
             } else {
-              const result = renderer(input);
-              rendered = typeof result === "string" ? result : result.html;
-              if (
-                typeof result !== "string" &&
-                (result.styles?.length || result.resources?.length)
-              )
-                throw new Error(
-                  "component ownership requires registered components",
-                );
+              rendered = rendererDocument(renderer(input), input);
             }
           } catch (error) {
+            if (error instanceof MoklyError) throw error;
             throw new MoklyError(
               "build-invalid",
               `renderer failed for ${entry.id} (${viewport}, ${colorScheme}): ${errorMessage(error)}`,

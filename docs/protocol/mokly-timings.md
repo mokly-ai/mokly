@@ -90,7 +90,7 @@ Review phases use the same session, role and parent context as their caller:
   [inline style ownership contract](./mokly-inline-styles.md) for one paired
   view, including span discovery and parser-cache lookups. A direct call to the
   pure engine emits the span even when identical outer style sources let it
-  skip parsing. Classification starts calling the engine in Milestone 4; the
+  skip parsing. Complete paired component-aware comparisons call the engine;
   reference-only fast-path calls arrive in Milestone 5. Contained parse or
   selector failures return unresolved attributions with span status `ok`; an
   escaping error ends the span with `error`. It logs no paths, selectors, CSS

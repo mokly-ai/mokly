@@ -7,9 +7,7 @@ import {
 import type { ManifestV5, ArtifactView } from "@mokly/viewer/data";
 
 import { transformCompatibilityDocuments } from "../compatibility/transform.js";
-import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
-import { rebaseStyleOwnership } from "../components/style_ownership.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
@@ -140,7 +138,6 @@ async function compileMeasured(
       );
     }
   }
-  const beforeTransform = new Map(outputs);
   await accepted?.checkpoint();
   const logicalRecords = timeSync("html.compatibility", () =>
     transformCompatibilityDocuments(
@@ -152,18 +149,8 @@ async function compileMeasured(
     ),
   );
   timeSync("components.validate-metadata", () => {
-    for (const [route, view] of componentViews) {
-      const final = outputs.get(route)!;
-      validateComponentRanges(final, view.ranges);
-      componentViews.set(route, {
-        ...view,
-        styles: rebaseStyleOwnership(
-          beforeTransform.get(route)!,
-          final,
-          view.styles,
-        ),
-      });
-    }
+    for (const [route, view] of componentViews)
+      validateComponentRanges(outputs.get(route)!, view.ranges);
   });
   timeSync("html.ownership", () =>
     validateGeneratedOwnershipHeaders(outputs, generatedOwners),
@@ -186,9 +173,6 @@ async function compileMeasured(
     ),
   );
   timeSync("manifest.validate", () => parseManifest(manifest));
-  timeSync("components.validate-resources", () =>
-    validateComponentResources(componentViews, config),
-  );
   await accepted?.checkpoint();
   timeSync("manifest.serialize", () =>
     outputs.set(MANIFEST_NAME, serializeManifest(manifest)),

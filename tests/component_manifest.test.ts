@@ -3,7 +3,10 @@ import { test } from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
-import { parseManifest } from "../dist/registry/manifest.js";
+import {
+  parseHistoricalManifest,
+  parseManifest,
+} from "../dist/registry/manifest.js";
 import type { ManifestComponent } from "../packages/viewer/dist/components/manifest_types.js";
 import type {
   ManifestV5,
@@ -139,20 +142,13 @@ test("manifest v5 rejects broken identities, ownership references and props befo
         }),
     ],
     [
-      "unknown style owner",
-      (_v, screen) =>
-        Object.assign(screen.componentViews[0]!, {
-          styles: [
-            { startOffset: 10, endOffset: 20, componentIds: ["unknown"] },
-          ],
-        }),
+      "retired current styles",
+      (_v, screen) => Object.assign(screen.componentViews[0]!, { styles: [] }),
     ],
     [
-      "unsafe resource",
+      "retired current resources",
       (_v, screen) =>
-        Object.assign(screen.componentViews[0]!, {
-          resources: [{ path: "../secret", componentIds: ["action"] }],
-        }),
+        Object.assign(screen.componentViews[0]!, { resources: [] }),
     ],
   ];
   for (const [name, edit] of edits) {
@@ -165,5 +161,40 @@ test("manifest v5 rejects broken identities, ownership references and props befo
     )!;
     edit(value, screen, component);
     assert.throws(() => parseManifest(value), Error, name);
+  }
+});
+
+test("historical v5 discards retired ownership arrays and rejects malformed values", async (t) => {
+  const original = await example(t);
+  const historical = structuredClone(original);
+  const screen = historical.entries.find(
+    (entry): entry is ManifestScreenV4 => entry.kind === "screen",
+  )!;
+  Object.assign(screen.componentViews[0]!, {
+    styles: [{ malformed: true }],
+    resources: [42],
+  });
+  const parsed = parseHistoricalManifest(historical);
+  const parsedScreen = parsed.entries.find((entry) => entry.kind === "screen")!;
+  assert.ok(parsedScreen.kind === "screen");
+  assert.equal(
+    Object.hasOwn(parsedScreen.componentViews![0]!, "styles"),
+    false,
+  );
+  assert.equal(
+    Object.hasOwn(parsedScreen.componentViews![0]!, "resources"),
+    false,
+  );
+
+  for (const [field, value] of [
+    ["styles", null],
+    ["resources", {}],
+  ] as const) {
+    const invalid = structuredClone(original);
+    const invalidScreen = invalid.entries.find(
+      (entry): entry is ManifestScreenV4 => entry.kind === "screen",
+    )!;
+    Object.assign(invalidScreen.componentViews[0]!, { [field]: value });
+    assert.throws(() => parseHistoricalManifest(invalid), /must be an array/);
   }
 });

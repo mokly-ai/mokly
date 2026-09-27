@@ -22,9 +22,13 @@ import type { CssRule, CssRuleDiffResult, CssRuleParser } from "./types.js";
 export interface InlineAttributionSide {
   source: string;
   sourceRanges: readonly RenderedRange[];
+  usage: ComponentViewRecord;
+}
+
+/** Lazily prepared normalized document and ranges for selector ownership. */
+export interface InlineAttributionMatchingSide {
   document: CssDocument;
   ranges: readonly RenderedRange[];
-  usage: ComponentViewRecord;
 }
 
 /** Pure analysis inputs for one paired component-aware view. */
@@ -34,6 +38,10 @@ export interface InlineAttributionInput {
   pairedIgnoreIds: readonly string[];
   rootComponentId?: string | undefined;
   parser: CssRuleParser;
+  prepare: () => {
+    before: InlineAttributionMatchingSide;
+    after: InlineAttributionMatchingSide;
+  };
 }
 
 interface CommonResult {
@@ -109,24 +117,35 @@ function analyze(input: InlineAttributionInput): InlineAttributionResult {
       retainedSelectors: { status: "unresolved", selectors: [] },
     };
 
+  const diff = diffCssRuleLists(before.rules, after.rules);
+  const changes = deltas(diff);
+  if (!changes.length)
+    return {
+      ...common,
+      status: "resolved",
+      beforeRules: before.rules,
+      afterRules: after.rules,
+      rules: [],
+      ownedComponentIds: new Set(),
+    };
+  const matching = input.prepare();
   const beforeOwners = createElementOwnerIndex({
-    ranges: input.before.ranges,
+    ranges: matching.before.ranges,
     usage: input.before.usage,
     counterpart: input.after.usage,
     rootComponentId: input.rootComponentId,
   });
   const afterOwners = createElementOwnerIndex({
-    ranges: input.after.ranges,
+    ranges: matching.after.ranges,
     usage: input.after.usage,
     counterpart: input.before.usage,
     rootComponentId: input.rootComponentId,
   });
-  const diff = diffCssRuleLists(before.rules, after.rules);
-  const rules = deltas(diff).map((change) =>
+  const rules = changes.map((change) =>
     attributeInlineRule(
       change,
-      { document: input.before.document, owners: beforeOwners },
-      { document: input.after.document, owners: afterOwners },
+      { document: matching.before.document, owners: beforeOwners },
+      { document: matching.after.document, owners: afterOwners },
     ),
   );
   const retained = rules.filter(({ attribution }) =>

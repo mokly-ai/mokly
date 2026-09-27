@@ -221,10 +221,6 @@ function historicalCompilation(compilation: Compilation): Compilation {
     for (const view of generatedViews(entry)) {
       const current = compilation.outputs.get(view.path);
       assert.notEqual(current, undefined);
-      for (const style of view.usage?.styles ?? []) {
-        style.startOffset += historicalOffset(current!, style.startOffset);
-        style.endOffset += historicalOffset(current!, style.endOffset);
-      }
       outputs.set(
         view.path,
         current!
@@ -233,13 +229,6 @@ function historicalCompilation(compilation: Compilation): Compilation {
       );
     }
   return { ...compilation, manifest, outputs };
-}
-
-function historicalOffset(html: string, offset: number): number {
-  return (
-    [...html.slice(0, offset).matchAll(/<!--mokly-(?:component|review-)/g)]
-      .length * 3
-  );
 }
 
 async function assetFiles(directory: string) {

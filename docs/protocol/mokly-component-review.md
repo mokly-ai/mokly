@@ -10,8 +10,10 @@ existing [schema-v2 contract](./mokly-changes.md) and
 from the [component manifest](./mokly-component-manifest.md). The optional
 `inlineStyles` view evidence below is the approved target of the
 [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md)
-and lands with its evidence
-milestone.
+and lands with its evidence milestone. Its document-derived ownership and
+canonical actual/projected comparison material are implemented; reference
+following, evidence emission, and presentation remain in that plan's later
+milestones.
 
 ## Normative Result
 

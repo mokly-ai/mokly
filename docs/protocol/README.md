@@ -83,8 +83,8 @@ when the historical primary file is absent, never when it is invalid.
 - [Component change attribution](./mokly-component-changes.md)
 - [CSS change attribution](./mokly-css-attribution.md) — approved
   target: rule-aware stylesheet evidence.
-- [Inline style ownership](./mokly-inline-styles.md) — approved target:
-  document-derived ownership of head styles.
+- [Inline style ownership](./mokly-inline-styles.md) — document-derived
+  ownership and comparison material for head styles.
 - [CSS evidence in the shell](./mokly-css-evidence-shell.md) — inspector and
   comparison-stage presentation of stylesheet evidence.
 - [Component pages and screen inspection](./mokly-component-explorer.md)

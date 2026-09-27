@@ -18,19 +18,15 @@ import { renderToStaticMarkup } from "react-dom/server";
 export default function render(input) {
   const css = '.action{border-radius:12px}';
   const html = '<!doctype html><html><head><style>' + css + '</style></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';
-  return { html, styles: [{ startOffset: html.indexOf(css), endOffset: html.indexOf(css) + css.length, componentIds: ["action"] }], resources: [{ path: "action.css", componentIds: ["action"] }] };
+  return html;
 }`;
 
-test("component style ownership rebases through generated headers while preserving rendered CSS", async (t) => {
+test("component render keeps head styles without manifest ownership records", async (t) => {
   const fixture = await createFixture(componentEntrySource(), {
     extraConfig: 'renderer: "renderer.tsx",',
   });
   t.after(() => removeFixture(fixture));
   await fs.writeFile(path.join(fixture.root, "renderer.tsx"), renderer);
-  await fs.writeFile(
-    path.join(fixture.mockupsDir, "action.css"),
-    ".action{color:green}",
-  );
   const config = await loadConfig(fixture.root);
   const result = await compileCatalogue(config);
   const screen = result.manifest.entries.find(
@@ -38,20 +34,16 @@ test("component style ownership rebases through generated headers while preservi
   )!;
   const view = screen.componentViews![0]!;
   const html = result.outputs.get(screen.fragments.mobile)!;
-  assert.equal(
-    html.slice(view.styles[0]!.startOffset, view.styles[0]!.endOffset),
-    ".action{border-radius:12px}",
-  );
-  assert.deepEqual(view.resources, [
-    { path: "action.css", componentIds: ["action"] },
+  assert.match(html, /\.action\{border-radius:12px\}/);
+  assert.deepEqual(Object.keys(view).sort(), [
+    "colorScheme",
+    "instances",
+    "ranges",
+    "slots",
+    "viewport",
   ]);
   await writeCompilation(result, config);
   checkCompilation(await compileCatalogue(config), config);
-  await fs.writeFile(
-    path.join(fixture.root, "renderer.tsx"),
-    renderer.replace('componentIds: ["action"]', 'componentIds: ["unknown"]'),
-  );
-  await assert.rejects(compileCatalogue(config), /owners must render/);
   assert.equal(
     await fs.readFile(
       path.join(fixture.mockupsDir, screen.fragments.mobile),

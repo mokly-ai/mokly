@@ -1,11 +1,6 @@
 import type { ReactNode } from "react";
 
-import type {
-  ColorScheme,
-  Viewport,
-  ComponentResourceOwnership,
-  ComponentStyleOwnership,
-} from "@mokly/viewer";
+import type { ColorScheme, Viewport } from "@mokly/viewer";
 
 import type { ScreenDefinition } from "../authoring/types.js";
 import type { ComponentDefinition } from "../components/types.js";
@@ -21,12 +16,5 @@ export interface RenderInput {
   viewport: Viewport;
 }
 
-/** Optional exact ownership of component-generated style/resource material. */
-export interface RenderResult {
-  html: string;
-  styles?: readonly ComponentStyleOwnership[];
-  resources?: readonly ComponentResourceOwnership[];
-}
-
 /** Synchronous complete-document renderer contract. */
-export type Renderer = (input: RenderInput) => string | RenderResult;
+export type Renderer = (input: RenderInput) => string;

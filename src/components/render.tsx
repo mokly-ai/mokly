@@ -3,14 +3,14 @@ import type { ReactNode } from "react";
 import type { ComponentViewRecord } from "@mokly/viewer";
 import { invalidData } from "@mokly/viewer/data";
 
+import { rendererDocument } from "../renderer/result.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
-import type { RenderInput, Renderer, RenderResult } from "../renderer/types.js";
+import type { RenderInput, Renderer } from "../renderer/types.js";
 
 import { ComponentCollector } from "./collector.js";
 import { componentInputs } from "./inputs.js";
 import { serializeComponentSentinels } from "./ranges.js";
 import { ComponentContext } from "./render_context.js";
-import { rebaseStyleOwnership } from "./style_ownership.js";
 import type { ComponentDefinition } from "./types.js";
 
 export interface ComponentRenderOutput {
@@ -45,20 +45,14 @@ export const renderWithComponents: ComponentGraphRenderer = (
       )}
     </ComponentContext>
   );
-  const result = renderer({ ...input, node });
-  const rendered: RenderResult =
-    typeof result === "string" ? { html: result } : result;
-  if (
-    !rendered ||
-    typeof rendered.html !== "string" ||
-    !/<html[\s>]/i.test(rendered.html)
-  )
+  const rendered = rendererDocument(renderer({ ...input, node }), input);
+  if (!/<html[\s>]/i.test(rendered))
     invalidData(
       collector.label,
       "renderer must return a complete HTML document",
     );
   const serialized = serializeComponentSentinels(
-    serializeReviewSentinels(rendered.html),
+    serializeReviewSentinels(rendered),
     collector.boundaries,
   );
   const view: ComponentViewRecord = {
@@ -71,12 +65,6 @@ export const renderWithComponents: ComponentGraphRenderer = (
       a.key < b.key ? -1 : 1,
     ),
     ranges: serialized.ranges,
-    styles: rebaseStyleOwnership(
-      rendered.html,
-      serialized.html,
-      rendered.styles ?? [],
-    ),
-    resources: rendered.resources ?? [],
   };
   return { html: serialized.html, view };
 };

@@ -16,6 +16,7 @@ import type { ComponentDependencyPolicy } from "./component_metadata.js";
 import {
   prepareComponentProjection,
   type PreparedComponentComparison,
+  type PreparedInlineStyleEvidence,
 } from "./component_projection_resources.js";
 import {
   ownedCssReasons,
@@ -24,7 +25,7 @@ import {
 import { changedResourceBytes } from "./component_resource_changes.js";
 import type { ComponentMaterialReader } from "./component_resources.js";
 import { compareUnchangedComponentView } from "./component_view_fast_path.js";
-import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
+import { normalizeSingleDocument } from "./ignore.js";
 import { snapshotPath } from "./paths.js";
 import type { ResourceComparison } from "./resource_comparison.js";
 
@@ -34,6 +35,7 @@ export interface ComparedComponentView {
   reasons: readonly EntryChangeReason[];
   changedImplementations: ReadonlySet<string>;
   ownedResources: readonly OwnedCssReason[];
+  inlineEvidence?: PreparedInlineStyleEvidence;
 }
 export interface ComponentViewContext {
   beforeReader: ComponentMaterialReader;
@@ -87,7 +89,6 @@ export async function compareComponentView(
       ownedResources: ownedCssReasons(
         evidence.reasons ?? [],
         context.dependencies,
-        context.prefix,
         before?.usage,
         after?.usage,
         root,
@@ -116,28 +117,34 @@ export async function compareComponentView(
     head,
     root,
   );
-  const { baseRanges, headRanges, projected, excluded } = prepared;
+  const {
+    baseRanges,
+    headRanges,
+    projected,
+    excluded,
+    matching,
+    ownedComponentIds,
+    inlineEvidence,
+  } = prepared;
   const reasons: EntryChangeReason[] = [];
   if (projected.before !== projected.after) reasons.push({ kind: "material" });
   if (projected.inputs) reasons.push({ kind: "inputs" });
   if (projected.structure) reasons.push({ kind: "structure" });
-  const actual = normalizeReviewPair(
-    stripHistoricalMarkers(base),
-    stripMarkers(head, after?.usage, headRanges),
-    selected.path,
-  );
+  const actual = projected.actual;
   const repoPath = (path: string) =>
     context.prefix ? `${context.prefix}/${path}` : path;
   const evidence = await context.resources.compare(
     { path: before!.path, html: projected.before },
     { path: after!.path, html: projected.after },
     excluded,
-    { before: actual.base, after: actual.head },
+    matching,
   );
   reasons.push(...(evidence.reasons ?? []));
   const actualEvidence = await context.resources.compare(
     { path: before!.path, html: actual.base },
     { path: after!.path, html: actual.head },
+    undefined,
+    matching,
   );
   const byteChanges = context.compareResourceBytes
     ? await changedResourceBytes(
@@ -175,19 +182,22 @@ export async function compareComponentView(
     ownedResources: ownedCssReasons(
       actualEvidence.reasons ?? [],
       context.dependencies,
-      context.prefix,
       before?.usage,
       after?.usage,
       root,
     ),
-    changedImplementations: changedComponentImplementations(
-      base,
-      head,
-      before?.usage,
-      after?.usage,
-      baseRanges,
-      headRanges,
-    ),
+    changedImplementations: new Set([
+      ...changedComponentImplementations(
+        base,
+        head,
+        before?.usage,
+        after?.usage,
+        baseRanges,
+        headRanges,
+      ),
+      ...ownedComponentIds,
+    ]),
+    ...(inlineEvidence ? { inlineEvidence } : {}),
     view: {
       ...view,
       ...actualEvidence,

@@ -2,6 +2,10 @@ import type { ComponentInputOwner, ComponentViewRecord } from "@mokly/viewer";
 import { canonicalJson } from "@mokly/viewer/data";
 
 import {
+  applyInlineMaterial,
+  type InlineMaterialReplacements,
+} from "../review/css/inline_rendering.js";
+import {
   normalizeReviewPair,
   normalizeSingleDocument,
 } from "../review/ignore.js";
@@ -17,6 +21,7 @@ import {
 import { validateComponentRanges, type RenderedRange } from "./ranges.js";
 
 export interface ComponentProjection {
+  actual: { base: string; head: string; ignoredIds: readonly string[] };
   before: string;
   after: string;
   inputs: boolean;
@@ -26,6 +31,17 @@ export interface ComponentProjection {
   pairedComponentIds: ReadonlySet<string>;
 }
 
+export interface ComponentInlineMaterial {
+  before: InlineMaterialReplacements;
+  after: InlineMaterialReplacements;
+}
+
+const EMPTY_PROJECTION = { replacements: [], appendix: "" } as const;
+const EMPTY_INLINE: InlineMaterialReplacements = {
+  actual: EMPTY_PROJECTION,
+  projected: EMPTY_PROJECTION,
+};
+
 /** Project only mutually proven implementations; data and rendered slots stay with their caller. */
 export function projectComponentPair(
   before: string,
@@ -34,6 +50,10 @@ export function projectComponentPair(
   afterView: ComponentViewRecord | undefined,
   context: string,
   rootComponentId?: string,
+  inline: ComponentInlineMaterial = {
+    before: EMPTY_INLINE,
+    after: EMPTY_INLINE,
+  },
   beforeRanges?: readonly RenderedRange[],
   afterRanges?: readonly RenderedRange[],
 ): ComponentProjection {
@@ -44,14 +64,16 @@ export function projectComponentPair(
   const validatedAfter = afterView
     ? (afterRanges ?? validateComponentRanges(after, afterView.ranges))
     : undefined;
-  const rawBefore = normalizeSingleDocument(
-    stripHistoricalMarkers(before),
-    context,
+  const actualBefore = stripHistoricalMarkers(
+    applyInlineMaterial(before, inline.before.actual),
   );
-  const rawAfter = normalizeSingleDocument(
-    stripMarkers(after, afterView, validatedAfter),
-    context,
+  const actualAfter = stripMarkers(
+    applyInlineMaterial(after, inline.after.actual),
+    afterView,
+    validatedAfter,
   );
+  const rawBefore = normalizeSingleDocument(actualBefore, context);
+  const rawAfter = normalizeSingleDocument(actualAfter, context);
   const pairs = new Map<string, string>();
   if (beforeView && afterView) {
     const current = new Map(
@@ -62,26 +84,13 @@ export function projectComponentPair(
         pairs.set(instance.key, instance.componentId);
   }
   const pairedComponentIds = new Set(pairs.values());
-  const stylesBefore = styleGroups(
-    beforeView,
-    pairedComponentIds,
-    rootComponentId,
-  );
-  const stylesAfter = styleGroups(
-    afterView,
-    pairedComponentIds,
-    rootComponentId,
-  );
-  const pairedStyles = new Set(
-    [...stylesBefore].filter((group) => stylesAfter.has(group)),
-  );
   const left =
     beforeView && afterView
       ? projectOwnedMaterial(
           before,
           beforeView,
           pairs,
-          pairedStyles,
+          inline.before.projected,
           validatedBefore,
         )
       : stripMarkers(before, beforeView, validatedBefore);
@@ -91,7 +100,7 @@ export function projectComponentPair(
           after,
           afterView,
           pairs,
-          pairedStyles,
+          inline.after.projected,
           validatedAfter,
         )
       : stripMarkers(after, afterView, validatedAfter);
@@ -100,8 +109,10 @@ export function projectComponentPair(
     right,
     context,
   );
+  const actual = normalizeReviewPair(actualBefore, actualAfter, context);
   const { inputs, structure } = componentUsageSignals(beforeView, afterView);
   return {
+    actual,
     before: normalized.base,
     after: normalized.head,
     inputs,
@@ -110,20 +121,6 @@ export function projectComponentPair(
     ignoredIds: normalized.ignoredIds,
     pairedComponentIds,
   };
-}
-
-function styleGroups(
-  view: ComponentViewRecord | undefined,
-  paired: ReadonlySet<string>,
-  root: string | undefined,
-): Set<string> {
-  return new Set(
-    view?.styles
-      .filter((style) =>
-        style.componentIds.every((id) => id !== root && paired.has(id)),
-      )
-      .map((style) => canonicalJson(style.componentIds)),
-  );
 }
 
 /** Real consumer invocations can expose implementation branches absent from saved variants. */
@@ -182,7 +179,7 @@ export function changedComponentImplementations(
               html,
               view,
               pairs,
-              new Set(),
+              EMPTY_PROJECTION,
               ranges,
               owner,
               {

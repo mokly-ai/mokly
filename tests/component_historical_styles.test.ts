@@ -22,7 +22,7 @@ const originalCss = ".action{color:red}";
 const source = componentEntrySource({
   body: '<ReviewIgnore id="clock" materialKey={"a".repeat(64)}>Before</ReviewIgnore><action.Component label="Only action" /><p>Caller content</p>',
   actionRender:
-    '(props) => <button>{props.label}<ReviewIgnore id="internal">Old</ReviewIgnore></button>',
+    '(props) => <button className="action">{props.label}<ReviewIgnore id="internal">Old</ReviewIgnore></button>',
 });
 
 for (const edit of [
@@ -58,7 +58,10 @@ for (const edit of [
           : edit === "material-key"
             ? source.replaceAll('"a".repeat(64)', '"b".repeat(64)')
             : edit === "implementation"
-              ? source.replace("<button>", '<button className="changed">')
+              ? source.replace(
+                  '<button className="action">',
+                  '<button className="action changed">',
+                )
               : source,
     );
     const after = await compileCatalogue(config);
@@ -125,8 +128,7 @@ function renderer(css: string, display = "block"): string {
   return `import { renderToStaticMarkup } from "react-dom/server";
 export default (input) => {
   const css = ${JSON.stringify(css)};
-  const html = '<html><head></head><body><p>😀</p>' + renderToStaticMarkup(input.node) + '<style>.global{display:${display}}' + css + '</style><p>Trailing caller text</p></body></html>';
-  return { html, styles: [{ startOffset: html.indexOf(css), endOffset: html.indexOf(css) + css.length, componentIds: ["action"] }] };
+  return '<html><head></head><body><p>😀</p>' + renderToStaticMarkup(input.node) + '<style>body{display:${display}}' + css + '</style><p>Trailing caller text</p></body></html>';
 };`;
 }
 
@@ -138,7 +140,11 @@ function historical(compilation: Compilation): Compilation {
       route,
       html
         .replaceAll("<!--mokly-component:", "<!--mokabook-component:")
-        .replaceAll("<!--mokly-review-", "<!--mokabook-review-"),
+        .replaceAll("<!--mokly-review-", "<!--mokabook-review-")
+        .replace(
+          `<style>body{display:block}${originalCss}</style>`,
+          `<style>${originalCss}body{display:block}</style>`,
+        ),
     ]),
   );
   for (const entry of manifest.entries)
@@ -150,13 +156,16 @@ function historical(compilation: Compilation): Compilation {
         html.slice(startOffset, startOffset + originalCss.length),
         originalCss,
       );
-      view.usage!.styles = [
-        {
-          startOffset,
-          endOffset: startOffset + originalCss.length,
-          componentIds: ["action"],
-        },
-      ];
+      Object.assign(view.usage!, {
+        styles: [
+          {
+            startOffset,
+            endOffset: startOffset + originalCss.length,
+            componentIds: ["action"],
+          },
+        ],
+        resources: [{ malformed: true }],
+      });
     }
   outputs.delete(MANIFEST_NAME);
   outputs.set(

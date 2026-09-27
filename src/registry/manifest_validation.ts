@@ -23,7 +23,7 @@ export function validateManifest(
   historical = false,
 ): HistoricalManifest {
   const manifest = validateManifestMetadata(value, allowV2, historical);
-  validateManifestComponentUsage(manifest);
+  validateManifestComponentUsage(manifest, historical);
   return manifest;
 }
 

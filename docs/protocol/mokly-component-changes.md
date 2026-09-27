@@ -5,11 +5,11 @@
 The classifier, Browse/watch cache, comparison artifacts, and static exporter
 share this attribution policy. The [component explorer plan](../../plans/component-explorer.md)
 records delivery. Unregistered catalogue and legacy behavior remains intact.
-Inferred head-style ownership replacing renderer-returned records is the
-approved target of the
-[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md);
-until its Milestone 4 lands, the
-classifier still applies stored `styles` and `resources` records.
+The [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md)
+has replaced renderer-returned records with document-derived head-style
+ownership in complete paired component-aware comparisons. Reference-bearing
+inline rules remain for that plan's Milestone 5, result evidence for Milestone
+6, and shell presentation for Milestone 7.
 
 ## Changes Membership
 

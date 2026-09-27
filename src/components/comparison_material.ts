@@ -1,6 +1,7 @@
 import type { ComponentInputOwner, ComponentViewRecord } from "@mokly/viewer";
 import { canonicalJson } from "@mokly/viewer/data";
 
+import type { InlineMaterialProjection } from "../review/css/inline_rendering.js";
 import { normalizeHistoricalDocument } from "../review/ignore.js";
 
 import { instanceInputs, instanceStructure } from "./instance_structure.js";
@@ -90,12 +91,12 @@ export function projectOwnedMaterial(
   html: string,
   usage: ComponentViewRecord | undefined,
   pairs: ReadonlyMap<string, string>,
-  styles: ReadonlySet<string>,
+  inline: InlineMaterialProjection,
   validatedRanges?: readonly RenderedRange[],
   owner: ComponentInputOwner = { kind: "entry" },
   clip?: { start: number; end: number },
 ): string {
-  if (!usage) return stripMarkers(html);
+  if (!usage) return applyReplacements(html, inline);
   const ranges = validatedRanges ?? validateComponentRanges(html, usage.ranges);
   const render = (start: number, end: number): string => {
     const replacements: { start: number; end: number; text: string }[] = [];
@@ -135,16 +136,12 @@ export function projectOwnedMaterial(
             text: `<!--mokly-external-slot:${slot.sourceSlotKey ?? slot.key}-->`,
           });
       }
-    for (const style of usage.styles)
-      if (
-        styles.has(canonicalJson(style.componentIds)) &&
-        style.startOffset >= start &&
-        style.endOffset <= end
-      )
+    for (const replacement of inline.replacements)
+      if (replacement.start >= start && replacement.end <= end)
         replacements.push({
-          start: style.startOffset,
-          end: style.endOffset,
-          text: "",
+          start: replacement.start,
+          end: replacement.end,
+          text: replacement.text,
         });
     replacements.sort((a, b) => a.start - b.start || b.end - a.end);
     let cursor = start;
@@ -174,7 +171,25 @@ export function projectOwnedMaterial(
     );
     return `<mokly-caller-slot data-key="${slot.key}" data-rendered="${Boolean(range)}">${range ? render(range.contentStart, range.contentEnd) : ""}</mokly-caller-slot>`;
   });
-  return render(clip?.start ?? 0, clip?.end ?? html.length) + material.join("");
+  return (
+    render(clip?.start ?? 0, clip?.end ?? html.length) +
+    material.join("") +
+    inline.appendix
+  );
+}
+
+function applyReplacements(
+  html: string,
+  inline: InlineMaterialProjection,
+): string {
+  for (const replacement of [...inline.replacements].sort(
+    (a, b) => b.start - a.start,
+  ))
+    html =
+      html.slice(0, replacement.start) +
+      replacement.text +
+      html.slice(replacement.end);
+  return stripMarkers(html) + inline.appendix;
 }
 export function sameOwner(
   a: ComponentInputOwner,

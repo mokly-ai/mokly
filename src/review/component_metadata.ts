@@ -1,6 +1,5 @@
 import { minimatch } from "minimatch";
 
-import type { ComponentViewRecord } from "@mokly/viewer";
 import {
   canonicalJson,
   analyzeHierarchy,
@@ -152,23 +151,12 @@ export class ComponentDependencyPolicy {
   }
   suppressResource(
     repoPath: string,
-    publicPath: string,
     paired: ReadonlySet<string>,
-    before?: ComponentViewRecord,
-    after?: ComponentViewRecord,
     root?: string,
   ): boolean {
-    if (!before || !after) return false;
     const owners = this.owners(repoPath);
-    if (owners.size && [...owners].every((id) => id !== root && paired.has(id)))
-      return true;
-    const left = before.resources.find((item) => item.path === publicPath);
-    const right = after.resources.find((item) => item.path === publicPath);
     return Boolean(
-      left &&
-      right &&
-      canonicalJson(left.componentIds) === canonicalJson(right.componentIds) &&
-      left.componentIds.every((id) => id !== root && paired.has(id)),
+      owners.size && [...owners].every((id) => id !== root && paired.has(id)),
     );
   }
 }

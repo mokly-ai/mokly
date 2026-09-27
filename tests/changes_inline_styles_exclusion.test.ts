@@ -1,0 +1,68 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import { inlineChangesFixture } from "./helpers/inline_changes.js";
+
+test("a cumulative sheet excludes another component's unused rule from a zero-instance screen", async (t) => {
+  const fixture = await inlineChangesFixture(
+    t,
+    "<style>.action{color:red}</style>",
+    "<style>.action{color:red}.other-component{color:blue}</style>",
+  );
+  const live = await fixture.live();
+  const { result } = await fixture.complete();
+  assert.equal(result.schemaVersion, 3);
+  if (result.schemaVersion !== 3) return;
+  assert.deepEqual(result.changes, []);
+  assert.deepEqual(live.changedRoutes, []);
+  const plain = result.screens.find((screen) => screen.id === "plain")!;
+  assert.equal(plain.views.length, 4);
+  assert.ok(
+    plain.views.every(
+      (view) =>
+        view.state === "unchanged" &&
+        !view.material &&
+        !view.reasons &&
+        !view.excludedResources,
+    ),
+  );
+});
+
+test("formatting, comments, attributes and element splits carry no identity", async (t) => {
+  const fixture = await inlineChangesFixture(
+    t,
+    '<style nonce="before">.action { color: red; } .pane{display:block}</style>',
+    '<style data-emotion="pane">/* moved */.pane { display: block }</style><style nonce="after">.action{color:red}</style>',
+  );
+  const live = await fixture.live();
+  const { result } = await fixture.complete();
+  assert.equal(result.schemaVersion, 3);
+  if (result.schemaVersion !== 3) return;
+  assert.deepEqual(result.changes, []);
+  assert.deepEqual(live.changedRoutes, []);
+  assert.ok(
+    [...result.screens, ...result.components].every(
+      (entry) => entry.state === "unchanged",
+    ),
+  );
+});
+
+test("a parse failure stays entry material with no inferred component owner", async (t) => {
+  const fixture = await inlineChangesFixture(
+    t,
+    "<style>.action{color:red}</style>",
+    "<style>.action{color:blue</style>",
+  );
+  const live = await fixture.live();
+  const { result } = await fixture.complete();
+  assert.equal(result.schemaVersion, 3);
+  if (result.schemaVersion !== 3) return;
+  assert.ok(live.changedRoutes?.includes("screens/home.html"));
+  assert.ok(
+    result.changes.some(
+      (entry) =>
+        entry.after?.route === "screens/home.html" &&
+        entry.reasons.some((reason) => reason.kind === "material"),
+    ),
+  );
+});

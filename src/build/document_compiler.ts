@@ -11,9 +11,7 @@ import {
   transformCompatibilityDocuments,
   type CompatibilityContext,
 } from "../compatibility/transform.js";
-import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
-import { rebaseStyleOwnership } from "../components/style_ownership.js";
 import { MoklyError } from "../errors.js";
 import { extractHtmlReferences } from "../html_references.js";
 import { prepareRegistry } from "../registry/prepare.js";
@@ -163,7 +161,6 @@ export class DocumentCompiler {
       componentViews,
       target,
     );
-    const original = outputs.get(route)!;
     const records = transformCompatibilityDocuments(
       outputs,
       this.entries,
@@ -180,22 +177,10 @@ export class DocumentCompiler {
       new Map([[route, entry.sourceRelativePath]]),
     );
     normalizeSingleDocument(html, route);
-    const captured = componentViews.get(route);
-    const view = captured
-      ? {
-          ...captured,
-          styles: rebaseStyleOwnership(original, html, captured.styles),
-        }
-      : undefined;
+    const view = componentViews.get(route);
     if (view) {
       validateComponentRanges(html, view.ranges);
-      validateComponentViewRecord(
-        view,
-        this.components,
-        route,
-        entry.kind === "component" ? entry.id : undefined,
-      );
-      validateComponentResources(new Map([[route, view]]), config);
+      validateComponentViewRecord(view, this.components, route);
     }
     const prepared = {
       route,

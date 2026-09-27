@@ -85,8 +85,6 @@ export function view(
     instances: options.instances ?? [],
     slots: options.slots ?? [],
     ranges: options.ranges ?? [],
-    styles: [],
-    resources: [],
   };
 }
 
@@ -127,15 +125,11 @@ export function inlineInput(options: {
         beforeUsage.ranges,
         "historical",
       ),
-      document: parse(normalized.base, { sourceCodeLocationInfo: true }),
-      ranges: validateComponentRanges(normalized.base, beforeUsage.ranges),
       usage: beforeUsage,
     },
     after: {
       source: options.after,
       sourceRanges: validateComponentRanges(options.after, afterUsage.ranges),
-      document: parse(normalized.head, { sourceCodeLocationInfo: true }),
-      ranges: validateComponentRanges(normalized.head, afterUsage.ranges),
       usage: afterUsage,
     },
     pairedIgnoreIds: normalized.pairedIgnoreIds,
@@ -143,6 +137,16 @@ export function inlineInput(options: {
       ? { rootComponentId: options.rootComponentId }
       : {}),
     parser: options.parser ?? new LightningCssRuleParser(),
+    prepare: () => ({
+      before: {
+        document: parse(normalized.base, { sourceCodeLocationInfo: true }),
+        ranges: validateComponentRanges(normalized.base, beforeUsage.ranges),
+      },
+      after: {
+        document: parse(normalized.head, { sourceCodeLocationInfo: true }),
+        ranges: validateComponentRanges(normalized.head, afterUsage.ranges),
+      },
+    }),
   };
 }
 
@@ -161,7 +165,9 @@ export function changedStyle(selector = ".target") {
   };
 }
 
-export function resolved(result: InlineAttributionResult) {
+export function resolved(
+  result: InlineAttributionResult,
+): Extract<InlineAttributionResult, { status: "resolved" }> {
   assert.equal(result.status, "resolved");
   assert.ok(result.status === "resolved");
   return result;

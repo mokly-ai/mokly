@@ -39,8 +39,6 @@ export function usageView(
     instances: view.usage.instances,
     slots: view.usage.slots,
     ranges: view.usage.ranges,
-    styles: [],
-    resources: [],
   };
 }
 function fragments(

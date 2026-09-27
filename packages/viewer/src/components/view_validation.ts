@@ -12,7 +12,7 @@ import type {
 } from "./manifest_types.js";
 import { validateProps } from "./props.js";
 import { validateComponentSource } from "./source.js";
-import { sortedStrings, validateResourcePath } from "./validation_helpers.js";
+import { sortedStrings } from "./validation_helpers.js";
 import { validateViewReferences } from "./view_references.js";
 
 export function validateComponentViews(
@@ -23,7 +23,7 @@ export function validateComponentViews(
     Pick<ManifestComponent, "propSchema" | "slots">
   >,
   at: string,
-  rootId?: string,
+  historical = false,
 ): asserts value is readonly ComponentViewRecord[] {
   const axes = ["mobile", "desktop"].flatMap((viewport) =>
     (dark ? ["light", "dark"] : ["light"]).map(
@@ -33,29 +33,29 @@ export function validateComponentViews(
   if (!Array.isArray(value) || value.length !== axes.length)
     invalidData(at, "componentViews must record every available view");
   value.forEach((view, i) => {
+    const record = view as Record<string, unknown>;
+    if (historical)
+      for (const key of ["styles", "resources"])
+        if (Object.hasOwn(record, key)) {
+          if (!Array.isArray(record[key]))
+            invalidData(at, `historical ${key} must be an array`);
+          Reflect.deleteProperty(record, key);
+        }
     exactKeys(
-      view,
-      [
-        "viewport",
-        "colorScheme",
-        "instances",
-        "slots",
-        "ranges",
-        "styles",
-        "resources",
-      ],
+      record,
+      ["viewport", "colorScheme", "instances", "slots", "ranges"],
       at,
     );
     if (`${String(view.viewport)}/${String(view.colorScheme)}` !== axes[i])
       invalidData(at, "view axes must be unique and ordered");
-    for (const field of ["instances", "slots", "ranges", "styles", "resources"])
-      if (!Array.isArray(view[field]))
+    for (const field of ["instances", "slots", "ranges"])
+      if (!Array.isArray(record[field]))
         invalidData(at, `missing ${field} array`);
     validateComponentViewRecord(
       view as unknown as ComponentViewRecord,
       components,
       `${at} / ${axes[i]}`,
-      rootId,
+      historical,
     );
   });
 }
@@ -68,7 +68,6 @@ export function validateComponentViewRecord(
     Pick<ManifestComponent, "propSchema" | "slots">
   >,
   at: string,
-  rootId?: string,
   historical = false,
 ): void {
   for (const instance of view.instances) {
@@ -149,32 +148,6 @@ export function validateComponentViewRecord(
   const slots = new Map(view.slots.map((item) => [item.key, item]));
   validateOrders(view.instances, at);
   validateViewReferences(view, components, instances, slots, at, historical);
-  const rendered = new Set([
-    ...view.instances.map((instance) => instance.componentId),
-    ...(rootId ? [rootId] : []),
-  ]);
-  let end = 0;
-  for (const style of view.styles) {
-    exactKeys(style, ["startOffset", "endOffset", "componentIds"], at);
-    if (
-      !Number.isSafeInteger(style.startOffset) ||
-      !Number.isSafeInteger(style.endOffset) ||
-      style.startOffset < end ||
-      style.endOffset <= style.startOffset
-    )
-      invalidData(at, "invalid or overlapping style range");
-    end = style.endOffset;
-    validateOwners(style.componentIds, rendered, at);
-  }
-  for (const resource of view.resources) {
-    exactKeys(resource, ["path", "componentIds"], at);
-    validateResourcePath(resource.path, at);
-    validateOwners(resource.componentIds, rendered, at);
-  }
-  sortedStrings(
-    view.resources.map((resource) => resource.path),
-    `${at}.resources`,
-  );
 }
 
 function validateOwner(
@@ -204,14 +177,4 @@ function validateOrders(
         at,
         "instance order must be contiguous and unique within each owner/slot scope",
       );
-}
-
-function validateOwners(
-  value: unknown,
-  rendered: ReadonlySet<string>,
-  at: string,
-): void {
-  sortedStrings(value, at);
-  if (!value.length || !value.every((id) => rendered.has(id)))
-    invalidData(at, "style/resource owners must render in this view");
 }

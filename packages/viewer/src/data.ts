@@ -98,8 +98,6 @@ export type { GeneratedComponentView } from "./components/views.js";
 export type {
   ComponentInstanceRecord,
   ComponentSourceLocation,
-  ComponentStyleOwnership,
-  ComponentResourceOwnership,
 } from "./components/manifest_types.js";
 export { instanceKey, slotKey } from "./components/keys.js";
 export { resolveInstance } from "./components/resolve_instance.js";

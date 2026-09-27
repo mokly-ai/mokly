@@ -12,6 +12,10 @@ export const reviewStages = [
   "review.resource-graph",
   "review.write-artifact",
 ];
+const reviewAnalysisStages = [
+  "review.css-analysis",
+  "review.inline-style-analysis",
+];
 
 export function timingEvents(stderr: string): TimingEvent[] {
   return stderr
@@ -35,7 +39,7 @@ export function assertReviewTimings(
     );
   for (const event of review) {
     assert.ok(
-      [...reviewStages, "review.css-analysis"].includes(event.stage),
+      [...reviewStages, ...reviewAnalysisStages].includes(event.stage),
       event.stage,
     );
     assert.equal(event.schemaVersion, 1);

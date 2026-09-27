@@ -1,0 +1,115 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import { compileCatalogue } from "../dist/build/compile.js";
+import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
+import { ComponentMaterialReader } from "../dist/review/component_resources.js";
+import { compareComponentView } from "../dist/review/component_view.js";
+import { ResourceComparison } from "../dist/review/resource_comparison.js";
+import { generatedViews } from "../packages/viewer/dist/components/views.js";
+
+import { inlineChangesFixture } from "./helpers/inline_changes.js";
+
+test("parse failure selectors remain prepared for later evidence delivery", async (t) => {
+  const fixture = await inlineChangesFixture(
+    t,
+    "<style>.action{color:red}</style>",
+    "<style>.action{color:blue</style>",
+  );
+  const compilation = await compileCatalogue(fixture.config);
+  const screen = compilation.manifest.entries.find(
+    (entry) => entry.id === "home",
+  )!;
+  const view = generatedViews(screen)[0]!;
+  const head = compilation.outputs.get(view.path)!;
+  const base = head.replace(
+    "<style>.action{color:blue</style>",
+    "<style>.action{color:red}</style>",
+  );
+  const reader = (document: string) =>
+    new ComponentMaterialReader({
+      read: async (route) => {
+        assert.equal(route, view.path);
+        return Buffer.from(document);
+      },
+    });
+  const beforeReader = reader(base);
+  const afterReader = reader(head);
+  const resources = new ResourceComparison(
+    beforeReader,
+    afterReader,
+    new Set(),
+    "mockups",
+  );
+  const comparison = await compareComponentView(
+    {
+      beforeReader,
+      afterReader,
+      dependencies: new ComponentDependencyPolicy(
+        compilation.manifest,
+        compilation.manifest,
+        [],
+      ),
+      changed: new Set(),
+      prefix: "mockups",
+      resources,
+      useFastPath: false,
+    },
+    view,
+    view,
+  );
+  assert.deepEqual(comparison.inlineEvidence, {
+    allExcluded: false,
+    retainedSelectors: { status: "unresolved", selectors: [] },
+  });
+});
+
+test("all-excluded status remains prepared for later evidence delivery", async (t) => {
+  const fixture = await inlineChangesFixture(
+    t,
+    "<style>.unused{color:red}</style>",
+    "<style>.unused{color:blue}</style>",
+  );
+  const compilation = await compileCatalogue(fixture.config);
+  const screen = compilation.manifest.entries.find(
+    (entry) => entry.id === "home",
+  )!;
+  const view = generatedViews(screen)[0]!;
+  const head = compilation.outputs.get(view.path)!;
+  const base = head.replace(
+    "<style>.unused{color:blue}</style>",
+    "<style>.unused{color:red}</style>",
+  );
+  const reader = (document: string) =>
+    new ComponentMaterialReader({
+      read: async (route) => {
+        assert.equal(route, view.path);
+        return Buffer.from(document);
+      },
+    });
+  const beforeReader = reader(base);
+  const afterReader = reader(head);
+  const comparison = await compareComponentView(
+    {
+      beforeReader,
+      afterReader,
+      dependencies: new ComponentDependencyPolicy(
+        compilation.manifest,
+        compilation.manifest,
+        [],
+      ),
+      changed: new Set(),
+      prefix: "mockups",
+      resources: new ResourceComparison(
+        beforeReader,
+        afterReader,
+        new Set(),
+        "mockups",
+      ),
+      useFastPath: false,
+    },
+    view,
+    view,
+  );
+  assert.deepEqual(comparison.inlineEvidence, { allExcluded: true });
+});

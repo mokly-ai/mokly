@@ -13,8 +13,6 @@ const result: TransientRender = {
     instances: [],
     slots: [],
     ranges: [],
-    styles: [],
-    resources: [],
   },
   files: new Map([
     [

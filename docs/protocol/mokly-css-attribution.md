@@ -11,9 +11,11 @@ component classification or an additional resource analysis. See
 [CSS Change Attribution](../../plans/css-change-attribution.md). Applying the
 same parser, diff, keep list and matcher to a page's own inline styles is the
 approved target of the
-[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md); the
-[inline style ownership contract](./mokly-inline-styles.md) owns that
-analysis.
+[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md);
+the [inline style ownership contract](./mokly-inline-styles.md) owns that
+analysis. Diffed inline rules now use the shared parser, keep list and matcher
+in component-aware comparisons; reference-bearing inline rules remain for that
+plan's Milestone 5.
 
 ## Purpose
 

@@ -113,9 +113,14 @@ propSchema: {
 ## Ownership
 
 `ownedDependencies` names material outside the component's own body that
-belongs to it. A renderer may also return exact style and resource ownership,
-so a change to a component's implementation is attributed to the component and
-its consumers are listed as affected.
+belongs exclusively to it, including stylesheets, fonts, images or source
+modules the rendered resource graph cannot identify. The renderer returns only
+the complete HTML document. When a styling library places component rules in
+eligible `<style>` elements outside the component markup, Mokly infers their
+owners during comparison by matching each changed rule against the rendered
+component ranges. A component-owned edit is attributed to that component and
+its consumers are listed as affected; a rule that can reach screen markup stays
+with the screen.
 
 ## Resolve a saved instance
 
@@ -145,6 +150,5 @@ catalogue, inspect rendered markup or classify a visual change.
 | `ComponentControl`, `ComponentControlLabel`, `ControlFor`       | The editable controls                   |
 | `ObjectPropSchema`, `DataPropSchema`, `DataPropField`           | The schema of a component's data        |
 | `InferProp`, `ComponentPropsData`, `PropValue`, `PropPrimitive` | The values a schema allows              |
-| `ComponentStyleOwnership`, `ComponentResourceOwnership`         | Exact ownership a renderer may report   |
 | `ComponentInstanceRecord`, `ComponentSourceLocation`            | Saved instance identity and source      |
 | `InstanceResolution`                                            | The result of `resolveInstance`         |

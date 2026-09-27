@@ -402,8 +402,8 @@ the view's actual comparison material differs. That material is the pair of
 ignore-normalized documents, after the inline style canonicalization of the
 inline style ownership contract when the component-aware classifier runs; the
 single-document normalizations of the same material decide `unchanged`
-against `ignored-only`. Until that plan's Milestone 4 lands, the material is
-the pair of ignore-normalized documents alone. Empty optional lists are
+against `ignored-only`. Linked-stylesheet selectors still match against the
+real paired-normalized documents rather than this rewritten material. Empty optional lists are
 omitted; historical results without them remain valid. Retained resource reasons
 make paired views changed. Entry `sharedImpact` includes a stylesheet only if
 some view kept it, and summary counts follow these states.

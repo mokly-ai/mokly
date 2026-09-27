@@ -59,7 +59,7 @@ for (const exact of [false, true])
     );
   });
 
-for (const ownership of ["dependency", "renderer", "unowned"] as const)
+for (const ownership of ["dependency", "migrated-renderer", "unowned"] as const)
   test(`external styles retain real snapshots with ${ownership} attribution`, async (t) => {
     const source = componentEntrySource()
       .replace(
@@ -68,13 +68,13 @@ for (const ownership of ["dependency", "renderer", "unowned"] as const)
       )
       .replace(
         'id: "action",',
-        ownership === "dependency"
+        ownership !== "unowned"
           ? 'id: "action", ownedDependencies: ["mockups/action.css"], dependencies: ["mockups/action.css"],'
           : 'id: "action",',
       );
     const fixture = await createFixture(source, {
       extraConfig:
-        ownership === "renderer"
+        ownership === "migrated-renderer"
           ? 'renderer: "renderer.tsx", stylesheets: [{ match: "**", stylesheets: ["action.css"] }],'
           : 'stylesheets: [{ match: "**", stylesheets: ["action.css"] }],',
     });
@@ -83,10 +83,10 @@ for (const ownership of ["dependency", "renderer", "unowned"] as const)
       path.join(fixture.mockupsDir, "action.css"),
       ".action{color:red}",
     );
-    if (ownership === "renderer")
+    if (ownership === "migrated-renderer")
       await fs.writeFile(
         path.join(fixture.root, "renderer.tsx"),
-        `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' + input.stylesheets[0] + '"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>', resources: [{ path: "action.css", componentIds: ["action"] }] });`,
+        `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => '<html><head><link rel="stylesheet" href="' + input.stylesheets[0] + '"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
       );
     const config = await loadConfig(fixture.root);
     const before = await compileCatalogue(config);
@@ -133,13 +133,17 @@ for (const ownership of ["dependency", "renderer", "unowned"] as const)
   });
 
 for (const owned of [false, true])
-  test(`head styling uses exact ownership; owned=${owned}`, async (t) => {
-    const fixture = await createFixture(componentEntrySource(), {
+  test(`head styling infers ownership from matching markup; owned=${owned}`, async (t) => {
+    const source = componentEntrySource().replace(
+      "<button data-viewport=",
+      '<button className="action" data-viewport=',
+    );
+    const fixture = await createFixture(source, {
       extraConfig: 'renderer: "renderer.tsx",',
     });
     t.after(() => removeFixture(fixture));
     const renderer = (color: string) =>
-      `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => { const css = '.action{color:${color}}'; const html = '<html><head><style>.global{display:block}' + css + '</style></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return { html, ${owned ? 'styles: [{ startOffset: html.indexOf(css), endOffset: html.indexOf(css) + css.length, componentIds: ["action"] }]' : ""} }; };`;
+      `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => { const css = '${owned ? ".action" : ".action, body"}{color:${color}}'; return '<html><head><style>' + css + '</style></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; };`;
     await fs.writeFile(
       path.join(fixture.root, "renderer.tsx"),
       renderer("red"),
