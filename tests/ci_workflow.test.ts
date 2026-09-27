@@ -188,21 +188,22 @@ test("CI shards complete verification behind one prerequisite", async () => {
     const chromiumIndex = job.steps.findIndex((step) =>
       step.run?.includes("playwright install --with-deps chromium"),
     );
-    const removalIndex = job.steps.findIndex(
-      (step) => step.name === "Remove remote-tracking test inputs",
-    );
     const suiteIndex = job.steps.findIndex((step) =>
       step.run?.includes(`cargo xtask check --suite ${suite}`),
     );
-    assert.ok(installIndex >= 0 && installIndex < removalIndex);
+    assert.ok(installIndex >= 0 && installIndex < suiteIndex);
     if (suite === "browser")
-      assert.ok(chromiumIndex >= 0 && chromiumIndex < removalIndex);
-    assert.ok(removalIndex >= 0 && removalIndex < suiteIndex);
-    const removal = job.steps[removalIndex]?.run ?? "";
-    assert.equal(removal, "node scripts/verification/remove-remote-state.mjs");
+      assert.ok(chromiumIndex >= 0 && chromiumIndex < suiteIndex);
+    const commands = job.steps.map((step) => step.run ?? "").join("\n");
     assert.doesNotMatch(
-      job.steps.map((step) => step.run ?? "").join("\n"),
-      /git (?:for-each-ref|update-ref)\b/u,
+      commands,
+      /git merge-base HEAD origin\/main/u,
+      `${suite} must not resolve its cache input from origin/main`,
+    );
+    assert.doesNotMatch(
+      commands,
+      /(?:branch-point|baseline-package-lock|git show [^\n]*package-lock\.json)/u,
+      `${suite} must use the checked-out lockfile`,
     );
   }
   assert.doesNotMatch(source, /origin\/main/u);

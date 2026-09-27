@@ -89,50 +89,31 @@ startup, and cache-invalidation regressions retain independent preparation.
 
 ## Deterministic Test Repository Inputs
 
-Unit and browser tests depend only on the tree under test and fixture-owned
+Unit and browser tests must depend only on the tree under test and fixture-owned
 state. The example preview unit test copies the checked-out example and tooling
-into an isolated fixture repository, commits that fixture-owned baseline and
-applies one deterministic source edit so its comparison assertions remain
-meaningful. The browser suite's example server compares with the checked-out
-`HEAD`. A fixture repository may create and read its own remotes because those
-references are fixture-owned inputs inside the test tree.
+into an isolated fixture repository, commits that fixture-owned baseline,
+applies one deterministic source edit and asserts its exact changed
+destinations and count. The browser suite's example server runs with
+`--base HEAD` and compares with the checked-out `HEAD`. A fixture repository may
+create and read its own remotes because those references are fixture-owned
+inputs inside the test tree.
 
-Before their suites, CI's unit and browser jobs run
-`node scripts/verification/remove-remote-state.mjs`. This one boundary:
-
-- removes each configured remote, including its remote-tracking references and
-  branch upstream settings;
-- deletes leftover `refs/remotes/*` entries with no symbolic-reference
-  dereference;
-- deletes the checkout's `FETCH_HEAD`; and
-- fails unless the configured-remote list and remote-tracking namespace are
-  empty and `FETCH_HEAD` is absent.
-
-Delivery repeats the proof in a separate copy or clone of the tree under test,
-including uncommitted and untracked files when they are part of that tree:
-
-```bash
-node scripts/verification/remove-remote-state.mjs
-npm ci
-npm run build
-cargo xtask check --suite unit
-cargo xtask check --suite browser
-```
-
-Identical trees must therefore produce identical test results; the release
+CI's unit and browser jobs key npm's download cache from the checked-out
+`package-lock.json`; neither job resolves `origin/main` or reads a branch-point
+lockfile. Identical trees must produce identical test results; the release
 workflow's exact-tree evidence reuse depends on that determinism.
 
-`tests/test_repository_refs.test.ts` is a best-effort static lint behind the
-runtime proof. It examines direct subprocess calls whose first argument is the
-literal `"git"` and whose argv is an inline literal array. Before finding the
-subcommand, it skips global options and the values of `-C`, `-c`, `--git-dir`,
-`--work-tree`, `--namespace` and `--config-env`; separated and `=` forms follow
-the same rule. The target comes from the last `-C` or `--git-dir` before that
-subcommand; otherwise it comes from an inline options object's `cwd` property,
-including shorthand `{ cwd }`. A call with no options argument, or with an
-inline options object that omits `cwd`, targets the real checkout. An options
-variable or call, or an inline object with a spread, leaves the target unknown
-and is not reported.
+`tests/test_repository_refs.test.ts` is the only automated check for this rule
+and is a best-effort static lint. It examines direct subprocess calls whose
+first argument is the literal `"git"` and whose argv is an inline literal
+array. Before finding the subcommand, it skips global options and the values of
+`-C`, `-c`, `--git-dir`, `--work-tree`, `--namespace` and `--config-env`;
+separated and `=` forms follow the same rule. The target comes from the last
+`-C` or `--git-dir` before that subcommand; otherwise it comes from an inline
+options object's `cwd` property, including shorthand `{ cwd }`. A call with no
+options argument, or with an inline options object that omits `cwd`, targets the
+real checkout. An options variable or call, or an inline object with a spread,
+leaves the target unknown and is not reported.
 
 For calls attributed to the real checkout, the lint recognizes literals that
 contain `origin/`, `remotes/` or `refs/remotes`; the literal `FETCH_HEAD`;
@@ -146,8 +127,8 @@ The lint does not follow Git calls hidden behind helper closures, argv stored in
 variables or spreads, shell command strings, a relative `-C` layered after a
 real-root `-C`, `for-each-ref` without a remote pattern, `git remote`, compound
 ranges such as `HEAD..FETCH_HEAD`, modules under `scripts/` that tests execute,
-or product-code defaults such as a configured comparison base. The remote-free
-unit and browser runs cover the runtime boundary beyond those blind spots.
+or product-code defaults such as a configured comparison base. Passing this
+lint does not establish behavior hidden by those blind spots.
 
 ## Pull Request Title Contract
 

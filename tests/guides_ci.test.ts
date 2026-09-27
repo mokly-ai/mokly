@@ -279,26 +279,31 @@ test("test repository inputs are deterministic and title types stay fixed", () =
   ])
     assert.ok(verification.includes(reference), reference);
   assert.match(verification, /tests\/test_repository_refs\.test\.ts/u);
-  assert.match(verification, /best-effort static lint/u);
+  assert.match(
+    verification,
+    /only automated check for this rule.*best-effort static lint/u,
+  );
   assert.match(verification, /isolated fixture repository/u);
   assert.match(
     verification,
-    /browser suite's example server compares with the checked-out `HEAD`/u,
+    /deterministic source edit.*asserts its exact changed destinations and count/u,
   );
   assert.match(
     verification,
-    /node scripts\/verification\/remove-remote-state\.mjs/u,
+    /browser suite's example server runs with `--base HEAD`/u,
   );
   assert.match(
     verification,
-    /removes each configured remote.*branch upstream settings/u,
+    /unit and browser jobs key npm's download cache from the checked-out `package-lock\.json`/u,
   );
   assert.match(
     verification,
-    /deletes leftover `refs\/remotes\/\*` entries with no symbolic-reference dereference/u,
+    /neither job resolves `origin\/main` or reads a branch-point lockfile/u,
   );
-  assert.match(verification, /cargo xtask check --suite unit/u);
-  assert.match(verification, /cargo xtask check --suite browser/u);
+  assert.match(
+    verification,
+    /Unit and browser tests must depend only on the tree under test and fixture-owned state/u,
+  );
   assert.match(
     verification,
     /target comes from the last `-C` or `--git-dir` before that subcommand/u,
@@ -322,10 +327,6 @@ test("test repository inputs are deterministic and title types stay fixed", () =
   assert.match(verification, /`HEAD\.\.FETCH_HEAD`/u);
   assert.match(verification, /modules under `scripts\/`/u);
   assert.match(verification, /product-code defaults/u);
-  assert.match(
-    verification,
-    /Identical trees must therefore produce identical test results/u,
-  );
   assert.match(verification, /This type list is fixed/u);
   assert.match(verification, /examples in `AGENTS\.md`/u);
   assert.match(verification, /does not derive policy from Git history/u);

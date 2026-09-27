@@ -974,27 +974,27 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       without changing the implementation. Five findings (one Medium, four
       Low) are recorded in its Fifth Review for the user's decision.
 
-## Milestone 28: Remove the remote-state cleanup script
+## Milestone 28: Remove the remote-state cleanup script — completed
 
-- [ ] Rewrite the "Deterministic Test Repository Inputs" section of
+- [x] Rewrite the "Deterministic Test Repository Inputs" section of
       [`ci-verification.md`](../docs/protocol/ci-verification.md) without the
       removal step, the local procedure or the runtime-proof wording, keeping
       the rule, the two tree-owned bases and the lint as the remaining
       best-effort guard; check every link to that section.
-- [ ] Delete `scripts/verification/remove-remote-state.mjs`,
+- [x] Delete `scripts/verification/remove-remote-state.mjs`,
       `scripts/verification/remove-remote-state.d.mts` and
       `tests/verification_remote_state.test.ts`, and remove the "Remove
       remote-tracking test inputs" steps from `.github/workflows/ci.yml`.
-- [ ] Update `tests/ci_workflow.test.ts` and `tests/guides_ci.test.ts` to the
+- [x] Update `tests/ci_workflow.test.ts` and `tests/guides_ci.test.ts` to the
       new contract, keeping the checks that the unit and browser jobs do not
       read `origin/main`; confirm no reference to the script remains outside
       historical plans and reviews.
 
 ## Milestone 29: Script removal verification and delivery
 
-- [ ] Run the CI, verification, workflow, guides and preview tests, then
+- [x] Run the CI, verification, workflow, guides and preview tests, then
       `cargo xtask check`; resolve every failure.
-- [ ] Record the removal in `docs/reviews/delta-publishing.md` against
+- [x] Record the removal in `docs/reviews/delta-publishing.md` against
       fifth-review findings 1 and 2.
 - [ ] After checks pass, `git add -A`, commit with a Conventional Commits
       title of at most 50 characters, and push the branch.

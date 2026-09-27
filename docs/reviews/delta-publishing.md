@@ -901,14 +901,16 @@ and rechecked the plan, this document and every changed link. They confirmed
 the seven fourth-review fixes work: 280 timed process-group presses during
 compile and 140 during configuration loading all printed the cancellation line
 with status 1. Five new findings follow: one Medium and four Low. None was
-changed; each awaits the user's decision. A stale title-check sentence in
+changed during the review. The user then chose to remove the cleanup script,
+which resolves finding 1 and part of finding 2 (see **Fifth Review
+Follow-up**); the rest await the user's decision. A stale title-check sentence in
 `ci-verification.md` that a reviewer also reported is already open as
 second-review finding 10, and the missing "completed" marker on Milestone 24
 was corrected in the plan while recording this review. Second-review findings
 3–11 stay open.
 
 1. **P2 / Medium — The documented local run can delete the real repository's
-   remotes.** [`remove-remote-state.mjs`](../../scripts/verification/remove-remote-state.mjs)
+   remotes.** `scripts/verification/remove-remote-state.mjs` (since removed)
    changes whichever Git store the current folder uses. Conductor workspaces
    are Git worktrees that share one store, so running it in a linked worktree,
    or in a `cp -a` copy of one (its `.git` file still points at the shared
@@ -1001,3 +1003,30 @@ reproducible statistically, the release workflow's complete-verification
 fallback still runs with `origin` present, the script is untested on macOS
 and Windows, and a pre-existing `npm-release.md` sentence names a
 GitHub-hosted release runner while `release.yml` uses Blacksmith.
+
+### Fifth Review Follow-up
+
+On 2026-09-28 the user judged the cleanup script too dangerous and asked to
+remove it instead of guarding it. [Delta Publishing](../../plans/delta-publishing.md)
+Milestones 28–29 record the decision and work.
+
+1. **Resolved by removal.** `scripts/verification/remove-remote-state.mjs`, its
+   declaration file and `tests/verification_remote_state.test.ts` are deleted,
+   and CI's unit and browser jobs no longer run a cleanup step, so no command
+   in the repository removes remotes. The
+   [CI contract](../protocol/ci-verification.md#deterministic-test-repository-inputs)
+   keeps the rule that tests depend only on the tree under test and its two
+   fixes (the preview test's fixture-owned baseline and the browser server's
+   `--base HEAD`); it no longer promises a runtime proof, and the best-effort
+   lint is now the only automated check. Nothing automatically proves that no
+   test reads remote-tracking references.
+2. **Partly resolved by removal.** The script-specific parts (the local-upstream
+   check and the untested protections) went with the script. The symlinked-path
+   entry guard still applies to `scripts/verification/pull-request-title.mjs`,
+   which CI runs by relative path, and stays open.
+
+Findings 3–5 stay open.
+
+Follow-up verification: `cargo xtask check` passed with Node 24.21.0 (unit
+2,544/2,544 across 472 files, browser 781/781 across 122 files,
+packed-consumer smoke and every static check).
