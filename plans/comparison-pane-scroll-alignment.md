@@ -520,11 +520,23 @@ frames and awaits the user's confirmation.
       Milestone 3A added to `docs/protocol/mokly-component-design.md`.
 - [x] Run the comparison, preview, review and design browser specs and
       `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the
       findings without changing the implementation.
+- [x] Fix the review findings that showed this milestone's own work broken,
+      each with a test that failed first: finding 1, write every programmatic
+      scroll instantly (`scrollInstantly`) so smooth-scrolling snapshots and
+      hosts cannot pull the shared viewport back; finding 3, prove the
+      contract's Acceptance against a static export and an embedded viewer
+      through both frame adapters, including the pane failure path, in
+      `tests/browser/comparison_alignment_hosts.spec.ts` over the shared
+      `tests/browser/viewer_host.ts`, and name the proving specs in the
+      contract; finding 7, state in the removed previews contract that the
+      guard installs from commit.
+- [x] Re-run the checks and `cargo xtask check`, commit the fixes with
+      Conventional Commits, and push the branch.
 
 ## Post-merge follow-up (non-blocking)
 

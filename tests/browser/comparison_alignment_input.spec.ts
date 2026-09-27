@@ -6,6 +6,7 @@ import {
   comparisonSection,
   documentExtent,
   expectStackAt,
+  sampleFrames,
   layerOffsets,
   openComparison,
   paneFrame,
@@ -181,4 +182,36 @@ test("links stay inert while a version is still loading", async ({ page }) => {
   } finally {
     release();
   }
+});
+
+test("smooth-scrolling documents and hosts still move as one", async ({
+  page,
+}) => {
+  await openComparison(
+    page,
+    `${fixture.url}/view/screens/smooth.html`,
+    "desktop",
+    "Overlay",
+  );
+  await page.addStyleTag({
+    content: "* { scroll-behavior: smooth !important; }",
+  });
+  const desktop = comparisonSection(page, "desktop");
+  const offsets = async () => {
+    const layers = await layerOffsets(desktop);
+    const viewports = await sharedViewports(desktop).evaluateAll((nodes) =>
+      nodes.map((node) => node.scrollTop),
+    );
+    return [layers.before.y, layers.after.y, ...viewports];
+  };
+  await wheelOver(page, paneFrame(desktop, "after"), 400);
+  await expectStackAt(desktop, 400);
+  for (const sample of await sampleFrames(page, offsets, 20))
+    expect(sample).toEqual([400, 400, 400]);
+  await page.getByRole("button", { name: "Side by side", exact: true }).click();
+  await expect(sharedViewports(desktop)).toHaveCount(2);
+  await wheelOver(page, paneFrame(desktop, "before"), 300);
+  await expectMirrored(desktop, 300);
+  for (const sample of await sampleFrames(page, offsets, 20))
+    expect(sample).toEqual([300, 300, 300, 300]);
 });

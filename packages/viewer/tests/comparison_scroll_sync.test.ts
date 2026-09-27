@@ -13,6 +13,7 @@ import {
   FakeViewport,
   fakeEnvironment,
   flushScrolls,
+  stepAnimations,
 } from "./comparison_scroll_fakes.js";
 
 const SIZE = { height: 700, width: 1000 };
@@ -241,4 +242,35 @@ test("a replaced document is followed and its predecessor released", () => {
   flushScrolls();
   assert.equal(shared[0]!.scrollTop, 1300);
   assert.equal(fake.observed.has(second.doc.documentElement), false);
+});
+
+test("smooth-scrolling documents and viewports still move as one at once", () => {
+  const { layer, shared } = setup();
+  const before = presented({ height: 2400 });
+  const after = presented({ height: 2400 });
+  before.doc.scroller.smooth = true;
+  after.doc.scroller.smooth = true;
+  shared[0]!.smooth = true;
+  const top = layer();
+  layer().frame.present(before.doc, before.content);
+  top.frame.present(after.doc, after.content);
+  shared[0]!.userScroll({ top: 400 });
+  flushScrolls();
+  assert.deepEqual(
+    [before.doc.scroller.scrollTop, after.doc.scroller.scrollTop],
+    [400, 400],
+  );
+  assert.equal(top.frame.style.transform, "");
+  for (let step = 0; step < 12; step += 1) {
+    stepAnimations();
+    flushScrolls();
+  }
+  assert.deepEqual(
+    [
+      shared[0]!.scrollTop,
+      before.doc.scroller.scrollTop,
+      after.doc.scroller.scrollTop,
+    ],
+    [400, 400, 400],
+  );
 });

@@ -103,7 +103,10 @@ back into it.
 
 On every scroll of a viewport, the controller writes that offset to every
 layer document of the section in the same handler, so the versions can never
-disagree. A document shorter or narrower than the offset stops at its own end,
+disagree. Every programmatic scroll, of a document or a viewport, is instant
+(`scrollTo` with `behavior: "instant"`), whatever `scroll-behavior` the
+snapshot or the host sets, so a smooth-scrolling document never lags behind the
+offset or reads as a scroll of its own. A document shorter or narrower than the offset stops at its own end,
 and its frame is translated by the remainder so its content stays aligned with
 the offset; the uncovered area shows the layer's opaque surface, painted with
 the document's canvas colour, read from its root's or else its body's computed
@@ -201,8 +204,15 @@ each request to its immutable generation and configured sides.
 
 ## Acceptance
 
-Regressions prove, through the selected and complete comparison paths in both
-output modes:
+Regressions prove every item below in live Serve through the selected
+comparison path (`tests/browser/comparison_alignment.spec.ts` and
+`comparison_alignment_input.spec.ts`). Against a static export's complete
+comparison, and in an embedded viewer through both frame adapters,
+`comparison_alignment_hosts.spec.ts` proves stacked wheel alignment, the frame
+attributes, inert links and anchors, and, for the export, Side by side
+mirroring; the pane failure path runs in the embedded viewer. Unit tests under
+`packages/viewer/tests/` cover the scroll controller, mirror, keys, documents
+controller and presentation follower.
 
 - Wheel scrolling over an Overlay and a Difference stack puts both pane
   documents and the shared viewport at one offset with coincident layer
@@ -224,11 +234,15 @@ output modes:
   `sandbox="allow-same-origin"`, `scrolling="no"`, a `srcdoc`, and
   `data-mokly-preview-source` naming an address beneath the accepted
   generation; no pane loads a snapshot as its `src`.
-- Plain, relative, external, and `mock:` links and forms inside a pane stay
-  inert in every host, including while a slow resource holds back its load.
-- Ready waits for every selected document; a rejected, redirected,
-  other-origin, non-HTML, or oversized document renders the failure copy with
-  a working Try again; Refresh presents the documents again.
+- A document or host that asks for smooth scrolling still moves with the
+  shared offset at once, in a stack and in Side by side.
+- Links and forms inside a pane stay inert in Serve, a static export and an
+  embedded viewer, including while a slow resource holds back its load.
+- Ready waits for every selected document; a pane document that cannot be
+  presented renders the failure copy, reaches an embedded host's error event,
+  and recovers with Try again; Refresh presents the documents again; the
+  loader's rejection of redirected, other-origin, non-HTML and oversized
+  documents is covered by its unit tests.
 - `after` addresses are accepted for comparison loaders and rejected for
   removed-preview loaders; other generations and prefixes are rejected.
 - Snapshot files and comparison bytes are unchanged by presentation.

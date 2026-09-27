@@ -1,11 +1,11 @@
 import { expect, test, type Locator } from "@playwright/test";
 
+import { comparisonAlignmentFixture } from "../helpers/comparison_alignment_fixture.js";
 import {
   ALIGNMENT_LATE_IMAGE_HEIGHT,
   ALIGNMENT_SHORT_CANVAS,
   ALIGNMENT_SHORT_HEIGHTS,
-  comparisonAlignmentFixture,
-} from "../helpers/comparison_alignment_fixture.js";
+} from "../helpers/comparison_alignment_source.js";
 
 import {
   comparisonSection,

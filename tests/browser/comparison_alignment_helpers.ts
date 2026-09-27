@@ -12,20 +12,26 @@ export interface Offset {
   y: number;
 }
 
-/** Open an alignment route and load the requested comparison mode. */
+/**
+ * Open an alignment route and load the requested comparison mode. Live Serve
+ * waits for the selected comparison request; `static` delivery (an export or an
+ * embedded viewer) reads its packaged comparison, so it only waits for panes.
+ */
 export async function openComparison(
   page: Page,
   url: string,
   viewport: "both" | "desktop" | "mobile",
   mode: "Difference" | "Overlay" | "Side by side",
+  delivery: "live" | "static" = "live",
 ): Promise<void> {
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.goto(url);
   await chooseViewport(page, viewport);
-  if (mode === "Difference") {
-    await loadComparison(page, "Overlay");
+  const first = mode === "Difference" ? "Overlay" : mode;
+  if (delivery === "live") await loadComparison(page, first);
+  else await page.getByRole("button", { name: first, exact: true }).click();
+  if (mode === "Difference")
     await page.getByRole("button", { name: "Difference", exact: true }).click();
-  } else await loadComparison(page, mode);
   await expect(page.locator("[data-diff-stage] iframe").first()).toBeVisible();
 }
 

@@ -13,12 +13,26 @@ import type {
 /** Scroll events queued by writes, dispatched by `flushScrolls`. */
 const queued = new Set<FakeScroller>();
 
-/** A scroll container with a fixed client size and an adjustable content size. */
+/** Scrollers still animating a smooth scroll, advanced by `stepAnimations`. */
+const animating = new Set<FakeScroller>();
+
+interface Target {
+  left?: number | undefined;
+  top?: number | undefined;
+}
+
+/**
+ * A scroll container with a fixed client size and an adjustable content size.
+ * With `smooth` set, as CSS `scroll-behavior: smooth` does, plain writes and
+ * `scrollTo` without `behavior: "instant"` animate instead of landing at once.
+ */
 export class FakeScroller extends EventTarget {
   clientHeight: number;
   clientWidth: number;
   contentHeight: number;
   contentWidth: number;
+  smooth = false;
+  #animation: Target | undefined;
   #left = 0;
   #top = 0;
 
@@ -43,13 +57,7 @@ export class FakeScroller extends EventTarget {
   }
 
   set scrollLeft(value: number) {
-    const next = Math.min(
-      Math.max(value, 0),
-      this.scrollWidth - this.clientWidth,
-    );
-    if (next === this.#left) return;
-    this.#left = next;
-    queued.add(this);
+    this.#write({ left: value }, false);
   }
 
   get scrollTop(): number {
@@ -57,19 +65,73 @@ export class FakeScroller extends EventTarget {
   }
 
   set scrollTop(value: number) {
-    const next = Math.min(
-      Math.max(value, 0),
-      this.scrollHeight - this.clientHeight,
+    this.#write({ top: value }, false);
+  }
+
+  scrollTo(options: ScrollToOptions): void {
+    this.#write(
+      { left: options.left, top: options.top },
+      options.behavior === "instant",
     );
-    if (next === this.#top) return;
-    this.#top = next;
-    queued.add(this);
+  }
+
+  /** A reader's own scroll, which lands at once. */
+  userScroll(target: Target): void {
+    this.#land(target);
+  }
+
+  /** Advance a smooth scroll half way, landing once it is within a pixel. */
+  step(): void {
+    const target = this.#animation;
+    if (!target) return;
+    const next = (from: number, to: number | undefined) =>
+      to === undefined || Math.abs(to - from) <= 1
+        ? to
+        : from + (to - from) / 2;
+    const left = next(this.#left, target.left);
+    const top = next(this.#top, target.top);
+    if (left === target.left && top === target.top) {
+      this.#animation = undefined;
+      animating.delete(this);
+    }
+    this.#land({ left, top });
   }
 
   /** Where scroll events for this scroller are dispatched. */
   eventTarget(): EventTarget {
     return this;
   }
+
+  #write(target: Target, instant: boolean): void {
+    if (!this.smooth || instant) {
+      this.#land(target);
+      return;
+    }
+    this.#animation = { ...this.#animation, ...target };
+    animating.add(this);
+  }
+
+  #land(target: Target): void {
+    const clamp = (value: number, client: number, size: number) =>
+      Math.min(Math.max(value, 0), size - client);
+    const left =
+      target.left === undefined
+        ? this.#left
+        : clamp(target.left, this.clientWidth, this.scrollWidth);
+    const top =
+      target.top === undefined
+        ? this.#top
+        : clamp(target.top, this.clientHeight, this.scrollHeight);
+    if (left === this.#left && top === this.#top) return;
+    this.#left = left;
+    this.#top = top;
+    queued.add(this);
+  }
+}
+
+/** Advance every smooth scroll by one animation step. */
+export function stepAnimations(): void {
+  for (const scroller of [...animating]) scroller.step();
 }
 
 /** Dispatch every queued scroll event, as the next rendering update does. */

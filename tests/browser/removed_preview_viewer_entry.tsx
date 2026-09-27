@@ -5,7 +5,11 @@ import {
   postMessageAdapter,
   sameOriginAdapter,
 } from "@mokly/viewer";
-import type { CatalogueReadModel, ViewerSelection } from "@mokly/viewer";
+import type {
+  CatalogueReadModel,
+  ViewerError,
+  ViewerSelection,
+} from "@mokly/viewer";
 
 interface Fixture {
   catalogue: CatalogueReadModel;
@@ -15,6 +19,8 @@ interface Fixture {
 const data = (window as unknown as { fixture: Fixture }).fixture;
 const messages: string[] = [];
 (window as unknown as { frameMessages: string[] }).frameMessages = messages;
+const errors: ViewerError[] = [];
+(window as unknown as { viewerErrors: ViewerError[] }).viewerErrors = errors;
 window.addEventListener("message", (event) => {
   messages.push(String(event.data));
 });
@@ -45,6 +51,7 @@ createRoot(element).render(
         ? postMessageAdapter({ frameOrigin: data.frameOrigin })
         : sameOriginAdapter()
     }
+    onError={(error) => errors.push(error)}
     viewerId="removed-preview"
   />,
 );

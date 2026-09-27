@@ -6,11 +6,16 @@ export interface ScrollOffset {
   y: number;
 }
 
+/** A scroller whose offset can be read and set at once. */
+export interface InstantScroller {
+  scrollLeft: number;
+  scrollTo(options: ScrollToOptions): void;
+  scrollTop: number;
+}
+
 /** The scrollable element surface the mirror reads and writes. */
-export type MirroredViewport = Pick<
-  HTMLElement,
-  "addEventListener" | "removeEventListener" | "scrollLeft" | "scrollTop"
->;
+export type MirroredViewport = InstantScroller &
+  Pick<HTMLElement, "addEventListener" | "removeEventListener">;
 
 /** Viewports that always show one offset, whichever the reader scrolls. */
 export interface ScrollMirror {
@@ -30,9 +35,22 @@ function same(first: ScrollOffset, second: ScrollOffset): boolean {
   return first.x === second.x && first.y === second.y;
 }
 
+/**
+ * Move a scroller at once. A plain `scrollTop` write follows the element's
+ * CSS `scroll-behavior`, so a host or snapshot that asks for smooth scrolling
+ * would animate it, and the read-back would not show the offset just written.
+ */
+export function scrollInstantly(
+  scroller: InstantScroller,
+  offset: ScrollOffset,
+): void {
+  if (scroller.scrollLeft === offset.x && scroller.scrollTop === offset.y)
+    return;
+  scroller.scrollTo({ behavior: "instant", left: offset.x, top: offset.y });
+}
+
 function write(viewport: MirroredViewport, offset: ScrollOffset): void {
-  if (viewport.scrollLeft !== offset.x) viewport.scrollLeft = offset.x;
-  if (viewport.scrollTop !== offset.y) viewport.scrollTop = offset.y;
+  scrollInstantly(viewport, offset);
 }
 
 /**

@@ -1,6 +1,9 @@
 /** Read and scroll the presented document inside one comparison layer. */
 
-import type { ScrollOffset } from "./comparison_scroll_mirror.js";
+import {
+  scrollInstantly,
+  type ScrollOffset,
+} from "./comparison_scroll_mirror.js";
 
 function scroller(doc: Document): Element | null {
   return doc.scrollingElement ?? doc.documentElement;
@@ -22,15 +25,17 @@ export function documentOffset(doc: Document): ScrollOffset {
   return root ? { x: root.scrollLeft, y: root.scrollTop } : { x: 0, y: 0 };
 }
 
-/** Scroll a document towards an offset; it stops at its own end. */
+/**
+ * Scroll a document towards an offset at once, whatever its CSS
+ * `scroll-behavior`; it stops at its own end.
+ */
 export function scrollDocument(
   doc: Document,
   offset: ScrollOffset,
 ): ScrollOffset {
   const root = scroller(doc);
   if (!root) return { x: 0, y: 0 };
-  if (root.scrollLeft !== offset.x) root.scrollLeft = offset.x;
-  if (root.scrollTop !== offset.y) root.scrollTop = offset.y;
+  scrollInstantly(root, offset);
   return documentOffset(doc);
 }
 

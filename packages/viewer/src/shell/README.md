@@ -191,8 +191,10 @@ section's largest range, writes one offset to every document, shifts a shorter
 document's frame by the remainder, adopts scrolls it did not make, forwards
 scroll keys (`comparison_scroll_keys.ts`) and moves the viewport to anchors.
 `comparison_scroll_mirror.ts` mirrors Side by side viewports by comparing
-values, never with timers, and `comparison_layer_document.ts` reads a layer
-document's range, offset and canvas colour. The
+values, never with timers, and owns `scrollInstantly`, which every
+programmatic scroll uses so a smooth `scroll-behavior` in a snapshot or host
+cannot animate it; `comparison_layer_document.ts` reads a layer document's
+range, offset and canvas colour. The
 [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md)
 defines this behaviour.
 
