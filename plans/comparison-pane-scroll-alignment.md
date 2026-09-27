@@ -659,3 +659,96 @@ frames and awaits the user's confirmation.
 - Milestone 2 finding 3 is resolved by this milestone. Milestone 1 findings 2,
   3, 4, 5 (the Milestone 4 portion), 7, 8 and 10, and Milestone 2 findings 2
   and 5, remain recorded for the user's decision.
+
+### Milestone 4
+
+- Base commit: `2a3eacb`; the aligned pane runtime, its tests and documents
+  landed as `5674c1c` and the review fixes as `28c0a3e` on
+  `calummoore/kelowna-v2`.
+- Design change, awaiting the user's confirmation: Decision 3 now keeps every
+  comparison frame at the device viewport size and drives both documents from
+  one shared scroller. It replaces the sizing rule the user approved, which
+  sized each frame to its document's `scrollHeight`, because that rule proved
+  defective in Chrome 153: viewport units, `position: fixed` and
+  `position: sticky` resolve against the frame, so a `min-height: 100vh` hero
+  followed by 600px of content grew the frame 1338 → 1956 → … → 8136px over
+  twelve `ResizeObserver` cycles without converging, and converging documents
+  still moved fixed tab bars to the end of the page, stopped sticky headers from
+  sticking and stretched viewport-height sections. The user was offered this
+  fix (A) or document-sized frames with a height cap (B) and has not answered;
+  the milestone proceeds with A, the announced default, because B ships those
+  distortions.
+- Failing-first: `tests/browser/comparison_alignment.spec.ts` and
+  `comparison_alignment_input.spec.ts` ran against `2a3eacb` before the runtime
+  changed and failed 12 of 12. Ten failed on the defect itself, the Before
+  document staying at 0 while the Current one scrolled (`[before, after]`
+  received `[0, 400]` for desktop Overlay, `[0, 300]` mobile, `[0, 400]` with
+  both viewports, `[0, 200]` for the component, `[0, 282]` for the shorter
+  document, `[0, 900]` for the fixed and sticky case, `[0, 628]` for Space,
+  `[0, 2790]` for the anchor, `[0, 2126]` for a scroll the viewer did not make,
+  and `[300, 0]` for Side by side); the hero and inner-scroll cases failed
+  because no shared spacer existed.
+- Defects found while implementing, each captured by a test that failed first:
+  a layer connected only on the frame's `load` event, which a slow image holds
+  back, so its range stayed zero (intermittent hero failures; unit test "a
+  document is followed from its commit"); the read-only guard was installed
+  only on `load`, so a link clicked while a slow resource loaded navigated the
+  frame ("links stay inert while a version is still loading"); and releasing a
+  `pagehide` listener through a window proxy that had turned cross-origin threw
+  and stopped the guard's restoration ("a cross-origin frame navigation
+  restores the presentation" and the follower unit test).
+  `previews/presented_document.ts` now follows presentations from commit for
+  both the guard and the scroll controller.
+- Checks before review: `npm run build`, `npm run typecheck`, `npm run lint`,
+  `npm run format:check`, `npm run example:build` (416 files) and
+  `npm run example:check` passed; the targeted comparison, preview, review,
+  removed-preview and design browser specs passed 226/226; the complete
+  `cargo xtask check` passed (audit, formatting, lint, Rust format, clippy,
+  tests and file-length audit, typecheck, example build and check, package
+  check and smoke, unit 2461/2461, browser 811/811 in 126 files) with zero
+  failures, skips or cancellations. After the review fixes the
+  18 alignment cases passed 18/18 and the complete `cargo xtask check` passed
+  again (unit 2462/2462, browser 816/816 in 127 files) with zero failures,
+  skips or cancellations.
+- Smoke: `npm run dev` served a temporarily tall Details screen (sticky
+  header, `min-height: 100vh` hero, eight sections, fixed bar) in Overlay,
+  Difference and Side by side on desktop and mobile, both viewports in Dark,
+  Refresh and Current, with no page errors; screenshots are under
+  `.context/m4/`, and the temporary change was reverted.
+- Resolved earlier findings: Milestone 1 finding 2 (option A, pair-maximum
+  Side by side ranges), 3 (A, the cache survives mode, viewport and scheme
+  switches), 4 (A, the inner-scroll limitation is documented and pinned by a
+  spec), 5 (the Milestone 4 spec list), 8 (B, scroll keys and anchors move the
+  shared viewport; removed previews keep their behaviour) and 10 (A, the
+  `data-mokly-comparison-frame` marker); Milestone 2 finding 2 (B, both layers
+  paint an opaque screen background, asserted in the spec); Milestone 3A
+  findings 4 (B, the guides and viewer README describe delivered behaviour) and
+  5 (the pending-runtime sentences are gone).
+- Review of the complete diff against `origin/main` (fresh reviewer, after the
+  push of `5674c1c`), eight findings:
+  - Finding 1 (high: a snapshot or host with `scroll-behavior: smooth` animated
+    the controller's `scrollTop` writes, so the read-back lagged and animation
+    steps pulled the shared viewport back) broke the "scroll as one" contract
+    and was fixed in `28c0a3e`: every programmatic scroll uses `scrollTo` with
+    `behavior: "instant"`. The new unit test with animating fakes and the
+    browser case "smooth-scrolling documents and hosts still move as one"
+    failed before the fix (the stack settled at 399 instead of 400).
+  - Finding 3 (medium: the Acceptance section claimed proofs through both
+    output modes and every host that only live Serve had) was fixed in `28c0a3e`
+    with `comparison_alignment_hosts.spec.ts`: a static export (stack, Side by
+    side, read-only), an embedded viewer through both frame adapters (stack,
+    read-only) and the pane failure path (failure copy, host error, Try again);
+    the Acceptance section now names the proving specs.
+  - Finding 7 (low: the removed previews contract still said the guard
+    installs on each load) was fixed in `28c0a3e`.
+  - Finding 8 (low: this record and the commit TODO were missing) is resolved
+    by this entry.
+  - Findings 2 (medium: a document that shrinks while scrolled past its end
+    moves the shared offset to its new end), 4 (medium: Decision 3 awaits the
+    user's confirmation), 5 (medium: Milestone 1 finding 7, a host
+    `base-uri` policy that ignores the presented `<base>`) and 6 (low: a frame
+    reused for a new scheme accepts its outgoing document and reloads the new
+    one once) were reported for a decision rather than applied.
+- Still open for the user's decision: Decision 3 and review findings 2, 5 and
+  6; Milestone 2 finding 5 (the long overlay's rationale); and the Milestone 3A
+  question whether every caption should name the recorded reason.
