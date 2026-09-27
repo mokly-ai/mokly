@@ -121,6 +121,38 @@ recommendations left open:
   that squash commit on `main`. A new check enforces Conventional Commits pull
   request titles of at most 50 characters.
 
+## Second Review Fix Decisions
+
+On 2026-09-27 the user chose option B for finding 1 and option A for finding 2
+of the [second review](../docs/reviews/delta-publishing.md#second-review). The
+other nine second-review findings are not approved and stay open. Milestones
+14–17 carry this work; `second #n` refers to finding _n_ of that review.
+
+- **Typed cancellation (second #1).** A failure is a cancellation only when it
+  is exactly the requested cancellation: a platform abort error (`name` is
+  `AbortError`, as produced by `AbortSignal` and the Git runner) or a
+  `MoklyError` marked as a cancellation where the cancellation was detected.
+  The mark is set by the export's cancellation check, by baseline
+  interruption, by publish's own cancellation, and by any wrapper whose only
+  content is a cancellation (a successful rollback after cancellation, or the
+  export's wrapper around a non-Mokly abort). It is never set on an error
+  that combines a cancellation with another failure (rollback, backup or
+  reservation cleanup), and a reader never infers it from `cause` chains,
+  `AggregateError` members or messages. The publish identity readers rethrow
+  a cancellation instead of reporting a Git failure.
+- **Cancellation precedence (second #1).** `mokly publish` prints the
+  cancellation output only for a cancellation. Every other `MoklyError`,
+  including an export recovery error that names a backup or reservation path,
+  is printed unchanged with its own category, whether or not the command was
+  cancelled. Exit status stays 1. `mokly export` output does not change.
+- **Deterministic tests (second #2).** Unit and browser tests depend only on
+  the tree under test. They never read the real checkout's remote-tracking
+  references (`origin/…`, `refs/remotes/…`, `FETCH_HEAD`, upstream settings);
+  fixture repositories may create their own. The pull request title test
+  keeps its fixed type list and its `AGENTS.md` example check and drops the
+  `origin/main` history scan. A static test enforces the rule for every test
+  source.
+
 ## Milestone 1: Protocol and guide contract — completed
 
 Define the complete receiver and CLI contract before any code changes. Docs
@@ -572,6 +604,88 @@ Release notes depend on the squash title, so CI checks it.
       recommendation to `docs/reviews/delta-publishing.md` and report them
       without changing the implementation. Eleven findings (two Medium, nine
       Low) are recorded in its Second Review for the user's decision.
+
+## Milestone 14: Second review fix contract
+
+Documentation and contract only. Validate with Prettier and the guide tests;
+`cargo xtask check` is not required.
+
+- [ ] State the cancellation precedence in the exchange contract
+      ([`mokly-upload-exchange.md`](../docs/protocol/mokly-upload-exchange.md)
+      Accounting And Output and Rejections), the
+      [terminal contract](../docs/protocol/mokly-terminal-output.md) and the
+      [export recovery contract](../docs/protocol/mokly-export-recovery.md):
+      what counts as a cancellation, that a recovery failure after
+      cancellation is shown unchanged with its paths, and that `mokly export`
+      output is unchanged (second #1).
+- [ ] Update the publish cancellation sentences in
+      [`cli/publish.md`](../docs/guides/cli/publish.md) and
+      [`ci/the-upload.md`](../docs/guides/ci/the-upload.md) to match
+      (second #1).
+- [ ] Add the deterministic-test rule and its enforcing test to
+      [`ci-verification.md`](../docs/protocol/ci-verification.md) (second #2).
+- [ ] Run Prettier and the guide tests; check every changed link.
+
+## Milestone 15: Typed cancellation
+
+Publish shows the cancellation output only for a real cancellation, and
+export recovery errors reach the user unchanged.
+
+- [ ] Add failing tests first: `isCancellation` accepts a marked
+      `MoklyError` and a platform abort error and rejects combined, wrapped
+      and unrelated errors without reading causes; export rollback success
+      after cancellation is a cancellation, while rollback failure and
+      reservation or backup cleanup failure are not and still name their
+      paths; the export's wrapper around a non-Mokly abort is a
+      cancellation; baseline interruption is a cancellation; the publish
+      identity readers rethrow a cancellation instead of `git-failed`; the
+      publish error mapping keeps every non-cancellation `MoklyError`.
+- [ ] Add spawned `mokly publish` tests with
+      `tests/helpers/export_failure_preload.ts` (adding modes as needed):
+      cancellation with a clean rollback prints exactly the cancellation line
+      and restores the previous `site/`; cancellation with a failed restore
+      prints the export rollback error naming the backup; cancellation with
+      a reservation cleanup failure prints the export error naming the
+      reservation; the Blob-upload cancellation test still passes. Cover
+      plain and rich output for the failed-restore case.
+- [ ] Add the cancellation mark to `MoklyError` and `isCancellation` to
+      `src/errors.ts`; mark the export cancellation check, baseline
+      interruption, publish cancellation and the cancellation-only wrappers;
+      make the publish identity readers rethrow cancellations.
+- [ ] Replace the abort-signal check in `src/cli/publish.ts` with
+      `isCancellation`, so only cancellations map to the cancellation output.
+- [ ] Confirm `mokly export` and Serve output are unchanged, including
+      `tests/export_cli_failures.test.ts`, and update the export, publish and
+      CLI READMEs.
+
+## Milestone 16: Deterministic pull request title test
+
+The title test no longer depends on the state of `origin/main`, and a static
+test keeps every test independent of remote-tracking references.
+
+- [ ] Remove the `origin/main` history scan from
+      `tests/verification_pull_request_title.test.ts`; keep the fixed type
+      list, the `AGENTS.md` example check and every boundary case
+      (second #2).
+- [ ] Add a static test that fails when a test or test helper runs Git in the
+      real repository with a remote-tracking reference, with synthetic
+      positive cases (including the removed code) and negative cases (fixture
+      repositories, local references); it reports no violation on the
+      current tree (second #2).
+
+## Milestone 17: Second review fix verification and delivery
+
+- [ ] Run the focused publish, export, baseline, CLI, guides, package and CI
+      suites, then `cargo xtask check`; resolve every failure.
+- [ ] Mark second-review findings 1 and 2 addressed in
+      `docs/reviews/delta-publishing.md` and summarize what changed.
+- [ ] After checks pass, `git add -A`, commit with a Conventional Commits
+      title of at most 50 characters, and push the branch.
+- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; append the
+      numbered, severity-rated findings with lettered options and a
+      recommendation to `docs/reviews/delta-publishing.md` and report them
+      without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 
