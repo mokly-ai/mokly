@@ -7,9 +7,9 @@
   exchange, the schema 2 export ownership marker, v2 fixtures and guides for
   the next minor release. Implemented, verified, pushed and reviewed; the
   approved [review findings](../docs/reviews/delta-publishing.md) were fixed
-  in Milestones 7–13; second-review findings 1 and 2 are being fixed in
-  Milestones 14–17 and the other nine stay open. The plan stays Active until
-  its pull request merges.
+  in Milestones 7–13, second-review findings 1 and 2 in Milestones 14–17, and
+  the remaining second-review and third-review findings await the user's
+  decision. The plan stays Active until its pull request merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align

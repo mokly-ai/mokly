@@ -674,19 +674,21 @@ test keeps every test independent of remote-tracking references.
       repositories, local references); it reports no violation on the
       current tree (second #2).
 
-## Milestone 17: Second review fix verification and delivery
+## Milestone 17: Second review fix verification and delivery — completed
 
 - [x] Run the focused publish, export, baseline, CLI, guides, package and CI
       suites, then `cargo xtask check`; resolve every failure.
 - [x] Mark second-review findings 1 and 2 addressed in
       `docs/reviews/delta-publishing.md` and summarize what changed.
-- [ ] After checks pass, `git add -A`, commit with a Conventional Commits
-      title of at most 50 characters, and push the branch.
-- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After checks pass, `git add -A`, commit with a Conventional Commits
+      title of at most 50 characters, and push the branch. Committed as
+      `bf63380 fix(publish): keep recovery errors after Ctrl+C`.
+- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
-      without changing the implementation.
+      without changing the implementation. Three findings (two Medium, one
+      Low) are recorded in its Third Review for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 

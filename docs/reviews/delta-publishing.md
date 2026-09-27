@@ -526,30 +526,130 @@ publish, and the fake receiver's archive rejection order are untested.
 On 2026-09-27 the user chose option B for finding 1 and option A for finding 2. [Delta Publishing](../../plans/delta-publishing.md) Milestones 14–17
 record the decisions and work.
 
-1. **Addressed (option B).** `MoklyError` has an explicit cancellation mark,
-   and `isCancellation` in `src/errors.ts` accepts only that mark or a
-   platform `AbortError`; it never reads causes or messages. The export's
-   cancellation check, baseline interruption, publish cancellation and the
-   cancellation-only wrappers (a rollback that restored the previous export,
-   and the export's wrapper around a non-Mokly abort) set the mark; rollback,
-   backup and reservation cleanup failures never do. The publish identity
-   readers pass a cancellation through instead of reporting a Git failure,
-   and `src/cli/publish_failure.ts` maps only cancellations to the
-   cancellation output. Spawned publish tests prove a clean rollback prints
-   the cancellation line and restores the previous site, while a failed
-   restore or reservation cleanup prints the export recovery error with its
-   backup or reservation path. `mokly export` output is unchanged, and the
-   exchange, terminal and export recovery contracts state the precedence.
-2. **Addressed (option A).** The pull request title test no longer reads
-   `origin/main`; it keeps the fixed type list and the `AGENTS.md` example
-   check, and passes in a single-branch clone. `tests/test_repository_refs.test.ts`
-   uses the TypeScript compiler API to fail on any direct Git call in the
-   real checkout that names a remote-tracking or upstream reference, with
-   synthetic positive and negative cases. `docs/protocol/ci-verification.md`
-   states the rule, its reason (release evidence reuse needs identical trees
-   to give identical results) and the analyser's limit: Git calls hidden
-   behind helper closures still need review.
+1. **Partly addressed (option B).** `MoklyError` has an explicit
+   cancellation mark, and `isCancellation` in `src/errors.ts` accepts only
+   that mark or a platform `AbortError`; it never reads causes or messages.
+   The export's cancellation check, baseline interruption, publish
+   cancellation and the cancellation-only wrappers (a rollback that restored
+   the previous export, and the export's wrapper around a non-Mokly abort)
+   set the mark; rollback, backup and reservation cleanup failures never do.
+   The publish identity readers pass a cancellation through, and
+   `src/cli/publish_failure.ts` maps only cancellations to the cancellation
+   output. Export recovery errors after Ctrl+C now reach the user with their
+   backup or reservation path, and `mokly export` output is unchanged. A
+   clean Ctrl+C before installation still often prints a Git, configuration
+   or build error instead of the cancellation line; see
+   [third review](#third-review) finding 1.
+2. **Addressed for the title test (option A).** The pull request title test
+   no longer reads `origin/main`; it keeps the fixed type list and the
+   `AGENTS.md` example check, and passes in a single-branch clone.
+   `tests/test_repository_refs.test.ts` uses the TypeScript compiler API to
+   fail on direct Git calls in the real checkout that name a remote-tracking
+   or upstream reference in the recognised form, and
+   `docs/protocol/ci-verification.md` states the rule and its reason. The
+   rule is not yet true for the whole suite, and the analyser recognises
+   fewer forms than documented; see [third review](#third-review) findings 2
+   and 3.
 
 Follow-up verification: `cargo xtask check` passed with Node 24.21.0 (unit
 2,519/2,519 across 468 files, browser 781/781 across 122 files, packed-consumer
 smoke and every static check).
+
+## Third Review
+
+Reviewed on 2026-09-27 with
+[the implementation review prompt](../implementation-review-prompt.md), after
+fix commit `bf63380` was pushed, against `origin/main` (`3699c56`). Two
+independent read-only reviewers covered typed cancellation and the
+deterministic-test rule, and rechecked the plan, this document and every
+changed link. Three new findings follow: two Medium and one Low. None was
+changed; each awaits the user's decision. Second-review findings 3–11 are
+still accurate against the current tree; the fix for finding 10 must also
+update the title test, which pins `chore(main): release 0.13.0`.
+
+1. **P2 / Medium — Ctrl+C before installation often shows a Git,
+   configuration or build error instead of "Publication was cancelled."**
+   Since `bf63380`, publish shows the cancellation line only for errors with
+   the cancellation mark or named `AbortError`. Two paths break this. First,
+   Git reader wrappers turn the Git runner's `AbortError` into plain
+   `git-failed` or `review-invalid` errors without the mark
+   ([`src/review/git_commands.ts`](../../src/review/git_commands.ts),
+   `src/review/git_batch.ts`, `src/review/assets.ts`), and the export passes
+   typed errors through unchanged. Second, a terminal sends SIGINT to the
+   whole foreground process group, which stops esbuild's service process, so
+   the next compile or config load fails as `build-invalid` or
+   `config-invalid`. A reviewer saw, for example,
+   `[mokly/git-failed] find merge base of origin/main and HEAD: The operation was aborted`
+   and `[mokly/config-invalid] could not load …/mokly.config.ts: The service is no longer running`.
+   This is a regression from `b012d69`, which mapped any failure after the
+   abort to cancellation, and it contradicts the export recovery contract
+   and the publish guide. The tests missed it because every spawned
+   cancellation test uses `--no-changes` and signals only the Node process.
+   **Impact of no change:** users who press Ctrl+C during most of the export
+   phase are told Git, the configuration or the build is broken; CI records
+   cancellations as failures. No data is lost and the exit status stays 1.
+   **Options:** **A)** carry the mark through each wrapper that can wrap an
+   abort, keeping codes and messages; this fixes the Git path only;
+   **B)** decide at the export boundary: before installation, when a step
+   fails after the export's own signal fired, rethrow the error marked as a
+   cancellation with its code and message kept. No backup or reservation
+   exists yet, so no recovery path can be hidden; installation, rollback and
+   cleanup keep today's rules, and the recovery contract owns this
+   pre-installation exception to "never infer from the signal"; **C)**
+   document that Ctrl+C during export may show the interrupted step's error;
+   **D)** with A or B, add spawned publish tests without `--no-changes` for
+   committed and derived catalogues that send SIGINT to the whole process
+   group at comparison preparation, compile and the input recheck, plus a
+   unit matrix of Git readers against an aborted runner.
+   **Recommended: B + D.** One boundary rule covers present and future
+   wrappers and helper processes; D adds the terminal's real signal delivery
+   to the suite.
+
+2. **P2 / Medium — The new "tests never read `origin/main`" rule is already
+   broken, and the static test cannot see it.** The example config sets no
+   comparison base, so it defaults to `origin/main`
+   ([`src/config/validate.ts`](../../src/config/validate.ts)).
+   [`tests/preview.test.ts`](../../tests/preview.test.ts) builds the real
+   example with `--include-changes`, and the browser suite's server
+   ([`playwright.config.ts`](../../playwright.config.ts)) serves it, so both
+   read the real checkout's `origin/main` through product code, not a Git
+   call in a test. In a single-branch clone `tests/preview.test.ts` fails
+   with `baseline-history-unavailable`, and
+   [`ci-verification.md`](../protocol/ci-verification.md) still says CI jobs
+   that resolve `origin/main` get full history. **Impact of no change:** the
+   contract promises tree-only results that release evidence reuse relies
+   on, but the suite does not meet it, and the unit suite still fails in
+   single-branch clones. **Options:** **A)** correct the contract: limit the
+   rule to direct Git calls and name the example preview test and browser
+   server as deliberate `origin/main` users; **B)** make both tree-only (build
+   the preview test from `tests/helpers/example_baseline.ts` or a local base,
+   serve the browser suite with `--base HEAD` or a fixture-owned reference)
+   and prove it by running the unit and browser suites in a checkout without
+   remote-tracking references; **C)** put a `git` shim on `PATH` in the
+   verification runners that fails remote reads in the real checkout.
+   **Recommended: B,** using A's wording for anything kept deliberately:
+   only a run without those references proves a runtime promise.
+
+3. **P3 / Low — The static test misses common remote reads, and the
+   documents overstate it.** In its recognised call shape it misses
+   `HEAD..origin/main`, `^origin/main`, `remotes/origin/main`,
+   `--remotes=origin`, `-r`, `--all`, `fetch origin main`, `ls-remote origin`
+   and `@{U}`/`@{UPSTREAM}`; it also misses Git calls without `cwd` (the
+   unit runner's working directory is the repository root), aliases of
+   `repositoryRoot`, references held in variables, shell strings and
+   `scripts/` modules the tests run, and it flags `repositoryRoot` anywhere in
+   a call, even in `env`. Only 1 of the 34 direct Git calls in the scanned
+   files uses the recognised shape. **Impact of no change:** a plausible
+   regression such as `git branch -r` passes while the documents say it
+   cannot. **Options:** **A)** widen the matcher (calls without `cwd`,
+   `-r`, `--all`, `refs/remotes`, case-insensitive upstream spellings,
+   aliases; take the target only from `cwd` or `-C`); **B)** keep it as a
+   best-effort lint behind finding 2's runtime check; **C)** document
+   exactly what it recognises. **Recommended: B + C,** plus A's cheap cases.
+
+Third-review verification: the reviewers' focused reruns passed 34, 16, 28,
+25, 4 and 11 tests; every relative link and anchor in the 31 changed
+Markdown files resolves. Residual test risk: Ctrl+C on Windows (Git is not
+in its own process group there), a Ctrl+C while reading the Complete body
+after the receiver published, and no run of the suites in a checkout
+without remote-tracking references.
