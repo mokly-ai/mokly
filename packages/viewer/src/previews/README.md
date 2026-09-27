@@ -61,9 +61,10 @@ window's `pagehide`, so slow resources that hold back `load` never delay the
 guard. `read_only.ts` guards every viewer-owned presentation from that commit.
 It cancels all link and form activation, shows a same-document fragment itself
 without applying `:target` (scrolling it into view for removed previews, or
-through the caller's `reveal` hook, which comparison panes use to move their
-shared viewport), preserves Space for scrolling, and reapplies the accepted
-`srcdoc` if the frame navigates away. `shell/use_removed_preview.ts` is the
+through the caller's `reveal` hook, which comparison panes use to reveal inner
+regions and then their page viewport), preserves Space for scrolling, and
+reapplies the accepted `srcdoc` if the frame navigates away.
+`shell/use_removed_preview.ts` is the
 route-owned controller: its first effect replaces the honest server-rendered
 unavailable state with loading, requests on selection, fetches every document
 needed for that viewport and scheme before reporting ready, renews before
@@ -94,4 +95,5 @@ aligned panes in Milestone 4. Removed previews keep accepting
 Related boundaries: [the Browse client](../client/README.md), the
 [shared shell](../shell/README.md), the
 [selected comparison contract](../../../../docs/protocol/mokly-selected-comparisons.md),
-and the [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md).
+the [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md),
+and the [comparison scrolling contract](../../../../docs/protocol/mokly-comparison-scrolling.md).

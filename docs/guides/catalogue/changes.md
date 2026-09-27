@@ -38,14 +38,25 @@ rather than rebuilding the catalogue. Changing the viewport, the scheme or the
 comparison mode renews the snapshots before using them, and an expired
 comparison is reacquired for you.
 
-Overlay and Difference show both versions inside one frame that scrolls as one,
-so the two can never drift apart, and Side by side scrolls its two frames
-together. Each version keeps the size of the device, so full-height sections,
-fixed bars and sticky headers look just as they do in Current. The wheel,
-touch, and the scroll keys pressed inside a comparison all scroll both
-versions; past the end of a shorter version you see its page background while
-the other keeps scrolling. A screen that scrolls only inside an inner region,
-rather than as a whole page, scrolls that region in the top version only.
+Overlay and Difference show both versions inside one frame, and Side by side
+shows one frame per version. Pages and scrolling panels move together by
+default. Each version keeps the size of the device, so full-height sections,
+fixed bars, and sticky headers look just as they do in Current. The wheel,
+touch, scroll keys, and anchors use the panel you are working in before moving
+the whole page.
+
+Use **Scroll together** after the comparison modes to unlink or relink the
+versions. Turning it off leaves every page and panel where it is. In Side by
+side, each version then scrolls independently. Overlay and Difference still
+have one page scrollbar because their versions share one frame, but their
+panels can move apart. Turning it on again aligns the other version with the
+one you scrolled last.
+
+Mokly pairs the same panel across versions automatically. If an edit moves the
+panel or changes most of its wording, keep the same `id` on it in both versions
+or give it the same `data-mokly-scroll` name. When one version's page or panel
+is shorter, it stops at its own end while the other can continue; Mokly never
+stretches or moves content inside the screen to hide that difference.
 
 Links and forms inside a comparison do nothing, and an anchor moves both
 versions to its target, so compare a linked screen through the catalogue, where

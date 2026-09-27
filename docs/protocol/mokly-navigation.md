@@ -142,9 +142,10 @@ Generated documents in both output modes keep their relative artifact `href`
 values. They must remain navigable when opened directly or copied without the
 Browse shell. Comparison snapshot trees copy the same portable documents and do
 not promote their marked links into Browse routes. Inside a comparison pane the
-viewer's read-only guard cancels every link and form activation and moves the
-pane's shared viewport to a same-document anchor's target, as the
-[comparison pane contract](./mokly-comparison-panes.md) defines.
+viewer's read-only guard cancels every link and form activation. A
+same-document anchor reveals its enclosing inner regions before the pane's page
+viewport, with counterparts following under the
+[comparison scrolling contract](./mokly-comparison-scrolling.md#anchors).
 
 ## Browse Presentation
 

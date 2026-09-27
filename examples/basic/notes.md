@@ -107,8 +107,10 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
 - Overlay and Difference draw one device chrome holding both versions, as the
   [comparison pane contract](../../docs/protocol/mokly-comparison-panes.md)
   presents them: both layers fill the chrome's viewport at device size and
-  share one scroll offset, each on its own opaque screen background, and the
-  chrome itself never blends. Side by side keeps one chrome per version. The Welcome sketch
+  share one page offset, while paired inner regions follow the
+  [scrolling contract](../../docs/protocol/mokly-comparison-scrolling.md). Each
+  layer has its own opaque screen background, and the chrome itself never
+  blends. Side by side keeps one chrome per version. The Welcome sketch
   inside any depicted comparison carries its link as inert text, because links
   inside a comparison do nothing.
 - The long-overlay artboard shows Welcome continuing well below its first

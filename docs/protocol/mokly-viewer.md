@@ -384,10 +384,10 @@ the appearance controller retains preference and system-theme listening.
 Frames remain static documents in sandboxed iframes. Hydration reaches inside
 only the viewer-owned, same-origin `srcdoc` documents used for a historical
 removed preview and for [comparison panes](./mokly-comparison-panes.md), where
-it installs and restores the read-only guard and, for panes, measures each
-document, writes the shared scroll offset to it and forwards its scroll keys to
-the shared viewport. Current documents retain their existing adapter and
-sandbox boundaries.
+it installs and restores the read-only guard. For panes it also implements the
+[comparison scrolling contract](./mokly-comparison-scrolling.md): measurement,
+page and inner-region writes, key and anchor routing, and the Scroll together
+choice. Current documents retain their existing adapter and sandbox boundaries.
 
 Shell state is one store scoped to a mounted viewer:
 
@@ -403,9 +403,16 @@ Shell state is one store scoped to a mounted viewer:
   responsive drawer. Navigation, details and split-width choices persist per
   served origin in browser storage under the existing keys; the drawer and the
   tag picker panel do not persist and reset on reload.
-- **Scroll** is tracked per `data-mokly-scroll` region and saved into the
-  history entry for Back/Forward restoration; route-change focus never
-  overrides a restored position.
+- **Comparison scrolling** includes the Scroll together choice. Standalone
+  Serve and export persist `on` or `off` under
+  `mokly:comparison-scroll-together`; an embedded viewer retains it only for
+  that mounted session. The scrolling contract defines its default and live
+  mode behavior.
+- **Scroll** is tracked per viewer-owned shell `data-mokly-scroll` region and
+  saved into the history entry for Back/Forward restoration; route-change
+  focus never overrides a restored position. Consumer elements with the same
+  attribute live inside separate comparison documents and instead use the
+  scrolling contract's author hint.
 - **Workspace** state (component variant, props under edit, inspector tab and
   pane size, active pick, highlight scope) lives with the mounted view and is
   discarded on route change or source replacement.

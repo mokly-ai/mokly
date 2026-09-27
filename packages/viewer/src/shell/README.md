@@ -188,15 +188,29 @@ each version, marked `data-mokly-comparison-frame` with `scrolling="no"`.
 `comparison_scroll_sync.ts` is the per-section scroll controller: it follows
 each layer document from commit, measures it, sizes every spacer to the
 section's largest range, writes one offset to every document, shifts a shorter
-document's frame by the remainder, adopts scrolls it did not make, forwards
-scroll keys (`comparison_scroll_keys.ts`) and moves the viewport to anchors.
+document's frame by the remainder, and adopts scrolls it did not make.
 `comparison_scroll_mirror.ts` mirrors Side by side viewports by comparing
 values, never with timers, and owns `scrollInstantly`, which every
 programmatic scroll uses so a smooth `scroll-behavior` in a snapshot or host
 cannot animate it; `comparison_layer_document.ts` reads a layer document's
-range, offset and canvas colour. The
-[comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md)
-defines this behaviour.
+range, offset and canvas colour. `comparison_scroll_keys.ts` currently maps
+pane keys to that page controller, and the read-only guard delegates anchors
+to it.
+
+Milestone 7 of the comparison alignment plan will add
+`comparison_scroll_regions.ts`, the pure region detector and four-rule matcher,
+and `comparison_region_mirror.ts`, the capturing listener, per-element echo
+state, match cache, and two-axis writer. It will extend
+`comparison_scroll_keys.ts` with focused/last-pointer region routing and the
+anchor reveal with innermost-first region scrolling. The planned
+`comparison_scroll_preference.ts` owns `on`/`off` normalization and the
+`mokly:comparison-scroll-together` storage key; `use_scroll_together.ts` keeps
+the standalone or mounted-viewer state and supplies the live native switch in
+`diffs.tsx`. No planned module may reload pane presentations when that switch
+changes. The [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md)
+owns presentation and layout; the
+[comparison scrolling contract](../../../../docs/protocol/mokly-comparison-scrolling.md)
+owns the delivered page rules and these planned extensions.
 
 `previews.tsx` renders the one previous-version presentation a removed page and
 a removed screen share: the "Showing previous version" label, the stage host

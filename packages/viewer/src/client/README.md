@@ -82,7 +82,9 @@ logical-navigation handshake happens for them. Each controller fetches every
 snapshot document and presents it as a viewer-origin, script-disabled
 `srcdoc`; its parent guard therefore cancels every link and form in every host,
 owns same-document anchors, and restores the accepted presentation if the frame
-navigates. Comparison panes are also scrolled only by their shared viewport.
+navigates. Comparison pages are driven by their chrome viewports, while paired
+inner regions, keys, and anchors follow the
+[comparison scrolling contract](../../../../docs/protocol/mokly-comparison-scrolling.md).
 
 `post_message_adapter.ts` explicitly opts into a separate HTTP(S) origin. It sets
 the cross-origin sandbox, replaces iframe history, and negotiates a fresh random

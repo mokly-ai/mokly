@@ -36,7 +36,8 @@ collaboration UI.
 - **A complete catalogue experience.** Render pages, screens, component
   variants and user flows with search, tags, responsive previews, color
   schemes, Changes filtering, inspection, and Overlay, Difference and Side by
-  side comparisons whose two versions always scroll as one.
+  side comparisons whose pages and paired scrolling panels move together by
+  default, with a reader-controlled Scroll together switch.
 - **Designed to be embedded.** Connect the viewer to application state through
   controlled selection, typed events, host-owned slots and an imperative ref.
 - **Component-aware collaboration.** Resolve saved component references,
@@ -337,6 +338,25 @@ leave Appearance hidden; back/forward-cache restoration retains and refreshes
 the controller. Final disposal removes both system and selector listeners.
 Serve loads live capabilities separately; static navigation reads inert
 workspace evidence from the same finalized deployment.
+
+### Standalone reader preferences
+
+Serve and export keep these origin-local preferences in `localStorage`:
+
+| Key                                | Choice                            |
+| ---------------------------------- | --------------------------------- |
+| `mokly:theme`                      | Explicit Light or Dark appearance |
+| `mokly:nav-disclosure:v2`          | Open catalogue groups             |
+| `mokly:details-disclosure`         | Details open or closed            |
+| `mokly:navigation-width:v1`        | Navigation split width            |
+| `mokly:comparison-scroll-together` | `on` or `off`; missing means on   |
+
+Scroll together appears after the comparison modes in Side by side, Overlay,
+and Difference. It updates the open comparison without reloading panes. An
+embedded `MoklyViewer` never reads this storage key; it keeps the choice only
+for the lifetime of that mounted viewer. The
+[comparison scrolling contract](../../docs/protocol/mokly-comparison-scrolling.md)
+defines panel pairing, per-mode behavior, and re-alignment.
 
 ## Theming
 

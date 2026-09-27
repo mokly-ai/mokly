@@ -178,46 +178,55 @@ and is specified by the
     section to the same `scrollLeft` and `scrollTop` at once, in the same
     handler and with `behavior: "instant"`, clamped by the browser to the
     counterpart's own range; the value-based echo rule of Decision 3 prevents
-    loops, per element. Only regions scrolling on the same axis can pair, and
-    the counterpart is the first unambiguous match of: (1) the region
+    loops, per element. A candidate must be scrollable on every axis on which
+    the source region has a positive range, and the counterpart is the first
+    unambiguous match of: (1) the region
     carrying the same `data-mokly-scroll` name, an attribute authors add to
     name a panel explicitly; (2) the region with the same non-empty `id`;
     (3) the region with the same landmark or role and accessible name (for
     example `<main>`, or `<nav aria-label="Projects">`), when that pair is
     unique in both versions; (4) the candidate with the best score combining
     border-box overlap in document coordinates, shared text (the words of the
-    region's headings and first text) and the same element name, provided
-    the score reaches a minimum and leads the runner-up by a margin that the
-    Milestone 5 contract fixes. Otherwise there is no counterpart and the
-    region scrolls alone, because a wrong pairing is worse than none. A
+    region's headings and first text) and the same element name. The
+    [scrolling contract](../docs/protocol/mokly-comparison-scrolling.md) fixes
+    the score at `0.55` overlap plus `0.45` text and a `0.10` same-element
+    bonus, with a `0.45` minimum and `0.15` runner-up margin. Otherwise there
+    is no counterpart and the region scrolls alone, because a wrong pairing is
+    worse than none. A
     region marked `data-mokly-scroll="off"`, or whose counterpart is, never
-    mirrors. A match is made when a region first scrolls and discarded
-    whenever the section measures its documents again, so a changed layout is
-    matched afresh. Class names and DOM positions are not used: utility class
-    lists and generated class names change with ordinary style edits and
-    inserted content shifts positions. A counterpart shorter than the offset stops at its own
-    end; the viewer never restyles or moves elements inside a snapshot, so
+    mirrors. Names use the public lowercase kebab-case id grammar; a duplicate
+    name in either document skips to the next rule as ambiguous, while an
+    attribute on a non-region is ignored. A match is made when a region first
+    scrolls and discarded whenever the section measures its documents again,
+    so a changed layout is matched afresh. Class names and DOM positions are
+    not used: utility class lists and generated class names change with
+    ordinary style edits and inserted content shifts positions. A counterpart
+    shorter than the offset stops at its own end; the viewer never restyles or
+    moves elements inside a snapshot, so
     past that end the two regions differ, and the contract says so. Side by
     side, both viewports at once, component comparisons and nested regions
     follow the same rules; removed previews are unchanged.
 11. **Keys and anchors reach inner regions first.** A scroll key pressed
     inside a pane goes to the region the browser would scroll: starting at the
-    focused element, or at the element the reader last pressed a pointer on
-    when focus is on the body, the nearest region, inclusive, that can still
-    move in the key's direction. When one exists, the viewer leaves the key to
+    focused element when it is not the document root or body, otherwise at the
+    element the reader last pressed a pointer on in that pane document, the
+    nearest region, inclusive, that can still move in the key's direction.
+    When one exists, the viewer leaves the key to
     the browser and mirrors the region's scroll under Decision 10; only when
     none exists does the key move the shared viewport as Milestone 4
     delivered. A same-document anchor whose target sits inside regions
     scrolls each enclosing region, innermost first, just enough to show the
     target, then moves the shared viewport to the target's document position;
     every counterpart follows.
-12. **Readers can turn scroll syncing off.** A "Scroll together" toggle in
-    the comparison toolbar applies only to the diff modes: it is shown in
+12. **Readers can turn scroll syncing off.** A native checkbox with switch
+    semantics and the visible label "Scroll together" in the comparison
+    toolbar applies only to the diff modes: it is shown in
     Side by side, Overlay and Difference and hidden in Current, which shows
     one version and has nothing to sync, as the Refresh control already is.
-    It is on by default and remembered in the browser like the viewer's other
-    reader preferences; embedded viewers keep it for the session. Turned off
-    in Side by side, each pane's page and inner regions scroll on their own.
+    It is on by default; Serve and export store `on` or `off` under
+    `mokly:comparison-scroll-together`, while embedded viewers keep it for the
+    mounted session without storage. Turned off in Side by side, each pane's
+    page and inner regions scroll on their own.
     Turned off in Overlay or Difference, inner regions stop mirroring, while
     the page itself keeps one scroll position, because both versions sit in
     one chrome with one scrollbar and the lower version cannot be reached to
@@ -621,14 +630,14 @@ routing, anchors inside regions and the "Scroll together" toggle
 (Decisions 10 to 12) in the specs and guides, so Milestones 6 and 7 have a
 complete contract.
 
-- [ ] Move the Scrolling section of
+- [x] Move the Scrolling section of
       [`mokly-comparison-panes.md`](../docs/protocol/mokly-comparison-panes.md)
       into a new `docs/protocol/mokly-comparison-scrolling.md` that owns the
       shared scroller, the echo rule, key routing and inner scroll regions;
       link it from the pane contract, the
       [protocol index](../docs/protocol/README.md) and every doc that cites
       the moved rules, keeping both contracts near 250 lines.
-- [ ] Specify Decisions 10 to 12 completely in the scrolling contract: what
+- [x] Specify Decisions 10 to 12 completely in the scrolling contract: what
       counts as a region, when and how a counterpart is written, the matching
       order with the `data-mokly-scroll` grammar and its `off` value, the
       landmark and accessible-name rule, the scored fallback with its exact
@@ -639,30 +648,30 @@ complete contract.
       inside regions, the Side by side, both-viewports and component cases,
       and the toggle's placement, product copy, default, storage, behaviour
       in each mode and realignment when it is switched back on.
-- [ ] Confirm `data-mokly-scroll` conflicts with no reserved attribute or
+- [x] Confirm `data-mokly-scroll` conflicts with no reserved attribute or
       transformer rule, and document it for authors beside the other
       authoring attributes in `docs/guides/authoring/` and
       [`mokly-authoring.md`](../docs/protocol/mokly-authoring.md); add the
       toggle preference wherever [`mokly-viewer.md`](../docs/protocol/mokly-viewer.md)
       and the viewer README list reader preferences.
-- [ ] Replace the inner-scroll limitation paragraph and the "Only document
+- [x] Replace the inner-scroll limitation paragraph and the "Only document
       scrolling is shared" sentence in the pane contract's Layout section,
       extend its Alignment Invariant and Acceptance sections with the region
       proofs Milestone 7 must deliver, and name the Milestone 6 mockup
-      `design-changes-overlay-panel` in its Design References as planned, not
-      as existing.
-- [ ] Update [`docs/guides/catalogue/changes.md`](../docs/guides/catalogue/changes.md)
+      `design-changes-overlay-panel` and `design-changes-side-by-side-apart` in
+      its Design References as planned, not as existing.
+- [x] Update [`docs/guides/catalogue/changes.md`](../docs/guides/catalogue/changes.md)
       so app-shell panels scroll together and a panel whose position changed
       pairs by carrying the same `id` in both versions, and correct every
       other statement that only document scrolling is shared
       (`grep -rn "inner scroll\|inner region\|Only document scrolling" docs packages examples/basic/notes.md`).
-- [ ] Describe the region modules Milestone 7 will add in
+- [x] Describe the region modules Milestone 7 will add in
       [`packages/viewer/src/shell/README.md`](../packages/viewer/src/shell/README.md).
-- [ ] Validate with `npm run format:check`, run the Node tests that parse
+- [x] Validate with `npm run format:check`, run the Node tests that parse
       protocol docs (at least `tests/design_links.test.ts` and
       `tests/design_screen_counts.test.ts`), and review the diff;
       documentation-only work does not require `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the

@@ -3,13 +3,11 @@
 ## Delivery Status
 
 The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-delivers the presentation below: Milestones 2 and 3A the design references
-listed at the end, Milestone 3 the generation-confined shared snapshot loader
-and documented embedded fetch set, and Milestone 4 the aligned pane runtime.
-Milestone 4 replaced the approved rule that sized each frame to its document
-with device-sized frames driven by one shared scroller, recorded in the plan's
-Decision 3 and confirmed by the user on 2026-09-27. This contract governs the
-Before and Current panes that
+delivered the presentation below through Milestone 4: the existing design
+references, generation-confined snapshot loader, and device-sized pane runtime.
+Its [scrolling contract](./mokly-comparison-scrolling.md) records that delivered
+page scroller and the approved inner-region and Scroll together target for
+Milestones 6 and 7. This contract governs the Before and Current panes that
 [Changes and screen comparisons](./mokly-changes.md) offer for changed screens
 and eligible component variants in Side by side, Overlay and Difference. It
 changes nothing about comparison eligibility, capture, generation, publishing,
@@ -18,14 +16,14 @@ shared pipeline named here.
 
 ## Behavior
 
-Overlay and Difference show both versions inside one device chrome and scroll
-them as one: whatever the reader scrolls, both versions move together and
-always show one offset, so the two can never drift apart. Side by side keeps a
-chrome for each version, and scrolling one moves the other to the same offset.
-Each version renders at the device's viewport size, so full-height sections,
-fixed bars and sticky headers look as they do in Current. Inside a pane, links
-and forms do nothing, an anchor moves both versions to its target, scroll keys
-scroll the comparison, and text stays selectable. Readers compare a linked
+Overlay and Difference show both versions inside one device chrome; Side by
+side keeps a chrome for each version. With Scroll together on, page scrolling
+and paired inner panels move together under the
+[scrolling contract](./mokly-comparison-scrolling.md), so versions cannot drift
+where both have range. Each version renders at the device's viewport size, so
+full-height sections, fixed bars, and sticky headers look as they do in
+Current. Links and forms do nothing, anchors and scroll keys reach inner
+regions before the page, and text stays selectable. Readers compare a linked
 screen through the catalogue, where every screen has its own comparison.
 Loading, failed, refreshed, and renewed comparisons keep the existing product
 copy, and Try again repeats the request. Individual browser expansion stays
@@ -66,63 +64,24 @@ original presentation, which is accepted.
 The parent installs the read-only guard from the removed previews contract in
 every pane document as soon as it commits, before slow resources let it load:
 it cancels every link and form activation and reapplies the accepted `srcdoc`
-and guard if the frame ever loads another document. A same-document anchor
-moves the shared viewport to the target's document position instead of
-scrolling inside the frame, and `:target` does not apply. Pane frames never
-enter either frame adapter: no handshake, inspection, geometry, marker, or
-navigation message exists for them, and the only privileges a pane gains are
-same-origin measurement, programmatic scrolling, key forwarding and the guard.
+and guard if the frame ever loads another document. A same-document anchor is
+revealed under the [scrolling contract](./mokly-comparison-scrolling.md#anchors)
+instead of navigating, and `:target` does not apply. Pane frames never enter
+either frame adapter: no handshake, inspection, geometry, marker, or navigation
+message exists for them, and the only privileges a pane gains are same-origin
+measurement, programmatic scrolling, key forwarding, and the guard.
 
 Captured snapshot files, comparison JSON, packaged artifacts, and served bytes
 stay byte-identical. The edits above exist only in the in-memory presentation.
 
 ## Scrolling
 
-Each pane frame keeps the size of its chrome's viewport, so viewport units,
-`position: fixed` and `position: sticky` resolve exactly as in Current, and a
-document's size never depends on its frame beyond that fixed size. Sizing a
-frame to its document was rejected: in Chrome a `min-height: 100vh` hero then
-grew the frame from 1338 to 8136 pixels over twelve measurements without
-converging, fixed bars moved to the end of the page and sticky headers stopped
-sticking.
-
-The chrome's viewport is the only user-scrollable container of its panes.
-Inside it, a box that is `position: sticky` at the top-left and exactly the
-viewport's size holds the frames, and a spacer after it extends the viewport's
-range to the largest range of the section: its height is the largest
-`scrollHeight − clientHeight` of the section's documents and its width the
-viewport plus the largest `scrollWidth − clientWidth`. The viewport sets
-`overflow-anchor: none`. A document is measured as soon as it commits, which
-is one animation frame after its predecessor's window hides and before slow
-resources let it load, and again when it loads; after it parses, or when a
-parent-realm `ResizeObserver` on its root or body, a late resource, a font or a
-`<details>` toggle reports a change, it is measured at the next animation
-frame. Each measurement updates the spacers and applies the current offset
-again. Because no frame size depends on its document, measuring cannot feed
-back into it.
-
-On every scroll of a viewport, the controller writes that offset to every
-layer document of the section in the same handler, so the versions can never
-disagree. Every programmatic scroll, of a document or a viewport, is instant
-(`scrollTo` with `behavior: "instant"`), whatever `scroll-behavior` the
-snapshot or the host sets, so a smooth-scrolling document never lags behind the
-offset or reads as a scroll of its own. A document shorter or narrower than the offset stops at its own end,
-and its frame is translated by the remainder so its content stays aligned with
-the offset; the uncovered area shows the layer's opaque surface, painted with
-the document's canvas colour, read from its root's or else its body's computed
-background, over the scheme's screen background. A scroll the controller did
-not make itself, such as find in page, focus moving to an element, selection
-autoscroll or a fragment target, is written back to the viewport, which then
-applies one offset to every layer again. Loops are broken by comparing values,
-never with timers: an event whose element already shows the offset last
-written is an echo and is ignored.
-
-Scroll keys pressed inside a pane, Space, Shift+Space, PageUp, PageDown, Home,
-End and the arrow keys, move the pane's shared viewport: a page is 87.5% of the
-visible height and an arrow key 40 pixels, as the browser steps. Keys stay with
-editable targets, `input`, `textarea`, `select` and editable content, Space
-stays with buttons and `<summary>`, and keys carrying Control, Meta or Alt are
-left alone. Removed previews keep their own frame scrolling and guard.
+The [comparison scrolling contract](./mokly-comparison-scrolling.md) owns frame
+sizing, page spacers and measurement, instant writes, shorter-document
+translation, value-based echoes, inner-region pairing, keys, anchors, and the
+Scroll together preference. Sizing a frame to its document remains rejected:
+it distorted viewport units, fixed bars, and sticky headers and could feed a
+document's height back into itself without converging.
 
 ## Layout
 
@@ -135,35 +94,39 @@ layer are stacked at full size, and both paint an opaque screen background in
 the selected scheme. The Current layer is the top layer, at 50% opacity in
 Overlay and with CSS difference blending over the opaque Before layer in
 Difference; the chrome is never blended. Wheel and touch input over the stack
-reaches the top document, which cannot scroll, so the browser chains it to the
-shared viewport. When both viewports are shown, the mobile and desktop sections
-each have their own chrome, viewport and offset.
+reaches the top document. A movable inner region handles it there; otherwise
+the non-scrollable frame lets the browser chain it to the shared page viewport.
+When both viewports are shown, the mobile and desktop sections each have their
+own chrome, viewport and offset.
 
 Side by side renders one chrome per version in the existing two-column grid,
-each with one shared viewport holding one layer. Both viewports belong to one
+each with one page viewport holding one layer. Both viewports belong to one
 section controller, so both spacers use the pair maximum and their ranges
-always match, and the two offsets are mirrored in both directions with the same
-value-based echo rule. Narrow layouts keep the existing single-column
-responsive rules and the mirroring.
+always match. With Scroll together on, their page offsets and paired inner
+regions mirror in both directions. With it off, each pane scrolls independently.
+Narrow layouts keep the existing single-column responsive rules.
 
 A pane whose document is missing, such as the current side of a removed
 component variant, keeps the existing explicit missing-pane message and the
 comparison falls back to Side by side, as it does today.
 
-A document whose own inner regions scroll, such as a `height: 100vh;
-overflow: hidden` root with scrolling children, keeps those regions independent
-per layer: its document range is zero, the shared viewport cannot scroll, and
-wheel input scrolls the inner region of the top layer only. Only document
-scrolling is shared.
+An app shell may keep a zero-range page while its panels scroll. Those inner
+regions pair and mirror by authored name, id, role and accessible name, or a
+conservative scored fallback. A shorter counterpart stops at its own end
+without restyling snapshot elements. Overlay and Difference always retain one
+structural page offset; turning Scroll together off affects their inner regions,
+not that shared page scrollbar. The scrolling contract defines every case.
 
 ## Alignment Invariant
 
-No comparison frame is ever user-scrollable, in any mode, viewport, scheme or
-host. Every layer document of a section receives the section's one offset in
-the handler that observed it, stopping at its own end with its frame shifted by
-the remainder, so the content of every layer stays aligned at all times. The
-two Side by side viewports show the same offset after any scroll settles.
-Browser expansion is unavailable outside Current.
+No comparison frame is ever user-scrollable in any mode, viewport, scheme, or
+host. With Scroll together on, every layer document receives its section's page
+offset in the handler that observed it, and every paired inner region receives
+both source offsets in that region's handler. Pages and regions clamp at their
+own ends; only a shorter page's frame is translated, never snapshot elements.
+Side by side offsets may differ only while the reader has explicitly turned
+the control off. Overlay and Difference keep one page offset even then. Browser
+expansion is unavailable outside Current.
 
 ## Lifecycle
 
@@ -204,15 +167,15 @@ each request to its immutable generation and configured sides.
 
 ## Acceptance
 
-Regressions prove every item below in live Serve through the selected
-comparison path (`tests/browser/comparison_alignment.spec.ts` and
-`comparison_alignment_input.spec.ts`). Against a static export's complete
-comparison, and in an embedded viewer through both frame adapters,
-`comparison_alignment_hosts.spec.ts` proves stacked wheel alignment, the frame
-attributes, inert links and anchors, and, for the export, Side by side
-mirroring; the pane failure path runs in the embedded viewer. Unit tests under
-`packages/viewer/tests/` cover the scroll controller, mirror, keys, documents
-controller and presentation follower.
+Regressions prove the delivered page items below in live Serve through the
+selected comparison path (`tests/browser/comparison_alignment.spec.ts` and
+`comparison_alignment_input.spec.ts`). Against a static export and an embedded
+viewer through both frame adapters, `comparison_alignment_hosts.spec.ts` proves
+stacked wheel alignment, frame attributes, inert links and anchors, and export
+Side by side mirroring; the pane failure path runs embedded. Unit tests under
+`packages/viewer/tests/` cover the delivered controllers. The scrolling
+contract names the complete Milestone 7 region and toggle proof, including the
+planned `tests/browser/comparison_regions.spec.ts`.
 
 - Wheel scrolling over an Overlay and a Difference stack puts both pane
   documents and the shared viewport at one offset with coincident layer
@@ -220,16 +183,25 @@ controller and presentation follower.
   comparison; the same spec failed before the implementation landed.
 - Scrolling one Side by side viewport moves the other to the same offset in
   both directions, and an anchor in either pane moves both.
-- Space, Shift+Space, PageUp, PageDown, Home, End and the arrow keys pressed
-  inside a pane move the shared viewport; an input keeps its keys.
-- A same-document anchor and a scroll the controller did not make move every
-  version to one offset, and the shell URL and heading stay unchanged.
+- Milestone 7 must prove Space, Shift+Space, PageUp, PageDown, Home, End, and
+  the arrow keys reach the nearest movable inner region first and otherwise
+  move the applicable page viewport; editable and Space-activated controls
+  keep their keys.
+- Milestone 7 must prove a same-document anchor reveals enclosing regions
+  innermost first and then the page; its paired counterparts follow, while the
+  shell URL and heading stay unchanged.
 - A document shorter than its pair stops at its end, its frame is shifted by the
   remainder so its content stays aligned, and its surface shows its canvas.
 - A `min-height: 100vh` hero keeps spacer and frame sizes stable across
   animation frames and after a late image loads, the spacer grows by exactly the
   image, fixed bars stay at the viewport's bottom and sticky headers at its top.
-- Inner scroll regions stay independent per version, as documented.
+- Milestone 7 must prove inner regions pair in the specified order and mirror
+  both axes in every mode, viewport, and component comparison; unmatched and
+  `off` regions scroll alone, and shorter counterparts clamp without snapshot
+  restyling.
+- Milestone 7 must prove Scroll together is placed, persisted, and
+  session-scoped as specified; its off behavior and last-scrolled-version
+  realignment are live and reload no pane.
 - Every pane frame carries `data-mokly-comparison-frame`, exactly
   `sandbox="allow-same-origin"`, `scrolling="no"`, a `srcdoc`, and
   `data-mokly-preview-source` naming an address beneath the accepted
@@ -269,3 +241,6 @@ frame's scrollbar drawn to match; `design-component-comparison` keeps one frame
 per version in Side by side. Links inside every depicted pane are inert. See
 [the shell design](./mokly-shell-design.md) and
 [the component design](./mokly-component-design.md) for the complete tables.
+Milestone 6 plans `design-changes-overlay-panel`, an app-shell panel aligned in
+Overlay, and `design-changes-side-by-side-apart`, independent offsets with
+Scroll together off. They are planned references, not existing inventory rows.

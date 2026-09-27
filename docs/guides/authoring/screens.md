@@ -43,6 +43,26 @@ export const accountHome = defineScreen({
 Each view is generated as its own standalone page, so wrap the content in a
 landmark such as `main`.
 
+## Keep scrolling panels paired
+
+Mokly normally pairs scrolling panels across Before and Current from their
+position, words, element type, and accessible role. If an edit moves a panel
+or rewrites most of it, give the panel the same stable `id` in both versions.
+When that id belongs to your application for another purpose, name the pair
+directly with `data-mokly-scroll`:
+
+```tsx
+<main data-mokly-scroll="account-activity" className="activity-panel">
+  <Activity />
+</main>
+```
+
+The name is lowercase kebab-case and must be unique among scrolling regions in
+each generated document. Use `data-mokly-scroll="off"` when a panel should
+scroll independently in comparisons. The hint changes only comparison
+scrolling; it does not make an element scrollable, change its layout, or affect
+the generated file outside the viewer.
+
 ## Variants of a screen
 
 A variant is the same screen with one deliberate shift, such as an empty

@@ -210,9 +210,12 @@ documents are presented under the
 script-disabled documents in device-sized frames that are never
 user-scrollable, whose links and forms are inert. Overlay places the current
 version at 50% opacity above its baseline and Difference uses CSS difference
-blending, each inside one device chrome whose viewport is the only scroll
-container and writes its one offset to both documents, so both versions always
-stay aligned. Side by side keeps two chromes whose viewports mirror each other. These are document comparisons, not pixel measurements.
+blending, each inside one device chrome. Under the
+[comparison scrolling contract](./mokly-comparison-scrolling.md), its page
+viewport and paired inner regions keep both versions aligned while Scroll
+together is on. Side by side keeps two chromes whose page viewports and paired
+regions mirror each other unless the reader turns that control off. These are
+document comparisons, not pixel measurements.
 They must never display invented pixel counts or percentages. Missing current
 views for removed component variants remain explicit and legible in every
 mode. Comparison frames retain matching dimensions; individual browser
