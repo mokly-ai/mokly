@@ -2,9 +2,9 @@
 
 ## Delivery Status
 
-The placement-tier delivery is tracked by the
+Implemented. The Placement Tiers were delivered by the
 [styled link control ancestor rule plan](../../plans/styled-link-control-ancestor-rule.md).
-The original child-control delivery is recorded in the
+The original `MockLink asChild` delivery is recorded in the
 [MockLink child controls plan](../../plans/mocklink-child-controls.md).
 
 ## Authoring Contract

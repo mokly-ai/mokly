@@ -2,10 +2,6 @@
 
 ## Active
 
-- [Styled Link Control Ancestor Rule](./styled-link-control-ancestor-rule.md)
-  — three tiers for `MockLink asChild` placement (fail, warn, allow), a build
-  warning channel with `--strict`, element-naming messages, and the full rule
-  in the Links guide.
 - [Comparison Pane Scroll Alignment](./comparison-pane-scroll-alignment.md)
   — Overlay and Difference drift apart when scrolled because each snapshot
   scrolls inside its own opaque frame; comparison panes become viewer-owned,
@@ -65,6 +61,10 @@
 
 ## Completed
 
+- [Styled Link Control Ancestor Rule](./styled-link-control-ancestor-rule.md)
+  — delivered and verified: tiered `MockLink asChild` placement, deterministic
+  build warnings, `--strict`, element-naming messages, and the complete Links
+  guide rule.
 - [Screen Variants](./screen-variants.md) — PR #101's delivered scope is
   complete: authoring, navigation, Changes, per-view evidence, and the approved
   review fixes. Unfinished work is owned by

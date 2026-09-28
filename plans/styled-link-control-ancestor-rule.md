@@ -233,16 +233,18 @@ middle tier, and name the offending element in every message.
 
 Complete the required delivery sequence after validation passes.
 
-- [ ] Set the link-controls Delivery Status back to Implemented, mark the new
+- [x] Set the link-controls Delivery Status back to Implemented, mark the new
       protocol document implemented, and move this plan to Completed in
       `plans/README.md` once verified.
-- [ ] Inspect the diff and deletions against `origin/main` with
+- [x] Fetch and merge `origin/main` at `d71b03b`, then inspect the diff and
+      deletions against it with
       `git diff --name-status origin/main` and
-      `git diff --diff-filter=D --name-status origin/main`; confirm the only
-      removed behavior is the inverted tests authorized above, and record it in
-      the commit body.
-- [ ] Run `git add -A`, commit using Conventional Commits, and push the
-      branch.
+      `git diff --diff-filter=D --name-status origin/main`; no mainline files
+      are deleted, and the only removed behavior is the authorized inversion of
+      ancestor `tabindex` and focus-only descendant failures. Record the audit
+      in the commit body.
+- [x] Run `git add -A` and commit using Conventional Commits; leave the branch
+      unpushed for the reviewer as directed by the delivery task.
 - [ ] After the push, review the complete local diff against `origin/main`
       using `docs/implementation-review-prompt.md` and report each finding with
       a number, severity, impact, lettered options, and a recommendation

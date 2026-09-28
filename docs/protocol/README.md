@@ -35,8 +35,8 @@ when the historical primary file is absent, never when it is invalid.
 - [Package and authoring contract](./mokly-package.md)
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
   interactive progress, errors, watched events, and shortcuts.
-- [Build warnings](./mokly-build-warnings.md) — approved target: non-fatal
-  compile diagnostics, which command reports them, and `--strict`.
+- [Build warnings](./mokly-build-warnings.md) — implemented non-fatal compile
+  diagnostics, command reporting, and `--strict` enforcement.
 - [Packaged CLI guides](./mokly-guides.md) — versioned Markdown consumed by the
   cloud documentation site.
 - [Configuration contract](./mokly-configuration.md) — includes public-exclusion validation and defaults.
