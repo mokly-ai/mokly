@@ -149,14 +149,14 @@ authored inputs, and prepares Git change evidence in the background. The
 default port is `4173`; use `--port 0` to choose any available port.
 
 Previews are static documents, so comparisons read exact bytes. Setting
-`interactive: "serve"` now opens and announces an isolated loopback origin
-that can lazily prepare the same React tree for Live frames; comparisons and
-exports stay static. The catalogue still displays Static only until the next
-milestone adds its Static/Live control. The Live port defaults to the resolved
-Serve port plus one (or an OS-selected port when Serve uses 65535);
-`--interactive-port`, `--interactive-origin`, and `--strict-port` cover
-explicit ports and forwarding. Forwarded host names or port numbers require an
-explicit interactive origin. See the
+`interactive: "serve"` adds a Static/Live control to screens and saved
+component variants: Live runs the same React tree in the browser on an
+isolated loopback origin, prepared the first time you choose it, while
+comparisons, inspection, prop editing and exports stay static. The Live port
+defaults to the resolved Serve port plus one (or an OS-selected port when
+Serve uses 65535); `--interactive-port`, `--interactive-origin`, and
+`--strict-port` cover explicit ports and forwarding. Forwarded host names or
+port numbers require an explicit interactive origin. See the
 [interactive views contract](./docs/protocol/mokly-interactive-views.md).
 
 When the first screen is working, continue with the guides for

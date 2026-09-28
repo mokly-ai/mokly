@@ -67,6 +67,22 @@ export function sameViewerInteractiveOrigin(
   );
 }
 
+/**
+ * Adopt newer readiness for the same listener identity. A generation's
+ * `ready` or `failed` result is final, so a late `building` event cannot
+ * return a prepared generation to preparing.
+ */
+export function advancedViewerInteractive(
+  current: ViewerInteractiveDescriptor | undefined,
+  next: ViewerInteractiveDescriptor,
+): ViewerInteractiveDescriptor {
+  return current &&
+    sameViewerInteractiveOrigin(current, next) &&
+    (current.state === "ready" || current.state === "failed")
+    ? current
+    : next;
+}
+
 function descriptorKeys(value: Record<string, unknown>): readonly string[] {
   return [
     "generation",

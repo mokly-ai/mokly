@@ -7,19 +7,26 @@ Delivered mockup scope for Milestone 2 of the
 design states depict the [interactive views contract](./mokly-interactive-views.md)
 and extend the [shell design](./mokly-shell-design.md) and
 [component workspace design](./mokly-component-workspace-design.md). The
-runtime Static/Live control implements these designs in a later milestone.
+runtime Static/Live control implements these designs in Milestone 5; hiding it
+for opted-out entries follows once Serve delivers their eligibility, as the
+contract records.
 
 ## Static/Live Control
 
 Add a two-option segmented control labelled Static and Live to the view
-toolbar, immediately after the viewport control and before Highlight
-components. It uses the existing segmented style, selected state, accessible
-group name ("Preview mode"), hover tooltips and visible keyboard focus. Static
-is selected by default. The control
+toolbar, after the Dark preview toggle and before Highlight components. When
+the toolbar has no Dark preview toggle, as in a catalogue without dark
+fragments or the standalone shell whose top-bar Appearance selector owns the
+scheme, it follows the viewport control directly. It uses the existing
+segmented style, selected state, accessible group name ("Preview mode"), hover
+tooltips and visible keyboard focus, and matches the icon controls' height.
+Static is selected by default. The control
 appears only on screen fragments and component saved variants of a catalogue
 whose local Serve offers Live; pages, use-case steps, comparison panes and
 removed previous versions never show it. A static-only catalogue, or an entry
 that opted out, shows the existing toolbar unchanged, with no placeholder gap.
+At narrow widths the toolbar takes its own row below the title, left-aligned,
+as the mobile artboards show.
 
 Selecting Live keeps the same artboard, device frames, labels, breadcrumb,
 saved-variant strip and comparison band. The preview content itself is
@@ -42,10 +49,13 @@ document as normal.
 
 While Live is selected, the Props/Controls and Usage tabs keep their icons and
 open normally, but their panels replace their content with one secondary line:
-"Switch to Static to inspect or edit this view." Details remains unchanged.
+"Switch to Static to inspect or edit this view." A Components (or Nested
+components) tab, which lists and selects instances in the rendered view,
+shows the same line. Details remains unchanged.
 Highlight components is disabled with the description "Highlighting works in
 Static." Comparison controls are unchanged and open the comparison stage as
-today; comparison panes have no Static/Live control.
+today; comparison panes have no Static/Live control, so the toolbar hides it
+while a comparison is shown and Current brings back the same choice.
 
 ## Owning Catalogue
 

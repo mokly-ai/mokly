@@ -41,8 +41,8 @@ Consumer frames and comparisons remain static HTML in script-disabled sandboxes.
 The optional Live backend for local Serve is implemented as defined by the
 [interactive views contract](./mokly-interactive-views.md): it paints the same
 static document first and then mounts the consumer tree on a separate loopback
-origin, without changing comparison bytes. The shell's Static/Live control is
-the remaining delivery milestone.
+origin, without changing comparison bytes. The shell's Static/Live toolbar
+control selects it for screen fragments and saved component variants.
 Selecting a removed page or screen captures and renders its pinned previous
 version in that shared tree through the lifecycle implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
@@ -255,8 +255,9 @@ in, the tags the entry declares, related docs, dependencies, use cases, and
 comparison context.
 Static Browse fragments and document pages are sandboxed without script permission
 so they cannot alter the same-origin Browse shell. A Live frame, when the
-catalogue enables interactive views, is mounted on the separate interactive
-origin under the cross-origin frame-adapter policy instead. Package-owned same-origin
+catalogue enables interactive views and the reader selects Live, is a new
+frame mounted on the separate interactive origin under the cross-origin
+frame-adapter policy instead. Package-owned same-origin
 inspection permits parent-owned outer navigation after explicit user
 activation. Browse does not grant either
 top-navigation sandbox token, so direct and nested consumer contexts retain the

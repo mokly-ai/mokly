@@ -1,7 +1,9 @@
-/** Grouped, compact viewport, theme and inspection controls. */
+/** Grouped, compact viewport, theme, preview mode and inspection controls. */
 import type { ColorScheme } from "../data/axes.js";
 
 import { useShellIdentifier } from "./identifier_context.js";
+import type { PreviewModeChoice } from "./live_preview.js";
+import { PreviewModeControl } from "./preview_mode_control.js";
 import { useOptionalShellStore } from "./store_context.js";
 import { ViewChangedMark } from "./view_changed_mark.js";
 import { VIEW_CHANGED_IDS, viewMarks, type ChangedView } from "./view_marks.js";
@@ -12,6 +14,7 @@ export function WorkspaceControls({
   dark,
   effectiveColorScheme,
   highlight,
+  previewMode,
 }: {
   changedViews: readonly ChangedView[];
   dark: boolean;
@@ -22,6 +25,8 @@ export function WorkspaceControls({
     reason?: string;
     toggle(): void;
   };
+  /** Static/Live, present only for a view whose local Serve offers Live. */
+  previewMode?: PreviewModeChoice | undefined;
 }) {
   const store = useOptionalShellStore();
   const viewport = store?.state.selection.viewport ?? "both";
@@ -78,6 +83,7 @@ export function WorkspaceControls({
           />
         </button>
       ) : null}
+      {previewMode ? <PreviewModeControl choice={previewMode} /> : null}
       <button
         type="button"
         className="mbk-icon-button"

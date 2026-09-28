@@ -1152,9 +1152,17 @@ test("dark scheme paints device screens and leaves the chrome light", () => {
     css,
     /\[data-preview-color-scheme="dark"\] \.mbk-frag \{[^}]*background: var\(--mbk-dark-screen-bg\);/,
   );
+  assert.match(
+    css,
+    /\[data-preview-color-scheme="dark"\] \.mbk-live-preparing \{ background: var\(--mbk-dark-screen-bg\);/,
+  );
+  assert.match(
+    css,
+    /\[data-preview-color-scheme="dark"\] \.mbk-live-preparing \.mbk-preview-spinner \{ border-color: color-mix\(in srgb, var\(--mbk-dark-screen-ink\)/,
+  );
 
   const selectors = darkTokenSelectors(SHELL_CSS).map(flatCss);
-  assert.equal(selectors.length, 7);
+  assert.equal(selectors.length, 9);
   for (const selector of selectors) {
     assert.ok(
       selector.includes('[data-preview-color-scheme="dark"]'),
@@ -1163,7 +1171,7 @@ test("dark scheme paints device screens and leaves the chrome light", () => {
   }
   assert.equal(
     selectors.filter((selector) => selector.startsWith(scope.trim())).length,
-    6,
+    8,
   );
 
   assert.match(

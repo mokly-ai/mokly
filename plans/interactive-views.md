@@ -255,39 +255,94 @@ Live documents, but the shell still shows Static only.
 - [x] Update `src/server/README.md`; run the full check set and
       `cargo xtask check`; commit and push.
 
-## Milestone 5: Static/Live toggle in the shell
+## Milestone 5: Static/Live toggle in the shell — completed
 
 Tags: ui
 
-- [ ] Add the segmented Static/Live control to the view toolbar in the React
-      shell (`packages/viewer/src/shell/views.tsx` and
-      `packages/viewer/src/shell/head.tsx`, after `ViewportSwitch`, with a
-      `previewMode` selection in the shell store and actions), kept across view
-      changes in the current document, hidden when the private descriptor has
-      no interactive capability or the entry opted out, and
-      never shown for pages, use-case steps or comparisons.
-- [ ] Mount Live frames through `postMessageAdapter({ frameOrigin })` in
+Implementation decisions recorded in the contracts: the control follows the
+Dark preview toggle (or the viewport control) and precedes Highlight
+components, and is hidden while a comparison is shown; the preview mode rides
+in the watched-reload recovery snapshot so a replaced generation remounts
+Live, while an ordinary load starts Static; a failed bundle or preparation
+disables Live for the generation and a mount failure for that view only; the
+Components tab shows the same Static-only notice as Props and Usage; and the
+narrow toolbar takes its own row as the mobile artboards show. Hiding the
+control for opted-out entries was blocked by missing backend data and moved to
+Milestones 6 and 7.
+
+- [x] Add the segmented Static/Live control to the view toolbar in the React
+      shell (`packages/viewer/src/shell/workspace_controls.tsx`, after the
+      Dark preview toggle or viewport control and before Highlight
+      components, with a `previewMode` selection in the shell store and
+      actions), kept across view changes in the current document, hidden when
+      the private descriptor has no interactive capability, and never shown
+      for pages, use-case steps, comparisons or removed entries.
+- [x] Mount Live frames through `postMessageAdapter({ frameOrigin })` in
       `packages/viewer/src/shell/frame_registry.tsx` with pending usage, the
       same `/static/` path and query parameters, and the device frame
       unchanged; mount Static frames exactly as today. Consume the Milestone 4
       descriptor's optional explicit origin or derive the frame origin from
       its port and the shell's own scheme/host name; never read this from the
       public catalogue.
-- [ ] Present the preparing and unavailable states from the design milestone,
+- [x] Present the preparing and unavailable states from the design milestone,
       consuming the descriptor state, preparation capability, and private SSE
       updates delivered in Milestone 4; keep Static reachable in both, and
       disable highlight, pick and controls with the Static-only notice while
       Live is selected.
-- [ ] Apply the chosen controls rule from Milestone 1 when switching to Live
+- [x] Apply the chosen controls rule from Milestone 1 when switching to Live
       with unsaved prop edits.
-- [ ] Browser tests: toggle visibility per catalogue and entry, frame origin
-      and sandbox attributes per mode, navigation from a Live frame opens the
-      destination in the shell, state persists across view changes, and the
-      inspector notice appears.
-- [ ] Update `packages/viewer/README.md` and `packages/viewer/src/shell/README.md`;
+- [x] Keep Live selected across a watched reload that replaces the
+      generation by carrying the preview mode in the one-shot recovery
+      snapshot, and correct the contract's opted-out wording to "no control".
+- [x] Browser tests: toggle visibility per catalogue and view kind, frame
+      origin and sandbox attributes per mode, the preparing and unavailable
+      states, navigation from a Live frame opens the destination in the shell,
+      state persists across view changes and resets on reload, a watched
+      rebuild remounts Live, the inspector notice appears, highlighting is
+      disabled, unsaved edits are discarded, and the control works from the
+      keyboard; unit tests for the pure state, recovery and markup.
+- [x] Update `packages/viewer/README.md` and `packages/viewer/src/shell/README.md`;
       run the full check set and `cargo xtask check`; commit and push.
 
-## Milestone 6: Example adoption, smoke test and review
+## Milestone 6: Per-entry Live eligibility for the shell
+
+Backend. Discovered while implementing Milestone 5: the resolved per-entry
+`interactive` value reaches the private catalogue index, but the browser shell
+receives only the public catalogue and route-scoped private workspace
+evidence, and once Serve adopts the completed manifest that evidence no longer
+carries the value, so the shell cannot hide Static/Live for an opted-out entry.
+
+- [ ] Define in `mokly-interactive-views.md` and `mokly-live-capabilities.md`
+      how Serve carries each current screen's and component's resolved
+      `interactive` value from `ComponentRuntime.interactiveEntries` in the
+      private route-scoped workspace evidence, for the live index and the
+      completed manifest alike, and never in public catalogue JSON, static
+      workspace evidence, export or publication.
+- [ ] Implement it in Serve's private workspace evidence and its validation in
+      `packages/viewer/src/client/workspace_descriptor.ts`, surviving
+      `completeCatalogue`, route evidence loads, evidence refreshes and watched
+      rebuilds.
+- [ ] Tests: opted-out and eligible screens and components before and after
+      background completion, and the value's absence from public JSON, static
+      evidence and export.
+- [ ] Update `src/server/README.md` and the viewer READMEs; run the full check
+      set and `cargo xtask check`; commit and push.
+
+## Milestone 7: Hide Static/Live for opted-out entries
+
+Tags: ui
+
+- [ ] Hide the Static/Live control, with no placeholder gap, for an entry
+      whose resolved `interactive` is false, reading the private eligibility
+      delivered in Milestone 6 (moved from Milestone 5), and remove the
+      interim unavailable fallback note from the contract.
+- [ ] Browser tests: toggle visibility per entry for an opted-out screen and an
+      opted-out component, alongside eligible entries of the same catalogue
+      (moved from Milestone 5).
+- [ ] Update `packages/viewer/src/shell/README.md`; run the full check set and
+      `cargo xtask check`; commit and push.
+
+## Milestone 8: Example adoption, smoke test and review
 
 - [ ] Enable `interactive: "serve"` in `examples/basic/mokly.config.ts`, add
       the `interactive` export to `examples/basic/renderer.tsx` mirroring its

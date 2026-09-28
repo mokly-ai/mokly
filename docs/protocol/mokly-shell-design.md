@@ -409,7 +409,10 @@ scrollable region scrolls internally:
   button uses the standard pointer cursor, moves down 1px with an inset shadow
   while pressed, and copies the unprefixed ID without navigating.
   Selected screen routes place one right-aligned group of icon controls here:
-  Mobile/Desktop/Both dropdown and component highlighting when applicable.
+  Mobile/Desktop/Both dropdown, the Static/Live segmented control when local
+  Serve offers [interactive views](./mokly-interactive-views-design.md), and
+  component highlighting when applicable. At 760px and narrower the group
+  takes its own left-aligned row below the title.
   Tooltips name each action. The head band carries no scheme control; the
   catalogue's one Appearance control lives in the top bar.
   A control whose axis hides a changed view carries a 6px accent dot in its

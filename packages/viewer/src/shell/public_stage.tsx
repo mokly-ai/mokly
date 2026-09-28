@@ -11,7 +11,8 @@ import type { GeneratedComponentView } from "../components/views.js";
 import { encodeUrlPath } from "../data/paths.js";
 import { DisplaySelection } from "../viewer/display_context.js";
 
-import { DocumentStageFrame, StageFrame } from "./stage_frame.js";
+import { DocumentStageFrame } from "./document_stage_frame.js";
+import { StageFrame } from "./stage_frame.js";
 
 /** Render current frames without giving consumer documents script capability. */
 export function PublicStage({

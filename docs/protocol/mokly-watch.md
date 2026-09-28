@@ -189,11 +189,12 @@ the watcher waits for another authored change. A
 successful rebuild or healthy restart publishes a new update version. Browsers
 reload their current durable URL and restore search, changed-only selection,
 current collection disclosure, the disclosure baseline captured before active
-filtering, details disclosure, viewport and color-scheme selection, responsive
-drawer, catalogue scroll, and per-region stage scroll once. Recovery is strictly
-parsed with one compatibility rule: a payload from before filter-baseline
-capture treats that missing baseline as unavailable while restoring its other
-valid state. Browse applies durable preferences and initial active-route
+filtering, details disclosure, viewport and color-scheme selection, the
+Static/Live preview mode, responsive drawer, catalogue scroll, and per-region
+stage scroll once. Recovery is strictly parsed with two compatibility rules: a
+payload from before filter-baseline capture treats that missing baseline as
+unavailable, and a payload without a preview mode restores Static, while each
+restores its other valid state. Browse applies durable preferences and initial active-route
 selection before one-shot recovery. It then re-establishes active-route
 visibility, promoting a recovered pre-filter baseline only when a closed
 ancestor must be opened. A non-null baseline without active search or Changes

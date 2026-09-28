@@ -406,12 +406,16 @@ Shell state is one store scoped to a mounted viewer:
 - **Workspace** state (component variant, props under edit, inspector tab and
   pane size, active pick, highlight scope) lives with the mounted view and is
   discarded on route change or source replacement.
+- **Preview mode** is Static or Live for local Serve's
+  [interactive views](./mokly-interactive-views.md), with the Live failures
+  seen in this document. It persists across in-shell navigation, is not part
+  of public selection, and starts Static in every other host.
 
-A watched reload captures search, view, viewport, scheme, disclosure
-(including the pre-filter baseline), drawer, catalogue scroll, per-region
-scroll and the optional validated Changes status into the one-shot recovery
-snapshot defined by the [watch contract](./mokly-watch.md); the hydrated shell
-restores it exactly as before. Native disclosure choices made before hydration
+A watched reload captures search, view, viewport, scheme, preview mode,
+disclosure (including the pre-filter baseline), drawer, catalogue scroll,
+per-region scroll and the optional validated Changes status into the one-shot
+recovery snapshot defined by the [watch contract](./mokly-watch.md); the
+hydrated shell restores it exactly as before. Native disclosure choices made before hydration
 completes are captured by the pre-hydration script and take precedence over
 older preferences and the snapshot; capture state is removed after hydration or
 exit. Static export may resolve its shared catalogue after the document `load`

@@ -5,7 +5,11 @@ import type { RefObject } from "react";
 
 import { resolvedFrameSource } from "./stage_sources.js";
 
-/** Keep the initial source stable; adapters own navigation once mounted. */
+/**
+ * Keep the initial source stable; adapters own navigation once mounted. Without
+ * a source no frame element renders, so the next source starts a new element
+ * whose initial source is the current one.
+ */
 export function useFrameSource(
   frameRef: RefObject<HTMLIFrameElement | null>,
   source: string | undefined,
@@ -13,7 +17,8 @@ export function useFrameSource(
   adapterOwned = false,
 ): string | undefined {
   const initial = useRef<string | undefined>(undefined);
-  initial.current ??= resolvedFrameSource(source, baseUrl);
+  if (source === undefined) initial.current = undefined;
+  else initial.current ??= resolvedFrameSource(source, baseUrl);
   useEffect(() => {
     const frame = frameRef.current;
     const resolved = resolvedFrameSource(

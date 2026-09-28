@@ -38,11 +38,15 @@ export interface ComponentControlsResult {
   props?: ComponentWireProps;
 }
 
-/** Own one component variant's edit lifecycle. */
+/**
+ * Own one component variant's edit lifecycle. Selecting Live starts a new
+ * scope, so unsaved edits are discarded exactly as a variant change does.
+ */
 export function useComponentControls({
   comparing,
   contexts,
   data,
+  livePreview,
   request,
   variant,
   workspaceRef,
@@ -50,6 +54,7 @@ export function useComponentControls({
   comparing: boolean;
   contexts: readonly GeneratedComponentView[];
   data: WorkspaceData;
+  livePreview: boolean;
   request?: ViewerCapabilityRequest | undefined;
   variant?: WorkspaceVariant | undefined;
   workspaceRef: RefObject<HTMLElement | null>;
@@ -57,7 +62,7 @@ export function useComponentControls({
   const capabilities = useViewerCapabilities();
   const component = data.entry.kind === "component" ? data.entry : undefined;
   const generation = request?.source.renderGeneration;
-  const scope = `${variant?.value.id ?? "none"}/${comparing}/${generation ?? "static"}/${variant ? JSON.stringify(variant.value.props) : ""}`;
+  const scope = `${variant?.value.id ?? "none"}/${comparing}/${livePreview ? "live" : "static"}/${generation ?? "static"}/${variant ? JSON.stringify(variant.value.props) : ""}`;
   const initial = useMemo(
     () =>
       initialComponentEditorState(
@@ -79,6 +84,7 @@ export function useComponentControls({
     variant,
     comparing,
     Boolean(capabilities?.temporaryPreviews && request && generation),
+    livePreview,
   );
   const contextKey = contexts.map(controlViewKey).join("|");
 

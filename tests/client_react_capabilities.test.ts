@@ -69,6 +69,36 @@ test("React live updates provide recovery and replace strict-effect streams", ()
   second.abort();
 });
 
+test("watched reload recovery carries the Live preview mode once", () => {
+  const environment = new FakeEnvironment();
+  environment.storage.setItem(
+    "mokly:live-update-recovery",
+    JSON.stringify({
+      browse: { ...browseRecovery(), previewMode: "live" },
+      url: environment.location.href,
+      version: 4,
+    }),
+  );
+  const capabilities = createReactViewerCapabilities(descriptor, environment);
+  const request = currentRequest();
+  assert.deepEqual(capabilities.updates.consumeRecovery(request), {
+    ...shellRecovery(),
+    previewMode: "live",
+    view: "changes",
+  });
+  assert.equal(capabilities.updates.consumeRecovery(request), undefined);
+
+  environment.storage.setItem(
+    "mokly:live-update-recovery",
+    JSON.stringify({
+      browse: { ...browseRecovery(), previewMode: "interactive" },
+      url: environment.location.href,
+      version: 4,
+    }),
+  );
+  assert.equal(capabilities.updates.consumeRecovery(request), undefined);
+});
+
 test("React live updates close when pagehide fires during registration", () => {
   const environment = new FakeEnvironment();
   environment.pageHideImmediately = true;

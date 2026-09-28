@@ -262,7 +262,10 @@ it cannot selectively authorize only Mokly's script. The local same-origin
 adapter never adopts this policy; local Serve uses this cross-origin policy
 only for Live frames on its separate interactive origin, as defined by the
 [interactive views contract](./mokly-interactive-views.md). Those mounts
-supply pending usage and therefore subscribe to navigation only. Content
+supply pending usage and therefore subscribe to navigation only. The shell's
+frame registry keeps one `postMessageAdapter` per Live origin and mounts each
+Live view in a new frame element that starts without a document, so a Static
+frame is never re-sandboxed with script permission. Content
 hosting/isolation remains the host's responsibility.
 
 On each mount, generate 128 random bits using `crypto.getRandomValues` and

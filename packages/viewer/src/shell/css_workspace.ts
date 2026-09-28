@@ -107,4 +107,7 @@ export const SHELL_WORKSPACE_CSS = `
   .mbk-sheet-grab span { width: 36px; height: 5px; border-radius: 9px; background: var(--chrome-muted); opacity: .5; }
   .mbk-inspector:not([data-open="true"]) .mbk-sheet-grab { display: none; }
 }
+@media (max-width: 760px) {
+  .mbk-workspace .mbk-view-tools { flex: 1 0 100%; margin-left: 0; }
+}
 `;

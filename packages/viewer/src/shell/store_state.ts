@@ -3,6 +3,7 @@
 import type { ViewerSelection } from "../viewer/types.js";
 
 import type { LiveChangesStatus } from "./metadata.js";
+import type { PreviewMode } from "./preview_mode.js";
 import type { ShellRoute } from "./routes.js";
 import type { ViewMarks } from "./view_marks.js";
 import type { EntryStatus } from "./view_status.js";
@@ -23,6 +24,8 @@ export interface ShellRecoverySnapshot {
   drawerOpen: boolean;
   filterBaselineClosedCollectionIds: readonly string[] | null;
   navScroll: number;
+  /** Carries Live across a watched reload; older payloads omit it. */
+  previewMode?: PreviewMode;
   query: string;
   regionScrolls: Readonly<Record<string, number>>;
   view: ViewerSelection["view"];
@@ -52,9 +55,13 @@ export interface ShellState {
   expandedFrame: string | undefined;
   filterBaseline: Readonly<Record<string, boolean>> | undefined;
   inspectorTab: string | undefined;
+  /** Live views that failed in this document, keyed by generation and view. */
+  liveUnavailable: readonly string[];
   navigationMaximum: number;
   navScroll: number;
   navigationWidth: number;
+  /** Static or Live, kept across view changes and reset with the document. */
+  previewMode: PreviewMode;
   query: string;
   regionScrolls: Readonly<Record<string, number>>;
   route: ShellRoute;

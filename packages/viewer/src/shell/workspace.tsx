@@ -10,8 +10,8 @@ import { useComponentControls } from "./component_controls.js";
 import type { ShellContext } from "./context.js";
 import { DiffScreen } from "./diffs.js";
 import { ScreenHead, targetHead } from "./head.js";
-import { Inspector } from "./inspector.js";
 import { useInspectorResize } from "./inspector_resize.js";
+import { LivePreviewFrameProvider, useLivePreview } from "./live_preview.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
 import { useOptionalShellStore } from "./store_context.js";
 import type { ComparisonMode } from "./use_comparison.js";
@@ -19,12 +19,10 @@ import { useWorkspaceUsage } from "./use_workspace_usage.js";
 import { useActiveWorkspace } from "./workspace_context.js";
 import { WorkspaceControls } from "./workspace_controls.js";
 import type { WorkspaceData } from "./workspace_data.js";
-import { WorkspaceEvidence } from "./workspace_evidence.js";
 import { useWorkspaceInspection } from "./workspace_inspection.js";
-import { WorkspaceInstances } from "./workspace_instances.js";
+import { WorkspaceInspector } from "./workspace_inspector.js";
 import { WorkspaceProps } from "./workspace_props.js";
 import { WorkspaceStage } from "./workspace_stage.js";
-import { WorkspaceUsage } from "./workspace_usage.js";
 import { WorkspaceVariantBar } from "./workspace_variant_bar.js";
 import { visibleWorkspaceViews } from "./workspace_views.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
@@ -61,10 +59,12 @@ export function ComponentWorkspace({
     LoadedComparison | undefined
   >();
   const comparing = comparisonMode !== "current";
+  const live = useLivePreview({ comparing, data, request, selection });
   const controls = useComponentControls({
     comparing,
     contexts: savedViews,
     data,
+    livePreview: live.selected,
     request,
     variant,
     workspaceRef,
@@ -152,6 +152,7 @@ export function ComponentWorkspace({
     invalidSelection: Boolean(
       data.removed || selection.error || variant?.removed,
     ),
+    liveActive: live.inspecting,
     onSelect: selectInstance,
     ...(selectedKey ? { selectedKey } : {}),
     views,
@@ -162,16 +163,18 @@ export function ComponentWorkspace({
     ? removedPreviewData(catalogue, context, entry)
     : undefined;
   const stage = (
-    <WorkspaceStage
-      catalogue={catalogue}
-      context={context}
-      data={data}
-      previewViews={controls.previewViews}
-      target={target}
-      variantRemoved={variant?.removed ?? false}
-      {...(selection.error ? { error: selection.error } : {})}
-      {...(variantId ? { variantId } : {})}
-    />
+    <LivePreviewFrameProvider value={live.frame}>
+      <WorkspaceStage
+        catalogue={catalogue}
+        context={context}
+        data={data}
+        previewViews={controls.previewViews}
+        target={target}
+        variantRemoved={variant?.removed ?? false}
+        {...(selection.error ? { error: selection.error } : {})}
+        {...(variantId ? { variantId } : {})}
+      />
+    </LivePreviewFrameProvider>
   );
   const showComponents =
     data.previewGeneration !== undefined ||
@@ -206,6 +209,7 @@ export function ComponentWorkspace({
             dark={Boolean(context.embedded) && catalogue.hasDarkFragments}
             effectiveColorScheme={resolvedView.colorScheme}
             highlight={highlight}
+            previewMode={live.control}
           />
         }
         crumbs={head.crumbs}
@@ -255,39 +259,22 @@ export function ComponentWorkspace({
             stage
           )}
         </div>
-        <Inspector
+        <WorkspaceInspector
+          activeViewport={resolvedViewport}
           catalogue={catalogue}
+          components={showComponents}
           data={data}
-          panels={{
-            ...(showComponents
-              ? {
-                  components: (
-                    <WorkspaceInstances
-                      activeViewport={resolvedViewport}
-                      data={data}
-                      onFocus={(key, nextViewport) =>
-                        inspection.select(key, nextViewport, false)
-                      }
-                      onSelect={inspection.select}
-                      onViewport={setActiveViewport}
-                      {...(selectedKey ? { selectedKey } : {})}
-                      views={views}
-                    />
-                  ),
-                }
-              : {}),
-            details: (
-              <WorkspaceEvidence
-                data={data}
-                {...(loadedComparison
-                  ? { loaded: loadedComparison.result }
-                  : {})}
-                {...(variantId ? { variantId } : {})}
-              />
-            ),
-            props: propsPanel,
-            usage: <WorkspaceUsage data={data} />,
-          }}
+          live={live.inspecting}
+          loaded={loadedComparison?.result}
+          onFocus={(key, nextViewport) =>
+            inspection.select(key, nextViewport, false)
+          }
+          onSelect={inspection.select}
+          onViewport={setActiveViewport}
+          props={propsPanel}
+          selectedKey={selectedKey}
+          variantId={variantId}
+          views={views}
         />
       </div>
       {inspection.overlay}

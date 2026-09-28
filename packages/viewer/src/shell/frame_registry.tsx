@@ -9,6 +9,7 @@ import type {
   FrameEvent,
   MountedFrame,
 } from "../client/frame_adapter.js";
+import { postMessageAdapter } from "../client/post_message_adapter.js";
 import { sameOriginAdapter } from "../client/same_origin_adapter.js";
 
 import { ShellFrameGeometryController } from "./frame_geometry_controller.js";
@@ -49,6 +50,7 @@ export class ShellFrameRegistry {
   private readonly sessions = new Set<ShellFrameSession>();
   private readonly listeners = new Set<RegistryListener>();
   private readonly eventListeners = new Set<FrameEventListener>();
+  private readonly liveAdapters = new Map<string, FrameAdapter>();
   private generation = 0;
   private revision = 0;
   readonly geometry: ShellFrameGeometryController;
@@ -65,6 +67,18 @@ export class ShellFrameRegistry {
   /** Snapshot the sessions currently owned by this shell. */
   values(): readonly ShellFrameSession[] {
     return [...this.sessions];
+  }
+
+  /**
+   * The cross-origin adapter shared by every Live frame on one interactive
+   * origin. It throws `FrameError("origin")` for an origin it cannot pin.
+   */
+  liveAdapter(frameOrigin: string): FrameAdapter {
+    const current = this.liveAdapters.get(frameOrigin);
+    if (current) return current;
+    const adapter = postMessageAdapter({ frameOrigin });
+    this.liveAdapters.set(frameOrigin, adapter);
+    return adapter;
   }
 
   /** Observe mount, update, readiness, and disposal changes. */

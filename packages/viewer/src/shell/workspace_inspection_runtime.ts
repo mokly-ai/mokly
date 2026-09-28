@@ -17,6 +17,7 @@ import type {
   ShellFrameRegistry,
   ShellFrameSession,
 } from "./frame_registry.js";
+import { LIVE_PREVIEW_COPY } from "./preview_mode.js";
 import type { WorkspaceData } from "./workspace_data.js";
 
 export const WAITING_REASON = "Waiting for the component preview.";
@@ -25,6 +26,8 @@ export interface WorkspaceInspectionContext {
   comparisonActive: boolean;
   data: WorkspaceData;
   invalidSelection: boolean;
+  /** The current view is shown in Live, where highlighting is unavailable. */
+  liveActive: boolean;
   views: readonly GeneratedComponentView[];
 }
 
@@ -73,6 +76,8 @@ export function inspectionAvailability(
       available: false,
       reason: "Highlighting is available in Current.",
     };
+  if (input.liveActive)
+    return { available: false, reason: LIVE_PREVIEW_COPY.highlight };
   if (input.invalidSelection || input.data.removed)
     return { available: false, reason: "This preview is unavailable." };
   if (!input.views.length)

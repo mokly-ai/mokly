@@ -6,7 +6,10 @@ import {
   type ViewerCapabilityRequest,
   type ViewerCapabilitySource,
 } from "../client/host_capability_descriptor.js";
-import type { ViewerInteractiveDescriptor } from "../client/interactive_capability.js";
+import {
+  advancedViewerInteractive,
+  type ViewerInteractiveDescriptor,
+} from "../client/interactive_capability.js";
 
 import {
   adoptedViewerCatalogue,
@@ -57,7 +60,14 @@ export function commitViewerEvidence(
   return {
     snapshot: {
       catalogue,
-      ...(revision.interactive ? { interactive: revision.interactive } : {}),
+      ...(revision.interactive
+        ? {
+            interactive: advancedViewerInteractive(
+              current.interactive,
+              revision.interactive,
+            ),
+          }
+        : {}),
       source: revision.source,
       ...(revision.workspace
         ? { workspace: { request, value: revision.workspace } }

@@ -1,6 +1,7 @@
 /** Strict validation for one-shot watched-shell recovery state. */
 
 import type { LiveChangesStatus } from "../shell/metadata.js";
+import { isPreviewMode, type PreviewMode } from "../shell/preview_mode.js";
 
 /** Stored shell state consumed once after an automatic watched reload. */
 export interface BrowseRecoveryState {
@@ -12,6 +13,8 @@ export interface BrowseRecoveryState {
   drawerOpen: boolean;
   filterBaselineClosedCollectionIds: readonly string[] | null;
   navScroll: number;
+  /** Static/Live across the watched reload; payloads before Live omit it. */
+  previewMode?: PreviewMode;
   query: string;
   regionScrolls: Readonly<Record<string, number>>;
   viewport: "both" | "desktop" | "mobile";
@@ -27,6 +30,7 @@ export function parseBrowseRecoveryState(
   const colorScheme = value["colorScheme"];
   const storedBaseline = value["filterBaselineClosedCollectionIds"];
   const baseline = storedBaseline === undefined ? null : storedBaseline;
+  const previewMode = value["previewMode"];
   const query = value["query"];
   const viewport = value["viewport"];
   if (
@@ -37,6 +41,7 @@ export function parseBrowseRecoveryState(
     typeof value["detailsOpen"] !== "boolean" ||
     typeof value["drawerOpen"] !== "boolean" ||
     !nonNegativeNumber(value["navScroll"]) ||
+    (previewMode !== undefined && !isPreviewMode(previewMode)) ||
     typeof query !== "string" ||
     !scrollRecord(value["regionScrolls"]) ||
     (viewport !== "both" && viewport !== "desktop" && viewport !== "mobile")
@@ -57,6 +62,7 @@ export function parseBrowseRecoveryState(
     filterBaselineClosedCollectionIds:
       baseline === null ? null : [...new Set(baseline)],
     navScroll: value["navScroll"],
+    ...(previewMode === undefined ? {} : { previewMode }),
     query,
     regionScrolls: { ...value["regionScrolls"] },
     viewport,

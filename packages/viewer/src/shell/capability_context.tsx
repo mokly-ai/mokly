@@ -14,7 +14,10 @@ import type {
   ViewerCapabilityRequest,
   ViewerCapabilitySource,
 } from "../client/host_capability_descriptor.js";
-import type { ViewerInteractiveDescriptor } from "../client/interactive_capability.js";
+import type {
+  InteractivePrepareResponse,
+  ViewerInteractiveDescriptor,
+} from "../client/interactive_capability.js";
 import type { StaticWorkspaceEvidence } from "../standalone/static_workspace_evidence.js";
 
 import type { WorkspaceData } from "./workspace_data.js";
@@ -29,6 +32,8 @@ interface ViewerCapabilityContextValue {
 
 /** Current revision and route-private data accepted by the shell store. */
 export interface ViewerLiveState {
+  /** Record a completed preparation for the installed Live generation. */
+  adoptPreparation?(result: InteractivePrepareResponse): void;
   capabilities?: ViewerHostCapabilities;
   interactive?: ViewerInteractiveDescriptor;
   request?: ViewerCapabilityRequest;

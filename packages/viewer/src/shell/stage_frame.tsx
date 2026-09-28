@@ -17,8 +17,9 @@ import {
 } from "./frame_registry.js";
 import { useFrameSource } from "./frame_source_hook.js";
 import { BrowserFrame, PhoneFrame } from "./frames.js";
+import { useLivePreviewFrame } from "./live_preview.js";
+import { LivePreviewFrame } from "./live_preview_frame.js";
 import {
-  framePath,
   frameSource,
   generatedFrameSource,
   generatedUsage,
@@ -27,7 +28,11 @@ import {
 } from "./stage_sources.js";
 import { useOptionalShellStore } from "./store_context.js";
 
-/** A selected, adapter-owned screen or component preview. */
+/**
+ * A selected, adapter-owned screen or component preview. While its workspace
+ * selects Live, the same device chrome holds a Live frame instead; flow steps
+ * always stay Static.
+ */
 export function StageFrame({
   entry,
   flow = false,
@@ -52,6 +57,8 @@ export function StageFrame({
   const selection = useContext(DisplaySelection);
   const store = useOptionalShellStore();
   const registry = useOptionalShellFrameRegistry();
+  const workspaceLive = useLivePreviewFrame();
+  const live = flow ? undefined : workspaceLive;
   const light = views.find(
     (view) => view.viewport === viewport && view.colorScheme === "light",
   );
@@ -73,6 +80,7 @@ export function StageFrame({
   const source = preview
     ? generatedFrameSource(preview, fragment, stepIndex)
     : frameSource(selected, fragment, stepIndex);
+  const staticSource = live ? undefined : source;
   const temporary =
     preview?.path.startsWith("/__mokly/components/renders/") ?? false;
   const previewAdapter = useMemo(temporaryPreviewAdapter, []);
@@ -93,19 +101,28 @@ export function StageFrame({
     ...(temporary ? { adapter: previewAdapter } : {}),
     enabled: store?.interactive ?? false,
     identity,
-    source,
+    source: staticSource,
     usage: preview
       ? generatedUsage(preview)
       : (selected?.usage ?? unavailableUsage),
   });
   const initialSource = useFrameSource(
     mounted.frameRef,
-    source,
+    staticSource,
     registry?.baseUrl,
     temporary || Boolean(store?.interactive && registry),
   );
   const component = entry.kind === "component";
-  const frame = source ? (
+  const title = `${entry.title} — ${viewport}`;
+  const frame = !source ? null : live ? (
+    <LivePreviewFrame
+      identity={identity}
+      live={live}
+      source={source}
+      title={title}
+      viewport={viewport}
+    />
+  ) : (
     <iframe
       aria-busy={mounted.status === "loading" ? true : undefined}
       className="mbk-frag"
@@ -129,9 +146,9 @@ export function StageFrame({
       ref={mounted.frameRef}
       sandbox="allow-same-origin"
       src={initialSource}
-      title={`${entry.title} — ${viewport}`}
+      title={title}
     />
-  ) : null;
+  );
   const framed = component ? (
     frame
   ) : viewport === "mobile" ? (
@@ -167,65 +184,7 @@ export function StageFrame({
         />
       ) : null}
       {framed ?? <p className="mbk-empty">This preview is unavailable.</p>}
-      {mounted.status === "error" ? (
-        <p className="mbk-frame-error" role="status">
-          This preview could not be loaded.
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-/** A whole-document page with the same adapter-owned logical navigation. */
-export function DocumentStageFrame({
-  entry,
-  fragment,
-}: {
-  entry: Extract<CatalogueRoutedEntry, { kind: "page" }>;
-  fragment?: string;
-}) {
-  const store = useOptionalShellStore();
-  const registry = useOptionalShellFrameRegistry();
-  const source = entry.documentPath
-    ? framePath(entry.documentPath, fragment)
-    : undefined;
-  const identity = useMemo<ShellFrameIdentity>(
-    () => ({ entryId: entry.id, route: entry.route }),
-    [entry.id, entry.route],
-  );
-  const mounted = useMountedShellFrame({
-    enabled: store?.interactive ?? false,
-    identity,
-    source,
-    usage: unavailableUsage,
-  });
-  const initialSource = useFrameSource(
-    mounted.frameRef,
-    source,
-    registry?.baseUrl,
-    Boolean(store?.interactive && registry),
-  );
-  return (
-    <div
-      className="mbk-stage-embed"
-      data-mokly-scroll="embed"
-      data-preview-color-scheme="light"
-    >
-      {source ? (
-        <iframe
-          aria-busy={mounted.status === "loading" ? true : undefined}
-          className="mbk-frag"
-          data-mokly-fragment-frame=""
-          data-mokly-frame-state={mounted.status}
-          ref={mounted.frameRef}
-          sandbox="allow-same-origin"
-          src={initialSource}
-          title={entry.title}
-        />
-      ) : (
-        <p className="mbk-empty">This preview is unavailable.</p>
-      )}
-      {mounted.status === "error" ? (
+      {!live && mounted.status === "error" ? (
         <p className="mbk-frame-error" role="status">
           This preview could not be loaded.
         </p>

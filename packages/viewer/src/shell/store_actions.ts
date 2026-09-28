@@ -8,6 +8,7 @@ import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { navigationFiltering } from "./nav_model.js";
 import type { NavSectionNode } from "./nav_tree.js";
+import { withLiveUnavailable, withPreviewMode } from "./preview_mode.js";
 import { clearTagTerm, parseSearchQuery, setTagTerm } from "./search_query.js";
 import type { ShellBrowserActions } from "./store_browser.js";
 import type { ShellStore } from "./store_context.js";
@@ -71,6 +72,9 @@ export function shellStore(input: StoreActionsInput): ShellStore {
       if (announcement)
         input.setState((current) => ({ ...current, announcement }));
     },
+    markLiveUnavailable(key) {
+      input.setState((current) => withLiveUnavailable(current, key));
+    },
     persistNavigationWidth(value = input.stateRef.current.navigationWidth) {
       const current = input.stateRef.current;
       const width = Math.round(
@@ -89,6 +93,9 @@ export function shellStore(input: StoreActionsInput): ShellStore {
       updateSelection({
         colorScheme: input.catalogue.hasDarkFragments ? value : "light",
       });
+    },
+    selectPreviewMode(value) {
+      input.setState((current) => withPreviewMode(current, value));
     },
     selectViewport(value) {
       updateSelection({ viewport: value });
@@ -178,6 +185,7 @@ export function shellRecoverySnapshot(
       ? closedDisclosures(state.filterBaseline)
       : null,
     navScroll: state.navScroll,
+    previewMode: state.previewMode,
     query: state.query,
     regionScrolls,
     view: state.selection.view,

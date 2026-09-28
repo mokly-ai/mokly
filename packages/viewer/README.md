@@ -343,7 +343,11 @@ the controller. Final disposal removes both system and selector listeners.
 Serve loads live capabilities separately, including optional private Live
 origin and bundle-readiness state; static navigation reads inert workspace
 evidence from the same finalized deployment. Neither capability enters public
-catalogue JSON or exported documents.
+catalogue JSON or exported documents. With that private Live state, the shared
+shell shows a Static/Live control for screens and saved variants and mounts
+Live frames through an internal `postMessageAdapter` on the Live origin.
+Embedded `MoklyViewer` hosts never receive it, so they keep Static previews and
+the unchanged toolbar.
 
 ## Theming
 

@@ -1,6 +1,7 @@
 /** React-store integration for optional live host capabilities. */
 
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -16,7 +17,12 @@ import {
   type ViewerCapabilityRequest,
   type ViewerCapabilitySource,
 } from "../client/host_capability_descriptor.js";
-import { sameViewerInteractiveOrigin } from "../client/interactive_capability.js";
+import {
+  advancedViewerInteractive,
+  sameViewerInteractiveOrigin,
+  type InteractivePrepareResponse,
+  type ViewerInteractiveDescriptor,
+} from "../client/interactive_capability.js";
 
 import {
   shellContextWithViewerEvidence,
@@ -105,21 +111,46 @@ export function useViewerCapabilityStore(input: {
     input.setState,
   );
 
+  const adoptInteractive = useCallback(
+    (interactive: ViewerInteractiveDescriptor) =>
+      setSnapshot((current) => {
+        if (!sameViewerInteractiveOrigin(current.interactive, interactive))
+          return current;
+        const adopted = advancedViewerInteractive(
+          current.interactive,
+          interactive,
+        );
+        if (adopted === current.interactive) return current;
+        const next = { ...current, interactive: adopted };
+        snapshotRef.current = next;
+        return next;
+      }),
+    [],
+  );
+  const adoptPreparation = useCallback(
+    (result: InteractivePrepareResponse) =>
+      setSnapshot((current) => {
+        const installed = current.interactive;
+        if (installed?.generation !== result.generation) return current;
+        const adopted = advancedViewerInteractive(installed, {
+          ...installed,
+          state: result.state,
+        });
+        if (adopted === installed) return current;
+        const next = { ...current, interactive: adopted };
+        snapshotRef.current = next;
+        return next;
+      }),
+    [],
+  );
+
   useEffect(() => {
     if (!capabilities || !input.interactive || !request) return;
     const controller = new AbortController();
     capabilities.updates.subscribe(
       request,
       {
-        adoptInteractive(interactive) {
-          setSnapshot((current) => {
-            if (!sameViewerInteractiveOrigin(current.interactive, interactive))
-              return current;
-            const next = { ...current, interactive };
-            snapshotRef.current = next;
-            return next;
-          });
-        },
+        adoptInteractive,
         adoptEvidence(revision) {
           if (controller.signal.aborted) return true;
           const current = snapshotRef.current;
@@ -150,6 +181,7 @@ export function useViewerCapabilityStore(input: {
     );
     return () => controller.abort();
   }, [
+    adoptInteractive,
     capabilities,
     input.interactive,
     input.setState,
@@ -167,12 +199,13 @@ export function useViewerCapabilityStore(input: {
     : input.context;
   const liveState = useMemo<ViewerLiveState>(
     () => ({
+      adoptPreparation,
       ...(capabilities ? { capabilities } : {}),
       ...(snapshot.interactive ? { interactive: snapshot.interactive } : {}),
       ...(request ? { request } : {}),
       ...(workspace ? { workspace } : {}),
     }),
-    [capabilities, request, snapshot.interactive, workspace],
+    [adoptPreparation, capabilities, request, snapshot.interactive, workspace],
   );
   return { catalogue: snapshot.catalogue, context, liveState };
 }

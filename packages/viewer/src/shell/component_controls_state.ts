@@ -5,6 +5,7 @@ import type { ComponentRenderSuccess } from "../components/render_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 
 import type { ControlDraft } from "./component_control_fields.js";
+import { LIVE_PREVIEW_COPY } from "./preview_mode.js";
 import type { WorkspaceData, WorkspaceVariant } from "./workspace_data.js";
 
 /** One edit scope's current draft and last valid previews. */
@@ -38,17 +39,23 @@ export function initialComponentEditorState(
   };
 }
 
-/** Explain why controls are read-only in the current product context. */
+/**
+ * Explain why controls are read-only in the current product context. `live`
+ * means the host can render temporary previews; `livePreview` means the view
+ * is shown in Live, where prop editing waits for Static.
+ */
 export function controlsUnavailable(
   data: WorkspaceData,
   variant: WorkspaceVariant | undefined,
   comparing: boolean,
   live: boolean,
+  livePreview = false,
 ): string | undefined {
   if (!variant || variant.removed)
     return "Choose an available saved variant to edit props.";
   if (comparing)
     return "Comparisons show the saved variant. Return to Current to edit props.";
+  if (livePreview) return LIVE_PREVIEW_COPY.notice;
   if (!live) return "Open this catalogue locally to edit props.";
   if (
     data.entry.kind === "component" &&

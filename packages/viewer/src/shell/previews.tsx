@@ -11,6 +11,7 @@ import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { BrowserFrame, PhoneFrame } from "./frames.js";
 import { PreviewFrame } from "./preview_frame.js";
+import { PreviewProgress } from "./preview_progress.js";
 import { PreviewUnavailable } from "./preview_unavailable.js";
 import { useOptionalShellStore } from "./store_context.js";
 import { useRemovedPreview } from "./use_removed_preview.js";
@@ -218,12 +219,7 @@ function PreviewState(props: {
   if (preview.state.status === "loading")
     return (
       <div className="mbk-stage">
-        <div className="mbk-preview-state">
-          <p className="mbk-preview-status" role="status">
-            <span aria-hidden="true" className="mbk-preview-spinner" />
-            Loading previous version…
-          </p>
-        </div>
+        <PreviewProgress>Loading previous version…</PreviewProgress>
       </div>
     );
   return (

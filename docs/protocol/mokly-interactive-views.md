@@ -3,10 +3,11 @@
 ## Delivery Status
 
 Tracked by the [interactive views plan](../../plans/interactive-views.md).
-Milestones 1–4 implement the contract, browser runtime, isolated Serve origin,
-lazy bundle state, and private shell transport. The Static/Live shell control
-remains Milestone 5, so Serve still presents Static even when its Live backend
-is enabled.
+Milestones 1–5 implement the contract, browser runtime, isolated Serve origin,
+lazy bundle state, private shell transport, and the shell's Static/Live
+control. Hiding the control for an opted-out entry waits for Serve to deliver
+that entry's resolved eligibility to the shell, as recorded under
+[Per-entry opt-out](#per-entry-opt-out).
 
 ## Purpose
 
@@ -53,9 +54,13 @@ query, fragment or userinfo. `--strict-port` applies to both Serve listeners.
 field can only remove Live from one entry. Screen variants inherit the parent's
 value unless they declare their own. Collections, pages and use cases reject
 the field. An opted-out entry shows no Static/Live control and refuses Live
-document requests with 404 on the interactive origin. The catalogue index
-carries the resolved value so the shell can hide the control without reading
-source.
+document requests with 404 on the interactive origin. The private catalogue
+index carries the resolved value, but the browser shell receives only the
+public catalogue and route-scoped private workspace evidence, and that
+evidence does not yet carry it once Serve adopts the completed manifest.
+Until Serve adds the resolved value to that private evidence, an opted-out
+entry offers the control and its refused Live document ends in the unavailable
+state below.
 
 ## Views That Offer Live
 
@@ -292,29 +297,62 @@ generations are 404. Like component-control POSTs, it requires `Origin` to equal
 `http://` plus the accepted loopback Host exactly and otherwise returns 403.
 The app event stream emits private `interactive` events with the complete
 descriptor on `building`, `ready`, and `failed` transitions, and includes the
-current descriptor when a stream opens. Milestone 5 consumes this transport
-and mounts a frame only after `ready`.
+current descriptor when a stream opens. The shell consumes this transport and
+mounts a frame only after `ready`. For one generation, `ready` and `failed`
+are final: a late `building` event cannot return a prepared generation to
+preparing.
 
 ## Shell Behaviour
 
-The view toolbar shows a Static/Live segmented control after the viewport
-control when the private descriptor carries an interactive origin and the
-entry offers Live. The standalone top-bar Appearance selector remains the only
-color-scheme control. Preview mode persists across view changes in the current
-document and is discarded on reload. Static frames mount exactly as today. Live
-frames mount through the cross-origin adapter with `sandbox="allow-same-origin
-allow-scripts"` on the interactive origin, and supply pending usage, so they
-subscribe to navigation only. Highlight, pick and controls stay Static-only;
-while Live is selected, the inspector's Props/Controls and Usage tabs state
-"Switch to Static to inspect or edit this view." Switching to Live with unsaved
+The view toolbar shows a segmented control named "Preview mode" with Static
+and Live when the private descriptor exists and the routed view is a current
+screen or a current saved component variant. It sits after the Dark preview
+toggle, or after the viewport control when the shell shows no Dark preview
+toggle, and before Highlight components. The standalone top-bar Appearance
+selector remains the only color-scheme control. Pages, use-case steps,
+removed entries and removed variants render no control and leave no gap; while
+a comparison is shown the control is hidden, and Current restores it with the
+choice unchanged. The same descriptor is present during server rendering and
+hydration, so the control is part of the first paint. Export and publication
+never carry the descriptor and never show the control.
+
+Preview mode is shell state, not public selection. It starts Static, persists
+across view changes in the current document, and is discarded by an ordinary
+reload. A watched reload's one-shot recovery carries it, so a rebuild that
+replaces the generation reloads the page with Live still selected and mounts
+the Live frame on the new generation.
+
+Static frames mount exactly as today. Selecting Live mounts a new frame in the
+same device chrome: the same `/static/` path, query and fragment on the Live
+origin, `sandbox="allow-same-origin allow-scripts"`, and the cross-origin
+adapter with pending usage, so the frame subscribes to navigation only. The
+frame origin is the descriptor's explicit origin, otherwise the shell's own
+scheme and host name with the descriptor port. Navigation events reach the
+shell's existing frame event router exactly like Static links.
+
+Preparing: when the descriptor is not `ready`, the device frame shows a
+centered spinner with "Getting the live preview ready" and the shell calls the
+preparation endpoint for the current generation. Selecting Static, changing
+view or replacing the generation aborts that call, and Static returns the
+static document immediately. A `ready` result or event mounts the Live frame
+hidden behind the same state until the adapter mount resolves, so a blank
+document never shows.
+
+Unavailable: Static is selected and the Live segment is disabled but
+focusable, with the tooltip and accessible description "Live preview is
+unavailable for this view." A `failed` descriptor, a `failed` preparation or
+a preparation error applies to every view of that generation; an adapter
+mount failure such as `timeout`, `origin` or `unavailable` applies to that
+view only. The reason stays diagnostic detail, not shell copy, and a new
+document starts available again.
+
+While Live is on screen, highlight, pick and controls stay Static-only. The
+inspector's Components, Props or Controls, and Usage tabs keep their icons and
+open normally, but each panel shows only "Switch to Static to inspect or edit
+this view."; Details is unchanged. Highlight components is disabled with the
+description "Highlighting works in Static." Switching to Live with unsaved
 prop edits discards them, exactly as changing the saved variant does; the
 control is not disabled.
-
-Preparing: while the bundle builds, the frame area shows the bundle
-preparation state with Static still selectable. Unavailable: after a bundle
-failure, opted-out entries, or an unreachable origin, the control shows Live
-as unavailable with Static selected; the reason is diagnostic detail, not
-shell copy.
 
 ## Failure States
 
@@ -327,7 +365,7 @@ shell copy.
 | Uncaught Live render error | Consumer render throws in the root          | Static document restored; one diagnostic             |
 | Caught Live render error   | Consumer error boundary catches             | Boundary result retained; one diagnostic             |
 | Origin unavailable         | Second listener cannot bind                 | Serve fails to start, naming the port                |
-| Generation replaced        | Watched rebuild during a Live session       | Frame reloads through the ordinary update path       |
+| Generation replaced        | Watched rebuild during a Live session       | Page reloads, keeps Live, mounts the new generation  |
 
 ## Verification
 
@@ -340,7 +378,11 @@ watched generation rollover, diagnostics, timing, typed 503 states, and 404 for
 ineligible entries. A real-Serve browser test mounts a stateful control through
 the frame adapter and observes navigation with no diagnostic. Other browser
 tests cover render recovery, and export tests prove private Live material is
-absent.
+absent. Shell tests cover control visibility per catalogue and view,
+server-rendered markup, frame origin and sandbox per mode, preparing and both
+unavailable scopes, navigation from a Live frame, preview-mode persistence,
+reset and watched-reload recovery, the inspector notice, disabled
+highlighting, discarded edits, and keyboard operation.
 
 ## Related Docs
 

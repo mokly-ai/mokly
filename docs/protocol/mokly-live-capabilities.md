@@ -150,9 +150,12 @@ unavailable presentation. `/__mokly/events` emits a private `interactive`
 event containing the complete descriptor whenever the current generation
 enters `building`, `ready`, or `failed`, and sends the current descriptor when
 the stream opens. The client adopts a state event only when generation, port,
-and optional explicit origin exactly match the installed descriptor. Milestone
-5 starts the preparation call, presents preparing while it awaits, and mounts
-the cross-origin frame only after ready.
+and optional explicit origin exactly match the installed descriptor. The shell
+starts the preparation call only while Live is selected for a view and the
+descriptor is not `ready`, presents preparing while it awaits, adopts the
+validated result into the same descriptor, and mounts the cross-origin frame
+only after ready. Events, preparation results and adopted evidence cannot move
+one generation from `ready` or `failed` back to `building`.
 
 ## Watched Updates
 

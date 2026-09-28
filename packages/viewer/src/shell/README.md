@@ -103,10 +103,11 @@ carry a compact identity/revision reference and resolve the shared finalized
 catalogue before `src/browser.tsx` hydrates that exact server tree. Live Serve
 places private route evidence and optional `{ generation, port, origin?, state }`
 interactive readiness in a separate descriptor. The capability store adopts
-same-identity readiness events in place and adopts a fetched page's public
-bootstrap, source, interactive descriptor, and private workspace as one
-monotonic revision. A changed Live generation keeps the existing full-reload
-boundary. `use_workspace_data.ts` keeps one route-owned workspace object so
+same-identity readiness events and preparation results in place, never moving
+a generation from `ready` or `failed` back to `building`, and adopts a fetched
+page's public bootstrap, source, interactive descriptor, and private workspace
+as one monotonic revision. A changed Live generation keeps the existing
+full-reload boundary. `use_workspace_data.ts` keeps one route-owned workspace object so
 matching evidence refreshes retain already loaded usage and local editor state.
 Versioned historical selection adopts new evidence and becomes unavailable if
 that exact snapshot disappears. Identity-less legacy history adopts only an
@@ -137,6 +138,25 @@ remains behind `useViewerCapabilities`. The
 [live capability contract](../../../../docs/protocol/mokly-live-capabilities.md)
 defines route loading, bundle preparation, revision fencing, and export
 omission.
+
+Static/Live is split the same way. `preview_mode.ts` is the pure layer: the
+`PreviewMode` and failure keys kept in the store (`selectPreviewMode`,
+`markLiveUnavailable`), which views offer Live, availability, and the shared
+product copy. `live_frame_source.ts` derives the Live origin and maps a static
+`/static/` source onto it. `live_preview.tsx` owns one routed workspace's
+decision: it reads the private descriptor from `useViewerLiveState`, calls the
+preparation capability while Live waits for its generation (aborting on
+Static, view change or a new generation), adopts the result into the
+descriptor, and supplies frame wiring through context to the current stage
+only. `stage_frame.tsx` then renders `live_preview_frame.tsx` in the same
+device chrome: a new frame mounted through the registry's per-origin
+`postMessageAdapter` with pending usage, hidden behind `PreviewProgress`
+until the adapter mount resolves. `preview_mode_control.tsx` is the toolbar
+segment, and `workspace_inspector.tsx` swaps the Components, Props and Usage
+panels for the Static-only notice while Live is on screen. Flow steps, pages,
+comparisons and removed entries never receive Live wiring. The preview mode
+rides in the watched-reload recovery snapshot, so a new generation remounts
+Live, while an ordinary load starts Static.
 
 Before standalone hydration, stored disclosure and split-width preferences are
 applied to the server DOM. Disclosure helpers treat native `<details>` groups

@@ -9,6 +9,7 @@ import type { ViewerSelection } from "../viewer/types.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import type { NavSectionNode } from "./nav_tree.js";
+import type { PreviewMode } from "./preview_mode.js";
 import type { ShellState } from "./store_state.js";
 import type { ShellRecoverySnapshot } from "./store_state.js";
 
@@ -21,12 +22,15 @@ export interface ShellStore {
   state: ShellState;
   collapseAll(): void;
   copy(text: string, announcement?: string): void;
+  /** Select Static and disable Live for a failed generation or view key. */
+  markLiveUnavailable(key: string): void;
   navigateFrame(href: string, navigation?: FrameNavigation): void;
   openFrame(href: string, target: string): void;
   persistNavigationWidth(value?: number): void;
   recoverySnapshot(): ShellRecoverySnapshot;
   select(selection: Partial<ViewerSelection>): void;
   selectColorScheme(value: "dark" | "light"): void;
+  selectPreviewMode(value: PreviewMode): void;
   selectVariant(value: string): void;
   selectViewport(value: "both" | "desktop" | "mobile"): void;
   setDetails(open: boolean, tab?: string): void;
