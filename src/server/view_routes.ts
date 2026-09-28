@@ -3,7 +3,7 @@ import type { ServerResponse } from "node:http";
 import {
   isHistoricalSnapshotId,
   parseViewHref,
-  resolveCatalogueRoute,
+  resolveCatalogueEntry,
 } from "@mokly/viewer/data";
 import { catalogueRouteEntry } from "@mokly/viewer/server";
 import type { Catalogue, ShellContext } from "@mokly/viewer/server";
@@ -43,7 +43,7 @@ export async function renderView(
     );
   const selected =
     identity && context.readModel
-      ? resolveCatalogueRoute(context.readModel, identity, requestedSnapshot)
+      ? resolveCatalogueEntry(context.readModel, identity, requestedSnapshot)
       : undefined;
   const entry = identity
     ? context.readModel

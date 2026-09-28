@@ -1,10 +1,6 @@
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import { viewRoute } from "../navigation/routes.js";
-import type {
-  HistoricalManifestEntry,
-  ManifestEntry,
-  ManifestScreen,
-} from "../registry/types.js";
+import type { ManifestEntry, ManifestScreen } from "../registry/types.js";
 import { VIEWPORTS } from "../registry/views.js";
 
 import type {
@@ -21,15 +17,8 @@ export interface GeneratedComponentView {
   usage?: ComponentViewRecord;
 }
 
-/** Enumerate actual artifacts from current identity or normalized history. */
-export function generatedViews(
-  entry: ManifestEntry | HistoricalManifestEntry,
-): GeneratedComponentView[] {
-  if ("artifacts" in entry)
-    return entry.artifacts.map((artifact) => ({
-      ...artifact,
-      ...(entry.kind === "component" ? { variantId: entry.id } : {}),
-    }));
+/** Derive current and historical-v7 artifacts from identity and view axes. */
+export function generatedViews(entry: ManifestEntry): GeneratedComponentView[] {
   if (entry.kind === "component")
     return isManifestComponentVariant(entry)
       ? fragmentViews(entry, entry.id)

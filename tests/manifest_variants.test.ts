@@ -2,12 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { ResolvedRegistryEntry } from "../dist/authoring/types.js";
-import {
-  createManifest,
-  parseManifest,
-  parseHistoricalManifest,
-} from "../dist/registry/manifest.js";
-import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
+import { createManifest, parseManifest } from "../dist/registry/manifest.js";
+import { entryRoute } from "../packages/viewer/dist/data.js";
 import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
 
 test("manifest emits variantOf only for screen variants", () => {
@@ -24,17 +20,9 @@ test("manifest emits variantOf only for screen variants", () => {
 });
 
 test("manifest and hierarchy keep authored sibling variant order", () => {
-  const parent = resolvedScreen("welcome", "screens/welcome.html");
-  const zeta = resolvedScreen(
-    "welcome-zeta",
-    "screens/welcome-zeta.html",
-    parent.id,
-  );
-  const alpha = resolvedScreen(
-    "welcome-alpha",
-    "screens/welcome-alpha.html",
-    parent.id,
-  );
+  const parent = resolvedScreen("welcome");
+  const zeta = resolvedScreen("welcome-zeta", parent.id);
+  const alpha = resolvedScreen("welcome-alpha", parent.id);
   const manifest = createManifest([parent, zeta, alpha], [], ["light"]);
 
   assert.deepEqual(
@@ -57,27 +45,6 @@ test("manifest and hierarchy keep authored sibling variant order", () => {
   );
 });
 
-test("historical v5 permits empty collections but drops them after validation", () => {
-  const historical = historicalManifest(5);
-  historical.entries.push({
-    id: "screens",
-    kind: "collection",
-    title: "Screens",
-    description: "Screens",
-    childIds: [],
-    navPath: [],
-    dependencies: [],
-    declaredDependencies: [],
-    relatedDocs: [],
-    sourcePath: "entries/welcome.mockup.tsx",
-  });
-  assert.deepEqual(
-    parseHistoricalManifest(historical).entries.map(({ id }) => id),
-    ["welcome", "welcome-empty"],
-  );
-  assert.throws(() => parseManifest(historical), /schema version 7/);
-});
-
 test("manifest validation rejects broken variant parents and stored routes", () => {
   const unknown = mutableManifest(variantManifest());
   screenEntry(unknown, "welcome-empty").variantOf = "missing";
@@ -98,37 +65,16 @@ test("manifest validation rejects broken variant parents and stored routes", () 
   assert.throws(() => parseManifest(nonScreen), /parent is not a screen/);
 
   const rerouted = mutableManifest(variantManifest());
-  const reroutedVariant = screenEntry(rerouted, "welcome-empty");
-  reroutedVariant.route = "screens/elsewhere.html";
+  screenEntry(rerouted, "welcome-empty").route = "screens/elsewhere.html";
   assert.throws(() => parseManifest(rerouted), /unsupported route/);
-});
-
-test("historical manifest validation retains authored v6 routes", () => {
-  const historical = historicalManifest(6);
-  const variant = screenEntry(historical, "welcome-empty");
-  variant.route = "archive/welcome.variants/empty.html";
-  variant.fragments = {
-    desktop: "archive/welcome.variants/empty.desktop.html",
-    mobile: "archive/welcome.variants/empty.mobile.html",
-  };
-
-  const parsed = parseHistoricalManifest(historical);
-  assert.equal(parsed.schemaVersion, 6);
-  const normalized = parsed.entries.find((entry) => entry.id === variant.id);
-  assert.ok(normalized?.kind === "screen" && "artifacts" in normalized);
-  assert.equal(
-    normalized.artifacts.find(({ viewport }) => viewport === "mobile")?.path,
-    "archive/welcome.variants/empty.mobile.html",
-  );
-  assert.throws(() => parseManifest(historical), /schema version 7/);
 });
 
 test("manifest validation rejects nested variants and mismatched paths", () => {
   const nested = createManifest(
     [
-      resolvedScreen("base", "screens/base.html"),
-      resolvedScreen("welcome", "screens/welcome.html", "base"),
-      resolvedScreen("welcome-empty", "screens/welcome-empty.html", "welcome"),
+      resolvedScreen("base"),
+      resolvedScreen("welcome", "base"),
+      resolvedScreen("welcome-empty", "welcome"),
     ],
     [],
     ["light"],
@@ -162,42 +108,13 @@ test("current non-screen manifest entries reject variant fields", () => {
 
 function variantManifest() {
   return createManifest(
-    [
-      resolvedScreen("welcome", "screens/welcome.html"),
-      resolvedScreen("welcome-empty", "screens/welcome-empty.html", "welcome"),
-    ],
+    [resolvedScreen("welcome"), resolvedScreen("welcome-empty", "welcome")],
     [],
     ["light"],
   );
 }
 
-function historicalManifest(schemaVersion: 5 | 6): MutableManifest {
-  const current = variantManifest();
-  return mutableManifest({
-    ...current,
-    schemaVersion,
-    entries: current.entries.map((entry) => {
-      if (entry.kind !== "screen") return entry;
-      const { colorSchemes: _colorSchemes, ...metadata } = entry;
-      return {
-        ...metadata,
-        dependencies: [entry.sourcePath],
-        route: entryRoute("screen", entry.id),
-        fragments: {
-          desktop: viewRoute("screen", entry.id, "desktop", "light"),
-          mobile: viewRoute("screen", entry.id, "mobile", "light"),
-        },
-        viewports: ["mobile", "desktop"],
-      };
-    }),
-  });
-}
-
-function resolvedScreen(
-  id: string,
-  route: string,
-  variantOf?: string,
-): ResolvedRegistryEntry {
+function resolvedScreen(id: string, variantOf?: string): ResolvedRegistryEntry {
   return {
     __viaDefine: true,
     dependencies: [],
@@ -208,7 +125,6 @@ function resolvedScreen(
     mobile: id,
     navPath: [],
     relatedDocs: [],
-    route,
     sourcePath: `entries/${id}.mockup.tsx`,
     sourceRelativePath: `entries/${id}.mockup.tsx`,
     title: id,

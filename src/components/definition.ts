@@ -1,6 +1,5 @@
 import type { ObjectPropSchema } from "@mokly/viewer";
 import {
-  entryRoute,
   isEntryId,
   validateControlledValues,
   validateControls,
@@ -101,7 +100,6 @@ export function validateComponentDefinition(
     navPath: value.navPath === undefined ? [] : value.navPath,
     __viaDefine: true,
     kind: "component",
-    route: entryRoute("component", value.id),
     propSchema: structuredClone(value.propSchema),
     controls: structuredClone(controls),
     slots: [...slots].sort(),
@@ -171,7 +169,6 @@ function componentVariantDefinition(
       : parent.navPath,
     props: { ...values.data, ...values.slots },
     relatedDocs: [...parent.relatedDocs],
-    route: entryRoute("component", variant.id),
     suppliedSlots: Object.keys(values.slots).sort(),
     ...(parent.tags ? { tags: [...parent.tags] } : {}),
     title: variant.title,

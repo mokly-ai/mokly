@@ -63,7 +63,6 @@ test("projection exposes real usage and attribution without private evidence", a
     "endOffset",
     "styles",
     "resources",
-    "legacyPages",
     "headDigests",
     "changedPaths",
   ])

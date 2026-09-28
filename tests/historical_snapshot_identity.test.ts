@@ -2,10 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
-import {
-  resolveCatalogueRoute,
-  resolveCatalogueSelection,
-} from "../packages/viewer/src/catalogue/entry_selection.js";
+import { resolveCatalogueEntry } from "../packages/viewer/src/catalogue/entry_selection.js";
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import type { CatalogueReadModel } from "../packages/viewer/src/catalogue/types.js";
 import type {
@@ -94,7 +91,7 @@ test("reader safely derives older generation-backed identities", () => {
   const identityLess = readCatalogue(value);
   assert.equal(identityLess.removedEntries[0]?.snapshotId, undefined);
   assert.equal(
-    resolveCatalogueRoute(identityLess, {
+    resolveCatalogueEntry(identityLess, {
       id: oldScreen.id,
       kind: oldScreen.kind,
     })?.entry.id,
@@ -118,36 +115,22 @@ test("reader rejects malformed and duplicate published identities", () => {
   assert.throws(() => readCatalogue(duplicated), /duplicate/i);
 });
 
-test("id-only selection prefers current while snapshots select exact history", () => {
+test("reader rejects current and removed records sharing an id", () => {
   const fixture = readCatalogue(
     JSON.parse(requireFixture("../docs/protocol/fixtures/catalogue-v3.json")),
   );
-  const current = [
-    fixture.screens[0]!,
-    fixture.pages[0]!,
-    fixture.useCases[0]!,
-    fixture.components[0]!,
-  ];
-  const removedEntries = current.map((entry, index) => ({
+  const current = fixture.screens[0]!;
+  const removed = {
     entry: {
-      ...structuredClone(entry),
-      title: `Historical ${entry.title}`,
+      ...structuredClone(current),
+      title: `Historical ${current.title}`,
     },
-    snapshotId: String(index + 1).repeat(64),
-  }));
-  const model = { ...fixture, removedEntries };
-
-  for (const record of removedEntries) {
-    assert.equal(
-      resolveCatalogueSelection(model, record.entry.id)?.entry.title,
-      current.find(({ id }) => id === record.entry.id)?.title,
-    );
-    assert.equal(
-      resolveCatalogueSelection(model, record.entry.id, record.snapshotId)
-        ?.entry.title,
-      record.entry.title,
-    );
-  }
+    snapshotId: "f".repeat(64),
+  };
+  assert.throws(
+    () => readCatalogue({ ...fixture, removedEntries: [removed] }),
+    /current|removed|same-id/i,
+  );
 });
 
 test("historical workspace resolution owns the old identity and Removed status", () => {

@@ -39,8 +39,8 @@ export function DiffScreen({
   const comparison = useComparison({
     ...(effectiveColorScheme ? { effectiveColorScheme } : {}),
     eligible,
+    entryId,
     ...(owner ? { owner } : {}),
-    route: entryId,
   });
   const comparisonCallback = useRef(onComparisonChange);
   const modeCallback = useRef(onModeChange);

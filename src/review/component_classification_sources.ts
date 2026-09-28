@@ -303,9 +303,7 @@ export async function classifyComponentsWithSources(
 
 function entryDependencies(entry: ReviewEntry | undefined): readonly string[] {
   if (!entry) return [];
-  return "dependencies" in entry
-    ? entry.dependencies
-    : [entry.sourcePath, ...entry.declaredDependencies];
+  return [entry.sourcePath, ...entry.declaredDependencies];
 }
 
 function entryViews(

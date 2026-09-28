@@ -109,67 +109,6 @@ for (const mode of ["committed", "derived"] as const) {
   });
 }
 
-test("complete comparison retains a removed screen from a v3 manifest", async (t) => {
-  const fixture = await screenFixture(t);
-  const old = fixture.screen;
-  const historical = {
-    entries: [
-      {
-        declaredDependencies: [],
-        dependencies: [old.sourcePath],
-        description: old.description,
-        fragments: {
-          desktop: viewRoute("screen", old.id, "desktop", "light"),
-          mobile: viewRoute("screen", old.id, "mobile", "light"),
-        },
-        darkFragments: {
-          desktop: viewRoute("screen", old.id, "desktop", "dark"),
-          mobile: viewRoute("screen", old.id, "mobile", "dark"),
-        },
-        id: old.id,
-        kind: "screen",
-        navPath: old.navPath,
-        relatedDocs: old.relatedDocs,
-        route: `screens/${old.id}.html`,
-        sourcePath: old.sourcePath,
-        title: old.title,
-        useCaseIds: [],
-        viewports: ["mobile", "desktop"],
-      },
-    ],
-    generatedBy: "mokly",
-    legacyPages: [],
-    schemaVersion: 3,
-  };
-  fixture.files.set(
-    "mockups/mokly-manifest.json",
-    Buffer.from(JSON.stringify(historical)),
-  );
-
-  const artifact = await compareReview(
-    fixture.current,
-    fixture.config,
-    repository(fixture.reader),
-    "main",
-  );
-  const screen = artifact.result.screens.find((entry) => entry.id === old.id)!;
-  assert.equal(screen.state, "removed");
-  assert.ok(screen.views.every((view) => view.state === "removed"));
-  for (const view of screen.views)
-    assert.match(
-      String(
-        artifact.files.get(
-          `snapshots/before/${viewRoute("screen", screen.id, view.viewport, view.colorScheme)}`,
-        ),
-      ),
-      /baseline view/,
-    );
-  assert.equal(
-    String(artifact.files.get("snapshots/before/assets/removed.css")),
-    "body { color: baseline; }",
-  );
-});
-
 test("removed screen capture never substitutes current files for deleted history", async (t) => {
   const fixture = await screenFixture(t);
   fixture.files.delete("mockups/assets/removed.css");
@@ -280,16 +219,6 @@ function baselineReader(
             : { kind: "missing" },
         ]),
       ),
-  };
-}
-
-function repository(reader: BaselineReader) {
-  return {
-    evidence: {
-      changedPaths: async () => [],
-      mergeBase: async () => commit,
-    },
-    reader,
   };
 }
 

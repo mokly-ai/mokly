@@ -87,9 +87,7 @@ export function EntryDetailsBody(props: {
 }
 
 function entryDependencies(entry: CatalogueManifestEntry): readonly string[] {
-  return "dependencies" in entry
-    ? entry.dependencies
-    : [...new Set([entry.sourcePath, ...entry.declaredDependencies])].sort();
+  return [...new Set([entry.sourcePath, ...entry.declaredDependencies])].sort();
 }
 
 /** The collapsed-by-default details panel for the selected route. */

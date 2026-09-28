@@ -100,6 +100,9 @@ the same config-owned validation.
 Both readers accept only manifest v7. Recognized earlier output follows the
 successful unavailable behavior and single terminal line in the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
+`classification_result.ts` carries that expected typed outcome across the
+background worker without converting it into a generic classifier failure;
+unsupported newer or malformed v7 data keeps the normal safe diagnostic path.
 
 `configured_review.ts` requires an injected `ReadOnlyReviewRepository` or a
 `ReviewRepositorySource` that supplies the current reader. The full comparison

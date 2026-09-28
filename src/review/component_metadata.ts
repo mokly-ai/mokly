@@ -1,10 +1,6 @@
 import { minimatch } from "minimatch";
 
-import type {
-  ComponentViewRecord,
-  HistoricalManifestComponent,
-  ManifestComponent,
-} from "@mokly/viewer";
+import type { ComponentViewRecord, ManifestComponent } from "@mokly/viewer";
 import { canonicalJson, isManifestComponentVariant } from "@mokly/viewer/data";
 import type {
   Manifest,
@@ -58,10 +54,8 @@ export function metadata(entry: ReviewEntry): string {
   const navPath = entry.navPath;
   const common = { ...entry } as Record<string, unknown>;
   for (const field of [
-    "artifacts",
     "componentViews",
     "declaredDependencies",
-    "dependencies",
     "navPath",
     "sourcePath",
   ])
@@ -74,9 +68,7 @@ export function metadata(entry: ReviewEntry): string {
 
 /** Track owners, exact reasons, and unowned path evidence across both manifests. */
 export class ComponentDependencyPolicy {
-  private readonly components: readonly (
-    ManifestComponent | HistoricalManifestComponent
-  )[];
+  private readonly components: readonly ManifestComponent[];
   private readonly ownersByPath = new Map<string, ReadonlySet<string>>();
   private readonly sharedByPath = new Map<string, boolean>();
   constructor(
@@ -85,7 +77,7 @@ export class ComponentDependencyPolicy {
     private readonly shared: readonly string[],
   ) {
     this.components = [...before.entries, ...after.entries].filter(
-      (entry): entry is ManifestComponent | HistoricalManifestComponent =>
+      (entry): entry is ManifestComponent =>
         entry.kind === "component" && !isManifestComponentVariant(entry),
     );
   }

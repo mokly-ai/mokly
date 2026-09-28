@@ -42,8 +42,8 @@ test("Review artifact paths are collision-free for distinct valid routes", async
   const baseManifest = JSON.stringify({
     entries: [],
     generatedBy: "mokly",
-    legacyPages: [],
-    schemaVersion: 3,
+    schemaVersion: 7,
+    sourceFiles: [],
   });
   const artifact = await compareReview(
     compilation,
@@ -154,8 +154,8 @@ test("Review retains marker-bearing pane bytes as portable output", async (conte
   const baseManifest = JSON.stringify({
     entries: [],
     generatedBy: "mokly",
-    legacyPages: [],
-    schemaVersion: 3,
+    schemaVersion: 7,
+    sourceFiles: [],
   });
   const artifact = await compareReview(
     compilation,

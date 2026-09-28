@@ -7,6 +7,7 @@ import {
   reviewAddress,
   reviewArray,
   reviewId,
+  reviewIgnoreId,
   reviewInvalid,
   reviewObject,
   reviewPath,
@@ -107,7 +108,7 @@ export function validateReviewViews(
     keys.push(
       `${view.viewport === "mobile" ? 0 : 1}:${view.colorScheme === "light" ? 0 : 1}`,
     );
-    reviewStrings(view.ignoredIds, reviewId);
+    reviewStrings(view.ignoredIds, reviewIgnoreId);
     reviewState(view.state);
     if (view.state === "added" && sides && !sides.after)
       reviewInvalid("added view has no after entry side");

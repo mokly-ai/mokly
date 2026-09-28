@@ -83,6 +83,8 @@ export class WatchedBackground {
           ),
         baselineProgress: (event) => this.reportBaseline(event),
         diagnostic: options.report,
+        incompatibleBaseline: (commit) =>
+          options.reporter.incompatibleBaseline(commit),
         resources: options.resources,
         shutdown: options.shutdown,
         ...(options.baselineBuilder

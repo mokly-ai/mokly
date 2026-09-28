@@ -21,7 +21,6 @@ export async function inspectPublicCatalogue(root, comparisonPath) {
     "sourceFiles",
     "declaredDependencies",
     "ownedDependencies",
-    "legacyPages",
     "route",
     "documentPath",
     "fragmentPath",

@@ -3,7 +3,6 @@ import type { ColorScheme, Viewport } from "@mokly/viewer";
 import type { HistoricalManifest, ManifestV7 } from "@mokly/viewer/data";
 import { entryRoute, VIEWPORTS } from "@mokly/viewer/data";
 
-import { pageBaselines } from "../review/page_baselines.js";
 import { fragmentForView, unionColorSchemes } from "../review/screen_views.js";
 
 export interface DocumentPair {
@@ -21,12 +20,14 @@ export function documentPairs(
   documents: "all" | "pages",
 ): DocumentPair[] {
   const bases = new Map(baseline.entries.map((entry) => [entry.id, entry]));
-  const pages = pageBaselines(manifest, baseline);
   const pairs: DocumentPair[] = [];
   for (const screen of manifest.entries) {
     const baseEntry = bases.get(screen.id);
     if (screen.kind === "page") {
-      const base = pages.get(screen.id)?.artifactPath;
+      const base =
+        baseEntry?.kind === "page"
+          ? entryRoute("page", baseEntry.id)
+          : undefined;
       const head = entryRoute("page", screen.id);
       pairs.push({
         ...(base ? { base } : {}),

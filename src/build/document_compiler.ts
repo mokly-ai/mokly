@@ -43,7 +43,6 @@ interface PreparedDocument extends CompiledDocument {
 }
 interface DocumentTarget extends ArtifactView {
   entryId: string;
-  variantId?: string;
 }
 
 export class DocumentCompiler {
@@ -86,7 +85,6 @@ export class DocumentCompiler {
           entryId: entry.id,
           viewport: view.viewport,
           colorScheme: view.colorScheme,
-          ...(view.variantId ? { variantId: view.variantId } : {}),
         });
     }
     this.links = {

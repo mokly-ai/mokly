@@ -144,7 +144,8 @@ export async function startCatalogueServer(
     options.liveChanges === false &&
     !options.review &&
     routes === undefined &&
-    !hasEvidence
+    !hasEvidence &&
+    options.changesStatus !== "unavailable"
       ? ("disabled" as const)
       : status;
   const publicInput = (
@@ -203,9 +204,12 @@ export async function startCatalogueServer(
       componentChanges,
       controls?.capability(),
       documents,
-      options.liveChanges === false ? undefined : changesStatus,
+      options.liveChanges === false && options.changesStatus !== "unavailable"
+        ? undefined
+        : changesStatus,
       contentVersion,
       publicCatalogue,
+      options.liveChanges === false && options.changesStatus === "unavailable",
     ).catch(() => {
       if (!response.destroyed && !response.headersSent)
         send(

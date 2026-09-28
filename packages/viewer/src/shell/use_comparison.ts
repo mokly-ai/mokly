@@ -1,4 +1,4 @@
-/** React lifecycle controller for one route's lazy comparison snapshots. */
+/** React lifecycle controller for one entry's lazy comparison snapshots. */
 
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 
@@ -60,14 +60,14 @@ export interface ComparisonController {
 export function useComparison({
   effectiveColorScheme,
   eligible,
+  entryId,
   owner,
-  route,
   variantId,
 }: {
   effectiveColorScheme?: "dark" | "light";
   eligible: boolean;
+  entryId: string;
   owner?: string;
-  route: string;
   variantId?: string;
 }): ComparisonController {
   const store = useOptionalShellStore();
@@ -75,14 +75,14 @@ export function useComparison({
   const selection = store?.state.selection;
   const evidenceKey = `${store?.context.updateVersion ?? 0}:${store?.catalogue.publicModel?.revision.evidence ?? 0}`;
   const scope = useMemo<ComparisonScope>(
-    () => ({ id: variantId ?? route }),
-    [route, variantId],
+    () => ({ id: variantId ?? entryId }),
+    [entryId, variantId],
   );
   const scopeKey = useMemo(
-    () => JSON.stringify([route, variantId]),
-    [route, variantId],
+    () => JSON.stringify([entryId, variantId]),
+    [entryId, variantId],
   );
-  const ownerKey = `${owner ?? route}\u0000${evidenceKey}`;
+  const ownerKey = `${owner ?? entryId}\u0000${evidenceKey}`;
   const [modeState, setModeState] = useReducer(
     (
       _current: { mode: ComparisonMode; ownerKey: string },

@@ -7,7 +7,6 @@ import {
   generatedViews,
   isManifestComponentVariant,
   parseReviewResult,
-  viewRoute,
 } from "@mokly/viewer/data";
 import type {
   HistoricalManifestScreen,
@@ -29,7 +28,6 @@ import { ComponentMaterialReader } from "./component_resources.js";
 import { SelectedAssetReader } from "./evidence_assets.js";
 import type { BaselineReader } from "./git.js";
 import { CompiledReviewAssetReader } from "./head_assets.js";
-import { relocateHistoricalDocument } from "./historical_document.js";
 import { baselineReaderForCommit } from "./repository.js";
 import { ResourceComparison } from "./resource_comparison.js";
 import { compareScreen } from "./screen_compare.js";
@@ -97,7 +95,7 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
         side === "before" ? source.before : source.after,
         selection.id,
       );
-      const routes = new Set(artifacts.map((artifact) => artifact.source));
+      const routes = new Set(artifacts);
       if (side === "after")
         for (const route of routes)
           if (!Object.hasOwn(source.headDigests, route))
@@ -113,26 +111,6 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
         (route) => reader.read(route),
         (routes) => reader.readMany(routes),
       );
-      for (const artifact of artifacts) {
-        const sourcePath = `snapshots/${side}/${artifact.source}`;
-        const targetPath = `snapshots/${side}/${artifact.target}`;
-        if (sourcePath === targetPath) continue;
-        const content = files.get(sourcePath);
-        if (content === undefined)
-          throw new MoklyError(
-            "review-invalid",
-            `Selected snapshot is missing: ${artifact.source}`,
-          );
-        files.delete(sourcePath);
-        files.set(
-          targetPath,
-          relocateHistoricalDocument(
-            Buffer.from(content).toString("utf8"),
-            artifact.source,
-            artifact.target,
-          ),
-        );
-      }
     }
     signal.throwIfAborted();
     return { result, files };
@@ -146,15 +124,11 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
   ): Promise<ReviewResult> {
     const before = source.before.entries.find(
       (entry): entry is HistoricalManifestScreen =>
-        entry.kind === "screen" &&
-        "artifacts" in entry &&
-        entry.id === selection.id,
+        entry.kind === "screen" && entry.id === selection.id,
     );
     const after = source.after.entries.find(
       (entry): entry is ManifestScreen =>
-        entry.kind === "screen" &&
-        !("artifacts" in entry) &&
-        entry.id === selection.id,
+        entry.kind === "screen" && entry.id === selection.id,
     );
     if (!before && !after) throw missingSelection();
     const sharedImpact = source.changedPaths.filter((changed) =>
@@ -224,8 +198,5 @@ function selectedArtifacts(manifest: Manifest, id: string) {
   );
   if (!entry || (entry.kind !== "screen" && entry.kind !== "component"))
     return [];
-  return generatedViews(entry).map((view) => ({
-    source: view.path,
-    target: viewRoute(entry.kind, entry.id, view.viewport, view.colorScheme),
-  }));
+  return generatedViews(entry).map((view) => view.path);
 }

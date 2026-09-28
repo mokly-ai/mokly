@@ -14,7 +14,6 @@ import { rebaseStyleOwnership } from "../components/style_ownership.js";
 import { isComponentVariantDefinition } from "../components/types.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
-import { MoklyError } from "../errors.js";
 import {
   createManifest,
   MANIFEST_NAME,
@@ -92,9 +91,6 @@ async function compileMeasured(
           componentViews,
         ),
       );
-  const routedEntries = new Set(
-    registry.entries.map((entry) => entryRoute(entry.kind, entry.id)),
-  );
   const generatedOwners = new Map<string, string>();
   for (const entry of registry.entries) {
     if (entry.kind === "page")
@@ -119,23 +115,6 @@ async function compileMeasured(
           );
         }
       }
-    }
-  }
-  const fragmentRoutes = new Set(
-    [...generatedOwners.keys()].filter(
-      (route) =>
-        !registry.entries.some(
-          (entry) =>
-            entry.kind === "page" && entryRoute("page", entry.id) === route,
-        ),
-    ),
-  );
-  for (const route of routedEntries) {
-    if (fragmentRoutes.has(route)) {
-      throw new MoklyError(
-        "build-invalid",
-        `fragment route collides with registry route: ${route}`,
-      );
     }
   }
   const beforeTransform = new Map(outputs);

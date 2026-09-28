@@ -19,7 +19,7 @@ const config: ResolvedConfig = {
   generatedOutput: "committed",
   publicExclude: DEFAULT_PUBLIC_EXCLUDE,
   colorSchemes: ["light"],
-  compatibility: { readManifestV2: false },
+  compatibility: {},
   configPath: path.join(repositoryRoot, "mokly.config.ts"),
   entriesDir: path.join(repositoryRoot, "tests"),
   entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],
@@ -91,7 +91,6 @@ test("screen variants inherit, override, brand, derived route, and attribute", (
     mobile: "Empty mobile",
     navPath: [],
     relatedDocs: ["docs/protocol/mokly-authoring.md"],
-    route: "screens/welcome-empty.html",
     tags: ["onboarding"],
     title: "Welcome, empty workspace",
     useCaseIds: [],
@@ -132,8 +131,8 @@ test("nested screen variants flatten beside the parent", () => {
     flattened.map(({ id }) => id),
     ["nested-parent", "nested-empty"],
   );
-  assert.equal(flattened[0]?.route, "screens/nested-parent.html");
-  assert.equal(flattened[1]?.route, "screens/nested-empty.html");
+  assert.equal(Object.hasOwn(flattened[0] ?? {}, "route"), false);
+  assert.equal(Object.hasOwn(flattened[1] ?? {}, "route"), false);
   assert.equal(flattened[1]?.variantOf, "nested-parent");
   assert.deepEqual(flattened[1]?.tags, ["forms"]);
   assert.deepEqual(flattened[1]?.dependencies, ["README.md"]);

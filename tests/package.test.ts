@@ -13,6 +13,7 @@ import {
   reviewMaterialKey,
   screen,
 } from "../dist/index.js";
+import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 import { GUIDE_PATHS } from "./helpers/guides.js";
@@ -60,7 +61,9 @@ test("public helpers retain stable authoring semantics", () => {
     ["nested-screen"],
   );
   assert.equal(
-    definitions[0]?.kind === "screen" ? definitions[0].route : "",
+    definitions[0]?.kind === "screen"
+      ? entryRoute(definitions[0].kind, definitions[0].id)
+      : "",
     "screens/nested-screen.html",
   );
   assert.deepEqual(definitions[0]?.navPath, ["Group"]);

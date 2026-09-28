@@ -2,14 +2,14 @@ import path from "node:path";
 
 import type { HistoricalManifest } from "@mokly/viewer/data";
 
+import { incompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import {
-  FORMER_MANIFEST_NAME,
+  EARLIER_MANIFEST_NAMES,
   MANIFEST_NAME,
   parseHistoricalManifest,
-  selectManifestInput,
 } from "../registry/manifest.js";
 
 import type { BaselineReader } from "./git.js";
@@ -32,14 +32,13 @@ async function readMeasured(
 ): Promise<HistoricalManifest> {
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const canonicalPath = joinGit(prefix, MANIFEST_NAME);
-  const selection = selectManifestInput(
-    await git.fileExists(commit, canonicalPath),
-    await git.fileExists(commit, joinGit(prefix, FORMER_MANIFEST_NAME)),
-    config.compatibility.readManifestV2,
-  );
+  if (!(await git.fileExists(commit, canonicalPath))) {
+    for (const name of EARLIER_MANIFEST_NAMES)
+      if (await git.fileExists(commit, joinGit(prefix, name)))
+        throw incompatibleEarlierBaseline();
+  }
   return parseHistoricalManifest(
-    JSON.parse(await git.readFile(commit, joinGit(prefix, selection.filename))),
-    selection.allowV2,
+    JSON.parse(await git.readFile(commit, canonicalPath)),
   );
 }
 
@@ -50,10 +49,7 @@ export function baselineResourceConfig(
 ): ResolvedConfig {
   return {
     ...config,
-    sourceFiles: manifest.sourceFiles ?? [
-      ...manifest.entries.map((entry) => entry.sourcePath),
-      ...(manifest.legacyPages ?? []).map((page) => page.sourcePath),
-    ],
+    sourceFiles: manifest.sourceFiles,
   };
 }
 

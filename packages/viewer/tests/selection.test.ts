@@ -71,35 +71,6 @@ test("component parent and variant identities round trip through selection", () 
   );
 });
 
-test("same-id current and historical components reset record identity", () => {
-  const current = fixture.components.find((entry) => !("variantOf" in entry))!;
-  const historical = {
-    ...structuredClone(current),
-    route: "archive/action.html",
-  };
-  const snapshotId = "f".repeat(64);
-  const model = {
-    ...fixture,
-    removedEntries: [
-      ...fixture.removedEntries,
-      { entry: historical, snapshotId },
-    ],
-  };
-  const currentSelection = normalizeSelection(model, {
-    ...defaultSelection,
-    screenId: current.id,
-  });
-  const selectedHistory = mergeSelection(model, currentSelection, {
-    screenId: current.id,
-    snapshotId,
-  });
-  assert.equal(selectedHistory.snapshotId, snapshotId);
-  const selectedCurrent = mergeSelection(model, selectedHistory, {
-    screenId: current.id,
-  });
-  assert.equal(selectedCurrent.snapshotId, undefined);
-});
-
 test("variant entry identity participates in equality and survives reveal", () => {
   const variant = fixture.components.find((entry) => "variantOf" in entry)!;
   const selected = normalizeSelection(fixture, {

@@ -16,9 +16,7 @@ import type { RemovedPagePreviewArtifact } from "../packages/viewer/dist/review/
 import type { ReviewArtifact } from "../packages/viewer/dist/review/types.js";
 
 const page = {
-  artifactPath: "archive/removed.html",
   declaredDependencies: [],
-  dependencies: [],
   description: "Removed page",
   id: "removed-page",
   kind: "page" as const,
@@ -31,8 +29,8 @@ const page = {
 const baseline = {
   entries: [page],
   generatedBy: "mokly" as const,
-  schemaVersion: 5 as const,
-  sourceFiles: [],
+  schemaVersion: 7 as const,
+  sourceFiles: [page.sourcePath],
 };
 const pageSource: RemovedPagePreviewSource = {
   baseline,

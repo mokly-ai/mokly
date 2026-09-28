@@ -17,56 +17,40 @@ import {
   removedPagePreviewFixture,
 } from "./helpers/removed_page_preview_fixture.js";
 
-for (const version of [4, 5] as const) {
-  test(`removed page captures its complete historical closure from manifest v${version}`, async (t) => {
-    const fixture = await removedPagePreviewFixture(t, version);
-    const artifact = await new RepositoryRemovedPagePreview(
-      fixture.config,
-      fixture.reader,
-    ).generate(
-      fixture.source,
-      { kind: "page", id: "guide" },
-      new AbortController().signal,
-    );
-    const files = renderRemovedPagePreviewArtifact(artifact);
+test("removed page captures its complete historical closure from manifest v7", async (t) => {
+  const fixture = await removedPagePreviewFixture(t);
+  const artifact = await new RepositoryRemovedPagePreview(
+    fixture.config,
+    fixture.reader,
+  ).generate(
+    fixture.source,
+    { kind: "page", id: "guide" },
+    new AbortController().signal,
+  );
+  const files = renderRemovedPagePreviewArtifact(artifact);
 
-    assert.deepEqual(artifact.preview, {
-      schemaVersion: 2,
-      baseRef: "main",
-      baseCommit: PAGE_COMMIT,
-      id: "guide",
-    });
-    assert.deepEqual(
-      parseRemovedPagePreview(JSON.parse(String(files.get("preview.json")))),
-      artifact.preview,
-    );
-    assert.equal(files.size, fixture.files.size + 1);
-    for (const [repoPath, value] of fixture.files) {
-      const captured = Buffer.from(
-        files.get(
-          repoPath === `mockups/${PAGE_ROUTE}`
-            ? "snapshots/before/pages/guide.html"
-            : `snapshots/before/${repoPath.slice("mockups/".length)}`,
-        )!,
-      );
-      if (repoPath === `mockups/${PAGE_ROUTE}`) {
-        const base = '<base data-mokly-snapshot-base="" href="../archive/">';
-        assert.match(captured.toString(), new RegExp(base));
-        assert.deepEqual(
-          Buffer.from(captured.toString().replace(base, "")),
-          Buffer.from(value.bytes!),
-          repoPath,
-        );
-        continue;
-      }
-      assert.deepEqual(captured, Buffer.from(value.bytes!), repoPath);
-    }
-    assert.deepEqual(
-      fixture.batches.map((batch) => batch.length),
-      [1, 3, 4, 1],
-    );
+  assert.deepEqual(artifact.preview, {
+    schemaVersion: 2,
+    baseRef: "main",
+    baseCommit: PAGE_COMMIT,
+    id: "guide",
   });
-}
+  assert.deepEqual(
+    parseRemovedPagePreview(JSON.parse(String(files.get("preview.json")))),
+    artifact.preview,
+  );
+  assert.equal(files.size, fixture.files.size + 1);
+  for (const [repoPath, value] of fixture.files) {
+    const captured = Buffer.from(
+      files.get(`snapshots/before/${repoPath.slice("mockups/".length)}`)!,
+    );
+    assert.deepEqual(captured, Buffer.from(value.bytes!), repoPath);
+  }
+  assert.deepEqual(
+    fixture.batches.map((batch) => batch.length),
+    [1, 3, 4, 1],
+  );
+});
 
 test("removed page capture rejects missing documents and every missing dependency", async (t) => {
   const fixture = await removedPagePreviewFixture(t);
@@ -144,27 +128,8 @@ for (const [name, reference, message] of [
   });
 }
 
-test("removed page capture denies traversal, symlinks, metadata, and authored sources", async (t) => {
+test("removed page capture denies symlinks, metadata, and authored sources", async (t) => {
   const fixture = await removedPagePreviewFixture(t);
-  const unsafeSource = {
-    ...fixture.source,
-    baseline: {
-      ...fixture.baseline,
-      entries: [{ ...fixture.page, artifactPath: "../guide.html" }],
-    } as HistoricalManifest,
-    removedEntries: [
-      { entry: { ...fixture.page, artifactPath: "../guide.html" } },
-    ],
-  };
-  await assert.rejects(
-    new RepositoryRemovedPagePreview(fixture.config, fixture.reader).generate(
-      unsafeSource,
-      { kind: "page", id: "guide" },
-      new AbortController().signal,
-    ),
-    /unsafe path/,
-  );
-
   for (const [reference, denied] of [
     ["../assets/linked.css", /not a regular Git file \(symlink\)/],
     ["../mokly-manifest.json", /internal catalogue metadata/],

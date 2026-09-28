@@ -1,5 +1,3 @@
-import path from "node:path";
-
 import { parse } from "parse5";
 
 import { decodeCssIdentifier, tokenizeCss } from "./review/css/source.js";
@@ -19,7 +17,6 @@ interface HtmlNode {
 /** URL and fragment data extracted from one complete HTML document. */
 export interface HtmlReferences {
   anchors: ReadonlySet<string>;
-  snapshotBase?: string;
   hrefs: readonly string[];
   resources: readonly string[];
 }
@@ -27,37 +24,6 @@ export interface HtmlReferences {
 /** Whether discovery also includes speculative browser resource requests. */
 export interface HtmlReferenceOptions {
   resourceHints?: boolean;
-}
-
-/** Resolve a private relocated-document base within its immutable snapshot side. */
-export function snapshotBaseDocumentRoute(
-  source: string,
-  href: string,
-): string | undefined {
-  if (
-    href.startsWith("/") ||
-    href.includes("\\") ||
-    /^[a-z][a-z0-9+.-]*:/i.test(href)
-  )
-    return undefined;
-  const encoded = href.split(/[?#]/, 1)[0] ?? "";
-  let decoded: string;
-  try {
-    decoded = decodeURIComponent(encoded);
-  } catch {
-    return undefined;
-  }
-  const parts = source.split("/");
-  const snapshot = parts.lastIndexOf("snapshots");
-  const sideName = parts[snapshot + 1];
-  if (snapshot < 0 || (sideName !== "before" && sideName !== "after"))
-    return undefined;
-  const side = parts.slice(0, snapshot + 2).join("/");
-  const resolved = encoded
-    ? path.posix.normalize(path.posix.join(path.posix.dirname(source), decoded))
-    : source;
-  if (resolved !== side && !resolved.startsWith(`${side}/`)) return undefined;
-  return encoded.endsWith("/") ? `${resolved}/index.html` : resolved;
 }
 
 const SOURCE_ATTRIBUTES = new Map<string, readonly string[]>([
@@ -84,7 +50,6 @@ export function extractHtmlReferences(
   const anchors = new Set<string>();
   const hrefs: string[] = [];
   const resources: string[] = [];
-  let snapshotBase: string | undefined;
   visit(parse(content) as unknown as HtmlNode, (node) => {
     const attributes = new Map(
       (node.attrs ?? []).map((attribute) => [attribute.name, attribute.value]),
@@ -92,20 +57,9 @@ export function extractHtmlReferences(
     const id = attributes.get("id");
     if (id !== undefined) anchors.add(id);
     const href = attributes.get("href");
-    if (
-      snapshotBase === undefined &&
-      node.tagName === "base" &&
-      attributes.has("data-mokly-snapshot-base") &&
-      href !== undefined
-    )
-      snapshotBase = href;
     const navigationHref = attributes.get("data-nav-href");
     const sourceAttributes = SOURCE_ATTRIBUTES.get(node.tagName ?? "") ?? [];
-    if (
-      href !== undefined &&
-      !sourceAttributes.includes("href") &&
-      !(node.tagName === "base" && attributes.has("data-mokly-snapshot-base"))
-    ) {
+    if (href !== undefined && !sourceAttributes.includes("href")) {
       hrefs.push(href);
     }
     if (navigationHref !== undefined) hrefs.push(navigationHref);
@@ -136,7 +90,6 @@ export function extractHtmlReferences(
     anchors,
     hrefs,
     resources,
-    ...(snapshotBase === undefined ? {} : { snapshotBase }),
   };
 }
 

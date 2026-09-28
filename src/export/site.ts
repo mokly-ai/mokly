@@ -55,15 +55,18 @@ export function assembleExport(
   comparison: ReviewArtifact | undefined,
   publicFiles: ReadonlyMap<string, Buffer>,
   contentChanges: readonly string[],
+  changesStatus: "disabled" | "ready" | "unavailable" = comparison
+    ? "ready"
+    : "disabled",
 ): {
   inventory: ExportInventory;
   delivery: StaticDelivery;
   shells: ReadonlyMap<string, StaticDelivery>;
 } {
-  const removedSnapshots = removedManifestEntries(
-    compilation.manifest,
-    baseline,
-  );
+  const removedSnapshots =
+    changesStatus === "ready"
+      ? removedManifestEntries(compilation.manifest, baseline)
+      : [];
   const removed = removedSnapshots.map(({ entry }) => entry);
   const catalogue = createCatalogue(compilation.manifest, removedSnapshots);
   const entries = [...compilation.manifest.entries, ...removed];
@@ -127,7 +130,7 @@ export function assembleExport(
     : materialIds;
   const context: ShellContext = {
     base: comparison?.result.baseRef ?? "",
-    ...(comparison
+    ...(changesStatus === "ready" && comparison
       ? {
           changedIds: [
             ...new Set([...changes, ...removed.map((entry) => entry.id)]),
@@ -169,14 +172,14 @@ export function assembleExport(
             })),
           },
         }
-      : { comparisons: false }),
+      : { comparisons: changesStatus !== "disabled" }),
     updateVersion: 0,
     delivery,
   };
   const readModel = projectCatalogue({
     configPath: toPosixPath(path.relative(config.repoRoot, config.configPath)),
     catalogue,
-    changesStatus: comparison ? "ready" : "disabled",
+    changesStatus,
     changedIds: context.changedIds,
     evidence: context.componentChanges,
     comparison: comparison?.result,

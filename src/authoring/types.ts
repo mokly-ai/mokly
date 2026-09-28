@@ -72,7 +72,6 @@ interface DefinitionBrand {
 export interface ScreenDefinition extends ScreenInput, DefinitionBrand {
   kind: "screen";
   navPath: readonly string[];
-  route: string;
   useCaseIds: readonly string[];
   /** Parent screen id when this definition is a flattened screen variant. */
   variantOf?: string;
@@ -82,14 +81,12 @@ export interface ScreenDefinition extends ScreenInput, DefinitionBrand {
 export interface PageDefinition extends PageInput, DefinitionBrand {
   kind: "page";
   navPath: readonly string[];
-  route: string;
 }
 
 /** Validated use-case definition created by `defineUseCase`. */
 export interface UseCaseDefinition extends UseCaseInput, DefinitionBrand {
   kind: "use-case";
   navPath: readonly string[];
-  route: string;
 }
 
 /** Any structured catalogue definition. */

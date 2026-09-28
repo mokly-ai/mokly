@@ -1,6 +1,6 @@
 /** Deterministic shell-state initialization shared by SSR and hydration. */
 
-import { resolveCatalogueRoute } from "../catalogue/entry_selection.js";
+import { resolveCatalogueEntry } from "../catalogue/entry_selection.js";
 import { defaultSelection } from "../viewer/selection.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -32,7 +32,7 @@ export function createInitialShellState(
   const snapshotId =
     context.snapshotId ??
     (context.readModel && view.kind === "target"
-      ? resolveCatalogueRoute(context.readModel, {
+      ? resolveCatalogueEntry(context.readModel, {
           id: view.target.entry.id,
           kind: view.target.entry.kind,
         })?.snapshotId

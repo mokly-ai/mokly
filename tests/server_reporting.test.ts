@@ -207,6 +207,7 @@ class RecordingReporter implements ServeReporter {
     this.resolve();
   }
   gitReferenceRefresh(_base: string): void {}
+  incompatibleBaseline(_commit: string): void {}
   runtimeDiagnostic(_error: unknown): void {}
   serveReady(): void {}
   watchFailed(_report: WatchReport, _error: unknown): void {}

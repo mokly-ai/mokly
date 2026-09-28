@@ -35,8 +35,7 @@ export { projectTree } from "./catalogue/tree.js";
 export {
   catalogueComponentVariants,
   currentCatalogueEntries,
-  resolveCatalogueRecord,
-  resolveCatalogueRoute,
+  resolveCatalogueEntry,
   resolveCatalogueSelection,
 } from "./catalogue/entry_selection.js";
 export type { ResolvedCatalogueEntry } from "./catalogue/entry_selection.js";
@@ -49,9 +48,7 @@ export type { HistoricalSnapshotSource } from "./catalogue/snapshot_identity.js"
 export {
   counter,
   repositoryPath,
-  publicPath,
   comparisonPath,
-  pagePreviewPath,
   relatedDoc,
   lexical,
 } from "./catalogue/values.js";
@@ -95,7 +92,6 @@ export {
 } from "./components/view_validation.js";
 export { generatedViews, fragmentViews } from "./components/views.js";
 export type { GeneratedComponentView } from "./components/views.js";
-export { legacyComponentVariantId } from "./components/variants.js";
 export type {
   ComponentInstanceRecord,
   ComponentSourceLocation,
@@ -172,13 +168,10 @@ export type {
   ManifestEntry,
   ManifestV7,
   Manifest,
-  HistoricalArtifactView,
-  HistoricalManifestEntryBase,
   HistoricalManifestEntry,
   HistoricalManifestScreen,
   HistoricalManifestPage,
   HistoricalManifestUseCase,
-  HistoricalLegacyPage,
   HistoricalManifest,
 } from "./registry/types.js";
 export { reviewMaterialKey } from "./data/material_key.js";

@@ -2,7 +2,7 @@ import { reviewInvalid, viewRoute } from "@mokly/viewer/data";
 import type { ReviewArtifact, ViewReview } from "@mokly/viewer/data";
 
 import { referencedRoutes } from "./asset_references.js";
-import { normalizeHistoricalDocument, normalizeReviewPair } from "./ignore.js";
+import { normalizeReviewPair } from "./ignore.js";
 
 /** Check graph-backed evidence against the actual retained snapshots before publication. */
 export function validateArtifactResources(artifact: ReviewArtifact): void {
@@ -55,9 +55,7 @@ export function validateArtifactResources(artifact: ReviewArtifact): void {
       view.state === "added" ? undefined : `snapshots/before/${route}`;
     const afterPath =
       view.state === "removed" ? undefined : `snapshots/after/${route}`;
-    const before = beforePath
-      ? normalizeHistoricalDocument(text(beforePath))
-      : undefined;
+    const before = beforePath ? text(beforePath) : undefined;
     const after = afterPath ? text(afterPath) : undefined;
     const normalized = normalizeReviewPair(
       before ?? after ?? "",

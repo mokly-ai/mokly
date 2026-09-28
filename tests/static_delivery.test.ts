@@ -3,10 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 
 import { readCatalogue } from "../packages/viewer/dist/catalogue/reader.js";
-import {
-  parseStaticDelivery,
-  validFragmentQuery,
-} from "../packages/viewer/dist/navigation/delivery.js";
+import { parseStaticDelivery } from "../packages/viewer/dist/navigation/delivery.js";
 import {
   currentDeploymentMatches,
   readShellDelivery,
@@ -39,8 +36,6 @@ test("delivery v3 accepts only same-origin canonical and comparison paths", () =
     }),
     undefined,
   );
-  assert.equal(validFragmentQuery("?fragment=a&fragment=b"), "");
-  assert.equal(validFragmentQuery("?fragment=%23bad"), "");
 });
 
 test("delivery canonical paths round trip through the shared entry route grammar", () => {

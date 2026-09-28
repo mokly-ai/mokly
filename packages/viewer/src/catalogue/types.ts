@@ -114,6 +114,3 @@ export interface CatalogueComponentVariant extends CatalogueEntry {
   views: readonly CatalogueView[];
   comparison: ComparisonSelection;
 }
-
-/** Compatibility name for code that presents a component's variant rows. */
-export type CatalogueVariant = CatalogueComponentVariant;

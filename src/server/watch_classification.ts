@@ -5,6 +5,10 @@ import type { ManifestV7 } from "@mokly/viewer/data";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timingCounts } from "../diagnostics/timings.js";
 
+import {
+  isEarlierBaselineClassification,
+  isInvalidBaselineClassification,
+} from "./classification_result.js";
 import type {
   CatalogueChangeClassifier,
   ComponentChangeSnapshot,
@@ -32,7 +36,14 @@ export class WatchClassification {
       this.classifier.read(config, manifest, base, controller.signal),
     )
       .then((snapshot) => {
-        if (this.closed || sequence !== this.sequence || !snapshot) return;
+        if (
+          this.closed ||
+          sequence !== this.sequence ||
+          !snapshot ||
+          isEarlierBaselineClassification(snapshot) ||
+          isInvalidBaselineClassification(snapshot)
+        )
+          return;
         timingCounts("changes.publish", () => ({
           changedIds: snapshot.changedIds?.length ?? 0,
         }));

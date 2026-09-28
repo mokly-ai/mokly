@@ -1,5 +1,6 @@
 import type { ManifestV7 } from "@mokly/viewer/data";
 
+import { EARLIER_BASELINE_MESSAGE } from "../../baseline/compatibility.js";
 import { errorMessage } from "../../errors.js";
 import type { ServeReadyReport, WatchReport } from "../../server/reporter.js";
 
@@ -17,6 +18,7 @@ const INACTIVE_PHASE: ReporterPhase = {
 /** Compatibility reporter whose bytes match the historical CLI output. */
 export class PlainReporter implements CliReporter {
   readonly mode = "plain" as const;
+  readonly #incompatible = new Set<string>();
 
   constructor(readonly environment: TerminalEnvironment) {}
 
@@ -43,6 +45,12 @@ export class PlainReporter implements CliReporter {
   }
 
   gitReferenceRefresh(_base: string): void {}
+
+  incompatibleBaseline(commit: string): void {
+    if (this.#incompatible.has(commit)) return;
+    this.#incompatible.add(commit);
+    this.environment.stderr.write(`${EARLIER_BASELINE_MESSAGE}\n`);
+  }
 
   renderError(error: unknown, redact: (value: string) => string): void {
     this.environment.stderr.write(`${redact(errorMessage(error))}\n`);

@@ -1,11 +1,9 @@
 import type {
-  HistoricalManifestComponent,
-  HistoricalManifestComponentVariant,
   ManifestComponent,
   ManifestComponentVariant,
   ComponentViewRecord,
 } from "../components/manifest_types.js";
-import type { ColorScheme, Viewport } from "../data/axes.js";
+import type { ColorScheme } from "../data/axes.js";
 
 /** Serializable common metadata for a current manifest entry. */
 export interface ManifestEntryBase {
@@ -64,70 +62,14 @@ export interface ManifestV7 {
   sourceFiles: readonly string[];
 }
 
-/** One historical rendered view after stored paths have been normalized. */
-export interface HistoricalArtifactView {
-  colorScheme: ColorScheme;
-  path: string;
-  usage?: ComponentViewRecord;
-  viewport: Viewport;
-}
+/** A baseline accepted by the historical boundary is exactly manifest v7. */
+export type HistoricalManifest = ManifestV7;
 
-/** Common metadata retained at the historical-manifest boundary. */
-export interface HistoricalManifestEntryBase extends Omit<
-  ManifestEntryBase,
-  "kind"
-> {
-  dependencies: readonly string[];
-  kind: ManifestEntryBase["kind"];
-}
+/** Historical names express caller intent without introducing a second shape. */
+export type HistoricalManifestEntry = ManifestEntry;
+export type HistoricalManifestScreen = ManifestScreen;
+export type HistoricalManifestPage = ManifestPage;
+export type HistoricalManifestUseCase = ManifestUseCase;
 
-/** Normalized historical screen with its actual stored or derived artifacts. */
-export interface HistoricalManifestScreen extends HistoricalManifestEntryBase {
-  address?: string;
-  artifacts: readonly HistoricalArtifactView[];
-  colorSchemes: readonly ColorScheme[];
-  kind: "screen";
-  tags?: readonly string[];
-  useCaseIds: readonly string[];
-  variantOf?: string;
-}
-
-/** Normalized historical page with its actual stored or derived document. */
-export interface HistoricalManifestPage extends HistoricalManifestEntryBase {
-  artifactPath: string;
-  kind: "page";
-  tags?: readonly string[];
-}
-
-/** Normalized historical use case. */
-export interface HistoricalManifestUseCase extends HistoricalManifestEntryBase {
-  kind: "use-case";
-  steps: readonly { description?: string; screenId: string; title?: string }[];
-  tags?: readonly string[];
-}
-
-/** Any normalized entry accepted from Git history. */
-export type HistoricalManifestEntry =
-  | HistoricalManifestScreen
-  | HistoricalManifestPage
-  | HistoricalManifestUseCase
-  | HistoricalManifestComponent
-  | HistoricalManifestComponentVariant;
-
-/** One legacy unregistered page retained only for historical migration reads. */
-export interface HistoricalLegacyPage {
-  artifactPath: string;
-  sourcePath: string;
-}
-
-/** Internal normalized historical manifest shared by comparison readers. */
-export interface HistoricalManifest {
-  entries: readonly (HistoricalManifestEntry | ManifestEntry)[];
-  generatedBy: "mokly";
-  legacyPages?: readonly HistoricalLegacyPage[];
-  schemaVersion: 3 | 4 | 5 | 6 | 7;
-  sourceFiles?: readonly string[];
-}
-
-/** Current or normalized historical manifest accepted by comparison logic. */
-export type Manifest = ManifestV7 | HistoricalManifest;
+/** Current and historical comparison inputs share the exact v7 contract. */
+export type Manifest = ManifestV7;

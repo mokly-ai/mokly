@@ -302,8 +302,8 @@ merge.
 - [`src/components/manifest_entry_validation.ts`](./src/components/manifest_entry_validation.ts)
   — manifest-v7 component-entry validation.
 - [`src/registry/changed_ids.ts`](./src/registry/changed_ids.ts) and
-  [`historical_manifest.ts`](./src/registry/historical_manifest.ts) —
-  identity-keyed change membership and the baseline-v7 boundary.
+  [`manifest_validation.ts`](./src/registry/manifest_validation.ts) —
+  identity-keyed change membership and the strict baseline-v7 boundary.
 - [`src/cli`](./src/cli/README.md) — command parsing, reporting, and composition.
 - [`src/server`](./src/server/README.md) — local HTTP server and watched runtime.
 - [`src/review`](./src/review/README.md) — Git baselines, comparison, and change

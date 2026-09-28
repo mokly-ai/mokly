@@ -9,7 +9,7 @@ import type {
 
 export interface ViewerSelection {
   screenId: string | null;
-  /** Exact removed record; absent selects current or uniquely identified legacy history. */
+  /** Exact removed record; absent selects current or uniquely identified history. */
   snapshotId?: string | undefined;
   view: "all" | "changes";
   viewport: "mobile" | "desktop" | "both";

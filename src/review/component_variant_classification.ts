@@ -1,6 +1,4 @@
 import type {
-  HistoricalManifestComponent,
-  HistoricalManifestComponentVariant,
   ManifestComponent,
   ManifestComponentVariant,
 } from "@mokly/viewer";
@@ -26,9 +24,8 @@ import type { ComponentReasonSources } from "./component_reason_sources.js";
 import type { ComparedComponentView } from "./component_view.js";
 import { aggregateState } from "./screen_views.js";
 
-type ComponentParent = ManifestComponent | HistoricalManifestComponent;
-type ReviewComponentVariant =
-  ManifestComponentVariant | HistoricalManifestComponentVariant;
+type ComponentParent = ManifestComponent;
+type ReviewComponentVariant = ManifestComponentVariant;
 
 interface VariantClassificationInput {
   before?: ComponentParent;
@@ -150,7 +147,7 @@ export function classifyComponentVariants(
   return { parentReasons, reviews };
 }
 
-/** Index current entries and normalized historical nested variants by global id. */
+/** Index current or historical-v7 flattened variants by global id. */
 export function componentVariantEntries(
   entries: readonly (ManifestEntry | HistoricalManifestEntry)[],
 ): ReadonlyMap<string, ReviewComponentVariant> {

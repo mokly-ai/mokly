@@ -1,4 +1,3 @@
-import { isLogicalFragment } from "./logical.js";
 import { parseViewHref, viewHref } from "./routes.js";
 
 /** Trusted shell metadata needed to serve a catalogue from ordinary files. */
@@ -56,12 +55,4 @@ export function parseStaticDelivery(
     canonicalPath: value.canonicalPath as string,
     comparisonUrl: value.comparisonUrl,
   };
-}
-
-/** Keep only one syntactically valid logical fragment on a canonical URL. */
-export function validFragmentQuery(search: string): string {
-  const values = new URLSearchParams(search).getAll("fragment");
-  return values.length === 1 && isLogicalFragment(values[0])
-    ? `?fragment=${encodeURIComponent(values[0])}`
-    : "";
 }

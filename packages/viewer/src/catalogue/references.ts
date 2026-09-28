@@ -34,6 +34,10 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
       projectTree(hierarchy),
     ), "tree must project the navigation paths");
   const historical = model.removedEntries.map(({ entry }) => entry);
+  const currentIds = new Set(current.map((entry) => entry.id));
+  require(historical.every(
+    (entry) => !currentIds.has(entry.id),
+  ), "current and removed entries cannot share an id");
   const all = [...current, ...historical];
   unique(model.removedEntries.map(({ entry }) => entry.id));
   unique(
@@ -58,12 +62,6 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
       require(entry.changes.status === "ready" &&
         entry.changes.kind === "removed" &&
         entry.changes.included, "removed entry needs removed Changes");
-      const collides = current.some((item) => item.id === entry.id);
-      const snapshotId = model.removedEntries.find(
-        (record) => record.entry === entry,
-      )?.snapshotId;
-      require(!collides ||
-        snapshotId !== undefined, "same-id history needs an exact snapshot");
     }
     if (entry.kind === "use-case" && !removed) {
       require(entry.steps.length > 0, "use case needs steps");
@@ -185,10 +183,14 @@ function validateComponentVariant(
       (entry.comparison.kind === "changed" ||
         entry.comparison.kind ===
           "removed"), "invalid variant comparison eligibility");
-  const historical =
-    removed ||
-    (entry.comparison.status === "ready" &&
-      entry.comparison.kind === "removed");
+  if (!removed) {
+    require(!(
+      entry.comparison.status === "ready" && entry.comparison.kind === "removed"
+    ), "current variant cannot be historical");
+    require(!(
+      entry.changes.status === "ready" && entry.changes.kind === "removed"
+    ), "current variant cannot have removed Changes");
+  }
   const parent = components.get(entry.variantOf);
   if (!removed) {
     require(current.includes(
@@ -198,7 +200,7 @@ function validateComponentVariant(
       canonicalJson(parent?.navPath), "variant path must match parent");
   }
   unique(entry.suppliedSlots);
-  if (!historical && parent) {
+  if (!removed && parent) {
     require(entry.suppliedSlots.every((slot) =>
       parent.slots.includes(slot),
     ), "unknown supplied slot");
@@ -208,7 +210,7 @@ function validateComponentVariant(
       entry.id,
     );
   }
-  validateViews(entry, entry.views, components, historical);
+  validateViews(entry, entry.views, components, removed);
 }
 
 function require(condition: boolean, message: string): void {

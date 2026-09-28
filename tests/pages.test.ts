@@ -29,7 +29,6 @@ test("a page renders exactly one complete document even with dark screens enable
     "pages/handbook.html",
   ]);
   assert.equal(result.manifest.schemaVersion, 7);
-  assert.equal("legacyPages" in result.manifest, false);
   assert.match(
     result.outputs.get("pages/handbook.html") ?? "",
     /Whole document/,

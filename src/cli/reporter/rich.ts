@@ -1,5 +1,6 @@
 import type { ManifestV7 } from "@mokly/viewer/data";
 
+import { EARLIER_BASELINE_MESSAGE } from "../../baseline/compatibility.js";
 import { errorMessage } from "../../errors.js";
 import type { ServeReadyReport, WatchReport } from "../../server/reporter.js";
 import { cliErrorPresentation } from "../errors.js";
@@ -40,6 +41,7 @@ export class RichReporter implements CliReporter {
   #active: ActivePhase | undefined;
   #serveReport: ServeReadyReport | undefined;
   #servePhase: ReporterPhase | undefined;
+  readonly #incompatible = new Set<string>();
 
   constructor(readonly environment: TerminalEnvironment) {
     this.#glyphs = terminalGlyphs(environment.platform, environment.env);
@@ -111,6 +113,13 @@ export class RichReporter implements CliReporter {
   }
 
   gitReferenceRefresh(_base: string): void {}
+
+  incompatibleBaseline(commit: string): void {
+    if (this.#incompatible.has(commit)) return;
+    this.#incompatible.add(commit);
+    this.clearPhase();
+    this.environment.stderr.write(`${EARLIER_BASELINE_MESSAGE}\n`);
+  }
 
   renderError(error: unknown, redact: (value: string) => string): void {
     this.clearPhase();

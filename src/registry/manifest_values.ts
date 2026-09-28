@@ -1,13 +1,6 @@
-import { isSafeCatalogueRoute, isSafeRepositoryPath } from "@mokly/viewer/data";
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
-
-/** Validate a portable routed catalogue URL. */
-export function validateRoute(route: string, label: string): void {
-  if (!isSafeCatalogueRoute(route)) {
-    throw new MoklyError("manifest-invalid", `${label} has an unsafe route`);
-  }
-}
 
 /** Validate one retained effective color-scheme configuration. */
 export function validateColorSchemes(value: unknown, label: string): void {

@@ -69,20 +69,11 @@ export function resolveCatalogueSelection(
 }
 
 /** Resolve one kind-and-id address, inferring its published snapshot when unique. */
-export function resolveCatalogueRoute(
+export function resolveCatalogueEntry(
   model: CatalogueReadModel,
   identity: { id: string; kind: CatalogueRecord["kind"] },
   snapshotId?: string,
 ): ResolvedCatalogueEntry | undefined {
   const selected = resolveCatalogueSelection(model, identity.id, snapshotId);
   return selected?.entry.kind === identity.kind ? selected : undefined;
-}
-
-/** Resolve the public record corresponding to an already exact routed entry. */
-export function resolveCatalogueRecord(
-  model: CatalogueReadModel,
-  entry: { id: string; kind: string },
-): ResolvedCatalogueEntry | undefined {
-  const selected = resolveCatalogueSelection(model, entry.id);
-  return selected?.entry.kind === entry.kind ? selected : undefined;
 }

@@ -31,7 +31,7 @@ export interface Catalogue {
   removedComponents: readonly CatalogueManifestEntry[];
 }
 
-/** Current entries and normalized history share identity and display metadata. */
+/** Current and historical-v7 entries share identity and display metadata. */
 export type CatalogueManifestEntry = ManifestEntry | HistoricalManifestEntry;
 
 /** Resolve an entry identity, giving current content precedence over history. */
@@ -108,8 +108,7 @@ export function createCatalogue(
   const byId = new Map<string, CatalogueManifestEntry>(
     manifest.entries.map((entry) => [entry.id, entry]),
   );
-  for (const { entry } of removedEntries)
-    if (!byId.has(entry.id)) byId.set(entry.id, entry);
+  for (const { entry } of removedEntries) byId.set(entry.id, entry);
   const hasDarkFragments = [
     ...manifest.entries,
     ...removedScreens,

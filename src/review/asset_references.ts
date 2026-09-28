@@ -7,7 +7,6 @@ import { MoklyError } from "../errors.js";
 import {
   extractCssReferences,
   extractHtmlReferences,
-  snapshotBaseDocumentRoute,
   type HtmlReferenceOptions,
 } from "../html_references.js";
 
@@ -28,15 +27,10 @@ export function referencedRoutes(
       : undefined;
   const references =
     extension === ".css" ? extractCssReferences(text) : (html?.resources ?? []);
-  const referenceSource = html?.snapshotBase
-    ? snapshotBaseDocumentRoute(sourceRoute, html.snapshotBase)
-    : sourceRoute;
-  if (!referenceSource)
-    throw assetError(sourceRoute, "invalid historical snapshot base");
   return [
     ...new Set(
       references.flatMap((reference) => {
-        const resolved = resolveReference(referenceSource, reference);
+        const resolved = resolveReference(sourceRoute, reference);
         return resolved ? [resolved] : [];
       }),
     ),

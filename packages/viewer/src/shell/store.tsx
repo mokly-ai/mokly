@@ -202,7 +202,7 @@ export function currentContext(
   state: ShellStore["state"],
 ) {
   const {
-    activeId: _activeRoute,
+    activeId: _activeId,
     changesStatus: _changesStatus,
     fragment: _fragment,
     snapshotId: _snapshotId,

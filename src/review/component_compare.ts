@@ -1,8 +1,4 @@
-import {
-  generatedViews,
-  isManifestComponentVariant,
-  viewRoute,
-} from "@mokly/viewer/data";
+import { generatedViews, isManifestComponentVariant } from "@mokly/viewer/data";
 import type {
   Manifest,
   ReviewArtifact,
@@ -20,7 +16,6 @@ import {
 } from "./assets.js";
 import { CompilationAssetReader } from "./compilation_assets.js";
 import { classifyComponents } from "./component_classification.js";
-import { relocateHistoricalDocument } from "./historical_document.js";
 import { addArtifactFile, snapshotPath } from "./paths.js";
 
 /** Retain every component variant and affected screen, then classify the same immutable bytes. */
@@ -37,8 +32,8 @@ export async function compareComponentCatalogue(
 ): Promise<ReviewArtifact> {
   const baseArtifacts = artifactViews(baseline);
   const headArtifacts = artifactViews(compilation.manifest);
-  const basePaths = baseArtifacts.map((artifact) => artifact.source);
-  const headPaths = headArtifacts.map((artifact) => artifact.source);
+  const basePaths = baseArtifacts;
+  const headPaths = headArtifacts;
   const baseFiles = await timeAsync("review.base-documents", () =>
     baseReader.readMany(basePaths),
   );
@@ -74,21 +69,17 @@ export async function compareComponentCatalogue(
     ...(useFastPath === undefined ? {} : { useFastPath }),
   });
   const files = new Map<string, ReviewArtifactContent>();
-  for (const artifact of baseArtifacts)
+  for (const artifact of basePaths)
     addArtifactFile(
       files,
-      snapshotPath("before", artifact.target),
-      relocateHistoricalDocument(
-        Buffer.from(await beforeReader.read(artifact.source)).toString("utf8"),
-        artifact.source,
-        artifact.target,
-      ),
+      snapshotPath("before", artifact),
+      Buffer.from(await beforeReader.read(artifact)).toString("utf8"),
     );
-  for (const artifact of headArtifacts)
+  for (const artifact of headPaths)
     addArtifactFile(
       files,
-      snapshotPath("after", artifact.target),
-      Buffer.from(await afterReader.read(artifact.source)).toString("utf8"),
+      snapshotPath("after", artifact),
+      Buffer.from(await afterReader.read(artifact)).toString("utf8"),
     );
   await copySnapshotDependencies(
     files,
@@ -97,9 +88,6 @@ export async function compareComponentCatalogue(
     (route) => beforeReader.read(route),
     (routes) => baseReader.readMany(routes),
   );
-  for (const artifact of baseArtifacts)
-    if (artifact.source !== artifact.target)
-      files.delete(snapshotPath("before", artifact.source));
   await copySnapshotDependencies(files, "after", new Set(headPaths), (route) =>
     afterReader.read(route),
   );
@@ -113,9 +101,6 @@ function artifactViews(manifest: Manifest) {
       !(entry.kind === "component" && isManifestComponentVariant(entry))
     )
       return [];
-    return generatedViews(entry).map((view) => ({
-      source: view.path,
-      target: viewRoute(entry.kind, entry.id, view.viewport, view.colorScheme),
-    }));
+    return generatedViews(entry).map((view) => view.path);
   });
 }

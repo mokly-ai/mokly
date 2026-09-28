@@ -5,7 +5,6 @@ import test, { type TestContext } from "node:test";
 
 import { compileCatalogue, type Compilation } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
-import { generatedViews } from "../packages/viewer/dist/components/views.js";
 import type { ReviewResultV4 } from "../packages/viewer/dist/review/component_types.js";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
@@ -143,7 +142,7 @@ test("derived byte-only image changes take the complete path", async (t) => {
 
 test("historical component markers remain unchanged", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
-  const before = historicalCompilation(fixture.before);
+  const before = baselineCompilation(fixture.before);
   const result = await assertFastPathEquivalent({
     before: before.manifest,
     after: fixture.after.manifest,
@@ -214,32 +213,12 @@ async function stylesheetFixture(
   };
 }
 
-function historicalCompilation(compilation: Compilation): Compilation {
-  const manifest = structuredClone(compilation.manifest);
-  const outputs = new Map(compilation.outputs);
-  for (const entry of manifest.entries)
-    for (const view of generatedViews(entry)) {
-      const current = compilation.outputs.get(view.path);
-      assert.notEqual(current, undefined);
-      for (const style of view.usage?.styles ?? []) {
-        style.startOffset += historicalOffset(current!, style.startOffset);
-        style.endOffset += historicalOffset(current!, style.endOffset);
-      }
-      outputs.set(
-        view.path,
-        current!
-          .replaceAll("<!--mokly-component:", "<!--mokabook-component:")
-          .replaceAll("<!--mokly-review-", "<!--mokabook-review-"),
-      );
-    }
-  return { ...compilation, manifest, outputs };
-}
-
-function historicalOffset(html: string, offset: number): number {
-  return (
-    [...html.slice(0, offset).matchAll(/<!--mokly-(?:component|review-)/g)]
-      .length * 3
-  );
+function baselineCompilation(compilation: Compilation): Compilation {
+  return {
+    ...compilation,
+    manifest: structuredClone(compilation.manifest),
+    outputs: new Map(compilation.outputs),
+  };
 }
 
 async function assetFiles(directory: string) {

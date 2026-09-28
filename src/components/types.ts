@@ -56,7 +56,6 @@ export interface ComponentDefinition extends EntryInput {
   definedIn?: string;
   kind: "component";
   navPath: readonly string[];
-  route: string;
   propSchema: ObjectPropSchema;
   slots: readonly string[];
   controls: Readonly<Record<string, ComponentControl>>;
@@ -75,7 +74,6 @@ export interface ComponentVariantDefinition extends EntryInput {
   definedIn?: string;
   kind: "component";
   navPath: readonly string[];
-  route: string;
   variantOf: string;
   props: Readonly<Record<string, unknown>>;
   suppliedSlots: readonly string[];

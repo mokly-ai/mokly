@@ -2,9 +2,8 @@
 
 ## Delivery Status
 
-Approved for Milestone 11 of the active
-[id-derived routes plan](../../plans/id-derived-routes.md). The current branch
-still contains the compatibility code that milestone removes.
+Implemented by Milestone 11 of the active
+[id-derived routes plan](../../plans/id-derived-routes.md).
 
 This contract owns the version gate between a current catalogue and the Git
 comparison base used by Serve, export, and publication. Baseline storage and

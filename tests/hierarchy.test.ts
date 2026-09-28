@@ -4,13 +4,7 @@ import test from "node:test";
 import { analyzeHierarchy, navPathKey } from "@mokly/viewer/data";
 
 import { defineScreen } from "../dist/index.js";
-import {
-  createManifest,
-  parseHistoricalManifest,
-  parseManifest,
-} from "../dist/registry/manifest.js";
-
-import { legacyManifestFromV7 } from "./helpers/historical_manifest.js";
+import { createManifest, parseManifest } from "../dist/registry/manifest.js";
 
 const entry = (
   id: string,
@@ -202,7 +196,7 @@ test("current labels report every invalid segment, and duplicates remain separat
   );
 });
 
-test("manifest v7 preserves navigation paths; v5 baselines validate then discard collection records", () => {
+test("manifest v7 preserves navigation paths", () => {
   const screen = defineScreen({
     id: "home",
     title: "Home",
@@ -225,24 +219,4 @@ test("manifest v7 preserves navigation paths; v5 baselines validate then discard
     ["light"],
   );
   assert.equal(parseManifest(manifest).schemaVersion, 7);
-  const old = legacyManifestFromV7(manifest, 5);
-  old.entries.unshift({
-    id: "design",
-    kind: "collection",
-    title: "Design",
-    description: "Design",
-    navPath: [],
-    childIds: ["home"],
-    dependencies: [],
-    declaredDependencies: [],
-    relatedDocs: [],
-    sourcePath: "entries/home.mockup.tsx",
-  });
-  assert.throws(() => parseManifest(old), /schema version 7/);
-  assert.deepEqual(
-    parseHistoricalManifest(old).entries.map(({ id }) => id),
-    ["home"],
-  );
-  old.entries[0]!.childIds = ["missing"];
-  assert.throws(() => parseHistoricalManifest(old), /unknown child id/);
 });

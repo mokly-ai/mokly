@@ -6,7 +6,7 @@ import { promisify } from "node:util";
 import { expect, test } from "@playwright/test";
 
 import { exportCatalogue } from "../../dist/export/run.js";
-import { createExampleBaseline } from "../helpers/example_baseline.js";
+import { createCommittedExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import {
   FULL_CATALOGUE_SETUP_TIMEOUT_MS,
@@ -28,15 +28,15 @@ test.beforeAll(async () => {
     "design-library-export",
     "baseline-fixture",
     false,
-    () => createExampleBaseline(root),
+    () => createCommittedExampleBaseline(root, "design-library"),
   );
   const git = (...args: string[]) =>
     promisify(execFile)("git", args, { cwd: root });
-  const tracked = (await git("ls-files", "examples/basic/generated")).stdout
-    .trim()
-    .split("\n");
-  expect(tracked).toHaveLength(30);
-  expect(tracked.every((file) => file.endsWith(".css"))).toBe(true);
+  const baselineManifest = JSON.parse(
+    (await git("show", "HEAD:examples/basic/generated/mokly-manifest.json"))
+      .stdout,
+  );
+  expect(baselineManifest.schemaVersion).toBe(7);
   const file = path.join(
     root,
     "examples/basic/entries/design/library/controls/tag-chip.view.tsx",

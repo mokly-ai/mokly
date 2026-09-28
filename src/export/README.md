@@ -135,7 +135,7 @@ adapter supplies validated host aliases and legacy ownership explicitly. It
 captures already-built Browse output, retaining optional Changes and its
 source/resource fingerprint contract. Its capture server disables live Changes
 states: ordinary publications omit the tabs, while opt-in Changes publications
-render their completed counts without a pending or unavailable state.
+render completed counts or the explicit earlier-baseline unavailable state.
 Current-only static delivery explicitly
 disables comparison requests while retaining canonical `/view/<route>`
 navigation resolved by entry id.

@@ -8,9 +8,11 @@ import type {
   ScreenResourceEvidence,
 } from "@mokly/viewer/data";
 
+import { isIncompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { ConfiguredGitCommandRunner } from "../config/git.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { errorMessage, isMoklyError } from "../errors.js";
 import { changedManifestIds } from "../registry/changed_ids.js";
 import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
 import { GitReviewAssetReader } from "../review/assets.js";
@@ -31,6 +33,7 @@ import type { ReadOnlyReviewRepository } from "../review/repository.js";
 import type { ReviewEvidence } from "../review/selection_types.js";
 
 import { classifyChangedContent } from "./changed_content.js";
+import type { CatalogueChangeClassification } from "./classification_result.js";
 import {
   screenViewChanges,
   type ScreenViewChanges,
@@ -63,7 +66,7 @@ export interface CatalogueChangeClassifier {
     base: string,
     signal?: AbortSignal,
     accepted?: CatalogueClassificationInputs,
-  ): Promise<ComponentChangeSnapshot | undefined>;
+  ): Promise<CatalogueChangeClassification>;
 }
 
 /** Classify one generated catalogue against its repository branch point. */
@@ -76,7 +79,8 @@ export class RepositoryCatalogueChangeClassifier implements CatalogueChangeClass
     base: string,
     signal?: AbortSignal,
     accepted?: CatalogueClassificationInputs,
-  ): Promise<ComponentChangeSnapshot | undefined> {
+  ): Promise<CatalogueChangeClassification> {
+    let commit = accepted?.commit;
     try {
       const source = new RepositoryComponentChanges(
         config,
@@ -88,9 +92,14 @@ export class RepositoryCatalogueChangeClassifier implements CatalogueChangeClass
       );
       signal?.throwIfAborted();
       const baseline = await source.baseline();
+      commit = baseline;
       signal?.throwIfAborted();
       return await source.read(baseline);
-    } catch {
+    } catch (error) {
+      if (isIncompatibleEarlierBaseline(error))
+        return { kind: "incompatible-earlier", commit: commit ?? base };
+      if (isMoklyError(error) && error.code === "manifest-invalid")
+        return { kind: "invalid-baseline", diagnostic: errorMessage(error) };
       return undefined;
     }
   }

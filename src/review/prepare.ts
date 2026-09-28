@@ -93,7 +93,6 @@ export async function prepareReviewRepository(
     commit,
     mockupsPath: toPosixPath(path.relative(config.repoRoot, config.mockupsDir)),
     commands: config.review.baselineBuild ?? [],
-    allowManifestV2: config.compatibility.readManifestV2,
     ...(options.signal ? { signal: options.signal } : {}),
     ...(options.onProgress ? { onProgress: options.onProgress } : {}),
   };

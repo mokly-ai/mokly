@@ -1,7 +1,6 @@
 import type {
   ManifestComponent,
   ManifestComponentVariant,
-  HistoricalManifestComponentVariant,
 } from "../components/manifest_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { ComponentReview } from "../review/component_types.js";
@@ -41,7 +40,7 @@ export function workspaceVariants(
   );
   const baseline: ManifestComponentVariant[] = [
     ...(snapshot?.baseline.entries.filter(
-      (candidate): candidate is HistoricalManifestComponentVariant =>
+      (candidate): candidate is ManifestComponentVariant =>
         candidate.kind === "component" &&
         isManifestComponentVariant(candidate) &&
         candidate.variantOf === entry.id,

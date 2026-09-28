@@ -5,6 +5,9 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { buildPreview } from "../scripts/preview/catalogue.mjs";
+
+import { createCommittedExampleBaseline } from "./helpers/example_baseline.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
@@ -12,22 +15,15 @@ const execute = promisify(execFile);
 test("preview build snapshots a static Browse catalogue", async (context) => {
   const contextDir = path.join(repositoryRoot, ".context");
   await fs.promises.mkdir(contextDir, { recursive: true });
-  const output = await fs.promises.mkdtemp(
-    path.join(contextDir, "preview-test-"),
+  const root = await fs.promises.mkdtemp(
+    path.join(contextDir, "preview-test-root-"),
   );
-  await fs.promises.rm(output, { recursive: true });
-  context.after(() => fs.promises.rm(output, { force: true, recursive: true }));
+  const output = path.join(root, ".context/preview");
+  context.after(() => fs.promises.rm(root, { force: true, recursive: true }));
+  const config = await createCommittedExampleBaseline(root, "static-example");
 
-  await execute(
-    process.execPath,
-    ["scripts/preview/build.mjs", "--include-changes", "--out", output],
-    { cwd: repositoryRoot },
-  );
-  await execute(
-    process.execPath,
-    ["scripts/preview/build.mjs", "--include-changes", "--out", output],
-    { cwd: repositoryRoot },
-  );
+  await buildPreview(config, output, { includeChanges: true, base: "HEAD" });
+  await buildPreview(config, output, { includeChanges: true, base: "HEAD" });
 
   await assertClientGraphIsComplete(output);
   const index = await read(output, "index.html");

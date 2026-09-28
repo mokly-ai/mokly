@@ -211,7 +211,8 @@ markers and incorrect range parentage. No template sentinel survives final
 serialization. Review-ignore regions cannot enclose component or caller-slot
 boundaries. Compatibility transforms must preserve validated pairs; adapters
 inspect current views using these comments without adding layout wrappers.
-Snapshot bytes and historical marker compatibility retain their existing rules.
+Accepted baseline and current v7 documents use the same marker spelling and
+validation; historical marker translation is not supported.
 
 ## Acceptance
 

@@ -1,12 +1,10 @@
 import type { ManifestComponent } from "@mokly/viewer";
 import {
-  canonicalJson,
   decodeProps,
   exactKeys,
   invalidData,
   isCatalogueId,
   isEntryId,
-  isSafeCatalogueRoute,
   sortedStrings,
   validateControlledValues,
   validateControls,
@@ -16,7 +14,7 @@ import {
 
 import { validateColorSchemes } from "../registry/manifest_values.js";
 
-const commonKeys = (identityOnly: boolean) => [
+const COMMON_KEYS = [
   "id",
   "title",
   "description",
@@ -26,31 +24,22 @@ const commonKeys = (identityOnly: boolean) => [
   "sourcePath",
   "navPath",
   "kind",
-  ...(identityOnly ? [] : ["dependencies"]),
-];
+  "colorSchemes",
+  "tags",
+] as const;
 
-/** Validate one component parent or flattened component variant. */
+/** Validate one identity-only v7 component parent or flattened variant. */
 export function validateManifestComponent(
   value: Record<string, unknown>,
-  identityOnly = false,
 ): void {
   if (typeof value.variantOf === "string") {
-    validateVariantEntry(value, identityOnly);
+    validateVariantEntry(value);
     return;
   }
   const at = `${String(value.id)} $component`;
   exactKeys(
     value,
-    [
-      ...commonKeys(identityOnly),
-      ...(identityOnly ? ["colorSchemes"] : ["route", "viewports"]),
-      "tags",
-      "propSchema",
-      "slots",
-      "controls",
-      "ownedDependencies",
-      ...(Array.isArray(value.variants) ? ["variants"] : []),
-    ],
+    [...COMMON_KEYS, "propSchema", "slots", "controls", "ownedDependencies"],
     at,
   );
   validatePropSchema(value.propSchema, at);
@@ -58,7 +47,6 @@ export function validateManifestComponent(
     invalidData(at, "component propSchema must be an object");
   const schema = value.propSchema;
   sortedStrings(value.slots, `${at}.slots`);
-  const declaredSlots = value.slots;
   sortedStrings(value.ownedDependencies, `${at}.ownedDependencies`);
   for (const key of [...Object.keys(schema.properties), ...value.slots]) {
     if (
@@ -81,122 +69,37 @@ export function validateManifestComponent(
       invalidData(at, "owned dependencies must be declared dependencies");
   validateControls(schema, value.controls, at);
   validateTags(value.tags, at);
-  if (identityOnly) validateColorSchemes(value.colorSchemes, at);
-  else validateViewports(value.viewports, at);
-  if (value.variants === undefined) return;
-  if (!Array.isArray(value.variants) || !value.variants.length)
-    invalidData(at, "historical component requires saved variants");
-  const ids = new Set<string>();
-  let dark: boolean | undefined;
-  for (const raw of value.variants) {
-    validateLegacyVariant(
-      raw,
-      value as unknown as ManifestComponent,
-      declaredSlots,
-      at,
-    );
-    if (ids.has(raw.id)) invalidData(at, "duplicate historical variant id");
-    ids.add(raw.id);
-    const hasDark = raw.darkFragments !== undefined;
-    if (dark !== undefined && dark !== hasDark)
-      invalidData(at, "variant schemes must agree");
-    dark = hasDark;
-  }
+  validateColorSchemes(value.colorSchemes, at);
 }
 
-function validateVariantEntry(
-  value: Record<string, unknown>,
-  identityOnly: boolean,
-): void {
+function validateVariantEntry(value: Record<string, unknown>): void {
   const at = `${String(value.id)} $component-variant`;
   exactKeys(
     value,
-    [
-      ...commonKeys(identityOnly),
-      ...(identityOnly ? ["colorSchemes"] : ["route", "viewports"]),
-      "tags",
-      "variantOf",
-      "props",
-      "suppliedSlots",
-      ...(identityOnly ? [] : ["fragments", "darkFragments"]),
-      "componentViews",
-    ],
+    [...COMMON_KEYS, "variantOf", "props", "suppliedSlots", "componentViews"],
     at,
   );
   if (!isEntryId(value.variantOf)) invalidData(at, "invalid variantOf");
   validateTags(value.tags, at);
-  if (identityOnly) validateColorSchemes(value.colorSchemes, at);
-  else validateViewports(value.viewports, at);
+  validateColorSchemes(value.colorSchemes, at);
   sortedStrings(value.suppliedSlots, `${at}.suppliedSlots`);
   decodeProps(value.props);
-  if (!identityOnly) validateFragmentFields(value, at);
 }
 
-function validateLegacyVariant(
-  raw: Record<string, unknown>,
+/** Validate a v7 variant's data against its already-validated parent. */
+export function validateVariantAgainstParent(
+  variant: Record<string, unknown>,
   parent: ManifestComponent,
-  declaredSlots: readonly string[],
-  at: string,
 ): void {
-  exactKeys(
-    raw,
-    [
-      "id",
-      "title",
-      "description",
-      "props",
-      "suppliedSlots",
-      "fragments",
-      "darkFragments",
-      "componentViews",
-    ],
-    at,
-  );
-  if (!isEntryId(raw.id)) invalidData(at, "invalid historical variant id");
-  if (
-    typeof raw.title !== "string" ||
-    !raw.title.trim() ||
-    (raw.description !== undefined &&
-      (typeof raw.description !== "string" || !raw.description.trim()))
-  )
-    invalidData(at, "invalid variant title/description");
-  sortedStrings(raw.suppliedSlots, `${at}.${String(raw.id)}.suppliedSlots`);
-  if (!raw.suppliedSlots.every((slot) => declaredSlots.includes(slot)))
-    invalidData(at, "unknown supplied slot");
+  const suppliedSlots = variant.suppliedSlots as string[];
+  if (!suppliedSlots.every((slot) => parent.slots.includes(slot)))
+    invalidData(variant.id as string, "unknown supplied slot");
   const data = validateProps(
     parent.propSchema,
-    decodeProps(raw.props),
-    `${at}.${String(raw.id)}`,
+    decodeProps(variant.props as never),
+    variant.id as string,
   );
-  validateControlledValues(parent.controls, data, `${at}.${String(raw.id)}`);
-  for (const key of ["fragments", "darkFragments"] as const) {
-    if (key === "darkFragments" && raw[key] === undefined) continue;
-    exactKeys(
-      raw[key],
-      ["mobile", "desktop"],
-      `${at}.${String(raw.id)}.${key}`,
-    );
-    for (const viewport of ["mobile", "desktop"] as const) {
-      const fragment = (raw[key] as Record<string, unknown>)[viewport];
-      if (typeof fragment !== "string" || !isSafeCatalogueRoute(fragment))
-        invalidData(at, "invalid historical variant fragment path");
-    }
-  }
-}
-
-function validateFragmentFields(
-  value: Record<string, unknown>,
-  at: string,
-): void {
-  for (const key of ["fragments", "darkFragments"] as const) {
-    if (key === "darkFragments" && value[key] === undefined) continue;
-    exactKeys(value[key], ["mobile", "desktop"], `${at}.${key}`);
-    for (const viewport of ["mobile", "desktop"] as const) {
-      const fragment = (value[key] as Record<string, unknown>)[viewport];
-      if (typeof fragment !== "string" || !isSafeCatalogueRoute(fragment))
-        invalidData(at, "invalid variant fragment path");
-    }
-  }
+  validateControlledValues(parent.controls, data, variant.id as string);
 }
 
 function validateTags(value: unknown, at: string): void {
@@ -207,9 +110,4 @@ function validateTags(value: unknown, at: string): void {
       new Set(value).size !== value.length)
   )
     invalidData(at, "invalid component tags");
-}
-
-function validateViewports(value: unknown, at: string): void {
-  if (canonicalJson(value) !== '["mobile","desktop"]')
-    invalidData(at, "component requires both viewports");
 }

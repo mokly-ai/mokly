@@ -14,7 +14,7 @@ const source: SelectedReviewSource = {
   before: {
     entries: [],
     generatedBy: "mokly",
-    schemaVersion: 5,
+    schemaVersion: 7,
     sourceFiles: [],
   },
   after: {

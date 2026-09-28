@@ -52,13 +52,13 @@ parentPort?.on(
         return;
       }
       await checkpoint();
-      const snapshot = await timeAsync("changes.classify", () =>
+      const classification = await timeAsync("changes.classify", () =>
         classifier.read(runtime.config, manifest!, message.base, undefined, {
           ...(message.commit ? { commit: message.commit } : {}),
           ...(outputs ? { outputs } : {}),
         }),
       );
-      parentPort?.postMessage({ type: "classified", snapshot });
+      parentPort?.postMessage({ type: "classified", snapshot: classification });
     });
   },
 );

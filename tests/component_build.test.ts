@@ -4,11 +4,7 @@ import { test } from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { validateComponentRanges } from "../dist/components/ranges.js";
 import { loadConfig } from "../dist/config/load.js";
-import {
-  parseHistoricalManifest,
-  parseManifest,
-  serializeManifest,
-} from "../dist/registry/manifest.js";
+import { parseManifest, serializeManifest } from "../dist/registry/manifest.js";
 import { decodeProps } from "../packages/viewer/dist/components/codec.js";
 import {
   instanceKey,
@@ -19,7 +15,6 @@ import { viewRoute } from "../packages/viewer/dist/data.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentVariants } from "./helpers/component_views.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
-import { legacyManifestFromV7 } from "./helpers/historical_manifest.js";
 
 async function compile(
   t: { after: (fn: () => Promise<void>) => void },
@@ -177,22 +172,4 @@ test("v7 retains only explicit dependency declarations", async (t) => {
   )!;
   assert.deepEqual(Reflect.get(action, "declaredDependencies"), ["notes.md"]);
   assert.equal("dependencies" in action, false);
-});
-
-test("historical v4 retains declarations separately from source attribution", async (t) => {
-  const result = await compile(t);
-  const historical = parseHistoricalManifest(
-    legacyManifestFromV7(result.manifest, 4, "components"),
-  );
-  const action = historical.entries.find((entry) => entry.id === "action");
-  assert.ok(
-    action?.kind === "component" &&
-      "dependencies" in action &&
-      "declaredDependencies" in action,
-  );
-  assert.deepEqual(action.declaredDependencies, ["notes.md"]);
-  assert.deepEqual(action.dependencies, [
-    "entries/fixture.mockup.tsx",
-    "notes.md",
-  ]);
 });

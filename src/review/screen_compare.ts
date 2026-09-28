@@ -20,11 +20,7 @@ import {
   analysisOwnsStylesheet,
   assertViewAnalysisScope,
 } from "./css/paths.js";
-import {
-  normalizeHistoricalDocument,
-  normalizeReviewPair,
-  normalizeSingleDocument,
-} from "./ignore.js";
+import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
 import { addArtifactFile, snapshotPath } from "./paths.js";
 import type { ResourceComparison } from "./resource_comparison.js";
 import {
@@ -109,17 +105,13 @@ export async function compareScreen(
       );
       const normalized =
         before !== undefined && after !== undefined
-          ? normalizeReviewPair(
-              normalizeHistoricalDocument(before),
-              after,
-              entryRoute("screen", entry.id),
-            )
+          ? normalizeReviewPair(before, after, entryRoute("screen", entry.id))
           : {
               base:
                 before === undefined
                   ? undefined
                   : normalizeSingleDocument(
-                      normalizeHistoricalDocument(before),
+                      before,
                       entryRoute("screen", entry.id),
                     ),
               head:
@@ -153,11 +145,7 @@ export async function compareScreen(
   assertViewAnalysisScope(views, config);
   const dependencies = [
     ...new Set([
-      ...(base
-        ? "dependencies" in base
-          ? base.dependencies
-          : [base.sourcePath, ...base.declaredDependencies]
-        : []),
+      ...(base ? [base.sourcePath, ...base.declaredDependencies] : []),
       ...(head ? [head.sourcePath, ...head.declaredDependencies] : []),
     ]),
   ].sort();
@@ -193,12 +181,8 @@ function compareView(
   colorScheme: ColorScheme,
 ): ViewReview {
   const context = `${route} (${viewport}, ${colorScheme})`;
-  const historicalBefore =
-    before === undefined ? undefined : normalizeHistoricalDocument(before);
   const normalizedBefore =
-    historicalBefore === undefined
-      ? undefined
-      : normalizeSingleDocument(historicalBefore, context);
+    before === undefined ? undefined : normalizeSingleDocument(before, context);
   const normalizedAfter =
     after === undefined ? undefined : normalizeSingleDocument(after, context);
   if (before === undefined)
@@ -217,11 +201,7 @@ function compareView(
       state: "removed",
       viewport,
     };
-  const normalized = normalizeReviewPair(
-    normalizeHistoricalDocument(before),
-    after,
-    context,
-  );
+  const normalized = normalizeReviewPair(before, after, context);
   const normalizedEqual = digest(normalized.base) === digest(normalized.head);
   const rawEqual =
     digest(normalizedBefore ?? "") === digest(normalizedAfter ?? "");

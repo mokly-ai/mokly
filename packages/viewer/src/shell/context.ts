@@ -20,7 +20,7 @@ export interface ShellContext {
   renderCapability?: RenderCapability;
   /** Validated delivery information for a static export. */
   delivery?: StaticDelivery;
-  /** Route of the currently selected catalogue entry, when one is active. */
+  /** Id of the currently selected catalogue entry, when one is active. */
   activeId?: string;
   /** Review comparison base ref for the serve session. */
   base: string;
@@ -32,7 +32,7 @@ export interface ShellContext {
    * shows the one Appearance control.
    */
   embedded?: boolean;
-  /** Routes changed since the base-ref branch point; absent when unknown. */
+  /** Entry ids changed since the base-ref branch point; absent when unknown. */
   changedIds?: readonly string[];
   /** Whether on-demand comparison serving is available. */
   comparisons?: boolean;

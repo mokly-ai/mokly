@@ -164,6 +164,26 @@ test("reader accepts empty sections but rejects empty folders", async () => {
   assert.throws(() => readCatalogue(fixture), /tree must project/);
 });
 
+test("a current component variant cannot claim a removed comparison", async () => {
+  const value = JSON.parse(
+    await fs.readFile("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
+  );
+  value.changesStatus = "ready";
+  const variant = value.components.find(
+    (entry: { variantOf?: string }) => entry.variantOf !== undefined,
+  );
+  assert.ok(variant);
+  variant.changes = { status: "ready", kind: "removed", included: true };
+  variant.comparison = { status: "ready", kind: "removed", eligible: true };
+  for (const view of variant.views)
+    view.comparison = {
+      status: "ready",
+      kind: "removed",
+      eligible: true,
+    };
+  assert.throws(() => readCatalogue(value), /removed|historical/i);
+});
+
 interface FixtureNode {
   children?: FixtureNode[];
   id?: string;

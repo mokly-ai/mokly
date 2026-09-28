@@ -26,11 +26,11 @@ import { validateManifest } from "./manifest_validation.js";
 /** Canonical generated manifest filename. */
 export const MANIFEST_NAME = "mokly-manifest.json";
 
-/** Former package manifest filename accepted only from Git history. */
-export const FORMER_MANIFEST_NAME = "mokabook-manifest.json";
-
-/** Legacy version 2 manifest filename accepted only during migration. */
-export const LEGACY_MANIFEST_NAME = "mockbook-manifest.json";
+/** Earlier manifest names retained only as incompatibility sentinels and stale output. */
+export const EARLIER_MANIFEST_NAMES = [
+  "mokabook-manifest.json",
+  "mockbook-manifest.json",
+] as const;
 
 /** Create deterministic manifest data from prepared entries and the source inventory. */
 export function createManifest(
@@ -73,22 +73,6 @@ export function readManifest(config: ResolvedConfig): ManifestV7 {
   return manifest;
 }
 
-/** Select the strict canonical input or the explicitly enabled legacy input. */
-export function selectManifestInput(
-  canonicalExists: boolean,
-  formerExists: boolean,
-  allowLegacyV2: boolean,
-): { allowV2: boolean; filename: string } {
-  if (canonicalExists) {
-    return { allowV2: false, filename: MANIFEST_NAME };
-  }
-  if (formerExists) {
-    return { allowV2: false, filename: FORMER_MANIFEST_NAME };
-  }
-  if (!allowLegacyV2) return { allowV2: false, filename: MANIFEST_NAME };
-  return { allowV2: true, filename: LEGACY_MANIFEST_NAME };
-}
-
 function readManifestFile(candidate: string): ManifestV7 {
   let value: unknown;
   try {
@@ -105,17 +89,14 @@ function readManifestFile(candidate: string): ManifestV7 {
   return parseManifest(value);
 }
 
-/** Validate manifest-shaped JSON and normalize temporary version 2 input. */
+/** Validate manifest-shaped JSON against the current v7 contract. */
 export function parseManifest(value: unknown): ManifestV7 {
-  return validateManifest(value, false, false) as ManifestV7;
+  return validateManifest(value);
 }
 
-/** Read old schemas only at the historical comparison boundary. */
-export function parseHistoricalManifest(
-  value: unknown,
-  allowV2 = false,
-): HistoricalManifest {
-  return validateManifest(value, allowV2, true) as HistoricalManifest;
+/** Apply the earlier/newer version gate, then fully validate historical v7. */
+export function parseHistoricalManifest(value: unknown): HistoricalManifest {
+  return validateManifest(value, true);
 }
 
 function toManifestEntry(

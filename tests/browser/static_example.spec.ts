@@ -4,7 +4,7 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 
 import { exportCatalogue } from "../../dist/export/run.js";
-import { createExampleBaseline } from "../helpers/example_baseline.js";
+import { createCommittedExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import {
   FULL_CATALOGUE_SETUP_TIMEOUT_MS,
@@ -28,7 +28,7 @@ test.beforeAll(async () => {
     "static-example",
     "baseline-fixture",
     false,
-    () => createExampleBaseline(root),
+    () => createCommittedExampleBaseline(root, "static-example"),
   );
   output = path.join(root, "site");
   await timeExportPreparation("static-example", () =>

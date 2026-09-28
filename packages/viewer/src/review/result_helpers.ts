@@ -1,5 +1,5 @@
 import { canonicalJson } from "../components/data.js";
-import { isEntryId } from "../navigation/logical.js";
+import { isCatalogueId, isEntryId } from "../navigation/logical.js";
 
 export const compareText = (a: string, b: string): number =>
   a < b ? -1 : a > b ? 1 : 0;
@@ -49,6 +49,11 @@ export function reviewString(value: unknown): string {
 export function reviewId(value: unknown): string {
   const id = reviewString(value);
   if (!isEntryId(id)) reviewInvalid("invalid entry id");
+  return id;
+}
+export function reviewIgnoreId(value: unknown): string {
+  const id = reviewString(value);
+  if (!isCatalogueId(id)) reviewInvalid("invalid ReviewIgnore id");
   return id;
 }
 export function reviewPath(value: unknown): string {

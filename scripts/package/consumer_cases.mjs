@@ -252,7 +252,6 @@ export async function smokeThemedConsumer(context) {
     ),
   );
   assert.equal(pageManifest.schemaVersion, 7);
-  assert.equal("legacyPages" in pageManifest, false);
   assert.ok(
     pageManifest.entries.some(
       (entry) => entry.id === "themed-notice" && entry.kind === "page",

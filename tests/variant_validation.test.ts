@@ -26,7 +26,7 @@ const config: ResolvedConfig = {
   generatedOutput: "committed",
   publicExclude: DEFAULT_PUBLIC_EXCLUDE,
   colorSchemes: ["light"],
-  compatibility: { readManifestV2: false },
+  compatibility: {},
   configPath: path.join(repositoryRoot, "mokly.config.ts"),
   entriesDir: path.join(repositoryRoot, "tests"),
   entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],
@@ -58,7 +58,7 @@ test("variant authoring rejects only the retained forbidden fields", () => {
     slug: "custom",
   } as unknown as ScreenVariantInput;
   const definitions = screenDefinitions([legacy]);
-  assert.equal(definitions[1]?.route, "screens/welcome-legacy.html");
+  assert.equal(Object.hasOwn(definitions[1] ?? {}, "route"), false);
   assert.equal(
     allViolations(definitions).some(({ code }) => code === "invalid-variants"),
     false,
@@ -77,7 +77,6 @@ test("variant relationships reject unknown, nested, and non-screen parents", () 
   const nested = {
     ...child,
     id: "welcome-nested",
-    route: "screens/welcome-nested.html",
     variantOf: child.id,
   };
   assertViolation(
@@ -251,9 +250,9 @@ function invalidNonScreen(
   };
   const specific =
     kind === "page"
-      ? { render: () => "<html></html>", route: "page.html" }
+      ? { render: () => "<html></html>" }
       : kind === "use-case"
-        ? { route: "flow.html", steps: [{ screenId: "welcome" }] }
-        : { route: "component.html" };
+        ? { steps: [{ screenId: "welcome" }] }
+        : {};
   return { ...common, ...specific } as unknown as ResolvedRegistryEntry;
 }

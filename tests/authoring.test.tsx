@@ -29,6 +29,7 @@ import {
 import { validateEntry } from "../dist/registry/entry_validation.js";
 import type { RegistryViolation } from "../dist/registry/prepared_types.js";
 import { serializeReviewSentinels } from "../dist/renderer/sentinels.js";
+import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 
@@ -38,7 +39,7 @@ const validationConfig: ResolvedConfig = {
   generatedOutput: "committed",
   publicExclude: DEFAULT_PUBLIC_EXCLUDE,
   colorSchemes: ["light"],
-  compatibility: { readManifestV2: false },
+  compatibility: {},
   configPath: path.join(repositoryRoot, "mokly.config.ts"),
   entriesDir: path.join(repositoryRoot, "tests"),
   entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],
@@ -120,7 +121,7 @@ test("review material keys reject cyclic or non-finite state", () => {
   assert.throws(() => reviewMaterialKey({ value: Number.NaN }), /finite/);
 });
 
-test("definitions derive documents for every entry kind", () => {
+test("definitions keep identity while shared helpers derive every document", () => {
   const screenDefinition = defineScreen(screenBase);
   const pageDefinition = definePage({
     dependencies: [],
@@ -142,10 +143,29 @@ test("definitions derive documents for every entry kind", () => {
     variants: [{ id: "action-default", props: {}, title: "Default" }],
   }).entries[0];
 
-  assert.equal(screenDefinition.route, "screens/tagged-screen.html");
-  assert.equal(pageDefinition.route, "pages/account-guide.html");
-  assert.equal(useCaseDefinition.route, "user-flows/tagged-journey.html");
-  assert.equal(componentDefinition.route, "components/action.html");
+  for (const definition of [
+    screenDefinition,
+    pageDefinition,
+    useCaseDefinition,
+    componentDefinition,
+  ])
+    assert.equal(Object.hasOwn(definition, "route"), false);
+  assert.equal(
+    entryRoute(screenDefinition.kind, screenDefinition.id),
+    "screens/tagged-screen.html",
+  );
+  assert.equal(
+    entryRoute(pageDefinition.kind, pageDefinition.id),
+    "pages/account-guide.html",
+  );
+  assert.equal(
+    entryRoute(useCaseDefinition.kind, useCaseDefinition.id),
+    "user-flows/tagged-journey.html",
+  );
+  assert.equal(
+    entryRoute(componentDefinition.kind, componentDefinition.id),
+    "components/action.html",
+  );
 });
 
 test("nested screens retain colorSchemes through root flattening", () => {
@@ -166,7 +186,7 @@ test("nested screens retain colorSchemes through root flattening", () => {
   assert.equal(definition?.kind, "screen");
   if (definition?.kind !== "screen") throw new Error("screen missing");
   assert.deepEqual(definition.colorSchemes, ["light"]);
-  assert.equal(definition.route, "screens/nested-screen.html");
+  assert.equal(Object.hasOwn(definition, "route"), false);
 });
 
 test("defineScreen flattens declared variants after their parent", () => {

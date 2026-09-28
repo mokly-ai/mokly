@@ -198,9 +198,7 @@ export function publicWorkspace(
               parentRemoved ||
               model.removedEntries.some(
                 ({ entry: candidate }) => candidate === source,
-              ) ||
-              (source.comparison.status === "ready" &&
-                source.comparison.kind === "removed"),
+              ),
             comparisonEligible:
               source.comparison.status === "ready" &&
               source.comparison.eligible,

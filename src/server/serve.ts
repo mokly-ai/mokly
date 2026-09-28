@@ -132,6 +132,7 @@ export async function serve(
             );
         },
         diagnostic: (error) => reporter.runtimeDiagnostic(error),
+        incompatibleBaseline: (commit) => reporter.incompatibleBaseline(commit),
         ...(dependencies.baselineBuilder
           ? { builder: dependencies.baselineBuilder }
           : {}),

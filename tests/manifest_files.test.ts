@@ -9,27 +9,22 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { pendingGeneratedOrphanRoutes } from "../dist/build/ownership.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
-import type { ResolvedConfig } from "../dist/config/types.js";
 import {
   createManifest,
   MANIFEST_NAME,
-  parseHistoricalManifest,
   parseManifest,
   readManifest,
   serializeManifest,
 } from "../dist/registry/manifest.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
-import { legacyManifestFromV7 } from "./helpers/historical_manifest.js";
-
-test("current filesystem reads reject legacy-only output even with historical compatibility", async (context) => {
+test("current filesystem reads reject an earlier-name manifest sentinel", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
-  const config = withV2Compatibility(await loadConfig(fixture.root));
-  const legacy = toV2Manifest((await compileCatalogue(config)).manifest);
+  const config = await loadConfig(fixture.root);
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, "mockbook-manifest.json"),
-    JSON.stringify(legacy),
+    '{"schemaVersion":6}\n',
   );
 
   assert.throws(() => readManifest(config), /could not read/);
@@ -38,7 +33,7 @@ test("current filesystem reads reject legacy-only output even with historical co
 test("filesystem manifest loading never accepts v2 under the canonical filename", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
-  const config = withV2Compatibility(await loadConfig(fixture.root));
+  const config = await loadConfig(fixture.root);
   const legacy = toV2Manifest((await compileCatalogue(config)).manifest);
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, MANIFEST_NAME),
@@ -77,38 +72,6 @@ test("manifest validates retained color schemes and rejects stored view paths", 
   const stored = structuredClone(manifest);
   Object.assign(stored.entries[0]!, { fragments: {} });
   assert.throws(() => parseManifest(stored), /unsupported fragments/);
-});
-
-test("historical manifests validate darkFragments names and collisions", () => {
-  const current = createManifest(
-    [resolvedScreen("a"), resolvedScreen("b")],
-    [],
-    ["light", "dark"],
-  );
-  const historical = legacyManifestFromV7(current, 6);
-  assert.doesNotThrow(() => parseHistoricalManifest(historical));
-
-  const wrongName = structuredClone(historical);
-  const wrongScreen = wrongName.entries.find((entry) => entry.id === "a");
-  assert.ok(wrongScreen);
-  const wrongDark = wrongScreen.darkFragments as Record<string, string>;
-  wrongDark.mobile = "wrong.mobile.dark.html";
-  assert.throws(
-    () => parseHistoricalManifest(wrongName),
-    /invalid or colliding mobile dark fragment/,
-  );
-
-  const collision = structuredClone(historical);
-  const first = collision.entries.find((entry) => entry.id === "a");
-  const second = collision.entries.find((entry) => entry.id === "b");
-  assert.ok(first && second);
-  const firstDark = first.darkFragments as Record<string, string>;
-  const secondDark = second.darkFragments as Record<string, string>;
-  secondDark.mobile = firstDark.mobile!;
-  assert.throws(
-    () => parseHistoricalManifest(collision),
-    /invalid or colliding mobile dark fragment/,
-  );
 });
 
 test("manifest validation accepts tags and rejects invalid ones", () => {
@@ -157,14 +120,14 @@ test("manifest serializes declared tags and omits absent ones", () => {
   const serialized = serializeManifest(
     createManifest(
       [
-        resolvedScreen("a", "a.html", {
+        resolvedScreen("a", {
           tags: ["onboarding", "forms"],
           useCaseIds: ["tour", "untagged-tour"],
         }),
-        resolvedScreen("b", "b.html", { tags: [] }),
-        resolvedScreen("c", "c.html"),
+        resolvedScreen("b", { tags: [] }),
+        resolvedScreen("c"),
         resolvedUseCase(["forms"]),
-        resolvedUseCase([], "untagged-tour", "untagged-tour.html"),
+        resolvedUseCase([], "untagged-tour"),
       ],
       [],
       ["light"],
@@ -222,10 +185,6 @@ test("disabling dark orphans committed dark fragments", async (context) => {
   }
 });
 
-function withV2Compatibility(config: ResolvedConfig): ResolvedConfig {
-  return { ...config, compatibility: { readManifestV2: true } };
-}
-
 function toV2Manifest(manifest: unknown): Record<string, unknown> {
   const legacy: Record<string, unknown> = {
     ...(manifest as Record<string, unknown>),
@@ -242,7 +201,6 @@ function manifestWithScreen(id: string) {
 function resolvedUseCase(
   tags?: readonly string[],
   id = "tour",
-  route = "tour.html",
 ): ResolvedRegistryEntry {
   return {
     __viaDefine: true,
@@ -252,7 +210,6 @@ function resolvedUseCase(
     kind: "use-case",
     navPath: [],
     relatedDocs: [],
-    route,
     sourcePath: `/repo/entries/${id}.mockup.tsx`,
     sourceRelativePath: `entries/${id}.mockup.tsx`,
     steps: [{ screenId: "a" }],
@@ -263,7 +220,6 @@ function resolvedUseCase(
 
 function resolvedScreen(
   id = "a",
-  route = "a.html",
   options: { tags?: readonly string[]; useCaseIds?: readonly string[] } = {},
 ): ResolvedRegistryEntry {
   return {
@@ -276,7 +232,6 @@ function resolvedScreen(
     navPath: [],
     mobile: null,
     relatedDocs: [],
-    route,
     sourcePath: `/repo/entries/${id}.mockup.tsx`,
     sourceRelativePath: `entries/${id}.mockup.tsx`,
     ...(options.tags ? { tags: options.tags } : {}),

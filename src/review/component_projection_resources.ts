@@ -31,7 +31,7 @@ export function prepareComponentProjection(
   root?: string,
 ): PreparedComponentComparison {
   const baseRanges = before.usage
-    ? validateComponentRanges(base, before.usage.ranges, "historical")
+    ? validateComponentRanges(base, before.usage.ranges)
     : undefined;
   const headRanges = after.usage
     ? validateComponentRanges(head, after.usage.ranges)

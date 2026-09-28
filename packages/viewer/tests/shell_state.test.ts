@@ -16,9 +16,14 @@ import {
 import { shellStore } from "../src/shell/store_actions.js";
 import { canonicalHistoricalUrl } from "../src/shell/store_browser.js";
 import { withFilterSelection, withRoute } from "../src/shell/store_filters.js";
+import {
+  announceNavigation,
+  hostRoute,
+} from "../src/shell/store_host_routes.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
 import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
+import type { ScreenNavigateEvent } from "../src/viewer/types.js";
 
 const model = readCatalogue(
   JSON.parse(
@@ -169,6 +174,35 @@ test("shell routes parse explicit view axes independently", () => {
   );
   assert.equal(repeated.viewport, "mobile");
   assert.equal(repeated.colorScheme, undefined);
+});
+
+test("live host routing carries exact history and announces its entry", () => {
+  const historical = model.removedEntries[0]!;
+  assert.ok(historical.snapshotId);
+  const selection = {
+    ...defaultSelection,
+    screenId: historical.entry.id,
+    snapshotId: historical.snapshotId,
+  };
+  const route = hostRoute(catalogue, selection, "hero");
+  assert.equal(route.snapshot, historical.snapshotId);
+  assert.equal(route.fragment, "hero");
+  const navigations: unknown[] = [];
+  announceNavigation(
+    {
+      model,
+      events: () => ({
+        onScreenNavigate: (event: ScreenNavigateEvent) =>
+          navigations.push(event),
+      }),
+    } as never,
+    selection,
+    route.fragment,
+    undefined,
+  );
+  assert.deepEqual(navigations, [
+    { screenId: historical.entry.id, fragment: "hero" },
+  ]);
 });
 
 test("filter transitions restore their disclosure baseline and route activation reveals its row", () => {

@@ -1,6 +1,6 @@
 /** Serializable state shared by standalone shell SSR and browser hydration. */
 
-import { resolveCatalogueRoute } from "../catalogue/entry_selection.js";
+import { resolveCatalogueEntry } from "../catalogue/entry_selection.js";
 import { readCatalogue } from "../catalogue/reader.js";
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
@@ -169,7 +169,7 @@ export function shellBootstrapProps(bootstrap: ShellBootstrap) {
   const catalogue = viewerCatalogue(bootstrap.catalogue);
   const selected =
     bootstrap.view.kind === "target"
-      ? resolveCatalogueRoute(
+      ? resolveCatalogueEntry(
           bootstrap.catalogue,
           {
             id: bootstrap.view.entryId,
@@ -317,7 +317,7 @@ function validateTarget(
 ): void {
   if (
     view.kind === "target" &&
-    !resolveCatalogueRoute(
+    !resolveCatalogueEntry(
       catalogue,
       {
         id: view.entryId,

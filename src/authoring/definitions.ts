@@ -1,5 +1,3 @@
-import { entryRoute } from "@mokly/viewer/data";
-
 import { MoklyError } from "../errors.js";
 
 import { NESTED_AUTHORED_NAV_PATH } from "./markers.js";
@@ -76,7 +74,6 @@ export function defineScreen(
     ...parentInput,
     kind: "screen" as const,
     navPath: input.navPath === undefined ? [] : input.navPath,
-    route: entryRoute("screen", input.id),
     useCaseIds: input.useCaseIds ?? [],
   });
   return variants === undefined
@@ -90,7 +87,6 @@ export function definePage(input: PageInput): PageDefinition {
     ...input,
     kind: "page",
     navPath: input.navPath === undefined ? [] : input.navPath,
-    route: entryRoute("page", input.id),
   });
 }
 
@@ -105,7 +101,6 @@ export function defineUseCase(input: UseCaseInput): UseCaseDefinition {
     ...input,
     kind: "use-case",
     navPath: input.navPath === undefined ? [] : input.navPath,
-    route: entryRoute("use-case", input.id),
   });
 }
 

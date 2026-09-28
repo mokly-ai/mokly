@@ -31,7 +31,7 @@ const test = base.extend<{ preparedPreview: PreparedPreview }>({
   ],
 });
 
-test("the real preview build preserves generated output and serves fresh publication bytes", async ({
+test("focused preview preparation preserves generated output and serves fresh publication bytes", async ({
   page,
   preparedPreview: { before, after, preview },
 }) => {

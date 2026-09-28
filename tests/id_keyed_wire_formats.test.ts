@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   entryRoute,
+  generatedViews,
   parseRemovedPagePreview,
   parseReviewResult,
   viewRoute,
@@ -62,57 +63,22 @@ test("manifest v7 carries identity and configuration but no derived paths", () =
   }
 });
 
-test("historical parsing confines stored paths to normalized artifacts", () => {
-  const { colorSchemes: _, ...legacyScreen } = currentScreen();
-  const historical = parseHistoricalManifest({
-    entries: [
-      {
-        ...legacyScreen,
-        dependencies: [sourcePath],
-        fragments: {
-          mobile: "legacy/home.mobile.html",
-          desktop: "legacy/home.desktop.html",
-        },
-        route: "legacy/home.html",
-        viewports: ["mobile", "desktop"],
-      },
-    ],
-    generatedBy: "mokly",
-    schemaVersion: 6,
-    sourceFiles: [sourcePath],
-  });
-  const [entry] = historical.entries;
-  assert.ok(entry?.kind === "screen" && "artifacts" in entry);
-  assert.equal("route" in entry, false);
-  assert.equal("fragments" in entry, false);
-  assert.deepEqual(entry.artifacts, [
-    {
-      colorScheme: "light",
-      path: "legacy/home.mobile.html",
-      viewport: "mobile",
-    },
-    {
-      colorScheme: "light",
-      path: "legacy/home.desktop.html",
-      viewport: "desktop",
-    },
-  ]);
-
+test("historical parsing accepts only v7 and derives its view paths", () => {
+  assert.throws(
+    () => parseHistoricalManifest({ schemaVersion: 6 }),
+    (error: unknown) =>
+      (error as { code?: string }).code === "baseline-incompatible-earlier",
+  );
   const current = parseHistoricalManifest(currentManifest());
-  const [currentEntry] = current.entries;
-  assert.ok(currentEntry?.kind === "screen" && "artifacts" in currentEntry);
-  assert.deepEqual(currentEntry.artifacts, [
-    {
-      colorScheme: "light",
-      path: viewRoute("screen", "home", "mobile", "light"),
-      viewport: "mobile",
-    },
-    {
-      colorScheme: "light",
-      path: viewRoute("screen", "home", "desktop", "light"),
-      viewport: "desktop",
-    },
-  ]);
+  const [entry] = current.entries;
+  assert.ok(entry?.kind === "screen");
+  assert.deepEqual(
+    generatedViews(entry).map(({ path }) => path),
+    [
+      viewRoute("screen", "home", "mobile", "light"),
+      viewRoute("screen", "home", "desktop", "light"),
+    ],
+  );
 });
 
 test("review v4 is the only accepted comparison result", () => {

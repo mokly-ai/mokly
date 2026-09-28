@@ -18,8 +18,6 @@ import { ExportTransaction } from "../../dist/export/transaction.js";
 import { publicationOptions } from "../../dist/publication/options.js";
 import { copyPublicFiles } from "../../dist/publication/resources.js";
 import { prepareReviewRepository } from "../../dist/review/prepare.js";
-import { loadCatalogueSnapshot } from "../../dist/server/catalogue_snapshot.js";
-import { computeCatalogueChanges } from "../../dist/server/changed.js";
 import {
   loadBrowserClientModules,
   loadBrowserNavigationModules,
@@ -28,6 +26,7 @@ import {
 import { startCatalogueServer } from "../../dist/server/http.js";
 
 import { previewOwnership, stagePreviewArtifact } from "./artifact.mjs";
+import { publicationSnapshot } from "./baseline.mjs";
 import {
   captureComparison,
   capturePublicationPagePreviews,
@@ -70,20 +69,21 @@ export async function buildPreview(config, output, options = {}) {
           : undefined;
         const git = prepared;
         const inputs = await capturePublicationInputs(config, excludedRoots);
-        const snapshot = await loadCatalogueSnapshot(
+        const { incompatible, snapshot } = await publicationSnapshot(
           config,
-          git
-            ? (manifest) => computeCatalogueChanges(config, base, git, manifest)
-            : undefined,
+          git,
+          base,
           inputs.manifest,
         );
         const { catalogue, changes } = snapshot;
         const manifest = catalogue.manifest;
-        const review = git
-          ? previewComparisonProvider(config, stage, base, git)
-          : undefined;
+        const review =
+          git && !incompatible
+            ? previewComparisonProvider(config, stage, base, git)
+            : undefined;
         const server = await startCatalogueServer(config, {
           base,
+          ...(incompatible ? { changesStatus: "unavailable" } : {}),
           liveChanges: false,
           snapshot,
           port: 0,
@@ -138,7 +138,11 @@ export async function buildPreview(config, output, options = {}) {
             .split(path.sep)
             .join("/"),
           catalogue,
-          changesStatus: comparison ? "ready" : "disabled",
+          changesStatus: comparison
+            ? "ready"
+            : incompatible
+              ? "unavailable"
+              : "disabled",
           changedIds: changes?.changedIds,
           evidence: snapshot.componentChanges,
           comparison: comparison?.result,

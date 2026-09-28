@@ -11,9 +11,7 @@ import { SelectedReviewRoutes } from "../dist/server/selected_review_routes.js";
 
 const id = "removed-page";
 const page = {
-  artifactPath: "archive/removed.html",
   declaredDependencies: [],
-  dependencies: [],
   description: "Removed page",
   id,
   kind: "page" as const,
@@ -27,8 +25,8 @@ const source: RemovedPagePreviewSource = {
   baseline: {
     entries: [page],
     generatedBy: "mokly",
-    schemaVersion: 5,
-    sourceFiles: [],
+    schemaVersion: 7,
+    sourceFiles: [page.sourcePath],
   },
   baseCommit: "a".repeat(40),
   baseRef: "main",

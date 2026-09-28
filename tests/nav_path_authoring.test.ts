@@ -8,6 +8,7 @@ import {
   page,
   screen,
 } from "../dist/authoring/definitions.js";
+import { entryRoute } from "../packages/viewer/dist/data.js";
 
 test("nested folders derive paths while ids alone derive routes", () => {
   const entries = defineRoot({
@@ -41,7 +42,7 @@ test("nested folders derive paths while ids alone derive routes", () => {
     ],
   );
   assert.deepEqual(
-    entries.map((entry) => "route" in entry && entry.route),
+    entries.map((entry) => entryRoute(entry.kind, entry.id)),
     ["screens/browse-home.html", "pages/browse-document.html"],
   );
 });

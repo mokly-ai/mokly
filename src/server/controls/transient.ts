@@ -48,7 +48,6 @@ export function renderTransient(
   const route = [...compiler.routes].find(
     ([, target]) =>
       target.entryId === saved.id &&
-      target.variantId === request.variantId &&
       target.viewport === request.viewport &&
       target.colorScheme === request.colorScheme,
   )![0];

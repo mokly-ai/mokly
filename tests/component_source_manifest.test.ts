@@ -4,18 +4,12 @@ import { test } from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 import { defineComponent } from "../dist/index.js";
-import {
-  parseHistoricalManifest,
-  parseManifest,
-  serializeManifest,
-} from "../dist/registry/manifest.js";
+import { parseManifest, serializeManifest } from "../dist/registry/manifest.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentViews } from "./helpers/component_views.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
-import { legacyManifestFromV7 } from "./helpers/historical_manifest.js";
-
-test("v6 source metadata round-trips deterministically and readers still accept its absence", async (t) => {
+test("v7 source metadata round-trips deterministically and accepts its absence", async (t) => {
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const { manifest } = await compileCatalogue(await loadConfig(fixture.root));
@@ -25,10 +19,6 @@ test("v6 source metadata round-trips deterministically and readers still accept 
     for (const instance of view.instances)
       Reflect.deleteProperty(instance, "source");
   assert.deepEqual(parseManifest(original), original);
-  assert.equal(
-    parseHistoricalManifest(legacyManifestFromV7(original, 6)).schemaVersion,
-    6,
-  );
   const supplied = structuredClone(original);
   const source = { path: "entries/caller.tsx", line: 12, column: 4 };
   const instance = componentViews(supplied).flatMap(
@@ -36,10 +26,6 @@ test("v6 source metadata round-trips deterministically and readers still accept 
   )[0]!;
   Object.assign(instance, { source });
   assert.deepEqual(parseManifest(supplied), supplied);
-  assert.equal(
-    parseHistoricalManifest(legacyManifestFromV7(supplied, 6)).schemaVersion,
-    6,
-  );
   const text = serializeManifest(supplied);
   Object.assign(instance, {
     source: { column: 4, line: 12, path: "entries/caller.tsx" },
@@ -63,10 +49,6 @@ test("v6 source metadata round-trips deterministically and readers still accept 
   ]) {
     Object.assign(instance, { source: invalid });
     assert.throws(() => parseManifest(supplied), /source/);
-    assert.throws(
-      () => parseHistoricalManifest(legacyManifestFromV7(supplied, 6)),
-      /source/,
-    );
   }
 });
 
@@ -75,7 +57,6 @@ test("authored data schemas, slots and forged manifest components reserve __mokl
     id: "action",
     title: "Action",
     description: "Action",
-    route: "components/action.html",
     dependencies: [],
     relatedDocs: [],
     propSchema: { kind: "object" as const, properties: {} },

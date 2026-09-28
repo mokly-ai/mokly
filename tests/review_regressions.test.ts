@@ -12,7 +12,6 @@ import { compareReview } from "../dist/review/compare.js";
 import { CommittedRepository } from "../dist/review/git.js";
 import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { runReview } from "../dist/review/run.js";
-import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 
 import {
@@ -76,12 +75,7 @@ test("Review validates malformed markers on added and removed panes", async (con
   assert.ok(home?.kind === "screen");
   const removed = {
     ...home,
-    fragments: {
-      desktop: "screens/removed.desktop.html",
-      mobile: "screens/removed.mobile.html",
-    },
     id: "removed",
-    route: "screens/removed.html",
     useCaseIds: [],
   };
   const removedFiles = new Map([
@@ -181,68 +175,6 @@ test("Git file classification uses a literal pathspec", async () => {
   );
 });
 
-test("Review does not hide an invalid v3 manifest behind v2 fallback", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  await fs.promises.writeFile(
-    fixture.configPath,
-    `export default { compatibility: { readManifestV2: true }, entriesDir: "entries", mockupsDir: "mockups", repoRoot: "." };
-`,
-  );
-  const config = await loadConfig(fixture.root);
-  const compilation = await compileCatalogue(config);
-  const files = new Map([
-    ["mockups/mokly-manifest.json", "{"],
-    [
-      "mockups/mockbook-manifest.json",
-      JSON.stringify({
-        ...manifest([]),
-        generatedBy: undefined,
-        schemaVersion: 2,
-      }),
-    ],
-  ]);
-
-  await assert.rejects(
-    () => compareReview(compilation, config, fakeGit(files), "HEAD"),
-    /JSON|Unexpected end/,
-  );
-});
-
-test("Review uses v2 compatibility only when v3 is absent", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  await fs.promises.writeFile(
-    fixture.configPath,
-    `export default { compatibility: { readManifestV2: true }, entriesDir: "entries", mockupsDir: "mockups", repoRoot: "." };
-`,
-  );
-  const config = await loadConfig(fixture.root);
-  const compilation = await compileCatalogue(config);
-  const files = new Map([
-    [
-      "mockups/mockbook-manifest.json",
-      JSON.stringify({
-        ...manifest([]),
-        generatedBy: undefined,
-        schemaVersion: 2,
-      }),
-    ],
-  ]);
-
-  const artifact = await compareReview(
-    compilation,
-    config,
-    fakeGit(files),
-    "HEAD",
-  );
-
-  assert.equal(
-    artifact.result.screens.every((screen) => screen.state === "added"),
-    true,
-  );
-});
-
 function fakeGit(files: ReadonlyMap<string, string>): ReadOnlyReviewRepository {
   return {
     evidence: {
@@ -271,35 +203,10 @@ function fakeGit(files: ReadonlyMap<string, string>): ReadOnlyReviewRepository {
 
 function manifest(entries: readonly ManifestScreen[]) {
   return {
-    entries: entries.map((entry) => ({
-      declaredDependencies: [...entry.declaredDependencies],
-      dependencies: [entry.sourcePath, ...entry.declaredDependencies],
-      description: entry.description,
-      fragments: {
-        desktop: viewRoute("screen", entry.id, "desktop", "light"),
-        mobile: viewRoute("screen", entry.id, "mobile", "light"),
-      },
-      ...(entry.colorSchemes.includes("dark")
-        ? {
-            darkFragments: {
-              desktop: viewRoute("screen", entry.id, "desktop", "dark"),
-              mobile: viewRoute("screen", entry.id, "mobile", "dark"),
-            },
-          }
-        : {}),
-      id: entry.id,
-      kind: "screen" as const,
-      navPath: [...entry.navPath],
-      relatedDocs: [...entry.relatedDocs],
-      route: entryRoute("screen", entry.id),
-      sourcePath: entry.sourcePath,
-      title: entry.title,
-      useCaseIds: [...entry.useCaseIds],
-      viewports: ["mobile", "desktop"] as const,
-    })),
+    entries,
     generatedBy: "mokly",
-    legacyPages: [],
-    schemaVersion: 3,
+    schemaVersion: 7,
+    sourceFiles: [...new Set(entries.map((entry) => entry.sourcePath))].sort(),
   };
 }
 

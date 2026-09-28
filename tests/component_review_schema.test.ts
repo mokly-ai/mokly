@@ -109,6 +109,28 @@ test("component comparison schemas reject invalid membership, sides, references 
   }
 });
 
+test("review readers keep plain kebab-case ignore ids such as device names", async (t) => {
+  const fixture = await componentReviewFixture(t, (source) => source);
+  const { result } = await compareReview(
+    fixture.after,
+    fixture.config,
+    fixture.git,
+    "main",
+  );
+  const value = structuredClone(result);
+  const view = value.screens[0]!.views[0]!;
+  view.ignoredIds = ["aux"];
+  value.ignoredImpact = [
+    {
+      id: "aux",
+      count: 1,
+      viewport: view.viewport,
+      colorScheme: view.colorScheme,
+    },
+  ];
+  assert.doesNotThrow(() => parseReviewResult(value));
+});
+
 test("source validation rejects a changed path supported only by a shared-impact glob", async (t) => {
   const fixture = await pathEvidenceFixture(t, {
     beforeSource: pathCatalogueSource(),

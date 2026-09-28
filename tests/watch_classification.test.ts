@@ -67,8 +67,8 @@ function snapshot(id: string): ComponentChangeSnapshot {
     baseline: {
       entries: [],
       generatedBy: "mokly",
-      legacyPages: [{ artifactPath: `${id}.html`, sourcePath: `${id}.html` }],
-      schemaVersion: 3,
+      schemaVersion: 7,
+      sourceFiles: [`${id}.html`],
     },
   };
 }

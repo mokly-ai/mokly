@@ -80,32 +80,6 @@ test("removed screens and saved variants retain baseline context with null curre
   });
   assert.ok(variant.views.every((view) => !("fragmentPath" in view)));
   assert.deepEqual(readCatalogue(JSON.parse(serializeCatalogue(model))), model);
-  const historical = structuredClone(fixture.before.manifest);
-  for (const entry of historical.entries)
-    if (entry.kind === "screen") delete entry.componentViews;
-  const legacy = {
-    schemaVersion: 3 as const,
-    generatedBy: "mokly" as const,
-    legacyPages: [],
-    entries: historical.entries.filter(
-      (entry) => entry.kind !== "component" && entry.kind !== "page",
-    ),
-  };
-  const unavailable = projectCatalogue({
-    configPath: "mokly.config.ts",
-    catalogue: catalogueAtBaseline(fixture.after.manifest, legacy),
-    changesStatus: "ready",
-    evidence: { baseline: legacy },
-    comparisonUrl: `__mokly/diffs/__generations/${previewGeneration}/review.json`,
-    removedPreviews: new Map([["home", { kind: "screen" as const }]]),
-    revision: { content: 0, evidence: 0 },
-  });
-  const old = unavailable.removedEntries[0]!.entry;
-  assert.ok(
-    old.kind === "screen" &&
-      old.views.every((view) => view.usage.status === "unavailable"),
-  );
-  assert.deepEqual(unavailable.removedEntries[0]!.preview, { kind: "screen" });
 });
 
 test("removed component parents round trip with their variant entries", async (t) => {

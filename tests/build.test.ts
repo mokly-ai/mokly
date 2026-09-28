@@ -8,11 +8,6 @@ import { checkCompilation } from "../dist/build/check.js";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
-import {
-  parseManifest,
-  parseHistoricalManifest,
-} from "../dist/registry/manifest.js";
-import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 
 import {
   registerFixturePage,
@@ -100,42 +95,6 @@ test("dark schemes render dark fragments per view", async (context) => {
     ),
     ["screens/details.mobile.html", "screens/details.desktop.html"],
   );
-});
-
-test("manifest readers accept version 2 only through explicit compatibility", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
-  const compilation = await compileCatalogue(config);
-  const legacy = {
-    entries: compilation.manifest.entries.flatMap((entry) => {
-      if (entry.kind === "page" || entry.kind === "component") return [];
-      const common = {
-        ...entry,
-        dependencies: [entry.sourcePath, ...entry.declaredDependencies],
-        route: entryRoute(entry.kind, entry.id),
-      } as Record<string, unknown>;
-      delete common["colorSchemes"];
-      delete common["componentViews"];
-      return entry.kind === "screen"
-        ? [
-            {
-              ...common,
-              fragments: {
-                desktop: viewRoute("screen", entry.id, "desktop", "light"),
-                mobile: viewRoute("screen", entry.id, "mobile", "light"),
-              },
-              viewports: ["mobile", "desktop"],
-            },
-          ]
-        : [common];
-    }),
-    generatedBy: undefined,
-    schemaVersion: 2,
-    legacyPages: [],
-  };
-  assert.throws(() => parseManifest(legacy), /schema version 7/);
-  assert.equal(parseHistoricalManifest(legacy, true).schemaVersion, 3);
 });
 
 test("check groups missing, stale, and proven orphan output", async (context) => {

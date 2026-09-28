@@ -143,11 +143,7 @@ function changedPathCandidates(
       : generatedViews(entry).map((view) => view.path);
   const baseline =
     baseEntry?.kind === "page"
-      ? [
-          "artifactPath" in baseEntry
-            ? baseEntry.artifactPath
-            : entryRoute("page", baseEntry.id),
-        ]
+      ? [entryRoute("page", baseEntry.id)]
       : baseEntry
         ? generatedViews(baseEntry).map((view) => view.path)
         : [];

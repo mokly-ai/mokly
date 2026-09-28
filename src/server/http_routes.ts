@@ -32,7 +32,7 @@ export async function handleCatalogueRequest(
   catalogue: Catalogue,
   config: ResolvedConfig,
   base: string,
-  currentChangedRoutes: () => readonly string[] | undefined,
+  currentChangedIds: () => readonly string[] | undefined,
   streams: Set<ServerResponse>,
   assets: ServedAssets,
   currentVersion: () => number,
@@ -43,6 +43,7 @@ export async function handleCatalogueRequest(
   changesStatus?: ChangesStatus,
   contentVersion?: number,
   publicCatalogue?: PublicCatalogueSource,
+  unavailableComparisons = false,
 ): Promise<void> {
   if (method !== "GET" && method !== "HEAD")
     return send(response, 405, "text/plain", "Method not allowed", method);
@@ -109,7 +110,7 @@ export async function handleCatalogueRequest(
       ? componentChanges.result.changes.map(
           (entry) => (entry.after ?? entry.before)!.id,
         )
-      : currentChangedRoutes());
+      : currentChangedIds());
   const context = shellContext(
     base,
     changed
@@ -123,7 +124,7 @@ export async function handleCatalogueRequest(
     requestVersion,
   );
   if (publicCatalogue) context.readModel = readPublicCatalogue(publicCatalogue);
-  context.comparisons = reviewRoutes !== undefined;
+  context.comparisons = reviewRoutes !== undefined || unavailableComparisons;
   if (contentVersion !== undefined) context.contentVersion = contentVersion;
   if (documents && renderCapability)
     context.previewGeneration = renderCapability.generation;

@@ -9,6 +9,10 @@ import type { GeneratedOutputStore } from "../../build/output_store.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { timeAsync, timingCounts } from "../../diagnostics/timings.js";
 import {
+  isEarlierBaselineClassification,
+  isInvalidBaselineClassification,
+} from "../classification_result.js";
+import {
   RepositoryCatalogueChangeClassifier,
   type CatalogueChangeClassifier,
   type ComponentChangeSnapshot,
@@ -38,6 +42,8 @@ export interface BackgroundGenerationOptions {
   readonly baselineProgress?: (event: BaselineProgress) => void;
   /** Route background failures through the process's sole terminal owner. */
   readonly diagnostic?: (error: unknown) => void;
+  /** Report the expected earlier-version outcome once per baseline commit. */
+  readonly incompatibleBaseline?: (commit: string) => void;
   /** Injected by tests; the composition root builds the real one on demand. */
   readonly builder?: BaselineBuilder;
 }
@@ -109,7 +115,7 @@ export class BackgroundGeneration {
             : undefined;
         if (!current()) return;
         if (baseline) this.options.baselinePrepared?.(baseline.commit);
-        const snapshot = await timeAsync("changes.classify", () =>
+        const classification = await timeAsync("changes.classify", () =>
           this.classifier instanceof RepositoryCatalogueChangeClassifier
             ? worker.classify(base, baseline?.commit)
             : Promise.race([
@@ -130,6 +136,15 @@ export class BackgroundGeneration {
               ]),
         );
         if (current()) {
+          const snapshot =
+            isEarlierBaselineClassification(classification) ||
+            isInvalidBaselineClassification(classification)
+              ? undefined
+              : classification;
+          if (isEarlierBaselineClassification(classification))
+            this.options.incompatibleBaseline?.(classification.commit);
+          if (isInvalidBaselineClassification(classification))
+            this.options.diagnostic?.(new Error(classification.diagnostic));
           if (snapshot)
             timingCounts("changes.publish", () => ({
               changedIds: snapshot.changedIds?.length ?? 0,

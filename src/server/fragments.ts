@@ -46,13 +46,6 @@ export async function requestedFragment(
   return fragment;
 }
 
-/** Add the one canonical encoded fragment query to a route. */
-export function withFragmentQuery(route: string, fragment?: string): string {
-  return fragment === undefined
-    ? route
-    : `${route}?fragment=${encodeURIComponent(fragment)}`;
-}
-
 function destinationScreen(
   entry: ManifestEntry | undefined,
   catalogue: Catalogue,

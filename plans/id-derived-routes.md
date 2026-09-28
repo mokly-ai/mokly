@@ -579,11 +579,11 @@ Tags: mockup
 
 ## Milestone 11: Remove old-baseline compatibility
 
-- [ ] Failure-first tests: a v6 baseline makes Serve report Changes
+- [x] Failure-first tests: a v6 baseline makes Serve report Changes
       unavailable with the documented CLI line; export and publish succeed
       without Changes; a v7 baseline still compares; a v8 baseline follows the
       documented invalid-baseline path and never prints the earlier-version line.
-- [ ] The historical boundary accepts only v7: versions below 7 return the
+- [x] The historical boundary accepts only v7: versions below 7 return the
       incompatible-earlier outcome, versions above 7 return the invalid-newer
       outcome, and v7 receives full validation; delete v2–v6 parsing, the
       legacy baseline manifest names, `legacyPages` and the v2 page migration,
@@ -595,12 +595,12 @@ Tags: mockup
       `validateHistoricalComponentVariantIds`, legacy variant validators, and
       `HistoricalManifestComponent*` types), and the historical nested-variant
       paths in review and shell data.
-- [ ] Identity leftovers: the v3 reader rejects removed records whose id is
+- [x] Identity leftovers: the v3 reader rejects removed records whose id is
       current, and the collision branches that can no longer fire go
       (finding 14); delete the removed-variant-on-a-surviving-component path
       (finding 28); review readers validate `ReviewIgnore` ids with the plain
       id grammar (finding 15).
-- [ ] Dead code (finding 19): delete `withFragmentQuery`, `safeDecode`,
+- [x] Dead code (finding 19): delete `withFragmentQuery`, `safeDecode`,
       `validFragmentQuery`, `resolveCatalogueRecord`, `publicPath`,
       `pagePreviewPath`, the `CatalogueVariant` alias, `route()` in
       `catalogue/values.ts`, the unused `viewer/routing.ts` and
@@ -608,7 +608,10 @@ Tags: mockup
       unreachable route-collision check in `compile.ts`, and unread `route`
       and `variantId` fields on definitions and render targets; rename
       route-era identifiers that carry ids.
-- [ ] Update tests and fixtures; build, lint, format, typecheck, example
+- [x] Move full-catalogue browser setup that needs Changes onto focused,
+      controlled v7 baselines built by the current code; keep the 300-second
+      budget and record fixture timings before and after the move.
+- [x] Update tests and fixtures; build, lint, format, typecheck, example
       build and check, full unit suite, and affected browser specs; smoke
       Serve and export against a branch point built by an earlier Mokly;
       commit.

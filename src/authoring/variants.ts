@@ -1,5 +1,3 @@
-import { entryRoute } from "@mokly/viewer/data";
-
 import { VARIANT_AUTHORING } from "./markers.js";
 import type { ScreenDefinition, ScreenVariantInput } from "./types.js";
 
@@ -56,7 +54,6 @@ function variantDefinition(
       ? { rationale: variant.rationale }
       : {}),
     relatedDocs: variant.relatedDocs ?? parent.relatedDocs,
-    route: entryRoute("screen", variant.id),
     ...(tags !== undefined ? { tags } : {}),
     title: variant.title,
     useCaseIds: variant.useCaseIds ?? [],

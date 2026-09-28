@@ -6,6 +6,7 @@ const MOKLY_ERROR = Symbol.for("mokly.error");
 
 export type MoklyErrorCode =
   | BaselineErrorCode
+  | "baseline-incompatible-earlier"
   | "build-invalid"
   | "cli-invalid"
   | "config-invalid"
@@ -22,6 +23,7 @@ export type MoklyErrorCode =
   | "upload-unsupported-version";
 
 const knownCodes: Record<MoklyErrorCode, true> = {
+  "baseline-incompatible-earlier": true,
   "baseline-history-unavailable": true,
   "baseline-extraction-failed": true,
   "baseline-command-failed": true,

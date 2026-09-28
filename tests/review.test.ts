@@ -34,7 +34,6 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
-import { legacyManifestFromV7 } from "./helpers/historical_manifest.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -93,13 +92,10 @@ test("Review classifies added, removed, and unchanged routes independently", asy
     title: "Old screen",
     useCaseIds: [],
   };
-  const baseManifest = legacyManifestFromV7(
-    {
-      ...compilation.manifest,
-      entries: [{ ...detail, useCaseIds: [] }, old],
-    },
-    5,
-  );
+  const baseManifest = {
+    ...compilation.manifest,
+    entries: [{ ...detail, useCaseIds: [] }, old],
+  };
   const gitFiles = new Map<string, string>([
     ["mockups/mokly-manifest.json", `${JSON.stringify(baseManifest)}\n`],
     [

@@ -110,8 +110,7 @@ function firstVisibleChangedVariant(
   const removed = catalogue.removedEntries.flatMap(({ entry, snapshotId }) =>
     entry.kind === parent.kind &&
     "variantOf" in entry &&
-    entry.variantOf === parentId &&
-    (snapshotId !== undefined || catalogue.byId.get(entry.id) === entry)
+    entry.variantOf === parentId
       ? [{ entry, ...(snapshotId ? { snapshotId } : {}) }]
       : [],
   );

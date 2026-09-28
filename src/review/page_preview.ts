@@ -20,8 +20,7 @@ import { copySnapshotDependencies, GitReviewAssetReader } from "./assets.js";
 import { baselineResourceConfig } from "./base_manifest.js";
 import { SelectedAssetReader } from "./evidence_assets.js";
 import type { BaselineReader } from "./git.js";
-import { relocateHistoricalDocument } from "./historical_document.js";
-import { addArtifactFile, snapshotPath } from "./paths.js";
+import { addArtifactFile } from "./paths.js";
 import { missingSelection } from "./selection_result.js";
 import type {
   RemovedPagePreviewProvider,
@@ -69,37 +68,15 @@ export class RepositoryRemovedPagePreview implements RemovedPagePreviewProvider 
       signal,
     );
     const files = new Map<string, ReviewArtifactContent>();
+    const document = entryRoute("page", historical.id);
     await copySnapshotDependencies(
       files,
       "before",
-      new Set([historical.artifactPath]),
+      new Set([document]),
       (route) => reader.read(route),
       (routes) => reader.readMany(routes),
     );
     signal.throwIfAborted();
-    const storedPath = snapshotPath("before", historical.artifactPath);
-    const canonicalPath = snapshotPath(
-      "before",
-      entryRoute("page", removed.entry.id),
-    );
-    if (storedPath !== canonicalPath) {
-      const content = files.get(storedPath);
-      if (content === undefined)
-        throw new MoklyError(
-          "review-invalid",
-          "Removed page snapshot is missing",
-        );
-      files.delete(storedPath);
-      addArtifactFile(
-        files,
-        canonicalPath,
-        relocateHistoricalDocument(
-          Buffer.from(content).toString("utf8"),
-          historical.artifactPath,
-          entryRoute("page", removed.entry.id),
-        ),
-      );
-    }
     const preview = parseRemovedPagePreview({
       schemaVersion: 2,
       baseRef: source.baseRef,

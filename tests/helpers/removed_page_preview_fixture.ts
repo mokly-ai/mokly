@@ -17,24 +17,19 @@ import type {
 import { createFixture, removeFixture } from "./fixture.js";
 
 export const PAGE_COMMIT = "b".repeat(40);
-export const PAGE_ROUTE = "archive/guide.html";
+export const PAGE_ROUTE = "pages/guide.html";
 
 interface BaselineFile {
   bytes?: Uint8Array;
   kind: GitFileKind;
 }
 
-export async function removedPagePreviewFixture(
-  t: TestContext,
-  schemaVersion: 4 | 5 = 4,
-) {
+export async function removedPagePreviewFixture(t: TestContext) {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const page: HistoricalManifestPage = {
-    artifactPath: PAGE_ROUTE,
     declaredDependencies: [],
-    dependencies: ["entries/guide.mockup.tsx"],
     description: "Historical guide",
     id: "guide",
     kind: "page",
@@ -47,7 +42,7 @@ export async function removedPagePreviewFixture(
   const baseline = {
     entries: [page],
     generatedBy: "mokly",
-    schemaVersion,
+    schemaVersion: 7,
     sourceFiles: ["entries/guide.mockup.tsx"],
   } as HistoricalManifest;
   const files = new Map<string, BaselineFile>();

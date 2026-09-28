@@ -45,7 +45,6 @@ export function renderFragments(
     entryId: string;
     viewport: "mobile" | "desktop";
     colorScheme: ColorScheme;
-    variantId?: string;
   },
 ): Map<string, string> {
   const outputs = new Map<string, string>();

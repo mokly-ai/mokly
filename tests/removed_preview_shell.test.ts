@@ -17,7 +17,6 @@ import { createRemovedDeliveryFixture } from "./helpers/removed_delivery_fixture
 const metadata = {
   description: "Fixture",
   declaredDependencies: [],
-  dependencies: [],
   navPath: [],
   relatedDocs: [],
   sourcePath: "entries/fixture.mockup.tsx",
@@ -30,7 +29,6 @@ const page: RemovedEntry = {
   kind: "page",
   id: "handbook",
   title: "Getting started",
-  artifactPath: "docs/handbook.html",
 };
 
 const screen: RemovedEntry = {
@@ -38,18 +36,6 @@ const screen: RemovedEntry = {
   kind: "screen",
   id: "farewell",
   title: "Farewell",
-  artifacts: [
-    {
-      colorScheme: "light",
-      path: "screens/farewell.mobile.html",
-      viewport: "mobile",
-    },
-    {
-      colorScheme: "light",
-      path: "screens/farewell.desktop.html",
-      viewport: "desktop",
-    },
-  ],
   colorSchemes: ["light"],
   address: "example.test/farewell",
   useCaseIds: [],
@@ -72,18 +58,6 @@ const componentVariant: RemovedEntry = {
   kind: "component",
   id: "chip-default",
   title: "Default",
-  artifacts: [
-    {
-      colorScheme: "light",
-      path: "components/chip-default.mobile.html",
-      viewport: "mobile",
-    },
-    {
-      colorScheme: "light",
-      path: "components/chip-default.desktop.html",
-      viewport: "desktop",
-    },
-  ],
   colorSchemes: ["light"],
   variantOf: "chip",
   props: {},

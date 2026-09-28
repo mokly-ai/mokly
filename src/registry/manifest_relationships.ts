@@ -2,51 +2,39 @@ import { analyzeHierarchy, type HierarchyEntry } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 
-import { validateHistoricalCollections } from "./historical_collections.js";
-
 type ValidatedManifestEntry = Record<string, unknown> & HierarchyEntry;
 
 /** Validate manifest relationship targets and reciprocal memberships. */
 export function validateManifestRelationships(
   entries: readonly Record<string, unknown>[],
   byId: ReadonlyMap<string, Record<string, unknown>>,
-  mode: "current" | "historical" | "historical-collections" = "current",
 ): void {
-  if (mode === "historical-collections")
-    validateHistoricalCollections(entries, byId);
-  if (mode === "current") {
-    const hierarchyEntries = entries as readonly ValidatedManifestEntry[];
-    const hierarchyIssue = analyzeHierarchy(hierarchyEntries).issues[0];
-    if (hierarchyIssue)
-      relationshipError(hierarchyIssue.entry, hierarchyIssue.message);
-  }
+  const hierarchyEntries = entries as readonly ValidatedManifestEntry[];
+  const hierarchyIssue = analyzeHierarchy(hierarchyEntries).issues[0];
+  if (hierarchyIssue)
+    relationshipError(hierarchyIssue.entry, hierarchyIssue.message);
   for (const entry of entries) {
-    if (entry.kind === "screen") validateScreen(entry, byId, mode);
-    else if (entry.kind === "component")
-      validateVariantParent(entry, byId, mode);
+    if (entry.kind === "screen") validateScreen(entry, byId);
+    else if (entry.kind === "component") validateVariantParent(entry, byId);
     else if (entry.kind === "use-case") validateUseCase(entry, byId);
   }
-  if (mode === "current") {
-    for (const entry of entries) {
-      if (
-        entry.kind === "component" &&
-        typeof entry.variantOf !== "string" &&
-        !entries.some(
-          (candidate) =>
-            candidate.kind === "component" && candidate.variantOf === entry.id,
-        )
+  for (const entry of entries)
+    if (
+      entry.kind === "component" &&
+      typeof entry.variantOf !== "string" &&
+      !entries.some(
+        (candidate) =>
+          candidate.kind === "component" && candidate.variantOf === entry.id,
       )
-        relationshipError(entry, "component has no variants");
-    }
-  }
+    )
+      relationshipError(entry, "component has no variants");
 }
 
 function validateScreen(
   entry: Record<string, unknown>,
   byId: ReadonlyMap<string, Record<string, unknown>>,
-  mode: "current" | "historical" | "historical-collections",
 ): void {
-  validateVariantParent(entry, byId, mode);
+  validateVariantParent(entry, byId);
   for (const useCaseId of entry.useCaseIds as string[]) {
     const useCase = byId.get(useCaseId);
     if (useCase?.kind !== "use-case") {
@@ -68,7 +56,6 @@ function validateScreen(
 function validateVariantParent(
   entry: Record<string, unknown>,
   byId: ReadonlyMap<string, Record<string, unknown>>,
-  mode: "current" | "historical" | "historical-collections",
 ): void {
   if (typeof entry.variantOf !== "string") return;
   const parent = byId.get(entry.variantOf);
@@ -78,10 +65,7 @@ function validateVariantParent(
   if (typeof parent.variantOf === "string") {
     relationshipError(entry, "parent is itself a variant");
   }
-  if (
-    mode === "current" &&
-    JSON.stringify(entry.navPath) !== JSON.stringify(parent.navPath)
-  ) {
+  if (JSON.stringify(entry.navPath) !== JSON.stringify(parent.navPath)) {
     relationshipError(entry, "variant navPath does not match parent");
   }
 }
