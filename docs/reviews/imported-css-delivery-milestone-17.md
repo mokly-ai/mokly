@@ -28,8 +28,9 @@ Each of the 14 fixes works for the case it targeted:
   `feat!` change.
 
 The 15 findings below were each reproduced in a scratch copy. The parent session
-independently confirmed finding 2. They await the user's decision, and the
-implementation has not changed in response to them.
+independently confirmed finding 2. Finding 2 was resolved in `3aa7d67`, and
+findings 3, 8 and 9 no longer apply after that change. The other findings
+remain open for the user's decision.
 
 ## Findings
 
@@ -91,6 +92,10 @@ implementation has not changed in response to them.
      plain and module copies across logical properties, `:dir()`,
      `light-dark()`, nesting, colours and fallbacks. A direct fix (A) leaves
      the source of four defects in place.
+
+   Resolved in `3aa7d67`: rename-only PostCSS CSS Modules plugins preserve
+   authored CSS; exact-byte and Chrome computed-style parity tests cover it.
+
 3. **Medium — CSS Modules inside `node_modules` miss the fixed default
    targets.** `hasBrowserslistConfig` treats the installed
    `node_modules/browserslist` package directory as a `browserslist` config
@@ -103,6 +108,10 @@ implementation has not changed in response to them.
      files, as Browserslist does, and test package and workspace modules;
      B) use Browserslist's own lookup, bounded by `repoRoot`.
    - Recommended: A now; moot if finding 2 takes option B.
+
+   No longer applies after `3aa7d67`: module delivery has no Browserslist
+   lookup or browser targets, including for package stylesheets.
+
 4. **Low — a global Git excludes file named `.gitignore` gets wrong advice.**
    Any source ending in `.gitignore` is treated as a repository file, so
    `~/.gitignore` produces a path outside the repository that varies with the
@@ -135,6 +144,10 @@ implementation has not changed in response to them.
    Chrome renders them differently, and removing module targets also passes.
    Recommended: normalize without targets, and add the browser parity test from
    finding 2.
+
+   No longer applies after `3aa7d67`: the test compares emitted stylesheets
+   directly after removing only scoped-name prefixes; Chrome parity is pinned.
+
 9. **Low — the Browserslist guidance contradicts itself.** The Styles guide says
    one `.browserslistrc` gives Mokly and autoprefixer the same targets, but its
    PostCSS sample still passes `overrideBrowserslist`, which makes autoprefixer
@@ -143,6 +156,10 @@ implementation has not changed in response to them.
    say so. Recommended: fix the sample, document the boundary and
    `BROWSERSLIST_CONFIG`, and add a stale-text test. Moot if finding 2 takes
    option B.
+
+   No longer applies after `3aa7d67`: Mokly does not read Browserslist for
+   CSS Modules; the guide identifies autoprefixer as the only target consumer.
+
 10. **Low — the breaking-change note misses real breaks compared with
     `origin/main`.** The `BREAKING CHANGE:` footer in `0ce4f20` becomes the next
     changelog's breaking section, and it was written from the branch's own

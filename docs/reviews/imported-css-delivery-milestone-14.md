@@ -76,6 +76,9 @@ and 3 were resolved in `7b454b0`; finding 1 remains open by user direction.
    Resolved in `7b454b0`: consumer Browserslist targets or fixed conservative
    defaults preserve fallback/prefix declarations in CSS Modules.
 
+   Superseded in `3aa7d67`: rename-only module scoping leaves authored
+   fallbacks and prefixes intact without Mokly browser targets.
+
 3. **Low — the new tests would not catch lost import conditions or reordered
    imports.** The module import and equivalence tests only check that marker
    rules are present. Two mutations pass all 25 new tests while materially

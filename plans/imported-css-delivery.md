@@ -8,8 +8,9 @@ authorized review findings; finding 3 was resolved in the separate `922c1ec`
 merge. M12-4, M12-6, M12-7 and M14-1 remain open by user direction in the
 [final review record](../docs/reviews/imported-css-delivery.md#milestone-12-review)
 and [Milestone 14 review record](../docs/reviews/imported-css-delivery-milestone-14.md).
-Milestone 18 resolves M17-2 and makes M17-3, M17-8 and M17-9 obsolete; the
-other findings in the [Milestone 17 review record](../docs/reviews/imported-css-delivery-milestone-17.md)
+Milestone 18 (`3aa7d67`) resolves M17-2 and makes M17-3, M17-8 and M17-9
+obsolete. Other findings in the
+[Milestone 17 review record](../docs/reviews/imported-css-delivery-milestone-17.md)
 remain open for the user's decision.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
@@ -792,7 +793,7 @@ rewrites that retain authored values, rules, comments and browser semantics.
 
 ## Milestone 19: Commit, push, and review
 
-- [ ] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
 - [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
 
 ## Post-merge follow-up (non-blocking)
