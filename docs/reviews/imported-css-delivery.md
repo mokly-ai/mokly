@@ -22,9 +22,11 @@ The review of the Milestone 13 fix is recorded separately in the
 the review of Milestones 15 and 16 in the
 [Milestone 17 review record](./imported-css-delivery-milestone-17.md),
 the review of Milestone 18 in the
-[Milestone 19 review record](./imported-css-delivery-milestone-19.md), and
+[Milestone 19 review record](./imported-css-delivery-milestone-19.md),
 the review of Milestone 20 in the
-[Milestone 21 review record](./imported-css-delivery-milestone-21.md).
+[Milestone 21 review record](./imported-css-delivery-milestone-21.md), and
+the review of Milestone 22 in the
+[Milestone 23 review record](./imported-css-delivery-milestone-23.md).
 
 ## Findings
 

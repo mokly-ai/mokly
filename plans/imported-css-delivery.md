@@ -19,7 +19,9 @@ and the eight findings in the
 Milestone 22 (`8a47cc5`) accepts the selector-list behavior from finding 3 of that review;
 its other parts and findings remain open.
 The accepted behavior is the CSS Modules plugins' descendant-chain output,
-not an expansion into alternative selectors.
+not an expansion into alternative selectors. The two findings in the
+[Milestone 23 review record](../docs/reviews/imported-css-delivery-milestone-23.md)
+remain open for the user's decision.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -836,10 +838,10 @@ the rename-only check for any other selector rewrite.
 - [x] Update the imported-CSS contract and Styles guide; keep other finding-3 concerns and all other open findings untouched.
 - [x] Run Build, focused suites, example Build/Check and unchanged digest, lint, typecheck, Chrome parity, CLI fixture smoke and `cargo xtask check`; commit and push.
 
-## Milestone 23: Commit, push, and review
+## Milestone 23: Commit, push, and review (complete)
 
 - [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
-- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Two new findings (1 Medium, 1 Low) are recorded in the [Milestone 23 review record](../docs/reviews/imported-css-delivery-milestone-23.md) for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
