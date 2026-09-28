@@ -785,7 +785,7 @@ Second-review findings 3–11 stay open.
    **C)** A plus a prose test. **Recommended: B.**
 
 5. **P3 / Low — The lint's new default flags legitimate code, and its
-   documented lists are not exact.** [`tests/helpers/test_repository_refs.ts`](../../tests/helpers/test_repository_refs.ts)
+   documented lists are not exact.** `tests/helpers/test_repository_refs.ts` (since removed)
    treats shorthand `{ cwd }`, an options variable or a spread as "no
    `cwd`", which means the real checkout, and matches `-r` for every
    subcommand, so `git ls-tree -r HEAD` in the real checkout is flagged. It
@@ -949,7 +949,7 @@ was corrected in the plan while recording this review. Second-review findings
    pattern recurring.
 
 3. **P3 / Low — The lint still contradicts its documentation and flags
-   fixture code.** [`test_repository_refs.ts`](../../tests/helpers/test_repository_refs.ts)
+   fixture code.** `tests/helpers/test_repository_refs.ts` (since removed)
    treats a callback argument (`execFile("git", [...], callback)`) and inline
    options written with `as`, `satisfies` or parentheses as unknown options,
    although the contract says a call with no options targets the real
