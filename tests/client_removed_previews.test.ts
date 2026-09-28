@@ -161,7 +161,7 @@ test("a damaged or unknown descriptor advertises nothing", () => {
   );
 });
 
-test("an embedded viewer may request only advertised addresses", () => {
+test("the documented embedded fetch set advertises comparison snapshots", () => {
   const model = {
     comparisonUrl: COMPARISON.slice(1),
     removedEntries: [
@@ -175,7 +175,10 @@ test("an embedded viewer may request only advertised addresses", () => {
   } as unknown as CatalogueReadModel;
   assert.deepEqual(advertisedPreviewPaths(model), {
     files: [COMPARISON.slice(1), pagePath],
-    prefixes: [`__mokly/diffs/__generations/${GENERATION}/snapshots/before/`],
+    prefixes: [
+      `__mokly/diffs/__generations/${GENERATION}/snapshots/before/`,
+      `__mokly/diffs/__generations/${GENERATION}/snapshots/after/`,
+    ],
   });
   assert.deepEqual(
     advertisedPreviewPaths({

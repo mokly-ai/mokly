@@ -205,13 +205,21 @@ in Serve.
 
 Diffs render inside the existing main region with the catalogue, title, details,
 viewport, and scheme controls retained. Both viewports are supported. Snapshot
-frames remain sandboxed without scripts or catalogue navigation privileges.
-Overlay places the current snapshot at 50% opacity above its baseline;
-Difference uses CSS difference blending. These are document comparisons, not
-pixel measurements. They must never display invented pixel counts or percentages.
-Missing current views for removed component variants remain explicit and legible in every mode.
-Comparison frames retain matching dimensions; individual browser expansion is
-available only in Current so it cannot misalign an overlay.
+documents are presented under the
+[comparison pane contract](./mokly-comparison-panes.md): viewer-owned,
+script-disabled documents in device-sized frames that are never
+user-scrollable, whose links and forms are inert. Overlay places the current
+version at 50% opacity above its baseline and Difference uses CSS difference
+blending, each inside one device chrome. Under the
+[comparison scrolling contract](./mokly-comparison-scrolling.md), its page
+viewport and paired inner regions keep both versions aligned while Scroll
+together is on. Side by side keeps two chromes whose page viewports and paired
+regions mirror each other unless the reader turns that control off. These are
+document comparisons, not pixel measurements.
+They must never display invented pixel counts or percentages. Missing current
+views for removed component variants remain explicit and legible in every
+mode. Comparison frames retain matching dimensions; individual browser
+expansion is available only in Current so it cannot misalign a stack.
 
 Loading, unavailable, and failed comparison states use plain product copy.
 Failure offers a retry. All and Changes share the same comparison eligibility.
@@ -270,7 +278,17 @@ configured comparison directory.
 ## Design references
 
 The synthetic design catalogue owns distinct mobile and desktop examples at
-`design/review/controls/current.html` and `design/review/controls/overlay.html`.
+`design/review/controls/current.html`, `design/review/controls/overlay.html`,
+and `design/review/controls/overlay-long.html`, the last depicting a long
+screen scrolled inside its one shared chrome. Beside them,
+`design/review/controls/overlay-panel.html` depicts an app-shell panel scrolled
+as one in Overlay, and `design/review/controls/side-by-side-apart.html` depicts
+Side by side with the Scroll together switch that every diff-mode band draws
+turned off, under the
+[comparison scrolling contract](./mokly-comparison-scrolling.md). Component
+variant comparisons in Overlay and Difference, including a component taller
+than its frame, live under `design/components/pages/stacked/` in the
+[component design inventory](./mokly-component-design.md).
 Existing outcome and impact examples now depict the same catalogue shell.
 Their stable authoring ids and routes are retained to preserve links.
 
@@ -339,8 +357,11 @@ not portable in an isolated snapshot and fail comparison instead of being
 silently omitted.
 Current-worktree resources must resolve to regular public files. Every base
 resource, including the pane document itself and each transitive dependency,
-must be a regular Git file. Neither side may read from protected authoring inputs. Pane documents remain byte-unmodified and run in
-script-disabled sandboxes.
+must be a regular Git file. Neither side may read from protected authoring inputs. Pane documents remain
+byte-unmodified on disk and in every artifact; the viewer presents them without
+script permission under the
+[comparison pane contract](./mokly-comparison-panes.md), whose in-memory
+edits never change captured bytes.
 
 `review.json` is the normative machine-readable result:
 

@@ -2,6 +2,15 @@
 
 ## Active
 
+- [Comparison Pane Scroll Alignment](./comparison-pane-scroll-alignment.md)
+  — Overlay and Difference drift apart when scrolled because each snapshot
+  scrolls inside its own opaque frame; comparison panes become viewer-owned,
+  device-sized presentations driven by one shared chrome viewport
+  (Milestones 1 to 4, delivered), and
+  Milestones 5 to 7 mirror inner scroll regions such as app-shell panels and
+  add a "Scroll together" toggle; the contract (Milestone 5), mockups
+  (Milestone 6) and runtime (Milestone 7) are delivered. Implementation is
+  complete; move this plan to Completed when its implementation PR merges.
 - [Inferred Inline Style Ownership](./inferred-inline-style-ownership.md) —
   replace renderer-supplied style and resource ownership records with
   ownership inferred from rendered documents and component ranges, so head

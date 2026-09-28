@@ -39,6 +39,13 @@ export const COMPONENTS = {
     source: "components/Badge.tsx",
     dependencies: ["components/Badge.tsx"],
   },
+  checklist: {
+    id: "checklist",
+    title: "Checklist",
+    description: "The steps to finish before starting, in order.",
+    source: "components/Checklist.tsx",
+    dependencies: ["components/Checklist.tsx"],
+  },
 } as const satisfies Record<string, ComponentMetadata>;
 
 export type ComponentId = keyof typeof COMPONENTS;
@@ -47,6 +54,9 @@ export const COMPONENT_BY_STATE = {
   default: "action",
   disabled: "action",
   comparison: "action",
+  overlay: "action",
+  difference: "action",
+  "overlay-tall": "checklist",
   affected: "action",
   toolbar: "toolbar",
   hidden: "help-hint",

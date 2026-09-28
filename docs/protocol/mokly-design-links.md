@@ -2,13 +2,13 @@
 
 ## Delivery Status
 
-Implemented in the 61 Browse/Changes design screens and two real example
+Implemented in the 64 Browse/Changes design screens and two real example
 screens using `MockLink` and `MockLink asChild`. Verification and delivery are tracked by the
 [implementation plan](../../plans/mokabook-design-mocklinks.md).
 
 The [component design inventory](./mokly-component-design.md) extend the
 catalogue with their own state contract and native component/control depictions.
-Those 61 Browse/Changes designs retain the canonical links below, including the
+Those 64 Browse/Changes designs retain the canonical links below, including the
 removed previous-version family added by
 [removed previews](./mokly-removed-previews.md).
 They now share native icon inspector tabs and working viewport dropdowns with
@@ -114,7 +114,7 @@ stable id and points readers to Welcome; no unrelated route or membership moves.
 | Changed catalogue: Survey / Invite / Archive    | `design-review-removed-long` / `design-review-removed-loading` / `design-review-removed-unavailable`           |
 | Changed catalogue: Timeline                     | `design-review-removed-no-view`                                                                                |
 | Removed documents: four Changes rows            | `design-page-removed` / `-long` / `-loading` / `-unavailable`, each returning to `design-browse-home` from All |
-| MiniWelcome: Open the details screen            | `design-browse-details-screen`                                                                                 |
+| MiniWelcome: Open the details screen            | `design-browse-details-screen`; inert inside a depicted comparison                                             |
 | MiniDetails: Return to welcome                  | `design-browse-screen`                                                                                         |
 | Depicted use-case step reference                | Welcome: `design-browse-screen`; Details: `design-browse-details-screen`                                       |
 | Welcome/Details inspector: Example tour         | `design-browse-use-case`                                                                                       |
@@ -125,6 +125,7 @@ stable id and points readers to Welcome; no unrelated route or membership moves.
 | Removed screen All filter                       | `design-browse-home`, because the depicted product screen has no current entry                                 |
 | Empty Changes All filter                        | `design-browse-screen`                                                                                         |
 | Removed consumer return, component explorer     | `design-component-removed`, from the desktop Action row and the narrow Changes shortcut, never from the stage  |
+| Action comparison modes, component explorer     | `design-component-affected` / `-comparison` / `-overlay` / `-difference`, owned by the component design        |
 
 Collection headings and collection-only breadcrumbs are not catalogue-link
 targets: the public API rejects collection ids. Leave grouping labels as text,
@@ -206,7 +207,9 @@ Browse holds one Appearance setting, so every artboard that draws a top bar
 draws the depicted Appearance selector in it, which has no authored
 transitions. `design-browse-screen`, `design-browse-details-screen`, the Welcome comparison
 family (`design-changes-current`, `design-changes-overlay`,
-`design-review-changed`, `design-review-difference`) and the appearance entries
+`design-changes-overlay-long`, `design-changes-overlay-panel`,
+`design-changes-side-by-side-apart`, `design-review-changed`,
+`design-review-difference`) and the appearance entries
 render in Light and in Dark instead, and the outer Appearance control moves
 between those two generated files at the same route. A link out of a dark
 fragment resolves to the target's dark fragment wherever one exists, and every
@@ -230,6 +233,17 @@ Welcome states; Browse and tag-picker states omit them. Each comparison destinat
 its Current action returns to `design-changes-current`. Current is already
 selected in `design-changes-current`, so it has no
 transition there. Returning to All uses the navigation table above.
+`design-changes-overlay-long` depicts the same Overlay part-way down a long
+Welcome, and `design-changes-overlay-panel` depicts it on a Welcome built as an
+app shell whose panel is scrolled part-way, so their controls map to the same
+destinations with Overlay selected. `design-changes-side-by-side-apart`
+depicts Side by side with Scroll together off, so its controls map to the same
+destinations with Side by side selected. All three keep the Welcome filters and
+Changes rows. No comparison control links into them, because scrolling and
+switching are not links; readers reach them beside Current and Overlay in
+their owning Diff controls group. The Welcome sketch inside every
+depicted comparison carries its link as inert text, because links inside a
+comparison pane do nothing.
 
 Added Details shows its Current preview without comparison modes. Removed
 Farewell, Survey, Invite, Archive, and Timeline show their previous version,
@@ -286,6 +300,10 @@ grips, and collapse-all are not catalogue destinations in this change. Keep
 their existing visual depictions and document their non-interactive status
 outside the rendered artboard; do not add fake hrefs, clipboard-success copy,
 or scripts. Existing native `details` disclosures may keep working locally.
+The Scroll together switch in every diff-mode band is a native checkbox that
+toggles in place, like the viewport dropdown; it opens no destination because
+a native control cannot be a link, and the switched-off state has its own
+artboard, `design-changes-side-by-side-apart`.
 The real outer shell continues to provide its implemented runtime controls.
 
 ## Basic Example And Portability
@@ -302,7 +320,8 @@ viewports and light/dark generation without changing fixture ids or routes.
 All design and example links must retain portable relative hrefs on disk and
 authenticated markers in served/deployed Browse. Standalone activation opens
 the matching generated viewport with the existing scheme fallback. Real
-comparison snapshots retain their existing portable, frame-owned link behavior;
+comparison snapshots keep portable links on disk, which the viewer's read-only
+guard cancels inside a comparison pane;
 design artboards depicting comparisons are ordinary Browse screens and use
 normal enhanced navigation. Do not equate these two contexts.
 
