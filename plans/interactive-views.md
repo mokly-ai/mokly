@@ -466,9 +466,16 @@ was right-aligned, which no artboard shows.
       remove stale delivery wording.
 - [x] Run the full check set and `cargo xtask check`; `git add -A`, commit
       with a Conventional Commits message, and push.
-- [ ] Review: after the push, use `docs/implementation-review-prompt.md`
+- [x] Review: after the push, use `docs/implementation-review-prompt.md`
       against `origin/main` and report numbered findings with severity,
       impact and lettered options, without changing the implementation.
+      Reviewed at `72602945`: three Medium findings, each confirmed against
+      the code and reported to the user for a decision: the Live bundle
+      compiles the current files rather than the accepted generation's
+      sources; `MockLink asChild` controls whose component ignores `onClick`
+      (including the example's "View details" action) do not navigate in
+      Live; and forwarded app origins cannot pass the preparation request's
+      Origin check.
 
 ## Post-merge follow-up (non-blocking)
 

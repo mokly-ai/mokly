@@ -4,7 +4,8 @@
 
 - [Interactive Views](./interactive-views.md) — implementation is complete,
   including the reference example, Static/Live parity and static-output
-  regression coverage. Move this plan to Completed when its implementation PR
+  regression coverage. The final review reported three Medium findings that
+  await a decision. Move this plan to Completed when its implementation PR
   merges.
 - [Comparison Pane Scroll Alignment](./comparison-pane-scroll-alignment.md)
   — Overlay and Difference drift apart when scrolled because each snapshot
