@@ -66,7 +66,7 @@ export function ControlsPage({
   return (
     <ComponentLayout
       design={CONTROLS_PAGES[state]}
-      comparison={state === "comparison"}
+      mode={state === "comparison" ? "side-by-side" : "current"}
       status={state === "comparison" ? actionComparison.status : "unmodified"}
       scenario={state === "comparison" ? "component" : "all"}
       viewport={viewport}

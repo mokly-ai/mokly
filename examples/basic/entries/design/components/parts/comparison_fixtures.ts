@@ -36,11 +36,22 @@ export const actionComparison = {
   savedPropsUnchanged: true,
 } as const satisfies ComparisonFixture;
 
+/** The Checklist's own output changed while its saved props stayed the same. */
+const checklistComparison = {
+  status: "changed",
+  reason: "output",
+  variant: "Default",
+  savedPropsUnchanged: true,
+} as const satisfies ComparisonFixture;
+
 /** These are authored comparison records, not analysis of rendered pixels. */
 const componentComparisons: Partial<
   Record<ComponentPageState, ComparisonFixture>
 > = {
   comparison: actionComparison,
+  overlay: actionComparison,
+  difference: actionComparison,
+  "overlay-tall": checklistComparison,
   affected: actionComparison,
   added: { status: "added", reason: "added", variant: "Default" },
   removed: { status: "changed", reason: "variant-removed", variant: "Compact" },

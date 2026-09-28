@@ -3,6 +3,12 @@
 import { createContext, useContext, useMemo } from "react";
 import type { ReactNode } from "react";
 
+import type { SnapshotPresentationEnvironment } from "../previews/presentation.js";
+
+import {
+  storedScrollTogether,
+  type ScrollTogetherPreference,
+} from "./comparison_scroll_preference.js";
 import type { ShellContext } from "./context.js";
 import { readShellDelivery } from "./delivery.js";
 
@@ -17,6 +23,11 @@ export interface ComparisonEnvironment {
   fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
   initialMode?(): "side" | undefined;
   reportError?(error: unknown): void;
+  /**
+   * The reader's Scroll together choice for this viewer; without one, Scroll
+   * together stays on.
+   */
+  scrollTogether?: ScrollTogetherPreference;
 }
 
 const ComparisonEnvironmentContext = createContext<
@@ -51,6 +62,17 @@ export function useComparisonEnvironment(): ComparisonEnvironment | undefined {
   return useContext(ComparisonEnvironmentContext);
 }
 
+/** The browser boundaries a snapshot loader needs, from the comparison host. */
+export function snapshotPresentationEnvironment(
+  environment: ComparisonEnvironment,
+): SnapshotPresentationEnvironment {
+  return {
+    baseUrl: environment.baseUrl,
+    fetch: (input, init) => environment.fetch(input, init),
+    parse: (source) => new DOMParser().parseFromString(source, "text/html"),
+  };
+}
+
 function standaloneEnvironment(
   context: ShellContext,
   interactive: boolean,
@@ -74,5 +96,6 @@ function standaloneEnvironment(
       new URL(window.location.href).searchParams.get("comparison") === "side"
         ? "side"
         : undefined,
+    scrollTogether: storedScrollTogether(() => window.localStorage),
   };
 }

@@ -204,7 +204,9 @@ ready. Its URL must be on the configured source origin beneath
 `snapshots/before/` of the generation established by the accepted comparison or
 page-preview response. The GET carries the mount's abort signal and uses the
 comparison credential rule: `credentials: "omit"` for pinned delivery and
-`credentials: "same-origin"` for live delivery.
+`credentials: "same-origin"` for live delivery. The same presentation pipeline
+serves [comparison panes](./mokly-comparison-panes.md), whose loaders also
+accept `snapshots/after/`; a removed preview never does.
 
 Accept a response only when its final URL is the requested snapshot address
 or that address with only its final `.html` suffix removed, the
@@ -242,8 +244,10 @@ provider-normalized final URL. A `srcdoc` document inherits the embedding docume
 Policy; an embedded host must allow the artifact origin and historical inline
 styles for resources the previous version needs.
 
-On each load, the parent installs the guard in the viewer-owned document. It
-finds links through the event's composed path; cancels every click, auxiliary
+As soon as the viewer-owned document commits, one animation frame after its
+predecessor's window hides, and again on each load, the parent installs the
+guard in it, so a slow resource that holds back the frame's `load` event never
+leaves its links active. It finds links through the event's composed path; cancels every click, auxiliary
 click, and Enter activation regardless of target or download attributes; and
 cancels form submission. When a link has a nonempty fragment and its resolved
 URL without that fragment equals the snapshot address, the guard scrolls the
@@ -252,8 +256,9 @@ apply. Space keeps its scrolling default. If a later load is not the recorded
 presentation document, the parent reapplies the accepted `srcdoc` and guard.
 
 These edits exist only in the in-memory presentation. Captured snapshot files,
-packaged artifacts, comparison bytes, and comparison-pane documents stay
-byte-identical.
+packaged artifacts, comparison bytes, and comparison-pane files stay
+byte-identical; comparison panes present those files through the same
+in-memory edits.
 
 The served-then-loading sequence is an accepted first-paint tradeoff: while the
 browser module downloads, the stage can briefly show the honest unavailable
@@ -285,4 +290,6 @@ removes meta refresh; folds the first consumer base into the effective base;
 preserves doctypes while quirks and standards documents both render in
 no-quirks mode; owns same-document anchor scrolling; restores presentation
 after frame navigation; and loads historical resources in an embedded host
-with a strict Content Security Policy.
+with a strict Content Security Policy. The shared guard's installation from
+commit is proven by the presentation follower's unit tests and by comparison
+panes keeping links inert while a slow resource loads.

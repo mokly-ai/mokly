@@ -49,6 +49,12 @@ a trailing dot and never an edge or rail. Row rendering lives in
 view. Selected rows use the same appearance-aware contrast token for their
 labels, variant disclosures and changed marks.
 
+Comparison toolbar draws the **Scroll together** switch in every diff mode,
+between the mode group and Refresh: a native checkbox with switch semantics
+inside a label whose text is its name, over a drawn track and knob. Every mode
+sample saves it on and **side-by-side-apart** saves it off; Current draws
+neither the switch nor Refresh. The screen header forwards the same state.
+
 View controls saves **Changed views**, where a change confined to other views
 marks the viewport dropdown; the owning screen also marks top-bar Appearance
 when another scheme changed. The mark is evidence about
