@@ -11,6 +11,7 @@ import type { WorkspaceData } from "./workspace_data.js";
 import { workspaceComparisonEvidence } from "./workspace_evidence_data.js";
 import { propText } from "./workspace_props.js";
 import {
+  excludedPageStyles,
   excludedStylesheets,
   retainedPaths,
   styleOutcomeLead,
@@ -33,6 +34,7 @@ export function WorkspaceEvidence({
     ...new Set([...retainedPaths(evidence.reasons), ...evidence.legacyPaths]),
   ].sort();
   const excluded = excludedStylesheets(evidence.resourceViews, retained);
+  const pageStylesExcluded = excludedPageStyles(evidence.resourceViews);
   const ignored = evidence.comparison
     ? [...new Set(evidence.views.flatMap((view) => view.ignoredIds))]
     : [];
@@ -83,20 +85,22 @@ export function WorkspaceEvidence({
               <PathList paths={retained} />
             </>
           ) : null}
-          {styleOutcomes(evidence.reasons).map((outcome) => (
-            <Fragment key={outcome.status}>
-              <p>{styleOutcomeLead(outcome)}</p>
-              {outcome.selectors.length ? (
-                <ul>
-                  {outcome.selectors.map((selector) => (
-                    <li key={selector}>
-                      <code className="mbk-code">{selector}</code>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </Fragment>
-          ))}
+          {styleOutcomes(evidence.reasons, evidence.resourceViews).map(
+            (outcome) => (
+              <Fragment key={outcome.status}>
+                <p>{styleOutcomeLead(outcome)}</p>
+                {outcome.selectors.length ? (
+                  <ul>
+                    {outcome.selectors.map((selector) => (
+                      <li key={selector}>
+                        <code className="mbk-code">{selector}</code>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </Fragment>
+            ),
+          )}
           {excluded.length ? (
             <>
               <p>
@@ -114,7 +118,7 @@ export function WorkspaceEvidence({
           {evidence.comparison &&
           data.comparison &&
           !data.change &&
-          evidence.views.some((view) => view.state === "changed") ? (
+          data.relatedComponents.length > 0 ? (
             <p>
               Shared component changes affect this preview. This page has no
               independent entry in Changes.
@@ -131,6 +135,12 @@ export function WorkspaceEvidence({
               <p>Current</p>
               <pre>{propText(decodeProps(variant.after.props))}</pre>
             </>
+          ) : null}
+          {pageStylesExcluded ? (
+            <p>
+              Styles on this page changed, but none of the changed styles apply
+              to this screen.
+            </p>
           ) : null}
           {data.status === "Unmodified" ? (
             <p>{entryWording(data.entry.kind).noChanges}</p>

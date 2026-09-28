@@ -791,24 +791,31 @@ Tags: ui
 Summary: present the Milestone 6 evidence in the Details inspector exactly as
 the Milestone 2 design and the evidence-shell contract specify.
 
-- [ ] In `packages/viewer/src/shell/workspace_style_evidence.ts`, union
+- [x] In `packages/viewer/src/shell/workspace_style_evidence.ts`, union
       inline `matched`/`unresolved` selectors into `styleOutcomes` and add
       `excludedPageStyles(views)`, true when at least one compared view of the
       selection carries `inlineStyles.status === "excluded"` and no view
       retains inline evidence.
-- [ ] In `packages/viewer/src/shell/workspace_evidence.tsx`, render the
+- [x] In `packages/viewer/src/shell/workspace_evidence.tsx`, render the
       excluded-page-styles lead sentence before the terminal no-changes line,
       and show the "Shared component changes affect this preview" note only
       when a changed component affects the entry.
-- [ ] Keep `isStyleOnlyView` and the comparison-stage headings unchanged;
+- [x] Keep `isStyleOnlyView` and the comparison-stage headings unchanged;
       confirm an inline-excluded-only view resolves to `Unmodified` with no
       comparison offered.
-- [ ] Extend `tests/client_style_evidence.test.ts` and `tests/shell.test.ts`,
+- [x] Extend `tests/client_style_evidence.test.ts` and `tests/shell.test.ts`,
       and add a browser test beside `tests/browser/viewer_inspection_ownership.spec.ts`
       that drives the excluded, matched and affected inline cases in the
       mobile sheet and the desktop dock.
-- [ ] Run the unit and browser suites and `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] Discovered: mark inline style presentation as shipped in the evidence
+      contract, document its derivation and ordering in the shell README, and
+      verify the existing shell-design inventory remains accurate.
+- [x] Discovered: capture the live page-excluded Details panel and the merged
+      `design-review-style-page-excluded` screen at mobile and desktop sizes,
+      compare them visually, and retain the images under the milestone's
+      delegation screenshot directory.
+- [x] Run the unit and browser suites and `cargo xtask check`.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report

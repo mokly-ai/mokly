@@ -2,14 +2,13 @@
 
 ## Delivery Status
 
-Implemented for stylesheet evidence. This document owns how the inspector and
-the comparison stage present the evidence defined by
+Implemented for linked stylesheet and inline style evidence. This document owns
+how the inspector and the comparison stage present the evidence defined by
 [CSS change attribution](./mokly-css-attribution.md) and
 [inline style ownership](./mokly-inline-styles.md); those contracts own the
 analysis, membership rules, evidence schemas, and validation. The inline
-style presentation is the approved target of the
-[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md)
-and lands with its shell milestone.
+style presentation is implemented by the
+[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md).
 
 ## Shell Presentation
 

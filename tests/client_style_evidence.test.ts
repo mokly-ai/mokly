@@ -1,19 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-
 import type { EntryChangeReason } from "../packages/viewer/dist/review/component_types.js";
 import type { ViewReview } from "../packages/viewer/dist/review/types.js";
-import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
-import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 import {
+  excludedPageStyles,
   excludedStylesheets,
   isStyleOnlyView,
   retainedPaths,
   styleOutcomes,
 } from "../packages/viewer/dist/shell/workspace_style_evidence.js";
+
+import { renderEvidence } from "./helpers/style_evidence.js";
 
 const SHARED = "mockups/shared.css";
 const TOKENS = "mockups/tokens.css";
@@ -44,6 +42,72 @@ test("analysed reasons group into one list per retained outcome", () => {
     { status: "unresolved", selectors: [":root"] },
   ]);
   assert.deepEqual(styleOutcomes(undefined), []);
+});
+
+test("inline selectors join the existing outcome groups", () => {
+  const views: readonly ViewReview[] = [
+    {
+      colorScheme: "light",
+      ignoredIds: [],
+      inlineStyles: { status: "matched", selectors: ["main a", ".auth"] },
+      material: true,
+      state: "changed",
+      viewport: "mobile",
+    },
+    {
+      colorScheme: "dark",
+      ignoredIds: [],
+      inlineStyles: { status: "unresolved", selectors: [":root"] },
+      material: true,
+      state: "changed",
+      viewport: "mobile",
+    },
+  ];
+  assert.deepEqual(
+    styleOutcomes(
+      [
+        {
+          kind: "dependency",
+          path: SHARED,
+          analysis: { status: "matched", selectors: [".auth"] },
+        },
+      ],
+      views,
+    ),
+    [
+      { status: "matched", selectors: [".auth", "main a"] },
+      { status: "unresolved", selectors: [":root"] },
+    ],
+  );
+});
+
+test("excluded page styles yield only when no inline style is retained", () => {
+  const view = (inlineStyles: ViewReview["inlineStyles"]): ViewReview => ({
+    colorScheme: "light",
+    ignoredIds: [],
+    ...(inlineStyles ? { inlineStyles } : {}),
+    ...(inlineStyles && inlineStyles.status !== "excluded"
+      ? { material: true as const }
+      : {}),
+    state: inlineStyles?.status === "excluded" ? "unchanged" : "changed",
+    viewport: "mobile",
+  });
+  assert.equal(excludedPageStyles([view({ status: "excluded" })]), true);
+  assert.equal(
+    excludedPageStyles([
+      view({ status: "excluded" }),
+      view({ status: "matched", selectors: [".entry"] }),
+    ]),
+    false,
+  );
+  assert.equal(
+    excludedPageStyles([
+      view({ status: "excluded" }),
+      view({ status: "unresolved", selectors: [] }),
+    ]),
+    false,
+  );
+  assert.equal(excludedPageStyles([view(undefined)]), false);
 });
 
 test("retained paths keep every changed dependency once, in order", () => {
@@ -214,45 +278,3 @@ test("excluded stylesheets lead with the outcome and pluralize sensibly", () => 
   const none = renderEvidence({});
   assert.doesNotMatch(none, /stylesheets? changed|Examined and excluded/);
 });
-
-function renderEvidence({
-  excluded = [],
-  reasons = [],
-}: {
-  excluded?: readonly string[];
-  reasons?: readonly EntryChangeReason[];
-}): string {
-  const data = {
-    base: "main",
-    status: "Changed",
-    change: {
-      kind: "screen",
-      after: { id: "home", route: "screens/home.html", title: "Home" },
-      reasons,
-    },
-    components: [],
-    comparisonEligible: true,
-    comparisons: true,
-    entry: { id: "home", kind: "screen", route: "screens/home.html" },
-    inputChanges: [],
-    relatedComponents: [],
-    resourceEvidence: excluded.length
-      ? [
-          {
-            colorScheme: "light",
-            excludedResources: excluded.map((path) => ({
-              path,
-              reason: "no-matching-rule" as const,
-            })),
-            viewport: "mobile",
-          },
-        ]
-      : [],
-    usedBy: [],
-    affected: [],
-    removed: false,
-    variants: [],
-    views: [],
-  } as unknown as WorkspaceData;
-  return renderToStaticMarkup(createElement(WorkspaceEvidence, { data }));
-}

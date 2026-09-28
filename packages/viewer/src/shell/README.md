@@ -105,6 +105,14 @@ Versioned historical selection adopts new evidence and becomes unavailable if
 that exact snapshot disappears. Identity-less legacy history adopts only an
 unchanged removed record; metadata changes reject live adoption and preserve the
 existing document reload boundary.
+`workspace_evidence.tsx` renders linked and page-level style evidence in the
+same Details panel. `workspace_style_evidence.ts` unions matched and unresolved
+inline selectors into the existing outcome groups and recognizes an
+excluded-page-style result only when no selected view retains inline evidence.
+The excluded linked-stylesheet block remains first; the page-style outcome then
+leads directly into the screen or saved-view terminal no-changes line. The
+shared-component note is gated by a real affected-component relationship, not
+by inline exclusion alone.
 Static export uses `src/standalone/static_workspace_evidence.ts` to read inert
 workspace JSON from a destination shell in the mounted deployment, validating
 the response route, compact catalogue reference, and delivery identities against

@@ -7,6 +7,7 @@ import {
   viewPage as renderViewPage,
 } from "../dist/server/pages.js";
 import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
+import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
 import type { Catalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
@@ -479,6 +480,76 @@ test("screen page renders device chrome, viewport switch, and details", () => {
       attribute(element, "href") === "/view/user-flows/tour.html",
   );
   assert.match(html, /aria-live="polite"/);
+});
+
+test("excluded page styles keep the screen unmodified without a comparison stage", () => {
+  const catalogue = createCatalogue(manifest);
+  const address = {
+    id: "welcome",
+    route: "screens/welcome.html",
+    title: "Welcome",
+  };
+  const views: ReviewResultV3["screens"][number]["views"] = (
+    ["mobile", "desktop"] as const
+  ).map((viewport) => ({
+    afterPath: `snapshots/after/screens/welcome.${viewport}.html`,
+    beforePath: `snapshots/before/screens/welcome.${viewport}.html`,
+    colorScheme: "light",
+    ignoredIds: [],
+    inlineStyles: { status: "excluded" },
+    state: "unchanged",
+    viewport,
+  }));
+  const result: ReviewResultV3 = {
+    affectedConsumers: [],
+    baseCommit: "a".repeat(40),
+    baseRef: "origin/main",
+    changedPaths: ["renderer.tsx"],
+    changes: [],
+    components: [],
+    ignoredImpact: [],
+    schemaVersion: 3,
+    screens: [
+      {
+        ...address,
+        after: address,
+        before: address,
+        dependencies: [],
+        sharedImpact: [],
+        state: "unchanged",
+        views,
+      },
+    ],
+    sharedImpact: [],
+  };
+  const html = routePage(catalogue, address.route, {
+    changedRoutes: [],
+    comparisons: true,
+    componentChanges: { baseline: manifest, result },
+  });
+  assert.match(
+    html,
+    /Styles on this page changed, but none of the changed styles apply to this screen\./,
+  );
+  assert.match(html, /No changes to this screen\./);
+  assert.equal(
+    textContent(
+      requiredElement(
+        html,
+        (element) => attribute(element, "data-workspace-status") !== undefined,
+      ),
+    ),
+    "Unmodified",
+  );
+  assert.ok(
+    html.indexOf(
+      "Styles on this page changed, but none of the changed styles apply to this screen.",
+    ) < html.indexOf("No changes to this screen."),
+  );
+  assert.doesNotMatch(html, /Shared component changes affect this preview/);
+  assert.doesNotMatch(html, /class="mbk-cmp-toolbar"/);
+  assert.doesNotMatch(html, /class="mbk-diff-view"/);
+  assert.doesNotMatch(html, /Styles this screen uses changed/);
 });
 
 test("use-case page renders the flow with catalogue links per step", () => {
