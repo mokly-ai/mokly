@@ -488,11 +488,15 @@ writer together, and remove the development redirect and preview redirects.
 
 ## Review record
 
-Milestones 2–8 (`a6fe0da`..`d227702e`) were reviewed with the
-[implementation review prompt](../docs/implementation-review-prompt.md) after
-the full gate and push, split by area across six read-only reviewers. The
-coordinator confirmed each finding below against the code before recording it.
-No finding was applied automatically; all await the user's decision.
+Milestones 2–8 (`a6fe0da`..`d227702e`) were reviewed with the [implementation
+review prompt](../docs/implementation-review-prompt.md) after the full gate
+and push, split by area across six read-only reviewers who each checked their
+findings against the cited lines. The coordinator re-checked both High
+findings and findings 3–8, 12, and 13 directly in the code; finding 9 still
+needs a browser test to confirm, finding 10 is confirmed only for the
+root-level base case, and the remaining findings rest on the reviewers' cited
+evidence with coordinator spot checks. No finding was applied automatically;
+all await the user's decision.
 
 1. **High** — the review producer sorts affected consumers by a `:`-joined key
    while the v4 reader requires a `\u0000`-joined order, so two changed
