@@ -10,14 +10,11 @@ Imported CSS follows the [delivery contract](../../docs/protocol/mokly-imported-
 imports in JavaScript import order, traverses prelude `@import`s, and emits
 one deterministic stylesheet per nonempty root. The renderer's complete CSS
 closure is pruned before processing entry CSS; separate entries still share
-sources independently. CSS Modules use path-stable Lightning CSS names and
-expose default and named bindings to JavaScript. Target resolution is lazy:
-each module uses its consumer Browserslist config or a fixed conservative
-default, while plain CSS remains authored text. Module transformation leaves
-Lightning dependency analysis off so local/remote `@import`s and custom-property
-`url()` values reach the same bundle and inventory as plain CSS. A tokenized
-post-transform pass restores local `image-set()` first-option strings to
-`url()`; a separate guard catches any unhandled Lightning rewrite.
+sources independently. CSS Modules use a lazy PostCSS CSS Modules pipeline to
+rename local classes, IDs and keyframes by a path-only hash and expose default
+and named bindings to JavaScript. The module scoper never re-prints authored
+values, imports, URLs, comments or modern syntax; ordinary CSS and modules
+reach the same bundle and inventory. Consumer PostCSS still runs first.
 Graph and stylesheet metafiles each resolve their physical working directory
 once for path mapping. Root-import diagnostics build edge provenance only
 when an outside-repository CSS file actually fails validation; successful
@@ -144,8 +141,9 @@ while retaining in-repository workspace CSS/asset aliases. React and React DOM
 resolve from consumer package roots, including when Mokly runs
 from an npx installation. The bundle stays in memory and retains the
 consumer's existing rendering/provider graph.
-`styles/lightning.ts` loads Lightning CSS's native CommonJS binding only on
-the first CSS transformation, not during CLI module import.
+`styles/lightning.ts` loads Lightning CSS's native CommonJS binding only for
+read-only transformer inventory; CSS Modules load their own PostCSS plugins
+only when a module is imported, not during CLI module import.
 The preprocessor caches by local imports actually excluded in each file,
 allowing both graph and CSS passes to share unaffected transformations. The
 output cleaner drops esbuild's source-path comments and their separator lines

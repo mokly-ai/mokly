@@ -9,9 +9,9 @@
   [review record](../docs/reviews/imported-css-delivery.md) and
   [Milestone 14 review](../docs/reviews/imported-css-delivery-milestone-14.md)
   are resolved in Milestones 15–16 (`7b454b0`, `0ce4f20`). The four
-  unselected findings remain open, and 15 new findings from the
+  unselected findings remain open. Milestone 18 resolves finding 2 from the
   [Milestone 17 review](../docs/reviews/imported-css-delivery-milestone-17.md)
-  await the user's decision.
+  and supersedes findings 3, 8 and 9; its other findings remain open.
   Move this plan to Completed when its
   implementation PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one

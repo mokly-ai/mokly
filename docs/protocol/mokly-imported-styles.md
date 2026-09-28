@@ -105,8 +105,9 @@ by root order, never plugin callback order. Nested imports retain their CSS
 ordering. The CSS pass uses
 the same aliases, conditions, main fields, package roots, extension and
 symlink policy as the graph pass; it does not evaluate consumer JavaScript.
-The CLI does not eagerly load Lightning CSS: its native CommonJS module is
-loaded only when CSS Modules or transformer-only CSS require a transform.
+The CLI does not eagerly load CSS Modules plugins or Lightning CSS. The
+former load only when a module is scoped; Lightning remains a read-only parser
+for Changes and transformer-only inventory.
 For CSS `@import` resolution in both the prelude scan and the CSS pass,
 prepend `style` to the consumer's conditions and main fields (or esbuild's
 Node defaults `main,module` when unset): neither the `style` export condition
@@ -121,62 +122,47 @@ stylesheet. Remote imports remain external and are never inventoried.
 
 ## CSS Modules And Import Loaders
 
-For `*.module.css`, call Lightning CSS `transform` with
-`filename` equal to the **repository-relative POSIX** file path,
-`cssModules: { pattern: "mokly_[hash]_[local]", dashedIdents: false,
-animation: true, grid: false, container: false, customIdents: true,
-pure: false }`, `minify: false`, and browser targets resolved per stylesheet.
-Load `browserslist` using Node resolution from the consumer config directory
-then `moduleResolution.packageRoots`, call it with `path` set to the physical
-stylesheet and convert its result using Lightning's `browserslistToTargets`.
-Cache targets per stylesheet directory within a graph load. Browserslist
-environment sections follow `BROWSERSLIST_ENV` and `NODE_ENV`; results also
-depend on the consumer's installed Browserslist data. If the package is absent
-and a Browserslist file, nearest package `browserslist` key, or the
-`BROWSERSLIST`/`BROWSERSLIST_CONFIG` environment is present, fail with the
-catalogued install guidance. Without any configuration, use fixed targets
-whether or not the package is installed: Chrome 109, Edge
-109, Firefox 115 ESR, Safari 14 and iOS Safari 14 (major versions shifted by
-16 bits for Lightning); these deliberately retain older fallback and prefix
-declarations. Plain CSS is delivered as authored and never transformed with
-these targets. Suppress only Browserslist's outdated-data warning while
-computing targets so the example's main process and PostCSS worker stay quiet;
-consumers should update their Browserslist data independently. Lightning's
-filename-derived `[hash]` (not a content hash) scopes classes, IDs,
-`@keyframes` names and **all** their `animation`/`animation-name` references.
-It also scopes `@counter-style` and its `list-style`/`list-style-type`
-references, and `view-transition-name` values; these local names appear in
-the exported map. References to undefined keyframe names are also localized.
-Global `var(--brand)` tokens, grid-area and container names stay unchanged.
-Lightning may normalize declarations (e.g. `animation: pulse 1s` to
-`animation: 1s <scoped-name>`), preserving their meaning. A collision between
-distinct local identities fails rather than appending a suffix.
-Do **not** enable Lightning CSS `analyzeDependencies` for CSS Modules: that
-mode removes local and remote `@import` rules and rejects relative `url()` in
-custom properties. Module `@import`s and custom-property `url()` values use
-the same esbuild resolution, pruning, inventory and asset delivery as plain
-CSS. Lightning's normal transform may turn an authored `url()` image in an
-unprefixed `image-set()` option into a quoted string. Tokenize the transformed
-CSS, find each unprefixed `image-set()` function, and replace a local quoted
-first token of each top-level comma-separated option with `url(<unchanged
-string token>)`. Preserve escapes, query/hash suffixes, comments, nested
-functions, `type()` arguments, gradients, and external strings; do not rewrite
-`-webkit-image-set()`. Authored local quoted image-set strings have already
-failed the pre-transform guard. Run a distinct post-transform guard on any
-remaining local quoted image-set source so an unhandled Lightning rewrite
-cannot escape Build validation. Asset routes and resolved URL targets are
-equivalent between plain and module CSS; Lightning may format declarations
-differently. Transformer-only CSS analysis may still use dependency analysis
-because it does not emit a stylesheet.
-PostCSS runs first. Feed the identical transformed CSS to the stylesheet
-pass and use Lightning's exports for JavaScript: a default plain object
-whose original local names map to space-joined scoped names; recursively
-expand same-file and `global` `composes` in authored order, composed names
-before the owning name, deduplicating names at first occurrence. Also export
-each valid, non-reserved JavaScript identifier as a named string with the
-same value. Other keys (such as `foo-bar`) remain accessible on the default
-object. Cross-file `composes` and cyclic local composition fail, not silently
-flattened. Plain CSS imports supply no JavaScript class map.
+For `*.module.css`, Mokly runs its own PostCSS parser and the same rename-only
+CSS Modules pipeline as css-loader and Vite's default: first
+`postcss-modules-local-by-default({ mode: "local" })`, then
+`postcss-modules-extract-imports()`, then
+`postcss-modules-scope({ generateScopedName })`, followed by
+`icss-utils.extractICSS(root)`. Load these packages lazily in the main process;
+the isolated worker is only for consumer PostCSS plugins. Run after renderer
+pruning and consumer PostCSS, sharing the `(source, effective pruned set)`
+memo between the graph and stylesheet passes. The generated name is
+`mokly_<hash>_<local>` where `<hash>` is the first **12 lowercase hex** digits
+of SHA-256 over the UTF-8 repository-relative POSIX stylesheet path. It never
+depends on source bytes, bundle order, process cwd or platform separators.
+Distinct local identities colliding at a generated name fail Build.
+
+Only local classes, IDs, `@keyframes` names and their `animation` and
+`animation-name` references are renamed. `:global(...)` stays global and
+`:local(...)` becomes a local selector. `@counter-style` names and list-style
+references, `view-transition-name`, custom properties and `var(--token)`,
+grid-area and container names remain global. The scoper does not optimize,
+prefix, polyfill or normalize other declarations, selectors, comments,
+`@import`s, `url()`s, `image-set()` options, fallbacks, media/supports/layer
+conditions or modern CSS syntax. These reach esbuild as authored; plain and
+module bundles differ only in the scoped names. The authored quoted-local
+`image-set()` guard still runs before scoping. Lightning CSS remains a
+read-only parser for Changes and transformer-only inventory, never a module
+delivery transformer. Browserslist targets are the consumer's PostCSS concern,
+not a Mokly CSS Modules input.
+
+Before the plugins run, reject authored `:import(...)`, `:export` and
+`@value` with the exact catalogued diagnostics. Lightning previously left
+authored ICSS rules in CSS without binding them to JavaScript, and rejected
+`@value`; explicit failure avoids silent changes. After the plugins, reject
+generated ICSS imports as cross-file `composes` with the existing message.
+Same-file `composes` may reference only a class defined **earlier** in that
+file; a forward or missing name fails with the catalogued location. This is
+the css-loader/Vite rule and makes local cycles impossible. `from global`
+works. The default export is a plain map of sorted local keys to the plugins'
+space-joined values: owning scoped name first, then composed names in authored
+order, including repeats. Each valid, non-reserved JavaScript identifier is
+also a named string export with the same value. Other keys remain on the
+default map. Plain CSS imports supply no JavaScript class map.
 If PostCSS and renderer pruning produce a different export map between the
 graph and delivered stylesheet passes, fail before writing instead of emitting
 class names with no matching rules.

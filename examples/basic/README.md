@@ -8,8 +8,8 @@ The Welcome screen also includes a small `WorkspaceNote` built from a CSS
 Module, an authored PNG-backed stylesheet, and Tailwind v4 utilities, including
 a small `note-title` utility. Its
 PostCSS module pins Tailwind's base and optimization, scans only `src/` with
-`source(none)` plus `@source`, and shares `.browserslistrc` Safari 14 targets
-between autoprefixer and CSS Modules.
+`source(none)` plus `@source`, and uses `.browserslistrc` Safari 14 targets
+for autoprefixer only. Mokly does not target or re-print CSS Modules.
 In `src/components/workspace-note/utilities.css`, `@source "../..";` scans
 only this example's `src/` tree, and `@utility note-title` applies to the
 Welcome component. The example sets `BROWSERSLIST_IGNORE_OLD_DATA=1` in its

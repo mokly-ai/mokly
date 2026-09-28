@@ -43,27 +43,21 @@ links; add a relative link to its complete document yourself if needed.
 Name scoped styles `*.module.css` and import the default class map or a
 valid-identifier named class. Class names are derived from the file path,
 not the CSS content or unrelated entries. Same-file and global `composes`
-work; composing from another file or a local composition cycle fails Build.
-Classes, IDs, keyframes and their animation references are scoped together.
-Counter-style names and their list-style references, and view-transition
-names, are also local and exported. Global tokens such as `var(--brand)`
-remain global, as do grid-area and container names. Lightning CSS can
-reorder equivalent declaration values (for example `animation: pulse 1s`
-becomes `animation: 1s <scoped-name>`).
+work when the composed class is defined earlier in the same file; forward
+references and composing from another file fail Build. Exported values start
+with the owning class, followed by composed names. Classes, IDs, keyframes
+and their animation references are scoped together; `:global(...)` keeps a
+selector global. Counter-style, view-transition, custom-property, grid-area
+and container names stay global. Apart from local names, Mokly passes module
+CSS through as authored: prefixes, fallback declarations, modern syntax,
+comments and `url()` forms are not rewritten by module scoping.
 Local and remote `@import`s and relative `url()` values inside custom
 properties work the same way in a CSS Module as in plain CSS. For a local
-`image-set()` image, write `url("./image.png")`; Mokly preserves it through
-module scoping and copies the asset.
-Mokly reads your project's Browserslist configuration for each module file
-to preserve prefixes and fallback values for your target browsers. Put one
-`.browserslistrc` near your styles so both Mokly and autoprefixer use the
-same targets; install `browserslist` in your repository if you configure it.
-Without either a package or configuration, Mokly uses a fixed conservative
-Chrome/Edge 109, Firefox 115, Safari/iOS 14 target set for modules. Plain CSS
-is delivered as authored. Browserslist environment sections follow
-`BROWSERSLIST_ENV` or `NODE_ENV`, and output depends on your installed browser
-data. Mokly suppresses only the stale-data warning during its target lookup;
-update Browserslist data to keep your targets current.
+`image-set()` image, write `url("./image.png")`; Mokly keeps that form and
+copies the asset. Use ordinary CSS, local classes or custom properties instead
+of authored `:import`, `:export` or `@value` syntax.
+Mokly does not read Browserslist for CSS Modules. If you configure consumer
+PostCSS/autoprefixer, its target settings still apply before module naming.
 
 ```tsx
 import styles from "./card.module.css";

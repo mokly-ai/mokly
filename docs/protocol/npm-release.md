@@ -64,10 +64,12 @@ dependencies.
 The exporter's Koffi dependency supplies OS-enforced exclusive directory rename;
 its optional platform binaries must remain available for export. The native
 bridge is lazy and does not load for build/check/serve or help.
-The standalone CSS rule parser, imported CSS Modules transformation, and
-transformer-only stylesheet inventory use the production `lightningcss`
-dependency. CSS Module transforms use consumer Browserslist targets or fixed
-conservative defaults; the other two uses do not rewrite delivered CSS.
+The standalone CSS rule parser and transformer-only stylesheet inventory use
+the production `lightningcss` dependency for read-only analysis. Rename-only
+CSS Modules delivery uses `postcss-modules-local-by-default`,
+`postcss-modules-extract-imports`, `postcss-modules-scope` and `icss-utils`
+with Mokly's existing PostCSS runtime; their transitive selector/value parser,
+`cssesc` and `util-deprecate` packages join the package license/audit scope.
 Packed-consumer smoke also exercises a CSS Module, its binary `url()` asset,
 and a local PostCSS plugin through the URL-loaded `postcss_worker.js`; package
 inspection requires that worker file in the published archive.

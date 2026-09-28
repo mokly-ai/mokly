@@ -67,9 +67,14 @@ The current maintenance choices are:
   unrelated dependency parents.
 - Compatible Browserslist, browser-baseline data, and Nano ID patches remain
   lockfile-only updates; they do not add direct runtime dependencies.
-- Lightning CSS is a production dependency for stylesheet rule parsing,
-  imported CSS Modules transformation with consumer Browserslist targets or
-  fixed defaults, and transformer-only dependency analysis. Its
+- The PostCSS CSS Modules plugins and `icss-utils` are runtime dependencies
+  for rename-only local selectors and exports. Their transitive
+  `postcss-selector-parser`, `cssesc`, `util-deprecate` and
+  `postcss-value-parser` dependencies are MIT or ISC; they do not evaluate
+  consumer code or choose browser targets. Consumer PostCSS packages still
+  run only in the isolated worker.
+- Lightning CSS is a production dependency only for read-only stylesheet rule
+  analysis and transformer-only dependency inventory. Its
   MPL-2.0 native packages and Apache-2.0 `detect-libc` dependency participate in
   the workspace and packed-consumer audits. Retain every platform's optional
   lockfile entry when updating it; ordinary Ubuntu and native macOS/Windows

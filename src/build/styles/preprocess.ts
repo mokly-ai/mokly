@@ -6,12 +6,12 @@ import { toPosixPath } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
 
+import { validateImageSetStrings } from "./image_set.js";
 import {
-  validateImageSetStrings,
-  validateTransformedImageSetStrings,
-} from "./image_set.js";
-import { ModuleBrowserTargets } from "./module_targets.js";
-import { scopeModule, type ScopedStyle } from "./modules.js";
+  recordModuleIdentities,
+  scopeModule,
+  type ScopedStyle,
+} from "./modules.js";
 import { nestedExcludedImports } from "./nested_imports.js";
 import type { StyleDependencyReport } from "./postcss.js";
 import { scanImportPrelude } from "./prelude.js";
@@ -54,14 +54,11 @@ export class StylePreprocessor {
   readonly sourceFiles = new Set<string>();
   /** Raw reports awaiting package-owned source inventory validation. */
   readonly reports: StyleDependencyReport[] = [];
-  private readonly moduleTargets: ModuleBrowserTargets;
 
   constructor(
     private readonly config: ResolvedConfig,
     private readonly processor: StyleTextProcessor = new IdentityStyleProcessor(),
-  ) {
-    this.moduleTargets = new ModuleBrowserTargets(config);
-  }
+  ) {}
 
   /** Memoize by file and effectively excluded local imports across both passes. */
   async prepare(
@@ -144,26 +141,8 @@ export class StylePreprocessor {
         ...(processed.reports ? { reports: processed.reports } : {}),
       };
     const relative = toPosixPath(path.relative(this.config.repoRoot, source));
-    const scoped = scopeModule(
-      text,
-      relative,
-      this.moduleTargets.forFile(source),
-    );
-    validateTransformedImageSetStrings(
-      scoped.css,
-      source,
-      this.config.repoRoot,
-    );
-    for (const name of scoped.identities) {
-      const first = this.identities.get(name);
-      if (first && first !== relative) {
-        throw new MoklyError(
-          "build-invalid",
-          `CSS Modules generated name collision: ${name} in ${first} and ${relative}; rename one local name or file`,
-        );
-      }
-      this.identities.set(name, relative);
-    }
+    const scoped = scopeModule(text, relative);
+    recordModuleIdentities(scoped.identities, relative, this.identities);
     return {
       css: scoped.css,
       scoped,

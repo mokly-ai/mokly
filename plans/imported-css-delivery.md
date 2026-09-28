@@ -8,8 +8,9 @@ authorized review findings; finding 3 was resolved in the separate `922c1ec`
 merge. M12-4, M12-6, M12-7 and M14-1 remain open by user direction in the
 [final review record](../docs/reviews/imported-css-delivery.md#milestone-12-review)
 and [Milestone 14 review record](../docs/reviews/imported-css-delivery-milestone-14.md).
-The Milestone 17 review found 15 new issues that await the user's decision in
-the [Milestone 17 review record](../docs/reviews/imported-css-delivery-milestone-17.md).
+Milestone 18 resolves M17-2 and makes M17-3, M17-8 and M17-9 obsolete; the
+other findings in the [Milestone 17 review record](../docs/reviews/imported-css-delivery-milestone-17.md)
+remain open for the user's decision.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -115,6 +116,11 @@ the same inventory.
    scope together; this also scopes counter-style and view-transition names.
    Provide a default class map and valid-identifier named exports. Cross-file `composes` is rejected;
    same-file and `global` composition work.
+   Milestone 18 supersedes the Lightning CSS scoping mechanism: PostCSS CSS
+   Modules plugins rename only classes, IDs and keyframes in the authored
+   stylesheet. Mokly's SHA-256 path hash remains independent of content and
+   bundle order; neither Browserslist targets nor whole-stylesheet re-printing
+   participates in module delivery.
 6. **Assets referenced by CSS are copied.** `url()` targets that resolve to
    repository files are emitted to `mokly-generated/assets/<repository-relative
 path>` through esbuild's `file` loader with a path-mirroring asset name, and
@@ -770,6 +776,24 @@ findings left for a later user decision.
 
 - [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
 - [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Fifteen new findings (3 Medium, 12 Low) are recorded in the [Milestone 17 review record](../docs/reviews/imported-css-delivery-milestone-17.md) for the user's decision.
+
+## Milestone 18: Rename-only CSS Modules (complete)
+
+Replace whole-stylesheet Lightning CSS module transformation with scoped-name
+rewrites that retain authored values, rules, comments and browser semantics.
+
+- [x] Add failing byte-equivalence tests for plain/module CSS across fallbacks, logical styles, conditional imports, assets and modern syntax; add a Chrome computed-style parity regression that fails against Lightning CSS.
+- [x] Specify deterministic path-only naming, plugin-compatible export order and composition, authored ICSS/`@value` handling, and exact errors in the protocol before implementation.
+- [x] Add PostCSS CSS Modules plugins through `npm install`; lazily load them in the main process after consumer PostCSS and renderer pruning, retaining memoization and divergence checks.
+- [x] Keep class-map, keyframe, ID, global/local, composition, collision, import, asset and example coverage; test forward references, authored ICSS, `@value` and product-language locations.
+- [x] Remove browser-target and post-Lightning image-set machinery and tests; update guides, READMEs, security/release docs, and the ignored PR draft.
+- [x] Demonstrate an old whole-stylesheet re-print mutation fails exact parity; smoke-test Welcome in Chrome across both schemes and viewports.
+- [x] Run Build, focused tests, example Build/Check, lint, typecheck, dependency and package checks, relevant browser specs, then `cargo xtask check`; commit and push this milestone.
+
+## Milestone 19: Commit, push, and review
+
+- [ ] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
 
 ## Post-merge follow-up (non-blocking)
 

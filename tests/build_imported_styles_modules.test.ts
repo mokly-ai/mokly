@@ -21,7 +21,7 @@ test("CSS Modules export a default class map and matching named binding", async 
   t.after(() => removeFixture(fixture));
   await fs.writeFile(
     path.join(fixture.entriesDir, "card.module.css"),
-    ".card{composes: helper; color:red}.helper{color:blue}",
+    ".helper{color:blue}.card{composes: helper; color:red}",
   );
   await fs.appendFile(
     fixture.entryPath,
@@ -33,6 +33,7 @@ test("CSS Modules export a default class map and matching named binding", async 
     compiled.outputs.get("screens/home.mobile.html") as string
   ).match(/class="([^"]+)"/)?.[1];
   assert.ok(classes, "CSS Modules class map must be used by the component");
+  assert.match(classes.split(" ")[0]!, /_card$/);
   for (const name of classes.split(" "))
     assert.ok(css.includes(`.${name}`), name);
 });
@@ -89,7 +90,7 @@ test("adding an unrelated same-basename CSS Module does not rename existing clas
   assert.equal(before, after);
 });
 
-test("CSS Module cross-file composes and cycles use catalogued errors", async (t) => {
+test("CSS Module cross-file and forward composes use catalogued errors", async (t) => {
   const fixture = await styleFixture('.a { composes: b from "./other.css" }', {
     module: true,
   });
@@ -113,7 +114,7 @@ test("CSS Module cross-file composes and cycles use catalogued errors", async (t
     (error: Error) => {
       assert.equal(
         error.message,
-        "[mokly/build-invalid] CSS Modules composition cycle in entries/fixture.module.css: a; remove the cycle",
+        "[mokly/build-invalid] CSS Modules composition refers to a class not yet defined in entries/fixture.module.css:1:6: b; define the composed class before this rule",
       );
       return true;
     },

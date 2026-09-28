@@ -4,8 +4,6 @@ import path from "node:path";
 import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
-import { lightningTransform } from "../dist/build/styles/lightning.js";
-import { ModuleBrowserTargets } from "../dist/build/styles/module_targets.js";
 import { loadConfig } from "../dist/config/load.js";
 import { extractCssReferences } from "../dist/html_references.js";
 import { classifyResourceUrl } from "../dist/resource_url.js";
@@ -21,6 +19,22 @@ interface Scenario {
 }
 
 const scenarios: readonly Scenario[] = [
+  {
+    name: "fallbacks and vendor prefixes",
+    css: ".x{width:-webkit-fill-available;width:-moz-available;width:stretch;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);height:100vh;height:100dvh;top:0;right:0;bottom:0;left:0}",
+  },
+  {
+    name: "logical properties and direction",
+    css: ".x:dir(rtl){inset-inline-start:12px;color:light-dark(red,blue)}",
+  },
+  {
+    name: "nesting colors media supports and layers",
+    css: "@layer component{.x{color:rgba(0,0,255,.5);& .child{color:var(--brand)}}}@supports(display:grid){.x{display:grid}}@media (min-width:600px){.x{margin-inline-start:4px}}",
+  },
+  {
+    name: "authored comments and global custom identifiers",
+    css: '@counter-style dot{system:cyclic;symbols:"•"}.x{/* retain selector */list-style:dot;view-transition-name:swap;grid-area:slot;container-name:box}',
+  },
   {
     name: "url background",
     css: '.x{background:url("./background.png")}',
@@ -146,23 +160,13 @@ async function buildScenario(
         }),
     ),
   ].sort();
-  const normalized = lightningTransform()({
-    filename: "comparison.css",
-    code: Buffer.from(stylesheet.replace(/mokly_[A-Za-z0-9]+_/g, "")),
-    minify: false,
-    targets: new ModuleBrowserTargets(await loadConfig(fixture.root)).forFile(
-      path.join(
-        fixture.entriesDir,
-        module ? "fixture.module.css" : "fixture.css",
-      ),
-    ),
-  }).code.toString();
+  const normalized = stylesheet.replace(
+    /mokly_(?:[a-f0-9]{12}|[A-Za-z0-9_-]{6})_/g,
+    "",
+  );
   return {
     stylesheet,
-    normalized: normalized
-      .split("\n")
-      .filter((line, index, lines) => line !== lines[index - 1])
-      .join("\n"),
+    normalized,
     assets,
     localReferences,
     sourceFiles: compiled.manifest.sourceFiles

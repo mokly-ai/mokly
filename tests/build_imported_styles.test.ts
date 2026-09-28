@@ -82,7 +82,7 @@ test("renderer closure is excluded from entry CSS even via nested imports", asyn
   assert.ok(compiled.manifest.sourceFiles.includes("entries/token.css"));
 });
 
-test("CSS Modules scope animations and counter styles but preserve custom properties", async (t) => {
+test("CSS Modules scope animations while keeping other custom identifiers global", async (t) => {
   const fixture = await createFixture(undefined, { extraConfig: "" });
   t.after(() => removeFixture(fixture));
   await fs.writeFile(
@@ -91,7 +91,7 @@ test("CSS Modules scope animations and counter styles but preserve custom proper
   );
   await fs.appendFile(
     fixture.entryPath,
-    '\nimport styles, { pulse, dot, swap } from "./card.module.css"; export const moduleNames = { styles, pulse, dot, swap };',
+    '\nimport styles, { pulse } from "./card.module.css"; export const moduleNames = { styles, pulse };',
   );
   const compiled = await compileFixture(fixture);
   const output = compiled.outputs.get(entryStyle) as string;
@@ -101,9 +101,9 @@ test("CSS Modules scope animations and counter styles but preserve custom proper
   assert.match(output, /var\(--token\)/);
   assert.match(output, /grid-area: slot/);
   assert.match(output, /container-name: box/);
-  assert.match(output, /@counter-style mokly_[\w-]+_dot/);
-  assert.match(output, /list-style: mokly_[\w-]+_dot/);
-  assert.match(output, /view-transition-name: mokly_[\w-]+_swap/);
+  assert.match(output, /@counter-style dot/);
+  assert.match(output, /list-style: dot/);
+  assert.match(output, /view-transition-name: swap/);
 });
 
 test("opted-out CSS and JavaScript file-loader output are rejected as specified", async (t) => {
@@ -199,7 +199,7 @@ test("invalid CSS Module transforms use the catalogued guidance", async (t) => {
     (error: Error) => {
       assert.equal(
         error.message,
-        "[mokly/build-invalid] could not transform CSS entries/fixture.module.css: Unexpected end of input; fix the stylesheet and rebuild",
+        "[mokly/build-invalid] could not transform CSS entries/fixture.module.css:1:1: Unclosed block; fix the stylesheet and rebuild",
       );
       return true;
     },

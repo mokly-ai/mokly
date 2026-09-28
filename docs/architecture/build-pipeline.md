@@ -82,8 +82,9 @@ The additional stylesheet step follows
 the JavaScript graph, derive renderer and entry
 import order, compute the full renderer CSS closure, and prune its files
 at any depth of entry imports _before_ PostCSS can inline them. PostCSS runs
-per effective stylesheet input; Lightning CSS names CSS Modules with a
-repo-relative filename. A second esbuild pass produces one CSS file per
+per effective stylesheet input; lazy CSS Modules plugins rename local
+classes, IDs and keyframes using a repo-relative path hash without rewriting
+other authored CSS. A second esbuild pass produces one CSS file per
 configured renderer/entry root and path-mirrored local assets. The
 compatibility transformer is a graph source, not a CSS delivery root;
 its CSS tree is inventoried without publishing a stylesheet. The union of
