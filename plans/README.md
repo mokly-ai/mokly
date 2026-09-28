@@ -11,6 +11,11 @@
   add a "Scroll together" toggle; the contract (Milestone 5), mockups
   (Milestone 6) and runtime (Milestone 7) are delivered. Implementation is
   complete; move this plan to Completed when its implementation PR merges.
+- [Scalable Inline Style Analysis](./scalable-inline-style-analysis.md) —
+  make inferred inline style ownership work on a full-size React Native Web
+  catalogue: release unneeded worker memory, bound the parse caches, parse each
+  distinct CSS rule once, and analyze only changed rules; builds on Inferred
+  Inline Style Ownership.
 - [Inferred Inline Style Ownership](./inferred-inline-style-ownership.md) —
   derive ownership of rendered head styles and their resource references from
   documents and component ranges, so React Native Web and CSS-in-JS changes
