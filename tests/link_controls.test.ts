@@ -9,8 +9,11 @@ const end = '<template data-mokly-link-child-end=""></template>';
 const page = (body: string) =>
   `<!doctype html><html><head><title>Control</title></head><body>${body}</body></html>`;
 const wrap = (body: string) => `${start}${body}${end}`;
-const adapt = (body: string) =>
-  adaptLinkControls(page(body), "screens/home.html");
+const adapt = (body: string) => {
+  const result = adaptLinkControls(page(body), "screens/home.html");
+  assert.deepEqual(result.diagnostics, []);
+  return result.html;
+};
 
 test("patches retain unrelated bytes and marked control content exactly", () => {
   const outside =
@@ -103,7 +106,10 @@ test("ordinary input is untouched, including metadata-only navigation", () => {
   const html = page(
     '<span data-nav-href="mock:details"><button>Metadata</button></span>',
   );
-  assert.equal(adaptLinkControls(html, "home.html"), html);
+  assert.deepEqual(adaptLinkControls(html, "home.html"), {
+    diagnostics: [],
+    html,
+  });
 });
 
 test("control CSS belongs to the document head even with similarly named SVG elements", () => {

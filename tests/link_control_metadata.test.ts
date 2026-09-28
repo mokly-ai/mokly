@@ -7,7 +7,11 @@ const page = (body: string) =>
   `<!doctype html><html><head></head><body>${body}</body></html>`;
 const wrap = (body: string) =>
   `<template data-mokly-link-child-start="mock:details"></template>${body}<template data-mokly-link-child-end=""></template>`;
-const adapt = (body: string) => adaptLinkControls(page(body), "home.html");
+const adapt = (body: string) => {
+  const result = adaptLinkControls(page(body), "home.html");
+  assert.deepEqual(result.diagnostics, []);
+  return result.html;
+};
 
 test("mixed-case child markers are consumed using HTML attribute semantics", () => {
   const html = wrap("<button>Continue</button>").replaceAll(

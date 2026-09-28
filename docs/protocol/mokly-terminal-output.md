@@ -176,8 +176,12 @@ summary, which is unchanged:
   ! screens/home.desktop.html: MockLink child control is inside <button>; one click or key press has two targets
 ```
 
+Rich warnings use stderr, matching existing rich `!` diagnostic lines; rich
+phase completions and summaries remain on stdout.
+
 With `--strict`, the warnings print and the command then fails with
-`build-invalid` and the message `<n> build warnings with --strict`.
+`build-invalid` and the message `1 build warning with --strict` for one warning
+or `<n> build warnings with --strict` otherwise.
 
 ## Plain compatibility
 

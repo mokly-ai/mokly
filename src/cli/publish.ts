@@ -1,3 +1,4 @@
+import { enforceStrictBuildWarnings } from "../build/build_warnings.js";
 import { loadConfig } from "../config/load.js";
 import { MoklyError } from "../errors.js";
 import { exportCatalogue } from "../export/run.js";
@@ -35,6 +36,10 @@ export async function runPublish(
         ...arguments_,
         ...options,
         diagnostic: (message) => reporter.runtimeDiagnostic(message),
+        onBuildDiagnostics: (diagnostics) => {
+          reporter.buildWarnings(diagnostics);
+          enforceStrictBuildWarnings(diagnostics, arguments_.strict ?? false);
+        },
       },
       packageVersion(),
       env,

@@ -2,10 +2,11 @@
 
 ## Delivery Status
 
-Approved target. This contract is tracked by the
+The warning record, transport, reporters, and strict command boundary are
+implemented. The first producers remain an approved target tracked by the
 [styled link control ancestor rule plan](../../plans/styled-link-control-ancestor-rule.md).
-Until it lands, a compilation has two outcomes only: it returns a catalogue or
-it fails, and no command prints warning lines.
+Until that milestone lands, existing compilations return an empty diagnostic
+list, so catalogue bytes and terminal output remain unchanged.
 
 ## Scope
 
@@ -20,8 +21,10 @@ the `--strict` option. Terminal line formats are owned by the
 ## Record
 
 ```ts
+type BuildDiagnosticCode = "link-control-ancestor" | "link-control-descendant";
+
 interface BuildDiagnostic {
-  code: string;
+  code: BuildDiagnosticCode;
   route: string;
   message: string;
 }
@@ -72,13 +75,28 @@ Each command reports the diagnostics of exactly one compilation:
 | `publish` | The export's compilation, before any upload                   |
 | `serve`   | Each generation's exhaustive compilation, once, when it lands |
 
+Internal compilation callers have an explicit transport decision:
+
+| Caller                     | Decision                                           |
+| -------------------------- | -------------------------------------------------- |
+| `build/compile_runtime.ts` | Preserve for the primary Serve generation          |
+| `server/changed.ts`        | Discard secondary Changes evidence                 |
+| `export/inputs.ts`         | Discard the final freshness comparison             |
+| `review/run.ts`            | Discard; standalone Review has no warning reporter |
+| `review/head_assets.ts`    | Discard the fallback derived-head evidence         |
+
 Secondary compilations discard their diagnostics: the Changes evidence
 compilation for derived output and the freshness comparison inside export.
-Baseline preparation runs the historical tree's own build; its warnings belong
-to that tree and are not forwarded. Serve prints a generation's warnings
+The standalone Review orchestration and its derived-head asset fallback also
+discard diagnostics: Review has no command reporter, and its compilation exists
+only to produce comparison evidence. `compileRuntime` is the exception among
+internal callers because it is Serve's primary exhaustive compilation and
+preserves diagnostics on its result. Baseline preparation captures a historical
+tree's command output only for bounded failure diagnostics, so successful
+warnings from that tree are not forwarded. Serve prints a generation's warnings
 immediately before that generation's `Catalogue ready` boundary, in watched and
-snapshot modes alike, and does not repeat them when a foreground request
-renders one of the same documents on demand.
+snapshot modes alike, and does not repeat them when a foreground request renders
+one of the same documents on demand.
 
 One-shot commands print warnings after the rendering phase completes and before
 the summary. A warning never changes the exit status by itself.
@@ -89,10 +107,13 @@ the summary. A warning never changes the exit status by itself.
 by `serve` with `cli-invalid` and the message
 `--strict belongs to build, check, export or publish`. With `--strict`, a
 command still prints every warning, then fails with `build-invalid` and the
-message `<n> build warnings with --strict`, where `<n>` is the number of
-warnings. Nothing is written, exported, or uploaded after that failure, and
-`build` leaves the last-good generated tree unchanged. Without warnings,
-`--strict` changes nothing.
+message `1 build warning with --strict` for one warning or
+`<n> build warnings with --strict` otherwise. This failure is the immediate
+next action after reporting: `build` fails before `outputStore.write`, `check`
+before comparison, `export` before generated or staged export bytes are
+written, and `publish` before bundle capture or upload. The last-good generated
+and export trees therefore remain unchanged. Without warnings, `--strict`
+changes nothing.
 
 ## Verification
 

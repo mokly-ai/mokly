@@ -1,5 +1,6 @@
 import path from "node:path";
 
+import { enforceStrictBuildWarnings } from "../build/build_warnings.js";
 import { compileCatalogue } from "../build/compile.js";
 import { FileSystemGeneratedOutputStore } from "../build/output_store.js";
 import { loadConfig } from "../config/load.js";
@@ -87,6 +88,13 @@ async function execute(
         timeAsync("export", () =>
           runExport(config, {
             diagnostic: (message) => reporter.runtimeDiagnostic(message),
+            onBuildDiagnostics: (diagnostics) => {
+              reporter.buildWarnings(diagnostics);
+              enforceStrictBuildWarnings(
+                diagnostics,
+                arguments_.strict ?? false,
+              );
+            },
             outDir: arguments_.out ?? "",
             ...(arguments_.base !== undefined ? { base: arguments_.base } : {}),
           }),
@@ -111,6 +119,11 @@ async function execute(
       "Catalogue rendered",
       () => compileCatalogue(config),
     );
+    reporter.buildWarnings(compilation.diagnostics);
+    enforceStrictBuildWarnings(
+      compilation.diagnostics,
+      arguments_.strict ?? false,
+    );
     await reportPhase(
       reporter,
       "Writing generated output",
@@ -130,6 +143,11 @@ async function execute(
       "Rendering catalogue",
       "Catalogue rendered",
       () => compileCatalogue(config),
+    );
+    reporter.buildWarnings(compilation.diagnostics);
+    enforceStrictBuildWarnings(
+      compilation.diagnostics,
+      arguments_.strict ?? false,
     );
     await reportPhase(
       reporter,

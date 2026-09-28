@@ -5,6 +5,11 @@ receivers use the installed npm executable and the
 [upload v1 protocol](../../docs/protocol/mokly-upload.md), never deep imports.
 The protocol documents are included in the npm package.
 
+Publish forwards the exporter's primary build diagnostics to its CLI reporter
+before bundle capture and upload. With `--strict`, that callback raises the
+typed build failure at the same boundary, so no archive or HTTP side effect can
+begin.
+
 `run.ts` composes injected Git, export, HTTP and time boundaries. It pins the
 actual checkout HEAD, adds an owned manifest through the exporter, compresses
 its finalized bytes before installation, rechecks HEAD and uploads once. HTTP

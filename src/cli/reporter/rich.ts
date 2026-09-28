@@ -1,5 +1,6 @@
 import type { ManifestV5 } from "@mokly/viewer/data";
 
+import type { BuildDiagnostic } from "../../build/build_warnings.js";
 import { errorMessage } from "../../errors.js";
 import type { ServeReadyReport, WatchReport } from "../../server/reporter.js";
 import { cliErrorPresentation } from "../errors.js";
@@ -76,6 +77,11 @@ export class RichReporter implements CliReporter {
       `  ${this.#success} Baseline ready · ${cacheHit ? "reused" : "rebuilt"} ${commit.slice(0, 8)} (${formatDuration(durationMs)})`,
     );
     this.#servePhase = this.startPhase("Checking changes");
+  }
+
+  buildWarnings(diagnostics: readonly BuildDiagnostic[]): void {
+    for (const diagnostic of diagnostics)
+      this.warning(`${diagnostic.route}: ${diagnostic.message}`);
   }
 
   catalogueReady(manifest: ManifestV5, durationMs: number): void {

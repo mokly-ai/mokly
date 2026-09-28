@@ -2,6 +2,7 @@
 
 import { parseLogicalTarget } from "@mokly/viewer/data";
 
+import type { BuildDiagnostic } from "./build_warnings.js";
 import {
   assertNoChildLinkMarkers,
   parseControlMetadata,
@@ -29,12 +30,21 @@ interface Boundary {
   target: string;
 }
 
+/** Adapted document bytes and any non-fatal placement diagnostics. */
+export interface AdaptedLinkControls {
+  readonly diagnostics: readonly BuildDiagnostic[];
+  readonly html: string;
+}
+
 /** Transform only marked controls, leaving documents without markers untouched. */
-export function adaptLinkControls(html: string, route: string): string {
+export function adaptLinkControls(
+  html: string,
+  route: string,
+): AdaptedLinkControls {
   const metadata = parseControlMetadata(html, route);
   if (metadata?.owners.length)
     throw controlError(route, "contains reserved adaptation metadata");
-  if (!metadata?.markers.length) return html;
+  if (!metadata?.markers.length) return { diagnostics: [], html };
   const { document, duplicateOffsets } = metadata;
   const patches: ControlPatch[] = [];
   let open: Boundary | undefined;
@@ -158,5 +168,5 @@ export function adaptLinkControls(html: string, route: string): string {
     });
   const result = applyControlPatches(html, patches);
   assertNoChildLinkMarkers(result, route);
-  return result;
+  return { diagnostics: [], html: result };
 }

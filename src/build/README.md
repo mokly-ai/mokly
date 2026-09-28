@@ -82,10 +82,14 @@ identities, or Changes projections.
 
 ## Build Warnings
 
-Approved target. The child-control adapter and the compatibility transform
-return non-fatal diagnostics beside their output, and `compile.ts` sorts them
-onto the compilation result as `diagnostics`. They never enter generated files
-or the manifest. See the
+`build_warnings.ts` owns the validated code, route, and single-line message
+record plus deterministic sorting and de-duplication. The child-control adapter
+and compatibility transform return diagnostics beside their output;
+`compile.ts` puts the normalized list on `Compilation`, while
+`document_compiler.ts` retains the requested document's list without reporting
+it. Diagnostics never enter generated files, the manifest, HTTP bytes, or
+timing records. The link-control warning producers land in the next milestone.
+See the
 [build warnings contract](../../docs/protocol/mokly-build-warnings.md).
 
 ## Development
@@ -102,8 +106,8 @@ The example uses derived output: generation writes local ignored HTML and a
 manifest; authored public CSS remains tracked. Committed output and historical
 manifest compatibility are tested with isolated consumers.
 
-- `compile.ts`, `render.ts`, `document_compiler.ts`: exhaustive and requested-view
-  compilation using the same validation boundary.
+- `compile.ts`, `build_warnings.ts`, `render.ts`, `document_compiler.ts`:
+  exhaustive and requested-view compilation using the same validation boundary.
 - `load_graph.ts`, `consumer_entry.ts`, `consumer_resolution.ts`: one consumer
   graph, discovered through `config/entry_discovery.ts`, and its module
   resolution.

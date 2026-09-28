@@ -19,6 +19,7 @@ npx mokly export --out .context/mokly-site
 | `--config <path>` | Use an explicit `mokly.config` file                         |
 | `--base <ref>`    | Git base ref used to find the branch point                  |
 | `--debug-timings` | Report phase timings and catalogue counts on standard error |
+| `--strict`        | Fail before writing when the build reports warnings         |
 
 ## What it produces
 
@@ -33,7 +34,8 @@ requirements are on the Catalogue page for export and hosting.
 
 Export prints the warnings of the build it packages on standard error and
 still exports. With `--strict` it prints them and stops before writing the
-destination.
+destination. The failure says `1 build warning with --strict` for one warning
+and `<n> build warnings with --strict` otherwise.
 
 ## The destination
 

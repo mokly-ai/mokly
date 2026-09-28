@@ -48,6 +48,8 @@ not follow later edits.
 When the complete generated output finishes, Serve prints that generation's
 build warnings once on standard error. Previews you open afterwards are not
 reported again, and Serve never stops for a warning.
+`--strict` is not a Serve option; use it with `build`, `check`, `export`, or
+`publish` when warnings must fail automation.
 
 ## Access
 

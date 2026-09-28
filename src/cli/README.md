@@ -33,9 +33,11 @@ Publish-only modules are loaded after command selection. Build, Check, Export,
 and supervised Serve children therefore do not initialize the upload archiver.
 
 Build warnings are non-fatal compile diagnostics carried on the compilation
-result. `run.ts` prints them through the reporter after the rendering phase
-and, with `--strict`, fails the command afterwards; this is an approved target
-tracked by the build warnings contract.
+result. `run.ts` prints them through the reporter after the rendering phase.
+`build`, `check`, `export`, and `publish` accept `--strict`, which reports every
+warning and then fails before the next write, comparison, staging, or upload
+boundary. Serve refuses the flag. Plain and rich warning lines both use stderr,
+so plain stdout and rich summaries retain their established bytes.
 
 Rich presentation never changes `MoklyError`, generated output, HTTP responses,
 or timing JSON. The supervised Serve child stays plain and forwards diagnostics
