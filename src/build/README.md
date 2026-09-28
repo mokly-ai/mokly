@@ -88,8 +88,9 @@ and compatibility transform return diagnostics beside their output;
 `compile.ts` puts the normalized list on `Compilation`, while
 `document_compiler.ts` retains the requested document's list without reporting
 it. Diagnostics never enter generated files, the manifest, HTTP bytes, or
-timing records. The link-control warning producers land in the next milestone.
-See the
+timing records. `link_control_tiers.ts` owns the explicit ancestor and
+descendant tier sets, feature precedence, and one-line element descriptions
+used by both errors and warnings. See the
 [build warnings contract](../../docs/protocol/mokly-build-warnings.md).
 
 ## Development
@@ -108,6 +109,8 @@ manifest compatibility are tested with isolated consumers.
 
 - `compile.ts`, `build_warnings.ts`, `render.ts`, `document_compiler.ts`:
   exhaustive and requested-view compilation using the same validation boundary.
+- `link_control_tiers.ts`, `link_control_nodes.ts`, `link_controls.ts`: tiered
+  placement validation and source-byte-preserving styled-control adaptation.
 - `load_graph.ts`, `consumer_entry.ts`, `consumer_resolution.ts`: one consumer
   graph, discovered through `config/entry_discovery.ts`, and its module
   resolution.

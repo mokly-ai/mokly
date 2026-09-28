@@ -2,11 +2,10 @@
 
 ## Delivery Status
 
-The warning record, transport, reporters, and strict command boundary are
-implemented. The first producers remain an approved target tracked by the
+The warning record, transport, reporters, strict command boundary, and first
+link-control producers are implemented on the delivery branch. Final delivery
+is tracked by the
 [styled link control ancestor rule plan](../../plans/styled-link-control-ancestor-rule.md).
-Until that milestone lands, existing compilations return an empty diagnostic
-list, so catalogue bytes and terminal output remain unchanged.
 
 ## Scope
 

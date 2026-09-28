@@ -52,13 +52,12 @@ for (const metadata of [
 }
 
 for (const tabindex of ["0", "3", "-1"]) {
-  test(`tabindex ${tabindex} ancestors cannot enclose child links`, () => {
-    assert.throws(
-      () =>
-        adapt(
-          `<div tabindex="${tabindex}">${wrap("<button>Continue</button>")}</div>`,
-        ),
-      /interactive ancestor/,
+  test(`tabindex ${tabindex} ancestors silently allow child links`, () => {
+    assert.match(
+      adapt(
+        `<div tabindex="${tabindex}">${wrap("<button>Continue</button>")}</div>`,
+      ),
+      /<a href="mock:details"/,
     );
   });
 }

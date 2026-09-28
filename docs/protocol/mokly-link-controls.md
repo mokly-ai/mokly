@@ -2,13 +2,10 @@
 
 ## Delivery Status
 
-Implemented, except [Placement Tiers](#placement-tiers), which is an approved
-target tracked by the
+The placement-tier delivery is tracked by the
 [styled link control ancestor rule plan](../../plans/styled-link-control-ancestor-rule.md).
-Until that plan lands, every warning-tier and silent-tier placement below
-fails the build with `has an interactive ancestor` or
-`contains another interactive control`. The original delivery is recorded in
-the [MockLink child controls plan](../../plans/mocklink-child-controls.md).
+The original child-control delivery is recorded in the
+[MockLink child controls plan](../../plans/mocklink-child-controls.md).
 
 ## Authoring Contract
 
@@ -68,16 +65,31 @@ no output. Disabled state does not change an element's tier.
 
 An element is editable when its `contenteditable` attribute is present with
 any value other than `false`. Roles are matched per whitespace-separated
-token. Ancestors are examined from the control outward and descendants in
-document order; the first error stops the build, and otherwise the first
-warning in each direction is reported once per control.
+token. An element takes the highest tier reached by any of its features: error,
+then warning, then silent. Within that tier, the message shows the first
+matching feature in this order: element name, `contenteditable`, `controls`,
+`role`, the first `on*` attribute in authored attribute order, then `tabindex`.
+For example, `<button tabindex="0">` is an error named as `<button>`,
+`<span role="button" onclick="go()">` is an error named with its role, and
+`<div role="menu" tabindex="0">` is a warning named with its role.
+
+Checks run in this order: ancestors, the root contract, then descendants.
+Ancestors are examined from the control outward. The closest error ancestor
+fails the build even when a warning ancestor is closer; without an error, the
+closest warning ancestor produces one diagnostic. Descendants are examined in
+document order. The first error fails the build even when an earlier warning
+was found; without an error, the first warning produces one diagnostic. One
+control can therefore produce at most one ancestor and one descendant warning.
 
 Messages describe the classified element as `<tag>` or
 `<tag attribute="value">`, where the attribute is the one that decided the
-tier: `role`, `contenteditable`, `controls`, or `tabindex`. An `on*` attribute
-is shown by name only, never with its value. Errors keep the existing
-`<route>: MockLink child control` prefix; warning messages omit the route,
-which the [build warning record](./mokly-build-warnings.md#record) carries.
+tier: `role`, `contenteditable`, `controls`, or `tabindex`. Displayed authored
+values collapse each whitespace run to one space, trim leading and trailing
+whitespace, and escape `"` as `&quot;`, so every message remains one line. An
+`on*` attribute is shown by name only, never with its value. Errors keep the
+existing `<route>: MockLink child control` prefix; warning messages omit the
+route, which the [build warning record](./mokly-build-warnings.md#record)
+carries.
 
 ```text
 MockLink child control is inside <a>; move the control outside it
@@ -86,6 +98,7 @@ MockLink child control is inside <button>; one click or key press has two target
 MockLink child control contains <input>; remove the nested interactive element
 MockLink child control contains <span onclick>; remove the inline event handler
 MockLink child control contains <span tabindex="-1">; the link has an extra focus stop
+MockLink child control contains <div role="menu">; the role does not belong inside a link
 ```
 
 A root's existing `href` or `data-nav-href` must either be absent or equal the

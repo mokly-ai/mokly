@@ -91,7 +91,6 @@ for (const body of [
   wrap('<div><span role="switch">Switch</span></div>'),
   wrap("<div><iframe></iframe></div>"),
   wrap("<p>Unsupported root</p>"),
-  `<button>${wrap("<span>Inside button</span>")}</button>`,
   `<div contenteditable="true">${wrap("<span>Editable ancestor</span>")}</div>`,
   wrap(`<div>${wrap("<span>Nested</span>")}</div>`),
   `${start}<div><button>Repaired</div>${end}`,

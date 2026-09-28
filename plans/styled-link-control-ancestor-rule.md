@@ -70,7 +70,16 @@ One helper describes the offending element as `<tag>` or
 <route>: MockLink child control is inside <button>; one click or key press has two targets
 <route>: MockLink child control contains <input>; remove the nested interactive element
 <route>: MockLink child control contains <span tabindex="-1">; the link has an extra focus stop
+<route>: MockLink child control contains <div role="menu">; the role does not belong inside a link
 ```
+
+An element uses the highest tier reached by any feature. Within that tier, the
+displayed feature order is element name, `contenteditable`, `controls`, `role`,
+the first authored `on*` attribute, then `tabindex`. Displayed values collapse
+whitespace, trim their ends, and escape `"` as `&quot;`. Ancestor errors outrank
+closer warnings; otherwise the closest ancestor warning is reported.
+Descendants likewise scan past earlier warnings for the first error and report
+only the first warning when no error exists.
 
 ### Build warning channel
 
@@ -180,39 +189,43 @@ existing catalogue builds with identical bytes and output.
 - [x] Run the CLI, reporter, guides, and build suites, then
       `cargo xtask check`.
 
-## Milestone 3: Tiered link control rules
+## Milestone 3: Tiered link control rules — completed
 
 Split the shared predicate into the tiers above, produce warnings for the
 middle tier, and name the offending element in every message.
 
-- [ ] Add failing regressions in `tests/link_control_metadata.test.ts`: each
+- [x] Close the placement contract gaps for descendant group-role copy,
+      tier/feature precedence, one-line authored values, and exact scan order;
+      keep the authoring guide aligned.
+
+- [x] Add failing regressions in `tests/link_control_metadata.test.ts`: each
       silent ancestor (`tabindex` `0`, `3`, `-1`; `main tabindex="-1"`;
       `details` content; each group role) adapts with no diagnostics; each
       warning ancestor adapts with one diagnostic naming the element; each
       error ancestor fails naming the element; descendant `tabindex` and group
       roles warn; activatable descendants and inline handlers fail naming the
       element or attribute.
-- [ ] Add compile-level regressions in `tests/build_link_controls.test.ts`:
+- [x] Add compile-level regressions in `tests/build_link_controls.test.ts`:
       `<main tabIndex={-1}>` builds with no diagnostics; a `<button>` ancestor
       builds with a sorted diagnostic on the compilation; an `<a>` ancestor
       fails; move the inverted `tabindex` cases to the warning list.
-- [ ] Add a CLI-level test running `build` and `check` through the memory
+- [x] Add a CLI-level test running `build` and `check` through the memory
       terminal on a fixture with one warning: plain stderr line, unchanged
       stdout, exit `0`, and exit `1` with the strict message under `--strict`.
-- [ ] Add a Serve test with `tests/helpers/watched_catalogue.ts` proving the
+- [x] Add a Serve test with `tests/helpers/watched_catalogue.ts` proving the
       warning prints once per generation and not per on-demand request.
-- [ ] Implement the tier sets and predicates in
+- [x] Implement the tier sets and predicates in
       `src/build/link_control_nodes.ts`, moving the sets into a sibling
       module if the file passes 200 lines; add the element-description helper
       shared by errors and warnings; emit diagnostics from
       `src/build/link_controls.ts` and `validateControl`.
-- [ ] Search the repository for the old message text (`interactive ancestor`,
+- [x] Search the repository for the old message text (`interactive ancestor`,
       `another interactive control`) and update every match, including
       `plans/mocklink-child-controls.md` references that describe current
       behavior.
-- [ ] Run the focused suites (`link_control_metadata`, `build_link_controls`,
+- [x] Run the focused suites (`link_control_metadata`, `build_link_controls`,
       `design_links`, CLI, guides), then `cargo xtask check`.
-- [ ] Smoke test in a temporary fixture with `node dist/cli/bin.js`: the three
+- [x] Smoke test in a temporary fixture with `node dist/cli/bin.js`: the three
       formerly failing structures build silently; a `<button>` ancestor prints
       the warning in plain and rich mode and fails under `--strict`; an `<a>`
       ancestor fails with the element named.
