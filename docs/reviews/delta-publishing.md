@@ -1184,3 +1184,27 @@ tests, Prettier and ESLint are clean, and all 170 relative links and anchors in
 the changed Markdown files resolve. Residual risk: by the user's decision
 nothing scans test code for remote-branch reads, and the guard cannot see
 commands in `scripts/`, `xtask` or dynamic commands.
+
+### Seventh Review Follow-up
+
+On 2026-09-28 the user chose option B for finding 2.
+[Delta Publishing](../../plans/delta-publishing.md) Milestones 32–33 record
+the decision and work.
+
+2. **Addressed (option B).** `remoteStateDeletingCommands` and its private
+   shell splitting and tokenizing moved byte-for-byte into
+   `tests/helpers/remote_state_commands.ts`.
+   `tests/ci_workflow_remote_state.test.ts` imports it, keeps its synthetic
+   cases and its workflow reading, and exports nothing. The
+   [CI contract](../protocol/ci-verification.md#deterministic-test-repository-inputs)
+   names the helper beside the guard, and `tests/guides_ci.test.ts` pins that
+   sentence. Parsing all 491 test files with the TypeScript parser finds no
+   top-level export and no import of a test file; the other `export` lines a
+   text search finds are fixture source inside template strings. No lint rule
+   bans exports from test files, because option C was not chosen.
+
+Finding 1 stays open for the user's decision.
+
+Follow-up verification: `cargo xtask check` passed with Node 24.21.0 (unit
+2,646/2,646, browser 860/860, packed-consumer smoke and every static check),
+and the focused guard, CI workflow and guides tests passed 42/42.

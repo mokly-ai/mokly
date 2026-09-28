@@ -308,7 +308,7 @@ test("test repository inputs are deterministic and title types stay fixed", () =
   );
   assert.match(
     verification,
-    /tests\/ci_workflow_remote_state\.test\.ts.*text check.*cannot see commands inside scripts that a step calls/u,
+    /tests\/ci_workflow_remote_state\.test\.ts.*text check.*command scanner in.*tests\/helpers\/remote_state_commands\.ts.*cannot see commands inside scripts that a step calls/u,
   );
   assert.match(verification, /This type list is fixed/u);
   assert.match(verification, /examples in `AGENTS\.md`/u);

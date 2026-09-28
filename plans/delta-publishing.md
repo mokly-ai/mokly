@@ -301,6 +301,24 @@ widening the lint. Milestones 30–31 carry this work.
   with the lint; that finding's plan sentence, sixth-review finding 2,
   fifth-review findings 2, 4 and 5 and second-review findings 3–11 stay open.
 
+## Test Export Decision
+
+On 2026-09-28 the user chose option B for
+[seventh-review](../docs/reviews/delta-publishing.md#seventh-review) finding 2:
+move the workflow guard's command scanner out of its test file into
+`tests/helpers/`. Milestones 32–33 carry this work.
+
+- `tests/helpers/remote_state_commands.ts` owns `remoteStateDeletingCommands`
+  and its private shell splitting and tokenizing, with unchanged behaviour.
+  `tests/ci_workflow_remote_state.test.ts` imports it, keeps its synthetic
+  cases and its workflow reading, and exports nothing. Shared test code lives
+  in `tests/helpers/`, and importing a test file would also run its tests.
+- `ci-verification.md` names the helper beside the guard. No lint rule bans
+  exports from test files; option C was not chosen.
+- This resolves seventh-review finding 2. Seventh-review finding 1,
+  sixth-review finding 2 and finding 3's plan sentence, fifth-review findings
+  2, 4 and 5 and second-review findings 3–11 stay open.
+
 ## Milestone 1: Protocol and guide contract — completed
 
 Define the complete receiver and CLI contract before any code changes. Docs
@@ -1063,6 +1081,33 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       recommendation to `docs/reviews/delta-publishing.md` and report them
       without changing the implementation. Two Low findings are recorded in
       its Seventh Review for the user's decision.
+
+## Milestone 32: Move the remote-state scanner into a helper — completed
+
+- [x] Record the [Test Export Decision](#test-export-decision) and name the
+      helper beside the guard in the "Deterministic Test Repository Inputs"
+      section of [`ci-verification.md`](../docs/protocol/ci-verification.md);
+      pin the sentence in `tests/guides_ci.test.ts`.
+- [x] Move `remoteStateDeletingCommands` and its private shell helpers
+      unchanged into `tests/helpers/remote_state_commands.ts`, and make
+      `tests/ci_workflow_remote_state.test.ts` import it and export nothing.
+- [x] Confirm with the TypeScript parser that no test file under `tests/` or
+      `packages/viewer/tests/` has a top-level export, and that nothing imports
+      a test file.
+
+## Milestone 33: Helper move verification and delivery
+
+- [x] Run the workflow guard, CI workflow and guides tests, Prettier, ESLint
+      and the type check, then `cargo xtask check`; resolve every failure.
+- [x] Record the change in `docs/reviews/delta-publishing.md` against
+      seventh-review finding 2.
+- [ ] After checks pass, `git add -A`, commit with a Conventional Commits
+      title of at most 50 characters, and push the branch.
+- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; append the
+      numbered, severity-rated findings with lettered options and a
+      recommendation to `docs/reviews/delta-publishing.md` and report them
+      without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 
