@@ -4,6 +4,7 @@ import { validEntrySource } from "../helpers/fixture.js";
 import { FULL_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.js";
 import { createPreviewComparisonFixture } from "../helpers/preview_comparison_fixture.js";
 
+import { expectPresentedPane, PANE_SOURCE } from "./comparison_actions.js";
 import { focusDesignLink } from "./design_test_helpers.js";
 import { test } from "./ordinary_preview_fixture.js";
 import { servePreviewFixture, type PreviewFixture } from "./preview_fixture.js";
@@ -148,7 +149,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await expect(page).toHaveURL(/\/view\/screens\/example-welcome$/);
   });
 
-  test(`${viewport}: published comparison links stay inside the isolated current snapshot`, async ({
+  test(`${viewport}: published comparison panes stay read-only`, async ({
     page,
   }) => {
     await page.goto(`${comparisonPreview.url}/view/screens/home`);
@@ -157,40 +158,61 @@ for (const viewport of ["mobile", "desktop"] as const) {
       .getByRole("button", { name: "Side by side", exact: true })
       .click();
     const iframe = page.locator("[data-diff-stage] iframe").last();
-    await expect(iframe).toHaveAttribute("sandbox", "");
+    await expectPresentedPane(iframe);
+    const source = await iframe.getAttribute(PANE_SOURCE);
     const frame = iframe.contentFrame();
     const next = frame.getByRole("link", { name: "View details", exact: true });
     await expect(next).toHaveAttribute(
       "href",
       `./details.${viewport}.html#details`,
     );
-    const snapshot = await (await iframe.elementHandle())?.contentFrame();
-    if (!snapshot) throw new Error("The current snapshot frame is missing");
-    await snapshot.waitForLoadState("load");
-    await iframe.scrollIntoViewIfNeeded();
-    await Promise.all([
-      snapshot.waitForURL(
-        new RegExp(`/details\\.${viewport}(?:\\.html)?#details$`),
-        { waitUntil: "load" },
-      ),
-      next.click(),
-    ]);
-    await expect(page).toHaveURL(`${comparisonPreview.url}/view/screens/home`);
-    await expect(frame.locator("main#details")).toBeVisible();
-    await Promise.all([
-      snapshot.waitForURL(new RegExp(`/home\\.${viewport}(?:\\.html)?$`), {
-        waitUntil: "load",
-      }),
-      frame.getByRole("link", { name: "Return home", exact: true }).click(),
-    ]);
-    await expect(frame.locator("h1")).toHaveText("Current home");
-    await expect(page.locator("#mb-main h2")).toHaveText("Home");
+    const address = page.url();
+    const expectPresentation = async () => {
+      await expect(page).toHaveURL(address);
+      await expect(page.locator("#mb-main h2")).toHaveText("Home");
+      await expect(frame.locator("h1")).toHaveText("Current home");
+      await expect(iframe).toHaveAttribute(PANE_SOURCE, source!);
+      expect(
+        await iframe.evaluate(
+          (element: HTMLIFrameElement) => element.contentDocument?.URL,
+        ),
+      ).toBe("about:srcdoc");
+    };
+    await next.click();
+    await expectPresentation();
+    await frame.getByRole("button", { name: "Send", exact: true }).click();
+    await expectPresentation();
+
+    const viewports = page.locator(
+      "[data-diff-stage] [data-comparison-viewport]",
+    );
+    await expect(viewports).toHaveCount(2);
+    await frame.getByRole("link", { name: "Jump to end", exact: true }).click();
+    await expect
+      .poll(() => viewports.last().evaluate((element) => element.scrollTop))
+      .toBeGreaterThan(0);
+    const shared = await viewports
+      .last()
+      .evaluate((element) => element.scrollTop);
+    for (const pane of await page.locator("[data-diff-stage] iframe").all())
+      await expect
+        .poll(() =>
+          pane
+            .contentFrame()
+            .locator("html")
+            .evaluate((root) => root.ownerDocument.scrollingElement!.scrollTop),
+        )
+        .toBe(shared);
+    expect(
+      await viewports.first().evaluate((element) => element.scrollTop),
+    ).toBe(shared);
+    await expectPresentation();
   });
 }
 
 function linkEntrySource(changed: boolean): string {
   const source = validEntrySource({
-    body: `<h1>${changed ? "Current" : "Previous"} home</h1><a href="mock:details#details">View details</a>`,
+    body: `<h1>${changed ? "Current" : "Previous"} home</h1><a href="mock:details#details">View details</a><a href="#home-end">Jump to end</a><form><input aria-label="Query" name="q" /><button type="submit">Send</button></form><div style={{ height: 2000 }}>Spacer</div><p id="home-end">End</p>`,
   });
   const details =
     '<main id="details"><h1>Details</h1><a href="mock:home">Return home</a></main>';

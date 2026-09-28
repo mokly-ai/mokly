@@ -62,7 +62,8 @@ closure. Copy accepted v7 before/after documents byte-for-byte to paths from
 [artifact path contract](./mokly-artifact-paths.md). Baseline reads use the pinned
 Git commit and bounded batches of regular files. Current reads retain the public
 file and source-confinement rules. Resource hints not read by classification are
-validated and captured on demand. Frames retain their script-disabled sandbox.
+validated and captured on demand. Panes present those documents without script
+permission under the [comparison pane contract](./mokly-comparison-panes.md).
 
 The stable request redirects to
 `/__mokly/diffs/__generations/selected-<uuid>/review.json`. JSON and snapshot

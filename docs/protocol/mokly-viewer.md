@@ -374,9 +374,9 @@ startup assets establish them before paint, and the shell adopts them before
 hydration. React owns the resulting shell state and render thereafter, while
 the appearance controller retains preference and system-theme listening.
 Frames remain static documents in sandboxed iframes. Hydration reaches inside
-only the viewer-owned, same-origin `srcdoc` used for a historical removed
-preview, where it installs and restores the read-only guard. Current and
-comparison documents retain their existing adapter and sandbox boundaries.
+only viewer-owned removed-preview and [comparison-pane](./mokly-comparison-panes.md)
+`srcdoc`, installing their guard and scrolling controller.
+Current documents retain their existing adapter and sandbox boundaries.
 
 Shell state is one store scoped to a mounted viewer:
 
@@ -394,9 +394,9 @@ Shell state is one store scoped to a mounted viewer:
   [disclosure persistence contract](./mokly-disclosure-persistence.md). Details
   and split-width choices persist per served origin; the drawer and tag picker
   panel reset on reload.
-- **Scroll** is tracked per `data-mokly-scroll` region and saved into the
-  history entry for Back/Forward restoration; route-change focus never
-  overrides a restored position.
+- **Scroll** is tracked per shell `data-mokly-scroll` region for history;
+  comparison-document regions and the persisted or mount-scoped Scroll together
+  choice follow their [scrolling contracts](./mokly-comparison-scrolling.md).
 - **Workspace** state (props under edit, inspector tab and pane size, active
   pick, highlight scope) lives with the mounted view and is discarded on route
   change or source replacement.
@@ -481,10 +481,10 @@ The viewer knows no cloud tenant, auth, comment model, deployment provider or
 host route layout. Marker content is host-owned; hosts own surrounding product
 UI and data. Viewer network
 activity is limited to its configured source and validated public resources or
-pinned comparisons from it. That set includes historical HTML documents beneath
-the advertised generation's `snapshots/before/` directory when a removed entry
-is selected; it adds no analytics, discovery, remote fonts, or background
-comparison requests. Existing authored external fragment resources retain
+pinned comparisons from it: historical `before` documents for a removed entry,
+plus permitted `before` and `after` pane documents when a
+comparison is selected; it adds no analytics, discovery, remote fonts, or
+background comparison requests. Existing authored external fragment resources retain
 export's resource policy. Serve owns its existing private update/control
 transport outside this public fetch boundary. No cookies or ambient credentials
 are read/written, and no `window.top` access occurs. Embedding never commandeers

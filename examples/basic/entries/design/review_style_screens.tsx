@@ -47,7 +47,7 @@ function StyleComparison({
               address="example.test/welcome"
               viewport={previewViewport}
             >
-              <MiniWelcome compact={previewViewport === "mobile"} />
+              <MiniWelcome compact={previewViewport === "mobile"} inert />
             </FramedShot>
           </Pane>
           <Pane label="Current" side="after">
@@ -55,7 +55,11 @@ function StyleComparison({
               address="example.test/welcome"
               viewport={previewViewport}
             >
-              <MiniWelcome compact={previewViewport === "mobile"} restyled />
+              <MiniWelcome
+                compact={previewViewport === "mobile"}
+                inert
+                restyled
+              />
             </FramedShot>
           </Pane>
         </CompareGrid>

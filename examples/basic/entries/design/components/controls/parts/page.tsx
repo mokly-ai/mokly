@@ -78,7 +78,7 @@ export function ControlsPage({
           ? COMPONENT_NAVIGATION.action.variants[1].id
           : COMPONENT_NAVIGATION.action.variants[0].id
       }
-      comparison={state === "comparison"}
+      mode={state === "comparison" ? "side-by-side" : "current"}
       status={state === "comparison" ? actionComparison.status : "unmodified"}
       scenario={state === "comparison" ? "component" : "all"}
       viewport={viewport}

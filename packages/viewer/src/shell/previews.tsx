@@ -4,7 +4,7 @@
 
 import type { RemovedEntryPreview } from "../catalogue/types.js";
 import { entryRoute } from "../navigation/routes.js";
-import type { PreviewPresentation } from "../previews/presentation.js";
+import type { SnapshotPresentation } from "../previews/presentation.js";
 import type { LoadedPreview, PreviewScreenView } from "../previews/request.js";
 
 import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
@@ -83,7 +83,7 @@ function MissingView(props: { viewport: "desktop" | "mobile" }) {
 
 function ScreenFrame(props: {
   data: RemovedPreviewData;
-  presentation: PreviewPresentation;
+  presentation: SnapshotPresentation;
   scheme: "dark" | "light";
   view: PreviewScreenView;
   viewport: "desktop" | "mobile";
@@ -126,7 +126,7 @@ export function ReadyPreview(props: {
   colorScheme: "dark" | "light";
   data: RemovedPreviewData;
   loaded: LoadedPreview;
-  presentations: ReadonlyMap<string, PreviewPresentation>;
+  presentations: ReadonlyMap<string, SnapshotPresentation>;
   retry(): void;
   viewport: "both" | "desktop" | "mobile";
 }) {
@@ -184,9 +184,9 @@ export function ReadyPreview(props: {
 }
 
 function presentationFor(
-  presentations: ReadonlyMap<string, PreviewPresentation>,
+  presentations: ReadonlyMap<string, SnapshotPresentation>,
   address: string,
-): PreviewPresentation | undefined {
+): SnapshotPresentation | undefined {
   return presentations.get(address);
 }
 

@@ -201,15 +201,25 @@ test("every frame carries its own preview color-scheme", () => {
 test("a comparison canvas takes an opaque base from its preview scheme", () => {
   const css = SHELL_CSS.replace(/\s+/g, " ");
   assert.ok(
-    css.includes(".mb-pane-doc { background: var(--mbk-screen-bg); }"),
-    "a comparison canvas has no opaque base",
+    css.includes(
+      ".mb-pane-doc { background-color: var(--mbk-screen-bg); " +
+        "background-image: linear-gradient( var(--mbk-comparison-canvas, transparent), " +
+        "var(--mbk-comparison-canvas, transparent) ); }",
+    ),
+    "a comparison canvas has no opaque base under its document's canvas",
   );
   assert.ok(
     css.includes(
-      '.mb-pane-doc[data-preview-color-scheme="dark"] ' +
-        "{ background: var(--mbk-dark-screen-bg); }",
+      '[data-preview-color-scheme="dark"] .mb-pane-doc ' +
+        "{ background-color: var(--mbk-dark-screen-bg); }",
     ),
     "a dark comparison canvas keeps the light base",
+  );
+  assert.ok(
+    css.includes(
+      '[data-preview-color-scheme="dark"] .mb-viewport { color-scheme: dark; }',
+    ),
+    "a dark comparison viewport keeps light scrollbars",
   );
 });
 

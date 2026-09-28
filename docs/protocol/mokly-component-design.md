@@ -13,17 +13,25 @@ extend the [shell design](./mokly-shell-design.md) and depict the
 [component explorer contract](./mokly-component-explorer.md). The former
 consumer's previous-version state is implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).
+The stacked component comparisons depict the implemented
+[comparison pane contract](./mokly-comparison-panes.md): the explorer holds a
+saved variant's two versions in one bordered frame whose viewport scrolls both
+as one. Their comparison bands also depict the implemented Scroll together
+switch of the
+[Scroll together contract](./mokly-comparison-scroll-together.md#reader-control).
 
 ## Owning Catalogue
 
 Source lives under `examples/basic/entries/design/components/`; generated
-artboards live under `examples/basic/generated/design/components/`. The existing
+artboards live under `examples/basic/generated/screens/` at their derived
+`screens/<id>.<viewport>.html` paths. The existing
 Pages → Design → Mokly design → Component explorer folder reaches every
 screen.
 The canonical `overview` screen shows a component page, followed by links to the
 owning child pages outside the artboard. The original Pages, Inspection, and States child folders are gallery
 indexes, each with at most five direct owning screens; inspection also links a nested
-selection gallery with two owning screens. The Inspector gallery adds two closed
+selection gallery with two owning screens, and Pages links a nested Stacked
+comparisons gallery with three. The Inspector gallery adds two closed
 states. Controls has one canonical parent screen and Editing, States, and
 Published galleries with four, four, and two screens. The linked inspector and
 controls contracts own their additional entry inventories. Every screen has a separate
@@ -34,6 +42,9 @@ mobile component and desktop component; there are no new user-flow pages.
 | `design-component-overview`                 | Action page, default variant, props, and Used by          |
 | `design-component-variants`                 | Disabled saved variant                                    |
 | `design-component-comparison`               | Saved variant before/current comparison                   |
+| `design-component-overlay`                  | Saved variant Overlay in one bordered frame               |
+| `design-component-difference`               | Saved variant Difference in one bordered frame            |
+| `design-component-overlay-tall`             | Component taller than its frame, part-way down in Overlay |
 | `design-component-affected`                 | One changed component and two affected screens            |
 | `design-component-toolbar`                  | Component consuming Action                                |
 | `design-component-help`                     | Invoked component with no visible region                  |
@@ -55,7 +66,7 @@ mobile component and desktop component; there are no new user-flow pages.
 Each entry's route is `screens/<id>.html` under the
 [derived route rule](./mokly-authoring.md#derived-routes); its standalone views
 insert `.mobile` or `.desktop` before `.html`, and gallery membership is the
-entry's `navPath`. All thirty-three component
+entry's `navPath`. All thirty-six component
 screens opt into light documents, matching the existing shell mockups. Their
 depicted preview caption names the artboard's own scheme, and the toolbar has
 no scheme switch: the catalogue's one Appearance control, drawn in their top
@@ -67,7 +78,15 @@ depictions of shell controls do not implement the separate runtime inspector.
 The shared shell retains the [existing design navigation](./mokly-design-links.md)
 for brand, home breadcrumb, and the canonical mobile drawer. Component artboards
 select their own typed navigation state; they never inherit Welcome's tag,
-scheme, inspector, or comparison transitions. Their viewport dropdown and highlight switch work through native form state and CSS. Comparison depictions retain native button focus and pressed states only in eligible change scenarios.
+scheme, inspector, or comparison transitions. Their viewport dropdown and highlight switch work through native form state and CSS. Comparison depictions retain native button focus and pressed states only in eligible change scenarios. In Side by side, Overlay and Difference the band also draws the Scroll together switch, on, after the mode control and before Refresh, as the [shell design](./mokly-shell-design.md#in-place-comparisons) specifies; it toggles in place.
+Action's changed Default variant is one comparison family: its mode control
+links Current to `design-component-affected`, Side by side to
+`design-component-comparison`, and Overlay and Difference to
+`design-component-overlay` and `design-component-difference`, while the
+selected mode stays a pressed button. Every other eligible depiction, including
+the tall Checklist, keeps all four modes as buttons. No mode control links into
+the Checklist, because it depicts another component; readers reach it beside
+Overlay and Difference in its owning Stacked comparisons gallery.
 The shared selection control preserves native anchor semantics when an authored
 transition exists. Existing Browse and Changes artboards retain their non-link
 spans for unsupported controls.
@@ -87,6 +106,17 @@ row under the [variant contract](./mokly-variants.md); the strip links to them.
 The viewport dropdown shows the mobile canvas, desktop canvas, or both for the selected variant. Mobile context is capped at 390px; desktop context uses the available width with a 720px minimum inside the scrolling preview pane. Canvases have a 10px radius, a light
 border, a small context caption, and a centered component, without device chrome.
 The same `ActionExample` and `ToolbarExample` are reused in consuming screens.
+
+Side by side draws one canvas per version under Before and Current labels.
+Overlay and Difference draw one bordered frame at the same canvas height, its
+caption above the viewport both versions share: Current sits on top at half
+opacity, or blends by difference over the opaque Before layer, and both versions
+always share one scroll position. The Stacked comparisons gallery also depicts
+a synthetic Checklist taller than that frame, part-way down with the frame's
+scrollbar drawn. Its Current version rewords one step, and its fixed-height
+rows keep the drawn position independent of text wrapping. Its own one-entry
+Changes scenario lists only Checklist, which no screen uses yet, so its
+inspector opens on Details, where the comparison facts live.
 
 The inspector separates Details (description/source/references), Nested components (present only when the component has children), Props/Controls (supplied values or declared editable fields), and
 Usage (Used by plus Affected screens). Only one panel is open at a time. Click
@@ -169,9 +199,13 @@ small gap above an intact rounded outline, shared by all three region layouts.
 ## Verification And Maintenance
 
 Use the real generator; never hand-edit generated HTML. Six shared component
-stylesheets are hand-authored public inputs, confined to `design/components/**`.
-Route-scoped stylesheet matching links them only from the thirty-three component design entries; Changes follows those rendered resource references. The folder marker supplies inherited dependencies to its leaves for comparison evidence. The controls stylesheet is scoped
-further to its eleven owning entries, with a matching dependency and watch rule. Keep them out of the global
+stylesheets are hand-authored public inputs, scoped to the
+`screens/design-component-*.html` documents.
+Route-scoped stylesheet matching links them only from the thirty-six component design routes;
+Changes follows those rendered resource references. The folder
+marker supplies inherited dependencies to its leaves for comparison evidence.
+The controls stylesheet is scoped further to its eleven owning entries, with a
+matching dependency and watch rule. Keep them out of the global
 `review.sharedImpact` list; watched stylesheet rules still reload their edits.
 Child folder dependency lists replace inherited lists; Controls explicitly
 spreads the shared stylesheet dependency set before adding its own stylesheet.
@@ -183,9 +217,15 @@ Changes membership for the component design entries, excluding unrelated design 
 product screens, and their use case.
 
 Run `npm run example:build`, `npm run example:check`, and
-`npx playwright test tests/browser/component*.spec.ts`. The browser suite
-opens every artboard directly from disk, checks links, selection semantics,
-counts, missing states, responsive overflow, and mask geometry. Visually inspect
+`npx playwright test tests/browser/component*.spec.ts tests/browser/design_component_stacks.spec.ts`.
+The browser suite opens every artboard directly from disk, checks links,
+selection semantics, counts, missing states, responsive overflow, mask
+geometry, and the stacked frames' layers, blending, single scroller and drawn
+offset; `tests/design_component_stacks.test.ts` pins their structure,
+`tests/design_component_comparison_states.test.ts` ties every comparison
+caption to its recorded change and pins the Checklist's Changes, and
+`tests/design_screen_counts.test.ts` keeps the documented screen counts
+aligned with the catalogue. Visually inspect
 all generated mobile and desktop pages, including both selected-instance states.
 Run `cargo xtask check` before committing and pushing. After the push, use the
 [implementation review prompt](../implementation-review-prompt.md) against

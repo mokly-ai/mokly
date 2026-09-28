@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { COMPONENT_NAVIGATION } from "../../parts/component_nav_data.js";
+import type { ComparisonMode } from "../../parts/destinations.js";
 import { ScreenHead, type ArtboardViewport } from "../../parts/shell.js";
 
 import type { ChangeStatus } from "./comparison_fixtures.js";
@@ -13,7 +14,7 @@ import { PreviewWorkspace } from "./workspace.js";
 /** One component-page shell for saved examples and editable controls designs. */
 export function ComponentLayout({
   children,
-  comparison = false,
+  mode = "current",
   status = "unmodified",
   design,
   entry,
@@ -24,7 +25,8 @@ export function ComponentLayout({
   viewport,
 }: {
   children: (viewport: ArtboardViewport) => ReactNode;
-  comparison?: boolean;
+  /** The selected comparison mode; Current when nothing is compared. */
+  mode?: ComparisonMode | undefined;
   status?: ChangeStatus;
   design: ComponentDesignDestination;
   entry: ComponentEntryMetadata;
@@ -51,7 +53,7 @@ export function ComponentLayout({
         action={<ViewControls viewport={viewport} />}
         comparisons={status === "changed" || status === "removed"}
         status={status}
-        comparisonMode={comparison ? "side-by-side" : "current"}
+        comparisonMode={mode}
       />
       {variants}
       <PreviewWorkspace

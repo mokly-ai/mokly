@@ -1,8 +1,7 @@
 import {
-  MAX_PREVIEW_DOCUMENT_BYTES,
-  createPreviewPresentationLoader,
+  MAX_SNAPSHOT_DOCUMENT_BYTES,
+  createSnapshotPresentationLoader,
 } from "../../packages/viewer/src/previews/presentation.js";
-import type { LoadedPreview } from "../../packages/viewer/src/previews/request.js";
 
 interface PresentationHarnessOptions {
   bodyBytes?: number;
@@ -65,16 +64,12 @@ function response(options: PresentationHarnessOptions): Response {
 }
 
 window.previewDocumentAddress = snapshotAddress;
-window.previewDocumentLimit = MAX_PREVIEW_DOCUMENT_BYTES;
+window.previewDocumentLimit = MAX_SNAPSHOT_DOCUMENT_BYTES;
 window.loadPreviewPresentation = async (options = {}) => {
   let credentials: RequestCredentials | undefined;
-  const loaded: LoadedPreview = {
-    content: { kind: "page", url: snapshotAddress },
+  const loader = createSnapshotPresentationLoader(
     generation,
-    url: `${generation}review.json`,
-  };
-  const loader = createPreviewPresentationLoader(
-    loaded,
+    ["before"],
     { kind: "pinned", comparisonUrl: `${generation}review.json` },
     {
       baseUrl: generation,

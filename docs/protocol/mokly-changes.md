@@ -207,13 +207,11 @@ in Serve.
 
 Diffs render inside the existing main region with the catalogue, title, details,
 viewport, and scheme controls retained. Both viewports are supported. Snapshot
-frames remain sandboxed without scripts or catalogue navigation privileges.
-Overlay places the current snapshot at 50% opacity above its baseline;
-Difference uses CSS difference blending. These are document comparisons, not
-pixel measurements. They must never display invented pixel counts or percentages.
-Missing current views for removed component variants remain explicit and legible in every mode.
-Comparison frames retain matching dimensions; individual browser expansion is
-available only in Current so it cannot misalign an overlay.
+frames follow the [pane](./mokly-comparison-panes.md) and
+[scrolling](./mokly-comparison-scrolling.md) contracts: script-disabled,
+device-sized documents with inert links and aligned regions. Overlay and
+Difference use one chrome; Side by side uses two. Missing panes stay explicit,
+dimensions match, and only Current offers expansion or pixel measurements.
 
 Loading, unavailable, and failed comparison states use plain product copy.
 Failure offers a retry. All and Changes share the same comparison eligibility.
@@ -272,9 +270,9 @@ writes to a running development server's configured comparison directory.
 
 ## Design references
 
-The synthetic mobile/desktop examples `design-changes-current` and
-`design-changes-overlay` retain stable ids. [Shell design](./mokly-shell-design.md)
-and [runtime behavior](./mokly-runtime.md) own their surrounding contracts.
+`design-changes-*` and the stacked [component designs](./mokly-component-design.md)
+depict this behavior. The [pane](./mokly-comparison-panes.md#design-references)
+and [shell](./mokly-shell-design.md) contracts own each state.
 
 ## Comparison engine
 
@@ -340,10 +338,11 @@ binary fonts and images, while explicit HTTP(S)/data resources remain external.
 Root-absolute, protocol-relative, and other scheme-qualified resource URLs are
 not portable in an isolated snapshot and fail comparison instead of being
 silently omitted.
-Current-worktree resources and every base dependency must be regular public
-files, never protected authoring inputs. Pane documents run in script-disabled
-sandboxes that confine navigation to the pane. Accepted v7 documents are copied
-byte-for-byte; ignore normalization changes classification only.
+Current resources and every base pane or transitive dependency must be regular
+public files, never protected authoring inputs. Pane bytes stay unchanged on
+disk and in artifacts; the viewer's script-disabled
+[presentation](./mokly-comparison-panes.md#presentation) applies only in
+memory.
 
 `review.json` is the normative machine-readable result. Its screen records are:
 

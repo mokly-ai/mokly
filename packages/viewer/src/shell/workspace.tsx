@@ -230,13 +230,12 @@ export function ComponentWorkspace({
           ) : data.comparisons ? (
             <DiffScreen
               effectiveColorScheme={resolvedView.colorScheme}
-              component={entry.kind === "component"}
+              entryId={variantId ?? entry.id}
+              entryKind={entry.kind}
               eligible={presentation.comparisonEligible}
               onComparisonChange={setLoadedComparison}
               onModeChange={setComparisonMode}
               {...(data.component ? { owner: data.component.id } : {})}
-              route={entry.id}
-              {...(variantId ? { variantId } : {})}
             >
               {stage}
             </DiffScreen>

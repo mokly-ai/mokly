@@ -41,6 +41,30 @@ rather than rebuilding the catalogue. Changing the viewport, the scheme or the
 comparison mode renews the snapshots before using them, and an expired
 comparison is reacquired for you.
 
+Overlay and Difference show both versions inside one frame, and Side by side
+shows one frame per version. Pages and scrolling panels move together by
+default. Each version keeps the size of the device, so full-height sections,
+fixed bars, and sticky headers look just as they do in Current. The wheel,
+touch, scroll keys, and anchors use the panel you are working in before moving
+the whole page.
+
+Use **Scroll together** after the comparison modes to unlink or relink the
+versions. Turning it off leaves every page and panel where it is. In Side by
+side, each version then scrolls independently. Overlay and Difference still
+have one page scrollbar because their versions share one frame, but their
+panels can move apart. Turning it on again aligns the other version with the
+one you scrolled last.
+
+Mokly pairs the same panel across versions automatically. If an edit moves the
+panel or changes most of its wording, keep the same `id` on it in both versions
+or give it the same `data-mokly-scroll` name. When one version's page or panel
+is shorter, it stops at its own end while the other can continue; Mokly never
+stretches or moves content inside the screen to hide that difference.
+
+Links and forms inside a comparison do nothing. An anchor reveals its target in
+that pane, and the other version follows while Scroll together is on. Compare a
+linked screen through the catalogue, where it has its own comparison.
+
 ## Variants and views
 
 A screen or component variant is its own row in Changes and counts on its own.

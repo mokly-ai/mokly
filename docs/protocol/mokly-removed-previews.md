@@ -205,7 +205,7 @@ ready. Its URL must be on the configured source origin beneath
 `snapshots/before/` of the generation established by the accepted comparison or
 page-preview response. The GET carries the mount's abort signal and uses the
 comparison credential rule: `credentials: "omit"` for pinned delivery and
-`credentials: "same-origin"` for live delivery.
+`credentials: "same-origin"` for live delivery. Comparison loaders also accept `snapshots/after/`; removed previews never do.
 
 Accept a response only when its final URL is the requested snapshot address
 or that address with only its final `.html` suffix removed, the
@@ -243,8 +243,8 @@ provider-normalized final URL. A `srcdoc` document inherits the embedding docume
 Policy; an embedded host must allow the artifact origin and historical inline
 styles for resources the previous version needs.
 
-On each load, the parent installs the guard in the viewer-owned document. It
-finds links through the event's composed path; cancels every click, auxiliary
+From document commit, and again after replacement and load, the parent installs
+the guard before slow resources can leave links active. It finds links through the event's composed path; cancels every click, auxiliary
 click, and Enter activation regardless of target or download attributes; and
 cancels form submission. When a link has a nonempty fragment and its resolved
 URL without that fragment equals the snapshot address, the guard scrolls the
@@ -252,9 +252,8 @@ matching target into view. Navigation remains cancelled, so `:target` does not
 apply. Space keeps its scrolling default. If a later load is not the recorded
 presentation document, the parent reapplies the accepted `srcdoc` and guard.
 
-These edits exist only in the in-memory presentation. Captured snapshot files,
-packaged artifacts, comparison bytes, and comparison-pane documents stay
-byte-identical.
+These edits exist only in memory; snapshot, artifact, comparison, and pane
+bytes stay identical.
 
 The served-then-loading sequence is an accepted first-paint tradeoff: while the
 browser module downloads, the stage can briefly show the honest unavailable
@@ -287,4 +286,5 @@ removes meta refresh; folds the first consumer base into the effective base;
 preserves doctypes while quirks and standards documents both render in
 no-quirks mode; owns same-document anchor scrolling; restores presentation
 after frame navigation; and loads historical resources in an embedded host
-with a strict Content Security Policy.
+with a strict Content Security Policy. Presentation-follower tests prove the
+commit-time guard, including comparison panes with slow resources.

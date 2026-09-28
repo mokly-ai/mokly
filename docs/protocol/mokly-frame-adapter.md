@@ -241,13 +241,12 @@ the receiver, so an unenhanced document continues to use its portable native
 links.
 
 The sandbox remains exactly `allow-same-origin`; consumer scripts stay disabled.
-Historical [removed previews](./mokly-removed-previews.md) do not enter this
-adapter. The viewer fetches and presents them as viewer-origin `srcdoc`
-documents in separate frames with the same sandbox, so its parent guard enforces
-read-only links and forms in every host.
+Historical [removed previews](./mokly-removed-previews.md) and
+[comparison panes](./mokly-comparison-panes.md) bypass this adapter as guarded,
+viewer-origin `srcdoc`; panes add only their documented scrolling behavior.
 Existing local memory previews retain their authenticated private transport.
 No inspector handshake, extra badge, pick control, or visible affordance appears
-locally. Unsupported/unowned documents and comparison snapshots gain no privilege.
+locally. Panes gain no inspection, geometry, markers, or navigation messages.
 
 ## Cross-Origin Mount And Handshake
 

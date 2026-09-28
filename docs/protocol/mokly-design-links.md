@@ -2,18 +2,16 @@
 
 ## Delivery Status
 
-Implemented with `MockLink`/`MockLink asChild` across the Browse, Changes, and
-example screens. The [component inventory](./mokly-component-design.md) extends
-the same state contract, including [removed previews](./mokly-removed-previews.md).
-Both families share icon inspector tabs and native viewport controls; catalogue
-checks cover their links and inventory.
+Implemented in the 63 Browse/Changes design screens and two example screens with
+`MockLink`/`MockLink asChild`. Those 63 Browse/Changes designs retain canonical
+links; [components](./mokly-component-design.md) and
+[removed previews](./mokly-removed-previews.md) extend the contract.
 
 ## Scope And Ownership
 
-Make the catalogue under `examples/basic/entries/design/` a navigable prototype
-using the existing [catalogue navigation](./mokly-navigation.md) and
-[styled control](./mokly-link-controls.md) contracts. Include the basic
-example's two prominent buttons as clear navigation examples. The package API,
+The catalogue under `examples/basic/entries/design/` is a navigable prototype
+under the [navigation](./mokly-navigation.md) and
+[control](./mokly-link-controls.md) contracts. The package API,
 server, trusted frame adapter, sandbox, and actual shell behavior stay governed
 by their existing contracts; this adoption requires no new runtime capability.
 
@@ -197,13 +195,11 @@ its generated scheme. The depicted Appearance selector has no authored transitio
 
 ## Scheme, Comparison, And Tag States
 
-The catalogue authors no scheme pairs and no artboard depicts a scheme control
-in its screen header, which carries the viewport control alone. Standalone
-Browse holds one Appearance setting, so every artboard that draws a top bar
-draws the depicted Appearance selector in it, which has no authored
-transitions. `design-browse-screen`, `design-browse-details-screen`, the Welcome comparison
-family (`design-changes-current`, `design-changes-overlay`,
-`design-review-changed`, `design-review-difference`) and the appearance entries
+No screen header depicts a scheme control; standalone Browse owns one
+Appearance selector in the top bar. `design-browse-screen`,
+`design-browse-details-screen`, the Welcome comparison
+family (`design-changes-*`, `design-review-changed`, and
+`design-review-difference`) and the appearance entries
 render in Light and in Dark instead, and the outer Appearance control moves
 between those two generated views of the same entry. A link out of a dark
 fragment resolves to the target's dark fragment wherever one exists, and every
@@ -227,6 +223,8 @@ Welcome states; Browse and tag-picker states omit them. Each comparison destinat
 its Current action returns to `design-changes-current`. Current is already
 selected in `design-changes-current`, so it has no
 transition there. Returning to All uses the navigation table above.
+The scrolling `design-changes-*` examples keep those destinations; their
+controls navigate nowhere and pane links are inert.
 
 Added Details shows its Current preview without comparison modes. Removed
 Farewell, Survey, Invite, Archive, and Timeline show their previous version,
@@ -280,6 +278,7 @@ grips, and collapse-all are not catalogue destinations in this change. Keep
 their existing visual depictions and document their non-interactive status
 outside the rendered artboard; do not add fake hrefs, clipboard-success copy,
 or scripts. Existing native `details` disclosures may keep working locally.
+The Scroll together checkbox toggles in place and opens no destination.
 The real outer shell continues to provide its implemented runtime controls.
 
 ## Basic Example And Portability
@@ -296,7 +295,7 @@ viewports and light/dark generation without changing fixture ids.
 All design and example links must retain portable relative hrefs on disk and
 authenticated markers in served/deployed Browse. Standalone activation opens
 the matching generated viewport with the existing scheme fallback. Real
-comparison snapshots retain their existing portable, frame-owned link behavior;
+comparison snapshots keep portable links that the pane guard cancels;
 design artboards depicting comparisons are ordinary Browse screens and use
 normal enhanced navigation. Do not equate these two contexts.
 

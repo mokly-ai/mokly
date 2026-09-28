@@ -16,7 +16,8 @@ ancestor disclosure, conditional filter clearing, nearest-row scrolling, the
 `tag:` search term, the details inspector's tag chips, the search field's tag
 control with its picker panel, the mark-only narrow brand, and the top bar's
 stacking above the navigation drawer scrim. Every state recorded here is
-implemented. The [React Browse shell plan](../../plans/react-browse-shell.md)
+implemented, including aligned comparison scrolling. The
+[React Browse shell plan](../../plans/react-browse-shell.md)
 changes how the shell is rendered and enhanced, not how it looks or behaves:
 this design, its tokens, dimensions, responsive rules and the design catalogue
 remain binding on the hydrated React implementation, and no mockup changes
@@ -25,7 +26,7 @@ are part of that plan. The separate
 mockups whose runtime-backed states are identified in their own contract.
 
 Auto/Light/Dark interface appearance is designed in the
-`design/browse/appearance/` mockups and specified by the
+`design-appearance-*` mockups and specified by the
 [semantic palette](./mokly-viewer-palette.md). The shell now carries that
 palette in both appearances, selected on a viewer root, and an embedded host
 chooses one with `theme`. A standalone document carries the delivered Appearance
@@ -37,6 +38,11 @@ device/comparison controls. Removed pages are flat Changes rows; baseline
 breadcrumbs are text even after their parents are deleted. Ordinary
 publications omit the Changes filter and comparison band while preserving the
 same navigation, search, tags, and variants.
+
+The comparison designs implement the [pane](./mokly-comparison-panes.md),
+[scrolling](./mokly-comparison-scrolling.md), and
+[Scroll together](./mokly-comparison-scroll-together.md) contracts, including
+stacked component frames, paired app-shell panels, and the switched-off state.
 
 The removed-document and removed-screen designs depict the shipped
 [removed previews](./mokly-removed-previews.md) behavior: the previous version
@@ -82,6 +88,9 @@ contract until their standalone screens are implemented.
 | `design-browse-changed-views`         | Browse shell › Screen variants                             | Change confined to the views that are not shown            |
 | `design-changes-current`              | Changes › Diff controls                                    | Current screen in Changes                                  |
 | `design-changes-overlay`              | Changes › Diff controls                                    | On-demand overlay comparison                               |
+| `design-changes-overlay-long`         | Changes › Diff controls                                    | Overlay on a long screen, scrolled part-way in one chrome  |
+| `design-changes-overlay-panel`        | Changes › Diff controls                                    | Overlay on an app shell, its panel scrolled part-way       |
+| `design-changes-side-by-side-apart`   | Changes › Diff controls                                    | Side by side with Scroll together off, scrolled apart      |
 | `design-review-changed`               | Changes › Comparison outcomes                              | Changed screen, side-by-side compare                       |
 | `design-review-added`                 | Changes › Comparison outcomes                              | Added screen current preview without comparison controls   |
 | `design-review-removed`               | Changes › Comparison outcomes                              | Removed badge and previous version without comparisons     |
@@ -185,7 +194,9 @@ Additional owning groups keep each new page at no more than five screens:
 
 `design-browse-screen`, `design-browse-details-screen` and the whole Welcome
 comparison family — `design-changes-current`, `design-changes-overlay`,
-`design-review-changed` and `design-review-difference` — also render in both
+`design-changes-overlay-long`, `design-changes-overlay-panel`,
+`design-changes-side-by-side-apart`, `design-review-changed` and
+`design-review-difference` — also render in both
 schemes, so the outer Appearance control shows the selected Welcome, the
 light-only Details subject and every comparison mode under either appearance at
 their own entries. A comparison family publishes the same schemes for every
@@ -201,7 +212,7 @@ Every screen ships one mobile and one desktop variant. Mockup implementation
 notes live in entry descriptions, rationale, and related docs — never inside
 the rendered screen area.
 
-The component explorer extends this catalogue under `design/components/` with
+The `design-component-*` entries extend this catalogue with
 component pages, comparisons, affected screens, inspection, controls, and edge
 states. The manifest-backed browser inventory covers every owning screen. Its entry inventory and target visual rules live in
 the [component design contract](./mokly-component-design.md).
@@ -539,44 +550,28 @@ The shell has one breakpoint at **56.25rem (900px)**:
 
 ## In-place Comparisons
 
-The catalogue remains the only shell. An eligible shown view has a compact Current /
-Side by side / Overlay / Difference band below its heading. Current is the initial
-state in both All and Changes. Diff selections load snapshots on demand in the
-same main region; controls, navigation, and details stay in place. Refresh and
-retry controls are available after an explicit comparison request. The target
-component shell makes the band conditional on a Changed shown view, a Removed
-component variant, or verified affected-consumer evidence. The updated
-mockups omit it on every Browse, Added or Unmodified shown view, Removed screen,
-shared-impact-only, ignored-only, excluded-stylesheet-only, and empty state.
-Removed screens show a status badge over their previous version labelled “Showing previous
-version” under [removed previews](./mokly-removed-previews.md). A removed screen
-keeps the grouped viewport control. The catalogue-wide Appearance selector
-remains the only theme control, while the historical frame stays Light because
-that is the only scheme captured for its previous views.
-Comparison bands always retain
-an opaque surface and their border. Static catalogues without comparison data
-omit the band.
-The Added outcome still exposes factual branch evidence in Details. Comparison
-eligibility, evidence availability, and initial inspector disclosure are modeled
-independently in the mockups, matching the runtime rather than using the presence
-of a mode band to decide whether Details exists or starts open.
+The catalogue remains the only shell. Eligible shown views place Current, Side
+by side, Overlay, and Difference below the heading; Current starts selected.
+Diffs load on demand in the same main region while navigation, details,
+viewport, scheme, Refresh, and Retry stay available. The band appears for a
+changed shown view, removed component variant, or verified affected consumer,
+and is absent from Browse, Added, Unmodified, removed-screen, evidence-only,
+and empty states. Static catalogues without comparison data omit it.
 
-Both viewports reuse the existing device-frame components. Stylesheet evidence
-presentation, including its secondary details and the evidence spacing shared
-by the mockup card and the shell, is owned by
-[CSS evidence in the shell](./mokly-css-evidence-shell.md).
-Before and current
-snapshots remain in script-disabled iframes. Overlay composites the current
-pane at 50% opacity; Difference uses CSS difference blending. Missing panes for
-eligible Removed component variants remain side by side for readability in every mode. No pixel percentages are
-shown. Baseline, affected files, and excluded content belong in secondary
-comparison details. Loading and failure states keep the catalogue available.
+Both viewports reuse their device frames. Overlay and Difference keep both
+script-disabled versions inside one opaque chrome; Side by side keeps one
+captioned chrome per version. Missing component-variant panes remain explicit
+and fall back to Side by side. Loading, failure, evidence, and ignored details
+remain secondary and never invent pixel measurements. Exact presentation,
+scrolling, switch geometry, responsive wrapping, app-shell dimensions, and
+fixed-row depictions live in the linked comparison contracts above.
 
-The canonical Current and Overlay designs are `design-changes-current` and
-`design-changes-overlay`; their mobile and desktop components share the
-catalogue shell. Existing design entries keep their identifiers, while outcome
-and impact screens depict Changes.
-See [the complete behavior](./mokly-changes.md).
+The canonical states are `design-changes-current`, `design-changes-overlay`,
+`design-changes-overlay-long`, `design-changes-overlay-panel`, and
+`design-changes-side-by-side-apart`, each at its derived `screens/<id>.html`
+document with mobile and desktop artboards. See
+[Changes](./mokly-changes.md), [component designs](./mokly-component-design.md),
+and [CSS evidence](./mokly-css-evidence-shell.md).
 
 ## Related Docs
 

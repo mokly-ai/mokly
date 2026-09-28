@@ -39,6 +39,13 @@ export const COMPONENTS = {
     source: "components/Badge.tsx",
     dependencies: ["components/Badge.tsx"],
   },
+  checklist: {
+    id: "checklist",
+    title: "Checklist",
+    description: "The steps to finish before starting, in order.",
+    source: "components/Checklist.tsx",
+    dependencies: ["components/Checklist.tsx"],
+  },
 } as const satisfies Record<string, ComponentMetadata>;
 
 export type ComponentId = keyof typeof COMPONENTS;
@@ -85,12 +92,26 @@ export const COMPONENT_ENTRIES = {
     title: "Default",
     variantOf: "badge",
   },
+  checklist: {
+    component: "checklist",
+    id: "checklist",
+    title: "Checklist",
+  },
+  checklistDefault: {
+    component: "checklist",
+    id: "checklist-default",
+    title: "Default",
+    variantOf: "checklist",
+  },
 } as const satisfies Record<string, ComponentEntryMetadata>;
 
 export const COMPONENT_ENTRY_BY_STATE = {
   default: COMPONENT_ENTRIES.action,
   disabled: COMPONENT_ENTRIES.actionDisabled,
   comparison: COMPONENT_ENTRIES.actionDefault,
+  overlay: COMPONENT_ENTRIES.actionDefault,
+  difference: COMPONENT_ENTRIES.actionDefault,
+  "overlay-tall": COMPONENT_ENTRIES.checklistDefault,
   affected: COMPONENT_ENTRIES.actionDefault,
   toolbar: COMPONENT_ENTRIES.toolbar,
   hidden: COMPONENT_ENTRIES.helpHint,

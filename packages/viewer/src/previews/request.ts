@@ -55,11 +55,11 @@ export interface PreviewRequestEnvironment {
   fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response>;
 }
 
-/** Exact files and confined directory prefixes advertised for a preview. */
+/** Exact files and directory prefixes in the documented embedded fetch set. */
 export interface AdvertisedPreviewPaths {
-  /** Metadata files an embedded viewer may request directly. */
+  /** Metadata files that catalogue descriptors advertise. */
   files: readonly string[];
-  /** Directory prefixes beneath which historical documents may be requested. */
+  /** Snapshot prefixes advertised by the comparison generation. */
   prefixes: readonly string[];
 }
 
@@ -96,8 +96,9 @@ export function previewEndpoint(
 }
 
 /**
- * Every address a catalogue advertises for historical content, relative to the
- * artifact root. An embedded viewer requests nothing outside this set.
+ * The documented embedded fetch set for one catalogue, relative to the
+ * artifact root. Tests verify this description; presentation loaders enforce
+ * their own generation and snapshot-side boundaries at runtime.
  */
 export function advertisedPreviewPaths(
   model: CatalogueReadModel,
@@ -117,7 +118,10 @@ export function advertisedPreviewPaths(
     prefixes:
       comparison === null
         ? []
-        : [`${comparison.slice(0, -REVIEW_FILE.length)}snapshots/before/`],
+        : ["before", "after"].map(
+            (side) =>
+              `${comparison.slice(0, -REVIEW_FILE.length)}snapshots/${side}/`,
+          ),
   };
 }
 

@@ -18,7 +18,17 @@ import {
 import type { CatalogueIdentity } from "./metadata.js";
 
 export type ChangeScenario =
-  "all" | "component" | "screen" | "removed" | "added";
+  "all" | "component" | "screen" | "removed" | "added" | "checklist";
+
+/** Scenarios whose Changes hold one component outside Action's story. */
+const SOLE_CHANGES = {
+  added: { key: "badge", label: "Badge", to: COMPONENT_PAGES.added },
+  checklist: {
+    key: "checklist",
+    label: "Checklist",
+    to: COMPONENT_PAGES["overlay-tall"],
+  },
+} as const;
 
 function nodes(
   scenario: ChangeScenario,
@@ -56,8 +66,10 @@ function nodes(
     },
     ...linkedVariants(variants, variantDestination),
   ];
-  if (scenario === "added") {
-    const badge = componentVariantRows("badge", 2);
+  if (scenario === "added" || scenario === "checklist") {
+    const identity = scenario === "added" ? "badge" : "checklist";
+    const { to } = SOLE_CHANGES[scenario];
+    const variants = componentVariantRows(identity, 2);
     return [
       {
         key: "components",
@@ -67,12 +79,7 @@ function nodes(
         count: 1,
         open: true,
       },
-      ...componentBranch(
-        "badge",
-        COMPONENT_PAGES.added,
-        badge,
-        COMPONENT_PAGES.added,
-      ),
+      ...componentBranch(identity, to, variants, to),
     ];
   }
   const reading = active === "reading-room";
@@ -152,7 +159,8 @@ function nodes(
           ? activeKey === "example-action-compact"
             ? design
             : COMPONENT_PAGES.removed
-          : activeKey === COMPONENT_NAVIGATION.action.variants[0].id
+          : activeKey === COMPONENT_NAVIGATION.action.id ||
+              activeKey === COMPONENT_NAVIGATION.action.variants[0].id
             ? design
             : COMPONENT_PAGES.affected,
       scenario === "removed"
@@ -241,8 +249,8 @@ export function ExplorerShell({
           ) : (
             <MockLink
               to={
-                scenario === "added"
-                  ? COMPONENT_PAGES.added
+                scenario === "added" || scenario === "checklist"
+                  ? SOLE_CHANGES[scenario].to
                   : scenario === "removed"
                     ? "design-component-removed"
                     : scenario === "screen"

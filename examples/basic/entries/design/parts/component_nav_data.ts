@@ -6,7 +6,7 @@ type NavigationRows = CatalogueNavigationProps["rows"];
 
 /** Components depicted in the example catalogue and component explorer. */
 export type ComponentNavigationIdentity =
-  "action" | "toolbar" | "help-hint" | "badge";
+  "action" | "toolbar" | "help-hint" | "badge" | "checklist";
 
 interface ComponentVariantNavigationDefinition {
   id: string;
@@ -66,6 +66,17 @@ export const COMPONENT_NAVIGATION = {
     title: "Badge",
     variants: [
       { id: "badge-default", title: "Default", to: COMPONENT_PAGES.unused },
+    ],
+  },
+  checklist: {
+    id: "checklist",
+    title: "Checklist",
+    variants: [
+      {
+        id: "checklist-default",
+        title: "Default",
+        to: COMPONENT_PAGES["overlay-tall"],
+      },
     ],
   },
 } as const satisfies Record<

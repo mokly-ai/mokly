@@ -106,7 +106,9 @@ function TargetView(props: {
       (props.context.comparisons ?? false) &&
       props.target.kind === "entry" &&
       props.target.entry.kind === "screen" ? (
-        <DiffScreen route={props.target.entry.id}>{stage}</DiffScreen>
+        <DiffScreen entryId={props.target.entry.id} entryKind="screen">
+          {stage}
+        </DiffScreen>
       ) : (
         stage
       )}

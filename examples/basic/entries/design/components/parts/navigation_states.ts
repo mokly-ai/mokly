@@ -7,6 +7,14 @@ import {
   type ComponentDesignDestination,
 } from "./destinations.js";
 
+/** Action's changed Default variant in every comparison mode: one family. */
+export const actionModes = {
+  current: COMPONENT_PAGES.affected,
+  "side-by-side": COMPONENT_PAGES.comparison,
+  overlay: COMPONENT_PAGES.overlay,
+  difference: COMPONENT_PAGES.difference,
+};
+
 /** Shared shell controls do not inherit unrelated Browse transitions. */
 export const COMPONENT_NAVIGATION_STATES = {
   [CONTROLS_PAGES["default"]]: {},
@@ -24,8 +32,11 @@ export const COMPONENT_NAVIGATION_STATES = {
   [INSPECTION_PAGES.closed]: {},
   [COMPONENT_PAGES.default]: {},
   [COMPONENT_PAGES.disabled]: {},
-  [COMPONENT_PAGES.comparison]: {},
-  [COMPONENT_PAGES.affected]: {},
+  [COMPONENT_PAGES.comparison]: { comparison: actionModes },
+  [COMPONENT_PAGES.overlay]: { comparison: actionModes },
+  [COMPONENT_PAGES.difference]: { comparison: actionModes },
+  [COMPONENT_PAGES["overlay-tall"]]: {},
+  [COMPONENT_PAGES.affected]: { comparison: actionModes },
   [COMPONENT_PAGES.toolbar]: {},
   [COMPONENT_PAGES.hidden]: {},
   [COMPONENT_PAGES.unused]: {},

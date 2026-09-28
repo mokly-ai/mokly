@@ -1,16 +1,16 @@
-/** Inert HTML transformation for one historical document presentation. */
+/** Inert HTML transformation for one snapshot document presentation. */
 
-import type { PreviewPresentation } from "./presentation.js";
+import type { SnapshotPresentation } from "./presentation.js";
 
 const ELEMENT_NODE = 1;
 const COMMENT_NODE = 8;
 const DOCUMENT_TYPE_NODE = 10;
 
 /** Apply the contracted base and refresh edits, then serialize the document. */
-export function presentPreviewDocument(
+export function presentSnapshotDocument(
   doc: Document,
   snapshotAddress: string,
-): PreviewPresentation {
+): SnapshotPresentation {
   const consumerBase = doc.querySelector("base[href]")?.getAttribute("href");
   let effectiveBase = snapshotAddress;
   if (consumerBase !== null && consumerBase !== undefined) {
@@ -78,5 +78,5 @@ function quoted(value: string): string {
 }
 
 function unavailable(): never {
-  throw new Error("The previous version is unavailable.");
+  throw new Error("The snapshot document is unavailable.");
 }

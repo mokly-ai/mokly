@@ -10,7 +10,7 @@ import type { RunningServer } from "../../dist/server/http_types.js";
 import { componentEntrySource } from "../helpers/component_fixture.js";
 import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 
-import { loadComparison } from "./comparison_actions.js";
+import { loadComparison, PANE_SOURCE } from "./comparison_actions.js";
 import { chooseVariant } from "./workspace_actions.js";
 
 let server: RunningServer;
@@ -333,7 +333,7 @@ test("component comparisons follow changed variants while added variants stay cu
   ).toBeDisabled();
   await chooseVariant(page, "Disabled");
   await expect(page.locator("[data-diff-stage] iframe").last()).toHaveAttribute(
-    "src",
+    PANE_SOURCE,
     /disabled\.mobile\.html$/,
   );
   await page.getByRole("button", { name: "Current", exact: true }).click();
