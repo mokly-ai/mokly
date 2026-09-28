@@ -1,3 +1,4 @@
+import { COMPONENT_NAVIGATION } from "../../parts/component_nav_data.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 
 import { actionVariants } from "./action_props.js";
@@ -9,7 +10,7 @@ import {
 import { ComponentLayout } from "./component_layout.js";
 import { VariantPicker } from "./controls.js";
 import { COMPONENT_PAGES } from "./destinations.js";
-import { COMPONENT_BY_STATE } from "./metadata.js";
+import { COMPONENT_ENTRY_BY_STATE } from "./metadata.js";
 import {
   ActionExample,
   ComponentCanvas,
@@ -27,12 +28,26 @@ export function ComponentPage({
 }) {
   const comparison = state === "comparison" || state === "removed";
   const evidence = componentComparison(state);
+  const entry = COMPONENT_ENTRY_BY_STATE[state];
+  const navigationKey =
+    state === "disabled"
+      ? COMPONENT_NAVIGATION.action.variants[1].id
+      : state === "comparison" || state === "affected"
+        ? COMPONENT_NAVIGATION.action.variants[0].id
+        : state === "removed"
+          ? "example-action-compact"
+          : state === "added"
+            ? COMPONENT_NAVIGATION.badge.variants[0].id
+            : undefined;
   return (
     <ComponentLayout
       design={COMPONENT_PAGES[state]}
-      identity={COMPONENT_BY_STATE[state]}
+      entry={entry}
+      navigationKey={navigationKey}
       comparison={comparison}
-      status={evidence?.status ?? "unmodified"}
+      status={
+        state === "removed" ? "removed" : (evidence?.status ?? "unmodified")
+      }
       scenario={
         state === "removed"
           ? "removed"

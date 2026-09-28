@@ -1,6 +1,10 @@
 import { COMPONENT_PAGES } from "../components/parts/destinations.js";
 import type { CatalogueNavigationProps } from "../library/chrome/catalogue-navigation.js";
 
+import {
+  COMPONENT_NAVIGATION,
+  componentVariantRows,
+} from "./component_nav_data.js";
 import { DESTINATIONS, type DesignDestination } from "./destinations.js";
 
 /** One screen this branch removed, with the preview state it opens in. */
@@ -66,8 +70,15 @@ const WELCOME_VARIANTS: NavigationRows = [
     kind: "variant",
     label: "Empty workspace",
     to: DESTINATIONS.variantSelected,
+    variantParentKind: "screen",
   },
-  { key: "welcome-error", depth: 3, kind: "variant", label: "Save failed" },
+  {
+    key: "welcome-error",
+    depth: 3,
+    kind: "variant",
+    label: "Save failed",
+    variantParentKind: "screen",
+  },
 ];
 
 function catalogueTree(variants: "closed" | "open"): NavigationRows {
@@ -120,19 +131,23 @@ function catalogueTree(variants: "closed" | "open"): NavigationRows {
       open: true,
     },
     {
-      key: "action",
+      key: COMPONENT_NAVIGATION.action.id,
       depth: 2,
       kind: "component",
-      label: "Action",
+      label: COMPONENT_NAVIGATION.action.title,
       to: COMPONENT_PAGES.default,
+      variants: "open",
     },
+    ...componentVariantRows("action", 3),
     {
-      key: "toolbar",
+      key: COMPONENT_NAVIGATION.toolbar.id,
       depth: 2,
       kind: "component",
-      label: "Toolbar",
+      label: COMPONENT_NAVIGATION.toolbar.title,
       to: COMPONENT_PAGES.toolbar,
+      variants: "open",
     },
+    ...componentVariantRows("toolbar", 3),
     {
       key: "design",
       count: 2,
@@ -195,6 +210,7 @@ export const CHANGED_VARIANT_ROWS: NavigationRows = [
     depth: 3,
     kind: "variant",
     label: "Save failed",
+    variantParentKind: "screen",
   },
 ];
 
@@ -214,6 +230,7 @@ export const REMOVED_VARIANT_ROWS: NavigationRows = [
     depth: 3,
     kind: "variant",
     label: "Save failed · Removed",
+    variantParentKind: "screen",
   },
 ];
 

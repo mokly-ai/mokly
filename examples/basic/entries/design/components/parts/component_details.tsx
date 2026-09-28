@@ -10,7 +10,7 @@ import { UsedBy, AffectedScreens } from "./component_usage.js";
 import { CONTROLS_PAGES } from "./destinations.js";
 import { toolbarPrompt } from "./fixtures.js";
 import { Inspector } from "./inspector.js";
-import { COMPONENT_BY_STATE } from "./metadata.js";
+import { COMPONENT_ENTRY_BY_STATE } from "./metadata.js";
 
 export type ComponentPageState =
   | "default"
@@ -38,6 +38,7 @@ function ComponentChildren() {
 }
 
 function ComponentProps({ state }: { state: ComponentPageState }) {
+  const entry = COMPONENT_ENTRY_BY_STATE[state];
   return (
     <section>
       <h3>Supplied props</h3>
@@ -73,7 +74,7 @@ function ComponentProps({ state }: { state: ComponentPageState }) {
           }
         />
       )}
-      {COMPONENT_BY_STATE[state] === "action" && state !== "removed" ? (
+      {entry.component === "action" && state !== "removed" ? (
         <MockLink
           to={
             state === "disabled"
@@ -89,6 +90,7 @@ function ComponentProps({ state }: { state: ComponentPageState }) {
 }
 
 export function ComponentDetails({ state }: { state: ComponentPageState }) {
+  const entry = COMPONENT_ENTRY_BY_STATE[state];
   const changed =
     state === "affected" || state === "comparison" || state === "removed";
   const initial =
@@ -108,7 +110,7 @@ export function ComponentDetails({ state }: { state: ComponentPageState }) {
           label: "Details",
           content: (
             <>
-              <ComponentInfo identity={COMPONENT_BY_STATE[state]} />
+              <ComponentInfo entry={entry} />
               <ComparisonDetails comparison={componentComparison(state)} />
             </>
           ),

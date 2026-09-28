@@ -565,15 +565,15 @@ ratchets. Finding numbers refer to the [review record](#review-record).
 
 Tags: mockup
 
-- [ ] Update the shared navigation mockup data
+- [x] Update the shared navigation mockup data
       (`examples/basic/entries/design/parts/nav_data.ts`) and the component
       explorer, workspace, and Changes mockups so a component with variants
       shows its disclosure and its variant rows in authored order with a
       component-shaped variant icon, in both mobile and desktop variants,
       keeping the screen-variant presentation unchanged (finding 6).
-- [ ] Confirm the `design-browse-variant-reparented` mockup shows the former
+- [x] Confirm the `design-browse-variant-reparented` mockup shows the former
       parent as a plain-text breadcrumb (finding 27).
-- [ ] `npm run build`, `npm run example:build`, `npm run example:check`, and a
+- [x] `npm run build`, `npm run example:build`, `npm run example:check`, and a
       visual smoke of the changed design screens through `npm run dev` with
       screenshots; commit.
 
@@ -685,6 +685,9 @@ Tags: ui
 - [ ] Finding 6: component variant rows use the component-shaped variant icon
       from the Milestone 10 mockups; extend the mockup-versus-runtime row test
       to the Components section.
+- [ ] Component variant entry pages use the parent component's title as the
+      heading, with the id chip, status, and Details describing the shown
+      variant entry, matching the Milestone 10 mockups; test.
 - [ ] Finding 26: dark-scheme availability counts removed component variants;
       test.
 - [ ] Finding 27: a removed variant whose former parent is not an eligible

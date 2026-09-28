@@ -148,7 +148,9 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
 test("the canonical tree keeps Welcome's variant list collapsed", async () => {
   const { document } = await designDocument("design-browse-screen", "desktop");
-  const toggles = variantToggles(document);
+  const toggles = variantToggles(document).filter((toggle) =>
+    attribute(toggle, "aria-label")?.endsWith("variants of Welcome"),
+  );
   assert.equal(toggles.length, 1);
   assert.equal(attribute(toggles[0]!, "aria-expanded"), "false");
   assert.equal(
@@ -164,7 +166,9 @@ test("a selected variant discloses its parent's variant rows", async () => {
     "design-browse-variant-selected",
     "desktop",
   );
-  const toggles = variantToggles(document);
+  const toggles = variantToggles(document).filter((toggle) =>
+    attribute(toggle, "aria-label")?.endsWith("variants of Welcome"),
+  );
   assert.equal(toggles.length, 1);
   assert.equal(attribute(toggles[0]!, "aria-expanded"), "true");
   assert.equal(

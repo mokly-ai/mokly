@@ -98,7 +98,10 @@ for (const viewport of ["mobile", "desktop"] as const) {
         ["Details", "design-browse-details-screen"],
         ["Example tour", "design-browse-use-case"],
         ["Action", "design-component-overview"],
+        ["Default", "design-component-overview"],
+        ["Disabled", "design-component-variants"],
         ["Toolbar", "design-component-toolbar"],
+        ["Default", "design-component-toolbar"],
       ],
     );
     assert.equal(

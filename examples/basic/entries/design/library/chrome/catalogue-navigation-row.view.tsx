@@ -5,6 +5,8 @@ import { MockLink } from "@mokly/mokly";
 import type { DesignDestination } from "../../parts/destinations.js";
 import {
   ChevronIcon,
+  ComponentIcon,
+  ComponentVariantIcon,
   FlowIcon,
   FolderIcon,
   FolderOpenIcon,
@@ -46,23 +48,16 @@ function navRowStyle(depth: number): CSSProperties {
   return style as CSSProperties;
 }
 
-function RowIcon({ kind }: { kind: NavigationRow["kind"] }) {
-  if (kind === "component") {
-    return (
-      <svg
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 16 16"
-        width="15"
-        height="15"
-      >
-        <path d="m8 1 6 3.5v7L8 15l-6-3.5v-7L8 1Zm0 7 6-3.5M8 8v7M8 8 2 4.5" />
-      </svg>
+function RowIcon({ node }: { node: NavigationRow }) {
+  if (node.kind === "component") return <ComponentIcon />;
+  if (node.kind === "page") return <PageIcon />;
+  if (node.kind === "flow") return <FlowIcon />;
+  if (node.kind === "variant")
+    return node.variantParentKind === "component" ? (
+      <ComponentVariantIcon />
+    ) : (
+      <VariantIcon />
     );
-  }
-  if (kind === "page") return <PageIcon />;
-  if (kind === "flow") return <FlowIcon />;
-  if (kind === "variant") return <VariantIcon />;
   return <ScreenIcon />;
 }
 
@@ -93,18 +88,22 @@ function VariantsToggle({ label, open }: { label: string; open: boolean }) {
 
 export function NavRow({
   activeDestination,
+  activeKey,
   activeLabel,
   node,
 }: {
   activeDestination?: DesignDestination | undefined;
+  activeKey?: string | undefined;
   activeLabel?: string | undefined;
   node: NavigationRow;
 }) {
   const isActive =
     node.kind !== "folder" &&
-    (activeDestination !== undefined
-      ? node.to === activeDestination
-      : activeLabel !== undefined && node.label === activeLabel);
+    (activeKey !== undefined
+      ? node.key === activeKey
+      : activeDestination !== undefined
+        ? node.to === activeDestination
+        : activeLabel !== undefined && node.label === activeLabel);
   const className = isActive ? "mbk-nav-row active" : "mbk-nav-row";
   const mark = node.changed ? (
     <>
@@ -128,7 +127,7 @@ export function NavRow({
   const content = (
     <>
       <span className={iconClassName(node.kind)} aria-hidden="true">
-        <RowIcon kind={node.kind} />
+        <RowIcon node={node} />
       </span>
       {node.label}
       {mark}

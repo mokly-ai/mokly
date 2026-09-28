@@ -145,7 +145,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       for (const [route, status] of [
         ["pages/affected", "Changed"],
         ["inspection/direct-change", "Changed"],
-        ["states/removed", "Changed"],
+        ["states/removed", "Removed"],
         ["states/removed-consumer", "Removed"],
         ["states/unused", "Unmodified"],
         ["controls/editing/edited", "Unmodified"],
@@ -167,8 +167,15 @@ for (const viewport of ["desktop", "mobile"] as const) {
           viewport === "desktop" ? ".mbk-nav-filter-count" : ".ce-change-count",
         ),
       ).toHaveText("1");
-      if (viewport === "desktop")
-        await expect(page.locator(".mbk-nav-scroll a")).toHaveText("Badge");
+      if (viewport === "desktop") {
+        await expect(page.locator(".mbk-nav-scroll a")).toContainText([
+          "Badge",
+          "Default",
+        ]);
+        await expect(
+          page.locator(".mbk-nav-scroll .mbk-nav-changed"),
+        ).toHaveCount(2);
+      }
     });
   });
 }

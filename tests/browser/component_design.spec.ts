@@ -63,7 +63,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
       await page.goto(componentDesignUrl("overview", viewport));
       await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
       await expect(page.locator(".phone-frame, .browser-frame")).toHaveCount(0);
-      await page.getByRole("link", { name: "Disabled", exact: true }).click();
+      await page
+        .getByRole("navigation", { name: "Saved variants" })
+        .getByRole("link", { name: "Disabled", exact: true })
+        .click();
       await expect(page).toHaveURL(
         componentDesignUrl("pages/variants", viewport),
       );
@@ -125,8 +128,13 @@ for (const viewport of ["desktop", "mobile"] as const) {
           .getByRole("link"),
       ).toHaveCount(2);
       if (viewport === "desktop") {
-        await expect(page.locator(".mbk-nav-scroll a")).toHaveCount(1);
-        await expect(page.locator(".mbk-nav-scroll a")).toHaveText("Action");
+        await expect(page.locator(".mbk-nav-scroll a")).toContainText([
+          "Action",
+          "Default",
+        ]);
+        await expect(
+          page.locator(".mbk-nav-scroll .mbk-nav-changed"),
+        ).toHaveCount(2);
       }
       await page.goto(componentDesignUrl("inspection/direct-change", viewport));
       await expect(page.locator(count)).toHaveText("2");
@@ -134,9 +142,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
         page.locator(".ce-selected-instance .ce-props"),
       ).toContainText("Get started");
       if (viewport === "desktop")
-        await expect(page.locator(".mbk-nav-scroll a")).toHaveText([
+        await expect(page.locator(".mbk-nav-scroll a")).toContainText([
           "Welcome",
           "Action",
+          "Default",
         ]);
     });
 

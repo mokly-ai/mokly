@@ -34,6 +34,7 @@ for (const delayedStyles of [false, true]) {
     }
     try {
       await desktop
+        .getByRole("navigation", { name: "Saved variants" })
         .getByRole("link", { name: "Disabled", exact: true })
         .click();
       await expect(page).toHaveURL(

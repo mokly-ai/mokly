@@ -23,6 +23,12 @@ catalogue still provides its authored Components group.
 A component page contains its title, description, a variant bar linking its
 variant entries, preview canvas, grouped view controls, eligible comparison
 controls, and an icon inspector.
+The heading uses the parent component's title on the parent page and on every
+variant entry page, while the variant bar marks the shown entry. The id chip,
+status beside the heading, Details, and URL describe that shown entry. The
+parent page shows its first variant on the stage but keeps the parent id and
+parent entry details. Screen variants have no variant bar and keep their own
+title as the heading.
 The canvas uses the consumer renderer and gives a small component suitable
 space without implying it is a whole phone screen. Mobile/desktop still select
 distinct viewport contexts; controls must not fake scaling or modify consumer
