@@ -13,6 +13,15 @@
   Milestones 28–29, and the remote-branch lint was replaced by a workflow
   guard in Milestones 30–31. The remaining open review findings await the
   user's decision. The plan stays Active until its pull request merges.
+- [Comparison Pane Scroll Alignment](./comparison-pane-scroll-alignment.md)
+  — Overlay and Difference drift apart when scrolled because each snapshot
+  scrolls inside its own opaque frame; comparison panes become viewer-owned,
+  device-sized presentations driven by one shared chrome viewport
+  (Milestones 1 to 4, delivered), and
+  Milestones 5 to 7 mirror inner scroll regions such as app-shell panels and
+  add a "Scroll together" toggle; the contract (Milestone 5), mockups
+  (Milestone 6) and runtime (Milestone 7) are delivered. Implementation is
+  complete; move this plan to Completed when its implementation PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align

@@ -73,6 +73,14 @@ when the historical primary file is absent, never when it is invalid.
 - [Breaking page migration](./mokly-page-migration.md)
 - [Optional changes in publication](./mokly-publication.md)
 - [Changes and screen comparisons](./mokly-changes.md)
+- [Comparison pane presentation](./mokly-comparison-panes.md) — viewer-owned,
+  device-sized Overlay, Difference and Side by side panes.
+- [Comparison scrolling](./mokly-comparison-scrolling.md) — page alignment,
+  inner-region mirroring, keys, and anchors.
+- [Comparison region pairing](./mokly-comparison-region-pairing.md) — how an
+  inner scroll region finds its counterpart in another version.
+- [Comparison Scroll together](./mokly-comparison-scroll-together.md) — the
+  reader control, its preference, and realignment.
 - [Removed content previews](./mokly-removed-previews.md) — removed screens
   and pages show their pinned baseline version.
 - [Derived baselines](./mokly-derived-baselines.md) — default uncommitted

@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import type { RunningServer } from "../../dist/server/http_types.js";
 
-import { loadComparison } from "./comparison_actions.js";
+import { loadComparison, PANE_SOURCE } from "./comparison_actions.js";
 import { selectedComparisonFixture } from "./selected_comparison_fixture.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
@@ -65,7 +65,7 @@ for (const change of ["theme", "viewport"] as const)
     );
     const snapshot = await page
       .locator(".mb-pane--after iframe")
-      .getAttribute("src");
+      .getAttribute(PANE_SOURCE);
     expect(snapshot).not.toBeNull();
     await expireSnapshots(page, snapshot!);
 
@@ -79,7 +79,7 @@ for (const change of ["theme", "viewport"] as const)
       page.frameLocator(".mb-pane--after iframe").locator("main"),
     ).toContainText("Updated screen");
     await expect(page.locator(".mb-pane--after iframe")).toHaveAttribute(
-      "src",
+      PANE_SOURCE,
       change === "theme" ? /\.desktop\.dark\.html$/ : /\.mobile\.html$/,
     );
     await expect(page.locator(".mb-panes")).toHaveAttribute(
@@ -108,7 +108,7 @@ test("snapshot recovery keeps the selected saved variant", async ({ page }) => {
   ).toBeDisabled();
   const snapshot = await page
     .locator(".mb-pane--after iframe")
-    .getAttribute("src");
+    .getAttribute(PANE_SOURCE);
   expect(snapshot).not.toBeNull();
   await expireSnapshots(page, snapshot!);
   await chooseViewport(page, "mobile");

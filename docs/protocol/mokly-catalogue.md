@@ -309,8 +309,11 @@ comparison generations under `__mokly/diffs/__generations/**`. These retain
 normal path confinement; this list grants no source, controls or watcher access.
 When a removed entry is selected, the viewer fetches its validated historical
 HTML beneath the advertised generation's `snapshots/before/` directory instead
-of framing that artifact URL. Those document responses require `text/html` and
-the same CORS and `nosniff` treatment as other generation files.
+of framing that artifact URL; when a comparison is selected, it fetches the
+pane documents beneath that generation's `snapshots/before/` and
+`snapshots/after/` directories the same way. Those document responses require
+`text/html` and the same CORS and `nosniff` treatment as other generation
+files.
 Same-origin clients need no CORS header. A cross-origin artifact host must send
 `Access-Control-Allow-Origin: <exact app origin>` and
 `X-Content-Type-Options: nosniff` on these responses (including errors and HEAD),

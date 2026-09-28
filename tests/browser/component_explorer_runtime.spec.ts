@@ -9,7 +9,7 @@ import { startCatalogueServer } from "../../dist/server/http.js";
 import type { RunningServer } from "../../dist/server/http_types.js";
 import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 
-import { loadComparison } from "./comparison_actions.js";
+import { loadComparison, PANE_SOURCE } from "./comparison_actions.js";
 
 let server: RunningServer;
 const cleanup: (() => Promise<void>)[] = [];
@@ -264,7 +264,7 @@ test("component comparisons follow changed variants while added variants stay cu
     .getByLabel("Saved variant", { exact: true })
     .selectOption("disabled");
   await expect(page.locator("[data-diff-stage] iframe").last()).toHaveAttribute(
-    "src",
+    PANE_SOURCE,
     /disabled\.mobile\.html$/,
   );
   await page.getByRole("button", { name: "Current", exact: true }).click();

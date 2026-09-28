@@ -104,6 +104,47 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
   Every screen starts in Current, and diff snapshots load only after a click.
   The same band belongs to the actual shell in both development and published
   catalogues; it is independent of the design pictures rendered inside frames.
+- Overlay and Difference draw one device chrome holding both versions, as the
+  [comparison pane contract](../../docs/protocol/mokly-comparison-panes.md)
+  presents them: both layers fill the chrome's viewport at device size and
+  share one page offset, while paired inner regions follow the
+  [scrolling contract](../../docs/protocol/mokly-comparison-scrolling.md). Each
+  layer has its own opaque screen background, and the chrome itself never
+  blends. Side by side keeps one chrome per version. The Welcome sketch
+  inside any depicted comparison carries its link as inert text, because links
+  inside a comparison do nothing.
+- The long-overlay artboard shows Welcome continuing well below its first
+  screenful, part-way down, with one section reworded in place so every other
+  section stays aligned. A static artboard cannot scroll, so its offset and
+  scrollbar are drawn.
+- The stage's heading style applies only to its own heading, so the section
+  headings of a depicted Welcome keep the screen's ink in either scheme.
+- Every diff-mode band draws the Scroll together switch, on, after its modes
+  and before Refresh. It is a native checkbox that toggles in place and opens
+  no artboard; below the breakpoint the modes take the first row and the
+  switch starts the second.
+- The panel-overlay artboard shows Welcome built as an app shell: its top bar
+  and navigation, a tab bar on the phone, stay in place while both versions'
+  main panels are drawn part-way down at one position with the panel's own
+  scrollbar and one section reworded. The chrome's viewport has nothing to
+  scroll, so it draws no scrollbar.
+- The scrolled-apart artboard shows Side by side with Scroll together off:
+  each version is drawn at its own place down a long Welcome with its own
+  scrollbar, and both land in the sections rather than the introduction's
+  reserved space.
+- Those two artboards draw every row at a fixed height. Each drawn region
+  states its visible height, content height and offset once in
+  `generated/design-review-scroll.css`, and both the content's offset and its
+  scrollbar thumb follow those numbers, so they always agree and never depend
+  on text wrapping.
+- Component Overlay and Difference draw one bordered component frame holding
+  both versions of a saved variant, at the height of each Side by side canvas,
+  with its caption above the viewport both versions share. Each version paints
+  the canvas surface, and the frame and caption never blend. Action's mode
+  control links its four modes to their own artboards.
+- The tall-component artboard shows a synthetic Checklist taller than its
+  frame, part-way down, with one step reworded. Its rows keep fixed heights and
+  never wrap, so the drawn offset and scrollbar never depend on text layout.
 - The approved tokens, consumer-tunable accent properties, and responsive
   breakpoints are recorded in `docs/protocol/mokly-shell-design.md`.
 
@@ -129,6 +170,10 @@ following presentation differences are intentional:
   visibility are part of the destination screen.
 - There is no separate Review section or standalone comparison command. Stable
   design routes retain their old identifiers to preserve catalogue links.
+- Comparison artboards draw shorter browser frames than the served shell so two
+  versions fit side by side, and every comparison mode keeps that one frame
+  size. Component comparison artboards likewise draw a shorter bordered frame
+  than the served one, the same in every mode.
 - Difference mockups use CSS blending, as does the served comparison; no pixel
   percentages or invented diff metrics appear. Classification and impact facts
   come from the comparison engine in the runtime and from synthetic fixture data

@@ -43,6 +43,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       ["design-component-toolbar", "components/Toolbar.tsx"],
       ["design-component-help", "components/HelpHint.tsx"],
       ["design-component-unused", "components/Badge.tsx"],
+      ["design-component-overlay-tall", "components/Checklist.tsx"],
     ] as const) {
       const { document } = await designDocument(id, viewport);
       const values = elements(document, (node) => node.tagName === "code").map(

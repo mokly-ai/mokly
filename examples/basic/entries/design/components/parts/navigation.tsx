@@ -13,14 +13,25 @@ import {
 import type { CatalogueIdentity } from "./metadata.js";
 
 export type ChangeScenario =
-  "all" | "component" | "screen" | "removed" | "added";
+  "all" | "component" | "screen" | "removed" | "added" | "checklist";
+
+/** Scenarios whose Changes hold one component outside Action's story. */
+const SOLE_CHANGES = {
+  added: { key: "badge", label: "Badge", to: COMPONENT_PAGES.added },
+  checklist: {
+    key: "checklist",
+    label: "Checklist",
+    to: COMPONENT_PAGES["overlay-tall"],
+  },
+} as const;
 
 function nodes(
   scenario: ChangeScenario,
   active: CatalogueIdentity,
   design: ComponentDesignDestination,
 ): NavNode[] {
-  if (scenario === "added")
+  if (scenario === "added" || scenario === "checklist") {
+    const { key, label, to } = SOLE_CHANGES[scenario];
     return [
       {
         key: "components",
@@ -30,14 +41,9 @@ function nodes(
         count: 1,
         open: true,
       },
-      {
-        key: "badge",
-        depth: 1,
-        kind: "component",
-        label: "Badge",
-        to: COMPONENT_PAGES.added,
-      },
+      { key, depth: 1, kind: "component", label, to },
     ];
+  }
   const reading = active === "reading-room";
   const destination = (
     identity: CatalogueIdentity,
@@ -193,8 +199,8 @@ export function ExplorerShell({
           ) : (
             <MockLink
               to={
-                scenario === "added"
-                  ? COMPONENT_PAGES.added
+                scenario === "added" || scenario === "checklist"
+                  ? SOLE_CHANGES[scenario].to
                   : scenario === "removed"
                     ? "design-component-removed"
                     : scenario === "screen"

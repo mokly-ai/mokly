@@ -8,12 +8,12 @@ import { designLibraryFixture } from "./helpers/design_library_fixture.js";
 test("mixed component design styles retain their actual rendered resource scope", async (t) => {
   const fixture = await designLibraryFixture(t);
   for (const [stylesheet, screens, components] of [
-    ["design-components.css", 32, 16],
-    ["design-component-inspection.css", 32, 16],
-    ["design-component-details.css", 32, 16],
+    ["design-components.css", 35, 16],
+    ["design-component-inspection.css", 35, 16],
+    ["design-component-details.css", 35, 16],
     ["design-component-inspector.css", "all-design", 16],
     ["design-component-workspace.css", "all-design", 16],
-    ["design-component-view.css", 32, 16],
+    ["design-component-view.css", 35, 16],
     ["design-component-controls.css", 11, 16],
     ["design.css", "all-design", 16],
     ["design-library.css", 0, 16],
