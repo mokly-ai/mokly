@@ -32,13 +32,14 @@ The change works for the cases it targeted:
 
 The nine findings below were reproduced in scratch copies. The parent session
 independently confirmed findings 1, 2, 6 and 7 and the animation, custom
-property, view-transition and composition rules in finding 4. All nine remain
-open for the user's decision.
+property, view-transition and composition rules in finding 4. Finding 1 is
+resolved in `9bab3d7`; finding 2 is partly mitigated, and the other findings
+remain open for the user's decision.
 
 Findings 1, 2 and 4 share one cause. The plugins find names with text
-heuristics instead of a CSS parser, and nothing checks that their output only
-renamed names. The equivalence and Chrome tests use inputs that avoid those
-heuristics.
+heuristics instead of a CSS parser. Milestone 20 now verifies that their
+output changed only documented local names; unresolved semantic cases remain
+in findings 2 and 4.
 
 ## Findings
 
@@ -75,6 +76,14 @@ heuristics.
      scenarios whose `@scope` selectors contain "to". A restores what worked
      before; C turns every future plugin rewrite into a Build failure instead
      of broken CSS. D is a useful non-blocking follow-up.
+
+   Resolved in `9bab3d7`: Mokly localizes `@scope` preludes outside the plugins
+   (A) and verifies rename-only output (C). Remove Mokly's temporary handling
+   after fixed releases for [local-by-default #90](https://github.com/css-modules/postcss-modules-local-by-default/issues/90)
+   ([PR #91](https://github.com/css-modules/postcss-modules-local-by-default/pull/91))
+   and [scope #68](https://github.com/css-modules/postcss-modules-scope/issues/68)
+   ([PR #69](https://github.com/css-modules/postcss-modules-scope/pull/69)).
+
 2. **Medium — several valid animation forms lose their animation in CSS
    Modules.**
    - What happens: the plugin guesses which word in an `animation` value is the
@@ -104,6 +113,12 @@ heuristics.
        `animation-name` naming a local `@keyframes` was renamed.
      - D) Document the limitations.
    - Recommended: A plus C, with a parity scenario for each form.
+
+   Partly mitigated in `9bab3d7`: the scroll-driven shorthand using `auto`
+   and quoted `@keyframes "pulse"` now fail Build with plain-stylesheet
+   guidance. `animation-name: ease` still passes silently; this finding stays
+   open.
+
 3. **Low, but must be handled before merge — the release notes would state a
    false and incomplete breaking change.** This extends Milestone 17 finding 10.
    - What happens: `main` squash-merges with every commit message in the body,
@@ -138,6 +153,12 @@ heuristics.
    - Recommended: A, which also resolves Milestone 17 finding 10, plus a PR
      checklist step that audits user-visible changes against `origin/main`
      rather than branch history.
+
+   Milestone 20 adds another break relative to `origin/main`: a CSS Module
+   that cannot be scoped without changing other authored CSS now fails Build
+   (including the two animation forms above). Finding 3 remains open; no
+   commit override or new breaking-change footer was added in `9bab3d7`.
+
 4. **Low — the CSS Modules contract misstates rules the plugins now apply.**
    The protocol and the Styles guide differ from the code:
    - Every name in an `animation` or `animation-name` value is renamed and
