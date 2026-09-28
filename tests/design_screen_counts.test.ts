@@ -67,6 +67,12 @@ test("documented design-screen counts match the compiled catalogue", async () =>
   const components = designs.filter((entry) =>
     entry.route.startsWith("design/components/"),
   );
+  const interactive = designs.filter((entry) =>
+    entry.route.startsWith("design/interactive/"),
+  );
+  const interactiveWorkspaces = interactive.filter((entry) =>
+    entry.route.startsWith("design/interactive/workspace/"),
+  );
   const dual = designs.filter((entry) => entry.darkFragments !== undefined);
   const dualBrowse = dual.filter((entry) =>
     entry.route.startsWith("design/browse/views/"),
@@ -74,7 +80,7 @@ test("documented design-screen counts match the compiled catalogue", async () =>
   const variants = dualBrowse.filter((entry) =>
     entry.route.includes(".variants/"),
   );
-  const shell = designs.length - components.length;
+  const shell = designs.length - components.length - interactive.length;
   const readme = "examples/basic/README.md";
   const word = "([A-Za-z]+(?:-[a-z]+)?)";
   for (const [file, pattern, expected] of [
@@ -95,8 +101,18 @@ test("documented design-screen counts match the compiled catalogue", async () =>
     ],
     [
       readme,
+      new RegExp(`${word} Static and Live screens under`, "gu"),
+      [interactive.length],
+    ],
+    [
+      readme,
       /scoped to the (\d+) component-design routes/gu,
       [components.length],
+    ],
+    [
+      readme,
+      new RegExp(`the ${word} Static and Live workspace routes`, "gu"),
+      [interactiveWorkspaces.length],
     ],
     [
       readme,

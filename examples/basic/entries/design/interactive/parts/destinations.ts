@@ -5,6 +5,7 @@ export const INTERACTIVE_PAGES = {
   preparing: "design-interactive-preparing",
   unavailable: "design-interactive-unavailable",
   component: "design-interactive-component",
+  screen: "design-interactive-screen",
   staticCatalogue: "design-interactive-static-catalogue",
 } as const;
 

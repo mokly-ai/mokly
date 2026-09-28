@@ -373,7 +373,7 @@ contract into its own shell contract so both protocol documents stay short.
 - [x] Update `packages/viewer/src/shell/README.md`; run the full check set and
       `cargo xtask check`; commit and push.
 
-## Milestone 8: Depict the Components tab while Live
+## Milestone 8: Depict the Components tab while Live — completed
 
 Tags: mockup
 
@@ -382,15 +382,27 @@ in the Components tab while Live is selected, as the design contract now
 states, but no artboard depicts that state. Mockups must stay aligned with the
 implementation, so add it to the Static and Live design catalogue.
 
-- [ ] Add a Workspace screen to the interactive design catalogue that shows a
+Implementation decisions recorded in the
+[design contract](../docs/protocol/mokly-interactive-views-design.md): the new
+`design-interactive-screen` artboard shows the Welcome screen workspace, whose
+tab is named Components (a component's tab is Nested components, and Action has
+none), with Live selected and the Components tab open. Its Static segment opens
+the screen's own page, `design-component-inspection-details`, which keeps its
+toolbar unchanged because only the two canonical entry points record a preview
+mode, so the artboard is entered from the catalogue navigation. The count lock
+for "Browse, page, publication, appearance and Changes" designs no longer
+includes the Static and Live family, which the example README and design links
+contract now count separately, so their totals add up.
+
+- [x] Add a Workspace screen to the interactive design catalogue that shows a
       component or screen workspace in Live with the Components tab selected
       and its "Switch to Static to inspect or edit this view." notice, with
       separate mobile and desktop components, reachable from the owning
       Workspace gallery page and the design navigation (at most five screens
       per page).
-- [ ] Update `docs/protocol/mokly-interactive-views-design.md` and the design
+- [x] Update `docs/protocol/mokly-interactive-views-design.md` and the design
       suites (ids, routes, viewports, notice copy, navigation, counts).
-- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
       smoke the new artboards through `npm run dev`, run `cargo xtask check`,
       commit and push.
 

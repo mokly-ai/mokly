@@ -2,19 +2,20 @@
 
 ## Delivery Status
 
-Implemented in the 69 Browse/Changes design screens and two real example
+Implemented in the 63 Browse/Changes design screens and two real example
 screens using `MockLink` and `MockLink asChild`. Verification and delivery are tracked by the
 [implementation plan](../../plans/mokabook-design-mocklinks.md).
 
-The [component design inventory](./mokly-component-design.md) extend the
-catalogue with their own state contract and native component/control depictions.
-Those 69 Browse/Changes designs retain the canonical links below, including the
+The [component design inventory](./mokly-component-design.md) and the
+[Static and Live designs](./mokly-interactive-views-design.md) extend the
+catalogue with their own state contracts and native component/control depictions.
+Those 63 Browse/Changes designs retain the canonical links below, including the
 removed previous-version family added by
 [removed previews](./mokly-removed-previews.md).
 They now share native icon inspector tabs and working viewport dropdowns with
 the component designs; the legacy disclosure links and segmented view controls
 are removed. Catalogue-wide link and inventory checks cover
-both families; component keyboard-control checks live in the component suites.
+every family; component keyboard-control checks live in the component suites.
 
 ## Scope And Ownership
 

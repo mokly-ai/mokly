@@ -2,14 +2,16 @@
 
 ## Delivery Status
 
-Delivered mockup scope for Milestone 2 of the
+Delivered mockup scope for Milestones 2 and 8 of the
 [interactive views plan](../../plans/interactive-views.md). These authored
 design states depict the [interactive views contract](./mokly-interactive-views.md)
 and extend the [shell design](./mokly-shell-design.md) and
 [component workspace design](./mokly-component-workspace-design.md). The
 runtime Static/Live control implements these designs in Milestone 5, and
 Milestone 7 removes it from opted-out entries, as the
-[shell contract](./mokly-interactive-views-shell.md) records.
+[shell contract](./mokly-interactive-views-shell.md) records. Milestone 8 adds
+the screen in Live whose Components tab points back to Static, which the shell
+already shows.
 
 ## Static/Live Control
 
@@ -56,7 +58,8 @@ While Live is selected, the Props/Controls and Usage tabs keep their icons and
 open normally, but their panels replace their content with one secondary line:
 "Switch to Static to inspect or edit this view." A Components (or Nested
 components) tab, which lists and selects instances in the rendered view,
-shows the same line. Details remains unchanged.
+shows the same line; `design-interactive-screen` depicts it open on a screen.
+Details remains unchanged.
 Highlight components is disabled with the description "Highlighting works in
 Static." Comparison controls are unchanged and open the comparison stage as
 today; comparison panes have no Static/Live control, so the toolbar hides it
@@ -78,10 +81,11 @@ shell chrome.
 | `design-interactive-preparing`        | `design/interactive/modes/preparing.html`       | Live selected while the preview is being prepared           |
 | `design-interactive-unavailable`      | `design/interactive/modes/unavailable.html`     | Live disabled, Static selected                              |
 | `design-interactive-component`        | `design/interactive/workspace/component.html`   | Action saved variant in Live with the Props/Controls notice |
+| `design-interactive-screen`           | `design/interactive/workspace/screen.html`      | Welcome screen in Live with the Components notice           |
 | `design-interactive-static-catalogue` | `design/interactive/workspace/static-only.html` | Toolbar of a catalogue without Live, no control             |
 
 Overview is the canonical parent screen. Modes and Workspace are bounded child
-galleries with three and two owning screens. All screens are light-only
+galleries with three owning screens each. All screens are light-only
 documents, matching the existing shell mockups. Links use the logical-id
 navigation contract so they work from disk and in Browse. Static depictions of
 the control do not implement the separate runtime behaviour.
@@ -92,14 +96,15 @@ The control itself carries every transition; no design-only navigation is
 added inside or under an artboard. The top-bar Appearance selector remains the
 standalone catalogue's only color-scheme control.
 
-| Source                         | Segment | Destination                    |
-| ------------------------------ | ------- | ------------------------------ |
-| `design-browse-screen`         | Live    | `design-interactive-overview`  |
-| `design-interactive-overview`  | Static  | `design-interactive-static`    |
-| `design-interactive-static`    | Live    | `design-interactive-preparing` |
-| `design-interactive-preparing` | Static  | `design-interactive-static`    |
-| `design-component-overview`    | Live    | `design-interactive-component` |
-| `design-interactive-component` | Static  | `design-component-overview`    |
+| Source                         | Segment | Destination                           |
+| ------------------------------ | ------- | ------------------------------------- |
+| `design-browse-screen`         | Live    | `design-interactive-overview`         |
+| `design-interactive-overview`  | Static  | `design-interactive-static`           |
+| `design-interactive-static`    | Live    | `design-interactive-preparing`        |
+| `design-interactive-preparing` | Static  | `design-interactive-static`           |
+| `design-component-overview`    | Live    | `design-interactive-component`        |
+| `design-interactive-component` | Static  | `design-component-overview`           |
+| `design-interactive-screen`    | Static  | `design-component-inspection-details` |
 
 Selecting Live for the first time prepares the preview, so the static screen
 opens the preparing state while the ready pair keeps its own transition.
@@ -108,7 +113,10 @@ have no incoming control transition, because no product action reaches them:
 they are entered from the catalogue navigation, exactly like the Changes
 availability states. Unavailable is also the only artboard whose Live segment
 is a described depiction instead of a link, and the static-only catalogue is
-the only workspace with no segments at all.
+the only workspace with no segments at all. `design-interactive-screen` is
+entered from the catalogue navigation too: its Static segment opens the
+screen's own page, which keeps its toolbar unchanged under the rule below, so
+no Live segment leads back to it.
 
 Only the two canonical entry points — the selected Browse screen and the
 component page — record a preview mode. Every other existing artboard keeps
@@ -117,9 +125,11 @@ offers Live. Each artboard declares its own mode, links and availability in
 `entries/design/parts/navigation_states.ts`, so a screen that has not been
 designed for Live cannot acquire the control implicitly.
 
-Both Workspace screens show the Highlight components toggle so they differ
-only by the preview-mode control: Live disables highlighting with its reason,
-and the static-only catalogue keeps the ordinary enabled toggle.
+Every Workspace screen shows the Highlight components toggle. The component
+in Live and the static-only catalogue differ only by the preview-mode control:
+Live disables highlighting with its reason, and the static-only catalogue keeps
+the ordinary enabled toggle. The screen in Live disables it with the same
+reason.
 
 ## Shared Component
 
@@ -138,7 +148,8 @@ Use the real generator and build/check every generated artboard. Keep
 generated HTML and the manifest ignored in derived mode and commit the
 authored changes only. Test the control's labels, selected states, disabled
 state and accessible descriptions; the preparing spinner copy; the inspector
-notice; the absent control on the static-only screen; and links between
+notice in the Props, Usage and Components tabs, with the screen's Components
+tab open; the absent control on the static-only screen; and links between
 owning states. Open every artboard from disk and inspect both viewport
 variants. Run `npm run build`, `npm run example:build`,
 `npm run example:check`, smoke the pages through `npm run dev`, then commit

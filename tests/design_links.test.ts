@@ -120,12 +120,13 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
 /**
  * Artboards that draw the component workspace and therefore keep its native
- * depicted controls, including the two Static/Live workspace states.
+ * depicted controls, including the three Static/Live workspace states.
  */
 function drawsComponentWorkspace(id: string): boolean {
   return (
     id.startsWith("design-component-") ||
     id === "design-interactive-component" ||
+    id === "design-interactive-screen" ||
     id === "design-interactive-static-catalogue"
   );
 }
@@ -142,7 +143,7 @@ test("every design link resolves to a real same-viewport design artifact without
     entry.id.startsWith("design-interactive-"),
   );
   assert.equal(componentDesigns.length, 35);
-  assert.equal(interactiveDesigns.length, 6);
+  assert.equal(interactiveDesigns.length, 7);
   assert.equal(
     designs.length - componentDesigns.length - interactiveDesigns.length,
     63,

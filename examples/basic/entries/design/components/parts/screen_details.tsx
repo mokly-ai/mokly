@@ -1,12 +1,10 @@
 import { MockLink } from "@mokly/mokly";
 
-import { ComparisonDetails } from "./comparison_details.js";
-import { screenComparison } from "./comparison_fixtures.js";
 import { welcomeInstances } from "./fixtures.js";
 import { Inspector, type InspectorPanel } from "./inspector.js";
 import { InstanceDetails } from "./instance_details.js";
 import { InstanceTree } from "./instance_tree.js";
-import { SCREENS, screenIdentity } from "./metadata.js";
+import { ScreenInfo } from "./screen_info.js";
 import type { ScreenPageState } from "./screen_preview.js";
 
 function ScreenComponents({ state }: { state: ScreenPageState }) {
@@ -74,7 +72,6 @@ function ScreenUsage({ state }: { state: ScreenPageState }) {
 }
 
 export function ScreenDetails({ state }: { state: ScreenPageState }) {
-  const screen = SCREENS[screenIdentity(state)];
   const removed = state === "removed-consumer";
   const noInstances = state === "empty" || state === "unavailable";
   const initial =
@@ -90,18 +87,7 @@ export function ScreenDetails({ state }: { state: ScreenPageState }) {
         {
           id: "info",
           label: "Details",
-          content: (
-            <>
-              <section>
-                <h3>About {screen.title}</h3>
-                <p>{screen.description}</p>
-                <p className="ce-muted">
-                  Source <code>{screen.source}</code>
-                </p>
-              </section>
-              <ComparisonDetails comparison={screenComparison(state)} />
-            </>
-          ),
+          content: <ScreenInfo state={state} />,
         },
         ...(removed
           ? []

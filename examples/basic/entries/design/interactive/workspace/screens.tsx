@@ -1,5 +1,6 @@
 import { screen } from "@mokly/mokly";
 
+import { LiveScreenWorkspace } from "../parts/live_screen.js";
 import { WorkspaceModeScreen } from "../parts/workspace_screen.js";
 
 export function LiveComponentDesktop() {
@@ -8,6 +9,12 @@ export function LiveComponentDesktop() {
 export function LiveComponentMobile() {
   return <WorkspaceModeScreen live viewport="mobile" />;
 }
+export function LiveScreenDesktop() {
+  return <LiveScreenWorkspace viewport="desktop" />;
+}
+export function LiveScreenMobile() {
+  return <LiveScreenWorkspace viewport="mobile" />;
+}
 export function StaticCatalogueDesktop() {
   return <WorkspaceModeScreen live={false} viewport="desktop" />;
 }
@@ -15,7 +22,7 @@ export function StaticCatalogueMobile() {
   return <WorkspaceModeScreen live={false} viewport="mobile" />;
 }
 
-/** A component's saved example with and without a preview-mode control. */
+/** Workspaces in Live, and a workspace without a preview-mode control. */
 export const workspaceScreens = [
   screen({
     id: "design-interactive-component",
@@ -28,12 +35,22 @@ export const workspaceScreens = [
     mobile: <LiveComponentMobile />,
   }),
   screen({
+    id: "design-interactive-screen",
+    slug: "screen",
+    title: "Screen in Live",
+    colorSchemes: ["light"],
+    description:
+      "A screen with Live selected and its Components tab open: the tabs that list, read or edit the components in the view point back to Static, and Details stays the same.",
+    desktop: <LiveScreenDesktop />,
+    mobile: <LiveScreenMobile />,
+  }),
+  screen({
     id: "design-interactive-static-catalogue",
     slug: "static-only",
     title: "Catalogue without Live",
     colorSchemes: ["light"],
     description:
-      "The same workspace in a catalogue that offers no live preview: the toolbar keeps its existing controls with no gap.",
+      "The component workspace in a catalogue that offers no live preview: the toolbar keeps its existing controls with no gap.",
     desktop: <StaticCatalogueDesktop />,
     mobile: <StaticCatalogueMobile />,
   }),

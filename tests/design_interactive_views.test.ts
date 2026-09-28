@@ -8,8 +8,13 @@ import {
   designDocument,
   elements,
   textContent,
-  type Element,
 } from "./helpers/design_catalogue.js";
+import {
+  LIVE_UNAVAILABLE,
+  previewMode,
+  segments,
+  type DesignNode,
+} from "./helpers/design_interactive.js";
 
 const OWNING = [
   ["design-interactive-overview", "design/interactive/overview.html"],
@@ -23,34 +28,15 @@ const OWNING = [
     "design-interactive-component",
     "design/interactive/workspace/component.html",
   ],
+  ["design-interactive-screen", "design/interactive/workspace/screen.html"],
   [
     "design-interactive-static-catalogue",
     "design/interactive/workspace/static-only.html",
   ],
 ] as const;
 
-const LIVE_UNAVAILABLE = "Live preview is unavailable for this view.";
-const STATIC_NOTICE = "Switch to Static to inspect or edit this view.";
-
-function previewMode(
-  document: Parameters<typeof byClass>[0],
-): Element | undefined {
-  return byClass(document, "ce-preview-mode")[0];
-}
-
-/** Every segment in order, with its selected state and authored destination. */
-function segments(group: Element) {
-  return group.childNodes
-    .filter((node): node is Element => "tagName" in node)
-    .map((node) => [
-      textContent(node).trim(),
-      (attribute(node, "class") ?? "").split(/\s+/).includes("active"),
-      attribute(node, "data-mokly-link"),
-    ]);
-}
-
 for (const viewport of ["mobile", "desktop"] as const) {
-  test(`${viewport}: the Static and Live gallery owns six light-only artboards`, async () => {
+  test(`${viewport}: the Static and Live gallery owns seven light-only artboards`, async () => {
     for (const [id, route] of OWNING) {
       const { entry, document } = await designDocument(id, viewport);
       assert.equal(entry.route, route);
@@ -71,6 +57,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       "design-interactive-preparing",
       "design-interactive-unavailable",
       "design-interactive-component",
+      "design-interactive-screen",
       "design-browse-screen",
       "design-component-overview",
     ]) {
@@ -128,6 +115,13 @@ for (const viewport of ["mobile", "desktop"] as const) {
         "design-interactive-component",
         [
           ["Static", false, "design-component-overview"],
+          ["Live", true, undefined],
+        ],
+      ],
+      [
+        "design-interactive-screen",
+        [
+          ["Static", false, "design-component-inspection-details"],
           ["Live", true, undefined],
         ],
       ],
@@ -195,64 +189,6 @@ for (const viewport of ["mobile", "desktop"] as const) {
     assert.equal(segments(group)[0]?.[2], "design-interactive-static");
   });
 
-  test(`${viewport}: the live workspace points inspection and highlighting back to Static`, async () => {
-    const { document } = await designDocument(
-      "design-interactive-component",
-      viewport,
-    );
-    const notices = byClass(document, "ce-muted").filter(
-      (node) => textContent(node) === STATIC_NOTICE,
-    );
-    assert.equal(notices.length, 2);
-    const panels = notices.map((node) => {
-      const owner = elements(
-        document,
-        (element) =>
-          attribute(element, "class") === "ce-inspector-panel" &&
-          elements(element, (child) => child === node).length > 0,
-      )[0];
-      return attribute(owner!, "aria-label");
-    });
-    assert.deepEqual(panels.sort(), ["Props", "Usage"]);
-    assert.match(textContent(document), /About Action/);
-    const highlight = byClass(document, "ce-highlight-toggle")[0];
-    assert.ok(highlight);
-    assert.equal(attribute(highlight, "disabled"), "");
-    const reason = attribute(highlight, "aria-describedby");
-    assert.ok(reason);
-    assert.equal(
-      textContent(
-        elements(document, (node) => attribute(node, "id") === reason)[0]!,
-      ),
-      "Highlighting works in Static.",
-    );
-  });
-
-  test(`${viewport}: a catalogue without Live keeps its toolbar unchanged`, async () => {
-    const { document } = await designDocument(
-      "design-interactive-static-catalogue",
-      viewport,
-    );
-    assert.equal(previewMode(document), undefined);
-    assert.equal(byClass(document, "ce-preview-mode-off").length, 0);
-    const toolbar = elements(
-      document,
-      (node) => attribute(node, "aria-label") === "Preview options",
-    )[0];
-    assert.ok(toolbar);
-    assert.equal(byClass(toolbar, "mbk-seg").length, 0);
-    assert.doesNotMatch(textContent(toolbar), /Static|Live/);
-    assert.deepEqual(
-      toolbar.childNodes
-        .filter((node): node is Element => "tagName" in node)
-        .map((node) => attribute(node, "class")?.split(/\s+/)[1]),
-      ["ce-viewport-control", "ce-highlight-control"],
-    );
-    const highlight = byClass(document, "ce-highlight-toggle")[0];
-    assert.ok(highlight);
-    assert.equal(attribute(highlight, "disabled"), undefined);
-  });
-
   test(`${viewport}: preview mode stays out of every other design artboard`, async () => {
     const { manifest } = await designCatalogue;
     const carriers = new Set([
@@ -270,25 +206,35 @@ for (const viewport of ["mobile", "desktop"] as const) {
 }
 
 test("the Live preview never announces itself inside the device frame", async () => {
-  for (const id of [
-    "design-interactive-overview",
-    "design-interactive-component",
-  ])
+  for (const [id, still, frameClasses] of [
+    [
+      "design-interactive-overview",
+      "design-interactive-static",
+      ["phone-screen"],
+    ],
+    [
+      "design-interactive-component",
+      "design-component-overview",
+      ["ce-canvas"],
+    ],
+    [
+      "design-interactive-screen",
+      "design-component-inspection-details",
+      ["phone-screen", "browser-viewport"],
+    ],
+  ] as const)
     for (const viewport of ["mobile", "desktop"] as const) {
-      const live = await designDocument(id, viewport);
-      const still = await designDocument(
-        id === "design-interactive-overview"
-          ? "design-interactive-static"
-          : "design-component-overview",
-        viewport,
-      );
-      const frames = (document: typeof live.document) =>
-        byClass(
-          document,
-          id === "design-interactive-overview" ? "phone-screen" : "ce-canvas",
-        )
+      const frames = (document: DesignNode) =>
+        frameClasses
+          .flatMap((frameClass) => byClass(document, frameClass))
           .map(textContent)
           .join("|");
-      assert.equal(frames(live.document), frames(still.document), id);
+      const live = frames((await designDocument(id, viewport)).document);
+      assert.ok(live.length > 0, id);
+      assert.equal(
+        live,
+        frames((await designDocument(still, viewport)).document),
+        id,
+      );
     }
 });

@@ -50,7 +50,7 @@ export const interactiveDesign = collection({
       segment: "workspace",
       title: "Component workspace",
       description:
-        "A saved component example in Live, and the same workspace in a catalogue with no live preview.",
+        "A saved component example and a screen in Live, and the component workspace in a catalogue with no live preview.",
       dependencies: componentStyleDependencies,
       relatedDocs: INTERACTIVE_DOCS,
       children: workspaceScreens,

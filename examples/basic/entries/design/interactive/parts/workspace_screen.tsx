@@ -14,8 +14,7 @@ import {
 import type { ArtboardViewport } from "../../parts/shell.js";
 
 import { INTERACTIVE_PAGES } from "./destinations.js";
-
-const STATIC_NOTICE = "Switch to Static to inspect or edit this view.";
+import { StaticNotice } from "./static_notice.js";
 
 function SavedProps() {
   return (
@@ -41,7 +40,7 @@ export function WorkspaceModeScreen({
   const design = live
     ? INTERACTIVE_PAGES.component
     : INTERACTIVE_PAGES.staticCatalogue;
-  const notice = <p className="ce-muted">{STATIC_NOTICE}</p>;
+  const notice = <StaticNotice />;
   return (
     <ComponentLayout
       design={design}

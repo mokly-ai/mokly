@@ -2,13 +2,14 @@
 
 ## Active
 
-- [Interactive Views](./interactive-views.md) — Milestones 1–7 complete: the
+- [Interactive Views](./interactive-views.md) — Milestones 1–8 complete: the
   contract documentation, Static/Live design catalogue, browser bundle,
-  fresh-mount runtime, isolated interactive origin, and the shell's Static/Live
+  fresh-mount runtime, isolated interactive origin, the shell's Static/Live
   control, which reads private route-scoped eligibility and is hidden for
-  opted-out entries. Milestone 8 depicts the Components tab while Live,
-  Milestone 9 restores the approved narrow toolbar without Static/Live, and
-  Milestone 10 adopts the example, smoke tests and reviews.
+  opted-out entries, and the artboard of a screen in Live whose Components tab
+  points back to Static. Milestone 9 restores the approved narrow toolbar
+  without Static/Live, and Milestone 10 adopts the example, smoke tests and
+  reviews.
 - [Comparison Pane Scroll Alignment](./comparison-pane-scroll-alignment.md)
   — Overlay and Difference drift apart when scrolled because each snapshot
   scrolls inside its own opaque frame; comparison panes become viewer-owned,
