@@ -1095,19 +1095,21 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       `packages/viewer/tests/` has a top-level export, and that nothing imports
       a test file.
 
-## Milestone 33: Helper move verification and delivery
+## Milestone 33: Helper move verification and delivery — completed
 
 - [x] Run the workflow guard, CI workflow and guides tests, Prettier, ESLint
       and the type check, then `cargo xtask check`; resolve every failure.
 - [x] Record the change in `docs/reviews/delta-publishing.md` against
       seventh-review finding 2.
-- [ ] After checks pass, `git add -A`, commit with a Conventional Commits
-      title of at most 50 characters, and push the branch.
-- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After checks pass, `git add -A`, commit with a Conventional Commits
+      title of at most 50 characters, and push the branch. Committed as
+      `6e84de7 test: move the remote-state scanner to a helper`.
+- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
-      without changing the implementation.
+      without changing the implementation. One Low finding is recorded in its
+      Eighth Review for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 

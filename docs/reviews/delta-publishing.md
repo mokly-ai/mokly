@@ -1208,3 +1208,48 @@ Finding 1 stays open for the user's decision.
 Follow-up verification: `cargo xtask check` passed with Node 24.21.0 (unit
 2,646/2,646, browser 860/860, packed-consumer smoke and every static check),
 and the focused guard, CI workflow and guides tests passed 42/42.
+
+## Eighth Review
+
+Reviewed on 2026-09-28 with
+[the implementation review prompt](../implementation-review-prompt.md), after
+commits `55503d3` (`chore: merge main into bogota-v7`) and `6e84de7`
+(`test: move the remote-state scanner to a helper`) were pushed, against
+`origin/main`. One independent read-only reviewer confirmed that the merge
+applied every line main's #121 added or removed across its 186 files and kept
+every branch change across 170 files, with no other edit beyond the
+`plans/README.md` resolution; that main's new comparison specs start their own
+fixture repositories with `base: "HEAD"` and do not use the shared example
+server; and that the scanner moved byte-for-byte, with no top-level export in
+any of the 625 test and spec files and no import of a test file. One finding
+follows, Low. It was not changed; it awaits the user's decision.
+
+1. **P3 / Low — The Seventh Review's summary still calls both of its findings
+   open.** Its opening paragraph says "Two findings follow, both Low. None was
+   changed; each awaits the user's decision", but the Seventh Review Follow-up
+   says finding 2 is addressed. Every earlier round's summary was edited to
+   point to its follow-up once one was written. This is the second such slip in
+   two rounds (the Seventh Review corrected one for fifth-review finding 3),
+   because the plan's recording task names only the follow-up.
+   **Impact of no change:** a reader of the summary, the part meant to be read
+   first, would think the test-export finding still needs a decision and might
+   raise it again or redo the work; code is unaffected. **Options:** **A)**
+   reword the summary to say the user chose option B for finding 2, which is
+   addressed (see the Seventh Review Follow-up), and that finding 1 awaits the
+   user's decision; **B)** A, plus have future recording tasks in the plan
+   also update that review's summary and any earlier status sentence the
+   change affects; **C)** A, plus a test that every review section with a
+   follow-up points to it from its summary; **D)** leave it.
+   **Recommended: B.** The direct fix is needed either way, and one sentence
+   in the recording task addresses the cause at no code cost. A test would
+   protect little: no other review record uses this summary-and-follow-up
+   layout, and this one stops receiving follow-ups when the pull request
+   merges.
+
+Eighth-review verification: 276 relative links and anchors in the changed
+Markdown resolve; replaying the new pin against the contract without the
+helper sentence fails; the guard, guides and CI workflow tests passed 38/38,
+and the related protocol, guide-structure, removed-preview and import-order
+tests passed 11/11; Prettier and ESLint are clean. Residual risk: the reviewer
+relied on the recorded `cargo xtask check` (unit 2,646/2,646, browser 860/860)
+rather than re-running the suites.
