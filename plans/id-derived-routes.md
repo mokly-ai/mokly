@@ -1,11 +1,11 @@
 # Id-Derived Routes, Unified Variants, And Identity-Keyed Wire
 
 Status: Milestones 1–8 implemented, verified, pushed, and reviewed on
-`calummoore/halifax-v2` (2026-09-26 to 2026-09-28); the review findings in the
-[review record](#review-record) await the user's decision. Created 2026-09-26
-with the user's consent after discussing route redundancy on the
-navigation-path branch; the variant unification and the wire cleanup were
-folded in the same day. The work is implemented on this branch,
+`calummoore/halifax-v2` (2026-09-26 to 2026-09-28); Milestones 9–15 carry the
+user's decisions on the [review record](#review-record) and are in progress.
+Created 2026-09-26 with the user's consent after discussing route redundancy
+on the navigation-path branch; the variant unification and the wire cleanup
+were folded in the same day. The work is implemented on this branch,
 `calummoore/halifax-v2`, and the user opens a pull request when it is ready.
 Mokly is not live, so this plan adds no backwards compatibility: readers it
 rewrites accept only the new versions, and there are no migration guards or
@@ -486,6 +486,219 @@ writer together, and remove the development redirect and preview redirects.
       explanation, impact of doing nothing, lettered options, and a
       recommendation, without changing the implementation.
 
+## Milestone 9: Review follow-up contract
+
+Rewrite the protocol docs, guides, and READMEs for the user's review decisions
+(2026-09-28) before any code changes: no compatibility with baselines built by
+earlier Mokly versions, the approved review fixes, and the verification
+ratchets. Finding numbers refer to the [review record](#review-record).
+
+- [ ] Old baselines (option A; findings 2, 9, 10, 15, 22, 23): the historical
+      manifest boundary accepts only manifest v7. Any other version, and the
+      legacy `mokabook-manifest.json` and `mockbook-manifest.json` baseline
+      names, makes the baseline incompatible: Serve reports Changes
+      unavailable, export and publish complete without Changes
+      (`changesStatus: "unavailable"`, delivery `comparisonUrl: null`), and
+      each prints one plain CLI line saying the comparison base was built
+      with an earlier Mokly and Changes return once the base includes this
+      version. Delete historical document relocation and its private base,
+      legacy component-variant id expansion and its collision rule, v3–v6
+      path normalization, the v3–v5 readers, and the v2 legacy page migration
+      from every doc, including `mokly-component-manifest.md`,
+      `mokly-changes.md`, `mokly-derived-baselines.md`,
+      `mokly-removed-previews.md`, `mokly-catalogue-changes.md`,
+      `mokly-nav-paths.md`, `mokly-variants.md`, `mokly-components.md`, and
+      `mokly-page-migration.md`. Output-ownership cleanup of old generated
+      files stays.
+- [ ] Identity leftovers: the v3 reader rejects a removed record whose id
+      belongs to a current entry, so the same-id history rules go (findings
+      14 and 28); `InstanceRef` has no `variantId`, and `ScreenNavigateEvent`
+      is `{ screenId, snapshotId?, fragment?, navigation? }` with `snapshotId`
+      present exactly when historical content was committed (finding 4);
+      `ReviewIgnore` ids keep the plain kebab-case grammar, and only entry ids
+      reject Windows device names (finding 15).
+- [ ] Review fixes: a baseline entry whose id belongs to a current entry of
+      another kind is dropped before pairing, so the current entry is added
+      (finding 8); one owning paragraph in
+      `mokly-component-review-validation.md` states the `review.json` order
+      for `screens`, `components`, nested variants, and `changes`, and
+      `mokly-changes.md` links to it (finding 11); `RenderInput.entry` is
+      `ScreenDefinition | ComponentVariantDefinition` (finding 12); removed
+      variants of a surviving parent keep baseline authored order at the
+      parent's position in `removedEntries` (finding 25); a removed variant
+      whose former parent is not an eligible parent shows the former
+      parent's title as a plain-text breadcrumb (finding 27); dark-scheme
+      availability counts removed component variants (finding 26);
+      screen-only Serve logs a classifier failure and reports Changes
+      unavailable (finding 16); snapshot and preview artifact names come from
+      shared path builders (finding 17).
+- [ ] Shell behavior: switching sibling component variants keeps the
+      comparison mode, and the workspace reads that one mode (finding 3); an
+      unknown frame-link id shows the missing view in uncontrolled and
+      standalone shells and a later selection re-applies its route, while a
+      controlled Viewer emits only `onError` and keeps its display (finding
+      5); component variant rows use a component-shaped variant icon
+      (finding 6).
+- [ ] Verification ratchets (findings 19 and 29): `ci-verification.md` and
+      `xtask/README.md` state that `cargo xtask check` fails when a changed
+      TypeScript file under `src`, `packages/viewer/src`, or `scripts`
+      crosses 300 lines or grows while over 300 lines relative to
+      `origin/main`, when a protocol doc cap is raised or added relative to
+      `origin/main`, and when an internal export is unused outside a reviewed
+      baseline list that can only shrink.
+- [ ] Release notes (finding 30): `docs/protocol/npm-release.md` names the
+      rejected `ViewerSelection.variantId`, the removed `ScreenNavigateEvent`
+      `route` and `variantId`, the removed `InstanceRef.variantId`, and the
+      end of comparisons against baselines built by earlier Mokly versions.
+- [ ] Fix the remaining doc and code wording mismatches (finding 20).
+- [ ] Restore every protocol doc touched by Milestones 1–9 to its
+      `origin/main` cap (a renamed doc keeps its predecessor's cap; a new doc
+      stays at or below 250 lines) by splitting by responsibility, and lower
+      the caps in `tests/protocol_doc_sizes.test.ts`; run
+      `npm run format:check` and the protocol doc tests; review the diff;
+      commit.
+
+## Milestone 10: Component variant navigation mockups
+
+Tags: mockup
+
+- [ ] Update the shared navigation mockup data
+      (`examples/basic/entries/design/parts/nav_data.ts`) and the component
+      explorer, workspace, and Changes mockups so a component with variants
+      shows its disclosure and its variant rows in authored order with a
+      component-shaped variant icon, in both mobile and desktop variants,
+      keeping the screen-variant presentation unchanged (finding 6).
+- [ ] Confirm the `design-browse-variant-reparented` mockup shows the former
+      parent as a plain-text breadcrumb (finding 27).
+- [ ] `npm run build`, `npm run example:build`, `npm run example:check`, and a
+      visual smoke of the changed design screens through `npm run dev` with
+      screenshots; commit.
+
+## Milestone 11: Remove old-baseline compatibility
+
+- [ ] Failure-first tests: a v6 baseline makes Serve report Changes
+      unavailable with the documented CLI line; export and publish succeed
+      without Changes; a v7 baseline still compares.
+- [ ] The historical boundary accepts only v7: delete v2–v6 parsing, the
+      legacy baseline manifest names, `legacyPages` and the v2 page migration,
+      v3–v6 normalization in `src/registry/historical_manifest.ts`,
+      `src/review/historical_document.ts` and every snapshot-base branch in
+      export and HTML reference code, legacy component-variant expansion
+      (`legacyComponentVariantId`, `legacyComponentVariantEntry`,
+      `flattenComponentVariantEntries`,
+      `validateHistoricalComponentVariantIds`, legacy variant validators, and
+      `HistoricalManifestComponent*` types), and the historical nested-variant
+      paths in review and shell data.
+- [ ] Identity leftovers: the v3 reader rejects removed records whose id is
+      current, and the collision branches that can no longer fire go
+      (finding 14); delete the removed-variant-on-a-surviving-component path
+      (finding 28); review readers validate `ReviewIgnore` ids with the plain
+      id grammar (finding 15).
+- [ ] Dead code (finding 19): delete `withFragmentQuery`, `safeDecode`,
+      `validFragmentQuery`, `resolveCatalogueRecord`, `publicPath`,
+      `pagePreviewPath`, the `CatalogueVariant` alias, `route()` in
+      `catalogue/values.ts`, the unused `viewer/routing.ts` and
+      `viewer/public_stage.tsx` (moving their tests to live code), the
+      unreachable route-collision check in `compile.ts`, and unread `route`
+      and `variantId` fields on definitions and render targets; rename
+      route-era identifiers that carry ids.
+- [ ] Update tests and fixtures; build, lint, format, typecheck, example
+      build and check, full unit suite, and affected browser specs; smoke
+      Serve and export against a branch point built by an earlier Mokly;
+      commit.
+
+## Milestone 12: Review fixes in data, review, and export
+
+- [ ] Finding 1: one exported affected-consumer sort key used by the
+      producer and the v4 reader; a test feeds producer output with component
+      ids `x`, `x-y`, and `x2` through `parseReviewResult`.
+- [ ] Finding 8: drop a baseline entry whose id belongs to a current entry of
+      another kind before pairing; a classify-then-parse test.
+- [ ] Finding 11: the v4 reader enforces the documented order for `changes`
+      and nested component variants; tests.
+- [ ] Finding 13: the packed-consumer export check derives snapshot paths
+      with the shared helper and fails when it checked none.
+- [ ] Finding 16: screen-only Serve logs a classifier failure and reports
+      Changes unavailable; delete the `compareScreen` fallback and its dead
+      arguments.
+- [ ] Finding 17: shared builders for snapshot view, snapshot page, and page
+      preview artifact names replace every hand-built copy, and
+      `snapshotPath` is deleted; a test fails on hand-built names.
+- [ ] Finding 18: `parseViewHref` uses a `Map` lookup; tests for
+      `constructor`, `__proto__`, and `toString` prefixes.
+- [ ] Finding 21: shared helpers in `packages/viewer/src/navigation/routes.ts`
+      for provider-normalized extensionless view paths and the unknown-id
+      destination, used by the shell, `static_workspace_evidence.ts`, and
+      both preview scripts (mechanical shell edits only).
+- [ ] Finding 24: a component parent that fails its own validation stays
+      available for relationship checks, so authors see one root-cause
+      error; test.
+- [ ] Finding 25: a projection test pins removed-entry order with
+      interleaved ids and a surviving parent.
+- [ ] Finding 7: table-driven variant validation and manifest relationship
+      tests run every rule for screens and components, including stored v7
+      `variants`, empty `variants`, and forbidden variant fields.
+- [ ] Finding 12: the NodeNext consumer fixture type-checks the renderer
+      snippet from `mokly-rendering.md`.
+- [ ] Build, lint, format, typecheck, example build and check, full unit
+      suite, and affected browser specs; commit.
+
+## Milestone 13: Verification ratchets and file splits
+
+- [ ] Finding 29: split the files that grew past 300 lines in this plan
+      (`src/registry/manifest_validation.ts`,
+      `src/registry/manifest_entries.ts`, `src/build/mock_links.ts`,
+      `packages/viewer/src/shell/workspace_data.ts`,
+      `packages/viewer/src/standalone/bootstrap.ts`,
+      `packages/viewer/src/shell/use_comparison.ts`, and
+      `packages/viewer/src/shell/store_browser.ts`) by responsibility with no
+      behavior change.
+- [ ] Add the TypeScript file-length ratchet, the protocol doc cap ratchet,
+      and the unused internal export check with its shrinking baseline to the
+      repository suite of `cargo xtask check` as documented, with tests;
+      Rust changes follow the repository's Rust rules.
+- [ ] `cargo xtask check --suite repository` and the full unit suite pass;
+      commit.
+
+## Milestone 14: Shell review fixes
+
+Tags: ui
+
+- [ ] Finding 3: the workspace reads the single comparison mode owned by
+      `useComparison` instead of a copy; a browser test switches sibling
+      variants in Side by side and asserts the Props return-to-Current
+      message and disabled highlighting.
+- [ ] Finding 5: unknown frame-link ids show the missing view in
+      uncontrolled and standalone shells and a later selection re-applies its
+      route; a controlled Viewer emits only `onError` and keeps its display;
+      unit and browser tests for both modes.
+- [ ] Finding 4: drop `InstanceRef.variantId` and frame matching by variant;
+      `onScreenNavigate` carries `snapshotId` when historical content was
+      committed; tests build references from the documented shape and check
+      the live event payload.
+- [ ] Finding 6: component variant rows use the component-shaped variant icon
+      from the Milestone 10 mockups; extend the mockup-versus-runtime row test
+      to the Components section.
+- [ ] Finding 26: dark-scheme availability counts removed component variants;
+      test.
+- [ ] Finding 27: a removed variant whose former parent is not an eligible
+      parent shows the former parent's title as a plain-text crumb; test.
+- [ ] Build, lint, format, typecheck, full unit and browser suites, and an
+      `npm run dev` smoke with screenshots; commit.
+
+## Milestone 15: Follow-up verification, close-out, and review
+
+- [ ] Update key-code pointers in the touched READMEs and `plans/README.md`.
+- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
+- [ ] Commit with a `BREAKING CHANGE:` footer naming the end of comparisons
+      against baselines built by earlier Mokly versions, the removed
+      `InstanceRef.variantId`, and the `ScreenNavigateEvent` fields; push.
+- [ ] Review the complete local diff against `origin/main` using
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      after the push; report each finding with a number, severity, plain
+      explanation, impact of doing nothing, lettered options, and a
+      recommendation, without changing the implementation.
+
 ## Review record
 
 Milestones 2–8 (`a6fe0da`..`d227702e`) were reviewed with the [implementation
@@ -573,11 +786,21 @@ all await the user's decision.
 30. **Low** — the breaking-change notes omit the viewer host API changes
     (`ViewerSelection.variantId` rejected; `ScreenNavigateEvent` narrowed).
 
+**User decisions (2026-09-28):** option A removes compatibility with baselines
+built by earlier Mokly versions, resolving findings 2, 9, 10, 15, 22, and 23
+and deleting the leftovers behind findings 4, 14, 19, and 28. Findings 1, 3,
+5–8, 11–13, 16, 18, 21, 24–27, 29, and 30 are fixed as recommended, with
+these refinements confirmed by the coordinator: finding 8 uses option C,
+finding 5 keeps a controlled Viewer's display unchanged, finding 4 also
+restores `snapshotId` on navigation events, finding 11 also enforces the order
+in the reader, finding 15 also fixes `ReviewIgnore` ids, and finding 29 uses a
+ratchet against `origin/main`. Findings 17 and 20, omitted from both earlier
+lists, are included. Milestones 9–15 carry the work.
+
 ## Post-merge follow-up (non-blocking)
 
-- Separate cleanup: delete the historical v3–v5 manifest readers and the
-  legacy v2 page migration once no derived baseline can still produce them.
 - Update Mokly Cloud and any external documentation that links to
-  `/id/<id>` URLs or reads `route` from the public read model.
+  `/id/<id>` URLs, reads `route` from the public read model, sends
+  `ViewerSelection.variantId`, or stores `InstanceRef.variantId`.
 - Re-run `npm run benchmark:large` after the release to confirm the single
   shell write speeds up export.
