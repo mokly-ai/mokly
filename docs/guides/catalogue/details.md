@@ -13,7 +13,7 @@ it.
 
 ## What it holds
 
-- The screen's id, title, description and route.
+- The entry's id, title and description.
 - The tags it carries, as chips you can search from.
 - The dependencies it declares and the related documents it names.
 - Its components, and for a component page the screens that use it.
@@ -41,8 +41,8 @@ add their entry.
 
 ## Component props
 
-On a component page the inspector shows the saved variants and the declared
-controls. While serving locally you can edit text, boolean, number and preset
-controls and see the result immediately; Reset restores the saved variant. A
-published catalogue keeps the variants and the inspection with the controls
-read only.
+On a component page the inspector shows the component's variant entries and
+declared controls. While serving locally you can edit text, boolean, number and
+preset controls and see the result immediately; Reset restores the current
+variant's declared props. A published catalogue keeps the variants and the
+inspection with the controls read only.

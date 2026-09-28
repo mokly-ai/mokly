@@ -16,9 +16,9 @@ button discloses, because a row cannot be both a link and a `<summary>`. A
 deleted variant whose non-variant parent survives joins that container as a
 Removed row. `nav_tree.ts` records actual attachment before removing the row
 from flat fallback, so a former parent that is now a variant cannot make its
-historical child disappear and every removed route remains represented once.
+historical child disappear and every removed entry remains represented once.
 Current section nodes use the shared folder-first comparator; flat removed
-rows follow the complete current hierarchy in route/id order rather than
+rows follow the complete current hierarchy in kind/id order rather than
 interleaving with its top-level leaves. Components and Pages keep independent
 section roots even when they reuse the same folder labels.
 `disclosure_keys.ts` derives section-scoped folder disclosure keys by matching
@@ -40,7 +40,7 @@ visibility to parents and their variant children. `changes_activation.ts`
 owns Changes-filter activation for both standalone and embedded shells: an
 aggregate-only parent selects its first visible changed variant, and a changed
 destination selects its first changed view only when the current selection is
-not already a changed route. Later navigation within Changes keeps the sticky
+not already a changed entry. Later navigation within Changes keeps the sticky
 view axes; aggregate-parent redirection still applies. The shared typed query
 parser applies each valid viewport or scheme independently and ignores invalid
 or repeated values; the embedded host and standalone router consume the same
@@ -59,19 +59,19 @@ state, so navigation and controlled-host updates cannot leave stale indicators.
 `workspace_views_data.ts` derives the changed views themselves, preferring a
 ready comparison result and falling back to the lightweight screen-view
 evidence a screen-only catalogue records. Workspace data keys those lists by
-saved-variant id for components and entry id for screens, so every reader must
+component variant entry id or screen entry id, so every reader must
 select the evidence that belongs to the preview; `css_workspace_marks.ts` draws
 the dot and clips its wording.
 The parallel `viewStates` map stores `{ viewport, colorScheme, state }` for each
 ready view under the same key, while a missing key means per-view status is
 unknown. `workspace_views.ts` resolves documents actually displayed after
 Light fallback. `view_status.ts` returns status, eligibility, and evidence
-provenance together; missing or partial matching evidence retains the
-selected entry or saved variant's fallback status and eligibility.
+provenance together; missing or partial matching evidence retains the selected
+entry's fallback status and eligibility.
 `workspace_context.tsx` owns one routed workspace and its resolved views for
 the top-bar Appearance indicator and workspace. `workspace.tsx` consumes that
-shared resolution on every viewport, scheme, saved-variant, or evidence change
-and passes the effective scheme to controls and comparison presentation.
+shared resolution on every viewport, scheme, component variant, or evidence
+change and passes the effective scheme to controls and comparison presentation.
 
 `css.ts` concatenates the standalone stylesheet. Split string modules preserve
 its exact bytes. The package build scopes an embedded stylesheet separately and
@@ -187,7 +187,8 @@ after hydration.
 Appearance has the same explicit handoff with an earlier first-paint boundary.
 `appearance-startup.js` runs before the stylesheet, resolves Auto/Light/Dark,
 and refreshes the parsed control and frame sources before `src/browser.tsx`
-hydrates. `appearance_bridge.ts` adopts that theme and the body's effective
+hydrates. [`appearance_bridge.ts`](../standalone/appearance_bridge.ts) adopts
+that theme and the body's effective
 scheme into the live shell, independently asking the store for matching preview
 files. A light-only catalogue can therefore keep Light previews without
 rewriting a Dark interface during hydration. Without the startup host, the
@@ -220,14 +221,15 @@ quiet. The served stage holds the unavailable copy without a Retry control,
 because a shell that never hydrates cannot honour that action; the first client
 effect replaces it with the loading state and adds Retry only if its own request
 fails. The request fencing lives in `use_removed_preview.ts`; it asks
-`previews/presentation.ts` to fetch and validate the historical documents needed
+[`previews/presentation.ts`](../previews/presentation.ts) to fetch and validate
+the historical documents needed
 by the selected views before reporting ready. Each loaded frame receives only a
 script-disabled, viewer-origin `srcdoc`, with
 `data-mokly-preview-source` naming the immutable snapshot address. The
 viewer-owned guard cancels links and forms, scrolls same-document anchors
 without native navigation, and restores the accepted presentation after any
 later frame navigation. The copy and Retry contract comes from
-`previews/copy.ts`.
+[`previews/copy.ts`](../previews/copy.ts).
 `views.tsx` uses it for removed pages and `workspace.tsx` for removed screens;
 both drop the comparison band there, while removed component variants keep
 theirs.

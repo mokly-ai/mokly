@@ -128,8 +128,10 @@ five-second interactive target.
 
 Key files: `generate.ts` produces consumer sources; `area.tsx`, `components.tsx`
 and `screens.tsx` define the catalogue; `renderer.tsx` collects native styles;
-`scripts/large/setup.mjs` owns baseline setup, `toolchain.mjs` archives the derived
-tooling, `baseline.mjs` resets the pinned cache safely, and `benchmark.mjs` owns browser
+`scripts/large/setup.mjs` owns baseline setup,
+`scripts/large/toolchain.mjs` archives the derived tooling,
+`scripts/large/baseline.mjs` resets the pinned cache safely, and
+`scripts/large/benchmark.mjs` owns browser
 acceptance. The
 [diagnostic contract](../../../docs/protocol/mokly-timings.md) describes timing
 records, inclusive durations and process boundaries.

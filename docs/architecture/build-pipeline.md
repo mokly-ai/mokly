@@ -309,5 +309,4 @@ Shared catalogue validation uses synchronous browser-safe SHA-256, checked again
 Node digests; source inventory excludes the resolved viewer runtime even when
 npm installs it as a workspace symlink. Browser
 packaging fails if a client imports Node-only code. Comparison JSON is decoded
-with the same new-record validator used by its producer; v2 artifacts remain
-supported without adding component suppression.
+with the same strict review-result v4 validator used by its producer.

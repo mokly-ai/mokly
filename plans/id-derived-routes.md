@@ -470,10 +470,10 @@ writer together, and remove the development redirect and preview redirects.
 
 ## Milestone 8: Verification, close-out, and review
 
-- [ ] Update key-code pointers in the touched READMEs and confirm
+- [x] Update key-code pointers in the touched READMEs and confirm
       `plans/README.md` describes the completed state.
-- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
-- [ ] Commit as a `feat!:` change with a `BREAKING CHANGE:` footer naming the
+- [x] Run `cargo xtask check`; fix anything it reports until it passes.
+- [x] Commit as a `feat!:` change with a `BREAKING CHANGE:` footer naming the
       removed authoring fields, global component variant ids, the document
       layout, identity-only manifest v7, read model v3, review result v4,
       delivery v3, and the removed `/id/` URLs; push.

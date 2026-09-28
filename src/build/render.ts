@@ -176,7 +176,7 @@ export function addOutput(
 
 export function stylesheetsFor(
   catalogueRoute: string,
-  fragmentRoute: string,
+  viewPath: string,
   colorScheme: ColorScheme,
   config: ResolvedConfig,
 ): string[] {
@@ -201,7 +201,7 @@ export function stylesheetsFor(
       );
     }
     const relative = path.posix.relative(
-      path.posix.dirname(fragmentRoute),
+      path.posix.dirname(viewPath),
       stylesheet,
     );
     const encoded = encodeUrlPath(relative);

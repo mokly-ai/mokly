@@ -10,8 +10,7 @@ order: 3
 Changes compares your working tree with the branch point shared by `HEAD` and
 the Git base your configuration names, which is `origin/main` unless you say
 otherwise. It compares the generated documents, the local resources they
-render, route-level catalogue metadata and the `navPath` an entry
-sits in.
+render, entry metadata and the `navPath` an entry sits in.
 
 Commits added to the base branch after you diverged do not appear as your
 changes. Staged, unstaged and untracked edits in your working tree do.
@@ -44,16 +43,16 @@ comparison is reacquired for you.
 
 ## Variants and views
 
-A variant of a screen is its own row in Changes and counts on its own. When
-only a variant changed, the parent screen still shows a changed mark on its
-row so the group stays visible, and opening the parent from Changes takes you
-to the first changed variant. A deleted variant keeps a Removed row under the
-screen it belonged to, shown in Changes and hidden in All; if the screen went
+A screen or component variant is its own row in Changes and counts on its own.
+When only a variant changed, the parent still shows a changed mark on its row
+so the group stays visible, and opening the parent from Changes takes you to
+the first changed variant. A deleted variant keeps a Removed row under the
+parent it belonged to, shown in Changes and hidden in All; if the parent went
 too, the row joins the others at the top level. A change confined to one
 viewport or scheme, such as a dark-only edit, puts a dot on the control that
 would take you to it: the theme control when the change is in the other theme,
 the viewport control when it is in the other viewport. Details names those
-views under Changed views, and opening the screen from Changes takes you
+views under Changed views, and opening the entry from Changes takes you
 straight to the first of them. Opening it from All, following a link with a
 viewport or scheme in it, or reloading keeps the view you were on.
 The status and comparison options describe the view in front of you; with Both
@@ -76,7 +75,7 @@ being retrieved the stage says so, and if it cannot be shown you get "Previous
 version unavailable" with a Retry, while the rest of the catalogue stays
 usable.
 
-A removed saved component variant keeps its earlier version, so it can still be
+A removed component variant keeps its earlier version, so it can still be
 compared.
 
 ## When the evidence is incomplete

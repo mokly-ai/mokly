@@ -257,6 +257,10 @@ Key code:
 - `page_preview.ts`: typed before-only page capture from accepted removal state.
 - `historical_document.ts`: derived-path relocation for historical documents
   while preserving their relative resource base.
+- `component_variant_classification.ts`: flat component variant entry pairing,
+  reasons, view evidence, and grouped v4 result records.
+- `component_classification_sources.ts`, `component_reason_sources.ts`, and
+  `component_result_sources.ts`: source-complete v4 assembly and validation.
 - `component_classification.ts`, `component_view.ts`: component ownership policy.
   `compareComponentView` has two paths: an unchanged decision that settles a
   paired view only when marker-retaining documents, routes, and usage topology
@@ -295,10 +299,12 @@ Key code:
 - `css/nesting.ts`, `css/pseudos.ts`: parent substitution and static match bounds.
 - `css/material.ts`: changed custom-property and URL-reference detection.
 - `css/paths.ts`: shared public stylesheet analysis scope.
-- `css/stylesheet_path.ts`: browser-safe, case-insensitive stylesheet identity.
+- `../../packages/viewer/src/review/css/stylesheet_path.ts`: browser-safe,
+  case-insensitive stylesheet identity shared with readers.
 - `resource_comparison.ts`, `css/resource_analysis.ts`: shared resource evidence
   and the classification-scoped parser cache.
-- `result_resources.ts`: browser-safe validation of retained/excluded evidence.
+- `../../packages/viewer/src/review/result_resources.ts`: browser-safe
+  validation of retained/excluded evidence shared with readers.
 - `resource_documents.ts`: one paired normalization for embedded-document
   discovery and matching; normalized ignore tokens are never parsed a second time.
 - `artifact_resources.ts`: validation of evidence against retained snapshot resources.

@@ -10,13 +10,14 @@ Changes baseline, for the served shell, a static export and an embedded
 nothing, so the stage reports the unavailable state instead of requesting an
 address the catalogue never published.
 
-`request.ts` resolves that descriptor to one metadata address. Development uses
-the stable selected endpoint (`route=` for a screen, `page=` for a page); static
-delivery uses `comparisonUrl` for a screen and the catalogue's advertised
-`preview.path` for a page, after checking that the path belongs to the
-comparison's generation and to this exact route. A page's documents resolve
+[`request.ts`](./request.ts) resolves that descriptor to one metadata address.
+Development uses the stable selected endpoint (`id=` for a screen or component
+variant, `page=` for a page); static delivery uses `comparisonUrl` for a screen
+and the catalogue's advertised `preview.path` for a page, after checking that
+the path belongs to the comparison's generation and to this exact entry. A
+page's documents resolve
 against the generation root, not the descriptor's own directory. Screen views
-render only where the comparison says `removed`; any `afterPath` for that route
+render only where the comparison says `removed`; any `afterPath` for that entry
 means a reused generation and is treated as unavailable. Before accepting
 either kind, the request recomputes the selected historical identity from the
 metadata's baseline commit. Legacy generation-backed selections must resolve
@@ -37,8 +38,9 @@ directives, prepends the single effective base, and serializes the preserved
 doctype and other nodes for `srcdoc`. These edits affect only the in-memory
 presentation; snapshot and comparison bytes do not change.
 
-`copy.ts` owns the unavailable copy and Retry hook shared by the server render
-and hydrated shell. `shell/previews.tsx` owns loading, retry and loaded states,
+[`copy.ts`](./copy.ts) owns the unavailable copy and Retry hook shared by the
+server render and hydrated shell. [`shell/previews.tsx`](../shell/previews.tsx)
+owns loading, retry and loaded states,
 using the same device chrome components as current screens. A selected viewport
 with no captured view keeps a note where its frame would be rather than an empty
 stage; its `mbk-preview-note` and `mbk-preview-switch` classes match the design
@@ -46,7 +48,8 @@ catalogue, and the stylesheet hides the closing sentence while both viewports
 are shown. `read_only.ts` guards every viewer-owned presentation. It cancels all
 link and form activation, scrolls a same-document fragment itself without
 applying `:target`, preserves Space for scrolling, and reapplies the accepted
-`srcdoc` if the frame navigates away. `shell/use_removed_preview.ts` is the
+`srcdoc` if the frame navigates away.
+[`shell/use_removed_preview.ts`](../shell/use_removed_preview.ts) is the
 route-owned controller: its first effect replaces the honest server-rendered
 unavailable state with loading, requests on selection, fetches every document
 needed for that viewport and scheme before reporting ready, renews before

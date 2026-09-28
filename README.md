@@ -42,9 +42,9 @@ styling, and rendering context.
 - **Use real product UI.** Screens are React nodes composed from the same
   components, providers, styles, and assets as the product.
 - **See the whole product in one place.** Path-based folders, search, tags,
-  mobile and desktop views, color schemes, pages, components, screen variants,
-  and user flows share one catalogue. Variants remain grouped beneath their
-  parent screen while keeping their own stable ids and routes.
+  mobile and desktop views, color schemes, pages, components, screen and
+  component variants, and user flows share one catalogue. Variants remain
+  grouped beneath their parent while keeping their own stable ids and routes.
 - **Review outcomes, not file lists.** The Changes view compares rendered
   screens and their reachable resources with the branch point of your Git base,
   while removed screens and pages retain a read-only previous version.
@@ -298,10 +298,18 @@ merge.
 - [`src/config`](./src/config) — config discovery, loading, and path policy.
 - [`src/build`](./src/build) — bundling, rendering, validation, and generated
   output transactions.
+- [`src/components/manifest_entry_validation.ts`](./src/components/manifest_entry_validation.ts)
+  — current and historical component-entry validation.
+- [`src/registry/changed_ids.ts`](./src/registry/changed_ids.ts) and
+  [`historical_manifest.ts`](./src/registry/historical_manifest.ts) —
+  identity-keyed change membership and the historical wire boundary.
 - [`src/cli`](./src/cli/README.md) — command parsing, reporting, and composition.
 - [`src/server`](./src/server/README.md) — local HTTP server and watched runtime.
 - [`src/review`](./src/review/README.md) — Git baselines, comparison, and change
   attribution.
+- [`src/review/component_variant_classification.ts`](./src/review/component_variant_classification.ts)
+  and [`historical_document.ts`](./src/review/historical_document.ts) — flat
+  variant classification and relocation of historical documents.
 - [`src/export`](./src/export/README.md) — static catalogue export.
 - [`src/publication`](./src/publication/README.md) — shared static shell and
   previous-version publication.

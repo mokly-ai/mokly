@@ -45,7 +45,7 @@ disclosure summary. Variant rows render one indent step deeper with the variant
 icon — a screen outline over a second, partially drawn screen — on a
 `mbk-nav-ico variant` wrapper, only while the list is open. The changed mark is
 a trailing dot and never an edge or rail. Row rendering lives in
-`catalogue-navigation-row.view.tsx`, which the component owns beside its main
+`chrome/catalogue-navigation-row.view.tsx`, which the component owns beside its main
 view. Selected rows use the same appearance-aware contrast token for their
 labels, variant disclosures and changed marks.
 
@@ -71,7 +71,7 @@ bodies and native inputs. Resolve scenario navigation in an adapter before
 calling a component; missing destinations stay non-links. Top-bar Appearance owns scheme selection;
 header view controls own the viewport. Use ordinary `MockLink` anchors for inspector-body
 links and tag chips so they can live inside native `details` panels.
-`parts/nav_data.ts` is the canonical catalogue-navigation fixture for both the
+`../parts/nav_data.ts` is the canonical catalogue-navigation fixture for both the
 saved All example and in-screen artboards, so those two views stay aligned.
 
 Use explicit semantic `moklyInstance` names for repeated siblings. The

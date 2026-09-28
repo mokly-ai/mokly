@@ -449,6 +449,13 @@ consumers.
 - [`src/registry/nav_paths.ts`](./src/registry/nav_paths.ts) and [`src/registry/hierarchy_conflicts.ts`](./src/registry/hierarchy_conflicts.ts) — shared folder keys, labels, sibling order and source-attributed path conflicts
 - [`src/client`](./src/client) — frame adapters, transport and geometry
 - [`src/catalogue`](./src/catalogue) — public catalogue types and validation
+- [`src/navigation/routes.ts`](./src/navigation/routes.ts) — shared
+  identity-derived document, view and shell URL helpers
+- [`src/components/variants.ts`](./src/components/variants.ts) — legacy local
+  component-variant id normalization at the historical boundary
+- [`src/shell/workspace_entry.ts`](./src/shell/workspace_entry.ts) and
+  [`src/shell/workspace_variants.ts`](./src/shell/workspace_variants.ts) —
+  routed workspace identity and sibling component-variant entries
 - [`src/inspector`](./src/inspector) — bounded in-frame inspection runtime
 - [`tests`](./tests) — package-level conformance tests
 

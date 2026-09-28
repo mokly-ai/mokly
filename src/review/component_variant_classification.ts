@@ -51,7 +51,7 @@ interface VariantClassification {
   reviews: readonly ComponentVariantReview[];
 }
 
-/** Classify saved variant entries while retaining Review v3's grouped result. */
+/** Classify variant entries while retaining Review v4's grouped component result. */
 export function classifyComponentVariants(
   input: VariantClassificationInput,
 ): VariantClassification {

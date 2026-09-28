@@ -78,8 +78,9 @@
   manifest, read model, review result, and viewer indexes drop every
   derivable path field and key on id; and the static export writes each
   shell once without the `id/<id>/index.html` alias. No backwards
-  compatibility. Implemented on the navigation-path branch; a pull request
-  opens when the work is ready.
+  compatibility. Milestones 1–7 are implemented, verified, and pushed on
+  `calummoore/halifax-v2`; Milestone 8 close-out is in progress, and the plan
+  stays Active until its pull request merges.
 
 ## Completed
 

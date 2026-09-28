@@ -8,7 +8,7 @@ order: 2
 ## Search the tree
 
 The search field narrows the navigation tree as you type. It matches an
-entry's id, its title and its route, so any of the three finds a screen.
+entry's id, title and tags.
 
 ## Search by tag
 

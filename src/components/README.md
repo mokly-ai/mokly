@@ -103,15 +103,32 @@ npm run build
 node --import tsx --test tests/component_*.test.ts
 ```
 
-- `definition.ts`, `types.ts`: public authoring boundary and inference.
-- `props.ts`, `schema.ts`, `codec.ts`: declarative validation and lossless data.
-- `collector.ts`, `render.tsx`, `ranges.ts`: actual usage and neutral ranges.
-- `resolve_instance.ts`: pure resolution for scoped, validated instance records.
-- `source.ts`, `../build/jsx_dev_runtime.ts`: source validation and capture.
-- `instance_structure.ts`: explicit logical inputs, excluding source metadata.
-- `comparison_projection.ts`: caller versus implementation material.
-- `../server/controls`: supervised local rendering and transient storage.
-- `../client/workspace.ts`: shared component explorer and inspector.
+- [`definition.ts`](./definition.ts), [`types.ts`](./types.ts): public authoring
+  boundary and inference.
+- [`manifest_build.ts`](./manifest_build.ts) and
+  [`manifest_entry_validation.ts`](./manifest_entry_validation.ts): flattened
+  parent/variant records and current-or-historical validation.
+- Viewer [`props.ts`](../../packages/viewer/src/components/props.ts),
+  [`schema.ts`](../../packages/viewer/src/components/schema.ts), and
+  [`codec.ts`](../../packages/viewer/src/components/codec.ts): declarative
+  validation and lossless data.
+- [`collector.ts`](./collector.ts), [`render.tsx`](./render.tsx), and
+  [`ranges.ts`](./ranges.ts): actual usage and neutral ranges.
+- Viewer [`resolve_instance.ts`](../../packages/viewer/src/components/resolve_instance.ts):
+  pure resolution for scoped, validated instance records.
+- Viewer [`source.ts`](../../packages/viewer/src/components/source.ts) and
+  [`../build/jsx_dev_runtime.ts`](../build/jsx_dev_runtime.ts): source
+  validation and capture.
+- [`instance_structure.ts`](./instance_structure.ts): explicit logical inputs,
+  excluding source metadata.
+- [`comparison_projection.ts`](./comparison_projection.ts): caller versus
+  implementation material.
+- [`../server/controls`](../server/controls): supervised local rendering and
+  transient storage.
+- Viewer [`workspace.tsx`](../../packages/viewer/src/shell/workspace.tsx),
+  [`workspace_entry.ts`](../../packages/viewer/src/shell/workspace_entry.ts),
+  and [`workspace_variants.ts`](../../packages/viewer/src/shell/workspace_variants.ts):
+  shared component explorer, routed entry, and sibling variants.
 
 See the [registered component contract](../../docs/protocol/mokly-components.md),
 [instance identity](../../docs/protocol/mokly-instances.md),

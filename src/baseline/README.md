@@ -142,7 +142,7 @@ interruption and symlink rejection. See the
 and [storage and execution rules](../../docs/protocol/mokly-baseline-storage.md)
 and [review boundaries](../review/README.md).
 
-`baseline_process_tree.test.ts` runs real nested commands on Linux and in the
+`tests/baseline_process_tree.test.ts` runs real nested commands on Linux and in the
 Windows/macOS CI jobs, including cancellation after the launcher exits. Native
 binding fault tests exercise assignment, setup and ownership ordering without
 requiring a Windows host.
