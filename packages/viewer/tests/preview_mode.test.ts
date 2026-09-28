@@ -36,6 +36,8 @@ import {
 } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 
+type AvailabilityInput = Parameters<typeof livePreviewAvailability>[0];
+
 const model = readCatalogue(
   JSON.parse(
     fs.readFileSync(
@@ -110,22 +112,19 @@ test("only current screens and saved variants name a Live view", () => {
 });
 
 test("availability is absent without Live and disabled only where it failed", () => {
+  const known = (input: Omit<AvailabilityInput, "eligibility" | "retained">) =>
+    livePreviewAvailability({
+      ...input,
+      eligibility: "eligible",
+      retained: false,
+    });
   const view = { entryId: "action", variantId: "default" };
   const other = { entryId: "home" };
+  assert.equal(known({ descriptor: undefined, unavailable: [], view }), "none");
+  assert.equal(known({ descriptor, unavailable: [], view: undefined }), "none");
+  assert.equal(known({ descriptor, unavailable: [], view }), "available");
   assert.equal(
-    livePreviewAvailability({ descriptor: undefined, unavailable: [], view }),
-    "none",
-  );
-  assert.equal(
-    livePreviewAvailability({ descriptor, unavailable: [], view: undefined }),
-    "none",
-  );
-  assert.equal(
-    livePreviewAvailability({ descriptor, unavailable: [], view }),
-    "available",
-  );
-  assert.equal(
-    livePreviewAvailability({
+    known({
       descriptor: { ...descriptor, state: "failed" },
       unavailable: [],
       view,
@@ -134,11 +133,11 @@ test("availability is absent without Live and disabled only where it failed", ()
   );
   const failedView = [liveViewKey(generation, view)];
   assert.equal(
-    livePreviewAvailability({ descriptor, unavailable: failedView, view }),
+    known({ descriptor, unavailable: failedView, view }),
     "unavailable",
   );
   assert.equal(
-    livePreviewAvailability({
+    known({
       descriptor,
       unavailable: failedView,
       view: other,
@@ -146,7 +145,7 @@ test("availability is absent without Live and disabled only where it failed", ()
     "available",
   );
   assert.equal(
-    livePreviewAvailability({
+    known({
       descriptor,
       unavailable: [liveGenerationKey(generation)],
       view: other,
@@ -154,7 +153,7 @@ test("availability is absent without Live and disabled only where it failed", ()
     "unavailable",
   );
   assert.equal(
-    livePreviewAvailability({
+    known({
       descriptor: { ...descriptor, generation: "d".repeat(32) },
       unavailable: [liveGenerationKey(generation), ...failedView],
       view,

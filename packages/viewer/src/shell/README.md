@@ -108,8 +108,12 @@ same-identity readiness events and preparation results in place, never moving
 a generation from `ready` or `failed` back to `building`, and adopts a fetched
 page's public bootstrap, source, interactive descriptor, and private workspace
 as one monotonic revision. A changed Live generation keeps the existing
-full-reload boundary. `use_workspace_data.ts` keeps one route-owned workspace object so
-matching evidence refreshes retain already loaded usage and local editor state.
+full-reload boundary. `capability_route_evidence.ts` loads a newly routed
+workspace's private evidence and reports it pending until adoption; a request
+for the current route and source that settles without one ends pending and
+leaves that private evidence unknown. `use_workspace_data.ts` keeps one
+route-owned workspace object so matching evidence refreshes retain already
+loaded usage and local editor state.
 Versioned historical selection adopts new evidence and becomes unavailable if
 that exact snapshot disappears. Identity-less legacy history adopts only an
 unchanged removed record; metadata changes reject live adoption and preserve the
@@ -142,29 +146,38 @@ omission.
 
 Static/Live is split the same way. `preview_mode.ts` is the pure layer: the
 `PreviewMode` and failure keys kept in the store (`selectPreviewMode`,
-`markLiveUnavailable`), which views offer Live, availability, and the shared
-product copy. `live_frame_source.ts` derives the Live origin and maps a static
-`/static/` source onto it. `live_preview.tsx` owns one routed workspace's
-decision: it reads the private descriptor from `useViewerLiveState`, calls the
-preparation capability while Live waits for its generation (aborting on
-Static, view change or a new generation), adopts the result into the
-descriptor, and supplies frame wiring through context to the current stage
-only. `stage_frame.tsx` then renders `live_preview_frame.tsx` in the same
-device chrome: a new frame mounted through the registry's per-origin
-`postMessageAdapter` with pending usage, hidden behind `PreviewProgress`
-until the adapter mount resolves. `preview_mode_control.tsx` is the toolbar
-segment, and `workspace_inspector.tsx` swaps the Components, Props and Usage
-panels for the Static-only notice while Live is on screen. Flow steps, pages,
+`markLiveUnavailable`), which views offer Live, route-scoped eligibility,
+availability, and the shared product copy. `live_frame_source.ts` derives the
+Live origin and maps a static `/static/` source onto it. `live_preview.tsx`
+owns one routed workspace's decision: it reads the private descriptor, the
+adopted workspace's `interactive` value and `workspacePending` from
+`useViewerLiveState`, calls the preparation capability only while Live is
+selected for a view known to be eligible and waits for its generation
+(aborting on Static, view change or a new generation), adopts the result into
+the descriptor, and supplies frame wiring through context to the current stage
+only. An opted-out entry, or one whose adopted workspace lacks the value, gets
+no control and a Static stage while the preview mode stays Live for the next
+eligible view. `live_preview_retention.tsx` keeps one per-root slot recording
+whether the displayed view offered Static/Live; after same-shell navigation a
+pending view keeps that presence until its workspace arrives, never preparing
+or mounting Live meanwhile, and a page, flow or home leaves it empty.
+`stage_frame.tsx` then renders `live_preview_frame.tsx` in the same device
+chrome: a new frame mounted through the registry's per-origin
+`postMessageAdapter` with pending usage, hidden behind `PreviewProgress` until
+the view is known eligible, its bundle is ready and the adapter mount
+resolves. `preview_mode_control.tsx` is the toolbar segment, and
+`workspace_inspector.tsx` swaps the Components, Props and Usage panels for the
+Static-only notice while Live is on screen. Flow steps, pages,
 comparisons and removed entries never receive Live wiring. The preview mode
 rides in the watched-reload recovery snapshot, so a new generation remounts
 Live, while an ordinary load starts Static.
 
-The backend eligibility accessor for the follow-up UI is
-`useViewerLiveState().workspace?.interactive`. A known value survives SSR,
-hydration, route evidence loads and same-generation evidence refreshes, and is
-replaced with the runtime on watched rebuild. `undefined` means unknown or not
-applicable and must never enable Live. The current control intentionally does
-not consume it until Interactive Views Milestone 7.
+Eligibility arrives only as `useViewerLiveState().workspace?.interactive`. A
+known value survives SSR, hydration, route evidence loads and same-generation
+evidence refreshes, and is replaced with the runtime on watched rebuild.
+`undefined` means unknown or not applicable and never enables Live. The
+[interactive views shell contract](../../../../docs/protocol/mokly-interactive-views-shell.md)
+defines the control, eligibility and the pending interval.
 
 Before standalone hydration, stored disclosure and split-width preferences are
 applied to the server DOM. Disclosure helpers treat native `<details>` groups

@@ -10,7 +10,6 @@ import {
   type SetStateAction,
 } from "react";
 
-import type { ViewerHostCapabilities } from "../client/host_capabilities.js";
 import {
   viewerCapabilityRequest,
   viewerCapabilitySourceEquals,
@@ -30,7 +29,6 @@ import {
 } from "./capability_adoption.js";
 import {
   commitViewerEvidence,
-  type BoundViewerWorkspace,
   type ViewerCapabilitySnapshot,
 } from "./capability_commit.js";
 import {
@@ -40,6 +38,10 @@ import {
   useViewerInitialWorkspace,
   type ViewerLiveState,
 } from "./capability_context.js";
+import {
+  sameCapabilityRequest,
+  useRouteEvidence,
+} from "./capability_route_evidence.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import type { ShellRecoverySnapshot, ShellState } from "./store_state.js";
@@ -95,21 +97,21 @@ export function useViewerCapabilityStore(input: {
     [route, snapshot.source],
   );
   const workspace =
-    request && sameRequest(snapshot.workspace?.request, request)
+    request && sameCapabilityRequest(snapshot.workspace?.request, request)
       ? snapshot.workspace?.value
       : undefined;
 
-  useRouteEvidence(
+  const workspacePending = useRouteEvidence({
     capabilities,
-    input.interactive,
-    input.state,
-    input.stateRef,
+    interactive: input.interactive,
     request,
-    snapshot.workspace,
-    snapshotRef,
     setSnapshot,
-    input.setState,
-  );
+    setState: input.setState,
+    snapshotRef,
+    state: input.state,
+    stateRef: input.stateRef,
+    workspace: snapshot.workspace,
+  });
 
   const adoptInteractive = useCallback(
     (interactive: ViewerInteractiveDescriptor) =>
@@ -204,73 +206,18 @@ export function useViewerCapabilityStore(input: {
       ...(snapshot.interactive ? { interactive: snapshot.interactive } : {}),
       ...(request ? { request } : {}),
       ...(workspace ? { workspace } : {}),
+      ...(workspacePending ? { workspacePending: true as const } : {}),
     }),
-    [adoptPreparation, capabilities, request, snapshot.interactive, workspace],
+    [
+      adoptPreparation,
+      capabilities,
+      request,
+      snapshot.interactive,
+      workspace,
+      workspacePending,
+    ],
   );
   return { catalogue: snapshot.catalogue, context, liveState };
-}
-
-function useRouteEvidence(
-  capabilities: ViewerHostCapabilities | undefined,
-  interactive: boolean,
-  state: ShellState,
-  stateRef: Current<ShellState>,
-  request: ViewerCapabilityRequest | undefined,
-  workspace: BoundViewerWorkspace | undefined,
-  snapshotRef: { current: ViewerCapabilitySnapshot },
-  setSnapshot: Dispatch<SetStateAction<ViewerCapabilitySnapshot>>,
-  setState: Dispatch<SetStateAction<ShellState>>,
-): void {
-  const target = state.route.view.kind === "target" && state.route.view.target;
-  const ownsWorkspace =
-    target &&
-    target.kind === "entry" &&
-    (target.entry.kind === "screen" || target.entry.kind === "component");
-  useEffect(() => {
-    if (
-      !capabilities ||
-      !interactive ||
-      !request ||
-      !ownsWorkspace ||
-      sameRequest(workspace?.request, request)
-    )
-      return;
-    const controller = new AbortController();
-    void capabilities.evidence
-      .loadRouteEvidence(request, controller.signal)
-      .then((revision) => {
-        if (!revision || controller.signal.aborted) return;
-        const current = snapshotRef.current;
-        if (
-          !current.source ||
-          !viewerCapabilitySourceEquals(current.source, request.source) ||
-          viewerCapabilityRoute(stateRef.current.route) !== request.route
-        )
-          return;
-        const commit = commitViewerEvidence(
-          current,
-          stateRef.current,
-          revision,
-        );
-        if (!commit) return;
-        snapshotRef.current = commit.snapshot;
-        stateRef.current = commit.state;
-        setSnapshot(commit.snapshot);
-        setState(commit.state);
-      })
-      .catch(() => undefined);
-    return () => controller.abort();
-  }, [
-    capabilities,
-    interactive,
-    ownsWorkspace,
-    request,
-    setSnapshot,
-    setState,
-    snapshotRef,
-    stateRef,
-    workspace?.request,
-  ]);
 }
 
 function capabilityRequest(
@@ -280,15 +227,4 @@ function capabilityRequest(
   return source
     ? viewerCapabilityRequest(source, viewerCapabilityRoute(state.route))
     : undefined;
-}
-
-function sameRequest(
-  left: ViewerCapabilityRequest | undefined,
-  right: ViewerCapabilityRequest,
-): boolean {
-  return (
-    left !== undefined &&
-    left.route === right.route &&
-    viewerCapabilitySourceEquals(left.source, right.source)
-  );
 }

@@ -17,6 +17,7 @@ import {
 import type { ShellContext } from "./context.js";
 import { ShellFrameEventRouter } from "./frame_event_router.js";
 import { ShellFrameRegistryProvider } from "./frame_registry.js";
+import { LivePreviewRetentionProvider } from "./live_preview_retention.js";
 import { catalogueNavSections } from "./nav_model.js";
 import { routeScreenId, type ShellRoute } from "./routes.js";
 import { shellRecoverySnapshot, shellStore } from "./store_actions.js";
@@ -159,9 +160,11 @@ export function ShellStoreProvider({
           >
             <DisplaySelection.Provider value={state.selection}>
               <ShellFrameEventRouter />
-              <WorkspaceProvider initial={initialState?.workspace}>
-                {children}
-              </WorkspaceProvider>
+              <LivePreviewRetentionProvider>
+                <WorkspaceProvider initial={initialState?.workspace}>
+                  {children}
+                </WorkspaceProvider>
+              </LivePreviewRetentionProvider>
             </DisplaySelection.Provider>
           </ShellFrameRegistryProvider>
         </ComparisonEnvironmentProvider>

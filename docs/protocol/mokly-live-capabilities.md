@@ -73,8 +73,11 @@ workspace reader all forbid the field.
   errors or consumer text;
 - `useViewerLiveState()` returns the exact adopted request and its matching
   private workspace from the shell store. A workspace from an older route or
-  revision is never exposed. Milestone 7 reads the current entry's resolved
-  eligibility directly as `useViewerLiveState().workspace?.interactive`.
+  revision is never exposed. The Static/Live control reads the current entry's
+  resolved eligibility directly as `useViewerLiveState().workspace?.interactive`.
+  While a routed screen or component still expects its workspace,
+  `workspacePending` is `true`; it is absent once the workspace is adopted or
+  its request settles without one, as described below.
 - `useViewerCapabilities()` returns browser behavior only after the live host
   supplies it. Export returns `undefined`.
 
@@ -140,6 +143,13 @@ sources are rejected.
 
 Pages, flows, home and missing routes have no workspace result. A route or
 source replacement cancels the request and obsolete results are ignored.
+From navigation until the routed workspace is adopted, the store reports it as
+pending. A request for the current route and source that fails, returns no
+revision, or is rejected by these checks ends pending without a workspace, so
+private evidence, including Live eligibility, stays unknown until a later
+evidence revision supplies it. The
+[interactive views shell contract](./mokly-interactive-views-shell.md#eligibility)
+defines how the Static/Live control presents both intervals.
 The public read model commits navigation before this metadata request starts;
 holding, failing or aborting the request cannot delay the URL and main-view
 transition or replace their React-owned DOM. Same-document Back cancels an

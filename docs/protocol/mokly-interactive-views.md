@@ -3,10 +3,11 @@
 ## Delivery Status
 
 Tracked by the [interactive views plan](../../plans/interactive-views.md).
-Milestones 1–6 implement the contract, browser runtime, isolated Serve origin,
-lazy bundle state, private shell transport, the shell's Static/Live control,
-and route-scoped per-entry eligibility. Hiding the control for an opted-out
-entry remains the Milestone 7 UI change.
+Milestones 1–7 implement the contract, browser runtime, isolated Serve origin,
+lazy bundle state, private shell transport, route-scoped per-entry
+eligibility, and the shell's Static/Live control, which opted-out entries do
+not show. The [shell contract](./mokly-interactive-views-shell.md) owns the
+control.
 
 ## Purpose
 
@@ -52,17 +53,19 @@ query, fragment or userinfo. `--strict-port` applies to both Serve listeners.
 `interactive?: false`. Declaring `true` or any other value is rejected, so the
 field can only remove Live from one entry. Screen variants inherit the parent's
 value unless they declare their own. Collections, pages and use cases reject
-the field. An opted-out entry shows no Static/Live control and refuses Live
-document requests with 404 on the interactive origin. When the global private
-interactive descriptor exists, each current screen or component route's
-private workspace evidence contains `interactive: boolean` at the workspace
-root when the accepted runtime has a resolved value. Serve resolves it from
+the field. An opted-out entry shows no Static/Live control, leaving no gap,
+and refuses Live document requests with 404 on the interactive origin. When
+the global private interactive descriptor exists, each current screen or
+component route's private workspace evidence contains `interactive: boolean`
+at the workspace root when the accepted runtime has a resolved value. Serve resolves it from
 `ComponentRuntime.interactiveEntries`, not from the current manifest entry, so
 the live index, completed manifest, background evidence refreshes and watched
 replacement generations agree. If that runtime value is missing, Serve omits
 the field, reports the inconsistency once per entry and generation, and still
 serves the Static page. The shell treats absent eligibility as unknown and must
-not offer or mount Live for that view.
+not offer or mount Live for that view; the
+[shell contract](./mokly-interactive-views-shell.md#eligibility) defines that
+presentation and the pending interval after same-shell navigation.
 
 `useViewerLiveState().workspace?.interactive` is the shell accessor. The
 workspace remains bound to the exact route and accepted source revision. This
@@ -323,68 +326,27 @@ preparing.
 
 ## Shell Behaviour
 
-The view toolbar shows a segmented control named "Preview mode" with Static
-and Live when the private descriptor exists and the routed view is a current
-screen or a current saved component variant. It sits after the Dark preview
-toggle, or after the viewport control when the shell shows no Dark preview
-toggle, and before Highlight components. The standalone top-bar Appearance
-selector remains the only color-scheme control. Pages, use-case steps,
-removed entries and removed variants render no control and leave no gap; while
-a comparison is shown the control is hidden, and Current restores it with the
-choice unchanged. The same descriptor is present during server rendering and
-hydration, so the control is part of the first paint. Export and publication
-never carry the descriptor and never show the control.
-
-Preview mode is shell state, not public selection. It starts Static, persists
-across view changes in the current document, and is discarded by an ordinary
-reload. A watched reload's one-shot recovery carries it, so a rebuild that
-replaces the generation reloads the page with Live still selected and mounts
-the Live frame on the new generation.
-
-Static frames mount exactly as today. Selecting Live mounts a new frame in the
-same device chrome: the same `/static/` path, query and fragment on the Live
-origin, `sandbox="allow-same-origin allow-scripts"`, and the cross-origin
-adapter with pending usage, so the frame subscribes to navigation only. The
-frame origin is the descriptor's explicit origin, otherwise the shell's own
-scheme and host name with the descriptor port. Navigation events reach the
-shell's existing frame event router exactly like Static links.
-
-Preparing: when the descriptor is not `ready`, the device frame shows a
-centered spinner with "Getting the live preview ready" and the shell calls the
-preparation endpoint for the current generation. Selecting Static, changing
-view or replacing the generation aborts that call, and Static returns the
-static document immediately. A `ready` result or event mounts the Live frame
-hidden behind the same state until the adapter mount resolves, so a blank
-document never shows.
-
-Unavailable: Static is selected and the Live segment is disabled but
-focusable, with the tooltip and accessible description "Live preview is
-unavailable for this view." A `failed` descriptor, a `failed` preparation or
-a preparation error applies to every view of that generation; an adapter
-mount failure such as `timeout`, `origin` or `unavailable` applies to that
-view only. The reason stays diagnostic detail, not shell copy, and a new
-document starts available again.
-
-While Live is on screen, highlight, pick and controls stay Static-only. The
-inspector's Components, Props or Controls, and Usage tabs keep their icons and
-open normally, but each panel shows only "Switch to Static to inspect or edit
-this view."; Details is unchanged. Highlight components is disabled with the
-description "Highlighting works in Static." Switching to Live with unsaved
-prop edits discards them, exactly as changing the saved variant does; the
-control is not disabled.
+The [interactive views shell contract](./mokly-interactive-views-shell.md)
+owns the Static/Live control: where it appears, route-scoped eligibility and
+the pending interval after same-shell navigation, preview-mode state, Live
+frames, the preparing and unavailable states, and inspection while Live is on
+screen. A pending or ineligible view never calls the preparation endpoint and
+never requests a Live document.
 
 ## Failure States
 
-| State                      | Cause                                       | Behaviour                                            |
-| -------------------------- | ------------------------------------------- | ---------------------------------------------------- |
-| `interactive-bundle`       | Node-only import or esbuild failure         | 503 on Live documents; failure cached for generation |
-| View ineligible            | Typed entry/kind/variant eligibility reason | 404 on the interactive origin                        |
-| Composition fault          | Invalid generation or adapted document      | 500; never presented as a bundle-input problem       |
-| Pre-mount failure          | Invalid bootstrap or missing registry view  | Static document untouched; one diagnostic            |
-| Uncaught Live render error | Consumer render throws in the root          | Static document restored; one diagnostic             |
-| Caught Live render error   | Consumer error boundary catches             | Boundary result retained; one diagnostic             |
-| Origin unavailable         | Second listener cannot bind                 | Serve fails to start, naming the port                |
-| Generation replaced        | Watched rebuild during a Live session       | Page reloads, keeps Live, mounts the new generation  |
+| State                      | Cause                                               | Behaviour                                                          |
+| -------------------------- | --------------------------------------------------- | ------------------------------------------------------------------ |
+| `interactive-bundle`       | Node-only import or esbuild failure                 | 503 on Live documents; failure cached for generation               |
+| View ineligible            | Typed entry/kind/variant eligibility reason         | 404 on the interactive origin                                      |
+| Entry opted out            | `interactive: false` on the screen or component     | No control and no gap; Static frame; 404 on the interactive origin |
+| Eligibility unknown        | Value omitted by Serve or route evidence unloadable | No control; Static frame; never prepared or mounted                |
+| Composition fault          | Invalid generation or adapted document              | 500; never presented as a bundle-input problem                     |
+| Pre-mount failure          | Invalid bootstrap or missing registry view          | Static document untouched; one diagnostic                          |
+| Uncaught Live render error | Consumer render throws in the root                  | Static document restored; one diagnostic                           |
+| Caught Live render error   | Consumer error boundary catches                     | Boundary result retained; one diagnostic                           |
+| Origin unavailable         | Second listener cannot bind                         | Serve fails to start, naming the port                              |
+| Generation replaced        | Watched rebuild during a Live session               | Page reloads, keeps Live, mounts the new generation                |
 
 ## Verification
 
@@ -397,11 +359,8 @@ watched generation rollover, diagnostics, timing, typed 503 states, and 404 for
 ineligible entries. A real-Serve browser test mounts a stateful control through
 the frame adapter and observes navigation with no diagnostic. Other browser
 tests cover render recovery, and export tests prove private Live material is
-absent. Shell tests cover control visibility per catalogue and view,
-server-rendered markup, frame origin and sandbox per mode, preparing and both
-unavailable scopes, navigation from a Live frame, preview-mode persistence,
-reset and watched-reload recovery, the inspector notice, disabled
-highlighting, discarded edits, and keyboard operation.
+absent. The [shell contract](./mokly-interactive-views-shell.md#verification)
+lists the shell's unit and browser tests.
 
 ## Related Docs
 
@@ -410,4 +369,5 @@ highlighting, discarded edits, and keyboard operation.
 - [Viewer frame adapter](./mokly-frame-adapter.md)
 - [Live viewer capabilities](./mokly-live-capabilities.md)
 - [Component controls](./mokly-component-controls.md)
+- [Interactive views shell](./mokly-interactive-views-shell.md)
 - [Interactive views design](./mokly-interactive-views-design.md)

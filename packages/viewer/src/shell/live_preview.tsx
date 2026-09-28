@@ -19,6 +19,11 @@ import {
 import { useOptionalShellFrameRegistry } from "./frame_registry.js";
 import { liveFrameOrigin } from "./live_frame_source.js";
 import {
+  useLivePreviewRetention,
+  useRecordLivePreviewPresence,
+} from "./live_preview_retention.js";
+import {
+  liveEligibility,
   liveGenerationKey,
   livePreviewAvailability,
   livePreviewView,
@@ -32,9 +37,12 @@ import type { WorkspaceVariantSelection } from "./workspace_selection.js";
 /** What a Live stage frame needs from the workspace that selected Live. */
 export interface LivePreviewFrameOptions {
   adapter: FrameAdapter;
-  /** The generation's browser bundle is ready, so the frame may mount. */
-  bundleReady: boolean;
   frameOrigin: string;
+  /**
+   * The view is known to be eligible and its generation's browser bundle is
+   * ready, so the frame may mount. Until then the preparing state stays.
+   */
+  mountable: boolean;
   /** Report a mount failure: Static is selected and Live disabled here. */
   unavailable(): void;
 }
@@ -48,13 +56,19 @@ export interface PreviewModeChoice {
 
 /** Static/Live outcome for one routed workspace. */
 export interface LivePreview {
-  /** Absent when the catalogue, view or comparison offers no Static/Live. */
+  /**
+   * Absent when the catalogue, view, entry or comparison offers no
+   * Static/Live, including a view whose eligibility is unknown.
+   */
   control?: PreviewModeChoice;
   /** Frame wiring while Live is selected for the current view. */
   frame?: LivePreviewFrameOptions;
   /** Live is on screen, so inspection and prop editing wait for Static. */
   inspecting: boolean;
-  /** Live is selected for the current view, including behind a comparison. */
+  /**
+   * Live is selected for the current view, including behind a comparison and
+   * while a retained control waits for this view's eligibility.
+   */
   selected: boolean;
 }
 
@@ -88,13 +102,23 @@ export function useLivePreview(input: {
   const descriptor = live.interactive;
   const adoptPreparation = live.adoptPreparation;
   const view = livePreviewView(input.data, input.selection);
+  const retention = useLivePreviewRetention();
   const availability = livePreviewAvailability({
     descriptor,
+    eligibility: liveEligibility({
+      entry: input.data.entry,
+      pending: live.workspacePending === true,
+      workspace: live.workspace,
+    }),
+    retained: retention?.offered ?? false,
     unavailable: store?.state.liveUnavailable ?? [],
     view,
   });
+  useRecordLivePreviewPresence(retention, availability !== "none");
   const requested = store?.state.previewMode === "live";
-  const selected = requested && availability === "available";
+  const selected =
+    requested && (availability === "available" || availability === "pending");
+  const selectedEligible = requested && availability === "available";
   const generation = descriptor?.generation;
   const bundleFailed = descriptor?.state === "failed";
   const bundleReady = descriptor?.state === "ready";
@@ -122,8 +146,8 @@ export function useLivePreview(input: {
   }, [viewKey]);
 
   useEffect(() => {
-    if (selected && !wiring) unavailable();
-  }, [selected, unavailable, wiring]);
+    if (selectedEligible && !wiring) unavailable();
+  }, [selectedEligible, unavailable, wiring]);
 
   useEffect(() => {
     if (requested && bundleFailed && generation)
@@ -131,7 +155,8 @@ export function useLivePreview(input: {
   }, [bundleFailed, generation, requested]);
 
   useEffect(() => {
-    if (!selected || bundleReady || !generation || !capabilities) return;
+    if (!selectedEligible || bundleReady || !generation || !capabilities)
+      return;
     const request = requestRef.current;
     const preparation = capabilities.interactive;
     const failed = () =>
@@ -157,7 +182,7 @@ export function useLivePreview(input: {
     bundleReady,
     capabilities,
     generation,
-    selected,
+    selectedEligible,
     viewKey,
   ]);
 
@@ -165,10 +190,11 @@ export function useLivePreview(input: {
     (mode: PreviewMode) => storeRef.current?.selectPreviewMode(mode),
     [],
   );
+  const mountable = selectedEligible && bundleReady;
   const frame = useMemo(
     () =>
-      selected && wiring ? { ...wiring, bundleReady, unavailable } : undefined,
-    [bundleReady, selected, unavailable, wiring],
+      selected && wiring ? { ...wiring, mountable, unavailable } : undefined,
+    [mountable, selected, unavailable, wiring],
   );
   return {
     ...(availability === "none" || input.comparing

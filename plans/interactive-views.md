@@ -336,19 +336,41 @@ carries the value, so the shell cannot hide Static/Live for an opted-out entry.
 - [x] Update `src/server/README.md` and the viewer READMEs; run the full check
       set and `cargo xtask check`; commit and push.
 
-## Milestone 7: Hide Static/Live for opted-out entries
+## Milestone 7: Hide Static/Live for opted-out entries — completed
 
 Tags: ui
 
-- [ ] Hide the Static/Live control, with no placeholder gap, for an entry
+Implementation decisions recorded in the
+[shell contract](../docs/protocol/mokly-interactive-views-shell.md): the shell
+reads eligibility only from the private workspace adopted for the exact route;
+`false`, or an adopted workspace without the value, renders no control and a
+Static stage while a Live selection stays selected for the next eligible view.
+Same-shell navigation commits before the destination's workspace arrives, so
+that view is pending until adoption. Like status and change marks, which keep a
+presentation until matching evidence arrives, the toolbar shows Static/Live
+only if the previous view offered it (a retained Live selection shows the
+preparing state), never prepares or mounts Live meanwhile, and changes at most
+once per navigation; a route evidence request that fails or is
+rejected ends pending as unknown. The shell behaviour moved from the main
+contract into its own shell contract so both protocol documents stay short.
+
+- [x] Hide the Static/Live control, with no placeholder gap, for an entry
       whose resolved `interactive` is false, reading the private eligibility
       delivered in Milestone 6 (moved from Milestone 5); never offer or mount
       Live while eligibility is unknown; and remove the interim unavailable
       fallback note from the contract.
-- [ ] Browser tests: toggle visibility per entry for an opted-out screen and an
+- [x] Keep the previous view's control presence while a newly routed view's
+      eligibility is pending, never preparing or mounting Live until it is
+      known; end pending as unknown when the route evidence request fails or
+      is rejected; and document the interval in the contracts (discovered
+      while implementing: eligibility arrives after navigation commits).
+- [x] Browser tests: toggle visibility per entry for an opted-out screen and an
       opted-out component, alongside eligible entries of the same catalogue
-      (moved from Milestone 5).
-- [ ] Update `packages/viewer/src/shell/README.md`; run the full check set and
+      (moved from Milestone 5); Live selected across eligible and opted-out
+      screens, components, saved variants and Back; held route evidence from
+      eligible to opted-out to eligible that neither prepares nor mounts Live
+      and changes the control at most once; and unloadable route evidence.
+- [x] Update `packages/viewer/src/shell/README.md`; run the full check set and
       `cargo xtask check`; commit and push.
 
 ## Milestone 8: Example adoption, smoke test and review

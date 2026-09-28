@@ -421,8 +421,10 @@ Shell state is one store scoped to a mounted viewer:
   discarded on route change or source replacement.
 - **Preview mode** is Static or Live for local Serve's
   [interactive views](./mokly-interactive-views.md), with the Live failures
-  seen in this document. It persists across in-shell navigation, is not part
-  of public selection, and starts Static in every other host.
+  seen in this document. It persists across in-shell navigation, including
+  through opted-out entries that show Static, is not part of public selection,
+  and starts Static in every other host. The
+  [shell contract](./mokly-interactive-views-shell.md) defines eligibility.
 
 A watched reload captures search, view, viewport, scheme, preview mode,
 disclosure (including the pre-filter baseline), drawer, catalogue scroll,

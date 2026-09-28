@@ -348,9 +348,12 @@ boolean for each current screen or component workspace when known. An absent
 value is unknown and cannot enable Live. Static navigation reads
 inert workspace evidence from the same finalized deployment. None of this
 private state enters public catalogue JSON or exported documents. With the
-private Live state, the shared shell shows a Static/Live control for screens and
-saved variants and mounts Live frames through an internal `postMessageAdapter`
-on the Live origin.
+private Live state, the shared shell shows a Static/Live control for eligible
+screens and saved variants and mounts Live frames through an internal
+`postMessageAdapter` on the Live origin. Opted-out and unknown entries keep the
+toolbar without the control, and after in-shell navigation a view keeps the
+previous view's control until its eligibility arrives, never mounting Live
+before then.
 Embedded `MoklyViewer` hosts never receive it, so they keep Static previews and
 the unchanged toolbar.
 

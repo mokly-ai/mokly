@@ -72,13 +72,14 @@ sources change and keeps your place. `--no-watch` starts the same way but does
 not follow later edits.
 
 With `interactive: "serve"`, screens and saved component variants gain a
-Static/Live control in the view toolbar. Live runs the same view in the browser
-so buttons respond, menus open and local state works; the announced second
-origin prepares it the first time you choose Live, and links inside it open
-their destination in the catalogue. Inspection and prop editing stay in
-Static, so switching to Live discards unsaved prop edits. The choice follows
-you between views and survives watched reloads, and opening the page again
-starts in Static. Build, Check, export, publication, Changes, and comparisons
+Static/Live control in the view toolbar, except those that opt out with
+`interactive: false`, which keep the toolbar without it and always show Static.
+Live runs the same view in the browser so buttons respond, menus open and local
+state works; the announced second origin prepares it the first time you choose
+Live, and links inside it open their destination in the catalogue. Inspection
+and prop editing stay in Static, so switching to Live discards unsaved prop
+edits. The choice follows you between views, including past opted-out ones,
+and survives watched reloads, and opening the page again starts in Static. Build, Check, export, publication, Changes, and comparisons
 remain static.
 
 ## Access

@@ -28,12 +28,16 @@ const interactive: ViewerInteractiveDescriptor = {
 };
 const CONTROL =
   /<span aria-label="Preview mode" class="mbk-seg mbk-preview-mode"/;
+const CONTROL_MARKUP =
+  /<span aria-label="Preview mode" class="mbk-seg mbk-preview-mode"[^]*?<\/span>/;
 
 function served(
   screenId: string,
   descriptor: ViewerInteractiveDescriptor | null = interactive,
+  eligible: boolean | null = true,
 ): string {
   const view = viewerView(display, { ...defaultSelection, screenId });
+  const entry = view.kind === "target" ? view.target.entry : undefined;
   return renderHydratedShellPage(
     view,
     {
@@ -42,6 +46,15 @@ function served(
       readModel: model,
       updateVersion: 4,
       ...(descriptor ? { interactive: descriptor } : {}),
+      ...(descriptor && entry && eligible !== null
+        ? {
+            workspaceInteractive: {
+              entryId: entry.id,
+              route: entry.route,
+              value: eligible,
+            },
+          }
+        : {}),
     },
     privateDisplay,
   );
@@ -81,6 +94,24 @@ test("a failed generation keeps the control with Live described as unavailable",
     tools,
     /aria-description="Live preview is unavailable for this view." aria-disabled="true" aria-pressed="false" data-preview-mode-option="live"/,
   );
+});
+
+test("an opted-out or unknown entry keeps its toolbar with no control or gap", () => {
+  for (const id of ["home", "action"]) {
+    const eligible = toolbar(served(id));
+    for (const eligibility of [false, null]) {
+      const tools = toolbar(served(id, interactive, eligibility));
+      assert.doesNotMatch(tools, CONTROL, `${id} ${String(eligibility)}`);
+      assert.match(tools, /data-workspace-viewport=""/);
+      assert.match(tools, /data-workspace-highlight=""/);
+      assert.equal(tools, eligible.replace(CONTROL_MARKUP, ""));
+    }
+    for (const state of ["failed", "ready"] as const)
+      assert.doesNotMatch(
+        toolbar(served(id, { ...interactive, state }, false)),
+        CONTROL,
+      );
+  }
 });
 
 test("no control appears without Live, on pages, flows or removed entries", () => {

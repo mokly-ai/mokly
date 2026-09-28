@@ -7,9 +7,9 @@ Delivered mockup scope for Milestone 2 of the
 design states depict the [interactive views contract](./mokly-interactive-views.md)
 and extend the [shell design](./mokly-shell-design.md) and
 [component workspace design](./mokly-component-workspace-design.md). The
-runtime Static/Live control implements these designs in Milestone 5; hiding it
-for opted-out entries follows once Serve delivers their eligibility, as the
-contract records.
+runtime Static/Live control implements these designs in Milestone 5, and
+Milestone 7 removes it from opted-out entries, as the
+[shell contract](./mokly-interactive-views-shell.md) records.
 
 ## Static/Live Control
 
@@ -24,7 +24,12 @@ Static is selected by default. The control
 appears only on screen fragments and component saved variants of a catalogue
 whose local Serve offers Live; pages, use-case steps, comparison panes and
 removed previous versions never show it. A static-only catalogue, or an entry
-that opted out, shows the existing toolbar unchanged, with no placeholder gap.
+that opted out, shows the existing toolbar unchanged, with no placeholder gap;
+`design-interactive-static-catalogue` depicts both. While a newly opened
+view's Live availability is still loading, its toolbar keeps the control only
+if the previous view offered it, and the preview shows the preparing state
+only when that control has Live selected, so this interval needs no additional
+design state.
 At narrow widths the toolbar takes its own row below the title, left-aligned,
 as the mobile artboards show.
 

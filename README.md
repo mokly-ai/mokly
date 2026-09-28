@@ -150,9 +150,10 @@ default port is `4173`; use `--port 0` to choose any available port.
 
 Previews are static documents, so comparisons read exact bytes. Setting
 `interactive: "serve"` adds a Static/Live control to screens and saved
-component variants: Live runs the same React tree in the browser on an
-isolated loopback origin, prepared the first time you choose it, while
-comparisons, inspection, prop editing and exports stay static. The Live port
+component variants that do not opt out with `interactive: false`: Live runs
+the same React tree in the browser on an isolated loopback origin, prepared the
+first time you choose it, while comparisons, inspection, prop editing and
+exports stay static. The Live port
 defaults to the resolved Serve port plus one (or an OS-selected port when
 Serve uses 65535); `--interactive-port`, `--interactive-origin`, and
 `--strict-port` cover explicit ports and forwarding. Forwarded host names or

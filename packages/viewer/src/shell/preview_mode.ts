@@ -10,10 +10,20 @@ import type { WorkspaceVariantSelection } from "./workspace_selection.js";
 export type PreviewMode = "live" | "static";
 
 /**
- * Toolbar presentation for one routed view: `none` renders no control at all,
- * `unavailable` keeps Static selected with Live disabled.
+ * What the private evidence adopted for the routed entry says about Live:
+ * `pending` until that route's workspace is adopted, `eligible` only for an
+ * explicit `true`, and `ineligible` for an opt-out or an unknown value.
  */
-export type LivePreviewAvailability = "available" | "none" | "unavailable";
+export type LiveEligibility = "eligible" | "ineligible" | "pending";
+
+/**
+ * Toolbar presentation for one routed view: `none` renders no control at all,
+ * `pending` keeps the control the previous view showed while this view's
+ * eligibility loads, and `unavailable` keeps Static selected with Live
+ * disabled. Only `available` may prepare or mount Live.
+ */
+export type LivePreviewAvailability =
+  "available" | "none" | "pending" | "unavailable";
 
 /** A current screen or saved component variant that can offer Live. */
 export interface LivePreviewView {
@@ -59,19 +69,48 @@ export function liveViewKey(generation: string, view: LivePreviewView): string {
   return JSON.stringify([generation, view.entryId, view.variantId ?? null]);
 }
 
-/** Decide whether the toolbar shows Static/Live and whether Live is usable. */
+/**
+ * Read eligibility only from the private workspace adopted for this exact
+ * entry and route. Without one, the view stays `pending` while its route
+ * evidence is still expected and is `ineligible` once that request settled.
+ */
+export function liveEligibility(input: {
+  entry: WorkspaceData["entry"];
+  pending: boolean;
+  workspace: WorkspaceData | undefined;
+}): LiveEligibility {
+  const { entry, workspace } = input;
+  if (
+    workspace?.entry.id === entry.id &&
+    workspace.entry.kind === entry.kind &&
+    workspace.entry.route === entry.route
+  )
+    return workspace.interactive === true ? "eligible" : "ineligible";
+  return input.pending ? "pending" : "ineligible";
+}
+
+/**
+ * Decide whether the toolbar shows Static/Live and whether Live is usable.
+ * A pending view keeps the presence the previous view displayed, so known
+ * eligibility changes the toolbar at most once and never flickers it.
+ */
 export function livePreviewAvailability(input: {
   descriptor: ViewerInteractiveDescriptor | undefined;
+  eligibility: LiveEligibility;
+  /** The previously displayed routed view offered Static/Live. */
+  retained: boolean;
   unavailable: readonly string[];
   view: LivePreviewView | undefined;
 }): LivePreviewAvailability {
-  const { descriptor, view } = input;
-  if (!descriptor || !view) return "none";
+  const { descriptor, eligibility, view } = input;
+  if (!descriptor || !view || eligibility === "ineligible") return "none";
+  if (eligibility === "pending" && !input.retained) return "none";
   const failed =
     descriptor.state === "failed" ||
     input.unavailable.includes(liveGenerationKey(descriptor.generation)) ||
     input.unavailable.includes(liveViewKey(descriptor.generation, view));
-  return failed ? "unavailable" : "available";
+  if (failed) return "unavailable";
+  return eligibility === "pending" ? "pending" : "available";
 }
 
 /** Select a preview mode that later views in this document keep. */

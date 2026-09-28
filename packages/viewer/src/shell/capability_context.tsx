@@ -38,6 +38,12 @@ export interface ViewerLiveState {
   interactive?: ViewerInteractiveDescriptor;
   request?: ViewerCapabilityRequest;
   workspace?: WorkspaceData;
+  /**
+   * The routed screen or component's private workspace is still expected:
+   * set from same-shell navigation until it is adopted, and cleared if its
+   * request settles without one, which leaves private evidence unknown.
+   */
+  workspacePending?: true;
 }
 
 const ViewerCapabilityContext = createContext<ViewerCapabilityContextValue>({});

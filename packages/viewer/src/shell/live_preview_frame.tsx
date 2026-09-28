@@ -16,8 +16,9 @@ import { useOptionalShellStore } from "./store_context.js";
 const LIVE_USAGE: CatalogueUsage = { status: "pending" };
 
 /**
- * Keep the preparing state over the frame until its bundle is ready and its
- * cross-origin adapter mount has resolved, so a blank document never shows.
+ * Keep the preparing state over the frame until the view is known to be
+ * eligible, its bundle is ready and its cross-origin adapter mount has
+ * resolved, so neither a blank document nor an unconfirmed view shows.
  */
 export function LivePreviewFrame({
   identity,
@@ -33,7 +34,7 @@ export function LivePreviewFrame({
   viewport: "desktop" | "mobile";
 }) {
   const store = useOptionalShellStore();
-  const liveSource = live.bundleReady
+  const liveSource = live.mountable
     ? liveFrameSource(source, live.frameOrigin)
     : undefined;
   const mounted = useMountedShellFrame({
@@ -43,8 +44,7 @@ export function LivePreviewFrame({
     source: liveSource,
     usage: LIVE_USAGE,
   });
-  const failed =
-    mounted.status === "error" || (live.bundleReady && !liveSource);
+  const failed = mounted.status === "error" || (live.mountable && !liveSource);
   const ready = liveSource !== undefined && mounted.status === "ready";
   const report = live.unavailable;
   useEffect(() => {
