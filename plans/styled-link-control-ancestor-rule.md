@@ -197,7 +197,6 @@ middle tier, and name the offending element in every message.
 - [x] Close the placement contract gaps for descendant group-role copy,
       tier/feature precedence, one-line authored values, and exact scan order;
       keep the authoring guide aligned.
-
 - [x] Add failing regressions in `tests/link_control_metadata.test.ts`: each
       silent ancestor (`tabindex` `0`, `3`, `-1`; `main tabindex="-1"`;
       `details` content; each group role) adapts with no diagnostics; each

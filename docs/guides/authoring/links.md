@@ -66,16 +66,9 @@ warning that one click has two targets. A focus target such as
 `<main tabIndex={-1}>`, the body of a `<details>` element and grouping roles
 such as `menubar` or `tablist` need no change and produce no warning.
 
-When one element matches several rules, the strongest result wins: errors take
-priority over warnings. The message then names the first matching feature at
-that tier: the element itself, editable state, media controls, role, inline
-handler, then `tabindex`. Attribute values in messages are trimmed, have
-whitespace collapsed, and stay on one line; inline handlers show only their
-attribute name, never their value.
-
 A warning names the route and the element on standard error and leaves the
-exit status at `0`. Pass `--strict` to `build` or `check` when a warning should
-fail the command instead.
+exit status at `0`. Pass `--strict` to `build`, `check`, `export` or `publish`
+when a warning should fail the command instead.
 
 ## Metadata without an interaction
 

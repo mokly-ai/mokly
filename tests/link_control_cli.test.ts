@@ -10,7 +10,10 @@ import { run } from "../dist/cli/run.js";
 import { loadConfig } from "../dist/config/load.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
-import { registerWarningPage } from "./helpers/link_control_warning_fixture.js";
+import {
+  registerWarningPage,
+  writeWarningPage,
+} from "./helpers/link_control_warning_fixture.js";
 import { memoryTerminal } from "./helpers/terminal.js";
 
 const warning =
@@ -19,7 +22,7 @@ const warning =
 test("build and check report warnings and strict fails before writing", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
-  await registerWarningPage(fixture);
+  const sourcePath = await registerWarningPage(fixture);
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   assert.equal(compilation.diagnostics.length, 1);
@@ -41,16 +44,23 @@ test("build and check report warnings and strict fails before writing", async (t
   );
   assert.equal(checked.stderr, warning);
 
-  for (const command of ["build", "check"] as const) {
-    const strict = await invoke(fixture, [command, "--strict"]);
-    assert.equal(strict.code, 1);
-    assert.equal(strict.stdout, "");
-    assert.equal(
-      strict.stderr,
-      `${warning}[mokly/build-invalid] 1 build warning with --strict\n`,
-    );
-  }
+  await writeWarningPage(sourcePath, "Changed label");
+  const strictBuild = await invoke(fixture, ["build", "--strict"]);
+  assert.equal(strictBuild.code, 1);
+  assert.equal(strictBuild.stdout, "");
+  assert.equal(
+    strictBuild.stderr,
+    `${warning}[mokly/build-invalid] 1 build warning with --strict\n`,
+  );
   assert.equal(await treeDigest(fixture.mockupsDir), lastGood);
+
+  const strictCheck = await invoke(fixture, ["check", "--strict"]);
+  assert.equal(strictCheck.code, 1);
+  assert.equal(strictCheck.stdout, "");
+  assert.equal(
+    strictCheck.stderr,
+    `${warning}[mokly/build-invalid] 1 build warning with --strict\n`,
+  );
 });
 
 async function invoke(
