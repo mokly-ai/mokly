@@ -103,32 +103,25 @@ CI's unit and browser jobs key npm's download cache from the checked-out
 lockfile. Identical trees must produce identical test results; the release
 workflow's exact-tree evidence reuse depends on that determinism.
 
-`tests/test_repository_refs.test.ts` is the only automated check for this rule
-and is a best-effort static lint. It examines direct subprocess calls whose
-first argument is the literal `"git"` and whose argv is an inline literal
-array. Before finding the subcommand, it skips global options and the values of
-`-C`, `-c`, `--git-dir`, `--work-tree`, `--namespace` and `--config-env`;
-separated and `=` forms follow the same rule. The target comes from the last
-`-C` or `--git-dir` before that subcommand; otherwise it comes from an inline
-options object's `cwd` property, including shorthand `{ cwd }`. A call with no
-options argument, or with an inline options object that omits `cwd`, targets the
-real checkout. An options variable or call, or an inline object with a spread,
-leaves the target unknown and is not reported.
+The remaining automated checks for repository inputs are deliberately narrow:
 
-For calls attributed to the real checkout, the lint recognizes literals that
-contain `origin/`, `remotes/` or `refs/remotes`; the literal `FETCH_HEAD`;
-case-insensitive `@{u}`, `@{upstream}` and `@{push}` spellings; configured
-upstream keys shaped like `branch.<name>.remote` or `branch.<name>.merge`; and
-the `fetch` and `ls-remote` subcommands. The reference-listing flags `-r`, `-a`,
-`--all`, `--remotes` and `--remotes=…` count only for `branch`, `show-branch`,
-`log`, `rev-list`, `rev-parse`, `describe`, `name-rev` and `shortlog`.
+- [`tests/preview.test.ts`](../../tests/preview.test.ts) owns the isolated
+  fixture baseline, deterministic edit and exact changed-result assertions.
+- [`tests/deployment.test.ts`](../../tests/deployment.test.ts) requires the
+  browser server command to use `--base HEAD`.
+- [`tests/ci_workflow.test.ts`](../../tests/ci_workflow.test.ts) requires the
+  unit and browser jobs to use the checked-out lockfile and never resolve
+  `origin/main` or a branch-point lockfile.
 
-The lint does not follow Git calls hidden behind helper closures, argv stored in
-variables or spreads, shell command strings, a relative `-C` layered after a
-real-root `-C`, `for-each-ref` without a remote pattern, `git remote`, compound
-ranges such as `HEAD..FETCH_HEAD`, modules under `scripts/` that tests execute,
-or product-code defaults such as a configured comparison base. Passing this
-lint does not establish behavior hidden by those blind spots.
+Nothing scans test code for remote-branch reads. New tests rely on review to
+keep this deterministic-input rule.
+
+No workflow or composite-action `run:` step may delete remote Git state. In a
+shared Git worktree, such a command deletes the shared repository's remotes,
+remote-tracking references or upstream settings.
+[`tests/ci_workflow_remote_state.test.ts`](../../tests/ci_workflow_remote_state.test.ts)
+enforces this as a text check across workflow and composite-action steps. It
+cannot see commands inside scripts that a step calls.
 
 ## Pull Request Title Contract
 

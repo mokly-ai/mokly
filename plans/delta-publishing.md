@@ -1035,14 +1035,14 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       without changing the implementation. Three Low findings are recorded in
       its Sixth Review for the user's decision.
 
-## Milestone 30: Remove the lint and guard workflows
+## Milestone 30: Remove the lint and guard workflows — completed
 
-- [ ] Add the workflow guard first, with synthetic positive and negative
+- [x] Add the workflow guard first, with synthetic positive and negative
       cases for every decided command form, and confirm it passes on the
       current workflows and fails when a cleanup step is added.
-- [ ] Delete `tests/test_repository_refs.test.ts` and
+- [x] Delete `tests/test_repository_refs.test.ts` and
       `tests/helpers/test_repository_refs.ts`.
-- [ ] Rewrite the "Deterministic Test Repository Inputs" section of
+- [x] Rewrite the "Deterministic Test Repository Inputs" section of
       [`ci-verification.md`](../docs/protocol/ci-verification.md): keep the
       rule, its reason and the tree-owned bases, name the remaining tests,
       drop the lint description, and state the workflow guard and its limit;
@@ -1050,9 +1050,9 @@ Documentation and contract only. Validate with Prettier and the guide tests;
 
 ## Milestone 31: Lint removal verification and delivery
 
-- [ ] Run the CI, verification, workflow, guides and deployment tests, then
+- [x] Run the CI, verification, workflow, guides and deployment tests, then
       `cargo xtask check`; resolve every failure.
-- [ ] Record the change in `docs/reviews/delta-publishing.md` against
+- [x] Record the change in `docs/reviews/delta-publishing.md` against
       fifth-review finding 3 and sixth-review findings 1 and 3.
 - [ ] After checks pass, `git add -A`, commit with a Conventional Commits
       title of at most 50 characters, and push the branch.

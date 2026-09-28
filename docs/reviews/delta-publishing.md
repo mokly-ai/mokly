@@ -1040,7 +1040,9 @@ against `origin/main`. One independent read-only reviewer confirmed the
 removal is complete: no command in the repository removes remotes, nothing
 references the deleted files, both CI steps are gone, the unit and browser
 jobs never read `origin/main`, and every link resolves. Three findings follow,
-all Low. None was changed; each awaits the user's decision.
+all Low. None was changed during the review. The user then chose to remove the
+lint and restore a workflow check for finding 1 (see **Sixth Review
+Follow-up**); the rest of findings 2 and 3 await the user's decision.
 
 1. **P3 / Low — Nothing stops a remote-cleanup step from coming back.** The
    commit deleted the workflow test's check that the unit and browser jobs
@@ -1088,3 +1090,39 @@ and browser jobs now run with `origin/*` references present, so an accidental
 read of the real checkout's `origin/main` would pass silently; one unused
 browser helper (`startPreviewFixture(true)` in `tests/browser/preview_fixture.ts`)
 would do exactly that if a spec started using it.
+
+### Sixth Review Follow-up
+
+On 2026-09-28 the user chose, for finding 1, to remove the remote-branch lint
+and restore a small workflow check instead of widening the lint.
+[Delta Publishing](../../plans/delta-publishing.md) Milestones 30–31 record
+the decision and work.
+
+1. **Addressed (option A, with the lint removed).**
+   `tests/ci_workflow_remote_state.test.ts` reads every `run:` step of every
+   workflow and of the composite action and fails if any deletes remote Git
+   state: `git remote remove`/`rm`, deleting `git update-ref` forms or one
+   naming `refs/remotes`, remote-branch deletion and `--unset-upstream` with
+   `git branch`, removing `remote.`/`branch.` configuration, or the old
+   script's name. Synthetic cases cover each form, multi-line blocks,
+   continuations and chained commands, and the old inline cleanup step is
+   flagged. It is a text check and cannot see commands inside scripts a step
+   calls. The lint (`tests/test_repository_refs.test.ts` and its helper) is
+   deleted, so nothing scans test code for remote-branch reads any more; the
+   [CI contract](../protocol/ci-verification.md#deterministic-test-repository-inputs)
+   says new tests rely on review for that and names the remaining checks.
+2. **Partly addressed.** The rewritten guide test pins the rule and its
+   reason again ("Identical trees must produce identical test results"); it
+   does not add option B's assertion that the contract no longer names the
+   script or a runtime proof.
+3. **Partly resolved by removal.** The lint sentence ("the only automated
+   check") went with the lint, and the contract now names the remaining
+   checks. The plan's Script Removal Decision still says CI "keeps reading
+   the baseline lockfile from the checked-out tree"; that sentence stays open.
+
+Fifth-review finding 3 (the lint's false alarms and contradictions) is
+resolved by the lint's removal.
+
+Follow-up verification: `cargo xtask check` passed with Node 24.21.0 (unit
+2,542/2,542 across 472 files, browser 781/781 across 122 files,
+packed-consumer smoke and every static check).

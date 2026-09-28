@@ -263,26 +263,6 @@ test("Complete idempotency, accounting and cancellation copy stay explicit", () 
 });
 
 test("test repository inputs are deterministic and title types stay fixed", () => {
-  for (const reference of [
-    "origin/",
-    "remotes/",
-    "refs/remotes",
-    "FETCH_HEAD",
-    "-r",
-    "--all",
-    "--remotes",
-    "fetch",
-    "ls-remote",
-    "@{upstream}",
-    "branch.<name>.remote",
-    "branch.<name>.merge",
-  ])
-    assert.ok(verification.includes(reference), reference);
-  assert.match(verification, /tests\/test_repository_refs\.test\.ts/u);
-  assert.match(
-    verification,
-    /only automated check for this rule.*best-effort static lint/u,
-  );
   assert.match(verification, /isolated fixture repository/u);
   assert.match(
     verification,
@@ -306,27 +286,30 @@ test("test repository inputs are deterministic and title types stay fixed", () =
   );
   assert.match(
     verification,
-    /target comes from the last `-C` or `--git-dir` before that subcommand/u,
+    /Identical trees must produce identical test results.*release workflow's exact-tree evidence reuse depends/u,
+  );
+  for (const file of [
+    "tests/preview.test.ts",
+    "tests/deployment.test.ts",
+    "tests/ci_workflow.test.ts",
+  ])
+    assert.ok(verification.includes(file), file);
+  assert.match(
+    verification,
+    /Nothing scans test code for remote-branch reads.*New tests rely on review/u,
   );
   assert.match(
     verification,
-    /An options variable or call, or an inline object with a spread, leaves the target unknown and is not reported/u,
+    /No workflow or composite-action `run:` step may delete remote Git state/u,
   );
-  assert.match(verification, /separated and `=` forms follow the same rule/u);
-  assert.match(verification, /including shorthand `\{ cwd \}`/u);
-  assert.match(verification, /`-r`, `-a`, `--all`, `--remotes`/u);
   assert.match(
     verification,
-    /reference-listing flags.*count only for `branch`, `show-branch`, `log`/u,
+    /shared Git worktree.*deletes the shared repository's remotes, remote-tracking references or upstream settings/u,
   );
-  assert.match(verification, /argv stored in variables or spreads/u);
-  assert.match(verification, /shell command strings/u);
-  assert.match(verification, /relative `-C` layered after a real-root `-C`/u);
-  assert.match(verification, /`for-each-ref` without a remote pattern/u);
-  assert.match(verification, /`git remote`/u);
-  assert.match(verification, /`HEAD\.\.FETCH_HEAD`/u);
-  assert.match(verification, /modules under `scripts\/`/u);
-  assert.match(verification, /product-code defaults/u);
+  assert.match(
+    verification,
+    /tests\/ci_workflow_remote_state\.test\.ts.*text check.*cannot see commands inside scripts that a step calls/u,
+  );
   assert.match(verification, /This type list is fixed/u);
   assert.match(verification, /examples in `AGENTS\.md`/u);
   assert.match(verification, /does not derive policy from Git history/u);
