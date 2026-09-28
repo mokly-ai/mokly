@@ -13,7 +13,9 @@ obsolete. Milestone 20 (`9bab3d7`) resolves M19-1 with Mokly-owned `@scope` scop
 rename-only verification; M19-2 is partly mitigated, and other findings in the
 [Milestone 17 review record](../docs/reviews/imported-css-delivery-milestone-17.md)
 remain open for the user's decision, as do the other findings in the
-[Milestone 19 review record](../docs/reviews/imported-css-delivery-milestone-19.md).
+[Milestone 19 review record](../docs/reviews/imported-css-delivery-milestone-19.md)
+and the eight findings in the
+[Milestone 21 review record](../docs/reviews/imported-css-delivery-milestone-21.md).
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -814,10 +816,10 @@ plugins and reject any change beyond documented local-name rewrites.
 - [x] Add direct selector/value parser dependencies with `npm install`, update security/release docs, and sweep the example, equivalence cases and installed CSS for false positives.
 - [x] Report failing-first, mutation, performance and Chrome fixture evidence; run Build, focused suites, example Build/Check, lint, typecheck, dependency/package checks and `cargo xtask check`; commit and push.
 
-## Milestone 21: Commit, push, and review
+## Milestone 21: Commit, push, and review (complete)
 
 - [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
-- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Eight new findings (all Low) are recorded in the [Milestone 21 review record](../docs/reviews/imported-css-delivery-milestone-21.md) for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 

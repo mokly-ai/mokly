@@ -14,7 +14,9 @@
   and supersedes findings 3, 8 and 9; its other findings remain open, as do
   the [Milestone 19 review](../docs/reviews/imported-css-delivery-milestone-19.md).
   Milestone 20 (`9bab3d7`) resolves finding 1 and partly mitigates finding 2 without
-  changing other open findings.
+  changing other open findings. The eight findings in the
+  [Milestone 21 review](../docs/reviews/imported-css-delivery-milestone-21.md)
+  also remain open.
   Move this plan to Completed when its
   implementation PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
