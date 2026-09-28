@@ -121,6 +121,13 @@ eight remain open for the user's decision.
      together with Milestone 19 findings 2 and 4.
    - Recommended: B now, and C within the Milestone 19 finding 2 and 4
      decision.
+
+   Partly addressed in `8a47cc5`: by the user's decision, selector lists
+   inside `:global()` and `:local()` now build with the descendant-chain
+   output of css-loader and Vite. The Styles guide shows how to match either
+   selector instead. Option B's proposed catalogued error was dropped; the
+   rest of this finding stays open.
+
 4. **Low — tests do not pin most of the check's rules or the placeholder
    position.**
    - What happens: a reviewer applied 49 single-rule mutations and ran the 13

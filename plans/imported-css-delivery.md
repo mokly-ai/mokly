@@ -16,7 +16,7 @@ remain open for the user's decision, as do the other findings in the
 [Milestone 19 review record](../docs/reviews/imported-css-delivery-milestone-19.md)
 and the eight findings in the
 [Milestone 21 review record](../docs/reviews/imported-css-delivery-milestone-21.md).
-Milestone 22 accepts the selector-list behavior from finding 3 of that review;
+Milestone 22 (`8a47cc5`) accepts the selector-list behavior from finding 3 of that review;
 its other parts and findings remain open.
 The accepted behavior is the CSS Modules plugins' descendant-chain output,
 not an expansion into alternative selectors.
@@ -838,7 +838,7 @@ the rename-only check for any other selector rewrite.
 
 ## Milestone 23: Commit, push, and review
 
-- [ ] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
 - [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
 
 ## Post-merge follow-up (non-blocking)
