@@ -165,12 +165,16 @@ or mounting Live meanwhile, and a page, flow or home leaves it empty.
 chrome: a new frame mounted through the registry's per-origin
 `postMessageAdapter` with pending usage, hidden behind `PreviewProgress` until
 the view is known eligible, its bundle is ready and the adapter mount
-resolves. `preview_mode_control.tsx` is the toolbar segment, and
+resolves. `preview_mode_control.tsx` is the toolbar segment;
+`workspace_controls.tsx` marks the toolbar that renders it with
+`data-preview-mode-offered`, the only toolbar `css_workspace.ts` gives its own
+row at narrow widths, so the row follows the control's presence, retained
+presence included, while every other narrow toolbar stays beside the title.
 `workspace_inspector.tsx` swaps the Components, Props and Usage panels for the
-Static-only notice while Live is on screen. Flow steps, pages,
-comparisons and removed entries never receive Live wiring. The preview mode
-rides in the watched-reload recovery snapshot, so a new generation remounts
-Live, while an ordinary load starts Static.
+Static-only notice while Live is on screen. Flow steps, pages, comparisons and
+removed entries never receive Live wiring. The preview mode rides in the
+watched-reload recovery snapshot, so a new generation remounts Live, while an
+ordinary load starts Static.
 
 Eligibility arrives only as `useViewerLiveState().workspace?.interactive`. A
 known value survives SSR, hydration, route evidence loads and same-generation

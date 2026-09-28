@@ -406,7 +406,7 @@ contract now count separately, so their totals add up.
       smoke the new artboards through `npm run dev`, run `cargo xtask check`,
       commit and push.
 
-## Milestone 9: Keep the approved narrow toolbar without Static/Live
+## Milestone 9: Keep the approved narrow toolbar without Static/Live — completed
 
 Tags: ui
 
@@ -416,15 +416,27 @@ Live (the default) and opted-out entries no longer match their approved mobile
 artboards, which keep the toolbar beside the title. Only views that show the
 Static/Live control are drawn with the toolbar on its own row.
 
-- [ ] Take the narrow toolbar row only when the Static/Live control is shown;
+Implementation decisions recorded in the
+[shell contract](../docs/protocol/mokly-interactive-views-shell.md#control):
+`WorkspaceControls` marks the toolbar with `data-preview-mode-offered` exactly
+when it renders the control, and only that mark takes the narrow row. The row
+therefore follows the control's presence, including the presence a pending
+view retains, and a comparison, which hides the control, returns the toolbar
+beside the title. A narrow toolbar without the mark drops `margin-left: auto`,
+so it stays at the end of the title row when it fits and, when the title
+leaves no room, wraps below it starting where the heading starts, as every
+mobile artboard draws a wrapped toolbar; before Milestone 5 a wrapped toolbar
+was right-aligned, which no artboard shows.
+
+- [x] Take the narrow toolbar row only when the Static/Live control is shown;
       views without it (static-only catalogues, opted-out entries, pages and
       comparisons) keep the approved narrow layout, with no layout shift while
       eligibility is pending.
-- [ ] Browser and markup tests for the narrow toolbar with and without the
+- [x] Browser and markup tests for the narrow toolbar with and without the
       control, and desktop and mobile screenshots compared with the matching
       artboards (static-only catalogue, opted-out entry, Live-capable screen
       and component).
-- [ ] Update `packages/viewer/src/shell/README.md` and the shell contract if
+- [x] Update `packages/viewer/src/shell/README.md` and the shell contract if
       the wording changes; run `cargo xtask check`; commit and push.
 
 ## Milestone 10: Example adoption, smoke test and review

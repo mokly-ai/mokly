@@ -108,6 +108,7 @@ export const SHELL_WORKSPACE_CSS = `
   .mbk-inspector:not([data-open="true"]) .mbk-sheet-grab { display: none; }
 }
 @media (max-width: 760px) {
-  .mbk-workspace .mbk-view-tools { flex: 1 0 100%; margin-left: 0; }
+  .mbk-workspace .mbk-view-tools { margin-left: 0; }
+  .mbk-workspace .mbk-view-tools[data-preview-mode-offered] { flex: 1 0 100%; }
 }
 `;

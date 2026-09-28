@@ -7,8 +7,9 @@ Delivered mockup scope for Milestones 2 and 8 of the
 design states depict the [interactive views contract](./mokly-interactive-views.md)
 and extend the [shell design](./mokly-shell-design.md) and
 [component workspace design](./mokly-component-workspace-design.md). The
-runtime Static/Live control implements these designs in Milestone 5, and
-Milestone 7 removes it from opted-out entries, as the
+runtime Static/Live control implements these designs in Milestone 5,
+Milestone 7 removes it from opted-out entries, and Milestone 9 keeps every
+narrow toolbar without it beside the title, as the
 [shell contract](./mokly-interactive-views-shell.md) records. Milestone 8 adds
 the screen in Live whose Components tab points back to Static, which the shell
 already shows.
@@ -32,8 +33,11 @@ view's Live availability is still loading, its toolbar keeps the control only
 if the previous view offered it, and the preview shows the preparing state
 only when that control has Live selected, so this interval needs no additional
 design state.
-At narrow widths the toolbar takes its own row below the title, left-aligned,
-as the mobile artboards show.
+At narrow widths a toolbar that shows the control takes its own row below the
+title, left-aligned, as the mobile Live artboards show. Without the control the
+toolbar keeps its place beside the title and moves below it, left-aligned,
+only when the title leaves no room, as the static-only catalogue and every
+other mobile artboard without the control show.
 
 Selecting Live keeps the same artboard, device frames, labels, breadcrumb,
 saved-variant strip and comparison band. The preview content itself is

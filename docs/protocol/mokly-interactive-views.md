@@ -3,10 +3,11 @@
 ## Delivery Status
 
 Tracked by the [interactive views plan](../../plans/interactive-views.md).
-Milestones 1–7 implement the contract, browser runtime, isolated Serve origin,
-lazy bundle state, private shell transport, route-scoped per-entry
-eligibility, and the shell's Static/Live control, which opted-out entries do
-not show. The [shell contract](./mokly-interactive-views-shell.md) owns the
+Milestones 1–9 implement the contract, its approved designs, browser runtime,
+isolated Serve origin, lazy bundle state, private shell transport,
+route-scoped per-entry eligibility, and the shell's Static/Live control, which
+opted-out entries do not show and which alone gives the narrow toolbar its own
+row. The [shell contract](./mokly-interactive-views-shell.md) owns the
 control.
 
 ## Purpose

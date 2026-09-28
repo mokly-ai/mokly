@@ -4,6 +4,7 @@ import { test } from "node:test";
 
 import { readCatalogue } from "../src/catalogue/reader.js";
 import type { ViewerInteractiveDescriptor } from "../src/client/interactive_capability.js";
+import { SHELL_CSS } from "../src/shell/css.js";
 import { renderHydratedShellPage } from "../src/shell/document.js";
 import { viewerCatalogue, viewerView } from "../src/viewer/projection.js";
 import { defaultSelection } from "../src/viewer/selection.js";
@@ -30,6 +31,10 @@ const CONTROL =
   /<span aria-label="Preview mode" class="mbk-seg mbk-preview-mode"/;
 const CONTROL_MARKUP =
   /<span aria-label="Preview mode" class="mbk-seg mbk-preview-mode"[^]*?<\/span>/;
+/** The mark that gives a toolbar with Static/Live its own narrow row. */
+const OFFERED = ' data-preview-mode-offered=""';
+const OFFERED_TOOLS =
+  /^<div class="mbk-view-tools" data-preview-mode-offered="" role="group" aria-label="View options">/;
 
 function served(
   screenId: string,
@@ -60,8 +65,9 @@ function served(
   );
 }
 
+/** The view toolbar from its opening tag, so its own marks are compared too. */
 function toolbar(html: string): string {
-  const start = html.indexOf('aria-label="View options"');
+  const start = html.indexOf('<div class="mbk-view-tools"');
   assert.notEqual(start, -1, "the view toolbar is rendered");
   return html.slice(start, html.indexOf("</div>", start));
 }
@@ -69,6 +75,7 @@ function toolbar(html: string): string {
 test("Serve offers Static and Live for current screens and saved variants", () => {
   for (const id of ["home", "action"]) {
     const tools = toolbar(served(id));
+    assert.match(tools, OFFERED_TOOLS);
     assert.match(tools, CONTROL);
     assert.match(
       tools,
@@ -89,6 +96,7 @@ test("Serve offers Static and Live for current screens and saved variants", () =
 
 test("a failed generation keeps the control with Live described as unavailable", () => {
   const tools = toolbar(served("home", { ...interactive, state: "failed" }));
+  assert.match(tools, OFFERED_TOOLS);
   assert.match(tools, CONTROL);
   assert.match(
     tools,
@@ -99,12 +107,19 @@ test("a failed generation keeps the control with Live described as unavailable",
 test("an opted-out or unknown entry keeps its toolbar with no control or gap", () => {
   for (const id of ["home", "action"]) {
     const eligible = toolbar(served(id));
+    const staticOnly = toolbar(served(id, null));
+    assert.doesNotMatch(staticOnly, CONTROL);
+    assert.equal(staticOnly.includes(OFFERED), false, id);
     for (const eligibility of [false, null]) {
       const tools = toolbar(served(id, interactive, eligibility));
       assert.doesNotMatch(tools, CONTROL, `${id} ${String(eligibility)}`);
       assert.match(tools, /data-workspace-viewport=""/);
       assert.match(tools, /data-workspace-highlight=""/);
-      assert.equal(tools, eligible.replace(CONTROL_MARKUP, ""));
+      assert.equal(tools, staticOnly, `${id} ${String(eligibility)}`);
+      assert.equal(
+        tools,
+        eligible.replace(CONTROL_MARKUP, "").replace(OFFERED, ""),
+      );
     }
     for (const state of ["failed", "ready"] as const)
       assert.doesNotMatch(
@@ -115,10 +130,36 @@ test("an opted-out or unknown entry keeps its toolbar with no control or gap", (
 });
 
 test("no control appears without Live, on pages, flows or removed entries", () => {
-  assert.doesNotMatch(served("home", null), CONTROL);
-  assert.doesNotMatch(served("action", null), CONTROL);
-  for (const id of ["guide", "tour", "removed-screen"])
-    assert.doesNotMatch(served(id), CONTROL, id);
+  for (const html of [served("home", null), served("action", null)]) {
+    assert.doesNotMatch(html, CONTROL);
+    assert.equal(html.includes(OFFERED), false);
+  }
+  for (const id of ["guide", "tour", "removed-screen"]) {
+    const html = served(id);
+    assert.doesNotMatch(html, CONTROL, id);
+    assert.equal(html.includes(OFFERED), false, id);
+  }
+});
+
+test("only a toolbar with Static and Live takes its own narrow row", () => {
+  const rules = [
+    ...SHELL_CSS.matchAll(/([^{};]*\.mbk-view-tools[^{};]*)\{([^}]*)\}/g),
+  ].map(([, selector, body]) => [selector!.trim(), body!.trim()] as const);
+  const rows = rules.filter(([, body]) => /flex:\s*1 0 100%/.test(body));
+  assert.deepEqual(rows, [
+    [
+      ".mbk-workspace .mbk-view-tools[data-preview-mode-offered]",
+      "flex: 1 0 100%;",
+    ],
+  ]);
+  assert.ok(
+    rules.some(
+      ([selector, body]) =>
+        selector === ".mbk-workspace .mbk-view-tools" &&
+        body === "margin-left: 0;",
+    ),
+    "a narrow toolbar without the control wraps from the start of its line",
+  );
 });
 
 test("an exported page never offers Live, even from a Live context", () => {

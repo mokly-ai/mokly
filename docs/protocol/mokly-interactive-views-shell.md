@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Implemented by Milestones 5 and 7 of the
+Implemented by Milestones 5, 7 and 9 of the
 [interactive views plan](../../plans/interactive-views.md), on the private
 route-scoped eligibility delivered in Milestone 6. This contract owns how the
 React shell offers, selects and presents Static and Live. The
@@ -27,6 +27,17 @@ the choice unchanged. The descriptor and the route's private workspace are
 present during server rendering and hydration, so the control, or its absence,
 is part of the first paint. Export and publication never carry the descriptor
 and never show the control.
+
+At 760px and narrower, only a toolbar that shows the control takes its own
+left-aligned row below the title, as the Live artboards draw it: the toolbar
+that renders the control carries `data-preview-mode-offered`, and the narrow
+row is scoped to that mark. Every other toolbar keeps the static-only layout of
+the approved artboards: beside the title, and below it, starting where the
+heading starts, only when the title leaves no room. Because the row follows
+the control's presence, including the presence a pending view retains under
+[Eligibility](#eligibility), the first paint already has its final layout, and
+a navigation or comparison moves the toolbar only when the control itself
+appears or disappears.
 
 ## Eligibility
 
@@ -117,9 +128,10 @@ view keeps ordinary inspection and editing whatever the preview mode.
 ## Verification
 
 Unit tests cover eligibility from adopted, value-less, other-route and missing
-workspaces; availability with and without a retained control; and
-server-rendered markup for eligible, opted-out and unknown screens and
-components, including a toolbar identical to the static-only one. Browser
+workspaces; availability with and without a retained control; server-rendered
+markup for eligible, opted-out and unknown screens and components, including a
+toolbar identical to the static-only one and the narrow-row mark only on a
+toolbar with the control; and the narrow row scoped to that mark. Browser
 tests against real Serve cover control visibility per catalogue, view and
 entry; the first paint of opted-out screens and components; Live selected
 across eligible and opted-out screens and components, saved variants and Back;
@@ -127,8 +139,9 @@ held route evidence that neither prepares nor mounts Live and changes the
 control at most once; route evidence that cannot load; frame origin and
 sandbox per mode; preparing and both unavailable scopes; navigation from a
 Live frame; preview-mode persistence, reset and watched-reload recovery; the
-inspector notice; disabled highlighting; discarded edits; and keyboard
-operation.
+inspector notice; disabled highlighting; discarded edits; keyboard operation;
+and the narrow toolbar's placement for eligible, opted-out, compared and
+static-only views and across held route evidence.
 
 ## Related Docs
 

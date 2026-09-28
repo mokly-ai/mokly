@@ -142,3 +142,77 @@ export async function expectStaticFrames(
     await expect(frame).toHaveAttribute("sandbox", "allow-same-origin");
   await expect(page.locator(".mbk-live-frame")).toHaveCount(0);
 }
+
+/**
+ * Whether Static/Live is shown, paired with where the view toolbar sits: on
+ * its own row below the title, starting where the heading starts (`row`), or
+ * beside the title at the head's end (`beside`). `offset row`, `offset beside`
+ * and `missing` name a misplaced or absent toolbar.
+ */
+export type ToolbarPlacement = readonly [control: boolean, placement: string];
+
+/**
+ * Log each change in the toolbar's placement and control from now on. The
+ * first entry is the current one, so a single entry means nothing moved.
+ */
+export async function watchToolbarPlacement(
+  page: Page,
+): Promise<() => Promise<ToolbarPlacement[]>> {
+  await page.evaluate(() => {
+    const measure = (): [boolean, string] => {
+      const head = document.querySelector("#mb-main .mbk-screen-head");
+      const copy = head?.querySelector(".mbk-screen-head-copy");
+      const title = head?.querySelector(".mbk-title-row");
+      const tools = head?.querySelector(".mbk-view-tools");
+      if (!head || !copy || !title || !tools) return [false, "missing"];
+      const box = (node: Element) => node.getBoundingClientRect();
+      const control = tools.querySelector("[data-preview-mode]") !== null;
+      if (box(tools).top >= box(title).bottom - 1)
+        return [
+          control,
+          Math.abs(box(tools).left - box(copy).left) <= 1
+            ? "row"
+            : "offset row",
+        ];
+      const end =
+        box(head).right -
+        Number.parseFloat(getComputedStyle(head).paddingRight);
+      return [
+        control,
+        Math.abs(end - box(tools).right) <= 1 ? "beside" : "offset beside",
+      ];
+    };
+    const state = window as unknown as {
+      moklyToolbarObserver?: MutationObserver;
+    };
+    state.moklyToolbarObserver?.disconnect();
+    const log = [measure()];
+    const observer = new MutationObserver(() => {
+      const [control, placement] = measure();
+      const [lastControl, lastPlacement] = log.at(-1)!;
+      if (control !== lastControl || placement !== lastPlacement)
+        log.push([control, placement]);
+    });
+    observer.observe(document.body, {
+      attributes: true,
+      childList: true,
+      subtree: true,
+    });
+    Object.assign(window, {
+      moklyToolbarLog: log,
+      moklyToolbarObserver: observer,
+    });
+  });
+  return () =>
+    page.evaluate(
+      () =>
+        (window as unknown as { moklyToolbarLog: ToolbarPlacement[] })
+          .moklyToolbarLog,
+    );
+}
+
+/** The toolbar's current control and placement. */
+export async function toolbarPlacement(page: Page): Promise<ToolbarPlacement> {
+  const log = await (await watchToolbarPlacement(page))();
+  return log.at(-1)!;
+}

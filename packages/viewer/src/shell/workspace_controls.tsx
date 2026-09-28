@@ -25,7 +25,11 @@ export function WorkspaceControls({
     reason?: string;
     toggle(): void;
   };
-  /** Static/Live, present only for a view whose local Serve offers Live. */
+  /**
+   * Static/Live, present only for a view whose local Serve offers Live. The
+   * toolbar that shows it is marked so that, alone, it takes its own row at
+   * narrow widths, as the Live artboards draw it.
+   */
   previewMode?: PreviewModeChoice | undefined;
 }) {
   const store = useOptionalShellStore();
@@ -35,7 +39,12 @@ export function WorkspaceControls({
   const schemeChangedId = useShellIdentifier(VIEW_CHANGED_IDS.scheme);
   const viewportChangedId = useShellIdentifier(VIEW_CHANGED_IDS.viewport);
   return (
-    <div className="mbk-view-tools" role="group" aria-label="View options">
+    <div
+      className="mbk-view-tools"
+      data-preview-mode-offered={previewMode ? "" : undefined}
+      role="group"
+      aria-label="View options"
+    >
       <label className="mbk-icon-select" title="Viewport">
         <WorkspaceIcon name="viewport" />
         <WorkspaceIcon name="caret" />
