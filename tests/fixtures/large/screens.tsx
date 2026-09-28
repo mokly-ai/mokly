@@ -58,7 +58,7 @@ function Screen({
       />
       <panel.Component title="Recent activity">
         <p>Review your records and choose your next step.</p>
-        <action.Component label="New record" />
+        <action.Component label={`New record ${index + 1}`} />
       </panel.Component>
       <RecordList compact={compact} rows={rows} />
       <footer>

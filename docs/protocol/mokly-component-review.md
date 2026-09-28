@@ -6,12 +6,11 @@ The producer, source validator, artifact publisher, exporter, and browser decode
 implement this component-aware Review schema v3 for [change attribution](./mokly-component-changes.md).
 `ReviewResult`, `ScreenReview`, `ViewReview`, and `ReviewState` refer to the
 existing [schema-v2 contract](./mokly-changes.md) and
-[named result interfaces](../../packages/viewer/src/review/types.ts). Manifest/usage types come
-from the [component manifest](./mokly-component-manifest.md). The optional
-`inlineStyles` view evidence below is implemented by the
-[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md)
-across live classification, complete and selected comparisons, and publication.
-Its shell presentation remains in that plan's later milestone.
+[named result interfaces](../../packages/viewer/src/review/types.ts).
+Manifest/usage types come from the
+[component manifest](./mokly-component-manifest.md). The optional `inlineStyles`
+view evidence below is implemented across live classification, complete and
+selected comparisons, publication and shell presentation.
 
 ## Normative Result
 

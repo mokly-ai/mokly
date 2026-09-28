@@ -120,7 +120,10 @@ eligible `<style>` elements outside the component markup, Mokly infers their
 owners during comparison by matching each changed rule against the rendered
 component ranges. A component-owned edit is attributed to that component and
 its consumers are listed as affected; a rule that can reach screen markup stays
-with the screen.
+with the screen. Files referenced by an inferred-owned inline rule follow that
+rule's owner through the same relative and transitive resource discovery used
+for the rendered page. A file also reached by screen-owned material keeps its
+independent screen evidence.
 
 ## Resolve a saved instance
 

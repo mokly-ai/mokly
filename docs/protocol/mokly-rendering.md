@@ -4,11 +4,10 @@ This implemented contract expands the [package contract](./mokly-package.md)
 for the [authoring API](./mokly-authoring.md) and
 [configuration](./mokly-configuration.md). Public-resource eligibility follows
 [source protection](./mokly-source-protection.md), including configured
-public exclusions. The string-only renderer result below is the approved and
-implemented contract from the
-[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md).
-The builder rejects the retired structured result, and current component view
-records contain no renderer-supplied style or resource ownership.
+public exclusions. The string-only renderer result below is the implemented
+contract. The builder rejects structured results, and current component view
+records contain only rendered-instance and range data; head styles and their
+resources are attributed during comparison.
 
 ## Rendering Boundary
 

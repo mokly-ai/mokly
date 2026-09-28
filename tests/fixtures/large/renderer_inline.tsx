@@ -23,10 +23,7 @@ export default function render(input: RenderInput): string {
   AppRegistry.registerComponent("scale-styles", () => Empty);
   const nativeStyles = renderToStaticMarkup(
     AppRegistry.getApplication("scale-styles", {}).getStyleElement(),
-  );
-  const componentStyles = body.includes('data-scale-action="area-1"')
-    ? `<style data-scale-component-styles="">[data-scale-action="area-1"]{border-top-color:${AREA_ONE_ACTION_COLOR}}</style>`
-    : "";
+  ).replace("rgba(1,2,3,1.00)", AREA_ONE_ACTION_COLOR);
   const markedBody =
     input.entry.id === "area-1-screen-1" && SCREEN_ONE_MARKUP
       ? body.replace(
@@ -37,5 +34,5 @@ export default function render(input: RenderInput): string {
   const links = input.stylesheets
     .map((href) => `<link rel="stylesheet" href="${href}">`)
     .join("");
-  return `<!doctype html><html lang="en" data-color-scheme="${input.colorScheme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${input.entry.title}</title>${links}${nativeStyles}${componentStyles}</head><body>${markedBody}</body></html>`;
+  return `<!doctype html><html lang="en" data-color-scheme="${input.colorScheme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${input.entry.title}</title>${links}${nativeStyles}</head><body>${markedBody}</body></html>`;
 }

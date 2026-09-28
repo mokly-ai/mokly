@@ -8,15 +8,12 @@ inspector receives retained and excluded stylesheet evidence for component
 catalogues and screen-only catalogues, including before a comparison is loaded.
 Screen-only delivery reuses the existing v2 classification; it does not run
 component classification or an additional resource analysis. See
-[CSS Change Attribution](../../plans/css-change-attribution.md). Applying the
-same parser, diff, keep list and matcher to a page's own inline styles is the
-approved target of the
-[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md);
-the [inline style ownership contract](./mokly-inline-styles.md) owns that
-analysis. Diffed inline rules now use the shared parser, keep list and matcher
-in component-aware comparisons. Reference-bearing inline rules also reuse the
-resource detector and follow inferred owners; evidence and presentation remain
-for that plan's later milestones.
+[CSS Change Attribution](../../plans/css-change-attribution.md). The
+[inline style ownership contract](./mokly-inline-styles.md) applies the same
+parser, diff, keep list and matcher to a page's own inline styles. Diffed inline
+rules use them in component-aware comparisons. Reference-bearing inline rules
+also reuse the resource detector and follow inferred owners; their validated
+evidence is delivered and presented in the shell.
 
 ## Purpose
 

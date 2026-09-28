@@ -65,3 +65,76 @@ export function baselineMeasurement(records, beginning, cacheHit) {
     })),
   };
 }
+
+/** Classification duration and the interval-union share spent on inline CSS. */
+export function classificationMeasurement(records, expectedStatus = "ok") {
+  const completed = records.filter(
+    ({ event }) =>
+      event.stage === "changes.classify" &&
+      event.event === "end" &&
+      event.role === "background",
+  );
+  if (completed.length !== 1)
+    throw new Error("Expected exactly one completed background classification");
+  const classification = completed[0].event;
+  if (
+    classification.status !== expectedStatus ||
+    !Number.isFinite(classification.durationMs) ||
+    !Number.isFinite(classification.elapsedMs)
+  )
+    throw new Error(
+      `Expected background classification status ${expectedStatus}`,
+    );
+  const start = classification.elapsedMs - classification.durationMs;
+  const end = classification.elapsedMs;
+  const inline = unionDuration(
+    records.flatMap(({ event }) => {
+      if (
+        event.session !== classification.session ||
+        event.stage !== "review.inline-style-analysis" ||
+        event.event !== "end" ||
+        event.status !== "ok" ||
+        !Number.isFinite(event.durationMs) ||
+        !Number.isFinite(event.elapsedMs)
+      )
+        return [];
+      return [
+        [
+          Math.max(start, event.elapsedMs - event.durationMs),
+          Math.min(end, event.elapsedMs),
+        ],
+      ];
+    }),
+  );
+  const classificationMs = Number(classification.durationMs.toFixed(2));
+  const inlineStyleAnalysisMs = Number(inline.toFixed(2));
+  return {
+    classificationMs,
+    inlineStyleAnalysisMs,
+    inlineStyleAnalysisShare:
+      classificationMs === 0
+        ? 0
+        : Number((inlineStyleAnalysisMs / classificationMs).toFixed(4)),
+  };
+}
+
+function unionDuration(intervals) {
+  const ordered = intervals
+    .filter(([start, end]) => end > start)
+    .sort(([left], [right]) => left - right);
+  let total = 0;
+  let activeStart;
+  let activeEnd;
+  for (const [start, end] of ordered) {
+    if (activeStart === undefined) {
+      activeStart = start;
+      activeEnd = end;
+    } else if (start <= activeEnd) activeEnd = Math.max(activeEnd, end);
+    else {
+      total += activeEnd - activeStart;
+      activeStart = start;
+      activeEnd = end;
+    }
+  }
+  return activeStart === undefined ? 0 : total + activeEnd - activeStart;
+}

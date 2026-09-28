@@ -5,12 +5,10 @@
 The classifier, Browse/watch cache, comparison artifacts, and static exporter
 share this attribution policy. The [component explorer plan](../../plans/component-explorer.md)
 records delivery. Unregistered catalogue and legacy behavior remains intact.
-The [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md)
-has replaced renderer-returned records with document-derived head-style
-ownership in complete paired component-aware comparisons. Reference-bearing
-rules now follow inferred owners through resource discovery, and result views
-carry validated inline-style evidence. Shell presentation remains for that
-plan's Milestone 7.
+Complete paired component-aware comparisons derive head-style ownership from
+the documents and component ranges. Reference-bearing rules follow inferred
+owners through resource discovery, result views carry validated inline-style
+evidence, and the shell presents that evidence.
 
 ## Changes Membership
 

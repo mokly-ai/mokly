@@ -12,10 +12,10 @@
   (Milestone 6) and runtime (Milestone 7) are delivered. Implementation is
   complete; move this plan to Completed when its implementation PR merges.
 - [Inferred Inline Style Ownership](./inferred-inline-style-ownership.md) —
-  replace renderer-supplied style and resource ownership records with
-  ownership inferred from rendered documents and component ranges, so head
-  styles from React Native Web and CSS-in-JS attribute to their components
-  without consumer code; the renderer returns a string again.
+  derive ownership of rendered head styles and their resource references from
+  documents and component ranges, so React Native Web and CSS-in-JS changes
+  attribute to their components without consumer code. Implementation is
+  complete; move this plan to Completed when its implementation PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align

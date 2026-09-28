@@ -1,6 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 
-/** The fixture's only edit adds a rule that matches no screen at any size. */
+/** Setup's unrelated stylesheet edit matches no screen at any size. */
 export const expectedStylesheetChanges = 0;
 
 /** Classification publication precedes asynchronous IPC delivery and child adoption. */

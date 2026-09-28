@@ -21,3 +21,12 @@ export function baselineMeasurement(
   preparingToPendingMs: number;
   baselinePhases: { stage: string; durationMs: number }[];
 };
+
+export function classificationMeasurement(
+  records: readonly ReceivedTiming[],
+  expectedStatus?: "ok" | "error",
+): {
+  classificationMs: number;
+  inlineStyleAnalysisMs: number;
+  inlineStyleAnalysisShare: number;
+};

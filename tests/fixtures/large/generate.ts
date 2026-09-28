@@ -4,6 +4,7 @@ import path from "node:path";
 
 export interface LargeSize {
   areas: number;
+  inlineStyles: boolean;
   screens: number;
   rows: number;
   stylesheets: number;
@@ -13,6 +14,7 @@ export interface LargeSize {
 export function largeSize(input: Partial<LargeSize>): LargeSize {
   const size = {
     areas: 30,
+    inlineStyles: false,
     screens: 40,
     rows: 12,
     stylesheets: 4,
@@ -53,8 +55,18 @@ export async function generateLargeFixture(
   await fs.mkdir(assets, { recursive: true });
   for (const file of ["components.tsx", "screens.tsx", "area.tsx"])
     await fs.copyFile(path.join(templates, file), path.join(entries, file));
+  await fs.copyFile(
+    path.join(
+      templates,
+      size.inlineStyles ? "inline_styles.tsx" : "inline_styles_none.tsx",
+    ),
+    path.join(entries, "inline_styles.tsx"),
+  );
   const renderer = await fs.readFile(
-    path.join(templates, "renderer.tsx"),
+    path.join(
+      templates,
+      size.inlineStyles ? "renderer_inline.tsx" : "renderer.tsx",
+    ),
     "utf8",
   );
   await fs.writeFile(

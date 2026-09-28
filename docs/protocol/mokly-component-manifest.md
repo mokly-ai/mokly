@@ -17,10 +17,9 @@ The optional instance `source` field below is implemented in
 All existing v5 fields retain their contracts. Updated readers accept
 instances with or without `source`; the manifest version remains 5.
 
-The [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md)
-retired the `styles` and `resources` view fields. Current records reject those
-keys; historical v5 readers accept arrays under them and discard the values
-before comparison.
+Current manifests omit the retired `styles` and `resources` view fields and
+reject those keys. Historical v5 readers accept arrays under them and discard
+the values before comparison.
 
 ## Entries And Variants
 
@@ -203,14 +202,14 @@ changes to logical instance ids/order/props still remain material.
 
 ## Retired Fields, Validation, And Serialization
 
-Earlier v5 records carried `styles` and `resources` arrays asserting
-renderer-supplied ownership of head style text and public files. Those fields
-are retired: current v5 records must not carry either key, and current loading
-rejects them. Historical v5 records read at the Git boundary or from the
-rebuilt baseline cache may still carry them, because a merge-base commit built
-by an earlier Mokly emits them; historical validation accepts an array under
-either key and discards it before the record is used. The schema version
-stays 5. Ownership of head style material is inferred at comparison time under
+Earlier v5 records could carry `styles` and `resources` arrays that asserted
+ownership of head style text and public files. Those fields are retired:
+current v5 records must not carry either key, and current loading rejects them.
+Historical v5 records read at the Git boundary or from the rebuilt baseline
+cache may still carry them, because a merge-base commit built by an earlier
+Mokly emits them; historical validation accepts an array under either key and
+discards it before the record is used. The schema version stays 5. Ownership
+of head style material is inferred at comparison time under
 the [inline style ownership contract](./mokly-inline-styles.md); explicit file
 ownership stays declared through `ownedDependencies`.
 

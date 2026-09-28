@@ -113,9 +113,10 @@ adds review work to a command or writes artifacts during background classificati
 
 For aggregate stage time, take the union of each stage's
 `[elapsedMs - durationMs, elapsedMs]` end-record intervals within one session.
-For the scale fixture's CSS share of total review time, divide the union of
-`review.css-analysis` intervals by the enclosing background worker's
-`changes.classify` duration, separately for cold and warm runs. Do not use the
+For a scale-fixture analysis share, clip those intervals to the enclosing
+background worker's `changes.classify` interval, then divide their union by
+that classification duration, separately for cold and warm runs. The large
+benchmark applies this rule to `review.inline-style-analysis`. Do not use the
 supervisor's wait span, whole startup time, or sums across sessions.
 
 ## Historical baseline phases
@@ -153,11 +154,19 @@ workload for locating scaling costs, not a claim of identical production data
 or timings. It must provide a Git baseline so Changes performs real comparison.
 Additional shared stylesheets have configurable count and per-area screen share
 (defaults: four and 0.5, rounded up). After the baseline commit, setup adds an
-unrelated rule to the first sheet. Background Changes therefore exercises actual
-stylesheet dependency evidence; rule attribution excludes the unrelated rule
-from every linked screen, so the benchmark expects zero Changes, including
-flows. The fixture guide documents
-zero-count/share cases and the separate complete-export measurement.
+unrelated rule to the first sheet so an ordinary development server exercises
+actual stylesheet dependency exclusion. The benchmark restores that file, then
+runs no-change, component-head-style and screen-markup scenarios with expected
+Changes membership of zero, one component, and the screen plus its use case.
+The fixture guide documents zero-count/share cases and the separate
+complete-export measurement.
+
+Pass `--inline-styles` to select a separate record and a React Native Web
+renderer whose process-global sheet grows in exhaustive render order. Later
+screens therefore carry rules registered by earlier component variants and
+screens. The small correctness fixture proves that editing one component rule
+changes exactly its component and affects its consumers without adding a later
+non-consumer screen.
 
 `fixture:large` explicitly prepares and records an isolated baseline under
 `.context`; setup time includes exhaustive Build and Git and is reported separately.
@@ -169,21 +178,25 @@ Mokly version and a consumer lockfile, installs the head dependencies, and
 commits only source, authored resources and tooling. Serve rebuilds the archived
 commit through its `baselineBuild` recipe; no cached or committed HTML stands in
 for that build.
-The benchmark launches Chrome before timing a fresh Serve subprocess and measures
-searchable navigation with real preview content, then repeats in a fresh server
-and browser context for an OS-warm restart. “Cold” means application-cold, not a
-flushed OS page cache. It also verifies theme/viewport changes, a real Props edit,
-whole-document pages and eventual Changes. Stdout reports each measurement as JSON.
+The benchmark launches Chrome before timing a fresh Serve subprocess and
+measures searchable navigation with real preview content. Each of the three
+scenarios gets a cold sample and an OS-warm restart in a fresh server and browser
+context. “Cold” means application-cold, not a flushed OS page cache. It also
+verifies theme/viewport changes, a real Props edit, whole-document pages and
+eventual Changes. Stdout reports each measurement as JSON and writes the full
+matrix before returning any navigation-target or bounded classification
+failure.
 
 For derived mode, the benchmark clears only the pinned cache entry under the
-builder's exclusive lock before the cold run. A locked entry fails setup; stop
-other fixture servers before benchmarking. The warm run retains that output.
-Both runs enforce `usableMs < 5000` and require successful baseline timings with
-`cacheHit: false` and `true` respectively. `baselineMs` measures the whole builder;
-`baselineReadyMs` measures command start to receipt of its completion, using the
-benchmark process's clock. `preparingToPendingMs` is the cold builder duration,
-or zero when preparing is skipped on a hit. This phase measurement remains
-available even on Serve versions without the `preparing` presentation; it is
-not a browser paint measurement. `baselinePhases` records extraction, each
-command, and adoption separately. `changesReadyMs` still waits for delivered
-complete Changes in Browse. No wall-clock threshold is imposed on rebuilds.
+builder's exclusive lock before each scenario's cold run. A locked entry fails
+setup; stop other fixture servers before benchmarking. The warm run retains
+that output. Every run enforces `usableMs < 5000` and requires successful
+baseline timings with `cacheHit: false` or `true` as appropriate. `baselineMs`
+measures the whole builder; `baselineReadyMs` measures command start to receipt
+of its completion, using the benchmark process's clock.
+`preparingToPendingMs` is the cold builder duration, or zero when preparing is
+skipped on a hit. This phase measurement remains available even on Serve
+versions without the `preparing` presentation; it is not a browser paint
+measurement. `baselinePhases` records extraction, each command, and adoption
+separately. `changesReadyMs` still waits for delivered complete Changes in
+Browse. No wall-clock threshold is imposed on rebuilds or classification.

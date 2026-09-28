@@ -27,7 +27,7 @@ config file and every React-bearing source is bundled in one graph.
 The renderer is synchronous and returns a complete HTML document as a string;
 the builder rejects any other result. Head styles emitted outside component
 markup are attributed during comparison under the
-[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md).
+[inline style ownership contract](../protocol/mokly-inline-styles.md).
 This is the only place an app should install theme providers, collect React Native Web's
 `AppRegistry` styles, inject product fonts, or establish other render context.
 Those actions depend on app-owned packages and policy, so moving them into the

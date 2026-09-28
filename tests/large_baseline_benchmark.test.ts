@@ -5,6 +5,7 @@ import { cacheLayout } from "../dist/baseline/cache_layout.js";
 import { resetFixtureBaseline } from "../scripts/large/baseline.mjs";
 import {
   baselineMeasurement,
+  classificationMeasurement,
   timingCollector,
   type ReceivedTiming,
 } from "../scripts/large/timings.mjs";
@@ -102,5 +103,63 @@ test("the benchmark rejects missing, failed, mislabeled and unadopted baselines"
     assert.throws(() => baselineMeasurement(records, 100, false));
   assert.throws(() =>
     baselineMeasurement([adopt, completion(true)], 100, true),
+  );
+});
+
+test("classification timing unions overlapping inline-analysis intervals", () => {
+  const classification: ReceivedTiming = {
+    receivedMs: 200,
+    event: {
+      schemaVersion: 1,
+      session: "classification-test",
+      pid: 1,
+      role: "background",
+      stage: "changes.classify",
+      event: "end",
+      id: 1,
+      elapsedMs: 100,
+      durationMs: 80,
+      status: "ok",
+    },
+  };
+  const inline = (elapsedMs: number, durationMs: number): ReceivedTiming => ({
+    receivedMs: 200,
+    event: {
+      ...classification.event,
+      stage: "review.inline-style-analysis",
+      id: elapsedMs,
+      elapsedMs,
+      durationMs,
+    },
+  });
+  assert.deepEqual(
+    classificationMeasurement([
+      inline(50, 20),
+      inline(60, 20),
+      inline(95, 15),
+      classification,
+    ]),
+    {
+      classificationMs: 80,
+      inlineStyleAnalysisMs: 45,
+      inlineStyleAnalysisShare: 0.5625,
+    },
+  );
+  assert.deepEqual(
+    classificationMeasurement(
+      [
+        inline(50, 20),
+        {
+          ...classification,
+          event: { ...classification.event, status: "error" },
+        },
+      ],
+      "error",
+    ),
+    {
+      classificationMs: 80,
+      inlineStyleAnalysisMs: 20,
+      inlineStyleAnalysisShare: 0.25,
+    },
   );
 });

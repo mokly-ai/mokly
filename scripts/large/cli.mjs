@@ -11,6 +11,7 @@ async function main() {
     throw new Error("Use generate, serve or benchmark");
   const size = {
     areas: 30,
+    inlineStyles: false,
     screens: 40,
     rows: 12,
     stylesheets: 4,
@@ -23,6 +24,7 @@ async function main() {
     const flag = args.shift();
     if (flag === "--debug-timings") debug = true;
     else if (flag === "--derived") generatedOutput = "derived";
+    else if (flag === "--inline-styles") size.inlineStyles = true;
     else if (flag === "--config") {
       const value = args.shift();
       if (!value || value.startsWith("--"))

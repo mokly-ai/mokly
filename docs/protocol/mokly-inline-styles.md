@@ -2,17 +2,15 @@
 
 ## Delivery Status
 
-Approved target tracked by the
-[inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md).
-The span, diff, attribution and canonical-material engine is implemented and
-the component-aware classifier calls it on complete paired views and
-reference-bearing fast-path views. The renderer is string-only, current
-manifests no longer carry ownership records, and
-historical readers discard the retired arrays. References inside inferred-owned
-rules now follow their owners through the ordinary resource graph, including on
-the fast path. Validated `inlineStyles` evidence is delivered in component-aware
-results; shell presentation remains for Milestone 7. This document owns the
-analysis, attribution, comparison material, membership and evidence rules for
+Implemented across comparison, classification, result delivery and shell
+presentation. The span, diff, attribution and canonical-material engine runs on
+complete paired views and reference-bearing fast-path views. The renderer is
+string-only, current manifests contain no head-style or public-resource
+assertions, and historical readers discard the retired arrays. References
+inside inferred-owned rules follow their owners through the ordinary resource
+graph, including on the fast path. Component-aware results carry validated
+`inlineStyles` evidence and the shell presents each outcome. This document owns
+the analysis, attribution, comparison material, membership and evidence rules for
 style material that a renderer places outside component markup. The
 [CSS change attribution contract](./mokly-css-attribution.md) owns the
 parser, rule diff, keep list and matcher that this analysis reuses; the
@@ -72,7 +70,8 @@ because generated-source removal and historical marker normalization change
 lengths. The span finder walks the original document's comment nodes, accepts
 current and retired ignore prefixes and leaves an element inside a paired id
 in place. A one-sided region remains ordinary analyzed material. The renderer
-reports nothing; `RenderResult`, `styles` and `resources` records are retired.
+supplies only the document string; the manifest supplies no head-style or
+public-resource assertions.
 
 When the ordered sequence of unowned outer sources is identical on both sides
 and neither side can contain a reference, the analysis is skipped and both

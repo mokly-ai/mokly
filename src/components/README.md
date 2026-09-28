@@ -81,10 +81,12 @@ effects are confined to the component. For eligible style elements outside
 component markup, Review diffs their rules and infers ownership from every
 element each rule can match in the paired documents. Rules that also reach
 entry-owned markup or cannot be resolved stay with the entry; rules that match
-nothing are excluded. The renderer returns only the complete HTML document and
-reports no style or resource ownership. Global or mixed resources remain
-conservatively attributed. Dependency declarations and adopting an unrelated
-component alone do not invent a visible screen change. Historical Mokabook
+nothing are excluded. Files referenced by inferred-owned inline rules follow
+those owners through the rendered resource graph; an entry-owned reference
+keeps independent entry evidence. The renderer returns only the complete HTML
+document. Global or mixed resources remain conservatively attributed.
+Dependency declarations and adopting an unrelated component alone do not
+invent a visible screen change. Historical Mokabook
 markers are normalized for matching and range validation; marker renames alone
 do not create consumer changes or alter the retained snapshots.
 

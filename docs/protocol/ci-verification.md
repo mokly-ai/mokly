@@ -260,7 +260,7 @@ register before releasing their command worker and unregister only after normal
 drainage. Abrupt cancellation signals the direct process tree and every
 registered descendant group, rescans for registrations racing with shutdown,
 escalates from TERM to KILL within the existing bound, and waits for all groups
-to stop before removing the subtree's resources. Invalid ownership records or a
+to stop before removing the subtree's resources. Invalid owner registrations or a
 group that cannot be drained fail verification and retain resources for
 diagnosis. Windows retains kill-on-close job ownership; the hierarchy adds an
 outer cancellation fallback rather than replacing the job boundary.
