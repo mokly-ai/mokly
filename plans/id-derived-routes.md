@@ -1,12 +1,15 @@
 # Id-Derived Routes, Unified Variants, And Identity-Keyed Wire
 
-Status: Planned; not started. Created 2026-09-26 with the user's consent after
-discussing route redundancy on the navigation-path branch; the variant
-unification and the wire cleanup were folded in the same day. The work is
-implemented on this branch, `calummoore/halifax-v2`, and the user opens a
-pull request when it is ready. Mokly is not live, so this plan adds no
-backwards compatibility: readers it rewrites accept only the new versions,
-and there are no migration guards or transitional shapes.
+Status: Milestones 1–8 implemented, verified, pushed, and reviewed on
+`calummoore/halifax-v2` (2026-09-26 to 2026-09-28); the review findings in the
+[review record](#review-record) await the user's decision. Created 2026-09-26
+with the user's consent after discussing route redundancy on the
+navigation-path branch; the variant unification and the wire cleanup were
+folded in the same day. The work is implemented on this branch,
+`calummoore/halifax-v2`, and the user opens a pull request when it is ready.
+Mokly is not live, so this plan adds no backwards compatibility: readers it
+rewrites accept only the new versions, and there are no migration guards or
+transitional shapes.
 
 **Problem:** every routed entry carries two hierarchies. `navPath` is the list
 of folder labels; `route` is an author-chosen `.html` path built from a root
@@ -477,11 +480,94 @@ writer together, and remove the development redirect and preview redirects.
       removed authoring fields, global component variant ids, the document
       layout, identity-only manifest v7, read model v3, review result v4,
       delivery v3, and the removed `/id/` URLs; push.
-- [ ] Review the complete local diff against `origin/main` using
+- [x] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
       recommendation, without changing the implementation.
+
+## Review record
+
+Milestones 2–8 (`a6fe0da`..`d227702e`) were reviewed with the
+[implementation review prompt](../docs/implementation-review-prompt.md) after
+the full gate and push, split by area across six read-only reviewers. The
+coordinator confirmed each finding below against the code before recording it.
+No finding was applied automatically; all await the user's decision.
+
+1. **High** — the review producer sorts affected consumers by a `:`-joined key
+   while the v4 reader requires a `\u0000`-joined order, so two changed
+   components such as `button` and `button-group` make a valid result invalid
+   and Changes unavailable (`src/review/component_affected.ts`,
+   `packages/viewer/src/review/result_validation.ts`).
+2. **High** — export resolves `#…` references in a relocated v3–v6 snapshot
+   document against a synthetic `<base dir>/index.html`, so CSS `url(#id)` in a
+   `style` attribute or `<style>` block aborts export and publish with Changes
+   during the upgrade window (`src/export/references.ts`).
+3. **Medium** — switching sibling component variants while comparing leaves
+   the workspace's copy of the comparison mode at Current, so Props stay
+   editable and highlighting stays on during a comparison
+   (`packages/viewer/src/shell/workspace.tsx`, `diffs.tsx`).
+4. **Medium** — `InstanceRef` still carries and matches `variantId`, which the
+   viewer and instance contracts removed, so documented references never match
+   component-variant frames; the viewer docs and README also still promise
+   `snapshotId` on navigation events.
+5. **Medium** — an embedded frame link to an unknown id shows the missing view
+   without changing the selection, leaving the viewer stuck and bypassing the
+   controlled host (`packages/viewer/src/shell/store_host.ts`).
+6. **Medium** — component-variant navigation rows shipped without updating the
+   design mockups under `examples/basic/entries/design/`, and component
+   variants use the screen-shaped variant icon the docs no longer describe.
+7. **Medium** — the component-variant registry and manifest rules (parent
+   existence and kind, nesting, `navPath`, inheritance, no-variant components,
+   stored v7 `variants`) have no tests.
+8. **Medium** — a review whose baseline and head reuse one id across kinds
+   fails as a duplicate Changes entry, though the catalogue contract allows it.
+9. **Medium** — relocation rewrites `<use href="#…">` to a full snapshot URL,
+   which likely stops sprite icons rendering in `srcdoc` previous-version
+   previews; needs a browser test to confirm.
+10. **Medium** — full-catalogue capture can relocate one entry onto another
+    entry's stored path, and rejects a root-level `<base href="./">`, aborting
+    export with Changes on the upgrade PR.
+11. **Medium** — `review.json` ordering is stated three different ways across
+    `mokly-changes.md`, `mokly-component-review-validation.md`, and the code.
+12. **Medium** — `mokly-rendering.md` types `RenderInput.entry` as
+    `ComponentDefinition`; the code uses `ComponentVariantDefinition`.
+13. **Medium** — the packed-consumer snapshot check reads `beforePath` and
+    `afterPath`, which review v4 removed, so it never checks anything
+    (`scripts/package/export.mjs`).
+14. **Low** — the v3 reader accepts current and removed records sharing an id,
+    while shell checks treat such a current entry as removed.
+15. **Low** — the device-name id rule also rejects `ReviewIgnore` ids and
+    historical ids such as `aux`.
+16. **Low** — screen-only Serve swallows classifier errors and falls back to a
+    second comparison implementation.
+17. **Low** — snapshot and preview file names are still composed by hand in
+    about nine places instead of the shared path module.
+18. **Low** — `parseViewHref` accepts `constructor` and `__proto__` prefixes.
+19. **Low** — dead code and route-era names remain (for example
+    `withFragmentQuery`, `safeDecode`, `resolveCatalogueRecord`,
+    `CatalogueVariant`, unused viewer routing modules, unread `route` fields).
+20. **Low** — smaller doc and code mismatches across export delivery, server,
+    variants, component manifest, controls, live evidence, previews, guides,
+    example notes, page migration, and selected comparisons.
+21. **Low** — extensionless `/view/` handling is still hand-written in the
+    shell and preview scripts.
+22. **Low** — historical v4–v6 manifest validation was loosened.
+23. **Low** — expanded historical component variants inherit the parent
+    `rationale`, which current variants do not.
+24. **Low** — a component parent that fails validation reports misleading
+    missing-parent errors for each variant.
+25. **Low** — removed-entry order differs from the documented rule when a
+    removed variant's parent survives.
+26. **Low** — dark-scheme availability ignores removed component variants.
+27. **Low** — a removed variant whose former parent became a variant loses the
+    parent breadcrumb the mockup shows.
+28. **Low** — the v3 reader keeps the removed-variant-on-a-surviving-component
+    path the plan deleted.
+29. **Low** — several source files grew past about 300 lines, and 15 protocol
+    doc size caps were raised instead of splitting docs.
+30. **Low** — the breaking-change notes omit the viewer host API changes
+    (`ViewerSelection.variantId` rejected; `ScreenNavigateEvent` narrowed).
 
 ## Post-merge follow-up (non-blocking)
 
