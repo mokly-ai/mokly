@@ -11,7 +11,8 @@ and [Milestone 14 review record](../docs/reviews/imported-css-delivery-milestone
 Milestone 18 (`3aa7d67`) resolves M17-2 and makes M17-3, M17-8 and M17-9
 obsolete. Other findings in the
 [Milestone 17 review record](../docs/reviews/imported-css-delivery-milestone-17.md)
-remain open for the user's decision.
+remain open for the user's decision, as do the nine findings in the
+[Milestone 19 review record](../docs/reviews/imported-css-delivery-milestone-19.md).
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -791,10 +792,10 @@ rewrites that retain authored values, rules, comments and browser semantics.
 - [x] Demonstrate an old whole-stylesheet re-print mutation fails exact parity; smoke-test Welcome in Chrome across both schemes and viewports.
 - [x] Run Build, focused tests, example Build/Check, lint, typecheck, dependency and package checks, relevant browser specs, then `cargo xtask check`; commit and push this milestone.
 
-## Milestone 19: Commit, push, and review
+## Milestone 19: Commit, push, and review (complete)
 
 - [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
-- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Nine new findings (2 Medium, 7 Low) are recorded in the [Milestone 19 review record](../docs/reviews/imported-css-delivery-milestone-19.md) for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 

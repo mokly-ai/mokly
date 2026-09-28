@@ -18,9 +18,11 @@ those fixes. The user authorized fixes for findings 1, 2 and 4–20 as Milestone
 without including the uncommitted Milestone 10 work.
 
 The review of the Milestone 13 fix is recorded separately in the
-[Milestone 14 review record](./imported-css-delivery-milestone-14.md), and
+[Milestone 14 review record](./imported-css-delivery-milestone-14.md),
 the review of Milestones 15 and 16 in the
-[Milestone 17 review record](./imported-css-delivery-milestone-17.md).
+[Milestone 17 review record](./imported-css-delivery-milestone-17.md), and
+the review of Milestone 18 in the
+[Milestone 19 review record](./imported-css-delivery-milestone-19.md).
 
 ## Findings
 
