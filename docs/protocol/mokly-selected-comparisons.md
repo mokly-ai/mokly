@@ -62,7 +62,8 @@ transitive resource closure. Keep original before/after documents unmodified,
 with separate route-preserving snapshot roots. Historical reads use the pinned
 Git commit and bounded batches of regular files. Current reads retain the public
 file and source-confinement rules. Resource hints not read by classification are
-validated and captured on demand. Frames retain their script-disabled sandbox.
+validated and captured on demand. Panes present those documents without script
+permission under the [comparison pane contract](./mokly-comparison-panes.md).
 
 The stable request redirects to
 `/__mokly/diffs/__generations/selected-<uuid>/review.json`. JSON and snapshot

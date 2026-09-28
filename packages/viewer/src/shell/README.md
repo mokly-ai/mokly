@@ -196,6 +196,63 @@ active adapter; it must not race adapter-owned history-replacing navigation.
 Display-only selection updates preserve manually collapsed filtered groups;
 only changed search, tag or Changes filters reveal their matching groups.
 
+`diffs.tsx` owns the comparison band and stage; `comparison_toolbar.tsx`
+renders the band's mode group, the Scroll together switch (a native checkbox
+with `role="switch"`, shown in every diff mode including loading and failure)
+and Refresh. `use_comparison.ts` requests, renews and fences the selected
+comparison; `comparison_selection.ts` picks the views and snapshot addresses
+the selection shows; and `use_comparison_documents.ts` presents every selected
+pane document through the shared snapshot loader of the comparison's immutable
+generation before the stage reports ready. Its framework-free core,
+`comparison_documents.ts`, keeps one loaded comparison's presentations across
+mode, viewport and scheme switches and discards them when Refresh, Try again, a
+new generation, Current or navigation replaces the comparison; a failure shows
+the existing failure copy with Try again. `comparison_views.tsx` renders one
+section per viewport, sharing one last-scrolled version
+(`comparison_scroll_owner.ts`) between them, and chooses `comparison_stack.tsx`
+for Overlay and Difference (one chrome whose viewport holds the Before layer
+and the blended Current layer) or `comparison_side.tsx` for Side by side and
+for views missing a side. `comparison_chrome.tsx` picks the browser, phone or
+bordered component frame, `comparison_viewport.tsx` renders the shared
+viewport, its sticky device-sized box and range spacer, and
+`comparison_frame.tsx` reuses `preview_frame.tsx` and the read-only guard for
+each version, marked `data-mokly-comparison-frame` with `scrolling="no"`.
+
+`comparison_scroll_sync.ts` is the per-section scroll controller behind the
+interfaces in `comparison_scroll_types.ts`: it follows each layer document from
+commit, measures it (`comparison_section_measure.ts` sizes every spacer to the
+section's largest range and paints each canvas), writes each viewport's offset
+to its documents, shifts a shorter document's frame by the remainder, adopts
+scrolls it did not make, routes keys and anchors, and applies Scroll together
+live. `comparison_layer_listeners.ts` attaches its one capturing `scroll`
+listener, key listener and reader-action listeners to each pane document and
+remembers the last pointer target. `comparison_scroll_mirror.ts` keeps each
+viewport's settled offset, links Side by side viewports while Scroll together
+is on, compares values rather than using timers, and owns `scrollInstantly`,
+which every programmatic scroll uses so a smooth `scroll-behavior` cannot
+animate it; `comparison_layer_document.ts` reads a layer document's range,
+offset and canvas colour. `comparison_scroll_regions.ts` detects a document's
+inner scroll regions and indexes them, `comparison_region_identity.ts` reads
+authored names, ids, roles, accessible names and text fingerprints, and
+`comparison_region_match.ts` is the pure four-rule matcher; none of them change
+the document. `comparison_region_mirror.ts` collects regions and matches at
+most once per measurement, reserves pairs, records each region's last offset
+for the echo rule, and writes both axes at once. `comparison_scroll_keys.ts`
+maps keys to page steps and `comparison_key_route.ts` finds the region a key
+belongs to from the focused element or last pointer target, right-to-left
+regions included; `comparison_region_reveal.ts` reveals anchors in their
+enclosing regions, innermost first. `comparison_scroll_preference.ts` owns the
+`mokly:comparison-scroll-together` value and its stored, in-memory and fixed
+stores, and `use_scroll_together.ts` reads the one the comparison environment
+supplies; the embedded viewer keeps its store above source replacement. No
+module reloads a pane presentation when the switch changes. The
+[comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md)
+owns presentation and layout, and the
+[scrolling](../../../../docs/protocol/mokly-comparison-scrolling.md),
+[region pairing](../../../../docs/protocol/mokly-comparison-region-pairing.md) and
+[Scroll together](../../../../docs/protocol/mokly-comparison-scroll-together.md)
+contracts own the scroll behavior.
+
 `previews.tsx` renders the one previous-version presentation a removed page and
 a removed screen share: the "Showing previous version" label, the stage host
 carrying the descriptor the React request lifecycle validates, and the shared
@@ -204,10 +261,11 @@ public catalogue publishes one, so a delivery without that descriptor stays
 quiet. The served stage holds the unavailable copy without a Retry control,
 because a shell that never hydrates cannot honour that action; the first client
 effect replaces it with the loading state and adds Retry only if its own request
-fails. The request fencing lives in `use_removed_preview.ts`; it asks
-`previews/presentation.ts` to fetch and validate the historical documents needed
-by the selected views before reporting ready. Each loaded frame receives only a
-script-disabled, viewer-origin `srcdoc`, with
+fails. The request fencing lives in `use_removed_preview.ts`; it creates the
+shared snapshot-presentation loader for the loaded generation with only the
+`before` side enabled, then fetches and validates the historical documents
+needed by the selected views before reporting ready. Each loaded frame receives
+only a script-disabled, viewer-origin `srcdoc`, with
 `data-mokly-preview-source` naming the immutable snapshot address. The
 viewer-owned guard cancels links and forms, scrolls same-document anchors
 without native navigation, and restores the accepted presentation after any

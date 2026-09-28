@@ -16,7 +16,9 @@ ancestor disclosure, conditional filter clearing, nearest-row scrolling, the
 `tag:` search term, the details inspector's tag chips, the search field's tag
 control with its picker panel, the mark-only narrow brand, and the top bar's
 stacking above the navigation drawer scrim. Every state recorded here is
-implemented. The [React Browse shell plan](../../plans/react-browse-shell.md)
+implemented, including the Scroll together switch and the mirrored inner
+panels that the comparison designs below depict. The
+[React Browse shell plan](../../plans/react-browse-shell.md)
 changes how the shell is rendered and enhanced, not how it looks or behaves:
 this design, its tokens, dimensions, responsive rules and the design catalogue
 remain binding on the hydrated React implementation, and no mockup changes
@@ -37,6 +39,18 @@ device/comparison controls. Removed pages are flat Changes rows; baseline
 breadcrumbs are text even after their parents are deleted. Ordinary
 publications omit the Changes filter and comparison band while preserving the
 same navigation, search, tags, and screen variants.
+
+The comparison designs depict the implemented
+[comparison pane contract](./mokly-comparison-panes.md): Overlay and Difference
+hold both versions in one device chrome, or in one bordered frame for a saved
+component variant in the
+[component explorer designs](./mokly-component-design.md), whose viewport
+scrolls them as one, and links inside every depicted comparison do nothing.
+They also depict the reader control and inner panels of the
+[comparison scrolling contract](./mokly-comparison-scrolling.md): every diff
+mode draws the Scroll together switch, `design-changes-overlay-panel` shows an
+app-shell panel scrolled as one in Overlay, and
+`design-changes-side-by-side-apart` shows Side by side with the switch off.
 
 The removed-document and removed-screen designs depict the shipped
 [removed previews](./mokly-removed-previews.md) behavior: the previous version
@@ -80,6 +94,9 @@ contract until their standalone screens are implemented.
 | `design-browse-changed-views`         | `design/browse/variants/changed-views.html`                     | Change confined to the views that are not shown            |
 | `design-changes-current`              | `design/review/controls/current.html`                           | Current screen in Changes                                  |
 | `design-changes-overlay`              | `design/review/controls/overlay.html`                           | On-demand overlay comparison                               |
+| `design-changes-overlay-long`         | `design/review/controls/overlay-long.html`                      | Overlay on a long screen, scrolled part-way in one chrome  |
+| `design-changes-overlay-panel`        | `design/review/controls/overlay-panel.html`                     | Overlay on an app shell, its panel scrolled part-way       |
+| `design-changes-side-by-side-apart`   | `design/review/controls/side-by-side-apart.html`                | Side by side with Scroll together off, scrolled apart      |
 | `design-review-changed`               | `design/review/outcomes/changed.html`                           | Changed screen, side-by-side compare                       |
 | `design-review-added`                 | `design/review/outcomes/added.html`                             | Added screen current preview without comparison controls   |
 | `design-review-removed`               | `design/review/outcomes/removed.html`                           | Removed badge and previous version without comparisons     |
@@ -184,7 +201,9 @@ Additional owning groups keep each new page at no more than five screens:
 
 `design-browse-screen`, `design-browse-details-screen` and the whole Welcome
 comparison family — `design-changes-current`, `design-changes-overlay`,
-`design-review-changed` and `design-review-difference` — also render in both
+`design-changes-overlay-long`, `design-changes-overlay-panel`,
+`design-changes-side-by-side-apart`, `design-review-changed` and
+`design-review-difference` — also render in both
 schemes, so the outer Appearance control shows the selected Welcome, the
 light-only Details subject and every comparison mode under either appearance at
 their own routes. A comparison family publishes the same schemes for every
@@ -583,14 +602,62 @@ presentation, including its secondary details and the evidence spacing shared
 by the mockup card and the shell, is owned by
 [CSS evidence in the shell](./mokly-css-evidence-shell.md).
 Before and current
-snapshots remain in script-disabled iframes. Overlay composites the current
-pane at 50% opacity; Difference uses CSS difference blending. Missing panes for
+snapshots remain script-disabled documents under the
+[comparison pane contract](./mokly-comparison-panes.md). Overlay and
+Difference stack both versions inside one device chrome whose viewport is the
+only page-level scroll container: Overlay composites the current layer at 50%
+opacity and Difference uses CSS difference blending, and the long-overlay
+depiction shows that chrome scrolled part-way with both layers at one page
+offset. Both layers fill the chrome's viewport at device size and each paints
+its own opaque screen background in its scheme, so the blend never reaches the
+stage; paired panels follow the
+[comparison scrolling contract](./mokly-comparison-scrolling.md). The browser
+bar, phone status band, notch and home pill stay outside the blend.
+Stacked comparisons show no Before or Current caption. The long depiction draws
+its scrollbar part-way down the viewport, a thin indicator on the phone, because
+a static artboard cannot scroll itself. Side by side keeps one chrome per
+version, captioned Before and Current. Links inside every depicted comparison do
+nothing. Missing panes for
 eligible Removed component variants remain side by side for readability in every mode. No pixel percentages are
 shown. Baseline, affected files, and excluded content belong in secondary
 comparison details. Loading and failure states keep the catalogue available.
 
+Side by side, Overlay and Difference draw the Scroll together switch that the
+[Scroll together contract](./mokly-comparison-scroll-together.md#reader-control) places
+immediately after the mode group and before Refresh; Current draws none. It is
+a native checkbox with switch semantics whose visible label, “Scroll together”,
+is its accessible name. A 30×18px pill track with a 1px border holds a 12px
+knob inset 2px, 8px before the 12px/600 label in `--chrome-ink-2`. On, the
+track and its border take `--mbk-sage-deep` and the knob `--mbk-accent-contrast`
+at the far end; off, the track takes `--chrome-bg` and its border and knob
+`--chrome-control-edge`, with the knob at the start. Keyboard focus draws a 2px
+`--mbk-sage-deep` ring 2px outside the track, and the transparent checkbox
+covers the whole control as its hit area. The runtime draws those colours with
+`--mbk-accent-deep` and `--_mokly-private-on-accent-deep`, never the
+consumer-tunable `--mokly-accent-contrast`, and paints the knob with its border
+so forced colours keep it visible without opting out. The band keeps 16px
+between its controls on a row and 8px between rows and wraps whenever a row
+lacks room: on desktop the switch follows the mode group on its row and Refresh
+closes the band at the far end; below the breakpoint the mode group takes the
+whole first row, the switch starts the second and Refresh ends it. The switch
+toggles in place in the artboards; every diff-mode screen draws it on except
+`design-changes-side-by-side-apart`.
+
+`design-changes-overlay-panel` depicts Welcome built as an app shell in
+Overlay: a 44px top bar (40px on the phone) and a 148px navigation column, or a
+tab bar under the panel on the phone, stay in place while both versions' main
+panels are drawn part-way down at one position with the panel's own scrollbar.
+The page itself has nothing to scroll, so the chrome's viewport draws no
+scrollbar. `design-changes-side-by-side-apart` depicts Side by side with the
+switch off, each version's viewport at its own place down a long Welcome with
+its own scrollbar. Both draw every row at a fixed height, so their drawn
+positions and scrollbars never depend on text wrapping.
+
 The canonical Current and Overlay designs live at
-`design/review/controls/current.html` and `design/review/controls/overlay.html`;
+`design/review/controls/current.html`, `design/review/controls/overlay.html`
+and `design/review/controls/overlay-long.html`, with the scrolling states at
+`design/review/controls/overlay-panel.html` and
+`design/review/controls/side-by-side-apart.html`;
 their mobile and desktop components share the catalogue shell. Existing design
 routes keep their identifiers, while outcome and impact screens depict Changes.
 See [the complete behavior](./mokly-changes.md).

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { sameOriginAdapter } from "../client/same_origin_adapter.js";
+import { memoryScrollTogether } from "../shell/comparison_scroll_preference.js";
 
 import {
   awaitHostBridgeFailureBarrier,
@@ -17,6 +18,7 @@ export function MoklyViewer(props: MoklyViewerProps) {
   const identifierPrefix = viewerIdentifierPrefix(props.viewerId);
   const source = useCatalogue(props.catalogue, props.baseUrl);
   const [adapter] = useState(sameOriginAdapter);
+  const [scrollTogether] = useState(memoryScrollTogether);
   const selectedAdapter = props.frameAdapter ?? adapter;
   const bridgeOwner = useRef({});
   const [bridgeFailure, setBridgeFailure] = useState<
@@ -122,6 +124,7 @@ export function MoklyViewer(props: MoklyViewerProps) {
       bridgeOwner={bridgeOwner.current}
       identifierPrefix={identifierPrefix}
       replaced={replaced}
+      scrollTogether={scrollTogether}
     />
   );
 }

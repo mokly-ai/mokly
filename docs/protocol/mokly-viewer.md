@@ -382,9 +382,12 @@ startup assets establish them before paint, and the shell adopts them before
 hydration. React owns the resulting shell state and render thereafter, while
 the appearance controller retains preference and system-theme listening.
 Frames remain static documents in sandboxed iframes. Hydration reaches inside
-only the viewer-owned, same-origin `srcdoc` used for a historical removed
-preview, where it installs and restores the read-only guard. Current and
-comparison documents retain their existing adapter and sandbox boundaries.
+only the viewer-owned, same-origin `srcdoc` documents used for a historical
+removed preview and for [comparison panes](./mokly-comparison-panes.md), where
+it installs and restores the read-only guard. For panes it also implements the
+[comparison scrolling contract](./mokly-comparison-scrolling.md): measurement,
+page and inner-region writes, key and anchor routing, and the Scroll together
+choice. Current documents retain their existing adapter and sandbox boundaries.
 
 Shell state is one store scoped to a mounted viewer:
 
@@ -400,9 +403,19 @@ Shell state is one store scoped to a mounted viewer:
   responsive drawer. Navigation, details and split-width choices persist per
   served origin in browser storage under the existing keys; the drawer and the
   tag picker panel do not persist and reset on reload.
-- **Scroll** is tracked per `data-mokly-scroll` region and saved into the
-  history entry for Back/Forward restoration; route-change focus never
-  overrides a restored position.
+- **Comparison scrolling** includes the Scroll together choice. Standalone
+  Serve and export persist `on` or `off` under
+  `mokly:comparison-scroll-together`; an embedded viewer retains it only for
+  that mounted session, including source replacement, outside the
+  source-specific shell remount. The
+  [Scroll together contract](./mokly-comparison-scroll-together.md) defines
+  its default and live mode behavior.
+- **Scroll** is tracked per viewer-owned shell `data-mokly-scroll` region and
+  saved into the history entry for Back/Forward restoration; route-change
+  focus never overrides a restored position. Consumer elements with the same
+  attribute live inside separate comparison documents and instead use the
+  [region pairing contract's](./mokly-comparison-region-pairing.md) author
+  hint.
 - **Workspace** state (component variant, props under edit, inspector tab and
   pane size, active pick, highlight scope) lives with the mounted view and is
   discarded on route change or source replacement.
@@ -494,8 +507,9 @@ UI and data. Viewer network
 activity is limited to its configured source and validated public resources or
 pinned comparisons from it. That set includes historical HTML documents beneath
 the advertised generation's `snapshots/before/` directory when a removed entry
-is selected; it adds no analytics, discovery, remote fonts, or background
-comparison requests. Existing authored external fragment resources retain
+is selected, and the pane documents beneath its `snapshots/before/` and
+`snapshots/after/` directories when a comparison is selected; it adds no
+analytics, discovery, remote fonts, or background comparison requests. Existing authored external fragment resources retain
 export's resource policy. Serve owns its existing private update/control
 transport outside this public fetch boundary. No cookies or ambient credentials
 are read/written, and no `window.top` access occurs. Embedding never commandeers

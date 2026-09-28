@@ -1164,14 +1164,12 @@ test("dark scheme paints device screens and leaves the chrome light", () => {
   const selectors = darkTokenSelectors(SHELL_CSS).map(flatCss);
   assert.equal(selectors.length, 9);
   for (const selector of selectors) {
-    assert.ok(
-      selector.includes('[data-preview-color-scheme="dark"]'),
-      selector,
-    );
+    assert.ok(selector.startsWith(scope), selector);
   }
-  assert.equal(
-    selectors.filter((selector) => selector.startsWith(scope.trim())).length,
-    8,
+  assert.ok(
+    css.includes(
+      `${scope}.mb-pane-doc { background-color: var(--mbk-dark-screen-bg); }`,
+    ),
   );
 
   assert.match(

@@ -31,8 +31,8 @@ structural and owns child ids but no route. A use case owns ordered references
 to existing screens and never defines a screen inline. A page owns one
 complete HTML document from a synchronous render callback, with no device or
 color variants. The [page contract](./mokly-pages.md) defines both explicit
-and nested authoring forms. Ids are explicit,
-globally unique kebab-case values and remain stable across navigation changes.
+and nested authoring forms. Ids are explicit, globally unique values matching
+`^[a-z0-9]+(?:-[a-z0-9]+)*$` and remain stable across navigation changes.
 A screen may also declare `variants`: each variant flattens into a complete
 screen entry with its own global id, a route derived beneath the parent's,
 and a `variantOf` relationship to the parent. The
@@ -141,6 +141,24 @@ trees never inherit it from a collection or root. A collection is rejected for
 carrying the key at all, so `tags: undefined` is as much a violation as
 `tags: ["forms"]`. Tags are optional catalogue vocabulary, not a second
 hierarchy: an untagged catalogue stays valid.
+
+## Comparison Scroll Hints
+
+A rendered inner scroll region may carry `data-mokly-scroll` to keep its
+identity when a comparison edit moves the panel or rewrites its content. A
+normal value uses the same id grammar, `^[a-z0-9]+(?:-[a-z0-9]+)*$`, and the
+same exact value belongs on that region in both versions. The value `off` is
+reserved to keep that region independent. Duplicate names in one generated
+document are ambiguous; a name on a non-scrollable element is ignored. The
+[comparison region pairing contract](./mokly-comparison-region-pairing.md#counterpart-algorithm)
+defines fallback matching when a valid name is absent on either side.
+
+This is consumer metadata in the rendered document, not a TypeScript authoring
+field or Mokly-owned build marker. Mokly does not validate, rewrite, or remove
+it and imposes no special preservation rule on a consumer-supplied
+compatibility transformer. Viewer-owned shell elements also use the name
+outside pane documents for history restoration; the separate DOM scopes keep
+those meanings independent.
 
 Imports of `@mokly/mokly` from any repository-owned module bind the authoring
 helpers to that importing module. A module is repository-owned when its real

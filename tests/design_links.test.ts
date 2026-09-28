@@ -5,6 +5,7 @@ import { test } from "node:test";
 
 import { parse } from "parse5";
 
+import { actionModes } from "../examples/basic/entries/design/components/parts/navigation_states.js";
 import {
   appearanceModes,
   welcomeModes,
@@ -140,11 +141,11 @@ test("every design link resolves to a real same-viewport design artifact without
   const interactiveDesigns = designs.filter((entry) =>
     entry.id.startsWith("design-interactive-"),
   );
-  assert.equal(componentDesigns.length, 32);
+  assert.equal(componentDesigns.length, 35);
   assert.equal(interactiveDesigns.length, 6);
   assert.equal(
     designs.length - componentDesigns.length - interactiveDesigns.length,
-    60,
+    63,
   );
   for (const entry of designs) {
     for (const viewport of ["mobile", "desktop"] as const) {
@@ -253,6 +254,7 @@ test("the canonical documented inventory exactly matches the complete design reg
 const COMPARISON_FAMILIES = [
   Object.values(welcomeModes),
   Object.values(appearanceModes),
+  Object.values(actionModes),
 ];
 
 test("a dark fragment's links stay dark wherever the target has a dark render", async () => {
@@ -293,18 +295,22 @@ test("a dark fragment's links stay dark wherever the target has a dark render", 
 
 test("comparison families publish the same schemes for every member", async () => {
   const { manifest } = await designCatalogue;
+  const dualFamilies: boolean[] = [];
   for (const family of COMPARISON_FAMILIES) {
     const members = family.map((id) => {
       const entry = manifest.entries.find((entry) => entry.id === id);
       assert.ok(entry?.kind === "screen", id);
       return [id, entry.darkFragments !== undefined] as const;
     });
+    const dual = members[0]![1];
+    dualFamilies.push(dual);
     assert.deepEqual(
-      members.filter(([, dual]) => !dual).map(([id]) => id),
+      members.filter(([, member]) => member !== dual).map(([id]) => id),
       [],
-      `light-only members would strand a dark comparison: ${family[0]}`,
+      `a member with other schemes would strand a comparison: ${family[0]}`,
     );
   }
+  assert.deepEqual(dualFamilies, [true, true, false]);
 });
 
 test("a tag chip without a destination is a label, not a control", async () => {

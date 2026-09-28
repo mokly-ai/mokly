@@ -24,7 +24,7 @@ export const designLibrary = [
   [
     "controls",
     "comparison-toolbar",
-    ["current", "side-by-side", "overlay", "difference"],
+    ["current", "side-by-side", "overlay", "difference", "side-by-side-apart"],
   ],
   [
     "controls",

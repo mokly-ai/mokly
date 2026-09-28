@@ -1,8 +1,4 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
-
-import { build } from "esbuild";
 
 import { readCatalogue } from "@mokly/viewer";
 
@@ -10,6 +6,8 @@ import { exportCatalogue } from "../../dist/export/run.js";
 import { serve } from "../../dist/server/serve.js";
 import { createRemovedPreviewFixture } from "../helpers/removed_preview_fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
+
+import { hostExportedViewer } from "./viewer_host.js";
 
 /** A running catalogue holding one removed page and one removed screen. */
 export interface RemovedPreviewHost {
@@ -65,71 +63,11 @@ export async function startViewerPreviews(): Promise<
       base: "origin/main",
       outDir: "site",
     });
-    await build({
-      bundle: true,
-      entryPoints: [
-        path.resolve("tests/browser/removed_preview_viewer_entry.tsx"),
-      ],
-      format: "esm",
-      logLevel: "silent",
-      outfile: path.join(fixture.output, "viewer.js"),
-      platform: "browser",
-      target: "es2023",
-    });
-    await fs.copyFile(
-      "packages/viewer/dist/styles.css",
-      path.join(fixture.output, "viewer.css"),
-    );
-    await fs.cp(
-      "packages/viewer/dist/assets",
-      path.join(fixture.output, "assets"),
-      {
-        recursive: true,
-      },
-    );
-    const artifact = await serveStaticFiles(fixture.output);
-    const catalogue: unknown = JSON.parse(
-      await fs.readFile(
-        path.join(fixture.output, "__mokly/catalogue.json"),
-        "utf8",
-      ),
-    );
-    const data = JSON.stringify({
-      catalogue,
-      frameOrigin: artifact.url,
-    }).replaceAll("<", "\\u003c");
-    await fs.writeFile(
-      path.join(fixture.output, "fixture.js"),
-      `window.fixture=${data};`,
-    );
-    await fs.writeFile(
-      path.join(fixture.output, "viewer.html"),
-      '<!doctype html><link rel="stylesheet" href="/viewer.css"><body><script src="/fixture.js"></script><script type="module" src="/viewer.js"></script></body>',
-    );
-    const host = await serveStaticFiles(fixture.output);
-    const cspHost = await serveStaticFiles(fixture.output, {
-      csp: [
-        "default-src 'self'",
-        "script-src 'self'",
-        `connect-src 'self' ${artifact.url}`,
-        `img-src 'self' ${artifact.url}`,
-        `style-src 'self' 'unsafe-inline' ${artifact.url}`,
-        `font-src 'self' ${artifact.url}`,
-        `media-src 'self' ${artifact.url}`,
-        `frame-src 'self' ${artifact.url}`,
-        "object-src 'none'",
-      ].join("; "),
-    });
-    artifact.allowOrigin(host.url);
-    artifact.allowOrigin(cspHost.url);
+    const viewer = await hostExportedViewer(fixture.output);
     return {
-      cspUrl: cspHost.url,
-      frameOrigin: artifact.url,
-      url: host.url,
+      ...viewer,
       close: async () => {
-        await host.close();
-        await cspHost.close();
-        await artifact.close();
+        await viewer.close();
         await fixture.close();
       },
     };

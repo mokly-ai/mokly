@@ -2,7 +2,11 @@ import { expect, test } from "@playwright/test";
 
 import type { RunningServer } from "../../dist/server/http_types.js";
 
-import { loadComparison } from "./comparison_actions.js";
+import {
+  expectPresentedPane,
+  loadComparison,
+  PANE_SOURCE,
+} from "./comparison_actions.js";
 import { selectedComparisonFixture } from "./selected_comparison_fixture.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
@@ -42,17 +46,15 @@ test("live Difference requests the active screen and keeps real before/current p
     "data-compare-mode",
     "difference",
   );
-  await expect(page.locator(".mb-pane--before iframe")).toHaveAttribute(
-    "sandbox",
-    "",
-  );
+  await expectPresentedPane(page.locator(".mb-pane--before iframe"));
+  await expectPresentedPane(page.locator(".mb-pane--after iframe"));
   await chooseScheme(page, "dark");
   await expect(
     page.frameLocator(".mb-pane--after iframe").locator("main"),
   ).toContainText("Updated screen");
   for (const pane of ["before", "after"])
     await expect(page.locator(`.mb-pane--${pane} iframe`)).toHaveAttribute(
-      "src",
+      PANE_SOURCE,
       /\.desktop\.dark\.html$/u,
     );
   expect(requests).toHaveLength(1);

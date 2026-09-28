@@ -99,6 +99,8 @@ interface ScreenHeadProps {
   idChip?: string;
   comparisonMode?: "current" | "difference" | "overlay" | "side-by-side";
   comparisons?: boolean;
+  /** The Scroll together switch a diff mode draws; on unless set otherwise. */
+  scrollTogether?: boolean | undefined;
   status?: ChangeStatus;
   title: string;
 }
@@ -111,6 +113,7 @@ export function ScreenHead({
   idChip,
   comparisonMode,
   comparisons = false,
+  scrollTogether = true,
   status,
   title,
 }: ScreenHeadProps) {
@@ -133,6 +136,7 @@ export function ScreenHead({
       ]}
       comparisons={comparisons}
       mode={comparisonMode ?? "current"}
+      scrollTogether={scrollTogether}
       accessible={accessibleControls ?? false}
       destinations={navigation.comparison ?? {}}
       {...optional("idChip", idChip)}

@@ -60,7 +60,7 @@ export const comparisonPane = defineComponent({
             expandable
             address="example.test/welcome"
           >
-            <MiniWelcome compact />
+            <MiniWelcome compact inert />
           </deviceFrame.Component>
         ),
       },
@@ -81,7 +81,7 @@ export const comparisonPane = defineComponent({
             expandable
             address="example.test/welcome"
           >
-            <MiniWelcome compact />
+            <MiniWelcome compact inert />
           </deviceFrame.Component>
         ),
       },
