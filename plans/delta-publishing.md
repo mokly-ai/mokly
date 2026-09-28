@@ -1048,19 +1048,21 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       drop the lint description, and state the workflow guard and its limit;
       update `tests/guides_ci.test.ts` to pin the new sentences.
 
-## Milestone 31: Lint removal verification and delivery
+## Milestone 31: Lint removal verification and delivery — completed
 
 - [x] Run the CI, verification, workflow, guides and deployment tests, then
       `cargo xtask check`; resolve every failure.
 - [x] Record the change in `docs/reviews/delta-publishing.md` against
       fifth-review finding 3 and sixth-review findings 1 and 3.
-- [ ] After checks pass, `git add -A`, commit with a Conventional Commits
-      title of at most 50 characters, and push the branch.
-- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After checks pass, `git add -A`, commit with a Conventional Commits
+      title of at most 50 characters, and push the branch. Committed as
+      `a7d0a07 test: replace the git ref lint with a workflow guard`.
+- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
-      without changing the implementation.
+      without changing the implementation. Two Low findings are recorded in
+      its Seventh Review for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 

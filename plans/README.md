@@ -10,9 +10,9 @@
   in Milestones 7–13, second-review findings 1 and 2 in Milestones 14–17 and
   the third-review findings in Milestones 18–22 and the fourth-review findings
   in Milestones 23–27, and the remote-state cleanup script was removed in
-  Milestones 28–29. The remote-branch lint is being replaced by a workflow
-  guard in Milestones 30–31; other open review findings await the user's
-  decision. The plan stays Active until its pull request merges.
+  Milestones 28–29, and the remote-branch lint was replaced by a workflow
+  guard in Milestones 30–31. The remaining open review findings await the
+  user's decision. The plan stays Active until its pull request merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align

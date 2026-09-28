@@ -903,7 +903,8 @@ compile and 140 during configuration loading all printed the cancellation line
 with status 1. Five new findings follow: one Medium and four Low. None was
 changed during the review. The user then chose to remove the cleanup script,
 which resolves finding 1 and part of finding 2 (see **Fifth Review
-Follow-up**); the rest await the user's decision. A stale title-check sentence in
+Follow-up**), and later removed the lint, which resolves finding 3 (see
+**Sixth Review Follow-up**); the rest await the user's decision. A stale title-check sentence in
 `ci-verification.md` that a reviewer also reported is already open as
 second-review finding 10, and the missing "completed" marker on Milestone 24
 was corrected in the plan while recording this review. Second-review findings
@@ -1025,7 +1026,8 @@ Milestones 28–29 record the decision and work.
    entry guard still applies to `scripts/verification/pull-request-title.mjs`,
    which CI runs by relative path, and stays open.
 
-Findings 3–5 stay open.
+Findings 3–5 stay open; finding 3 was later resolved by removing the lint
+(see **Sixth Review Follow-up**).
 
 Follow-up verification: `cargo xtask check` passed with Node 24.21.0 (unit
 2,544/2,544 across 472 files, browser 781/781 across 122 files,
@@ -1126,3 +1128,59 @@ resolved by the lint's removal.
 Follow-up verification: `cargo xtask check` passed with Node 24.21.0 (unit
 2,542/2,542 across 472 files, browser 781/781 across 122 files,
 packed-consumer smoke and every static check).
+
+## Seventh Review
+
+Reviewed on 2026-09-28 with
+[the implementation review prompt](../implementation-review-prompt.md), after
+commits `a7d0a07` (`test: replace the git ref lint with a workflow guard`) and
+`58a8c15` were pushed, against `origin/main`. One independent read-only
+reviewer confirmed the lint removal is complete, nothing expects the deleted
+files, the guard reads all 58 `run:` steps in the four workflows and the
+composite action with none flagged, and the contract's named tests check what
+it says. Two findings follow, both Low. None was changed; each awaits the
+user's decision. A third finding, that this record still called fifth-review
+finding 3 open, was corrected while recording this review.
+
+1. **P3 / Low — The workflow guard misses common inline forms, but the
+   documents say its only limit is called scripts.**
+   `tests/ci_workflow_remote_state.test.ts` only checks commands whose first
+   word is `git`, treats the path after a separated `--git-dir` as the
+   subcommand, knows only the dashed `git config --unset` spellings and does
+   not handle shell comments. In a throwaway clone, each of these deleted
+   remote state and none was flagged: `bash -c '…'`/`sh -c '…'`, a
+   `for r in $(git remote); do git remote remove "$r"; done` loop, commands
+   inside `if … then … fi`, `xargs -n 1 git update-ref -d`, `GIT_DIR=… git …`,
+   `git --git-dir "$D" remote remove origin`, the newer `git config unset` and
+   `git config remove-section` spellings, `git symbolic-ref --delete
+refs/remotes/origin/HEAD`, `git remote set-head origin --delete`,
+   `git remote -v remove origin` and `git branch -qdr`; an apostrophe in an
+   earlier comment hides every later line of a step. `git push origin --delete`
+   also deletes the local remote-tracking branch, and the contract does not say
+   whether that is in scope. [`ci-verification.md`](../protocol/ci-verification.md),
+   the plan and this record name called scripts as the only limit.
+   **Impact of no change:** false assurance; the natural loop or `xargs` form
+   of the removed cleanup would pass with every test green. **Options:**
+   **A)** extend the tokenizer to cover shell keywords, wrappers, `-c` strings,
+   comments, separated options and the new spellings; **B)** replace the
+   tokenizer with a case-insensitive pattern scan over each whole step, add the
+   probes above as positive cases and reword any prose the patterns catch;
+   **C)** only document the real limits. **Recommended: B, plus C** for what a
+   text scan still cannot see (dynamic commands, called scripts) and a stated
+   decision on `git push --delete`; a reviewer's eight-pattern prototype caught
+   all 16 probes and flagged none of the 58 real steps.
+
+2. **P3 / Low — A test file exports a function.** The same file exports
+   `remoteStateDeletingCommands`, the only real top-level export in any test
+   file; shared test code lives in `tests/helpers/`, and importing a test file
+   also runs its tests in the importing file. **Impact of no change:** harmless
+   today, but reuse would run these tests twice. **Options:** **A)** drop the
+   `export`; **B)** move the scanner into a `tests/helpers/` module, which also
+   keeps the test under 300 lines once finding 1 adds cases; **C)** B plus an
+   ESLint rule banning exports from test files. **Recommended: B.**
+
+Seventh-review verification: the reviewer's focused runs passed 41 and 2
+tests, Prettier and ESLint are clean, and all 170 relative links and anchors in
+the changed Markdown files resolve. Residual risk: by the user's decision
+nothing scans test code for remote-branch reads, and the guard cannot see
+commands in `scripts/`, `xtask` or dynamic commands.
