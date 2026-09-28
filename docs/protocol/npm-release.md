@@ -70,6 +70,8 @@ CSS Modules delivery uses `postcss-modules-local-by-default`,
 `postcss-modules-extract-imports`, `postcss-modules-scope` and `icss-utils`
 with Mokly's existing PostCSS runtime; their transitive selector/value parser,
 `cssesc` and `util-deprecate` packages join the package license/audit scope.
+The selector and value parsers are also direct lazy runtime dependencies for
+Mokly's post-scoping verification; the packed graph keeps one copy of each.
 Packed-consumer smoke also exercises a CSS Module, its binary `url()` asset,
 and a local PostCSS plugin through the URL-loaded `postcss_worker.js`; package
 inspection requires that worker file in the published archive.

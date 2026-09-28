@@ -15,6 +15,10 @@ rename local classes, IDs and keyframes by a path-only hash and expose default
 and named bindings to JavaScript. The module scoper never re-prints authored
 values, imports, URLs, comments or modern syntax; ordinary CSS and modules
 reach the same bundle and inventory. Consumer PostCSS still runs first.
+`styles/module_scope.ts` handles real `@scope` preludes with temporary sourced
+selector rules while hiding every scope-suffixed at-rule from plugin heuristics.
+`styles/module_verify.ts` compares restored output with the authored PostCSS
+tree and rejects any rewrite beyond documented local names before bundling.
 Graph and stylesheet metafiles each resolve their physical working directory
 once for path mapping. Root-import diagnostics build edge provenance only
 when an outside-repository CSS file actually fails validation; successful

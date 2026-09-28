@@ -20,6 +20,18 @@ interface Scenario {
 
 const scenarios: readonly Scenario[] = [
   {
+    name: "scope start with to inside a class",
+    css: "@scope (.button){.target{color:red}}",
+  },
+  {
+    name: "scope start and limit with to inside both classes",
+    css: "@scope (.tooltip, .photo) to (.footer, .bottom){.target{color:red}}",
+  },
+  {
+    name: "scope nested conditions and scope pseudo",
+    css: "@media (min-width:600px){@scope (.photo) to (:scope > .footer){.target{color:blue}}}",
+  },
+  {
     name: "fallbacks and vendor prefixes",
     css: ".x{width:-webkit-fill-available;width:-moz-available;width:stretch;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);height:100vh;height:100dvh;top:0;right:0;bottom:0;left:0}",
   },

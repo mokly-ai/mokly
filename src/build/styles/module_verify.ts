@@ -1,0 +1,188 @@
+import postcss, {
+  CssSyntaxError,
+  type AtRule,
+  type ChildNode,
+  type Container,
+  type Declaration,
+  type Root,
+  type Rule,
+} from "postcss";
+
+import { MoklyError } from "../../errors.js";
+
+import { scanScopePrelude, type ScopeGroup } from "./module_scope.js";
+import { moduleSelectorsMatch } from "./module_verify_selector.js";
+import {
+  scopedWordMatches,
+  validModuleIdentifier,
+  moduleValuesMatch,
+} from "./module_verify_value.js";
+
+/** Reject any CSS Modules output difference beyond documented local-name edits. */
+export function verifyModuleScoping(
+  input: string,
+  output: string,
+  relative: string,
+  prefix: string,
+): void {
+  const original = postcss.parse(input, { from: relative, map: false });
+  original.walkDecls((declaration) => {
+    if (["composes", "compose-with"].includes(declaration.prop.toLowerCase()))
+      declaration.remove();
+  });
+  let transformed: Root;
+  try {
+    transformed = postcss.parse(output, { from: relative, map: false });
+  } catch (error) {
+    const line = error instanceof CssSyntaxError ? error.line : undefined;
+    const matching =
+      line === undefined
+        ? undefined
+        : original.nodes.find((node) => node.source?.start?.line === line);
+    throw changed(relative, matching ?? original.first ?? original);
+  }
+  const first = firstDifference(original, transformed, prefix);
+  if (first) throw changed(relative, first);
+}
+
+function changed(relative: string, node: Root | ChildNode): MoklyError {
+  const start = node.source?.start;
+  return new MoklyError(
+    "build-invalid",
+    `CSS Modules scoping would change more than local names in ${relative}:${start?.line ?? 1}:${start?.column ?? 1}; move this CSS to a plain stylesheet`,
+  );
+}
+
+function firstDifference(
+  input: Root | ChildNode,
+  output: Root | ChildNode,
+  prefix: string,
+): ChildNode | undefined {
+  if (input.type !== output.type) return input as ChildNode;
+  switch (input.type) {
+    case "comment":
+      if (input.text !== (output as typeof input).text) return input;
+      break;
+    case "decl": {
+      const changed = output as Declaration;
+      if (
+        input.prop !== changed.prop ||
+        input.important !== changed.important ||
+        !moduleValuesMatch(input.value, changed.value, prefix)
+      )
+        return input;
+      break;
+    }
+    case "rule":
+      if (
+        !moduleSelectorsMatch(input.selector, (output as Rule).selector, prefix)
+      )
+        return input;
+      break;
+    case "atrule": {
+      const changed = output as AtRule;
+      if (
+        input.name !== changed.name ||
+        !atRuleParamsMatch(input, changed, prefix)
+      )
+        return input;
+      break;
+    }
+  }
+  if ("nodes" in input) {
+    const originalChildren = (input as Container).nodes ?? [];
+    const changedChildren = (output as Container).nodes ?? [];
+    for (
+      let index = 0;
+      index < Math.max(originalChildren.length, changedChildren.length);
+      index += 1
+    ) {
+      const original = originalChildren[index];
+      const changed = changedChildren[index];
+      if (!original)
+        return input.type === "root"
+          ? (input.first ?? undefined)
+          : (input as ChildNode);
+      if (!changed) return original;
+      const first = firstDifference(original, changed, prefix);
+      if (first) return first;
+    }
+  }
+  return;
+}
+
+function atRuleParamsMatch(
+  input: AtRule,
+  output: AtRule,
+  prefix: string,
+): boolean {
+  if (input.params === output.params) return true;
+  if (input.name.toLowerCase() === "scope") {
+    try {
+      const first = scanScopePrelude(input.params);
+      const second = scanScopePrelude(output.params);
+      return (
+        scopeOutside(input.params, first.start, first.limit) ===
+          scopeOutside(output.params, second.start, second.limit) &&
+        scopeGroupMatches(
+          input.params,
+          first.start,
+          output.params,
+          second.start,
+          prefix,
+        ) &&
+        scopeGroupMatches(
+          input.params,
+          first.limit,
+          output.params,
+          second.limit,
+          prefix,
+        )
+      );
+    } catch {
+      return false;
+    }
+  }
+  if (/keyframes$/iu.test(input.name)) {
+    const original = unwrapKeyframe(input.params.trim());
+    return (
+      original !== undefined &&
+      validModuleIdentifier(original) &&
+      scopedWordMatches(original, output.params.trim(), prefix)
+    );
+  }
+  return input.params.trim() === output.params.trim();
+}
+
+function unwrapKeyframe(value: string): string | undefined {
+  const wrapper = /^:(?:global|local)\(([^()]*)\)$/u.exec(value);
+  return wrapper ? wrapper[1] : value;
+}
+
+function scopeOutside(
+  text: string,
+  start?: ScopeGroup,
+  limit?: ScopeGroup,
+): string {
+  let result = text;
+  for (const group of [start, limit]
+    .filter((part): part is ScopeGroup => part !== undefined)
+    .sort((left, right) => right.start - left.start))
+    result = result.slice(0, group.start) + "\0" + result.slice(group.end);
+  return result;
+}
+
+function scopeGroupMatches(
+  input: string,
+  original: ScopeGroup | undefined,
+  output: string,
+  changed: ScopeGroup | undefined,
+  prefix: string,
+): boolean {
+  if (!original || !changed) return original === changed;
+  return moduleSelectorsMatch(
+    input.slice(original.start, original.end),
+    output.slice(changed.start, changed.end),
+    prefix,
+  );
+}

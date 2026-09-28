@@ -73,6 +73,9 @@ The current maintenance choices are:
   `postcss-value-parser` dependencies are MIT or ISC; they do not evaluate
   consumer code or choose browser targets. Consumer PostCSS packages still
   run only in the isolated worker.
+  Mokly now declares `postcss-selector-parser` and `postcss-value-parser`
+  directly for its lazy rename-only verification. The lockfile deduplicates
+  each with the plugins' existing runtime copies.
 - Lightning CSS is a production dependency only for read-only stylesheet rule
   analysis and transformer-only dependency inventory. Its
   MPL-2.0 native packages and Apache-2.0 `detect-libc` dependency participate in

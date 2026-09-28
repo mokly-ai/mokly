@@ -9,9 +9,10 @@ merge. M12-4, M12-6, M12-7 and M14-1 remain open by user direction in the
 [final review record](../docs/reviews/imported-css-delivery.md#milestone-12-review)
 and [Milestone 14 review record](../docs/reviews/imported-css-delivery-milestone-14.md).
 Milestone 18 (`3aa7d67`) resolves M17-2 and makes M17-3, M17-8 and M17-9
-obsolete. Other findings in the
+obsolete. Milestone 20 resolves M19-1 with Mokly-owned `@scope` scoping and
+rename-only verification; M19-2 is partly mitigated, and other findings in the
 [Milestone 17 review record](../docs/reviews/imported-css-delivery-milestone-17.md)
-remain open for the user's decision, as do the nine findings in the
+remain open for the user's decision, as do the other findings in the
 [Milestone 19 review record](../docs/reviews/imported-css-delivery-milestone-19.md).
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
@@ -123,6 +124,9 @@ the same inventory.
    stylesheet. Mokly's SHA-256 path hash remains independent of content and
    bundle order; neither Browserslist targets nor whole-stylesheet re-printing
    participates in module delivery.
+   Milestone 20 adds Mokly-owned `@scope` prelude localization and verifies
+   every transform changes only documented local names. Any other rewrite
+   fails Build instead of publishing broken CSS.
 6. **Assets referenced by CSS are copied.** `url()` targets that resolve to
    repository files are emitted to `mokly-generated/assets/<repository-relative
 path>` through esbuild's `file` loader with a path-mirroring asset name, and
@@ -797,6 +801,24 @@ rewrites that retain authored values, rules, comments and browser semantics.
 - [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
 - [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Nine new findings (2 Medium, 7 Low) are recorded in the [Milestone 19 review record](../docs/reviews/imported-css-delivery-milestone-19.md) for the user's decision.
 
+## Milestone 20: Mokly-owned `@scope` scoping and rename-only verification (complete)
+
+Preserve valid `@scope` selectors independently of the current CSS Modules
+plugins and reject any change beyond documented local-name rewrites.
+
+- [x] Define the prelude grammar, selector/export/composition semantics, structural verification and exact messages in the protocol and guide before implementation.
+- [x] Add failing scanner, `scopeModule`, plain/module byte-parity, Build and Chrome computed-style regressions, including classes containing `to` and malformed preludes.
+- [x] Hide scope-suffixed at-rules from the plugins, localize real scope groups with sourced temporary rules, and restore names/params without changing other prelude bytes.
+- [x] Compare input and output PostCSS trees after documented composition removals; allow only local-name changes in selectors, keyframes and value tokens, then fail with the first authored location otherwise.
+- [x] Pin the two animation outcomes that now fail and the `animation-name: ease` limit that remains; test comparator accept/reject cases and collision/composition scope behavior.
+- [x] Add direct selector/value parser dependencies with `npm install`, update security/release docs, and sweep the example, equivalence cases and installed CSS for false positives.
+- [x] Report failing-first, mutation, performance and Chrome fixture evidence; run Build, focused suites, example Build/Check, lint, typecheck, dependency/package checks and `cargo xtask check`; commit and push.
+
+## Milestone 21: Commit, push, and review
+
+- [ ] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
+
 ## Post-merge follow-up (non-blocking)
 
 - Watch the first derived comparison on a consumer catalogue that adopts this
@@ -804,6 +826,11 @@ rewrites that retain authored values, rules, comments and browser semantics.
 
 ## Follow-up plans (not part of this change)
 
+- Remove Mokly-owned `@scope` handling after fixed releases of
+  [local-by-default #90](https://github.com/css-modules/postcss-modules-local-by-default/issues/90)
+  ([PR #91](https://github.com/css-modules/postcss-modules-local-by-default/pull/91))
+  and [scope #68](https://github.com/css-modules/postcss-modules-scope/issues/68)
+  ([PR #69](https://github.com/css-modules/postcss-modules-scope/pull/69)) land.
 - `define` support for `import.meta.env` style constants.
 - Page render input carrying resolved stylesheet links.
 - Rebuilding only the stylesheet pass when only CSS inputs changed, and a

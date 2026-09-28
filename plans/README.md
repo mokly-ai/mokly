@@ -12,8 +12,9 @@
   unselected findings remain open. Milestone 18 (`3aa7d67`) resolves finding 2 from the
   [Milestone 17 review](../docs/reviews/imported-css-delivery-milestone-17.md)
   and supersedes findings 3, 8 and 9; its other findings remain open, as do
-  the nine findings in the
-  [Milestone 19 review](../docs/reviews/imported-css-delivery-milestone-19.md).
+  the [Milestone 19 review](../docs/reviews/imported-css-delivery-milestone-19.md).
+  Milestone 20 resolves finding 1 and partly mitigates finding 2 without
+  changing other open findings.
   Move this plan to Completed when its
   implementation PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one

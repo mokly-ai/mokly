@@ -136,6 +136,47 @@ of SHA-256 over the UTF-8 repository-relative POSIX stylesheet path. It never
 depends on source bytes, bundle order, process cwd or platform separators.
 Distinct local identities colliding at a generated name fail Build.
 
+`@scope` prelude localization is Mokly-owned until the CSS Modules plugins
+fix their text splitting. Parse `[trivia] [(start)] [trivia] [to [trivia]
+(limit)] [trivia]`; trivia is whitespace or comments, `to` is a standalone
+top-level identifier (case-insensitive), and either group may be absent.
+Groups are balanced through nested parentheses/brackets, quoted strings,
+escapes and comments. A missing/empty group, dangling `to`, extra text or
+third group fails with the catalogued prelude error at the at-rule's authored
+line/column. Empty params mean no prelude. Preserve every character outside
+the group interiors, including keyword case and comments. Hide all at-rules
+whose names end in `scope` from the plugins; only a real `@scope` (any case)
+gets temporary selector rules for its start/limit. The rules sit just before
+the at-rule in its parent and carry its source location; after plugin scoping,
+read their localized selectors, remove them and restore the original at-rule
+name and params. Other scope-suffixed at-rules retain their params unchanged.
+The prelude uses normal selector localization, including default local,
+`:global(...)`, `:local(...)`, bare modes, lists, `:scope`, `&`, `:is()` and
+`:not()`. Local prelude names are exported and count for identity collisions.
+The temporary selector rules also make those names available as earlier
+selectors for a later `composes`, including when the scope is nested in a
+rule, `@media`, `@supports` or `@layer`.
+
+After restoration, verify the scoping result against its input with parsed
+PostCSS trees. Remove only input `composes`/`compose-with` declarations
+(case-insensitive), then compare node counts, types and order. Comments,
+declaration properties/importance and all unrelated at-rule params are exact.
+Value tokens may remain identical or change one valid identifier word to
+`mokly_<hash>_<word>`; `global(word)`/`local(word)` may collapse to that word
+or its scoped version. Strings, functions, dividers and whitespace-token
+presence otherwise stay unchanged. Selector trees may unwrap `:global` and
+`:local` (including bare forms and their dropped combinator), and only class,
+ID and `[class=…]` values may gain the exact module prefix. A keyframes-family
+at-rule param may likewise gain that prefix after optional local/global
+unwrapping. Scope params keep the same group structure and non-group bytes;
+their interiors follow the selector rule. Equal selector/value text skips
+tokenization; parse failure counts as a difference. Report the first
+difference with the input node's file/line/column. This check does not infer
+semantic animation correctness: `animation-name: ease` still passes when the
+plugin leaves that local keyframe reference bare. The plugin's invalid
+`animation: grow-progress auto linear` rewrite and quoted-keyframe prefix
+rewrite fail Build rather than shipping invalid CSS.
+
 Only local classes, IDs, `@keyframes` names and their `animation` and
 `animation-name` references are renamed. `:global(...)` stays global and
 `:local(...)` becomes a local selector. `@counter-style` names and list-style

@@ -51,6 +51,15 @@ selector global. Counter-style, view-transition, custom-property, grid-area
 and container names stay global. Apart from local names, Mokly passes module
 CSS through as authored: prefixes, fallback declarations, modern syntax,
 comments and `url()` forms are not rewritten by module scoping.
+`@scope` start and limit selectors work with local, global and nested selector
+forms, including class names containing `to`. The local names are exported;
+they can be composed by a later rule. Mokly checks that scoping changes no
+other authored CSS. If Build says scoping would change more than local names,
+move that declaration to a plain stylesheet. Two current cases trigger that
+check: `animation: grow-progress auto linear` and quoted keyframe names such
+as `@keyframes "pulse"`. `animation-name: ease` can still stay bare when a
+local keyframe named `ease` is renamed; use a plain stylesheet for this case
+until CSS Modules animation handling is improved.
 Local and remote `@import`s and relative `url()` values inside custom
 properties work the same way in a CSS Module as in plain CSS. For a local
 `image-set()` image, write `url("./image.png")`; Mokly keeps that form and

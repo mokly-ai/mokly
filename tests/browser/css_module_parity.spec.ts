@@ -78,3 +78,50 @@ test("plain and module CSS compute the same browser styles", async ({
     await Promise.all([removeFixture(plain), removeFixture(module)]);
   }
 });
+
+test("@scope with to-names styles only content before the limit", async ({
+  page,
+}) => {
+  const css = "@scope (.button) to (.footer){.target{color:rgb(210, 0, 0)}}";
+  const plain = await styleFixture(css);
+  const module = await styleFixture(css, { module: true });
+  try {
+    const plainOutput = (
+      await compileCatalogue(await loadConfig(plain.root))
+    ).outputs.get(entryStyle) as string;
+    const moduleOutput = (
+      await compileCatalogue(await loadConfig(module.root))
+    ).outputs.get(entryStyle) as string;
+    const name = (local: string) =>
+      new RegExp(`\\.(mokly_[a-f0-9]{12}_${local})\\b`).exec(moduleOutput)?.[1];
+    const button = name("button");
+    const footer = name("footer");
+    const target = name("target");
+    expect(button && footer && target).toBeTruthy();
+    await page.setContent(`<style>${plainOutput}</style><style>${moduleOutput}</style>
+      <div class="button"><span id="plain-inside" class="target">Inside</span><div class="footer"><span id="plain-limit" class="target">Limit</span></div></div><span id="plain-outside" class="target">Outside</span>
+      <div class="${button}"><span id="module-inside" class="${target}">Inside</span><div class="${footer}"><span id="module-limit" class="${target}">Limit</span></div></div><span id="module-outside" class="${target}">Outside</span>`);
+    const colors = await page.evaluate(() =>
+      Object.fromEntries(
+        [
+          "plain-inside",
+          "plain-limit",
+          "plain-outside",
+          "module-inside",
+          "module-limit",
+          "module-outside",
+        ].map((id) => [
+          id,
+          getComputedStyle(document.getElementById(id)!).color,
+        ]),
+      ),
+    );
+    expect(colors["plain-inside"]).toBe("rgb(210, 0, 0)");
+    expect(colors["module-inside"]).toBe(colors["plain-inside"]);
+    expect(colors["module-limit"]).toBe(colors["plain-limit"]);
+    expect(colors["module-outside"]).toBe(colors["plain-outside"]);
+    expect(colors["plain-limit"]).not.toBe(colors["plain-inside"]);
+  } finally {
+    await Promise.all([removeFixture(plain), removeFixture(module)]);
+  }
+});

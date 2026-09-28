@@ -5,6 +5,8 @@ import postcss, { CssSyntaxError, type Root } from "postcss";
 import { MoklyError } from "../../errors.js";
 
 import { modulePlugins } from "./module_plugins.js";
+import { prepareModuleScopes } from "./module_scope.js";
+import { verifyModuleScoping } from "./module_verify.js";
 
 /** Rename-only CSS output shared by JavaScript imports and CSS bundling. */
 export interface ScopedStyle {
@@ -24,6 +26,7 @@ export function scopeModule(css: string, relative: string): ScopedStyle {
   try {
     root = postcss.parse(css, { from: relative });
     rejectAuthoredICSS(root, relative);
+    const restoreScopes = prepareModuleScopes(root, relative);
     const plugins = modulePlugins();
     const result = postcss([
       plugins.localByDefault({ mode: "local" }),
@@ -35,6 +38,7 @@ export function scopeModule(css: string, relative: string): ScopedStyle {
       .process(root, { from: relative, map: false })
       .sync();
     const { icssImports, icssExports } = plugins.extractICSS(result.root);
+    restoreScopes();
     const specifier = Object.keys(icssImports).sort()[0];
     if (specifier)
       throw new MoklyError(
@@ -51,7 +55,9 @@ export function scopeModule(css: string, relative: string): ScopedStyle {
         .flatMap((value) => value.split(" "))
         .filter((name) => name.startsWith(prefix)),
     );
-    return { css: result.root.toString(), exports: exported, identities };
+    const scopedCss = result.root.toString();
+    verifyModuleScoping(css, scopedCss, relative, prefix);
+    return { css: scopedCss, exports: exported, identities };
   } catch (error) {
     if (error instanceof MoklyError) throw error;
     throw moduleError(error, relative, root);
