@@ -272,6 +272,35 @@ shared repository's remotes. Milestones 28–29 carry this work.
   `scripts/verification/pull-request-title.mjs`, and fifth-review findings
   3–5 and second-review findings 3–11 stay open.
 
+## Lint Removal Decision
+
+On 2026-09-28 the user chose, for
+[sixth-review](../docs/reviews/delta-publishing.md#sixth-review) finding 1, to
+remove the remote-branch lint and restore a small workflow check instead of
+widening the lint. Milestones 30–31 carry this work.
+
+- Delete `tests/test_repository_refs.test.ts` and
+  `tests/helpers/test_repository_refs.ts`. The rule that tests depend only on
+  the tree under test stays in `ci-verification.md`; its remaining automated
+  checks are the preview test's fixture-owned baseline, `tests/deployment.test.ts`
+  (the browser server's `--base HEAD`) and `tests/ci_workflow.test.ts` (CI never
+  reads `origin/main`). Nothing scans test code for remote-branch reads any
+  more.
+- A workflow test reads every step of every file in `.github/workflows/` and
+  the composite action under `.github/actions/`, and fails if any step runs a
+  command that deletes remote Git state: `git remote remove` or `git remote rm`,
+  `git update-ref` deleting references (`-d`, `--delete`, `--stdin`) or naming
+  `refs/remotes`, `git branch` deleting remote-tracking branches (`-dr`,
+  `-Dr`, `--delete --remotes`), `git branch --unset-upstream`,
+  `git config --unset`/`--unset-all`/`--remove-section` on `remote.` or
+  `branch.` keys, and the old script name `remove-remote-state`. It is a text
+  check with synthetic positive and negative cases; it cannot see commands
+  inside scripts a step calls.
+- This resolves fifth-review finding 3 and sixth-review finding 1 (option A
+  with the lint removed). The lint sentence in sixth-review finding 3 goes
+  with the lint; that finding's plan sentence, sixth-review finding 2,
+  fifth-review findings 2, 4 and 5 and second-review findings 3–11 stay open.
+
 ## Milestone 1: Protocol and guide contract — completed
 
 Define the complete receiver and CLI contract before any code changes. Docs
@@ -1005,6 +1034,33 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       recommendation to `docs/reviews/delta-publishing.md` and report them
       without changing the implementation. Three Low findings are recorded in
       its Sixth Review for the user's decision.
+
+## Milestone 30: Remove the lint and guard workflows
+
+- [ ] Add the workflow guard first, with synthetic positive and negative
+      cases for every decided command form, and confirm it passes on the
+      current workflows and fails when a cleanup step is added.
+- [ ] Delete `tests/test_repository_refs.test.ts` and
+      `tests/helpers/test_repository_refs.ts`.
+- [ ] Rewrite the "Deterministic Test Repository Inputs" section of
+      [`ci-verification.md`](../docs/protocol/ci-verification.md): keep the
+      rule, its reason and the tree-owned bases, name the remaining tests,
+      drop the lint description, and state the workflow guard and its limit;
+      update `tests/guides_ci.test.ts` to pin the new sentences.
+
+## Milestone 31: Lint removal verification and delivery
+
+- [ ] Run the CI, verification, workflow, guides and deployment tests, then
+      `cargo xtask check`; resolve every failure.
+- [ ] Record the change in `docs/reviews/delta-publishing.md` against
+      fifth-review finding 3 and sixth-review findings 1 and 3.
+- [ ] After checks pass, `git add -A`, commit with a Conventional Commits
+      title of at most 50 characters, and push the branch.
+- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; append the
+      numbered, severity-rated findings with lettered options and a
+      recommendation to `docs/reviews/delta-publishing.md` and report them
+      without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 
