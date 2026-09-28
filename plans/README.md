@@ -14,8 +14,10 @@
 - [Inferred Inline Style Ownership](./inferred-inline-style-ownership.md) —
   derive ownership of rendered head styles and their resource references from
   documents and component ranges, so React Native Web and CSS-in-JS changes
-  attribute to their components without consumer code. Implementation is
-  complete; move this plan to Completed when its implementation PR merges.
+  attribute to their components without consumer code. All eight milestones
+  are implemented and reviewed; the recorded review findings, including an
+  out-of-memory limit on the full-size cumulative React Native Web fixture,
+  await the user's decision. Move this plan to Completed when its PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
   standalone Auto/Light/Dark control for interface and previews, and
   host-owned theme with independent previews when embedded. Dark neutrals align

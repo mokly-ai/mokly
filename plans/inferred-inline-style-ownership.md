@@ -462,11 +462,35 @@ and last the page may hold.
       `npm run dev`; commit only authored sources.
 - [x] Run the relevant design tests and `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
+
+### Milestone 2 review findings
+
+Reported by the post-push review of commits `ef1abc9` and `21702a7`. Not
+applied; recorded for the user's decision, with each item's status after the
+later milestones.
+
+1. Low. The mockup covers excluded page styles only as a screen's sole
+   evidence, while the evidence-shell contract says both an excluded linked
+   stylesheet and excluded page styles "lead with" their sentence, so a
+   combined state had no approved composition. Recommended: a composition
+   rule in the evidence-shell contract (the page-style sentence follows any
+   "Examined and excluded" list and precedes the terminal line; "leads with"
+   applies only to sole evidence), pinned by a shell test. Status: Milestone 7
+   renders an excluded stylesheet's block first, then the page-style sentence,
+   then the terminal line, and tests that order; the contract still lacks the
+   composition rule.
+2. Low. `mokly-shell-design.md` claimed every recorded state was implemented
+   before the viewer could show `design-review-style-page-excluded`. Status:
+   resolved; Milestone 7 shipped the state.
+3. Low. `mokly-design-links.md` says all five style-evidence states are
+   entered through filter controls, but the unnamed and page-excluded states
+   have no inbound link and the test named for entry checks only exits.
+   Recommended: reword the sentence and rename the test. Status: open.
 
 ## Milestone 3: Inline Rule Attribution Engine
 
@@ -553,11 +577,39 @@ target and depends on the existing parser, diff and matcher.
 - [x] Run the new tests and the existing `review_css_*` tests, then
       `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
+
+### Milestone 3 review findings
+
+Reported by the post-push review of commit `95f582d`. Not applied unless
+stated; recorded for the user's decision.
+
+1. Low. The rule diff's grouping key ignores the at-rule `block` flag that the
+   canonical renderer's identity includes, so `@layer a;` versus `@layer a{}`
+   yields no diffed rule but different fragments, an unexplained `material`
+   change. Recommended: one shared rule-identity helper for the diff and the
+   renderer (`cssRuleIdentity` now exists but the diff does not use it), the
+   flag documented in the CSS attribution rule shape, and an invariant test
+   that a resolved diff with no diffed rules renders byte-equal fragments.
+   Status: open.
+2. Low. Restated inline rules lagged the refined contract. Status: the CSS
+   attribution pointer was updated in Milestone 5; this plan's Design Summary
+   still carries Milestone 1 wording (a byte-identical style-text skip and
+   `diffCssRules`). Recommended: replace the plan's normative design prose
+   with a summary that links to `mokly-inline-styles.md`.
+3. Low. `tests/review_css_inline_attribution.test.ts` was 585 lines. Status:
+   resolved by `922bc08`, which split it with all 19 tests preserved; a
+   changed-file TypeScript length audit in `cargo xtask check` remains
+   recommended.
+4. Low. Five owner and evidence rules had no direct test: same component id
+   for pairing, owners resolving to the root component id, forwarded slots,
+   unresolved precedence with a sorted union, and the owned-set union; all
+   behaved correctly when checked. Recommended: one small fixture per rule.
+   Status: open.
 
 ## Milestone 4: Document-Derived Ownership In Comparisons
 
@@ -684,11 +736,43 @@ naming the renderer contract and the removed manifest fields.
       CHANGELOG-generating commit body; run the full test suite,
       `npm run package:smoke`, and `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
+
+### Milestone 4 review findings
+
+Reported by the post-push review of commits `922bc08` and `f439de0`. Not
+applied as review fixes; recorded for the user's decision.
+
+1. Medium. Unchanged views ran the inline engine on the fast path (two extra
+   parse5 parses plus a paired normalization per view with instances),
+   raising a 416-view no-change `review.compare-screens` from about 1.4 s to
+   2.0 s while contracts said the fast path runs no analysis. Recommended:
+   projection-only preparation on the fast path, inline analysis only after a
+   fall-through, and a span-count assertion for zero-change classification.
+   Status: Milestone 5 gates the fast-path call behind a reference prefilter,
+   so views without `url(`, `@import` or an escape skip it; see Milestone 5
+   finding 3 for the remaining cost.
+2. Low. `tests/changes_inline_styles_fast_path.test.ts` never exercised the
+   fast path, and the parent-owns-child-prop test did not assert that the
+   screen stays out of Changes. Status: Milestone 6 made the shared helper
+   require a fast-path settlement, but catalogue-wide; see Milestone 6
+   finding 1.
+3. Low. Historical manifest validation was loosened beyond the plan: the
+   removed `rootId` parameter was replaced by `historical`, so historical
+   manifests skip instance prop-schema and declared-slot checks (a
+   schema-invalid historical instance is now accepted). Recommended: discard
+   the retired keys but validate records strictly, add a rejection test, and
+   use an options object instead of positional booleans. Status: open.
+4. Low. Leftovers from the record removal: unused `rootComponentId` in
+   `projectComponentPair`, unused `before`/`after` in
+   `projectedResourceExclusion`, and an unreachable `!usage` branch whose
+   `applyReplacements` duplicates `applyInlineMaterial`. Recommended: remove
+   them and enable `@typescript-eslint/no-unused-vars` with `args: "all"`.
+   Status: open.
 
 ## Milestone 5: Resource References Follow Rule Owners
 
@@ -735,11 +819,45 @@ records for files reached only through component styles.
       implementation exposes a gap, then run the suite and
       `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
+
+### Milestone 5 review findings
+
+Reported by the post-push review of commit `c5b55cc`. The two items the
+supervisor had already raised (a re-export and two contract sentences about
+non-CSS ownership) were fixed in `a676a95`. The findings below are not
+applied; recorded for the user's decision.
+
+1. Medium. Unchanged inline styles that contain a `url()`, `@import` or an
+   escape lose their position: the identical-source skip is cancelled, the
+   elements are removed and one canonical fragment is appended at the end, so
+   reordering such a style relative to a linked stylesheet (a real cascade
+   change) is reported as unchanged, where Milestone 4 reported it. The same
+   blind spot exists whenever a moved sheet also has an edited rule, because
+   the canonical fragment carries no position. Recommended: when no rule
+   changed, rewrite each element in place instead of appending, and stop
+   treating `data:`, `http(s):` and `#id` references as reference-bearing;
+   closing the whole class needs a product decision on the contract's "order
+   carries no identity" rule. Status: open.
+2. Low. One rule can receive two conflicting attributions: the unchanged
+   pairing reuses a copy the diff reported as added, and rendering removes
+   every copy with that identity, so with a custom property an `unresolved`
+   retained rule can vanish from both materials. Recommended: pair only copies
+   the diff matched, remove only those objects, and assert that no rule object
+   appears in two analysed entries. Status: open.
+3. Low. The fast-path inline analysis cannot change the fast path's decision
+   (it already falls back when any raw-document resource changed), so it only
+   adds cost, and its document-wide prefilter fires on SVG `url(#id)`,
+   backslashes and views without instances. Recommended: remove it from the
+   fast path, always prepare it on the complete path, correct the contracts,
+   and test that fast-path-settled views run no inline analysis. Status: open.
+4. Low. A stale component-review Delivery Status and a packaged guide that did
+   not mention reference-following. Status: resolved by the Milestone 8
+   documentation sweep.
 
 ## Milestone 6: Inline Style Evidence Delivery
 
@@ -778,11 +896,34 @@ publication and the selected endpoint.
       differential cases whose fixtures necessarily take the complete path.
 - [x] Run the suite and `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
+
+### Milestone 6 review findings
+
+Reported by the post-push review of commits `a676a95` and `efc0fc3`. Not
+applied; recorded for the user's decision.
+
+1. Low. The fast-path proof checks the catalogue-wide `fastPath` counter, so
+   bystander views satisfy it while the inline scenario views always fall
+   through, and the "fast-path views emit no inline evidence" test could not
+   fail. Recommended: a test-only per-view observer on
+   `ComponentClassificationInput` so `assertFastPathEquivalent` requires the
+   named scenario views to settle early, and relabel cases that cannot.
+   Status: open.
+2. Low. The retained-selector merge is tested only with one selector, while
+   every component-aware result is validated at the boundary, so an ordering
+   or de-duplication regression would fail classification for the whole
+   catalogue. Recommended: an integration test with several shared and
+   mixed-case selectors plus an unresolved rule, asserting the exact field in
+   complete, live and selected results. Status: open.
+3. Low. `ViewResourceEvidence` includes `inlineStyles` although the contracts
+   say schema-v2 `screenEvidence` never carries it. Recommended: restore the
+   screen-only type and give the shell's merged evidence array its own type.
+   Status: open.
 
 ## Milestone 7: Inline Style Evidence In The Shell
 
@@ -816,11 +957,44 @@ the Milestone 2 design and the evidence-shell contract specify.
       delegation screenshot directory.
 - [x] Run the unit and browser suites and `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
+
+### Milestone 7 review findings
+
+Reported by the post-push review of the `origin/main` merge `116cc46` and
+commit `10c6cdb`. The merge has no findings: every path only main changed is
+byte-identical to `d71b03b`, overlapping paths keep both sides, and the
+recomputed design counts match a rebuilt manifest. The Milestone 7 findings
+are not applied; recorded for the user's decision.
+
+1. Medium. The "Shared component changes affect this preview" note shows on
+   previews that did not change: it is gated on `relatedComponents`, which
+   lists every consumer of a changed component at whole-entry scope, so an
+   unchanged, excluded-only screen shows the note beside "No changes to this
+   screen.", contradicting the contract; the tests pass with the old condition
+   because they pair a changed comparison with an `Unmodified` status.
+   Recommended: require a related changed component and at least one changed
+   compared view of the selection, define "affects" that way in the contract,
+   and add tests built from a real `ReviewResultV3`. Status: open.
+2. Medium. The page-style sentence is decided at the wrong scope: a view
+   changed through a component-owned rule carries no inline evidence, so a
+   screen whose dark views changed through an owned rule and whose light views
+   are excluded says none of the changed styles apply, without a terminal
+   line, and an unaffected saved variant of a changed component loses its
+   "No changes to this saved view." line. Recommended: show the sentence only
+   when no compared view of the selection is `changed`, base the terminal line
+   on the selected screen's or variant's status, and compute one selection
+   outcome shared by the badge, note, sentence and terminal line. Status:
+   open.
+3. Low. Four contracts still said the shell presentation was pending. Status:
+   resolved by the Milestone 8 documentation sweep.
+4. Low. `tests/shell.test.ts` grew to 1,363 lines. Recommended: move the new
+   test into a focused file and add a changed-file TypeScript length check.
+   Status: open.
 
 ## Milestone 8: Scale Evidence And Final Alignment
 
@@ -860,11 +1034,82 @@ scale fixture and leave every document aligned with the shipped behavior.
       still names `RenderResult`, ownership records or style offsets.
 - [x] Run the full suite, `npm run package:smoke`, and `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
+
+### Milestone 8 review findings
+
+Reported by the final post-push review of commit `49baa820`, which also
+checked whole-branch documentation consistency. Not applied; recorded for the
+user's decision.
+
+1. Medium. The committed `--inline-styles` fixture is not the template that
+   produced the recorded cumulative numbers: the measured fixture came from an
+   earlier template, and the committed one derives each per-view `zIndex` from
+   a global render counter, so adding a screen in one area renames classes in
+   another and reports a false component change there. Recommended: restore
+   value-stable per-view rules, add a small-fixture test that other areas stay
+   byte-identical and out of Changes, re-measure, and record a template digest
+   in the fixture record and benchmark JSON. Status: open.
+2. Medium. `benchmark:large` no longer exercises linked-stylesheet rule
+   attribution (setup's unused `shared-1.css` rule is restored before every
+   scenario, so no run emits `review.css-analysis`, although the README and
+   timing contract still say it does), and it leaves `renderer.tsx` and
+   `shared-1.css` in the last scenario's state. Recommended: a
+   `linked-stylesheet` scenario that keeps setup's rule and expects zero
+   Changes, restoration of setup state after the matrix, and clipped shares
+   for every `review.*` analysis stage. Status: open.
+3. Medium. The five-second navigation miss was recorded without a control run.
+   Status: a paired run on the same VM after the review measured `origin/main`
+   at 5,088 ms cold and 4,734 ms warm usable, and this branch at 4,714 ms and
+   4,599 ms, so the cold miss is pre-existing and not a regression of this
+   plan; it still has no owner. Recommended: a follow-up that owns the target
+   and a Delivery Status note in `mokly-on-demand.md`, and the Mokly commit and
+   fixture digest in each benchmark JSON.
+4. Low. The cumulative matrix and OOM figures were assembled by hand from two
+   benchmark revisions, omit one OOM sample, and misstate the unfinished inline
+   intervals; the committed benchmark cannot record a worker killed by the heap
+   limit or a wrong Changes count. Recommended: model every terminal state,
+   test OOM-shaped and window-straddling records, add a resumable scenario
+   filter, and regenerate the table. Status: open.
+5. Low. The plan omitted the Milestone 2 to 7 review outcomes while declaring
+   implementation complete. Status: resolved by recording them here; the plan
+   stays Active while findings await a decision.
+6. Low. The terminology sweep changed "Invalid ownership records" to "Invalid
+   owner registrations" in the unrelated CI verification contract, whose error
+   message still says "Invalid verification ownership record". Recommended:
+   restore "Invalid verification ownership records". Status: open.
+
+### Scale diagnosis
+
+A read-only diagnosis after the review located the out-of-memory failure of
+the cumulative component-style scenario. The edit changes all 5,520
+inline-bearing views, which carry 5,280 unique cumulative sheets per side
+(median 101 KB, up to 192 KB; 15.2 million parsed rules per side) with exactly
+one diffed rule each. At the 1 GiB worker limit, the retained heap was the
+background compilation `outputs` map (645 MB) and the classification-lifetime
+`CssResourceAnalysis` parse cache (340 MB, about 1.06 million rule objects,
+with sliced keys retaining whole documents). CPU was 78% Lightning CSS parsing,
+14% the eight parse5 trees built per analyzed view, 2% rule diffing and 0.04%
+selector matching. Experiments in a temporary copy:
+
+- A 32-entry parse cache cut peak heap from 1,135 to 925 MiB and time by about
+  29% with no lost cache hits.
+- Releasing committed-mode compilation outputs cut first-view heap from 733 to
+  104 MiB and peak heap to 773 MiB.
+- Reusing parse5 trees cut parse5 time by 26% but total time by only 2%.
+
+Ranked follow-up options: (1) release committed-mode compilation outputs and
+replace the parse cache with a byte-bounded LRU, which should remove the
+out-of-memory failure; (2) prefix-aware incremental parsing of cumulative
+sheets, because even without the memory limit full parsing of this fixture
+extrapolates to about 48 minutes; (3) parse5 tree reuse; a selector index is
+not worth pursuing. The inline analysis is therefore correct but does not yet
+scale to a full-size cumulative React Native Web catalogue; option 2 is
+needed before that workload is practical.
 
 ## Post-merge follow-up (non-blocking)
 
