@@ -8,12 +8,10 @@ implement this component-aware Review schema v3 for [change attribution](./mokly
 existing [schema-v2 contract](./mokly-changes.md) and
 [named result interfaces](../../packages/viewer/src/review/types.ts). Manifest/usage types come
 from the [component manifest](./mokly-component-manifest.md). The optional
-`inlineStyles` view evidence below is the approved target of the
+`inlineStyles` view evidence below is implemented by the
 [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md)
-and lands with its evidence milestone. Its document-derived ownership and
-canonical actual/projected comparison material are implemented; reference
-following, evidence emission, and presentation remain in that plan's later
-milestones.
+across live classification, complete and selected comparisons, and publication.
+Its shell presentation remains in that plan's later milestone.
 
 ## Normative Result
 

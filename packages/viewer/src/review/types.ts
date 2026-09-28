@@ -28,6 +28,11 @@ export interface ExcludedResource {
   reason: "no-matching-rule";
 }
 
+/** Attribution evidence for changed rules from eligible page style elements. */
+export type InlineStyleEvidence =
+  | { status: "matched" | "unresolved"; selectors: readonly string[] }
+  | { status: "excluded" };
+
 /** One view comparison and its retained artifact paths. */
 export interface ViewReview {
   afterPath?: string;
@@ -38,6 +43,7 @@ export interface ViewReview {
   material?: true;
   reasons?: readonly DependencyReason[];
   excludedResources?: readonly ExcludedResource[];
+  inlineStyles?: InlineStyleEvidence;
   state: ReviewState;
   viewport: Viewport;
 }
@@ -45,7 +51,7 @@ export interface ViewReview {
 /** Classification evidence available without generating comparison snapshots. */
 export type ViewResourceEvidence = Pick<
   ViewReview,
-  "viewport" | "colorScheme" | "reasons" | "excludedResources"
+  "viewport" | "colorScheme" | "reasons" | "excludedResources" | "inlineStyles"
 >;
 
 /** Screen-only resource evidence retained by the existing live classification. */

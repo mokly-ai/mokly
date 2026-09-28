@@ -19,8 +19,8 @@ import { inlineChangesFixture } from "./helpers/inline_changes.js";
 test("inline ownership agrees across live, complete, selected and publication boundaries", async (t) => {
   const fixture = await inlineChangesFixture(
     t,
-    "<style>.actual-only{color:red}</style>",
-    "<style>.actual-only{color:blue}</style>",
+    "<style>.entry{color:red}</style>",
+    "<style>.entry{color:blue}</style>",
   );
   const manifest = readManifest(fixture.config);
   const cache = new ComponentChangeCache(
@@ -32,6 +32,16 @@ test("inline ownership agrees across live, complete, selected and publication bo
   assert.equal(artifact.result.schemaVersion, 3);
   if (artifact.result.schemaVersion !== 3) return;
   assert.deepEqual(snapshot.result, artifact.result);
+  assert.ok(
+    artifact.result.screens
+      .find((screen) => screen.id === "home")!
+      .views.every(
+        (view) =>
+          view.inlineStyles?.status === "matched" &&
+          JSON.stringify(view.inlineStyles.selectors) ===
+            JSON.stringify([".entry"]),
+      ),
+  );
 
   const server = await startCatalogueServer(fixture.config, {
     base: "main",

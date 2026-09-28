@@ -31,7 +31,8 @@ test("an image in an excluded inline rule creates no Changes row", async (t) => 
         (view) =>
           view.state === "unchanged" &&
           !view.reasons &&
-          !view.excludedResources,
+          !view.excludedResources &&
+          !view.inlineStyles,
       ),
     ),
   );
@@ -65,4 +66,9 @@ test("a string-form inline import stays unresolved entry material", async (t) =>
     },
   ]);
   assert.ok(!result.changes.some((entry) => entry.kind === "component"));
+  assert.ok(
+    result.screens
+      .find((entry) => entry.id === "home")!
+      .views.every((view) => !view.inlineStyles),
+  );
 });

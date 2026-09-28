@@ -4,9 +4,11 @@ import test from "node:test";
 import { MoklyError } from "../dist/errors.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
+import { assertViewAnalysisScope } from "../dist/review/css/paths.js";
 import type { ResourceEvidence } from "../dist/review/css/resource_analysis.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
 import { compareScreen } from "../dist/review/screen_compare.js";
+import type { ViewReview } from "../packages/viewer/dist/review/types.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
@@ -107,3 +109,18 @@ for (const version of [2, 3])
           });
       });
   });
+
+test("inline evidence carries no stylesheet path scope", async (t) => {
+  const fixture = await componentReviewFixture(t, (source) => source);
+  const view: ViewReview = {
+    viewport: "mobile",
+    colorScheme: "light",
+    state: "changed",
+    material: true,
+    ignoredIds: [],
+    beforePath: "snapshots/before/home.html",
+    afterPath: "snapshots/after/home.html",
+    inlineStyles: { status: "matched", selectors: [".entry"] },
+  };
+  assert.doesNotThrow(() => assertViewAnalysisScope([view], fixture.config));
+});

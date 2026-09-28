@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import {
+  runWithTimings,
+  type TimingEvent,
+} from "../dist/diagnostics/timings.js";
+
 import { inlineChangesFixture } from "./helpers/inline_changes.js";
 
 for (const mode of ["committed", "derived"] as const)
@@ -22,10 +27,29 @@ for (const mode of ["committed", "derived"] as const)
     ],
   ] as const)
     test(`${mode} fast and complete comparisons agree for an inline ${name}`, async (t) => {
-      const fixture = await inlineChangesFixture(t, before, after);
-      const [fast, complete] = await Promise.all([
-        fixture.complete(true, mode),
-        fixture.complete(false, mode),
-      ]);
+      const fixture = await inlineChangesFixture(t, "", "", {
+        renderer: {
+          before: scopedRenderer(before),
+          after: scopedRenderer(after),
+        },
+      });
+      const events: TimingEvent[] = [];
+      const fast = await runWithTimings(
+        true,
+        "test",
+        () => fixture.complete(true, mode),
+        { write: (event) => events.push(event) },
+      );
+      const complete = await fixture.complete(false, mode);
+      const counts = events.find(
+        (event) =>
+          event.stage === "review.compare-screens" && event.event === "counts",
+      )?.counts;
+      assert.ok(Number(counts?.fastPath) > 0);
       assert.deepEqual(fast.result, complete.result);
     });
+
+function scopedRenderer(styles: string): string {
+  return `import { renderToStaticMarkup } from "react-dom/server";
+export default (input) => '<!doctype html><html><head>' + (input.entry.id === "home" ? ${JSON.stringify(styles)} : '<style>.stable{color:black}</style>') + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
+}

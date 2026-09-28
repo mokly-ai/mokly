@@ -69,11 +69,14 @@ It fixes these presentation rules:
 
 ### Shell Derivation
 
-The live classification snapshot retains screen-only `screenEvidence` records
-with a route and per-view `viewport`, `colorScheme`, optional `reasons`,
-optional `excludedResources`, and optional `inlineStyles`. Paths remain
-repository-relative. The workspace
-projects the selected screen's views as optional `resourceEvidence`; it does not
+The live schema-v2 classification snapshot retains screen-only `screenEvidence`
+records with a route and per-view `viewport`, `colorScheme`, optional `reasons`
+and optional `excludedResources`. Those records exist only for catalogues
+without registered components, so they never carry inline ownership evidence.
+Component-aware live classification, complete/static results and selected
+comparisons instead retain `inlineStyles` on their schema-v3 view records.
+Paths remain repository-relative. The workspace projects a screen-only
+selection's views as optional `resourceEvidence`; it does not
 invent v3 entry reasons, component results, or comparison states. Static exports
 project this same slice from the existing v2 comparison. Schema versions remain
 unchanged, and absent evidence remains valid. New classification generations

@@ -1,6 +1,7 @@
 import type {
   GeneratedComponentView,
   EntryChangeReason,
+  InlineStyleEvidence,
   ViewReview,
 } from "@mokly/viewer/data";
 
@@ -202,6 +203,18 @@ export async function compareComponentView(
     after?.usage,
     root,
   );
+  const comparedView: ViewReview = {
+    ...view,
+    ...actualEvidence,
+    ignoredIds: actual.ignoredIds,
+    ...(actual.base !== actual.head ? { material: true as const } : {}),
+    state:
+      actual.base !== actual.head || actualResourceChange
+        ? "changed"
+        : projected.rawEqual
+          ? "unchanged"
+          : "ignored-only",
+  };
   return {
     comparisonPath: "complete",
     ownedResources: ownedResourceReasons(
@@ -226,19 +239,29 @@ export async function compareComponentView(
     ]),
     ...(inlineEvidence ? { inlineEvidence } : {}),
     view: {
-      ...view,
-      ...actualEvidence,
-      ignoredIds: actual.ignoredIds,
-      ...(actual.base !== actual.head ? { material: true as const } : {}),
-      state:
-        actual.base !== actual.head || actualResourceChange
-          ? "changed"
-          : projected.rawEqual
-            ? "unchanged"
-            : "ignored-only",
+      ...comparedView,
+      ...deliveredInlineStyles(inlineEvidence, comparedView, reasons),
     },
     reasons,
   };
+}
+
+function deliveredInlineStyles(
+  evidence: PreparedInlineStyleEvidence | undefined,
+  view: ViewReview,
+  reasons: readonly EntryChangeReason[],
+): { inlineStyles?: InlineStyleEvidence } {
+  if (evidence?.retainedSelectors && view.state === "changed" && view.material)
+    return { inlineStyles: evidence.retainedSelectors };
+  if (
+    evidence?.allExcluded &&
+    reasons.length === 0 &&
+    view.state === "unchanged" &&
+    !view.material &&
+    !view.reasons
+  )
+    return { inlineStyles: { status: "excluded" } };
+  return {};
 }
 
 function normalizeOneSidedView(

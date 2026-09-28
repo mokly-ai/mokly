@@ -1,12 +1,18 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import {
+  runWithTimings,
+  type TimingEvent,
+} from "../dist/diagnostics/timings.js";
 import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
 test("Review fast and complete paths agree for matching shared CSS", async (t) => {
-  const fixture = await cssAttributionFixture(t, true);
+  const fixture = await cssAttributionFixture(t, true, {
+    stylesheetMatch: "screens/home.html",
+  });
   await fixture.append(".auth { padding: 2px; }");
   const result = await equivalentReview(fixture);
 
@@ -15,6 +21,7 @@ test("Review fast and complete paths agree for matching shared CSS", async (t) =
 
 test("Review fast and complete paths agree for owned component CSS", async (t) => {
   const fixture = await cssAttributionFixture(t, true, {
+    stylesheetMatch: "components/action.html",
     transformSource: (source) =>
       source
         .replace(
@@ -39,15 +46,17 @@ test("Review fast and complete paths agree for owned component CSS", async (t) =
 });
 
 test("Review fast and complete paths agree for unrelated CSS", async (t) => {
-  const fixture = await cssAttributionFixture(t, true);
+  const fixture = await cssAttributionFixture(t, true, {
+    stylesheetMatch: "screens/home.html",
+  });
   await fixture.append(".not-present { padding: 2px; }");
   const result = await equivalentReview(fixture);
 
   assert.deepEqual(reasonPaths(result), []);
   assert.ok(
     result.screens
-      .flatMap((screen) => screen.views)
-      .every((view) =>
+      .find((screen) => screen.route === "screens/home.html")!
+      .views.every((view) =>
         view.excludedResources?.some(
           (resource) => resource.path === "mockups/shared.css",
         ),
@@ -56,7 +65,9 @@ test("Review fast and complete paths agree for unrelated CSS", async (t) => {
 });
 
 test("Review fast and complete paths agree for a Git asset-byte change", async (t) => {
-  const fixture = await cssAttributionFixture(t, true);
+  const fixture = await cssAttributionFixture(t, true, {
+    stylesheetMatch: "screens/home.html",
+  });
   await fixture.append("\nchanged image bytes", "image.svg");
   const result = await equivalentReview(fixture);
 
@@ -67,8 +78,16 @@ test("Review fast and complete paths agree for a Git asset-byte change", async (
 async function equivalentReview(
   fixture: Awaited<ReturnType<typeof cssAttributionFixture>>,
 ): Promise<ReviewResultV3> {
-  const fast = await fixture.compare(true);
+  const events: TimingEvent[] = [];
+  const fast = await runWithTimings(true, "test", () => fixture.compare(true), {
+    write: (event) => events.push(event),
+  });
   const complete = await fixture.compare(false);
+  const counts = events.find(
+    (event) =>
+      event.stage === "review.compare-screens" && event.event === "counts",
+  )?.counts;
+  assert.ok(Number(counts?.fastPath) > 0);
   assert.deepEqual(fast.result, complete.result);
   assert.equal(fast.result.schemaVersion, 3);
   return fast.result;

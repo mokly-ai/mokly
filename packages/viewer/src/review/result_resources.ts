@@ -71,4 +71,29 @@ export function validateResourceEvidence(
     });
     requireOrdered(paths, (path) => path);
   }
+  if (view.inlineStyles !== undefined) validateInlineStyles(view);
+}
+
+function validateInlineStyles(view: Record<string, unknown>): void {
+  const shape = reviewObject(view.inlineStyles, ["status"], ["selectors"]);
+  const paired = view.beforePath !== undefined && view.afterPath !== undefined;
+  if (!paired) reviewInvalid("inline style evidence requires a paired view");
+  if (shape.status === "matched" || shape.status === "unresolved") {
+    const evidence = reviewObject(view.inlineStyles, ["status", "selectors"]);
+    const selectors = reviewStrings(evidence.selectors);
+    if (shape.status === "matched" && selectors.length === 0)
+      reviewInvalid("matched inline styles require selectors");
+    if (view.state !== "changed" || view.material !== true)
+      reviewInvalid("retained inline styles require changed material");
+    return;
+  }
+  if (shape.status !== "excluded")
+    reviewInvalid("invalid inline style evidence status");
+  reviewObject(view.inlineStyles, ["status"]);
+  if (
+    view.state !== "unchanged" ||
+    view.material !== undefined ||
+    view.reasons !== undefined
+  )
+    reviewInvalid("excluded inline styles require an unchanged view");
 }

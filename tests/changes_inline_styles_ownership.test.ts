@@ -32,6 +32,7 @@ test("an actual-only component rule changes the component and affects its screen
   const home = result.screens.find((screen) => screen.id === "home")!;
   assert.ok(home.views.every((view) => view.state === "changed"));
   assert.ok(home.views.every((view) => !view.reasons));
+  assert.ok(home.views.every((view) => !view.inlineStyles));
 });
 
 test("one rule shared by two components changes both and affects the screen", async (t) => {
@@ -58,14 +59,25 @@ test("one rule shared by two components changes both and affects the screen", as
   assert.ok(
     result.screens
       .find((screen) => screen.id === "home")!
-      .views.every((view) => view.state === "changed" && !view.reasons),
+      .views.every(
+        (view) =>
+          view.state === "changed" && !view.reasons && !view.inlineStyles,
+      ),
   );
 });
 
-for (const [name, selector] of [
-  ["entry markup", ".entry"],
-  ["an unresolved construct", ":root"],
-  ["caller-owned markup inside a slot", ".slot-content"],
+for (const [name, selector, evidence] of [
+  ["entry markup", ".entry", { status: "matched", selectors: [".entry"] }],
+  [
+    "an unresolved construct",
+    ":root",
+    { status: "unresolved", selectors: [":root"] },
+  ],
+  [
+    "caller-owned markup inside a slot",
+    ".slot-content",
+    { status: "matched", selectors: [".slot-content"] },
+  ],
 ] as const)
   test(`${name} remains a direct screen change`, async (t) => {
     const fixture = await inlineChangesFixture(
@@ -83,6 +95,14 @@ for (const [name, selector] of [
       (entry) => entry.after?.route === "screens/home.html",
     );
     assert.ok(home?.reasons.some((reason) => reason.kind === "material"));
+    assert.ok(
+      result.screens
+        .find((screen) => screen.id === "home")!
+        .views.every(
+          (view) =>
+            JSON.stringify(view.inlineStyles) === JSON.stringify(evidence),
+        ),
+    );
   });
 
 test("a nested component inside a caller slot owns its implementation rule", async (t) => {
@@ -118,4 +138,15 @@ test("the root component keeps its own matching style edit", async (t) => {
     (entry) => entry.after?.route === "components/action.html",
   );
   assert.ok(action?.reasons.some((reason) => reason.kind === "material"));
+  assert.ok(
+    result.components
+      .find((component) => component.id === "action")!
+      .variants.flatMap((variant) => variant.views)
+      .every(
+        (view) =>
+          view.inlineStyles?.status === "matched" &&
+          JSON.stringify(view.inlineStyles.selectors) ===
+            JSON.stringify([".action"]),
+      ),
+  );
 });

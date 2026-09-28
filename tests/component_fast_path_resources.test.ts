@@ -8,6 +8,7 @@ import { loadConfig } from "../dist/config/load.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import {
+  assertComparisonModesEquivalent,
   assertFastPathEquivalent,
   compilationFiles,
 } from "./helpers/component_fast_path.js";
@@ -16,11 +17,11 @@ import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 for (const direction of ["added", "removed"] as const)
-  test(`derived ${direction} stylesheet imports agree across paths`, async (t) => {
+  test(`derived ${direction} stylesheet imports agree across enabled and forced-complete modes`, async (t) => {
     const fixture = await componentReviewFixture(t, (source) => source);
     const baseCss = direction === "added" ? "" : '@import "./nested.css";';
     const headCss = direction === "added" ? '@import "./nested.css";' : "";
-    const result = await assertFastPathEquivalent({
+    const result = await assertComparisonModesEquivalent({
       before: fixture.before.manifest,
       after: fixture.after.manifest,
       beforeFiles: withRootStylesheet(fixture.before, {
@@ -62,7 +63,11 @@ for (const generatedOutput of ["derived", "committed"] as const)
       ...beforeResources,
       "components/nested/image.svg": "image",
     };
-    const result = await assertFastPathEquivalent({
+    const result = await (
+      generatedOutput === "derived"
+        ? assertFastPathEquivalent
+        : assertComparisonModesEquivalent
+    )({
       before: fixture.before.manifest,
       after: fixture.after.manifest,
       beforeFiles: compilationFiles(fixture.before, beforeResources),

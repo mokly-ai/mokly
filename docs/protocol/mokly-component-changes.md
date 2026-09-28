@@ -8,8 +8,9 @@ records delivery. Unregistered catalogue and legacy behavior remains intact.
 The [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md)
 has replaced renderer-returned records with document-derived head-style
 ownership in complete paired component-aware comparisons. Reference-bearing
-rules now follow inferred owners through resource discovery. Result evidence
-remains for that plan's Milestone 6 and shell presentation for Milestone 7.
+rules now follow inferred owners through resource discovery, and result views
+carry validated inline-style evidence. Shell presentation remains for that
+plan's Milestone 7.
 
 ## Changes Membership
 

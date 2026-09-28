@@ -30,8 +30,8 @@ for (const direction of ["added", "removed"] as const) {
     assert.ok(
       variant.views.every((view) =>
         direction === "added"
-          ? view.afterPath && !view.beforePath
-          : view.beforePath && !view.afterPath,
+          ? view.afterPath && !view.beforePath && !view.inlineStyles
+          : view.beforePath && !view.afterPath && !view.inlineStyles,
       ),
     );
   });
@@ -51,8 +51,8 @@ for (const direction of ["added", "removed"] as const) {
     assert.ok(
       screen.views.every((view) =>
         direction === "added"
-          ? view.afterPath && !view.beforePath
-          : view.beforePath && !view.afterPath,
+          ? view.afterPath && !view.beforePath && !view.inlineStyles
+          : view.beforePath && !view.afterPath && !view.inlineStyles,
       ),
     );
   });

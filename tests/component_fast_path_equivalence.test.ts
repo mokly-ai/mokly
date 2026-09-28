@@ -11,6 +11,7 @@ import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_ty
 import { generateLargeFixture } from "./fixtures/large/generate.js";
 import { componentChangeCases } from "./helpers/component_change_cases.js";
 import {
+  assertComparisonModesEquivalent,
   assertFastPathEquivalent,
   compilationFiles,
   type FastPathFixture,
@@ -23,10 +24,16 @@ import {
   repositoryRoot,
 } from "./helpers/fixture.js";
 
-for (const [name, change, routes] of componentChangeCases)
-  test(`fast and complete paths agree for ${name}`, async (t) => {
+for (const [name, change, routes] of componentChangeCases) {
+  const settlesFast = ![
+    "component-only implementation",
+    "component and screen edits",
+  ].includes(name);
+  test(`${settlesFast ? "fast and complete paths" : "enabled and forced-complete modes"} agree for ${name}`, async (t) => {
     const fixture = await componentReviewFixture(t, change);
-    const result = await assertFastPathEquivalent({
+    const result = await (
+      settlesFast ? assertFastPathEquivalent : assertComparisonModesEquivalent
+    )({
       before: fixture.before.manifest,
       after: fixture.after.manifest,
       beforeFiles: compilationFiles(fixture.before),
@@ -45,6 +52,7 @@ for (const [name, change, routes] of componentChangeCases)
         ),
       );
   });
+}
 
 test("fast and complete paths agree for ignored-only documents", async (t) => {
   const source = componentEntrySource({
@@ -78,9 +86,9 @@ test("fast and complete paths agree for ignored-only documents", async (t) => {
 });
 
 for (const owned of [false, true])
-  test(`fast and complete paths agree for changed reachable CSS; owned=${owned}`, async (t) => {
+  test(`enabled and forced-complete modes agree for changed reachable CSS; owned=${owned}`, async (t) => {
     const fixture = await stylesheetFixture(t, owned);
-    const result = await assertFastPathEquivalent(fixture);
+    const result = await assertComparisonModesEquivalent(fixture);
     assert.ok(
       allViews(result).some(
         (view) =>
@@ -126,7 +134,7 @@ test("derived byte-only image changes take the complete path", async (t) => {
     "image.svg": "head-image",
     "components/image.svg": "head-image",
   };
-  const result = await assertFastPathEquivalent({
+  const result = await assertComparisonModesEquivalent({
     before: compilation.manifest,
     after: compilation.manifest,
     beforeFiles: compilationFiles(compilation, baseImages),

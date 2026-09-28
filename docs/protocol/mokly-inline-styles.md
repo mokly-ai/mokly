@@ -5,12 +5,13 @@
 Approved target tracked by the
 [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md).
 The span, diff, attribution and canonical-material engine is implemented and
-the component-aware classifier calls it on complete paired views. The renderer
-is string-only, current manifests no longer carry ownership records, and
+the component-aware classifier calls it on complete paired views and
+reference-bearing fast-path views. The renderer is string-only, current
+manifests no longer carry ownership records, and
 historical readers discard the retired arrays. References inside inferred-owned
 rules now follow their owners through the ordinary resource graph, including on
-the fast path. `inlineStyles` evidence delivery remains for Milestone 6 and
-shell presentation for Milestone 7. This document owns the
+the fast path. Validated `inlineStyles` evidence is delivered in component-aware
+results; shell presentation remains for Milestone 7. This document owns the
 analysis, attribution, comparison material, membership and evidence rules for
 style material that a renderer places outside component markup. The
 [CSS change attribution contract](./mokly-css-attribution.md) owns the
@@ -281,10 +282,13 @@ Reference-bearing rules that are not diffed contribute no evidence. Views
 settled by the unchanged decision, one-sided views and views without unowned
 inline style differences carry no field.
 
-The live classification snapshot's `screenEvidence` records, the static export
-projection, publication and the selected live endpoint carry `inlineStyles`
-beside `reasons` and `excludedResources`, with the same omission and canonical
-ordering rules. Schema versions do not change; results without the field
+The component-aware live classification snapshot's full schema-v3 result, the
+complete comparison artifact, static publication and the selected live
+component-aware endpoint carry `inlineStyles` beside `reasons` and
+`excludedResources`, with the same omission and canonical ordering rules.
+Schema-v2 `screenEvidence` is produced only for catalogues without registered
+components, where inline ownership never runs, so that lightweight slice never
+carries the field. Schema versions do not change; results without the field
 remain valid and mean the analysis did not run.
 
 ## Validation

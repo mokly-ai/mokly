@@ -121,6 +121,7 @@ export type {
   ReviewState,
   DependencyReason,
   ExcludedResource,
+  InlineStyleEvidence,
   ViewReview,
   ViewResourceEvidence,
   ScreenResourceEvidence,

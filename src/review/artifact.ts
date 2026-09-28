@@ -21,7 +21,10 @@ export function renderReviewArtifact(
     artifact.result.screens.some((screen) =>
       screen.views.some(
         (view) =>
-          view.material !== undefined || view.reasons || view.excludedResources,
+          view.material !== undefined ||
+          view.reasons ||
+          view.excludedResources ||
+          view.inlineStyles,
       ),
     )
   )

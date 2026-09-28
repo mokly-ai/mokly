@@ -239,9 +239,12 @@ Reference-bearing rules additionally run on the fast path behind the shared
 cheap CSS-reference prefilter. Rules grouped by each inferred owner set traverse
 the ordinary cached resource graph, preserving relative and transitive paths;
 unchanged owned or excluded reference rules are removed symmetrically without
-creating inline evidence. One-sided and missing-usage comparisons keep their
-existing behavior. Each call emits `review.inline-style-analysis`; it logs no
-document or CSS.
+creating inline evidence. Diffed retained/excluded rules emit validated
+`inlineStyles` evidence on complete schema-v3 views; the full live result,
+artifacts, publication and selected component-aware responses retain it.
+Schema-v2 screen-only evidence has no inline analysis to copy. One-sided and
+missing-usage comparisons keep their existing behavior. Each call emits
+`review.inline-style-analysis`; it logs no document or CSS.
 
 ## Development
 

@@ -395,7 +395,7 @@ interface ReviewResult {
 Optional view `material`, `reasons`, and `excludedResources` implement
 [CSS change attribution](./mokly-css-attribution.md). Optional `inlineStyles`
 implements [inline style ownership](./mokly-inline-styles.md), is emitted only
-by the component-aware classifier, and is the approved target of the
+by the component-aware classifier, and is implemented by the
 [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md).
 This contract owns the definition of `material`: it is present exactly when
 the view's actual comparison material differs. That material is the pair of

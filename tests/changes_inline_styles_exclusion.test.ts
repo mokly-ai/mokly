@@ -23,7 +23,8 @@ test("a cumulative sheet excludes another component's unused rule from a zero-in
         view.state === "unchanged" &&
         !view.material &&
         !view.reasons &&
-        !view.excludedResources,
+        !view.excludedResources &&
+        view.inlineStyles?.status === "excluded",
     ),
   );
 });
@@ -45,6 +46,11 @@ test("formatting, comments, attributes and element splits carry no identity", as
       (entry) => entry.state === "unchanged",
     ),
   );
+  assert.ok(
+    result.screens.every((screen) =>
+      screen.views.every((view) => !view.inlineStyles),
+    ),
+  );
 });
 
 test("a parse failure stays entry material with no inferred component owner", async (t) => {
@@ -64,5 +70,14 @@ test("a parse failure stays entry material with no inferred component owner", as
         entry.after?.route === "screens/home.html" &&
         entry.reasons.some((reason) => reason.kind === "material"),
     ),
+  );
+  assert.ok(
+    result.screens
+      .find((screen) => screen.id === "home")!
+      .views.every(
+        (view) =>
+          view.inlineStyles?.status === "unresolved" &&
+          view.inlineStyles.selectors.length === 0,
+      ),
   );
 });

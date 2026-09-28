@@ -19,6 +19,7 @@ export async function cssAttributionFixture(
   options: {
     body?: string;
     prepare?(fixture: TestFixture): Promise<void>;
+    stylesheetMatch?: string;
     transformSource?(source: string): string;
   } = {},
 ) {
@@ -43,8 +44,7 @@ export async function cssAttributionFixture(
     t,
     options.transformSource?.(combinedSource) ?? combinedSource,
     {
-      extraConfig:
-        'colorSchemes: ["light", "dark"], stylesheets: [{ match: "**/*.html", stylesheets: ["shared.css"] }],',
+      extraConfig: `colorSchemes: ["light", "dark"], stylesheets: [{ match: ${JSON.stringify(options.stylesheetMatch ?? "**/*.html")}, stylesheets: ["shared.css"] }],`,
     },
     async (fixture) => {
       const { mockupsDir, configPath } = fixture;

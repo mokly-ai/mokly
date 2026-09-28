@@ -747,26 +747,37 @@ Summary: emit, validate and deliver the `inlineStyles` view field through
 every classification path so the shell milestone has data in Serve, exports,
 publication and the selected endpoint.
 
-- [ ] Add `InlineStyleEvidence` to `packages/viewer/src/review/types.ts`,
+- [x] Add `InlineStyleEvidence` to `packages/viewer/src/review/types.ts`,
       extend `ViewResourceEvidence`, allow the key in
       `result_records.ts`, and validate the shape, sorting, uniqueness and
       the non-empty `matched` rule in `result_resources.ts`.
-- [ ] Emit the field from `compareComponentView` on the complete path under
+- [x] Emit the field from `compareComponentView` on the complete path under
       the status rules in the design summary; never emit it on the fast path
       or for one-sided views.
-- [ ] Carry the field in the live classification snapshot's `screenEvidence`
-      records, the static export projection, publication and the selected
-      live endpoint, with canonical key ordering and omission when absent.
-- [ ] Extend `tests/review_css_schema.test.ts`, the producer-scope and
-      delivery tests, and `tests/changes_inline_styles.test.ts` with the
+- [x] Carry the field in the component-aware live snapshot's schema-v3 result,
+      complete/static comparison, publication and selected live endpoint, with
+      canonical key ordering and omission when absent.
+- [x] Discovered: correct the delivery contract and plan because schema-v2
+      `screenEvidence` is produced only for catalogues without registered
+      components, where inline ownership never runs; do not add dead copying
+      plumbing to that slice.
+- [x] Discovered: include `inlineStyles` in the artifact's shared-result
+      validation trigger even though resource-closure validation has no inline
+      path to traverse.
+- [x] Add `tests/review_inline_styles_schema.test.ts`, extend producer-scope and
+      delivery tests, and focused `tests/changes_inline_styles_*.test.ts` files
+      under 300 lines with the
       field's presence, absence and validation failures, including
       `excluded` on a `changed` or `ignored-only` view or beside a reason,
       `excluded` omitted for a derived-mode resource byte change with no
       reason, `excluded` omitted for a reference-only pass with no diffed
       rule, and `matched` on an `unchanged` view; prove identical evidence
       across live, complete, published and selected results.
-- [ ] Run the suite and `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] Discovered: require timing counts in every test that claims fast-path
+      behavior so at least one view demonstrably settles there; relabel
+      differential cases whose fixtures necessarily take the complete path.
+- [x] Run the suite and `cargo xtask check`.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report

@@ -10,6 +10,7 @@ import { generatedViews } from "../packages/viewer/dist/components/views.js";
 import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
 
 import {
+  assertComparisonModesEquivalent,
   assertFastPathEquivalent,
   compilationFiles,
   type FastPathFixture,
@@ -44,7 +45,7 @@ test("slot-bearing instance renames preserve projected material", async (t) => {
   assert.deepEqual(reasonKinds(result, "home"), ["material", "structure"]);
 });
 
-test("marker movement with identical stripped HTML preserves consumer material", async (t) => {
+test("marker movement preserves consumer material across enabled and forced-complete modes", async (t) => {
   const source = componentEntrySource({
     body: '<action.Component moklyInstance="footer" label="Finish" /><i></i>',
   });
@@ -62,7 +63,7 @@ test("marker movement with identical stripped HTML preserves consumer material",
         ),
     source,
   );
-  const result = await assertFastPathEquivalent(reviewFixture(fixture));
+  const result = await assertComparisonModesEquivalent(reviewFixture(fixture));
 
   assert.deepEqual(reasonKinds(result, "home"), ["material"]);
 });

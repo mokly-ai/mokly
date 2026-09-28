@@ -103,6 +103,11 @@ test("fast-path reference analysis parses cached CSS once and prepares each view
     ).length,
     views,
   );
+  const counts = events.find(
+    (event) =>
+      event.stage === "review.compare-screens" && event.event === "counts",
+  )?.counts;
+  assert.ok(Number(counts?.fastPath) > 0);
 });
 
 async function referenceFixture(t: TestContext, selector: string) {
