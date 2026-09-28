@@ -229,7 +229,7 @@ middle tier, and name the offending element in every message.
       the warning in plain and rich mode and fails under `--strict`; an `<a>`
       ancestor fails with the element named.
 
-## Milestone 4: Deliver and review
+## Milestone 4: Deliver and review — completed
 
 Complete the required delivery sequence after validation passes.
 
@@ -243,9 +243,9 @@ Complete the required delivery sequence after validation passes.
       are deleted, and the only removed behavior is the authorized inversion of
       ancestor `tabindex` and focus-only descendant failures. Record the audit
       in the commit body.
-- [x] Run `git add -A` and commit using Conventional Commits; leave the branch
-      unpushed for the reviewer as directed by the delivery task.
-- [ ] After the push, review the complete local diff against `origin/main`
+- [x] Run `git add -A` and commit using Conventional Commits; the reviewer
+      pushed the branch after checking the delivery.
+- [x] After the push, review the complete local diff against `origin/main`
       using `docs/implementation-review-prompt.md` and report each finding with
       a number, severity, impact, lettered options, and a recommendation
       without changing the implementation.
