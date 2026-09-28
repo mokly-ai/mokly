@@ -108,94 +108,128 @@ for (const [name, input, output] of [
     assert.doesNotThrow(() => verifyModuleScoping(input, output, file, prefix));
   });
 
-for (const [name, input, output, location] of [
-  ["changed value", ".x{color:red}", `.${prefix}x{color:blue}`, "1:4"],
+for (const [name, input, output] of [
   [
-    "dropped declaration",
-    ".x{color:red;opacity:1}",
-    `.${prefix}x{color:red}`,
-    "1:14",
+    "global list after a class",
+    ".wrap :global(.x, .y)",
+    `.${prefix}wrap .x .y`,
   ],
   [
-    "dropped rule",
-    ".x{color:red}.y{color:blue}",
-    `.${prefix}x{color:red}`,
-    "1:14",
+    "global list before a class",
+    ":global(.x, .y) .wrap",
+    `.x .y .${prefix}wrap`,
   ],
   [
-    "reordered rule",
-    ".x{color:red}.y{color:blue}",
-    `.${prefix}y{color:blue}.${prefix}x{color:red}`,
-    "1:1",
+    "global list attached to a compound",
+    ".wrap:global(.x, .y)",
+    `.${prefix}wrap.x .y`,
   ],
   [
-    "changed at-rule",
-    "@media screen{.x{color:red}}",
-    `@media print{.${prefix}x{color:red}}`,
-    "1:1",
+    "complex global list",
+    ".wrap :global(.x > .a, .y) .z",
+    `.${prefix}wrap .x > .a .y .${prefix}z`,
   ],
   [
-    "leaked local function",
-    ".x{animation:fade auto linear}",
-    `.${prefix}x{animation:${prefix}fade :local(auto) linear}`,
-    "1:1",
+    "three global list items",
+    ".wrap :global(.x, .y, .w)",
+    `.${prefix}wrap .x .y .w`,
   ],
   [
-    "prefix glued to string",
-    '@keyframes "pulse"{to{opacity:1}}',
-    `@keyframes ${prefix}"pulse"{to{opacity:1}}`,
-    "1:1",
+    "local list",
+    ".wrap :local(.x, .y)",
+    `.${prefix}wrap .${prefix}x .${prefix}y`,
   ],
   [
-    "broken scope",
-    "@scope (.button){.x{color:red}}",
-    `@scope (.${prefix}bu) to (){.${prefix}x{color:red}}`,
-    "1:1",
+    "bare global before local list",
+    ":global .g :local(.x, .y)",
+    `.g .${prefix}x .${prefix}y`,
+  ],
+  ["list inside is", ".a :is(:global(.x, .y))", `.${prefix}a :is(.x .y)`],
+  [
+    "list inside not",
+    ".wrap :not(:global(.x, .y))",
+    `.${prefix}wrap :not(.x .y)`,
   ],
   [
-    "changed comment",
-    "/* good */.x{color:red}",
-    `/* bad */.${prefix}x{color:red}`,
-    "1:1",
-  ],
-  ["changed string", '.x{content:"red"}', `.${prefix}x{content:"blue"}`, "1:4"],
-  [
-    "changed function",
-    ".x{color:rgb(1,2,3)}",
-    `.${prefix}x{color:hsl(1,2,3)}`,
-    "1:4",
+    "explicit alternatives",
+    ".wrap :global(.x), .wrap :global(.y)",
+    `.${prefix}wrap .x, .${prefix}wrap .y`,
   ],
   [
-    "changed importance",
-    ".x{color:red!important}",
-    `.${prefix}x{color:red}`,
-    "1:4",
+    "is alternative",
+    ".wrap :global(:is(.x, .y))",
+    `.${prefix}wrap :is(.x, .y)`,
+  ],
+  [
+    "bare global between lists",
+    ".wrap :global .g :local(.x, .y) .tail",
+    `.${prefix}wrap .g .${prefix}x .${prefix}y .tail`,
+  ],
+  [
+    "bare global after local list",
+    ".wrap :local(.x, .y) :global .g",
+    `.${prefix}wrap .${prefix}x .${prefix}y .g`,
+  ],
+  [
+    "nested ampersand global list",
+    ".wrap{& :global(.x, .y){color:red}}",
+    `.${prefix}wrap{& .x .y{color:red}}`,
+  ],
+  [
+    "nested ampersand local list",
+    ".wrap{& :local(.x, .y){color:red}}",
+    `.${prefix}wrap{& .${prefix}x .${prefix}y{color:red}}`,
   ],
 ] as const)
-  test(`rename-only check rejects ${name}`, () => {
+  test(`rename-only check accepts selector list ${name}`, () => {
+    const original = input.includes("{") ? input : `${input}{color:red}`;
+    const changed = output.includes("{") ? output : `${output}{color:red}`;
+    assert.doesNotThrow(() =>
+      verifyModuleScoping(original, changed, file, prefix),
+    );
+  });
+
+for (const [name, input, output] of [
+  [
+    "both scope groups",
+    "@scope (.wrap :global(.x, .y)) to (.foot :local(.a, .b)){.target{color:red}}",
+    `@scope (.${prefix}wrap .x .y) to (.${prefix}foot .${prefix}a .${prefix}b){.${prefix}target{color:red}}`,
+  ],
+  [
+    "reversed scope modes",
+    "@scope (.wrap :local(.x, .y)) to (.foot :global(.a, .b)){.target{color:red}}",
+    `@scope (.${prefix}wrap .${prefix}x .${prefix}y) to (.${prefix}foot .a .b){.${prefix}target{color:red}}`,
+  ],
+  [
+    "ampersand scope start",
+    "@scope (& :global(.x, .y)) to (:scope > .limit){.target{color:red}}",
+    `@scope (& .x .y) to (:scope > .${prefix}limit){.${prefix}target{color:red}}`,
+  ],
+] as const)
+  test(`rename-only check accepts selector lists in ${name}`, () => {
+    assert.doesNotThrow(() => verifyModuleScoping(input, output, file, prefix));
+  });
+
+for (const [name, changed] of [
+  ["reordered items", `.${prefix}wrap .y .x`],
+  ["missing item", `.${prefix}wrap .x`],
+  ["non-descendant join", `.${prefix}wrap .x > .y`],
+] as const)
+  test(`rename-only check rejects selector list ${name}`, () => {
     assert.throws(
-      () => verifyModuleScoping(input, output, file, prefix),
+      () =>
+        verifyModuleScoping(
+          ".wrap :global(.x, .y){color:red}",
+          `${changed}{color:red}`,
+          file,
+          prefix,
+        ),
       (error: Error) => {
         assert.equal(
           error.message,
-          `[mokly/build-invalid] CSS Modules scoping would change more than local names in ${file}:${location}; move this CSS to a plain stylesheet`,
+          `[mokly/build-invalid] CSS Modules scoping would change more than local names in ${file}:1:1; move this CSS to a plain stylesheet`,
         );
         return true;
       },
     );
   });
-
-test("unparseable output names the later authored rule, not the first rule", () => {
-  const input = ".ok{color:red}\n.x{animation:fade auto linear}";
-  const output = `.${prefix}ok{color:red}\n.${prefix}x{animation:${prefix}fade :local(auto) linear}`;
-  assert.throws(
-    () => verifyModuleScoping(input, output, file, prefix),
-    (error: Error) => {
-      assert.equal(
-        error.message,
-        `[mokly/build-invalid] CSS Modules scoping would change more than local names in ${file}:2:1; move this CSS to a plain stylesheet`,
-      );
-      return true;
-    },
-  );
-});

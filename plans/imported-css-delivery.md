@@ -16,6 +16,10 @@ remain open for the user's decision, as do the other findings in the
 [Milestone 19 review record](../docs/reviews/imported-css-delivery-milestone-19.md)
 and the eight findings in the
 [Milestone 21 review record](../docs/reviews/imported-css-delivery-milestone-21.md).
+Milestone 22 accepts the selector-list behavior from finding 3 of that review;
+its other parts and findings remain open.
+The accepted behavior is the CSS Modules plugins' descendant-chain output,
+not an expansion into alternative selectors.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -820,6 +824,22 @@ plugins and reject any change beyond documented local-name rewrites.
 
 - [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
 - [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Eight new findings (all Low) are recorded in the [Milestone 21 review record](../docs/reviews/imported-css-delivery-milestone-21.md) for the user's decision.
+
+## Milestone 22: Accept CSS Modules selector lists in `:global()` and `:local()` (complete)
+
+Permit the CSS Modules plugins' established list flattening without weakening
+the rename-only check for any other selector rewrite.
+
+- [x] Confirm every reviewed plugin output and probe scope groups, nesting and bare modes before relying on the flattening rule.
+- [x] Add failing verifier and Build regressions for all accepted list forms, plus reordered, missing and non-descendant join rejections.
+- [x] Normalize wrapped lists into ordered descendant chains in the input selector tree, including compound attachment, nested pseudos and `@scope` groups.
+- [x] Update the imported-CSS contract and Styles guide; keep other finding-3 concerns and all other open findings untouched.
+- [x] Run Build, focused suites, example Build/Check and unchanged digest, lint, typecheck, Chrome parity, CLI fixture smoke and `cargo xtask check`; commit and push.
+
+## Milestone 23: Commit, push, and review
+
+- [ ] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
 
 ## Post-merge follow-up (non-blocking)
 

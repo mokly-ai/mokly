@@ -137,6 +137,24 @@ test("scope selectors share local/global and nested pseudo localization", () => 
   assert.ok(Object.hasOwn(result.exports, "toast"));
 });
 
+test("scope start and limit lists use the plugins' descendant chains", () => {
+  const result = scopeModule(
+    "@scope (.wrap :global(.x, .y)) to (.foot :local(.a, .b)){.target{color:red}}",
+    relative,
+  );
+  assert.equal(
+    result.css,
+    `@scope (.${prefix}wrap .x .y) to (.${prefix}foot .${prefix}a .${prefix}b){.${prefix}target{color:red}}`,
+  );
+  assert.deepEqual(Object.keys(result.exports).sort(), [
+    "a",
+    "b",
+    "foot",
+    "target",
+    "wrap",
+  ]);
+});
+
 test("prelude-only identities participate in collision checking", () => {
   const result = scopeModule("@scope (.button){.target{color:red}}", relative);
   const known = new Map<string, string>();

@@ -83,9 +83,13 @@ function normalizeChildren(
       [":global", ":local"].includes(node.value ?? "")
     ) {
       if (node.nodes?.length) {
-        if (node.nodes.length !== 1 || node.nodes[0]?.type !== "selector")
+        if (node.nodes.some((selector) => selector.type !== "selector"))
           return [{ type: "invalid", value: "", children: [] }];
-        normalized.push(...normalizeChildren(node.nodes[0].nodes ?? [], true));
+        for (const [selectorIndex, selector] of node.nodes.entries()) {
+          if (selectorIndex > 0)
+            normalized.push({ type: "combinator", value: " ", children: [] });
+          normalized.push(...normalizeChildren(selector.nodes ?? [], true));
+        }
       } else if (nodes[index + 1]?.type === "combinator") index += 1;
       continue;
     }

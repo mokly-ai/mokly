@@ -153,6 +153,11 @@ name and params. Other scope-suffixed at-rules retain their params unchanged.
 The prelude uses normal selector localization, including default local,
 `:global(...)`, `:local(...)`, bare modes, lists, `:scope`, `&`, `:is()` and
 `:not()`. Local prelude names are exported and count for identity collisions.
+In any selector, including either `@scope` group or a nested pseudo-class,
+a list inside `:global(...)` or `:local(...)` becomes one descendant chain:
+the plugins keep every item in order and join adjacent items with one space.
+A compound before the wrapper stays attached to the first item. This follows
+css-loader and Vite's default CSS Modules pipeline; it is not list expansion.
 The temporary selector rules also make those names available as earlier
 selectors for a later `composes`, including when the scope is nested in a
 rule, `@media`, `@supports` or `@layer`.
@@ -165,7 +170,8 @@ Value tokens may remain identical or change one valid identifier word to
 `mokly_<hash>_<word>`; `global(word)`/`local(word)` may collapse to that word
 or its scoped version. Strings, functions, dividers and whitespace-token
 presence otherwise stay unchanged. Selector trees may unwrap `:global` and
-`:local` (including bare forms and their dropped combinator), and only class,
+`:local` (including bare forms and their dropped combinator), and may flatten
+a wrapped selector list into that ordered descendant chain. Only class,
 ID and `[class=…]` values may gain the exact module prefix. A keyframes-family
 at-rule param may likewise gain that prefix after optional local/global
 unwrapping. Scope params keep the same group structure and non-group bytes;

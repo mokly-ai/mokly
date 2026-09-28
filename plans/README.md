@@ -17,6 +17,8 @@
   changing other open findings. The eight findings in the
   [Milestone 21 review](../docs/reviews/imported-css-delivery-milestone-21.md)
   also remain open.
+  Milestone 22 accepts only the approved selector-list part of finding 3;
+  its other parts remain open.
   Move this plan to Completed when its
   implementation PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one

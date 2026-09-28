@@ -3,6 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { scopeModule } from "../dist/build/styles/modules.js";
+
 import {
   createFixture,
   removeFixture,
@@ -57,6 +59,34 @@ test("CSS Modules keep strict-mode reserved names only on the default export", a
   const value = html.match(/class="([^"]+)"/)?.[1];
   assert.ok(value);
   assert.ok(css.includes(`.${value}`));
+});
+
+test("Build retains plugin selector-list output and exported local names", async (context) => {
+  const fixture = await createFixture(
+    validEntrySource({
+      body: "<div className={styles.wrap}><span className={styles.x}>X</span><span className={styles.y}>Y</span></div>",
+    }),
+  );
+  context.after(() => removeFixture(fixture));
+  const css =
+    ".wrap :global(.x, .y){color:red}.wrap :local(.x, .y){color:blue}";
+  await fs.writeFile(path.join(fixture.entriesDir, "list.module.css"), css);
+  await fs.appendFile(
+    fixture.entryPath,
+    '\nimport styles from "./list.module.css";',
+  );
+  const compiled = await compileFixture(fixture);
+  const scoped = scopeModule(css, "entries/list.module.css");
+  const stylesheet = compiled.outputs.get(entryStyle) as string;
+  assert.ok(stylesheet.includes(`.${scoped.exports.wrap} .x .y`));
+  assert.ok(
+    stylesheet.includes(
+      `.${scoped.exports.wrap} .${scoped.exports.x} .${scoped.exports.y}`,
+    ),
+  );
+  const html = compiled.outputs.get("screens/home.mobile.html") as string;
+  for (const name of ["wrap", "x", "y"] as const)
+    assert.ok(html.includes(`class="${scoped.exports[name]}"`));
 });
 
 test("adding an unrelated same-basename CSS Module does not rename existing classes", async (t) => {
