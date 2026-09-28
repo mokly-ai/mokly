@@ -28,7 +28,8 @@ by generated output:
 - every accepted source rebuild, reload/restart watch action, and configuration
   replacement gives the in-memory Live runtime a fresh 32-lowercase-hex
   generation; its browser bundle from the
-  [interactive views contract](./mokly-interactive-views.md) is rebuilt lazily
+  [interactive Serve contract](./mokly-interactive-views-serve.md#browser-bundle)
+  is rebuilt lazily
   on the next Live request while one predecessor is retained for unloading
   frames. Evidence-only updates and recovery restarts keep the generation.
 

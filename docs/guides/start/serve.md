@@ -48,3 +48,21 @@ up later edits.
 Browse the catalogue by collection, search it, switch viewport and color
 scheme, open the details of a screen and compare a changed screen with its
 base. The Catalogue section describes each of those.
+
+## Try a Live preview
+
+Set `interactive: "serve"` in the config to add Static/Live to screens and
+saved component variants. Live mounts the same React tree in the browser, so
+local component state and catalogue links respond. An entry that declares
+`interactive: false` stays Static and shows no control. Changes, comparisons,
+Build, Check, Export, and Publish continue to use static documents.
+
+The basic example under `examples/basic` enables Live. Open **Example →
+Screens → Plan your visit**, switch to Live, change the guest count, and
+follow its Details link. The registered Guest picker also has two saved
+variants under **Example → Components**; the Details screen is the
+static-only opt-out example.
+
+A custom renderer should export `interactive` with the same pure providers as
+its static render. The Authoring configuration guide shows the function, and
+the Serve CLI guide covers the second port and forwarding options.

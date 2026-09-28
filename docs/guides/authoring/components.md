@@ -86,6 +86,12 @@ for both viewports and every configured scheme. A link to the component id
 opens its default variant; a canonical page URL selects one with
 `?variant=default`.
 
+With `interactive: "serve"`, each saved variant can switch from its generated
+Static document to the real component mounted in the browser. This is useful
+for stateful controls as well as visual examples. The Guest picker in the
+repository's basic example keeps its starting count in variant props, then
+updates real React state in Live.
+
 ## Controls
 
 `controls` declares what can be edited while serving locally: `text`,

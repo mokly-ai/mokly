@@ -77,6 +77,17 @@ test("Live mounts state and sends MockLink navigation through the frame adapter"
   );
 });
 
+test("Live component render runs inside renderer providers", async ({
+  page,
+}) => {
+  await mountInteractiveFrame(page, fixture, fixture.providerPath);
+
+  await expect(
+    page.frameLocator("#frame").locator("#provider-value"),
+  ).toHaveText("provider-light");
+  expect(fixture.diagnostics).toEqual([]);
+});
+
 test("Live reports a bounded root render error to its generation endpoint", async ({
   page,
 }) => {

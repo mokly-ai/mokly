@@ -1,24 +1,28 @@
 # Basic Mokly Consumer
 
-This is a synthetic external-consumer fixture. It contains two distinct mobile
-and desktop product-style screens built with `@firna/ui` controls, nested
+This is a synthetic external-consumer fixture. It contains three mobile and
+desktop product-style screens built with `@firna/ui` controls, nested
 collections, one use case, id-addressed links, a Firna renderer adapter, local
 stylesheets, light and dark product fragments, and a safe Review-ignore region.
-The Components → Example → Components collection contains real registered Action and Toolbar
-components. Both product screens use Action repeatedly, directly and inside the
-Toolbar, with caller-owned slots. Action has Default, Disabled and Secondary
-variants plus text, boolean, number, optional hint and emphasis controls; Toolbar
-has an editable title and nested Action instances. Open Props in local Serve to
-edit them. Published exports provide the same saved examples read-only.
+The Components → Example → Components collection contains real registered
+Action, Toolbar, and Guest picker components. The Welcome and Details screens
+use Action repeatedly, directly and inside Toolbar, with caller-owned slots.
+Action has Default, Disabled and Secondary variants plus text, boolean, number,
+optional hint and emphasis controls; Toolbar has an editable title and nested
+Action instances. Guest picker has two saved variants and owns real React count
+state: open Plan your visit, choose Live, and add or remove a guest. Open Props
+in local Serve to edit declared values. Published exports provide the same
+saved examples read-only.
 `example-components.css` declares exact shared ownership, separate from global
-styles and the design mockups. Action and Toolbar are co-located with their
-product-style implementations under `src/components/`: each directory holds
+styles and the design mockups. Action, Toolbar, and Guest picker are co-located
+with their product-style implementations under `src/components/`: each
+directory holds
 the plain React component (`action.tsx`), its catalogue registration
 (`action.mokly.tsx`), and the entry module that exports it
 (`action.mockup.tsx`). The configuration discovers those entry modules with a
 second `entries` glob beside the `entries/` catalogue, so the shared
-components need no mirror files under `entries/`.
-It contains no consumer product screens.
+components need no mirror files under `entries/`. It contains no consumer
+product screens.
 
 Authoring imports use the public package `@mokly/mokly`. The local executable
 and configuration filename remain `mokly` and `mokly.config.ts`.
@@ -53,6 +57,13 @@ HTML keeps a portable relative artifact link while served and deployed Browse
 navigate to the canonical Details page, retain its anchor through Light/Dark
 swaps, and select the Details row in the catalogue tree. The reciprocal Details
 link exercises the id-only form.
+
+Welcome also links to Plan your visit through the existing Example navigation.
+That screen composes the registered Guest picker and links to the Details
+anchor, so a Live frame demonstrates both local state and catalogue navigation.
+Details declares `interactive: false`: it is an informational reference state
+with no behaviour to exercise, and serves as the example of an entry whose
+toolbar remains static-only at desktop and mobile widths.
 
 The prominent `View details` and `Return to welcome` Firna buttons use
 `MockLink asChild`, alongside the three original text links. Both viewport
@@ -110,6 +121,18 @@ plain HTML outside Firna components.
 `.web.*`-first resolve extensions, and the `.js` → `jsx` loader. Consumers that
 render plain React DOM need none of this and can keep a plain
 `renderToStaticMarkup` adapter.
+
+The config enables `interactive: "serve"`, and the renderer's optional
+`interactive` export reuses the same pure wrapper tree as static rendering:
+the design style context, rendered-scheme context, Firna theme provider,
+viewport context and renderer root, plus `LibraryHost` for standalone design
+library components. This keeps every Live view visually equal to its Static
+initial state. React Native Web style collection, stylesheet-link selection,
+dark document rules and complete-document string assembly remain only in the
+default server `render`; the Live mount retains those results in the static
+document head instead of adding a duplicate. See the
+[Live runtime contract](../../docs/protocol/mokly-interactive-views-runtime.md#renderer-participation)
+and [Serve delivery contract](../../docs/protocol/mokly-interactive-views-serve.md).
 
 The `Design` navigation group is the owning design catalogue for Mokly's
 Browse and Changes views. Its sixty-three Browse, page, publication, appearance
@@ -259,6 +282,9 @@ npm run dev
 This builds the local CLI, generates the catalogue, and watches entries, the
 renderer, and configured stylesheets. Open the printed URL; the browser reloads
 after watched edits. Forward Serve options with `npm run dev -- --port 0`.
+Open **Example → Screens → Plan your visit**, switch Preview mode to Live, and
+use the guest controls; open **Example → Components → Guest picker** to try its
+saved variants directly. **Details** intentionally has no Static/Live control.
 Imported consumer helpers, including this example's `theme.ts`, are tracked
 and trigger rebuilds automatically. Restart the command after changing
 Mokly's own `src/` files.

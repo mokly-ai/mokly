@@ -56,7 +56,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
         );
         assert.equal(
           elements(document, (node) => node.tagName === "a").length,
-          source === "example-welcome" ? 6 : 4,
+          source === "example-welcome" ? 7 : 4,
         );
         for (const [title, id] of [
           ["Browse details", "example-details#details"],

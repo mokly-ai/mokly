@@ -6,10 +6,13 @@ Implemented by Milestones 5, 7 and 9 of the
 [interactive views plan](../../plans/interactive-views.md), on the private
 route-scoped eligibility delivered in Milestone 6. This contract owns how the
 React shell offers, selects and presents Static and Live. The
-[interactive views contract](./mokly-interactive-views.md) owns configuration,
-the per-entry opt-out, the interactive origin, the browser bundle and the Live
-document; the [design](./mokly-interactive-views-design.md) owns the approved
-presentation.
+[interactive views overview](./mokly-interactive-views.md) owns configuration
+and the per-entry opt-out, the
+[Live runtime contract](./mokly-interactive-views-runtime.md) owns the document
+and mount, the
+[Serve delivery contract](./mokly-interactive-views-serve.md) owns the origin
+and bundle, and the [design](./mokly-interactive-views-design.md) owns the
+approved presentation.
 
 ## Control
 
@@ -145,7 +148,9 @@ static-only views and across held route evidence.
 
 ## Related Docs
 
-- [Interactive views contract](./mokly-interactive-views.md)
+- [Interactive views overview](./mokly-interactive-views.md)
+- [Live document and browser runtime](./mokly-interactive-views-runtime.md)
+- [Interactive Serve delivery](./mokly-interactive-views-serve.md)
 - [Interactive views design](./mokly-interactive-views-design.md)
 - [Live viewer capabilities](./mokly-live-capabilities.md)
 - [Live catalogue evidence updates](./mokly-live-evidence.md)

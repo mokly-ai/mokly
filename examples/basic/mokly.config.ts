@@ -16,6 +16,7 @@ export default defineConfig({
     "examples/basic/entries/**/*.mockup.{ts,tsx}",
     "examples/basic/src/components/**/*.mockup.{ts,tsx}",
   ],
+  interactive: "serve",
   mockupsDir: "generated",
   moduleResolution: {
     aliases: { "react-native": "react-native-web" },

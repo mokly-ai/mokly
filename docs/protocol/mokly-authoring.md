@@ -130,7 +130,7 @@ Nested trees do not inherit this field from their collections or root.
 Serve. Only `false` is accepted; `true`, `undefined`, and other values are
 rejected. Screen variants inherit the parent's value unless they declare their
 own. Collections, pages, and use cases reject the field. See the
-[interactive views contract](./mokly-interactive-views.md).
+[per-entry Live contract](./mokly-interactive-views.md#per-entry-opt-out).
 
 `defineScreen`, `definePage`, `defineUseCase`, and nested `screen` and `page`
 inputs may also declare

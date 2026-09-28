@@ -2,7 +2,8 @@
 
 This directory prepares Live preview documents without changing Mokly's static
 build artifacts. It owns the browser bundle and runtime plus Serve's isolated
-Live listener. The shell control is a separate delivery milestone.
+Live listener. The viewer shell consumes that runtime through its separately
+owned Static/Live control.
 
 ## Responsibilities
 
@@ -48,8 +49,10 @@ on-demand document.
 `runtime/` strictly validates the bootstrap, configures the route table, finds
 the bundled registry entry, and mounts with React's `createRoot` inside
 `flushSync`. Component roots use their saved complete props; registered
-components inside any Live tree use the non-recording component context. The
-optional renderer `interactive` export wraps the node in consumer providers.
+components inside any Live tree use the non-recording component context. A
+saved component's registered render stays deferred until React traverses it
+under the optional renderer `interactive` export, so consumer providers wrap
+both component roots and screens.
 
 Render failures reach an injectable `InteractiveDiagnosticReporter`. The
 default implementation logs locally and posts a bounded `render-error` payload
@@ -80,7 +83,7 @@ as a canonical origin distinct from the frame.
 timed build, and retains one predecessor. Typed `interactive-bundle` failures
 become consumer-text-free 503 responses; internal faults remain 500. The app
 origin owns the current-generation preparation POST and private descriptor/SSE
-transport, so the future shell can wait for readiness without reading a
+transport, so the shell can wait for readiness without reading a
 cross-origin response. That POST follows the component-control rule: its Origin
 must be exactly `http://` plus the accepted loopback Host.
 
@@ -106,6 +109,8 @@ npx playwright test tests/browser/interactive.spec.ts
 npm run package:check
 ```
 
-See the [Interactive Views contract](../../docs/protocol/mokly-interactive-views.md),
-[rendering contract](../../docs/protocol/mokly-rendering.md), and
-[frame adapter](../../docs/protocol/mokly-frame-adapter.md).
+See the [Interactive Views overview](../../docs/protocol/mokly-interactive-views.md),
+[Live runtime contract](../../docs/protocol/mokly-interactive-views-runtime.md),
+[Serve delivery contract](../../docs/protocol/mokly-interactive-views-serve.md),
+[rendering contract](../../docs/protocol/mokly-rendering.md), and [frame
+adapter](../../docs/protocol/mokly-frame-adapter.md).

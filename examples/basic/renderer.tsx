@@ -8,13 +8,14 @@ import { createContext, type ReactNode, useContext } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { AppRegistry } from "react-native-web";
 
-import type { RenderInput } from "@mokly/mokly";
+import type { InteractiveRenderInput, RenderInput } from "@mokly/mokly";
 
 import { LibraryHost } from "./entries/design/library/host.js";
 import {
   DesignStyleCollector,
   DesignStyles,
 } from "./entries/design/library/style_context.js";
+import { libraryStyleCandidates } from "./entries/design/library/style_files.js";
 import { DesignRenderedScheme } from "./entries/design/parts/appearance.js";
 import { darkTokens, tokens } from "./theme.js";
 
@@ -41,10 +42,15 @@ function collectNativeStyles(): string {
   );
 }
 
-export default function render(input: RenderInput): string {
+function RenderedView({
+  input,
+  styles,
+}: {
+  input: InteractiveRenderInput;
+  styles: DesignStyleCollector;
+}) {
   const theme = themes[input.colorScheme];
-  const styles = new DesignStyleCollector(input.stylesheets);
-  const body = renderToStaticMarkup(
+  return (
     <DesignStyles value={styles}>
       <DesignRenderedScheme scheme={input.colorScheme}>
         <SharedUiThemeProvider theme={theme}>
@@ -60,7 +66,15 @@ export default function render(input: RenderInput): string {
           </ViewportContext.Provider>
         </SharedUiThemeProvider>
       </DesignRenderedScheme>
-    </DesignStyles>,
+    </DesignStyles>
+  );
+}
+
+export default function render(input: RenderInput): string {
+  const theme = themes[input.colorScheme];
+  const styles = new DesignStyleCollector(input.stylesheets);
+  const body = renderToStaticMarkup(
+    <RenderedView input={input} styles={styles} />,
   );
   const nativeStyles = collectNativeStyles();
   const links = styles
@@ -72,4 +86,13 @@ export default function render(input: RenderInput): string {
       ? `html{color-scheme:dark}body{margin:0;background:${theme.colors.bg};color:${theme.colors.ink}}main a{color:${darkTokens.colors.accent}}`
       : `html{color-scheme:light}body{margin:0;background:${theme.colors.bg}}`;
   return `<!doctype html><html lang="en" data-color-scheme="${input.colorScheme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${input.entry.title}</title>${links}${nativeStyles}<style>${documentStyles}</style></head><body>${body}</body></html>\n`;
+}
+
+export function interactive(input: InteractiveRenderInput): ReactNode {
+  return (
+    <RenderedView
+      input={input}
+      styles={new DesignStyleCollector(libraryStyleCandidates)}
+    />
+  );
 }

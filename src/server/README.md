@@ -143,7 +143,7 @@ POST. That POST requires Origin to equal `http://` plus its accepted loopback
 Host exactly. Public catalogue JSON and exports receive none of this state. The Live
 listener itself serves the exact document, public-file, bundle, diagnostic, and
 inspector allowlist described by the
-[interactive views contract](../../docs/protocol/mokly-interactive-views.md).
+[interactive Serve delivery contract](../../docs/protocol/mokly-interactive-views-serve.md).
 Eligibility precedes lazy bundle work; the current `ComponentRuntime.generation`
 binds the document, bootstrap, bundle, diagnostics, and descriptor.
 

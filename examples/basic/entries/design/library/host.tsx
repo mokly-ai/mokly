@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import type { RenderInput } from "@mokly/mokly";
+import type { InteractiveRenderInput } from "@mokly/mokly";
 
 import { PreviewWorkspace } from "../components/parts/workspace.js";
 
@@ -9,7 +9,7 @@ export function LibraryHost({
   input,
   children,
 }: {
-  input: RenderInput;
+  input: InteractiveRenderInput;
   children: ReactNode;
 }) {
   const slug = input.entry.id.slice("design-ui-".length);

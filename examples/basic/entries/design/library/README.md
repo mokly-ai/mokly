@@ -126,6 +126,8 @@ identically in standalone samples and in-screen compositions.
 Keep configured watch paths in sync when introducing an owned sheet.
 
 `host.tsx` supplies standalone layout and semantic parents without fixture data.
+The example renderer calls that host from its shared wrapper tree, so a saved
+library component receives the same host and style context in Static and Live.
 Every inspector uses the ordinary preview workspace for its resizer and mobile
 sheet. The workspace dock owns placement and sizing, while the inspector owns
 the sheet border, rounded surface and shadow. Open mobile sheets span the

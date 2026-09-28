@@ -41,11 +41,12 @@ const staticHydrationScript =
 
 /** Capture already-built output; the supported npm command builds before this boundary. */
 export async function buildPreview(config, output, options = {}) {
-  const ownership = previewOwnership(config);
+  const staticConfig = { ...config, interactive: "off" };
+  const ownership = previewOwnership(staticConfig);
   const capability = publicationOptions(options);
-  assertSafeOutput(output, config.repoRoot);
-  const contextRoot = path.join(config.repoRoot, ".context");
-  const destination = resolveExportOutput(config, output, contextRoot);
+  assertSafeOutput(output, staticConfig.repoRoot);
+  const contextRoot = path.join(staticConfig.repoRoot, ".context");
+  const destination = resolveExportOutput(staticConfig, output, contextRoot);
   try {
     await assertExportOwnership(destination, ownership);
   } catch (cause) {
@@ -61,26 +62,30 @@ export async function buildPreview(config, output, options = {}) {
         const stage = transaction.stage;
         const excludedRoots = [stage, output, transaction.reservationRoot];
         const base = capability.includeChanges
-          ? (capability.base ?? config.review.base)
+          ? (capability.base ?? staticConfig.review.base)
           : "";
         const prepared = capability.includeChanges
-          ? await prepareReviewRepository(config, base)
+          ? await prepareReviewRepository(staticConfig, base)
           : undefined;
         const git = prepared;
-        const inputs = await capturePublicationInputs(config, excludedRoots);
+        const inputs = await capturePublicationInputs(
+          staticConfig,
+          excludedRoots,
+        );
         const snapshot = await loadCatalogueSnapshot(
-          config,
+          staticConfig,
           git
-            ? (manifest) => computeCatalogueChanges(config, base, git, manifest)
+            ? (manifest) =>
+                computeCatalogueChanges(staticConfig, base, git, manifest)
             : undefined,
           inputs.manifest,
         );
         const { catalogue, changes } = snapshot;
         const manifest = catalogue.manifest;
         const review = git
-          ? previewComparisonProvider(config, stage, base, git)
+          ? previewComparisonProvider(staticConfig, stage, base, git)
           : undefined;
-        const server = await startCatalogueServer(config, {
+        const server = await startCatalogueServer(staticConfig, {
           base,
           liveChanges: false,
           snapshot,
@@ -96,7 +101,7 @@ export async function buildPreview(config, output, options = {}) {
             comparison = await captureComparison(server.url);
             removed = changes.removedEntries.map(({ entry }) => entry);
             pagePreviews = await capturePublicationPagePreviews(
-              config,
+              staticConfig,
               prepared,
               changes,
             );
@@ -134,10 +139,10 @@ export async function buildPreview(config, output, options = {}) {
             changes.removedEntries,
             pagePreviews,
           );
-        await copyPublicFiles(config, catalogue, stage, excludedRoots);
+        await copyPublicFiles(staticConfig, catalogue, stage, excludedRoots);
         const readModel = projectCatalogue({
           configPath: path
-            .relative(config.repoRoot, config.configPath)
+            .relative(staticConfig.repoRoot, staticConfig.configPath)
             .split(path.sep)
             .join("/"),
           catalogue,
@@ -172,16 +177,18 @@ export async function buildPreview(config, output, options = {}) {
         );
         if (
           inputs.fingerprint !==
-          (await capturePublicationInputs(config, excludedRoots)).fingerprint
+          (await capturePublicationInputs(staticConfig, excludedRoots))
+            .fingerprint
         )
           throw new Error(
             "consumer inputs changed during publication; retry with stable inputs",
           );
-        assertSafeOutput(output, config.repoRoot);
+        assertSafeOutput(output, staticConfig.repoRoot);
         await prepared?.assertUnchanged();
         if (
-          projectRealPath(resolveExportOutput(config, output, contextRoot)) !==
-          transaction.output
+          projectRealPath(
+            resolveExportOutput(staticConfig, output, contextRoot),
+          ) !== transaction.output
         )
           throw new Error(
             "preview output changed its real location during publication",

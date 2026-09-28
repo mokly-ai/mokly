@@ -99,11 +99,16 @@ when the historical primary file is absent, never when it is invalid.
 - [Component controls design catalogue](./mokly-component-controls-design.md)
 - [Component workspace design](./mokly-component-workspace-design.md) (view controls, resizing, and comparison eligibility)
 - [Component controls](./mokly-component-controls.md)
-- [Interactive views](./mokly-interactive-views.md) — approved target: optional
-  Static/Live previews in local Serve with static comparisons, its
-  [shell contract](./mokly-interactive-views-shell.md) for the Static/Live
-  control, eligibility and navigation, and its
-  [design catalogue](./mokly-interactive-views-design.md).
+- [Interactive views](./mokly-interactive-views.md) — implemented optional
+  Static/Live previews in local Serve with static comparisons.
+  - [Live document and browser runtime](./mokly-interactive-views-runtime.md)
+    — composition, renderer providers, mounting, recovery, and navigation.
+  - [Interactive Serve delivery](./mokly-interactive-views-serve.md) — isolated
+    origin, browser bundle, diagnostics, and readiness.
+  - [Shell contract](./mokly-interactive-views-shell.md) — control,
+    eligibility, navigation, and Static-only inspection.
+  - [Design catalogue](./mokly-interactive-views-design.md) — approved
+    responsive presentation and states.
 - [Consumer static export](./mokly-export.md) — consumer CLI and
   transactional artifact-generation contract.
 - [Static export delivery](./mokly-export-delivery.md) — portable

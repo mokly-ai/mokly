@@ -12,6 +12,7 @@ import {
 } from "@mokly/mokly";
 
 import { action } from "../src/components/action/action.mokly.js";
+import { guestPicker } from "../src/components/guest-picker/guest-picker.mokly.js";
 import { toolbar } from "../src/components/toolbar/toolbar.mokly.js";
 
 import { renderExampleDocument } from "./document.js";
@@ -58,6 +59,9 @@ function Welcome({ compact }: { compact: boolean }) {
       <toolbar.Component title="Workspace actions">
         <p>Explore the catalogue.</p>
       </toolbar.Component>
+      <p>
+        <MockLink to="example-visit">Plan a visit</MockLink>
+      </p>
       <p>
         <MockLink to="example-handbook" fragment="next-steps">
           Read the handbook
@@ -122,13 +126,34 @@ function Details({ compact }: { compact: boolean }) {
   );
 }
 
+function Visit() {
+  return (
+    <main id="visit" className="example-screen">
+      <header className="example-head">
+        <h1>Plan your visit</h1>
+        <Badge tone="primary">Booking</Badge>
+      </header>
+      <p>Choose how many guests are joining you.</p>
+      <guestPicker.Component
+        initialCount={2}
+        label="Guests"
+        maximum={8}
+        moklyInstance="guests"
+      />
+      <MockLink fragment="details" to="example-details">
+        Review venue details
+      </MockLink>
+    </main>
+  );
+}
+
 export const mockups = [
   defineCollection({
     ...metadata,
     id: "example-components",
     title: "Components",
     description: "Shared actions and composition.",
-    childIds: ["example-action", "example-toolbar"],
+    childIds: ["example-action", "example-toolbar", "example-guest-picker"],
   }),
   defineCollection({
     ...metadata,
@@ -144,7 +169,7 @@ export const mockups = [
   }),
   defineCollection({
     ...metadata,
-    childIds: ["example-welcome", "example-details"],
+    childIds: ["example-welcome", "example-details", "example-visit"],
     description: "Synthetic screens used to exercise the reusable framework.",
     id: "example-screens",
     title: "Screens",
@@ -177,11 +202,23 @@ export const mockups = [
     description: "A second synthetic screen proving cross-screen links.",
     desktop: <Details compact={false} />,
     id: "example-details",
+    interactive: false,
     mobile: <Details compact />,
     route: "screens/details.html",
     tags: ["forms"],
     title: "Details",
     useCaseIds: ["example-tour"],
+  }),
+  defineScreen({
+    ...metadata,
+    address: "example.test/visit",
+    description: "A booking screen with a stateful guest selector.",
+    desktop: <Visit />,
+    id: "example-visit",
+    mobile: <Visit />,
+    route: "screens/visit.html",
+    tags: ["forms"],
+    title: "Plan your visit",
   }),
   definePage({
     ...metadata,

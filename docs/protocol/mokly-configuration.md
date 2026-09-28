@@ -144,7 +144,8 @@ omit `generatedOutput` or set it to `"derived"` when supplying a
 repository-specific recipe.
 `interactive` defaults to `"off"`, which builds no browser bundle and shows no
 Static/Live control. `"serve"` enables Live views in local Serve only, as
-defined by the [interactive views contract](./mokly-interactive-views.md);
+defined by the
+[interactive views configuration](./mokly-interactive-views.md#configuration);
 unknown strings are `config-invalid`. Build, check, export and publication
 ignore the option and emit identical bytes in both values. Serve's
 `--interactive-port` and `--interactive-origin` options are rejected when the

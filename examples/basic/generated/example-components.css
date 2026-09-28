@@ -35,7 +35,47 @@
   align-items: start;
   gap: 12px;
 }
+.example-guest-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: min(320px, calc(100vw - 48px));
+  padding: 20px;
+  border: 1px solid #9daca05c;
+  border-radius: 12px;
+  background: #fff;
+}
+.example-guest-picker h2,
+.example-guest-picker p {
+  margin: 0;
+}
+.example-guest-picker-count {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.example-guest-picker-count output {
+  font-size: 32px;
+  font-weight: 700;
+}
+.example-guest-picker-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.example-guest-picker-availability {
+  color: #68706a;
+  font-size: 13px;
+}
+html[data-color-scheme="dark"] .example-guest-picker {
+  border-color: #2a312d;
+  background: #1b201d;
+}
+html[data-color-scheme="dark"] .example-guest-picker-availability {
+  color: #9aa39d;
+}
 [data-example-renderer] > .example-action,
+[data-example-renderer] > .example-guest-picker,
 [data-example-renderer] > .example-toolbar {
   margin: 24px;
 }

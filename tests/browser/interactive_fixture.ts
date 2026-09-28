@@ -23,6 +23,12 @@ import { createCatalogue } from "../../packages/viewer/dist/shell/catalogue.js";
 import { createFixture, removeFixture } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
+import {
+  interactiveSource,
+  providerSource,
+  rendererSource,
+} from "./interactive_fixture_sources.js";
+
 export interface InteractiveTestWindow extends Window {
   frameEvents: FrameEvent[];
   mounted: MountedFrame;
@@ -33,6 +39,7 @@ export async function interactiveFixture() {
     extraConfig: 'renderer: "renderer.tsx",',
   });
   await fs.writeFile(path.join(fixture.root, "renderer.tsx"), rendererSource);
+  await fs.writeFile(path.join(fixture.root, "provider.ts"), providerSource);
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   const catalogue = createCatalogue(compilation.manifest);
@@ -49,6 +56,9 @@ export async function interactiveFixture() {
   const home = compilation.manifest.entries.find(
     (entry) => entry.kind === "screen" && entry.id === "home",
   );
+  const providerReader = compilation.manifest.entries.find(
+    (entry) => entry.kind === "component" && entry.id === "provider-reader",
+  );
   const staticChildren = compilation.manifest.entries.find(
     (entry) => entry.kind === "screen" && entry.id === "static-children",
   );
@@ -57,12 +67,16 @@ export async function interactiveFixture() {
     broken?.kind !== "screen" ||
     dynamicChildren?.kind !== "screen" ||
     home?.kind !== "screen" ||
+    providerReader?.kind !== "component" ||
     staticChildren?.kind !== "screen"
   )
     throw new Error("Interactive browser fixture entries are missing");
   const livePath = component.variants[0]?.fragments.mobile;
+  const providerPath = providerReader.variants[0]?.fragments.mobile;
   const errorPath = broken.fragments.mobile;
   if (!livePath) throw new Error("Interactive component variant is missing");
+  if (!providerPath)
+    throw new Error("Interactive provider component variant is missing");
   const files = new Map<string, string | Buffer>([
     [
       "index.html",
@@ -71,6 +85,7 @@ export async function interactiveFixture() {
   ]);
   for (const [route, entryId, variantId] of [
     [livePath, "live-panel", "default"],
+    [providerPath, "provider-reader", "default"],
     [errorPath, "broken", undefined],
     [staticChildren.fragments.mobile, "static-children", undefined],
     [dynamicChildren.fragments.mobile, "dynamic-children", undefined],
@@ -141,6 +156,7 @@ export async function interactiveFixture() {
     livePath: `/static/${livePath}`,
     dynamicChildrenPath: `/static/${dynamicChildren.fragments.mobile}`,
     preMountPath,
+    providerPath: `/static/${providerPath}`,
     staticChildrenPath: `/static/${staticChildren.fragments.mobile}`,
     async close() {
       await frames.close();
@@ -156,6 +172,7 @@ export async function interactiveServeFixture() {
     extraConfig: 'interactive: "serve", renderer: "renderer.tsx",',
   });
   await fs.writeFile(path.join(fixture.root, "renderer.tsx"), rendererSource);
+  await fs.writeFile(path.join(fixture.root, "provider.ts"), providerSource);
   const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
   const diagnostics: unknown[] = [];
   const server = await startCatalogueServer(runtime.config, {
@@ -228,53 +245,4 @@ export async function mountInteractiveFrame(
     },
     { frameOrigin: fixture.frames.url, framePath },
   );
-}
-
-const rendererSource = `import React from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-export default function render(input) {
-  return '<!doctype html><html><head><meta charset="utf-8"><title>Live fixture</title></head><body data-mokly-viewport="' + input.viewport + '"><style id="body-retained-style">body{margin:0}</style><script id="body-retained-script" type="application/json">{}</script>' + renderToStaticMarkup(input.node) + '</body></html>';
-}
-export function interactive(input) {
-  return <div data-live-provider={input.colorScheme}>{input.node}</div>;
-}
-`;
-
-function interactiveSource(): string {
-  return `import React, { useState } from "react";
-import { defineCollection, defineComponent, defineScreen, mockLink, MockLink, ReviewIgnore } from "@mokly/mokly";
-const metadata = { dependencies: [], relatedDocs: [] };
-function StatefulPanel({ label }) {
-  const [count, setCount] = useState(0);
-  const [rawLink, setRawLink] = useState(true);
-  return <main>
-    <p id="count">{label}: {count} items</p>
-    <button id="increment" onClick={() => setCount(value => value + 1)}>Increment</button>
-    <button id="toggle-raw-link" onClick={() => setRawLink(value => !value)}>Toggle raw link</button>
-    <MockLink id="mock-link" to="details">Open details</MockLink>
-    <MockLink asChild to="details"><button id="child-link">Open child details</button></MockLink>
-    <a href={rawLink ? mockLink("details") : "/outside"} id="raw-link">Open raw details</a>
-    <ReviewIgnore id="shared-chrome"><span>Shared chrome</span></ReviewIgnore>
-  </main>;
-}
-const panel = defineComponent({ ...metadata, id: "live-panel", title: "Live panel", description: "Stateful component", route: "components/live-panel.html", propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } }, render: props => <StatefulPanel label={props.label} />, variants: [{ id: "default", title: "Default", props: { label: "Saved" } }] });
-function Broken() {
-  if (typeof window !== "undefined") throw new Error("browser render exploded");
-  return <main><p id="static-error-fallback">Static error fallback</p><MockLink id="static-error-link" to="details">Open static details</MockLink></main>;
-}
-function DynamicChildren() {
-  const labels = ["First", "Second"];
-  if (typeof window === "undefined") return <main id="dynamic-children">{labels.map((label) => <span key={label}>{label}</span>)}</main>;
-  return <main id="dynamic-children">{labels.map((label) => <span>{label}</span>)}</main>;
-}
-export const mockups = [
-  defineCollection({ ...metadata, childIds: ["live-panel", "home", "details", "broken", "static-children", "dynamic-children"], description: "Live fixtures", id: "fixtures", title: "Fixtures" }),
-  panel.entry,
-  defineScreen({ ...metadata, description: "Home", desktop: <main id="static-pre-mount">Static pre-mount fallback</main>, id: "home", mobile: <main id="static-pre-mount">Static pre-mount fallback</main>, route: "screens/home.html", title: "Home" }),
-  defineScreen({ ...metadata, description: "Details", desktop: <main>Details</main>, id: "details", mobile: <main>Details</main>, route: "screens/details.html", title: "Details" }),
-  defineScreen({ ...metadata, description: "Broken", desktop: <Broken />, id: "broken", mobile: <Broken />, route: "screens/broken.html", title: "Broken" }),
-  defineScreen({ ...metadata, description: "Static JSX siblings", desktop: <main id="static-children"><span>First</span><span>Second</span></main>, id: "static-children", mobile: <main id="static-children"><span>First</span><span>Second</span></main>, route: "screens/static-children.html", title: "Static children" }),
-  defineScreen({ ...metadata, description: "Dynamic JSX children", desktop: <DynamicChildren />, id: "dynamic-children", mobile: <DynamicChildren />, route: "screens/dynamic-children.html", title: "Dynamic children" })
-];
-`;
 }

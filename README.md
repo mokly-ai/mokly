@@ -50,6 +50,9 @@ styling, and rendering context.
   while removed screens and pages retain a read-only previous version.
 - **Inspect reusable components.** Register typed props, saved variants, slots,
   and local controls, then see where each component is used.
+- **Exercise real local state.** Opt into Serve-only Live previews for screens
+  and saved component variants while Changes, comparisons, builds, and exports
+  keep using deterministic static documents.
 - **Keep delivery simple.** A catalogue can be exported as static files and
   hosted without a Mokly server, source checkout, or Git installation.
 - **Stay app-independent.** Plain React, React Native Web, design systems, and
@@ -77,6 +80,7 @@ import { defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
   entriesDir: "docs/mockups/entries",
+  interactive: "serve",
   mockupsDir: "docs/mockups/generated",
 });
 ```
@@ -87,9 +91,12 @@ with product code, configure repository-relative `entries` globs such as
 `["src/**/*.mockup.{ts,tsx}"]` instead; set exactly one of `entries` or
 `entriesDir`, and ensure every configured glob matches an entry module.
 
-The default renderer is deliberately neutral; point `renderer` at your own
-module when screens need product theme providers, custom document markup, or
-React Native Web style collection. See the
+Remove `interactive: "serve"` when a catalogue needs only Static previews; the
+default is `"off"`. The default renderer is deliberately neutral; point
+`renderer` at your own module when screens need product theme providers,
+custom document markup, or React Native Web style collection. A Live-enabled
+custom renderer also exports `interactive` to reproduce its pure providers.
+See the
 [configuration guide](./docs/guides/start/configure.md).
 
 ### 3. Add a screen
@@ -158,7 +165,9 @@ defaults to the resolved Serve port plus one (or an OS-selected port when
 Serve uses 65535); `--interactive-port`, `--interactive-origin`, and
 `--strict-port` cover explicit ports and forwarding. Forwarded host names or
 port numbers require an explicit interactive origin. See the
-[interactive views contract](./docs/protocol/mokly-interactive-views.md).
+[interactive views overview](./docs/protocol/mokly-interactive-views.md),
+[browser runtime contract](./docs/protocol/mokly-interactive-views-runtime.md),
+and [Serve delivery contract](./docs/protocol/mokly-interactive-views-serve.md).
 
 When the first screen is working, continue with the guides for
 [theming and configuration](./docs/guides/authoring/config.md),
@@ -170,15 +179,15 @@ When the first screen is working, continue with the guides for
 Run the repository-local executable with `npx --no-install mokly`. Options
 follow the command, for example `mokly build --config tools/mokly.config.ts`.
 
-| Command                     | What it does                                                 |
-| --------------------------- | ------------------------------------------------------------ |
-| `mokly`                     | Serve the catalogue, render on demand, and watch for changes |
-| `mokly serve --open`        | Serve and open the local URL in a browser                    |
-| `mokly build`               | Validate and transactionally write generated output          |
-| `mokly check`               | Validate the catalogue without writing output                |
-| `mokly export --out <path>` | Build a complete static catalogue for hosting                |
-| `mokly publish`             | Export and upload to a compatible catalogue service          |
-| `mokly --help`              | Show every command and option                                |
+| Command                     | What it does                                            |
+| --------------------------- | ------------------------------------------------------- |
+| `mokly`                     | Serve, watch, and offer configured Static/Live previews |
+| `mokly serve --open`        | Serve and open the local catalogue in a browser         |
+| `mokly build`               | Validate and transactionally write generated output     |
+| `mokly check`               | Validate the catalogue without writing output           |
+| `mokly export --out <path>` | Build a complete static catalogue for hosting           |
+| `mokly publish`             | Export and upload to a compatible catalogue service     |
+| `mokly --help`              | Show every command and option                           |
 
 The CLI uses stable plain output in CI and a richer interactive display in a
 terminal. During watched Serve, press `h` to see shortcuts for opening,
@@ -269,7 +278,9 @@ interface appearance with any preview scheme. See the
 - [Removed content previews](./docs/protocol/mokly-removed-previews.md)
 - [Viewer appearance and preview schemes](./docs/protocol/mokly-viewer-appearance.md)
 - [Screen variants](./docs/protocol/mokly-screen-variants.md)
-- [Interactive views](./docs/protocol/mokly-interactive-views.md)
+- [Interactive views overview](./docs/protocol/mokly-interactive-views.md),
+  [browser runtime](./docs/protocol/mokly-interactive-views-runtime.md), and
+  [Serve delivery](./docs/protocol/mokly-interactive-views-serve.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
 - [Implementation plans](./plans/README.md)
@@ -294,9 +305,10 @@ npm run example:build
 npm run dev
 ```
 
-`npm run dev` serves the synthetic consumer in [`examples/basic`](./examples/basic/README.md)
-and watches its entries, renderer, and stylesheets. Changes to Mokly's own
-`src/` files require restarting the command so the CLI is rebuilt.
+`npm run dev` serves the synthetic consumer in
+[`examples/basic`](./examples/basic/README.md), including its Live stateful
+Guest picker, and watches its entries, renderer, and stylesheets. Changes to
+Mokly's own `src/` files require restarting the command so the CLI is rebuilt.
 
 Run the complete repository gate before submitting a change:
 

@@ -184,9 +184,15 @@ function InteractiveView({
   interactiveRenderer?: InteractiveRenderer;
 }): ReactNode {
   const node =
-    entry.kind === "screen"
-      ? entry[bootstrap.viewport]
-      : renderComponent(entry, componentProps!, bootstrap);
+    entry.kind === "screen" ? (
+      entry[bootstrap.viewport]
+    ) : (
+      <InteractiveComponentView
+        bootstrap={bootstrap}
+        entry={entry}
+        props={componentProps!}
+      />
+    );
   if (!interactiveRenderer) return node;
   return interactiveRenderer({
     colorScheme: bootstrap.colorScheme,
@@ -196,6 +202,18 @@ function InteractiveView({
     ...(bootstrap.variantId ? { variantId: bootstrap.variantId } : {}),
     ...(componentProps ? { componentProps } : {}),
   });
+}
+
+function InteractiveComponentView({
+  bootstrap,
+  entry,
+  props,
+}: {
+  bootstrap: InteractiveBootstrap;
+  entry: ComponentDefinition;
+  props: Readonly<Record<string, unknown>>;
+}): ReactNode {
+  return renderComponent(entry, props, bootstrap);
 }
 
 function diagnosticGeneration(document: Document): string | undefined {

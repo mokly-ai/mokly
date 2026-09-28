@@ -40,12 +40,14 @@ embedded hosts mount the same components with host-owned selection and slots.
 Consumer frames remain static HTML in script-disabled sandboxes; comparison
 panes present their static snapshot HTML as viewer-owned, script-disabled
 documents under the [comparison pane contract](./mokly-comparison-panes.md).
-The optional Live backend for local Serve is implemented as defined by the
-[interactive views contract](./mokly-interactive-views.md): it paints the same
-static document first and then mounts the consumer tree on a separate loopback
-origin, without changing comparison bytes. The shell's Static/Live toolbar
-control selects it for screen fragments and saved component variants whose
-entries have not opted out.
+The optional Live backend for local Serve is implemented by the
+[Live runtime](./mokly-interactive-views-runtime.md) and
+[Serve delivery](./mokly-interactive-views-serve.md) contracts: it paints the
+same static document first and then mounts the consumer tree on a separate
+loopback origin, without changing comparison bytes. The
+[shell's Static/Live control](./mokly-interactive-views-shell.md) selects it for
+screen fragments and saved component variants whose entries have not opted
+out.
 Selecting a removed page or screen captures and renders its pinned previous
 version in that shared tree through the lifecycle implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md).

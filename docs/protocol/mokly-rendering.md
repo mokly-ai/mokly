@@ -53,7 +53,8 @@ export default function render(input: RenderInput): string | RenderResult;
 The renderer module may also export a named `interactive(input)` function that
 returns the React node to mount for a Live view in local Serve. It receives
 the pure subset of `RenderInput` and is defined by the
-[interactive views contract](./mokly-interactive-views.md); Build, Check,
+[Live runtime contract](./mokly-interactive-views-runtime.md#renderer-participation);
+Build, Check,
 export and publication never call it.
 
 The string or `html` field must contain a complete `<html>` document. Optional

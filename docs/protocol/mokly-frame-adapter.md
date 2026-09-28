@@ -268,7 +268,7 @@ the app. `allow-scripts` enables document scripts as a browser capability;
 it cannot selectively authorize only Mokly's script. The local same-origin
 adapter never adopts this policy; local Serve uses this cross-origin policy
 only for Live frames on its separate interactive origin, as defined by the
-[interactive views contract](./mokly-interactive-views.md). Those mounts
+[shell frame contract](./mokly-interactive-views-shell.md#frames). Those mounts
 supply pending usage and therefore subscribe to navigation only. The shell's
 frame registry keeps one `postMessageAdapter` per Live origin and mounts each
 Live view in a new frame element that starts without a document, so a Static
@@ -289,7 +289,8 @@ canonical HTTP(S) origin distinct from the frame. Without an explicit
 forwarded Live origin, it must equal either loopback spelling at the resolved
 app port; explicit forwarded mode accepts the otherwise-unknown canonical app
 origin and uses the broader frame-ancestor policy documented by the
-[interactive views contract](./mokly-interactive-views.md). Unknown or
+[interactive-origin contract](./mokly-interactive-views-serve.md#interactive-origin).
+Unknown or
 duplicate query parameters remain invalid. A manual document request may omit
 `mokly-host`, but its inspector then has no host and stays inert.
 

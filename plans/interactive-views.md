@@ -41,8 +41,12 @@ Decisions:
   `interactive` because `live` already names the last-good routing runtime in
   `src/build/live_runtime.ts` and live evidence in Changes.
 
-Protocol owner: `docs/protocol/mokly-interactive-views.md` (created in
-Milestone 1). Related contracts: [runtime](../docs/protocol/mokly-runtime.md),
+Protocol entry point: [interactive views](../docs/protocol/mokly-interactive-views.md),
+with focused contracts for the
+[Live runtime](../docs/protocol/mokly-interactive-views-runtime.md),
+[Serve delivery](../docs/protocol/mokly-interactive-views-serve.md), and
+[shell](../docs/protocol/mokly-interactive-views-shell.md). Related contracts:
+[runtime](../docs/protocol/mokly-runtime.md),
 [rendering](../docs/protocol/mokly-rendering.md),
 [frame adapter](../docs/protocol/mokly-frame-adapter.md),
 [configuration](../docs/protocol/mokly-configuration.md),
@@ -441,20 +445,26 @@ was right-aligned, which no artboard shows.
 
 ## Milestone 10: Example adoption, smoke test and review
 
-- [ ] Enable `interactive: "serve"` in `examples/basic/mokly.config.ts`, add
+- [x] Enable `interactive: "serve"` in `examples/basic/mokly.config.ts`, add
       the `interactive` export to `examples/basic/renderer.tsx` mirroring its
       providers, and add one example screen with a genuinely stateful shared
       component so Live is demonstrable.
-- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`;
+- [x] Keep saved-component rendering beneath the renderer's Live provider tree
+      and add a real-browser regression test for provider context.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`;
       smoke through `npm run dev`: switch to Live, exercise the stateful
       control, follow a catalogue link from the Live frame, switch back to
       Static, and confirm Changes and comparisons are unaffected; save
       screenshots under `.context/`.
-- [ ] Confirm `mokly export` output contains no bundle, bootstrap or React
+- [x] Confirm `mokly export` output contains no bundle, bootstrap or React
       and that `mokly check` ignores the option.
-- [ ] Update `README.md` and `CHANGELOG.md` entries; move this plan to
-      Completed in `plans/README.md` when the PR merges.
-- [ ] Run the full check set and `cargo xtask check`; `git add -A`, commit
+- [x] Update the root and example READMEs and packaged guides. Note that
+      Release Please generates `CHANGELOG.md` from the Conventional Commit
+      title, so this milestone does not edit it.
+- [x] Split the interactive views protocol into focused overview, browser
+      runtime, Serve delivery, and shell documents; update every moved link and
+      remove stale delivery wording.
+- [x] Run the full check set and `cargo xtask check`; `git add -A`, commit
       with a Conventional Commits message, and push.
 - [ ] Review: after the push, use `docs/implementation-review-prompt.md`
       against `origin/main` and report numbered findings with severity,

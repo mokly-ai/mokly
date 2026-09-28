@@ -33,7 +33,8 @@ shuts down. Complete rendering and Changes run separately after listener readine
 for both watched and non-watched Serve. `catalogue.prepare-index` measures foreground
 metadata preparation; `preview.render` measures requested documents;
 `interactive.bundle` measures one lazy browser-bundle build for a catalogue
-generation when [interactive views](./mokly-interactive-views.md) are enabled.
+generation when [interactive views](./mokly-interactive-views-serve.md#browser-bundle)
+are enabled.
 Concurrent requests share that span; a failed build ends it with `error`, and
 the retained failed state emits no duplicate span for that generation. In
 watched Serve the span belongs to the HTTP child that owns the interactive

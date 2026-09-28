@@ -7,12 +7,11 @@ Delivered mockup scope for Milestones 2 and 8 of the
 design states depict the [interactive views contract](./mokly-interactive-views.md)
 and extend the [shell design](./mokly-shell-design.md) and
 [component workspace design](./mokly-component-workspace-design.md). The
-runtime Static/Live control implements these designs in Milestone 5,
-Milestone 7 removes it from opted-out entries, and Milestone 9 keeps every
+runtime Static/Live control implemented these designs in Milestone 5,
+Milestone 7 removed it from opted-out entries, and Milestone 9 kept every
 narrow toolbar without it beside the title, as the
-[shell contract](./mokly-interactive-views-shell.md) records. Milestone 8 adds
-the screen in Live whose Components tab points back to Static, which the shell
-already shows.
+[shell contract](./mokly-interactive-views-shell.md) records. Milestone 8 added
+the screen in Live whose Components tab points back to Static.
 
 ## Static/Live Control
 

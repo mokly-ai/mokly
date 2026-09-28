@@ -420,7 +420,7 @@ Shell state is one store scoped to a mounted viewer:
   pane size, active pick, highlight scope) lives with the mounted view and is
   discarded on route change or source replacement.
 - **Preview mode** is Static or Live for local Serve's
-  [interactive views](./mokly-interactive-views.md), with the Live failures
+  [interactive views](./mokly-interactive-views-shell.md), with the Live failures
   seen in this document. It persists across in-shell navigation, including
   through opted-out entries that show Static, is not part of public selection,
   and starts Static in every other host. The

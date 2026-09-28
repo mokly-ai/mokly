@@ -18,10 +18,11 @@ server render. Arbitrary interactive controls in published catalogues would
 require a browser renderer or hosted rendering service and are outside this
 change. No consumer JavaScript runtime is added to static preview frames. The
 optional Live preview defined by the
-[interactive views contract](./mokly-interactive-views.md) runs on a separate
-origin and does not host controls: editing and inspection stay on the Static
-frame, and switching to Live discards temporary edits exactly as changing the
-saved variant does.
+[interactive Serve contract](./mokly-interactive-views-serve.md#interactive-origin)
+runs on a separate origin and does not host controls: editing and inspection
+stay on the Static frame, and switching to Live discards temporary edits
+exactly as changing the saved variant does, under the
+[shell contract](./mokly-interactive-views-shell.md#inspector-while-live).
 
 The Props/Controls tab in the shared component inspector lists only explicitly declared editable
 props. Data props without controls remain visible in the inspector and still
