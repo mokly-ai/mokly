@@ -30,6 +30,7 @@ import {
   inputChanges as entryInputChanges,
   type InputChange,
 } from "./workspace_input_changes.js";
+import { workspaceEntryWithoutInteractive } from "./workspace_privacy.js";
 import {
   changedViewsBySelection,
   type ChangedViewsBySelection,
@@ -55,6 +56,8 @@ export interface UsageLink {
   comparisonEligible: boolean;
 }
 export interface WorkspaceData {
+  /** Private local-Serve eligibility; absence never enables Live. */
+  interactive?: boolean;
   previewGeneration?: string;
   usageComplete?: boolean;
   renderCapability?: RenderCapability;
@@ -109,6 +112,14 @@ export function workspaceData(
       : item.kind !== "collection" && item.route === entry.route,
   );
   const removed = !catalogue.byRoute.has(entry.route);
+  const interactive =
+    context.interactive &&
+    !context.delivery &&
+    !removed &&
+    context.workspaceInteractive?.entryId === entry.id &&
+    context.workspaceInteractive.route === entry.route
+      ? context.workspaceInteractive.value
+      : undefined;
   const change = result?.changes.find((item) =>
     entry.kind === "component"
       ? (item.after ?? item.before)?.id === entry.id
@@ -216,7 +227,8 @@ export function workspaceData(
     ...(entry.kind === "component" && context.renderCapability
       ? { renderCapability: context.renderCapability }
       : {}),
-    entry,
+    ...(interactive === undefined ? {} : { interactive }),
+    entry: workspaceEntryWithoutInteractive(entry),
     removed,
     comparisons: context.comparisons ?? false,
     comparisonEligible: shownComparisonEligible(status, entry.kind),

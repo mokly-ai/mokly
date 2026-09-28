@@ -16,7 +16,10 @@ Recovery converts only the `view`/`changedOnly` spelling and passes every other
 validated shell field through, including the Static/Live preview mode, so a
 watched reload that replaces the Live generation keeps Live selected.
 Public catalogue and private workspace evidence are adopted as one revision;
-authored content changes retain the reload lifecycle.
+authored content changes retain the reload lifecycle. The workspace's optional
+route-scoped `interactive` boolean stays inside that private atomic evidence and
+never enters the public catalogue or static host. Its absence is fail-closed
+unknown eligibility for Live.
 
 The synchronous viewer bootstrap captures native disclosure choices made before
 module initialization. Browse preferences and one-shot recovery retain these

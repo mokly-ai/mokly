@@ -23,7 +23,7 @@ function workspace(html: string): WorkspaceData {
   return JSON.parse(match[1]!) as WorkspaceData;
 }
 test("static export keeps component Changes, affected screens, saved variants and authenticated metadata", async (t) => {
-  const source = componentEntrySource();
+  const source = optedOutComponentSource();
   const fixture = await createExportFixture(source, {
     extraConfig: 'colorSchemes: ["light", "dark"],',
   });
@@ -51,6 +51,14 @@ test("static export keeps component Changes, affected screens, saved variants an
     files.get("view/components/action.html")!.toString(),
   );
   const home = workspace(files.get("view/screens/home.html")!.toString());
+  assert.equal("interactive" in action, false);
+  assert.equal("interactive" in action.entry, false);
+  assert.equal("interactive" in home, false);
+  assert.equal("interactive" in home.entry, false);
+  assert.doesNotMatch(
+    files.get("__mokly/catalogue.json")!.toString(),
+    /"interactive"/,
+  );
   assert.equal(action.variants.length, 2);
   assert.ok(action.affected.some((item) => item.route === "screens/home.html"));
   assert.equal(home.change, undefined);
@@ -112,7 +120,7 @@ test("static export retains removed saved variants and baseline component consum
 });
 
 test("preview capture retains route-scoped workspace evidence after removing live capabilities", async (t) => {
-  const source = componentEntrySource();
+  const source = optedOutComponentSource();
   const fixture = await createExportFixture(source);
   t.after(fixture.close);
   await fs.writeFile(
@@ -140,13 +148,27 @@ test("preview capture retains route-scoped workspace evidence after removing liv
   assert.doesNotMatch(actionPage, /react-host\.js/);
   assert.match(actionPage, /data-mokly-static=""/);
   assert.match(actionPage, /react-shell\.js/);
-  assert.ok(
-    workspace(actionPage).affected.some(
-      (item) => item.route === "screens/home.html",
-    ),
-  );
+  const action = workspace(actionPage);
+  const home = workspace(homePage);
+  assert.ok(action.affected.some((item) => item.route === "screens/home.html"));
+  assert.equal("interactive" in action, false);
+  assert.equal("interactive" in action.entry, false);
   assert.deepEqual(
-    workspace(homePage).relatedComponents.map((item) => item.title),
+    home.relatedComponents.map((item) => item.title),
     ["Action"],
   );
+  assert.equal("interactive" in home, false);
+  assert.equal("interactive" in home.entry, false);
 });
+
+function optedOutComponentSource(): string {
+  return componentEntrySource()
+    .replace(
+      "const action = defineComponent({ ...metadata,",
+      "const action = defineComponent({ ...metadata, interactive: false,",
+    )
+    .replace(
+      'defineScreen({ ...metadata, id: "home"',
+      'defineScreen({ ...metadata, interactive: false, id: "home"',
+    );
+}

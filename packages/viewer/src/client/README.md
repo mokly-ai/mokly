@@ -14,6 +14,10 @@ import resolves within that complete inventory.
 source identity. `host_capabilities.ts` defines the behavior context, atomic
 public/private evidence revision and route/source cancellation scope. Both are
 kept protocol modules; static export omits their standalone browser outputs.
+`workspace_descriptor.ts` accepts a route-root `interactive` boolean only for a
+current private workspace paired with the Live descriptor, rejects malformed
+values and the old nested-entry form, and rejects the field entirely for static
+evidence. Absence is valid unknown eligibility and must not enable Live.
 
 Disclosure capture and pre-hydration navigation width capture are owned directly
 under `src/standalone`. The synchronous navigation bootstrap records native

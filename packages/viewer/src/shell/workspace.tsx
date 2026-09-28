@@ -21,6 +21,7 @@ import { WorkspaceControls } from "./workspace_controls.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { useWorkspaceInspection } from "./workspace_inspection.js";
 import { WorkspaceInspector } from "./workspace_inspector.js";
+import { staticWorkspaceEvidence } from "./workspace_privacy.js";
 import { WorkspaceProps } from "./workspace_props.js";
 import { WorkspaceStage } from "./workspace_stage.js";
 import { WorkspaceVariantBar } from "./workspace_variant_bar.js";
@@ -281,7 +282,10 @@ export function ComponentWorkspace({
       <script
         data-workspace-data=""
         dangerouslySetInnerHTML={{
-          __html: canonicalJson(data).replaceAll("<", "\\u003c"),
+          __html: canonicalJson(staticWorkspaceEvidence(data)).replaceAll(
+            "<",
+            "\\u003c",
+          ),
         }}
         type="application/json"
       />

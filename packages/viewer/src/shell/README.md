@@ -94,9 +94,10 @@ canonical key ordering so their validated client projections retain the exact
 server bytes during hydration. `comparison_views.tsx` renders React-owned frame
 chrome around the snapshots from validated comparison metadata. The CLI
 supplies its private live capabilities through typed server context. The
-private `live-index-1` metadata also carries a resolved `interactive` boolean
-only on screen and component entries; public manifests never expose that local
-Serve capability. Standalone
+private Serve workspace also carries one resolved `interactive` boolean for a
+current screen or component route when known; absence means the shell must not
+offer Live. The nested entry and public manifests never expose that local
+capability. Standalone
 full-document composition lives in `src/standalone`: its bootstrap contains
 the validated public catalogue and shell delivery state for Serve. Static pages
 carry a compact identity/revision reference and resolve the shared finalized
@@ -157,6 +158,13 @@ panels for the Static-only notice while Live is on screen. Flow steps, pages,
 comparisons and removed entries never receive Live wiring. The preview mode
 rides in the watched-reload recovery snapshot, so a new generation remounts
 Live, while an ordinary load starts Static.
+
+The backend eligibility accessor for the follow-up UI is
+`useViewerLiveState().workspace?.interactive`. A known value survives SSR,
+hydration, route evidence loads and same-generation evidence refreshes, and is
+replaced with the runtime on watched rebuild. `undefined` means unknown or not
+applicable and must never enable Live. The current control intentionally does
+not consume it until Interactive Views Milestone 7.
 
 Before standalone hydration, stored disclosure and split-width preferences are
 applied to the server DOM. Disclosure helpers treat native `<details>` groups

@@ -141,10 +141,47 @@ test("Live reports pre-mount failures without replacing static content", async (
   });
 });
 
+test("Live does not warn that static JSX siblings need keys", async ({
+  page,
+}) => {
+  const warnings = reactKeyWarnings(page);
+  await mountInteractiveFrame(page, fixture, fixture.staticChildrenPath);
+
+  await expect(
+    page.frameLocator("#frame").locator("#static-children span"),
+  ).toHaveText(["First", "Second"]);
+  expect(warnings).toEqual([]);
+});
+
+test("Live still warns for an unkeyed dynamic JSX list", async ({ page }) => {
+  const warnings = reactKeyWarnings(page);
+  await mountInteractiveFrame(page, fixture, fixture.dynamicChildrenPath);
+
+  await expect(
+    page.frameLocator("#frame").locator("#dynamic-children span"),
+  ).toHaveText(["First", "Second"]);
+  await expect.poll(() => warnings.length).toBe(1);
+  expect(warnings[0]).toContain(
+    'Each child in a list should have a unique "key" prop.',
+  );
+});
+
 async function navigationIds(page: Page) {
   return page.evaluate(() =>
     (window as unknown as InteractiveTestWindow).frameEvents.flatMap((event) =>
       event.type === "navigation" ? [event.navigation.id] : [],
     ),
   );
+}
+
+function reactKeyWarnings(page: Page): string[] {
+  const warnings: string[] = [];
+  page.on("console", (message) => {
+    if (
+      (message.type() === "error" || message.type() === "warning") &&
+      message.text().includes("Each child in a list should have a unique")
+    )
+      warnings.push(message.text());
+  });
+  return warnings;
 }

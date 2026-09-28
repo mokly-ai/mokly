@@ -304,7 +304,7 @@ Milestones 6 and 7.
 - [x] Update `packages/viewer/README.md` and `packages/viewer/src/shell/README.md`;
       run the full check set and `cargo xtask check`; commit and push.
 
-## Milestone 6: Per-entry Live eligibility for the shell
+## Milestone 6: Per-entry Live eligibility for the shell — completed
 
 Backend. Discovered while implementing Milestone 5: the resolved per-entry
 `interactive` value reaches the private catalogue index, but the browser shell
@@ -312,20 +312,28 @@ receives only the public catalogue and route-scoped private workspace
 evidence, and once Serve adopts the completed manifest that evidence no longer
 carries the value, so the shell cannot hide Static/Live for an opted-out entry.
 
-- [ ] Define in `mokly-interactive-views.md` and `mokly-live-capabilities.md`
+- [x] Define in `mokly-interactive-views.md` and `mokly-live-capabilities.md`
       how Serve carries each current screen's and component's resolved
       `interactive` value from `ComponentRuntime.interactiveEntries` in the
       private route-scoped workspace evidence, for the live index and the
-      completed manifest alike, and never in public catalogue JSON, static
-      workspace evidence, export or publication.
-- [ ] Implement it in Serve's private workspace evidence and its validation in
+      completed manifest alike; define missing values as unknown, fail-closed
+      Live eligibility while Static remains available; and never expose the
+      value in public catalogue JSON, static workspace evidence, export or
+      publication.
+- [x] Implement it in Serve's private workspace evidence and its validation in
       `packages/viewer/src/client/workspace_descriptor.ts`, surviving
       `completeCatalogue`, route evidence loads, evidence refreshes and watched
-      rebuilds.
-- [ ] Tests: opted-out and eligible screens and components before and after
+      rebuilds; omit and diagnose a missing runtime value once per entry and
+      generation instead of failing the route.
+- [x] Tests: opted-out and eligible screens and components before and after
       background completion, and the value's absence from public JSON, static
-      evidence and export.
-- [ ] Update `src/server/README.md` and the viewer READMEs; run the full check
+      evidence and export; missing screen and component values keep Static
+      routes available, omit eligibility and report one diagnostic each.
+- [x] Fix the Live browser bundle's `jsxDEV` shim so static JSX siblings retain
+      esbuild's static-children signal without suppressing React's warning for
+      genuinely unkeyed dynamic lists; cover both outcomes in the real-browser
+      Live harness.
+- [x] Update `src/server/README.md` and the viewer READMEs; run the full check
       set and `cargo xtask check`; commit and push.
 
 ## Milestone 7: Hide Static/Live for opted-out entries
@@ -334,8 +342,9 @@ Tags: ui
 
 - [ ] Hide the Static/Live control, with no placeholder gap, for an entry
       whose resolved `interactive` is false, reading the private eligibility
-      delivered in Milestone 6 (moved from Milestone 5), and remove the
-      interim unavailable fallback note from the contract.
+      delivered in Milestone 6 (moved from Milestone 5); never offer or mount
+      Live while eligibility is unknown; and remove the interim unavailable
+      fallback note from the contract.
 - [ ] Browser tests: toggle visibility per entry for an opted-out screen and an
       opted-out component, alongside eligible entries of the same catalogue
       (moved from Milestone 5).

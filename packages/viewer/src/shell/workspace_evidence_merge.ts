@@ -17,6 +17,7 @@ export function mergeWorkspaceEvidence(
     "usageComplete",
     "previewGeneration",
     "renderCapability",
+    "interactive",
   ] as const)
     delete current[key];
   Object.assign(current, next);

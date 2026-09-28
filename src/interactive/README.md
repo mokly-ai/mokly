@@ -29,7 +29,10 @@ The esbuild implementation rejects Node built-ins with an
 `interactive-bundle` error naming the importing module. Browser compilation is
 never called by Build, Check, Export, or Publish. A rejected build remains
 cached for its generation until explicit invalidation; a later generation gets
-an independent attempt.
+an independent attempt. The browser-only JSX development shim preserves
+esbuild's static-children flag by selecting the consumer's `jsxs` helper for
+static siblings and `jsx` for dynamic children, so React keeps meaningful key
+warnings without misclassifying ordinary JSX.
 
 `document.ts` accepts only a document already processed by
 `adaptBrowseDocument`. It validates without rewriting that adapter's inert map,

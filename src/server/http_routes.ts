@@ -25,6 +25,7 @@ import type { ReviewRoutes } from "./review_routes.js";
 import { serveStatic } from "./static_routes.js";
 import type { ChangesStatus } from "./update_messages.js";
 import { redirectId, renderView } from "./view_routes.js";
+import type { WorkspaceEligibilitySource } from "./workspace_eligibility.js";
 
 /** Dispatch a request against one validated catalogue generation. */
 export async function handleCatalogueRequest(
@@ -47,6 +48,7 @@ export async function handleCatalogueRequest(
   publicCatalogue?: PublicCatalogueSource,
   interactive?: InteractiveServer,
   requestHeaders: IncomingHttpHeaders = {},
+  workspaceEligibility?: WorkspaceEligibilitySource,
 ): Promise<void> {
   const url = new URL(rawUrl, "http://mokly.invalid");
   if (
@@ -180,6 +182,7 @@ export async function handleCatalogueRequest(
       context,
       method,
       documents,
+      workspaceEligibility,
     );
   return send(
     response,

@@ -43,13 +43,21 @@ export async function interactiveFixture() {
   const broken = compilation.manifest.entries.find(
     (entry) => entry.kind === "screen" && entry.id === "broken",
   );
+  const dynamicChildren = compilation.manifest.entries.find(
+    (entry) => entry.kind === "screen" && entry.id === "dynamic-children",
+  );
   const home = compilation.manifest.entries.find(
     (entry) => entry.kind === "screen" && entry.id === "home",
+  );
+  const staticChildren = compilation.manifest.entries.find(
+    (entry) => entry.kind === "screen" && entry.id === "static-children",
   );
   if (
     component?.kind !== "component" ||
     broken?.kind !== "screen" ||
-    home?.kind !== "screen"
+    dynamicChildren?.kind !== "screen" ||
+    home?.kind !== "screen" ||
+    staticChildren?.kind !== "screen"
   )
     throw new Error("Interactive browser fixture entries are missing");
   const livePath = component.variants[0]?.fragments.mobile;
@@ -64,6 +72,8 @@ export async function interactiveFixture() {
   for (const [route, entryId, variantId] of [
     [livePath, "live-panel", "default"],
     [errorPath, "broken", undefined],
+    [staticChildren.fragments.mobile, "static-children", undefined],
+    [dynamicChildren.fragments.mobile, "dynamic-children", undefined],
   ] as const) {
     const compiled = compilation.outputs.get(route);
     if (!compiled) throw new Error(`Missing compiled fixture route: ${route}`);
@@ -129,7 +139,9 @@ export async function interactiveFixture() {
     frames,
     host,
     livePath: `/static/${livePath}`,
+    dynamicChildrenPath: `/static/${dynamicChildren.fragments.mobile}`,
     preMountPath,
+    staticChildrenPath: `/static/${staticChildren.fragments.mobile}`,
     async close() {
       await frames.close();
       await host.close();
@@ -250,12 +262,19 @@ function Broken() {
   if (typeof window !== "undefined") throw new Error("browser render exploded");
   return <main><p id="static-error-fallback">Static error fallback</p><MockLink id="static-error-link" to="details">Open static details</MockLink></main>;
 }
+function DynamicChildren() {
+  const labels = ["First", "Second"];
+  if (typeof window === "undefined") return <main id="dynamic-children">{labels.map((label) => <span key={label}>{label}</span>)}</main>;
+  return <main id="dynamic-children">{labels.map((label) => <span>{label}</span>)}</main>;
+}
 export const mockups = [
-  defineCollection({ ...metadata, childIds: ["live-panel", "home", "details", "broken"], description: "Live fixtures", id: "fixtures", title: "Fixtures" }),
+  defineCollection({ ...metadata, childIds: ["live-panel", "home", "details", "broken", "static-children", "dynamic-children"], description: "Live fixtures", id: "fixtures", title: "Fixtures" }),
   panel.entry,
   defineScreen({ ...metadata, description: "Home", desktop: <main id="static-pre-mount">Static pre-mount fallback</main>, id: "home", mobile: <main id="static-pre-mount">Static pre-mount fallback</main>, route: "screens/home.html", title: "Home" }),
   defineScreen({ ...metadata, description: "Details", desktop: <main>Details</main>, id: "details", mobile: <main>Details</main>, route: "screens/details.html", title: "Details" }),
-  defineScreen({ ...metadata, description: "Broken", desktop: <Broken />, id: "broken", mobile: <Broken />, route: "screens/broken.html", title: "Broken" })
+  defineScreen({ ...metadata, description: "Broken", desktop: <Broken />, id: "broken", mobile: <Broken />, route: "screens/broken.html", title: "Broken" }),
+  defineScreen({ ...metadata, description: "Static JSX siblings", desktop: <main id="static-children"><span>First</span><span>Second</span></main>, id: "static-children", mobile: <main id="static-children"><span>First</span><span>Second</span></main>, route: "screens/static-children.html", title: "Static children" }),
+  defineScreen({ ...metadata, description: "Dynamic JSX children", desktop: <DynamicChildren />, id: "dynamic-children", mobile: <DynamicChildren />, route: "screens/dynamic-children.html", title: "Dynamic children" })
 ];
 `;
 }

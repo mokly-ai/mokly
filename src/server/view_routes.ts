@@ -14,6 +14,10 @@ import type { DocumentService } from "./demand/service.js";
 import { requestedFragment, withFragmentQuery } from "./fragments.js";
 import { notFoundPage, viewPage } from "./pages.js";
 import { safeDecode, safeDecodePath, send } from "./respond.js";
+import {
+  resolvedWorkspaceInteractive,
+  type WorkspaceEligibilitySource,
+} from "./workspace_eligibility.js";
 
 export async function redirectId(
   response: ServerResponse,
@@ -76,6 +80,7 @@ export async function renderView(
   context: ShellContext,
   method: string,
   documents?: DocumentService,
+  workspaceEligibility?: WorkspaceEligibilitySource,
 ): Promise<void> {
   const route = safeDecodePath(encodedRoute);
   const snapshots = url.searchParams.getAll("snapshot");
@@ -125,11 +130,17 @@ export async function renderView(
   if (fragment === null) {
     return send(response, 400, "text/plain", "Invalid fragment query", method);
   }
+  const workspaceInteractive = resolvedWorkspaceInteractive(
+    manifestEntry,
+    removed,
+    workspaceEligibility,
+  );
   const viewContext = {
     ...context,
     ...(route ? { activeRoute: route } : {}),
     ...(fragment ? { fragment } : {}),
     ...(selected?.snapshotId ? { snapshotId: selected.snapshotId } : {}),
+    ...(workspaceInteractive ? { workspaceInteractive } : {}),
   };
   return send(
     response,

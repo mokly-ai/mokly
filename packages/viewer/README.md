@@ -343,11 +343,14 @@ over later URL pins during navigation and Back/Forward. Missing startup assets
 leave Appearance hidden; back/forward-cache restoration retains and refreshes
 the controller. Final disposal removes both system and selector listeners.
 Serve loads live capabilities separately, including optional private Live
-origin and bundle-readiness state; static navigation reads inert workspace
-evidence from the same finalized deployment. Neither capability enters public
-catalogue JSON or exported documents. With that private Live state, the shared
-shell shows a Static/Live control for screens and saved variants and mounts
-Live frames through an internal `postMessageAdapter` on the Live origin.
+origin, bundle-readiness state, and one route-scoped `interactive` eligibility
+boolean for each current screen or component workspace when known. An absent
+value is unknown and cannot enable Live. Static navigation reads
+inert workspace evidence from the same finalized deployment. None of this
+private state enters public catalogue JSON or exported documents. With the
+private Live state, the shared shell shows a Static/Live control for screens and
+saved variants and mounts Live frames through an internal `postMessageAdapter`
+on the Live origin.
 Embedded `MoklyViewer` hosts never receive it, so they keep Static previews and
 the unchanged toolbar.
 

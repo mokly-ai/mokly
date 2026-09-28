@@ -2,12 +2,12 @@
 
 ## Active
 
-- [Interactive Views](./interactive-views.md) — Milestones 1–5 complete: the
+- [Interactive Views](./interactive-views.md) — Milestones 1–6 complete: the
   contract documentation, Static/Live design catalogue, browser bundle,
   fresh-mount runtime, isolated interactive origin, and the shell's Static/Live
-  control. Milestones 6–7 deliver per-entry eligibility to the shell and hide
-  the control for opted-out entries; Milestone 8 adopts the example, smoke
-  tests and reviews.
+  control, including private route-scoped eligibility. Milestone 7 hides the
+  control for opted-out entries; Milestone 8 adopts the example, smoke tests
+  and reviews.
 - [Comparison Pane Scroll Alignment](./comparison-pane-scroll-alignment.md)
   — Overlay and Difference drift apart when scrolled because each snapshot
   scrolls inside its own opaque frame; comparison panes become viewer-owned,

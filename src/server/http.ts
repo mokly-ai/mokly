@@ -37,6 +37,7 @@ import {
   selectedReviewSource,
 } from "./review_sources.js";
 import type { ChangesStatus } from "./update_messages.js";
+import { ServeWorkspaceEligibility } from "./workspace_eligibility.js";
 
 /** Start Browse only after manifest validation succeeds. */
 export async function startCatalogueServer(
@@ -85,6 +86,7 @@ export async function startCatalogueServer(
   const fontAssets = timeSync("server.fonts", () => loadShellFontAssets());
   const streams = new Set<ServerResponse>();
   const interactiveState: { server?: InteractiveServer } = {};
+  const eligibility = new ServeWorkspaceEligibility(options.onDiagnostic);
   let closing: Promise<void> | undefined;
   const reviewRoutes = options.review
     ? new ReviewRoutes(
@@ -178,6 +180,9 @@ export async function startCatalogueServer(
       publicCatalogue,
       interactiveState.server,
       request.headers,
+      interactiveState.server && componentRuntime
+        ? eligibility.source(componentRuntime)
+        : undefined,
     ).catch(() => {
       if (!response.destroyed && !response.headersSent)
         send(

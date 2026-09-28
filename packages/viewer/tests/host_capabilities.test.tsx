@@ -15,7 +15,10 @@ import {
   viewerCapabilityDescriptor,
   viewerCapabilityRequest,
 } from "../src/client/host_capability_descriptor.js";
-import { readViewerWorkspace } from "../src/client/workspace_descriptor.js";
+import {
+  readViewerPrivateWorkspace,
+  readViewerWorkspace,
+} from "../src/client/workspace_descriptor.js";
 import {
   ViewerCapabilityBoundary,
   useViewerCapabilities,
@@ -192,6 +195,8 @@ test("live SSR carries a private descriptor while export carries no host loader"
     ...defaultSelection,
     screenId: catalogue.components[0]!.id,
   });
+  if (view.kind !== "target")
+    throw new Error("Expected a target fixture view.");
   const liveContext = {
     base: source.base,
     contentVersion: source.contentRevision,
@@ -204,6 +209,11 @@ test("live SSR carries a private descriptor while export carries no host loader"
     readModel: catalogue,
     renderCapability: { generation, token },
     updateVersion: source.updateVersion,
+    workspaceInteractive: {
+      entryId: view.target.entry.id,
+      route: view.target.entry.route,
+      value: false,
+    },
   };
   assert.deepEqual(
     viewerCapabilityDescriptor(catalogue, liveContext)?.source,
@@ -224,14 +234,51 @@ test("live SSR carries a private descriptor while export carries no host loader"
     state: "idle",
   });
   assert.equal(view.kind, "target");
-  if (view.kind !== "target")
-    throw new Error("Expected a target fixture view.");
   assert.equal(descriptor.workspace.entry.route, view.target.entry.route);
   assert.equal(descriptor.workspace.base, source.base);
+  assert.equal(descriptor.workspace.interactive, false);
+  assert.equal("interactive" in descriptor.workspace.entry, false);
   assert.equal("renderCapability" in descriptor.workspace, false);
+  assert.deepEqual(readViewerCapabilityDescriptor(descriptor), descriptor);
+  assert.deepEqual(
+    readViewerPrivateWorkspace(descriptor.workspace, source, true),
+    descriptor.workspace,
+  );
+  assert.throws(
+    () => readViewerWorkspace(descriptor.workspace, source),
+    /Invalid viewer workspace evidence/,
+  );
+  const { interactive: _eligibility, ...workspaceWithoutEligibility } =
+    descriptor.workspace;
+  assert.deepEqual(
+    readViewerCapabilityDescriptor({
+      ...descriptor,
+      workspace: workspaceWithoutEligibility,
+    }).workspace,
+    workspaceWithoutEligibility,
+  );
+  assert.throws(
+    () =>
+      readViewerCapabilityDescriptor({
+        ...descriptor,
+        workspace: { ...descriptor.workspace, interactive: "unknown" },
+      }),
+    /Invalid viewer workspace evidence/,
+  );
+  const { interactive: _interactive, ...descriptorWithoutInteractive } =
+    descriptor;
+  assert.throws(
+    () => readViewerCapabilityDescriptor(descriptorWithoutInteractive),
+    /Invalid viewer workspace evidence/,
+  );
   for (const leaked of [{ token }, { renderCapability: { generation, token } }])
     assert.throws(
-      () => readViewerWorkspace({ ...descriptor.workspace, ...leaked }, source),
+      () =>
+        readViewerPrivateWorkspace(
+          { ...descriptor.workspace, ...leaked },
+          source,
+          true,
+        ),
       /Invalid viewer workspace evidence/,
     );
 

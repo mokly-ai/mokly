@@ -14,6 +14,7 @@ import {
   createReactViewerCapabilities,
   type ReactCapabilityEnvironment,
 } from "../dist/client/react_capabilities.js";
+import { mergeWorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence_merge.js";
 
 const catalogue = readCatalogue(
   JSON.parse(
@@ -300,6 +301,71 @@ test("route evidence atomically carries a newer public and private revision", as
   );
 });
 
+test("route loads and evidence refreshes retain private Live eligibility", async () => {
+  const installed = interactiveDescriptor(true);
+  const route = installed.workspace!.entry.route;
+  const next = structuredClone(catalogue);
+  next.revision.evidence += 1;
+  const nextDescriptor: ViewerCapabilityDescriptor = {
+    ...installed,
+    source: {
+      ...installed.source,
+      evidenceRevision: next.revision.evidence,
+      updateVersion: installed.source.updateVersion + 1,
+    },
+    workspace: { ...installed.workspace!, interactive: true },
+  };
+  const routeEnvironment = new FakeEnvironment();
+  routeEnvironment.descriptor = nextDescriptor;
+  routeEnvironment.publicCatalogue = next;
+  routeEnvironment.location.href = `http://localhost/view/${route}`;
+  routeEnvironment.responses.push(htmlResponse(routeEnvironment.location.href));
+
+  const routed = await createReactViewerCapabilities(
+    installed,
+    routeEnvironment,
+  ).evidence.loadRouteEvidence(
+    { route, source: installed.source },
+    new AbortController().signal,
+  );
+  assert.equal(routed?.workspace?.interactive, true);
+  assert.ok(routed?.workspace);
+  const merged = { ...routed.workspace };
+  delete merged.interactive;
+  mergeWorkspaceEvidence(merged, routed.workspace);
+  assert.equal(merged.interactive, true);
+
+  const updateEnvironment = new FakeEnvironment();
+  updateEnvironment.descriptor = nextDescriptor;
+  updateEnvironment.publicCatalogue = next;
+  updateEnvironment.location.href = `http://localhost/view/${route}`;
+  updateEnvironment.responses.push(
+    htmlResponse(updateEnvironment.location.href),
+    jsonResponse("http://localhost/__mokly/catalogue.json", next),
+  );
+  const adopted: boolean[] = [];
+  const controller = new AbortController();
+  createReactViewerCapabilities(installed, updateEnvironment).updates.subscribe(
+    { route, source: installed.source },
+    {
+      ...actions(),
+      adoptEvidence(revision) {
+        if (revision.workspace?.interactive !== undefined)
+          adopted.push(revision.workspace.interactive);
+        return true;
+      },
+    },
+    controller.signal,
+  );
+  updateEnvironment.sources[0]!.emit(
+    "update",
+    String(nextDescriptor.source.updateVersion),
+  );
+  await setImmediate();
+  assert.deepEqual(adopted, [true]);
+  controller.abort();
+});
+
 test("workspace capabilities reject a stale routed request before transport", () => {
   const environment = new FakeEnvironment();
   let loads = 0;
@@ -354,6 +420,20 @@ function currentRequest(): ViewerCapabilityRequest {
   return {
     route: descriptor.workspace!.entry.route,
     source: descriptor.source,
+  };
+}
+
+function interactiveDescriptor(
+  interactive: boolean,
+): ViewerCapabilityDescriptor {
+  return {
+    ...descriptor,
+    interactive: {
+      generation: "a".repeat(32),
+      port: 4174,
+      state: "ready",
+    },
+    workspace: { ...descriptor.workspace!, interactive },
   };
 }
 

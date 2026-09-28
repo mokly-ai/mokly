@@ -11,6 +11,15 @@ import type { LiveChangesStatus } from "./metadata.js";
 export interface ShellContext {
   /** Private Live listener identity and current browser-bundle readiness. */
   interactive?: ViewerInteractiveDescriptor;
+  /**
+   * Private route-scoped eligibility paired with `interactive`; omitted from
+   * public bootstrap state and static delivery.
+   */
+  workspaceInteractive?: {
+    entryId: string;
+    route: string;
+    value: boolean;
+  };
   /** Accepted public snapshot supplied by the first-party server integration. */
   readModel?: CatalogueReadModel;
   /** Revision of the rendered content, independent of background evidence. */

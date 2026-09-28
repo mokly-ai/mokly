@@ -10,7 +10,7 @@ import {
   readViewerInteractiveDescriptor,
   type ViewerInteractiveDescriptor,
 } from "./interactive_capability.js";
-import { readViewerWorkspace } from "./workspace_descriptor.js";
+import { readViewerPrivateWorkspace } from "./workspace_descriptor.js";
 
 /** Stable source identity plus the revisions seen by one shell transition. */
 export interface ViewerCapabilitySource {
@@ -72,7 +72,12 @@ export function viewerCapabilityDescriptor(
   const privateWorkspace = workspace
     ? workspaceWithoutRenderCapability(workspace)
     : undefined;
-  if (privateWorkspace) readViewerWorkspace(privateWorkspace, source);
+  if (privateWorkspace)
+    readViewerPrivateWorkspace(
+      privateWorkspace,
+      source,
+      context.interactive !== undefined,
+    );
   return {
     schemaVersion: 1,
     source,
@@ -96,7 +101,11 @@ export function readViewerCapabilityDescriptor(
     source,
   );
   const interactive = readInteractive(value["interactive"]);
-  const workspace = readWorkspace(value["workspace"], source);
+  const workspace = readWorkspace(
+    value["workspace"],
+    source,
+    interactive !== undefined,
+  );
   return {
     schemaVersion: 1,
     source,
@@ -177,9 +186,10 @@ function readRenderCapability(
 function readWorkspace(
   value: unknown,
   source: ViewerCapabilitySource,
+  interactive: boolean,
 ): WorkspaceData | undefined {
   if (value === undefined) return;
-  return readViewerWorkspace(value, source);
+  return readViewerPrivateWorkspace(value, source, interactive);
 }
 
 function workspaceWithoutRenderCapability(data: WorkspaceData): WorkspaceData {

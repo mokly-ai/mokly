@@ -3,11 +3,10 @@
 ## Delivery Status
 
 Tracked by the [interactive views plan](../../plans/interactive-views.md).
-Milestones 1–5 implement the contract, browser runtime, isolated Serve origin,
-lazy bundle state, private shell transport, and the shell's Static/Live
-control. Hiding the control for an opted-out entry waits for Serve to deliver
-that entry's resolved eligibility to the shell, as recorded under
-[Per-entry opt-out](#per-entry-opt-out).
+Milestones 1–6 implement the contract, browser runtime, isolated Serve origin,
+lazy bundle state, private shell transport, the shell's Static/Live control,
+and route-scoped per-entry eligibility. Hiding the control for an opted-out
+entry remains the Milestone 7 UI change.
 
 ## Purpose
 
@@ -54,13 +53,27 @@ query, fragment or userinfo. `--strict-port` applies to both Serve listeners.
 field can only remove Live from one entry. Screen variants inherit the parent's
 value unless they declare their own. Collections, pages and use cases reject
 the field. An opted-out entry shows no Static/Live control and refuses Live
-document requests with 404 on the interactive origin. The private catalogue
-index carries the resolved value, but the browser shell receives only the
-public catalogue and route-scoped private workspace evidence, and that
-evidence does not yet carry it once Serve adopts the completed manifest.
-Until Serve adds the resolved value to that private evidence, an opted-out
-entry offers the control and its refused Live document ends in the unavailable
-state below.
+document requests with 404 on the interactive origin. When the global private
+interactive descriptor exists, each current screen or component route's
+private workspace evidence contains `interactive: boolean` at the workspace
+root when the accepted runtime has a resolved value. Serve resolves it from
+`ComponentRuntime.interactiveEntries`, not from the current manifest entry, so
+the live index, completed manifest, background evidence refreshes and watched
+replacement generations agree. If that runtime value is missing, Serve omits
+the field, reports the inconsistency once per entry and generation, and still
+serves the Static page. The shell treats absent eligibility as unknown and must
+not offer or mount Live for that view.
+
+`useViewerLiveState().workspace?.interactive` is the shell accessor. The
+workspace remains bound to the exact route and accepted source revision. This
+route-scoped scalar was chosen instead of a generation-wide eligibility set in
+the capability descriptor: its size is constant for large catalogues, and it
+is adopted atomically with the route the shell is displaying. The value never
+appears on the workspace's nested manifest entry, in the public catalogue or
+shell bootstrap, in static workspace evidence, or in build, export and
+publication output. Static evidence rejects it, while private evidence accepts
+only a boolean or absence for a current screen or component paired with the
+interactive descriptor.
 
 ## Views That Offer Live
 
@@ -279,6 +292,12 @@ with one typed `interactive-bundle` diagnostic naming the importing module;
 Static remains available. Builds appear as `interactive.bundle` spans in
 `--debug-timings`. Bundle bytes remain in memory and never enter the source
 inventory, generated output, `check`, export, or publication.
+
+The browser projection of the automatic development JSX runtime preserves
+esbuild's `isStaticChildren` signal: its `jsxDEV` shim delegates static sibling
+arrays to the consumer's `jsxs` and dynamic children to `jsx`. Ordinary static
+JSX therefore does not produce missing-key diagnostics, while genuinely
+unkeyed dynamic lists retain React's warning.
 
 A direct Live document or bundle request returns status 503 and exactly
 `{ "generation": <generation>, "state": "building" | "failed" }` while the

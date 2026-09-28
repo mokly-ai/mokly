@@ -147,6 +147,16 @@ inspector allowlist described by the
 Eligibility precedes lazy bundle work; the current `ComponentRuntime.generation`
 binds the document, bootstrap, bundle, diagnostics, and descriptor.
 
+For a current screen or component route, the same private descriptor's
+workspace contains one `interactive` boolean resolved from the current
+`ComponentRuntime.interactiveEntries` map. It remains available when background
+completion replaces the live index with a full manifest and when watched Serve
+installs a replacement runtime. If a routed id is absent from the map, Serve
+reports it once per entry and generation but omits the value and still returns
+the Static page; unknown eligibility never enables Live. The route-scoped
+scalar is removed from the nested entry and never enters public catalogue JSON,
+static workspace evidence, export or publication.
+
 The [public-exclusion policy](../../docs/protocol/mokly-source-protection.md#public-exclusions)
 adds config-owned `publicExclude` globs to the shared source classifier.
 Case-insensitive README/tsconfig defaults remain when consumers add globs.

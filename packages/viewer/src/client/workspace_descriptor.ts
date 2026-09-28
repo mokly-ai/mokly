@@ -13,6 +13,23 @@ export function readViewerWorkspace(
   value: unknown,
   source?: WorkspaceDescriptorSource,
 ): WorkspaceData {
+  return readWorkspace(value, source, false);
+}
+
+/** Validate private Serve evidence and bind known eligibility to Live. */
+export function readViewerPrivateWorkspace(
+  value: unknown,
+  source: WorkspaceDescriptorSource,
+  interactive: boolean,
+): WorkspaceData {
+  return readWorkspace(value, source, interactive);
+}
+
+function readWorkspace(
+  value: unknown,
+  source: WorkspaceDescriptorSource | undefined,
+  interactive: boolean,
+): WorkspaceData {
   if (!record(value) || !record(value["entry"]))
     throw new Error("Invalid viewer workspace evidence.");
   const entry = value["entry"];
@@ -34,6 +51,11 @@ export function readViewerWorkspace(
     typeof value["comparisonEligible"] !== "boolean" ||
     typeof value["removed"] !== "boolean" ||
     arrays.some((key) => !Array.isArray(value[key])) ||
+    "interactive" in entry ||
+    ("interactive" in value &&
+      (!interactive ||
+        value["removed"] !== false ||
+        typeof value["interactive"] !== "boolean")) ||
     "renderCapability" in value ||
     "token" in value ||
     (source !== undefined &&

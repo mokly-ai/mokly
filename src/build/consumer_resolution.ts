@@ -32,8 +32,8 @@ export function consumerReactPlugin(
           contents: options.browser
             ? [
                 `export { Fragment } from "react/jsx-runtime";`,
-                `import { jsx } from "react/jsx-runtime";`,
-                `export const jsxDEV = (type, props, key) => jsx(type, props, key);`,
+                `import { jsx, jsxs } from "react/jsx-runtime";`,
+                `export const jsxDEV = (type, props, key, isStaticChildren) => isStaticChildren ? jsxs(type, props, key) : jsx(type, props, key);`,
               ].join("\n")
             : [
                 `export { Fragment } from "react/jsx-runtime";`,

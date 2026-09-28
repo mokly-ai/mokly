@@ -49,6 +49,17 @@ loopback listener port, and `origin` is present only for an explicit forwarded
 origin. It never enters the public catalogue, public shell bootstrap, export,
 or publication.
 
+When that descriptor exists and the workspace belongs to a current screen or
+component, the workspace root carries `interactive: boolean` when eligibility
+is known. Serve reads the value from the accepted
+`ComponentRuntime.interactiveEntries` map, including after it replaces the live
+index with a completed manifest. A missing map value omits the field and emits
+one Serve diagnostic per entry and generation without failing the Static page.
+Absence means eligibility is unknown, so the shell must not offer or mount Live
+for that view. The nested entry never carries the private field. A descriptor
+without the interactive capability, a removed workspace and the static
+workspace reader all forbid the field.
+
 ## React Context
 
 `ViewerCapabilityBoundary` separates initial data from browser behavior:
@@ -62,7 +73,8 @@ or publication.
   errors or consumer text;
 - `useViewerLiveState()` returns the exact adopted request and its matching
   private workspace from the shell store. A workspace from an older route or
-  revision is never exposed.
+  revision is never exposed. Milestone 7 reads the current entry's resolved
+  eligibility directly as `useViewerLiveState().workspace?.interactive`.
 - `useViewerCapabilities()` returns browser behavior only after the live host
   supplies it. Export returns `undefined`.
 
@@ -95,7 +107,9 @@ changes, and closes the scope on unmount.
 
 The server computes initial private `WorkspaceData` from the same accepted
 catalogue snapshot and shell context used for SSR. Both SSR and hydration read
-that data from the descriptor, independently of browser-only behavior.
+that data from the descriptor, independently of browser-only behavior. Its
+optional Live eligibility is one route-scoped boolean rather than a
+generation-wide set, so descriptor size does not grow with the catalogue.
 
 React navigation does not replace the mounted shell with fetched HTML. When a
 newly routed screen or component needs private data,
@@ -177,6 +191,12 @@ workspace when the route owns one, and the source for the next request. Frames
 and shell state are updated in place by the consumer; the capability does not
 mutate DOM.
 
+The adopted workspace includes the current route's `interactive` value when
+the interactive descriptor exists and eligibility is known. Evidence refreshes
+and route loads validate that optional private value with the same source and
+route fences; watched content replacement still crosses the full-reload
+boundary and obtains the value from the replacement runtime generation.
+
 Content, render-generation, or interactive-generation changes are never
 adopted as evidence. They retain the full reload lifecycle.
 
@@ -212,4 +232,6 @@ instance.
 
 Static export and generated preview catalogues exclude all eight live-only
 modules named above. Export tests also reject the host marker, private state
-script and host loader in every rendered document.
+script and host loader in every rendered document. Static workspace evidence
+and public catalogue validation reject per-entry Live eligibility as private
+Serve state.
