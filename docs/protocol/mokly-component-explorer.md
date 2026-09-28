@@ -42,26 +42,16 @@ action stay outside scrolling content. Closing leaves the icon strip with no
 selected icon; reopening retains edits. The mockups use a native switch for
 size changes; gesture handling belongs to the runtime.
 
-Each component variant is its own routed entry under the
-[variant contract](./mokly-variants.md): a nav row beneath its parent, a search
-result, a Changes row, and a `mock:` link target, like a screen variant. The
-variant bar lists the parent's variant entries by title, and selecting one is
-navigation to that entry at its own URL, `/view/components/<variant id>.html`,
-so Back/Forward treat it like any entry; there is no `variant` query parameter.
-The parent's own page shows its first variant entry in authored order.
-Viewport/theme changes retain the shown entry, applying existing light-only
-rules.
+Each component variant is an entry, nav/search/Changes row, and `mock:` target
+under the [variant contract](./mokly-variants.md). The variant bar navigates by
+global id in authored order, so URLs and Back/Forward need no query parameter;
+the parent page shows the first variant.
 
-Current / Side by side / Overlay / Difference operate on the shown variant
-entry and viewport/theme. Navigating to another variant entry while comparing
-uses that entry's comparison; late responses cannot replace a newer selection.
-Added/removed variants retain their recorded state, but only removed variants
-need an explicit missing side: a removed component variant is an ordinary
-removed entry carrying `variantOf` and remains eligible for comparison with an
-explicit missing current side. Added variants stay in Current without
-comparison modes because there is no baseline view. Page navigation and reload
-start in Current, as screens do today. Variant navigation and comparison are
-fully usable in served and published catalogues.
+Comparison modes apply to the shown variant and view axes. Sibling-mode
+retention, read-only Props, disabled highlighting, and response fencing follow
+[variant navigation](./mokly-variant-navigation.md). A removed component
+variant remains eligible with a missing current side; Added stays in Current.
+Fresh page loads start in Current in served and published catalogues.
 
 Only expose comparison modes when the shown status is Changed or when a
 component variant entry's shown status is Removed. A known selection shows
@@ -118,7 +108,7 @@ with nested relationships and readable instance labels. Selecting an instance
 opens Props with supplied data, slot references, and links to its component page.
 Unrendered conditional branches do not appear; null-rendering instances are
 listed without a visible region. An empty usage set says no registered components
-are used in this view. Legacy/missing metadata says inspection is unavailable.
+are used in this view. Missing metadata says inspection is unavailable.
 
 Repeated instances remain individually selectable. Nested component groups start
 collapsed and can be expanded to inspect inner instances. Selecting an instance
@@ -181,7 +171,7 @@ Component-page nested inspection can reuse this same mechanism.
 
 By default, package-owned shell code inspects its immediate, same-origin, authenticated
 generated frame. Component metadata extends the existing Browse ownership
-validation. Arbitrary legacy documents, nested frames, and comparison snapshots
+validation. Unvalidated documents, nested frames, and comparison snapshots
 receive no new inspection privileges. Consumer scripts, forms, popups, and top
 navigation remain disabled; do not loosen frame sandbox policy for this feature.
 
@@ -201,7 +191,7 @@ document scripts; local frames and comparison snapshots keep their existing
 restrictions. Host-only pick mode reuses Highlight components and adds no local
 control. Instance lookup uses the [scoped identity contract](./mokly-instances.md),
 not source locations, DOM text or guessed geometry.
-Public imperative highlighting keeps viewport, scheme, variant and flow-step
+Public imperative highlighting keeps entry, viewport, scheme, and flow-step
 scope through masks, labels and emitted events. This differs from the workspace's
 intentional multi-view highlighting of one selected key. Frame replacement ends
 host picking and clears stale inspection under the viewer lifecycle contract.

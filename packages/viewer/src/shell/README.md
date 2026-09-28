@@ -18,8 +18,9 @@ Removed row. `nav_tree.ts` records actual attachment before removing the row
 from flat fallback, so a former parent that is now a variant cannot make its
 historical child disappear and every removed entry remains represented once.
 Current section nodes use the shared folder-first comparator; flat removed
-rows follow the complete current hierarchy in kind/id order rather than
-interleaving with its top-level leaves. Components and Pages keep independent
+rows use the combined ordering in the
+[variant navigation contract](../../../../docs/protocol/mokly-variant-navigation.md).
+Components and Pages keep independent
 section roots even when they reuse the same folder labels.
 `disclosure_keys.ts` derives section-scoped folder disclosure keys by matching
 fixed prefixes, never splitting on `:` inside a label. It rejects empty path
@@ -80,10 +81,9 @@ selectors and shell-root `.mbk` selectors to the embedding scope without
 rewriting class names. Standalone Serve/export retain their original CSS and
 font delivery paths.
 
-`catalogue.ts` owns pure display indexing. Its `byId` index installs current
-entries first and adds only non-conflicting historical entries, so current
-content takes precedence for id-only lookup. An explicit snapshot selects its
-exact retained historical record. Historical repository access remains in the
+`catalogue.ts` owns pure display indexing. Its `byId` index contains current and
+removed entries whose ids are unique across both sets; an explicit snapshot
+selects its exact removed record. Baseline repository access remains in the
 CLI's `src/server/baseline_catalogue.ts`.
 `store.tsx` and the focused `store_*` modules own standalone route/history,
 selection, disclosure, drawer, details, recovery and scroll state. `routes.ts`,
@@ -103,7 +103,9 @@ deployment identity; entry destinations come from the shared route helpers.
 Authenticated frame navigation stays logical until `frame_event_router.tsx`
 resolves its id through `byId` and derives the canonical URL with `viewHref`.
 Primary, modified, middle, and named-target activations therefore share the
-same `/view/` destination, while an unknown id installs the missing view.
+same `/view/` destination. An unknown id installs the missing view only for
+standalone/uncontrolled shells and is recoverable by any later selection;
+controlled viewers emit an error and keep their display.
 Search matches authored ids, titles, and tags only. Details omits derived route
 and generated-path rows because the address bar and id chip already identify
 the entry.
@@ -111,7 +113,7 @@ the entry.
 Snapshot selection is route-owned state as well as public selection state. One
 validated query/parser/resolver carries it through SSR, hydration, controlled
 hosts and history. Headings, crumbs, Details and previous-preview lookup consume
-the resolved historical record and route, never a colliding current-id lookup.
+the resolved removed record and route.
 
 `workspace_data.ts` describes shell data. Its `entry` is always the exact
 routed screen, component parent, or component variant; component routes retain
@@ -142,9 +144,9 @@ active-route reveal.
 The `nav_rows.tsx` and `nav_leaf_rows.tsx` missing-key defaults remain defensive
 for rendering without a store; mounted shells supply every current key.
 Versioned historical selection adopts new evidence and becomes unavailable if
-that exact snapshot disappears. Identity-less legacy history adopts only an
-unchanged removed record; metadata changes reject live adoption and preserve the
-existing document reload boundary.
+that exact snapshot disappears. A removed record without an explicit identity
+can be adopted only while its complete metadata remains unchanged; otherwise
+the existing document reload boundary preserves coherent preview bytes.
 Static export uses `src/standalone/static_workspace_evidence.ts` to read inert
 workspace JSON from a destination shell in the mounted deployment, validating
 the response route, compact catalogue reference, and delivery identities against

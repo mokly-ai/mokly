@@ -3,9 +3,8 @@
 ## Delivery Status
 
 Implemented through [viewer library Milestone 2](../../plans/mokly-viewer-library.md),
-including resolution and source capture. The key derivation and rendered boundaries
-retain their existing format. No new UI,
-changed key format, or visible local behavior is approved by this document.
+including resolution and source capture. Key and boundary formats are unchanged;
+this document approves no new UI or visible local behavior.
 
 ## Identity And Scope
 
@@ -39,11 +38,11 @@ same digest operation over `["mokabook-slot-v1", instanceKey, name]`.
 The containing entry id, viewport, color scheme, `componentId`, props, and
 source location are **not** in the instance preimage. In particular, moving an
 entry-owned invocation to another screen can retain the same digest. Keys are
-unique within a view, not globally across a catalogue. A stored reference must
-include its catalogue identity, the entry id of the owning screen or component
-variant entry, viewport, color scheme, and key. Moving to another entry changes
-that reference even if the digest is identical. Do not search other entries for
-a missing key.
+unique within a view, not globally across a catalogue. Public `InstanceRef`
+stores the owning entry id in `screenId` plus viewport, scheme, key, and optional
+flow `stepIndex`; it has no `variantId`, because a component variant's global id
+is already the owning entry id. Moving entries changes the scoped reference even
+if the digest is identical. Never search another entry for a missing key.
 
 `slotKey` denotes the original input slot scope. Forwarding a slot preserves
 that scope; it does not replace it with each later physical receiving slot.
@@ -163,10 +162,9 @@ The wrapper strips `__moklySource` before prop/slot validation, hashing and
 calling the consumer render function, just as it strips `moklyInstance`.
 The name is reserved from authored data props and slots. Capture it in the
 collector only; do not emit DOM attributes, source maps, or debug markup.
-Programmatic `createElement` calls and already-transformed modules without
-invocation information may omit `source`. Replayed slots retain the original
-invocation location. Historical v5 records without `source` remain valid; updated
-readers accept both forms without a schema-version bump.
+Programmatic `createElement` calls and transformed modules without invocation
+information may omit `source`. Replayed slots retain the original invocation
+location; manifest-v7 readers accept records with or without the optional field.
 
 `source` is excluded from instance/slot keys, `propsKey`, direct-input comparison,
 and every Changes projection. Line shifts and source moves alone are not material.

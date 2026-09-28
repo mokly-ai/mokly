@@ -117,7 +117,6 @@ interface MoklyConfig {
     }[];
   };
   compatibility?: {
-    readManifestV2?: boolean; // false
     transformer?: string;
   };
 }
@@ -201,10 +200,9 @@ deduplicated lists, while loader keys are extensions and values are supported
 esbuild loader names. React and React DOM still resolve through Mokly's
 consumer-peer plugin so these options cannot introduce a second React runtime.
 
-The `legacy` config key is rejected, including `legacy: undefined`. Register
-complete documents explicitly with `definePage` or nested `page`, following the
-[source-preserving migration](./mokly-page-migration.md). Historical manifest
-compatibility does not restore source discovery or legacy configuration.
+The obsolete `legacy` config key is rejected, including `legacy: undefined`.
+Register every complete document explicitly with `definePage` or nested `page`;
+baseline compatibility never restores source discovery or old configuration.
 
 ## Entry Discovery
 

@@ -158,7 +158,7 @@ selection under the repository's review rule.
    that would require an explicit provider decision beyond this demonstrated bug.
 
 3. **Medium — preserved legacy-page comparison is promised but absent. Fixed in the follow-up below.**
-   [The migration contract](../protocol/mokly-page-migration.md) requires an
+   [The then-current migration plan](../../plans/unified-catalogue-pages.md) requires an
    exact-route historical adapter using the current page's ID and the legacy
    document/source. [Document pairing](../../src/server/changed_content.ts)
    looks only at historical entries by ID. A validated v3 fixture with a matching

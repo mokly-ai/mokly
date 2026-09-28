@@ -2,10 +2,10 @@
 
 ## Delivery Status
 
-Implemented. This document owns how the inspector and the comparison stage
-present the evidence defined by
-[CSS change attribution](./mokly-css-attribution.md); that contract owns the
-analysis, membership rule, evidence schema, and validation.
+Implemented. This document owns compact visual rules for evidence defined by
+[CSS change attribution](./mokly-css-attribution.md); the
+[presentation contract](./mokly-css-evidence-presentation.md) owns derivation
+and exact copy.
 
 ## Shell Presentation
 
@@ -51,65 +51,7 @@ these presentation rules:
 
 ### Shell Derivation
 
-The live classification snapshot retains screen-only `screenEvidence` records
-keyed by entry id with per-view `viewport`, `colorScheme`, optional `reasons`,
-and optional `excludedResources`. Paths remain repository-relative. The
-workspace projects the selected screen's views as optional `resourceEvidence`;
-it does not invent component entry reasons, component results, or comparison
-states. Static exports project this same slice from the packaged v4
-comparison. Absent evidence remains valid. New classification generations
-replace the slice, clearing stale evidence while Changes is pending/unavailable.
-
-One inspector renderer merges classification evidence with the loaded selected
-comparison. Dependency reasons merge by path with sorted selector unions and
-unresolved precedence. Retained paths suppress exclusions across all selected
-views; loaded shared-impact and ignored-content details remain available.
-Loaded evidence is selection-scoped and cleared on classification invalidation.
-Component ownership facts continue to come from entry reasons and the complete
-classification; a screen-only resource change never implies a changed shared
-component.
-
-`ReviewState` has no resource-only variant, so the browser derives the style
-heading from the view's own evidence. A view reads "Styles this screen uses
-changed" when its state is `changed`, `material` is absent, it retains at
-least one reason, and every retained reason is a stylesheet dependency carrying
-an `analysis` record; a component variant reads "Styles this variant uses
-changed". Any other retained reason, such as a changed font or image, or a
-present `material` flag, keeps the existing "Screen changed" label. A view with
-no `analysis`-bearing reason never selects the style label, whatever its
-`material` flag.
-
-### Component Details Copy
-
-The shared entry wording helper selects these exact component sentences;
-screen copy stays as written below. File paths and analysed outcomes come from
-entry-level `sharedImpact` and retained dependency reasons, so they name the
-component. Exclusions come from the selected variant entry's compared views,
-so they name that variant; a component variant is its own Changes row under
-the [variant contract](./mokly-variants.md).
-
-| Evidence                            | Component Details sentence                                                            |
-| ----------------------------------- | ------------------------------------------------------------------------------------- |
-| File list                           | "Changes to these files may affect this component:"                                   |
-| Matched styles                      | "Changed styles that apply to this component:"                                        |
-| Unresolved styles with selectors    | "This change can apply anywhere on the component, so the component stays in Changes:" |
-| Unresolved styles without selectors | "This change can apply anywhere on the component, so the component stays in Changes." |
-| One excluded stylesheet             | "This stylesheet changed, but none of the changed styles apply to this variant."      |
-| Several excluded stylesheets        | "These stylesheets changed, but none of the changed styles apply to this variant."    |
-
-The Details inspector lists the sorted union of retained dependency reason
-paths (entry reasons where the result carries them, view reasons otherwise)
-and entry `sharedImpact` under
-"Changes to these files may affect this screen:". This includes path-only
-evidence for unchanged screens opened from All, without adding a Changes row;
-the [membership rule](./mokly-component-changes.md#dependencies-and-styles)
-defines when a path is a reason. The inspector then groups analysed
-selectors by outcome, so one screen shows at most one matched list and one
-unresolved list however many stylesheets changed. Selectors are unioned,
-deduplicated, and sorted; an `unresolved` outcome with no serialized selector
-renders its sentence with a full stop and no list. Excluded stylesheets come from the
-compared views of the selected entry, unioned and sorted, and
-never include a path any of those views retains. Their lead sentence
-pluralizes when it lists more than one stylesheet. Viewport and color-scheme
-controls never change this evidence, and the mobile inspector sheet and the
-desktop inspector dock render it identically.
+The [CSS evidence presentation contract](./mokly-css-evidence-presentation.md)
+owns live/static evidence projection, merge rules, stage-heading derivation,
+exact screen/component copy, selector grouping, and viewport-independent
+Details behavior.

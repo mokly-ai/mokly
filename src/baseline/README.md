@@ -7,7 +7,7 @@ this directory adds no supported JavaScript package exports.
 
 `BaselineBuilder` in `types.ts` accepts `build(request)`, where the request names
 one resolved commit, repository root, repository-relative `mockupsPath`, exact
-argv commands, optional historical-v2 compatibility, and an `AbortSignal`.
+argv commands, and an `AbortSignal`.
 `CachedBaselineBuilder(fs, runner, clock, maintenance, options)` implements it
 with four injected collaborators: filesystem, process runner, clock and
 `BaselineMaintenanceReporter`. The Node implementations live in `filesystem.ts`,
@@ -64,7 +64,7 @@ commit's build. Ref changes reuse preparation when the merge base is unchanged;
 a changed commit or build settings and shutdown cancel and drain it.
 
 `cache_layout.ts` owns `.mokly-cache/baselines/<commit>`. The builder extracts
-to `source`, runs commands, validates the historical manifest and output tree,
+to `source`, runs commands, validates the manifest and output tree,
 moves the generated directory to `output`, deletes the extraction, and writes
 `complete.json`. Completion of the marker write commits the result immediately.
 Cancellation before that point removes partial output; cancellation afterward
@@ -128,7 +128,9 @@ repository-relative paths and the pinned commit; it strips the output prefix
 internally. It rejects symlinks at every ancestor and non-regular files. Bulk
 reads use the Git reader's 4,096-object / 48 MiB batch limits, with at most 32
 filesystem reads in flight. The review asset reader additionally applies the
-historical manifest's source inventory and reserved-name policy.
+accepted v7 baseline's source inventory and reserved-name policy. Earlier output
+follows the
+[baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
 
 ```bash
 npm run build

@@ -202,12 +202,10 @@ you need to change modes.
 Removed entries advertise an optional opaque `snapshotId`. Supply it with the
 stable `screenId` to select that exact historical record. The viewer carries it
 through controlled proposals, navigation events and axis/filter changes. An
-id-only selection gives current content precedence, while a matching snapshot
-selects its exact retained history. Stale or unknown snapshots render
-unavailable rather than silently opening other content. Live evidence may
-update an explicit snapshot in place and makes a replaced identity unavailable.
-Legacy history without an identity is retained only while its complete record
-is unchanged; metadata changes use the full reload path.
+id-only selection of a removed record normalizes to its published identity;
+stale or unknown snapshots render unavailable. Readers reject a catalogue in
+which current and removed records share an id. Live evidence may update an
+explicit snapshot in place and makes a replaced identity unavailable.
 
 Shell links may name `viewport` and `scheme` independently. Exactly one valid
 value for an axis applies in the same selection proposal; invalid or repeated
@@ -245,6 +243,11 @@ or flow step, viewport, color scheme and stable component key. Persist that
 value to reconnect external data such as a review comment. `resolveInstance`
 compares a saved component record with its corresponding current record from a
 newer catalogue without fetching preview evidence.
+
+`InstanceRef.screenId` is the owning entry's id, including for a component
+variant; the shape has no `variantId`. `onScreenNavigate` reports
+`{ screenId, snapshotId?, fragment?, navigation? }`, with `snapshotId` present
+exactly after historical content is committed and with no route or variant id.
 
 Markers accept unique IDs, exact instance references and React content. Marker
 content is pointer-inert by default; opt an interactive child in with
@@ -308,11 +311,14 @@ React applications normally need only the root entry and stylesheet. Do not
 import `@mokly/viewer/browser` in an application-owned React root; it
 automatically hydrates a matching standalone Mokly document.
 
-`@mokly/viewer/data` also exports the shared route helpers `entryRoute`,
-`viewRoute` and `viewHref`, which derive every route and `/view/<route>` URL
-from an entry's kind and id. `parseViewHref` reads canonical and
-provider-normalized `/view/` paths back into that identity; the implementation
-lives in `src/navigation/routes.ts`. `isEntryId` adds portable Windows filename rules
+`@mokly/viewer/data` also exports the shared path helpers `entryRoute`,
+`viewRoute`, `viewHref`, `snapshotViewPath`, `snapshotPagePath`, and
+`pagePreviewMetadataPath`. `parseViewHref` reads canonical and
+provider-normalized `/view/` paths back into identity;
+`providerNormalizedHtmlPath` and `unavailableViewHref` own the browser forms.
+The complete naming contract is
+[identity-derived artifact paths](../../docs/protocol/mokly-artifact-paths.md).
+`isEntryId` adds portable Windows filename rules
 to the broader `isCatalogueId` grammar used by tags and logical links;
 `isWindowsDeviceName` exposes that filename check directly.
 
@@ -449,10 +455,8 @@ consumers.
 - [`src/registry/nav_paths.ts`](./src/registry/nav_paths.ts) and [`src/registry/hierarchy_conflicts.ts`](./src/registry/hierarchy_conflicts.ts) — shared folder keys, labels, sibling order and source-attributed path conflicts
 - [`src/client`](./src/client) — frame adapters, transport and geometry
 - [`src/catalogue`](./src/catalogue) — public catalogue types and validation
-- [`src/navigation/routes.ts`](./src/navigation/routes.ts) — shared
-  identity-derived document, view and shell URL helpers
-- [`src/components/variants.ts`](./src/components/variants.ts) — legacy local
-  component-variant id normalization at the historical boundary
+- [`src/navigation/routes.ts`](./src/navigation/routes.ts) — shared entry,
+  view, snapshot, preview, shell-URL, and browser-path derivation
 - [`src/shell/workspace_entry.ts`](./src/shell/workspace_entry.ts) and
   [`src/shell/workspace_variants.ts`](./src/shell/workspace_variants.ts) —
   routed workspace identity and sibling component-variant entries

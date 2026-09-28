@@ -1,44 +1,26 @@
 # Mokly CI And Npm Release Contract
 
-## Breaking Page Upgrade Release Note
+## Breaking Identity Upgrade Release Note
 
-The page release intentionally removes `legacy` configuration and its exported
-types, automatic `.source` discovery, comment-component expansion, legacy lint
-options, and route aliases. Consumers must register complete documents with
-`definePage` or nested `page`, import existing render helpers, preserve explicit
-routes, and regenerate manifest v5 with `sourceFiles`. Current v2/v3 output is
-rejected; historical readers remain available only for Git comparisons. Follow
-[the migration procedure](./mokly-page-migration.md) before replacing old
-owned artifacts. Screen and use-case authoring remains supported.
+The release derives paths from kind and id, removes authored `route`, `slug`,
+`segment`, and root `path`, and makes component variants global entries.
+Consumers adopt manifest v7, catalogue v3, review v4, and delivery v3; `/id/`
+URLs no longer exist.
 
-The repository preview command now exports the current catalogue by default.
-Use `--include-changes` to package a frozen baseline and comparisons. Both
-options omit development updates. Release automation must record these changes
-as breaking; version numbers and `CHANGELOG.md` remain release-PR owned.
+Viewer hosts must remove `ViewerSelection.variantId` and
+`InstanceRef.variantId`; `ScreenNavigateEvent` removes `route` and `variantId`
+and becomes `{ screenId, snapshotId?, fragment?, navigation? }`. `snapshotId`
+exists only for committed history. Comparisons require a base built by this
+version; Changes returns after that base updates.
 
-## Breaking Navigation Path Upgrade Release Note
-
-The navigation-path release removes `defineCollection`/`collection` and their
-exported types, adds per-entry `navPath` and nested `folder()` authoring, and
-replaces collection edges with independent section folder trees. Consumers must
-regenerate manifest v6 and adopt catalogue read model v2. Obsolete
-`collection:` disclosure keys are ignored on restore. Release automation must
-record this upgrade as breaking; version numbers and `CHANGELOG.md` remain
-release-PR owned.
-
-The id-derived routes release is also breaking: authored `route`, `slug`,
-`segment`, and root `path` fields are removed and every route derives from
-kind and id; component variants become entries with global ids; consumers
-must regenerate manifest v7 and adopt catalogue read model v3, review result
-v4, and delivery descriptor v3; and the `/id/<id>` URLs no longer exist.
+Release notes and the close-out commit use a `BREAKING CHANGE:` footer naming
+the baseline and host API changes; the release PR owns versions and changelog.
 
 ## Package Metadata
 
-`package.json` describes the published, scoped public ESM package `@mokly/mokly`,
-with a release-managed version, MIT licensing, Mokly authorship, exact
-repository/bugs/homepage metadata for `mokly-ai/mokly`, the Node engine range
-`>=22.14.0 <24.14.0 || >=24.19.0`, one `mokly` bin, explicit exports/types, and
-a restrictive `files` allowlist.
+`package.json` describes public ESM package `@mokly/mokly`: managed version,
+MIT license, Mokly authorship, exact repository metadata, Node range
+`>=22.14.0 <24.14.0 || >=24.19.0`, `mokly` bin, exports, types, and file allowlist.
 
 Read the checkout's version from `package.json`; `.release-please-manifest.json`
 tracks release-please's version state, and `package-lock.json` mirrors package

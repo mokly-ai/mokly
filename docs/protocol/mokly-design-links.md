@@ -2,19 +2,11 @@
 
 ## Delivery Status
 
-Implemented in the 60 Browse/Changes design screens and two real example
-screens using `MockLink` and `MockLink asChild`. Verification and delivery are tracked by the
-[implementation plan](../../plans/mokabook-design-mocklinks.md).
-
-The [component design inventory](./mokly-component-design.md) extend the
-catalogue with their own state contract and native component/control depictions.
-Those 60 Browse/Changes designs retain the canonical links below, including the
-removed previous-version family added by
-[removed previews](./mokly-removed-previews.md).
-They now share native icon inspector tabs and working viewport dropdowns with
-the component designs; the legacy disclosure links and segmented view controls
-are removed. Catalogue-wide link and inventory checks cover
-both families; component keyboard-control checks live in the component suites.
+Implemented with `MockLink`/`MockLink asChild` across the Browse, Changes, and
+example screens. The [component inventory](./mokly-component-design.md) extends
+the same state contract, including [removed previews](./mokly-removed-previews.md).
+Both families share icon inspector tabs and native viewport controls; catalogue
+checks cover their links and inventory.
 
 ## Scope And Ownership
 
@@ -194,7 +186,8 @@ removed entry whose former parent now names a variant. The Changes
 filter therefore hides the unmodified current parent and its variant (the
 former parent), and shows the removed child as one flat screen row outside
 their former folder hierarchy. The historical breadcrumb remains visible on the
-screen itself, but the Changes rail contains no parent or nested variant list.
+screen itself with the former parent's title as plain text, but the Changes rail
+contains no parent or nested variant list.
 The depicted All control links to the canonical catalogue home artboard; the
 reparented hierarchy is the context for this Changes-state example.
 The changed-views state shows no comparison band. Its marks on Appearance

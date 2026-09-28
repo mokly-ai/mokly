@@ -8,6 +8,8 @@ internal binary and is not published to npm or crates.io.
 - Run the current source-level TypeScript, package, example, and Rust suite.
 - Fail verification when the live dependency audit reports an advisory or error.
 - Enforce the Rust file-length limit.
+- Milestone 13 target: ratchet TypeScript length and protocol caps against
+  `origin/main`, and reject new unused exports or stale allowlist entries.
 - Keep the complete local gate aligned with the approved independent CI suites.
 
 ## What This Crate Does
@@ -24,6 +26,12 @@ consumer's resolved production dependencies without workspace overrides.
 The [CI verification contract](../docs/protocol/ci-verification.md) defines the
 suite boundaries, shard evidence, and fail-closed CI aggregate. Selected suites
 are partial verification; the unqualified command remains the complete gate.
+The [repository ratchet contract](../docs/protocol/verification-ratchets.md)
+defines the approved Milestone 13 changed-file scopes, caps, and shrinking
+unused-export baseline. Milestone 13 makes `cargo xtask check` fail when changed
+TypeScript crosses 300 lines or grows while already over, a protocol cap is
+raised or added, or an internal export is newly unused outside that baseline.
+All three checks then belong to the repository suite and complete gate.
 Ordinary CI runs functional suites on the minimum Node 22.14 runtime. Release
 Please pull requests add Node 24; CI resolves the latest patch in its repository
 prerequisite and explicitly shares that exact result with dependent jobs,

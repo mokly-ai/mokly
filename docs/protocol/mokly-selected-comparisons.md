@@ -1,10 +1,8 @@
 # Selected live comparisons
 
-Live comparison loading must scale with the selected entry, a screen or a
-component variant, and its referenced resources. It must not compile the
-consumer, check unrelated generated documents, classify the catalogue again, or
-snapshot other entries. Build, Check, Export and the complete comparison
-endpoint retain their exhaustive behavior.
+A live comparison reads only the selected screen or component variant and its
+resources. It never compiles the consumer, checks unrelated output, reclassifies
+the catalogue, or snapshots other entries; exhaustive commands remain unchanged.
 
 ## Requests and evidence
 
@@ -12,10 +10,9 @@ The live browser requests `/__mokly/diffs/review.json?id=<entry id>`, where
 the id names the selected screen or component variant entry, adding
 `refresh=1` for an explicit retry or refresh, or `page=<page id>` for a
 removed page's [preview](./mokly-removed-previews.md). Both values use the
-catalogue id grammar; the server derives every route. There is no `variant` parameter: a
-component variant is its own entry. Current, navigation and filtering never
-request snapshots. Static delivery continues to request its complete, packaged
-comparison URL without selection parameters.
+catalogue id grammar; the server derives paths. There is no `variant` parameter
+because a component variant is an entry. Current browsing never requests
+snapshots; static delivery uses its packaged comparison URL without parameters.
 Changing viewport or color scheme inside a comparison, or switching between diff
 modes, first renews a loaded live generation with a non-cached HEAD request to its
 immutable `review.json` URL.
@@ -27,10 +24,10 @@ the replacement result is ready. Do not reuse old snapshot URLs after failed
 renewal or depend on matching browser/server expiry clocks. Static delivery
 reuses its packaged result without renewal requests.
 
-Repeated view or mode switches share a pending renewal or capture and apply the
-latest viewport, scheme and mode when it completes. Navigating to a sibling
-variant entry requests that entry's own result and fences responses from the
-previous selection.
+Repeated view or mode switches share pending work and apply the latest axes and
+mode when it completes. Navigating to a sibling component variant retains that
+mode, requests the sibling's own result, keeps Props and highlighting in their
+comparison states, and fences the previous response.
 Current and navigation cancel both renewal and capture requests; late responses
 cannot replace the current view. Background [evidence updates](./mokly-live-evidence.md)
 also cancel pending comparisons, discard their cached selection and return an
@@ -59,10 +56,10 @@ comparison records.
 
 ## Capture and lifetime
 
-Capture all available viewport/scheme views of the selection and only their
-transitive resource closure. Keep original before/after documents unmodified,
-under separate `snapshots/before/` and `snapshots/after/` roots whose files are
-named by the derived view route. Historical reads use the pinned
+Capture every available view of the selection and only its transitive resource
+closure. Copy accepted v7 before/after documents byte-for-byte to paths from
+`snapshotViewPath` in the
+[artifact path contract](./mokly-artifact-paths.md). Baseline reads use the pinned
 Git commit and bounded batches of regular files. Current reads retain the public
 file and source-confinement rules. Resource hints not read by classification are
 validated and captured on demand. Frames retain their script-disabled sandbox.

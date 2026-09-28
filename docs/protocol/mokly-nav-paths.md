@@ -81,7 +81,7 @@ than using `split(":")`. A `folder:` key with an empty path or an empty
 segment is invalid. `section:` and `variants:` keys and the handling of
 obsolete keys are governed by the [disclosure persistence contract](./mokly-disclosure-persistence.md).
 
-## Variants And Historical Paths
+## Variants And Baseline Paths
 
 A flattened variant of either kind copies its parent's `navPath`; authored
 `navPath` on a variant is forbidden even when `undefined`, as is `variants`.
@@ -90,15 +90,12 @@ follow the parent's path followed by the parent title; variants are not
 independent folder members. The complete variant rules live in the
 [variant contract](./mokly-variants.md).
 
-Current v7 manifests use the full label and conflict rules above. At the
-explicit historical-read boundary, v3, both v4 envelopes, v5, v6, and v7
-`navPath` values are checked only as arrays of non-empty strings, without
-current label or conflict rules. Removed entries in the public read model
-follow this historical-label rule as well. Historical v3–v5 collection records
-undergo their original strict shape and relationship validation, then are
-dropped. Baseline paths are used for removed-entry labels and
-[Changes classification](./mokly-changes.md#changes-membership), never to build
-a current folder tree. A difference in `navPath`, including a renamed ancestor
-folder that changes every descendant entry's path, marks each affected routed
-entry changed; there is no separate moved state. Removed entries retain the
-baseline entry's path, with no separate ancestor field.
+Current and baseline manifests are both v7 and apply the complete label,
+conflict, relationship, and ordering rules above to their own independent
+trees. Baseline paths supply removed-entry labels and
+[Changes classification](./mokly-changes.md#changes-membership); they never
+become current folder nodes. A `navPath` difference, including an ancestor
+rename, marks every affected entry changed with no separate moved state.
+Removed entries retain the baseline entry's path and no separate ancestor
+field. Earlier output is unavailable under the
+[baseline compatibility contract](./mokly-baseline-compatibility.md).

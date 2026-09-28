@@ -2,19 +2,13 @@
 
 ## Delivery Status
 
-Implemented in the basic consumer. Every existing design screen retains its
-mobile/desktop fragments and now records shared component instances, and the
-registered components and their saved variants live under
-Components → Design → Shared components, alongside the separate Example Action
-and Toolbar. The manifest `npm run example:build` generates at
-`examples/basic/generated/mokly-manifest.json` is the source of the screen,
-fragment, component and variant counts; this contract does not restate them.
+The basic consumer records shared instances without changing existing design
+screens. Registered entries live under Components → Design → Shared components,
+beside Example Action and Toolbar. The generated manifest owns all counts.
 
 This contract and the [library inventory](./mokly-design-component-library.md)
-define the delivered behavior tracked by the [adoption plan](../../plans/mokabook-design-components.md).
-The existing [shell design](./mokly-shell-design.md),
-[design links](./mokly-design-links.md), and component design contracts retain
-their current screen behavior and navigation authority.
+define delivery; [shell design](./mokly-shell-design.md) and
+[design links](./mokly-design-links.md) retain presentation/navigation authority.
 
 ## Outcome And Scope
 
@@ -60,9 +54,8 @@ folder identity across sections.
 
 For inventory group `G` and slug `S`:
 
-- Component id: `design-ui-S`, routed at `components/design-ui-S.html` under
-  the [derived route rule](./mokly-authoring.md#derived-routes); its `navPath`
-  places it in the `G` gallery folder.
+- Component id: `design-ui-S`; the [artifact contract](./mokly-artifact-paths.md)
+  derives its path and `navPath` places it in gallery `G`.
 - Registration/schema/variants: `entries/design/library/G/S.tsx`, split into
   short metadata siblings if needed. Render logic: `G/S.view.tsx` and its
   exclusive implementation helpers. Source and visible hierarchy must agree.

@@ -85,13 +85,12 @@ before output generation; helper branding alone is not validation.
 The input includes the common entry metadata, `propSchema`, `render`, and a
 nonempty ordered `variants` list. `tags`, `colorSchemes`, `controls`, `slots`,
 and `ownedDependencies` are optional. Existing id, dependency, tag, and
-color-scheme validation applies; the component's route derives from its id
-under the [derived route rule](./mokly-authoring.md#derived-routes). Each
+color-scheme validation applies; component paths follow the
+[artifact path contract](./mokly-artifact-paths.md). Each
 variant contains an id, title, complete typed props, and an optional
 description. An authored description must be nonempty and becomes the variant
 entry's description; when omitted, the flattened entry copies the parent's
-description. Historical nested component variants use the same fallback when
-adapted to entries. `defineComponent` rejects unknown variant fields. Variant
+description. `defineComponent` rejects unknown variant fields. Variant
 ids are global kebab-case catalogue ids, and each variant flattens into its own
 `kind: "component"` entry carrying `variantOf`, `props`, and `suppliedSlots`,
 copying the parent's `navPath` and inheriting its `colorSchemes`,
@@ -131,26 +130,12 @@ consumer implementation belongs to its defining component/dependencies.
 
 ## Instances And Ownership
 
-`moklyInstance` is reserved for the wrapper, stripped before calling the
-consumer adapter, and uses the kebab-case id grammar. Its identity is scoped to
-the calling screen or component instance and slot. With no supplied instance
-id, the component id is the default; repeated instances in the same scope
-must supply distinct explicit ids. Duplicate identities fail with entry and
-view context rather than falling back to array indexes or random ids.
-
-The render collector records component id, scoped instance id, owner, parent
-instance, encounter order, data props and their material key, slot ownership,
-and a DOM range reference for each rendered occurrence. Ownership determines
-where an input change is reported; DOM ancestry determines inspector nesting.
-These relationships are distinct when a screen supplies another component in
-a container's slot. Repeated placement of one slot receives distinct range
-references while retaining the same input owner.
-
-Actual rendering supplies usage. Imports, unused branches, or declared
-dependencies do not invent instances. Mobile, desktop, light, dark, and each
-variant entry have separate usage records. A registered component that renders
-null is still an invoked instance, but has no visible bounds. Folder and
-use-case membership never duplicates canonical usage records.
+`moklyInstance` is wrapper-only kebab-case input, stripped before consumer
+rendering. Its default, scope, stable key, duplicate rules, and sentinels belong
+to [Component Instance Identity](./mokly-instances.md). The
+[usage-record contract](./mokly-component-usage-records.md) owns collector
+records, input versus DOM ownership, repeated ranges, per-view separation, null
+instances, and the rule that only actual rendering establishes usage.
 
 Components author their own `navPath`; Components-section folders form from
 matching paths, independently of Pages. Components have derived routes, tags,
@@ -162,22 +147,18 @@ usage rather than separately authored relationships.
 ## Generated Artifacts
 
 One complete static document is generated for every component variant entry,
-viewport, and effective color scheme. A variant entry `action-default` has the
-route `components/action-default.html` and views
-`components/action-default.<viewport>[.dark].html` under the
-[derived route rule](./mokly-authoring.md#derived-routes); the parent route
-`components/action.html` has no views of its own, and its page shows its first
-variant entry. Output collision, ownership, resource, orphan, and
-transactional-write checks apply.
+viewport, and effective color scheme. The parent has no views; its page shows
+its first variant. Exact names follow the
+[artifact path contract](./mokly-artifact-paths.md). Output collision,
+ownership, resource, orphan, and transactional-write checks apply.
 
 Every current catalogue emits manifest schema v7, including typed component
 parent and variant entries and per-view usage records for screens and component
 variants; no entry stores a route or view path. The
 [manifest schema](./mokly-component-manifest.md) defines every record,
-reference, ordering rule, and validation boundary. Historical Git readers
-accept v3, both disjoint v4 formats, v5, v6, v7, and the explicit v2 fallback;
-unknown versions fail. Historical manifests without usage metadata do not imply
-an empty component tree or justify suppressing changes.
+reference, ordering rule, and validation boundary. Baseline readers accept the
+same v7 contract; earlier output makes Changes unavailable as defined by
+[baseline compatibility](./mokly-baseline-compatibility.md).
 
 Inert, package-owned DOM markers bind generated ranges to their usage records.
 The collector is scoped to a render, not a process-global mutable registry.
@@ -194,9 +175,9 @@ Inspector values come from the generated records. Source metadata is repository-
 and remains secondary to the preview.
 
 Build, Check, watched rebuilds, published output, and packed consumers use the
-same registry and rendering pipeline. Existing unregistered components and
-legacy pages keep their current rendering and comparison behavior. A referenced
-wrapper whose entry is absent from the exported registry is a validation error.
+same registry and rendering pipeline. Unregistered components retain ordinary
+screen rendering and Review-ignore behavior. A referenced wrapper whose entry
+is absent from the exported registry is a validation error.
 Implementations must not silently register an unreachable component page.
 
 ## Related Contracts

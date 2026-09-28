@@ -106,17 +106,12 @@ supply the complete Used by list.
 
 The shared served/published workspace deduplicates Affected usage links after
 projecting the selected component's affected-consumer evidence. Two links are
-duplicates exactly when `JSON.stringify` of each complete link produces the same
-string: every serialized field must match. The fields are `title`, the
-consumer entry `id`, `viewport`, `colorScheme`, `instanceKey`, `direct`,
-`removed`, and `comparisonEligible`; a link carries no route or saved-variant
-id, because a component variant consumer is addressed by its own entry id;
-future serialized fields also participate. Preserve normal JSON field order and
-omission semantics; do not replace this identity with id-only, instance-only,
-or a sorted/subset key.
-
-An affected-usage link identifies its consumer by entry `id` alone; ids are
-global, and the read model supplies the kind.
+duplicates exactly when `JSON.stringify` of each complete link matches. Every
+field participates: `entryId`, `entryKind`, `title`, `viewport`, `colorScheme`,
+`instanceKey`, `direct`, `removed`, and `comparisonEligible`; future fields do
+too. A component variant uses its own global `entryId`; no route or saved-
+variant field exists. Preserve object field order and omission semantics rather
+than an id-only, instance-only, or sorted/subset key.
 
 Keep the first occurrence in evidence order: affected-consumer record order,
 then each record's evidence order. Do not sort the result or merge distinct

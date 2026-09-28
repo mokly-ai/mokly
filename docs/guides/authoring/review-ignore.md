@@ -19,7 +19,9 @@ import { ReviewIgnore } from "@mokly/mokly";
 </ReviewIgnore>;
 ```
 
-The id is lowercase kebab-case and unique within a generated document.
+The id is lowercase kebab-case and unique within a generated document. It is
+not a filename, so values such as `aux` and `con` are valid here even though
+entry ids reject Windows device names.
 Ignoring changes only how a difference is classified: the stored documents and
 both sides of a comparison keep the real content. Ignored-only changes are
 grouped by id, viewport and color scheme instead of listing every screen that

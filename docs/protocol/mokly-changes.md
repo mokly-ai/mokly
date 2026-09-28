@@ -1,13 +1,11 @@
 # Changes and screen comparisons
 
 The implemented [component attribution extension](./mokly-component-changes.md)
-keeps component-only consumers out of Changes while linking them from the
-component's Affected screens list. Screen and manual Review-ignore behavior
-remains documented below.
+keeps affected-only consumers out of Changes and links them from the component.
+Screen and Review-ignore behavior remains below.
 
-The catalogue is Mokly's only browsing surface. Its All / Changes filter
-narrows the same navigation tree. There is no Review tab, launcher, report
-section, or `mokly review` command; `--out` belongs only to static `export`.
+The catalogue's All / Changes filter narrows one navigation tree. There is no
+Review tab, report, or `mokly review`; `--out` belongs only to static `export`.
 
 [Pages](./mokly-pages.md) participate in Changes and removed-entry states,
 while comparison controls remain exclusive to changed screens and eligible
@@ -22,6 +20,8 @@ baseline ancestry. Review reads follow the [source policy](./mokly-source-protec
 [Published Changes](./mokly-publication.md) are opt-in through
 `npm run preview:build -- --include-changes`. Default publication omits Changes,
 comparisons, history, and removals; both options omit live updates.
+Strict baseline admission and pairing/order fixes are approved for Milestones
+11 and 12 of the active [id-derived routes plan](../../plans/id-derived-routes.md).
 
 ## Changes membership
 
@@ -103,8 +103,8 @@ by entry id; the workspace selects its `resourceEvidence` slice without a
 second analysis pass. Static exports select that slice from their packaged v4
 comparison. Details merge the loaded comparison's evidence
 with classification evidence, preserving retained stylesheet selectors,
-exclusions, and legacy shared-impact/ignored-content details without duplicate
-cards. See [CSS evidence in the shell](./mokly-css-evidence-shell.md#shell-derivation).
+exclusions, shared-impact, and ignored-content details without duplicate cards.
+See [CSS evidence presentation](./mokly-css-evidence-presentation.md).
 
 This detection reads baseline files without writing snapshots or generating a
 comparison; derived mode obtains them from the completed cache entry. Baseline reads are batched; shared resource edges
@@ -112,6 +112,9 @@ are cached within one calculation and cycles terminate. Apart from verified
 resource deletions, an unavailable or invalid input leaves Changes explicitly
 unavailable, preserving the tabs and access through All in live Serve.
 Watched updates and static publishing use this same membership calculation.
+A classifier error in a screen-only catalogue is logged through the ordinary
+safe diagnostic path and publishes unavailable; Serve never falls back to a
+second comparison implementation.
 
 Serve performs the calculation in a background worker after HTTP is ready and
 complete generated output has been adopted, never during a shell request.
@@ -124,20 +127,18 @@ before `pending` while its baseline rebuild runs; see the
 pending status before notifying the browser, then publish a terminal ready or
 unavailable status only when the latest sequence finishes. Empty ready results
 show zero; unavailable results show a dash and a plain unavailable message.
+Earlier baseline output follows the command and copy contract in
+[Baseline Compatibility](./mokly-baseline-compatibility.md).
 Tabs, count allocation and the tree origin remain fixed throughout;
 late results from superseded generations are ignored. Non-watched Serve uses the
 same asynchronous startup boundary, without observing later edits. Watched Git-only
 ref changes reclassify completed output without rendering views again.
 
-Component-aware classification preloads every baseline screen and component
-variant view in one logical, bounded Git batch, including mobile, desktop, dark and
-removed views. This applies to asynchronous watched startup, immutable Browse
-evidence, watched updates and publishing, including a screen-only baseline
-during component adoption. Readers without bulk support retain individual
-cached reads. Resource discovery stays lazy and follows the comparison's ignore
-and ownership rules; prefetching view documents does not traverse excluded or
-hint-only resources. An incomplete or invalid batch fails classification rather than silently
-dropping views or disabling Git file validation.
+Component-aware classification preloads all baseline views in one bounded Git
+batch across startup, watch, Browse evidence, and publishing; readers without
+bulk support cache individual reads. Resource discovery stays lazy and obeys
+ignore/ownership rules. An incomplete batch fails classification rather than
+dropping views or weakening Git validation.
 
 ## Screen controls
 
@@ -263,20 +264,17 @@ No comparison data or snapshot document is requested until a user selects a diff
 or opens a removed entry. Refresh and retry fetch the currently published
 comparison; only publishing a new
 artifact updates the underlying snapshots. Removed screens retain their Changes
-rows and previous-version pages; a current entry excludes historical content
-with its id unless a snapshot is requested. Comparison failure aborts
-publishing transactionally, preserving the previous artifact. Publishing never
+rows and previous-version pages. Comparison failure aborts publishing
+transactionally and preserves the previous artifact, except that recognized
+earlier baseline output completes with Changes unavailable under the
+compatibility contract. Publishing never
 writes to a running development server's configured comparison directory.
 
 ## Design references
 
-The synthetic design catalogue owns distinct mobile and desktop examples,
-`design-changes-current` and `design-changes-overlay`. Existing outcome and
-impact examples now depict the same catalogue shell. Their stable authoring ids
-are retained to preserve links.
-
-See [the shell design](./mokly-shell-design.md) and
-[runtime behavior](./mokly-runtime.md) for the surrounding contracts.
+The synthetic mobile/desktop examples `design-changes-current` and
+`design-changes-overlay` retain stable ids. [Shell design](./mokly-shell-design.md)
+and [runtime behavior](./mokly-runtime.md) own their surrounding contracts.
 
 ## Comparison engine
 
@@ -303,14 +301,15 @@ set is one logical batch request; transitively referenced assets are grouped by
 dependency depth. File modes are still checked before any blob is accepted, so
 batching does not weaken symlink or non-regular-file rejection.
 
-Screens pair by id. Views pair by id, viewport, and color scheme, enumerated
-from the union of base and head manifest entries. Each side's view set is its
+Before pairing, discard a baseline entry whose id belongs to a current entry of
+another kind; the current entry is then added, and no removed record with that
+id is emitted. Remaining entries pair by kind and id. Views pair by id,
+viewport, and color scheme from the union of baseline and current v7 entries.
+Each side's view set is its
 entry's effective `colorSchemes`: a dark view present only in head is `added`,
 and one present only in base is `removed`. Mobile and desktop still classify
-separately from their own documents. Added, removed, changed, and unchanged
-states handle historical manifest versions v2–v6 and current v7 manifests; the
-historical reader normalizes stored routes and fragment paths inside its
-boundary, and pre-dark bases simply have no dark views. Configured
+separately from their own documents. The compatibility gate runs before
+pairing, so both sides use manifest v7. Configured
 shared-impact globs and manifest dependencies
 identify changes that can affect many screens. A dependency is a repository file
 or directory root: its own change or any descendant change is recorded as
@@ -333,17 +332,18 @@ metadata and flows. Complete JSON retains every screen and its
 evidence. Selected live responses contain only the requested entry and retain
 its snapshots in memory.
 
-Base and head panes live under separate snapshot roots, `snapshots/before/` and
-`snapshots/after/`, whose files are named by the derived view route. Local
+Base and head panes live under separate snapshot roots. Their names come from
+`snapshotViewPath` in the
+[artifact path contract](./mokly-artifact-paths.md). Local
 resources referenced by pane HTML or CSS are copied transitively, including
 binary fonts and images, while explicit HTTP(S)/data resources remain external.
 Root-absolute, protocol-relative, and other scheme-qualified resource URLs are
 not portable in an isolated snapshot and fail comparison instead of being
 silently omitted.
 Current-worktree resources and every base dependency must be regular public
-files, never protected authoring inputs. Pane documents run in script-disabled sandboxes that confine navigation to the pane; current documents remain byte-unmodified.
-Relocating a v3–v6 document resolves and rewrites its first relative `<base href>` against the stored location, marking it `data-mokly-snapshot-base` instead of adding a second; a non-portable base fails capture. Without one, Mokly injects that private base.
-Injected-base HTML `href="#fragment"`, SVG `href`, and qualified `xlink:href` fragments are rewritten to the canonical snapshot document, so native pane anchor clicks stay within that document. SVG presentation attributes and inline styles retain `url(#fragment)`: browsers keep those paint, clip, mask, marker, and filter references document-local despite the base. Relocation changes no `mock:` link marker or non-fragment URL, reference validation confines the base to the same snapshot side, and no stored path enters `review.json`.
+files, never protected authoring inputs. Pane documents run in script-disabled
+sandboxes that confine navigation to the pane. Accepted v7 documents are copied
+byte-for-byte; ignore normalization changes classification only.
 
 `review.json` is the normative machine-readable result. Its screen records are:
 
@@ -390,10 +390,8 @@ interface ReviewResult {
 ```
 
 Version 4 addresses screens, components, variants, and views by entry id and
-view axes and stores no route or artifact path. A view's snapshot documents
-live at `snapshots/<side>/<view route>` beneath the generation root, where the
-view route derives from the entry's kind, id, viewport, and color scheme under
-the [derived route rule](./mokly-authoring.md#derived-routes); a side the
+view axes and stores no route or artifact path. Snapshot paths come from
+`snapshotViewPath`; a side the
 view's state lacks (`added` has no `before`, `removed` has no `after`) has no
 document. Component catalogues add component, variant, use-case, and
 affected-consumer records addressed by entry id, defined by the
@@ -412,17 +410,17 @@ exactly when the view's normalized documents differ. Empty optional lists are
 omitted; results without them mean the analysis did not run. Retained resource
 reasons make paired views changed, and summary counts follow these states.
 
-Entry records sort in canonical catalogue order, kind then id with a parent's
-variants following it in authored order; views sort by viewport (`mobile`,
-then `desktop`) and then color scheme (`light`, then `dark`).
-Changed and impact paths sort lexically. No timestamp or absolute checkout path
-enters the JSON. Before/after HTML remains unmodified in the artifact even when
-ignore normalization changes classification.
+The [review validation contract](./mokly-component-review-validation.md)
+exclusively owns every `review.json` array order. No timestamp or absolute
+checkout path enters the JSON. Snapshot HTML retains its accepted bytes even
+when ignore normalization changes classification.
 
 ## Review Ignore
 
 `ReviewIgnore` marks repeated shell chrome with paired inert boundaries and no
-layout wrapper. A stable kebab-case id is unique per generated document. Review
+layout wrapper. Its stable id uses plain lowercase kebab-case and may equal a
+Windows device name; only entry ids apply the filename restriction. The id is
+unique per generated document. Review
 normalizes a region only when both sides contain one valid matching boundary.
 One-sided adoption removes marker syntax but compares the real children.
 

@@ -2,20 +2,11 @@
 
 ## Delivery Status
 
-This contract is implemented. Its delivery and verification history is recorded
-in the completed
-[in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
-
-[Whole-document pages](./mokly-pages.md) use the same logical links, IDs,
-source ownership, and `navPath` breadcrumbs as screens and use cases.
-
-The [frame adapters](./mokly-frame-adapter.md) and `@mokly/viewer` package
-are implemented. This document's same-origin interactions remain
-authoritative. The outer shell is a hydrated React tree that renders routes
-from the catalogue read model, as tracked in the
-[React Browse shell plan](../../plans/react-browse-shell.md). Every marker,
-sandbox, target-parsing and outer-navigation rule below applies to that shared
-shell in Serve, export and embedded hosts.
+Implemented by the [in-frame navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
+[Pages](./mokly-pages.md) share the screen/flow link and breadcrumb rules. The
+hydrated shell and [frame adapters](./mokly-frame-adapter.md) apply every marker,
+sandbox, target, and outer-navigation rule in Serve, export, and embedded hosts.
+Controlled unknown-id handling is the approved Milestone 14 follow-up.
 
 ## Scope
 
@@ -275,6 +266,12 @@ read model to the exact `/view/<route>` URL before rendering or opening any
 context; there is no id alias page or redirect. See
 [Static export delivery](./mokly-export-delivery.md).
 
+For an absent runtime frame id, standalone/uncontrolled shells show the shared
+missing destination and any later selection reinstalls its canonical route. A
+controlled Viewer emits one frame error, changes no selection/display, and emits
+no selection/navigation event. [Identity-derived paths](./mokly-artifact-paths.md)
+owns the helper.
+
 The same trusted parent enhancement exclusively handles modified pointer
 activation and explicit non-self targets after validating the marker and
 canonical destination. Modified activation includes Meta-, Ctrl-, or
@@ -369,14 +366,12 @@ receive the complete proposal and commit nothing until they supply it back.
 A removed-entry destination also carries its public `snapshot` identity. Route
 parsing accepts exactly one lowercase 64-hex value and requires it to match that
 removed entry's id. The query survives same-entry axis and filter changes,
-Back/Forward and hydration; a current-entry link omits it and therefore clears
-historical selection. Unknown, stale, repeated, mismatched, or identity-less
-same-id history is unavailable through the Viewer error state rather than
-redirected to current content or left to native host navigation.
-Historical snapshot queries are supported only on the removed entry's
+Back/Forward and hydration. Unknown, stale, repeated, or mismatched snapshots
+are unavailable through the Viewer error state rather than retargeted.
+Snapshot queries are supported only on the removed entry's
 canonical `/view/<route>` URL or its provider-normalized extensionless form,
-where the route derives from the removed entry's kind and id. Without the
-query, that URL shows current content when a current entry has the same id.
+where the route derives from the removed entry's kind and id. Without the query,
+an id-only removed selection normalizes to its published identity when present.
 
 ## Verification Contract
 

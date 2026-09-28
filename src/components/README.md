@@ -85,9 +85,8 @@ changes still count directly. Exact `ownedDependencies` and renderer style or
 resource ownership records handle material outside the component's body. Global
 or mixed resources remain conservatively attributed. Dependency declarations
 and adopting an unrelated component alone do not invent a visible screen change.
-Historical Mokabook comparisons preserve the original document coordinates when
-applying recorded style ownership; internal marker renames alone do not create
-consumer changes or alter the retained snapshots.
+Compatible v7 baselines preserve each document's UTF-16 coordinates when
+applying recorded style ownership.
 
 Comparison projection can expose caller-owned slot material that HTML parsing
 discarded from contexts such as `template` or `select`. Removing component
@@ -107,7 +106,7 @@ node --import tsx --test tests/component_*.test.ts
   boundary and inference.
 - [`manifest_build.ts`](./manifest_build.ts) and
   [`manifest_entry_validation.ts`](./manifest_entry_validation.ts): flattened
-  parent/variant records and current-or-historical validation.
+  parent/variant records and manifest-v7 validation.
 - Viewer [`props.ts`](../../packages/viewer/src/components/props.ts),
   [`schema.ts`](../../packages/viewer/src/components/schema.ts), and
   [`codec.ts`](../../packages/viewer/src/components/codec.ts): declarative

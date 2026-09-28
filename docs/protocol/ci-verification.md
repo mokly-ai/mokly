@@ -2,15 +2,10 @@
 
 ## Delivery Status
 
-The suite CLI, inventory evidence, event-specific parallel workflow graph, and
-fixture reuse in this document are implemented. The
-[hosted acceptance measurement](../reviews/ci-performance.md) records the
-delivered timing, capacity, cache, cost, and coverage evidence. The
-authoritative complete local and complete-mode release gate remains
-`cargo xtask check`; the full hosted aggregate is reusable evidence for its
-exact tree. The public package forwarding and hierarchical cancellation
-additions below are implemented by the corresponding review-follow-up
-milestones.
+The suite CLI, evidence, workflow graph, and fixture reuse are implemented.
+Repository ratchets are the approved Milestone 13 target. [Hosted measurements](../reviews/ci-performance.md)
+record timing/coverage. `cargo xtask check` remains the complete local gate; a
+validated hosted aggregate is reusable evidence for its exact tree.
 
 ## Verification Boundary
 
@@ -45,18 +40,21 @@ fail before any subprocess starts.
 
 | Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                                                                |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Repository       | Live `npm run dependencies:check` first; Prettier check; ESLint; `cargo fmt --all -- --check`; workspace Clippy with warnings denied; workspace Rust tests; Rust file-length audit.                                                                                                                                                                                                        |
+| Repository       | Live dependency audit first; Prettier; ESLint; TypeScript length, protocol-cap, and unused-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                                                                                                                                                         |
 | Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; all five clean consumer smokes using that pair. Real `prepack` builds remain part of packing. |
 | Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most two files active. A shard runs its whole-file partition.                                                                                                                                                                                                                                |
 | Browser          | One ordinary package/example preparation followed by every discovered Playwright spec, with `fullyParallel: false`, one worker, existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                                                                                 |
 | Native platforms | On macOS and Windows, build once and run export transaction and destination-race tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                                                            |
 | Required CI      | Evaluate the result and evidence from the repository job, every package runtime selected for this event, all selected unit and browser runtime/shard combinations, and both native platforms.                                                                                                                                                                                              |
 
-The complete command and selected suites must be generated from the same gate
-definitions. Adding a command to a suite therefore adds it to the complete
-gate. The Rust file-length auditor is a repository-gate operation implemented
-inside xtask rather than a subprocess in the command list; it has the same
-failure semantics as the listed commands.
+Complete and selected suites share gate definitions, so adding a suite command
+adds it to the complete gate. In-process auditors have the same failure
+semantics as subprocesses.
+
+Milestone 13 makes `cargo xtask check` fail when changed TypeScript crosses 300
+lines or grows while already over, a protocol cap is raised or added, or an
+internal export is newly unused outside the shrinking baseline. The
+[ratchet contract](./verification-ratchets.md) owns exact scopes and exceptions.
 
 The ESLint configuration derives global ignores from the repository
 `.gitignore`, then layers its broader ESLint-only ignores. Git-ignored build,

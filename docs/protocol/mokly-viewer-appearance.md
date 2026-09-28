@@ -2,10 +2,7 @@
 
 ## Delivery Status
 
-This document is the canonical status for viewer appearance. Other protocols
-link here rather than restating it.
-
-Both halves are implemented. Embedded: `theme` on `MoklyViewerProps` and
+This is the implemented canonical viewer-appearance contract. Embedded: `theme` on `MoklyViewerProps` and
 `ServerViewerProps`, applied to every viewer root and resolved for Auto through
 CSS; per-frame preview `color-scheme`; and preview controls renamed to name the
 preview they change. Standalone: one Appearance selector in the top bar on

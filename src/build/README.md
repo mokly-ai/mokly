@@ -76,9 +76,8 @@ must survive the boundary. `MoklyError` carries a `Symbol.for` brand and
 `isMoklyError` checks that brand, a known code, and the unprefixed detail. The
 facade adds the source module; `load_graph.ts` reconstructs branded errors as
 CLI `MoklyError`s without double prefixes. Unrelated evaluation failures remain
-bundling errors. `src/registry/historical_collections.ts` validates legacy v3–v5
-collection edges before removing those records from comparison baselines; v6
-does not accept collection entries. `mock_links.ts` rewrites id links to the
+bundling errors. `src/registry/historical_manifest.ts` applies the strict v7
+baseline boundary before comparison. `mock_links.ts` rewrites id links to the
 identity-derived target artifact and builds the compatibility transform's
 logical-route index from the shared path helpers; a use case without a screen
 as its first step is an invalid registry invariant, not a navigation folder. Registry

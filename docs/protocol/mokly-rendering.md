@@ -25,7 +25,7 @@ import type { ReactNode } from "react";
 import type {
   ColorScheme,
   ScreenDefinition,
-  ComponentDefinition,
+  ComponentVariantDefinition,
   ComponentStyleOwnership,
   ComponentResourceOwnership,
   Viewport,
@@ -33,7 +33,7 @@ import type {
 
 interface RenderInput {
   colorScheme: ColorScheme;
-  entry: ScreenDefinition | ComponentDefinition;
+  entry: ScreenDefinition | ComponentVariantDefinition;
   componentProps?: Readonly<Record<string, unknown>>;
   node: ReactNode;
   stylesheets: readonly string[];
@@ -133,19 +133,11 @@ never copied into the npm package.
 
 ## Generated Contract
 
-`mokly build` writes deterministic output under `mockupsDir`, at the routes the
-[derived route rule](./mokly-authoring.md#derived-routes) fixes for each
-entry's kind and id:
-
-- `screens/<id>.mobile.html` and `screens/<id>.desktop.html` fragments for each
-  screen, including each screen variant under its own id (specified by the
-  [variant contract](./mokly-variants.md));
-- `screens/<id>.mobile.dark.html` and `screens/<id>.desktop.dark.html` when
-  that screen's effective schemes include dark;
-- `components/<id>.<viewport>[.dark].html` views for each component variant
-  entry under the same scheme rule; a component parent has no views;
-- one complete HTML document at each page route, `pages/<id>.html`;
-- `mokly-manifest.json` using schema version 7.
+`mokly build` writes deterministic screen/component views, complete page
+documents, and `mokly-manifest.json` beneath `mockupsDir`. The
+[artifact path contract](./mokly-artifact-paths.md) owns every exact name.
+Component parents have no views, and dark views exist only for entries whose
+effective schemes include dark.
 
 Screen, use-case, and component routes are durable identifiers and do not imply
 a composed HTML file. A screen's fragments are bare product renders with required head
@@ -172,10 +164,10 @@ file.
 
 All catalogues emit [manifest v7](./mokly-component-manifest.md), including
 pages, source inventory, component variant entries and per-view
-invocation/ownership records. Historical readers accept v3, both disjoint v4
-formats, v5, v6, v7, and opt-in v2. Version 7 stores no route, view path, or
-other value derivable from an entry's kind, id, and configuration. The common
-current shape is:
+invocation/ownership records. Current and baseline readers accept only v7;
+earlier output follows [baseline compatibility](./mokly-baseline-compatibility.md).
+Version 7 stores no route, view path, or other value derivable from identity and
+configuration. The common shape is:
 
 ```ts
 interface ManifestV7 {

@@ -2,18 +2,10 @@
 
 ## Delivery Status
 
-Implemented. This document completes the
-[consumer export contract](./mokly-export.md). It defines portable serving
-and browser behavior for the consumer command, with Cloudflare normalization
-kept in the repository adapter. Delivery is tracked in the
-[consumer static export plan](../../plans/consumer-static-export.md).
-
-The public catalogue, cross-origin inspector and viewer package are implemented
-by the completed [viewer library plan](../../plans/mokly-viewer-library.md).
-Removed page and screen previous versions are packaged and rendered by the
-[removed content previews plan](../../plans/removed-content-previews.md).
-Delivery descriptor v3 and the single shell page per entry are defined by the
-[id-derived routes plan](../../plans/id-derived-routes.md).
+Implemented portable serving for [consumer export](./mokly-export.md), with
+Cloudflare normalization confined to its repository adapter. Public catalogue,
+viewer, inspector, and [removed previews](./mokly-removed-previews.md) share
+delivery descriptor v3 and one shell page per entry.
 
 ## Hosting Contract
 
@@ -70,7 +62,7 @@ when written into URLs.
 | Path                          | Meaning                                                               |
 | ----------------------------- | --------------------------------------------------------------------- |
 | `index.html`                  | Full catalogue home                                                   |
-| `view/<route>`                | Full shell for current entries and removed screens/pages              |
+| `view/<route>`                | Full shell for current and removed entries                            |
 | `static/<public-path>`        | Adapted current fragments and public consumer resources               |
 | `__mokly/`                    | Required shell CSS, fonts, browser modules, and comparison generation |
 | `__mokly/catalogue.json`      | Public catalogue read model v3                                        |
@@ -98,8 +90,8 @@ component variants remain eligible for comparison.
 Every manifest, generated, copied, and adapter-added path enters a single
 collision-checked inventory, including file/directory prefix collisions.
 Reject incompatible duplicate paths, aliases, or reserved paths before
-installation. Shared byte-identical resources may be deduplicated. Current-id
-precedence over removed entries follows the Changes contract.
+installation. Shared byte-identical resources may be deduplicated. Current and
+removed entries cannot share an id under the Changes contract.
 
 Adapter aliases enter the same case-folded path namespace as files, including
 the final ownership marker. Each alias is a safe relative, file-like route
@@ -128,7 +120,8 @@ identity values use 64 lowercase SHA-256 hex characters. Repository previews
 without Changes explicitly set `comparisonUrl: null`; deployment identity
 remains required. Null disables comparison requests and never falls back to a
 development endpoint. Consumer CLI exports always include their validated
-generation URL. The descriptor carries no id-to-route map: the shell derives
+generation URL when Changes is ready; an incompatible base uses null. The
+descriptor carries no id-to-route map: the shell derives
 every URL from kind and id through the shared path module.
 
 Static frame-link enhancement resolves a validated logical id through the
@@ -145,12 +138,12 @@ entry identity and existing scroll/disclosure behavior. Unknown ids are
 unavailable; the shell renders only entries present in its catalogue read
 model and never invents a catch-all route.
 
-Provider-normalized extensionless `/view/<route>` URLs resolve by parsing the
-route into kind and id and looking that id up in the read model: a current
-entry, or a retained removed entry from `removedEntries` when the URL carries
-its `snapshot` query. Historical links keep their exact published `snapshot`
-query while the preview adapter removes `.html`. Unknown, stale, and
-id/snapshot mismatches remain unavailable.
+Provider-normalized extensionless `/view/<route>` URLs use the shared helper
+and parser from the [artifact path contract](./mokly-artifact-paths.md), then
+resolve the id to a current or removed read-model entry. A removed entry needs
+no query when its id resolves uniquely; if a `snapshot` is present, it must
+match the published record. Unknown, stale, and mismatched identities remain
+unavailable.
 
 An exported page embeds a compact shell bootstrap containing its route, shell
 context, catalogue identity, and content/evidence revisions. It references the
@@ -238,6 +231,11 @@ modules. The browser graph must be complete without unused server dependencies.
 All product data, counts, and comparison results come from the real captured
 catalogue and Git inputs. No publishing, sandbox, or environment labels are added
 to product screens. The existing light/dark, mobile/desktop shell design applies.
+
+When the selected base was built by an earlier Mokly, export contains no
+comparison generation, sets `comparisonUrl: null`, and advertises Changes as
+unavailable while still completing successfully, exactly as defined by
+[baseline compatibility](./mokly-baseline-compatibility.md).
 
 ## Browser Modules
 

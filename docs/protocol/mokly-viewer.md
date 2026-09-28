@@ -2,25 +2,13 @@
 
 ## Delivery Status
 
-The package, React API, static server entry and first-party hosts were
-implemented by the [viewer library plan](../../plans/mokly-viewer-library.md),
-and [coordinated release preparation](./npm-release.md) by its Milestone 6.
-Multi-instance highlights and markers are implemented by the
-[comment anchoring plan](../../plans/viewer-comment-anchoring.md) and remain
-part of the hydrated shell's public contract; the saved-variant selection that
-plan delivered is replaced by variant entries under the
-[id-derived routes plan](../../plans/id-derived-routes.md), so a selection
-names one entry id.
-This document now defines the hydrated shell contract delivered by the
-[React Browse shell plan](../../plans/react-browse-shell.md): one React
-component tree rendered on the server and hydrated in every delivery mode.
-Serve, export and application-owned hosts now use that tree directly. Local
-Serve/export presentation includes the standalone Appearance control defined by
-the [viewer appearance contract](./mokly-viewer-appearance.md); embedded hosts
-use the same tree with host-owned appearance and independent preview selection.
-Removed pages and screens load their advertised previous versions in local,
-static, and embedded hosts through the same tree, as implemented by the
-[removed content previews plan](../../plans/removed-content-previews.md).
+The [viewer library](../../plans/mokly-viewer-library.md), React shell, hosts,
+and multi-instance markers are implemented. One server-rendered/hydrated tree
+runs in Serve, export, and application-owned hosts; every selection names a
+global entry id. [Appearance](./mokly-viewer-appearance.md) and
+[removed previews](./mokly-removed-previews.md) retain their host-specific
+controls and shared presentation in that tree.
+The host event/reference corrections are approved for Milestone 14.
 
 ## Package And Props
 
@@ -44,6 +32,8 @@ import type { FrameAdapter, Box, FrameNavigation } from "@mokly/viewer";
 interface ViewerSelection {
   /** Entry id: screen, page, use case, component, or variant; null is home. */
   screenId: string | null;
+  /** Exact removed record; absent for current content. */
+  snapshotId?: string;
   view: "all" | "changes";
   viewport: "mobile" | "desktop" | "both";
   colorScheme: "light" | "dark";
@@ -69,6 +59,7 @@ interface InstanceEvent {
 }
 interface ScreenNavigateEvent {
   screenId: string;
+  snapshotId?: string;
   fragment?: string;
   navigation?: FrameNavigation;
 }
@@ -136,9 +127,10 @@ interface MoklyViewerProps {
 }
 ```
 
-`ScreenNavigateEvent` names the destination by `screenId` only. A host that
-needs the shell URL derives it with `viewHref(kind, id)` from the shared path
-module exported by `@mokly/viewer/data`; the event carries no route.
+`ScreenNavigateEvent` names the destination by `screenId`; `snapshotId` is
+present exactly when historical content was committed. It has no `route`,
+`variantId`, or `kind`: hosts resolve the entry through the read model and use
+`viewHref(kind, id)` when they need its shell URL.
 
 For an object source, `baseUrl` is required and supplies its HTTP(S) artifact
 origin root. A URL/string source must be an absolute HTTP(S) catalogue URL;
@@ -167,19 +159,16 @@ Logical fragments and comparison mode retain their existing route/runtime
 state.
 
 `snapshotId` is the optional opaque identity published beside a removed entry.
-Without it, `screenId` selects current content when that id exists. With it, the
-pair must resolve exactly one removed record with that id; an unknown, stale, or
-cross-catalogue identity is unavailable and never falls back to the current
-entry. An id-only selection of a unique removed record remains supported and
-normalizes to its published identity when present. A legacy current/removed id
-collision without identity fails closed. The same rules apply to screens,
-pages, components, variants and every kind retained in `removedEntries`.
+With it, the pair must resolve exactly one removed record; an unknown, stale,
+or cross-catalogue identity is unavailable. An id-only selection of a removed
+record remains supported and normalizes to its published identity when present.
+Readers reject models where a current and removed record share an id. The same
+rules apply to every kind retained in `removedEntries`.
 Evidence adoption can compare an explicit snapshot identity directly: a newer
 catalogue is adopted, and a replaced or missing selected record becomes
-unavailable without retargeting. Identity-less legacy history has no such
-version boundary. It may adopt only when its complete removed record is
-unchanged; changed or removed metadata rejects the live revision so the
-existing full reload path requests a coherent document and preview again.
+unavailable without retargeting. When no identity is available, adoption
+requires the complete removed record to remain unchanged; otherwise the full
+reload path requests coherent metadata and preview bytes again.
 
 Defaults are home, All, Both, Light, empty search and no tags, overridden once
 by `defaultSelection`. `selection` supplies the complete controlled state;
@@ -196,8 +185,10 @@ viewport, scheme, filter, search and tag changes retain it. Shell links and
 pending route intents propose `{ screenId, snapshotId }` atomically. The
 component workspace's variant bar links to the parent's sibling variant
 entries, proposing `select({ screenId })` for the chosen variant; in controlled
-mode it changes only after the host supplies that selection back. A committed
-selection replaces frames and announces `onScreenNavigate` once, with
+mode it changes only after the host supplies that selection back. Comparison
+mode behavior across siblings follows
+[variant navigation](./mokly-variant-navigation.md). A committed selection
+replaces frames and announces `onScreenNavigate` once, with
 `snapshotId` when historical content was committed. Switching control mode
 requires remounting.
 Never mutate supplied objects/arrays.
@@ -224,17 +215,15 @@ active. An imperative `select` call and supplied `defaultSelection` or
 `selection` props also keep their axes. Controlled mode emits the complete
 proposal and waits for the host to supply it back.
 
-Historical `/view/<route>` URLs carry at most one validated
+Removed-entry `/view/<route>` URLs carry at most one validated
 `snapshot=<64-hex>` query, where the route derives from the removed entry's
 kind and id. Direct URLs, SSR/hydration and Back/Forward restore the exact
 record. The query stays through viewport, scheme and filter changes and is
 removed by navigation to current content. An id/snapshot mismatch is
-unavailable. Current and historical records may share `screenId`; the entry
-title, breadcrumbs, Details,
-status, active row, preview lookup and navigation events always use the resolved
-record rather than a current-id lookup. Removed screens expose only their
-read-only previous version: no current component picking, inspection or
-comparison action is inferred from the colliding current entry.
+unavailable. Titles, breadcrumbs, Details, status, active rows, preview lookup,
+and navigation events always use the resolved removed record. Removed screens
+expose only their read-only previous version, with no component picking,
+inspection, or comparison action.
 
 Free text and tags follow [Browse search](./mokly-runtime.md#browse-shell):
 parse case-insensitive `tag:` terms out of search into a deduplicated tag list,
@@ -265,6 +254,8 @@ together until a complete matching update arrives.
 `onSelectionChange` reports requested state changes. `onScreenNavigate` fires
 once after a committed entry, snapshot or fragment transition, including accepted
 frame links and Back/Forward; it is observational, not a second router.
+Unknown frame-link behavior for standalone, uncontrolled, and controlled hosts
+is owned by the [navigation contract](./mokly-navigation.md#enhanced-navigation-and-safe-degradation).
 Instance hover/click reports scoped keys and current frame-relative boxes;
 hover exit uses null and empty boxes, clicks always have an instance. Flow
 events identify the owning use case and step without changing the screen's key.

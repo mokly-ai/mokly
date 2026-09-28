@@ -2,17 +2,11 @@
 
 ## Delivery Status
 
-Implemented consumer CLI and shared export engine. Repository preview capture
-shares its artifact validation, static delivery, and output transaction. The
-[consumer static export plan](../../plans/consumer-static-export.md) tracks
-delivery of this contract and the [static delivery contract](./mokly-export-delivery.md).
-Normal build validation and the existing comparison schema remain authoritative.
-
-The [viewer library plan](../../plans/mokly-viewer-library.md) tracks the
-implemented public catalogue, inert published inspector and separate viewer
-package. Serve and export now share a server-rendered React shell that hydrates
-with the bundled viewer runtime. Consumer frames and comparison documents remain
-static, and the existing presentation and interactions are preserved.
+The consumer CLI, shared engine, and repository preview reuse artifact
+validation, [static delivery](./mokly-export-delivery.md), and one transaction.
+Serve/export share the viewer's server-rendered, hydrated React shell; consumer
+and comparison frames remain static. Build and comparison contracts stay
+authoritative.
 
 ## Scope
 
@@ -61,7 +55,8 @@ their existing execution boundary; export adds no hosting network calls.
 
 ## Baseline And Comparisons
 
-The `export` command always includes comparisons. `publish --no-changes` uses
+The `export` command always requests Changes; an incompatible base follows the
+[baseline contract](./mokly-baseline-compatibility.md). `publish --no-changes` uses
 the same transactional engine with current-only assembly, no baseline reads,
 and the same source/public-byte consistency checks. It omits removed entries,
 diff files and comparison controls; delivery metadata has a null comparison URL.
@@ -73,8 +68,10 @@ and their merge base. Committed mode also needs the committed baseline artifacts
 at that commit; derived mode instead rebuilds the commit before capture under
 the [derived baselines contract](./mokly-derived-baselines.md). CI must fetch
 sufficient history before invoking the command; export never fetches it.
-Unavailable or invalid baselines fail explicitly, including shallow-history
-failures. It does not silently export a zero Changes count or disable controls.
+Missing or invalid baselines fail explicitly, including shallow history.
+Recognized earlier output is the one exception: export succeeds with Changes
+unavailable, no history files, and the exact diagnostic defined by
+[baseline compatibility](./mokly-baseline-compatibility.md).
 
 Resolve and pin one merge-base commit for the operation. Both entry-level
 Changes attribution and screen comparisons use that commit, the same current
@@ -89,9 +86,9 @@ Comparisons use [review result v4](./mokly-changes.md#comparison-engine) for
 every catalogue. It retains all existing states, shared/dependency impact,
 ignored regions, both viewports and all effective color schemes; see the
 [supported format matrix](./README.md#supported-formats). Removed screens,
-pages, components and variants retain their baseline context; a current entry
-excludes historical content with its id unless a snapshot is requested. Pages
-have no visual comparisons. An id absent from a side's manifest follows the
+pages, components and variants retain their baseline context; current and
+removed records never share an id. Pages have no visual comparisons. An id
+absent from a side's manifest follows the
 existing added/removed rules. A declared but
 missing baseline document, invalid manifest, or unavailable resource fails;
 none becomes an invented empty baseline. Empty registries retain the normal
@@ -270,9 +267,8 @@ second screen renderer or weakening build validation.
 
 Repository preview captures the already-built catalogue through Browse and
 shares final artifact validation, delivery identity, and the output transaction.
-It retains optional Changes and its existing snapshot/alias rules. Cloudflare routing/header files
-remain adapter concerns. Legacy output migration must be tested independently
-of clean CI output. A provider adapter may add metadata before installation;
+It retains optional Changes and existing snapshot/alias rules. Cloudflare
+routing/header files remain adapter concerns. A provider adapter may add metadata before installation;
 it must not mutate an already-installed site or relax core confinement.
 
 The first version supports HTTP(S) deployment at the origin root. Subpath

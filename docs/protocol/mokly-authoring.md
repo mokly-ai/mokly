@@ -35,8 +35,9 @@ and nested authoring forms. Ids are explicit,
 globally unique kebab-case values and remain stable across navigation changes.
 An id whose value is a Windows device name (`aux`, `con`, `nul`, `prn`,
 `com1`–`com9`, or `lpt1`–`lpt9`) is rejected with the `invalid-id` registry
-violation because it would name an unwritable file; the tag and link grammar
-is unchanged.
+violation because it would name an unwritable file. This restriction applies
+only to entry ids; tags, logical-link ids, and `ReviewIgnore` ids use the plain
+kebab-case grammar defined by their owning contracts.
 A screen or component may also declare `variants`: each variant flattens into
 a complete entry of the parent's kind with its own global id, its own derived
 route, and a `variantOf` relationship to the parent. The
@@ -74,43 +75,16 @@ path derivation, label diagnostics, ordering, and folder keys.
 
 ## Derived Routes
 
-Authors never write a route. Every entry's route is a pure function of its
-kind and id, so nothing but the id moves it:
+Authors never write a route. Kind plus id determines every entry, view,
+comparison, and preview path, so folder and title changes cannot move a URL.
+The [identity-derived artifact path contract](./mokly-artifact-paths.md) owns
+the exact tables, shared functions, URL parser, and reserved prefixes. Wire
+formats carry identity and axes rather than those derivable paths.
 
-| Kind      | Route                  | Generated views                          |
-| --------- | ---------------------- | ---------------------------------------- |
-| Screen    | `screens/<id>.html`    | `screens/<id>.<viewport>[.dark].html`    |
-| Page      | `pages/<id>.html`      | The route is the rendered document       |
-| Use case  | `user-flows/<id>.html` | None; the route is a logical identifier  |
-| Component | `components/<id>.html` | `components/<id>.<viewport>[.dark].html` |
-
-A variant is an entry of its parent's kind and derives its own route from its
-own id. `<viewport>` is `mobile` or `desktop`; the `.dark` infix is present
-exactly for an effective dark color scheme. A component parent has no views of
-its own: its page shows its first variant entry in authored order, and every
-component view belongs to a variant entry. Screen and use-case routes are
-catalogue identifiers, not generated files; a page's route is its one
-generated document. Ids contain no `.`, so a view name never collides with
-another entry's route. The four prefixes are reserved output directories under
-`mockupsDir`, enter the build's collision inventory with every other generated
-and public file, and are not folders in navigation.
-
-One shared path module exported from `@mokly/viewer/data` owns the derivation:
-`entryRoute(kind, id)`, `viewRoute(kind, id, viewport, colorScheme)`,
-`viewHref(kind, id)` for the shell URL `/view/<route>`, and the parser that
-turns `/view/<route>` back into kind and id. The builder, server, export,
-review, and shell all use it; no other code composes route strings. Wire
-formats never carry a route because every reader can derive it; see the
-[manifest](./mokly-component-manifest.md) and
-[public catalogue](./mokly-catalogue.md) contracts.
-
-Every derived route segment already satisfies the portable grammar (ASCII
-letters, digits, and `-`, ending in `.html`). Mokly percent-encodes each path
-segment whenever it emits a URL in HTML or an HTTP redirect, including
-configured static asset paths whose filenames contain other characters. A
-configured static asset segment must start with an ASCII letter or digit and
-then use only URL-unreserved ASCII letters, digits, `.`, `_`, `~`, or `-`, and
-its filename stem must not be a Windows device name.
+Mokly percent-encodes every path segment it writes into a URL. A configured
+static-asset segment starts with an ASCII letter or digit, then uses only
+URL-unreserved ASCII letters, digits, `.`, `_`, `~`, or `-`; its filename stem
+must not be a Windows device name.
 
 ## Input Types And Nested Trees
 
@@ -126,64 +100,12 @@ interface EntryInput {
   relatedDocs: readonly string[];
   title: string;
 }
-
-interface NestedFolderInput {
-  address?: string;
-  children: readonly NestedChild[];
-  dependencies?: readonly string[];
-  relatedDocs?: readonly string[];
-  title: string;
-}
-
-interface RootInput {
-  address?: string;
-  children: readonly NestedChild[];
-  dependencies?: readonly string[];
-  navPath?: readonly string[];
-  relatedDocs?: readonly string[];
-}
 ```
 
-`defineRoot({ navPath?, children, address?, dependencies?, relatedDocs? })`
-flattens nested `screen()` and `page()` leaves into ordinary definitions;
-`folder({ title, children, address?, dependencies?, relatedDocs? })`
-groups children without creating an entry. Nested leaves carry the same fields
-as their flat forms minus `navPath`, which derives from the tree; their routes
-derive from their ids like every other entry. Path derivation follows the
-[navigation path contract](./mokly-nav-paths.md).
-An explicit non-array root `navPath` fails at `defineRoot` with
-`MoklyError("build-invalid", "root navPath must be an array")`.
-Ancestor dependencies and related docs inherit with
-existing override behavior; address inheritance applies to screens only.
-Folders have no id, description, rationale, or entry status. An authored
-`navPath` key on a nested `screen()` or `page()` is an `invalid-nested-nav-path`
-registry violation naming the leaf id, even when its value is `undefined`:
-flattening retains the fact that it was authored rather than overwriting it.
-An empty `folder().children` fails at `defineRoot` flattening with
-`MoklyError("build-invalid", "folder <labels> has no children")`,
-where `<labels>` joins the root `navPath`, the ancestor folder titles, and the
-folder's own title with `›`, using `String(title)` for each label. A root
-with non-empty `navPath` and no children has no leaf to report a per-entry
-issue and would silently discard a folder: `defineRoot` rejects it with
-`MoklyError("build-invalid", "root <labels> has no children")`, where
-`<labels>` joins the root `navPath` with `›`. A root with omitted or empty
-`navPath` and no children returns no definitions. Folder titles are validated
-as navigation labels on every descendant entry under the
-[label rules](./mokly-nav-paths.md#labels-and-diagnostics).
-When these errors occur in an entry module, the module-bound facade prefixes
-their detail with `<source module>: `; the user sees exactly one
-`[mokly/build-invalid]` prefix, for example
-`[mokly/build-invalid] entries/example.mockup.tsx: folder Design › Empty has no children`.
-The nested authored-path violation is
-`nested entry <id> cannot author navPath` under the `invalid-nested-nav-path`
-code, attributed to the source module.
-
-The [navigation path contract](./mokly-nav-paths.md#labels-and-diagnostics)
-owns the exact `invalid-nav-path` and `nav-path-conflict` texts and
-attribution; [ordering and keys](./mokly-nav-paths.md#order-and-keys)
-are shared by authoring validation, the shell, and the public tree. See the
-[read model](./mokly-catalogue.md) for tree validation; key construction is
-defined by [ordering and keys](./mokly-nav-paths.md#order-and-keys).
+The [nested authoring contract](./mokly-nested-authoring.md) owns root/folder
+inputs, inheritance, flattening, and exact empty-tree and authored-`navPath`
+errors. The [navigation path contract](./mokly-nav-paths.md) owns label
+diagnostics, ordering, keys, and public-tree validation.
 
 `defineScreen` and nested `screen` inputs may declare `colorSchemes`. When
 omitted, a screen inherits the catalogue set; `colorSchemes: ["light"]` is the

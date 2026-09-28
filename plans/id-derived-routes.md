@@ -168,8 +168,8 @@ code changes.
       updated: global ids, `variantOf`,
       copied `navPath`, derived documents, inheritance per kind, forbidden
       fields `variants` and `navPath`, public grouping, and removal.
-- [x] [`mokly-pages.md`](../docs/protocol/mokly-pages.md) and
-      [`mokly-page-migration.md`](../docs/protocol/mokly-page-migration.md):
+- [x] [`mokly-pages.md`](../docs/protocol/mokly-pages.md) and the then-current
+      `mokly-page-migration.md` contract:
       `PageInput` without `route`, nested pages without `slug`, output at
       `mockupsDir/pages/<id>.html`, no `/id/` URL.
 - [x] [`mokly-components.md`](../docs/protocol/mokly-components.md),
@@ -493,31 +493,34 @@ Rewrite the protocol docs, guides, and READMEs for the user's review decisions
 earlier Mokly versions, the approved review fixes, and the verification
 ratchets. Finding numbers refer to the [review record](#review-record).
 
-- [ ] Old baselines (option A; findings 2, 9, 10, 15, 22, 23): the historical
-      manifest boundary accepts only manifest v7. Any other version, and the
-      legacy `mokabook-manifest.json` and `mockbook-manifest.json` baseline
-      names, makes the baseline incompatible: Serve reports Changes
+- [x] Old baselines (option A; findings 2, 9, 10, 15, 22, 23): the historical
+      manifest boundary accepts only manifest v7. An integer version below 7,
+      and the legacy `mokabook-manifest.json` and `mockbook-manifest.json`
+      baseline names, makes the baseline incompatible: Serve reports Changes
       unavailable, export and publish complete without Changes
       (`changesStatus: "unavailable"`, delivery `comparisonUrl: null`), and
       each prints one plain CLI line saying the comparison base was built
       with an earlier Mokly and Changes return once the base includes this
-      version. Delete historical document relocation and its private base,
-      legacy component-variant id expansion and its collision rule, v3–v6
-      path normalization, the v3–v5 readers, and the v2 legacy page migration
-      from every doc, including `mokly-component-manifest.md`,
+      version. An integer version above 7 is an invalid newer baseline: Serve
+      reports Changes unavailable with its normal safe diagnostic, while
+      explicit capture fails under existing rules. Delete historical document
+      relocation and its private base, legacy component-variant id expansion
+      and its collision rule, v3–v6 path normalization, the v3–v5 readers, and
+      the v2 legacy page migration from every doc, including
+      `mokly-component-manifest.md`,
       `mokly-changes.md`, `mokly-derived-baselines.md`,
       `mokly-removed-previews.md`, `mokly-catalogue-changes.md`,
       `mokly-nav-paths.md`, `mokly-variants.md`, `mokly-components.md`, and
       `mokly-page-migration.md`. Output-ownership cleanup of old generated
       files stays.
-- [ ] Identity leftovers: the v3 reader rejects a removed record whose id
+- [x] Identity leftovers: the v3 reader rejects a removed record whose id
       belongs to a current entry, so the same-id history rules go (findings
       14 and 28); `InstanceRef` has no `variantId`, and `ScreenNavigateEvent`
       is `{ screenId, snapshotId?, fragment?, navigation? }` with `snapshotId`
       present exactly when historical content was committed (finding 4);
       `ReviewIgnore` ids keep the plain kebab-case grammar, and only entry ids
       reject Windows device names (finding 15).
-- [ ] Review fixes: a baseline entry whose id belongs to a current entry of
+- [x] Review fixes: a baseline entry whose id belongs to a current entry of
       another kind is dropped before pairing, so the current entry is added
       (finding 8); one owning paragraph in
       `mokly-component-review-validation.md` states the `review.json` order
@@ -532,26 +535,26 @@ ratchets. Finding numbers refer to the [review record](#review-record).
       screen-only Serve logs a classifier failure and reports Changes
       unavailable (finding 16); snapshot and preview artifact names come from
       shared path builders (finding 17).
-- [ ] Shell behavior: switching sibling component variants keeps the
+- [x] Shell behavior: switching sibling component variants keeps the
       comparison mode, and the workspace reads that one mode (finding 3); an
       unknown frame-link id shows the missing view in uncontrolled and
       standalone shells and a later selection re-applies its route, while a
       controlled Viewer emits only `onError` and keeps its display (finding
       5); component variant rows use a component-shaped variant icon
       (finding 6).
-- [ ] Verification ratchets (findings 19 and 29): `ci-verification.md` and
+- [x] Verification ratchets (findings 19 and 29): `ci-verification.md` and
       `xtask/README.md` state that `cargo xtask check` fails when a changed
       TypeScript file under `src`, `packages/viewer/src`, or `scripts`
       crosses 300 lines or grows while over 300 lines relative to
       `origin/main`, when a protocol doc cap is raised or added relative to
       `origin/main`, and when an internal export is unused outside a reviewed
       baseline list that can only shrink.
-- [ ] Release notes (finding 30): `docs/protocol/npm-release.md` names the
+- [x] Release notes (finding 30): `docs/protocol/npm-release.md` names the
       rejected `ViewerSelection.variantId`, the removed `ScreenNavigateEvent`
       `route` and `variantId`, the removed `InstanceRef.variantId`, and the
       end of comparisons against baselines built by earlier Mokly versions.
-- [ ] Fix the remaining doc and code wording mismatches (finding 20).
-- [ ] Restore every protocol doc touched by Milestones 1–9 to its
+- [x] Fix the remaining doc and code wording mismatches (finding 20).
+- [x] Restore every protocol doc touched by Milestones 1–9 to its
       `origin/main` cap (a renamed doc keeps its predecessor's cap; a new doc
       stays at or below 250 lines) by splitting by responsibility, and lower
       the caps in `tests/protocol_doc_sizes.test.ts`; run
@@ -578,8 +581,11 @@ Tags: mockup
 
 - [ ] Failure-first tests: a v6 baseline makes Serve report Changes
       unavailable with the documented CLI line; export and publish succeed
-      without Changes; a v7 baseline still compares.
-- [ ] The historical boundary accepts only v7: delete v2–v6 parsing, the
+      without Changes; a v7 baseline still compares; a v8 baseline follows the
+      documented invalid-baseline path and never prints the earlier-version line.
+- [ ] The historical boundary accepts only v7: versions below 7 return the
+      incompatible-earlier outcome, versions above 7 return the invalid-newer
+      outcome, and v7 receives full validation; delete v2–v6 parsing, the
       legacy baseline manifest names, `legacyPages` and the v2 page migration,
       v3–v6 normalization in `src/registry/historical_manifest.ts`,
       `src/review/historical_document.ts` and every snapshot-base branch in

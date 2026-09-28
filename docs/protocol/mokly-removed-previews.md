@@ -66,13 +66,13 @@ and therefore no previews.
 ## Screens Reuse The Comparison
 
 A removed screen's previous views are the `before` views of its existing
-comparison. The comparison engine already captures every baseline view as
-`snapshots/before/<view route>`, the derived view route, with its transitive
+comparison. The comparison engine captures every baseline view at
+`snapshotViewPath("before", ...)`, with its transitive
 resources; the selected endpoint accepts a before-only entry, and
 Changes-enabled exports package those files under the generation root. The
 shell requests the selected comparison exactly as for a changed screen, using
 the stable endpoint in development and `comparisonUrl` in static delivery, then
-renders each `removed` view's document at its derived `snapshots/before/` path.
+renders each `removed` view from `snapshotViewPath("before", ...)`.
 Only views whose `state` is `removed` render; a response whose views carry an
 `after` side for that entry is a stale or reused generation and is treated as
 unavailable.
@@ -102,8 +102,8 @@ interface RemovedPagePreview {
 }
 ```
 
-The preview carries only the page id. Its historical document lives at
-`snapshots/before/pages/<id>.html` below the generation root: the directory of
+The preview carries only the page id. `snapshotPagePath(id)` names its document
+below the generation root: the directory of
 the redirected `preview.json` in development, or the directory of
 `comparisonUrl` in static delivery. Readers accept only version 2.
 
@@ -130,8 +130,8 @@ __mokly/diffs/__generations/<generation>/pages/<id>.json
 __mokly/diffs/__generations/<generation>/snapshots/before/pages/<id>.html
 ```
 
-`pages/<id>.json` is the same `RemovedPagePreview` shape. Its files enter the
-generation content identity, ownership
+The file at `pagePreviewMetadataPath(id)` contains the same
+`RemovedPagePreview` shape. Its files enter the generation content identity, ownership
 inventory, reference validation, deployment hash, and upload archive. A preview
 whose closure is incomplete fails the export transactionally, as an incomplete
 screen snapshot does. Current-only delivery writes no historical files and
@@ -154,14 +154,13 @@ interface RemovedEntry {
 
 `snapshotId` is the opaque baseline/generation identity defined by the
 [catalogue contract](./mokly-catalogue.md#serialization-identity-and-versions).
-It selects this exact removed record even when current content has the same
-stable entry id. It is a selection key, not an authorization capability, and
-does not name or grant access to preview bytes.
+It selects the exact removed record and baseline generation. It is a selection
+key, not an authorization capability, and grants no access to preview bytes.
 
 `preview.kind: "screen"` states that the removed screen's comparison `before`
-views are its preview; the viewer resolves them from `comparisonUrl` at the
-derived `snapshots/before/<view route>` paths. `preview.kind: "page"` states
-that the page's packaged preview metadata is published at `pages/<id>.json`
+views are its preview; the viewer derives them from `comparisonUrl` with
+`snapshotViewPath`. `preview.kind: "page"` states that the page's metadata uses
+`pagePreviewMetadataPath(id)`
 inside the same generation directory as `comparisonUrl`, so the viewer derives
 that location from the generation and the page id. Serve leaves `preview`
 absent for pages, because live page generations are selected through the
@@ -182,8 +181,8 @@ generation beneath `__mokly/diffs/__generations/**` by construction. The shipped
 
 The embedded viewer first resolves the selected snapshot and historical entry,
 then loads preview metadata only from the advertised generation:
-`comparisonUrl` for screens and `<generation directory>/pages/<id>.json` for
-pages, resolved against the source origin root for object and URL sources. Validated metadata may then name
+`comparisonUrl` for screens and `pagePreviewMetadataPath(id)` for pages,
+resolved against the source origin root for object and URL sources. Validated metadata may then name
 a historical document only on that source origin beneath the advertised
 generation's `snapshots/before/` directory. It never discovers
 `/__mokly/diffs/review.json`, runs Git, or fetches a removed entry's derived
@@ -266,7 +265,7 @@ truthful and the package keeps its external-module execution model.
 Navigation, evidence or source replacement, unmount, and viewport or scheme
 changes fence late responses exactly as comparisons do: a preview response can
 never replace another entry's stage. Back/Forward, direct removed-entry URLs,
-reused ids, stale or unknown snapshot ids, idle generation expiry, embedded
+stale or unknown snapshot ids, idle generation expiry, embedded
 controlled selection, and several viewers on one page follow the
 selected-comparison rules. Saved
 viewport and scheme choices are revalidated against the historical views
@@ -274,13 +273,13 @@ without inventing views.
 
 ## Acceptance
 
-Regressions cover removed screens through the selected and complete comparison
-paths in both output modes, same-id current/history pairs, removed pages with deleted assets and changed
-historical CSS, historical page-v4 manifests, path traversal and symlinks,
-current same-path files, malformed and mixed selections, coalescing, refresh,
+Regressions cover removed screens through selected and complete comparison
+paths in both output modes, removed pages with deleted assets and changed
+baseline CSS, path traversal and symlinks, current same-path files, malformed
+and mixed selections, incompatible baselines, coalescing, refresh,
 invalidation, cancellation, shutdown, idle recovery, both frame adapters,
 read-only enforcement, static delivery without renewal traffic, current-only
-delivery with zero historical work, and old/new catalogue readers. Embedded
+delivery with zero historical work, and the strict v3 catalogue reader. Embedded
 viewer coverage proves both adapters keep plain external and relative links
 inert. Presentation coverage accepts a final URL that only drops the `.html` suffix;
 rejects other redirects, origin changes, non-HTML and oversized documents;

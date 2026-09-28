@@ -40,9 +40,10 @@ evidence revisions advance independently. Failed candidates preserve the last
 snapshot, and superseded generations cannot replace it. `catalogue_update.ts`
 prepares updates before publication; `http_types.ts` owns the lifecycle types.
 
-Entry shells are served only at their derived `/view/<route>` locations.
-Legacy ID-shaped paths receive the ordinary not-found shell; Serve does not
-redirect them or interpret their fragment and snapshot queries.
+Entry shells are served at canonical `/view/<route>.html` and the matching
+provider-normalized extensionless path; both return the same 200 shell when the
+identity exists, while generated links stay canonical. ID-alias paths receive
+the ordinary not-found shell and are never redirected.
 
 Shell pages render through `@mokly/viewer/server` with CLI-owned live context.
 `public_catalogue_model.ts` validates each serialized public revision once and
@@ -59,6 +60,8 @@ The CLI host modules retain private live-update and capability transports.
 `screen_view_changes.ts` retains per-view screen-only material decisions from
 the existing classification pass. The public projection does not infer Changes
 membership from visual comparisons or invent empty usage for unfinished views.
+Any classifier failure, including in a screen-only catalogue, is logged and
+publishes Changes unavailable; there is no secondary comparison fallback.
 `public_review.ts` adds content-addressed aliases for matching complete explicit
 comparisons, verifying snapshot bytes against accepted input digests. Selected
 comparisons leave the catalogue pointer null. Public aliases never regenerate or
@@ -93,6 +96,10 @@ That reader validates the configured Git top level on its first read, so the
 unselected route reports `config-invalid` for a nested `repoRoot` while All
 remains available. Parent preparation, classification and selected readers use
 the same config-owned validation.
+
+Both readers accept only manifest v7. Recognized earlier output follows the
+successful unavailable behavior and single terminal line in the
+[baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
 
 `configured_review.ts` requires an injected `ReadOnlyReviewRepository` or a
 `ReviewRepositorySource` that supplies the current reader. The full comparison

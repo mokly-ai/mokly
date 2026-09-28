@@ -162,8 +162,9 @@ slots, and layout-neutral ranges. The variant's root render is not its own
 instance. All catalogues emit manifest v7 with the complete source inventory.
 Registered components add variant entries and complete per-view
 invocation/ownership records; explicit page callbacks still emit exactly one
-complete document. Historical v4 envelopes, v5, and v6 remain readable only at
-the Git boundary. Current readers require v7.
+complete document. Current and Git-baseline readers require v7; earlier output
+makes Changes unavailable under
+[baseline compatibility](../protocol/mokly-baseline-compatibility.md).
 
 The [child-control adapter](../protocol/mokly-link-controls.md) uses parsed
 source locations to patch only the marked control and its boundary templates.

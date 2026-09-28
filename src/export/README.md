@@ -25,10 +25,9 @@ catalogue change snapshots. A removed variant retains its baseline parent
 relationship; removal preserves ancestor context without introducing visual
 comparisons.
 Changes-enabled delivery captures every removed page from the same pinned
-baseline before installation. Its typed metadata is written as
-`pages/<id>.json` beside `review.json`, while its document at the derived
-`snapshots/before/pages/<id>.html` path and local
-resource closure share `snapshots/before/**` with screen comparisons. Removed
+baseline before installation. `pagePreviewMetadataPath(id)` names its typed
+metadata beside `review.json`; `snapshotPagePath(id)` names its document, and
+the local closure shares the snapshot tree with screen comparisons. Removed
 page and screen descriptors are emitted only for a complete generation. These
 files enter comparison identity before the generation path is chosen, then the
 normal reference checks, ownership inventory, deployment identity and upload
@@ -52,6 +51,8 @@ view states and the material-change flag.
 
 Review result v4 is the only comparison result: a catalogue without
 registered components emits the same shape with empty component arrays.
+The builders are exported from `@mokly/viewer/data` and owned by the
+[artifact path contract](../../docs/protocol/mokly-artifact-paths.md).
 
 With comparisons enabled, derived mode awaits `prepareReviewRepository` before
 compiling or capturing head input. Public capture and its final recheck substitute the accepted

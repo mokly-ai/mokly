@@ -1,8 +1,8 @@
 # Mokly Build And Browse Runtime
 
 [Whole-document pages](./mokly-pages.md) share the same path-derived folder
-hierarchy as screens and flows. The [migration contract](./mokly-page-migration.md)
-defines the required consumer upgrade.
+hierarchy as screens and flows. Current and baseline output use manifest v7
+under the [compatibility contract](./mokly-baseline-compatibility.md).
 
 ## Source Of Truth
 

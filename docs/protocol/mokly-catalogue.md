@@ -2,15 +2,11 @@
 
 ## Delivery Status
 
-Implemented through [viewer library Milestone 3](../../plans/mokly-viewer-library.md).
-Serve, export and repository preview share the public projection. The manifest
-stays private; local Browse keeps its embedded data, appearance and behavior.
-The additive removed-page and removed-screen preview descriptors are
-implemented by the
-[removed content previews plan](../../plans/removed-content-previews.md).
-Read model v3, defined by the
-[id-derived routes plan](../../plans/id-derived-routes.md), carries identity
-only: every route and view path is derived from kind and id.
+Serve, export, repository preview, and the viewer share public read model v3;
+strict current/removed collision rejection is the approved Milestone 11 target.
+The manifest stays private; local Browse retains embedded state. Removed-entry
+descriptors follow [removed previews](./mokly-removed-previews.md). Records carry
+identity only, with every route and view path derived from kind and id.
 
 ## Location And Types
 
@@ -136,11 +132,10 @@ interface CatalogueComponentVariant extends CatalogueEntry {
 }
 ```
 
-No record carries a route or a file path. A reader derives an entry's route
-and view routes from its kind and id under the
-[derived route rule](./mokly-authoring.md#derived-routes): a current screen or
+No record carries a route or file path. A reader uses the
+[artifact path contract](./mokly-artifact-paths.md): a current screen or
 component variant view is served at `static/<view route>`, a current page at
-`static/<route>`, and the shell page at `/view/<route>`. Removed entries have
+`static/<route>`, and the shell at `/view/<route>`. Removed entries have
 no current files; their historical documents come only from their `preview`
 descriptor. `PublicPath` is an artifact-root-relative POSIX file path, without
 a leading slash, origin, query or hash; resolve it against the source's origin
@@ -163,7 +158,8 @@ Do not spread a manifest, entry, or internal evidence object into public JSON.
 - Screens and component variants copy their effective `colorSchemes` and
   emit one view per effective viewport and scheme, sorted mobile/light,
   mobile/dark, desktop/light, desktop/dark; light-only fallback stays in the
-  viewer.
+  viewer. A current entry's comparison state is never `removed`; that state is
+  valid only inside `removedEntries`.
 - Pages have no viewport/usage. Use cases keep ordered standalone-screen steps;
   reused frames add no screen uses or duplicate instance records.
 - Component parents retain schemas, read-only control descriptions, and
@@ -181,9 +177,9 @@ Do not spread a manifest, entry, or internal evidence object into public JSON.
 
 Never emit `sourceFiles`, `declaredDependencies`, `ownedDependencies`, resolved
 dependency evidence, changed-path inventories, source graphs, Git commands,
-baseline manifest envelopes, content digests for source inputs, style offsets
+private manifest envelopes, content digests for source inputs, style offsets
 (`startOffset`/`endOffset`), style/resource ownership tables, absolute filesystem
-paths, credentials, render-capability tokens, or legacy manifests. No source
+paths, credentials, or render-capability tokens. No source
 bytes, HTML, runtime React values, or source maps belong in this JSON. This
 privacy rule applies recursively, including removed entries and extension fields.
 `snapshotId` is a one-way digest, never a public commit, manifest, or generation
@@ -195,22 +191,20 @@ visual comparisons. `included` is membership in Changes; affected consumers
 can have eligible comparisons while `included` is false. Folder visibility
 aggregates descendants without extra counts. Unknown, preparing, pending and
 disabled states never imply unmodified or a zero count. The
-[path contract](./mokly-nav-paths.md#variants-and-historical-paths) owns
-removed-entry ancestry. Removal is keyed by id: a baseline entry is removed
-when no current entry has its id. A current entry therefore excludes
-historical content with its id unless the request names a matching
-`snapshotId`; id-only lookup always chooses current content. Each newly
+[path contract](./mokly-nav-paths.md#variants-and-baseline-paths) owns
+removed-entry ancestry. Removal is keyed by id across kinds: a baseline entry
+is removed only when no current entry has its id. Readers reject a current and
+removed record sharing an id; only `removedEntries` may represent history. Each
+newly
 projected removed record carries an opaque `snapshotId` when real immutable
-identity is available, distinguishing it from current content and other
-catalogues. A removed variant of either kind is an ordinary removed entry
+identity is available, distinguishing baseline generations and catalogues. A
+removed variant of either kind is an ordinary removed entry
 carrying `variantOf`. The optional `preview` field is the additive descriptor
 defined by [removed previews](./mokly-removed-previews.md); readers tolerate
-its absence. Historical missing usage is unavailable. Historical usage is also
-unavailable when any referenced component's metadata is omitted under
-current-id precedence. The shared projection checks the components actually
-published in the model; it never publishes dangling references or weakens
-reader validation. Proven empty usage is ready with empty arrays, never
-inferred from a failed or incomplete render.
+its absence. Missing baseline usage is unavailable. The projection checks
+components actually published in the model; it never publishes dangling
+references or weakens reader validation. Proven empty usage is ready with empty
+arrays, never inferred from a failed or incomplete render.
 
 `comparisonUrl` is null or `__mokly/diffs/__generations/<generation>/review.json`,
 pinned to this content's evidence. Resolve snapshots against that JSON response
@@ -225,11 +219,12 @@ tags. Entry arrays sort by kind name in UTF-16 order (`component`, `page`,
 exception: emit them in authored order directly after their parent and before
 the next entry in kind-then-id order. That sibling order is the order
 `variantsById`, the navigation list, the details `Variants` row, and the
-public tree's entry-node `children` present. Apply the exception independently
-to `removedEntries`; when a variant's parent is absent from that array, the
-variant stays in its ordinary kind-then-id position. Sort all other removed
-entries by kind then id, instances/slots by key, and ranges by DOM start
-order. Tree siblings follow the
+public tree's entry-node `children` present. Build `removedEntries` through the
+combined current/baseline ordering: a removed variant of a surviving parent is
+emitted at that parent's kind/id position, retaining baseline authored sibling
+order; a variant without an eligible current parent stays in ordinary
+kind-then-id order. Instances/slots sort by key and ranges by DOM start order.
+Tree siblings follow the
 [shared comparator](./mokly-nav-paths.md#order-and-keys); entry-node variant
 children retain authored order. Emit required empties, omit absent optionals,
 use two-space indentation and a final LF. Identical inputs produce identical
@@ -247,16 +242,12 @@ generation from `comparisonUrl` may supply `sourceKind: "generation"`. With
 neither real source, projection omits the field instead of deriving it from
 revisions, `deploymentId`, metadata, time, or randomness.
 
-Readers validate supplied snapshot ids and require them to be unique. For a
-catalogue that omits the field but advertises one immutable comparison
-generation, the reader derives a generation-backed per-record identity. An
-id-only selection of one uniquely identified removed record remains compatible
-and normalizes to its safe published identity; current content still wins when
-both current and removed records use that id. Identity-less history also
-remains readable while its id is unique, but a current/removed id collision is
-unavailable. A baseline or generation change produces different ids, so an
-unknown, stale, or cross-catalogue selection fails closed rather than
-retargeting current content.
+Readers validate supplied snapshot ids and require uniqueness. When the field
+is absent but one immutable comparison generation is advertised, the reader
+derives a generation-backed identity. Id-only selection of a removed record
+normalizes to its safe identity when present. A baseline or generation change
+produces different ids, so an unknown, stale, or cross-catalogue selection
+fails closed rather than retargeting content.
 
 `deploymentId` is the artifact's 64-hex identity. The
 [delivery hashing rule](./mokly-export-delivery.md#deployment-identity) additionally
@@ -285,8 +276,8 @@ current non-variant id appears exactly once at its path; no empty folders,
 missing or duplicate references, or removed entries occur. Entry-node
 `children` holds exactly a parent's variants in authored order, with paths
 equal to that parent, and exists only for a screen or component with variants.
-Historical paths follow the
-[historical rules](./mokly-nav-paths.md#variants-and-historical-paths).
+Removed-entry paths follow the
+[baseline rules](./mokly-nav-paths.md#variants-and-baseline-paths).
 Unknown fields follow the existing reader policy for public JSON.
 
 ## Serve And Fetch Rules

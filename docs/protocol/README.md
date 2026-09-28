@@ -1,16 +1,9 @@
 # Protocol
 
-These documents define Mokly's implementation contract. They describe
-implemented pre-release behavior unless a document's Delivery Status explicitly
-labels an approved target that is still tracked by an active plan. Package,
-authoring, static build/check, responsive Browse, watched development, on-demand comparisons,
-packed consumer verification, CI, and npm release automation are implemented.
-The first public release remains an external delivery step. Path-based
-navigation and folder disclosure keys are implemented; their verification and
-review remain in the active [plan](../../plans/nav-path-hierarchy.md). The
+These documents define Mokly's implemented pre-release contract unless a
+Delivery Status names an approved active-plan target. The
 [id-derived routes plan](../../plans/id-derived-routes.md) defines the
-identity-only formats below: every route derives from an entry's kind and id,
-variants of both kinds are entries, and there is no `/id/<id>` URL.
+identity-only formats: paths derive from kind and id, and variants are entries.
 
 ## Supported Formats
 
@@ -19,29 +12,17 @@ variants of both kinds are entries, and there is no `/id/<id>` URL.
 | Without registered components | 7                  | 4                 |
 | With registered components    | 7                  | 4                 |
 
-All current catalogues emit manifest v7 with explicit pages, authored `navPath`,
-the complete source inventory and declared dependencies, and no route, view
-path, or other value derivable from kind, id, and configuration. Component
-catalogues also include variant entries and complete per-view usage.
-Comparisons use review result v4, which addresses screens, components,
-variants, and views by entry id and view axes, for every catalogue. Pages
-participate in Browse Changes without visual comparisons. The public read
-model is v3 and the static delivery descriptor is v3; readers accept only
-these versions.
-
-The current primary file requires v7. Git baseline readers accept v3 and both
-historical v4 formats: pages with `sourceFiles`, or components with `legacyPages`.
-These envelopes are disjoint; combining them is invalid. Historical v5, v6, and
-v7 are accepted; v3–v5 `collection` records are dropped after validation, and
-stored v3–v6 routes and fragment paths never leave the historical reader. Explicit
-`compatibility.readManifestV2` permits the legacy v2-format fallback only
-when the historical primary file is absent, never when it is invalid.
+Manifest v7 carries explicit pages, `navPath`, source inventory, declared
+dependencies, component variants, and per-view usage, but no derivable path.
+Review result v4 addresses entries and views by identity and axes. The public
+read model and static delivery descriptor are v3. Current and baseline manifest
+readers accept only v7; earlier output follows
+[baseline compatibility](./mokly-baseline-compatibility.md).
 
 ## Contracts
 
-- [CI verification](./ci-verification.md) — implemented suite, shard, evidence,
-  cache and aggregation contract; hosted acceptance measurements remain tracked
-  by the active CI performance plan.
+- [CI verification](./ci-verification.md)
+- [Repository verification ratchets](./verification-ratchets.md)
 - [Catalogue upload v1](./mokly-upload.md) — public CLI and hosted/self-hosted receiver boundary.
 - [Package and authoring contract](./mokly-package.md)
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
@@ -50,6 +31,8 @@ when the historical primary file is absent, never when it is invalid.
   cloud documentation site.
 - [Configuration contract](./mokly-configuration.md) — includes public-exclusion validation and defaults.
 - [Public authoring API](./mokly-authoring.md)
+- [Nested authoring trees](./mokly-nested-authoring.md)
+- [Identity-derived artifact paths](./mokly-artifact-paths.md)
 - [Rendering and generated output](./mokly-rendering.md)
 - [Build and Browse runtime](./mokly-runtime.md)
 - [Navigation disclosure persistence](./mokly-disclosure-persistence.md) —
@@ -85,9 +68,10 @@ when the historical primary file is absent, never when it is invalid.
 - [Variants](./mokly-variants.md) — screen and component variants as
   entries with their own global ids, derived routes, and `variantOf`, grouped
   under their parent.
+- [Variant navigation and Changes](./mokly-variant-navigation.md)
 - [Source protection](./mokly-source-protection.md)
 - [Catalogue change metadata](./mokly-catalogue-changes.md)
-- [Breaking page migration](./mokly-page-migration.md)
+- [Baseline compatibility](./mokly-baseline-compatibility.md)
 - [Optional changes in publication](./mokly-publication.md)
 - [Changes and screen comparisons](./mokly-changes.md)
 - [Removed content previews](./mokly-removed-previews.md) — removed screens
@@ -99,13 +83,15 @@ when the historical primary file is absent, never when it is invalid.
 - [Registered components](./mokly-components.md)
 - [Component runtime prop schema](./mokly-component-props.md)
 - [Current manifest v7 schema](./mokly-component-manifest.md)
+- [Component usage records](./mokly-component-usage-records.md)
 - [Component comparison v4 schema](./mokly-component-review.md)
 - [Component review validation and canonical output](./mokly-component-review-validation.md)
 - [Component change attribution](./mokly-component-changes.md)
-- [CSS change attribution](./mokly-css-attribution.md) — approved
-  target: rule-aware stylesheet evidence.
+- [Component review fast path](./mokly-component-review-fast-path.md)
+- [CSS change attribution](./mokly-css-attribution.md)
 - [CSS evidence in the shell](./mokly-css-evidence-shell.md) — inspector and
   comparison-stage presentation of stylesheet evidence.
+- [CSS evidence presentation](./mokly-css-evidence-presentation.md)
 - [Component pages and screen inspection](./mokly-component-explorer.md)
 - [Component explorer design catalogue](./mokly-component-design.md)
 - [Component icon inspector design](./mokly-component-inspector-design.md)

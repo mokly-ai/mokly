@@ -2,21 +2,15 @@
 
 ## Delivery Status
 
-Local Serve implements temporary prop editing through the registered consumer
-renderer. Published catalogues keep saved variants and read-only controls. The
-[controls mockups](./mokly-component-controls-design.md) and
-[component explorer plan](../../plans/component-explorer.md) describe the same
-shared icon inspector and lifecycle. Forwarded loopback ports follow the
-admission rule below; verification is recorded in Milestone 4 of the
-[dependency patch upstreaming plan](../../plans/mokabook-dependency-patch-upstreaming.md).
+Local Serve edits props through the registered renderer; published controls are
+read-only. [Controls mockups](./mokly-component-controls-design.md) share the
+icon inspector and lifecycle. Forwarded loopback ports follow the rule below.
 
 ## Scope And User Behavior
 
-Saved variants work locally and in published static catalogues. Local Serve
-additionally supports temporary editing of declared component props through a
-server render. Arbitrary interactive controls in published catalogues would
-require a browser renderer or hosted rendering service and are outside this
-change. No consumer JavaScript runtime is added to static preview frames.
+Saved variants work in every catalogue. Local Serve temporarily edits declared
+props through server rendering; static frames add neither interactive controls
+nor a consumer JavaScript runtime.
 
 The Props/Controls tab in the shared component inspector lists only explicitly declared editable
 props. Data props without controls remain visible in the inspector and still
@@ -79,17 +73,13 @@ Users can browse, inspect, and compare the saved variants normally.
 
 ## Rendering Boundary
 
-Serve exposes a private POST endpoint at `/__mokly/components/render`.
-The request carries a component id, the global id of one of its variant
-entries, viewport, color scheme, catalogue generation, page id, and a data
-object containing only declared control overrides. It does not accept a module
-path, source code, arbitrary component name, callback, resource path, or
-renderer selection.
+Serve exposes private POST `/__mokly/components/render`. Its request carries a
+parent component id, global variant-entry id, view axes, catalogue generation,
+page id, and declared control overrides. It accepts no module path, source,
+callback, resource path, or renderer selection.
 
-The exact request and success-response shapes are below. The response's `view`
-uses [manifest usage records](./mokly-component-manifest.md). Errors retain
-the HTTP/code contract below. The token is a separate
-`X-Mokly-Render-Token` header and is never stored in generated metadata.
+The response's `view` uses [manifest usage records](./mokly-component-manifest.md).
+The separate `X-Mokly-Render-Token` header never enters generated metadata.
 
 ```ts
 interface ComponentRenderRequest {
@@ -116,9 +106,10 @@ interface ComponentRenderSuccess {
 }
 ```
 
-`variantId` is the variant entry's global catalogue id; the request carries no
-separate component id because the variant entry names its parent through
-`variantOf`, and the server resolves the component definition from it.
+`componentId` names the parent and `variantId` names the global variant entry.
+The server requires that entry's `variantOf` to equal `componentId`, then uses
+the parent schema/controls and variant props. Neither field is inferred or
+accepted independently.
 
 The parent creates one random 32-hex `pageId` per mounted component edit owner
 and rendered viewport/color-scheme context, retaining it until that owner is

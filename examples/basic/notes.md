@@ -37,10 +37,9 @@ in each entry's description and rationale, never inside the rendered screens:
   [design mockup adoption](../../docs/protocol/mokly-design-links.md#canonical-destination-inventory)
   adds normal light Details and four tag states; that contract owns their
   destinations. The original inspector and forms-open routes stay available.
-- The two established scheme example ids and four tag-state artboards remain
-  variants of the canonical Welcome design. Their routes live below
-  `design/browse/views/screen.variants/`; the empty `design-browse-tags`
-  collection preserves its historical identity and points readers to Welcome.
+- The two established scheme examples and four tag-state artboards remain
+  variants of the canonical Welcome design. Each has its own id-derived screen
+  route and stays grouped below Welcome in navigation.
 - The two retained scheme variants now render both Light and Dark artboards
   through the shared Appearance selector. Welcome's device screen follows the
   catalogue scheme; Details keeps its light frames under Dark and names the

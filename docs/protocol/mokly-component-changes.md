@@ -4,7 +4,7 @@
 
 The classifier, Browse/watch cache, comparison artifacts, and static exporter
 share this attribution policy. The [component explorer plan](../../plans/component-explorer.md)
-records delivery. Unregistered catalogue and legacy behavior remains intact.
+records delivery. Unregistered catalogues retain their ordinary behavior.
 
 ## Changes Membership
 
@@ -79,7 +79,7 @@ The comparison artifact is the schema v4 result with component/variant records
 and explicit affected-consumer evidence; readers accept only v4, and every
 record addresses its entry by id. Screen entries retain their actual view
 results, with affected-only evidence separate from direct Changes membership.
-All comparisons keep full unmodified before/after documents and isolated assets.
+All comparisons keep accepted before/after bytes and isolated assets.
 The [comparison schema](./mokly-component-review.md) defines the exact result,
 Changes membership, reasons, affected evidence, and side pairing; the [validation contract](./mokly-component-review-validation.md) defines validation.
 Live [selected comparisons](./mokly-selected-comparisons.md) project this
@@ -121,99 +121,14 @@ one-sided adoption semantics. Component markers are a separate ownership tree;
 do not weaken the flat parser by accepting arbitrary nested ignore regions.
 Manual ignore regions may sit within component-owned implementation, but may
 not enclose component boundaries or caller-owned slots and erase their signals.
-Reject that ambiguous composition with a migration diagnostic. Existing
+Reject that ambiguous composition with a validation diagnostic. Existing
 catalogues without component boundaries remain byte-compatible.
 
 ### Unchanged view decision
 
-Classification cost must follow the size of the change, not the size of the
-catalogue. For a view present on both sides, the classifier first decides
-whether the view can differ at all. The decision validates ranges and projects
-ownership only for views whose usage can edit text through instances, styles,
-or entry-owned slots, then performs CSS rule analysis and implementation
-diffing only on complete-path fall-through. That decision is part of the
-materiality policy and must produce output equal to the complete
-comparison for every view produced by the validated builder; a differential
-test over the shared fixtures is required evidence. Identical handcrafted
-documents with the same malformed ownership markers are outside this equality
-guarantee for views without ownership text edits because those views do not
-repeat range validation.
-
-The decision, in order:
-
-1. Normalize historical marker prefixes in the base document, retain component
-   markers on both sides, and apply paired manual-ignore normalization. If the
-   resulting documents differ outside paired ignored regions, take the
-   complete path. Marker-stripped equality is not sufficient because marker
-   positions participate in ownership projection.
-2. Compare the two usage records canonically. Neither side having usage is
-   eligible; exactly one side having usage takes the complete path. When both
-   records exist, every field must match except `props` and `propsKey` on
-   entry-owned instances. In particular, viewport, color scheme, instance
-   `componentId`, `key`, `id`, `owner`, `slotKey`, and `order`, instance-owned
-   `props` and `propsKey`, and every slot, range, style, and resource record
-   must match. Optional invocation `source` metadata is excluded from this
-   comparison, as it is from every Changes projection. Any other difference
-   takes the complete path.
-3. If the paired view routes differ, take the complete path. Otherwise form
-   the actual normalized pair by stripping historical component markers
-   from the base, stripping current component markers from the head, and
-   applying paired manual-ignore normalization. If the normalized documents
-   differ, take the complete path. Discover the head closure in committed
-   mode and both closures independently in derived mode.
-4. When either usage record has instances, styles, or entry-owned slots,
-   compute the same ownership projection as the complete comparison, including
-   historical/current range validation in each side's marker dialect and
-   root-specific ownership.
-   Require the projected HTML pair to be equal and discover its resources with
-   the same exclusion policy. In committed mode discover the head closure; in
-   derived mode discover both closures.
-5. If any actual or projected resource is a changed Git path, take the complete
-   path; ownership, exclusion, and rule analysis are decided there.
-6. In derived mode, compare historical and current closure membership and
-   bytes independently for actual material and projected material. Any
-   difference in either comparison takes the complete path; equal unions do
-   not substitute for equal per-comparison sets.
-7. Otherwise the view is unchanged by content and resources. Its state is
-   `unchanged` when the single-document normalizations of both stripped sides
-   are equal and `ignored-only` otherwise; `ignoredIds` come from the paired
-   normalization. The view carries no `material`, `reasons`, or
-   `excludedResources` fields and contributes no owned-resource or
-   implementation-impact evidence, exactly as the complete path would.
-
-`inputs` and `structure` reasons are derived from validated usage records,
-never from document text, so an entry-owned input edit that renders identical
-HTML keeps its `inputs` reason on either path. Those entry-owned `props` and
-`propsKey` values are the only usage fields allowed to differ because the fast
-decision computes their signals with the same projection as the complete path.
-Nested instance input changes and all topology or ownership changes require
-projection and implementation-impact analysis. Entry-level `metadata`,
-`added`, `removed`, and dependency reasons are unaffected because they are
-computed outside the per-view comparison.
-
-Projected resources are not always a subset of actual-document resources.
-HTML parsing can discard caller slot content in contexts such as `template` or
-`select`, while ownership projection can expose that content. Removing
-component implementation text can also expose a later sibling that the
-implementation's unclosed HTML had hidden. Views whose usage cannot edit
-document text retain the actual-only proof. Views with instances, styles, or
-entry-owned slots remain eligible after both actual and projected resource
-comparisons are proved safe. Identical `(route, document, exclusion)` discovery
-work is reused on fall-through.
-
-Each resource discovery performed by the decision is reused when the view falls
-through to the complete path. Each side passes byte-identical route and
-normalized text to a cache keyed by route, content digest, and exclusion
-callback identity, so discovery is never repeated for that document and
-policy within one classification without retaining the full document as a map
-key.
-
-Added and removed views do not use the paired fast decision. Before their
-one-sided document is normalized, the classifier validates all recorded
-component ranges against that document. Removed base documents use the
-historical marker dialect; added head documents use the current dialect. A
-malformed one-sided ownership tree fails closed with a `$document` validation
-error rather than being reported as an ordinary addition or removal.
+The [component review fast-path contract](./mokly-component-review-fast-path.md)
+owns the ordered decision, usage exceptions, actual/projected resource proof,
+cache reuse, one-sided validation, and equivalence tests.
 
 ## Dependencies And Styles
 
@@ -270,21 +185,17 @@ Retain actual styles, fonts, and images in screenshots and snapshot trees. Never
 strip all styles, drop a shared-impact glob globally, or ignore the whole
 consumer document to make a component-only example pass.
 
-## Baselines And Migration
+## Baselines
 
-Historical Git documents may carry retired `mokabook-component` and
-`mokabook-review-*` comments. Parse their boundaries against the original HTML:
-style ownership offsets and component ranges must share its UTF-16 coordinate
-space. Normalize retired comments only in comparison material after projection,
-never before applying stored style offsets. Current output remains `mokly`-only;
-historical and current snapshots retain their original bytes. A marker-only
-rename is not a content change, while owned CSS edits still affect the component
-and independent caller edits still affect the consumer.
+Baseline and current documents come from validated manifest-v7 output and
+retain their original bytes. Style offsets and component ranges share each
+document's UTF-16 coordinate space. Earlier output never reaches attribution;
+it follows the [baseline compatibility contract](./mokly-baseline-compatibility.md).
 
 Use the existing merge base with `origin/main` or the configured base; staged,
-unstaged, and untracked current edits still participate. Pair every entry,
-including variants of both kinds, by its stable id; title edits remain metadata
-changes.
+unstaged, and untracked current edits still participate. Cross-kind id reuse
+follows the [comparison pairing rule](./mokly-changes.md#comparison-engine);
+title edits remain metadata changes.
 
 New/removed components and variants retain explicit missing comparison sides.
 Union baseline/current usage so removing a component does not erase its former
@@ -298,10 +209,8 @@ invent a variant representing every possible prop combination.
 
 When either side lacks validated component metadata, compare its real content
 conservatively. Initial registration or one-sided ownership adoption must not
-hide a simultaneous edit. Do not rebuild or check out the baseline. Markers and
-metadata introduced on just one side do not create synthetic empty components.
-The first migration may therefore show consumer changes; automatic suppression
-applies once both sides carry matching validated boundaries.
+hide a simultaneous edit or create synthetic empty components. Do not rebuild
+or check out the baseline during comparison.
 
 ## Required Evidence
 
@@ -309,8 +218,8 @@ Unit/integration and browser fixtures must establish agreement between Changes
 rows/count, on-demand results, watch updates, and published output. Cover all
 rows in the table, repeated/nested/empty instances, caller-owned slots, invalid
 markers, unchanged-render prop edits, both viewports/themes, owned external and
-head styles, shared-impact overlap, independent screen edits, historical
-manifests, removed consumers, and concurrent watched updates. Component styling
+head styles, shared-impact overlap, independent screen edits, compatible and
+incompatible baselines, removed consumers, and concurrent watched updates. Component styling
 must remain visibly changed in an affected screen's comparison.
 
 Dependency declaration provenance is attribution input, not display metadata.

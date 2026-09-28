@@ -29,12 +29,15 @@ through the current filesystem.
 view's checked snapshot closure. Neither reader executes historical code.
 `page_preview.ts` captures one page selected from an accepted removed-entry
 snapshot. Its caller supplies the pinned `BaselineReader`; the provider verifies
-the page against that snapshot's historical manifest, then reuses
+the page against that snapshot's baseline manifest, then reuses
 `GitReviewAssetReader`, `SelectedAssetReader` and `copySnapshotDependencies` for
 the same confinement, source exclusions, regular-file checks, transitive
 resource traversal and 64 MiB bound as screen panes. It returns typed
 `RemovedPagePreview` metadata plus the baseline files; the artifact renderer adds
 strictly validated `preview.json` without creating page records in `review.json`.
+Current and baseline manifests both require v7; recognized earlier output is
+handled before comparison under the
+[baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
 
 Server classification and export use the same interfaces. Export pins only
 repository evidence and retains the same baseline reader, including its optional
@@ -255,8 +258,8 @@ Key code:
 - `compare.ts`, `component_compare.ts`: the unified v4 comparison and retained
   artifacts for every catalogue.
 - `page_preview.ts`: typed before-only page capture from accepted removal state.
-- `historical_document.ts`: derived-path relocation for historical documents
-  while preserving their relative resource base.
+- `paths.ts` and the shared viewer-data builders: collision-checked snapshot
+  and removed-page artifact naming from entry identity.
 - `component_variant_classification.ts`: flat component variant entry pairing,
   reasons, view evidence, and grouped v4 result records.
 - `component_classification_sources.ts`, `component_reason_sources.ts`, and

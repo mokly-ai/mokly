@@ -19,12 +19,12 @@ Snapshot ids derive through the viewer-owned shared helper from the catalogue
 identity, exact entry kind and id, and either the accepted baseline commit or,
 only when no commit exists, an immutable comparison generation. Conflicting
 baseline identities fail projection; revisions and live deployment hashes are
-never substituted. Older generation-backed catalogues normalize safely, while
-identity-less same-id history remains unavailable.
+never substituted. Generation-backed catalogues normalize safely. Readers
+reject any current and removed records that share an id.
 `CatalogueProjectionInput.removedPreviews` is caller-supplied generation data;
 projection never derives it from Git or the filesystem. The map is keyed by
-removed entry id; page metadata is packaged at `pages/<id>.json`, while screen
-descriptors reuse the same generation's comparison. Readers reject descriptors
+removed entry id; `pagePreviewMetadataPath(id)` names page metadata, while
+screen descriptors reuse the same generation's comparison. Readers reject descriptors
 on current entries, mismatched entry kinds, or missing comparison URLs while
 accepting v3 catalogues that omit the optional preview field.
 Serve supplies only removed-screen descriptors after a complete comparison is
@@ -33,11 +33,8 @@ descriptors remain absent. Changes-enabled consumer export and repository
 publication supply both screen descriptors and removed-page paths after their
 historical closures are packaged. Evidence replacement publishes the pointer,
 descriptors and removed-entry snapshot atomically. Current-only delivery supplies
-none of them.
-Historical usage also becomes unavailable when a current entry with the same id
-excludes a referenced component's historical metadata. Projection checks the
-retained component set once for screens and removed variants; readers remain
-strict.
+none of them. Projection checks the retained component set once for screens and
+removed variants; readers remain strict.
 
 `@mokly/viewer` owns the public types and `readCatalogue`; its value/reference
 validators reject unsupported versions, malformed known fields, private evidence,

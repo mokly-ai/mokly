@@ -2,11 +2,9 @@
 
 ## Delivery Status
 
-Implemented by the completed
-[component explorer plan](../../plans/component-explorer.md), together with the
-[inspector revision](./mokly-component-inspector-design.md). These authored
-design states are shipped through the component registration API, local
-rendering service, and editable runtime controls.
+The completed [component explorer plan](../../plans/component-explorer.md) and
+[inspector revision](./mokly-component-inspector-design.md) shipped these states
+through registered components and local controls.
 
 ## Controls Panel
 
@@ -62,9 +60,8 @@ The Controls page is the canonical parent representation. Editing, States, and P
 are bounded child galleries with four, four, and two owning screens respectively.
 Every screen has distinct mobile and desktop components. The catalogue provides
 state navigation without adding a footer to the rendered product artboard.
-Each entry's route is `screens/<id>.html` under the
-[derived route rule](./mokly-authoring.md#derived-routes); gallery membership
-is the entry's `navPath`.
+Each entry uses an [id-derived path](./mokly-artifact-paths.md); `navPath` owns
+gallery membership.
 
 | Entry id                                     | State                                           |
 | -------------------------------------------- | ----------------------------------------------- |
@@ -90,5 +87,4 @@ values, optional/unset states, pending/error preservation, validation errors,
 disabled comparison inputs, read-only guidance, and links between owning states.
 Open every artboard from disk and visually inspect both viewport variants. Test
 inspector open/switch/close and keyboard behavior in standalone and served frames.
-Run the complete local gate before commit/push and the required post-push review
-before handoff.
+Run the complete local gate, commit/push, and required post-push review.

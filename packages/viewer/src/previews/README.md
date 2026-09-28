@@ -13,15 +13,13 @@ address the catalogue never published.
 [`request.ts`](./request.ts) resolves that descriptor to one metadata address.
 Development uses the stable selected endpoint (`id=` for a screen or component
 variant, `page=` for a page); static delivery uses `comparisonUrl` for a screen
-and the catalogue's advertised `preview.path` for a page, after checking that
-the path belongs to the comparison's generation and to this exact entry. A
-page's documents resolve
-against the generation root, not the descriptor's own directory. Screen views
-render only where the comparison says `removed`; any `afterPath` for that entry
-means a reused generation and is treated as unavailable. Before accepting
-either kind, the request recomputes the selected historical identity from the
-metadata's baseline commit. Legacy generation-backed selections must resolve
-from the same immutable generation named by both the request and final response.
+and `pagePreviewMetadataPath(id)` for a page, confined to that comparison
+generation. Page documents use `snapshotPagePath(id)` from the generation root.
+Screen documents use `snapshotViewPath("before", ...)` only for views whose
+review state is `removed`; review v4 carries no stored before/after paths.
+Before accepting either kind, the request recomputes the selected historical
+identity from the metadata's baseline commit. A generation-backed selection
+must resolve from the immutable generation named by request and final response.
 This keeps a late response or Retry from replacing an open historical record
 after the baseline changes. `renewPreview`
 extends a live generation's retention before reusing it, exactly as comparisons

@@ -1,6 +1,9 @@
 # Component Review Validation
 
 This spec validates and emits the [component comparison result schema](./mokly-component-review.md).
+Canonical order enforcement and the shared affected-consumer key are approved
+for Milestone 12 of the active
+[id-derived routes plan](../../plans/id-derived-routes.md).
 
 ## Validation And Canonical Output
 
@@ -37,10 +40,11 @@ this schema's record and reference validation, while catalogue-wide source
 coverage and affected evidence remain owned by the original background
 classification and shell inspector.
 
-Entry ids use normal catalogue validation. The result stores no snapshot path:
-a side's snapshot file is `snapshots/<side>/<view route>` under the generation
-directory, derived from the entry's kind, id, viewport, and scheme. When those
-files are written or served, reject absolute paths, traversal, encoded
+Entry ids use the portable entry-id grammar. `ignoredIds` use the
+[Review-ignore grammar](./mokly-changes.md#review-ignore). The result
+stores no snapshot path: files are derived with the shared builders in the
+[artifact path contract](./mokly-artifact-paths.md). When those files are
+written or served, reject absolute paths, traversal, encoded
 separators, source-root access, and non-regular files using existing
 snapshot/resource validation. Props in variant addresses use
 the corresponding side's schema and canonical wire codec. Instance keys are
@@ -54,17 +58,21 @@ uses safe code-span delimiters for refs and paths; JSON retains original values.
 Selected live generations instead serve an immutable captured byte map; they do
 not reopen filesystem paths when delivering a retained snapshot.
 
-Lexical ordering uses UTF-16 code units, not a locale-sensitive collator.
-Sort screens and components by id; the review result is not a navigation
-structure, so it applies no authored-order exception for variants, and each
-variant entry sorts by its own id. Views retain mobile/light, mobile/dark,
-desktop/light, desktop/dark order. Sort changes by kind name and then the
-preferred side's id. Reasons sort by kind then path/id.
-Affected records sort by changed component id, consumer kind, then id.
-Evidence sorts by side (before then after), context entry id, variant id when
-present, viewport/scheme order, and canonical JSON of the `via` list. The list's
-own order is its dependency-chain order. Sort path/id sets uniquely and retain
-the existing viewport/scheme/id ordering for `ignoredImpact`.
+Lexical ordering uses UTF-16 code units. This paragraph exclusively owns
+`review.json` array order: `screens` and `components` sort by id; each
+`components[].variants` array contains current variants in current authored
+order followed by baseline-only variants in baseline authored order; each
+entry's views are mobile/light, mobile/dark, desktop/light, desktop/dark;
+`changes` sorts by kind then `(after ?? before).id`; and affected consumers sort
+by changed component id, consumer kind, then consumer id. The shared
+`@mokly/viewer/data` export `affectedConsumerOrderKey(record)` joins that tuple
+with `\u0000` and is used by producer and reader. Reasons sort by kind then
+path/id. Affected
+evidence sorts by side (before then after), context entry id, variant id when
+present, viewport/scheme order, and canonical JSON of `via`; `via` itself keeps
+dependency-chain order. Path/id sets are sorted and unique, and `ignoredImpact`
+uses viewport/scheme/id order. Readers enforce every stated order and reject
+duplicates rather than reordering input.
 
 New object keys sort lexically; optional fields are omitted and required empty
 arrays remain explicit. Emit two-space JSON and a final LF, with no timestamp,

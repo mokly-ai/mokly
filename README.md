@@ -129,8 +129,9 @@ docs/mockups/generated/**/*.html
 docs/mockups/generated/mokly-manifest.json
 ```
 
-Current output uses manifest v7; compatibility readers for older formats are
-limited to historical Git baselines.
+Current output uses manifest v7, and comparison-base output must do the same.
+Earlier baselines leave Changes unavailable until the base includes this version; see
+[baseline compatibility](./docs/protocol/mokly-baseline-compatibility.md).
 
 ### 4. Open the catalogue
 
@@ -299,17 +300,17 @@ merge.
 - [`src/build`](./src/build) — bundling, rendering, validation, and generated
   output transactions.
 - [`src/components/manifest_entry_validation.ts`](./src/components/manifest_entry_validation.ts)
-  — current and historical component-entry validation.
+  — manifest-v7 component-entry validation.
 - [`src/registry/changed_ids.ts`](./src/registry/changed_ids.ts) and
   [`historical_manifest.ts`](./src/registry/historical_manifest.ts) —
-  identity-keyed change membership and the historical wire boundary.
+  identity-keyed change membership and the baseline-v7 boundary.
 - [`src/cli`](./src/cli/README.md) — command parsing, reporting, and composition.
 - [`src/server`](./src/server/README.md) — local HTTP server and watched runtime.
 - [`src/review`](./src/review/README.md) — Git baselines, comparison, and change
   attribution.
 - [`src/review/component_variant_classification.ts`](./src/review/component_variant_classification.ts)
-  and [`historical_document.ts`](./src/review/historical_document.ts) — flat
-  variant classification and relocation of historical documents.
+  and [`component_classification_sources.ts`](./src/review/component_classification_sources.ts)
+  — flat variant classification and review-result assembly.
 - [`src/export`](./src/export/README.md) — static catalogue export.
 - [`src/publication`](./src/publication/README.md) — shared static shell and
   previous-version publication.
