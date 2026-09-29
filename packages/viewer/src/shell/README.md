@@ -183,6 +183,13 @@ evidence refreshes, and is replaced with the runtime on watched rebuild.
 [interactive views shell contract](../../../../docs/protocol/mokly-interactive-views-shell.md)
 defines the control, eligibility and the pending interval.
 
+Watched Serve rebuild state follows the same private boundary. The documented
+Milestone 5 accessor is exactly `useViewerLiveState().rebuildStatus`; it returns
+only the greatest validated sequence whose `updateVersion` fence has been
+installed. A newer future-fenced event is retained privately until evidence
+adoption reaches it. Static and embedded hosts receive `undefined`, and this
+backend state adds no shell presentation by itself.
+
 Before standalone hydration, stored disclosure and split-width preferences are
 applied to the server DOM. Disclosure helpers treat native `<details>` groups
 and the button-controlled screen-variant lists as the same persisted state.

@@ -1,6 +1,7 @@
 /** Restart supervision retains ownership until each child's cleanup completes. */
 
 import type { ManifestV5 } from "@mokly/viewer/data";
+import type { RebuildStatus } from "@mokly/viewer/runtime";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import { bindTimings, timeSync } from "../diagnostics/timings.js";
@@ -14,6 +15,7 @@ import {
   parsePreviewObservation,
   type PreviewObservation,
 } from "./demand/observation.js";
+import type { RebuildStatusPublisher } from "./rebuild_status.js";
 import {
   childUpdateMessage,
   parseChildDiagnosticMessage,
@@ -22,7 +24,7 @@ import {
 } from "./update_messages.js";
 
 /** Restartable child interface used by watched Serve. */
-export interface ProcessSupervisor {
+export interface ProcessSupervisor extends RebuildStatusPublisher {
   interactivePort?(): number | undefined;
   completeCatalogue?(manifest: ManifestV5, generation: string): void;
   onForeground?(callback: (active: boolean) => void): void;
@@ -34,6 +36,8 @@ export interface ProcessSupervisor {
   replaceComponentRuntime(
     runtime: ComponentRuntime,
     delivery: "stage" | "live",
+    version?: number,
+    changesStatus?: "pending" | "preparing",
   ): void;
   close(): Promise<void>;
   notifyUpdate(
@@ -45,8 +49,9 @@ export interface ProcessSupervisor {
   ): void;
   /** Register the watched-runtime handler for a post-readiness child failure. */
   onUnexpectedExit(callback: (error: Error) => void): void;
-  restart(): Promise<number>;
-  start(): Promise<number>;
+  reserveUpdateVersion(): number;
+  restart(version?: number): Promise<number>;
+  start(version?: number): Promise<number>;
 }
 
 /** Factory seam for selecting the watched child-process implementation. */
@@ -92,6 +97,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   #resolvedInteractivePort: number | undefined;
   #updateVersion = 0;
   #runtime: ComponentRuntime | undefined;
+  #rebuildStatus: RebuildStatus | undefined;
   #foreground: ((active: boolean) => void) | undefined;
   #diagnostic: ((message: string) => void) | undefined;
   #previewResources: ((observation: PreviewObservation) => void) | undefined;
@@ -108,11 +114,16 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     return this.#resolvedInteractivePort;
   }
 
-  async start(): Promise<number> {
+  async start(version?: number): Promise<number> {
     if (this.#child)
       throw new MoklyError("server-failed", "server child is already running");
     const resolvedPort = this.#resolvedPort;
-    this.#updateVersion++;
+    const startupVersion = version ?? this.reserveUpdateVersion();
+    if (startupVersion !== this.#updateVersion)
+      throw new MoklyError(
+        "server-failed",
+        "reserved child update version is no longer current",
+      );
     const runtime = this.#runtime;
     const handle = this.factory.spawn([
       ...this.baseArguments,
@@ -132,7 +143,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
         ? ["--interactive-origin", this.options.interactiveOrigin]
         : []),
       "--update-version",
-      String(this.#updateVersion),
+      String(startupVersion),
     ]);
     let started = false;
     const child = new ManagedChild(
@@ -194,9 +205,16 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
           message.type === "component-runtime-request" &&
           runtime
         ) {
-          this.#updateVersion++;
+          const rebuildStatus = this.#rebuildStatus;
+          if (rebuildStatus)
+            timeSync("child.send-rebuild-status", () =>
+              child.send({
+                status: rebuildStatus,
+                type: "rebuild-status",
+              }),
+            );
           timeSync("child.send-runtime", () =>
-            child.send(componentRuntimeMessage(runtime, this.#updateVersion)),
+            child.send(componentRuntimeMessage(runtime, startupVersion)),
           );
         }
       }),
@@ -219,18 +237,38 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     }
   }
 
-  async restart(): Promise<number> {
+  async restart(version?: number): Promise<number> {
     await this.close();
-    return this.start();
+    return this.start(version);
   }
 
   replaceComponentRuntime(
     runtime: ComponentRuntime,
     delivery: "stage" | "live",
+    version?: number,
+    changesStatus?: "pending" | "preparing",
   ): void {
     this.#runtime = runtime;
     if (delivery === "live")
-      this.#child?.send(componentRuntimeMessage(runtime));
+      this.#child?.send(
+        componentRuntimeMessage(runtime, version, changesStatus),
+      );
+  }
+
+  currentUpdateVersion(): number {
+    return Math.max(1, this.#updateVersion);
+  }
+
+  publishRebuildStatus(status: RebuildStatus): void {
+    this.#rebuildStatus = status;
+    this.#child?.send({ status, type: "rebuild-status" });
+  }
+
+  reserveUpdateVersion(): number {
+    if (this.#updateVersion === Number.MAX_SAFE_INTEGER)
+      throw new MoklyError("server-failed", "watched update version exhausted");
+    this.#updateVersion += 1;
+    return this.#updateVersion;
   }
 
   notifyUpdate(
@@ -242,10 +280,10 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   ): void {
     const child = this.#child;
     if (!child || child.stopping || child.exited) return;
-    this.#updateVersion++;
+    const version = this.reserveUpdateVersion();
     child.send(
       childUpdateMessage(
-        this.#updateVersion,
+        version,
         changedRoutes,
         componentChanges,
         changesStatus,
@@ -266,7 +304,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
       type: "catalogue-complete",
       manifest,
       generation,
-      version: ++this.#updateVersion,
+      version: this.reserveUpdateVersion(),
     });
   }
   onForeground(callback: (active: boolean) => void): void {

@@ -2,7 +2,10 @@
 
 import type { ServerResponse } from "node:http";
 
-import type { ViewerInteractiveDescriptor } from "@mokly/viewer/runtime";
+import type {
+  RebuildStatus,
+  ViewerInteractiveDescriptor,
+} from "@mokly/viewer/runtime";
 
 import { send } from "./respond.js";
 
@@ -55,6 +58,7 @@ export function openEventStream(
   streams: Set<ServerResponse>,
   version: number,
   method: string,
+  rebuildStatus?: RebuildStatus,
   interactive?: ViewerInteractiveDescriptor,
 ): void {
   response.writeHead(200, {
@@ -67,6 +71,10 @@ export function openEventStream(
     return;
   }
   response.write(`event: ready\ndata: ${version}\n\n`);
+  if (rebuildStatus)
+    response.write(
+      `event: rebuild\ndata: ${JSON.stringify(rebuildStatus)}\n\n`,
+    );
   if (interactive)
     response.write(
       `event: interactive\ndata: ${JSON.stringify(interactive)}\n\n`,

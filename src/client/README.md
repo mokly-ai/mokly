@@ -21,6 +21,14 @@ route-scoped `interactive` boolean stays inside that private atomic evidence and
 never enters the public catalogue or static host. Its absence is fail-closed
 unknown eligibility for Live.
 
+The same private update stream validates complete `rebuild` snapshots before
+offering them to the viewer store. Newer sequences are adopted only after their
+`updateVersion` fence is installed; malformed events are browser warnings and
+cannot replace the current status. Descriptor and routed-evidence reads carry
+the same private value through their existing source and revision fences. The
+shell-facing value is `useViewerLiveState().rebuildStatus`; this host adds no
+presentation of its own.
+
 The synchronous viewer bootstrap captures native disclosure choices made before
 module initialization. Browse preferences and one-shot recovery retain these
 newer choices, then load completion persists them and removes the capture state.

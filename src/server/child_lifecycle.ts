@@ -93,7 +93,8 @@ export class ManagedChild {
       !(
         this.#state === "waiting" &&
         (message.type === "component-runtime-startup" ||
-          message.type === "component-runtime")
+          message.type === "component-runtime" ||
+          message.type === "rebuild-status")
       )
     )
       return;

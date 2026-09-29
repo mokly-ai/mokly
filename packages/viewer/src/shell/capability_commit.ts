@@ -16,6 +16,8 @@ import {
   shellStateWithViewerEvidence,
   viewerCapabilityRoute,
 } from "./capability_adoption.js";
+import { adoptViewerRebuildStatus } from "./capability_rebuild_status.js";
+import type { ViewerRebuildStatusState } from "./capability_rebuild_status.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellState } from "./store_state.js";
 import type { WorkspaceData } from "./workspace_data.js";
@@ -25,7 +27,7 @@ export interface BoundViewerWorkspace {
   value: WorkspaceData;
 }
 
-export interface ViewerCapabilitySnapshot {
+export interface ViewerCapabilitySnapshot extends ViewerRebuildStatusState {
   catalogue: Catalogue;
   interactive?: ViewerInteractiveDescriptor;
   source?: ViewerCapabilitySource;
@@ -57,9 +59,15 @@ export function commitViewerEvidence(
     revision.source,
     viewerCapabilityRoute(nextState.route),
   );
+  const rebuild = adoptViewerRebuildStatus(
+    current,
+    revision.source.updateVersion,
+    revision.rebuildStatus,
+  );
   return {
     snapshot: {
       catalogue,
+      ...rebuild,
       ...(revision.interactive
         ? {
             interactive: advancedViewerInteractive(

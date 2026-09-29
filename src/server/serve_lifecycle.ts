@@ -140,9 +140,10 @@ export async function closeWatched(
 /** Restore a child after a failed restart while still reporting the failure. */
 export async function restartWithRecovery(
   supervisor: ProcessSupervisor,
+  version?: number,
 ): Promise<void> {
   try {
-    await supervisor.restart();
+    await supervisor.restart(version);
   } catch (restartError) {
     try {
       await supervisor.start();

@@ -34,10 +34,12 @@ import {
 import {
   useViewerCapabilities,
   useViewerInitialInteractive,
+  useViewerInitialRebuildStatus,
   useViewerInitialSource,
   useViewerInitialWorkspace,
   type ViewerLiveState,
 } from "./capability_context.js";
+import { adoptViewerRebuildStatus } from "./capability_rebuild_status.js";
 import {
   sameCapabilityRequest,
   useRouteEvidence,
@@ -70,6 +72,7 @@ export function useViewerCapabilityStore(input: {
   const capabilities = useViewerCapabilities();
   const initialSource = useViewerInitialSource();
   const initialInteractive = useViewerInitialInteractive();
+  const initialRebuildStatus = useViewerInitialRebuildStatus();
   const initialWorkspace = useViewerInitialWorkspace();
   const initialRequest = capabilityRequest(
     capabilities?.source ?? initialSource,
@@ -78,6 +81,7 @@ export function useViewerCapabilityStore(input: {
   const [snapshot, setSnapshot] = useState<ViewerCapabilitySnapshot>(() => ({
     catalogue: input.catalogue,
     ...(initialInteractive ? { interactive: initialInteractive } : {}),
+    ...(initialRebuildStatus ? { rebuildStatus: initialRebuildStatus } : {}),
     ...(initialRequest ? { source: initialRequest.source } : {}),
     ...(initialRequest && initialWorkspace?.entry.route === initialRequest.route
       ? { workspace: { request: initialRequest, value: initialWorkspace } }
@@ -145,6 +149,28 @@ export function useViewerCapabilityStore(input: {
       }),
     [],
   );
+  const adoptRebuildStatus = useCallback(
+    (candidate: NonNullable<ViewerLiveState["rebuildStatus"]>) =>
+      setSnapshot((current) => {
+        if (!current.source) return current;
+        const adopted = adoptViewerRebuildStatus(
+          current,
+          current.source.updateVersion,
+          candidate,
+        );
+        if (
+          adopted.rebuildStatus === current.rebuildStatus &&
+          adopted.pendingRebuildStatus === current.pendingRebuildStatus
+        )
+          return current;
+        const next = { ...current, ...adopted };
+        if (!adopted.pendingRebuildStatus) delete next.pendingRebuildStatus;
+        if (!adopted.rebuildStatus) delete next.rebuildStatus;
+        snapshotRef.current = next;
+        return next;
+      }),
+    [],
+  );
 
   useEffect(() => {
     if (!capabilities || !input.interactive || !request) return;
@@ -153,6 +179,7 @@ export function useViewerCapabilityStore(input: {
       request,
       {
         adoptInteractive,
+        adoptRebuildStatus,
         adoptEvidence(revision) {
           if (controller.signal.aborted) return true;
           const current = snapshotRef.current;
@@ -184,6 +211,7 @@ export function useViewerCapabilityStore(input: {
     return () => controller.abort();
   }, [
     adoptInteractive,
+    adoptRebuildStatus,
     capabilities,
     input.interactive,
     input.setState,
@@ -204,6 +232,9 @@ export function useViewerCapabilityStore(input: {
       adoptPreparation,
       ...(capabilities ? { capabilities } : {}),
       ...(snapshot.interactive ? { interactive: snapshot.interactive } : {}),
+      ...(snapshot.rebuildStatus
+        ? { rebuildStatus: snapshot.rebuildStatus }
+        : {}),
       ...(request ? { request } : {}),
       ...(workspace ? { workspace } : {}),
       ...(workspacePending ? { workspacePending: true as const } : {}),
@@ -213,6 +244,7 @@ export function useViewerCapabilityStore(input: {
       capabilities,
       request,
       snapshot.interactive,
+      snapshot.rebuildStatus,
       workspace,
       workspacePending,
     ],

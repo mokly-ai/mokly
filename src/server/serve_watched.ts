@@ -13,6 +13,10 @@ import {
   RepositoryGitReferences,
 } from "./demand/git_references.js";
 import { PreviewResources } from "./demand/resources.js";
+import {
+  WatchedRebuildStatus,
+  type WatchRebuildStatus,
+} from "./rebuild_status.js";
 import { PlainServeReporter } from "./reporter.js";
 import { ResourceWatcher } from "./resource_watcher.js";
 import type { RunningServe, ServeDependencies, ServeOptions } from "./serve.js";
@@ -73,6 +77,7 @@ export async function serveWatched(
   let runtime: ComponentRuntime;
   let signature: string;
   let supervisor: ProcessSupervisor | undefined;
+  let rebuildStatus: WatchRebuildStatus;
   let port: number;
   try {
     await timeAsync("watch.source-ready", () => watcher.ready());
@@ -83,6 +88,10 @@ export async function serveWatched(
       activeConfig,
       options,
       processSupervisorFactory,
+    );
+    rebuildStatus = new WatchedRebuildStatus(
+      supervisor,
+      () => activeConfig.repoRoot,
     );
     supervisor.onUnexpectedExit((error) => failures.notify(error));
     supervisor.replaceComponentRuntime(runtime, "stage");
@@ -131,9 +140,9 @@ export async function serveWatched(
     debouncer?.notify(action, event.path);
   };
 
-  const restart = async () => {
+  const restart = async (version?: number) => {
     try {
-      await restartWithRecovery(running);
+      await restartWithRecovery(running, version);
       running.notifyUpdate(
         undefined,
         undefined,
@@ -187,7 +196,11 @@ export async function serveWatched(
       try {
         await previous.close();
       } finally {
-        if (!closed) await restart();
+        if (!closed) {
+          const version = running.reserveUpdateVersion();
+          rebuildStatus.sourceSucceeded(version);
+          await restart(version);
+        }
       }
     } finally {
       if (!adopted) await replacement.close();
@@ -226,15 +239,21 @@ export async function serveWatched(
       runtime = next;
       background.clearCompilation();
       const nextSignature = JSON.stringify(next.manifest);
-      running.replaceComponentRuntime(
-        next,
-        nextSignature === signature ? "live" : "stage",
-      );
       if (nextSignature !== signature) {
         signature = nextSignature;
-        await restart();
+        running.replaceComponentRuntime(next, "stage");
+        const version = running.reserveUpdateVersion();
+        rebuildStatus.sourceSucceeded(version);
+        await restart(version);
       } else {
-        running.notifyUpdate(undefined, undefined, background.changesStatus);
+        const version = running.reserveUpdateVersion();
+        rebuildStatus.sourceSucceeded(version);
+        running.replaceComponentRuntime(
+          next,
+          "live",
+          version,
+          background.changesStatus,
+        );
         background.schedule();
       }
       return;
@@ -245,9 +264,10 @@ export async function serveWatched(
     running.replaceComponentRuntime(
       runtime,
       action === "reload" ? "live" : "stage",
+      action === "reload" ? running.reserveUpdateVersion() : undefined,
+      action === "reload" ? background.changesStatus : undefined,
     );
     if (action === "reload") {
-      running.notifyUpdate(undefined, undefined, background.changesStatus);
       background.schedule(background.compilation);
     } else await restart();
   };
@@ -256,8 +276,10 @@ export async function serveWatched(
       performAction,
       reporter,
       () => activeConfig.repoRoot,
+      rebuildStatus,
     ),
     report,
+    rebuildStatus,
   );
   const references = new GitReferenceObserver(
     new RepositoryGitReferences(),

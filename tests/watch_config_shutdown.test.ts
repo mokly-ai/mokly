@@ -198,6 +198,17 @@ class FakeSupervisor implements ProcessSupervisor {
   replaceComponentRuntime(): void {}
   closed = false;
   restarts = 0;
+  private version = 0;
+
+  currentUpdateVersion(): number {
+    return Math.max(1, this.version);
+  }
+
+  publishRebuildStatus(): void {}
+
+  reserveUpdateVersion(): number {
+    return ++this.version;
+  }
 
   async close(): Promise<void> {
     this.closed = true;

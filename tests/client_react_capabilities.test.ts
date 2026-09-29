@@ -116,6 +116,44 @@ test("React live updates close when pagehide fires during registration", () => {
   assert.equal(environment.pageHideStops, 1);
 });
 
+test("React live updates validate rebuild events before store adoption", () => {
+  const environment = new FakeEnvironment();
+  const reported: unknown[] = [];
+  environment.reportError = (error) => reported.push(error);
+  const adopted: number[] = [];
+  createReactViewerCapabilities(descriptor, environment).updates.subscribe(
+    currentRequest(),
+    {
+      ...actions(),
+      adoptRebuildStatus(status) {
+        adopted.push(status.sequence);
+      },
+    },
+    new AbortController().signal,
+  );
+  environment.sources[0]!.emit(
+    "rebuild",
+    JSON.stringify({
+      failure: null,
+      sequence: 2,
+      updateVersion: 5,
+      updating: true,
+    }),
+  );
+  environment.sources[0]!.emit(
+    "rebuild",
+    JSON.stringify({
+      extra: true,
+      failure: null,
+      sequence: 3,
+      updateVersion: 5,
+      updating: false,
+    }),
+  );
+  assert.deepEqual(adopted, [2]);
+  assert.equal(reported.length, 1);
+});
+
 test("React evidence refresh validates page descriptors before store adoption", async () => {
   const environment = new FakeEnvironment();
   const next = structuredClone(catalogue);
@@ -469,7 +507,7 @@ class FakeSource {
   private listeners = new Map<string, (event: { data: string }) => void>();
 
   addEventListener(
-    type: "ready" | "update",
+    type: "interactive" | "ready" | "rebuild" | "update",
     callback: (event: { data: string }) => void,
   ): void {
     this.listeners.set(type, callback);
@@ -479,7 +517,10 @@ class FakeSource {
     this.closed = true;
   }
 
-  emit(type: "ready" | "update", data: string): void {
+  emit(
+    type: "interactive" | "ready" | "rebuild" | "update",
+    data: string,
+  ): void {
     this.listeners.get(type)?.({ data });
   }
 }
@@ -515,6 +556,7 @@ class FakeEnvironment implements ReactCapabilityEnvironment {
       this.reloads += 1;
     },
   };
+  reportError?: (error: unknown) => void;
 
   createEventSource(): FakeSource {
     const source = new FakeSource();

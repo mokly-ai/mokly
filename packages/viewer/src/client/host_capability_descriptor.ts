@@ -10,6 +10,7 @@ import {
   readViewerInteractiveDescriptor,
   type ViewerInteractiveDescriptor,
 } from "./interactive_capability.js";
+import { readRebuildStatus, type RebuildStatus } from "./rebuild_status.js";
 import { readViewerPrivateWorkspace } from "./workspace_descriptor.js";
 
 /** Stable source identity plus the revisions seen by one shell transition. */
@@ -32,6 +33,7 @@ export interface ViewerCapabilityRequest {
 /** Private server-to-CLI bootstrap kept outside public catalogue JSON. */
 export interface ViewerCapabilityDescriptor {
   interactive?: ViewerInteractiveDescriptor;
+  rebuildStatus?: RebuildStatus;
   renderCapability?: RenderCapability;
   schemaVersion: 1;
   source: ViewerCapabilitySource;
@@ -72,6 +74,10 @@ export function viewerCapabilityDescriptor(
   const privateWorkspace = workspace
     ? workspaceWithoutRenderCapability(workspace)
     : undefined;
+  const rebuildStatus = readOptionalRebuildStatus(
+    context.rebuildStatus,
+    source.updateVersion,
+  );
   if (privateWorkspace)
     readViewerPrivateWorkspace(
       privateWorkspace,
@@ -82,6 +88,7 @@ export function viewerCapabilityDescriptor(
     schemaVersion: 1,
     source,
     ...(context.interactive ? { interactive: context.interactive } : {}),
+    ...(rebuildStatus ? { rebuildStatus } : {}),
     ...(context.renderCapability
       ? { renderCapability: context.renderCapability }
       : {}),
@@ -101,6 +108,10 @@ export function readViewerCapabilityDescriptor(
     source,
   );
   const interactive = readInteractive(value["interactive"]);
+  const rebuildStatus = readOptionalRebuildStatus(
+    value["rebuildStatus"],
+    source.updateVersion,
+  );
   const workspace = readWorkspace(
     value["workspace"],
     source,
@@ -110,9 +121,21 @@ export function readViewerCapabilityDescriptor(
     schemaVersion: 1,
     source,
     ...(interactive ? { interactive } : {}),
+    ...(rebuildStatus ? { rebuildStatus } : {}),
     ...(renderCapability ? { renderCapability } : {}),
     ...(workspace ? { workspace } : {}),
   };
+}
+
+function readOptionalRebuildStatus(
+  value: unknown,
+  updateVersion: number,
+): RebuildStatus | undefined {
+  if (value === undefined) return;
+  const status = readRebuildStatus(value);
+  if (status.updateVersion > updateVersion)
+    throw new Error("Invalid watched rebuild status fence.");
+  return status;
 }
 
 function readInteractive(

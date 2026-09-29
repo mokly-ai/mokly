@@ -20,6 +20,7 @@ export type TransferredComponentRuntime = Pick<
 >;
 
 export interface RuntimeMessage {
+  changesStatus?: "pending" | "preparing";
   type: "component-runtime";
   runtime: TransferredComponentRuntime;
   /** Reserved update version published only after the runtime is attached. */
@@ -30,6 +31,7 @@ export interface RuntimeMessage {
 export function componentRuntimeMessage(
   runtime: ComponentRuntime,
   version?: number,
+  changesStatus?: "pending" | "preparing",
 ): RuntimeMessage {
   return {
     runtime: {
@@ -39,42 +41,14 @@ export function componentRuntimeMessage(
       outputs: runtime.outputs,
     },
     type: "component-runtime",
+    ...(changesStatus ? { changesStatus } : {}),
     ...(version === undefined ? {} : { version }),
   };
 }
 
-/** Ask the watched parent for its retained graph after server readiness. */
+/** Ask the watched parent for its retained graph during startup transfer. */
 export function requestComponentRuntime(): void {
   process.send?.({ type: "component-runtime-request" });
-}
-
-/** Live indexes need their small rendering graph attached before announcing readiness. */
-export function receiveRequestedRuntime(): Promise<RuntimeMessage> {
-  return new Promise((resolve, reject) => {
-    const cleanup = () => {
-      clearTimeout(timer);
-      process.off("message", receive);
-      process.off("disconnect", disconnected);
-    };
-    const receive = (value: unknown) => {
-      const message = parseRuntimeMessage(value);
-      if (message) {
-        cleanup();
-        resolve(message);
-      }
-    };
-    const disconnected = () => {
-      cleanup();
-      reject(new Error("Parent disconnected during runtime transfer"));
-    };
-    const timer = setTimeout(() => {
-      cleanup();
-      reject(new Error("Consumer runtime transfer timed out"));
-    }, 10_000);
-    process.on("message", receive);
-    process.once("disconnect", disconnected);
-    requestComponentRuntime();
-  });
 }
 
 /** Receive parent-validated metadata before the child checks its source inventory. */
@@ -163,18 +137,24 @@ export function parseRuntimeMessage(
     return;
   const runtime = value.runtime as TransferredComponentRuntime | undefined;
   const version = "version" in value ? value.version : undefined;
+  const changesStatus =
+    "changesStatus" in value ? value.changesStatus : undefined;
   if (
     !runtime ||
     typeof runtime.generation !== "string" ||
     typeof runtime.bundle?.code !== "string" ||
     !interactiveEntries(runtime.interactiveEntries) ||
     !Array.isArray(runtime.outputs) ||
+    (changesStatus !== undefined &&
+      changesStatus !== "pending" &&
+      changesStatus !== "preparing") ||
     (version !== undefined &&
       (!Number.isSafeInteger(version) || (version as number) <= 0))
   )
     return;
   return {
     type: "component-runtime",
+    ...(changesStatus ? { changesStatus } : {}),
     runtime: {
       bundle: runtime.bundle,
       generation: runtime.generation,

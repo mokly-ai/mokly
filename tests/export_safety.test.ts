@@ -39,6 +39,9 @@ test("export excludes source and hidden files and refuses selected symlinks", as
       /\.env|source\.tsx|source\.js\.map/.test(name),
     ),
   );
+  for (const [name, content] of files)
+    if (/\.(?:html|json)$/.test(name))
+      assert.doesNotMatch(content.toString(), /"rebuildStatus"\s*:/);
   await fs.promises.symlink(
     path.join(fixture.root, "notes.md"),
     path.join(fixture.mockupsDir, "linked.txt"),

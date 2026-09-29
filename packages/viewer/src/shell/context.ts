@@ -1,5 +1,6 @@
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { ViewerInteractiveDescriptor } from "../client/interactive_capability.js";
+import type { RebuildStatus } from "../client/rebuild_status.js";
 import type { RenderCapability } from "../components/render_types.js";
 import type { StaticDelivery } from "../navigation/delivery.js";
 import type { ViewerTheme } from "../viewer/types.js";
@@ -9,6 +10,8 @@ import type { LiveChangesStatus } from "./metadata.js";
 
 /** Server-side context shared by every shell page. */
 export interface ShellContext {
+  /** Private watched-Serve status; omitted from every public/static boundary. */
+  rebuildStatus?: RebuildStatus;
   /** Private Live listener identity and current browser-bundle readiness. */
   interactive?: ViewerInteractiveDescriptor;
   /**

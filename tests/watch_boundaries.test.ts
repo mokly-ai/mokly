@@ -256,6 +256,17 @@ class CountingSupervisor implements ProcessSupervisor {
   replaceComponentRuntime(): void {}
   restarts = 0;
   updates = 0;
+  private version = 0;
+
+  currentUpdateVersion(): number {
+    return Math.max(1, this.version);
+  }
+
+  publishRebuildStatus(): void {}
+
+  reserveUpdateVersion(): number {
+    return ++this.version;
+  }
 
   async close(): Promise<void> {}
 

@@ -4,6 +4,7 @@ import {
   readViewerCapabilityDescriptor,
   readViewerEvidenceRevision,
   readViewerInteractiveDescriptor,
+  readRebuildStatus,
   sameViewerInteractiveOrigin,
   viewerCapabilityRequestMatches,
 } from "@mokly/viewer/runtime";
@@ -83,6 +84,15 @@ export function createReactUpdateCapability(
             installed.port === interactive.port
           )
             actions.adoptInteractive?.(interactive);
+        } catch (error) {
+          environment.reportError?.(error);
+        }
+      });
+      source.addEventListener("rebuild", (event) => {
+        try {
+          actions.adoptRebuildStatus?.(
+            readRebuildStatus(JSON.parse(event.data)),
+          );
         } catch (error) {
           environment.reportError?.(error);
         }
@@ -191,6 +201,7 @@ async function refreshEvidence(
     catalogue,
     next.workspace,
     next.interactive,
+    next.rebuildStatus,
   );
 }
 

@@ -175,7 +175,18 @@ class FakeChild implements ChildHandle {
 class ExitingSupervisor implements ProcessSupervisor {
   replaceComponentRuntime(): void {}
   restarts = 0;
+  private version = 0;
   private unexpectedExit: ((error: Error) => void) | undefined;
+
+  currentUpdateVersion(): number {
+    return Math.max(1, this.version);
+  }
+
+  publishRebuildStatus(): void {}
+
+  reserveUpdateVersion(): number {
+    return ++this.version;
+  }
 
   async close(): Promise<void> {}
 

@@ -49,7 +49,7 @@ test(
     const events = await fetch(`${url}/__mokly/events`);
     const reader = events.body?.getReader();
     assert.ok(reader);
-    assert.match(await readEvent(reader), /event: ready/);
+    await readThroughEvent(reader, "ready");
 
     await fs.promises.writeFile(
       fixture.entryPath,
@@ -57,7 +57,7 @@ test(
         body: '<a href="mock:details">Updated details link</a>',
       }),
     );
-    assert.match(await readEvent(reader), /event: update/);
+    await readThroughEvent(reader, "update");
     await waitFor(async () => {
       const html = await (await fetch(url)).text();
       return (
@@ -102,12 +102,12 @@ test(
       const reader = events.body?.getReader();
       assert.ok(reader);
       try {
-        assert.match(await readEvent(reader), /event: ready/);
+        await readThroughEvent(reader, "ready");
         await fs.promises.writeFile(
           path.join(fixture.mockupsDir, "home.css"),
           '@import "/invalid.css";',
         );
-        assert.match(await readEvent(reader), /event: update/);
+        await readThroughEvent(reader, "update");
         await waitFor(async () => {
           const html = await (await fetch(url)).text();
           return html.includes('data-changes-status="unavailable"');
@@ -120,7 +120,7 @@ test(
           path.join(fixture.mockupsDir, "home.css"),
           "body { color: red; }",
         );
-        assert.match(await readEvent(reader), /event: update/);
+        await readThroughEvent(reader, "update");
         await waitFor(async () => {
           const html = await (await fetch(url)).text();
           return html.includes('class="mbk-nav-filter-count">2');
@@ -165,12 +165,13 @@ function listeningUrl(child: ChildProcess): Promise<string> {
   });
 }
 
-async function readEvent(
+async function readThroughEvent(
   reader: ReadableStreamDefaultReader<Uint8Array>,
+  event: string,
 ): Promise<string> {
   const decoder = new TextDecoder();
   let output = "";
-  while (!output.includes("\n\n")) {
+  while (!output.includes(`event: ${event}\n`)) {
     const chunk = await reader.read();
     if (chunk.done) throw new Error("event stream ended before an event");
     output += decoder.decode(chunk.value, { stream: true });

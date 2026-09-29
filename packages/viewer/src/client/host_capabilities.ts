@@ -23,11 +23,13 @@ import type {
   InteractivePrepareResponse,
   ViewerInteractiveDescriptor,
 } from "./interactive_capability.js";
+import type { RebuildStatus } from "./rebuild_status.js";
 
 /** Validated same-content catalogue revision delivered by a live host. */
 export interface ViewerEvidenceRevision {
   catalogue: CatalogueReadModel;
   interactive?: ViewerInteractiveDescriptor;
+  rebuildStatus?: RebuildStatus;
   source: ViewerCapabilitySource;
   workspace?: WorkspaceData;
 }
@@ -44,6 +46,7 @@ export interface ViewerEvidenceCapability {
 /** Store transitions supplied when the shell subscribes to watched updates. */
 export interface ViewerUpdateActions {
   adoptInteractive?(interactive: ViewerInteractiveDescriptor): void;
+  adoptRebuildStatus?(status: RebuildStatus): void;
   adoptEvidence(revision: ViewerEvidenceRevision): boolean | Promise<boolean>;
   captureRecovery(): ShellRecoverySnapshot | undefined;
 }
@@ -113,6 +116,7 @@ export function readViewerEvidenceRevision(
   value: unknown,
   workspace?: WorkspaceData,
   interactive?: ViewerInteractiveDescriptor,
+  rebuildStatus?: RebuildStatus,
 ): ViewerEvidenceRevision | undefined {
   return readEvidenceRevision(
     installed,
@@ -121,6 +125,7 @@ export function readViewerEvidenceRevision(
     value,
     workspace,
     interactive,
+    rebuildStatus,
     true,
   );
 }
@@ -133,6 +138,7 @@ export function readViewerRouteEvidenceRevision(
   value: unknown,
   workspace?: WorkspaceData,
   interactive?: ViewerInteractiveDescriptor,
+  rebuildStatus?: RebuildStatus,
 ): ViewerEvidenceRevision | undefined {
   const bootstrap = readShellBootstrap(value);
   const route = bootstrap.view.kind === "target" ? bootstrap.view.route : null;
@@ -151,6 +157,7 @@ export function readViewerRouteEvidenceRevision(
     bootstrap.catalogue,
     workspace,
     interactive,
+    rebuildStatus,
     false,
   );
 }
@@ -162,6 +169,7 @@ function readEvidenceRevision(
   value: unknown,
   workspace: WorkspaceData | undefined,
   interactive: ViewerInteractiveDescriptor | undefined,
+  rebuildStatus: RebuildStatus | undefined,
   requireAdvance: boolean,
 ): ViewerEvidenceRevision | undefined {
   if (
@@ -194,6 +202,7 @@ function readEvidenceRevision(
     catalogue,
     source: nextSource,
     ...(interactive ? { interactive } : {}),
+    ...(rebuildStatus ? { rebuildStatus } : {}),
     ...(workspace ? { workspace } : {}),
   };
 }

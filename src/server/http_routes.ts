@@ -1,6 +1,7 @@
 import type { IncomingHttpHeaders, ServerResponse } from "node:http";
 
 import type { RenderCapability } from "@mokly/viewer/data";
+import type { RebuildStatus } from "@mokly/viewer/runtime";
 import type { Catalogue } from "@mokly/viewer/server";
 import { shellContext, SHELL_CSS } from "@mokly/viewer/server";
 
@@ -49,6 +50,7 @@ export async function handleCatalogueRequest(
   interactive?: InteractiveServer,
   requestHeaders: IncomingHttpHeaders = {},
   workspaceEligibility?: WorkspaceEligibilitySource,
+  currentRebuildStatus?: () => RebuildStatus | undefined,
 ): Promise<void> {
   const url = new URL(rawUrl, "http://mokly.invalid");
   if (
@@ -79,6 +81,7 @@ export async function handleCatalogueRequest(
   )
     return;
   const requestVersion = currentVersion();
+  const requestRebuildStatus = currentRebuildStatus?.();
   if (reviewRoutes && url.pathname.startsWith("/__mokly/diffs/")) {
     void reviewRoutes.handle(url, response, method);
     return;
@@ -91,6 +94,7 @@ export async function handleCatalogueRequest(
       streams,
       requestVersion,
       method,
+      requestRebuildStatus,
       interactive?.descriptor(),
     );
   if (url.pathname.startsWith("/__mokly/client/")) {
@@ -153,6 +157,7 @@ export async function handleCatalogueRequest(
   if (componentChanges) context.componentChanges = componentChanges;
   if (renderCapability) context.renderCapability = renderCapability;
   if (interactive) context.interactive = interactive.descriptor();
+  if (requestRebuildStatus) context.rebuildStatus = requestRebuildStatus;
   if (url.pathname === "/")
     return send(
       response,

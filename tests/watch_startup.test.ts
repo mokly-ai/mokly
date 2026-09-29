@@ -203,6 +203,17 @@ class FakeSupervisorFactory implements ProcessSupervisorFactory {
 class FakeSupervisor implements ProcessSupervisor {
   replaceComponentRuntime(): void {}
   constructor(private readonly events: string[]) {}
+  private version = 0;
+
+  currentUpdateVersion(): number {
+    return Math.max(1, this.version);
+  }
+
+  publishRebuildStatus(): void {}
+
+  reserveUpdateVersion(): number {
+    return ++this.version;
+  }
 
   async close(): Promise<void> {
     this.events.push("supervisor:close");

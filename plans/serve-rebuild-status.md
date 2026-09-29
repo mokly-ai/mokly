@@ -131,27 +131,27 @@ most five screens per page.
       smoke the pages through `npm run dev`, run `cargo xtask check`, commit
       and push.
 
-## Milestone 3: Rebuild status in watched Serve
+## Milestone 3: Rebuild status in watched Serve — completed
 
 Backend. After this milestone the browser receives the status, but the shell
 does not present it yet.
 
-- [ ] Track progress and failure around the watched action queue
+- [x] Track progress and failure around the watched action queue
       (`src/server/watch_events.ts`, `watch_reporting.ts` and
       `serve_watched.ts`) behind a small interface, with sanitized detail.
-- [ ] Send the status to the HTTP child through a validated IPC envelope in
+- [x] Send the status to the HTTP child through a validated IPC envelope in
       `src/server/update_messages.ts` and the supervisor, and keep the latest
       status across child restarts.
-- [ ] Carry the status in the private capability descriptor and emit the
+- [x] Carry the status in the private capability descriptor and emit the
       private SSE event, replayed on stream open; validate and adopt it in the
       CLI browser host (`src/client`) and the viewer's live state, with no
       shell UI.
-- [ ] Tests: a failure then a success clears it; reload and restart neither set
+- [x] Tests: a failure then a success clears it; reload and restart neither set
       nor clear it; evidence actions are ignored; progress covers queued and
       running actions; detail sanitizing and bounds; envelope validation;
       ordering against update versions; replay on stream open; absence in
       unwatched Serve, public catalogue JSON, static evidence and export.
-- [ ] Update `src/server/README.md` and `src/client/README.md`; run
+- [x] Update `src/server/README.md` and `src/client/README.md`; run
       `cargo xtask check`; commit and push.
 
 ## Milestone 4: Generation-pinned Live sources

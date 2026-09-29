@@ -18,6 +18,7 @@ import type {
   InteractivePrepareResponse,
   ViewerInteractiveDescriptor,
 } from "../client/interactive_capability.js";
+import type { RebuildStatus } from "../client/rebuild_status.js";
 import type { StaticWorkspaceEvidence } from "../standalone/static_workspace_evidence.js";
 
 import type { WorkspaceData } from "./workspace_data.js";
@@ -26,6 +27,7 @@ interface ViewerCapabilityContextValue {
   capabilities?: ViewerHostCapabilities;
   initialSource?: ViewerCapabilitySource;
   initialInteractive?: ViewerInteractiveDescriptor;
+  initialRebuildStatus?: RebuildStatus;
   initialWorkspace?: WorkspaceData;
   staticEvidence?: StaticWorkspaceEvidence;
 }
@@ -36,6 +38,8 @@ export interface ViewerLiveState {
   adoptPreparation?(result: InteractivePrepareResponse): void;
   capabilities?: ViewerHostCapabilities;
   interactive?: ViewerInteractiveDescriptor;
+  /** Latest validated private watched-Serve status whose source fence is installed. */
+  rebuildStatus?: RebuildStatus;
   request?: ViewerCapabilityRequest;
   workspace?: WorkspaceData;
   /**
@@ -54,6 +58,7 @@ export function ViewerCapabilityBoundary({
   capabilities,
   children,
   initialInteractive,
+  initialRebuildStatus,
   initialSource,
   initialWorkspace,
   staticEvidence,
@@ -62,6 +67,7 @@ export function ViewerCapabilityBoundary({
   children: ReactNode;
   initialSource?: ViewerCapabilitySource;
   initialInteractive?: ViewerInteractiveDescriptor;
+  initialRebuildStatus?: RebuildStatus;
   initialWorkspace?: WorkspaceData;
   staticEvidence?: StaticWorkspaceEvidence;
 }) {
@@ -74,12 +80,14 @@ export function ViewerCapabilityBoundary({
       ...(activeCapabilities ? { capabilities: activeCapabilities } : {}),
       ...(initialSource ? { initialSource } : {}),
       ...(initialInteractive ? { initialInteractive } : {}),
+      ...(initialRebuildStatus ? { initialRebuildStatus } : {}),
       ...(initialWorkspace ? { initialWorkspace } : {}),
       ...(staticEvidence ? { staticEvidence } : {}),
     }),
     [
       activeCapabilities,
       initialInteractive,
+      initialRebuildStatus,
       initialSource,
       initialWorkspace,
       staticEvidence,
@@ -106,6 +114,11 @@ export function useViewerInitialSource(): ViewerCapabilitySource | undefined {
 export function useViewerInitialInteractive():
   ViewerInteractiveDescriptor | undefined {
   return useContext(ViewerCapabilityContext).initialInteractive;
+}
+
+/** Read private rebuild status identically during server rendering and hydration. */
+export function useViewerInitialRebuildStatus(): RebuildStatus | undefined {
+  return useContext(ViewerCapabilityContext).initialRebuildStatus;
 }
 
 /** Read route-scoped private evidence identically during SSR and hydration. */

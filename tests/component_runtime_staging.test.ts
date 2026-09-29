@@ -210,7 +210,7 @@ test("staging during startup cannot change the spawned child's retained graph", 
     {
       type: "component-runtime",
       runtime: transferredRuntime(first),
-      version: 2,
+      version: 1,
     },
   ]);
   const closing = supervisor.close();

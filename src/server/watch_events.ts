@@ -71,6 +71,11 @@ export const systemDebounceClock: DebounceClock = {
   schedule: setTimeout,
 };
 
+/** Queue-level progress observer covering qualifying queued and running work. */
+export interface WatchActionQueueObserver {
+  setUpdating(updating: boolean): void;
+}
+
 const ACTION_PRIORITY: readonly RuntimeWatchAction[] = [
   "reconfigure",
   "rebuild",
@@ -129,6 +134,8 @@ export class WatchActionQueue {
   readonly #paths = new Set<string>();
   #closed = false;
   #draining: Promise<void> | undefined;
+  #active: RuntimeWatchAction | undefined;
+  #updating = false;
 
   constructor(
     private readonly process: (
@@ -136,6 +143,7 @@ export class WatchActionQueue {
       paths: readonly string[],
     ) => Promise<void>,
     private readonly reportError: (error: unknown) => void,
+    private readonly observer?: WatchActionQueueObserver,
   ) {}
 
   /** Queue one action; a stronger pending action subsumes weaker actions. */
@@ -143,6 +151,7 @@ export class WatchActionQueue {
     if (this.#closed || action === "ignore") return;
     this.#pending.add(action);
     for (const candidate of paths) this.#paths.add(candidate);
+    this.syncProgress();
     if (!this.#draining) this.#draining = this.drain();
   }
 
@@ -156,6 +165,7 @@ export class WatchActionQueue {
     this.#closed = true;
     this.#pending.clear();
     this.#paths.clear();
+    this.syncProgress();
     await this.#draining;
   }
 
@@ -169,10 +179,15 @@ export class WatchActionQueue {
         this.#pending.clear();
         this.#paths.clear();
         if (!action || action === "ignore") continue;
+        this.#active = action;
+        this.syncProgress();
         try {
           await this.process(action, paths);
         } catch (error) {
           this.reportError(error);
+        } finally {
+          this.#active = undefined;
+          this.syncProgress();
         }
       }
     } finally {
@@ -181,6 +196,19 @@ export class WatchActionQueue {
         this.#draining = this.drain();
       }
     }
+  }
+
+  private syncProgress(): void {
+    const updating = [this.#active, ...this.#pending].some(
+      (action) =>
+        action === "reconfigure" ||
+        action === "rebuild" ||
+        action === "restart" ||
+        action === "reload",
+    );
+    if (updating === this.#updating) return;
+    this.#updating = updating;
+    this.observer?.setUpdating(updating);
   }
 }
 

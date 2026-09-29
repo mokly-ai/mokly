@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   childUpdateMessage,
   parseChildUpdateMessage,
+  parseRebuildStatusMessage,
 } from "../dist/server/update_messages.js";
 
 test("watch update messages preserve available and unavailable route state", () => {
@@ -137,4 +138,40 @@ test("baseline handoffs preserve pinned commits and explicit revocation", () => 
       undefined,
     );
   }
+});
+
+test("rebuild status IPC accepts only exact bounded snapshots", () => {
+  const valid = {
+    status: {
+      failure: { detail: "src/home.tsx: failed", id: 2 },
+      sequence: 3,
+      updateVersion: 4,
+      updating: true,
+    },
+    type: "rebuild-status",
+  } as const;
+  assert.deepEqual(parseRebuildStatusMessage(valid), valid);
+  for (const value of [
+    { ...valid, extra: true },
+    { ...valid, type: "status" },
+    { ...valid, status: { ...valid.status, extra: true } },
+    { ...valid, status: { ...valid.status, sequence: 0 } },
+    { ...valid, status: { ...valid.status, updateVersion: 1.5 } },
+    {
+      ...valid,
+      status: { ...valid.status, failure: { detail: "", id: 2 } },
+    },
+    {
+      ...valid,
+      status: { ...valid.status, failure: { detail: "failed", id: 4 } },
+    },
+    {
+      ...valid,
+      status: {
+        ...valid.status,
+        failure: { detail: "x".repeat(2_049), id: 2 },
+      },
+    },
+  ])
+    assert.equal(parseRebuildStatusMessage(value), undefined);
 });

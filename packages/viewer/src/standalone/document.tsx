@@ -65,6 +65,9 @@ export function StandaloneShellDocument({
       {...(capabilityDescriptor?.interactive
         ? { initialInteractive: capabilityDescriptor.interactive }
         : {})}
+      {...(capabilityDescriptor?.rebuildStatus
+        ? { initialRebuildStatus: capabilityDescriptor.rebuildStatus }
+        : {})}
       {...(workspace ? { initialWorkspace: workspace } : {})}
       {...(staticEvidence ? { staticEvidence } : {})}
     >

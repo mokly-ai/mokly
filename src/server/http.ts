@@ -1,5 +1,6 @@
 import http, { type ServerResponse } from "node:http";
 
+import type { RebuildStatus } from "@mokly/viewer/runtime";
 import { createCatalogue } from "@mokly/viewer/server";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
@@ -29,6 +30,7 @@ import { publicChangesStatus, publishCatalogueUpdate } from "./http_update.js";
 import { listenOnAvailablePort, listeningPort } from "./ports.js";
 import { LivePublicCatalogue } from "./public_catalogue.js";
 import type { PublicComparison } from "./public_review.js";
+import { VersionedRebuildStatus } from "./rebuild_status_state.js";
 import { send } from "./respond.js";
 import { ReviewRoutes } from "./review_routes.js";
 import {
@@ -125,6 +127,9 @@ export async function startCatalogueServer(
     (changedRoutes || componentChanges ? "ready" : "unavailable");
   let updateVersion = options.updateVersion ?? 1;
   let contentVersion = updateVersion;
+  const rebuildStatus = options.rebuildStatus
+    ? new VersionedRebuildStatus(options.rebuildStatus, updateVersion)
+    : undefined;
   let publicComparison: PublicComparison | undefined;
   const publicInput = (
     comparison: PublicComparison | undefined = publicComparison,
@@ -183,6 +188,7 @@ export async function startCatalogueServer(
       interactiveState.server && componentRuntime
         ? eligibility.source(componentRuntime)
         : undefined,
+      () => rebuildStatus?.current(),
     ).catch(() => {
       if (!response.destroyed && !response.headersSent)
         send(
@@ -291,9 +297,29 @@ export async function startCatalogueServer(
       } = next);
       reviewRoutes?.invalidate();
       publicComparison = undefined;
+      const adoptedStatus = rebuildStatus?.advance(updateVersion);
+      if (adoptedStatus) publishRebuildEvent(streams, adoptedStatus);
       const payload = `event: update\ndata: ${updateVersion}\n\n`;
       for (const stream of streams) stream.write(payload);
     },
+    ...(rebuildStatus
+      ? {
+          replaceRebuildStatus(status) {
+            const acceptance = rebuildStatus.accept(status, updateVersion);
+            if (acceptance === "changed")
+              publishRebuildEvent(streams, rebuildStatus.current());
+            return acceptance;
+          },
+        }
+      : {}),
     url: `http://127.0.0.1:${appPort}`,
   };
+}
+
+function publishRebuildEvent(
+  streams: ReadonlySet<ServerResponse>,
+  status: RebuildStatus,
+): void {
+  const payload = `event: rebuild\ndata: ${JSON.stringify(status)}\n\n`;
+  for (const stream of streams) stream.write(payload);
 }

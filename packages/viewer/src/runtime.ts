@@ -23,6 +23,12 @@ export type {
   ViewerCapabilitySource,
 } from "./client/host_capability_descriptor.js";
 export {
+  readRebuildStatus,
+  REBUILD_DETAIL_BYTE_LIMIT,
+  REBUILD_DETAIL_CHARACTER_LIMIT,
+} from "./client/rebuild_status.js";
+export type { RebuildFailure, RebuildStatus } from "./client/rebuild_status.js";
+export {
   readInteractivePrepareResponse,
   readViewerInteractiveDescriptor,
   sameViewerInteractiveOrigin,

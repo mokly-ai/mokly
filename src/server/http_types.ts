@@ -1,4 +1,5 @@
 import type { ManifestV5 } from "@mokly/viewer/data";
+import type { RebuildStatus } from "@mokly/viewer/runtime";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { InteractiveServerFactory } from "../interactive/server.js";
@@ -10,6 +11,7 @@ import type {
 } from "./component_changes.js";
 import type { ServedReview } from "./configured_review.js";
 import type { PreviewObservation } from "./demand/observation.js";
+import type { RebuildStatusAcceptance } from "./rebuild_status_state.js";
 import type { CatalogueUpdate, ChangesStatus } from "./update_messages.js";
 
 /** Options for one deterministic server child. */
@@ -39,6 +41,8 @@ export interface ServerOptions {
   port: number;
   /** Enables on-demand comparison JSON and isolated snapshots. */
   review?: ServedReview;
+  /** Initial private snapshot supplied only to a watched HTTP child. */
+  rebuildStatus?: RebuildStatus;
   strictPort?: boolean;
   updateVersion?: number;
 }
@@ -50,6 +54,7 @@ export interface RunningServer {
   interactiveOrigin?: string;
   interactivePort?: number;
   publishUpdate(update?: CatalogueUpdate): void;
+  replaceRebuildStatus?(status: RebuildStatus): RebuildStatusAcceptance;
   replaceComponentRuntime(runtime: ComponentRuntime): void;
   port: number;
   url: string;

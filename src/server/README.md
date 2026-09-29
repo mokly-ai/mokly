@@ -127,6 +127,18 @@ watch-action boundaries. Diagnostics originating in a supervised child cross a
 validated IPC message so the parent remains the sole terminal owner; a child
 without IPC retains direct diagnostic output.
 
+Watched Serve owns rebuild status in `rebuild_status.ts`, behind the
+`WatchRebuildStatus` interface. The serialized action queue keeps progress true
+across qualifying queued and running actions; only source rebuild/reconfigure
+outcomes replace or clear failures. Failure detail is normalized, stripped of
+terminal escapes, made repository-relative and bounded before publication. The
+supervisor retains each complete snapshot independently of its child and sends
+the exact validated `rebuild-status` envelope during every startup transfer.
+`rebuild_status_state.ts` stages future-fenced snapshots in the child until the
+matching update version commits, then the HTTP server exposes the snapshot only
+through the private capability descriptor and replayable `rebuild` SSE event.
+Unwatched Serve, public catalogue JSON and static evidence never receive it.
+
 When `interactive: "serve"` is resolved, `http_interactive.ts` composes a
 second loopback listener through the `InteractiveServer` factory after the app
 port is known. It defaults to app port plus one, or an OS-selected port when

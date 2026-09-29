@@ -1,3 +1,5 @@
+import type { RebuildStatus } from "@mokly/viewer/runtime";
+
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { bindTimings, timeSync } from "../diagnostics/timings.js";
@@ -6,13 +8,14 @@ import { configuredServedReview } from "./configured_review.js";
 import {
   parseRuntimeMessage,
   requestComponentRuntime,
-  receiveRequestedRuntime,
+  type RuntimeMessage,
 } from "./controls/runtime_ipc.js";
 import { startCatalogueServer } from "./http.js";
 import { ServedReviewRepository } from "./review_repository.js";
 import {
   parseCatalogueCompleteMessage,
   parseChildUpdateMessage,
+  parseRebuildStatusMessage,
 } from "./update_messages.js";
 
 /** Run the hidden deterministic server child until its parent shuts it down. */
@@ -27,10 +30,11 @@ export async function runServerChild(
   interactivePort?: number,
   interactiveOrigin?: string,
 ): Promise<void> {
-  const initial =
+  const retained =
     retainedRuntime && manifest?.schemaVersion === "live-index-1"
-      ? await receiveRequestedRuntime()
+      ? await receiveWatchedState()
       : undefined;
+  const initial = retained?.runtime;
   if (initial?.version) updateVersion = initial.version;
   const repository = new ServedReviewRepository(config, updateVersion);
   const server = await startCatalogueServer(config, {
@@ -50,6 +54,7 @@ export async function runServerChild(
     ...(initial && manifest
       ? { componentRuntime: { ...initial.runtime, config, manifest } }
       : {}),
+    ...(retained ? { rebuildStatus: retained.rebuildStatus } : {}),
     port,
     review: configuredServedReview(config, base, repository),
     strictPort,
@@ -123,8 +128,19 @@ function waitForChildShutdown(
         );
         if (runtime.version !== undefined) {
           repository.accept(undefined, runtime.version);
-          server.publishUpdate({ version: runtime.version });
+          server.publishUpdate({
+            ...(runtime.changesStatus
+              ? { changesStatus: runtime.changesStatus }
+              : {}),
+            version: runtime.version,
+          });
         }
+      }
+      if (isMessage(message, "rebuild-status")) {
+        const rebuild = parseRebuildStatusMessage(message);
+        if (!rebuild) reportInvalidRebuildStatus();
+        else if (server.replaceRebuildStatus?.(rebuild.status) === "conflict")
+          reportInvalidRebuildStatus();
       }
       const update = parseChildUpdateMessage(message);
       if (update) {
@@ -149,6 +165,61 @@ function waitForChildShutdown(
     process.once("SIGINT", onSignal);
     process.once("SIGTERM", onSignal);
   });
+}
+
+interface WatchedStateTransfer {
+  rebuildStatus: RebuildStatus;
+  runtime: RuntimeMessage;
+}
+
+/** Require both validated retained commands inside the startup transfer window. */
+export function receiveWatchedState(
+  timeoutMilliseconds = 10_000,
+): Promise<WatchedStateTransfer> {
+  return new Promise((resolve, reject) => {
+    let runtime: RuntimeMessage | undefined;
+    let rebuildStatus: RebuildStatus | undefined;
+    const cleanup = (): void => {
+      clearTimeout(timer);
+      process.off("message", receive);
+      process.off("disconnect", disconnected);
+    };
+    const finish = (): void => {
+      if (!runtime || !rebuildStatus) return;
+      cleanup();
+      resolve({ rebuildStatus, runtime });
+    };
+    const receive = (value: unknown): void => {
+      if (isMessage(value, "rebuild-status")) {
+        const parsed = parseRebuildStatusMessage(value);
+        if (!parsed) {
+          cleanup();
+          reject(new Error("Invalid rebuild status during startup transfer"));
+          return;
+        }
+        rebuildStatus = parsed.status;
+      }
+      runtime ??= parseRuntimeMessage(value);
+      finish();
+    };
+    const disconnected = (): void => {
+      cleanup();
+      reject(new Error("Parent disconnected during watched state transfer"));
+    };
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error("Watched state transfer timed out"));
+    }, timeoutMilliseconds);
+    process.on("message", receive);
+    process.once("disconnect", disconnected);
+    requestComponentRuntime();
+  });
+}
+
+function reportInvalidRebuildStatus(): void {
+  const message = "Ignored an invalid rebuild-status IPC command.";
+  if (process.send) process.send({ type: "diagnostic", message });
+  else process.stderr.write(`${message}\n`);
 }
 
 function isMessage(value: unknown, type: string): boolean {

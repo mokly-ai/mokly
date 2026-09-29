@@ -19,6 +19,12 @@ current private workspace paired with the Live descriptor, rejects malformed
 values and the old nested-entry form, and rejects the field entirely for static
 evidence. Absence is valid unknown eligibility and must not enable Live.
 
+`rebuild_status.ts` owns the exact private watched-Serve snapshot shape and its
+character/byte bounds. Descriptor validation requires its source fence to be no
+newer than the paired capability source. Evidence revisions and update actions
+carry only validated snapshots; sequence and fence adoption remains owned by
+the shell capability store and never enters the public catalogue model.
+
 Disclosure capture and pre-hydration navigation width capture are owned directly
 under `src/standalone`. The synchronous navigation bootstrap records native
 disclosure choices outside the React-owned DOM, and React reads that state for

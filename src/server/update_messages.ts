@@ -1,5 +1,6 @@
 import { isSafeCatalogueRoute } from "@mokly/viewer/data";
 import type { ManifestV5 } from "@mokly/viewer/data";
+import { readRebuildStatus, type RebuildStatus } from "@mokly/viewer/runtime";
 
 import type { ComponentChangeSnapshot } from "./component_changes.js";
 import type {
@@ -56,6 +57,33 @@ export interface ChildDiagnosticMessage {
   readonly type: "diagnostic";
 }
 
+/** Parent-to-child complete watched rebuild status snapshot. */
+export interface RebuildStatusMessage {
+  readonly status: RebuildStatus;
+  readonly type: "rebuild-status";
+}
+
+/** Validate the exact private rebuild-status command and nested snapshot. */
+export function parseRebuildStatusMessage(
+  value: unknown,
+): RebuildStatusMessage | undefined {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    Array.isArray(value) ||
+    Object.keys(value).sort().join("\0") !== "status\0type" ||
+    !("type" in value) ||
+    value.type !== "rebuild-status" ||
+    !("status" in value)
+  )
+    return;
+  try {
+    return { status: readRebuildStatus(value.status), type: "rebuild-status" };
+  } catch {
+    return;
+  }
+}
+
 /** Validate one bounded diagnostic from the supervised child. */
 export function parseChildDiagnosticMessage(
   value: unknown,
@@ -105,6 +133,7 @@ export type ChildCommand =
   | ChildUpdateMessage
   | RuntimeMessage
   | RuntimeStartupMessage
+  | RebuildStatusMessage
   | { type: "shutdown" };
 
 /** Create an immutable IPC update payload from the latest route computation. */

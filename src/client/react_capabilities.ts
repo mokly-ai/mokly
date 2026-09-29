@@ -28,7 +28,7 @@ import type {
 /** EventSource subset needed by the live update adapter. */
 export interface ReactCapabilityEventSource {
   addEventListener(
-    type: "interactive" | "ready" | "update",
+    type: "interactive" | "ready" | "rebuild" | "update",
     callback: (event: { data: string }) => void,
   ): void;
   close(): void;
@@ -210,6 +210,7 @@ async function loadRouteEvidence(
     JSON.parse(publicState.textContent),
     next.workspace,
     next.interactive,
+    next.rebuildStatus,
   );
 }
 

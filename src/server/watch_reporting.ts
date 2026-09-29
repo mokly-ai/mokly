@@ -1,3 +1,4 @@
+import type { WatchRebuildStatus } from "./rebuild_status.js";
 import type { ServeReporter } from "./reporter.js";
 import type { RuntimeWatchAction } from "./watch_events.js";
 
@@ -6,6 +7,7 @@ export function reportedWatchProcessor(
   process: (action: RuntimeWatchAction) => Promise<void>,
   reporter: ServeReporter,
   repoRoot: () => string,
+  rebuildStatus?: WatchRebuildStatus,
 ): (action: RuntimeWatchAction, paths: readonly string[]) => Promise<void> {
   return async (action, paths) => {
     const reportable = action !== "evidence" || paths.length > 0;
@@ -23,6 +25,8 @@ export function reportedWatchProcessor(
         reporter.watchFinished(watchReport(Date.now() - startedAt));
     } catch (error) {
       reporter.watchFailed(watchReport(Date.now() - startedAt), error);
+      if (action === "rebuild" || action === "reconfigure")
+        rebuildStatus?.sourceFailed(error);
     }
   };
 }
