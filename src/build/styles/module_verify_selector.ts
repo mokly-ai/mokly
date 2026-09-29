@@ -9,6 +9,7 @@ interface SelectorNode {
   readonly insensitive?: boolean;
   readonly namespace?: string;
   readonly quoteMark?: string;
+  readonly spaces?: { readonly before?: string; readonly after?: string };
 }
 
 interface SelectorShape {
@@ -75,8 +76,16 @@ function normalizeChildren(
   input: boolean,
 ): SelectorShape[] {
   const normalized: SelectorShape[] = [];
+  let pendingWhitespace = false;
+  let afterWrapper = false;
+  let removedEmptyWrapper = false;
   for (let index = 0; index < nodes.length; index += 1) {
     const node = nodes[index]!;
+    if (node.type === "comment") {
+      pendingWhitespace ||=
+        hasWhitespace(node.spaces?.before) || hasWhitespace(node.spaces?.after);
+      continue;
+    }
     if (
       input &&
       node.type === "pseudo" &&
@@ -85,17 +94,103 @@ function normalizeChildren(
       if (node.nodes?.length) {
         if (node.nodes.some((selector) => selector.type !== "selector"))
           return [{ type: "invalid", value: "", children: [] }];
-        for (const [selectorIndex, selector] of node.nodes.entries()) {
-          if (selectorIndex > 0)
-            normalized.push({ type: "combinator", value: " ", children: [] });
-          normalized.push(...normalizeChildren(selector.nodes ?? [], true));
+        let previous: SelectorNode | undefined;
+        let betweenWhitespace = false;
+        let accepted = false;
+        for (const selector of node.nodes) {
+          const children = normalizeChildren(selector.nodes ?? [], true);
+          const first = firstNode(selector);
+          const last = lastNode(selector);
+          const leading = hasWhitespace(first?.spaces?.before);
+          const trailing = hasWhitespace(last?.spaces?.after);
+          if (!children.length) {
+            betweenWhitespace ||= leading || trailing;
+            continue;
+          }
+          const separate = accepted
+            ? betweenWhitespace ||
+              hasWhitespace(previous?.spaces?.after) ||
+              leading
+            : pendingWhitespace;
+          appendChildren(normalized, children, separate, true);
+          accepted = true;
+          previous = last;
+          betweenWhitespace = trailing;
         }
-      } else if (nodes[index + 1]?.type === "combinator") index += 1;
+        if (!accepted) {
+          removedEmptyWrapper = true;
+          pendingWhitespace = false;
+          afterWrapper = false;
+          continue;
+        }
+        pendingWhitespace = false;
+        afterWrapper = true;
+        removedEmptyWrapper = false;
+      } else {
+        if (nodes[index + 1]?.type === "combinator") index += 1;
+        pendingWhitespace = false;
+        afterWrapper = false;
+      }
       continue;
     }
-    normalized.push(normalize(node, input));
+    const child = normalize(node, input);
+    if (child.type === "combinator") {
+      if (removedEmptyWrapper && !normalized.length) {
+        removedEmptyWrapper = false;
+        continue;
+      }
+      if (normalized.at(-1)?.type !== "combinator") normalized.push(child);
+      pendingWhitespace = false;
+      afterWrapper = false;
+      removedEmptyWrapper = false;
+      continue;
+    }
+    appendChildren(
+      normalized,
+      [child],
+      pendingWhitespace || hasWhitespace(node.spaces?.before),
+      afterWrapper,
+    );
+    pendingWhitespace = hasWhitespace(node.spaces?.after);
+    afterWrapper = false;
+    removedEmptyWrapper = false;
   }
+  if (removedEmptyWrapper && normalized.at(-1)?.type === "combinator")
+    normalized.pop();
   return normalized;
+}
+
+function appendChildren(
+  target: SelectorShape[],
+  children: readonly SelectorShape[],
+  separate: boolean,
+  introduced: boolean,
+): void {
+  const previous = target.at(-1);
+  const first = children[0];
+  if (
+    previous &&
+    first &&
+    previous.type !== "combinator" &&
+    first.type !== "combinator"
+  ) {
+    if (separate) target.push({ type: "combinator", value: " ", children: [] });
+    else if (introduced && ["tag", "universal"].includes(first.type))
+      target.push({ type: "invalid", value: "", children: [] });
+  }
+  target.push(...children);
+}
+
+function firstNode(selector: SelectorNode): SelectorNode | undefined {
+  return selector.nodes?.[0];
+}
+
+function lastNode(selector: SelectorNode): SelectorNode | undefined {
+  return selector.nodes?.at(-1);
+}
+
+function hasWhitespace(value: string | undefined): boolean {
+  return value !== undefined && /\s/u.test(value);
 }
 
 function sameShapes(

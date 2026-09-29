@@ -20,6 +20,8 @@
   Milestone 22 (`8a47cc5`) accepts only the approved selector-list part of finding 3;
   its other parts remain open, as do the two findings in the
   [Milestone 23 review](../docs/reviews/imported-css-delivery-milestone-23.md).
+  Milestone 24 resolves those two approved findings; other findings remain
+  open.
   Move this plan to Completed when its
   implementation PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one

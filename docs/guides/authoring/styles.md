@@ -54,9 +54,11 @@ comments and `url()` forms are not rewritten by module scoping.
 `@scope` start and limit selectors work with local, global and nested selector
 forms, including class names containing `to`. The local names are exported;
 they can be composed by a later rule. Mokly checks that scoping changes no
-other authored CSS. A selector list inside `:global()` or `:local()` becomes
-one descendant chain, as with css-loader and Vite: `.wrap :global(.x, .y)`
-matches `.y` inside `.x` inside `.wrap`. To match either class, write
+other authored CSS. The spacing inside a `:global()` or `:local()` list matters:
+with a space after the comma, `.wrap :global(.x, .y)` matches `.y` inside
+`.x` inside `.wrap`; without it, `.wrap :global(.x,.y)` matches one element
+with both classes. Empty items are ignored. This matches css-loader and Vite.
+To match either class, write
 `.wrap :global(.x), .wrap :global(.y)` or
 `.wrap :global(:is(.x, .y))` instead.
 If Build says scoping would change more than local names,

@@ -18,10 +18,12 @@ and the eight findings in the
 [Milestone 21 review record](../docs/reviews/imported-css-delivery-milestone-21.md).
 Milestone 22 (`8a47cc5`) accepts the selector-list behavior from finding 3 of that review;
 its other parts and findings remain open.
-The accepted behavior is the CSS Modules plugins' descendant-chain output,
-not an expansion into alternative selectors. The two findings in the
+Milestone 24 resolves both M23 findings: it accepts the plugins' compound join
+without comma whitespace and ignores selector comments while rejecting
+invalid newly created compounds.
+The two findings in the
 [Milestone 23 review record](../docs/reviews/imported-css-delivery-milestone-23.md)
-remain open for the user's decision.
+are addressed there; other findings remain open for the user's decision.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -842,6 +844,23 @@ the rename-only check for any other selector rewrite.
 
 - [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
 - [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Two new findings (1 Medium, 1 Low) are recorded in the [Milestone 23 review record](../docs/reviews/imported-css-delivery-milestone-23.md) for the user's decision.
+
+## Milestone 24: Follow the plugins' list join and ignore selector comments (complete)
+
+Accept the CSS Modules plugins' comma-boundary spacing and empty-item behavior
+without accepting fused identifiers or invalid newly created compounds.
+
+- [x] Probe every reviewed plugin output and additional empty, local, attached, nested and `@scope` forms; document any differing behavior.
+- [x] Add failing generated differential and Build tests for the plugin join, empty items and selector comments, plus explicit invalid-compound and mutation regressions.
+- [x] Normalize wrapped list items using only whitespace touching comma boundaries; drop empty items and selector comments from both trees while preserving meaningful combinators.
+- [x] Reject fused names and type/universal placement created by a join or wrapper removal, without judging identical authored compounds elsewhere.
+- [x] Update the protocol, Styles guide, review records, plan and ignored PR draft for the exact accepted behavior.
+- [x] Run Build, focused and Chrome tests, example Build/Check with unchanged digest, CLI smoke, lint, typecheck and `cargo xtask check`; commit and push.
+
+## Milestone 25: Commit, push, and review
+
+- [ ] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
 
 ## Post-merge follow-up (non-blocking)
 

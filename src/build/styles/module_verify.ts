@@ -92,21 +92,25 @@ function firstDifference(
   if ("nodes" in input) {
     const originalChildren = (input as Container).nodes ?? [];
     const changedChildren = (output as Container).nodes ?? [];
-    for (
-      let index = 0;
-      index < Math.max(originalChildren.length, changedChildren.length);
-      index += 1
-    ) {
-      const original = originalChildren[index];
-      const changed = changedChildren[index];
-      if (!original)
-        return input.type === "root"
-          ? (input.first ?? undefined)
-          : (input as ChildNode);
+    let changedIndex = 0;
+    for (let index = 0; index < originalChildren.length; index += 1) {
+      const original = originalChildren[index]!;
+      while (
+        original.type === "rule" &&
+        changedChildren[changedIndex]?.type === "comment" &&
+        original.selector.includes(changedChildren[changedIndex]!.toString())
+      )
+        changedIndex += 1;
+      const changed = changedChildren[changedIndex];
       if (!changed) return original;
       const first = firstDifference(original, changed, prefix);
       if (first) return first;
+      changedIndex += 1;
     }
+    if (changedIndex !== changedChildren.length)
+      return input.type === "root"
+        ? (input.first ?? undefined)
+        : (input as ChildNode);
   }
   return;
 }
