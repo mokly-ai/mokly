@@ -22,7 +22,7 @@ export function scriptKind(file) {
 }
 
 /** Resolve a literal `await import()` expression when its path is static. */
-export function dynamicImportSpecifier(expression) {
+function dynamicImportSpecifier(expression) {
   let current = expression;
   while (
     current &&

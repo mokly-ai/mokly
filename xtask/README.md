@@ -34,8 +34,11 @@ roots, the internal-export baseline rejects entries absent at that merge base,
 and protocol caps scan `docs/protocol/**` recursively except `fixtures/`.
 All three checks belong to the repository suite and complete gate. The sole
 current unused-export exception is the component renderer imported by generated
-consumer-module source; its exact entry lives in the shrink-only reviewed
-baseline.
+consumer-module source: `src/build/consumer_entry.ts` emits that re-export as
+source text, so there is no static module edge for the analyser to follow. Its
+exact entry lives in the shrink-only reviewed baseline. A comparison commit
+that predates the baseline file permits that one-time bootstrap; after the file
+lands, candidate entries must already exist at the merge base.
 Ordinary CI runs functional suites on the minimum Node 22.14 runtime. Release
 Please pull requests add Node 24; CI resolves the latest patch in its repository
 prerequisite and explicitly shares that exact result with dependent jobs,

@@ -26,6 +26,7 @@ export function internalExportAudit(input: {
   modules: readonly InternalExportModule[];
   publicEntrypoints: readonly string[];
   baseline: readonly string[];
+  baselineAtComparison?: readonly string[];
   aliases?: Readonly<Record<string, string>>;
 }): { findings: string[]; unused: string[] };
 export function runRepositoryRatchets(repositoryRoot: string): boolean;

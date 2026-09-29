@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
@@ -48,22 +49,64 @@ test("protocol document size policy rejects growth and stale caps", () => {
   assert.equal(sizeIssue("old.md", 300, 300), undefined);
 });
 
-test("every protocol document obeys its current size cap", async () => {
-  const names = (await fs.readdir(protocolDirectory)).filter((name) =>
-    name.endsWith(".md"),
+test("nested protocol documents are audited while fixtures are excluded", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-protocol-docs-"));
+  context.after(() => fs.rm(root, { force: true, recursive: true }));
+  await fs.mkdir(path.join(root, "nested"), { recursive: true });
+  await fs.mkdir(path.join(root, "fixtures/nested"), { recursive: true });
+  await fs.writeFile(
+    path.join(root, "nested/too-long.md"),
+    "line\n".repeat(251),
   );
-  const failures: string[] = [];
-  for (const name of names) {
-    const contents = await fs.readFile(
-      path.join(protocolDirectory, name),
-      "utf8",
-    );
-    const lines =
-      contents.split("\n").length - (contents.endsWith("\n") ? 1 : 0);
-    const issue = sizeIssue(name, lines, oversizedCaps[name]);
-    if (issue) failures.push(issue);
-  }
-  for (const name of Object.keys(oversizedCaps))
-    if (!names.includes(name)) failures.push(`${name} has a stale size cap`);
+  await fs.writeFile(
+    path.join(root, "fixtures/nested/ignored.md"),
+    "line\n".repeat(251),
+  );
+
+  const failures = await documentSizeFailures(root, {});
+  assert.deepEqual(failures, [
+    "nested/too-long.md has 251 lines; new protocol docs must stay at or below 250 lines, or gain a reviewed cap",
+  ]);
+});
+
+test("every protocol document obeys its current size cap", async () => {
+  const failures = await documentSizeFailures(protocolDirectory, oversizedCaps);
   assert.deepEqual(failures, [], failures.join("\n"));
 });
+
+async function documentSizeFailures(
+  directory: string,
+  caps: Readonly<Record<string, number>>,
+) {
+  const names = await protocolDocumentNames(directory);
+  const failures: string[] = [];
+  for (const name of names) {
+    const contents = await fs.readFile(path.join(directory, name), "utf8");
+    const lines =
+      contents.split("\n").length - (contents.endsWith("\n") ? 1 : 0);
+    const issue = sizeIssue(name, lines, caps[name]);
+    if (issue) failures.push(issue);
+  }
+  for (const name of Object.keys(caps))
+    if (!names.includes(name)) failures.push(`${name} has a stale size cap`);
+  return failures;
+}
+
+async function protocolDocumentNames(directory: string) {
+  const names: string[] = [];
+  const visit = async (relative: string) => {
+    const entries = await fs.readdir(path.join(directory, relative), {
+      withFileTypes: true,
+    });
+    for (const entry of entries) {
+      const name = path.posix.join(relative, entry.name);
+      if (entry.isDirectory()) {
+        if (name !== "fixtures") await visit(name);
+      } else if (entry.isFile() && entry.name.endsWith(".md")) {
+        names.push(name);
+      }
+    }
+  };
+  await visit("");
+  return names.sort();
+}

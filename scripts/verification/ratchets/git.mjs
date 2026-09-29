@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 
 /** Parse the NUL-delimited output from `git diff --name-status -z`. */
-export function parseNameStatus(value) {
+function parseNameStatus(value) {
   const fields = value.toString("utf8").split("\0");
   const changes = [];
   for (let index = 0; index < fields.length - 1;) {
@@ -20,23 +20,37 @@ export function parseNameStatus(value) {
 
 /** Read-only Git boundary shared by repository ratchets. */
 export class GitWorkspace {
-  constructor(root, base = "origin/main") {
+  constructor(root, target = "origin/main") {
     this.root = root;
-    this.base = base;
+    this.target = target;
+    this.base = undefined;
   }
 
   requireBase() {
-    this.#run(["rev-parse", "--verify", `${this.base}^{commit}`]);
+    if (this.base) return this.base;
+    this.#run(["rev-parse", "--verify", "HEAD^{commit}"]);
+    this.#run(["rev-parse", "--verify", `${this.target}^{commit}`]);
+    const base = this.#run(["merge-base", "HEAD", this.target])
+      .toString("utf8")
+      .trim();
+    if (!base)
+      throw new Error(
+        `Repository ratchet could not resolve the merge base of HEAD and ${this.target}`,
+      );
+    this.#run(["rev-parse", "--verify", `${base}^{commit}`]);
+    this.base = base;
+    return base;
   }
 
   changedFiles(roots) {
+    const base = this.requireBase();
     const tracked = parseNameStatus(
       this.#run([
         "diff",
         "--name-status",
         "-z",
         "--find-renames",
-        this.base,
+        base,
         "--",
         ...roots,
       ]),
@@ -69,24 +83,25 @@ export class GitWorkspace {
   }
 
   baseFiles(root) {
+    const base = this.requireBase();
     return this.#paths([
       "ls-tree",
       "-r",
       "--name-only",
       "-z",
-      this.base,
+      base,
       "--",
       root,
     ]);
   }
 
   readBase(path) {
-    return this.#run(["show", `${this.base}:${path}`]);
+    return this.#run(["show", `${this.requireBase()}:${path}`]);
   }
 
   baseFileExists(path) {
     try {
-      this.#run(["cat-file", "-e", `${this.base}:${path}`]);
+      this.#run(["cat-file", "-e", `${this.requireBase()}:${path}`]);
       return true;
     } catch {
       return false;

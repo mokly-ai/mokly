@@ -34,7 +34,7 @@ export async function discoverBrowserTests(repositoryRoot, shard) {
   };
 }
 
-export function playwrightTests(report, repositoryRoot) {
+function playwrightTests(report, repositoryRoot) {
   const tests = [];
   const testRoot = path.resolve(report.config?.rootDir ?? repositoryRoot);
   for (const suite of report.suites ?? [])

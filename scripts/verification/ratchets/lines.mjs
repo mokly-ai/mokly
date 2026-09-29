@@ -7,7 +7,7 @@ export function countPhysicalLines(value) {
   return separators + (normalized.endsWith("\n") ? 0 : 1);
 }
 
-/** Whether a repository path names an audited TypeScript source file. */
-export function isTypeScriptPath(file) {
-  return /\.(?:ts|tsx|mts|cts)$/u.test(file);
+/** Whether a repository path names an audited JavaScript or TypeScript module. */
+export function isSourceModulePath(file) {
+  return /\.(?:ts|tsx|mts|cts|js|mjs|cjs)$/u.test(file);
 }

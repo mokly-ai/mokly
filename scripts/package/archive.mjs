@@ -147,7 +147,7 @@ export async function inspectRuntimeLicenses(repositoryRoot) {
   assert.deepEqual(invalid, [], "runtime dependency licenses must be declared");
 }
 
-export function validateViewerReport(report) {
+function validateViewerReport(report) {
   assert.equal(report.name, "@mokly/viewer");
   assert.match(report.version, /^\d+\.\d+\.\d+$/);
   const files = report.files.map((file) => file.path);

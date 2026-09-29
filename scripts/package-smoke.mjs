@@ -1,13 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import {
-  smokeThemedConsumer,
-  smokeCleanCacheExecution,
-  smokeEsmConsumer,
-  smokeJunoFixture,
-  smokeNodeNextConsumer,
-} from "./package/consumer_cases.mjs";
+import { smokeCleanCacheExecution } from "./package/consumer_cases/clean_cache.mjs";
+import { smokeEsmConsumer } from "./package/consumer_cases/esm.mjs";
+import { smokeJunoFixture } from "./package/consumer_cases/juno.mjs";
+import { smokeNodeNextConsumer } from "./package/consumer_cases/nodenext.mjs";
+import { smokeThemedConsumer } from "./package/consumer_cases/themed.mjs";
 import {
   inspectPackagePair,
   packPackagePair,

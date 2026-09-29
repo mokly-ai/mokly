@@ -797,19 +797,19 @@ repository`; commit.
 
 ## Milestone 18: Ratchet fixes
 
-- [ ] Finding 6: every ratchet compares with `git merge-base HEAD
+- [x] Finding 6: every ratchet compares with `git merge-base HEAD
 origin/main`; a test where `origin/main` moved after the branch point
       passes.
-- [ ] Finding 4: the file-length and unused-export ratchets include
+- [x] Finding 4: the file-length and unused-export ratchets include
       JavaScript modules under the three roots; fix what they flag, including
       `scripts/package/consumer_cases.mjs` and the unused exports in the
       ratchet modules; tests.
-- [ ] Finding 12: the unused-export baseline rejects entries absent from the
+- [x] Finding 12: the unused-export baseline rejects entries absent from the
       merge-base baseline; test.
-- [ ] Finding 13: the protocol cap ratchet and
+- [x] Finding 13: the protocol cap ratchet and
       `tests/protocol_doc_sizes.test.ts` scan `docs/protocol/**` recursively,
       excluding `fixtures/`; test.
-- [ ] `cargo xtask check --suite repository` and the full unit suite pass;
+- [x] `cargo xtask check --suite repository` and the full unit suite pass;
       commit.
 
 ## Milestone 19: Second follow-up close-out and review

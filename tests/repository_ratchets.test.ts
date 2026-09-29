@@ -17,7 +17,7 @@ test("physical line counts normalize CRLF without counting a final newline", () 
   assert.equal(countPhysicalLines("one\r\ntwo\r\n"), 2);
 });
 
-test("TypeScript length ratchet rejects a new 301-line file", () => {
+test("source length ratchet rejects a new 301-line module", () => {
   assert.deepEqual(
     typeScriptLengthFindings([
       { path: "src/boundary.ts", current: lines(300) },
@@ -32,7 +32,7 @@ test("TypeScript length ratchet rejects a new 301-line file", () => {
   );
 });
 
-test("TypeScript length ratchet permits oversized shrinkage but rejects growth", () => {
+test("source length ratchet permits oversized shrinkage but rejects growth", () => {
   assert.deepEqual(
     typeScriptLengthFindings([
       {
@@ -74,7 +74,7 @@ test("TypeScript length ratchet permits oversized shrinkage but rejects growth",
   );
 });
 
-test("TypeScript length ratchet carries a Git-detected rename predecessor", () => {
+test("source length ratchet carries a Git-detected rename predecessor", () => {
   assert.deepEqual(
     typeScriptLengthFindings([
       {
@@ -196,6 +196,46 @@ test("internal export audit follows imports and public re-exports", () => {
   assert.deepEqual(result.findings, []);
 });
 
+test("internal export audit resolves JavaScript imports", () => {
+  const result = internalExportAudit({
+    modules: [
+      {
+        path: "scripts/value.js",
+        source: "export const importedValue = 1;",
+      },
+      {
+        path: "scripts/consumer.mjs",
+        source:
+          'import { importedValue } from "./value.js";\nvoid importedValue;',
+      },
+    ],
+    publicEntrypoints: [],
+    baseline: [],
+  });
+  assert.deepEqual(result.unused, []);
+  assert.deepEqual(result.findings, []);
+});
+
+test("internal export audit reads CommonJS named exports", () => {
+  const result = internalExportAudit({
+    modules: [
+      {
+        path: "scripts/value.cjs",
+        source: "exports.importedValue = 1;\nmodule.exports.unusedValue = 2;",
+      },
+      {
+        path: "scripts/consumer.mjs",
+        source:
+          'import { importedValue } from "./value.cjs";\nvoid importedValue;',
+      },
+    ],
+    publicEntrypoints: [],
+    baseline: [],
+  });
+  assert.deepEqual(result.unused, ["scripts/value.cjs#unusedValue"]);
+  assert.match(result.findings.join("\n"), /new unused internal export/u);
+});
+
 test("internal export audit rejects a newly unused same-file export", () => {
   const result = internalExportAudit({
     modules: [
@@ -239,5 +279,23 @@ test("internal export baseline is exact, sorted, and shrinking", () => {
       baseline: ["src/z.ts#z", "src/a.ts#a"],
     }).findings.join("\n"),
     /sorted/u,
+  );
+  assert.match(
+    internalExportAudit({
+      modules: [module],
+      publicEntrypoints: [],
+      baseline: ["src/internal.ts#helper"],
+      baselineAtComparison: [],
+    }).findings.join("\n"),
+    /baseline entry was not present at the comparison commit.*src\/internal\.ts#helper/u,
+  );
+  assert.deepEqual(
+    internalExportAudit({
+      modules: [],
+      publicEntrypoints: [],
+      baseline: [],
+      baselineAtComparison: ["src/internal.ts#helper"],
+    }).findings,
+    [],
   );
 });

@@ -29,7 +29,7 @@ export function runRepositoryRatchets(repositoryRoot) {
   git.requireBase();
   const audits = [
     [
-      "TypeScript file-length",
+      "JavaScript/TypeScript file-length",
       () => auditTypeScriptLength(repositoryRoot, git),
     ],
     ["Protocol document cap", () => auditProtocolCaps(repositoryRoot, git)],

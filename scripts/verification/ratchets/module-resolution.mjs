@@ -42,5 +42,10 @@ function moduleCandidates(file) {
     `${stem}.cjs`,
     `${stem}/index.ts`,
     `${stem}/index.tsx`,
+    `${stem}/index.mts`,
+    `${stem}/index.cts`,
+    `${stem}/index.js`,
+    `${stem}/index.mjs`,
+    `${stem}/index.cjs`,
   ];
 }

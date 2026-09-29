@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { isTypeScriptPath } from "./lines.mjs";
+import { isSourceModulePath } from "./lines.mjs";
 import { discoverUnusedInternalExports } from "./module-graph.mjs";
 
 const BASELINE = "xtask/unused-internal-exports.txt";
@@ -13,6 +13,7 @@ export function internalExportAudit({
   modules,
   publicEntrypoints,
   baseline,
+  baselineAtComparison,
   aliases,
 }) {
   const unused = discoverUnusedInternalExports({
@@ -23,6 +24,15 @@ export function internalExportAudit({
   const findings = baselineFormatFindings(baseline);
   const allowed = new Set(baseline);
   const discovered = new Set(unused);
+  if (baselineAtComparison) {
+    const comparisonEntries = new Set(baselineAtComparison);
+    for (const key of baseline) {
+      if (!comparisonEntries.has(key))
+        findings.push(
+          `baseline entry was not present at the comparison commit: ${key}`,
+        );
+    }
+  }
   for (const key of unused) {
     if (!allowed.has(key)) findings.push(`new unused internal export: ${key}`);
   }
@@ -38,7 +48,7 @@ export function auditInternalExports(repositoryRoot, git) {
   const candidateFiles = new Set(
     git
       .currentFiles(SOURCE_ROOTS)
-      .filter((file) => isTypeScriptPath(file) && !isDeclarationPath(file))
+      .filter((file) => isSourceModulePath(file) && !isDeclarationPath(file))
       .filter((file) => fs.existsSync(path.join(repositoryRoot, file)))
       .map(normalize),
   );
@@ -53,21 +63,29 @@ export function auditInternalExports(repositoryRoot, git) {
       candidate: candidateFiles.has(normalize(file)),
     }));
   const baseline = readBaseline(path.join(repositoryRoot, BASELINE));
+  const baselineAtComparison = git.baseFileExists(BASELINE)
+    ? parseBaseline(git.readBase(BASELINE))
+    : undefined;
   const publicSurface = readPublicSurface(repositoryRoot);
   const result = internalExportAudit({
     modules,
     publicEntrypoints: publicSurface.entrypoints,
     baseline,
+    baselineAtComparison,
     aliases: publicSurface.aliases,
   });
   return {
     findings: result.findings,
-    summary: `${candidateFiles.size} TypeScript module(s), ${result.unused.length} baseline exception(s)`,
+    summary: `${candidateFiles.size} JavaScript/TypeScript module(s), ${result.unused.length} baseline exception(s)`,
   };
 }
 
 function readBaseline(file) {
-  const source = fs.readFileSync(file, "utf8").replaceAll("\r\n", "\n");
+  return parseBaseline(fs.readFileSync(file));
+}
+
+function parseBaseline(value) {
+  const source = value.toString("utf8").replaceAll("\r\n", "\n");
   const lines = source.split("\n");
   if (lines.at(-1) === "") lines.pop();
   return lines;
@@ -90,10 +108,7 @@ function baselineFormatFindings(baseline) {
 }
 
 function isModulePath(file) {
-  return (
-    /\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/u.test(file) &&
-    !isDeclarationPath(file)
-  );
+  return isSourceModulePath(file) && !isDeclarationPath(file);
 }
 
 function isDeclarationPath(file) {
@@ -139,7 +154,15 @@ function sourceForExport(repositoryRoot, packageRoot, target) {
   const relative = target
     .replace(/^\.\/dist\//u, "src/")
     .replace(/\.[cm]?js$/u, "");
-  for (const extension of [".ts", ".tsx", ".mts", ".cts"]) {
+  for (const extension of [
+    ".ts",
+    ".tsx",
+    ".mts",
+    ".cts",
+    ".js",
+    ".mjs",
+    ".cjs",
+  ]) {
     const candidate = normalize(
       path.posix.join(packageRoot, `${relative}${extension}`),
     );

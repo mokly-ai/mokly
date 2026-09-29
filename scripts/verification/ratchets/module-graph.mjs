@@ -1,5 +1,6 @@
 import ts from "typescript";
 
+import { addCommonJsExportNames } from "./module-commonjs.mjs";
 import {
   createModuleResolver,
   normalizeModulePath,
@@ -61,6 +62,7 @@ function parseModule(module) {
   };
   const bindings = importBindings(source, record);
   const values = topLevelValues(source);
+  addCommonJsExportNames(source, record.direct);
   for (const statement of source.statements) {
     if (isNamedValueExport(statement))
       addDeclarationNames(statement, record.direct);

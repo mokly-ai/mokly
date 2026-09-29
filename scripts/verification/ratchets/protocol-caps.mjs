@@ -10,7 +10,7 @@ const PROTOCOL_ROOT = "docs/protocol";
 const STANDARD_LIMIT = 250;
 
 /** Read the exact `oversizedCaps` object from the protocol size test. */
-export function parseProtocolCaps(source, label) {
+function parseProtocolCaps(source, label) {
   const file = ts.createSourceFile(
     label,
     source.toString("utf8"),
@@ -104,7 +104,7 @@ export function protocolCapFindings({
   return [...new Set(findings)].sort();
 }
 
-/** Audit protocol documents and the cap table against `origin/main`. */
+/** Audit protocol documents and the cap table against the comparison commit. */
 export function auditProtocolCaps(repositoryRoot, git) {
   const capSource = fs.readFileSync(path.join(repositoryRoot, CAP_TEST));
   const candidateCaps = parseProtocolCaps(capSource, CAP_TEST);
@@ -138,26 +138,30 @@ export function auditProtocolCaps(repositoryRoot, git) {
 
 function readCurrentDocuments(repositoryRoot) {
   const directory = path.join(repositoryRoot, PROTOCOL_ROOT);
-  return Object.fromEntries(
-    fs
-      .readdirSync(directory, { withFileTypes: true })
-      .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
-      .map((entry) => [
-        entry.name,
-        fs.readFileSync(path.join(directory, entry.name)),
-      ]),
-  );
+  const documents = {};
+  const visit = (relative) => {
+    for (const entry of fs.readdirSync(path.join(directory, relative), {
+      withFileTypes: true,
+    })) {
+      const name = path.posix.join(relative, entry.name);
+      if (entry.isDirectory()) {
+        if (name !== "fixtures") visit(name);
+      } else if (entry.isFile() && entry.name.endsWith(".md")) {
+        documents[name] = fs.readFileSync(path.join(directory, name));
+      }
+    }
+  };
+  visit("");
+  return documents;
 }
 
 function readBaselineDocuments(git) {
   return Object.fromEntries(
     git
       .baseFiles(PROTOCOL_ROOT)
-      .filter(
-        (file) =>
-          file.endsWith(".md") && path.posix.dirname(file) === PROTOCOL_ROOT,
-      )
-      .map((file) => [path.posix.basename(file), git.readBase(file)]),
+      .map((file) => [protocolDocumentName(file), file])
+      .filter(([name]) => name !== undefined)
+      .map(([name, file]) => [name, git.readBase(file)]),
   );
 }
 
@@ -166,15 +170,18 @@ function renamedProtocolDocuments(git) {
   for (const change of git.changedFiles([PROTOCOL_ROOT])) {
     if (!change.status.startsWith("R") || !change.path.endsWith(".md"))
       continue;
-    if (
-      path.posix.dirname(change.path) === PROTOCOL_ROOT &&
-      path.posix.dirname(change.source) === PROTOCOL_ROOT
-    )
-      predecessors[path.posix.basename(change.path)] = path.posix.basename(
-        change.source,
-      );
+    const candidate = protocolDocumentName(change.path);
+    const predecessor = protocolDocumentName(change.source);
+    if (candidate && predecessor) predecessors[candidate] = predecessor;
   }
   return predecessors;
+}
+
+function protocolDocumentName(file) {
+  const prefix = `${PROTOCOL_ROOT}/`;
+  if (!file.startsWith(prefix) || !file.endsWith(".md")) return undefined;
+  const relative = file.slice(prefix.length);
+  return relative.startsWith("fixtures/") ? undefined : relative;
 }
 
 function bootstrapCap(source) {

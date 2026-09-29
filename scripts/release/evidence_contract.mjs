@@ -1,4 +1,4 @@
-export const CI_WORKFLOW_PATH = ".github/workflows/ci.yml";
+const CI_WORKFLOW_PATH = ".github/workflows/ci.yml";
 export const REQUIRED_CI_JOB_NAME = "Required CI";
 export const VERIFICATION_ARTIFACT_PATTERN = /^verification-/;
 export const VERIFICATION_REPORT_COUNT = 16;

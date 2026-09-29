@@ -66,7 +66,9 @@ The auditor follows imports and re-exports across `.ts`, `.tsx`, `.mts`, `.cts`,
 is internal when no package export-map entry or documented public barrel
 exposes it. It is unused when no distinct workspace module imports or
 re-exports that symbol through a statically resolvable path; same-file
-references do not make the export necessary.
+references do not make the export necessary. Static CommonJS assignments
+through `exports.name`, `module.exports.name`, and object-literal
+`module.exports` participate as named exports.
 
 Known exceptions live in the reviewed, sorted
 `xtask/unused-internal-exports.txt` baseline as
@@ -76,10 +78,13 @@ any new unused export fails. A baseline entry no longer discovered also fails
 with an instruction to delete that line. The candidate baseline must also be a
 subset of the baseline stored at the comparison commit: any entry absent there
 fails even when the current scan discovers it. These two checks make the list
-shrink-only across the branch. Public entrypoint exports, type-only exports
-erased from JavaScript, and test fixtures outside the source roots are not
-internal-export findings. Dynamic use that a static analyser cannot prove
-requires a precise reviewed baseline entry rather than a wildcard suppression.
+shrink-only across the branch. If the comparison commit predates the baseline
+file itself, the candidate list is the one-time bootstrap; every entry must
+still be discovered, and the comparison-commit rule applies after that file
+lands. Public entrypoint exports, type-only exports erased from JavaScript, and
+test fixtures outside the source roots are not internal-export findings.
+Dynamic use that a static analyser cannot prove requires a precise reviewed
+baseline entry rather than a wildcard suppression.
 
 ## Gate Placement And Evidence
 

@@ -1,12 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { countPhysicalLines, isTypeScriptPath } from "./lines.mjs";
+import { countPhysicalLines, isSourceModulePath } from "./lines.mjs";
 
 const MAX_LINES = 300;
 const ROOTS = ["src", "packages/viewer/src", "scripts"];
 
-/** Compare candidate TypeScript contents with their optional predecessors. */
+/** Compare candidate module contents with their optional predecessors. */
 export function typeScriptLengthFindings(changes) {
   const findings = [];
   for (const change of changes) {
@@ -28,11 +28,11 @@ export function typeScriptLengthFindings(changes) {
   return findings.sort();
 }
 
-/** Audit changed TypeScript files in the three contracted source roots. */
+/** Audit changed JavaScript and TypeScript files in the contracted roots. */
 export function auditTypeScriptLength(repositoryRoot, git) {
   const candidates = [];
   for (const change of git.changedFiles(ROOTS)) {
-    if (change.status.startsWith("D") || !isTypeScriptPath(change.path))
+    if (change.status.startsWith("D") || !isSourceModulePath(change.path))
       continue;
     const absolute = path.join(repositoryRoot, change.path);
     if (!fs.lstatSync(absolute).isFile()) continue;
@@ -52,6 +52,6 @@ export function auditTypeScriptLength(repositoryRoot, git) {
   }
   return {
     findings: typeScriptLengthFindings(candidates),
-    summary: `${candidates.length} changed TypeScript file(s)`,
+    summary: `${candidates.length} changed JavaScript/TypeScript module(s)`,
   };
 }
