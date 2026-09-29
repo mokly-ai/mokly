@@ -29,6 +29,8 @@ const fixtureRoutes = [
 ];
 expect(fixtureRoutes.length).toBeGreaterThan(80);
 
+test.describe.configure({ mode: "parallel" });
+
 let developmentBundle: string;
 test.beforeAll(async () => {
   test.setTimeout(120_000);

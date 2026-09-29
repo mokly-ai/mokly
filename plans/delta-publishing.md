@@ -319,6 +319,33 @@ move the workflow guard's command scanner out of its test file into
   sixth-review finding 2 and finding 3's plan sentence, fifth-review findings
   2, 4 and 5 and second-review findings 3–11 stay open.
 
+## Browser Shard Balance Decision
+
+On 2026-09-29 the user asked to fix the pull request's failing CI. Browser
+shard 2 of 4 exceeded CI's 20-minute job timeout, which fails `Required CI`
+and blocks the merge. Playwright assigns whole spec files to shards, and
+`tests/browser/react_shell_hydration_routes.spec.ts` runs one test per example
+catalogue route (124 tests), so shard 2 held 318 of 860 browser tests and 11.5
+of 22.3 recorded test minutes; the other shards held 2.7 to 5.1 minutes. Main
+assigns the same 318 tests to its shard 2, and main's CI after #121 also
+failed there. Milestones 34–36 carry this work.
+
+- The hydration spec opts into Playwright's parallel mode. Its tests are
+  independent, and when sharding, Playwright divides a parallel spec with a
+  `beforeAll` hook into one group per shard. The listing then assigns 220,
+  225, 200 and 215 tests to the four shards. Each shard that runs part of the
+  spec builds the development bundle once.
+- A unit test lists every CI browser shard with the discovery CI uses and fails
+  when any shard holds more than 125% of an even share of the browser tests,
+  naming the parallel-mode fix. Playwright balances shards by test count, so
+  the test bounds counts; durations remain a measurement from shard reports.
+- `ci-verification.md` states the parallel-mode exception to whole-file
+  sharding, the balance test and the measured imbalance. Worker limits,
+  timeouts, retries and coverage are unchanged.
+- The open findings are unchanged: eighth-review finding 1, seventh-review
+  finding 1, sixth-review finding 2 and finding 3's plan sentence,
+  fifth-review findings 2, 4 and 5 and second-review findings 3–11.
+
 ## Milestone 1: Protocol and guide contract — completed
 
 Define the complete receiver and CLI contract before any code changes. Docs
@@ -1110,6 +1137,39 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       recommendation to `docs/reviews/delta-publishing.md` and report them
       without changing the implementation. One Low finding is recorded in its
       Eighth Review for the user's decision.
+
+## Milestone 34: Browser shard balance contract — completed
+
+- [x] Record the [Browser Shard Balance Decision](#browser-shard-balance-decision).
+- [x] In [`ci-verification.md`](../docs/protocol/ci-verification.md), state
+      that a browser shard runs whole spec files except parallel-mode specs,
+      which Playwright divides into one group per shard; name the balance test
+      and its 125% bound; record the measured imbalance in a new Browser
+      Shard Balance section that the acceptance measurement record links to;
+      pin the new sentences in `tests/guides_ci.test.ts`.
+
+## Milestone 35: Balance the browser shards — completed
+
+- [x] Add `tests/browser_shard_balance.test.ts`, which lists each shard of the
+      CI browser job's shard matrix with `discoverBrowserTests`, and confirm it
+      fails on the current tree (318 tests in shard 2 against a limit of 269).
+- [x] Declare `scripts/verification/playwright.mjs` for TypeScript callers.
+- [x] Put `tests/browser/react_shell_hydration_routes.spec.ts` in parallel mode
+      and confirm the balance test passes.
+
+## Milestone 36: Shard balance verification and delivery
+
+- [x] Run the balance, CI workflow and guides tests, Prettier, ESLint and the
+      type check, then `cargo xtask check`; resolve every failure.
+- [ ] After checks pass, `git add -A`, commit with a Conventional Commits
+      title of at most 50 characters, and push the branch; confirm every check
+      on the pull request passes, including all four browser shards and
+      `Required CI`.
+- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; append the
+      numbered, severity-rated findings with lettered options and a
+      recommendation to `docs/reviews/delta-publishing.md` and report them
+      without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 

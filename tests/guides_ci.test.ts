@@ -335,6 +335,25 @@ test("test repository inputs are deterministic and title types stay fixed", () =
   );
 });
 
+test("browser shards divide parallel specs and stay balanced by test count", () => {
+  assert.match(
+    verification,
+    /A shard runs whole spec files, except that Playwright divides a spec in parallel mode into one group per shard/u,
+  );
+  assert.match(
+    verification,
+    /react_shell_hydration_routes\.spec\.ts.*tests are independent, so it runs in parallel mode/u,
+  );
+  assert.match(
+    verification,
+    /tests\/browser_shard_balance\.test\.ts.*fails when any shard holds more than 125% of an even share of the browser tests/u,
+  );
+  assert.match(
+    verification,
+    /A spec whose tests depend on one another stays whole/u,
+  );
+});
+
 test("receiver limits, stored blobs and plan URL protocols are unambiguous", () => {
   for (const source of [exchange, prose]) {
     assert.match(source, /unfinished/u);

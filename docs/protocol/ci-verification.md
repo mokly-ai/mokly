@@ -50,7 +50,7 @@ fail before any subprocess starts.
 | Repository       | Live `npm run dependencies:check` first; Prettier check; ESLint; `cargo fmt --all -- --check`; workspace Clippy with warnings denied; workspace Rust tests; Rust file-length audit.                                                                                                                                                                                                        |
 | Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; all five clean consumer smokes using that pair. Real `prepack` builds remain part of packing. |
 | Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most two files active. A shard runs its whole-file partition.                                                                                                                                                                                                                                |
-| Browser          | One ordinary package/example preparation followed by every discovered Playwright spec, with `fullyParallel: false`, one worker, existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                                                                                 |
+| Browser          | One ordinary package/example preparation followed by every discovered Playwright spec, with `fullyParallel: false`, one worker, existing timeouts and zero retries. A shard runs whole spec files, except that Playwright divides a spec in parallel mode into one group per shard.                                                                                                        |
 | Native platforms | On macOS and Windows, build once and run export transaction and destination-race tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                                                            |
 | Required CI      | Evaluate the result and evidence from the repository job, every package runtime selected for this event, all selected unit and browser runtime/shard combinations, and both native platforms.                                                                                                                                                                                              |
 
@@ -390,6 +390,28 @@ shared fixture helpers. Failed browser jobs retain only the uploaded diagnostic
 artifacts selected by the workflow. Jobs must not delete, overwrite or reuse
 another job's writable output.
 
+## Browser Shard Balance
+
+Playwright assigns whole spec files to browser shards and balances shards by
+test count. On 2026-09-28 browser shard 2 of 4 exceeded the 20-minute job
+timeout: it held 318 of 860 browser tests, including all 124 tests of
+`tests/browser/react_shell_hydration_routes.spec.ts`, one per example catalogue
+route, and 11.5 of 22.3 recorded test minutes, while the other shards recorded
+2.7 to 5.1 minutes. That spec's tests are independent, so it runs in parallel
+mode. Playwright divides a parallel spec with a `beforeAll` hook into one group
+per shard, and the listing then assigns 220, 225, 200 and 215 tests; each shard
+that runs part of the spec builds its development bundle once. Every other spec
+keeps whole-file sharding.
+
+[`tests/browser_shard_balance.test.ts`](../../tests/browser_shard_balance.test.ts)
+lists every shard of the CI browser job's shard matrix with the discovery the
+browser runner uses and fails when any shard holds more than 125% of an even
+share of the browser tests. The bound applies to test counts, because that is
+what Playwright balances; shard durations remain a measurement from the shard
+reports. When the bound fails, put a large spec of independent tests in
+parallel mode or split it. A spec whose tests depend on one another stays
+whole.
+
 ## Acceptance Measurement
 
 The baseline is the 18 September 2026
@@ -421,4 +443,6 @@ attempts with complete dynamic inventories on both runtimes. The
 [measurement record](../reviews/ci-performance.md) retains all three observed
 results, including two queue-constrained misses and a 9m06s `Required CI`
 success with all 20 downstream runner slots available. Native whole-file
-sharding remains appropriate for the measured workload.
+sharding remains appropriate for the measured workload;
+[Browser Shard Balance](#browser-shard-balance) records the one later
+exception.
