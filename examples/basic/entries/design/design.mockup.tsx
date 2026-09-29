@@ -11,6 +11,7 @@ import { componentDesign } from "./components/index.js";
 import { interactiveDesign } from "./interactive/index.js";
 import { pageScreens } from "./page_screens.js";
 import { publicationScreens } from "./publication_screens.js";
+import { rebuildStatusDesign } from "./rebuild-status/index.js";
 import { removedOutcomeScreens } from "./review/outcomes/previous-version/screens.js";
 import { reviewAvailabilityScreens } from "./review_availability_screens.js";
 import { reviewImpactScreens } from "./review_impact_screens.js";
@@ -26,6 +27,7 @@ const designMockups = defineRoot({
   children: [
     componentDesign,
     interactiveDesign,
+    rebuildStatusDesign,
     collection({
       children: [
         collection({

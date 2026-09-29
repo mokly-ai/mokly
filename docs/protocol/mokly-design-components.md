@@ -46,7 +46,7 @@ Add `Components → Design → Shared components` from the same authored root th
 places `Pages → Design → Mokly design` in the Pages projection. Keep the
 existing Component explorer design section and Components → Example → Components group.
 The new pure gallery collections are `design-library` and
-`design-library-{chrome,controls,inspector,preview}`. They contain the 15 routed
+`design-library-{chrome,controls,inspector,preview}`. They contain the routed
 components in the inventory, with no duplicate screen entries for variants.
 
 Use flat `defineComponent`/`defineCollection` exports from

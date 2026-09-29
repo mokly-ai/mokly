@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { MockLink } from "@mokly/mokly";
 
 import { NavTree, type NavNode } from "../../parts/nav.js";
+import type { RebuildDepiction } from "../../parts/rebuild_status.js";
 import { Shell, type ArtboardViewport } from "../../parts/shell.js";
 
 import {
@@ -160,12 +161,15 @@ export function ExplorerShell({
   active = "action",
   children,
   design,
+  rebuild,
   scenario = "all",
   viewport,
 }: {
   active?: CatalogueIdentity;
   children: ReactNode;
   design: WorkspaceDesignDestination;
+  /** Watched Serve's status for the latest saved changes, when depicted. */
+  rebuild?: RebuildDepiction | undefined;
   scenario?: ChangeScenario;
   viewport: ArtboardViewport;
 }) {
@@ -184,6 +188,7 @@ export function ExplorerShell({
     <Shell
       menuPresentation="icon"
       design={design}
+      rebuild={rebuild}
       searchPlaceholder="Search catalogue…"
       viewport={viewport}
       nav={<NavTree {...navProps} />}

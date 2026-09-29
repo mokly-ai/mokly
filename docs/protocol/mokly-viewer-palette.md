@@ -130,6 +130,9 @@ Ignored use `--chrome-muted` on `--chrome-surface` inside `--chrome-border`.
 | removed status ink on its surface            | 5.73  | 8.04  | 4.5 text    |
 | added status ink on its surface              | 7.08  | 8.79  | 4.5 text    |
 | validation message on surface                | 6.66  | 8.51  | 4.5 text    |
+| notice headline on danger surface            | 15.22 | 13.15 | 4.5 text    |
+| notice explanation on danger surface         | 7.48  | 6.81  | 4.5 text    |
+| focus ring (deep sage) on danger surface     | 7.14  | 10.04 | 3 non-text  |
 
 `--chrome-border`, `--chrome-border-strong` and `--mbk-guide` are decorative
 hairlines separating adjacent surfaces, not control boundaries, so they are not
@@ -140,12 +143,14 @@ because `--chrome-control-edge` reaches only 2.99:1 on `--mbk-accent-surface`,
 the fill those states carry.
 
 One family is exempt. The `--mbk-status-*-edge` tokens, `--mbk-accent-edge` and
-`--mbk-danger-edge` outline the Added, Changed and Removed status badges and the
-validation alert, which are labels rather than controls: each names its own
-state in 5.62:1 or better text inside a distinct tinted fill, so the outline
-adds no information and is held to the decorative hairline standard. No other
-boundary may claim this exception; a control state that draws a boundary must
-reach 3:1 against its own fill or the surface around it.
+`--mbk-danger-edge` outline the Added, Changed and Removed status badges, the
+validation alert and the
+[rebuild status notice](./mokly-rebuild-status-design.md), which are labels
+rather than controls: each names its own state in 5.62:1 or better text inside
+a distinct tinted fill, so the outline adds no information and is held to the
+decorative hairline standard. No other boundary may claim this exception; a
+control state that draws a boundary must reach 3:1 against its own fill or the
+surface around it.
 
 Disabled controls are outside the contrast minimums, as WCAG allows. They use
 `--chrome-disabled-bg`, `--chrome-disabled-edge` and `--chrome-disabled-ink`

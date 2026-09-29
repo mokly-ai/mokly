@@ -1,6 +1,6 @@
 # Shared Design Components
 
-These sixteen registered components render both Mokly's design artboards and
+These seventeen registered components render both Mokly's design artboards and
 the independent pages under **Components → Design → Shared components**. The
 footer tabs panel is `inspector/inspector`. This is the consumer's mockup
 library; the actual Mokly browser shell remains in the package source.
@@ -66,6 +66,16 @@ control, so a preview mode is never a second control family. An artboard opts
 in through its own navigation record; without one the toolbar is unchanged and
 leaves no gap. Its contract is the
 [interactive views design](../../../../../docs/protocol/mokly-interactive-views-design.md).
+
+`chrome/rebuild-notice` is watched Serve's full-width notice when the latest
+saved changes could not be loaded: one tinted card with a complete outline and
+a leading icon, never an edge rail. It saves **Collapsed** and **Details open**;
+the native disclosure also works in place and its label always names what it
+offers. Its only data are the sanitized developer detail and the open flag; the
+copy is fixed. The top bar saves **Updating**: its `updating` flag places the
+delayed progress between the search field and Appearance, taking the room from
+the search field so no other control moves. Both follow the
+[rebuild status design](../../../../../docs/protocol/mokly-rebuild-status-design.md).
 
 ## Authoring
 

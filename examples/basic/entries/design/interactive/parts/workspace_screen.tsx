@@ -11,6 +11,7 @@ import {
   ActionExample,
   ComponentCanvas,
 } from "../../components/parts/preview.js";
+import type { RebuildDepiction } from "../../parts/rebuild_status.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 
 import { INTERACTIVE_PAGES } from "./destinations.js";
@@ -28,13 +29,16 @@ function SavedProps() {
 /**
  * A component's saved example in the workspace. While Live is selected the
  * inspector keeps every tab, and the tabs that read or edit the rendered view
- * carry one secondary line instead of their content.
+ * carry one secondary line instead of their content. A depicted rebuild
+ * status adds only its shell chrome; the workspace itself is unchanged.
  */
 export function WorkspaceModeScreen({
   live,
+  rebuild,
   viewport,
 }: {
   live: boolean;
+  rebuild?: RebuildDepiction | undefined;
   viewport: ArtboardViewport;
 }) {
   const design = live
@@ -46,6 +50,7 @@ export function WorkspaceModeScreen({
       design={design}
       highlight={{ active: false, unavailable: live ? "live" : undefined }}
       identity="action"
+      rebuild={rebuild}
       viewport={viewport}
       variants={<VariantPicker state="default" current={design} />}
       inspector={

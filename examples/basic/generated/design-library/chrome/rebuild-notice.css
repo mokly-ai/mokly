@@ -1,0 +1,161 @@
+/* Exclusive shared-component styles. Global and layout rules stay shared. */
+
+/* The notice spans the shell directly below the top bar and pushes the body
+   down. It is shell chrome, outside every preview frame. */
+.mbk-rebuild {
+  background: var(--chrome-bg);
+  border-bottom: 1px solid var(--chrome-border);
+  flex: none;
+  padding: 8px 16px;
+}
+
+/* One full-surface treatment: a tinted fill inside a complete outline. The
+   icon and the words carry the failure, so colour is never the only cue. */
+.mbk-rebuild-card {
+  align-items: flex-start;
+  background: var(--mbk-danger-bg);
+  border: 1px solid var(--mbk-danger-edge);
+  border-radius: 8px;
+  display: flex;
+  gap: 10px;
+  padding: 9px 12px;
+  position: relative;
+}
+
+.mbk-rebuild-icon {
+  color: var(--mbk-danger-ink);
+  display: inline-grid;
+  flex: none;
+  height: 20px;
+  place-items: center;
+  width: 16px;
+}
+
+.mbk-rebuild-icon svg {
+  display: block;
+}
+
+.mbk-rebuild-body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Wide shells keep the headline and explanation on one line and reserve the
+   disclosure's room at the end of that line. */
+.mbk-rebuild-copy {
+  color: var(--chrome-ink-2);
+  font-size: 13px;
+  line-height: 20px;
+  padding-right: 112px;
+}
+
+.mbk-rebuild-copy h2,
+.mbk-rebuild-copy p {
+  display: inline;
+  font-size: 13px;
+  line-height: 20px;
+  margin: 0;
+}
+
+.mbk-rebuild-copy h2 {
+  color: var(--chrome-ink);
+  font-weight: 600;
+}
+
+/* The disclosure holds one place in both states, so opening it never moves
+   the control that was just used. */
+.mbk-rebuild-details > summary {
+  align-items: center;
+  border-radius: 4px;
+  color: var(--mbk-danger-ink);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 600;
+  gap: 4px;
+  line-height: 20px;
+  list-style: none;
+  position: absolute;
+  right: 12px;
+  top: 9px;
+}
+
+.mbk-rebuild-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.mbk-rebuild-details > summary:hover {
+  text-decoration: underline;
+}
+
+.mbk-rebuild-details > summary:focus-visible {
+  outline: 2px solid var(--mbk-sage-deep);
+  outline-offset: 2px;
+}
+
+.mbk-rebuild-details > summary svg {
+  display: block;
+  flex: none;
+}
+
+/* Both labels share one cell, so the control keeps its size in either state,
+   and only the label naming what the disclosure offers is shown and named. */
+.mbk-rebuild-label {
+  display: inline-grid;
+  justify-items: end;
+}
+
+.mbk-rebuild-label > span {
+  grid-area: 1 / 1;
+}
+
+.mbk-rebuild-details[open] .mbk-rebuild-show,
+.mbk-rebuild-details:not([open]) .mbk-rebuild-hide {
+  visibility: hidden;
+}
+
+.mbk-rebuild-details[open] > summary svg {
+  transform: rotate(180deg);
+}
+
+/* Developer detail: selectable text that keeps its line breaks, wraps long
+   tokens rather than scrolling the page sideways, and scrolls within a bound. */
+.mbk-rebuild-detail {
+  background: var(--chrome-surface);
+  border: 1px solid var(--mbk-danger-edge);
+  border-radius: 6px;
+  color: var(--chrome-ink-2);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+  margin: 8px 0 1px;
+  max-height: 168px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  padding: 8px 10px;
+  white-space: pre-wrap;
+}
+
+/* Compact shells keep the same words in the same order: the explanation
+   wraps below the headline and the disclosure follows them. */
+.mbk-shell--mobile .mbk-rebuild {
+  padding: 8px 12px;
+}
+
+.mbk-shell--mobile .mbk-rebuild-copy {
+  padding-right: 0;
+}
+
+.mbk-shell--mobile .mbk-rebuild-copy h2,
+.mbk-shell--mobile .mbk-rebuild-copy p {
+  display: block;
+}
+
+.mbk-shell--mobile .mbk-rebuild-details > summary {
+  margin-top: 4px;
+  position: static;
+}
+
+.mbk-shell--mobile .mbk-rebuild-label {
+  justify-items: start;
+}

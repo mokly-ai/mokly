@@ -126,7 +126,10 @@ component page — record a preview mode. Every other existing artboard keeps
 its toolbar unchanged, which is also the depiction of a catalogue that never
 offers Live. Each artboard declares its own mode, links and availability in
 `entries/design/parts/navigation_states.ts`, so a screen that has not been
-designed for Live cannot acquire the control implicitly.
+designed for Live cannot acquire the control implicitly. The
+[rebuild status designs](./mokly-rebuild-status-design.md#owning-catalogue)
+draw the selected Browse screen and `design-interactive-component` unchanged
+under their notice, so they reuse those two records and add none.
 
 Every Workspace screen shows the Highlight components toggle. The component
 in Live and the static-only catalogue differ only by the preview-mode control:

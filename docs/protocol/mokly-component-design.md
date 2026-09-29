@@ -185,9 +185,9 @@ small gap above an intact rounded outline, shared by all three region layouts.
 ## Verification And Maintenance
 
 Use the real generator; never hand-edit generated HTML. Six shared component
-stylesheets are hand-authored public inputs, confined to `design/components/**`
-and `design/interactive/workspace/**`.
-Route-scoped stylesheet matching links them only from the thirty-five component design routes and the three Static and Live workspace routes that draw the same workspace; Changes follows those rendered resource references. The collection also declares inherited dependencies for comparison evidence. The controls stylesheet is scoped
+stylesheets are hand-authored public inputs, confined to `design/components/**`,
+`design/interactive/workspace/**` and `design/rebuild-status/live-component.html`.
+Route-scoped stylesheet matching links them only from the thirty-five component design routes, the three Static and Live workspace routes and the rebuild status Live component route, which draw the same workspace; Changes follows those rendered resource references. The collection also declares inherited dependencies for comparison evidence. The controls stylesheet is scoped
 further to its eleven owning routes, with a matching dependency and watch rule. Keep them out of the global
 `review.sharedImpact` list; watched stylesheet rules still reload their edits.
 Child collection dependency lists replace inherited lists; Controls explicitly

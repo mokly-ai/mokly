@@ -35,7 +35,7 @@ test.beforeAll(async () => {
   const tracked = (await git("ls-files", "examples/basic/generated")).stdout
     .trim()
     .split("\n");
-  expect(tracked).toHaveLength(30);
+  expect(tracked).toHaveLength(31);
   expect(tracked.every((file) => file.endsWith(".css"))).toBe(true);
   const file = path.join(
     root,

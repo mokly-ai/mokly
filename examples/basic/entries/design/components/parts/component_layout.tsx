@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import type { ComparisonMode } from "../../parts/destinations.js";
+import type { RebuildDepiction } from "../../parts/rebuild_status.js";
 import { ScreenHead, type ArtboardViewport } from "../../parts/shell.js";
 
 import type { ChangeStatus } from "./comparison_fixtures.js";
@@ -19,6 +20,7 @@ export function ComponentLayout({
   highlight,
   identity = "action",
   inspector,
+  rebuild,
   scenario = "all",
   variants,
   viewport,
@@ -32,6 +34,8 @@ export function ComponentLayout({
   highlight?: HighlightOption | undefined;
   identity?: ComponentId;
   inspector: ReactNode;
+  /** Watched Serve's status for the latest saved changes, when depicted. */
+  rebuild?: RebuildDepiction | undefined;
   scenario?: ChangeScenario;
   variants: ReactNode;
   viewport: ArtboardViewport;
@@ -41,6 +45,7 @@ export function ComponentLayout({
     <ExplorerShell
       active={identity}
       design={design}
+      rebuild={rebuild}
       scenario={scenario}
       viewport={viewport}
     >

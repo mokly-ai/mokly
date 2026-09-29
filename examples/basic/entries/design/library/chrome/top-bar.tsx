@@ -37,6 +37,7 @@ const propSchema = {
     },
     pickerOpen: flag,
     appearanceChanged: optionalFlag,
+    updating: optionalFlag,
     brandDestination: destination,
     menuDestination: destination,
     pickerDestination: destination,
@@ -64,6 +65,7 @@ export const topBar = defineComponent({
   controls: {
     query: { kind: "text", label: "Query" },
     pickerOpen: { kind: "boolean", label: "Tag picker open" },
+    updating: { kind: "boolean", label: "Updating" },
     appearance: {
       kind: "select",
       label: "Appearance selector",
@@ -110,6 +112,11 @@ export const topBar = defineComponent({
       id: "auto-appearance",
       title: "Auto appearance",
       props: { ...sample, appearance: "auto" },
+    },
+    {
+      id: "updating",
+      title: "Updating",
+      props: { ...sample, updating: true },
     },
   ],
 });

@@ -87,6 +87,19 @@ const CONTRAST_PAIRS: readonly (readonly [string, string, string, number])[] = [
     "--chrome-surface",
     4.5,
   ],
+  ["notice headline on danger surface", "--chrome-ink", "--mbk-danger-bg", 4.5],
+  [
+    "notice explanation on danger surface",
+    "--chrome-ink-2",
+    "--mbk-danger-bg",
+    4.5,
+  ],
+  [
+    "focus ring (deep sage) on danger surface",
+    "--mbk-sage-deep",
+    "--mbk-danger-bg",
+    3,
+  ],
 ];
 
 /** Font stacks share the palette block but are not appearance roles. */

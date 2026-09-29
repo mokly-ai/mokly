@@ -120,14 +120,16 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
 /**
  * Artboards that draw the component workspace and therefore keep its native
- * depicted controls, including the three Static/Live workspace states.
+ * depicted controls, including the three Static/Live workspace states and the
+ * Live component under the rebuild status notice.
  */
 function drawsComponentWorkspace(id: string): boolean {
   return (
     id.startsWith("design-component-") ||
     id === "design-interactive-component" ||
     id === "design-interactive-screen" ||
-    id === "design-interactive-static-catalogue"
+    id === "design-interactive-static-catalogue" ||
+    id === "design-rebuild-live-component"
   );
 }
 
@@ -142,10 +144,17 @@ test("every design link resolves to a real same-viewport design artifact without
   const interactiveDesigns = designs.filter((entry) =>
     entry.id.startsWith("design-interactive-"),
   );
+  const rebuildDesigns = designs.filter((entry) =>
+    entry.id.startsWith("design-rebuild-"),
+  );
   assert.equal(componentDesigns.length, 35);
   assert.equal(interactiveDesigns.length, 7);
+  assert.equal(rebuildDesigns.length, 5);
   assert.equal(
-    designs.length - componentDesigns.length - interactiveDesigns.length,
+    designs.length -
+      componentDesigns.length -
+      interactiveDesigns.length -
+      rebuildDesigns.length,
     63,
   );
   for (const entry of designs) {
@@ -233,6 +242,7 @@ test("the canonical documented inventory exactly matches the complete design reg
         "docs/protocol/mokly-component-inspector-design.md",
         "docs/protocol/mokly-component-controls-design.md",
         "docs/protocol/mokly-interactive-views-design.md",
+        "docs/protocol/mokly-rebuild-status-design.md",
       ].map((file) => fs.readFile(path.join(repositoryRoot, file), "utf8")),
     )
   ).join("\n");

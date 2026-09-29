@@ -51,8 +51,9 @@ when the historical primary file is absent, never when it is invalid.
   evidence, updates, recovery, previews and on-demand rendering for React.
 - [Watched Serve rebuild status](./mokly-rebuild-status.md) — approved private
   status, ordering, failure sanitizing and last-good shell behavior.
-- [Rebuild status design](./mokly-rebuild-status-design.md) — required notice,
-  details and layout-stable progress states for the design catalogue.
+- [Rebuild status design](./mokly-rebuild-status-design.md) — delivered
+  notice, details and progress mockups, with the notice geometry, final copy
+  and the progress slot beside the search field.
 - [Viewer appearance](./mokly-viewer-appearance.md) — implemented
   Auto/Light/Dark support: one standalone Appearance control and a host-supplied
   embedded theme beside independent preview controls.

@@ -2,6 +2,7 @@ import { defineCollection } from "@mokly/mokly";
 
 import { appearanceSelector } from "./chrome/appearance-selector.js";
 import { catalogueNavigation } from "./chrome/catalogue-navigation.js";
+import { rebuildNotice } from "./chrome/rebuild-notice.js";
 import { screenHeader } from "./chrome/screen-header.js";
 import { topBar } from "./chrome/top-bar.js";
 import { changeStatusBadge } from "./controls/change-status.js";
@@ -26,6 +27,7 @@ const groups = [
       catalogueNavigation.entry,
       screenHeader.entry,
       appearanceSelector.entry,
+      rebuildNotice.entry,
     ],
   },
   {

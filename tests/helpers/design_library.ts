@@ -2,7 +2,14 @@ export const designLibrary = [
   [
     "chrome",
     "top-bar",
-    ["default", "search", "tag-picker", "drawer-open", "auto-appearance"],
+    [
+      "default",
+      "search",
+      "tag-picker",
+      "drawer-open",
+      "auto-appearance",
+      "updating",
+    ],
   ],
   [
     "chrome",
@@ -21,6 +28,7 @@ export const designLibrary = [
   ],
   ["chrome", "screen-header", ["screen", "component", "changed", "removed"]],
   ["chrome", "appearance-selector", ["auto", "light", "dark", "compact"]],
+  ["chrome", "rebuild-notice", ["collapsed", "details"]],
   [
     "controls",
     "comparison-toolbar",

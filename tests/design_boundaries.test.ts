@@ -50,6 +50,7 @@ const DECORATIVE_BOUNDARIES = new Map([
   [".ce-changed", "a label naming its own state in 5.62:1 ink"],
   [".ce-removed", "a label naming its own state in 5.73:1 ink"],
   [".ce-control-alert", "a label naming its own state in 5.97:1 ink"],
+  [".mbk-rebuild-card", "a notice naming its own state in 15.22:1 ink"],
   [".ce-action:disabled", "WCAG exempts a disabled control"],
 ]);
 
@@ -80,6 +81,8 @@ const AUDITED_BOUNDARIES = [
   "design-library/chrome/appearance-selector.css .mbk-appearance:focus-within",
   "design-library/chrome/appearance-selector.css .mbk-appearance:hover",
   "design-library/chrome/catalogue-navigation.css .mbk-nav-variants-toggle:focus-visible",
+  "design-library/chrome/rebuild-notice.css .mbk-rebuild-card",
+  "design-library/chrome/rebuild-notice.css .mbk-rebuild-details > summary:focus-visible",
   "design-library/controls/change-status.css .ce-added",
   "design-library/controls/change-status.css .ce-changed",
   "design-library/controls/change-status.css .ce-removed",

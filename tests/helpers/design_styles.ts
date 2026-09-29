@@ -36,7 +36,11 @@ export async function designStyleRules(): Promise<StyleRule[]> {
     const absolute = path.join(entry.parentPath, entry.name);
     const relative = path.relative(GENERATED, absolute).replaceAll("\\", "/");
     if (!isDesignStylesheet(relative)) continue;
-    const source = await fs.readFile(absolute, "utf8");
+    // A comment before a rule would otherwise become part of its selector.
+    const source = (await fs.readFile(absolute, "utf8")).replace(
+      /\/\*[\s\S]*?\*\//gu,
+      "",
+    );
     for (const [, selector, body] of source.matchAll(/([^{}]+)\{([^}]*)\}/g))
       if (selector && body)
         rules.push({

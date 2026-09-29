@@ -35,6 +35,18 @@ const OWNING = [
   ],
 ] as const;
 
+/**
+ * Rebuild status artboards draw the canonical Welcome screen and the Live
+ * component workspace unchanged, so they carry those states' own control.
+ */
+const REBUILD_STATUS_CARRIERS = [
+  "design-rebuild-failure",
+  "design-rebuild-details",
+  "design-rebuild-updating",
+  "design-rebuild-failure-updating",
+  "design-rebuild-live-component",
+];
+
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: the Static and Live gallery owns seven light-only artboards`, async () => {
     for (const [id, route] of OWNING) {
@@ -195,6 +207,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       "design-browse-screen",
       "design-component-overview",
       ...OWNING.map(([id]) => id),
+      ...REBUILD_STATUS_CARRIERS,
     ]);
     for (const entry of manifest.entries) {
       if (entry.kind !== "screen" || !entry.id.startsWith("design-")) continue;

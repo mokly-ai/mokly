@@ -38,16 +38,17 @@ Decisions:
   in characters and bytes, with absolute repository paths rewritten to
   repository-relative ones, rendered as text only, and shown behind a
   disclosure. The headline never contains it.
-- Proposed product copy, finalized by the mockup milestone: "Your latest
-  changes couldn't be loaded." with "You're seeing the last working version."
-  and a "Show details" disclosure; progress reads "Updating…" and appears only
-  after a short delay, so fast updates never flash. No copy mentions builds,
+- Product copy, finalized by the mockup milestone: "Your latest changes
+  couldn’t be loaded." with "You’re seeing the last working version." and a
+  "Show details" disclosure; progress reads "Updating…" and appears only after
+  a short delay, so fast updates never flash. No copy mentions builds,
   bundles, generations or watch actions.
 - The failure notice is full width, directly below the top bar on every shell
   route, at both widths, and announced once per failure rather than on every
   reload. It uses the component system's full-surface treatment and an icon,
   never a left-edge accent border or rail. Progress must not shift layout; the
-  mockup milestone decides and records its placement.
+  mockup milestone placed it in the top bar between the search field and
+  Appearance, taking its room from the search field.
 - A Live preview compiles the same repository-owned source bytes as its
   generation's Static build. The sources are captured while the generation's
   consumer graph builds, only when `interactive` is `serve`, retained for the
@@ -106,7 +107,7 @@ Documentation only. Every later milestone implements this contract.
 - [x] Validate Markdown with `npm run format:check`, check local link targets,
       review the diff, commit and push.
 
-## Milestone 2: Design the rebuild status states
+## Milestone 2: Design the rebuild status states — completed
 
 Tags: mockup
 
@@ -115,15 +116,18 @@ Add the approved states to the design catalogue under
 and inspector parts, with mobile and desktop variants for every screen and at
 most five screens per page.
 
-- [ ] Add a screen-spec page for rebuild status with the five states from the
+- [x] Add a screen-spec page for rebuild status with the five states from the
       design contract, each a standalone screen component with mobile and
       desktop variants, reachable from the design navigation.
-- [ ] Decide and depict where progress appears so it never shifts layout at
+- [x] Decide and depict where progress appears so it never shifts layout at
       either width, and record the placement and final copy in
       `docs/protocol/mokly-rebuild-status-design.md`.
-- [ ] Extend the design suites: ids and routes in both viewports, notice copy,
+- [x] Extend the design suites: ids and routes in both viewports, notice copy,
       the details disclosure, progress copy, counts and navigation.
-- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+- [x] Register the notice as the shared `design-ui-rebuild-notice` component
+      and give the top bar an `updating` flag, with saved examples, inventory
+      and palette records.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
       smoke the pages through `npm run dev`, run `cargo xtask check`, commit
       and push.
 

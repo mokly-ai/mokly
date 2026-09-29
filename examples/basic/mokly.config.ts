@@ -77,6 +77,10 @@ export default defineConfig({
       stylesheets: withLibraryStyles(designBaseStyles, componentLayoutStyles),
     },
     {
+      match: "design/rebuild-status/live-component.html",
+      stylesheets: withLibraryStyles(designBaseStyles, componentLayoutStyles),
+    },
+    {
       match: "design/browse/appearance/**",
       stylesheets: withLibraryStyles(
         ["design.css", "design-stage.css", "design-review.css"],

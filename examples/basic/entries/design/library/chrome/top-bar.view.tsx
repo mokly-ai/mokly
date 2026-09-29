@@ -9,6 +9,19 @@ import { useDesignStyle } from "../style_context.js";
 import { appearanceSelector } from "./appearance-selector.js";
 import type { TopBarProps } from "./top-bar.js";
 
+/**
+ * Watched Serve's delayed update progress. It takes its room from the search
+ * field's flexible allotment, so the brand, menu and Appearance never move.
+ */
+function UpdateProgress() {
+  return (
+    <span className="mbk-progress">
+      <span className="mbk-progress-spinner" aria-hidden="true" />
+      Updating…
+    </span>
+  );
+}
+
 export function TopBarView({
   query,
   placeholder,
@@ -19,6 +32,7 @@ export function TopBarView({
   appearance,
   appearanceChanged,
   pickerOpen,
+  updating,
   brandDestination,
   menuDestination,
   pickerDestination,
@@ -28,6 +42,32 @@ export function TopBarView({
   viewport: Viewport;
 }) {
   useDesignStyle("top-bar");
+  const search = (
+    <div className="mbk-search">
+      <SearchIcon />
+      {query === undefined ? (
+        <span className="mbk-search-placeholder">{placeholder}</span>
+      ) : (
+        <span className="mbk-search-value">{query}</span>
+      )}
+      {tags.length ? (
+        <DesignLink to={pickerDestination}>
+          <span
+            className="mbk-search-tag"
+            aria-label={pickerOpen ? "Close tag picker" : "Filter by tag"}
+          >
+            <TagIcon size={13} />
+          </span>
+        </DesignLink>
+      ) : null}
+      {pickerOpen ? (
+        <tagPicker.Component
+          tags={tags}
+          {...(activeTag === undefined ? {} : { activeTag })}
+        />
+      ) : null}
+    </div>
+  );
   return (
     <header className="mbk-topbar">
       {viewport === "mobile" && menu !== "none" ? (
@@ -60,30 +100,14 @@ export function TopBarView({
           )}
         </span>
       </DesignLink>
-      <div className="mbk-search">
-        <SearchIcon />
-        {query === undefined ? (
-          <span className="mbk-search-placeholder">{placeholder}</span>
-        ) : (
-          <span className="mbk-search-value">{query}</span>
-        )}
-        {tags.length ? (
-          <DesignLink to={pickerDestination}>
-            <span
-              className="mbk-search-tag"
-              aria-label={pickerOpen ? "Close tag picker" : "Filter by tag"}
-            >
-              <TagIcon size={13} />
-            </span>
-          </DesignLink>
-        ) : null}
-        {pickerOpen ? (
-          <tagPicker.Component
-            tags={tags}
-            {...(activeTag === undefined ? {} : { activeTag })}
-          />
-        ) : null}
-      </div>
+      {updating ? (
+        <div className="mbk-search-slot">
+          {search}
+          <UpdateProgress />
+        </div>
+      ) : (
+        search
+      )}
       <appearanceSelector.Component
         value={appearance}
         {...(appearanceChanged === undefined

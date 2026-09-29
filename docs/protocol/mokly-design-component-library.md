@@ -24,10 +24,11 @@ to depict a different setting, as the `auto-appearance` sample does.
 
 | Group / slug                  | Existing implementation                                             | Saved variant ids                                                                                          |
 | ----------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`, `auto-appearance`                                        |
+| chrome / top-bar              | `parts/top_bar.tsx`, `parts/tag_filter.tsx`                         | `default`, `search`, `tag-picker`, `drawer-open`, `auto-appearance`, `updating`                            |
 | chrome / catalogue-navigation | `parts/nav.tsx`, scenario data in `components/parts/navigation.tsx` | `all`, `changes`, `empty`, `drawer`, `loading`, `preparing`, `unavailable`, `variants`, `changed-variants` |
 | chrome / screen-header        | `parts/shell.tsx: ScreenHead`                                       | `screen`, `component`, `changed`, `removed`                                                                |
 | chrome / appearance-selector  | new for the appearance mockups                                      | `auto`, `light`, `dark`, `compact`                                                                         |
+| chrome / rebuild-notice       | new for the rebuild status mockups                                  | `collapsed`, `details`                                                                                     |
 | controls / comparison-toolbar | `parts/compare.tsx: CompareToolbar`                                 | `current`, `side-by-side`, `overlay`, `difference`, `side-by-side-apart`                                   |
 | controls / view-controls      | `components/parts/view_controls.tsx`, `parts/shell.tsx: ViewSwitch` | `default`, `both`, `highlighted`, `unavailable`, `live`, `changed-views`                                   |
 | controls / tag-picker         | `parts/tag_filter.tsx: TagPicker`                                   | `all`, `selected`, `empty`                                                                                 |
@@ -62,8 +63,9 @@ Controls below use text, boolean, number and primitive enum selections only.
    existing text/icon menu presentation; available tag records, optional active
    tag and picker-open flag; explicit navigation destinations; and an
    `auto/light/dark` interface appearance that falls back to the render
-   context's scheme. Controls: query,
-   picker-open, menu state and appearance. The appearance setting is the
+   context's scheme, plus an optional `updating` flag for watched Serve's
+   delayed progress beside the search field. Controls: query, picker-open,
+   updating, menu state and appearance. The appearance setting is the
    catalogue's own and is the only scheme control in the design catalogue. This
    component owns it, so every artboard with a top bar draws it; screens do not
    opt in. The value defaults to the scheme the file was rendered for and is
@@ -169,6 +171,12 @@ Controls below use text, boolean, number and primitive enum selections only.
     selection control named Appearance, holding one value; it is the catalogue's
     single setting, so the value it holds is also the scheme the previews
     around it follow, and it does not fabricate a native open list.
+17. **Update notice:** the sanitized developer `detail` text and an `open` flag
+    for its disclosure; the headline, explanation and disclosure labels are the
+    fixed product copy of the
+    [rebuild status design](./mokly-rebuild-status-design.md). Control: details
+    open. It draws the full-width band and card that design fixes, with a native
+    disclosure that also works in place, and keeps the detail text only.
 
 Scenario adapters explicitly map current names to these semantic fields. Do not
 add uncontrolled catch-all objects, per-screen CSS strings or function props to
@@ -197,14 +205,15 @@ required semantic parents (such as a `dl` for prop rows), bounded panel dimensio
 and enough overflow space for popovers and frames.
 The host must not supply hidden scenario data or another full-screen component.
 
-| Existing design family                               | Required reuse                                                                                                                     |
-| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Browse, tag, scheme, missing-route and drawer states | Top bar, navigation, header, relevant tag/control/frame/inspector/empty components                                                 |
-| Changes and review outcomes                          | Shared chrome, eligible comparison toolbar, device frames, comparison panes and inspector; empty states where applicable           |
-| Component pages, states and inspection               | Shared chrome/status/view controls, inspector/metadata and comparison parts; existing fixture previews remain content              |
-| Component controls states                            | Shared chrome/inspector plus repeated prop-field framing; fixture values and validation outcomes remain explicit                   |
-| Use-case depiction                                   | Shared chrome, flow steps and framed owning screen content                                                                         |
-| Appearance states, panels and status                 | Shared chrome plus the appearance selector, and the existing navigation, header, frame, inspector, comparison and empty components |
+| Existing design family                               | Required reuse                                                                                                                      |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Browse, tag, scheme, missing-route and drawer states | Top bar, navigation, header, relevant tag/control/frame/inspector/empty components                                                  |
+| Changes and review outcomes                          | Shared chrome, eligible comparison toolbar, device frames, comparison panes and inspector; empty states where applicable            |
+| Component pages, states and inspection               | Shared chrome/status/view controls, inspector/metadata and comparison parts; existing fixture previews remain content               |
+| Component controls states                            | Shared chrome/inspector plus repeated prop-field framing; fixture values and validation outcomes remain explicit                    |
+| Use-case depiction                                   | Shared chrome, flow steps and framed owning screen content                                                                          |
+| Appearance states, panels and status                 | Shared chrome plus the appearance selector, and the existing navigation, header, frame, inspector, comparison and empty components  |
+| Rebuild status states                                | Shared chrome plus the update notice, and the existing navigation, header, view controls, frame, workspace and inspector components |
 
 Adoption tests enumerate the actual owning screen inventory, assert the expected
 component ids per viewport, and verify there are no calls bypassing the registered

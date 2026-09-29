@@ -74,6 +74,17 @@ export function ChevronDownIcon({ size }: IconProps) {
   );
 }
 
+/** A circled exclamation mark: the icon a failure notice leads with. */
+export function AlertIcon({ size }: IconProps) {
+  return (
+    <IconSvg size={size ?? 13}>
+      <circle cx={12} cy={12} r={9} />
+      <path d="M12 7.5v5.5" />
+      <path d="M12 16.5h.01" />
+    </IconSvg>
+  );
+}
+
 /** A collapsed collection: a closed folder grouping child screens. */
 export function FolderIcon({ size }: IconProps) {
   return (

@@ -17,6 +17,8 @@ interface TopBarProps {
   appearanceChanged?: boolean | undefined;
   searchValue?: string | undefined;
   tagPickerOpen?: boolean | undefined;
+  /** Watched Serve's delayed update progress is showing. */
+  updating?: boolean | undefined;
   viewport: ArtboardViewport;
   drawerOpen?: boolean;
 }
@@ -31,6 +33,7 @@ export function TopBar({
   searchValue,
   searchPlaceholder,
   tagPickerOpen,
+  updating,
   viewport,
 }: TopBarProps) {
   const navigation = useDesignNavigation();
@@ -47,6 +50,7 @@ export function TopBar({
       pickerOpen={tagPickerOpen ?? false}
       appearance={appearanceChoice ?? rendered}
       {...optional("appearanceChanged", appearanceChanged)}
+      {...optional("updating", updating)}
       brandDestination={DESTINATIONS.home}
       menuDestination={
         navigation.drawer?.to ??

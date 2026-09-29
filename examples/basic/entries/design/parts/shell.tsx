@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import type { ChangeStatus } from "../components/parts/comparison_fixtures.js";
 import { previewModeProps } from "../components/parts/view_controls.js";
+import { rebuildNotice } from "../library/chrome/rebuild-notice.js";
 import { screenHeader } from "../library/chrome/screen-header.js";
 import { optional, useDesignInstance } from "../library/composition.js";
 import {
@@ -16,6 +17,7 @@ import {
 } from "./appearance.js";
 import { DesignNavigation, useDesignNavigation } from "./design_navigation.js";
 import { DESTINATIONS, type DesignDestination } from "./destinations.js";
+import { REBUILD_DETAIL, type RebuildDepiction } from "./rebuild_status.js";
 import { TopBar } from "./top_bar.js";
 
 /** Rendering target for a design mockup artboard. */
@@ -32,12 +34,28 @@ interface ShellProps {
   children: ReactNode;
   menuPresentation?: "text" | "icon" | undefined;
   nav: ReactNode;
+  /** Watched Serve's status for the latest saved changes, when depicted. */
+  rebuild?: RebuildDepiction | undefined;
   searchValue?: string | undefined;
   tagPickerOpen?: boolean | undefined;
   viewport: ArtboardViewport;
 }
 
-/** The Mokly shell scaffold for one design mockup. */
+/** The failure notice, carrying the one sanitized fixture diagnostic. */
+function RebuildNotice({ open }: { open: boolean }) {
+  return (
+    <rebuildNotice.Component
+      moklyInstance={useDesignInstance("rebuild-notice")}
+      detail={REBUILD_DETAIL}
+      open={open}
+    />
+  );
+}
+
+/**
+ * The Mokly shell scaffold for one design mockup. A depicted failure notice
+ * sits directly below the top bar and pushes the body down on every route.
+ */
 export function Shell({
   activeTag,
   appearanceChoice,
@@ -47,12 +65,16 @@ export function Shell({
   design,
   menuPresentation,
   nav,
+  rebuild,
   searchValue,
   searchPlaceholder,
   tagPickerOpen,
   viewport,
 }: ShellProps) {
   const scheme = useRenderedAppearance();
+  const notice = rebuild?.failure ? (
+    <RebuildNotice open={rebuild.failure === "open"} />
+  ) : null;
   const bar = (
     <TopBar
       menuPresentation={menuPresentation}
@@ -63,6 +85,7 @@ export function Shell({
       appearanceChanged={changedViews?.some((view) => view.scheme !== scheme)}
       searchValue={searchValue}
       tagPickerOpen={tagPickerOpen}
+      updating={rebuild?.updating}
       viewport={viewport}
     />
   );
@@ -72,6 +95,7 @@ export function Shell({
         {viewport === "desktop" ? (
           <div className="mbk-shell mbk-shell--desktop">
             {bar}
+            {notice}
             <div className="mbk-body">
               {nav}
               <main className="mbk-main">{children}</main>
@@ -80,6 +104,7 @@ export function Shell({
         ) : (
           <div className="mbk-shell mbk-shell--mobile">
             {bar}
+            {notice}
             <main className="mbk-main">{children}</main>
             {aside}
           </div>

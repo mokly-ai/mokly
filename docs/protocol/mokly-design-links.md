@@ -6,9 +6,12 @@ Implemented in the 63 Browse/Changes design screens and two real example
 screens using `MockLink` and `MockLink asChild`. Verification and delivery are tracked by the
 [implementation plan](../../plans/mokabook-design-mocklinks.md).
 
-The [component design inventory](./mokly-component-design.md) and the
-[Static and Live designs](./mokly-interactive-views-design.md) extend the
+The [component design inventory](./mokly-component-design.md), the
+[Static and Live designs](./mokly-interactive-views-design.md) and the
+[rebuild status designs](./mokly-rebuild-status-design.md) extend the
 catalogue with their own state contracts and native component/control depictions.
+The rebuild status states keep the links of the canonical artboards they draw
+and are entered from the catalogue navigation.
 Those 63 Browse/Changes designs retain the canonical links below, including the
 removed previous-version family added by
 [removed previews](./mokly-removed-previews.md).
