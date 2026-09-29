@@ -91,6 +91,11 @@ options; other open findings were not changed.
    checks wrong accepts against browser-parsed selector text. All-empty
    wrappers now fail before the plugins run.
 
+   Corrected in `c482bd0`: the first oracle included 102 unparseable rows.
+   The replacement compares only its 220 listed Chrome-parseable shapes and
+   tolerates only explicitly marked strict non-wrapper trailing-comma
+   rejections; it is not a general selector-equivalence proof.
+
 2. **Low — a comment that touches the inside of a `:global()` or `:local()`
    wrapper fails Build.**
    - What happens: PostCSS removes a selector comment only when whitespace or

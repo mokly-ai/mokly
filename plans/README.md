@@ -23,7 +23,7 @@
   Milestone 24 (`7ba5628`) resolves those two approved findings; other findings remain
   open. Milestone 26 (`266164b`) resolves the four approved findings in the
   [Milestone 25 review](../docs/reviews/imported-css-delivery-milestone-25.md).
-  Milestone 28 addresses the four approved findings in the
+  Milestone 28 (`c482bd0`) resolves the four approved findings in the
   [Milestone 27 review](../docs/reviews/imported-css-delivery-milestone-27.md);
   other open findings remain unchanged.
   Move this plan to Completed when its

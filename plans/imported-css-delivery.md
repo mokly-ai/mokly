@@ -27,7 +27,7 @@ are addressed there; other findings remain open for the user's decision, as
 do the earlier unselected findings. Milestone 26 (`266164b`) resolves all four
 approved findings in the
 [Milestone 25 review record](../docs/reviews/imported-css-delivery-milestone-25.md).
-Milestone 28 addresses the four approved findings in the
+Milestone 28 (`c482bd0`) resolves the four approved findings in the
 [Milestone 27 review record](../docs/reviews/imported-css-delivery-milestone-27.md);
 other open findings remain unchanged.
 Imported CSS, CSS Modules, binary assets and
@@ -897,7 +897,7 @@ follow plugin-owned empty tails, and compare only real Chrome-parsed selectors.
 
 ## Milestone 29: Commit, push, and review
 
-- [ ] Commit and push the approved fixes and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Commit and push the approved fixes and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
 - [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
 
 ## Post-merge follow-up (non-blocking)

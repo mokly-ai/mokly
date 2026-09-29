@@ -86,6 +86,10 @@ four were resolved in `266164b` by the user's chosen options.
    Nested wrapper-owned whitespace remains accepted, while a trailing comma
    in another pseudo fails Build when it changes the selector.
 
+   Clarified in `c482bd0`: a trailing comma in a non-wrapper pseudo can also
+   fail Build when the moved whitespace is harmless; the check deliberately
+   retains this strict rejection.
+
 2. **Low — wrappers whose items are all empty now pass even when removing them
    leaves invalid CSS.**
    - What happens: to accept `:global(,)`, the check drops an all-empty wrapper
@@ -147,6 +151,11 @@ four were resolved in `266164b` by the user's chosen options.
    browser-parsed selectors; the plugin matrix is now named and asserted only
    as no-false-rejection evidence. The oracle records 102 cases Chrome drops
    on both sides separately because neither has selector text to compare.
+
+   Corrected in `c482bd0`: the earlier oracle passed 102 rows Chrome could
+   not parse. Its replacement checks only 220 listed, parseable shapes and
+   allows explicitly marked strict non-wrapper trailing-comma rejections;
+   it does not claim broader selector equivalence.
 
 4. **Low — the PR draft and the Styles guide describe the join rule and its
    safety net too broadly.**

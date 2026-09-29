@@ -32,8 +32,8 @@ The main fix works:
   performance does not change materially.
 
 The four findings below were reproduced in scratch copies. The parent session
-confirmed findings 1 and 3 against builds before and after the change. All
-four remain open for the user's decision.
+confirmed findings 1 and 3 against builds before and after the change. The
+user approved option A for all four, resolved in `c482bd0`.
 
 ## Findings
 
@@ -81,6 +81,12 @@ four remain open for the user's decision.
    - Recommended: A. One shared CSS-whitespace function prevents the whole
      class of text that looks like whitespace but is not CSS whitespace,
      not just these five spellings.
+
+   Resolved in `c482bd0`: a shared forward CSS scanner distinguishes
+   escape-consumed CSS whitespace from combinators and Unicode name
+   characters in selectors and `@scope` preludes. The wrong accepts now fail
+   and the reviewed false rejections now build.
+
 2. **Low — an escape ended by a tab or line break becomes a descendant
    combinator, even without wrappers. This existed before Milestone 26.**
    - What happens: the selector parser treats only a single space as the end
@@ -104,6 +110,13 @@ four remain open for the user's decision.
    - Recommended: A, with oracle rows for these shapes. It is narrow and
      deterministic. B is the broader guard if more disagreements between the
      parser and browsers appear, but it is a larger design change.
+
+   Resolved in `c482bd0`: raw authored selectors and `@scope` preludes now
+   reject tabs, line endings and form feeds that end hex escapes, and any
+   whitespace after six-digit escapes. The same guard rejects an escape
+   followed by a comment and then whitespace before PostCSS erases the
+   comment. The diagnostic names the authored file and location.
+
 3. **Low — three wrapper spellings now fail Build although the plugins' output
    means what the docs say.**
    - Cases:
@@ -128,6 +141,12 @@ four remain open for the user's decision.
      pin the rejections with tests; C) leave as is.
    - Recommended: A, done together with finding 1 so one text scanner serves
      both.
+
+   Resolved in `c482bd0`: whitespace anywhere after the first empty-tail
+   comma moves with a CSS Modules wrapper. A kept comment stops that move
+   inside another pseudo; the shared forward scan finds comment ends at the
+   first `*/`. Nested and chained-wrapper regressions pin plugin output.
+
 4. **Low — the Chrome oracle checks less than it claims, and two records
    overstate the rule.**
    - What happens: Chrome drops 102 of the oracle's 281 cases on both sides,
@@ -166,3 +185,10 @@ four remain open for the user's decision.
      - C) Keep it as is.
    - Recommended: A now and B as the broader guard. The reviewer's structural
      fuzz found finding 3's double-comma case at once.
+
+   Resolved in `c482bd0`: the seeded oracle now has 220 Chrome-parseable
+   rows, at least ten real comparisons per pseudo family, the reviewed escape
+   and wrapper cases, and the documented trailing-comma fix. It permits a
+   same-meaning rejection only when explicitly marked as the known strict
+   non-wrapper trailing-comma case; zero rows needed that exception. This is
+   option A only, not a structural generator.
