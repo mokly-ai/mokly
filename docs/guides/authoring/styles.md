@@ -55,9 +55,15 @@ comments and `url()` forms are not rewritten by module scoping.
 forms, including class names containing `to`. The local names are exported;
 they can be composed by a later rule. Mokly checks that scoping changes no
 other authored CSS. The spacing inside a `:global()` or `:local()` list matters:
-with a space after the comma, `.wrap :global(.x, .y)` matches `.y` inside
-`.x` inside `.wrap`; without it, `.wrap :global(.x,.y)` matches one element
-with both classes. Empty items are ignored. This matches css-loader and Vite.
+whitespace on either side of a comma, including a line break, makes
+`.wrap :global(.x, .y)` match `.y` inside `.x` inside `.wrap`. Without
+whitespace, `.wrap :global(.x,.y)` matches one element with both classes.
+Empty list items disappear, but a wrapper with no selector at all fails Build
+with guidance to add one or remove the wrapper. A trailing comma and space in
+`:global()` or `:local()` can separate the following selector; the same
+spelling in `:is()` and similar selectors changes its meaning and fails Build.
+Remove that trailing comma to keep the selector attached. This follows the
+plugins used by css-loader and Vite.
 To match either class, write
 `.wrap :global(.x), .wrap :global(.y)` or
 `.wrap :global(:is(.x, .y))` instead.

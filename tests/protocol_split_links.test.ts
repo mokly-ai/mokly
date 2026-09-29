@@ -14,6 +14,7 @@ const pages = [
   "mokly-css-attribution-evidence.md",
   "mokly-export-boundary.md",
   "mokly-imported-styles-assets.md",
+  "mokly-imported-styles-modules.md",
   "mokly-publication-changes.md",
   "mokly-rendering-generated.md",
   "mokly-source-inventory.md",

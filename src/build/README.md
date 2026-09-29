@@ -19,6 +19,9 @@ reach the same bundle and inventory. Consumer PostCSS still runs first.
 selector rules while hiding every scope-suffixed at-rule from plugin heuristics.
 `styles/module_verify.ts` compares restored output with the authored PostCSS
 tree and rejects any rewrite beyond documented local names before bundling.
+Its selector comparison uses authored offsets for comma and outer spacing;
+only a CSS Modules wrapper may move trailing-comma whitespace outward.
+Empty `:global()` and `:local()` wrappers fail before the plugins run.
 Graph and stylesheet metafiles each resolve their physical working directory
 once for path mapping. Root-import diagnostics build edge provenance only
 when an outside-repository CSS file actually fails validation; successful

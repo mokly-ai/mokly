@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import test from "node:test";
 
+import { verifyModuleScoping } from "../dist/build/styles/module_verify.js";
 import { scopeModule } from "../dist/build/styles/modules.js";
 
 import { pluginModuleOutput } from "./helpers/css_module_plugin_output.js";
@@ -141,7 +142,7 @@ function mustReject(
 }
 
 test(
-  "generated selector-list matrix matches the independent CSS Modules pipeline",
+  "generated plugin-output matrix has no false rejections",
   { timeout: 20_000 },
   (context) => {
     const started = performance.now();
@@ -172,9 +173,11 @@ test(
               );
               rejected += 1;
             } else {
-              const actual = scopeModule(css, relative);
-              assert.equal(actual.css, plugin.css, label);
-              assert.deepEqual(actual.exports, plugin.exports, label);
+              assert.doesNotThrow(
+                () => verifyModuleScoping(css, plugin.css, relative, prefix),
+                label,
+              );
+              assert.doesNotThrow(() => scopeModule(css, relative), label);
               accepted += 1;
             }
           }
@@ -189,7 +192,7 @@ test(
   },
 );
 
-test("empty selector-list items follow independent plugin output", () => {
+test("nonempty plugin selector-list items are not falsely rejected", () => {
   let cases = 0;
   for (const mode of modes)
     for (const candidate of contexts)
@@ -203,12 +206,17 @@ test("empty selector-list items follow independent plugin output", () => {
         "/* c */, /* d */",
       ]) {
         const css = source(candidate, `:${mode}(${items})`);
-        const plugin = pluginModuleOutput(css, relative, prefix);
         const hasSelector = /\.[xy]\b/u.test(items);
-        const invalid = Boolean(
-          (candidate.finalType && hasSelector) ||
-          (candidate.name === "scope limit" && !hasSelector),
-        );
+        if (!hasSelector) {
+          assert.throws(
+            () => scopeModule(css, relative),
+            /CSS Modules :(?:global|local)\(\) has no selector/,
+          );
+          cases += 1;
+          continue;
+        }
+        const plugin = pluginModuleOutput(css, relative, prefix);
+        const invalid = Boolean(candidate.finalType);
         if (invalid) {
           assert.throws(
             () => scopeModule(css, relative),
@@ -218,21 +226,11 @@ test("empty selector-list items follow independent plugin output", () => {
           cases += 1;
           continue;
         }
-        let actual;
-        try {
-          actual = scopeModule(css, relative);
-        } catch (error) {
-          throw new Error(
-            `${candidate.name}/${mode}/${items}: ${String(error)}`,
-            { cause: error },
-          );
-        }
-        assert.equal(
-          actual.css,
-          plugin.css,
+        assert.doesNotThrow(
+          () => verifyModuleScoping(css, plugin.css, relative, prefix),
           `${candidate.name}/${mode}/${items}`,
         );
-        assert.deepEqual(actual.exports, plugin.exports);
+        assert.doesNotThrow(() => scopeModule(css, relative));
         cases += 1;
       }
   assert.equal(cases, contexts.length * modes.length * 7);

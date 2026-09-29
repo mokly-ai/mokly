@@ -73,6 +73,7 @@ when the historical primary file is absent, never when it is invalid.
 - [Imported stylesheets](./mokly-imported-styles.md) — implemented:
   renderer/entry CSS, CSS Modules, assets, PostCSS, inventory, and
   [exact diagnostics](./mokly-imported-styles-errors.md).
+  - [CSS Modules and rename-only verification](./mokly-imported-styles-modules.md).
   - [PostCSS and dependency inventory](./mokly-imported-styles-postcss.md).
   - [Assets, links and delivery](./mokly-imported-styles-assets.md).
 - [Catalogue change metadata](./mokly-catalogue-changes.md)

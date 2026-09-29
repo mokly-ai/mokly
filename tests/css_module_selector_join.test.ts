@@ -31,10 +31,6 @@ for (const [input, pluginSelector] of [
   [".w:global(.x,.y)", ".M_w.x.y"],
   [".w :global(div,.x)", ".M_w div.x"],
   [".w :local(.x,.y)", ".M_w .M_x.M_y"],
-  [".w :global(,)", ".M_w"],
-  [".w:global(,)", ".M_w"],
-  [":global(,).z", ".M_z"],
-  [".w :global(/*c*/,/*d*/)", ".M_w "],
   [".w :global(.x,/*c*/,.y)", ".M_w .x.y"],
   [".w :global(.x/*c*/)", ".M_w .x/*c*/"],
   [".w :local(.x/*c*/)", ".M_w .M_x/*c*/"],
@@ -91,11 +87,11 @@ for (const [input, output] of [
     );
   });
 
-test("a selector comment hoisted before its rule is still ignored", () => {
+test("a selector comment hoisted before a nonempty wrapper rule is ignored", () => {
   assert.doesNotThrow(() =>
     verifyModuleScoping(
-      ":global(/* c */, /* d */) .tail{color:red}",
-      `/* c */ .${prefix}tail{color:red}`,
+      ":global(/* c */.x) .tail{color:red}",
+      `/* c */.x .${prefix}tail{color:red}`,
       relative,
       prefix,
     ),

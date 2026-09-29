@@ -4,6 +4,7 @@ import postcss, { CssSyntaxError, type Root } from "postcss";
 
 import { MoklyError } from "../../errors.js";
 
+import { rejectEmptyModuleWrappers } from "./module_empty_wrapper.js";
 import { modulePlugins } from "./module_plugins.js";
 import { prepareModuleScopes } from "./module_scope.js";
 import { verifyModuleScoping } from "./module_verify.js";
@@ -27,6 +28,7 @@ export function scopeModule(css: string, relative: string): ScopedStyle {
     root = postcss.parse(css, { from: relative });
     rejectAuthoredICSS(root, relative);
     const restoreScopes = prepareModuleScopes(root, relative);
+    rejectEmptyModuleWrappers(root, relative);
     const plugins = modulePlugins();
     const result = postcss([
       plugins.localByDefault({ mode: "local" }),

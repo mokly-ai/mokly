@@ -110,7 +110,7 @@ Use esbuild `write: false`, `metafile: true`, `bundle: true`, `minify: false`,
 `assetNames: "../assets/[dir]/[name]"` relative to `styles/`, and no content
 hashes, source maps or browser syntax lowering. Strip only esbuild-inserted
 source-path comments and their separator blank lines, and end CSS with one
-newline. The [module contract](./mokly-imported-styles.md#css-modules-and-import-loaders)
+newline. The [module contract](./mokly-imported-styles-modules.md)
 only renames local CSS identities before this pass; it does not restore or
 normalize image URLs. Mokly does not otherwise rewrite PostCSS/CSS Modules/esbuild output.
 Esbuild itself may drop ordinary authored comments or move legal comments,
