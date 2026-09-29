@@ -68,6 +68,18 @@ Migrate the released `@mokly/viewer/data` exports as follows:
   `ReviewResultV4`, and `ScreenReviewV3` with `ScreenReviewV4`. The current
   types use identity and view axes instead of stored artifact routes.
 
+Migrate the released `@mokly/viewer` root types as follows:
+
+- Replace `CatalogueCollection` with the `kind: "folder"` branch of
+  `CatalogueNode` and consume folders through `CatalogueReadModel.tree`.
+  Folders are structural and no longer carry collection ids, entry metadata,
+  or `childIds`.
+- Replace `CatalogueRoutedEntry` with `CatalogueRecord`. The current union
+  addresses catalogue records by kind and id and has no stored route.
+- Replace `CatalogueVariant` with `CatalogueComponentVariant`. A component
+  variant is now a complete catalogue entry with global identity, navigation
+  metadata, and `variantOf` instead of a local object inside its parent.
+
 Entry ids now reject a value that is exactly `aux`, `con`, `nul`, `prn`,
 `com1` through `com9`, or `lpt1` through `lpt9`, using the case-insensitive
 `isWindowsDeviceName` rule. This applies to every global entry id, including

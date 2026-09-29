@@ -1,16 +1,12 @@
 import ts from "typescript";
 
 import { addCommonJsExportNames } from "./module-commonjs.mjs";
+import { collectModuleImports } from "./module-imports.mjs";
 import {
   createModuleResolver,
   normalizeModulePath,
 } from "./module-resolution.mjs";
-import {
-  dynamicImportRecords,
-  hasModifier,
-  scriptKind,
-  stringSpecifier,
-} from "./module-syntax.mjs";
+import { hasModifier, scriptKind, stringSpecifier } from "./module-syntax.mjs";
 
 /** Discover runtime named exports unused by any distinct workspace module. */
 export function discoverUnusedInternalExports({
@@ -60,9 +56,12 @@ function parseModule(module) {
     reexports: [],
     exportAll: [],
   };
-  const bindings = importBindings(source, record);
+  const moduleImports = collectModuleImports(source);
+  const bindings = moduleImports.bindings;
   const values = topLevelValues(source);
-  addCommonJsExportNames(source, record.direct);
+  const hasCommonJsAssignments = addCommonJsExportNames(source, record.direct);
+  record.commonJs =
+    /\.(?:cjs|cts)$/u.test(record.path) || hasCommonJsAssignments;
   for (const statement of source.statements) {
     if (isNamedValueExport(statement))
       addDeclarationNames(statement, record.direct);
@@ -110,7 +109,7 @@ function parseModule(module) {
       }
     }
   }
-  record.imports.push(...dynamicImportRecords(source));
+  record.imports.push(...moduleImports.imports);
   return record;
 }
 
@@ -126,32 +125,6 @@ function recordTypeReexport(record, clause, specifier) {
       (element) => (element.propertyName ?? element.name).text,
     ),
   });
-}
-
-function importBindings(source, record) {
-  const bindings = new Map();
-  for (const statement of source.statements) {
-    if (!ts.isImportDeclaration(statement)) continue;
-    const specifier = stringSpecifier(statement.moduleSpecifier);
-    if (!specifier || !statement.importClause) continue;
-    const clause = statement.importClause;
-    if (clause.name)
-      bindings.set(clause.name.text, { imported: "default", specifier });
-    const named = clause.namedBindings;
-    if (named && ts.isNamespaceImport(named)) {
-      bindings.set(named.name.text, { namespace: true, specifier });
-      record.imports.push({ specifier, namespace: true });
-    } else if (named) {
-      const names = [];
-      for (const element of named.elements) {
-        const imported = (element.propertyName ?? element.name).text;
-        names.push(imported);
-        bindings.set(element.name.text, { imported, specifier });
-      }
-      record.imports.push({ specifier, names });
-    }
-  }
-  return bindings;
 }
 
 function topLevelValues(source) {
@@ -237,7 +210,11 @@ function importedExports(records, available, resolve) {
     for (const item of [...record.imports, ...record.reexports]) {
       const target = resolve(record.path, item.specifier);
       if (!target || target === record.path) continue;
-      if (item.namespace) addAll(used, target, available.get(target));
+      if (
+        item.namespace ||
+        (item.defaultImport && records.get(target)?.commonJs)
+      )
+        addAll(used, target, available.get(target));
       else
         for (const name of item.names ?? [item.imported])
           if (name && name !== "default") used.add(exportKey(target, name));

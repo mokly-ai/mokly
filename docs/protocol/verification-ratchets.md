@@ -2,9 +2,9 @@
 
 ## Delivery Status
 
-The file-length, protocol-cap, and unused-internal-export ratchets are
-implemented. The public-package-export ratchet below is approved for
-implementation by the [id-derived routes plan](../../plans/id-derived-routes.md).
+The file-length, protocol-cap, unused-internal-export, and
+public-package-export ratchets are implemented. Every ratchet in this document
+runs in the repository suite and the complete gate.
 
 This contract owns the maintainability ratchets run by the repository suite of
 `cargo xtask check`. The file-length, protocol-cap, and unused-internal-export
@@ -102,13 +102,18 @@ each side:
    current sources from the working tree. A JavaScript target that cannot map
    to a source entry point is a finding.
 
-Every mapped source contributes its explicit exported names to that subpath.
-Names come from named export lists with or without `from`, including type-only
-lists; exported variable, function, class, interface, type, enum, and namespace
-declarations; `export * as ns from`, which exports `ns`; and every
+Every mapped source contributes its expanded exported names to that subpath.
+Direct names come from named export lists with or without `from`, including
+type-only lists; exported variable, function, class, interface, type, enum, and
+namespace declarations; `export * as ns from`, which exports `ns`; and every
 `export default` form, which exports `default`. Aliases contribute the public
-exported name. A bare `export * from` in a baseline or current public entry
-point is a finding: public entry points must list their exports explicitly.
+exported name.
+
+Relative `export * from` and `export type * from` declarations expand
+recursively on the same side using the unused-export resolver's module
+candidates. Each contributes the target's expanded names except `default`;
+nested stars and cycles are supported. A star with a package specifier or no
+resolvable source target on that side is a finding.
 
 Compare the released and current surfaces as follows:
 
@@ -192,5 +197,5 @@ renamed files, an already-oversized shrink/growth pair, cap bootstrap and stale
 caps, nested protocol documents and the fixtures exclusion, public re-exports,
 newly unused symbols, CommonJS use, attempted baseline growth, stale baseline
 removal, release-tag selection, public name and subpath removals, explicit
-public entry points, release-note retention, and a moving `origin/main` whose
-merge base stays fixed.
+exports, recursive star re-exports, unresolved star targets, release-note
+retention, and a moving `origin/main` whose merge base stays fixed.

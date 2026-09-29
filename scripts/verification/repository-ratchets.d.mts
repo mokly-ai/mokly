@@ -29,4 +29,8 @@ export function internalExportAudit(input: {
   baselineAtComparison?: readonly string[];
   aliases?: Readonly<Record<string, string>>;
 }): { findings: string[]; unused: string[] };
+export function publicPackageExportAudit(repositoryRoot: string): {
+  findings: string[];
+  summary: string;
+};
 export function runRepositoryRatchets(repositoryRoot: string): boolean;

@@ -3,6 +3,10 @@ import path from "node:path";
 
 import { isSourceModulePath } from "./lines.mjs";
 import { discoverUnusedInternalExports } from "./module-graph.mjs";
+import {
+  javascriptExportTargets,
+  sourcePathForExport,
+} from "./package-exports.mjs";
 
 const BASELINE = "xtask/unused-internal-exports.txt";
 const SOURCE_ROOTS = ["src", "packages/viewer/src", "scripts"];
@@ -126,8 +130,10 @@ function readPublicSurface(repositoryRoot) {
       ),
     );
     for (const [subpath, value] of Object.entries(manifest.exports ?? {})) {
-      for (const target of runtimeExportTargets(value)) {
-        const source = sourceForExport(repositoryRoot, packageRoot, target);
+      for (const target of javascriptExportTargets(value)) {
+        const source = sourcePathForExport(packageRoot, target, (file) =>
+          fs.existsSync(path.join(repositoryRoot, file)),
+        );
         if (!source) continue;
         entrypoints.push(source);
         const specifier =
@@ -139,36 +145,6 @@ function readPublicSurface(repositoryRoot) {
     }
   }
   return { aliases, entrypoints: [...new Set(entrypoints)].sort() };
-}
-
-function runtimeExportTargets(value, condition) {
-  if (typeof value === "string")
-    return condition === "types" || !/\.[cm]?js$/u.test(value) ? [] : [value];
-  if (!value || typeof value !== "object" || Array.isArray(value)) return [];
-  return Object.entries(value).flatMap(([key, nested]) =>
-    runtimeExportTargets(nested, key),
-  );
-}
-
-function sourceForExport(repositoryRoot, packageRoot, target) {
-  const relative = target
-    .replace(/^\.\/dist\//u, "src/")
-    .replace(/\.[cm]?js$/u, "");
-  for (const extension of [
-    ".ts",
-    ".tsx",
-    ".mts",
-    ".cts",
-    ".js",
-    ".mjs",
-    ".cjs",
-  ]) {
-    const candidate = normalize(
-      path.posix.join(packageRoot, `${relative}${extension}`),
-    );
-    if (fs.existsSync(path.join(repositoryRoot, candidate))) return candidate;
-  }
-  return undefined;
 }
 
 function normalize(file) {

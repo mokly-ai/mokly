@@ -11,6 +11,7 @@ import {
   auditProtocolCaps,
   protocolCapFindings,
 } from "./ratchets/protocol-caps.mjs";
+import { auditPublicPackageExports } from "./ratchets/public-exports.mjs";
 import {
   auditTypeScriptLength,
   typeScriptLengthFindings,
@@ -23,6 +24,14 @@ export {
   typeScriptLengthFindings,
 };
 
+/** Run the release-tag public package export audit in isolation. */
+export function publicPackageExportAudit(repositoryRoot) {
+  return auditPublicPackageExports(
+    repositoryRoot,
+    new GitWorkspace(repositoryRoot),
+  );
+}
+
 /** Run every maintainability ratchet without stopping after the first finding. */
 export function runRepositoryRatchets(repositoryRoot) {
   const git = new GitWorkspace(repositoryRoot);
@@ -34,6 +43,10 @@ export function runRepositoryRatchets(repositoryRoot) {
     ],
     ["Protocol document cap", () => auditProtocolCaps(repositoryRoot, git)],
     ["Unused internal export", () => auditInternalExports(repositoryRoot, git)],
+    [
+      "Public package export",
+      () => auditPublicPackageExports(repositoryRoot, git),
+    ],
   ];
   let failed = false;
   for (const [name, audit] of audits) {

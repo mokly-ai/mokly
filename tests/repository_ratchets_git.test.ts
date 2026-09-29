@@ -22,6 +22,10 @@ test("repository ratchets stay anchored when origin/main moves", async (context)
   );
   const result = captureRatchets(fixture.root);
   assert.equal(result.passed, true, result.output);
+  assert.match(
+    result.output,
+    /Public package export ratchet passed \(0 released package baseline\(s\); 0 noted removal\(s\)\)/u,
+  );
 });
 
 test("file-length ratchet rejects every JavaScript module extension", async (context) => {
@@ -115,8 +119,20 @@ async function createDivergedRepository() {
       '{ "name": "ratchet-fixture", "exports": {} }\n',
     ),
     fs.writeFile(
+      path.join(root, "release-please-config.json"),
+      '{ "packages": { ".": {}, "packages/viewer": {} } }\n',
+    ),
+    fs.writeFile(
+      path.join(root, ".release-please-manifest.json"),
+      '{ ".": "0.0.0", "packages/viewer": "0.0.0" }\n',
+    ),
+    fs.writeFile(
       path.join(root, "packages/viewer/package.json"),
       '{ "name": "ratchet-viewer-fixture", "exports": {} }\n',
+    ),
+    fs.writeFile(
+      path.join(root, "docs/protocol/npm-release-notes.md"),
+      "# Release notes\n",
     ),
     fs.writeFile(path.join(root, "scripts/legacy.mjs"), legacyModule),
     fs.writeFile(

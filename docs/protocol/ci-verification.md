@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-The suite CLI, evidence, workflow graph, fixture reuse, and existing ratchets
-are implemented; the public-package-export ratchet is an approved target.
+The suite CLI, evidence, workflow graph, fixture reuse, and every repository
+ratchet are implemented.
 [Hosted measurements](../reviews/ci-performance.md) record timing and coverage.
 `cargo xtask check` remains the complete local gate; a validated hosted
 aggregate is reusable evidence for its exact tree.

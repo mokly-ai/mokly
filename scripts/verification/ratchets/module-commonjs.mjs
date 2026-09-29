@@ -2,6 +2,7 @@ import ts from "typescript";
 
 /** Add statically declared CommonJS named exports to one module record. */
 export function addCommonJsExportNames(source, names) {
+  let commonJs = false;
   for (const statement of source.statements) {
     if (!ts.isExpressionStatement(statement)) continue;
     const expression = statement.expression;
@@ -12,18 +13,21 @@ export function addCommonJsExportNames(source, names) {
       continue;
     const name = assignedExportName(expression.left);
     if (name) {
+      commonJs = true;
       names.add(name);
       continue;
     }
     if (!isModuleExports(expression.left)) continue;
     const value = expression.right;
     if (!ts.isObjectLiteralExpression(value)) continue;
+    commonJs = true;
     for (const property of value.properties) {
       if (ts.isSpreadAssignment(property)) continue;
       const propertyName = exportName(property.name);
       if (propertyName) names.add(propertyName);
     }
   }
+  return commonJs;
 }
 
 function assignedExportName(expression) {

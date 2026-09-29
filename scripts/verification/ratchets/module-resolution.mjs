@@ -11,18 +11,24 @@ export function createModuleResolver(records, aliases) {
     const alias = aliases[specifier];
     if (alias && records.has(normalizeModulePath(alias)))
       return normalizeModulePath(alias);
-    if (!specifier.startsWith(".")) return undefined;
-    const relative = normalizeModulePath(
-      path.posix.join(path.posix.dirname(from), specifier),
-    );
-    for (const candidate of moduleCandidates(relative))
-      if (records.has(candidate)) return candidate;
-    const remapped = relative.replace(/(^|\/)dist\//u, "$1src/");
-    if (remapped !== relative)
-      for (const candidate of moduleCandidates(remapped))
-        if (records.has(candidate)) return candidate;
-    return undefined;
+    return resolveRelativeModule(from, specifier, (file) => records.has(file));
   };
+}
+
+/** Resolve one relative specifier with the workspace module candidates. */
+export function resolveRelativeModule(from, specifier, fileExists) {
+  if (typeof specifier !== "string" || !specifier.startsWith("."))
+    return undefined;
+  const relative = normalizeModulePath(
+    path.posix.join(path.posix.dirname(from), specifier),
+  );
+  for (const candidate of moduleCandidates(relative))
+    if (fileExists(candidate)) return candidate;
+  const remapped = relative.replace(/(^|\/)dist\//u, "$1src/");
+  if (remapped !== relative)
+    for (const candidate of moduleCandidates(remapped))
+      if (fileExists(candidate)) return candidate;
+  return undefined;
 }
 
 function moduleCandidates(file) {

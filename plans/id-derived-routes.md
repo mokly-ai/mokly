@@ -901,22 +901,31 @@ refer to the
 
 ## Milestone 22: Release-note, CommonJS, and doc-history checks
 
-- [ ] Finding 1 (option B): the public export ratchet defined in
+- [x] Finding 1 (option B): the public export ratchet defined in
       `verification-ratchets.md`, with temporary-repository tests: an
       unnoted removed name or subpath fails, a noted one passes, a name added
       and removed after the last tag passes, a missing tag fails closed, an
-      `export *` entry point fails, and deleting a note before its release
-      fails; the repository itself passes.
-- [ ] Finding 4 (option A): the unused-export ratchet records `require()`,
+      unresolved star target fails, recursive stars contribute their names,
+      and deleting a note before its release fails; the repository itself
+      passes.
+- [x] Finding 4 (option A): the unused-export ratchet records `require()`,
       `import x = require()`, default imports of CommonJS modules, and
       whole dynamic-import bindings as the contract defines; a test covers
       each form, including a destructured `require()` that leaves another
       export unused.
-- [ ] Finding 7 (option B): a doc test fails when a protocol document outside
+- [x] Finding 7 (option B): a doc test fails when a protocol document outside
       `fixtures/` references a plan milestone.
-- [ ] Once these checks land, the delivery status in `verification-ratchets.md`
+- [x] Once these checks land, the delivery status in `verification-ratchets.md`
       and `ci-verification.md` says every ratchet is implemented.
-- [ ] The repository suite of `cargo xtask check` and the full unit suite
+- [x] The released `viewer-v0.3.0` root entry re-exports types with
+      `export type * from`, so Milestone 20's rule that public entry points
+      must not use `export *` could never pass. Star re-exports now expand
+      recursively on both sides, and an unresolvable star target fails
+      closed; `verification-ratchets.md` states the new rule. The expansion
+      surfaced three released root types without notes, `CatalogueCollection`,
+      `CatalogueRoutedEntry`, and `CatalogueVariant`, now in
+      `npm-release-notes.md`.
+- [x] The repository suite of `cargo xtask check` and the full unit suite
       pass; commit.
 
 ## Milestone 23: Third follow-up close-out and review

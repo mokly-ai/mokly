@@ -96,12 +96,40 @@ export class GitWorkspace {
   }
 
   readBase(path) {
-    return this.#run(["show", `${this.requireBase()}:${path}`]);
+    return this.readRevision(this.requireBase(), path);
   }
 
   baseFileExists(path) {
+    return this.revisionFileExists(this.requireBase(), path);
+  }
+
+  newestReachableTag(pattern) {
     try {
-      this.#run(["cat-file", "-e", `${this.requireBase()}:${path}`]);
+      const tag = this.#run([
+        "describe",
+        "--tags",
+        "--abbrev=0",
+        "--match",
+        pattern,
+        "HEAD",
+      ])
+        .toString("utf8")
+        .trim();
+      return tag || undefined;
+    } catch (error) {
+      if (error instanceof Error && error.cause?.status === 128)
+        return undefined;
+      throw error;
+    }
+  }
+
+  readRevision(revision, path) {
+    return this.#run(["show", `${revision}:${path}`]);
+  }
+
+  revisionFileExists(revision, path) {
+    try {
+      this.#run(["cat-file", "-e", `${revision}:${path}`]);
       return true;
     } catch {
       return false;

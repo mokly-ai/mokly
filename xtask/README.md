@@ -95,11 +95,16 @@ cargo test --package xtask
   [`../scripts/verification/ratchets/git.mjs`](../scripts/verification/ratchets/git.mjs)
   owns their merge-base workspace view.
 - [`../scripts/verification/ratchets/typescript-length.mjs`](../scripts/verification/ratchets/typescript-length.mjs),
-  [`protocol-caps.mjs`](../scripts/verification/ratchets/protocol-caps.mjs), and
-  [`internal-exports.mjs`](../scripts/verification/ratchets/internal-exports.mjs)
-  own the three policies;
+  [`protocol-caps.mjs`](../scripts/verification/ratchets/protocol-caps.mjs),
+  [`internal-exports.mjs`](../scripts/verification/ratchets/internal-exports.mjs), and
+  [`public-exports.mjs`](../scripts/verification/ratchets/public-exports.mjs)
+  own the four policies. [`package-exports.mjs`](../scripts/verification/ratchets/package-exports.mjs)
+  maps package export targets to source for both export audits, while
+  [`public-export-surface.mjs`](../scripts/verification/ratchets/public-export-surface.mjs)
+  expands relative star re-exports with the shared module resolver;
   [`module-commonjs.mjs`](../scripts/verification/ratchets/module-commonjs.mjs)
-  supplies CommonJS export discovery, and
+  and [`module-imports.mjs`](../scripts/verification/ratchets/module-imports.mjs)
+  supply CommonJS export and import-use discovery, and
   [`unused-internal-exports.txt`](./unused-internal-exports.txt) is the sorted
   shrinking exception baseline.
 
