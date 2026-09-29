@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import { isSafeRepositoryPath, snapshotResourcePath } from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import type { FileLocation } from "../config/file_locations.js";
@@ -202,7 +202,7 @@ export async function copySnapshotDependencies(
       const batch = queued.filter((route) => !seen.has(route));
       for (const route of batch) seen.add(route);
       const missing = batch.filter(
-        (route) => files.get(snapshotDependencyPath(side, route)) === undefined,
+        (route) => files.get(snapshotResourcePath(side, route)) === undefined,
       );
       if (missing.length > 0) {
         const loaded = readMany
@@ -213,12 +213,12 @@ export async function copySnapshotDependencies(
           if (content === undefined) {
             throw assetError(route, "batch reader omitted the file");
           }
-          addArtifactFile(files, snapshotDependencyPath(side, route), content);
+          addArtifactFile(files, snapshotResourcePath(side, route), content);
         }
       }
       const discovered = new Set<string>();
       for (const route of batch) {
-        const content = files.get(snapshotDependencyPath(side, route));
+        const content = files.get(snapshotResourcePath(side, route));
         if (content === undefined) {
           throw assetError(route, "snapshot dependency is unavailable");
         }
@@ -229,13 +229,6 @@ export async function copySnapshotDependencies(
       queued = [...discovered].sort();
     }
   });
-}
-
-function snapshotDependencyPath(
-  side: "after" | "before",
-  route: string,
-): string {
-  return path.posix.join("snapshots", side, route);
 }
 
 async function readIndividually(

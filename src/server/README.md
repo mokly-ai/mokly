@@ -151,6 +151,8 @@ public content-change classification test both candidate and realpath-alias
 paths relative to `mockupsDir`. Excluded requests return 404; excluded edits are
 not public content evidence, and exclusion alone never adds `sourceFiles`.
 Manifest/cache privacy and independently discovered authoring inputs remain protected.
+Screen-level resource classification shares Review's verified-deletion decision,
+so committed and derived runs agree without weakening these path checks.
 
 When controls are active, every Serve request uses the
 [Host contract](../../docs/protocol/mokly-component-controls.md#request-and-lifecycle-rules):

@@ -139,6 +139,14 @@ export class ComponentMaterialReader {
   async text(route: string): Promise<string> {
     return Buffer.from(await this.read(route)).toString("utf8");
   }
+  /** Read an optional resource through the same validated and cached boundary. */
+  async readIfExists(route: string): Promise<Uint8Array | undefined> {
+    const required = this.files.get(route);
+    if (required) return required;
+    if (!this.canReadOptionally) return this.read(route);
+    await this.optionalTexts([route]);
+    return this.optional.get(route)!;
+  }
   /** Read eligible CSS or embedded-document counterparts, allowing additions/removals. */
   async optionalTexts(
     routes: readonly string[],

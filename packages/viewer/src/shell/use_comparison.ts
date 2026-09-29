@@ -55,26 +55,18 @@ export function useComparison({
   eligible,
   entryId,
   owner,
-  variantId,
 }: {
   effectiveColorScheme?: "dark" | "light";
   eligible: boolean;
   entryId: string;
   owner?: string;
-  variantId?: string;
 }): ComparisonController {
   const store = useOptionalShellStore();
   const environment = useComparisonEnvironment();
   const selection = store?.state.selection;
   const evidenceKey = `${store?.context.updateVersion ?? 0}:${store?.catalogue.publicModel?.revision.evidence ?? 0}`;
-  const scope = useMemo<ComparisonScope>(
-    () => ({ id: variantId ?? entryId }),
-    [entryId, variantId],
-  );
-  const scopeKey = useMemo(
-    () => JSON.stringify([entryId, variantId]),
-    [entryId, variantId],
-  );
+  const scope = useMemo<ComparisonScope>(() => ({ id: entryId }), [entryId]);
+  const scopeKey = useMemo(() => JSON.stringify([entryId]), [entryId]);
   const ownerKey = `${owner ?? entryId}\u0000${evidenceKey}`;
   const [modeState, setModeState] = useReducer(
     (

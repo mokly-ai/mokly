@@ -23,7 +23,7 @@ import type { ShellState } from "./store_state.js";
 import { toRouteTarget } from "./target.js";
 
 /** The logical entry whose private evidence belongs to the current shell route. */
-export function viewerCapabilityRoute(route: ShellRoute): string | null {
+export function viewerCapabilityEntryId(route: ShellRoute): string | null {
   return route.view.kind === "target" ? route.view.target.entry.id : null;
 }
 
@@ -36,7 +36,7 @@ export function adoptedViewerCatalogue(
 ): Catalogue | undefined {
   if (
     !viewerCapabilityRequestMatches(currentSource, {
-      entryId: viewerCapabilityRoute(route),
+      entryId: viewerCapabilityEntryId(route),
       source: revision.source,
     })
   )

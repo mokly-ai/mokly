@@ -7,6 +7,7 @@ import {
   parseStaticDelivery,
   type StaticDelivery,
   parseReviewResult,
+  snapshotSidePath,
   viewHref,
 } from "@mokly/viewer/data";
 import { createCatalogue, SHELL_CSS } from "@mokly/viewer/server";
@@ -100,9 +101,8 @@ export function assembleExport(
   };
   const resourceDenial = exportResourceDenial(config, false);
   for (const [name, bytes] of comparisonFiles) {
-    const denial = name.startsWith("snapshots/")
-      ? resourceDenial(name.slice(name.indexOf("/", 10) + 1))
-      : undefined;
+    const resource = snapshotResourceRoute(name);
+    const denial = resource ? resourceDenial(resource) : undefined;
     if (denial)
       throw exportError(
         `Comparison contains a private export resource: ${name} (${denial})`,
@@ -226,4 +226,11 @@ export function assembleExport(
   for (const [name, bytes] of loadShellFontAssets())
     inventory.add(`__mokly/fonts/${name}`, bytes);
   return { inventory, delivery, shells };
+}
+
+function snapshotResourceRoute(name: string): string | undefined {
+  const prefix = `${path.posix.dirname(snapshotSidePath("before"))}/`;
+  if (!name.startsWith(prefix)) return undefined;
+  const separator = name.indexOf("/", prefix.length);
+  return separator < 0 ? undefined : name.slice(separator + 1);
 }

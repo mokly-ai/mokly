@@ -51,7 +51,8 @@ view states and the material-change flag.
 
 Review result v4 is the only comparison result: a catalogue without
 registered components emits the same shape with empty component arrays.
-The builders are exported from `@mokly/viewer/data` and owned by the
+Snapshot roots and resources use `snapshotSidePath` and
+`snapshotResourcePath`; all builders are exported from `@mokly/viewer/data` and owned by the
 [artifact path contract](../../docs/protocol/mokly-artifact-paths.md).
 
 With comparisons enabled, derived mode awaits `prepareReviewRepository` before

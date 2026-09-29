@@ -13,7 +13,6 @@ export function validateManifestComponentUsage(manifest: {
   entries: readonly Record<string, unknown>[];
   schemaVersion: number;
 }): void {
-  if (manifest.schemaVersion !== 7) return;
   exactKeys(
     manifest,
     ["schemaVersion", "generatedBy", "entries", "sourceFiles"],

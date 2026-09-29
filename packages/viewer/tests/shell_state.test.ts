@@ -212,6 +212,26 @@ test("live host routing carries exact history and announces its entry", () => {
   ]);
 });
 
+test("identity-less history announces navigation without a snapshot id", () => {
+  const identityless = structuredClone(model);
+  const historical = identityless.removedEntries[0]!;
+  delete historical.snapshotId;
+  const navigations: ScreenNavigateEvent[] = [];
+  announceNavigation(
+    {
+      model: identityless,
+      events: () => ({
+        onScreenNavigate: (event: ScreenNavigateEvent) =>
+          navigations.push(event),
+      }),
+    } as never,
+    { ...defaultSelection, screenId: historical.entry.id },
+    undefined,
+    undefined,
+  );
+  assert.deepEqual(navigations, [{ screenId: historical.entry.id }]);
+});
+
 test("component variant heads keep the parent heading and shown entry id", () => {
   const parent = catalogue.byId.get("action");
   assert.ok(parent?.kind === "component" && !("variantOf" in parent));

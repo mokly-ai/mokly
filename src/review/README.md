@@ -205,7 +205,10 @@ documents also supply matching trees. Base resource reads are batched by graph
 depth; optional counterpart CSS reads distinguish missing files from invalid
 ones. Per-side readers cache bytes, and the injected parser caches identical CSS
 text for the run. Live resource validation additionally retains its alias and
-verified-deletion behavior.
+verified-deletion behavior. `deleted_resource.ts` owns that one decision for
+both unified and screen-level classification, including derived byte comparison
+and paired embedded-document normalization; each caller still supplies its
+confinement-aware current and baseline readers.
 Committed live classification batches base documents for changed or moved documents and
 for views with changed stylesheet resources. Only an unchanged, unmoved view
 without changed CSS skips base view reads and base graph traversal, so verified
@@ -260,6 +263,8 @@ Key code:
 - `page_preview.ts`: typed before-only page capture from accepted removal state.
 - `artifact_files.ts` and the shared viewer-data builders: collision-checked
   writes plus snapshot and removed-page artifact naming from entry identity.
+- `deleted_resource.ts`: shared verification and byte comparison for a
+  currently referenced resource that may have been deleted.
 - `component_variant_classification.ts`: flat component variant entry pairing,
   reasons, view evidence, and grouped v4 result records.
 - `component_classification_sources.ts`, `component_classification_entries.ts`,

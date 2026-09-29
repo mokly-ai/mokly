@@ -108,6 +108,8 @@ export {
   parseViewHref,
   providerNormalizedHtmlPath,
   snapshotPagePath,
+  snapshotResourcePath,
+  snapshotSidePath,
   snapshotViewPath,
   unavailableViewHref,
   viewHref,

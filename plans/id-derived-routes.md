@@ -762,16 +762,16 @@ to the [follow-up review](#follow-up-review-milestones-915).
 
 ## Milestone 17: Follow-up fixes in review, registry, and paths
 
-- [ ] Finding 1 (option B): failure-first, one table of deletion cases
+- [x] Finding 1 (option B): failure-first, one table of deletion cases
       (committed and derived output modes; stylesheet, image, and embedded
       HTML; present or absent at the branch point; unsafe paths) runs against
       both the unified classifier and the screen-level classifier; both use
       one shared deleted-resource decision, including the byte comparison and
       embedded-document reads.
-- [ ] Finding 7: a component parent that fails `validateComponentDefinition`
+- [x] Finding 7: a component parent that fails `validateComponentDefinition`
       stays available for relationship checks; tests for both failure paths
       show one root-cause error.
-- [ ] Finding 10: shared builders for the snapshot side and snapshot resource
+- [x] Finding 10: shared builders for the snapshot side and snapshot resource
       paths replace the hand-built `snapshots/` paths in `src/review/assets.ts`,
       `src/review/artifact_resources.ts`,
       `packages/viewer/src/previews/request.ts`,
@@ -779,11 +779,11 @@ to the [follow-up review](#follow-up-review-milestones-915).
       `src/server/public_review.ts`; a repository-wide scan test fails on
       `snapshots/` or `pages/…json` path literals outside the shared path
       module.
-- [ ] Finding 15: a unit test shows a removed record without a published
+- [x] Finding 15: a unit test shows a removed record without a published
       identity announces navigation without `snapshotId`.
-- [ ] Finding 17: a projection test pins removed-entry order when a parent and
+- [x] Finding 17: a projection test pins removed-entry order when a parent and
       its variants are all removed.
-- [ ] Finding 16 (mechanical, no behavior change): delete the unused
+- [x] Finding 16 (mechanical, no behavior change): delete the unused
       `variantId` parameter of `useComparison`, the unreachable `TargetView`
       comparison branch and the `DiffScreen` wrapper, the stale comment in
       `src/review/base_manifest.ts`, the unreachable schema check in
@@ -791,7 +791,7 @@ to the [follow-up review](#follow-up-review-milestones-915).
       `docs/reviews/catalogue-inputs-and-aliases.md`; rename route-named
       functions and values that carry ids (`viewerCapabilityRoute`, the
       `route` value from `activeIdForView`, `containsRoute`).
-- [ ] Build, lint, format, typecheck, example build and check, full unit
+- [x] Build, lint, format, typecheck, example build and check, full unit
       suite, affected browser specs, and `cargo xtask check --suite
 repository`; commit.
 

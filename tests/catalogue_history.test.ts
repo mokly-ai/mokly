@@ -102,9 +102,10 @@ test("removed component parents round trip with their variant entries", async (t
   });
 
   const removedIds = model.removedEntries.map(({ entry }) => entry.id);
-  assert.ok(removedIds.includes("action"));
-  assert.ok(removedIds.includes("action-default"));
-  assert.ok(removedIds.includes("action-disabled"));
+  assert.deepEqual(
+    removedIds.filter((id) => id === "action" || id.startsWith("action-")),
+    ["action", "action-default", "action-disabled"],
+  );
   assert.deepEqual(readCatalogue(JSON.parse(serializeCatalogue(model))), model);
 });
 

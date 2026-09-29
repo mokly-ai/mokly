@@ -124,14 +124,14 @@ function collectDefaults(
   for (const node of nodes) {
     if (node.kind === "leaf") {
       if (node.variants?.length)
-        result[variantDisclosureKey(section, node.entryId)] = containsRoute(
+        result[variantDisclosureKey(section, node.entryId)] = containsEntryId(
           node,
           id,
         );
       continue;
     }
     result[folderDisclosureKey(section, node.key)] =
-      depth === 0 || containsRoute(node, id);
+      depth === 0 || containsEntryId(node, id);
     collectDefaults(node.children, section, id, depth + 1, result);
   }
 }
@@ -157,13 +157,13 @@ function nodePath(
   return undefined;
 }
 
-function containsRoute(node: NavNode, id: string | undefined): boolean {
+function containsEntryId(node: NavNode, id: string | undefined): boolean {
   return (
     id !== undefined &&
     (node.kind === "leaf"
       ? node.entryId === id ||
         (node.variants ?? []).some((variant) => variant.entryId === id)
-      : node.children.some((child) => containsRoute(child, id)))
+      : node.children.some((child) => containsEntryId(child, id)))
   );
 }
 

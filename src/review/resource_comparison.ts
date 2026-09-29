@@ -1,6 +1,6 @@
 import { parse } from "parse5";
 
-import { isStylesheetPath, reviewInvalid } from "@mokly/viewer/data";
+import { isStylesheetPath } from "@mokly/viewer/data";
 
 import type { ComponentMaterialReader } from "./component_resources.js";
 import type { CssDocumentPair } from "./css/document.js";
@@ -9,6 +9,10 @@ import {
   type ChangedResource,
   type ResourceEvidence,
 } from "./css/resource_analysis.js";
+import {
+  decideReferencedResource,
+  type ResourceDecision,
+} from "./deleted_resource.js";
 
 /** A view side after the comparison's paired normalization. */
 export interface ResourceDocument {
@@ -24,10 +28,13 @@ export class ResourceComparison {
     readonly changed: ReadonlySet<string>,
     readonly prefix: string,
     readonly css: CssResourceAnalysis = new CssResourceAnalysis(),
+    readonly compareBytes = false,
   ) {
     before.pairWith(after, "before");
     after.pairWith(before, "after");
-    after.allowMissingResources((route) => this.changed.has(this.path(route)));
+    after.allowMissingResources(
+      (route) => this.compareBytes || this.changed.has(this.path(route)),
+    );
   }
 
   async compare(
@@ -50,15 +57,24 @@ export class ResourceComparison {
     const changedRoutes = discovered.filter(
       (route) => !excluded?.(route) && this.changed.has(this.path(route)),
     );
-    const baseChanged = await this.before.optionalTexts(changedRoutes);
-    const headChanged = await this.after.optionalTexts(changedRoutes);
-    for (const route of changedRoutes)
+    const current = new Map<string, ResourceDecision>();
+    for (const route of discovered)
       if (
         heads.has(route) &&
-        headChanged.get(route) === undefined &&
-        (!bases.has(route) || baseChanged.get(route) === undefined)
+        (this.compareBytes || this.changed.has(this.path(route)))
       )
-        reviewInvalid(`referenced resource is missing: ${route}`);
+        current.set(
+          route,
+          await decideReferencedResource(
+            route,
+            this.before,
+            this.after,
+            this.changed.has(this.path(route)),
+            this.compareBytes,
+          ),
+        );
+    const baseChanged = await this.before.optionalTexts(changedRoutes);
+    const headChanged = await this.after.optionalTexts(changedRoutes);
     const changedCss = discovered.filter(
       (route) =>
         !excluded?.(route) &&
@@ -86,7 +102,9 @@ export class ResourceComparison {
           ? await this.before.resourceText(route)
           : undefined;
       const headDocument =
-        html && heads.has(route)
+        html &&
+        heads.has(route) &&
+        current.get(route)?.kind !== "verified-deletion"
           ? await this.after.resourceText(route)
           : undefined;
       if (this.changed.has(path) && (!html || baseDocument !== headDocument))

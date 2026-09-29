@@ -72,6 +72,7 @@ export function prepareRegistry(
         });
       } catch (error) {
         if (!(error instanceof ComponentValidationError)) throw error;
+        entries.push(entry);
         violations.push(problem(entry, "invalid-component", error.message));
       }
     } else entries.push(entry);

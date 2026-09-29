@@ -87,6 +87,7 @@ export async function classifyComponentsWithSources(
   const afterReader = new ComponentMaterialReader(input.afterReader);
   const changed = new Set(changedPaths);
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
+  const compareResourceBytes = config.generatedOutput === "derived";
   const context: ComponentViewContext = {
     beforeReader,
     afterReader,
@@ -99,8 +100,9 @@ export async function classifyComponentsWithSources(
       changed,
       prefix,
       new CssResourceAnalysis(input.cssParser),
+      compareResourceBytes,
     ),
-    compareResourceBytes: config.generatedOutput === "derived",
+    compareResourceBytes,
     ...(input.useFastPath === undefined
       ? {}
       : { useFastPath: input.useFastPath }),

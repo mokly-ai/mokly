@@ -9,7 +9,6 @@ import { sha256 } from "../data/sha256.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { DetailsPanel } from "./details.js";
-import { DiffScreen } from "./diffs.js";
 import {
   SchemeSwitch,
   ScreenHead,
@@ -102,16 +101,7 @@ function TargetView(props: {
           ) : undefined
         }
       />
-      {!removed &&
-      (props.context.comparisons ?? false) &&
-      props.target.kind === "entry" &&
-      props.target.entry.kind === "screen" ? (
-        <DiffScreen entryId={props.target.entry.id} entryKind="screen">
-          {stage}
-        </DiffScreen>
-      ) : (
-        stage
-      )}
+      {stage}
       <DetailsPanel catalogue={props.catalogue} target={props.target} />
     </>
   );
@@ -189,9 +179,9 @@ export function ShellMain(props: {
   view: ShellView;
 }) {
   const mainId = useShellIdentifier("mb-main");
-  const route = activeIdForView(props.view);
+  const activeId = activeIdForView(props.view);
   const baseline = props.catalogue.removedEntries.find(
-    ({ entry }) => entry.id === route,
+    ({ entry }) => entry.id === activeId,
   );
   return (
     <main

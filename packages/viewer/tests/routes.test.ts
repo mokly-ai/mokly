@@ -10,6 +10,8 @@ import {
   parseViewHref,
   providerNormalizedHtmlPath,
   snapshotPagePath,
+  snapshotResourcePath,
+  snapshotSidePath,
   snapshotViewPath,
   unavailableViewHref,
   viewHref,
@@ -93,6 +95,12 @@ test("comparison and removed-page paths derive from identity", () => {
     pagePreviewMetadataPath("archived-guide"),
     "pages/archived-guide.json",
   );
+  assert.equal(snapshotSidePath("before"), "snapshots/before/");
+  assert.equal(snapshotSidePath("after"), "snapshots/after/");
+  assert.equal(
+    snapshotResourcePath("before", "assets/icons/arrow.svg"),
+    "snapshots/before/assets/icons/arrow.svg",
+  );
   for (const call of [
     () => snapshotViewPath("before", "screen", "con", "mobile", "light"),
     () =>
@@ -105,6 +113,13 @@ test("comparison and removed-page paths derive from identity", () => {
       ),
     () => snapshotPagePath("bad/id"),
     () => pagePreviewMetadataPath("bad.id"),
+    () => snapshotSidePath("sideways" as "before"),
+    () => snapshotResourcePath("after", ""),
+    () => snapshotResourcePath("after", "/root.css"),
+    () => snapshotResourcePath("after", "assets/../root.css"),
+    () => snapshotResourcePath("after", "assets\\root.css"),
+    () => snapshotResourcePath("after", "https:asset.test/root.css"),
+    () => snapshotResourcePath("after", "assets/\0root.css"),
   ])
     assert.throws(call, /path/i);
 });

@@ -67,13 +67,28 @@ export function snapshotViewPath(
       (colorScheme === "light" || colorScheme === "dark") &&
       isEntryId(id),
   );
-  return `snapshots/${side}/${viewRoute(kind, id, viewport, colorScheme)}`;
+  return snapshotResourcePath(side, viewRoute(kind, id, viewport, colorScheme));
 }
 
 /** Derive a removed page's retained before document. */
 export function snapshotPagePath(id: string): string {
   requirePathValue(isEntryId(id));
-  return `snapshots/before/${entryRoute("page", id)}`;
+  return snapshotResourcePath("before", entryRoute("page", id));
+}
+
+/** Derive one retained comparison side's directory prefix. */
+export function snapshotSidePath(side: SnapshotSide): string {
+  requirePathValue(side === "before" || side === "after");
+  return `snapshots/${side}/`;
+}
+
+/** Derive one confined resource path beneath a retained comparison side. */
+export function snapshotResourcePath(
+  side: SnapshotSide,
+  route: string,
+): string {
+  requirePathValue(isConfinedStaticPath(route));
+  return `${snapshotSidePath(side)}${route}`;
 }
 
 /** Derive a removed page's metadata file within a comparison generation. */

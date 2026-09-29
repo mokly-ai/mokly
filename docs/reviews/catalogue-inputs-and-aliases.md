@@ -207,7 +207,7 @@ nested-page attribution finding remains unchanged.
    screen comparisons retain their existing provider policy.
 
 2. **Medium — historical page adapter. Fixed, option A.** A typed
-   [page-baseline index](../../src/review/page_baselines.ts) maps current IDs to
+   page-baseline index maps current IDs to
    v4 page IDs or exact preserved v2/v3 legacy routes. Existing paired-ignore,
    material-content, resource, and historical source-protection rules consume
    those artifacts. Current display metadata stays current, and unmatched legacy

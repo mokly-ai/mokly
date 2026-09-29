@@ -40,7 +40,9 @@ edits. Registered children inside another registered component appear in its
 Nested components tab. React content belongs in declared `slots`; data belongs
 in `propSchema`. The schema infers TypeScript props and validates actual values. Registry preparation
 revalidates exported definitions and snapshots component data before rendering,
-so malformed or mutated variants and controls produce author diagnostics.
+so malformed or mutated variants and controls produce author diagnostics. An
+invalid component parent remains present for relationship validation, preventing
+its variants from adding misleading missing-parent errors to the root failure.
 
 Instance keys remain stable across prop edits and sibling reorders. Changing the
 local id, input owner, or original slot changes the key. Keys are scoped to one

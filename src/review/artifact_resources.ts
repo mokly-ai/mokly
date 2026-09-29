@@ -1,4 +1,8 @@
-import { reviewInvalid, snapshotViewPath } from "@mokly/viewer/data";
+import {
+  reviewInvalid,
+  snapshotSidePath,
+  snapshotViewPath,
+} from "@mokly/viewer/data";
 import type { ReviewArtifact, ViewReview } from "@mokly/viewer/data";
 
 import { referencedRoutes } from "./asset_references.js";
@@ -75,7 +79,7 @@ export function validateArtifactResources(artifact: ReviewArtifact): void {
     for (const side of ["before", "after"] as const) {
       const root = side === "before" ? beforePath : afterPath;
       if (!root) continue;
-      const prefix = `snapshots/${side}/`;
+      const prefix = snapshotSidePath(side);
       const pending = referencedRoutes(
         root,
         side === "before" ? normalized.base : normalized.head,

@@ -7,6 +7,7 @@ import { encodeUrlPath } from "../data/paths.js";
 import {
   pagePreviewMetadataPath,
   snapshotPagePath,
+  snapshotSidePath,
   snapshotViewPath,
 } from "../navigation/routes.js";
 import { parseRemovedPagePreview } from "../review/page_preview.js";
@@ -122,9 +123,9 @@ export function advertisedPreviewPaths(
     prefixes:
       comparison === null
         ? []
-        : ["before", "after"].map(
+        : (["before", "after"] as const).map(
             (side) =>
-              `${comparison.slice(0, -REVIEW_FILE.length)}snapshots/${side}/`,
+              `${comparison.slice(0, -REVIEW_FILE.length)}${snapshotSidePath(side)}`,
           ),
   };
 }

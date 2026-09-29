@@ -11,40 +11,9 @@ import {
 } from "./comparison_selection.js";
 import { ComparisonToolbar } from "./comparison_toolbar.js";
 import { ComparisonViews } from "./comparison_views.js";
-import { useComparison, type ComparisonController } from "./use_comparison.js";
+import type { ComparisonController } from "./use_comparison.js";
 import { useComparisonDocuments } from "./use_comparison_documents.js";
 import { useScrollTogether } from "./use_scroll_together.js";
-
-/** Keep the current screen mounted until a comparison is explicitly selected. */
-export function DiffScreen({
-  children,
-  effectiveColorScheme,
-  entryId,
-  entryKind,
-  eligible = true,
-}: {
-  children: ReactNode;
-  effectiveColorScheme?: "dark" | "light";
-  entryId: string;
-  entryKind: ViewRouteKind;
-  eligible?: boolean;
-}) {
-  const comparison = useComparison({
-    ...(effectiveColorScheme ? { effectiveColorScheme } : {}),
-    eligible,
-    entryId,
-  });
-  return (
-    <ControlledDiffScreen
-      comparison={comparison}
-      entryId={entryId}
-      entryKind={entryKind}
-      eligible={eligible}
-    >
-      {children}
-    </ControlledDiffScreen>
-  );
-}
 
 /** Render comparison chrome around a controller owned by the workspace. */
 export function ControlledDiffScreen({

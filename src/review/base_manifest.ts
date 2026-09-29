@@ -14,7 +14,6 @@ import {
 
 import type { BaselineReader } from "./git.js";
 
-/** Read the canonical base manifest, falling back only when it is absent. */
 export async function readBaseManifest(
   git: BaselineReader,
   commit: string,

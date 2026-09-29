@@ -26,7 +26,8 @@ after the baseline changes. `renewPreview`
 extends a live generation's retention before reusing it, exactly as comparisons
 do. `advertisedPreviewPaths` returns accepted metadata in `files` and the
 comparison generation's `snapshots/before/` and `snapshots/after/` directories
-in `prefixes`. This internal helper has no runtime consumer: it models the
+in `prefixes` through the shared `snapshotSidePath` builder. This internal
+helper has no runtime consumer: it models the
 documented embedded fetch set for tests, while each presentation loader enforces
 its own generation and side boundaries. Page-preview metadata files are
 unchanged.

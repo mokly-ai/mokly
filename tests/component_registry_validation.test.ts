@@ -88,3 +88,26 @@ test("an invalid component parent remains available to its variant relationships
     },
   );
 });
+
+test("a component rejected by definition validation remains available to its variants", async (t) => {
+  const fixture = await createFixture(
+    componentEntrySource({
+      extra: "action.entries[0].render = null;",
+    }),
+  );
+  t.after(() => removeFixture(fixture));
+
+  await assert.rejects(
+    compileCatalogue(await loadConfig(fixture.root)),
+    (error: Error) => {
+      assert.match(error.message, /render must be a function/);
+      assert.doesNotMatch(error.message, /variant parent does not exist/);
+      assert.equal(
+        error.message.split("\n").filter((line) => line.startsWith("- ["))
+          .length,
+        1,
+      );
+      return true;
+    },
+  );
+});
