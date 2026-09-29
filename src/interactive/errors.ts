@@ -1,3 +1,27 @@
+import { MoklyError } from "../errors.js";
+
+/** Stable reasons why an accepted generation cannot produce a Live bundle. */
+export enum InteractiveBundleReason {
+  SourceNotCaptured = "source-not-captured",
+}
+
+/** A consumer-facing Live bundle failure with structured source context. */
+export class InteractiveBundleError extends MoklyError {
+  constructor(
+    readonly reason: InteractiveBundleReason,
+    readonly module: string,
+    readonly importer?: string,
+  ) {
+    super(
+      "interactive-bundle",
+      `accepted Live sources do not contain ${module}${
+        importer ? ` (imported by ${importer})` : ""
+      }`,
+    );
+    this.name = "InteractiveBundleError";
+  }
+}
+
 /** Stable reasons why one catalogue view cannot offer Live rendering. */
 export enum InteractiveViewEligibilityReason {
   MissingVariant = "missing-variant",

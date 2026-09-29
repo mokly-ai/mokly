@@ -4,7 +4,7 @@ import { readRebuildStatus, type RebuildStatus } from "@mokly/viewer/runtime";
 
 import type { ComponentChangeSnapshot } from "./component_changes.js";
 import type {
-  RuntimeMessage,
+  RuntimeCommand,
   RuntimeStartupMessage,
 } from "./controls/runtime_ipc.js";
 /** Typed watched-server updates crossing the parent/child IPC boundary. */
@@ -131,7 +131,7 @@ export function parseCatalogueCompleteMessage(
 export type ChildCommand =
   | CatalogueCompleteMessage
   | ChildUpdateMessage
-  | RuntimeMessage
+  | RuntimeCommand
   | RuntimeStartupMessage
   | RebuildStatusMessage
   | { type: "shutdown" };

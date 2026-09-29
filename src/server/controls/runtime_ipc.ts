@@ -2,9 +2,16 @@
 import { isCatalogueId } from "@mokly/viewer/data";
 
 import type { ComponentRuntime } from "../../build/component_runtime.js";
+import type { InteractiveSourceCapture } from "../../build/interactive_source_capture.js";
 import { validatePublicExclude } from "../../config/public_exclusions.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
+
+import {
+  interactiveSourceCaptureMessage,
+  readInteractiveSourceCapture,
+  type InteractiveSourceCaptureMessage,
+} from "./interactive_sources_ipc.js";
 
 /** Accepted configuration and manifest transferred before watched readiness. */
 export interface RuntimeStartupMessage {
@@ -17,7 +24,15 @@ export interface RuntimeStartupMessage {
 export type TransferredComponentRuntime = Pick<
   ComponentRuntime,
   "bundle" | "generation" | "interactiveEntries" | "outputs"
->;
+> &
+  Pick<ComponentRuntime, "interactiveSources">;
+
+type TransferredComponentRuntimeMessage = Omit<
+  TransferredComponentRuntime,
+  "interactiveSources"
+> & {
+  interactiveSources?: InteractiveSourceCaptureMessage;
+};
 
 export interface RuntimeMessage {
   changesStatus?: "pending" | "preparing";
@@ -27,17 +42,29 @@ export interface RuntimeMessage {
   version?: number;
 }
 
+/** JSON-safe parent-to-child runtime command. */
+export interface RuntimeCommand extends Omit<RuntimeMessage, "runtime"> {
+  runtime: TransferredComponentRuntimeMessage;
+}
+
 /** Strip startup data from a retained-runtime IPC response. */
 export function componentRuntimeMessage(
   runtime: ComponentRuntime,
   version?: number,
   changesStatus?: "pending" | "preparing",
-): RuntimeMessage {
+): RuntimeCommand {
   return {
     runtime: {
       bundle: runtime.bundle,
       generation: runtime.generation,
       interactiveEntries: runtime.interactiveEntries,
+      ...(runtime.interactiveSources
+        ? {
+            interactiveSources: interactiveSourceCaptureMessage(
+              runtime.interactiveSources,
+            ),
+          }
+        : {}),
       outputs: runtime.outputs,
     },
     type: "component-runtime",
@@ -126,6 +153,7 @@ function parseRuntimeStartupMessage(
 
 export function parseRuntimeMessage(
   value: unknown,
+  retainedSources?: InteractiveSourceCapture,
 ): RuntimeMessage | undefined {
   if (
     !value ||
@@ -139,12 +167,19 @@ export function parseRuntimeMessage(
   const version = "version" in value ? value.version : undefined;
   const changesStatus =
     "changesStatus" in value ? value.changesStatus : undefined;
+  const interactiveSources = Object.hasOwn(runtime ?? {}, "interactiveSources")
+    ? readInteractiveSourceCapture(
+        (runtime as { interactiveSources?: unknown }).interactiveSources,
+        retainedSources,
+      )
+    : undefined;
   if (
     !runtime ||
     typeof runtime.generation !== "string" ||
     typeof runtime.bundle?.code !== "string" ||
     !interactiveEntries(runtime.interactiveEntries) ||
     !Array.isArray(runtime.outputs) ||
+    (Object.hasOwn(runtime, "interactiveSources") && !interactiveSources) ||
     (changesStatus !== undefined &&
       changesStatus !== "pending" &&
       changesStatus !== "preparing") ||
@@ -159,6 +194,7 @@ export function parseRuntimeMessage(
       bundle: runtime.bundle,
       generation: runtime.generation,
       interactiveEntries: runtime.interactiveEntries,
+      ...(interactiveSources ? { interactiveSources } : {}),
       outputs: runtime.outputs,
     },
     ...(version === undefined ? {} : { version: version as number }),

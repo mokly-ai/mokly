@@ -80,13 +80,18 @@ Export and Review boundaries continue to use directories that hold resolved
 entry modules. Source locations do not enter instance keys, props keys, slot
 identities, or Changes projections.
 
-The Live browser compiler in `../interactive/bundle.ts` reuses entry discovery,
-the attributed API, module-resolution settings, loaders, and consumer React
-peer lookup. Its package-owned ESM entry omits compatibility transforms and the
-static renderer default, captures no Node-based JSX source location, and reads
-only an optional renderer `interactive` export. Node built-ins fail that graph
-with `interactive-bundle`; the ordinary Node build graph remains unchanged.
-Build, Check, Export, and Publish never call the browser compiler.
+Serve-mode live-index preparation captures repository-owned bytes inside this
+Node graph's load callbacks and seals them only after the index is accepted.
+The Live browser compiler in `../interactive/bundle.ts` uses those bytes and
+the accepted `entryModules`; it does not rediscover entries or reread a
+repository module. It reuses the attributed API, module-resolution settings,
+loaders, and consumer React peer lookup. Its package-owned ESM entry omits
+compatibility transforms and the static renderer default, captures no
+Node-based JSX source location, and reads only an optional renderer
+`interactive` export. Node built-ins fail that graph with
+`interactive-bundle`; the ordinary Node build graph remains unchanged. Build,
+Check, Export, Publish, and off-mode Serve do not install the source-capture
+hook or call the browser compiler.
 
 The retained `ComponentRuntime` records resolved per-entry Live eligibility
 separately from the publishable manifest. Runtime compaction and watched-child
@@ -116,6 +121,8 @@ manifest compatibility are tested with isolated consumers.
   or input-identity changes.
 - `source_inventory.ts`: complete private authoring inventory, separate from
   individual invocation metadata.
+- `interactive_source_capture.ts`: accepted Serve-generation repository bytes
+  and their logical/physical resolution aliases.
 - `transaction.ts`, `check.ts`: safe output installation and verification.
 
 See the [build pipeline](../../docs/architecture/build-pipeline.md),

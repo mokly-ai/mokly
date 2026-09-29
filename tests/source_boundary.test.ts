@@ -77,7 +77,7 @@ for (const consumer of [
     await assert.rejects(
       async () => {
         const config = await loadConfig(fixture.root);
-        await loadConsumerGraph(config, false);
+        await loadConsumerGraph(config, { evaluate: false });
       },
       {
         code: "build-invalid",

@@ -25,6 +25,7 @@ test("the example's Live mode stays outside build, check, and export bytes", asy
   const serveConfig = await loadConfig(root, "examples/basic/mokly.config.ts");
   assert.equal(serveConfig.interactive, "serve");
   const serve = await compileCatalogue(serveConfig);
+  assert.equal(componentRuntime(serve).interactiveSources, undefined);
   assert.deepEqual(componentRuntime(serve).interactiveEntries, {
     "example-action": true,
     "example-details": false,

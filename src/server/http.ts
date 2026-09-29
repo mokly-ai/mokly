@@ -6,6 +6,7 @@ import { createCatalogue } from "@mokly/viewer/server";
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync } from "../diagnostics/timings.js";
+import { MoklyError } from "../errors.js";
 import type { InteractiveServer } from "../interactive/server.js";
 import { parseManifest } from "../registry/manifest.js";
 
@@ -46,6 +47,7 @@ export async function startCatalogueServer(
   config: ResolvedConfig,
   options: ServerOptions,
 ): Promise<RunningServer> {
+  validateInteractiveSources(config, options.componentRuntime);
   const snapshot = await loadInitialCatalogueSnapshot(config, options);
   const validated = catalogueSnapshotForConfig(snapshot, config);
   const changes = validated.changes;
@@ -257,6 +259,7 @@ export async function startCatalogueServer(
       : {}),
     port: appPort,
     replaceComponentRuntime(runtime): void {
+      validateInteractiveSources(config, runtime);
       componentRuntime = runtime;
       publicCatalogue.clearUsage();
       void documents?.close();
@@ -314,6 +317,21 @@ export async function startCatalogueServer(
       : {}),
     url: `http://127.0.0.1:${appPort}`,
   };
+}
+
+function validateInteractiveSources(
+  config: ResolvedConfig,
+  runtime?: ComponentRuntime,
+): void {
+  if (!runtime) return;
+  const captured = runtime.interactiveSources !== undefined;
+  if ((config.interactive === "serve") !== captured)
+    throw new MoklyError(
+      "server-failed",
+      config.interactive === "serve"
+        ? "Live runtime is missing its accepted source capture"
+        : "non-Live runtime must not retain an interactive source capture",
+    );
 }
 
 function publishRebuildEvent(

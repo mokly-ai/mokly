@@ -10,6 +10,7 @@ import { MANIFEST_NAME } from "../registry/manifest.js";
 
 import type { Compilation } from "./compile.js";
 import { consumerBundle, type ConsumerBundle } from "./consumer_bundle.js";
+import type { InteractiveSourceCapture } from "./interactive_source_capture.js";
 import type { LoadedGraph } from "./load_graph.js";
 
 export interface ComponentRuntime {
@@ -17,6 +18,7 @@ export interface ComponentRuntime {
   config: ResolvedConfig;
   generation: string;
   interactiveEntries: Readonly<Record<string, boolean>>;
+  interactiveSources?: InteractiveSourceCapture;
   manifest: ManifestV5 | CatalogueIndex;
   outputs: readonly (readonly [string, string])[];
 }

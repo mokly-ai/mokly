@@ -2,13 +2,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import {
-  componentRuntime,
-  type ComponentRuntime,
-} from "../dist/build/component_runtime.js";
+import { type ComponentRuntime } from "../dist/build/component_runtime.js";
+import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import { loadConfig } from "../dist/config/load.js";
 import type { ChildHandle } from "../dist/server/child_process.js";
+import { interactiveSourceCaptureMessage } from "../dist/server/controls/interactive_sources_ipc.js";
 import { serve } from "../dist/server/serve.js";
 import { ReadyProcessSupervisor } from "../dist/server/supervisor.js";
 import type { ChildCommand } from "../dist/server/update_messages.js";
@@ -180,11 +178,11 @@ for (const action of ["rebuild", "reconfigure", "live"] as const) {
 }
 
 test("staging during startup cannot change the spawned child's retained graph", async (t) => {
-  const fixture = await createFixture(componentEntrySource());
+  const fixture = await createFixture(componentEntrySource(), {
+    extraConfig: 'interactive: "serve",',
+  });
   t.after(() => removeFixture(fixture));
-  const first = componentRuntime(
-    await compileCatalogue(await loadConfig(fixture.root)),
-  );
+  const first = await prepareLiveRuntime(await loadConfig(fixture.root));
   const second: ComponentRuntime = { ...first, generation: "b".repeat(32) };
   const child = new DelayedChild();
   const supervisor = new ReadyProcessSupervisor({ spawn: () => child }, [], 0);
@@ -223,6 +221,13 @@ function transferredRuntime(runtime: ComponentRuntime) {
     bundle: runtime.bundle,
     generation: runtime.generation,
     interactiveEntries: runtime.interactiveEntries,
+    ...(runtime.interactiveSources
+      ? {
+          interactiveSources: interactiveSourceCaptureMessage(
+            runtime.interactiveSources,
+          ),
+        }
+      : {}),
     outputs: runtime.outputs,
   };
 }

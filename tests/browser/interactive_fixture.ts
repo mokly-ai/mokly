@@ -130,7 +130,7 @@ export async function interactiveFixture() {
   );
   files.set(
     `__mokly/interactive/${generation}/bundle.js`,
-    await new EsbuildInteractiveBundleCompiler().compile(config),
+    await compileInteractiveFixture(config),
   );
   for (const [name, bytes] of loadBrowserClientModules())
     files.set(`__mokly/client/${name}`, bytes);
@@ -164,6 +164,22 @@ export async function interactiveFixture() {
       await removeFixture(fixture);
     },
   };
+}
+
+async function compileInteractiveFixture(
+  config: Awaited<ReturnType<typeof loadConfig>>,
+): Promise<string> {
+  const runtime = await prepareLiveRuntime({
+    ...config,
+    interactive: "serve",
+  });
+  if (!runtime.interactiveSources)
+    throw new Error("Interactive browser fixture has no source capture");
+  return new EsbuildInteractiveBundleCompiler().compile({
+    config: runtime.config,
+    signal: new AbortController().signal,
+    sources: runtime.interactiveSources,
+  });
 }
 
 /** Real Serve listener pair for the Milestone 4 happy-path browser contract. */

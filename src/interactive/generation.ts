@@ -4,7 +4,9 @@ import { generatedViews } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
+import type { InteractiveSourceCapture } from "../build/interactive_source_capture.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { MoklyError } from "../errors.js";
 import type { DocumentService } from "../server/demand/service.js";
 
 import type { InteractiveSourceEntry } from "./route_table.js";
@@ -26,6 +28,7 @@ export interface InteractiveGeneration {
   entries: readonly InteractiveSourceEntry[];
   generatedRoutes: ReadonlySet<string>;
   generation: string;
+  sources: InteractiveSourceCapture;
   views: ReadonlyMap<string, InteractiveViewTarget>;
 }
 
@@ -42,6 +45,12 @@ export function interactiveGeneration(
   catalogue: Catalogue,
   documents: DocumentService,
 ): InteractiveGeneration {
+  const sources = runtime.interactiveSources;
+  if (!sources)
+    throw new MoklyError(
+      "server-failed",
+      "Live runtime is missing its accepted source capture",
+    );
   const entries = runtime.manifest.entries.map((entry) => {
     if (entry.kind !== "screen" && entry.kind !== "component") return entry;
     const interactive = runtime.interactiveEntries[entry.id];
@@ -68,6 +77,7 @@ export function interactiveGeneration(
     entries,
     generatedRoutes: documents.routes,
     generation: runtime.generation,
+    sources,
     views,
   };
 }

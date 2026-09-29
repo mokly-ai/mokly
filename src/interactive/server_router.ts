@@ -63,7 +63,11 @@ export class InteractiveRequestRouter {
     const generation = interactiveGeneration(runtime, catalogue, documents);
     this.current = generation;
     this.generations.set(generation.generation, generation);
-    this.bundles.adopt(generation.config, generation.generation);
+    this.bundles.adopt(
+      generation.config,
+      generation.generation,
+      generation.sources,
+    );
     while (this.generations.size > 2) {
       const oldest = this.generations.keys().next().value as string | undefined;
       if (!oldest) break;

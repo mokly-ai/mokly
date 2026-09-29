@@ -15,7 +15,7 @@ export async function assertFreshSourceInventory(
   manifest: ComponentRuntime["manifest"],
 ): Promise<void> {
   const current = await loadConfig(config.repoRoot, config.configPath);
-  const graph = await loadConsumerGraph(current, false);
+  const graph = await loadConsumerGraph(current, { evaluate: false });
   if (
     !isDeepStrictEqual(graph.sourceFiles, manifest.sourceFiles) ||
     !isDeepStrictEqual(

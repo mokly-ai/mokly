@@ -148,6 +148,14 @@ resolved Live port in its readiness message, so the supervisor can bind both
 strictly on later restarts. `http_shutdown.ts` closes the interactive service
 beside documents, controls, Review, event streams, and the app listener.
 
+Each accepted Serve-mode runtime carries the repository source bytes captured
+by its Node consumer graph. Watched IPC validates their canonical base64 wire
+projection; the child retains only current and previous captures with their
+Live bundle states, while the supervisor retains only the current runtime for
+recovery. Browser compilation uses the capture for repository modules and
+continues to resolve installed packages from disk. Retiring a third generation
+aborts any obsolete in-flight compiler before its capture is released.
+
 The Live listener never owns shell routes. The app listener puts
 `{ generation, port, origin?, state }` only in its private capability descriptor
 and interactive SSE events, and exposes the private current-generation prepare

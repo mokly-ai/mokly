@@ -4,6 +4,9 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import type { ComponentRuntime } from "../dist/build/component_runtime.js";
+import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
+import { loadConsumerGraph } from "../dist/build/load_graph.js";
 import { loadConfig } from "../dist/config/load.js";
 import { resolveConfig } from "../dist/config/validate.js";
 import {
@@ -18,10 +21,13 @@ import {
   repositoryRoot,
 } from "./helpers/fixture.js";
 
-test("browser bundle compiles the complete example consumer graph", async () => {
+test("the captured example graph keeps its Live bundle bytes unchanged", async () => {
   const config = await loadConfig(path.join(repositoryRoot, "examples/basic"));
-  const code = await new EsbuildInteractiveBundleCompiler().compile(config);
+  const runtime = await capturedRuntime(config);
+  const code = await compileRuntime(runtime);
+  const recaptured = await compileRuntime(await capturedRuntime(config));
 
+  assert.equal(code, recaptured);
   assert.match(code, /createRoot/);
   assert.match(code, /data-mokly-interactive/);
   assert.match(code, /mountInteractiveDocument/);
@@ -38,10 +44,23 @@ export const mockups = [defineScreen({
 })];
 `);
   t.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
+  const config = {
+    ...(await loadConfig(fixture.root)),
+    interactive: "serve" as const,
+  };
+  const graph = await loadConsumerGraph(config, {
+    captureInteractiveSources: true,
+    evaluate: false,
+  });
+  const sources = graph.interactiveSourceCapture?.seal();
+  assert.ok(sources);
 
   await assert.rejects(
-    new EsbuildInteractiveBundleCompiler().compile(config),
+    new EsbuildInteractiveBundleCompiler().compile({
+      config: { ...config, entryModules: graph.entrySources },
+      signal: new AbortController().signal,
+      sources,
+    }),
     (error: Error & { code?: string }) => {
       assert.equal(error.code, "interactive-bundle");
       assert.match(error.message, /entries\/fixture\.mockup\.tsx/);
@@ -70,9 +89,21 @@ export const mockups = [defineScreen({
     { entriesDir: "entries", mockupsDir: "mockups", repoRoot: "." },
     path.join(root, "mokly.config.ts"),
   );
+  const bytes = await fs.readFile(
+    path.join(root, "entries", "peer.mockup.tsx"),
+  );
 
   await assert.rejects(
-    new EsbuildInteractiveBundleCompiler().compile(config),
+    new EsbuildInteractiveBundleCompiler().compile({
+      config: {
+        ...config,
+        entryModules: [path.join(root, "entries", "peer.mockup.tsx")],
+      },
+      signal: new AbortController().signal,
+      sources: {
+        files: [{ bytes, paths: ["entries/peer.mockup.tsx"] }],
+      },
+    }),
     (error: Error & { code?: string }) => {
       assert.equal(error.code, "interactive-bundle");
       assert.match(error.message, /peer dependency react/);
@@ -85,6 +116,8 @@ test("generation cache coalesces work, retains two and invalidates explicitly", 
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
+  const sources = (await capturedRuntime(config)).interactiveSources;
+  assert.ok(sources);
   let compilations = 0;
   const compiler: InteractiveBundleCompiler = {
     async compile() {
@@ -95,28 +128,28 @@ test("generation cache coalesces work, retains two and invalidates explicitly", 
   const bundler = new CachedInteractiveBundler(compiler);
 
   const [first, duplicate] = await Promise.all([
-    bundler.build({ config, generation: "a" }),
-    bundler.build({ config, generation: "a" }),
+    bundler.build({ config, generation: "a", sources }),
+    bundler.build({ config, generation: "a", sources }),
   ]);
   assert.equal(compilations, 1);
   assert.strictEqual(first, duplicate);
-  await bundler.build({ config, generation: "b" });
+  await bundler.build({ config, generation: "b", sources });
   assert.equal(
-    (await bundler.build({ config, generation: "a" })).code,
+    (await bundler.build({ config, generation: "a", sources })).code,
     "bundle-1",
   );
-  await bundler.build({ config, generation: "c" });
+  await bundler.build({ config, generation: "c", sources });
   assert.equal(
-    (await bundler.build({ config, generation: "b" })).code,
+    (await bundler.build({ config, generation: "b", sources })).code,
     "bundle-2",
   );
   assert.equal(
-    (await bundler.build({ config, generation: "a" })).code,
+    (await bundler.build({ config, generation: "a", sources })).code,
     "bundle-4",
   );
   bundler.invalidate("a");
   assert.equal(
-    (await bundler.build({ config, generation: "a" })).code,
+    (await bundler.build({ config, generation: "a", sources })).code,
     "bundle-5",
   );
 });
@@ -125,6 +158,8 @@ test("a rejected generation stays cached until explicit invalidation", async (t)
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
+  const sources = (await capturedRuntime(config)).interactiveSources;
+  assert.ok(sources);
   let attempts = 0;
   const failure = new Error("browser bundle failed");
   const compiler: InteractiveBundleCompiler = {
@@ -134,20 +169,35 @@ test("a rejected generation stays cached until explicit invalidation", async (t)
     },
   };
   const bundler = new CachedInteractiveBundler(compiler);
-  const first = bundler.build({ config, generation: "failed" });
-  const duplicate = bundler.build({ config, generation: "failed" });
+  const first = bundler.build({ config, generation: "failed", sources });
+  const duplicate = bundler.build({ config, generation: "failed", sources });
 
   assert.strictEqual(first, duplicate);
   await assert.rejects(first, (error: unknown) => error === failure);
   await assert.rejects(
-    bundler.build({ config, generation: "failed" }),
+    bundler.build({ config, generation: "failed", sources }),
     (error: unknown) => error === failure,
   );
   assert.equal(attempts, 1);
   bundler.invalidate("failed");
   await assert.rejects(
-    bundler.build({ config, generation: "failed" }),
+    bundler.build({ config, generation: "failed", sources }),
     (error: unknown) => error === failure,
   );
   assert.equal(attempts, 2);
 });
+
+async function capturedRuntime(
+  config: Awaited<ReturnType<typeof loadConfig>>,
+): Promise<ComponentRuntime> {
+  return prepareLiveRuntime({ ...config, interactive: "serve" });
+}
+
+function compileRuntime(runtime: ComponentRuntime): Promise<string> {
+  assert.ok(runtime.interactiveSources);
+  return new EsbuildInteractiveBundleCompiler().compile({
+    config: runtime.config,
+    signal: new AbortController().signal,
+    sources: runtime.interactiveSources,
+  });
+}

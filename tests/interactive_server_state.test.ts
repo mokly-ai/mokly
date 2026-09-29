@@ -77,6 +77,14 @@ test("Live generation changes rebuild and retain only one predecessor", async (t
     live.bundler.requests.map(({ generation }) => generation),
     [live.generation, secondGeneration],
   );
+  assert.strictEqual(
+    live.bundler.requests[0]?.sources,
+    live.runtime.interactiveSources,
+  );
+  assert.strictEqual(
+    live.bundler.requests[1]?.sources,
+    live.runtime.interactiveSources,
+  );
   assert.equal(
     (
       await fetch(

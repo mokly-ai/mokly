@@ -2,6 +2,7 @@
 
 import type { ViewerInteractiveDescriptor } from "@mokly/viewer/runtime";
 
+import type { InteractiveSourceCapture } from "../build/interactive_source_capture.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
@@ -18,6 +19,7 @@ interface GenerationRecord {
   failure?: InteractiveBundleFailure;
   generation: string;
   pending?: Promise<void>;
+  sources: InteractiveSourceCapture;
   state: BundleState;
 }
 
@@ -29,7 +31,11 @@ export interface InteractiveBundlePreparation {
 
 /** Stateful behavior boundary used by both app and interactive listeners. */
 export interface InteractiveBundleService {
-  adopt(config: ResolvedConfig, generation: string): void;
+  adopt(
+    config: ResolvedConfig,
+    generation: string,
+    sources: InteractiveSourceCapture,
+  ): void;
   code(generation: string): string | undefined;
   failure(generation: string): InteractiveBundleFailure | undefined;
   has(generation: string): boolean;
@@ -48,11 +54,16 @@ export class GenerationInteractiveBundles implements InteractiveBundleService {
     private readonly diagnostic: (error: unknown) => void,
   ) {}
 
-  adopt(config: ResolvedConfig, generation: string): void {
+  adopt(
+    config: ResolvedConfig,
+    generation: string,
+    sources: InteractiveSourceCapture,
+  ): void {
     if (!this.generations.has(generation))
       this.generations.set(generation, {
         config,
         generation,
+        sources,
         state: "idle",
       });
     while (this.generations.size > 2) {
@@ -92,10 +103,15 @@ export class GenerationInteractiveBundles implements InteractiveBundleService {
     this.changed(generation, record.state);
     record.pending = timeAsync("interactive.bundle", () =>
       Promise.resolve().then(() =>
-        this.bundler.build({ config: record.config, generation }),
+        this.bundler.build({
+          config: record.config,
+          generation,
+          sources: record.sources,
+        }),
       ),
     ).then(
       (bundle) => {
+        if (this.generations.get(generation) !== record) return;
         if (bundle.generation !== generation)
           return this.fail(
             record,
@@ -115,6 +131,7 @@ export class GenerationInteractiveBundles implements InteractiveBundleService {
   }
 
   private fail(record: GenerationRecord, error: unknown): void {
+    if (this.generations.get(record.generation) !== record) return;
     record.failure =
       error instanceof MoklyError && error.code === "interactive-bundle"
         ? "bundle"

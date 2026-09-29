@@ -5,6 +5,7 @@ import { generatedViews } from "@mokly/viewer/data";
 
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
+import { MoklyError } from "../errors.js";
 import { createCatalogueIndex } from "../registry/catalogue_index.js";
 import { prepareRegistry } from "../registry/prepare.js";
 
@@ -17,7 +18,9 @@ export async function prepareLiveRuntime(
   config: ResolvedConfig,
 ): Promise<ComponentRuntime> {
   return timeAsync("catalogue.prepare-index", async () => {
-    const graph = await loadConsumerGraph(config);
+    const graph = await loadConsumerGraph(config, {
+      captureInteractiveSources: config.interactive === "serve",
+    });
     config = {
       ...config,
       entryModules: graph.entrySources,
@@ -37,6 +40,15 @@ export async function prepareLiveRuntime(
       ),
       config,
     );
+    const interactiveSources =
+      config.interactive === "serve"
+        ? graph.interactiveSourceCapture?.seal()
+        : undefined;
+    if (config.interactive === "serve" && !interactiveSources)
+      throw new MoklyError(
+        "build-invalid",
+        "Live runtime is missing its accepted source capture",
+      );
     return {
       bundle: consumerBundle(graph),
       config,
@@ -48,6 +60,7 @@ export async function prepareLiveRuntime(
             : [],
         ),
       ),
+      ...(interactiveSources ? { interactiveSources } : {}),
       manifest,
       outputs: [],
     };

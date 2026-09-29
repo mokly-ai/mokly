@@ -59,7 +59,12 @@ export function interactiveConsumerPlugin(
 }
 
 /** Resolve consumer imports of the public package with source attribution. */
-export function packageApiPlugin(config: ResolvedConfig): Plugin {
+export function packageApiPlugin(
+  config: ResolvedConfig,
+  options: {
+    isRepositoryImporter?(path: string, namespace: string): boolean;
+  } = {},
+): Plugin {
   const realRepoRoot = fs.realpathSync(config.repoRoot);
   const indexPath = runtimeModule("../index.js", "../index.ts");
   const definitionsPath = runtimeModule(
@@ -71,13 +76,10 @@ export function packageApiPlugin(config: ResolvedConfig): Plugin {
     setup(pluginBuild: PluginBuild): void {
       pluginBuild.onResolve({ filter: /^@mokly\/mokly$/ }, (args) => {
         if (!args.importer) return { path: indexPath };
-        let realImporter: string;
-        try {
-          realImporter = fs.realpathSync(args.importer);
-        } catch {
-          return { path: indexPath };
-        }
-        if (!isRepositoryOwnedModule(realImporter, realRepoRoot))
+        if (
+          !options.isRepositoryImporter?.(args.importer, args.namespace) &&
+          !isRepositoryImporter(args.importer, realRepoRoot)
+        )
           return { path: indexPath };
         return {
           namespace: "mokly-attributed-api",
@@ -101,6 +103,14 @@ export function packageApiPlugin(config: ResolvedConfig): Plugin {
       );
     },
   };
+}
+
+function isRepositoryImporter(importer: string, realRepoRoot: string): boolean {
+  try {
+    return isRepositoryOwnedModule(fs.realpathSync(importer), realRepoRoot);
+  } catch {
+    return false;
+  }
 }
 
 function virtualEntryContents(

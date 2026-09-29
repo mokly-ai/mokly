@@ -8,12 +8,19 @@ import { Minimatch } from "minimatch";
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { isAuthoredEntryPath } from "../config/entry_membership.js";
-import { locatePath } from "../config/file_locations.js";
+import { locatePath, type FileLocation } from "../config/file_locations.js";
 import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
 import type { SourceDenial } from "./source_denial.js";
+
+const RUNTIME_ROOT = path.resolve(
+  fileURLToPath(new URL("../", import.meta.url)),
+);
+const VIEWER_RUNTIME_ROOT = fs.realpathSync(
+  path.dirname(fileURLToPath(import.meta.resolve("@mokly/viewer/data"))),
+);
 
 /** Names reserved for authoring, including stale helpers no longer imported. */
 function isReservedSource(candidate: string): boolean {
@@ -146,19 +153,46 @@ export function graphSourceFiles(
   workingDir: string,
   repoRoot: string,
 ): string[] {
-  const runtime = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
-  const viewerRuntime = fs.realpathSync(
-    path.dirname(fileURLToPath(import.meta.resolve("@mokly/viewer/data"))),
-  );
   const candidates = Object.keys(metafile.inputs).flatMap((input) => {
     const absolute = path.resolve(workingDir, input);
     if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) return [];
     const real = fs.realpathSync(absolute);
-    if (isInside(runtime, real) || isInside(viewerRuntime, real)) return [];
-    if (real.split(path.sep).includes("node_modules")) return [];
+    if (
+      isGraphRuntimePath(real) ||
+      real.split(path.sep).includes("node_modules")
+    )
+      return [];
     return [absolute];
   });
   return normalizeSourceFiles(candidates, repoRoot);
+}
+
+/** Locate one repository-owned consumer-graph input under the inventory rule. */
+export function graphSourceLocation(
+  candidate: string,
+  repoRoot: string,
+): FileLocation | undefined {
+  const location = locatePath(candidate, repoRoot);
+  if (!location) return;
+  try {
+    if (!fs.statSync(location.physicalPath).isFile()) return;
+  } catch {
+    return;
+  }
+  if (
+    isGraphRuntimePath(location.physicalPath) ||
+    location.physicalPath.split(path.sep).includes("node_modules")
+  )
+    return;
+  return location;
+}
+
+/** Return whether a resolved graph path belongs to Mokly's own runtime. */
+export function isGraphRuntimePath(candidate: string): boolean {
+  return (
+    isInside(RUNTIME_ROOT, candidate) ||
+    isInside(VIEWER_RUNTIME_ROOT, candidate)
+  );
 }
 
 /** Prove regular in-repository inputs and retain logical and physical identities. */

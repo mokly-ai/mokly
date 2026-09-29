@@ -154,23 +154,23 @@ does not present it yet.
 - [x] Update `src/server/README.md` and `src/client/README.md`; run
       `cargo xtask check`; commit and push.
 
-## Milestone 4: Generation-pinned Live sources
+## Milestone 4: Generation-pinned Live sources — completed
 
 Backend. Closes interactive views review finding 1.
 
-- [ ] Capture the repository-owned source bytes a generation's consumer graph
+- [x] Capture the repository-owned source bytes a generation's consumer graph
       compiles, only when `interactive` is `serve`; retain them with the
       runtime for the current and previous generations; and send them to the
       watched child.
-- [ ] Compile each generation's Live bundle from its capture, resolving
+- [x] Compile each generation's Live bundle from its capture, resolving
       installed packages normally, and fail it with a typed diagnostic naming
       any repository-owned module the capture lacks.
-- [ ] Tests: after generation G is accepted and before its first Live request,
+- [x] Tests: after generation G is accepted and before its first Live request,
       editing, deleting or breaking a source leaves G's Live bundle equal to
       its accepted sources; a later generation sees the edit; nothing is
       captured when `interactive` is `off`; captures are released with retired
       generations.
-- [ ] Update `src/interactive/README.md`; record in the plan index that
+- [x] Update `src/interactive/README.md`; record in the plan index that
       interactive views finding 1 is closed; run `cargo xtask check`; commit
       and push.
 

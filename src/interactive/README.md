@@ -35,6 +35,35 @@ esbuild's static-children flag by selecting the consumer's `jsxs` helper for
 static siblings and `jsx` for dynamic children, so React keeps meaningful key
 warnings without misclassifying ordinary JSX.
 
+## Accepted Source Captures
+
+Serve-mode graph preparation installs `build/interactive_source_capture.ts` in
+the Node consumer graph. Its load hook records the exact bytes esbuild receives
+for each repository-owned module or configured-loader input, groups logical and
+physical aliases around one byte blob, and seals the sorted capture only after
+registry and route validation accept the generation. The accepted
+`config.entryModules` and capture travel with `ComponentRuntime`; the watched
+IPC boundary converts the bytes to canonical padded base64 only while sending
+them. Off-mode Serve and exhaustive Build, Check, export, and publication do
+not create or retain this data.
+
+`source_resolution.ts` is the browser graph's repository resolver. Absolute
+entries plus relative, extension, index, symlink, and configured alias paths
+must resolve through the capture. A captured namespace load never reads a
+repository source from disk, and a missing path becomes
+`InteractiveBundleError` with reason `source-not-captured`. This is what lets a
+generation's first Live request succeed after the accepted source is edited,
+deleted, renamed, or made syntactically invalid. Bare installed packages,
+Mokly's runtime, and consumer React peers still use esbuild's normal filesystem
+resolution and intentionally remain unpinned.
+
+Resolution metadata is the deliberate limit of the guarantee. Esbuild may
+reread repository `tsconfig.json` settings and package `package.json` imports,
+exports, or browser fields during the lazy browser build. Changing that
+metadata can select an uncaptured repository module and produce the typed
+missing-capture failure, even though all captured module and loader-input bytes
+remain pinned.
+
 `document.ts` accepts only a document already processed by
 `adaptBrowseDocument`. It validates without rewriting that adapter's inert map,
 emits no props or source paths in the bootstrap, escapes canonical JSON for an
@@ -80,12 +109,16 @@ origin. The frame adapter's optional request parameter is separately validated
 as a canonical origin distinct from the frame.
 
 `bundle_state.ts` tracks `idle`, `building`, `ready`, or `failed`, coalesces one
-timed build, and retains one predecessor. Typed `interactive-bundle` failures
-become consumer-text-free 503 responses; internal faults remain 500. The app
-origin owns the current-generation preparation POST and private descriptor/SSE
-transport, so the shell can wait for readiness without reading a
-cross-origin response. That POST follows the component-control rule: its Origin
-must be exactly `http://` plus the accepted loopback Host.
+timed build, and retains exactly the current generation and one predecessor
+with their captures. A third generation evicts both the oldest state and its
+capture, aborts an in-flight esbuild context, and ignores a retired completion.
+Repeated reload/restart transfers reuse an identical decoded capture object;
+the supervisor retains only its current runtime. Typed `interactive-bundle`
+failures become consumer-text-free 503 responses; internal faults remain 500.
+The app origin owns the current-generation preparation POST and private
+descriptor/SSE transport, so the shell can wait for readiness without reading
+a cross-origin response. That POST follows the component-control rule: its
+Origin must be exactly `http://` plus the accepted loopback Host.
 
 ## Navigation
 

@@ -6,15 +6,15 @@
   including the reference example, Static/Live parity and static-output
   regression coverage. The final review reported three Medium findings:
   finding 1 (Live compiling current files instead of the accepted
-  generation's sources) is scheduled in Serve Rebuild Status Milestone 4, and
+  generation's sources) is closed by Serve Rebuild Status Milestone 4;
   findings 2 and 3 await a decision. Move this plan to Completed when its
   implementation PR merges.
 - [Serve Rebuild Status](./serve-rebuild-status.md) — tell the Browse shell
   when watched Serve could not load the latest changes and while an update is
   in progress, and compile Live previews from each generation's accepted
-  sources. Milestone 1's status, design, and generation-pinning contracts and
-  Milestone 2's mockups (five Update status states, with progress beside the
-  search field) are complete; the implementation milestones remain active.
+  sources. Milestones 1–4 have delivered the contracts, five approved mockup
+  states, watched status transport, and generation-pinned Live sources; shell
+  presentation and final smoke/review remain active.
 - [Comparison Pane Scroll Alignment](./comparison-pane-scroll-alignment.md)
   — Overlay and Difference drift apart when scrolled because each snapshot
   scrolls inside its own opaque frame; comparison panes become viewer-owned,

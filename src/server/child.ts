@@ -60,7 +60,13 @@ export async function runServerChild(
     strictPort,
     updateVersion,
   });
-  const shutdown = waitForChildShutdown(server, config, repository, manifest);
+  const shutdown = waitForChildShutdown(
+    server,
+    config,
+    repository,
+    manifest,
+    initial?.runtime.interactiveSources,
+  );
   process.send?.({
     ...(server.interactivePort !== undefined
       ? { interactivePort: server.interactivePort }
@@ -87,9 +93,11 @@ function waitForChildShutdown(
   config: ResolvedConfig,
   repository: ServedReviewRepository,
   manifest?: ComponentRuntime["manifest"],
+  initialInteractiveSources?: ComponentRuntime["interactiveSources"],
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     let closing = false;
+    let retainedInteractiveSources = initialInteractiveSources;
     const cleanup = (): void => {
       process.off("disconnect", onDisconnect);
       process.off("message", receive);
@@ -117,8 +125,9 @@ function waitForChildShutdown(
         repository.accept(undefined, complete.version);
         server.publishUpdate({ kind: "evidence", version: complete.version });
       }
-      const runtime = parseRuntimeMessage(message);
+      const runtime = parseRuntimeMessage(message, retainedInteractiveSources);
       if (runtime && manifest) {
+        retainedInteractiveSources = runtime.runtime.interactiveSources;
         timeSync("runtime.attach", () =>
           server.replaceComponentRuntime({
             ...runtime.runtime,

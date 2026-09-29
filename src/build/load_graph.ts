@@ -21,6 +21,10 @@ import {
   consumerReactPlugin,
   packageNodePaths,
 } from "./consumer_resolution.js";
+import {
+  interactiveSourceCapture,
+  type InteractiveSourceCaptureCandidate,
+} from "./interactive_source_capture.js";
 import { graphSourceFiles, normalizeSourceFiles } from "./source_inventory.js";
 
 /** Consumer modules loaded in one React-safe esbuild graph. */
@@ -28,6 +32,7 @@ export interface LoadedGraph {
   compatibilityTransformer?: CompatibilityTransformer;
   definitions: unknown[];
   entrySources: readonly string[];
+  interactiveSourceCapture?: InteractiveSourceCaptureCandidate;
   sourceFiles: readonly string[];
   renderer: Renderer;
   renderWithComponents: ComponentGraphRenderer;
@@ -36,21 +41,29 @@ export interface LoadedGraph {
 /** Bundle and import all React-bearing consumer modules as one graph. */
 export async function loadConsumerGraph(
   config: ResolvedConfig,
-  evaluate = true,
+  options: {
+    captureInteractiveSources?: boolean;
+    evaluate?: boolean;
+  } = {},
 ): Promise<LoadedGraph> {
+  const evaluate = options.evaluate ?? true;
   return timeAsync(evaluate ? "graph.load" : "graph.inventory", () =>
-    loadGraph(config, evaluate),
+    loadGraph(config, evaluate, options.captureInteractiveSources === true),
   );
 }
 
 async function loadGraph(
   config: ResolvedConfig,
   evaluate: boolean,
+  captureInteractiveSources: boolean,
 ): Promise<LoadedGraph> {
   const entrySources = timeSync("graph.discover", () =>
     discoverEntryModules(config),
   );
   config = { ...config, entryModules: entrySources };
+  const capture = captureInteractiveSources
+    ? interactiveSourceCapture(config)
+    : undefined;
   timingCounts("graph", () => ({ entryModules: entrySources.length }));
   const outputPath = path.join(
     path.dirname(config.configPath),
@@ -84,6 +97,7 @@ async function loadGraph(
           consumerEntryPlugin(config, entrySources),
           packageApiPlugin(config),
           consumerReactPlugin(config),
+          ...(capture ? [capture.plugin] : []),
         ],
         ...(config.moduleResolution.resolveExtensions
           ? {
@@ -113,6 +127,7 @@ async function loadGraph(
       return {
         definitions: [],
         entrySources,
+        ...(capture ? { interactiveSourceCapture: capture.candidate } : {}),
         sourceFiles,
         renderWithComponents: () => {
           throw new Error("inventory-only graph cannot render");
@@ -155,6 +170,7 @@ async function loadGraph(
         : {}),
       definitions: imported.definitions,
       entrySources,
+      ...(capture ? { interactiveSourceCapture: capture.candidate } : {}),
       sourceFiles,
       renderer: imported.renderer as Renderer,
       renderWithComponents: imported.renderWithComponents,

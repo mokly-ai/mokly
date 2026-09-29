@@ -1,7 +1,12 @@
 import { builtinModules } from "node:module";
 import path from "node:path";
 
-import { build, type Plugin, type PluginBuild } from "esbuild";
+import {
+  context,
+  type BuildContext,
+  type Plugin,
+  type PluginBuild,
+} from "esbuild";
 
 import {
   interactiveConsumerPlugin,
@@ -12,10 +17,15 @@ import {
   consumerReactPlugin,
   packageNodePaths,
 } from "../build/consumer_resolution.js";
-import { discoverEntryModules } from "../config/entry_discovery.js";
+import type { InteractiveSourceCapture } from "../build/interactive_source_capture.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { errorMessage, MoklyError } from "../errors.js";
+
+import {
+  CAPTURED_SOURCE_NAMESPACE,
+  interactiveSourceResolver,
+} from "./source_resolution.js";
 
 /** Immutable ESM bytes for one catalogue generation. */
 export interface InteractiveBundle {
@@ -27,6 +37,7 @@ export interface InteractiveBundle {
 export interface InteractiveBundleRequest {
   config: ResolvedConfig;
   generation: string;
+  sources: InteractiveSourceCapture;
 }
 
 /** Generation-keyed bundle service consumed by the interactive origin. */
@@ -37,48 +48,80 @@ export interface InteractiveBundler {
 
 /** Injected browser compiler boundary used by the retained generation cache. */
 export interface InteractiveBundleCompiler {
-  compile(config: ResolvedConfig): Promise<string>;
+  compile(request: {
+    config: ResolvedConfig;
+    signal: AbortSignal;
+    sources: InteractiveSourceCapture;
+  }): Promise<string>;
+}
+
+interface CachedBundle {
+  controller: AbortController;
+  promise: Promise<InteractiveBundle>;
 }
 
 /** Retain the current and previous generation, coalescing concurrent builds. */
 export class CachedInteractiveBundler implements InteractiveBundler {
-  private readonly generations = new Map<string, Promise<InteractiveBundle>>();
+  private readonly generations = new Map<string, CachedBundle>();
 
   constructor(private readonly compiler: InteractiveBundleCompiler) {}
 
   build(request: InteractiveBundleRequest): Promise<InteractiveBundle> {
     const cached = this.generations.get(request.generation);
-    if (cached) return cached;
-    const pending = this.compiler.compile(request.config).then((code) => ({
-      code,
-      generation: request.generation,
-    }));
-    this.generations.set(request.generation, pending);
+    if (cached) return cached.promise;
+    const controller = new AbortController();
+    const promise = this.compiler
+      .compile({
+        config: request.config,
+        signal: controller.signal,
+        sources: request.sources,
+      })
+      .then((code) => ({ code, generation: request.generation }));
+    this.generations.set(request.generation, { controller, promise });
     while (this.generations.size > 2) {
       const oldest = this.generations.keys().next().value as string | undefined;
       if (oldest === undefined) break;
-      this.generations.delete(oldest);
+      this.invalidate(oldest);
     }
-    return pending;
+    return promise;
   }
 
   invalidate(generation: string): void {
+    const cached = this.generations.get(generation);
+    if (!cached) return;
     this.generations.delete(generation);
+    cached.controller.abort();
   }
 }
 
 /** esbuild implementation of the package's browser consumer graph. */
 export class EsbuildInteractiveBundleCompiler implements InteractiveBundleCompiler {
-  async compile(config: ResolvedConfig): Promise<string> {
-    const entrySources = discoverEntryModules(config);
-    const resolved = { ...config, entryModules: entrySources };
+  async compile(request: {
+    config: ResolvedConfig;
+    signal: AbortSignal;
+    sources: InteractiveSourceCapture;
+  }): Promise<string> {
+    const { config, signal, sources } = request;
+    const entrySources = config.entryModules;
+    if (!entrySources)
+      throw new MoklyError(
+        "interactive-bundle",
+        "accepted Live runtime is missing its entry modules",
+      );
     const outputPath = path.join(
       path.dirname(config.configPath),
       ".mokly-interactive.js",
     );
     const guard = nodeBuiltinGuard(config);
+    const sourceResolver = interactiveSourceResolver(config, sources);
+    let buildContext: BuildContext | undefined;
+    const cancel = (): void => {
+      if (buildContext) void buildContext.cancel();
+    };
     try {
-      const result = await build({
+      if (signal.aborted)
+        throw new Error("Live bundle compilation was cancelled");
+      buildContext = await context({
         write: false,
         preserveSymlinks: true,
         absWorkingDir: path.dirname(config.configPath),
@@ -105,9 +148,13 @@ export class EsbuildInteractiveBundleCompiler implements InteractiveBundleCompil
         outfile: outputPath,
         platform: "browser",
         plugins: [
-          interactiveConsumerPlugin(resolved, entrySources),
-          packageApiPlugin(resolved),
-          consumerReactPlugin(resolved, { browser: true }),
+          interactiveConsumerPlugin(config, entrySources),
+          packageApiPlugin(config, {
+            isRepositoryImporter: (_importer, namespace) =>
+              namespace === CAPTURED_SOURCE_NAMESPACE,
+          }),
+          consumerReactPlugin(config, { browser: true }),
+          sourceResolver.plugin,
           guard.plugin,
         ],
         ...(config.moduleResolution.resolveExtensions
@@ -117,6 +164,11 @@ export class EsbuildInteractiveBundleCompiler implements InteractiveBundleCompil
           : {}),
         target: "es2023",
       });
+      signal.addEventListener("abort", cancel, { once: true });
+      if (signal.aborted) await buildContext.cancel();
+      const result = await buildContext.rebuild();
+      if (signal.aborted)
+        throw new Error("Live bundle compilation was cancelled");
       const output = result.outputFiles?.find(
         (candidate) => candidate.path === outputPath,
       );
@@ -127,6 +179,9 @@ export class EsbuildInteractiveBundleCompiler implements InteractiveBundleCompil
         );
       return output.text;
     } catch (error) {
+      if (signal.aborted) throw error;
+      const sourceFailure = sourceResolver.failure();
+      if (sourceFailure) throw sourceFailure;
       if (error instanceof MoklyError) throw error;
       const nodeImport = guard.failure();
       if (nodeImport)
@@ -140,6 +195,9 @@ export class EsbuildInteractiveBundleCompiler implements InteractiveBundleCompil
         `could not bundle consumer modules for Live: ${errorMessage(error)}`,
         { cause: error },
       );
+    } finally {
+      signal.removeEventListener("abort", cancel);
+      if (buildContext) await buildContext.dispose();
     }
   }
 }
