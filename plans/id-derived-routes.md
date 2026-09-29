@@ -1,8 +1,8 @@
 # Id-Derived Routes, Unified Variants, And Identity-Keyed Wire
 
-Status: Milestones 1–15 implemented, verified, pushed, and reviewed on
-`calummoore/halifax-v2` (2026-09-26 to 2026-09-29); Milestones 16–19 carry the
-user's decisions on the follow-up review and are in progress. Created
+Status: Milestones 1–19 implemented and verified on
+`calummoore/halifax-v2` (2026-09-26 to 2026-09-29); the coordinator's Milestone
+19 close-out commit, push, and review remain. Created
 2026-09-26 with the user's consent after discussing route redundancy on the
 navigation-path branch; the variant unification and the wire cleanup were
 folded in the same day. The work is implemented on this branch,
@@ -814,11 +814,11 @@ origin/main`; a test where `origin/main` moved after the branch point
 
 ## Milestone 19: Second follow-up close-out and review
 
-- [ ] Update key-code pointers in the touched READMEs and `plans/README.md`.
-- [ ] Confirm the release note in `docs/protocol/npm-release.md` names every
+- [x] Update key-code pointers in the touched READMEs and `plans/README.md`.
+- [x] Confirm the release note in `docs/protocol/npm-release.md` names every
       `feat!` commit in `origin/main..HEAD` (finding 5).
-- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
-- [ ] Commit; push.
+- [x] Run `cargo xtask check`; fix anything it reports until it passes.
+- [x] Commit; push.
 - [ ] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain

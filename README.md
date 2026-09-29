@@ -321,6 +321,9 @@ merge.
 - [`src/review/artifact_files.ts`](./src/review/artifact_files.ts) and
   [`component_classification_entries.ts`](./src/review/component_classification_entries.ts)
   — collision-safe artifact writes and per-entry comparison preparation.
+- [`src/review/deleted_resource.ts`](./src/review/deleted_resource.ts) — the
+  shared verified-deletion and byte-comparison decision used by both Changes
+  classifiers.
 - [`src/export`](./src/export/README.md) — static catalogue export.
 - [`src/publication`](./src/publication/README.md) — shared static shell and
   previous-version publication.

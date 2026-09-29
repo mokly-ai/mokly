@@ -75,14 +75,27 @@ cargo test --package xtask
 
 ### Key Code
 
-- `src/cli.rs` parses and dispatches commands.
-- `src/command.rs` defines the injected command-runner boundary.
-- `src/check.rs` defines the complete source, packed-consumer, browser, and Rust
-  verification sequence.
-- `../scripts/verification/repository-ratchets.mjs` dispatches the repository
-  ratchets. `../scripts/verification/ratchets/typescript-length.mjs`,
-  `protocol-caps.mjs`, and `internal-exports.mjs` own the three policies;
-  `unused-internal-exports.txt` is their sorted shrinking exception baseline.
+- [`src/cli.rs`](./src/cli.rs) parses and dispatches commands.
+- [`src/command.rs`](./src/command.rs) defines the injected command-runner
+  boundary.
+- [`src/check.rs`](./src/check.rs) defines the complete source,
+  packed-consumer, browser, and Rust verification sequence.
+- [`../scripts/package/browser_graph_analysis.mjs`](../scripts/package/browser_graph_analysis.mjs)
+  validates the delivered browser module graph;
+  [`../scripts/package/consumer_cases`](../scripts/package/consumer_cases)
+  owns the five clean packed-consumer scenarios.
+- [`../scripts/verification/repository-ratchets.mjs`](../scripts/verification/repository-ratchets.mjs)
+  dispatches the repository ratchets, and
+  [`../scripts/verification/ratchets/git.mjs`](../scripts/verification/ratchets/git.mjs)
+  owns their merge-base workspace view.
+- [`../scripts/verification/ratchets/typescript-length.mjs`](../scripts/verification/ratchets/typescript-length.mjs),
+  [`protocol-caps.mjs`](../scripts/verification/ratchets/protocol-caps.mjs), and
+  [`internal-exports.mjs`](../scripts/verification/ratchets/internal-exports.mjs)
+  own the three policies;
+  [`module-commonjs.mjs`](../scripts/verification/ratchets/module-commonjs.mjs)
+  supplies CommonJS export discovery, and
+  [`unused-internal-exports.txt`](./unused-internal-exports.txt) is the sorted
+  shrinking exception baseline.
 
 ### Related Docs
 
