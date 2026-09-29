@@ -335,22 +335,26 @@ test("test repository inputs are deterministic and title types stay fixed", () =
   );
 });
 
-test("browser shards divide parallel specs and stay balanced by test count", () => {
+test("browser shards stay whole and balanced by test count", () => {
   assert.match(
     verification,
-    /A shard runs whole spec files, except that Playwright divides a spec in parallel mode into one group per shard/u,
+    /\| Browser \|.*`fullyParallel: false`.*A shard runs its whole-file partition\. \|/u,
   );
   assert.match(
     verification,
-    /react_shell_hydration_routes\.spec\.ts.*tests are independent, so it runs in parallel mode/u,
+    /requires shard file assignments to be pairwise disjoint, so every browser spec stays whole and no spec uses parallel mode/u,
   );
   assert.match(
     verification,
-    /tests\/browser_shard_balance\.test\.ts.*fails when any shard holds more than 125% of an even share of the browser tests/u,
+    /`react_shell_hydration_routes\.spec\.ts` and `react_shell_hydration_routes_2\.spec\.ts` to `react_shell_hydration_routes_4\.spec\.ts` each cover every fourth catalogue route, and the first also covers the home, missing-route and id-redirect cases/u,
   );
   assert.match(
     verification,
-    /A spec whose tests depend on one another stays whole/u,
+    /tests\/browser_shard_balance\.test\.ts.*fails when any shard holds more than 125% of an even share of the browser tests.*runs the aggregate's `validateShardReports`/u,
+  );
+  assert.match(
+    verification,
+    /When the bound fails, split a large spec into smaller spec files/u,
   );
 });
 

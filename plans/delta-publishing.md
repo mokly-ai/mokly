@@ -325,8 +325,9 @@ On 2026-09-29 the user asked to fix the pull request's failing CI. Browser
 shard 2 of 4 exceeded CI's 20-minute job timeout, which fails `Required CI`
 and blocks the merge. Playwright assigns whole spec files to shards, and
 `tests/browser/react_shell_hydration_routes.spec.ts` runs one test per example
-catalogue route (124 tests), so shard 2 held 318 of 860 browser tests and 11.5
-of 22.3 recorded test minutes; the other shards held 2.7 to 5.1 minutes. Main
+catalogue route plus three shell routes (124 tests), so shard 2 held 318 of
+860 browser tests and 11.5 of 22.3 recorded test minutes; the other shards
+held 2.7 to 5.1 minutes. Main
 assigns the same 318 tests to its shard 2, and main's CI after #121 also
 failed there. Milestones 34–36 carry this work.
 
@@ -345,6 +346,29 @@ failed there. Milestones 34–36 carry this work.
 - The open findings are unchanged: eighth-review finding 1, seventh-review
   finding 1, sixth-review finding 2 and finding 3's plan sentence,
   fifth-review findings 2, 4 and 5 and second-review findings 3–11.
+
+Revision, 2026-09-29: CI on `18a0b92` passed all four browser shards, the
+slowest in 15m34s, but `Required CI` failed with "browser node-22.14.0
+evidence failed: file assignments contain duplicate values". The evidence
+aggregate requires whole-file shard assignments that are pairwise disjoint,
+and parallel mode assigned the hydration spec to shards 2 and 3. The local
+checks never combined four shard reports, so they could not see it.
+Milestones 37–38 replace parallel mode; Milestone 36 closes after them.
+
+- Parallel mode is removed and whole-file sharding stays.
+  `react_shell_hydration_routes.spec.ts` keeps every fourth catalogue route
+  and the home, missing-route and id-redirect cases, and
+  `react_shell_hydration_routes_2.spec.ts` to `_4.spec.ts` cover the other
+  routes. Each builds its own development bundle, no test file is deleted, and
+  the listing assigns 220, 224, 201 and 215 tests.
+  `tests/hydration_inventory.test.ts` still proves every route has exactly one
+  hydration test.
+- The balance test also builds a report for each shard listing and runs the
+  aggregate's own `validateShardReports`, so a spec split across shards fails
+  locally with the aggregate's error. Its advice is to split a large spec into
+  smaller files, never to use parallel mode.
+- `ci-verification.md` returns to whole-file partitioning and describes the
+  split files instead of the parallel-mode exception.
 
 ## Milestone 1: Protocol and guide contract — completed
 
@@ -1161,15 +1185,45 @@ Documentation and contract only. Validate with Prettier and the guide tests;
 
 - [x] Run the balance, CI workflow and guides tests, Prettier, ESLint and the
       type check, then `cargo xtask check`; resolve every failure.
-- [ ] After checks pass, `git add -A`, commit with a Conventional Commits
-      title of at most 50 characters, and push the branch; confirm every check
-      on the pull request passes, including all four browser shards and
-      `Required CI`.
+- [x] After checks pass, `git add -A`, commit with a Conventional Commits
+      title of at most 50 characters, and push the branch. Committed as
+      `18a0b92 test: balance the browser test shards`.
+- [ ] Confirm every check on the pull request passes, including all four
+      browser shards and `Required CI`. `18a0b92` failed `Required CI` (see
+      the decision's revision); this closes after Milestone 38.
 - [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
       without changing the implementation.
+
+## Milestone 37: Whole-file shard balance contract — completed
+
+- [x] Record the revision in the
+      [Browser Shard Balance Decision](#browser-shard-balance-decision).
+- [x] Rewrite the Browser Shard Balance section and the Browser gate row of
+      [`ci-verification.md`](../docs/protocol/ci-verification.md) for
+      whole-file partitioning with the hydration routes split across files,
+      state that the balance test runs the aggregate's shard validation, and
+      update the development hydration sentence in its evidence section;
+      update the pins in `tests/guides_ci.test.ts`.
+
+## Milestone 38: Split the route hydration spec
+
+- [x] Extend `tests/browser_shard_balance.test.ts` to validate the four shard
+      listings with `validateShardReports`, and confirm it fails on the current
+      tree with "file assignments contain duplicate values".
+- [x] Remove parallel mode, keep a quarter of the catalogue routes and the
+      shell routes in `tests/browser/react_shell_hydration_routes.spec.ts`,
+      and move the other quarters into `react_shell_hydration_routes_2.spec.ts`
+      to `_4.spec.ts`, sharing the route partition and test body through
+      `react_shell_hydration_route_helpers.ts`; confirm the balance and
+      hydration inventory tests pass.
+- [x] Run the balance, hydration inventory, CI workflow and guides tests,
+      Prettier, ESLint and the type check, then `cargo xtask check`; resolve
+      every failure.
+- [ ] After checks pass, `git add -A`, commit with a Conventional Commits
+      title of at most 50 characters, and push the branch.
 
 ## Post-merge follow-up (non-blocking)
 
