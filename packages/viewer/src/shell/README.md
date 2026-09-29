@@ -73,6 +73,9 @@ entry's fallback status and eligibility.
 the top-bar Appearance indicator and workspace. `workspace.tsx` consumes that
 shared resolution on every viewport, scheme, component variant, or evidence
 change and passes the effective scheme to controls and comparison presentation.
+`use_comparison.ts` is the single owner of comparison mode: component sibling
+navigation keeps that owner mounted, and the workspace reads its mode directly
+so Props and highlighting remain read-only until Current is selected.
 
 `css.ts` concatenates the standalone stylesheet. Split string modules preserve
 its exact bytes. The package build scopes an embedded stylesheet separately and
@@ -93,7 +96,9 @@ deployment continuity before a read-model route transition.
 `store_browser_actions.ts` owns DOM interaction and
 `store_browser_urls.ts` owns provider-normalized URL policy. Frame documents
 remain static while `frame_event_router.tsx` routes authenticated logical-link
-events from visible sessions in the owning `frame_registry.tsx`.
+events from visible sessions in the owning `frame_registry.tsx`. An unavailable
+frame destination changes only an uncontrolled or standalone display;
+controlled viewers report the frame error and wait for host-owned selection.
 
 Static route parsing accepts a provider-normalized extensionless path only when
 the shared parser derives a kind and id that `byId` contains. Historical

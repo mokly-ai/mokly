@@ -6,6 +6,7 @@ import { readCatalogue } from "../src/catalogue/reader.js";
 import { viewHref } from "../src/navigation/routes.js";
 import { entryWording } from "../src/shell/entry_wording.js";
 import { frameNavigationHref } from "../src/shell/frame_event_router.js";
+import { targetHead } from "../src/shell/head.js";
 import { catalogueNavSections } from "../src/shell/nav_model.js";
 import { routeFromUrl, routeHref } from "../src/shell/routes.js";
 import {
@@ -18,7 +19,9 @@ import { canonicalHistoricalUrl } from "../src/shell/store_browser_urls.js";
 import { withFilterSelection, withRoute } from "../src/shell/store_filters.js";
 import {
   announceNavigation,
+  frameMissState,
   hostRoute,
+  hostSelectionRouteChanged,
 } from "../src/shell/store_host_routes.js";
 import { createInitialShellState } from "../src/shell/store_initial.js";
 import { viewerCatalogue, viewerContext } from "../src/viewer/projection.js";
@@ -201,8 +204,87 @@ test("live host routing carries exact history and announces its entry", () => {
     undefined,
   );
   assert.deepEqual(navigations, [
-    { screenId: historical.entry.id, fragment: "hero" },
+    {
+      screenId: historical.entry.id,
+      snapshotId: historical.snapshotId,
+      fragment: "hero",
+    },
   ]);
+});
+
+test("component variant heads keep the parent heading and shown entry id", () => {
+  const parent = catalogue.byId.get("action");
+  assert.ok(parent?.kind === "component" && !("variantOf" in parent));
+  assert.deepEqual(targetHead(catalogue, { kind: "entry", entry: parent }), {
+    crumbs: [{ label: "Product" }],
+    id: "action",
+    title: "Action",
+  });
+  const variant = catalogue.byId.get("action-default");
+  assert.ok(variant?.kind === "component" && "variantOf" in variant);
+  const head = targetHead(catalogue, { kind: "entry", entry: variant });
+  assert.equal(head.title, "Action");
+  assert.equal(head.id, "action-default");
+  assert.deepEqual(head.crumbs.at(-1), {
+    href: "/view/components/action.html",
+    label: "Action",
+  });
+});
+
+test("unknown frame routes mutate only uncontrolled host display state", () => {
+  const sections = catalogueNavSections(catalogue);
+  const home = routeFromUrl(
+    catalogue,
+    new URL("https://example.test/view/screens/home.html"),
+  );
+  const missing = routeFromUrl(
+    catalogue,
+    new URL("https://example.test/view/missing-entry"),
+  );
+  const state = createInitialShellState(
+    catalogue,
+    context,
+    home.view,
+    undefined,
+  );
+
+  assert.equal(frameMissState(state, missing, sections, true), state);
+  const uncontrolled = frameMissState(state, missing, sections, false);
+  assert.equal(uncontrolled.route.view.kind, "missing");
+  assert.equal(
+    hostSelectionRouteChanged(catalogue, uncontrolled, state.selection),
+    true,
+  );
+  assert.equal(
+    hostSelectionRouteChanged(catalogue, state, state.selection),
+    false,
+  );
+});
+
+test("removed component variants keep catalogue-wide Dark available", () => {
+  const variant = model.components.find(
+    (entry) => entry.kind === "component" && "variantOf" in entry,
+  );
+  assert.ok(variant && "variantOf" in variant);
+  const historical = {
+    ...variant,
+    colorSchemes: ["light", "dark"] as const,
+    changes: {
+      status: "ready" as const,
+      kind: "removed" as const,
+      included: true,
+    },
+  };
+  const removedModel = {
+    ...model,
+    components: model.components.filter((entry) => entry.id !== variant.id),
+    removedEntries: [
+      ...model.removedEntries,
+      { entry: historical, snapshotId: "e".repeat(64) },
+    ],
+  };
+
+  assert.equal(viewerCatalogue(removedModel).hasDarkFragments, true);
 });
 
 test("filter transitions restore their disclosure baseline and route activation reveals its row", () => {

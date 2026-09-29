@@ -5,6 +5,7 @@ import type { CatalogueUsage } from "../src/catalogue/types.js";
 import type { MountedFrame } from "../src/client/frame_adapter.js";
 import {
   frameHasInstance,
+  frameInstanceRef,
   frameTargetKeys,
   matchFrameInstances,
 } from "../src/shell/frame_instances.js";
@@ -109,4 +110,22 @@ test("multi-instance matching rejects one unmatched ref and later evidence loss"
       ),
     { code: "missing-instance" },
   );
+});
+
+test("component variant frames match the documented instance reference shape", () => {
+  const variant = session("desktop", 1);
+  variant.identity = {
+    ...variant.identity,
+    entryId: "action-disabled",
+    variantId: "action-disabled",
+  };
+  const instance: InstanceRef = {
+    screenId: "action-disabled",
+    viewport: "desktop",
+    colorScheme: "light",
+    key: alpha,
+  };
+
+  assert.equal(matchFrameInstances([variant], [instance]).length, 1);
+  assert.deepEqual(frameInstanceRef(variant, alpha), instance);
 });

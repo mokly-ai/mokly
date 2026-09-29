@@ -227,7 +227,7 @@ test("SSR selects a component variant entry in navigation, chrome, and preview",
     baseUrl: "https://catalogue.example",
     defaultSelection: { screenId: "action-second" },
   });
-  assert.match(html, /<h2>Second<\/h2>/);
+  assert.match(html, /<h2>Action<\/h2>/);
   assert.match(html, /#<!-- -->action-second<\/button>/);
   assert.match(
     html,

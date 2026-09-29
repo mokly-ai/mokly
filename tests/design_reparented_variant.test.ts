@@ -1,11 +1,15 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { parse, serializeOuter } from "parse5";
+
+import { homePage as renderHomePage } from "../dist/server/pages.js";
 import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
 import type {
   ManifestEntry,
   ManifestScreen,
 } from "../packages/viewer/dist/registry/types.js";
+import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
 import {
   navLeafVisible,
@@ -18,7 +22,11 @@ import {
 import { defaultSelection } from "../packages/viewer/dist/viewer/selection.js";
 
 import { attribute, byClass, textContent } from "./helpers/design_catalogue.js";
-import { designDocument } from "./helpers/design_catalogue.js";
+import {
+  designCatalogue,
+  designDocument,
+  elements,
+} from "./helpers/design_catalogue.js";
 import {
   filterTargets,
   rowIcon,
@@ -26,6 +34,7 @@ import {
   rowLabels,
   variantToggles,
 } from "./helpers/design_rows.js";
+import { publicShellContext } from "./helpers/public_shell.js";
 
 const common = {
   colorSchemes: ["light"] as const,
@@ -119,4 +128,56 @@ test("reparented mockup shows the runtime's Changes-visible rows", async () => {
     textContent(document),
     /keeps its recorded details under the screen it belonged to/,
   );
+});
+
+test("component mockup rows and glyph match the runtime Components branch", async () => {
+  const compilation = await designCatalogue;
+  const catalogue = createCatalogue(compilation.manifest);
+  const runtime = parse(
+    renderHomePage(
+      catalogue,
+      publicShellContext(catalogue, { base: "", updateVersion: 0 }),
+    ),
+  );
+  const mockup = await designDocument("design-component-overview", "desktop");
+  const section = (document: typeof runtime) => {
+    const found = byClass(document, "mbk-nav-section").find(
+      (candidate) => attribute(candidate, "data-nav-section") === "components",
+    );
+    assert.ok(found);
+    return found;
+  };
+  const runtimeSection = section(runtime);
+  const mockupSection = section(mockup.document);
+  const ids = new Set([
+    "example-action",
+    "example-action-default",
+    "example-action-disabled",
+    "example-action-secondary",
+    "example-toolbar",
+    "example-toolbar-default",
+  ]);
+  const runtimeLabels = byClass(runtimeSection, "mbk-nav-row")
+    .filter(
+      (row) =>
+        rowLabel(row) === "Components" ||
+        ids.has(attribute(row, "data-entry-id") ?? ""),
+    )
+    .map(rowLabel);
+  assert.deepEqual(runtimeLabels, rowLabels(mockupSection).slice(0, 7));
+
+  const runtimeVariant = byClass(runtimeSection, "mbk-nav-row").find(
+    (row) => attribute(row, "data-entry-id") === "example-action-default",
+  );
+  assert.ok(runtimeVariant);
+  const runtimeWrapper = byClass(runtimeVariant, "mbk-nav-ico")[0];
+  assert.ok(runtimeWrapper);
+  const runtimeSvg = elements(
+    runtimeWrapper,
+    (element) => element.tagName === "svg",
+  )[0];
+  assert.ok(runtimeSvg);
+  const [mockupClass, mockupSvg] = rowIcon(mockupSection, "Default");
+  assert.equal(attribute(runtimeWrapper, "class"), mockupClass);
+  assert.equal(serializeOuter(runtimeSvg), mockupSvg);
 });

@@ -18,7 +18,7 @@ import { type RemovedEntrySnapshot } from "./metadata.js";
 export interface Catalogue {
   publicModel?: CatalogueReadModel;
   byId: ReadonlyMap<string, CatalogueManifestEntry>;
-  /** Whether any screen in the catalogue was rendered in the dark scheme. */
+  /** Whether any current or retained view was rendered in the dark scheme. */
   hasDarkFragments: boolean;
   hierarchy: CatalogueHierarchy<ManifestEntry>;
   manifest: CatalogueMetadata;
@@ -27,7 +27,7 @@ export interface Catalogue {
   /** Baseline screens retained only for on-demand comparisons. */
   removedScreens: readonly (ManifestScreen | HistoricalManifestScreen)[];
   removedEntries: readonly RemovedEntrySnapshot[];
-  /** Removed component variants retain their immutable baseline for inspection. */
+  /** Removed component parents retained as schemas for historical variants. */
   removedComponents: readonly CatalogueManifestEntry[];
 }
 
@@ -65,22 +65,31 @@ export function catalogueVariantParent(
   catalogue: Catalogue,
   entry: CatalogueManifestEntry,
 ): CatalogueManifestEntry | undefined {
+  const candidate = catalogueVariantParentEntry(catalogue, entry);
+  return candidate?.kind === entry.kind &&
+    (!("variantOf" in candidate) || candidate.variantOf === undefined)
+    ? candidate
+    : undefined;
+}
+
+/** Resolve the entry named as a variant's parent, even when it is ineligible. */
+export function catalogueVariantParentEntry(
+  catalogue: Catalogue,
+  entry: CatalogueManifestEntry,
+): CatalogueManifestEntry | undefined {
   if (
     (entry.kind !== "screen" && entry.kind !== "component") ||
     !("variantOf" in entry) ||
     entry.variantOf === undefined
   )
     return;
-  const candidate =
+  return (
     catalogue.hierarchy.variantParentById.get(entry.id) ??
     catalogue.removedEntries.find(
       ({ entry: historical }) => historical.id === entry.variantOf,
     )?.entry ??
-    catalogue.byId.get(entry.variantOf);
-  return candidate?.kind === entry.kind &&
-    (!("variantOf" in candidate) || candidate.variantOf === undefined)
-    ? candidate
-    : undefined;
+    catalogue.byId.get(entry.variantOf)
+  );
 }
 
 /** The union of the tags declared across every entry that can carry them. */
@@ -111,8 +120,7 @@ export function createCatalogue(
   for (const { entry } of removedEntries) byId.set(entry.id, entry);
   const hasDarkFragments = [
     ...manifest.entries,
-    ...removedScreens,
-    ...removedComponents,
+    ...removedEntries.map(({ entry }) => entry),
   ].some(
     (entry) =>
       (entry.kind === "screen" ||

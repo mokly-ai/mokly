@@ -5,6 +5,7 @@ import { entryRoute, viewHref } from "../navigation/routes.js";
 import type { ShellContext } from "./context.js";
 import {
   ChevronIcon,
+  ComponentVariantIcon,
   FlowIcon,
   PageIcon,
   ScreenIcon,
@@ -34,7 +35,11 @@ function LeafGlyph(props: {
   if (props.variant) {
     return (
       <span className="mbk-nav-ico variant">
-        <VariantIcon />
+        {props.entryKind === "component" ? (
+          <ComponentVariantIcon />
+        ) : (
+          <VariantIcon />
+        )}
       </span>
     );
   }

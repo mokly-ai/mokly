@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import type {
   CatalogueReadModel,
@@ -49,6 +49,63 @@ test("frame links and saved variants emit only committed navigation", async ({
       },
     }),
     { screenId: "action-disabled" },
+  ]);
+});
+
+async function activateUnknownFrameLink(page: Page) {
+  const link = page
+    .frameLocator('iframe[data-workspace-frame="mobile"]')
+    .getByRole("link", { name: "Open Action" });
+  await link.evaluate((element) =>
+    element.setAttribute("data-mokly-link", "missing-entry"),
+  );
+  await link.click();
+}
+
+test("an uncontrolled frame miss can be replaced by its committed selection", async ({
+  page,
+}) => {
+  await page.evaluate(() => window.viewerHarness.start("one"));
+  await activateUnknownFrameLink(page);
+  await expect(
+    page.getByRole("heading", { name: "Item not found", exact: true }),
+  ).toBeVisible();
+
+  await page.evaluate(() =>
+    window.viewerHarness.get("one").ref.current.select({ screenId: "home" }),
+  );
+  await expect(
+    page.getByRole("heading", { name: "Home", exact: true }),
+  ).toBeVisible();
+});
+
+test("a controlled frame miss reports only an error and keeps its display", async ({
+  page,
+}) => {
+  await page.evaluate(() =>
+    window.viewerHarness.start("one", { controlled: true }),
+  );
+  await activateUnknownFrameLink(page);
+
+  await expect(
+    page.getByRole("heading", { name: "Home", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() =>
+      window.viewerHarness
+        .get("one")
+        .events.filter((event) =>
+          ["error", "selection", "navigate"].includes(event.name),
+        ),
+    ),
+  ).toEqual([
+    {
+      name: "error",
+      value: {
+        code: "frame",
+        message: "The requested catalogue selection is unavailable.",
+      },
+    },
   ]);
 });
 

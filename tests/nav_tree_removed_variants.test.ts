@@ -8,11 +8,13 @@ import type {
   ManifestV7,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
+import { targetHead } from "../packages/viewer/dist/shell/head.js";
 import {
   buildNavSections,
   type NavLeafNode,
   type NavNode,
 } from "../packages/viewer/dist/shell/nav_tree.js";
+import { toRouteTarget } from "../packages/viewer/dist/shell/target.js";
 
 const removed = {
   entryId: "welcome-error",
@@ -67,6 +69,28 @@ test("removed variants remain represented exactly once across parent transitions
       current.label,
     );
   }
+});
+
+test("an ineligible former parent remains a plain-text breadcrumb", () => {
+  const removedVariant = variant("welcome-error", "Save failed", "welcome", [
+    "Example",
+    "Screens",
+  ]);
+  const catalogue = createCatalogue(
+    manifest([
+      screen("workspace", "Workspace", ["Example", "Screens"]),
+      variant("welcome", "Welcome", "workspace", ["Example", "Screens"]),
+    ]),
+    [{ entry: removedVariant, snapshotId: "d".repeat(64) }],
+  );
+  const target = toRouteTarget(removedVariant);
+  assert.ok(target);
+
+  assert.deepEqual(targetHead(catalogue, target).crumbs, [
+    { label: "Example" },
+    { label: "Screens" },
+    { label: "Welcome" },
+  ]);
 });
 
 function findLeaf(

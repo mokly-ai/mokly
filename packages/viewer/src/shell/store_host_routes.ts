@@ -17,6 +17,7 @@ import type { ShellContext } from "./context.js";
 import { disclosurePath } from "./nav_model.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import { routeFromUrl, type ShellRoute } from "./routes.js";
+import { sameShellRoute } from "./store_browser_routes.js";
 import type { EmbeddedShellEnvironment } from "./store_host.js";
 import { openDisclosures, type ShellState } from "./store_state.js";
 
@@ -48,6 +49,29 @@ export function hostRoute(
     ...(selection.snapshotId ? { snapshot: selection.snapshotId } : {}),
     ...(fragment ? { fragment } : {}),
   };
+}
+
+/** Whether committing a selection must reinstall its route-owned display. */
+export function hostSelectionRouteChanged(
+  catalogue: Catalogue,
+  state: ShellState,
+  selection: ViewerSelection,
+  fragment = state.route.fragment,
+): boolean {
+  return !sameShellRoute(
+    state.route,
+    hostRoute(catalogue, selection, fragment),
+  );
+}
+
+/** Apply an unavailable frame destination only when the Viewer owns selection. */
+export function frameMissState(
+  state: ShellState,
+  route: ShellRoute,
+  sections: readonly NavSectionNode[],
+  controlled: boolean,
+): ShellState {
+  return controlled ? state : withHostRoute(state, route, sections);
 }
 
 export function withHostRoute(
@@ -93,6 +117,7 @@ export function announceNavigation(
   if (!entry) return;
   environment.events().onScreenNavigate?.({
     screenId: entry.id,
+    ...(selection.snapshotId ? { snapshotId: selection.snapshotId } : {}),
     ...(fragment ? { fragment } : {}),
     ...(pending?.navigation ? { navigation: pending.navigation } : {}),
   });

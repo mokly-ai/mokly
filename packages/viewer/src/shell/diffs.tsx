@@ -1,18 +1,17 @@
 /** On-demand React comparison controls inside the catalogue. */
 
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo } from "react";
 import type { ReactNode } from "react";
 
 import type { ViewRouteKind } from "../navigation/routes.js";
 
-import type { LoadedComparison } from "./comparison_request.js";
 import {
   selectedComparisonDocuments,
   selectedComparisonViews,
 } from "./comparison_selection.js";
 import { ComparisonToolbar } from "./comparison_toolbar.js";
 import { ComparisonViews } from "./comparison_views.js";
-import { useComparison, type ComparisonMode } from "./use_comparison.js";
+import { useComparison, type ComparisonController } from "./use_comparison.js";
 import { useComparisonDocuments } from "./use_comparison_documents.js";
 import { useScrollTogether } from "./use_scroll_together.js";
 
@@ -23,34 +22,44 @@ export function DiffScreen({
   entryId,
   entryKind,
   eligible = true,
-  onComparisonChange,
-  onModeChange,
-  owner,
 }: {
   children: ReactNode;
   effectiveColorScheme?: "dark" | "light";
   entryId: string;
   entryKind: ViewRouteKind;
   eligible?: boolean;
-  onComparisonChange?(loaded: LoadedComparison | undefined): void;
-  onModeChange?(mode: ComparisonMode): void;
-  owner?: string;
 }) {
   const comparison = useComparison({
     ...(effectiveColorScheme ? { effectiveColorScheme } : {}),
     eligible,
     entryId,
-    ...(owner ? { owner } : {}),
   });
-  const comparisonCallback = useRef(onComparisonChange);
-  const modeCallback = useRef(onModeChange);
-  comparisonCallback.current = onComparisonChange;
-  modeCallback.current = onModeChange;
-  useEffect(() => modeCallback.current?.(comparison.mode), [comparison.mode]);
-  useEffect(
-    () => comparisonCallback.current?.(comparison.loaded),
-    [comparison.loaded],
+  return (
+    <ControlledDiffScreen
+      comparison={comparison}
+      entryId={entryId}
+      entryKind={entryKind}
+      eligible={eligible}
+    >
+      {children}
+    </ControlledDiffScreen>
   );
+}
+
+/** Render comparison chrome around a controller owned by the workspace. */
+export function ControlledDiffScreen({
+  children,
+  comparison,
+  entryId,
+  entryKind,
+  eligible = true,
+}: {
+  children: ReactNode;
+  comparison: ComparisonController;
+  entryId: string;
+  entryKind: ViewRouteKind;
+  eligible?: boolean;
+}) {
   const views = useMemo(
     () =>
       comparison.loaded && comparison.presentation

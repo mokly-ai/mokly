@@ -5,16 +5,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { canonicalJson } from "../components/data.js";
 
 import type { Catalogue } from "./catalogue.js";
-import type { LoadedComparison } from "./comparison_request.js";
 import { useComponentControls } from "./component_controls.js";
 import type { ShellContext } from "./context.js";
-import { DiffScreen } from "./diffs.js";
+import { ControlledDiffScreen } from "./diffs.js";
 import { ScreenHead, targetHead } from "./head.js";
 import { Inspector } from "./inspector.js";
 import { useInspectorResize } from "./inspector_resize.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
 import { useOptionalShellStore } from "./store_context.js";
-import type { ComparisonMode } from "./use_comparison.js";
+import { useComparison } from "./use_comparison.js";
 import { useWorkspaceUsage } from "./use_workspace_usage.js";
 import { useActiveWorkspace } from "./workspace_context.js";
 import { WorkspaceControls } from "./workspace_controls.js";
@@ -56,12 +55,13 @@ export function ComponentWorkspace({
   const viewport = store?.state.selection.viewport ?? "both";
   const colorScheme = store?.state.selection.colorScheme ?? "light";
   const savedViews = resolvedView.views;
-  const [comparisonMode, setComparisonMode] =
-    useState<ComparisonMode>("current");
-  const [loadedComparison, setLoadedComparison] = useState<
-    LoadedComparison | undefined
-  >();
-  const comparing = comparisonMode !== "current";
+  const comparison = useComparison({
+    effectiveColorScheme: resolvedView.colorScheme,
+    eligible: Boolean(data.comparisons && presentation.comparisonEligible),
+    entryId: variantId ?? entry.id,
+    ...(data.component ? { owner: data.component.id } : {}),
+  });
+  const comparing = comparison.mode !== "current";
   const controls = useComponentControls({
     comparing,
     contexts: savedViews,
@@ -108,8 +108,6 @@ export function ComponentWorkspace({
   });
 
   useEffect(() => {
-    setComparisonMode("current");
-    setLoadedComparison(undefined);
     setActiveViewport(
       store?.state.route.viewport === "mobile" ? "mobile" : "desktop",
     );
@@ -228,17 +226,14 @@ export function ComponentWorkspace({
           {preview ? (
             <RemovedPreviewStage data={preview} />
           ) : data.comparisons ? (
-            <DiffScreen
-              effectiveColorScheme={resolvedView.colorScheme}
+            <ControlledDiffScreen
+              comparison={comparison}
               entryId={variantId ?? entry.id}
               entryKind={entry.kind}
               eligible={presentation.comparisonEligible}
-              onComparisonChange={setLoadedComparison}
-              onModeChange={setComparisonMode}
-              {...(data.component ? { owner: data.component.id } : {})}
             >
               {stage}
-            </DiffScreen>
+            </ControlledDiffScreen>
           ) : (
             stage
           )}
@@ -267,8 +262,8 @@ export function ComponentWorkspace({
             details: (
               <WorkspaceEvidence
                 data={data}
-                {...(loadedComparison
-                  ? { loaded: loadedComparison.result }
+                {...(comparison.loaded
+                  ? { loaded: comparison.loaded.result }
                   : {})}
                 {...(variantId ? { variantId } : {})}
               />

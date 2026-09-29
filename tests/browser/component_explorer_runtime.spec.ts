@@ -29,12 +29,15 @@ test.beforeAll(async () => {
           '<button className="revised" data-viewport=',
         )
         .replace(
-          '{ id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }]',
-          '{ id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }, { id: "action-new", title: "New", props: { label: "New" } }]',
+          '{ id: "action-disabled", title: "Disabled", description: "The saved action is unavailable.", props: { label: "Continue", disabled: true } }]',
+          '{ id: "action-disabled", title: "Disabled", description: "The saved action is unavailable.", props: { label: "Continue", disabled: true } }, { id: "action-new", title: "New", props: { label: "New" } }]',
         ),
     componentEntrySource({
       body: '<pane.Component><p>Screen content</p><action.Component label="Slot action" /></pane.Component><action.Component moklyInstance="footer" label="Finish" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><MockLink to="action">Open Action</MockLink><MockLink to="action-disabled">Open Disabled Action</MockLink>',
-    }),
+    }).replace(
+      '{ id: "action-disabled", title: "Disabled", props:',
+      '{ id: "action-disabled", title: "Disabled", description: "The saved action is unavailable.", props:',
+    ),
   );
   const compared = await compareReview(
     fixture.after,
@@ -108,13 +111,20 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
   await variants.getByRole("link", { name: "Disabled", exact: true }).click();
   await expect(page).toHaveURL(/\/view\/components\/action-disabled\.html$/);
   await expect(
-    page.getByRole("heading", { name: "Disabled", exact: true }),
+    page.getByRole("heading", { name: "Action", exact: true }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Copy ID action-disabled" }),
+  ).toHaveText("#action-disabled");
+  await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
   await expect(
     page.getByLabel("Catalogue location").getByRole("link"),
   ).toHaveText("Action");
   await expect(page.locator('[data-inspector-panel="details"]')).toContainText(
     "Variant ofAction",
+  );
+  await expect(page.locator('[data-inspector-panel="details"]')).toContainText(
+    "The saved action is unavailable.",
   );
   await expect(mobile.getByRole("button", { name: "Continue" })).toBeDisabled();
   await page.getByRole("tab", { name: "Props", exact: true }).click();
@@ -171,12 +181,55 @@ test("a generated MockLink opens a component variant entry", async ({
 
   await expect(page).toHaveURL(/\/view\/components\/action-disabled\.html$/);
   await expect(
-    page.getByRole("heading", { name: "Disabled", exact: true }),
+    page.getByRole("heading", { name: "Action", exact: true }),
   ).toBeVisible();
   await expect(
     page
       .frameLocator('[data-workspace-frame="mobile"]')
       .getByRole("button", { name: "Continue" }),
+  ).toBeDisabled();
+});
+
+test("a standalone frame miss keeps navigation available for a later route", async ({
+  page,
+}) => {
+  await page.goto(`${server.url}/view/screens/home.html`);
+  const link = page
+    .frameLocator('[data-workspace-frame="mobile"]')
+    .getByRole("link", { name: "Open Disabled Action", exact: true });
+  await link.evaluate((element) =>
+    element.setAttribute("data-mokly-link", "missing-entry"),
+  );
+  await link.click();
+  await expect(page).toHaveURL(/\/view\/missing-entry$/);
+  await expect(
+    page.getByRole("heading", { name: "Item not found", exact: true }),
+  ).toBeVisible();
+
+  await page.getByRole("link", { name: "Home", exact: true }).click();
+  await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+  await expect(
+    page.getByRole("heading", { name: "Home", exact: true }),
+  ).toBeVisible();
+});
+
+test("Side by side stays authoritative while switching sibling variants", async ({
+  page,
+}) => {
+  await page.goto(`${server.url}/view/components/action-default.html`);
+  await page.getByLabel("Viewport", { exact: true }).selectOption("mobile");
+  await loadComparison(page, "Side by side");
+
+  await chooseVariant(page, "Disabled");
+  await expect(
+    page.getByRole("button", { name: "Side by side" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("tab", { name: "Props", exact: true }).click();
+  await expect(page.locator("[data-controls-status]")).toHaveText(
+    "Comparisons show the saved variant. Return to Current to edit props.",
+  );
+  await expect(
+    page.getByRole("button", { name: "Highlight components", exact: true }),
   ).toBeDisabled();
 });
 

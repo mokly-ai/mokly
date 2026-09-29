@@ -164,7 +164,9 @@ or frame adapter intentionally remounts the viewer and cancels pending work.
 `screenId` names one catalogue entry. Screen and component variants use their
 own global entry IDs, just like parents, pages and flows; there is no separate
 variant selection field. The component variant bar navigates between those
-entry IDs, so controlled hosts receive ordinary `screenId` proposals.
+entry IDs, so controlled hosts receive ordinary `screenId` proposals. A
+component variant page keeps the parent component title as its heading while
+the ID chip, status, URL, and Details describe the selected variant entry.
 
 Use `defaultSelection` for an uncontrolled viewer:
 
@@ -485,6 +487,15 @@ consumers.
 - [`src/shell/workspace_entry.ts`](./src/shell/workspace_entry.ts) and
   [`src/shell/workspace_variants.ts`](./src/shell/workspace_variants.ts) —
   routed workspace identity and sibling component-variant entries
+- [`src/shell/use_comparison.ts`](./src/shell/use_comparison.ts) and
+  [`src/shell/diffs.tsx`](./src/shell/diffs.tsx) — the single comparison-mode
+  owner and its current/comparison presentation
+- [`src/shell/store_host.ts`](./src/shell/store_host.ts) and
+  [`src/shell/store_host_routes.ts`](./src/shell/store_host_routes.ts) —
+  controlled and uncontrolled selection commits, frame-link misses, and
+  navigation events
+- [`src/shell/frame_instances.ts`](./src/shell/frame_instances.ts) — exact
+  documented `InstanceRef` matching against mounted preview frames
 - [`src/standalone/bootstrap.ts`](./src/standalone/bootstrap.ts) and
   [`src/standalone/bootstrap_validation.ts`](./src/standalone/bootstrap_validation.ts)
   — standalone hydration projection and validation

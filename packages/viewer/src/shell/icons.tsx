@@ -111,6 +111,24 @@ export function VariantIcon(props: { size?: number }) {
   );
 }
 
+/** A component variant drawn over the partial outline of its parent kind. */
+export function ComponentVariantIcon(props: { size?: number }) {
+  const size = props.size ?? 15;
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height={size}
+      stroke="currentColor"
+      viewBox="0 0 16 16"
+      width={size}
+    >
+      <path d="M6 4.5V3L10.5.5l5 2.9v5.8L12 11.3" strokeLinecap="butt" />
+      <path d="m6 4.5 5 2.9v5.3l-5 2.9-5-2.9V7.4l5-2.9Zm0 5.8 5-2.9M6 10.3v5.3M6 10.3 1 7.4" />
+    </svg>
+  );
+}
+
 /** The search affordance at the leading edge of the top bar's search field. */
 export function SearchIcon(props: { size?: number }) {
   return (

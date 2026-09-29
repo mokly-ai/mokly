@@ -5,7 +5,11 @@ import type { ReactNode } from "react";
 
 import { viewHref } from "../navigation/routes.js";
 
-import { catalogueVariantParent, type Catalogue } from "./catalogue.js";
+import {
+  catalogueVariantParent,
+  catalogueVariantParentEntry,
+  type Catalogue,
+} from "./catalogue.js";
 import { structuredCrumbTrail } from "./nav_tree.js";
 import type { CatalogueCrumb } from "./nav_tree.js";
 import { useOptionalShellStore } from "./store_context.js";
@@ -144,24 +148,35 @@ export function targetHead(
       ?.entry.navPath.map((label) => ({ label })) ??
     structuredCrumbTrail(catalogue.hierarchy, target.entry.id);
   const parent = catalogueVariantParent(catalogue, target.entry);
+  const parentEntry = catalogueVariantParentEntry(catalogue, target.entry);
   const parentSnapshot = parent
     ? catalogue.removedEntries.find(({ entry }) => entry.id === parent.id)
         ?.snapshotId
     : undefined;
   return {
     crumbs:
-      parent === undefined
+      parentEntry === undefined
         ? ancestors
         : [
             ...ancestors,
             {
-              href: `${viewHref(parent.kind, parent.id)}${
-                parentSnapshot ? `?snapshot=${parentSnapshot}` : ""
-              }`,
-              label: parent.title,
+              ...(parent
+                ? {
+                    href: `${viewHref(parent.kind, parent.id)}${
+                      parentSnapshot ? `?snapshot=${parentSnapshot}` : ""
+                    }`,
+                  }
+                : {}),
+              label: parentEntry.title,
             },
           ],
     id: target.entry.id,
-    title: target.entry.title,
+    title:
+      target.entry.kind === "component" &&
+      "variantOf" in target.entry &&
+      target.entry.variantOf !== undefined &&
+      parentEntry?.kind === "component"
+        ? parentEntry.title
+        : target.entry.title,
   };
 }

@@ -192,7 +192,6 @@ for (const cross of [false, true]) {
         page,
         {
           screenId: variant.id,
-          variantId: variant.id,
           key: usage.instances[0]!.key,
           viewport: "desktop",
           colorScheme: "light",

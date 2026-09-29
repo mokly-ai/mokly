@@ -34,6 +34,10 @@ function routeNavigation(
   navigation: FrameNavigation,
 ): void {
   const href = frameNavigationHref(store.catalogue, navigation);
+  if (!store.catalogue.byId.has(navigation.id)) {
+    store.navigateFrame(href, navigation);
+    return;
+  }
   const target = navigation.target;
   if (
     target.kind === "blank" ||

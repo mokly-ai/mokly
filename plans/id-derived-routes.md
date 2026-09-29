@@ -679,29 +679,29 @@ Tags: mockup
 
 Tags: ui
 
-- [ ] Finding 3: the workspace reads the single comparison mode owned by
+- [x] Finding 3: the workspace reads the single comparison mode owned by
       `useComparison` instead of a copy; a browser test switches sibling
       variants in Side by side and asserts the Props return-to-Current
       message and disabled highlighting.
-- [ ] Finding 5: unknown frame-link ids show the missing view in
+- [x] Finding 5: unknown frame-link ids show the missing view in
       uncontrolled and standalone shells and a later selection re-applies its
       route; a controlled Viewer emits only `onError` and keeps its display;
       unit and browser tests for both modes.
-- [ ] Finding 4: drop `InstanceRef.variantId` and frame matching by variant;
+- [x] Finding 4: drop `InstanceRef.variantId` and frame matching by variant;
       `onScreenNavigate` carries `snapshotId` when historical content was
       committed; tests build references from the documented shape and check
       the live event payload.
-- [ ] Finding 6: component variant rows use the component-shaped variant icon
+- [x] Finding 6: component variant rows use the component-shaped variant icon
       from the Milestone 10 mockups; extend the mockup-versus-runtime row test
       to the Components section.
-- [ ] Component variant entry pages use the parent component's title as the
+- [x] Component variant entry pages use the parent component's title as the
       heading, with the id chip, status, and Details describing the shown
       variant entry, matching the Milestone 10 mockups; test.
-- [ ] Finding 26: dark-scheme availability counts removed component variants;
+- [x] Finding 26: dark-scheme availability counts removed component variants;
       test.
-- [ ] Finding 27: a removed variant whose former parent is not an eligible
+- [x] Finding 27: a removed variant whose former parent is not an eligible
       parent shows the former parent's title as a plain-text crumb; test.
-- [ ] Build, lint, format, typecheck, full unit and browser suites, and an
+- [x] Build, lint, format, typecheck, full unit and browser suites, and an
       `npm run dev` smoke with screenshots; commit.
 
 ## Milestone 15: Follow-up verification, close-out, and review

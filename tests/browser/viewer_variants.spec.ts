@@ -358,7 +358,6 @@ for (const cross of [false, true]) {
     if (view.usage.status !== "ready") throw new Error("Expected ready usage");
     const instance: InstanceRef = {
       screenId: "pane-second",
-      variantId: "pane-second",
       viewport: "desktop",
       colorScheme: "light",
       key: view.usage.instances[0]!.key,
@@ -377,7 +376,7 @@ for (const cross of [false, true]) {
     );
     const outcomes = await page.evaluate(async (instance) => {
       const viewer = window.viewerHarness.get("one").ref.current;
-      const mismatched = { ...instance, variantId: "pane-default" };
+      const mismatched = { ...instance, screenId: "pane-default" };
       return Promise.all([
         viewer.highlightInstance(mismatched).then(
           () => "resolved",

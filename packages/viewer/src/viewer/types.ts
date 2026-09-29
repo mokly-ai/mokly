@@ -24,7 +24,6 @@ export type CatalogueSource =
   CatalogueReadModel | string | URL | CatalogueFetcher;
 export interface InstanceRef {
   screenId: string;
-  variantId?: string;
   /** Required for a flow occurrence; absent for a standalone screen or component. */
   stepIndex?: number;
   viewport: "mobile" | "desktop";
@@ -48,6 +47,8 @@ export interface MarkerState {
 }
 export interface ScreenNavigateEvent {
   screenId: string;
+  /** Present exactly when the committed destination is historical content. */
+  snapshotId?: string;
   fragment?: string;
   navigation?: FrameNavigation;
 }

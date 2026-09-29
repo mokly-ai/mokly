@@ -51,6 +51,39 @@ for (const adapter of ["same-origin", "cross"]) {
         () => (window as unknown as { frameMessages: string[] }).frameMessages,
       ),
     ).toEqual([]);
+    const snapshotId = await page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            fixture: {
+              catalogue: {
+                removedEntries: {
+                  entry: { id: string };
+                  snapshotId?: string;
+                }[];
+              };
+            };
+          }
+        ).fixture.catalogue.removedEntries.find(
+          ({ entry }) => entry.id === "removed-screen",
+        )?.snapshotId,
+    );
+    expect(snapshotId).toBeDefined();
+    expect(
+      await page.evaluate(
+        () =>
+          (
+            window as unknown as {
+              viewerNavigations: Record<string, unknown>[];
+            }
+          ).viewerNavigations,
+      ),
+    ).toEqual([
+      {
+        screenId: "removed-screen",
+        snapshotId,
+      },
+    ]);
   });
 }
 

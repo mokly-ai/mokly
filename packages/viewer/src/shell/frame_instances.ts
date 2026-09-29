@@ -19,7 +19,6 @@ export function matchesFrameInstance(
   const identity = session.identity;
   return (
     identity.entryId === instance.screenId &&
-    identity.variantId === instance.variantId &&
     identity.stepIndex === instance.stepIndex &&
     identity.viewport === instance.viewport &&
     identity.colorScheme === instance.colorScheme
@@ -92,7 +91,6 @@ export function frameInstanceRef(
     viewport: identity.viewport,
     colorScheme: identity.colorScheme,
     key,
-    ...(identity.variantId ? { variantId: identity.variantId } : {}),
     ...(identity.stepIndex === undefined
       ? {}
       : { stepIndex: identity.stepIndex }),
