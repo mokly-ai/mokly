@@ -49,6 +49,10 @@ when the historical primary file is absent, never when it is invalid.
   shared hydrated shell.
 - [Live viewer capabilities](./mokly-live-capabilities.md) — private Serve
   evidence, updates, recovery, previews and on-demand rendering for React.
+- [Watched Serve rebuild status](./mokly-rebuild-status.md) — approved private
+  status, ordering, failure sanitizing and last-good shell behavior.
+- [Rebuild status design](./mokly-rebuild-status-design.md) — required notice,
+  details and layout-stable progress states for the design catalogue.
 - [Viewer appearance](./mokly-viewer-appearance.md) — implemented
   Auto/Light/Dark support: one standalone Appearance control and a host-supplied
   embedded theme beside independent preview controls.

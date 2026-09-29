@@ -461,7 +461,10 @@ reload lifecycle. Private tokens/evidence never enter catalogue JSON, and hosts
 do not need undocumented manifest access. The
 [live capability contract](./mokly-live-capabilities.md) defines descriptor
 privacy, route and revision fencing, cancellation, recovery and export
-omission.
+omission. Watched Serve's private
+[rebuild status](./mokly-rebuild-status.md) uses the same boundary to present
+last-good source failures on every standalone shell route; embedded viewers and
+export never receive it.
 
 ## SSR, Hydration And Host Independence
 

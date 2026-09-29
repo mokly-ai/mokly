@@ -81,20 +81,90 @@ consumer message.
 
 ## Browser Bundle
 
-The bundle is the same consumer graph the build loads, with the same module
-resolution, React peer resolution and loaders, compiled by esbuild with
-`platform: "browser"` and `format: "esm"` together with one package-owned
-browser entry. It is built lazily on the first Live request per catalogue
-generation, cached in memory, retained for the previous generation while
-frames unload, and invalidated by every watched rebuild and configuration
-change. Concurrent requests coalesce. The state is `idle`, `building`,
-`ready`, or `failed`; a rejected generation is not retried, while a later
-generation gets an independent attempt. Node built-ins and Node-only consumer
-modules fail with one typed `interactive-bundle` diagnostic naming the
-importing module; Static remains available. Builds appear as
+The bundle is the browser projection of the same accepted consumer graph, with
+the same configured aliases, conditions, loaders, package roots, extensions,
+React peer resolution, and one package-owned browser entry. Esbuild uses
+`platform: "browser"` and `format: "esm"`. It is built lazily on the first Live
+request per catalogue generation, cached in memory, and retained with one
+predecessor while frames unload. Concurrent requests coalesce. The state is
+`idle`, `building`, `ready`, or `failed`; a rejected generation is not retried,
+while a later generation gets an independent attempt. Node built-ins and
+Node-only consumer modules fail with one typed `interactive-bundle` diagnostic
+naming the importing module; Static remains available. Builds appear as
 `interactive.bundle` spans in `--debug-timings`. Bundle bytes remain in memory
 and never enter the source inventory, generated output, `check`, export, or
 publication.
+
+### Generation-pinned repository sources
+
+When Serve resolves `interactive: "serve"`, the Node consumer-graph build
+captures the exact bytes returned for every repository-owned file input before
+tree shaking. The capture uses the source-inventory ownership rule: entry,
+renderer, transformer, local helper, JSON, and configured-loader inputs are
+included; Mokly runtime files and installed-package files are not. Logical and
+physical in-repository aliases address the same immutable blob. Capture occurs
+in the same load that produces the accepted graph, never in a second disk pass,
+and is sealed only after graph evaluation and registry/index validation
+succeed. A capture failure rejects that candidate generation.
+
+`ComponentRuntime.interactiveSources` carries the decoded capture. The existing
+runtime IPC message carries its exact wire projection:
+
+```ts
+interface InteractiveSourceCaptureMessage {
+  files: readonly {
+    bytes: string; // canonical padded RFC 4648 base64
+    paths: readonly string[];
+  }[];
+}
+```
+
+Every path is a safe repository-relative POSIX path. Paths within a blob and
+blobs by their first path are strictly sorted; both are nonempty; no path
+occurs twice. The child validates the exact shape, canonical base64, and paths
+before exposing the runtime. With `interactive: "serve"` the field is required;
+with `interactive: "off"` it is absent. Build, Check, export, publication, and
+an off Serve neither install the capture hook nor retain or transfer source
+bytes.
+
+The browser compiler uses the accepted `config.entryModules`; it never runs
+entry discovery again. Relative, absolute, or aliased resolution that lands in
+the repository can read only the capture, including extension and index-file
+selection. It never probes repository-owned module or loader-input files to
+fill a miss, so creating, editing, deleting, renaming, or breaking one after
+acceptance cannot change or fail that generation's Live bundle. Bare
+installed-package imports, their package-relative files, Mokly's runtime, and
+consumer React peers continue to resolve normally from the configured package
+roots and are deliberately not pinned. Resolution-only repository inputs that
+esbuild reads outside module loading—such as `tsconfig.json` path, base URL, or
+JSX settings and repository-package `package.json` imports, exports, or browser
+fields—are not captured and are reread from disk by the lazy browser build, so
+an edit after acceptance can make Live resolve differently or fail until the
+next accepted generation; module and loader-input bytes remain pinned.
+
+If browser-specific resolution requests a repository-owned module absent from
+the accepted capture, compilation fails with typed code `interactive-bundle`,
+typed reason `source-not-captured`, and repository-relative `module` and
+optional `importer` fields. Its terminal message is
+`accepted Live sources do not contain <module>` followed by
+` (imported by <importer>)` when known. Classification uses the typed reason,
+never message matching. The generation enters the ordinary cached `failed`
+Live state and returns its existing consumer-text-free 503; its Static
+documents and the watched rebuild status remain successful.
+
+The interactive child retains captures for exactly its current and immediately
+previous generations and evicts a capture with that generation's bundle state
+when a third arrives. Reload/restart generations reuse the same capture object;
+distinct generation records do not copy it. Eviction aborts an obsolete
+in-flight compiler and releases its capture after the request settles. The
+supervisor retains only the current capture needed to recover a child. If `Sg`
+is the sum of distinct decoded blobs for generation `g`, steady retained raw
+bytes are bounded by `Scurrent + Sprevious` in the child and `Scurrent` in the
+parent; candidate preparation adds only its candidate capture. IPC adds one
+transient base64 projection totaling `sum(4 * ceil(Sfile / 3))` bytes plus path
+and JSON metadata linear in the captured inputs, discarded after decoding.
+There is no lower arbitrary byte ceiling: the accepted consumer input itself
+defines `Sg`, while generation count and copies remain bounded as above.
 
 The browser projection of the automatic development JSX runtime preserves
 esbuild's `isStaticChildren` signal: its `jsxDEV` shim delegates static sibling
@@ -135,6 +205,13 @@ descriptor transport, watched generation rollover, diagnostics, timings,
 typed 503 states, 404 for ineligible entries, and bundle invalidation. Bundle
 tests cover the real example graph, consumer React resolution, concurrent
 coalescing, automatic JSX semantics, and typed Node-only import failures.
+Pinned-source tests accept generation G, then edit, delete, and syntactically
+break a source before G's first Live request and require byte-identical bundle
+output from G; a later accepted generation must see the edit. Tests also cover
+entry-discovery pinning, symlink retargeting, installed-package resolution, a
+typed missing-capture failure that leaves Static available, strict IPC
+validation, reuse and eviction, complete absence when interactive is off, and
+the documented resolution-metadata limitation.
 
 ## Related Docs
 

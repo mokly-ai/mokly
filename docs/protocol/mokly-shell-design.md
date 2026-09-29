@@ -40,6 +40,11 @@ breadcrumbs are text even after their parents are deleted. Ordinary
 publications omit the Changes filter and comparison band while preserving the
 same navigation, search, tags, and screen variants.
 
+The approved [rebuild status design](./mokly-rebuild-status-design.md) extends
+watched Serve with one full-width shell notice and delayed, layout-stable
+progress. Its full-surface, icon, responsive, accessibility, and no-left-rail
+rules are binding on the later mockups and implementation.
+
 The comparison designs depict the implemented
 [comparison pane contract](./mokly-comparison-panes.md): Overlay and Difference
 hold both versions in one device chrome, or in one bordered frame for a saved

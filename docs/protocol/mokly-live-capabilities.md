@@ -34,6 +34,8 @@ The descriptor contains:
 - an optional temporary-render capability owned by the CLI host;
 - an optional interactive descriptor `{ generation, port, origin?, state }`,
   where state is `idle | building | ready | failed`;
+- optional watched-Serve `rebuildStatus`, defined by the private
+  [rebuild status contract](./mokly-rebuild-status.md);
 - optional route-scoped `WorkspaceData` for screen and component routes.
 
 The workspace copy omits `renderCapability`. React invokes authenticated
@@ -180,6 +182,10 @@ descriptor is not `ready`, presents preparing while it awaits, adopts the
 validated result into the same descriptor, and mounts the cross-origin frame
 only after ready. Events, preparation results and adopted evidence cannot move
 one generation from `ready` or `failed` back to `building`.
+
+Watched Serve also replays private `rebuild` events. The CLI host validates
+and the viewer adopts that descriptor field and event under the status
+contract's sequence and update-version fences; other hosts never receive it.
 
 ## Watched Updates
 

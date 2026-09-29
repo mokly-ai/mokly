@@ -67,11 +67,11 @@ Protocol owner: `docs/protocol/mokly-rebuild-status.md` (created in Milestone
 Out of scope: interactive views review findings 2 (`MockLink asChild` in Live)
 and 3 (forwarded app origins), which await the user's decision.
 
-## Milestone 1: Define the rebuild status contract
+## Milestone 1: Define the rebuild status contract — completed
 
 Documentation only. Every later milestone implements this contract.
 
-- [ ] Create `docs/protocol/mokly-rebuild-status.md` (about 250 lines or
+- [x] Create `docs/protocol/mokly-rebuild-status.md` (about 250 lines or
       fewer) defining: the status model and its exact JSON shape and bounds;
       which watch actions set, clear and show progress; ordering against update
       versions, so a reloaded page never shows a cleared failure or misses a
@@ -82,28 +82,28 @@ Documentation only. Every later milestone implements this contract.
       in unwatched Serve, export, publication, static evidence and embedded
       hosts; and failure states such as an invalid envelope, oversized detail
       and a child restart while failed.
-- [ ] Create `docs/protocol/mokly-rebuild-status-design.md` describing the
+- [x] Create `docs/protocol/mokly-rebuild-status-design.md` describing the
       states the mockups must depict: the failure notice on a screen, the
       notice with its details open, progress without a failure, progress while
       failed, and the notice on a component workspace in Live; the copy;
       accessibility; the no left-edge accent rule; and the constraint that
       progress never shifts layout. Leave exact progress placement to
       Milestone 2.
-- [ ] Define generation-pinned Live sources in
+- [x] Define generation-pinned Live sources in
       `docs/protocol/mokly-interactive-views-serve.md`: what is captured and
       when, retention, transfer to the watched child, resolution of installed
       packages, the typed diagnostic for a missing capture, no capture when
       `interactive` is `off`, and that editing, deleting or breaking a file
       after acceptance cannot change or fail an accepted generation's Live
       bundle.
-- [ ] Cross-reference the new contract from `mokly-watch.md` (failed rebuilds
+- [x] Cross-reference the new contract from `mokly-watch.md` (failed rebuilds
       are also announced to browsers), `mokly-live-capabilities.md` (descriptor
       field, event and CLI host adoption), `mokly-viewer.md` and
       `mokly-shell-design.md`, keeping each edit short because
       `mokly-watch.md` is already long.
-- [ ] Add both new docs to `docs/protocol/README.md`. Keep the packaged guides
+- [x] Add both new docs to `docs/protocol/README.md`. Keep the packaged guides
       under `docs/guides` unchanged until the implementing milestones.
-- [ ] Validate Markdown with `npm run format:check`, check local link targets,
+- [x] Validate Markdown with `npm run format:check`, check local link targets,
       review the diff, commit and push.
 
 ## Milestone 2: Design the rebuild status states

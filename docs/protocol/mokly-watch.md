@@ -186,7 +186,9 @@ temporarily dangling resource remains observable and can recover after repair.
 Rebuilds are debounced and accept metadata and the retained graph together. A failed
 index candidate keeps the last-good server and output; a background failure keeps
 the last-good disk output without claiming completeness. Errors are reported while
-the watcher waits for another authored change. A
+the watcher waits for another authored change. Failed and recovering source actions
+also follow the private [rebuild status contract](./mokly-rebuild-status.md), so
+watched browsers explain that they still show the last accepted catalogue. A
 successful rebuild or healthy restart publishes a new update version. Browsers
 reload their current durable URL and restore search, changed-only selection,
 current collection disclosure, the disclosure baseline captured before active

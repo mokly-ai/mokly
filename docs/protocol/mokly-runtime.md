@@ -444,6 +444,8 @@ shipped shell are recorded beside the design catalogue in the example notes.
 
 The [watch lifecycle contract](./mokly-watch.md) defines reload recovery,
 transactional config changes, stable ports, invalidation, and shutdown.
+The private [rebuild status contract](./mokly-rebuild-status.md) defines how
+that last-good runtime reports source failure and progress to the Browse shell.
 
 ## Screen Comparisons
 

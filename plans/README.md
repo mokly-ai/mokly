@@ -12,7 +12,8 @@
 - [Serve Rebuild Status](./serve-rebuild-status.md) — tell the Browse shell
   when watched Serve could not load the latest changes and while an update is
   in progress, and compile Live previews from each generation's accepted
-  sources.
+  sources. Milestone 1's status, design, and generation-pinning contracts are
+  complete; mockup and implementation milestones remain active.
 - [Comparison Pane Scroll Alignment](./comparison-pane-scroll-alignment.md)
   — Overlay and Difference drift apart when scrolled because each snapshot
   scrolls inside its own opaque frame; comparison panes become viewer-owned,
