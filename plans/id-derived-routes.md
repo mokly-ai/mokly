@@ -1,11 +1,11 @@
 # Id-Derived Routes, Unified Variants, And Identity-Keyed Wire
 
 Status: Milestones 1–15 implemented, verified, pushed, and reviewed on
-`calummoore/halifax-v2` (2026-09-26 to 2026-09-29); the follow-up review's 18
-findings in the [review record](#review-record) await the user's decision.
-Created 2026-09-26 with the user's consent after discussing route redundancy
-on the navigation-path branch; the variant unification and the wire cleanup
-were folded in the same day. The work is implemented on this branch,
+`calummoore/halifax-v2` (2026-09-26 to 2026-09-29); Milestones 16–19 carry the
+user's decisions on the follow-up review and are in progress. Created
+2026-09-26 with the user's consent after discussing route redundancy on the
+navigation-path branch; the variant unification and the wire cleanup were
+folded in the same day. The work is implemented on this branch,
 `calummoore/halifax-v2`, and the user opens a pull request when it is ready.
 Mokly is not live, so this plan adds no backwards compatibility: readers it
 rewrites accept only the new versions, and there are no migration guards or
@@ -717,6 +717,111 @@ Tags: ui
       explanation, impact of doing nothing, lettered options, and a
       recommendation, without changing the implementation.
 
+## Milestone 16: Follow-up review contract
+
+Update the protocol docs, guides, and READMEs for the user's decisions on the
+follow-up review (2026-09-29) before any code changes. Finding numbers refer
+to the [follow-up review](#follow-up-review-milestones-915).
+
+- [ ] Deleted resources (finding 1, option B): one owning paragraph in
+      `mokly-changes.md` states the single rule both comparison paths share:
+      a resource that is a regular file at the branch point, is deleted, and
+      is still referenced by the current document is a verified deletion in
+      committed and derived output modes and for every resource type,
+      including embedded HTML documents; it marks its consumers as changed and
+      never makes Changes unavailable. It lists the rejected cases (never
+      present at the branch point, dangling or escaping symlinks, unsafe or
+      source-root paths, newly missing files) and states that snapshot
+      generation still requires current references to resolve.
+- [ ] Ratchets (findings 4, 6, 12, 13): `verification-ratchets.md`,
+      `ci-verification.md`, and `xtask/README.md` state that every ratchet
+      compares with `git merge-base HEAD origin/main`; the file-length and
+      unused-export ratchets audit `.ts`, `.tsx`, `.mts`, `.cts`, `.js`,
+      `.mjs`, and `.cjs` modules under the three roots; the unused-export
+      baseline rejects any entry absent from the merge-base baseline, so it
+      can only shrink; and the protocol doc cap ratchet scans
+      `docs/protocol/**` recursively, excluding `fixtures/`.
+- [ ] Release notes (finding 5, option B): restore the unreleased
+      navigation-path breaking-change note and add the
+      `defineComponent().entry` to `.entries` change in `npm-release.md`,
+      splitting the doc instead of raising its cap; state the release-note
+      coverage rule: before a close-out commit, the note names every `feat!`
+      commit in `origin/main..HEAD`.
+- [ ] Docs corrections (findings 14, 15, 17): update the delivery-status lines
+      of the eight protocol docs that still describe delivered milestones as
+      approved targets; `ScreenNavigateEvent.snapshotId` is present when the
+      committed historical record has a published identity (`mokly-viewer.md`
+      and `packages/viewer/README.md`); `mokly-catalogue.md` states that
+      removed variants of a removed parent follow that parent in baseline
+      authored order.
+- [ ] `npm run format:check`, the protocol and guide doc tests, and a relative
+      link check pass; review the diff; commit.
+
+## Milestone 17: Follow-up fixes in review, registry, and paths
+
+- [ ] Finding 1 (option B): failure-first, one table of deletion cases
+      (committed and derived output modes; stylesheet, image, and embedded
+      HTML; present or absent at the branch point; unsafe paths) runs against
+      both the unified classifier and the screen-level classifier; both use
+      one shared deleted-resource decision, including the byte comparison and
+      embedded-document reads.
+- [ ] Finding 7: a component parent that fails `validateComponentDefinition`
+      stays available for relationship checks; tests for both failure paths
+      show one root-cause error.
+- [ ] Finding 10: shared builders for the snapshot side and snapshot resource
+      paths replace the hand-built `snapshots/` paths in `src/review/assets.ts`,
+      `src/review/artifact_resources.ts`,
+      `packages/viewer/src/previews/request.ts`,
+      `packages/viewer/src/previews/presentation.ts`, and
+      `src/server/public_review.ts`; a repository-wide scan test fails on
+      `snapshots/` or `pages/…json` path literals outside the shared path
+      module.
+- [ ] Finding 15: a unit test shows a removed record without a published
+      identity announces navigation without `snapshotId`.
+- [ ] Finding 17: a projection test pins removed-entry order when a parent and
+      its variants are all removed.
+- [ ] Finding 16 (mechanical, no behavior change): delete the unused
+      `variantId` parameter of `useComparison`, the unreachable `TargetView`
+      comparison branch and the `DiffScreen` wrapper, the stale comment in
+      `src/review/base_manifest.ts`, the unreachable schema check in
+      `src/components/manifest_validation.ts`, and the dead link in
+      `docs/reviews/catalogue-inputs-and-aliases.md`; rename route-named
+      functions and values that carry ids (`viewerCapabilityRoute`, the
+      `route` value from `activeIdForView`, `containsRoute`).
+- [ ] Build, lint, format, typecheck, example build and check, full unit
+      suite, affected browser specs, and `cargo xtask check --suite
+repository`; commit.
+
+## Milestone 18: Ratchet fixes
+
+- [ ] Finding 6: every ratchet compares with `git merge-base HEAD
+origin/main`; a test where `origin/main` moved after the branch point
+      passes.
+- [ ] Finding 4: the file-length and unused-export ratchets include
+      JavaScript modules under the three roots; fix what they flag, including
+      `scripts/package/consumer_cases.mjs` and the unused exports in the
+      ratchet modules; tests.
+- [ ] Finding 12: the unused-export baseline rejects entries absent from the
+      merge-base baseline; test.
+- [ ] Finding 13: the protocol cap ratchet and
+      `tests/protocol_doc_sizes.test.ts` scan `docs/protocol/**` recursively,
+      excluding `fixtures/`; test.
+- [ ] `cargo xtask check --suite repository` and the full unit suite pass;
+      commit.
+
+## Milestone 19: Second follow-up close-out and review
+
+- [ ] Update key-code pointers in the touched READMEs and `plans/README.md`.
+- [ ] Confirm the release note in `docs/protocol/npm-release.md` names every
+      `feat!` commit in `origin/main..HEAD` (finding 5).
+- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
+- [ ] Commit; push.
+- [ ] Review the complete local diff against `origin/main` using
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      after the push; report each finding with a number, severity, plain
+      explanation, impact of doing nothing, lettered options, and a
+      recommendation, without changing the implementation.
+
 ## Review record
 
 Milestones 2–8 (`a6fe0da`..`d227702e`) were reviewed with the [implementation
@@ -863,6 +968,11 @@ cited evidence. Approved findings 1, 3–6, 8 (cross-kind case), 11, 13, 15, 16,
     variant are both removed.
 18. **Low** — the incompatible-baseline CLI line is not tested through the
     CLI reporters, the preview builder, or watched Serve's print-once rule.
+
+**User decisions (2026-09-29):** finding 1 uses option B, finding 4 option A,
+finding 5 option B, finding 6 option A, and finding 14 option A; findings 7,
+10, 12, 13, 15, 16, and 17 are fixed as recommended. Findings 2, 3, 8, 9, 11,
+and 18 are not pursued. Milestones 16–19 carry the work.
 
 ## Post-merge follow-up (non-blocking)
 
