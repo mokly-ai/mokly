@@ -93,7 +93,7 @@ cargo test --package xtask
 - [`../scripts/verification/repository-ratchets.mjs`](../scripts/verification/repository-ratchets.mjs)
   dispatches the repository ratchets, and
   [`../scripts/verification/ratchets/git.mjs`](../scripts/verification/ratchets/git.mjs)
-  owns their merge-base workspace view.
+  owns their merge-base workspace and reachable release-tag views.
 - [`../scripts/verification/ratchets/typescript-length.mjs`](../scripts/verification/ratchets/typescript-length.mjs),
   [`protocol-caps.mjs`](../scripts/verification/ratchets/protocol-caps.mjs),
   [`internal-exports.mjs`](../scripts/verification/ratchets/internal-exports.mjs), and

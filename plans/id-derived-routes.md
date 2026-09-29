@@ -1,14 +1,14 @@
 # Id-Derived Routes, Unified Variants, And Identity-Keyed Wire
 
-Status: Milestones 1–19 implemented, verified, pushed, and reviewed on
-`calummoore/halifax-v2` (2026-09-26 to 2026-09-29); Milestones 20–23 carry the
-user's decisions on the second follow-up review. Created 2026-09-26 with the
-user's consent after discussing route redundancy on the navigation-path
-branch; the variant unification and the wire cleanup were folded in the same
-day. The work is implemented on this branch, `calummoore/halifax-v2`, and the
-user opens a pull request when it is ready. Mokly is not live, so this plan
-adds no backwards compatibility: readers it rewrites accept only the new
-versions, and there are no migration guards or transitional shapes.
+Status: Milestones 1–23 implemented, verified, and pushed on
+`calummoore/halifax-v2` (2026-09-26 to 2026-09-30); the review of Milestones
+20–23 follows the push. Created 2026-09-26 with the user's consent after
+discussing route redundancy on the navigation-path branch; the variant
+unification and the wire cleanup were folded in the same day. The work is
+implemented on this branch, `calummoore/halifax-v2`, and the user opens a pull
+request when it is ready. Mokly is not live, so this plan adds no backwards
+compatibility: readers it rewrites accept only the new versions, and there are
+no migration guards or transitional shapes.
 
 **Problem:** every routed entry carries two hierarchies. `navPath` is the list
 of folder labels; `route` is an author-chosen `.html` path built from a root
@@ -930,11 +930,11 @@ refer to the
 
 ## Milestone 23: Third follow-up close-out and review
 
-- [ ] Update key-code pointers in the touched READMEs and `plans/README.md`.
-- [ ] Confirm `npm-release-notes.md` names every `feat!` commit in
+- [x] Update key-code pointers in the touched READMEs and `plans/README.md`.
+- [x] Confirm `npm-release-notes.md` names every `feat!` commit in
       `origin/main..HEAD`.
-- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
-- [ ] Commit; push.
+- [x] Run `cargo xtask check`; fix anything it reports until it passes.
+- [x] Commit; push.
 - [ ] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
