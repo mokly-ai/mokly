@@ -25,7 +25,8 @@ The change works for lists with whitespace after each comma:
   change the result.
 
 The two findings below were reproduced in scratch copies, and the parent
-session confirmed both. Both remain open for the user's decision.
+session confirmed both. They were resolved in `7ba5628` by the user's chosen
+options; other open findings were not changed.
 
 ## Findings
 
@@ -77,6 +78,14 @@ session confirmed both. Both remain open for the user's decision.
      release that changes the join. Because the decision assumed a descendant
      chain, the user should confirm that a compound result for `.x,.y` is
      acceptable.
+
+   Resolved in `7ba5628`: the verifier follows comma-boundary whitespace,
+   compound continuation and empty-item removal. It still rejects newly
+   fused names and invalid compounds. An independent plugin matrix covers
+   1,792 generated cases plus 224 empty-item cases. One all-comment list can
+   leave a hoisted comment or trailing space; the checker ignores that
+   selector comment, while an empty `@scope` limit still fails Build.
+
 2. **Low — a comment that touches the inside of a `:global()` or `:local()`
    wrapper fails Build.**
    - What happens: PostCSS removes a selector comment only when whitespace or
@@ -99,3 +108,7 @@ session confirmed both. Both remain open for the user's decision.
    - Recommended: A, with tests at each wrapper boundary for single items and
      lists. It removes the whole class instead of handling one position at a
      time, and it matches the CSS that is delivered.
+
+   Resolved in `7ba5628`: selector comment nodes are ignored on both sides,
+   including a comment hoisted before its rule. Meaningful combinators and
+   unrelated standalone comments remain checked.

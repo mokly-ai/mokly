@@ -18,7 +18,7 @@ and the eight findings in the
 [Milestone 21 review record](../docs/reviews/imported-css-delivery-milestone-21.md).
 Milestone 22 (`8a47cc5`) accepts the selector-list behavior from finding 3 of that review;
 its other parts and findings remain open.
-Milestone 24 resolves both M23 findings: it accepts the plugins' compound join
+Milestone 24 (`7ba5628`) resolves both M23 findings: it accepts the plugins' compound join
 without comma whitespace and ignores selector comments while rejecting
 invalid newly created compounds.
 The two findings in the
@@ -859,7 +859,7 @@ without accepting fused identifiers or invalid newly created compounds.
 
 ## Milestone 25: Commit, push, and review
 
-- [ ] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
 - [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
 
 ## Post-merge follow-up (non-blocking)
