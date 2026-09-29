@@ -38,11 +38,15 @@ Render `<action.Component label="Save" />` in a screen. Give repeated siblings
 distinct `moklyInstance` values; stable ids preserve their identity across
 edits. Registered children inside another registered component appear in its
 Nested components tab. React content belongs in declared `slots`; data belongs
-in `propSchema`. The schema infers TypeScript props and validates actual values. Registry preparation
-revalidates exported definitions and snapshots component data before rendering,
-so malformed or mutated variants and controls produce author diagnostics. An
-invalid component parent remains present for relationship validation, preventing
-its variants from adding misleading missing-parent errors to the root failure.
+in `propSchema`. The schema infers TypeScript props and validates actual values.
+Registry preparation revalidates exported definitions and snapshots component
+data before rendering, so malformed or mutated variants and controls produce
+author diagnostics. An invalid component parent remains present for relationship
+validation, preventing its variants from adding misleading missing-parent errors
+to the root failure. Definition validation runs only after parent metadata is
+valid. A parent that fails either check keeps its violations and remains
+available for relationship and inherited-field checks; child props, controls,
+and slots are not validated against it until both checks pass.
 
 Instance keys remain stable across prop edits and sibling reorders. Changing the
 local id, input owner, or original slot changes the key. Keys are scoped to one

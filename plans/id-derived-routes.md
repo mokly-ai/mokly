@@ -877,7 +877,7 @@ refer to the
 
 ## Milestone 21: Registry and test fixes
 
-- [ ] Finding 2 (option A): failure-first, a table in
+- [x] Finding 2 (option A): failure-first, a table in
       `tests/component_registry_validation.test.ts` covers a parent with a
       select control that has no options, a parent with an invalid prop
       schema, and a parent with a metadata problem and an invalid control.
@@ -885,7 +885,7 @@ refer to the
       variant violation, and a valid parent still reports an invalid
       variant's props. Variant prop, control, and slot validation then runs
       only against a parent that passed definition validation.
-- [ ] Finding 6 (option A): make three tests able to fail, and show for each
+- [x] Finding 6 (option A): make three tests able to fail, and show for each
       that a plausible regression makes it fail:
   - the identity-less navigation test drives the real route, selection, and
     announcement path, paired with a removed record that has a published
@@ -895,7 +895,7 @@ refer to the
     parent and its variants;
   - each rejected row of the deleted-resource table asserts its exact error
     code and message.
-- [ ] Build, lint, format, typecheck, example build and check, full unit
+- [x] Build, lint, format, typecheck, example build and check, full unit
       suite, affected browser specs, and the repository suite of
       `cargo xtask check`; commit.
 

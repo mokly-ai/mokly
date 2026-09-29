@@ -38,6 +38,7 @@ export function prepareRegistry(
 ): PreparedRegistry {
   const violations: RegistryViolation[] = [];
   const entries: ResolvedRegistryEntry[] = [];
+  const validComponentParents = new Set<ResolvedRegistryEntry>();
   const flattened = values.flatMap((value) =>
     Array.isArray(value) ? value : [value],
   );
@@ -65,11 +66,13 @@ export function prepareRegistry(
         return;
       }
       try {
-        entries.push({
+        const definition = {
           ...validateComponentDefinition(entry),
           sourcePath,
           sourceRelativePath,
-        });
+        };
+        entries.push(definition);
+        validComponentParents.add(definition);
       } catch (error) {
         if (!(error instanceof ComponentValidationError)) throw error;
         entries.push(entry);
@@ -77,7 +80,7 @@ export function prepareRegistry(
       }
     } else entries.push(entry);
   });
-  validateComponentVariants(entries, violations);
+  validateComponentVariants(entries, validComponentParents, violations);
   const orderedEntries = orderEntriesWithVariants(entries, (entry) => entry);
   violations.push(
     ...duplicateViolations(orderedEntries, "id"),
@@ -99,6 +102,7 @@ export function prepareRegistry(
 
 function validateComponentVariants(
   entries: ResolvedRegistryEntry[],
+  validParents: ReadonlySet<ResolvedRegistryEntry>,
   violations: RegistryViolation[],
 ): void {
   const byId = new Map<string, ResolvedRegistryEntry[]>();
@@ -127,6 +131,7 @@ function validateComponentVariants(
         );
       }
     }
+    if (!validParents.has(parent)) continue;
     try {
       entries[index] = {
         ...validateComponentVariantDefinition(

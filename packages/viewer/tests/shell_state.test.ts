@@ -212,24 +212,59 @@ test("live host routing carries exact history and announces its entry", () => {
   ]);
 });
 
-test("identity-less history announces navigation without a snapshot id", () => {
+test("bare removed routes announce only published snapshot identity", () => {
   const identityless = structuredClone(model);
-  const historical = identityless.removedEntries[0]!;
-  delete historical.snapshotId;
-  const navigations: ScreenNavigateEvent[] = [];
-  announceNavigation(
+  delete identityless.removedEntries[0]!.snapshotId;
+
+  const announceBareRoute = (candidate: typeof model) => {
+    const historical = candidate.removedEntries[0]!;
+    const candidateCatalogue = viewerCatalogue(candidate);
+    const route = routeFromUrl(
+      candidateCatalogue,
+      new URL(
+        viewHref(historical.entry.kind, historical.entry.id),
+        "https://example.test",
+      ),
+    );
+    const initial = createInitialShellState(
+      candidateCatalogue,
+      viewerContext(candidate, defaultSelection),
+      { kind: "home" },
+      undefined,
+    );
+    const state = withRoute(
+      initial,
+      route,
+      candidateCatalogue,
+      catalogueNavSections(candidateCatalogue),
+    );
+    const navigations: ScreenNavigateEvent[] = [];
+    announceNavigation(
+      {
+        model: candidate,
+        events: () => ({
+          onScreenNavigate: (event: ScreenNavigateEvent) =>
+            navigations.push(event),
+        }),
+      } as never,
+      state.selection,
+      state.route.fragment,
+      undefined,
+    );
+    return navigations;
+  };
+
+  const historical = model.removedEntries[0]!;
+  assert.ok(historical.snapshotId);
+  assert.deepEqual(announceBareRoute(identityless), [
+    { screenId: historical.entry.id },
+  ]);
+  assert.deepEqual(announceBareRoute(model), [
     {
-      model: identityless,
-      events: () => ({
-        onScreenNavigate: (event: ScreenNavigateEvent) =>
-          navigations.push(event),
-      }),
-    } as never,
-    { ...defaultSelection, screenId: historical.entry.id },
-    undefined,
-    undefined,
-  );
-  assert.deepEqual(navigations, [{ screenId: historical.entry.id }]);
+      screenId: historical.entry.id,
+      snapshotId: historical.snapshotId,
+    },
+  ]);
 });
 
 test("component variant heads keep the parent heading and shown entry id", () => {

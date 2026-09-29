@@ -17,6 +17,12 @@ import { classifyChangedContent } from "../dist/server/changed_content.js";
 import { generatedViews } from "../packages/viewer/dist/data.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import {
+  assertRejectedResource,
+  rejected,
+  type ClassifierName,
+  type RejectionKind,
+} from "./helpers/deleted_resource_expectations.js";
 import { validEntrySource } from "./helpers/fixture.js";
 
 type ResourceKind = "embedded HTML" | "image" | "stylesheet";
@@ -26,7 +32,7 @@ type CurrentState =
 interface DeletionCase {
   baseline: "absent" | "regular";
   current: CurrentState;
-  expected: "changed" | "rejected";
+  expected: "changed" | Readonly<Record<ClassifierName, RejectionKind>>;
   kind: ResourceKind;
   mode: "committed" | "derived";
   unsafe?: boolean;
@@ -45,21 +51,21 @@ const deletionCases: readonly DeletionCase[] = [
   {
     baseline: "absent",
     current: "absent",
-    expected: "rejected",
+    expected: rejected("baseline-missing", "current-missing"),
     kind: "image",
     mode: "committed",
   },
   {
     baseline: "absent",
     current: "absent",
-    expected: "rejected",
+    expected: rejected("baseline-missing", "current-missing"),
     kind: "embedded HTML",
     mode: "derived",
   },
   {
     baseline: "absent",
     current: "absent",
-    expected: "rejected",
+    expected: rejected("baseline-missing", "unsafe-view"),
     kind: "stylesheet",
     mode: "committed",
     unsafe: true,
@@ -67,7 +73,7 @@ const deletionCases: readonly DeletionCase[] = [
   {
     baseline: "absent",
     current: "absent",
-    expected: "rejected",
+    expected: rejected("baseline-missing", "current-missing"),
     kind: "image",
     mode: "derived",
     unsafe: true,
@@ -75,21 +81,21 @@ const deletionCases: readonly DeletionCase[] = [
   {
     baseline: "regular",
     current: "dangling",
-    expected: "rejected",
+    expected: rejected("dangling", "dangling"),
     kind: "image",
     mode: "committed",
   },
   {
     baseline: "regular",
     current: "escaping",
-    expected: "rejected",
+    expected: rejected("escaping", "escaping"),
     kind: "image",
     mode: "derived",
   },
   {
     baseline: "regular",
     current: "source-root",
-    expected: "rejected",
+    expected: rejected("source-root", "source-root"),
     kind: "image",
     mode: "committed",
   },
@@ -168,7 +174,7 @@ for (const scenario of deletionCases) {
           };
     const classifiers = [
       {
-        name: "unified",
+        name: "unified" as const,
         run: async () => {
           const result = await classifyComponents({
             after: manifest,
@@ -191,7 +197,7 @@ for (const scenario of deletionCases) {
         },
       },
       {
-        name: "screen-level",
+        name: "screen-level" as const,
         run: async () => {
           const result = await classifyChangedContent(
             manifest,
@@ -214,8 +220,19 @@ for (const scenario of deletionCases) {
     for (const [index, classifier] of classifiers.entries()) {
       const context = `${classifier.name}: ${label}`;
       const outcome = outcomes[index]!;
-      if (scenario.expected === "rejected") {
+      if (scenario.expected !== "changed") {
         assert.equal(outcome.status, "rejected", context);
+        if (outcome.status === "rejected")
+          assertRejectedResource(
+            outcome.reason,
+            scenario.expected[classifier.name],
+            {
+              route,
+              resource,
+              viewRoute: viewPaths[0]!,
+            },
+            context,
+          );
         continue;
       }
       assert.equal(

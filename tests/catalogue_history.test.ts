@@ -82,8 +82,12 @@ test("removed screens and saved variants retain baseline context with null curre
   assert.deepEqual(readCatalogue(JSON.parse(serializeCatalogue(model))), model);
 });
 
-test("removed component parents round trip with their variant entries", async (t) => {
-  const source = componentEntrySource({ body: "<p>Before</p>" });
+test("removed parents precede authored variants and the next sorted entry", async (t) => {
+  const source = componentEntrySource({ body: "<p>Before</p>" })
+    .replace('id: "action-default"', 'id: "action-zulu"')
+    .replace('id: "action-disabled"', 'id: "action-alpha"')
+    .replace('id: "pane"', 'id: "action-middle"')
+    .replace('id: "pane-default"', 'id: "action-middle-default"');
   const fixture = await componentReviewFixture(
     t,
     () => componentEntrySource({ body: "<p>After</p>", exports: "" }),
@@ -102,10 +106,13 @@ test("removed component parents round trip with their variant entries", async (t
   });
 
   const removedIds = model.removedEntries.map(({ entry }) => entry.id);
-  assert.deepEqual(
-    removedIds.filter((id) => id === "action" || id.startsWith("action-")),
-    ["action", "action-default", "action-disabled"],
-  );
+  assert.deepEqual(removedIds, [
+    "action",
+    "action-zulu",
+    "action-alpha",
+    "action-middle",
+    "action-middle-default",
+  ]);
   assert.deepEqual(readCatalogue(JSON.parse(serializeCatalogue(model))), model);
 });
 

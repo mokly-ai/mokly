@@ -122,11 +122,11 @@ that parent's root-cause violations without also reporting `variant parent does
 not exist` for each child. Missing, wrong-kind, and nested valid parents retain
 their relationship violations.
 
-For a component parent, preparation records whether metadata validation and
-`validateComponentDefinition` succeeded. If either fails, it reports each
-parent violation once and does not validate any child's props, controls, or
-slots against that invalid parent. The parent remains present for the
-relationship rules and for the inherited `dependencies`, `relatedDocs`,
+For a component parent, preparation runs metadata validation first and runs
+`validateComponentDefinition` only when the metadata is valid. A parent that
+fails either check keeps those parent violations and does not have any child's
+props, controls, or slots validated against it. The parent remains present for
+the relationship rules and for the inherited `dependencies`, `relatedDocs`,
 `colorSchemes`, and `tags` checks above. Once both parent validations succeed,
 preparation validates each component variant's props, controls, and slots
 against that parent exactly once.
