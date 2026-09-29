@@ -4,9 +4,15 @@
 
 - [Interactive Views](./interactive-views.md) — implementation is complete,
   including the reference example, Static/Live parity and static-output
-  regression coverage. The final review reported three Medium findings that
-  await a decision. Move this plan to Completed when its implementation PR
-  merges.
+  regression coverage. The final review reported three Medium findings:
+  finding 1 (Live compiling current files instead of the accepted
+  generation's sources) is scheduled in Serve Rebuild Status Milestone 4, and
+  findings 2 and 3 await a decision. Move this plan to Completed when its
+  implementation PR merges.
+- [Serve Rebuild Status](./serve-rebuild-status.md) — tell the Browse shell
+  when watched Serve could not load the latest changes and while an update is
+  in progress, and compile Live previews from each generation's accepted
+  sources.
 - [Comparison Pane Scroll Alignment](./comparison-pane-scroll-alignment.md)
   — Overlay and Difference drift apart when scrolled because each snapshot
   scrolls inside its own opaque frame; comparison panes become viewer-owned,
