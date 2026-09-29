@@ -74,9 +74,12 @@ four remain open for the user's decision.
      - B) Accept the moved whitespace only when it comes out of a `:global()`
        or `:local()` wrapper, and reject it after every other pseudo-class.
      - C) Document the limitation.
-   - Recommended: A, with failing tests first for each context above. Finding
-     3's browser comparison is the broader guard against the check and the
-     plugins misreading text in the same way.
+   - Recommended: B, with failing tests first for each context above. It keeps
+     the user's decision to match the plugins inside `:global()` and
+     `:local()` and restores the old rejection everywhere else. A is simpler,
+     but it makes some wrapper cases fail that css-loader and Vite accept.
+     Finding 3's browser comparison is the broader guard against the check
+     and the plugins misreading text in the same way.
 2. **Low — wrappers whose items are all empty now pass even when removing them
    leaves invalid CSS.**
    - What happens: to accept `:global(,)`, the check drops an all-empty wrapper
