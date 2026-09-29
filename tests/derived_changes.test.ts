@@ -40,6 +40,7 @@ test("derived Changes and selected comparisons use compiled source when generate
       ...snapshot.comparison,
       before: snapshot.baseline,
       after: current.manifest,
+      result: snapshot.result!,
     },
     { id: "home" },
     new AbortController().signal,

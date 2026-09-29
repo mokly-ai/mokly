@@ -2,9 +2,8 @@
 
 ## Delivery Status
 
-Entry/view helpers are implemented. Snapshot, preview, normalized-path, and
-unknown-destination helpers are the approved Milestone 12 target in the active
-[id-derived routes plan](../../plans/id-derived-routes.md).
+Entry/view, snapshot, preview, normalized-path, and unknown-destination helpers
+are implemented through the shared viewer data and navigation modules.
 
 This is the single contract for entry routes, generated view names, comparison
 snapshot names, removed-page metadata, provider-normalized shell paths, and

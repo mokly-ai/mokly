@@ -1,6 +1,6 @@
 import { parse } from "parse5";
 
-import { isStylesheetPath } from "@mokly/viewer/data";
+import { isStylesheetPath, reviewInvalid } from "@mokly/viewer/data";
 
 import type { ComponentMaterialReader } from "./component_resources.js";
 import type { CssDocumentPair } from "./css/document.js";
@@ -27,6 +27,7 @@ export class ResourceComparison {
   ) {
     before.pairWith(after, "before");
     after.pairWith(before, "after");
+    after.allowMissingResources((route) => this.changed.has(this.path(route)));
   }
 
   async compare(
@@ -45,14 +46,25 @@ export class ResourceComparison {
       ? await this.after.resources(after.path, after.html, excluded)
       : new Set<string>();
     const resources: ChangedResource[] = [];
-    const changedCss = [...new Set([...bases, ...heads])].filter(
+    const discovered = [...new Set([...bases, ...heads])];
+    const changedRoutes = discovered.filter(
+      (route) => !excluded?.(route) && this.changed.has(this.path(route)),
+    );
+    const baseChanged = await this.before.optionalTexts(changedRoutes);
+    const headChanged = await this.after.optionalTexts(changedRoutes);
+    for (const route of changedRoutes)
+      if (
+        heads.has(route) &&
+        headChanged.get(route) === undefined &&
+        (!bases.has(route) || baseChanged.get(route) === undefined)
+      )
+        reviewInvalid(`referenced resource is missing: ${route}`);
+    const changedCss = discovered.filter(
       (route) =>
         !excluded?.(route) &&
         isStylesheetPath(route) &&
-        this.changed.has(this.prefix ? `${this.prefix}/${route}` : route),
+        this.changed.has(this.path(route)),
     );
-    const baseCss = await this.before.optionalTexts(changedCss);
-    const headCss = await this.after.optionalTexts(changedCss);
     const documents: CssDocumentPair[] = changedCss.length
       ? [
           {
@@ -65,9 +77,9 @@ export class ResourceComparison {
           },
         ]
       : [];
-    for (const route of new Set([...bases, ...heads])) {
+    for (const route of discovered) {
       if (excluded?.(route)) continue;
-      const path = this.prefix ? `${this.prefix}/${route}` : route;
+      const path = this.path(route);
       const html = /\.html?$/i.test(route);
       const baseDocument =
         html && bases.has(route)
@@ -80,12 +92,12 @@ export class ResourceComparison {
       if (this.changed.has(path) && (!html || baseDocument !== headDocument))
         resources.push({
           path,
-          ...(baseCss.get(route) === undefined
+          ...(baseChanged.get(route) === undefined
             ? {}
-            : { before: baseCss.get(route)! }),
-          ...(headCss.get(route) === undefined
+            : { before: baseChanged.get(route)! }),
+          ...(headChanged.get(route) === undefined
             ? {}
-            : { after: headCss.get(route)! }),
+            : { after: headChanged.get(route)! }),
         });
       if (changedCss.length && html) {
         documents.push({
@@ -97,5 +109,9 @@ export class ResourceComparison {
       }
     }
     return this.css.analyze(resources, documents);
+  }
+
+  private path(route: string): string {
+    return this.prefix ? `${this.prefix}/${route}` : route;
   }
 }

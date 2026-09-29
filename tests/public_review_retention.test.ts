@@ -28,6 +28,18 @@ test("complete alias captures do not renew unused generation retention", async (
       sourceFiles: [],
       entries: [],
     },
+    result: {
+      affectedConsumers: [],
+      baseCommit: "a".repeat(40),
+      baseRef: "origin/main",
+      changedPaths: [],
+      changes: [],
+      components: [],
+      ignoredImpact: [],
+      schemaVersion: 4,
+      screens: [],
+      sharedImpact: [],
+    },
   };
   const outDir = path.join(root, "current");
   let generation = 0;

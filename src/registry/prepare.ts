@@ -60,7 +60,10 @@ export function prepareRegistry(
     const metadataViolations = validateEntry(entry, config);
     violations.push(...metadataViolations);
     if (entry.kind === "component" && !("variantOf" in entry)) {
-      if (metadataViolations.length) return;
+      if (metadataViolations.length) {
+        entries.push(entry);
+        return;
+      }
       try {
         entries.push({
           ...validateComponentDefinition(entry),

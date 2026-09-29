@@ -17,6 +17,7 @@ interface CachedViewResources {
 
 /** One immutable read cache per source side; it never copies or writes snapshots. */
 export class ComponentMaterialReader {
+  private readonly canReadOptionally: boolean;
   private readonly files = new Map<string, Promise<Uint8Array>>();
   private readonly optional = new Map<
     string,
@@ -24,6 +25,7 @@ export class ComponentMaterialReader {
   >();
   private readonly graph: ResourceGraph;
   private counterpart?: ComponentMaterialReader;
+  private missingResource?: (route: string) => boolean;
   private side: "before" | "after" = "after";
   private readonly normalized = new Map<string, Promise<string>>();
   private readonly viewResources = new Map<
@@ -31,13 +33,17 @@ export class ComponentMaterialReader {
     Map<string, CachedViewResources>
   >();
   constructor(private readonly reader: ReviewAssetReader) {
+    this.canReadOptionally = Boolean(
+      reader.readIfExists || reader.readManyIfExists,
+    );
     this.graph = new ResourceGraph({
-      prefetch: (routes) => this.prefetch(routes),
-      readReferences: async (route) =>
-        referencedRoutes(route, await this.resourceText(route), {
-          resourceHints: false,
-        }),
+      prefetch: (routes) => this.prefetchResources(routes),
+      readReferences: (route) => this.resourceReferences(route),
     });
+  }
+  /** Permit a missing current resource only while comparison verifies its baseline side. */
+  allowMissingResources(predicate: (route: string) => boolean): void {
+    this.missingResource = predicate;
   }
   /** Bind immutable source sides before traversing embedded-document resources. */
   pairWith(
@@ -194,5 +200,26 @@ export class ComponentMaterialReader {
     if (excluded) cached.filtered.set(excluded, resources);
     else cached.all = resources;
     return resources;
+  }
+
+  private async prefetchResources(routes: readonly string[]): Promise<void> {
+    const optional = routes.filter((route) => this.mayBeMissing(route));
+    if (optional.length) await this.optionalTexts(optional);
+    await this.prefetch(routes.filter((route) => !this.mayBeMissing(route)));
+  }
+
+  private async resourceReferences(route: string): Promise<readonly string[]> {
+    if (
+      this.mayBeMissing(route) &&
+      (await this.optionalTexts([route])).get(route) === undefined
+    )
+      return [];
+    return referencedRoutes(route, await this.resourceText(route), {
+      resourceHints: false,
+    });
+  }
+
+  private mayBeMissing(route: string): boolean {
+    return this.canReadOptionally && this.missingResource?.(route) === true;
   }
 }

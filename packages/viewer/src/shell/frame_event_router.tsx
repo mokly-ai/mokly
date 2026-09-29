@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 import type { FrameNavigation } from "../client/frame_adapter.js";
-import { viewHref } from "../navigation/routes.js";
+import { unavailableViewHref, viewHref } from "../navigation/routes.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { useOptionalShellFrameRegistry } from "./frame_registry.js";
@@ -52,7 +52,7 @@ export function frameNavigationHref(
   const entry = catalogue.byId.get(navigation.id);
   const pathname = entry
     ? viewHref(entry.kind, entry.id)
-    : `/view/${encodeURIComponent(navigation.id)}`;
+    : unavailableViewHref(navigation.id);
   const url = new URL(pathname, "https://mokly.invalid");
   if (navigation.fragment)
     url.searchParams.set("fragment", navigation.fragment);

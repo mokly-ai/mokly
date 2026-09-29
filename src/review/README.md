@@ -258,8 +258,8 @@ Key code:
 - `compare.ts`, `component_compare.ts`: the unified v4 comparison and retained
   artifacts for every catalogue.
 - `page_preview.ts`: typed before-only page capture from accepted removal state.
-- `paths.ts` and the shared viewer-data builders: collision-checked snapshot
-  and removed-page artifact naming from entry identity.
+- `artifact_files.ts` and the shared viewer-data builders: collision-checked
+  writes plus snapshot and removed-page artifact naming from entry identity.
 - `component_variant_classification.ts`: flat component variant entry pairing,
   reasons, view evidence, and grouped v4 result records.
 - `component_classification_sources.ts`, `component_reason_sources.ts`, and

@@ -26,6 +26,22 @@ export function entryPairKey(entry: ReviewEntry): string {
 }
 export const lexical = (a: string, b: string): number =>
   a < b ? -1 : a > b ? 1 : 0;
+/** Drop baseline identities that the current catalogue reuses for another kind. */
+export function baselineForCurrentIdentities(
+  before: Manifest,
+  after: Manifest,
+): Manifest {
+  const currentKinds = new Map(
+    after.entries.map((entry) => [entry.id, entry.kind] as const),
+  );
+  const entries = before.entries.filter((entry) => {
+    const currentKind = currentKinds.get(entry.id);
+    return currentKind === undefined || currentKind === entry.kind;
+  });
+  return entries.length === before.entries.length
+    ? before
+    : { ...before, entries };
+}
 export function entryPairs(
   before: Manifest,
   after: Manifest,

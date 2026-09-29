@@ -9,6 +9,7 @@ import {
   viewRoute,
   type ManifestScreen,
   type ManifestV7,
+  type ReviewResultV4,
 } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../dist/build/compile.js";
@@ -33,6 +34,7 @@ for (const mode of ["committed", "derived"] as const) {
       baseRef: "main",
       changedPaths: [],
       headDigests: {},
+      result: removedScreenResult(fixture.screen),
       ...(mode === "derived"
         ? { headOutputs: [...fixture.current.outputs] as const }
         : {}),
@@ -197,6 +199,37 @@ function selectedSource(fixture: Awaited<ReturnType<typeof screenFixture>>) {
     baseRef: "main",
     changedPaths: [],
     headDigests: {},
+    result: removedScreenResult(fixture.screen),
+  };
+}
+
+function removedScreenResult(screen: ManifestScreen): ReviewResultV4 {
+  return {
+    affectedConsumers: [],
+    baseCommit: commit,
+    baseRef: "main",
+    changedPaths: [],
+    changes: [],
+    components: [],
+    ignoredImpact: [],
+    schemaVersion: 4,
+    screens: [
+      {
+        before: { id: screen.id, title: screen.title },
+        dependencies: [],
+        id: screen.id,
+        sharedImpact: [],
+        state: "removed",
+        title: screen.title,
+        views: generatedViews(screen).map((view) => ({
+          colorScheme: view.colorScheme,
+          ignoredIds: [],
+          state: "removed",
+          viewport: view.viewport,
+        })),
+      },
+    ],
+    sharedImpact: [],
   };
 }
 

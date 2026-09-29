@@ -4,7 +4,11 @@ import { historicalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import { encodeUrlPath } from "../data/paths.js";
-import { entryRoute, viewRoute } from "../navigation/routes.js";
+import {
+  pagePreviewMetadataPath,
+  snapshotPagePath,
+  snapshotViewPath,
+} from "../navigation/routes.js";
 import { parseRemovedPagePreview } from "../review/page_preview.js";
 import { parseReviewResult } from "../review/result_validation.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
@@ -88,7 +92,7 @@ export function previewEndpoint(
   const generation = new URL(`/${comparisonPath}`, base);
   if (advertised.kind === "screen") return { endpoint: generation };
   const prefix = comparisonPath.slice(0, -REVIEW_FILE.length);
-  const path = `${prefix}pages/${data.id}.json`;
+  const path = `${prefix}${pagePreviewMetadataPath(data.id)}`;
   return {
     endpoint: new URL(`/${encodeUrlPath(path)}`, base),
     generation,
@@ -110,7 +114,7 @@ export function advertisedPreviewPaths(
       ...model.removedEntries.flatMap((removed) =>
         removed.preview?.kind === "page" && comparison !== null
           ? [
-              `${comparison.slice(0, -REVIEW_FILE.length)}pages/${removed.entry.id}.json`,
+              `${comparison.slice(0, -REVIEW_FILE.length)}${pagePreviewMetadataPath(removed.entry.id)}`,
             ]
           : [],
       ),
@@ -149,7 +153,13 @@ function screenContent(
             colorScheme: view.colorScheme,
             url: new URL(
               encodeUrlPath(
-                `snapshots/before/${viewRoute("screen", data.id, view.viewport, view.colorScheme)}`,
+                snapshotViewPath(
+                  "before",
+                  "screen",
+                  data.id,
+                  view.viewport,
+                  view.colorScheme,
+                ),
               ),
               base,
             ).href,
@@ -176,10 +186,7 @@ function pageContent(
     baseCommit: preview.baseCommit,
     content: {
       kind: "page",
-      url: new URL(
-        encodeUrlPath(`snapshots/before/${entryRoute("page", data.id)}`),
-        base,
-      ).href,
+      url: new URL(encodeUrlPath(snapshotPagePath(data.id)), base).href,
     },
   };
 }

@@ -7,10 +7,10 @@ import type {
   ReviewResult,
 } from "@mokly/viewer/data";
 
+import { addArtifactFile } from "./artifact_files.js";
 import { validateArtifactResources } from "./artifact_resources.js";
 import { markdownCode, markdownText } from "./markdown.js";
 import { hasOutputChange, isImpactOnly } from "./materiality.js";
-import { addArtifactFile } from "./paths.js";
 
 /** Add comparison metadata to isolated snapshot files. */
 export function renderReviewArtifact(

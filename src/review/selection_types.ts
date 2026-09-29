@@ -32,7 +32,7 @@ export interface ReviewEvidence {
 export interface SelectedReviewSource extends ReviewEvidence {
   readonly before: HistoricalManifest;
   readonly after: ManifestV7;
-  readonly result?: ReviewResultV4;
+  readonly result: ReviewResultV4;
 }
 
 /** Pinned removal metadata and its already-validated historical manifest. */

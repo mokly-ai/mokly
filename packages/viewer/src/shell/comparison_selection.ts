@@ -1,6 +1,6 @@
 /** Pure selection of the views and pane documents one comparison shows. */
 
-import { viewRoute, type ViewRouteKind } from "../navigation/routes.js";
+import { snapshotViewPath, type ViewRouteKind } from "../navigation/routes.js";
 import type { ViewReview } from "../review/types.js";
 
 import type { LoadedComparison } from "./comparison_request.js";
@@ -37,12 +37,13 @@ function snapshotUrl(
   id: string,
   view: ViewReview,
 ): string {
-  const source = `snapshots/${side}/${viewRoute(
+  const source = snapshotViewPath(
+    side,
     kind,
     id,
     view.viewport,
     view.colorScheme,
-  )}`;
+  );
   return new URL(source.split("/").map(encodeURIComponent).join("/"), base)
     .href;
 }

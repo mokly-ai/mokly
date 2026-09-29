@@ -134,6 +134,33 @@ test(
   },
 );
 
+test("screen-only Serve logs classifier failures and reports Changes unavailable", async (t) => {
+  const fixture = await createFixture();
+  t.after(() => removeFixture(fixture));
+  const reporter = new RecordingReporter();
+  const running = await serve(
+    await loadConfig(fixture.root),
+    { port: 0, watch: false },
+    {
+      changeClassifier: {
+        async read() {
+          throw new Error("screen classifier failed");
+        },
+      },
+      reporter,
+    },
+  );
+  fixture.beforeRemove(() => running.close());
+  await reporter.complete;
+
+  assert.ok(
+    reporter.events.some((event) =>
+      event.includes("diagnostic:screen classifier failed"),
+    ),
+  );
+  assert.ok(reporter.events.includes("changes-unavailable"));
+});
+
 test("the watched RunningServe rebuild hook uses the serialized queue", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
@@ -208,7 +235,11 @@ class RecordingReporter implements ServeReporter {
   }
   gitReferenceRefresh(_base: string): void {}
   incompatibleBaseline(_commit: string): void {}
-  runtimeDiagnostic(_error: unknown): void {}
+  runtimeDiagnostic(error: unknown): void {
+    this.events.push(
+      `diagnostic:${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
   serveReady(): void {}
   watchFailed(_report: WatchReport, _error: unknown): void {}
   watchFinished(report: WatchReport): void {

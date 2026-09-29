@@ -10,6 +10,7 @@ import type { Manifest, ReviewResultV4, ViewReview } from "@mokly/viewer/data";
 import { affectedConsumers } from "./component_affected.js";
 import {
   address,
+  baselineForCurrentIdentities,
   entryPairKey,
   entryPairs,
   metadata,
@@ -33,6 +34,7 @@ export function validateComponentReviewSources(
   sources: DependencyReasonSources,
 ): void {
   parseReviewResult(result);
+  before = baselineForCurrentIdentities(before, after);
   const beforeVariants = componentVariantEntries(before.entries);
   const afterVariants = componentVariantEntries(after.entries);
   const pairs = entryPairs(before, after);

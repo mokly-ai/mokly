@@ -1,6 +1,7 @@
 import { canonicalJson } from "../components/data.js";
 
 import type { ReviewResultV4 } from "./component_types.js";
+import { affectedConsumerOrderKey } from "./order.js";
 import {
   requireEqual,
   requireOrdered,
@@ -65,6 +66,13 @@ function validateResult(value: unknown): ReviewResult {
   const changes = reviewArray(result.changes).map((entry) =>
     validateChangedEntry(entry, changed),
   );
+  requireOrdered(changes, (change) => {
+    const preferred = (change.after ?? change.before) as Record<
+      string,
+      unknown
+    >;
+    return `${String(change.kind)}\u0000${String(preferred.id)}`;
+  });
   const changeIds = new Set<string>();
   for (const change of changes) {
     const preferred = (change.after ?? change.before) as Record<
@@ -98,10 +106,11 @@ function validateResult(value: unknown): ReviewResult {
       reviewInvalid("changed variant address differs from its result");
   }
   const affected = reviewArray(result.affectedConsumers).map(validateAffected);
-  requireOrdered(affected, (item) => {
-    const consumer = item.consumer as Record<string, unknown>;
-    return `${item.changedComponentId}\u0000${consumer.kind}\u0000${consumer.id}`;
-  });
+  requireOrdered(affected, (item) =>
+    affectedConsumerOrderKey(
+      item as unknown as ReviewResultV4["affectedConsumers"][number],
+    ),
+  );
   validateIgnoredImpact(result.ignoredImpact, screens);
   validateResultReferences(value as ReviewResultV4);
   return value as ReviewResult;

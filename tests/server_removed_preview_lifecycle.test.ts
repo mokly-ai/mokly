@@ -52,6 +52,18 @@ const reviewSource: SelectedReviewSource = {
   baseRef: pageSource.baseRef,
   changedPaths: [],
   headDigests: {},
+  result: {
+    affectedConsumers: [],
+    baseCommit: pageSource.baseCommit,
+    baseRef: pageSource.baseRef,
+    changedPaths: [],
+    changes: [],
+    components: [],
+    ignoredImpact: [],
+    schemaVersion: 4,
+    screens: [],
+    sharedImpact: [],
+  },
 };
 
 function pageArtifact(

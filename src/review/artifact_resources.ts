@@ -1,4 +1,4 @@
-import { reviewInvalid, viewRoute } from "@mokly/viewer/data";
+import { reviewInvalid, snapshotViewPath } from "@mokly/viewer/data";
 import type { ReviewArtifact, ViewReview } from "@mokly/viewer/data";
 
 import { referencedRoutes } from "./asset_references.js";
@@ -45,16 +45,26 @@ export function validateArtifactResources(artifact: ReviewArtifact): void {
     ];
     if (!evidence.length) continue;
     const reachable = new Set<string>();
-    const route = viewRoute(
-      item.kind,
-      item.id,
-      view.viewport,
-      view.colorScheme,
-    );
     const beforePath =
-      view.state === "added" ? undefined : `snapshots/before/${route}`;
+      view.state === "added"
+        ? undefined
+        : snapshotViewPath(
+            "before",
+            item.kind,
+            item.id,
+            view.viewport,
+            view.colorScheme,
+          );
     const afterPath =
-      view.state === "removed" ? undefined : `snapshots/after/${route}`;
+      view.state === "removed"
+        ? undefined
+        : snapshotViewPath(
+            "after",
+            item.kind,
+            item.id,
+            view.viewport,
+            view.colorScheme,
+          );
     const before = beforePath ? text(beforePath) : undefined;
     const after = afterPath ? text(afterPath) : undefined;
     const normalized = normalizeReviewPair(

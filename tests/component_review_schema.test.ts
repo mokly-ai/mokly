@@ -5,7 +5,7 @@ import type { Compilation } from "../dist/build/compile.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
 import { compareReview } from "../dist/review/compare.js";
 import { validateComponentReviewSources } from "../dist/review/component_result_sources.js";
-import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
+import { parseReviewResult } from "../packages/viewer/dist/data.js";
 
 import {
   classifyFixtureWithSources,

@@ -618,38 +618,41 @@ Tags: mockup
 
 ## Milestone 12: Review fixes in data, review, and export
 
-- [ ] Finding 1: one exported affected-consumer sort key used by the
+- [x] Finding 1: one exported affected-consumer sort key used by the
       producer and the v4 reader; a test feeds producer output with component
       ids `x`, `x-y`, and `x2` through `parseReviewResult`.
-- [ ] Finding 8: drop a baseline entry whose id belongs to a current entry of
+- [x] Finding 8: drop a baseline entry whose id belongs to a current entry of
       another kind before pairing; a classify-then-parse test.
-- [ ] Finding 11: the v4 reader enforces the documented order for `changes`
+- [x] Finding 11: the v4 reader enforces the documented order for `changes`
       and nested component variants; tests.
-- [ ] Finding 13: the packed-consumer export check derives snapshot paths
+- [x] Finding 13: the packed-consumer export check derives snapshot paths
       with the shared helper and fails when it checked none.
-- [ ] Finding 16: screen-only Serve logs a classifier failure and reports
+- [x] Finding 16: screen-only Serve logs a classifier failure and reports
       Changes unavailable; delete the `compareScreen` fallback and its dead
       arguments.
-- [ ] Finding 17: shared builders for snapshot view, snapshot page, and page
+- [x] Finding 16 follow-through: the unified classifier retains verified
+      baseline-present resource deletions while newly missing, escaping, and
+      unverified resources still make Changes unavailable; tests.
+- [x] Finding 17: shared builders for snapshot view, snapshot page, and page
       preview artifact names replace every hand-built copy, and
       `snapshotPath` is deleted; a test fails on hand-built names.
-- [ ] Finding 18: `parseViewHref` uses a `Map` lookup; tests for
+- [x] Finding 18: `parseViewHref` uses a `Map` lookup; tests for
       `constructor`, `__proto__`, and `toString` prefixes.
-- [ ] Finding 21: shared helpers in `packages/viewer/src/navigation/routes.ts`
+- [x] Finding 21: shared helpers in `packages/viewer/src/navigation/routes.ts`
       for provider-normalized extensionless view paths and the unknown-id
       destination, used by the shell, `static_workspace_evidence.ts`, and
       both preview scripts (mechanical shell edits only).
-- [ ] Finding 24: a component parent that fails its own validation stays
+- [x] Finding 24: a component parent that fails its own validation stays
       available for relationship checks, so authors see one root-cause
       error; test.
-- [ ] Finding 25: a projection test pins removed-entry order with
+- [x] Finding 25: a projection test pins removed-entry order with
       interleaved ids and a surviving parent.
-- [ ] Finding 7: table-driven variant validation and manifest relationship
+- [x] Finding 7: table-driven variant validation and manifest relationship
       tests run every rule for screens and components, including stored v7
       `variants`, empty `variants`, and forbidden variant fields.
-- [ ] Finding 12: the NodeNext consumer fixture type-checks the renderer
+- [x] Finding 12: the NodeNext consumer fixture type-checks the renderer
       snippet from `mokly-rendering.md`.
-- [ ] Build, lint, format, typecheck, example build and check, full unit
+- [x] Build, lint, format, typecheck, example build and check, full unit
       suite, and affected browser specs; commit.
 
 ## Milestone 13: Verification ratchets and file splits

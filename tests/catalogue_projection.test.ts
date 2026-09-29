@@ -151,6 +151,41 @@ test("projection exposes screen variants beneath their parent entry", async (t) 
   );
 });
 
+test("removed variants keep baseline authored order at a surviving parent's position", async (t) => {
+  const fixture = await componentReviewFixture(t, (source) => source);
+  const current = fixture.after.manifest.entries.find(
+    (entry): entry is CurrentManifestScreen =>
+      entry.kind === "screen" && entry.id === "home",
+  );
+  assert.ok(current);
+  const removedScreen = (id: string, variantOf?: string) => ({
+    entry: {
+      ...structuredClone(current),
+      id,
+      title: id,
+      ...(variantOf === undefined ? {} : { variantOf }),
+    },
+  });
+  const catalogue = createCatalogue(fixture.after.manifest, [
+    removedScreen("a-removed"),
+    removedScreen("z-variant", current.id),
+    removedScreen("b-variant", current.id),
+    removedScreen("m-removed"),
+  ]);
+  const model = projectCatalogue({
+    configPath: "mokly.config.ts",
+    catalogue,
+    changesStatus: "ready",
+    comparisonUrl: null,
+    revision: { content: 0, evidence: 0 },
+  });
+
+  assert.deepEqual(
+    model.removedEntries.map(({ entry }) => entry.id),
+    ["a-removed", "z-variant", "b-variant", "m-removed"],
+  );
+});
+
 test("public v3 fixture conforms and compatible readers ignore additive fields", async () => {
   const json = await fs.readFile(
     "docs/protocol/fixtures/catalogue-v3.json",

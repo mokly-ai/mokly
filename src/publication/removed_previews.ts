@@ -3,6 +3,7 @@ import path from "node:path";
 
 import type { RemovedEntryPreview } from "@mokly/viewer";
 import {
+  pagePreviewMetadataPath,
   parseRemovedPagePreview,
   type RemovedPagePreviewArtifact,
   type ReviewArtifact,
@@ -96,7 +97,7 @@ export function staticRemovedPreviews(
         previews.set(entry.id, { kind: "screen" });
       }
       if (entry.kind === "page") {
-        const name = `pages/${entry.id}.json`;
+        const name = pagePreviewMetadataPath(entry.id);
         const bytes = files.get(name);
         if (bytes === undefined)
           throw publicationError(

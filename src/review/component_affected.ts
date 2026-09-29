@@ -1,4 +1,5 @@
 import {
+  affectedConsumerOrderKey,
   canonicalJson,
   generatedViews,
   isManifestComponentVariant,
@@ -90,7 +91,10 @@ export function affectedConsumers(
               consumer.id === instance.componentId
             )
               continue;
-            const key = `${instance.componentId}:${consumer.kind}:${consumer.id}`;
+            const key = affectedConsumerOrderKey({
+              changedComponentId: instance.componentId,
+              consumer,
+            });
             let group = groups.get(key);
             if (!group) {
               group = {

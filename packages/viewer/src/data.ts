@@ -104,12 +104,18 @@ export { resolveInstance } from "./components/resolve_instance.js";
 export type { InstanceResolution } from "./components/resolve_instance.js";
 export {
   entryRoute,
+  pagePreviewMetadataPath,
   parseViewHref,
+  providerNormalizedHtmlPath,
+  snapshotPagePath,
+  snapshotViewPath,
+  unavailableViewHref,
   viewHref,
   viewRoute,
 } from "./navigation/routes.js";
 export type {
   EntryRouteKind,
+  SnapshotSide,
   ViewHrefIdentity,
   ViewRouteKind,
 } from "./navigation/routes.js";
@@ -126,6 +132,7 @@ export type {
   AffectedConsumer,
   ReviewResultV4,
 } from "./review/component_types.js";
+export { affectedConsumerOrderKey } from "./review/order.js";
 export type {
   ReviewArtifactContent,
   ReviewState,

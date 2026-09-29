@@ -1,7 +1,11 @@
 import { createHash } from "node:crypto";
 import type { ServerResponse } from "node:http";
 
-import { generatedViews, parseReviewResult } from "@mokly/viewer/data";
+import {
+  generatedViews,
+  parseReviewResult,
+  snapshotViewPath,
+} from "@mokly/viewer/data";
 import type { ReviewResult } from "@mokly/viewer/data";
 
 import { comparisonContentId } from "../export/content_id.js";
@@ -46,14 +50,25 @@ export class PublicReviewAliases {
       result.baseRef !== source.baseRef
     )
       return;
-    for (const view of source.after.entries.flatMap(generatedViews)) {
-      const bytes = files.get(`snapshots/after/${view.path}`);
-      if (
-        !bytes ||
-        createHash("sha256").update(bytes).digest("hex") !==
-          source.headDigests[view.path]
-      )
-        return;
+    for (const entry of source.after.entries) {
+      if (entry.kind !== "screen" && entry.kind !== "component") continue;
+      for (const view of generatedViews(entry)) {
+        const bytes = files.get(
+          snapshotViewPath(
+            "after",
+            entry.kind,
+            entry.id,
+            view.viewport,
+            view.colorScheme,
+          ),
+        );
+        if (
+          !bytes ||
+          createHash("sha256").update(bytes).digest("hex") !==
+            source.headDigests[view.path]
+        )
+          return;
+      }
     }
     for (const [name, bytes] of files) {
       const expected = name.startsWith("snapshots/after/")

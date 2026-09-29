@@ -47,6 +47,7 @@ export function validateReviewScreen(
     const variants = reviewArray(record.variants);
     if (!variants.length) reviewInvalid("component variants are missing");
     const ids = new Set();
+    let baselineOnly = false;
     for (const item of variants) {
       const variant = reviewObject(
         item,
@@ -58,6 +59,11 @@ export function validateReviewScreen(
       reviewState(variant.state);
       if (ids.has(variant.id) || (!variant.before && !variant.after))
         reviewInvalid("invalid variant sides or identity");
+      if (!variant.after) baselineOnly = true;
+      else if (baselineOnly)
+        reviewInvalid(
+          "component variant order must put current variants before baseline-only variants",
+        );
       ids.add(variant.id);
       for (const side of ["before", "after"] as const) {
         if (!variant[side]) continue;

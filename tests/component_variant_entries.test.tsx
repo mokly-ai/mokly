@@ -94,3 +94,45 @@ test("defineComponent applies the global id grammar to variant ids", () => {
     /unknown variant field navPath/,
   );
 });
+
+test("defineComponent rejects empty variants and every inherited variant field", () => {
+  const input = {
+    dependencies: [],
+    description: "A shared action",
+    id: "action",
+    propSchema: { kind: "object", properties: {} },
+    relatedDocs: [],
+    render: () => null,
+    title: "Action",
+  } as const;
+  assert.throws(
+    () => defineComponent({ ...input, variants: [] }),
+    /at least one saved variant is required/,
+  );
+
+  for (const field of [
+    "colorSchemes",
+    "dependencies",
+    "navPath",
+    "relatedDocs",
+    "tags",
+    "variantOf",
+    "variants",
+  ] as const)
+    assert.throws(
+      () =>
+        defineComponent({
+          ...input,
+          variants: [
+            {
+              id: `action-${field.toLowerCase()}`,
+              props: {},
+              title: field,
+              [field]: undefined,
+            } as never,
+          ],
+        }),
+      new RegExp(`unknown variant field ${field}`),
+      field,
+    );
+});

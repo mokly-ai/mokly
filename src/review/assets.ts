@@ -14,9 +14,9 @@ import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError, errorMessage } from "../errors.js";
 
+import { addArtifactFile } from "./artifact_files.js";
 import { referencedRoutes } from "./asset_references.js";
 import type { BaselineReader, GitFile } from "./git.js";
-import { addArtifactFile, snapshotPath } from "./paths.js";
 
 /** Filesystem boundary for current-worktree Review assets. */
 export interface ReviewAssetReader {
@@ -202,7 +202,7 @@ export async function copySnapshotDependencies(
       const batch = queued.filter((route) => !seen.has(route));
       for (const route of batch) seen.add(route);
       const missing = batch.filter(
-        (route) => files.get(snapshotPath(side, route)) === undefined,
+        (route) => files.get(snapshotDependencyPath(side, route)) === undefined,
       );
       if (missing.length > 0) {
         const loaded = readMany
@@ -213,12 +213,12 @@ export async function copySnapshotDependencies(
           if (content === undefined) {
             throw assetError(route, "batch reader omitted the file");
           }
-          addArtifactFile(files, snapshotPath(side, route), content);
+          addArtifactFile(files, snapshotDependencyPath(side, route), content);
         }
       }
       const discovered = new Set<string>();
       for (const route of batch) {
-        const content = files.get(snapshotPath(side, route));
+        const content = files.get(snapshotDependencyPath(side, route));
         if (content === undefined) {
           throw assetError(route, "snapshot dependency is unavailable");
         }
@@ -229,6 +229,13 @@ export async function copySnapshotDependencies(
       queued = [...discovered].sort();
     }
   });
+}
+
+function snapshotDependencyPath(
+  side: "after" | "before",
+  route: string,
+): string {
+  return path.posix.join("snapshots", side, route);
 }
 
 async function readIndividually(

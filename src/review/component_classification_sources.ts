@@ -22,6 +22,7 @@ import type { ComponentClassificationInput } from "./component_classification_in
 import { ComponentComparisonCounts } from "./component_comparison_counts.js";
 import {
   address,
+  baselineForCurrentIdentities,
   ComponentDependencyPolicy,
   entryPairs,
   lexical,
@@ -66,10 +67,10 @@ export interface ComponentClassificationWithSources {
 export async function classifyComponentsWithSources(
   input: ComponentClassificationInput,
 ): Promise<ComponentClassificationWithSources> {
-  const beforeVariantEntries = componentVariantEntries(input.before.entries);
-  const afterVariantEntries = componentVariantEntries(input.after.entries);
-  const before = input.before;
+  const before = baselineForCurrentIdentities(input.before, input.after);
   const after = input.after;
+  const beforeVariantEntries = componentVariantEntries(before.entries);
+  const afterVariantEntries = componentVariantEntries(after.entries);
   const componentAware = [...before.entries, ...after.entries].some(
     (entry) => entry.kind === "component" && !isManifestComponentVariant(entry),
   );

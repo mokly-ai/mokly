@@ -100,7 +100,7 @@ export class RepositoryCatalogueChangeClassifier implements CatalogueChangeClass
         return { kind: "incompatible-earlier", commit: commit ?? base };
       if (isMoklyError(error) && error.code === "manifest-invalid")
         return { kind: "invalid-baseline", diagnostic: errorMessage(error) };
-      return undefined;
+      throw error;
     }
   }
 }
@@ -214,26 +214,21 @@ export async function readCatalogueChanges(
     reader,
     components ? "pages" : "all",
   );
-  let result: ReviewResultV4 | undefined;
-  try {
-    result = await classifyComponents({
-      before: baseline,
-      after: manifest,
-      config,
-      baseCommit: commit,
-      baseRef: base,
-      changedPaths,
-      beforeReader: new GitReviewAssetReader(
-        baselineResourceConfig(config, baseline),
-        git.reader,
-        commit,
-        prefix,
-      ),
-      afterReader: reader,
-    });
-  } catch (error) {
-    if (components) throw error;
-  }
+  const result = await classifyComponents({
+    before: baseline,
+    after: manifest,
+    config,
+    baseCommit: commit,
+    baseRef: base,
+    changedPaths,
+    beforeReader: new GitReviewAssetReader(
+      baselineResourceConfig(config, baseline),
+      git.reader,
+      commit,
+      prefix,
+    ),
+    afterReader: reader,
+  });
   const pageIds = new Set(
     manifest.entries.flatMap((entry) =>
       entry.kind === "page" ? [entry.id] : [],
@@ -257,7 +252,7 @@ export async function readCatalogueChanges(
       headDigests: reader.digests,
       ...(outputs ? { headOutputs: [...outputs] } : {}),
     },
-    ...(result ? { result } : {}),
+    result,
     ...(!components
       ? {
           screenViews: screenViewChanges(
@@ -275,9 +270,7 @@ export async function readCatalogueChanges(
       ...new Set([
         ...ids,
         ...(components
-          ? (result?.changes.map(
-              (entry) => (entry.after ?? entry.before)!.id,
-            ) ?? [])
+          ? result.changes.map((entry) => (entry.after ?? entry.before)!.id)
           : []),
       ]),
     ].sort(),

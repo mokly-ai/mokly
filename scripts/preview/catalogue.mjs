@@ -33,6 +33,7 @@ import {
   previewComparisonProvider,
   publishComparison,
 } from "./comparisons.mjs";
+import { normalizeProviderHtmlAttributes } from "./html_paths.mjs";
 import { capturePublicationInputs } from "./inputs.mjs";
 
 const liveHostScript =
@@ -257,17 +258,15 @@ async function capturePage(
 }
 
 function staticPage(html) {
-  return html
-    .replace(' data-mokly-host-capabilities=""', "")
-    .replace(
-      /<script data-mokly-host-capability-state="" type="application\/json">[^<]*<\/script>/,
-      "",
-    )
-    .replace(liveHostScript, staticHydrationScript)
-    .replace(
-      /(href|src|data-fragment-light|data-fragment-dark)="\/(static|view)\/([^"?#]+)\.html((?:\?|#)[^"]*)?"/g,
-      '$1="/$2/$3$4"',
-    );
+  return normalizeProviderHtmlAttributes(
+    html
+      .replace(' data-mokly-host-capabilities=""', "")
+      .replace(
+        /<script data-mokly-host-capability-state="" type="application\/json">[^<]*<\/script>/,
+        "",
+      )
+      .replace(liveHostScript, staticHydrationScript),
+  );
 }
 
 function assertSafeOutput(output, repoRoot) {

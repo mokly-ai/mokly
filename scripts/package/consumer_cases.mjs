@@ -15,6 +15,7 @@ import {
   smokeServer,
 } from "./fixture.mjs";
 import { smokeConsumerPublish } from "./publish.mjs";
+import { rendererContractSnippet } from "./renderer_contract.mjs";
 import { smokeViewer } from "./viewer.mjs";
 import { smokeExternalWatch } from "./watch.mjs";
 
@@ -120,6 +121,14 @@ export async function smokeNodeNextConsumer(context) {
     root,
     context.archivePath,
     consumerPackage("packed-nodenext-consumer", context, true),
+  );
+  const renderingContract = await fs.promises.readFile(
+    path.join(context.repositoryRoot, "docs/protocol/mokly-rendering.md"),
+    "utf8",
+  );
+  await fs.promises.writeFile(
+    path.join(root, "renderer-contract.d.ts"),
+    `${rendererContractSnippet(renderingContract)}\n`,
   );
   await runCommand(
     path.join(root, "node_modules/.bin/tsc"),

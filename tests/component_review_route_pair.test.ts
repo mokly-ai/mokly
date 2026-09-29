@@ -5,12 +5,15 @@ import { test } from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
+import { parseReviewResult } from "../packages/viewer/dist/data.js";
 
 import {
   assertFastPathEquivalent,
+  classifyFixtureWithSources,
   compilationFiles,
 } from "./helpers/component_fast_path.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
+import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 const resource = "mockups/shared.svg";
@@ -53,6 +56,42 @@ test("non-identity metadata cannot split one screen id's view evidence", async (
         ),
     ),
   );
+});
+
+test("classification drops a baseline entry whose id changed kind", async (t) => {
+  const beforeSource = componentEntrySource();
+  const fixture = await componentReviewFixture(
+    t,
+    (value) =>
+      value
+        .replace('id: "action", title: "Action"', 'id: "home", title: "Action"')
+        .replace('id: "home", title: "Home"', 'id: "new-home", title: "Home"')
+        .replaceAll('"action-default"', '"home-default"')
+        .replaceAll('"action-disabled"', '"home-disabled"')
+        .replaceAll('to="action"', 'to="home"'),
+    beforeSource,
+  );
+  const classified = await classifyFixtureWithSources({
+    before: fixture.before.manifest,
+    after: fixture.after.manifest,
+    beforeFiles: compilationFiles(fixture.before),
+    afterFiles: compilationFiles(fixture.after),
+    changedPaths: fixture.changedPaths,
+    config: fixture.config,
+  });
+  const reused = classified.result.changes.filter(
+    (entry) => (entry.after ?? entry.before)?.id === "home",
+  );
+
+  assert.deepEqual(
+    reused.map((entry) => [
+      entry.kind,
+      Boolean(entry.before),
+      Boolean(entry.after),
+    ]),
+    [["component", false, true]],
+  );
+  assert.deepEqual(parseReviewResult(classified.result), classified.result);
 });
 
 function source(screens: readonly string[]): string {

@@ -9,6 +9,7 @@ import type {
 } from "react";
 
 import type { FrameNavigation } from "../client/frame_adapter.js";
+import { providerNormalizedHtmlPath } from "../navigation/routes.js";
 import { standaloneAppearanceHost } from "../standalone/appearance_host.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -345,11 +346,14 @@ function isProviderNormalizedRoute(
   canonicalPath: string | undefined,
 ): boolean {
   return (
-    canonicalPath?.endsWith(".html") === true &&
-    pathname === canonicalPath.slice(0, -5)
+    canonicalPath !== undefined &&
+    pathname === providerNormalizedHtmlPath(canonicalPath)
   );
 }
 
 function browserRouteHref(href: string, providerNormalized: boolean): string {
-  return providerNormalized ? href.replace(/\.html(?=\?|$)/, "") : href;
+  if (!providerNormalized) return href;
+  const url = new URL(href, "https://mokly.invalid");
+  const pathname = providerNormalizedHtmlPath(url.pathname);
+  return pathname === undefined ? href : `${pathname}${url.search}${url.hash}`;
 }

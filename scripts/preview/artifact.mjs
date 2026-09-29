@@ -4,6 +4,7 @@ import path from "node:path";
 import {
   parseStaticDelivery,
   parseViewHref,
+  providerNormalizedHtmlPath,
   viewHref,
 } from "@mokly/viewer/data";
 
@@ -17,6 +18,7 @@ import { stageExport } from "../../dist/export/stage.js";
 import { advertisePublicationShell } from "../../dist/publication/shell_previews.js";
 
 import { comparisonMetadata } from "./comparisons.mjs";
+import { normalizeProviderHtmlAttributes } from "./html_paths.mjs";
 
 /** Only this repository adapter can adopt the previous preview marker. */
 const previewMarker = {
@@ -100,17 +102,13 @@ export async function stagePreviewArtifact(
     const canonicalView =
       identity !== undefined &&
       viewHref(identity.kind, identity.id) === pathname;
-    if (canonicalView || /^static\/.+\.html$/.test(name))
-      aliases.set(name.slice(0, -5), name);
+    const normalized = providerNormalizedHtmlPath(pathname);
+    if ((canonicalView || name.startsWith("static/")) && normalized)
+      aliases.set(normalized.slice(1), name);
     if (name.endsWith(".html") && !name.startsWith("__mokly/diffs/"))
       files.set(
         name,
-        Buffer.from(bytes)
-          .toString("utf8")
-          .replace(
-            /(href|src|data-fragment-light|data-fragment-dark)="\/(static|view)\/([^"]+)\.html"/g,
-            '$1="/$2/$3"',
-          ),
+        normalizeProviderHtmlAttributes(Buffer.from(bytes).toString("utf8")),
       );
   }
   const metadata = comparison

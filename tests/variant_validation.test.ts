@@ -11,6 +11,7 @@ import type {
   ResolvedRegistryEntry,
   ScreenVariantInput,
 } from "../dist/authoring/types.js";
+import { defineComponent } from "../dist/components/definition.js";
 import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
 import { defineUseCase } from "../dist/index.js";
@@ -65,46 +66,73 @@ test("variant authoring rejects only the retained forbidden fields", () => {
   );
 });
 
-test("variant relationships reject unknown, nested, and non-screen parents", () => {
-  const [parent, child] = screenDefinitions([variant("welcome-empty")]);
-  assert.ok(parent && child);
-  const unknown = { ...child, variantOf: "missing" };
-  assertViolation(
-    allViolations([parent, unknown]),
-    "invalid-variant-of",
-    child.id,
-  );
-  const nested = {
-    ...child,
-    id: "welcome-nested",
-    variantOf: child.id,
-  };
-  assertViolation(
-    allViolations([parent, child, nested]),
-    "invalid-variant-of",
-    nested.id,
-  );
-  const nonScreenParent = {
-    ...invalidNonScreen("page"),
-    id: "page-parent",
-  } as ResolvedRegistryEntry;
-  const childOfPage = {
-    ...child,
-    variantOf: "page-parent",
-  } as ResolvedRegistryEntry;
-  assertViolation(
-    allViolations([nonScreenParent, childOfPage]),
-    "invalid-variant-of",
-    child.id,
-  );
+for (const kind of ["screen", "component"] as const) {
+  test(`${kind} variant relationships reject unknown, nested, and wrong-kind parents`, () => {
+    const [parent, child] = variantDefinitions(kind);
+    assert.ok(parent && child);
+    const unknown = { ...child, variantOf: "missing" };
+    assertViolation(
+      allViolations([parent, unknown]),
+      "invalid-variant-of",
+      child.id,
+    );
+    const nested = {
+      ...child,
+      id: `${parent.id}-nested`,
+      variantOf: child.id,
+    } as ResolvedRegistryEntry;
+    assertViolation(
+      allViolations([parent, child, nested]),
+      "invalid-variant-of",
+      nested.id,
+    );
+    const wrongParent = {
+      ...invalidNonScreen("page"),
+      id: "page-parent",
+    } as ResolvedRegistryEntry;
+    const childOfPage = {
+      ...child,
+      variantOf: "page-parent",
+    } as ResolvedRegistryEntry;
+    assertViolation(
+      allViolations([wrongParent, childOfPage]),
+      "invalid-variant-of",
+      child.id,
+    );
+  });
+
+  test(`${kind} variants retain their parent's navigation path`, () => {
+    const [parent, child] = variantDefinitions(kind);
+    assert.ok(parent && child);
+    const moved = { ...child, navPath: ["Elsewhere"] };
+    assertViolation(
+      allViolations([parent, moved]),
+      "invalid-variants",
+      child.id,
+    );
+  });
+}
+
+test("component parents require at least one variant", () => {
+  const [parent] = variantDefinitions("component");
+  assert.ok(parent);
+  assertViolation(allViolations([parent]), "invalid-variants", parent.id);
 });
 
-test("variants must retain their parent's navigation path", () => {
-  const [parent, child] = screenDefinitions([variant("welcome-empty")]);
-  assert.ok(parent && child);
-  const moved = { ...child, navPath: ["Elsewhere"] };
-  assertViolation(allViolations([parent, moved]), "invalid-variants", child.id);
-});
+for (const [field, value] of [
+  ["dependencies", ["README.md"]],
+  ["relatedDocs", ["README.md"]],
+  ["colorSchemes", ["light"]],
+  ["tags", ["forms"]],
+] as const)
+  test(`component variants inherit ${field} from their parent`, () => {
+    const [parent, child] = variantDefinitions("component");
+    assert.ok(parent && child);
+    assert.throws(
+      () => prepareRegistry([parent, { ...child, [field]: value }], config),
+      new RegExp(`must inherit ${field}`),
+    );
+  });
 
 test("non-screen entries reject variant fields even when undefined", () => {
   for (const kind of ["page", "use-case", "component"] as const) {
@@ -150,6 +178,23 @@ function screenDefinitions(
   });
   assert.ok(Array.isArray(definitions));
   return definitions.map((definition) => resolved(attributed(definition)));
+}
+
+function variantDefinitions(
+  kind: "component" | "screen",
+): ResolvedRegistryEntry[] {
+  if (kind === "screen") return screenDefinitions([variant("welcome-empty")]);
+  return defineComponent({
+    dependencies: [],
+    description: "Action",
+    id: "action",
+    navPath: ["Shared"],
+    propSchema: { kind: "object", properties: {} },
+    relatedDocs: [],
+    render: () => null,
+    title: "Action",
+    variants: [{ id: "action-default", props: {}, title: "Default" }],
+  }).entries.map((definition) => resolved(attributed(definition)));
 }
 
 function variant(id: string): ScreenVariantInput {

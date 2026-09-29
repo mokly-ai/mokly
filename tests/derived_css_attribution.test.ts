@@ -60,7 +60,7 @@ for (const components of [false, true]) {
           ...snapshot.comparison!,
           before: snapshot.baseline,
           after: current.manifest,
-          ...(snapshot.result ? { result: snapshot.result } : {}),
+          result: snapshot.result!,
         },
         { id },
         new AbortController().signal,

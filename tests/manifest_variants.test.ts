@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { ResolvedRegistryEntry } from "../dist/authoring/types.js";
+import { defineComponent } from "../dist/components/definition.js";
 import { createManifest, parseManifest } from "../dist/registry/manifest.js";
 import { entryRoute } from "../packages/viewer/dist/data.js";
 import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
@@ -45,48 +46,79 @@ test("manifest and hierarchy keep authored sibling variant order", () => {
   );
 });
 
-test("manifest validation rejects broken variant parents and stored routes", () => {
-  const unknown = mutableManifest(variantManifest());
-  screenEntry(unknown, "welcome-empty").variantOf = "missing";
-  assert.throws(() => parseManifest(unknown), /variant parent does not exist/);
-
-  const nonScreen = mutableManifest(variantManifest());
-  nonScreen.entries.push({
-    declaredDependencies: [],
-    description: "Page",
-    kind: "page",
-    id: "page",
-    navPath: [],
-    relatedDocs: [],
-    sourcePath: "entries/welcome.mockup.tsx",
-    title: "Page",
-  });
-  screenEntry(nonScreen, "welcome-empty").variantOf = "page";
-  assert.throws(() => parseManifest(nonScreen), /parent is not a screen/);
-
+test("manifest validation rejects stored routes", () => {
   const rerouted = mutableManifest(variantManifest());
-  screenEntry(rerouted, "welcome-empty").route = "screens/elsewhere.html";
+  manifestEntry(rerouted, "welcome-empty").route = "screens/elsewhere.html";
   assert.throws(() => parseManifest(rerouted), /unsupported route/);
 });
 
-test("manifest validation rejects nested variants and mismatched paths", () => {
-  const nested = createManifest(
-    [
-      resolvedScreen("base"),
-      resolvedScreen("welcome", "base"),
-      resolvedScreen("welcome-empty", "welcome"),
-    ],
-    [],
-    ["light"],
-  );
-  assert.throws(() => parseManifest(nested), /parent is itself a variant/);
+for (const kind of ["screen", "component"] as const)
+  test(`${kind} manifest relationships reject missing, wrong-kind, nested, and moved variants`, () => {
+    const original = mutableManifest(manifestForKind(kind));
+    const parent = original.entries.find(
+      (entry) => entry.kind === kind && typeof entry.variantOf !== "string",
+    );
+    const variant = original.entries.find(
+      (entry) => entry.kind === kind && typeof entry.variantOf === "string",
+    );
+    assert.ok(parent && variant);
 
-  const moved = mutableManifest(variantManifest());
-  screenEntry(moved, "welcome-empty").navPath = ["Elsewhere"];
-  assert.throws(
-    () => parseManifest(moved),
-    /variant navPath does not match parent/,
+    const unknown = structuredClone(original);
+    manifestEntry(unknown, variant.id).variantOf = "missing";
+    assert.throws(
+      () => parseManifest(unknown),
+      /variant parent does not exist/,
+    );
+
+    const wrongKind = structuredClone(original);
+    wrongKind.entries.push({
+      declaredDependencies: [],
+      description: "Page",
+      kind: "page",
+      id: "page-parent",
+      navPath: [],
+      relatedDocs: [],
+      sourcePath: parent.sourcePath,
+      title: "Page",
+    });
+    manifestEntry(wrongKind, variant.id).variantOf = "page-parent";
+    assert.throws(
+      () => parseManifest(wrongKind),
+      new RegExp(`parent is not a ${kind}`),
+    );
+
+    const nested = structuredClone(original);
+    nested.entries.push({
+      ...structuredClone(variant),
+      id: `${parent.id}-nested`,
+      variantOf: variant.id,
+    });
+    assert.throws(() => parseManifest(nested), /parent is itself a variant/);
+
+    const moved = structuredClone(original);
+    manifestEntry(moved, variant.id).navPath = ["Elsewhere"];
+    assert.throws(
+      () => parseManifest(moved),
+      /variant navPath does not match parent/,
+    );
+  });
+
+for (const kind of ["screen", "component"] as const)
+  test(`${kind} v7 entries reject stored variants arrays`, () => {
+    const original = mutableManifest(manifestForKind(kind));
+    for (const entry of original.entries.filter((item) => item.kind === kind)) {
+      const stored = structuredClone(original);
+      manifestEntry(stored, entry.id).variants = [];
+      assert.throws(() => parseManifest(stored), /variants/);
+    }
+  });
+
+test("component v7 parents require at least one variant", () => {
+  const manifest = mutableManifest(componentVariantManifest());
+  manifest.entries = manifest.entries.filter(
+    (entry) => typeof entry.variantOf !== "string",
   );
+  assert.throws(() => parseManifest(manifest), /component has no variants/);
 });
 
 test("current non-screen manifest entries reject variant fields", () => {
@@ -112,6 +144,29 @@ function variantManifest() {
     [],
     ["light"],
   );
+}
+
+function componentVariantManifest() {
+  const definitions = defineComponent({
+    dependencies: [],
+    description: "Action",
+    id: "action",
+    navPath: ["Shared"],
+    propSchema: { kind: "object", properties: {} },
+    relatedDocs: [],
+    render: () => null,
+    title: "Action",
+    variants: [{ id: "action-default", props: {}, title: "Default" }],
+  }).entries.map((entry): ResolvedRegistryEntry => ({
+    ...entry,
+    sourcePath: "entries/action.mockup.tsx",
+    sourceRelativePath: "entries/action.mockup.tsx",
+  }));
+  return createManifest(definitions, [], ["light"]);
+}
+
+function manifestForKind(kind: "component" | "screen") {
+  return kind === "screen" ? variantManifest() : componentVariantManifest();
 }
 
 function resolvedScreen(id: string, variantOf?: string): ResolvedRegistryEntry {
@@ -147,7 +202,7 @@ function mutableManifest(value: unknown): MutableManifest {
   return structuredClone(value) as MutableManifest;
 }
 
-function screenEntry(manifest: MutableManifest, id: string): MutableEntry {
+function manifestEntry(manifest: MutableManifest, id: string): MutableEntry {
   const entry = manifest.entries.find((candidate) => candidate.id === id);
   assert.ok(entry);
   return entry;

@@ -6,7 +6,12 @@ import {
   isCatalogueId,
   isEntryId,
   isWindowsDeviceName,
+  pagePreviewMetadataPath,
   parseViewHref,
+  providerNormalizedHtmlPath,
+  snapshotPagePath,
+  snapshotViewPath,
+  unavailableViewHref,
   viewHref,
   viewRoute,
 } from "../src/data.js";
@@ -65,6 +70,45 @@ test("view routes derive every axis from entry identity", () => {
   );
 });
 
+test("comparison and removed-page paths derive from identity", () => {
+  assert.equal(
+    snapshotViewPath("before", "screen", "account-home", "mobile", "light"),
+    "snapshots/before/screens/account-home.mobile.html",
+  );
+  assert.equal(
+    snapshotViewPath(
+      "after",
+      "component",
+      "action-disabled",
+      "desktop",
+      "dark",
+    ),
+    "snapshots/after/components/action-disabled.desktop.dark.html",
+  );
+  assert.equal(
+    snapshotPagePath("archived-guide"),
+    "snapshots/before/pages/archived-guide.html",
+  );
+  assert.equal(
+    pagePreviewMetadataPath("archived-guide"),
+    "pages/archived-guide.json",
+  );
+  for (const call of [
+    () => snapshotViewPath("before", "screen", "con", "mobile", "light"),
+    () =>
+      snapshotViewPath(
+        "sideways" as "before",
+        "screen",
+        "account-home",
+        "mobile",
+        "light",
+      ),
+    () => snapshotPagePath("bad/id"),
+    () => pagePreviewMetadataPath("bad.id"),
+  ])
+    assert.throws(call, /path/i);
+});
+
 test("view hrefs and their parser share the canonical route grammar", () => {
   assert.equal(
     viewHref("screen", "account-home"),
@@ -91,9 +135,38 @@ test("view hrefs and their parser share the canonical route grammar", () => {
     "/view/screens/UPPER.html",
     "/view/screens/nested/id.html",
     "/view/screens/account-home.mobile.html",
+    "/view/constructor/account-home.html",
+    "/view/__proto__/account-home.html",
+    "/view/toString/account-home.html",
     "/screens/account-home.html",
     "/view/screens/account-home.html?fragment=hero",
   ]) {
     assert.equal(parseViewHref(value), undefined, value);
   }
+});
+
+test("browser path helpers normalize only confined HTML artifacts", () => {
+  for (const [value, expected] of [
+    ["/view/screens/account-home.html", "/view/screens/account-home"],
+    [
+      "/static/screens/account-home.mobile.html",
+      "/static/screens/account-home.mobile",
+    ],
+    ["/static/assets/nested/example.html", "/static/assets/nested/example"],
+  ] as const)
+    assert.equal(providerNormalizedHtmlPath(value), expected, value);
+
+  for (const value of [
+    "/view/screens/account-home",
+    "/view/constructor/account-home.html",
+    "/static/../secret.html",
+    "/static/screens/./account-home.html",
+    "/static/screens/%2fsecret.html",
+    "/static/screens/account-home.html?mode=dark",
+    "/static/screens/account-home.html#section",
+    "/other/screens/account-home.html",
+  ])
+    assert.equal(providerNormalizedHtmlPath(value), undefined, value);
+
+  assert.equal(unavailableViewHref("missing/id"), "/view/missing%2Fid");
 });

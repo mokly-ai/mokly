@@ -1,9 +1,8 @@
 # Component Review Validation
 
 This spec validates and emits the [component comparison result schema](./mokly-component-review.md).
-Canonical order enforcement and the shared affected-consumer key are approved
-for Milestone 12 of the active
-[id-derived routes plan](../../plans/id-derived-routes.md).
+Canonical order enforcement and the shared affected-consumer key are
+implemented by both the producer and strict v4 reader.
 
 ## Validation And Canonical Output
 

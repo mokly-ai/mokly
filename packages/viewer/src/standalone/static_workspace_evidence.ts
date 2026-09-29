@@ -2,7 +2,7 @@
 
 import { readViewerWorkspace } from "../client/workspace_descriptor.js";
 import type { StaticDelivery } from "../navigation/delivery.js";
-import { viewHref } from "../navigation/routes.js";
+import { providerNormalizedHtmlPath, viewHref } from "../navigation/routes.js";
 import { readShellDelivery } from "../shell/delivery.js";
 import type { WorkspaceData } from "../shell/workspace_data.js";
 
@@ -102,13 +102,11 @@ function scriptValue(page: Document, selector: string): unknown {
 
 function sameResponseUrl(response: Response, requested: URL): boolean {
   const received = new URL(response.url, requested);
-  const normalized = requested.pathname.endsWith(".html")
-    ? requested.pathname.slice(0, -5)
-    : requested.pathname;
+  const normalized = providerNormalizedHtmlPath(requested.pathname);
   return (
     received.origin === requested.origin &&
     (received.pathname === requested.pathname ||
-      received.pathname === normalized) &&
+      (normalized !== undefined && received.pathname === normalized)) &&
     received.search === "" &&
     received.hash === ""
   );

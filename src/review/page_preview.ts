@@ -4,7 +4,9 @@ import path from "node:path";
 import {
   canonicalJson,
   entryRoute,
+  pagePreviewMetadataPath,
   parseRemovedPagePreview,
+  snapshotPagePath,
 } from "@mokly/viewer/data";
 import type {
   HistoricalManifestPage,
@@ -16,11 +18,11 @@ import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
+import { addArtifactFile } from "./artifact_files.js";
 import { copySnapshotDependencies, GitReviewAssetReader } from "./assets.js";
 import { baselineResourceConfig } from "./base_manifest.js";
 import { SelectedAssetReader } from "./evidence_assets.js";
 import type { BaselineReader } from "./git.js";
-import { addArtifactFile } from "./paths.js";
 import { missingSelection } from "./selection_result.js";
 import type {
   RemovedPagePreviewProvider,
@@ -69,6 +71,11 @@ export class RepositoryRemovedPagePreview implements RemovedPagePreviewProvider 
     );
     const files = new Map<string, ReviewArtifactContent>();
     const document = entryRoute("page", historical.id);
+    addArtifactFile(
+      files,
+      snapshotPagePath(historical.id),
+      await reader.read(document),
+    );
     await copySnapshotDependencies(
       files,
       "before",
@@ -147,7 +154,8 @@ export function packageRemovedPagePreviews(
         `Removed page preview id does not match its selection: ${id}`,
       );
     for (const [name, content] of renderRemovedPagePreviewArtifact(artifact)) {
-      const target = name === "preview.json" ? `pages/${id}.json` : name;
+      const target =
+        name === "preview.json" ? pagePreviewMetadataPath(id) : name;
       const previous = packaged.get(target);
       if (previous === undefined) packaged.set(target, content);
       else if (!Buffer.from(previous).equals(Buffer.from(content)))

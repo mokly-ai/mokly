@@ -64,3 +64,27 @@ test("component variant ids use registry-wide duplicate-id diagnostics", async (
     /\[duplicate-id\].*action-default/,
   );
 });
+
+test("an invalid component parent remains available to its variant relationships", async (t) => {
+  const fixture = await createFixture(
+    componentEntrySource({
+      extra: "const forged = { ...action.entries[0], variants: {} };",
+      exports: "forged, action.entries.slice(1), pane.entries,",
+    }),
+  );
+  t.after(() => removeFixture(fixture));
+
+  await assert.rejects(
+    compileCatalogue(await loadConfig(fixture.root)),
+    (error: Error) => {
+      assert.match(error.message, /definitions must flatten variants/);
+      assert.doesNotMatch(error.message, /variant parent does not exist/);
+      assert.equal(
+        error.message.split("\n").filter((line) => line.startsWith("- ["))
+          .length,
+        1,
+      );
+      return true;
+    },
+  );
+});

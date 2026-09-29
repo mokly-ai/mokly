@@ -27,6 +27,18 @@ const source: SelectedReviewSource = {
   baseRef: "HEAD",
   changedPaths: [],
   headDigests: {},
+  result: {
+    affectedConsumers: [],
+    baseCommit: "a".repeat(40),
+    baseRef: "HEAD",
+    changedPaths: [],
+    changes: [],
+    components: [],
+    ignoredImpact: [],
+    schemaVersion: 4,
+    screens: [],
+    sharedImpact: [],
+  },
 };
 
 function gate() {
