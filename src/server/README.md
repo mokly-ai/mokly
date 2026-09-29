@@ -4,6 +4,8 @@ Serve publishes a validated catalogue, renders requested documents and exposes
 comparison snapshots. `serve.ts` owns single-process Serve; `serve_watched.ts`
 owns watchers, background work and the supervised HTTP child. `http.ts` and
 `child.ts` serve accepted inputs and never prepare historical baselines.
+`http_request_handler.ts` isolates per-request routing from the server's
+mutable catalogue and evidence lifecycle.
 `http_shutdown.ts` stops HTTP admission, ends live-update streams, and disconnects
 open clients before draining every owned service. Incomplete request headers or
 unfinished responses cannot keep shutdown waiting for the browser.

@@ -27,9 +27,7 @@ function metadata(entry: CatalogueRecord) {
     navPath: entry.navPath,
   };
 }
-export function usageView(
-  view: CatalogueView,
-): ComponentViewRecord | undefined {
+function usageView(view: CatalogueView): ComponentViewRecord | undefined {
   if (view.usage.status !== "ready") return;
   return {
     viewport: view.viewport,

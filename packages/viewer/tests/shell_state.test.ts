@@ -14,7 +14,7 @@ import {
   setTagTerm,
 } from "../src/shell/search_query.js";
 import { shellStore } from "../src/shell/store_actions.js";
-import { canonicalHistoricalUrl } from "../src/shell/store_browser.js";
+import { canonicalHistoricalUrl } from "../src/shell/store_browser_urls.js";
 import { withFilterSelection, withRoute } from "../src/shell/store_filters.js";
 import {
   announceNavigation,

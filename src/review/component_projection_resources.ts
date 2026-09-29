@@ -61,7 +61,7 @@ export function prepareComponentProjection(
 }
 
 /** Build the exact projected-resource exclusion used by complete comparison. */
-export function projectedResourceExclusion(
+function projectedResourceExclusion(
   context: ComponentViewContext,
   before: GeneratedComponentView,
   after: GeneratedComponentView,

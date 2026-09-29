@@ -2,9 +2,9 @@
 
 ## Delivery Status
 
-Approved for Milestone 13 of the active
-[id-derived routes plan](../../plans/id-derived-routes.md); Milestone 9 defines
-the contract before xtask implementation.
+Implemented in Milestone 13 of the active
+[id-derived routes plan](../../plans/id-derived-routes.md), from the contract
+approved in Milestone 9.
 
 This contract owns the maintainability ratchets run by the repository suite of
 `cargo xtask check`. They compare the working tree, including untracked files,

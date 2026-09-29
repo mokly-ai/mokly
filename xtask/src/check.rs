@@ -180,6 +180,7 @@ fn repository_commands() -> Vec<CommandSpec> {
         npm(&["run", "dependencies:check"]),
         npm(&["run", "format:check"]),
         npm(&["run", "lint"]),
+        node(&["scripts/verification/repository-ratchets.mjs"]),
         cargo(&["fmt", "--all", "--", "--check"]),
         cargo(&[
             "clippy",
@@ -232,6 +233,10 @@ fn invalid_shard(shard: &str) -> Error {
 
 fn npm(args: &[&str]) -> CommandSpec {
     CommandSpec::new("npm").args(args.iter().copied())
+}
+
+fn node(args: &[&str]) -> CommandSpec {
+    CommandSpec::new("node").args(args.iter().copied())
 }
 
 fn cargo(args: &[&str]) -> CommandSpec {

@@ -14,10 +14,10 @@ import {
 import type { Box, RegionIndex } from "./comparison_scroll_regions.js";
 
 /** The lowest score the fallback accepts. */
-export const SCORE_MINIMUM = 0.45;
+const SCORE_MINIMUM = 0.45;
 
 /** How far the best score must lead the runner-up. */
-export const SCORE_MARGIN = 0.15;
+const SCORE_MARGIN = 0.15;
 
 const OVERLAP_WEIGHT = 0.55;
 const TEXT_WEIGHT = 0.45;

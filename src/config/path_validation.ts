@@ -19,7 +19,7 @@ interface ReviewOutBoundary {
 }
 
 /** Directories that hold authored entry modules for a boundary check. */
-export function entryRootsOf(boundary: ReviewOutBoundary): string[] {
+function entryRootsOf(boundary: ReviewOutBoundary): string[] {
   if (boundary.entriesDir) return [boundary.entriesDir];
   return [
     ...new Set([

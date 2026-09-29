@@ -77,9 +77,10 @@ must survive the boundary. `MoklyError` carries a `Symbol.for` brand and
 facade adds the source module; `load_graph.ts` reconstructs branded errors as
 CLI `MoklyError`s without double prefixes. Unrelated evaluation failures remain
 bundling errors. `src/registry/manifest_validation.ts` applies the strict v7
-baseline boundary before comparison. `mock_links.ts` rewrites id links to the
-identity-derived target artifact and builds the compatibility transform's
-logical-route index from the shared path helpers; a use case without a screen
+baseline boundary before comparison. `mock_links.ts` rewrites id links while
+`mock_link_routes.ts` resolves the identity-derived target artifact and relative
+destination. Together they build the compatibility transform's logical-route
+index from the shared path helpers; a use case without a screen
 as its first step is an invalid registry invariant, not a navigation folder. Registry
 validation and `ownership.ts` accept an attributed owner only when it is a
 resolved entry module or an inventoried source file. Ownership headers and
@@ -113,8 +114,9 @@ manifest rejection are tested with isolated consumers.
   resolution.
 - `jsx_dev_runtime.ts`, `component_source.ts`: invocation capture without output
   or input-identity changes.
-- `mock_links.ts`, `logical_records.ts`: identity-derived link rewriting and
-  compatibility invariants.
+- `mock_links.ts`, `mock_link_routes.ts`, `logical_records.ts`:
+  identity-derived link rewriting, target resolution, and compatibility
+  invariants.
 - `source_inventory.ts`: complete private authoring inventory, separate from
   individual invocation metadata.
 - `transaction.ts`, `check.ts`: safe output installation and verification.

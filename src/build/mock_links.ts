@@ -1,25 +1,15 @@
-import path from "node:path";
-
 import { parse } from "parse5";
 
 import type { ColorScheme, Viewport } from "@mokly/viewer";
 import {
-  encodeUrlPath,
-  entryRoute,
-  effectiveColorSchemes,
   logicalMarker,
   parseLogicalTarget,
   type LogicalTarget,
   duplicateReservedAttributeName,
   type HtmlSourceLocation,
-  viewRoute,
 } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
-import {
-  isComponentVariantDefinition,
-  type ComponentVariantDefinition,
-} from "../components/types.js";
 import { MoklyError } from "../errors.js";
 
 import {
@@ -28,6 +18,10 @@ import {
   type LogicalAttributeRecord,
   type LogicalReferenceRecord,
 } from "./logical_record_types.js";
+import {
+  artifactRouteForEntry,
+  portableMockTarget,
+} from "./mock_link_routes.js";
 
 interface HtmlAttribute {
   name: string;
@@ -48,49 +42,6 @@ interface HtmlNode {
 
 interface Replacement extends HtmlSourceLocation {
   value: string;
-}
-
-/** Resolve a registry entry to the static artifact appropriate for a view. */
-export function artifactRouteForEntry(
-  entry: ResolvedRegistryEntry,
-  viewport: Viewport,
-  colorScheme: ColorScheme,
-  byId: ReadonlyMap<string, ResolvedRegistryEntry>,
-  catalogueSchemes: readonly ColorScheme[],
-): string | undefined {
-  if (entry.kind === "page") return entryRoute("page", entry.id);
-  if (entry.kind === "component") {
-    const variant = isComponentVariantDefinition(entry)
-      ? entry
-      : [...byId.values()].find(
-          (
-            candidate,
-          ): candidate is ResolvedRegistryEntry & ComponentVariantDefinition =>
-            candidate.kind === "component" &&
-            isComponentVariantDefinition(candidate) &&
-            candidate.variantOf === entry.id,
-        );
-    if (!variant) return undefined;
-    const scheme = effectiveColorSchemes(variant, catalogueSchemes).includes(
-      colorScheme,
-    )
-      ? colorScheme
-      : "light";
-    return viewRoute("component", variant.id, viewport, scheme);
-  }
-  const screen =
-    entry.kind === "screen"
-      ? entry
-      : entry.kind === "use-case" && entry.steps[0]
-        ? byId.get(entry.steps[0].screenId)
-        : undefined;
-  if (screen?.kind !== "screen") return undefined;
-  const targetScheme = effectiveColorSchemes(screen, catalogueSchemes).includes(
-    colorScheme,
-  )
-    ? colorScheme
-    : "light";
-  return viewRoute("screen", screen.id, viewport, targetScheme);
 }
 
 /** One rewritten document plus its compatibility invariant records. */
@@ -179,7 +130,7 @@ export function rewriteMockLinks(
         `use case ${destination.id} has no screen as its first step`,
       );
     }
-    const linked = portableTarget(sourceRoute, targetRoute, destination);
+    const linked = portableMockTarget(sourceRoute, targetRoute, destination);
     const rewrittenAttributes = logicalAttributes.map(({ attribute }) => {
       replacements.push(
         attributeReplacement(html, sourceRoute, node, attribute.name, linked),
@@ -233,20 +184,6 @@ function oneDestination(
     );
   }
   return first;
-}
-
-function portableTarget(
-  sourceRoute: string,
-  targetRoute: string,
-  target: LogicalTarget,
-): string {
-  const relative = path.posix.relative(
-    path.posix.dirname(sourceRoute),
-    targetRoute,
-  );
-  const encoded = encodeUrlPath(relative);
-  const route = encoded.startsWith(".") ? encoded : `./${encoded}`;
-  return `${route}${target.fragment ? `#${target.fragment}` : ""}`;
 }
 
 function attributeReplacement(

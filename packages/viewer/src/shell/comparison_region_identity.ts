@@ -6,7 +6,7 @@
  */
 
 /** The authored value that keeps a region from pairing with anything. */
-export const SCROLL_OFF = "off";
+const SCROLL_OFF = "off";
 
 /** The attribute authors use to name a region or turn its pairing off. */
 const NAME_ATTRIBUTE = "data-mokly-scroll";
@@ -48,7 +48,7 @@ const WORD = /[\p{L}\p{N}]+/gu;
 const HEADING = /^h[1-6]$/;
 
 /** Words of a region's own text that its fingerprint keeps. */
-export const FINGERPRINT_WORDS = 200;
+const FINGERPRINT_WORDS = 200;
 
 function firstToken(value: string): string | undefined {
   return value.split(ASCII_WHITESPACE).find((token) => token !== "");

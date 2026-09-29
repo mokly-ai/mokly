@@ -1,24 +1,25 @@
 /** Browser URL, history, focus, and scroll integration for the shell store. */
 
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
-import type {
-  Dispatch,
-  KeyboardEvent,
-  MouseEvent,
-  SetStateAction,
-} from "react";
+import type { Dispatch, SetStateAction } from "react";
 
-import type { FrameNavigation } from "../client/frame_adapter.js";
-import { providerNormalizedHtmlPath } from "../navigation/routes.js";
 import { standaloneAppearanceHost } from "../standalone/appearance_host.js";
 
 import type { Catalogue } from "./catalogue.js";
-import { changesActivation } from "./changes_activation.js";
 import type { ShellContext } from "./context.js";
 import { currentDeploymentMatches } from "./delivery.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import { routeDocumentKey, routeFromUrl, routeHref } from "./routes.js";
-import { eligibleShellAnchor, sameShellRoute } from "./store_browser_routes.js";
+import {
+  shellBrowserActions,
+  type ShellBrowserActions,
+} from "./store_browser_actions.js";
+import { sameShellRoute } from "./store_browser_routes.js";
+import {
+  browserRouteHref,
+  canonicalHistoricalUrl,
+  isProviderNormalizedRoute,
+} from "./store_browser_urls.js";
 import { withRoute } from "./store_filters.js";
 import {
   captureScrolls,
@@ -38,13 +39,7 @@ interface BrowserStoreInput {
   state: ShellState;
 }
 
-/** Browser-only actions returned to the React shell provider. */
-export interface ShellBrowserActions {
-  navigateFrame(href: string, navigation?: FrameNavigation): void;
-  onShellClick(event: MouseEvent<HTMLElement>): void;
-  onShellKeyDown(event: KeyboardEvent<HTMLElement>): void;
-  openFrame(href: string, target: string): void;
-}
+export type { ShellBrowserActions } from "./store_browser_actions.js";
 
 /** Bind one store to standalone history without reading globals during SSR. */
 export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
@@ -238,122 +233,12 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
     }
   }, [input.catalogue, input.interactive, input.state.route]);
 
-  const openFrame = useCallback((href: string, target: string) => {
-    window.open(href, target, "noopener");
-  }, []);
-  return {
-    navigateFrame: (href) => {
-      setTimeout(() => void navigate(href), 0);
-    },
-    openFrame,
-    onShellClick: (event) => {
-      const target = event.target instanceof Element ? event.target : undefined;
-      if (!target) return;
-      const state = stateRef.current;
-      const outsidePickerTag =
-        target.closest("[data-mokly-tag]") &&
-        !target.closest("[data-mokly-tag-picker]");
-      if (
-        state.tagPickerOpen &&
-        !target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]")
-      ) {
-        input.setState((current) => ({ ...current, tagPickerOpen: false }));
-        if (outsidePickerTag) {
-          const root = event.currentTarget;
-          queueMicrotask(() =>
-            root.querySelector<HTMLElement>("[data-mokly-tag-toggle]")?.focus(),
-          );
-        }
-      }
-      if (target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]"))
-        return;
-      if (state.expandedFrame && !target.closest(".browser-frame.is-expanded"))
-        input.setState((current) => ({ ...current, expandedFrame: undefined }));
-      const anchor = target.closest<HTMLAnchorElement>("a[href]");
-      if (!anchor || !eligibleShellAnchor(event, anchor, window.location))
-        return;
-      event.preventDefault();
-      const requested = new URL(anchor.href, window.location.href);
-      const route = routeFromUrl(input.catalogue, requested);
-      const activated = anchor.hasAttribute("data-nav-row")
-        ? changesActivation(
-            input.catalogue,
-            input.context,
-            state.selection,
-            route,
-          )
-        : route;
-      if (activated === route || activated.view.kind !== "target") {
-        void navigate(requested.href);
-        return;
-      }
-      const href = routeHref(
-        activated.view.target.entry.kind,
-        activated.view.target.entry.id,
-        activated.fragment,
-        {
-          ...(activated.comparison ? { comparison: activated.comparison } : {}),
-          ...(activated.instance ? { instance: activated.instance } : {}),
-          ...(activated.snapshot ? { snapshot: activated.snapshot } : {}),
-        },
-      );
-      void transition(new URL(href, requested), true, {}, activated);
-    },
-    onShellKeyDown: (event) => {
-      if (event.key !== "Escape") return;
-      if (stateRef.current.tagPickerOpen) {
-        event.preventDefault();
-        input.setState((state) => ({ ...state, tagPickerOpen: false }));
-        event.currentTarget
-          .querySelector<HTMLElement>("[data-mokly-tag-toggle]")
-          ?.focus();
-      } else if (stateRef.current.expandedFrame) {
-        event.preventDefault();
-        input.setState((state) => ({ ...state, expandedFrame: undefined }));
-      }
-    },
-  };
-}
-
-/** Pin an inferred historical route before later catalogue evidence can change. */
-export function canonicalHistoricalUrl(
-  url: URL,
-  route: ReturnType<typeof routeFromUrl>,
-  providerNormalized: boolean,
-): URL {
-  if (
-    route.view.kind !== "target" ||
-    !route.snapshot ||
-    url.searchParams.has("snapshot")
-  )
-    return url;
-  return new URL(
-    browserRouteHref(
-      routeHref(
-        route.view.target.entry.kind,
-        route.view.target.entry.id,
-        route.fragment,
-        route,
-      ),
-      providerNormalized,
-    ),
-    url,
-  );
-}
-
-function isProviderNormalizedRoute(
-  pathname: string,
-  canonicalPath: string | undefined,
-): boolean {
-  return (
-    canonicalPath !== undefined &&
-    pathname === providerNormalizedHtmlPath(canonicalPath)
-  );
-}
-
-function browserRouteHref(href: string, providerNormalized: boolean): string {
-  if (!providerNormalized) return href;
-  const url = new URL(href, "https://mokly.invalid");
-  const pathname = providerNormalizedHtmlPath(url.pathname);
-  return pathname === undefined ? href : `${pathname}${url.search}${url.hash}`;
+  return shellBrowserActions({
+    catalogue: input.catalogue,
+    context: input.context,
+    navigate,
+    setState: input.setState,
+    state: () => stateRef.current,
+    transition,
+  });
 }

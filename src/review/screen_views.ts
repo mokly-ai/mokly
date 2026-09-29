@@ -1,7 +1,7 @@
 /** View enumeration and aggregation helpers for Review screen comparisons. */
 
 import type { ColorScheme, Viewport } from "@mokly/viewer";
-import { generatedViews, VIEWPORTS } from "@mokly/viewer/data";
+import { generatedViews } from "@mokly/viewer/data";
 import type {
   HistoricalManifestScreen,
   ManifestScreen,
@@ -23,15 +23,6 @@ const VIEWPORT_RANK: Readonly<Record<Viewport, number>> = {
   desktop: 1,
   mobile: 0,
 };
-
-/** List every generated fragment route declared by a manifest screen. */
-export function fragmentRoutes(screen: ReviewScreen): string[] {
-  return VIEWPORTS.flatMap((viewport) =>
-    COLOR_SCHEMES.flatMap(
-      (colorScheme) => fragmentForView(screen, viewport, colorScheme) ?? [],
-    ),
-  );
-}
 
 /** Resolve the manifest fragment for one viewport and color scheme. */
 export function fragmentForView(
@@ -57,7 +48,7 @@ export function unionColorSchemes(
 }
 
 /** Return the color schemes represented by one manifest screen. */
-export function screenColorSchemes(
+function screenColorSchemes(
   screen: ReviewScreen | undefined,
 ): readonly ColorScheme[] {
   return screen?.colorSchemes ?? [];

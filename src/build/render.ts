@@ -20,7 +20,6 @@ import {
   isComponentVariantDefinition,
   type ComponentDefinition,
 } from "../components/types.js";
-import { toPosixPath } from "../config/paths.js";
 import {
   isPublicStaticFile,
   publicFileFailureReason,
@@ -159,7 +158,7 @@ export function renderFragments(
 }
 
 /** Add one output and fail on a route collision. */
-export function addOutput(
+function addOutput(
   outputs: Map<string, string>,
   route: string,
   content: string,
@@ -206,12 +205,4 @@ export function stylesheetsFor(
     const encoded = encodeUrlPath(relative);
     return encoded.startsWith(".") ? encoded : `./${encoded}`;
   });
-}
-
-/** Normalize an absolute source path for deterministic diagnostics. */
-export function sourceLabel(
-  config: ResolvedConfig,
-  sourcePath: string,
-): string {
-  return toPosixPath(path.relative(config.repoRoot, sourcePath));
 }

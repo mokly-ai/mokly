@@ -4,7 +4,7 @@ import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { BaselineError } from "./errors.js";
 
-export const BASELINE_CACHE_PATH = ".mokly-cache/baselines";
+const BASELINE_CACHE_PATH = ".mokly-cache/baselines";
 export const DEFAULT_RETAINED_COUNT = 3;
 export const LOCK_TIMEOUT_MS = 120_000;
 export const LOCK_POLL_MS = 100;

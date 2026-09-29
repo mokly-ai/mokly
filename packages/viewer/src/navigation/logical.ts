@@ -1,10 +1,10 @@
 /** Shared grammar for stable catalogue entry identifiers. */
-export const CATALOGUE_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const CATALOGUE_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const WINDOWS_DEVICE_NAME_PATTERN = /^(?:aux|con|nul|prn|com[1-9]|lpt[1-9])$/i;
 
 /** Shared grammar for logical HTML fragment identifiers. */
-export const LOGICAL_FRAGMENT_PATTERN = /^[A-Za-z][A-Za-z0-9_:.-]*$/;
+const LOGICAL_FRAGMENT_PATTERN = /^[A-Za-z][A-Za-z0-9_:.-]*$/;
 
 /** A parsed complete logical catalogue destination. */
 export interface LogicalTarget {

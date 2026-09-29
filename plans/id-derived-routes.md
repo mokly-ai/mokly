@@ -657,7 +657,7 @@ Tags: mockup
 
 ## Milestone 13: Verification ratchets and file splits
 
-- [ ] Finding 29: split the files that grew past 300 lines in this plan
+- [x] Finding 29: split the files that grew past 300 lines in this plan
       (`src/registry/manifest_validation.ts`,
       `src/registry/manifest_entries.ts`, `src/build/mock_links.ts`,
       `packages/viewer/src/shell/workspace_data.ts`,
@@ -665,11 +665,14 @@ Tags: mockup
       `packages/viewer/src/shell/use_comparison.ts`, and
       `packages/viewer/src/shell/store_browser.ts`) by responsibility with no
       behavior change.
-- [ ] Add the TypeScript file-length ratchet, the protocol doc cap ratchet,
+- [x] Split the additional files caught by the exact `origin/main` ratchet
+      (`src/review/component_classification_sources.ts` and
+      `src/server/http.ts`) by responsibility with no behavior change.
+- [x] Add the TypeScript file-length ratchet, the protocol doc cap ratchet,
       and the unused internal export check with its shrinking baseline to the
       repository suite of `cargo xtask check` as documented, with tests;
       Rust changes follow the repository's Rust rules.
-- [ ] `cargo xtask check --suite repository` and the full unit suite pass;
+- [x] `cargo xtask check --suite repository` and the full unit suite pass;
       commit.
 
 ## Milestone 14: Shell review fixes

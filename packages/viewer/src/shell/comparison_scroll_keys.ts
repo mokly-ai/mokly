@@ -6,7 +6,7 @@ import type { ScrollOffset } from "./comparison_scroll_mirror.js";
 export const LINE_STEP = 40;
 
 /** Share of the visible height one page key scrolls, as the browser does. */
-export const PAGE_FRACTION = 0.875;
+const PAGE_FRACTION = 0.875;
 
 /** The key event fields that decide whether and where a pane scrolls. */
 export interface ScrollKey {

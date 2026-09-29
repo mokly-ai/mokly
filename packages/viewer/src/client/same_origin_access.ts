@@ -13,7 +13,7 @@ export function localFrameAccess(frame: HTMLIFrameElement): LocalFrameAccess {
   };
 }
 
-export function sameFrameResource(documentUrl: string, expected: URL): boolean {
+function sameFrameResource(documentUrl: string, expected: URL): boolean {
   const actual = new URL(documentUrl);
   return (
     actual.origin === expected.origin &&
@@ -23,22 +23,6 @@ export function sameFrameResource(documentUrl: string, expected: URL): boolean {
       normalizedHtmlPath(expected.pathname) &&
     actual.search === expected.search
   );
-}
-
-export function assignedFrameResource(
-  frame: HTMLIFrameElement,
-  expected: URL,
-): boolean {
-  const source = frame.getAttribute("src");
-  if (!source) return false;
-  try {
-    return sameFrameResource(
-      new URL(source, frame.ownerDocument.baseURI).href,
-      expected,
-    );
-  } catch {
-    return false;
-  }
 }
 
 export function recordedFrameResource(

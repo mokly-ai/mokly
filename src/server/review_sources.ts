@@ -78,7 +78,7 @@ export function livePublicInput(
   };
 }
 
-export function servedScreenPreviews(
+function servedScreenPreviews(
   catalogue: Catalogue,
   result: ReviewResult | undefined,
 ): ReadonlyMap<string, RemovedEntryPreview> | undefined {

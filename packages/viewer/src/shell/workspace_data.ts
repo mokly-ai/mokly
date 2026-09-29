@@ -4,7 +4,6 @@ import type { RenderCapability } from "../components/render_types.js";
 /** Serializable, source-derived state shared by the served and published inspector. */
 import {
   generatedViews,
-  orderedInstances,
   type GeneratedComponentView,
 } from "../components/views.js";
 import type {
@@ -17,21 +16,21 @@ import { publicWorkspace } from "../viewer/public_workspace.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
-import { dedupeUsageLinks } from "./usage_links.js";
 import {
   shownComparisonEligible,
   type EntryStatus,
   type ViewStatesBySelection,
 } from "./view_status.js";
-import {
-  workspaceComponent,
-  workspaceEntryTitle,
-  type WorkspaceEntry,
-} from "./workspace_entry.js";
+import { workspaceComponent, type WorkspaceEntry } from "./workspace_entry.js";
 import {
   inputChanges as entryInputChanges,
   type InputChange,
 } from "./workspace_input_changes.js";
+import {
+  affectedUsageLinks,
+  usedByUsageLinks,
+  type UsageLink,
+} from "./workspace_usage_data.js";
 import {
   standaloneWorkspaceVariant,
   workspaceVariants,
@@ -45,17 +44,7 @@ import {
 
 export type { EntryStatus } from "./view_status.js";
 export type { WorkspaceVariant } from "./workspace_variants.js";
-export interface UsageLink {
-  entryId: string;
-  entryKind: "component" | "screen";
-  title: string;
-  viewport: "mobile" | "desktop";
-  colorScheme: "light" | "dark";
-  instanceKey: string;
-  direct: boolean;
-  removed: boolean;
-  comparisonEligible: boolean;
-}
+export type { UsageLink } from "./workspace_usage_data.js";
 export interface WorkspaceData {
   previewGeneration?: string;
   usageComplete?: boolean;
@@ -114,9 +103,6 @@ export function workspaceData(
   const componentId =
     component?.id ?? (orphanVariant ? entry.variantOf : undefined);
   const evidenceEntry = component ?? entry;
-  const currentEntriesById = new Map(
-    catalogue.manifest.entries.map((candidate) => [candidate.id, candidate]),
-  );
   const resourceEvidence = snapshot?.screenEvidence?.find(
     (screen) => screen.id === entry.id,
   )?.views;
@@ -178,39 +164,6 @@ export function workspaceData(
       ? variants.find((variant) => variant.value.id === entry.id)
       : undefined;
   const status = selectedVariant?.status ?? entryStatus;
-  const affected: UsageLink[] = (result?.affectedConsumers ?? [])
-    .filter((item) => item.changedComponentId === componentId)
-    .flatMap((item) =>
-      item.evidence.map((evidence) => {
-        const entryId =
-          evidence.context.kind === "component"
-            ? evidence.context.variantId
-            : evidence.context.entry.id;
-        const destination =
-          currentEntriesById.get(entryId) ??
-          catalogue.removedEntries.find(
-            ({ entry: candidate }) => candidate.id === entryId,
-          )?.entry;
-        const current = currentEntriesById.get(entryId);
-        const removed = current === undefined;
-        return {
-          entryId,
-          entryKind: evidence.context.kind,
-          title: destination
-            ? workspaceEntryTitle(catalogue, destination)
-            : evidence.context.entry.title,
-          viewport: evidence.context.viewport,
-          colorScheme: evidence.context.colorScheme,
-          instanceKey: evidence.via.at(-1)!.instanceKey,
-          direct: evidence.via.length === 1,
-          removed,
-          comparisonEligible: shownComparisonEligible(
-            removed ? "Removed" : "Changed",
-            evidence.context.kind,
-          ),
-        };
-      }),
-    );
   const inputChanges = entryInputChanges(
     catalogue,
     evidenceEntry,
@@ -282,28 +235,8 @@ export function workspaceData(
       variants.map(({ value }) => value.id),
     ),
     variants,
-    usedBy: (catalogue.manifest.schemaVersion === "live-index-1"
-      ? []
-      : catalogue.manifest.entries
-    ).flatMap((owner) => {
-      if (owner.kind !== "screen" && owner.kind !== "component") return [];
-      return generatedViews(owner).flatMap((view) =>
-        orderedInstances(view.usage)
-          .filter((instance) => instance.componentId === evidenceEntry.id)
-          .map((instance) => ({
-            entryId: owner.id,
-            entryKind: owner.kind,
-            title: workspaceEntryTitle(catalogue, owner),
-            viewport: view.viewport,
-            colorScheme: view.colorScheme,
-            instanceKey: instance.key,
-            direct: instance.owner.kind === "entry",
-            removed: false,
-            comparisonEligible: false,
-          })),
-      );
-    }),
-    affected: dedupeUsageLinks(affected),
+    usedBy: usedByUsageLinks(catalogue, evidenceEntry),
+    affected: affectedUsageLinks(catalogue, result, componentId),
     ...(status ? { status } : {}),
     ...(change ? { change } : {}),
     ...(comparison ? { comparison } : {}),

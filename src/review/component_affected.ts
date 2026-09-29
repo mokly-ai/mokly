@@ -120,7 +120,7 @@ export function affectedConsumers(
       evidence: [...group.evidence.values()].sort(compareEvidence),
     }));
 }
-export function compareEvidence(
+function compareEvidence(
   a: AffectedUsageEvidence,
   b: AffectedUsageEvidence,
 ): number {

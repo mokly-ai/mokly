@@ -164,7 +164,7 @@ function MissingView(props: { requested: string }) {
 }
 
 /** The active catalogue route for a shell view, when it has one. */
-export function activeIdForView(view: ShellView): string | undefined {
+function activeIdForView(view: ShellView): string | undefined {
   if (view.kind !== "target") {
     return undefined;
   }

@@ -100,7 +100,7 @@ export function frameInstanceRef(
 }
 
 /** Match the exact current workspace view, including entry id and effective axes. */
-export function matchesWorkspaceFrame(
+function matchesWorkspaceFrame(
   session: ShellFrameSession,
   data: WorkspaceData,
   view: GeneratedComponentView,

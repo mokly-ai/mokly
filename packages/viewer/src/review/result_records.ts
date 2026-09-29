@@ -91,7 +91,7 @@ export function validateReviewScreen(
   }
   return record;
 }
-export function validateReviewViews(
+function validateReviewViews(
   value: unknown,
   sides?: Record<string, unknown>,
   changedPaths: readonly string[] = [],

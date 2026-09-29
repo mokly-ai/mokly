@@ -9,10 +9,8 @@ import { adaptLinkControls } from "../build/link_controls.js";
 import type { LoadedGraph } from "../build/load_graph.js";
 import type { LogicalReferenceRecord } from "../build/logical_record_types.js";
 import { validateCompatibilityRecords } from "../build/logical_records.js";
-import {
-  artifactRouteForEntry,
-  rewriteMockLinks,
-} from "../build/mock_links.js";
+import { artifactRouteForEntry } from "../build/mock_link_routes.js";
+import { rewriteMockLinks } from "../build/mock_links.js";
 import { pendingGeneratedOrphanRoutes } from "../build/ownership.js";
 import { toPosixPath } from "../config/paths.js";
 import { isPublicStaticFile } from "../config/public_files.js";

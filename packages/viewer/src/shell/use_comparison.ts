@@ -4,6 +4,12 @@ import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 
 import { useComparisonEnvironment } from "./comparison_context.js";
 import {
+  comparisonDemand,
+  type ComparisonDemand,
+  type ComparisonMode,
+  type ComparisonPresentation,
+} from "./comparison_presentation.js";
+import {
   renewComparison,
   requestComparison,
   type ComparisonScope,
@@ -11,23 +17,10 @@ import {
 } from "./comparison_request.js";
 import { useOptionalShellStore } from "./store_context.js";
 
-/** Available comparison presentations; Current never makes a request. */
-export type ComparisonMode = "current" | "side" | "overlay" | "difference";
-
-export interface ComparisonPresentation {
-  /** Scheme of the comparison artifact actually shown. */
-  colorScheme: "dark" | "light";
-  mode: Exclude<ComparisonMode, "current">;
-  /** Sticky control selection retained for fallback labels. */
-  requestedColorScheme: "dark" | "light";
-  viewport: "both" | "desktop" | "mobile";
-}
-
-interface Demand extends ComparisonPresentation {
-  key: string;
-  scope: ComparisonScope;
-  scopeKey: string;
-}
+export type {
+  ComparisonMode,
+  ComparisonPresentation,
+} from "./comparison_presentation.js";
 
 interface LoadedState {
   scopeKey: string;
@@ -115,7 +108,7 @@ export function useComparison({
   const failureRef = useRef<FailureState | undefined>(undefined);
   const pendingRef = useRef<PendingOperation | undefined>(undefined);
   const completedRef = useRef<string | undefined>(undefined);
-  const latestDemand = useRef<Demand | undefined>(undefined);
+  const latestDemand = useRef<ComparisonDemand | undefined>(undefined);
   const currentOwner = useRef(ownerKey);
   const currentEligibility = useRef(eligible);
   currentOwner.current = ownerKey;
@@ -275,30 +268,5 @@ export function useComparison({
     refresh: () => begin("load", true),
     retry: () => begin("load", true),
     selectMode: (next) => setModeState({ mode: next, ownerKey }),
-  };
-}
-
-function comparisonDemand(
-  scope: ComparisonScope,
-  scopeKey: string,
-  mode: Exclude<ComparisonMode, "current">,
-  viewport: ComparisonPresentation["viewport"],
-  colorScheme: ComparisonPresentation["colorScheme"],
-  requestedColorScheme: ComparisonPresentation["requestedColorScheme"],
-): Demand {
-  return {
-    scope,
-    scopeKey,
-    mode,
-    viewport,
-    colorScheme,
-    requestedColorScheme,
-    key: JSON.stringify([
-      scopeKey,
-      mode,
-      viewport,
-      colorScheme,
-      requestedColorScheme,
-    ]),
   };
 }

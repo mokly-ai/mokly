@@ -130,20 +130,6 @@ export function readStoredDetailsPreference(
   return undefined;
 }
 
-/** Read the actual disclosure DOM handed to React after preference capture. */
-export function readHydrationDisclosures(
-  doc: Document,
-): Readonly<Record<string, boolean>> {
-  return Object.fromEntries(
-    [...doc.querySelectorAll<HTMLElement>("[data-nav-disclosure]")]
-      .map((group) => [
-        group.getAttribute("data-nav-disclosure"),
-        disclosureOpen(group),
-      ])
-      .filter((entry): entry is [string, boolean] => entry[0] !== null),
-  );
-}
-
 /** Persist the disclosure DOM that React adopts, including an early choice. */
 export function persistHydrationDisclosures(doc: Document): void {
   const win = doc.defaultView;
@@ -151,7 +137,7 @@ export function persistHydrationDisclosures(doc: Document): void {
 }
 
 /** A native activation is newer than any stored preference or snapshot. */
-export function restoreEarlyDisclosures(doc: Document): void {
+function restoreEarlyDisclosures(doc: Document): void {
   const win = doc.defaultView as StateWindow | null;
   const state = win?.[stateKey];
   if (!state) return;
@@ -223,7 +209,7 @@ function storedDisclosures(
 }
 
 /** Read either a native group or a screen-variant list disclosure. */
-export function disclosureOpen(group: HTMLElement): boolean {
+function disclosureOpen(group: HTMLElement): boolean {
   return group.hasAttribute("data-nav-variants")
     ? !group.hidden
     : (group as HTMLDetailsElement).open;

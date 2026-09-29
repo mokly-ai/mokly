@@ -30,6 +30,7 @@ fn complete_gate_is_the_ordered_union_of_every_suite() {
             "npm run dependencies:check",
             "npm run format:check",
             "npm run lint",
+            "node scripts/verification/repository-ratchets.mjs",
             "cargo fmt --all -- --check",
             "cargo clippy --workspace --all-targets -- -D warnings",
             "cargo test --workspace",
@@ -81,6 +82,9 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
             .returns(Ok(())),
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "npm run lint"))
+            .returns(Ok(())),
+        CommandRunnerRunMock
+            .next_call(matching!((command) if command.display() == "node scripts/verification/repository-ratchets.mjs"))
             .returns(Ok(())),
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "cargo fmt --all -- --check"))

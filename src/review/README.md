@@ -262,8 +262,9 @@ Key code:
   writes plus snapshot and removed-page artifact naming from entry identity.
 - `component_variant_classification.ts`: flat component variant entry pairing,
   reasons, view evidence, and grouped v4 result records.
-- `component_classification_sources.ts`, `component_reason_sources.ts`, and
-  `component_result_sources.ts`: source-complete v4 assembly and validation.
+- `component_classification_sources.ts`, `component_classification_entries.ts`,
+  `component_reason_sources.ts`, and `component_result_sources.ts`:
+  source-complete v4 assembly, entry-view preparation, and validation.
 - `component_classification.ts`, `component_view.ts`: component ownership policy.
   `compareComponentView` has two paths: an unchanged decision that settles a
   paired view only when marker-retaining documents, routes, and usage topology

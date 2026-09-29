@@ -4,9 +4,6 @@ import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { RemovedEntryPreview } from "../catalogue/types.js";
 import type { RemovedPreviewData } from "../shell/previews.js";
 
-/** The attribute the shell writes on every previous-version stage host. */
-export const PREVIEW_ATTRIBUTE = "data-mokly-preview";
-
 function text(value: unknown): string | undefined {
   return typeof value === "string" && value.length > 0 ? value : undefined;
 }

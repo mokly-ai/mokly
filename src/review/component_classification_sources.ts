@@ -1,13 +1,12 @@
 import path from "node:path";
 
-import { generatedViews, isManifestComponentVariant } from "@mokly/viewer/data";
+import { isManifestComponentVariant } from "@mokly/viewer/data";
 import type {
   ChangedEntry,
   ComponentReview,
   EntryChangeReason,
   ReviewResultV4,
   ScreenReviewV4,
-  GeneratedComponentView,
 } from "@mokly/viewer/data";
 
 import { toPosixPath } from "../config/paths.js";
@@ -18,6 +17,11 @@ import {
   propagateImplementations,
   propagateUseCases,
 } from "./component_change_propagation.js";
+import {
+  entryDependencies,
+  entryViews,
+  prefetchClassificationViews,
+} from "./component_classification_entries.js";
 import type { ComponentClassificationInput } from "./component_classification_input.js";
 import { ComponentComparisonCounts } from "./component_comparison_counts.js";
 import {
@@ -27,7 +31,6 @@ import {
   entryPairs,
   lexical,
   metadata,
-  type ReviewEntry,
   uniqueReasons,
 } from "./component_metadata.js";
 import { viewPairs } from "./component_pairing.js";
@@ -102,22 +105,12 @@ export async function classifyComponentsWithSources(
       ? {}
       : { useFastPath: input.useFastPath }),
   };
-  const prefetchBefore = () =>
-    context.beforeReader.prefetch(
-      before.entries.flatMap((entry) =>
-        generatedViews(entry).map((view) => view.path),
-      ),
-    );
-  await Promise.all([
-    input.beforeReader.readMany
-      ? timeAsync("review.base-documents", prefetchBefore)
-      : prefetchBefore(),
-    context.afterReader.prefetch(
-      after.entries.flatMap((entry) =>
-        generatedViews(entry).map((view) => view.path),
-      ),
-    ),
-  ]);
+  await prefetchClassificationViews(
+    context,
+    before,
+    after,
+    input.beforeReader.readMany !== undefined,
+  );
   const sharedImpact = dependencies.sharedPaths(changedPaths);
   const screens: ScreenReviewV4[] = [];
   const components: ComponentReview[] = [];
@@ -300,21 +293,4 @@ export async function classifyComponentsWithSources(
     ignoredImpact: aggregateIgnored(screens),
   };
   return { result, implementationImpact: impacting, sources: reasonSources };
-}
-
-function entryDependencies(entry: ReviewEntry | undefined): readonly string[] {
-  if (!entry) return [];
-  return [entry.sourcePath, ...entry.declaredDependencies];
-}
-
-function entryViews(
-  entry: ReviewEntry | undefined,
-  variants: ReturnType<typeof componentVariantEntries>,
-): GeneratedComponentView[] {
-  if (!entry) return [];
-  if (entry.kind === "component" && !isManifestComponentVariant(entry))
-    return [...variants.values()]
-      .filter((variant) => variant.variantOf === entry.id)
-      .flatMap((variant) => generatedViews(variant));
-  return generatedViews(entry);
 }

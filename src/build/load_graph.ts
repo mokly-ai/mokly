@@ -2,7 +2,6 @@ import path from "node:path";
 
 import { build } from "esbuild";
 
-import type { RegistryDefinition } from "../authoring/types.js";
 import type { CompatibilityTransformer } from "../compatibility/types.js";
 import type { ComponentGraphRenderer } from "../components/render.js";
 import { discoverEntryModules } from "../config/entry_discovery.js";
@@ -173,13 +172,4 @@ async function loadGraph(
       },
     );
   }
-}
-
-/** Narrow an unknown loaded value after runtime validation. */
-export function asRegistryDefinition(
-  value: unknown,
-): RegistryDefinition | undefined {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-    ? (value as RegistryDefinition)
-    : undefined;
 }

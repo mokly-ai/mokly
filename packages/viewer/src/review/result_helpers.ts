@@ -1,8 +1,6 @@
 import { canonicalJson } from "../components/data.js";
 import { isCatalogueId, isEntryId } from "../navigation/logical.js";
 
-export const compareText = (a: string, b: string): number =>
-  a < b ? -1 : a > b ? 1 : 0;
 export function reviewInvalid(message: string): never {
   throw new Error(`[mokly/review] ${message}`);
 }
@@ -66,16 +64,6 @@ export function reviewPath(value: unknown): string {
   )
     reviewInvalid("unsafe path");
   return path;
-}
-export function reviewRoute(value: unknown): string {
-  const route = reviewPath(value);
-  if (
-    !/^(?:[A-Za-z0-9][A-Za-z0-9._~-]*\/)*[A-Za-z0-9][A-Za-z0-9._~-]*\.html$/.test(
-      route,
-    )
-  )
-    reviewInvalid("unsafe route");
-  return route;
 }
 export function reviewStrings(
   value: unknown,

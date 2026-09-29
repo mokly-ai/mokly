@@ -485,6 +485,9 @@ consumers.
 - [`src/shell/workspace_entry.ts`](./src/shell/workspace_entry.ts) and
   [`src/shell/workspace_variants.ts`](./src/shell/workspace_variants.ts) —
   routed workspace identity and sibling component-variant entries
+- [`src/standalone/bootstrap.ts`](./src/standalone/bootstrap.ts) and
+  [`src/standalone/bootstrap_validation.ts`](./src/standalone/bootstrap_validation.ts)
+  — standalone hydration projection and validation
 - [`src/inspector`](./src/inspector) — bounded in-frame inspection runtime
 - [`tests`](./tests) — package-level conformance tests
 

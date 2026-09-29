@@ -37,7 +37,7 @@ export const CHANGE_STATUSES = [
 ] as const;
 const KINDS = ["added", "changed", "removed", "unmodified"] as const;
 
-export function readChanges(value: unknown): CatalogueChanges {
+function readChanges(value: unknown): CatalogueChanges {
   const input = object(value),
     status = choice(input.status, CHANGE_STATUSES);
   if (status !== "ready") absent(input, ["kind", "included"]);
@@ -49,7 +49,7 @@ export function readChanges(value: unknown): CatalogueChanges {
       }
     : { status };
 }
-export function readComparison(value: unknown): ComparisonSelection {
+function readComparison(value: unknown): ComparisonSelection {
   const input = object(value),
     status = choice(input.status, [
       "ready",
@@ -66,7 +66,7 @@ export function readComparison(value: unknown): ComparisonSelection {
       }
     : { status };
 }
-export function readUsage(value: unknown): CatalogueUsage {
+function readUsage(value: unknown): CatalogueUsage {
   const input = object(value),
     status = choice(input.status, ["ready", "pending", "unavailable"] as const);
   if (status !== "ready") absent(input, ["instances", "slots", "ranges"]);
@@ -79,7 +79,7 @@ export function readUsage(value: unknown): CatalogueUsage {
       }
     : { status };
 }
-export function readView(value: unknown): CatalogueView {
+function readView(value: unknown): CatalogueView {
   const input = object(value);
   return {
     viewport: choice(input.viewport, ["mobile", "desktop"] as const),

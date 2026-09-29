@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-The suite CLI, evidence, workflow graph, and fixture reuse are implemented.
-Repository ratchets are the approved Milestone 13 target. [Hosted measurements](../reviews/ci-performance.md)
+The suite CLI, evidence, workflow graph, fixture reuse, and repository ratchets
+are implemented. [Hosted measurements](../reviews/ci-performance.md)
 record timing/coverage. `cargo xtask check` remains the complete local gate; a
 validated hosted aggregate is reusable evidence for its exact tree.
 

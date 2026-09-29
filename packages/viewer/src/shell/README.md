@@ -89,7 +89,9 @@ CLI's `src/server/baseline_catalogue.ts`.
 selection, disclosure, drawer, details, recovery and scroll state. `routes.ts`,
 `nav_model.ts`, `search_query.ts` and `entry_wording.ts` are deterministic
 helpers shared by SSR and the live tree; `delivery.ts` validates static
-deployment continuity before a read-model route transition. Frame documents
+deployment continuity before a read-model route transition.
+`store_browser_actions.ts` owns DOM interaction and
+`store_browser_urls.ts` owns provider-normalized URL policy. Frame documents
 remain static while `frame_event_router.tsx` routes authenticated logical-link
 events from visible sessions in the owning `frame_registry.tsx`.
 
@@ -115,9 +117,10 @@ validated query/parser/resolver carries it through SSR, hydration, controlled
 hosts and history. Headings, crumbs, Details and previous-preview lookup consume
 the resolved removed record and route.
 
-`workspace_data.ts` describes shell data. Its `entry` is always the exact
-routed screen, component parent, or component variant; component routes retain
-their parent schema separately for controls. The public viewer projects those
+`workspace_data.ts` describes shell data, while `workspace_usage_data.ts`
+projects use and affected-consumer links. Its `entry` is always the exact routed
+screen, component parent, or component variant; component routes retain their
+parent schema separately for controls. The public viewer projects those
 values only from validated catalogue records. Embedded bootstrap and workspace JSON use
 canonical key ordering so their validated client projections retain the exact
 server bytes during hydration. `comparison_views.tsx` renders React-owned frame
@@ -128,8 +131,10 @@ supplies its private live capabilities through typed server context.
 record for Details; `workspace_evidence.tsx` combines its shared-impact paths
 with retained dependency paths while keeping stylesheet exclusions separate.
 
-Standalone full-document composition lives in `src/standalone`: its bootstrap contains
-the validated public catalogue and shell delivery state for Serve. Static pages
+Standalone full-document composition lives in `src/standalone`:
+`bootstrap_types.ts` owns the wire shape and `bootstrap_validation.ts` validates
+it before selection. The bootstrap contains the validated public catalogue and
+shell delivery state for Serve. Static pages
 carry a compact identity/revision reference and resolve the shared finalized
 catalogue before `src/browser.tsx` hydrates that exact server tree. Live Serve places private
 route evidence in a separate descriptor; the capability store adopts the
@@ -218,7 +223,8 @@ only changed search, tag or Changes filters reveal their matching groups.
 renders the band's mode group, the Scroll together switch (a native checkbox
 with `role="switch"`, shown in every diff mode including loading and failure)
 and Refresh. `use_comparison.ts` requests, renews and fences the selected
-comparison; `comparison_selection.ts` picks the views and snapshot addresses
+comparison, while `comparison_presentation.ts` owns its request identity and
+axes; `comparison_selection.ts` picks the views and snapshot addresses
 the selection shows; and `use_comparison_documents.ts` presents every selected
 pane document through the shared snapshot loader of the comparison's immutable
 generation before the stage reports ready. Its framework-free core,
