@@ -24,8 +24,8 @@ invalid newly created compounds.
 The two findings in the
 [Milestone 23 review record](../docs/reviews/imported-css-delivery-milestone-23.md)
 are addressed there; other findings remain open for the user's decision, as
-do the earlier unselected findings. Milestone 26 follows the user's choices
-for all four findings in the
+do the earlier unselected findings. Milestone 26 (`266164b`) resolves all four
+approved findings in the
 [Milestone 25 review record](../docs/reviews/imported-css-delivery-milestone-25.md).
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
@@ -865,7 +865,7 @@ without accepting fused identifiers or invalid newly created compounds.
 - [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
 - [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Four new findings (1 Medium, 3 Low) are recorded in the [Milestone 25 review record](../docs/reviews/imported-css-delivery-milestone-25.md) for the user's decision.
 
-## Milestone 26: Wrapper-only moved whitespace, empty wrappers, a browser oracle and exact join docs
+## Milestone 26: Wrapper-only moved whitespace, empty wrappers, a browser oracle and exact join docs (complete)
 
 Trust authored comma-boundary whitespace, allow only wrapper-owned trailing
 whitespace to move, reject all-empty wrappers, and verify browser semantics.
@@ -874,11 +874,11 @@ whitespace to move, reject all-empty wrappers, and verify browser semantics.
 - [x] Reject all-empty `:global()`/`:local()` in every selector context before plugins run, with a catalogued location; remove empty-wrapper normalization branches.
 - [x] Add a seeded Chrome oracle independent of the plugins for plain and wrapped selectors, plus table-driven Build cases for every public example.
 - [x] Split the CSS Modules protocol into a linked indexed page, update guide/error catalogue/PR draft, and retitle the plugin matrix as no-false-rejection evidence.
-- [ ] Run the four mutation checks without committing them; run Build, focused/browser tests, example Build/Check, CLI smoke, lint, typecheck and `cargo xtask check`; commit and push.
+- [x] Run the four mutation checks without committing them; run Build, focused/browser tests, example Build/Check, CLI smoke, lint, typecheck and `cargo xtask check`; commit and push.
 
 ## Milestone 27: Commit, push, and review
 
-- [ ] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
 - [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
 
 ## Post-merge follow-up (non-blocking)

@@ -86,6 +86,11 @@ options; other open findings were not changed.
    leave a hoisted comment or trailing space; the checker ignores that
    selector comment, while an empty `@scope` limit still fails Build.
 
+   Corrected in `266164b`: the plugin matrix demonstrates only that valid
+   plugin output is not falsely rejected; a separate seeded Chrome oracle
+   checks wrong accepts against browser-parsed selector text. All-empty
+   wrappers now fail before the plugins run.
+
 2. **Low — a comment that touches the inside of a `:global()` or `:local()`
    wrapper fails Build.**
    - What happens: PostCSS removes a selector comment only when whitespace or

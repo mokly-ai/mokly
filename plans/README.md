@@ -21,7 +21,7 @@
   its other parts remain open, as do the two findings in the
   [Milestone 23 review](../docs/reviews/imported-css-delivery-milestone-23.md).
   Milestone 24 (`7ba5628`) resolves those two approved findings; other findings remain
-  open. Milestone 26 addresses the four approved findings in the
+  open. Milestone 26 (`266164b`) resolves the four approved findings in the
   [Milestone 25 review](../docs/reviews/imported-css-delivery-milestone-25.md).
   Move this plan to Completed when its
   implementation PR merges.

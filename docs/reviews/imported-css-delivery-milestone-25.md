@@ -28,7 +28,7 @@ The change works for the cases it targeted:
 
 The four findings below were reproduced in scratch copies. The parent session
 confirmed findings 1 and 2 against builds before and after the change. All
-four remain open for the user's decision.
+four were resolved in `266164b` by the user's chosen options.
 
 ## Findings
 
@@ -80,6 +80,12 @@ four remain open for the user's decision.
      but it makes some wrapper cases fail that css-loader and Vite accept.
      Finding 3's browser comparison is the broader guard against the check
      and the plugins misreading text in the same way.
+
+   Resolved in `266164b`: authored offsets now govern spacing; only a
+   `:global()` or `:local()` trailing comma may move its whitespace outward.
+   Nested wrapper-owned whitespace remains accepted, while a trailing comma
+   in another pseudo fails Build when it changes the selector.
+
 2. **Low — wrappers whose items are all empty now pass even when removing them
    leaves invalid CSS.**
    - What happens: to accept `:global(,)`, the check drops an all-empty wrapper
@@ -107,6 +113,10 @@ four remain open for the user's decision.
      the special cases closes the whole class. It changes cases that the new
      tests accept (`.w :global(,)` currently becomes `.w`), so it needs the
      user's agreement. B is the fallback.
+
+   Resolved in `266164b`: all-empty `:global()` and `:local()` wrappers now
+   fail before scoping, with the authored rule or `@scope` location.
+
 3. **Low — the "independent" plugin matrix cannot detect the check accepting a
    wrong result.**
    - What happens: the test helper runs Mokly's own plugin loader and `@scope`
@@ -132,6 +142,12 @@ four remain open for the user's decision.
      - C) Leave it.
    - Recommended: A. The repository already runs Chrome tests, and a scratch
      version of this oracle found finding 1 in seconds.
+
+   Resolved in `266164b`: a seeded Chrome oracle checks 281 cases against
+   browser-parsed selectors; the plugin matrix is now named and asserted only
+   as no-false-rejection evidence. The oracle records 102 cases Chrome drops
+   on both sides separately because neither has selector text to compare.
+
 4. **Low — the PR draft and the Styles guide describe the join rule and its
    safety net too broadly.**
    - The PR draft says newly fused names and invalid compounds fail Build. The
@@ -152,3 +168,7 @@ four remain open for the user's decision.
    - Recommended: A, and consider B together with finding 1. The protocol page
      is at 245 of its 250 lines, so these fixes probably need the CSS Modules
      verification text moved to its own protocol page.
+
+   Resolved in `266164b`: the protocol, Styles guide and PR draft state the
+   authored-whitespace, empty-wrapper and narrow invalid-compound rules.
+   Table-driven Build tests pin each documented selector or exact diagnostic.
