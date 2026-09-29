@@ -1253,3 +1253,94 @@ and the related protocol, guide-structure, removed-preview and import-order
 tests passed 11/11; Prettier and ESLint are clean. Residual risk: the reviewer
 relied on the recorded `cargo xtask check` (unit 2,646/2,646, browser 860/860)
 rather than re-running the suites.
+
+## Ninth Review
+
+Reviewed on 2026-09-29 with
+[the implementation review prompt](../implementation-review-prompt.md), after
+the pull request's CI fixes were pushed, against `origin/main`: `18a0b92`
+(`test: balance the browser test shards`), `85290c7`
+(`test: split the route hydration spec`) and `2be592f`
+(`fix(ci): list browser shards one at a time`), plus the plan edit recording
+that every check on `2be592f` passed. One independent read-only reviewer
+confirmed that the route hydration split covers every catalogue route exactly
+once, that the balance test's synthetic reports check what the evidence
+aggregate needs, that `discoverBrowserTests` now reports the load errors
+Playwright prints only in its JSON output, and that Playwright 1.61.1 writes its
+compilation cache without an atomic rename. Three findings follow, one Medium
+and two Low. None was changed; each awaits the user's decision.
+
+1. **P2 / Medium — The balance test bounds test counts, not minutes, so the
+   20-minute browser timeout can return.** CI runs the browser suite as four
+   20-minute jobs, and Playwright fills them with whole spec files in file
+   order. `tests/browser_shard_balance.test.ts` only limits how many tests a
+   shard holds. The four route hydration files sort together, so a fresh
+   listing puts `_2` in shard 2 and the other three in shard 3, where they took
+   6.2 of its 9.9 recorded test minutes on `2be592f`. Removing one unrelated
+   34-test spec from the listing moves all four into shard 3 while the counts
+   stay under the limit. Counts also do not predict time: on `2be592f` the
+   shards held 220, 224, 201 and 215 tests and took 12m32s, 15m17s, 14m48s and
+   7m51s. Run-to-run swings are about as large as the remaining margin: shard 1
+   ran the same tests in 7m45s on `85290c7` and 12m32s on `2be592f`, and the
+   old shard 2 passed in 17m37s before timing out with the same tests.
+   **Impact of no change:** a slow runner or an unrelated test addition can
+   push shard 2 or 3 past 20 minutes again; `Required CI` then fails while
+   every local check passes. **Options:** **A)** only document that split
+   files land in shards by file order and that the bound cannot see time;
+   **B)** have `scripts/verification/aggregate.mjs` report each browser shard's
+   recorded duration and warn past a budget such as 15 of 20 minutes;
+   **C)** run five or six browser shards, which means splitting the
+   aggregate's fixed four-shard count per suite and updating the matrix pin in
+   `tests/ci_workflow.test.ts` and the contract; **D)** raise the browser job
+   timeout to 30 minutes and amend the contract's 20-minute rule; **E)** rename
+   the route files so they sort apart. **Recommended: B plus C** (B plus D if
+   runner cost rules out C). Renaming or re-splitting cannot keep up with a
+   suite that grew from 452 to 860 tests in nine days; C adds real headroom,
+   and B turns the next drift into a warning from measured time instead of a
+   timeout.
+
+2. **P3 / Low — The timing record mixes two CI runs and overstates two CI
+   results.** The contract's Browser Shard Balance section and the plan credit
+   the shard that timed out with "11.5 of 22.3 recorded test minutes", but the
+   cancelled `b79baf9` run left no shard 2 report; the figures come from the
+   earlier run on `55503d3`
+   ([run 36432749890](https://github.com/mokly-ai/mokly/actions/runs/36432749890)),
+   where the same 318 tests passed in 17m37s, and they total 22.2. The plan
+   says main's CI after #121 "also failed there", but main's shard 2 failed
+   after 16m36s when one test (`evidence_races.spec.ts`, "evidence fetched for
+   a previous route cannot replace the destination") exceeded its 60-second
+   limit, not the job timeout. The plan's second revision says CI on `85290c7`
+   passed `validateShardReports`, but that run skipped the step that runs it
+   because the job-result check failed first; the reports pass when validated
+   offline, and CI first proved it on `2be592f`. **Impact of no change:** the
+   record hides that the same tests passed and then timed out, which is the
+   best evidence about the margin, and suggests main has the same timeout and
+   that CI validated `85290c7`; code is unaffected. **Options:** **A)** correct
+   the three sentences; **B)** A, plus cite each CI figure with its run link
+   or commit, as the Acceptance Measurement section does; **C)** leave it.
+   **Recommended: B.** The corrections are needed either way, and per-figure
+   run links cheaply prevent mixing runs.
+
+3. **P3 / Low — Each route hydration file re-reads and re-validates the
+   generated manifest.** `hydrationFixtureRoutes` in
+   `tests/browser/react_shell_hydration_route_helpers.ts` reads and parses the
+   9 MB example manifest on every call, and each of the four route files calls
+   it while Playwright loads it. One parse takes 0.57 to 0.81 seconds, so
+   about half of every browser listing and several seconds of each browser
+   shard repeat the same validation. The read itself is safe: every entry
+   point prepares the example first. **Impact of no change:** slower listings
+   and slower shards, including the two closest to the timeout. **Options:**
+   **A)** compute the route list once per process and slice it per part;
+   **B)** leave it. **Recommended: A.** A direct fix is enough.
+
+Ninth-review verification: the discovery, balance, hydration inventory, CI
+workflow and guides tests passed 39/39, reruns of the listing tests passed
+4/4, ESLint, Prettier and `tsc --noEmit` are clean, and 114 relative links and
+anchors in the changed Markdown resolve. The reviewer confirmed from
+downloaded shard reports and CI logs that the claims "no test file is
+deleted", "CI's browser runner lists its two inventories one at a time" and
+"the only other unit test that lists the real specs runs in a different CI
+unit shard" hold. Residual risk: only a doc comment and a contract sentence
+keep the balance test's listings one at a time, and the two unit tests that
+list the real specs land in different CI unit shards only because of the
+current file order.

@@ -12,7 +12,7 @@
   in Milestones 23–27, and the remote-state cleanup script was removed in
   Milestones 28–29, and the remote-branch lint was replaced by a workflow
   guard in Milestones 30–31, and the guard's scanner moved into a test helper
-  in Milestones 32–33, and the browser shard that exceeded CI's job timeout is
+  in Milestones 32–33, and the browser shard that exceeded CI's job timeout was
   rebalanced in Milestones 34–39. The remaining open review findings await the
   user's decision. The plan stays Active until its pull request merges.
 - [Comparison Pane Scroll Alignment](./comparison-pane-scroll-alignment.md)

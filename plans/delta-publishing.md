@@ -1201,22 +1201,24 @@ Documentation and contract only. Validate with Prettier and the guide tests;
 - [x] Put `tests/browser/react_shell_hydration_routes.spec.ts` in parallel mode
       and confirm the balance test passes.
 
-## Milestone 36: Shard balance verification and delivery
+## Milestone 36: Shard balance verification and delivery — completed
 
 - [x] Run the balance, CI workflow and guides tests, Prettier, ESLint and the
       type check, then `cargo xtask check`; resolve every failure.
 - [x] After checks pass, `git add -A`, commit with a Conventional Commits
       title of at most 50 characters, and push the branch. Committed as
       `18a0b92 test: balance the browser test shards`.
-- [ ] Confirm every check on the pull request passes, including all four
+- [x] Confirm every check on the pull request passes, including all four
       browser shards and `Required CI`. `18a0b92` failed `Required CI` and
-      `85290c7` failed unit shard 4 (see the decision's revisions); this
-      closes after Milestone 39.
-- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+      `85290c7` failed unit shard 4 (see the decision's revisions); every
+      check on `2be592f` passed, with browser shards of 12m32s, 15m17s,
+      14m48s and 7m51s.
+- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
-      without changing the implementation.
+      without changing the implementation. Three findings (one Medium, two
+      Low) are recorded in its Ninth Review for the user's decision.
 
 ## Milestone 37: Whole-file shard balance contract — completed
 
@@ -1247,7 +1249,7 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       title of at most 50 characters, and push the branch. Committed as
       `85290c7 test: split the route hydration spec`.
 
-## Milestone 39: Serial shard listings and discovery diagnostics
+## Milestone 39: Serial shard listings and discovery diagnostics — completed
 
 - [x] Record the second revision in the
       [Browser Shard Balance Decision](#browser-shard-balance-decision).
@@ -1266,8 +1268,9 @@ Documentation and contract only. Validate with Prettier and the guide tests;
 - [x] Run the discovery, balance, hydration inventory, CI workflow and guides
       tests, Prettier, ESLint and the type check, then `cargo xtask check`;
       resolve every failure.
-- [ ] After checks pass, `git add -A`, commit with a Conventional Commits
-      title of at most 50 characters, and push the branch.
+- [x] After checks pass, `git add -A`, commit with a Conventional Commits
+      title of at most 50 characters, and push the branch. Committed as
+      `2be592f fix(ci): list browser shards one at a time`.
 
 ## Post-merge follow-up (non-blocking)
 
