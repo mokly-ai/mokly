@@ -128,6 +128,11 @@ eight remain open for the user's decision.
    selector instead. Option B's proposed catalogued error was dropped; the
    rest of this finding stays open.
 
+   Corrected in `7ba5628`: lists now follow the plugins' join. Items join as
+   descendants only where whitespace touches a comma, and otherwise continue
+   one compound (`.x,.y` becomes `.x.y`); empty items are dropped. See the
+   [Milestone 23 review record](./imported-css-delivery-milestone-23.md).
+
 4. **Low — tests do not pin most of the check's rules or the placeholder
    position.**
    - What happens: a reviewer applied 49 single-rule mutations and ran the 13
