@@ -21,7 +21,8 @@
   its other parts remain open, as do the two findings in the
   [Milestone 23 review](../docs/reviews/imported-css-delivery-milestone-23.md).
   Milestone 24 (`7ba5628`) resolves those two approved findings; other findings remain
-  open.
+  open, as do the four findings in the
+  [Milestone 25 review](../docs/reviews/imported-css-delivery-milestone-25.md).
   Move this plan to Completed when its
   implementation PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
