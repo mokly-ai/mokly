@@ -1,14 +1,15 @@
 # Id-Derived Routes, Unified Variants, And Identity-Keyed Wire
 
-Status: Milestones 1–23 implemented, verified, and pushed on
-`calummoore/halifax-v2` (2026-09-26 to 2026-09-30); the review of Milestones
-20–23 follows the push. Created 2026-09-26 with the user's consent after
-discussing route redundancy on the navigation-path branch; the variant
-unification and the wire cleanup were folded in the same day. The work is
-implemented on this branch, `calummoore/halifax-v2`, and the user opens a pull
-request when it is ready. Mokly is not live, so this plan adds no backwards
-compatibility: readers it rewrites accept only the new versions, and there are
-no migration guards or transitional shapes.
+Status: Milestones 1–23 implemented, verified, pushed, and reviewed on
+`calummoore/halifax-v2` (2026-09-26 to 2026-09-30); the third follow-up
+review's 9 findings in the [review record](#review-record) await the user's
+decision. Created 2026-09-26 with the user's consent after discussing route
+redundancy on the navigation-path branch; the variant unification and the wire
+cleanup were folded in the same day. The work is implemented on this branch,
+`calummoore/halifax-v2`, and the user opens a pull request when it is ready.
+Mokly is not live, so this plan adds no backwards compatibility: readers it
+rewrites accept only the new versions, and there are no migration guards or
+transitional shapes.
 
 **Problem:** every routed entry carries two hierarchies. `navPath` is the list
 of folder labels; `route` is an author-chosen `.html` path built from a root
@@ -935,7 +936,7 @@ refer to the
       `origin/main..HEAD`.
 - [x] Run `cargo xtask check`; fix anything it reports until it passes.
 - [x] Commit; push.
-- [ ] Review the complete local diff against `origin/main` using
+- [x] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
@@ -1129,6 +1130,50 @@ automatically.
 **User decisions (2026-09-30):** finding 1 uses option B, finding 2 option A,
 finding 4 option A, finding 6 option A, and finding 7 option B; findings 3 and
 5 are not pursued. Milestones 20–23 carry the work.
+
+### Third follow-up review (Milestones 20–23)
+
+Milestones 20–23 (`d437c279`..`7a233104`) were reviewed with the
+implementation review prompt after the full gate and push, by two read-only
+reviewers; the coordinator re-checked each finding in the code. Approved
+second-review findings 6 and 7 are complete; 2 is complete apart from the
+wording in finding 7 below; 4 is complete as specified, with the gaps in
+findings 4 to 6; and 1 is not complete because of findings 1 to 3. No finding
+was applied automatically.
+
+1. **Medium** — the public export ratchet counts any inline code span in
+   `npm-release-notes.md` as a note, so replacement names in migration advice
+   (`defineRoot`, `RootInput`, `EntryInput`, `RegistryDefinition`,
+   `ReviewIgnore`, `CatalogueNode`, `ScreenNavigateEvent`) and the package
+   headings (`@mokly/viewer/data`) would let those released exports, or the
+   whole subpath, be removed without a note.
+2. **Low** — a package's first release pull request cannot pass: the release
+   manifest records the release before its first tag can exist, so the
+   ratchet fails closed with a fetch instruction (as the viewer's 0.0.0 to
+   0.1.0 release PR would have).
+3. **Low** — two path replacements in the release notes omit their base (the
+   `static/` prefix for `entryRoute`/`viewRoute` documents, and the comparison
+   generation directory for `pagePreviewMetadataPath`/`snapshotPagePath`), and
+   `RoutedEntryInput` and `CatalogueCollection` sit under the wrong upgrade
+   note.
+4. **Low** — the unused-export ratchet still treats some whole-module uses of
+   a CommonJS module as using nothing: `default` from a dynamic import,
+   `export { default } from`, rest destructuring of `require()`, and
+   `module.exports = require()` (latent: no `.cjs` files exist).
+5. **Low** — the CommonJS tests cannot detect over-counting, because each
+   named-use case imports every export its provider has.
+6. **Low** — `verification-ratchets.md` tells authors that an export left
+   unused by an unprovable dynamic use needs a reviewed baseline entry, but the
+   baseline is shrink-only, so that entry always fails.
+7. **Low** — `mokly-variants.md` says the remaining rules apply to variants of
+   "a valid parent's kind", implying metadata checks skip variants of an
+   invalid parent, which the code does not do.
+8. **Low** — this branch grew 21 test files past the ~300-line guideline (for
+   example `packages/viewer/tests/shell_state.test.ts` from 275 to 444 lines);
+   the file-length ratchet covers only the source roots.
+9. **Low** — the two export ratchets duplicate export-map, specifier,
+   declaration-name, and path-normalisation helpers, and the unused-export copy
+   does not handle the shorthand export-map forms the public copy handles.
 
 ## Post-merge follow-up (non-blocking)
 
