@@ -33,7 +33,8 @@ whose views changed. The parent entry is listed only for its own reasons:
 schema, controls, slots, declared metadata, and declared-file or shared-file
 evidence attributed to the component itself. A parent whose only change is a
 changed variant carries the navigation aggregate mark defined by the
-[variant contract](./mokly-variants.md#changes) and is not a Changes row.
+[variant navigation contract](./mokly-variant-navigation.md#changes-rows) and is
+not a Changes row.
 Affected-consumer evidence keys on the parent component id, which instance
 records reference.
 

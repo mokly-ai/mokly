@@ -6,7 +6,8 @@ Changes baseline, for the served shell, a static export and an embedded
 [removed previews contract](../../../../docs/protocol/mokly-removed-previews.md).
 
 `descriptor.ts` reads the stage host's `data-mokly-preview` attribute that
-`shell/previews.tsx` renders. A damaged or unknown descriptor advertises
+[`../shell/previews.tsx`](../shell/previews.tsx) renders. A damaged or unknown
+descriptor advertises
 nothing, so the stage reports the unavailable state instead of requesting an
 address the catalogue never published.
 
@@ -64,7 +65,7 @@ without applying `:target` (scrolling it into view for removed previews, or
 through the caller's `reveal` hook, which comparison panes use to reveal inner
 regions and then their page viewport), preserves Space for scrolling, and
 reapplies the accepted `srcdoc` if the frame navigates away.
-`shell/use_removed_preview.ts` is the
+[`../shell/use_removed_preview.ts`](../shell/use_removed_preview.ts) is the
 route-owned controller: its first effect replaces the honest server-rendered
 unavailable state with loading, requests on selection, fetches every document
 needed for that viewport and scheme before reporting ready, renews before
@@ -84,7 +85,8 @@ npx playwright test tests/browser/removed_previews.spec.ts tests/browser/removed
 
 The [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md)
 reuses this pipeline for the Before and Current panes of a comparison:
-`shell/use_comparison_documents.ts` creates a `before` and `after` loader for
+[`../shell/use_comparison_documents.ts`](../shell/use_comparison_documents.ts)
+creates a `before` and `after` loader for
 the accepted comparison's immutable generation and presents every selected pane
 document before the comparison is ready. The
 [comparison pane scroll alignment plan](../../../../plans/comparison-pane-scroll-alignment.md)

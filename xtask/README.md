@@ -74,9 +74,10 @@ cargo test --package xtask
 - `src/command.rs` defines the injected command-runner boundary.
 - `src/check.rs` defines the complete source, packed-consumer, browser, and Rust
   verification sequence.
-- `../scripts/verification/repository-ratchets.mjs` runs the three repository
-  ratchets; `unused-internal-exports.txt` is their sorted shrinking exception
-  baseline.
+- `../scripts/verification/repository-ratchets.mjs` dispatches the repository
+  ratchets. `../scripts/verification/ratchets/typescript-length.mjs`,
+  `protocol-caps.mjs`, and `internal-exports.mjs` own the three policies;
+  `unused-internal-exports.txt` is their sorted shrinking exception baseline.
 
 ### Related Docs
 

@@ -46,7 +46,8 @@ scroll restoration and authenticated temporary control previews. Direct frame
 document/window access lives in the local transport, rather than workspace,
 Browse state, or controls. `component_geometry.ts` retains its existing geometry
 entrypoints and shares containing-block-aware clipping with the inspector in
-`inspector/clipping.ts`; `same_origin_highlight.ts` owns the unchanged
+[`../inspector/clipping.ts`](../inspector/clipping.ts);
+`same_origin_highlight.ts` owns the unchanged
 mask, labels, selection and observer lifecycle.
 
 `same_origin_identity.ts` is the single document-authentication boundary for

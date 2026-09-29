@@ -137,7 +137,10 @@ record for Details; `workspace_evidence.tsx` combines its shared-impact paths
 with retained dependency paths while keeping stylesheet exclusions separate.
 
 Standalone full-document composition lives in `src/standalone`:
-`bootstrap_types.ts` owns the wire shape and `bootstrap_validation.ts` validates
+[`../standalone/bootstrap_types.ts`](../standalone/bootstrap_types.ts) owns the
+wire shape and
+[`../standalone/bootstrap_validation.ts`](../standalone/bootstrap_validation.ts)
+validates
 it before selection. The bootstrap contains the validated public catalogue and
 shell delivery state for Serve. Static pages
 carry a compact identity/revision reference and resolve the shared finalized

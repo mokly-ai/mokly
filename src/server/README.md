@@ -42,10 +42,10 @@ evidence revisions advance independently. Failed candidates preserve the last
 snapshot, and superseded generations cannot replace it. `catalogue_update.ts`
 prepares updates before publication; `http_types.ts` owns the lifecycle types.
 
-Entry shells are served at canonical `/view/<route>.html` and the matching
-provider-normalized extensionless path; both return the same 200 shell when the
-identity exists, while generated links stay canonical. ID-alias paths receive
-the ordinary not-found shell and are never redirected.
+Entry shells are served at canonical `/view/<kind-prefix>/<id>.html` and the
+matching provider-normalized `/view/<kind-prefix>/<id>` path; both return the
+same 200 shell when the identity exists, while generated links stay canonical.
+ID-alias paths receive the ordinary not-found shell and are never redirected.
 
 Shell pages render through `@mokly/viewer/server` with CLI-owned live context.
 `public_catalogue_model.ts` validates each serialized public revision once and

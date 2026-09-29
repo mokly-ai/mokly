@@ -367,7 +367,7 @@ Serve and export keep these origin-local preferences in `localStorage`:
 | Key                                | Choice                            |
 | ---------------------------------- | --------------------------------- |
 | `mokly:theme`                      | Explicit Light or Dark appearance |
-| `mokly:nav-disclosure:v2`          | Open catalogue groups             |
+| `mokly:nav-disclosure:v3`          | Open catalogue groups             |
 | `mokly:details-disclosure`         | Details open or closed            |
 | `mokly:navigation-width:v1`        | Navigation split width            |
 | `mokly:comparison-scroll-together` | `on` or `off`; missing means on   |
@@ -484,21 +484,31 @@ consumers.
 - [`src/catalogue`](./src/catalogue) — public catalogue types and validation
 - [`src/navigation/routes.ts`](./src/navigation/routes.ts) — shared entry,
   view, snapshot, preview, shell-URL, and browser-path derivation
+- [`src/review/order.ts`](./src/review/order.ts) — canonical affected-consumer
+  ordering shared by review producers and readers
 - [`src/shell/workspace_entry.ts`](./src/shell/workspace_entry.ts) and
   [`src/shell/workspace_variants.ts`](./src/shell/workspace_variants.ts) —
   routed workspace identity and sibling component-variant entries
-- [`src/shell/use_comparison.ts`](./src/shell/use_comparison.ts) and
+- [`src/shell/use_comparison.ts`](./src/shell/use_comparison.ts),
+  [`src/shell/comparison_presentation.ts`](./src/shell/comparison_presentation.ts), and
   [`src/shell/diffs.tsx`](./src/shell/diffs.tsx) — the single comparison-mode
-  owner and its current/comparison presentation
+  owner, request identity, and current/comparison presentation
+- [`src/shell/store_browser_actions.ts`](./src/shell/store_browser_actions.ts)
+  and [`src/shell/store_browser_urls.ts`](./src/shell/store_browser_urls.ts) —
+  standalone DOM actions and provider-normalized URL policy
+- [`src/shell/workspace_data.ts`](./src/shell/workspace_data.ts) and
+  [`src/shell/workspace_usage_data.ts`](./src/shell/workspace_usage_data.ts) —
+  routed workspace data and its usage/affected-consumer projection
 - [`src/shell/store_host.ts`](./src/shell/store_host.ts) and
   [`src/shell/store_host_routes.ts`](./src/shell/store_host_routes.ts) —
   controlled and uncontrolled selection commits, frame-link misses, and
   navigation events
 - [`src/shell/frame_instances.ts`](./src/shell/frame_instances.ts) — exact
   documented `InstanceRef` matching against mounted preview frames
-- [`src/standalone/bootstrap.ts`](./src/standalone/bootstrap.ts) and
+- [`src/standalone/bootstrap.ts`](./src/standalone/bootstrap.ts),
+  [`src/standalone/bootstrap_types.ts`](./src/standalone/bootstrap_types.ts), and
   [`src/standalone/bootstrap_validation.ts`](./src/standalone/bootstrap_validation.ts)
-  — standalone hydration projection and validation
+  — standalone hydration projection, wire shape, and validation
 - [`src/inspector`](./src/inspector) — bounded in-frame inspection runtime
 - [`tests`](./tests) — package-level conformance tests
 

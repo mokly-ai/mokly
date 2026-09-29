@@ -299,24 +299,37 @@ merge.
 - [`src/config`](./src/config) — config discovery, loading, and path policy.
 - [`src/build`](./src/build) — bundling, rendering, validation, and generated
   output transactions.
+- [`src/build/mock_link_routes.ts`](./src/build/mock_link_routes.ts) —
+  identity-derived logical-link targets and portable artifact URLs.
 - [`src/components/manifest_entry_validation.ts`](./src/components/manifest_entry_validation.ts)
   — manifest-v7 component-entry validation.
 - [`src/registry/changed_ids.ts`](./src/registry/changed_ids.ts) and
   [`manifest_validation.ts`](./src/registry/manifest_validation.ts) —
   identity-keyed change membership and the strict baseline-v7 boundary.
+- [`src/baseline/compatibility.ts`](./src/baseline/compatibility.ts) and
+  [`src/server/classification_result.ts`](./src/server/classification_result.ts)
+  — the typed earlier-baseline outcome from admission through Serve.
 - [`src/cli`](./src/cli/README.md) — command parsing, reporting, and composition.
 - [`src/server`](./src/server/README.md) — local HTTP server and watched runtime.
+- [`src/server/http_request_handler.ts`](./src/server/http_request_handler.ts) —
+  request dispatch against the server's current accepted snapshot.
 - [`src/review`](./src/review/README.md) — Git baselines, comparison, and change
   attribution.
 - [`src/review/component_variant_classification.ts`](./src/review/component_variant_classification.ts)
   and [`component_classification_sources.ts`](./src/review/component_classification_sources.ts)
   — flat variant classification and review-result assembly.
+- [`src/review/artifact_files.ts`](./src/review/artifact_files.ts) and
+  [`component_classification_entries.ts`](./src/review/component_classification_entries.ts)
+  — collision-safe artifact writes and per-entry comparison preparation.
 - [`src/export`](./src/export/README.md) — static catalogue export.
 - [`src/publication`](./src/publication/README.md) — shared static shell and
   previous-version publication.
 - [`src/publish`](./src/publish/README.md) — archive creation and upload.
 - [`packages/viewer`](./packages/viewer/README.md) — React shell, catalogue read
   model, navigation, frames, and inspection.
+- [`scripts/preview/baseline.mjs`](./scripts/preview/baseline.mjs) and
+  [`html_paths.mjs`](./scripts/preview/html_paths.mjs) — preview publication's
+  baseline-availability and provider-path adapters.
 - [`examples/basic`](./examples/basic/README.md) — reference consumer and design
   catalogue.
 

@@ -70,7 +70,7 @@ comparator: folders before leaves; then
 comparison of the folder path key (folders) or entry id (leaves). Variants
 stay under their parent in authored order and are never separate folder
 members. This intentionally replaces v1's authored `childIds` tree order in
-public read model v2 and later.
+the public model; the current strict read model is v3.
 
 The path key joins validated root-to-folder labels with `/` (labels cannot
 contain `/`). A folder's nav group key is `folder:<path key>`; its disclosure

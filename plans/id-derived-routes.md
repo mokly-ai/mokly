@@ -706,9 +706,9 @@ Tags: ui
 
 ## Milestone 15: Follow-up verification, close-out, and review
 
-- [ ] Update key-code pointers in the touched READMEs and `plans/README.md`.
-- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
-- [ ] Commit with a `BREAKING CHANGE:` footer naming the end of comparisons
+- [x] Update key-code pointers in the touched READMEs and `plans/README.md`.
+- [x] Run `cargo xtask check`; fix anything it reports until it passes.
+- [x] Commit with a `BREAKING CHANGE:` footer naming the end of comparisons
       against baselines built by earlier Mokly versions, the removed
       `InstanceRef.variantId`, and the `ScreenNavigateEvent` fields; push.
 - [ ] Review the complete local diff against `origin/main` using

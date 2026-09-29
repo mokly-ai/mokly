@@ -138,12 +138,12 @@ entry identity and existing scroll/disclosure behavior. Unknown ids are
 unavailable; the shell renders only entries present in its catalogue read
 model and never invents a catch-all route.
 
-Provider-normalized extensionless `/view/<route>` URLs use the shared helper
-and parser from the [artifact path contract](./mokly-artifact-paths.md), then
-resolve the id to a current or removed read-model entry. A removed entry needs
-no query when its id resolves uniquely; if a `snapshot` is present, it must
-match the published record. Unknown, stale, and mismatched identities remain
-unavailable.
+Provider-normalized `/view/<kind-prefix>/<id>` is the extensionless form of
+canonical `/view/<kind-prefix>/<id>.html`. The shared helper and parser in the
+[artifact path contract](./mokly-artifact-paths.md) resolve its id to a current
+or removed entry. A removed entry needs no query when its id is unique; if a
+`snapshot` is present, it must match the published record. Unknown, stale, and
+mismatched identities remain unavailable.
 
 An exported page embeds a compact shell bootstrap containing its route, shell
 context, catalogue identity, and content/evidence revisions. It references the
@@ -201,11 +201,11 @@ __mokly/diffs/__generations/<generation>/review.json
 Retain the engine's JSON and document bytes and relative snapshot paths.
 Do not change the review schema or rebase only some of its resource references.
 
-The static descriptor points directly to this immutable JSON URL. `diffs.ts`
-uses it only when a diff is selected and resolves snapshot paths relative to
-the actual response URL, as today. The generic export does not require a
-redirect from `/__mokly/diffs/review.json`. Development keeps its existing
-stable endpoint; the repository's Cloudflare adapter keeps its existing stable
+The static descriptor points directly to this immutable JSON URL. Shell
+[`diffs.tsx`](../../packages/viewer/src/shell/diffs.tsx) requests it only for a
+selected diff and resolves snapshots from the actual response URL. Generic
+export needs no redirect from `/__mokly/diffs/review.json`. Development keeps
+its stable endpoint; the repository's Cloudflare adapter keeps its stable
 redirect for compatibility.
 
 Current remains the default after navigation/reload. Browsing, Changes filtering,

@@ -84,7 +84,8 @@ its catalogue/build settings. Partial entries are rebuilt under the entry lock.
 `manifest.ts` fully validates v7 during adoption. It retains a lower integer
 version or earlier-name sentinel as completed incompatible output so the
 historical gate can report the expected unavailable outcome without rerunning
-trusted baseline commands. Newer or malformed output is not adopted.
+trusted baseline commands. `compatibility.ts` owns that typed outcome and its
+single user-facing line. Newer or malformed output is not adopted.
 
 Lock publication uses a fully written temporary file and an exclusive hard link.
 The filesystem captures the temporary file's identity before publication and
