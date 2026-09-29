@@ -82,4 +82,4 @@ Emit schema v4 for every result. Readers accept only v4; older and unknown
 versions fail. Shared fixture tests must
 cover valid/invalid schemas, deterministic round trips, current and removed
 variants/consumers, metadata-only changes, zero Changes with affected screens,
-and identical served/published membership. These are Milestone 3 requirements.
+and identical served/published membership. This coverage is required.

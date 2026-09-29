@@ -5,6 +5,11 @@ Delivery Status names an approved active-plan target. The
 [id-derived routes plan](../../plans/id-derived-routes.md) defines the
 identity-only formats: paths derive from kind and id, and variants are entries.
 
+Protocol documents state the contract and current delivery status, but never
+record which plan milestone delivered a rule; plans keep that history.
+`tests/protocol_doc_history.test.ts` enforces the boundary outside `fixtures/`
+by rejecting the case-insensitive pattern `\bmilestones?\s+\d`.
+
 ## Supported Formats
 
 | Catalogue                     | Generated manifest | Comparison result |
@@ -123,6 +128,7 @@ readers accept only v7; earlier output follows
   — implemented shared design components and ownership rules, with the
   [component library inventory](./mokly-design-component-library.md).
 - [CI and npm release contract](./npm-release.md)
+  - [npm breaking-change release notes](./npm-release-notes.md)
   - [Repository preview deployments](./npm-preview-deployments.md)
   - [Release verification evidence](./npm-release-evidence.md)
   - [One-time registry bootstrap](./npm-bootstrap.md)

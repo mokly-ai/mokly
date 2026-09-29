@@ -3,10 +3,10 @@
 ## Delivery Status
 
 The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-delivered the page-scrolling rules in Milestone 4 and the inner-region, key,
-anchor, and reader-control rules in Milestone 7. The design catalogue depicts
-them: `design-changes-overlay-panel`, `design-changes-side-by-side-apart`, and
-the switch in every diff-mode band of the
+records delivery of the page-scrolling, inner-region, key, anchor, and
+reader-control rules. The design catalogue depicts them in
+`design-changes-overlay-panel`, `design-changes-side-by-side-apart`, and the
+switch in every diff-mode band of the
 [shell design](./mokly-shell-design.md#in-place-comparisons).
 
 This contract owns every scroll interaction in the Before and Current panes

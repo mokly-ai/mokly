@@ -122,10 +122,19 @@ that parent's root-cause violations without also reporting `variant parent does
 not exist` for each child. Missing, wrong-kind, and nested valid parents retain
 their relationship violations.
 
-Every other rule of the parent's kind applies unchanged: id and tag grammar,
-color-scheme subsets, reciprocal use-case membership, dependency paths, prop
-validation against the component schema, and source attribution to the
-defining module.
+For a component parent, preparation records whether metadata validation and
+`validateComponentDefinition` succeeded. If either fails, it reports each
+parent violation once and does not validate any child's props, controls, or
+slots against that invalid parent. The parent remains present for the
+relationship rules and for the inherited `dependencies`, `relatedDocs`,
+`colorSchemes`, and `tags` checks above. Once both parent validations succeed,
+preparation validates each component variant's props, controls, and slots
+against that parent exactly once.
+
+Every other rule of a valid parent's kind applies unchanged: id and tag
+grammar, color-scheme subsets, reciprocal use-case membership, dependency
+paths, prop validation against the component schema, and source attribution to
+the defining module.
 
 ## Generated Output And Manifest
 

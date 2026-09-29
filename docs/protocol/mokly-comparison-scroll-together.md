@@ -3,8 +3,8 @@
 ## Delivery Status
 
 The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-delivered this reader control in Milestone 7. It decides whether the versions
-of an open comparison scroll together under the
+records delivery of this reader control. It decides whether the versions of an
+open comparison scroll together under the
 [comparison scrolling contract](./mokly-comparison-scrolling.md). The
 [shell design](./mokly-shell-design.md#in-place-comparisons) fixes how the
 switch is drawn and placed. The runtime implements it in

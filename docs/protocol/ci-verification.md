@@ -2,21 +2,20 @@
 
 ## Delivery Status
 
-The suite CLI, evidence, workflow graph, fixture reuse, and repository ratchets
-are implemented. [Hosted measurements](../reviews/ci-performance.md)
-record timing/coverage. `cargo xtask check` remains the complete local gate; a
-validated hosted aggregate is reusable evidence for its exact tree.
+The suite CLI, evidence, workflow graph, fixture reuse, and existing ratchets
+are implemented; the public-package-export ratchet is an approved target.
+[Hosted measurements](../reviews/ci-performance.md) record timing and coverage.
+`cargo xtask check` remains the complete local gate; a validated hosted
+aggregate is reusable evidence for its exact tree.
 
 ## Verification Boundary
 
-`cargo xtask check` is the complete local verification entrypoint and the
-release workflow's complete-mode entrypoint. With no options it runs every gate
-sequentially in one checkout, beginning with the live workspace dependency
-audit. A selected suite is partial evidence and must never report that the
-complete gate passed. CI's validated aggregate of every required job and all
-sharded reports is complete verification of the exact tree named by those
-reports; the [release evidence contract](./npm-release-evidence.md) defines how
-a publish may reuse that proof.
+`cargo xtask check` is the complete local and release complete-mode entrypoint.
+With no options it runs every gate sequentially in one checkout, beginning with
+the live workspace dependency audit. A selected suite is partial evidence and
+must never report that the complete gate passed. CI's validated aggregate of
+all required jobs and sharded reports is complete verification of their exact
+tree; the [release evidence contract](./npm-release-evidence.md) defines reuse.
 
 The CLI is:
 
@@ -40,7 +39,7 @@ fail before any subprocess starts.
 
 | Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                                                                |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Repository       | Live dependency audit first; Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, and unused-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                                                                                                                                              |
+| Repository       | Live dependency audit first; Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                                                                                                              |
 | Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; all five clean consumer smokes using that pair. Real `prepack` builds remain part of packing. |
 | Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most two files active. A shard runs its whole-file partition.                                                                                                                                                                                                                                |
 | Browser          | One ordinary package/example preparation followed by every discovered Playwright spec, with `fullyParallel: false`, one worker, existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                                                                                 |
@@ -50,17 +49,16 @@ fail before any subprocess starts.
 Complete and selected suites share gate definitions; adding a suite command
 adds it to the complete gate. In-process auditors fail like subprocesses.
 
-Every ratchet compares against `git merge-base HEAD origin/main`. The
-[owning contract](./verification-ratchets.md) applies file-length and export
-checks to `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.mjs`, and `.cjs` under the
-three source roots, forbids baseline growth, and scans `docs/protocol/**`
-recursively except `fixtures/`.
+File-length, protocol-cap, and unused-internal-export ratchets use
+`git merge-base HEAD origin/main`; the public-package-export ratchet instead
+uses the newest matching release tags reachable from `HEAD`. The
+[owning contract](./verification-ratchets.md) defines the module extensions,
+shrink-only baselines, and recursive `docs/protocol/**` scan excluding
+`fixtures/`.
 
-The ESLint configuration derives global ignores from the repository
-`.gitignore`, then layers its broader ESLint-only ignores. Git-ignored build,
-cache, report and tool scratch paths are therefore outside the repository gate
-even when an earlier suite leaves them in the checkout; in particular, Wrangler
-scratch from the browser suite cannot make a later complete gate fail.
+ESLint derives global ignores from `.gitignore` before adding its broader
+ESLint-only ignores. Ignored build, cache, report, and tool scratch paths,
+including Wrangler scratch, cannot make a later complete gate fail.
 
 The public `npm test` and `npm run test:browser` commands prepare package and
 example output; `npm run typecheck` prepares the package. Browser listing,
@@ -80,19 +78,20 @@ required output is missing; prepared package commands may instead receive the
 gate's archive pair. Xtask prepares output per suite and calls only prepared
 consumers; output is reused only within that suite.
 
-Builds that are themselves under test are not removed. Package dry-run
-allowlist inspection retains its existing `--ignore-scripts` boundary, while
-real packing keeps its lifecycle builds. Historical baseline reconstruction,
-clean consumer installation, clean-cache npx execution, source mutation,
-startup, and cache-invalidation regressions retain independent preparation.
+Builds under test are not removed. Package dry-run allowlist inspection retains
+`--ignore-scripts`, while real packing keeps lifecycle builds. Historical
+baseline reconstruction, clean consumers and caches, source mutation, startup,
+and cache invalidation retain independent preparation.
 
 ## CI Graph And Checkout Ownership
 
-The repository job is the shared prerequisite for every verification job. Each
-downstream job starts from a fresh checkout and owns its writable build,
-example, fixture, report, and trace output. No live checkout or writable build
-directory is transferred between jobs. All jobs that resolve `origin/main` or
-create historical baselines receive complete Git history.
+The repository job is every verification job's shared prerequisite. Its
+full-history checkout uses `fetch-depth: 0` and must fetch release tags for the
+public-package-export ratchet, plus `origin/main` and enough history for the
+merge-base ratchets. Each downstream job owns a fresh checkout and its writable
+output; none receives a live checkout or writable build directory from another
+job. Every other job that resolves `origin/main` or creates a historical
+baseline also receives complete Git history.
 
 For ordinary pull requests and pushes to `main`, the workflow fans out to:
 

@@ -1,15 +1,14 @@
 # Id-Derived Routes, Unified Variants, And Identity-Keyed Wire
 
 Status: Milestones 1–19 implemented, verified, pushed, and reviewed on
-`calummoore/halifax-v2` (2026-09-26 to 2026-09-29); the second follow-up
-review's 7 findings in the [review record](#review-record) await the user's
-decision. Created 2026-09-26 with the user's consent after discussing route
-redundancy on the navigation-path branch; the variant unification and the wire
-cleanup were folded in the same day. The work is implemented on this branch,
-`calummoore/halifax-v2`, and the user opens a pull request when it is ready.
-Mokly is not live, so this plan adds no backwards compatibility: readers it
-rewrites accept only the new versions, and there are no migration guards or
-transitional shapes.
+`calummoore/halifax-v2` (2026-09-26 to 2026-09-29); Milestones 20–23 carry the
+user's decisions on the second follow-up review. Created 2026-09-26 with the
+user's consent after discussing route redundancy on the navigation-path
+branch; the variant unification and the wire cleanup were folded in the same
+day. The work is implemented on this branch, `calummoore/halifax-v2`, and the
+user opens a pull request when it is ready. Mokly is not live, so this plan
+adds no backwards compatibility: readers it rewrites accept only the new
+versions, and there are no migration guards or transitional shapes.
 
 **Problem:** every routed entry carries two hierarchies. `navPath` is the list
 of folder labels; `route` is an author-chosen `.html` path built from a root
@@ -825,6 +824,114 @@ origin/main`; a test where `origin/main` moved after the branch point
       explanation, impact of doing nothing, lettered options, and a
       recommendation, without changing the implementation.
 
+## Milestone 20: Second follow-up review contract
+
+Update the protocol docs, guides, and READMEs for the user's decisions on the
+second follow-up review (2026-09-30) before any code changes. Finding numbers
+refer to the
+[second follow-up review](#second-follow-up-review-milestones-1619).
+
+- [x] Release notes (finding 1, option B): move the unreleased breaking-change
+      coverage rule and release notes from `npm-release.md` into a new
+      `npm-release-notes.md`, lowering the `npm-release.md` cap. Name each
+      export removed since the last release with its replacement:
+      `catalogueViewHref`, `publicPath`, `pagePreviewPath`,
+      `componentFragmentRoute`, `ManifestV5`, `ReviewResultV3`, and
+      `ScreenReviewV3` from `@mokly/viewer/data`; `defineCollection`,
+      `collection`, `CollectionDefinition`, `CollectionInput`,
+      `NestedCollectionInput`, and `RoutedEntryInput` from `@mokly/mokly`.
+      Add notes for rejected Windows device-name ids and for `?variant=`
+      links, stating the current behavior and what to use instead.
+- [x] Public export check (finding 1, option B): `verification-ratchets.md`
+      defines a repository ratchet that compares each published package's
+      export map and entry-point exports with the newest release tag
+      reachable from `HEAD` (`v[0-9]*` for `@mokly/mokly`, `viewer-v[0-9]*`
+      for `@mokly/viewer`). It fails unless every removed export subpath and
+      export name appears as an inline code span in `npm-release-notes.md`.
+      Names added and removed between releases need no note; a package whose
+      release manifest records a release but whose tag is missing fails
+      closed with a fetch instruction; public entry points list their exports
+      explicitly, without `export *`; and a note can be deleted only once
+      history includes the release that published the removal.
+      `ci-verification.md` and `xtask/README.md` list the ratchet and its tag
+      requirement.
+- [x] Registry (finding 2, option A): `mokly-variants.md` states that when a
+      component parent fails its metadata or definition validation,
+      preparation reports the parent's violations once and does not validate
+      its variants' props, controls, or slots against it; the variants are
+      validated once the parent is valid.
+- [x] CommonJS use (finding 4, option A): `verification-ratchets.md` defines
+      which exports the `require()`, `import x = require()`, default-import,
+      and dynamic-import forms use: destructured names and direct property
+      reads use those names; a binding of the whole module object uses every
+      export; a default import uses every export of a CommonJS module and
+      none of an ES module; a bare `require()` uses none.
+- [x] Delivery history (finding 7, option B): remove every plan-milestone
+      reference from `docs/protocol` outside `fixtures/`, keeping each
+      sentence's contract content, and correct the delivery status in
+      `verification-ratchets.md`. `docs/protocol/README.md` states that
+      protocol docs never record which plan milestone delivered them, and
+      that a test enforces this.
+- [x] `npm run format:check`, the protocol and guide doc tests, and a relative
+      link check pass; review the diff; commit.
+
+## Milestone 21: Registry and test fixes
+
+- [ ] Finding 2 (option A): failure-first, a table in
+      `tests/component_registry_validation.test.ts` covers a parent with a
+      select control that has no options, a parent with an invalid prop
+      schema, and a parent with a metadata problem and an invalid control.
+      Each reports only the parent's violations, with no `TypeError` and no
+      variant violation, and a valid parent still reports an invalid
+      variant's props. Variant prop, control, and slot validation then runs
+      only against a parent that passed definition validation.
+- [ ] Finding 6 (option A): make three tests able to fail, and show for each
+      that a plausible regression makes it fail:
+  - the identity-less navigation test drives the real route, selection, and
+    announcement path, paired with a removed record that has a published
+    identity;
+  - the removed-order test uses variant ids whose baseline authored order
+    differs from id order, plus a removed entry whose id sorts between the
+    parent and its variants;
+  - each rejected row of the deleted-resource table asserts its exact error
+    code and message.
+- [ ] Build, lint, format, typecheck, example build and check, full unit
+      suite, affected browser specs, and the repository suite of
+      `cargo xtask check`; commit.
+
+## Milestone 22: Release-note, CommonJS, and doc-history checks
+
+- [ ] Finding 1 (option B): the public export ratchet defined in
+      `verification-ratchets.md`, with temporary-repository tests: an
+      unnoted removed name or subpath fails, a noted one passes, a name added
+      and removed after the last tag passes, a missing tag fails closed, an
+      `export *` entry point fails, and deleting a note before its release
+      fails; the repository itself passes.
+- [ ] Finding 4 (option A): the unused-export ratchet records `require()`,
+      `import x = require()`, default imports of CommonJS modules, and
+      whole dynamic-import bindings as the contract defines; a test covers
+      each form, including a destructured `require()` that leaves another
+      export unused.
+- [ ] Finding 7 (option B): a doc test fails when a protocol document outside
+      `fixtures/` references a plan milestone.
+- [ ] Once these checks land, the delivery status in `verification-ratchets.md`
+      and `ci-verification.md` says every ratchet is implemented.
+- [ ] The repository suite of `cargo xtask check` and the full unit suite
+      pass; commit.
+
+## Milestone 23: Third follow-up close-out and review
+
+- [ ] Update key-code pointers in the touched READMEs and `plans/README.md`.
+- [ ] Confirm `npm-release-notes.md` names every `feat!` commit in
+      `origin/main..HEAD`.
+- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
+- [ ] Commit; push.
+- [ ] Review the complete local diff against `origin/main` using
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      after the push; report each finding with a number, severity, plain
+      explanation, impact of doing nothing, lettered options, and a
+      recommendation, without changing the implementation.
+
 ## Review record
 
 Milestones 2–8 (`a6fe0da`..`d227702e`) were reviewed with the [implementation
@@ -1009,6 +1116,10 @@ automatically.
    `plans/README.md` said the close-out commit and push remained (updated when
    this review was recorded), and `verification-ratchets.md` credits the
    current ratchet contract to Milestone 13 instead of Milestone 18.
+
+**User decisions (2026-09-30):** finding 1 uses option B, finding 2 option A,
+finding 4 option A, finding 6 option A, and finding 7 option B; findings 3 and
+5 are not pursued. Milestones 20–23 carry the work.
 
 ## Post-merge follow-up (non-blocking)
 

@@ -1,51 +1,6 @@
 # Mokly CI And Npm Release Contract
 
-## Unreleased Breaking-Change Coverage
-
-Before a close-out commit, this note must name every `feat!` commit returned by
-`git log --oneline origin/main..HEAD | grep 'feat!'`. The current coverage is:
-
-- `7aba5ec2 feat!: replace collections with navigation paths` — the navigation
-  path note below;
-- `d227702e feat!: close out id-derived routes plan` — the identity note;
-- `40ab4324 feat!: drop comparisons against older baselines` — the comparison
-  baseline note; and
-- `c16926ba feat!: close out id-derived routes review fixes` — the baseline and
-  viewer host notes.
-
-## Breaking Navigation Path Upgrade Release Note
-
-The navigation-path upgrade removes `defineCollection`, `collection`, and their
-exported types; adds per-entry `navPath` and nested `folder()` authoring; and
-replaces collection edges with independent section folder trees. Consumers must
-regenerate manifest v7 and adopt catalogue read model v3. Obsolete
-`collection:` disclosure keys are ignored on restore.
-
-## Breaking Identity Upgrade Release Note
-
-The identity upgrade derives paths from kind and id, removes authored `route`,
-`slug`, `segment`, and root `path`, and makes component variants global entries.
-The `defineComponent()` return changes from `.entry` to `.entries`; export that
-parent-first array of the component and its variant entries. Consumers adopt
-manifest v7, catalogue v3, review v4, and delivery v3; `/id/` URLs no longer
-exist.
-
-## Breaking Comparison Baseline Release Note
-
-Comparisons require a base built by this Mokly version. An earlier base makes
-Changes unavailable until the base includes this version, while export and
-publish still complete without Changes.
-
-## Breaking Viewer Host API Release Note
-
-Viewer hosts must remove `ViewerSelection.variantId` and
-`InstanceRef.variantId`; `ScreenNavigateEvent` removes `route` and `variantId`
-and becomes `{ screenId, snapshotId?, fragment?, navigation? }`. Its optional
-`snapshotId` is present only when the committed historical record publishes an
-opaque identity.
-
-Release notes and the close-out commit use a `BREAKING CHANGE:` footer naming
-the applicable upgrades above; the release PR owns versions and changelogs.
+Breaking-change notes: [npm release notes](./npm-release-notes.md).
 
 ## Package Metadata
 

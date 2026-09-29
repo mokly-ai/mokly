@@ -88,9 +88,9 @@
   derivable path field and key on id; and the static export writes each
   shell once without the `id/<id>/index.html` alias. No backwards
   compatibility. Milestones 1–19 are implemented, verified, pushed, and
-  reviewed on `calummoore/halifax-v2`; the second follow-up review's 7 findings
-  await the user's decision, and the plan stays Active until its pull request
-  merges.
+  reviewed on `calummoore/halifax-v2`; Milestones 20–23 carry the user's
+  decisions on the second follow-up review, and the plan stays Active until its
+  pull request merges.
 
 ## Completed
 

@@ -9,7 +9,7 @@ internal binary and is not published to npm or crates.io.
 - Fail verification when the live dependency audit reports an advisory or error.
 - Enforce the Rust file-length limit.
 - Ratchet JavaScript/TypeScript length, protocol caps, and internal exports
-  against the branch point shared by `HEAD` and `origin/main`.
+  against the branch point, and published-package exports against release tags.
 - Keep the complete local gate aligned with the approved independent CI suites.
 
 ## What This Crate Does
@@ -27,18 +27,24 @@ The [CI verification contract](../docs/protocol/ci-verification.md) defines the
 suite boundaries, shard evidence, and fail-closed CI aggregate. Selected suites
 are partial verification; the unqualified command remains the complete gate.
 The [repository ratchet contract](../docs/protocol/verification-ratchets.md)
-owns the exact scopes and exceptions. Every ratchet compares against
-`git merge-base HEAD origin/main`; length and internal-export analysis cover
-`.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.mjs`, and `.cjs` under the three source
-roots, the internal-export baseline rejects entries absent at that merge base,
-and protocol caps scan `docs/protocol/**` recursively except `fixtures/`.
-All three checks belong to the repository suite and complete gate. The sole
-current unused-export exception is the component renderer imported by generated
-consumer-module source: `src/build/consumer_entry.ts` emits that re-export as
-source text, so there is no static module edge for the analyser to follow. Its
-exact entry lives in the shrink-only reviewed baseline. A comparison commit
-that predates the baseline file permits that one-time bootstrap; after the file
-lands, candidate entries must already exist at the merge base.
+owns the exact scopes and exceptions. Length, protocol-cap, and
+unused-internal-export analysis compare against
+`git merge-base HEAD origin/main`; module analysis covers `.ts`, `.tsx`,
+`.mts`, `.cts`, `.js`, `.mjs`, and `.cjs` under the three source roots, the
+internal-export baseline rejects entries absent at that merge base, and
+protocol caps scan `docs/protocol/**` recursively except `fixtures/`. The
+public-package-export ratchet instead compares each released package with its
+newest matching release tag reachable from `HEAD`. Full history and tags are
+required; when a release manifest records a release but the tag is unavailable,
+fetch them with `git fetch --tags origin` and retry. All four checks belong to
+the repository suite and complete gate.
+
+The sole current unused-export exception is the component renderer imported by
+generated consumer-module source: `src/build/consumer_entry.ts` emits that
+re-export as source text, so there is no static module edge for the analyser to
+follow. Its exact entry lives in the shrink-only reviewed baseline. A comparison
+commit that predates the baseline file permits that one-time bootstrap; after
+the file lands, candidate entries must already exist at the merge base.
 Ordinary CI runs functional suites on the minimum Node 22.14 runtime. Release
 Please pull requests add Node 24; CI resolves the latest patch in its repository
 prerequisite and explicitly shares that exact result with dependent jobs,

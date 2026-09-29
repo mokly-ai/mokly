@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Implemented by Milestone 11 of the active
+Implemented as recorded in the
 [id-derived routes plan](../../plans/id-derived-routes.md).
 
 This contract owns the version gate between a current catalogue and the Git

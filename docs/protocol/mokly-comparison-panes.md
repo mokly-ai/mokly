@@ -3,14 +3,14 @@
 ## Delivery Status
 
 The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-delivered the presentation below through Milestone 4: the existing design
-references, generation-confined snapshot loader, and device-sized pane runtime.
-Its [scrolling contract](./mokly-comparison-scrolling.md) records the delivered
-page scroller and inner-region mirroring, with the
+records delivery of the presentation below: the existing design references,
+generation-confined snapshot loader, and device-sized pane runtime. Its
+[scrolling contract](./mokly-comparison-scrolling.md) records the implemented
+page scroller and inner-region mirroring. The
 [region pairing](./mokly-comparison-region-pairing.md) and
-[Scroll together](./mokly-comparison-scroll-together.md) contracts, which
-Milestone 6 depicts in the design catalogue and Milestone 7 delivered. This
-contract governs the Before and Current panes that
+[Scroll together](./mokly-comparison-scroll-together.md) contracts are also
+implemented and depicted in the design catalogue. This contract governs the
+Before and Current panes that
 [Changes and screen comparisons](./mokly-changes.md) offer for changed screens
 and eligible component variants in Side by side, Overlay and Difference. It
 changes nothing about comparison eligibility, capture, generation, publishing,

@@ -30,8 +30,8 @@ disclosure are implemented. Their delivery history is recorded in the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
 
 Browse is a first-party host of [`@mokly/viewer`](./mokly-viewer.md). The
-public catalogue (Milestone 3), optional frame transport (Milestone 4) and
-package extraction (Milestone 5) are implemented as recorded in the
+public catalogue, optional frame transport, and package extraction are
+implemented as recorded in the
 [viewer library plan](../../plans/mokly-viewer-library.md). The
 [React Browse shell plan](../../plans/react-browse-shell.md) delivers one React
 tree shared by standalone Serve, static export and embedded hosts. Standalone

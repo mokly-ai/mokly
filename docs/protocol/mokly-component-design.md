@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-Milestones 4, 4a, 4b, 4c, 4f, 4g, and 7 of the [component explorer plan](../../plans/component-explorer.md)
-deliver the complete mobile/desktop mockup set for sign-off. The
+The [component explorer plan](../../plans/component-explorer.md) records
+delivery of the complete mobile/desktop mockup set for sign-off. The
 [icon inspector revision](./mokly-component-inspector-design.md) and
 [prop controls designs](./mokly-component-controls-design.md) extend the
 original pages and inspection states. The [workspace revision](./mokly-component-workspace-design.md) owns the grouped view controls, bounded panes, resizable inspector, and comparison eligibility. Runtime registration, attribution,

@@ -2,9 +2,10 @@
 
 ## Delivery Status
 
-Implemented through [viewer library Milestone 2](../../plans/mokly-viewer-library.md),
-including resolution and source capture. Key and boundary formats are unchanged;
-this document approves no new UI or visible local behavior.
+Implemented as recorded in the
+[viewer library plan](../../plans/mokly-viewer-library.md), including resolution
+and source capture. Key and boundary formats are unchanged; this document
+approves no new UI or visible local behavior.
 
 ## Identity And Scope
 
@@ -216,8 +217,8 @@ validation; historical marker translation is not supported.
 
 ## Acceptance
 
-Milestone 2 needs key-stability fixtures, record-resolution truth-table tests,
+Coverage requires key-stability fixtures, record-resolution truth-table tests,
 source normalization/stripping and source-only Changes regressions, and marker
 conformance for every view, including null, nested, multi-root and replayed
-instances. Later viewer/adapter tests must preserve scoped lookup and treat
+instances. Viewer and adapter tests must preserve scoped lookup and treat
 unavailable geometry separately from a missing logical instance.
