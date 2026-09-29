@@ -1,8 +1,8 @@
 # Id-Derived Routes, Unified Variants, And Identity-Keyed Wire
 
-Status: Milestones 1–8 implemented, verified, pushed, and reviewed on
-`calummoore/halifax-v2` (2026-09-26 to 2026-09-28); Milestones 9–15 carry the
-user's decisions on the [review record](#review-record) and are in progress.
+Status: Milestones 1–15 implemented, verified, pushed, and reviewed on
+`calummoore/halifax-v2` (2026-09-26 to 2026-09-29); the follow-up review's 18
+findings in the [review record](#review-record) await the user's decision.
 Created 2026-09-26 with the user's consent after discussing route redundancy
 on the navigation-path branch; the variant unification and the wire cleanup
 were folded in the same day. The work is implemented on this branch,
@@ -711,7 +711,7 @@ Tags: ui
 - [x] Commit with a `BREAKING CHANGE:` footer naming the end of comparisons
       against baselines built by earlier Mokly versions, the removed
       `InstanceRef.variantId`, and the `ScreenNavigateEvent` fields; push.
-- [ ] Review the complete local diff against `origin/main` using
+- [x] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
@@ -814,6 +814,55 @@ restores `snapshotId` on navigation events, finding 11 also enforces the order
 in the reader, finding 15 also fixes `ReviewIgnore` ids, and finding 29 uses a
 ratchet against `origin/main`. Findings 17 and 20, omitted from both earlier
 lists, are included. Milestones 9–15 carry the work.
+
+### Follow-up review (Milestones 9–15)
+
+Milestones 9–15, the merge of `origin/main` (#121), and the close-out
+(`6caeb457`..`c16926ba`) were reviewed with the implementation review prompt
+after the full gate and push, by four read-only reviewers. The coordinator
+re-checked findings 1–7 directly in the code; the rest rest on the reviewers'
+cited evidence. Approved findings 1, 3–6, 8 (cross-kind case), 11, 13, 15, 16,
+18, 20–23, 25–27, and 30's listed items are complete; 12, 14, 17, 24, 28, and
+29 are incomplete as listed below. No finding was applied automatically.
+
+1. **Medium** — deleted but still-linked resources still make Changes
+   unavailable in derived output mode and for deleted embedded HTML, a
+   regression for screen-only catalogues since the fallback was removed
+   (`src/review/component_resource_changes.ts`, `resource_comparison.ts`).
+2. **Medium** — moving a component variant to another component makes the
+   review result invalid, so Changes is unavailable and export with Changes
+   fails (`src/review/component_variant_classification.ts`).
+3. **Medium** — component variant page mockups omit the parent breadcrumb the
+   runtime and the navigation path contract show, and no test compares them.
+4. **Medium** — the file-length and unused-export ratchets skip every `.mjs`
+   file under `scripts/`; `scripts/package/consumer_cases.mjs` grew 320→328.
+5. **Medium** — Milestone 9 deleted the unreleased navigation-path breaking
+   release note, and the notes omit `defineComponent().entry` → `.entries`.
+6. **Medium** — the ratchets compare with the tip of `origin/main`, not the
+   merge-base, so branches behind main and re-verified release tags can fail.
+7. **Low** — finding 24 is partial: a parent failing
+   `validateComponentDefinition` is still dropped (`src/registry/prepare.ts`).
+8. **Low** — finding 28 is partial: removed per-view comparison and removed
+   Changes on other current records are still accepted by the v3 reader.
+9. **Low** — the tests for findings 14 and 28 pass without their fixes.
+10. **Low** — finding 17 is partial: five places still build `snapshots/`
+    paths by hand, and the guard test cannot catch them.
+11. **Low** — the finding-12 check type-checks the doc snippet but never
+    compares it with the exported `RenderInput`.
+12. **Low** — the unused-export baseline can grow despite "can only shrink".
+13. **Low** — protocol docs in subdirectories escape the cap ratchet.
+14. **Low** — eight protocol docs and `plans/README.md` still describe
+    delivered milestones as approved targets or pending.
+15. **Low** — `snapshotId` is documented as present exactly for historical
+    content but is omitted when a removed record has no published identity.
+16. **Low** — dead code and route-era names remain (unused `variantId`
+    parameter in `useComparison`, an unreachable comparison branch and
+    `DiffScreen`, route-named id functions, a stale comment, an unreachable
+    schema check, and a dead link in `docs/reviews`).
+17. **Low** — the removed-entry order doc is wrong when a parent and its
+    variant are both removed.
+18. **Low** — the incompatible-baseline CLI line is not tested through the
+    CLI reporters, the preview builder, or watched Serve's print-once rule.
 
 ## Post-merge follow-up (non-blocking)
 
