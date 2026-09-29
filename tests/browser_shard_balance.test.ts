@@ -73,16 +73,17 @@ function listedShards(): Promise<ListedShards> {
   return listing;
 }
 
+/**
+ * List the complete inventory and each shard one at a time. Playwright writes
+ * compiled test modules to a shared on-disk cache without an atomic rename, so
+ * concurrent listings on an empty cache can load a partially written module.
+ */
 async function listShards(): Promise<ListedShards> {
   const total = await browserShardTotal();
-  const [complete, shards] = await Promise.all([
-    discoverBrowserTests(repositoryRoot),
-    Promise.all(
-      Array.from({ length: total }, (_, offset) =>
-        discoverBrowserTests(repositoryRoot, { index: offset + 1, total }),
-      ),
-    ),
-  ]);
+  const complete = await discoverBrowserTests(repositoryRoot);
+  const shards: BrowserTestInventory[] = [];
+  for (let index = 1; index <= total; index++)
+    shards.push(await discoverBrowserTests(repositoryRoot, { index, total }));
   return { complete, shards, total };
 }
 

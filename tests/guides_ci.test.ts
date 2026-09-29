@@ -356,6 +356,14 @@ test("browser shards stay whole and balanced by test count", () => {
     verification,
     /When the bound fails, split a large spec into smaller spec files/u,
   );
+  assert.match(
+    verification,
+    /lists the complete inventory and each shard one at a time.*without an atomic rename.*concurrent listings on an empty cache/u,
+  );
+  assert.match(
+    verification,
+    /A failed browser discovery reports the load errors from Playwright's JSON output as well as its standard error/u,
+  );
 });
 
 test("receiver limits, stored blobs and plan URL protocols are unambiguous", () => {

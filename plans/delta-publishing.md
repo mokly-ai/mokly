@@ -370,6 +370,26 @@ Milestones 37–38 replace parallel mode; Milestone 36 closes after them.
 - `ci-verification.md` returns to whole-file partitioning and describes the
   split files instead of the parallel-mode exception.
 
+Second revision, 2026-09-29: CI on `85290c7` passed all four browser shards
+and `validateShardReports`, but unit shard 4 failed both balance tests with
+"Playwright discovery failed (1)" and no detail. The test listed the complete
+inventory and all four shards in five concurrent Playwright processes.
+Playwright writes each compiled test module to a shared on-disk cache with a
+plain `writeFileSync`, so on a fresh runner's empty cache one listing can load
+a module another is still writing. With an empty cache per round, five
+concurrent listings reproduced it in 1 of 6 rounds: "SyntaxError: The
+requested module './component_overlay.js' does not provide an export named
+'createOverlay'". Playwright reports load errors in its JSON output, which
+`discoverBrowserTests` dropped on a non-zero exit. CI's browser runner lists
+its two inventories one at a time, and the only other unit test that lists
+the real specs, `tests/hydration_inventory.test.ts`, runs in a different CI
+unit shard. Milestone 39 carries this work.
+
+- The balance test lists the complete inventory and each shard one at a time.
+- A failed discovery reports Playwright's JSON load errors as well as its
+  standard error.
+- `ci-verification.md` states both rules.
+
 ## Milestone 1: Protocol and guide contract — completed
 
 Define the complete receiver and CLI contract before any code changes. Docs
@@ -1189,8 +1209,9 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       title of at most 50 characters, and push the branch. Committed as
       `18a0b92 test: balance the browser test shards`.
 - [ ] Confirm every check on the pull request passes, including all four
-      browser shards and `Required CI`. `18a0b92` failed `Required CI` (see
-      the decision's revision); this closes after Milestone 38.
+      browser shards and `Required CI`. `18a0b92` failed `Required CI` and
+      `85290c7` failed unit shard 4 (see the decision's revisions); this
+      closes after Milestone 39.
 - [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
@@ -1208,7 +1229,7 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       update the development hydration sentence in its evidence section;
       update the pins in `tests/guides_ci.test.ts`.
 
-## Milestone 38: Split the route hydration spec
+## Milestone 38: Split the route hydration spec — completed
 
 - [x] Extend `tests/browser_shard_balance.test.ts` to validate the four shard
       listings with `validateShardReports`, and confirm it fails on the current
@@ -1222,6 +1243,29 @@ Documentation and contract only. Validate with Prettier and the guide tests;
 - [x] Run the balance, hydration inventory, CI workflow and guides tests,
       Prettier, ESLint and the type check, then `cargo xtask check`; resolve
       every failure.
+- [x] After checks pass, `git add -A`, commit with a Conventional Commits
+      title of at most 50 characters, and push the branch. Committed as
+      `85290c7 test: split the route hydration spec`.
+
+## Milestone 39: Serial shard listings and discovery diagnostics
+
+- [x] Record the second revision in the
+      [Browser Shard Balance Decision](#browser-shard-balance-decision).
+- [x] State in [`ci-verification.md`](../docs/protocol/ci-verification.md)
+      that a failed discovery reports Playwright's load errors and that the
+      balance test lists one inventory at a time, and why; pin both in
+      `tests/guides_ci.test.ts`.
+- [x] Add `tests/verification_browser_discovery.test.ts`, which lists a
+      miniature Playwright project whose spec throws while loading, and
+      confirm it fails before `discoverBrowserTests` reports the load error.
+- [x] Report Playwright's JSON load errors from `discoverBrowserTests` on a
+      non-zero exit, and list the balance test's inventories one at a time.
+- [x] Rerun the empty-cache reproduction against the serial listing and
+      confirm no round fails. Six empty-cache rounds of the serial balance
+      test passed; the concurrent listing had failed one of six.
+- [x] Run the discovery, balance, hydration inventory, CI workflow and guides
+      tests, Prettier, ESLint and the type check, then `cargo xtask check`;
+      resolve every failure.
 - [ ] After checks pass, `git add -A`, commit with a Conventional Commits
       title of at most 50 characters, and push the branch.
 

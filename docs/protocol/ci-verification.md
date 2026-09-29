@@ -249,7 +249,8 @@ Test totals are discovered on the executing runtime; no fixed count is part of
 the contract. Before execution, the unit runner independently discovers all
 matching `.test.ts` and `.test.tsx` files across the root and viewer suites. The
 browser runner independently asks Playwright for the current spec inventory.
-Discovery fails on an empty suite.
+Discovery fails on an empty suite. A failed browser discovery reports the load
+errors from Playwright's JSON output as well as its standard error.
 
 Development hydration registers one browser test per unique generated catalogue
 route at discovery time, spread across four route spec files, the first of
@@ -413,9 +414,13 @@ lists every shard of the CI browser job's shard matrix with the discovery the
 browser runner uses. It fails when any shard holds more than 125% of an even
 share of the browser tests, and it runs the aggregate's `validateShardReports`
 over reports built from those listings, so a spec split across shards fails
-before CI does. The bound applies to test counts, because that is what
-Playwright balances; shard durations remain a measurement from the shard
-reports. When the bound fails, split a large spec into smaller spec files.
+before CI does. It lists the complete inventory and each shard one at a time:
+Playwright writes compiled test modules to a shared on-disk cache without an
+atomic rename, so concurrent listings on an empty cache can load a module that
+another listing is still writing. The bound applies to test counts, because
+that is what Playwright balances; shard durations remain a measurement from the
+shard reports. When the bound fails, split a large spec into smaller spec
+files.
 
 ## Acceptance Measurement
 
