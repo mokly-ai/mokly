@@ -26,9 +26,11 @@ the review of Milestone 18 in the
 the review of Milestone 20 in the
 [Milestone 21 review record](./imported-css-delivery-milestone-21.md),
 the review of Milestone 22 in the
-[Milestone 23 review record](./imported-css-delivery-milestone-23.md), and
+[Milestone 23 review record](./imported-css-delivery-milestone-23.md),
 the review of Milestone 24 in the
-[Milestone 25 review record](./imported-css-delivery-milestone-25.md).
+[Milestone 25 review record](./imported-css-delivery-milestone-25.md), and
+the review of Milestone 26 in the
+[Milestone 27 review record](./imported-css-delivery-milestone-27.md).
 
 ## Findings
 
