@@ -29,7 +29,9 @@ approved findings in the
 [Milestone 25 review record](../docs/reviews/imported-css-delivery-milestone-25.md).
 Milestone 28 (`c482bd0`) resolves the four approved findings in the
 [Milestone 27 review record](../docs/reviews/imported-css-delivery-milestone-27.md);
-other open findings remain unchanged.
+other open findings remain unchanged. The three findings in the
+[Milestone 29 review record](../docs/reviews/imported-css-delivery-milestone-29.md)
+remain open for the user's decision.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -895,10 +897,10 @@ follow plugin-owned empty tails, and compare only real Chrome-parsed selectors.
 - [x] Tighten the Chrome oracle to parseable rows with family minimums and documented strict rejections; add the documented fix to Build tests.
 - [x] Run corpus and mutation checks; verify Build, module suites, example Build/Check, lint, typecheck, browser specs and `cargo xtask check`; smoke-test the CLI.
 
-## Milestone 29: Commit, push, and review
+## Milestone 29: Commit, push, and review (complete)
 
 - [x] Commit and push the approved fixes and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
-- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Three new findings (1 Medium, 2 Low) are recorded in the [Milestone 29 review record](../docs/reviews/imported-css-delivery-milestone-29.md) for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
