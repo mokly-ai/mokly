@@ -19,6 +19,13 @@ of SHA-256 over the UTF-8 repository-relative POSIX stylesheet path. It never
 depends on source bytes, bundle order, process cwd or platform separators.
 Distinct local identities colliding at a generated name fail Build.
 
+CSS whitespace in selectors and `@scope` preludes means only space, tab, line
+feed, carriage return and form feed. A hex escape consumes its next single
+whitespace character (CRLF as one character), even after six hex digits, so
+that character is not a combinator or a comma-boundary space. Unicode spaces
+such as U+00A0 are name characters. One shared forward scan classifies CSS
+whitespace, strings, escapes and comments; comments end at the first `*/`.
+
 `@scope` prelude localization is Mokly-owned until the CSS Modules plugins
 fix their text splitting. Parse `[trivia] [(start)] [trivia] [to [trivia]
 (limit)] [trivia]`; trivia is whitespace or comments, `to` is a standalone
@@ -44,9 +51,17 @@ source offsets to distinguish authored spaces from parser-moved spaces. `.x, .y`
 `.x ,.y` and `.x,\n.y` become `.x .y`, while `.x,.y` becomes `.x.y` on one
 element. Comments alone are not whitespace. Whitespace just inside the
 wrapper is dropped; a compound before or after it attaches to the first or
-last item. Only trailing-comma whitespace moved out of `:global()` or
-`:local()` separates the next selector: `.w:global(.x, ):hover` becomes
+last item. Whitespace anywhere after the first comma following the last
+non-empty wrapper item, including empty items and whitespace beside comments,
+moves out of `:global()` or `:local()`. Whitespace before that first tail
+comma is dropped, and comments alone move nothing. Moved whitespace separates
+the next selector: `.w:global(.x, ):hover` becomes
 `.w.x :hover`, and `.w:global(.a, ):global(.x)` becomes `.w.a .x`.
+Inside another pseudo-class, a kept comment after the wrapper absorbs moved
+whitespace there; without kept content, it propagates to the next outer
+selector. At top level, a comment after the wrapper does not stop the
+separation. Find comment boundaries forward from `/*`, not backward from
+`*/`, so an inner `/*` within a comment has no effect.
 The same move out of `:is()`, `:where()`, `:not()`, `:has()`,
 `:nth-child(… of …)`, `:host()`, `::slotted()` or another pseudo never counts
 as authored outer whitespace. `.card:is(.a, ).b` would change to a descendant
@@ -70,6 +85,17 @@ behavior, not selector-list expansion.
 The temporary selector rules also make those names available as earlier
 selectors for a later `composes`, including when the scope is nested in a
 rule, `@media`, `@supports` or `@layer`.
+
+Before the CSS Modules plugins run, scan raw authored rule selectors,
+including nested rules, and raw `@scope` preludes. Fail Build at the authored
+rule or at-rule location if a hex escape ends with a tab, line feed, carriage
+return, CRLF or form feed; if a six-digit escape is followed by any CSS
+whitespace; or if an escape is followed immediately by a comment immediately
+followed by CSS whitespace. Skip strings and comments themselves. A one-to-five
+digit escape ended by one space, or an escape ended by a non-whitespace
+character, remains supported. The [catalogued error](./mokly-imported-styles-errors.md)
+gives the edit to make. This guard uses raw selector/parameter text because
+PostCSS can remove a comment before the plugins see it.
 
 After restoration, verify the scoping result against its input with parsed
 PostCSS trees. Remove only input `composes`/`compose-with` declarations
@@ -95,9 +121,10 @@ semantic animation correctness: `animation-name: ease` still passes when the
 plugin leaves that local keyframe reference bare. The plugin's invalid
 `animation: grow-progress auto linear` rewrite and quoted-keyframe prefix
 rewrite fail Build rather than shipping invalid CSS.
-The browser regression compares authored and delivered selector text when
-Chrome parses both. Cases Chrome drops on both sides have no selector text;
-the oracle records those separately rather than claiming browser equivalence.
+The browser regression uses only selectors Chrome parses. Accepted rows must
+have the same parsed meaning. A same-meaning rejection is allowed only for the
+documented strict case of whitespace moved out of a non-wrapper pseudo-class
+by a trailing comma; this preserves the pre-existing fail-closed rule.
 
 Only local classes, IDs, `@keyframes` names and their `animation` and
 `animation-name` references are renamed. `:global(...)` stays global and

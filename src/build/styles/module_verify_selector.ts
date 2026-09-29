@@ -1,8 +1,14 @@
 import { createRequire } from "node:module";
 
 import {
+  cssWhitespaceAt,
+  cssWhitespaceOnly,
+  scanCssText,
+  trimCssWhitespace,
+  type CssScan,
+} from "./module_css_scan.js";
+import {
   authoredCommaSpace,
-  authoredSpaceBefore,
   wrapperMovedSpace,
 } from "./module_selector_source.js";
 
@@ -16,7 +22,6 @@ interface SelectorNode {
   readonly namespace?: string;
   readonly quoteMark?: string;
   readonly sourceIndex?: number;
-  readonly spaces?: { readonly before?: string; readonly after?: string };
 }
 
 interface SelectorShape {
@@ -48,8 +53,16 @@ export function moduleSelectorsMatch(
     parser ??= requireSelectorParser(
       "postcss-selector-parser",
     ) as SelectorParser;
-    const original = normalize(parser().astSync(input), input, true);
-    const changed = normalize(parser().astSync(output), output, false);
+    const original = normalize(
+      parser().astSync(input),
+      scanCssText(input),
+      true,
+    );
+    const changed = normalize(
+      parser().astSync(output),
+      scanCssText(output),
+      false,
+    );
     return sameShapes(original, changed, prefix);
   } catch {
     return false;
@@ -58,18 +71,18 @@ export function moduleSelectorsMatch(
 
 function normalize(
   node: SelectorNode,
-  text: string,
+  scan: CssScan,
   input: boolean,
 ): SelectorShape {
   return {
     type: node.type,
     value:
-      node.type === "combinator" && !node.value?.trim()
+      node.type === "combinator" && cssWhitespaceOnly(node.value ?? "")
         ? " "
         : node.type === "combinator"
-          ? (node.value ?? "").trim()
+          ? trimCssWhitespace(node.value ?? "")
           : (node.value ?? ""),
-    children: normalizeChildren(node.nodes ?? [], text, input),
+    children: normalizeChildren(node.nodes ?? [], scan, input),
     ...(node.attribute ? { attribute: node.attribute } : {}),
     ...(node.operator ? { operator: node.operator } : {}),
     ...(node.insensitive ? { insensitive: node.insensitive } : {}),
@@ -84,7 +97,7 @@ function normalize(
 
 function normalizeChildren(
   nodes: readonly SelectorNode[],
-  text: string,
+  scan: CssScan,
   input: boolean,
 ): SelectorShape[] {
   const normalized: SelectorShape[] = [];
@@ -98,7 +111,9 @@ function normalizeChildren(
       node.type === "pseudo" &&
       [":global", ":local"].includes(node.value ?? "")
     ) {
-      if (text[(node.sourceIndex ?? -1) + (node.value?.length ?? 0)] !== "(") {
+      if (
+        scan.text[(node.sourceIndex ?? -1) + (node.value?.length ?? 0)] !== "("
+      ) {
         if (nodes[index + 1]?.type === "combinator") index += 1;
         movedWrapperSpace = false;
         afterWrapper = false;
@@ -110,12 +125,13 @@ function normalizeChildren(
         let previous: SelectorNode | undefined;
         let accepted = false;
         for (const selector of node.nodes) {
-          const children = normalizeChildren(selector.nodes ?? [], text, true);
+          const children = normalizeChildren(selector.nodes ?? [], scan, true);
           if (!children.length) continue;
           const separate = accepted
             ? previous !== undefined &&
-              authoredCommaSpace(text, previous, selector)
-            : movedWrapperSpace || authoredSpaceBefore(text, node);
+              authoredCommaSpace(scan, previous, selector)
+            : movedWrapperSpace ||
+              cssWhitespaceAt(scan, (node.sourceIndex ?? 0) - 1);
           appendChildren(normalized, children, separate, true);
           accepted = true;
           previous = selector;
@@ -123,10 +139,10 @@ function normalizeChildren(
         if (!accepted) return [{ type: "invalid", value: "", children: [] }];
         afterWrapper = true;
       } else return [{ type: "invalid", value: "", children: [] }];
-      movedWrapperSpace = wrapperMovedSpace(text, node);
+      movedWrapperSpace = wrapperMovedSpace(scan, node);
       continue;
     }
-    const child = normalize(node, text, input);
+    const child = normalize(node, scan, input);
     if (child.type === "combinator") {
       normalized.push(child);
       movedWrapperSpace = false;
@@ -136,10 +152,10 @@ function normalizeChildren(
     appendChildren(
       normalized,
       [child],
-      movedWrapperSpace || authoredSpaceBefore(text, node),
+      movedWrapperSpace || cssWhitespaceAt(scan, (node.sourceIndex ?? 0) - 1),
       afterWrapper,
     );
-    movedWrapperSpace = input && wrapperMovedSpace(text, node);
+    movedWrapperSpace = input && wrapperMovedSpace(scan, node);
     afterWrapper = false;
   }
   return normalized;

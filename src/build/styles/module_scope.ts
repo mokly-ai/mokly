@@ -2,6 +2,15 @@ import postcss, { type AtRule, type Root, type Rule } from "postcss";
 
 import { MoklyError } from "../../errors.js";
 
+import {
+  CSS_COMMENT,
+  CSS_NORMAL,
+  CSS_WHITESPACE,
+  isCssWhitespaceCharacter,
+  scanCssText,
+  type CssScan,
+} from "./module_css_scan.js";
+
 /** A selector interior without the surrounding parentheses. */
 export interface ScopeGroup {
   readonly start: number;
@@ -16,13 +25,14 @@ export interface ScopePrelude {
 
 /** Parse optional selector groups without splitting identifiers containing `to`. */
 export function scanScopePrelude(params: string): ScopePrelude {
-  let cursor = skipTrivia(params, 0);
+  const scan = scanCssText(params);
+  let cursor = skipTrivia(scan, 0);
   if (cursor === params.length) return {};
   let start: ScopeGroup | undefined;
   if (params[cursor] === "(") {
-    const parsed = readGroup(params, cursor);
+    const parsed = readGroup(scan, cursor);
     start = parsed.group;
-    cursor = skipTrivia(params, parsed.end);
+    cursor = skipTrivia(scan, parsed.end);
   }
   let limit: ScopeGroup | undefined;
   if (cursor < params.length) {
@@ -31,15 +41,17 @@ export function scanScopePrelude(params: string): ScopePrelude {
     const following = params[cursor + 2];
     if (
       following &&
-      !/\s|\(|\)/u.test(following) &&
+      !isCssWhitespaceCharacter(following) &&
+      following !== "(" &&
+      following !== ")" &&
       params.slice(cursor + 2, cursor + 4) !== "/*"
     )
       throw new Error("invalid scope prelude");
-    cursor = skipTrivia(params, cursor + 2);
+    cursor = skipTrivia(scan, cursor + 2);
     if (params[cursor] !== "(") throw new Error("invalid scope prelude");
-    const parsed = readGroup(params, cursor);
+    const parsed = readGroup(scan, cursor);
     limit = parsed.group;
-    cursor = skipTrivia(params, parsed.end);
+    cursor = skipTrivia(scan, parsed.end);
   }
   if (cursor !== params.length || (!start && !limit))
     throw new Error("invalid scope prelude");
@@ -108,39 +120,29 @@ export function prepareModuleScopes(root: Root, relative: string): () => void {
   };
 }
 
-function skipTrivia(text: string, from: number): number {
+function skipTrivia(scan: CssScan, from: number): number {
   let cursor = from;
-  while (cursor < text.length) {
-    if (/\s/u.test(text[cursor]!)) cursor += 1;
-    else if (text.slice(cursor, cursor + 2) === "/*") {
-      const end = text.indexOf("*/", cursor + 2);
-      if (end < 0) throw new Error("unterminated scope comment");
-      cursor = end + 2;
-    } else break;
-  }
+  if (scan.unclosedComment) throw new Error("unterminated scope comment");
+  while (
+    scan.kinds[cursor] === CSS_WHITESPACE ||
+    scan.kinds[cursor] === CSS_COMMENT
+  )
+    cursor += 1;
   return cursor;
 }
 
 function readGroup(
-  text: string,
+  scan: CssScan,
   open: number,
 ): { readonly group: ScopeGroup; readonly end: number } {
   const brackets: string[] = ["("];
   let cursor = open + 1;
-  while (cursor < text.length) {
-    const char = text[cursor]!;
-    if (char === "\\") {
-      cursor += 2;
+  while (cursor < scan.text.length) {
+    if (scan.kinds[cursor] !== CSS_NORMAL) {
+      cursor += 1;
       continue;
     }
-    if (char === '"' || char === "'") {
-      cursor = skipString(text, cursor);
-      continue;
-    }
-    if (text.slice(cursor, cursor + 2) === "/*") {
-      cursor = skipTrivia(text, cursor);
-      continue;
-    }
+    const char = scan.text[cursor]!;
     if (char === "(" || char === "[") brackets.push(char);
     else if (char === ")" || char === "]") {
       if (brackets.pop() !== (char === ")" ? "(" : "["))
@@ -148,7 +150,10 @@ function readGroup(
       if (!brackets.length) {
         const group = { start: open + 1, end: cursor };
         if (
-          skipTrivia(text.slice(group.start, group.end), 0) ===
+          skipTrivia(
+            scanCssText(scan.text.slice(group.start, group.end)),
+            0,
+          ) ===
           group.end - group.start
         )
           throw new Error("empty scope group");
@@ -158,14 +163,4 @@ function readGroup(
     cursor += 1;
   }
   throw new Error("unterminated scope group");
-}
-
-function skipString(text: string, open: number): number {
-  const quote = text[open];
-  let cursor = open + 1;
-  while (cursor < text.length) {
-    if (text[cursor] === "\\") cursor += 2;
-    else if (text[cursor++] === quote) return cursor;
-  }
-  throw new Error("unterminated scope string");
 }

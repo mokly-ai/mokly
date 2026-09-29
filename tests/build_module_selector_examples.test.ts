@@ -32,6 +32,7 @@ for (const [source, delivered, error] of [
   [".wrap :global(.x,.y)/**/.tail", ".wrap .x.y.tail"],
   [".w :global(::before,.x)", ".w ::before .x"],
   [".card:is(.a,).b", ".card:is(.a, ).b"],
+  [".card:is(.a ).b", ".card:is(.a).b"],
   [".card:is(.a, ).b", undefined, changed],
   [".w :global(.a,:is(.b, ),.c)", undefined, changed],
   [":global()", undefined, emptyGlobal],

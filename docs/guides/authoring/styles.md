@@ -64,6 +64,9 @@ with guidance to add one or remove the wrapper. A trailing comma and space in
 spelling in `:is()` and similar selectors changes its meaning and fails Build.
 Remove that trailing comma to keep the selector attached. This follows the
 plugins used by css-loader and Vite.
+If Build cannot safely scope an escaped selector name, end a short escape
+with one space before any comment, or remove whitespace after a six-digit
+escape. Use a plain stylesheet if the selector cannot be written that way.
 To match either class, write
 `.wrap :global(.x), .wrap :global(.y)` or
 `.wrap :global(:is(.x, .y))` instead.

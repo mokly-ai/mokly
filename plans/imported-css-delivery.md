@@ -27,9 +27,9 @@ are addressed there; other findings remain open for the user's decision, as
 do the earlier unselected findings. Milestone 26 (`266164b`) resolves all four
 approved findings in the
 [Milestone 25 review record](../docs/reviews/imported-css-delivery-milestone-25.md).
-The four findings in the
-[Milestone 27 review record](../docs/reviews/imported-css-delivery-milestone-27.md)
-remain open for the user's decision.
+Milestone 28 addresses the four approved findings in the
+[Milestone 27 review record](../docs/reviews/imported-css-delivery-milestone-27.md);
+other open findings remain unchanged.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -883,6 +883,22 @@ whitespace to move, reject all-empty wrappers, and verify browser semantics.
 
 - [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
 - [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Four new findings (1 Medium, 3 Low) are recorded in the [Milestone 27 review record](../docs/reviews/imported-css-delivery-milestone-27.md) for the user's decision.
+
+## Milestone 28: CSS whitespace, escape guards, wrapper empty tails and a stricter oracle (complete)
+
+Use one CSS text scanner for selector spacing, reject unsafe escape spellings,
+follow plugin-owned empty tails, and compare only real Chrome-parsed selectors.
+
+- [x] Write failing scanner, Build and browser regressions for the four approved findings and the escape-plus-comment case; capture the baseline CSS corpus.
+- [x] Define CSS whitespace and escape limits in the protocol, error catalogue, Styles guide and PR draft before or with the implementation.
+- [x] Share one forward CSS scanner across selector checking and `@scope`, add the early escape diagnostic, and handle wrapper empty tails and kept comments.
+- [x] Tighten the Chrome oracle to parseable rows with family minimums and documented strict rejections; add the documented fix to Build tests.
+- [x] Run corpus and mutation checks; verify Build, module suites, example Build/Check, lint, typecheck, browser specs and `cargo xtask check`; smoke-test the CLI.
+
+## Milestone 29: Commit, push, and review
+
+- [ ] Commit and push the approved fixes and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
 
 ## Post-merge follow-up (non-blocking)
 
