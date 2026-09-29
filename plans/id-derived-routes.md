@@ -1,11 +1,11 @@
 # Id-Derived Routes, Unified Variants, And Identity-Keyed Wire
 
-Status: Milestones 1–19 implemented and verified on
-`calummoore/halifax-v2` (2026-09-26 to 2026-09-29); the coordinator's Milestone
-19 close-out commit, push, and review remain. Created
-2026-09-26 with the user's consent after discussing route redundancy on the
-navigation-path branch; the variant unification and the wire cleanup were
-folded in the same day. The work is implemented on this branch,
+Status: Milestones 1–19 implemented, verified, pushed, and reviewed on
+`calummoore/halifax-v2` (2026-09-26 to 2026-09-29); the second follow-up
+review's 7 findings in the [review record](#review-record) await the user's
+decision. Created 2026-09-26 with the user's consent after discussing route
+redundancy on the navigation-path branch; the variant unification and the wire
+cleanup were folded in the same day. The work is implemented on this branch,
 `calummoore/halifax-v2`, and the user opens a pull request when it is ready.
 Mokly is not live, so this plan adds no backwards compatibility: readers it
 rewrites accept only the new versions, and there are no migration guards or
@@ -819,7 +819,7 @@ origin/main`; a test where `origin/main` moved after the branch point
       `feat!` commit in `origin/main..HEAD` (finding 5).
 - [x] Run `cargo xtask check`; fix anything it reports until it passes.
 - [x] Commit; push.
-- [ ] Review the complete local diff against `origin/main` using
+- [x] Review the complete local diff against `origin/main` using
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
@@ -976,6 +976,39 @@ cited evidence. Approved findings 1, 3–6, 8 (cross-kind case), 11, 13, 15, 16,
 finding 5 option B, finding 6 option A, and finding 14 option A; findings 7,
 10, 12, 13, 15, 16, and 17 are fixed as recommended. Findings 2, 3, 8, 9, 11,
 and 18 are not pursued. Milestones 16–19 carry the work.
+
+### Second follow-up review (Milestones 16–19)
+
+Milestones 16–19 (`aa07039e`..`bc4cbe55`) were reviewed with the
+implementation review prompt after the full gate and push, by two read-only
+reviewers. The coordinator re-checked findings 1 and 2 in the code. Approved
+follow-up findings 6, 12, 13, and 16 are complete; 1, 4, 5, 7, 10, 14, 15, and
+17 are complete in code or docs with the gaps below. No finding was applied
+automatically.
+
+1. **Medium** — the release notes omit removals from the released
+   `@mokly/viewer@0.3.0` data entry (`catalogueViewHref`, `publicPath`,
+   `pagePreviewPath`, `componentFragmentRoute`, and the `ScreenReviewV3`,
+   `ReviewResultV3`, and `ManifestV5` types), the rejection of Windows
+   device-name ids, and the end of `?variant=` links.
+2. **Low** — the finding 7 fix validates variants against a parent that just
+   failed validation, so invalid parent controls (for example a select with no
+   options) crash registry preparation with a `TypeError`, and an invalid prop
+   schema repeats its error once per variant (`src/registry/prepare.ts`).
+3. **Low** — the release-note coverage rule greps only `feat!`, missing
+   `feat(scope)!:`, `fix!:`, and `BREAKING CHANGE:` footers such as
+   `ca3e8273`; it pins branch SHAs that squash merges remove, and nothing
+   enforces it.
+4. **Low** — the unused-export ratchet ignores `require()` and default imports
+   of `.cjs` modules, so the first `.cjs` helper would fail the gate falsely.
+5. **Low** — the artifact path scan misses segment-joined paths such as
+   `path.posix.join("snapshots", side, route)`, the pattern finding 10 cited.
+6. **Low** — the new tests for findings 15 and 17 and the deletion table's
+   rejection rows pass whether or not the behavior they pin holds.
+7. **Low** — status lines were stale at close-out: the plan and
+   `plans/README.md` said the close-out commit and push remained (updated when
+   this review was recorded), and `verification-ratchets.md` credits the
+   current ratchet contract to Milestone 13 instead of Milestone 18.
 
 ## Post-merge follow-up (non-blocking)
 
