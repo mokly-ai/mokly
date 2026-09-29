@@ -136,6 +136,7 @@ export const CSS_NAV_RAIL = `
   color: var(--chrome-ink);
   font: inherit;
   outline: none;
+  text-overflow: ellipsis;
 }
 
 .mbk-search input::placeholder {

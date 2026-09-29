@@ -10,6 +10,8 @@ import type { Catalogue } from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
 import { CatalogueNav } from "../shell/nav.js";
 import { useNavigationBounds } from "../shell/nav_resize.js";
+import { RebuildNotice } from "../shell/rebuild_notice.js";
+import { ShellStatusRegion } from "../shell/status_region.js";
 import { ShellStoreProvider } from "../shell/store.js";
 import { useShellStore } from "../shell/store_context.js";
 import type { ShellInitialState } from "../shell/store_state.js";
@@ -144,19 +146,12 @@ function StandaloneDocumentContents({
             Skip to content
           </a>
           <TopBar appearance={appearance} catalogue={catalogue} />
+          <RebuildNotice />
           <div className="mbk-body">
             <CatalogueNav catalogue={catalogue} context={context} />
             <ShellMain catalogue={catalogue} context={context} view={view} />
           </div>
-          <p
-            aria-atomic="true"
-            aria-live="polite"
-            className="mbk-route-status"
-            id="mb-status"
-            role="status"
-          >
-            {store.state.announcement}
-          </p>
+          <ShellStatusRegion />
         </div>
         {bootstrap ? (
           <script

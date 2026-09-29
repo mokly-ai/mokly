@@ -183,12 +183,30 @@ evidence refreshes, and is replaced with the runtime on watched rebuild.
 [interactive views shell contract](../../../../docs/protocol/mokly-interactive-views-shell.md)
 defines the control, eligibility and the pending interval.
 
-Watched Serve rebuild state follows the same private boundary. The documented
-Milestone 5 accessor is exactly `useViewerLiveState().rebuildStatus`; it returns
-only the greatest validated sequence whose `updateVersion` fence has been
-installed. A newer future-fenced event is retained privately until evidence
-adoption reaches it. Static and embedded hosts receive `undefined`, and this
-backend state adds no shell presentation by itself.
+Watched Serve rebuild state follows the same private boundary. The shell reads
+it only through `useViewerLiveState().rebuildStatus`, which returns the greatest
+validated sequence whose `updateVersion` fence has been installed; a newer
+future-fenced event is retained privately until evidence adoption reaches it.
+Static and embedded hosts receive `undefined` and render no status chrome.
+`rebuild_notice.tsx` is the standalone document's always-mounted notice between
+the top bar and `.mbk-body`. It renders a failure as a section named by its
+headline, with the approved copy and a native disclosure whose detail is a text
+node in a focusable `Error details` region. It announces each new failure id
+once through the store's `announce`, treats a failure present at first paint as
+the baseline, withdraws the announcement when the failure clears, and closes a
+replaced failure's disclosure in place, returning focus from the closing detail
+to its control. `status_region.tsx` renders `#mb-status` for standalone and
+embedded roots; each announcement key gets its own text node, so a repeated
+message is spoken again. In the top bar, `update_progress.tsx` wraps the search
+field in `.mbk-search-slot` only when that status exists and shows "Updating…"
+once `rebuild_progress.ts`'s `DelayedProgress` has observed one uninterrupted
+second of `updating`; server rendering and hydration always start hidden.
+`rebuild_status_view.ts` holds the copy, the delay and the pure announcement
+decision, and `css_rebuild_status.ts` the notice, progress and the compact
+bar's 10px gap and 12px padding. The
+[rebuild status contract](../../../../docs/protocol/mokly-rebuild-status.md)
+and [design](../../../../docs/protocol/mokly-rebuild-status-design.md) define
+the behavior and presentation.
 
 Before standalone hydration, stored disclosure and split-width preferences are
 applied to the server DOM. Disclosure helpers treat native `<details>` groups

@@ -55,7 +55,7 @@ export function captureBrowserErrors(page: Page): string[] {
     const sandboxDiagnostic =
       message.text().startsWith("Blocked script execution in") &&
       (message.location().url.includes("/static/") ||
-        /^Blocked script execution in 'https?:\/\/[^/]+\/static\//u.test(
+        /^Blocked script execution in '(?:https?:\/\/[^/]+\/static\/|about:srcdoc')/u.test(
           message.text(),
         ));
     if (!sandboxDiagnostic) errors.push(message.text());

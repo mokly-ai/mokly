@@ -40,8 +40,14 @@ test("export excludes source and hidden files and refuses selected symlinks", as
     ),
   );
   for (const [name, content] of files)
-    if (/\.(?:html|json)$/.test(name))
+    if (/\.(?:html|json)$/.test(name)) {
       assert.doesNotMatch(content.toString(), /"rebuildStatus"\s*:/);
+      assert.doesNotMatch(
+        content.toString(),
+        /class="mbk-(?:rebuild|search-slot|progress)/,
+        `${name} carries no update status chrome`,
+      );
+    }
   await fs.promises.symlink(
     path.join(fixture.root, "notes.md"),
     path.join(fixture.mockupsDir, "linked.txt"),

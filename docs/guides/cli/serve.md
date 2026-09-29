@@ -82,6 +82,27 @@ edits. The choice follows you between views, including past opted-out ones,
 and survives watched reloads, and opening the page again starts in Static. Build, Check, export, publication, Changes, and comparisons
 remain static.
 
+## When a change can't be loaded
+
+If a saved change fails to load, for example because of a syntax error or a
+module that can no longer be found, a watched server keeps serving the last
+version that loaded. Every page then shows a notice under the top bar: **Your
+latest changes couldn’t be loaded. You’re seeing the last working version.**
+Static and Live previews keep working on that version, so you can carry on
+browsing and comparing.
+
+Choose **Show details** to read the error. Paths inside your repository appear
+relative to it, and other absolute paths appear as `<absolute path>`; the
+terminal reports the same error in full. Fix the source and save again: the
+catalogue reloads with your change and the notice goes away. If another save
+fails first, the notice stays and its details show the newest error. A screen
+reader hears the notice once for each new failure, not on every reload.
+
+While a change takes more than a second to load, **Updating…** appears beside
+the search field; quicker updates finish before it would show. Unwatched
+servers, exported catalogues and published catalogues never show the notice
+or the progress.
+
 ## Access
 
 While the local controls are active, every request must address

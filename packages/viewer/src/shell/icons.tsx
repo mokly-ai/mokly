@@ -1,7 +1,8 @@
 // Shared Mokly shell glyphs: the disclosure chevron, the closed / open
 // folder icons for collapsible collections, the screen / page / use-case leaf
-// icons, the top bar's brand, search and tag controls, and the device chrome's
-// copy and expand / collapse controls. Icons are stroke-based on a 24-unit
+// icons, the top bar's brand, search and tag controls, the device chrome's
+// copy and expand / collapse controls, and the update notice's alert and
+// downward disclosure chevron. Icons are stroke-based on a 24-unit
 // viewBox and inherit `currentColor`; the brand mark is the filled Mokly logo
 // on its own 32-unit grid. Authored collection groups swap closed and open
 // folder icons; top-level catalogue sections and the details inspector use the
@@ -62,6 +63,26 @@ export function ChevronIcon(props: { size?: number }) {
   return (
     <IconSvg size={props.size ?? 13}>
       <polyline points="9 6 15 12 9 18" />
+    </IconSvg>
+  );
+}
+
+/** Downward chevron on a disclosure that opens content below it. */
+export function ChevronDownIcon(props: { size?: number }) {
+  return (
+    <IconSvg size={props.size ?? 13}>
+      <polyline points="6 9 12 15 18 9" />
+    </IconSvg>
+  );
+}
+
+/** A circled exclamation mark: the icon a failure notice leads with. */
+export function AlertIcon(props: { size?: number }) {
+  return (
+    <IconSvg size={props.size ?? 13}>
+      <circle cx={12} cy={12} r={9} />
+      <path d="M12 7.5v5.5" />
+      <path d="M12 16.5h.01" />
     </IconSvg>
   );
 }

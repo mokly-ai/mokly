@@ -20,6 +20,10 @@ export interface ShellStore {
   interactive: boolean;
   sections: readonly NavSectionNode[];
   state: ShellState;
+  /** Speak one status message through `#mb-status`, even if it repeats. */
+  announce(message: string): void;
+  /** Clear `message` from `#mb-status` if it is still the current text. */
+  withdrawAnnouncement(message: string): void;
   collapseAll(): void;
   copy(text: string, announcement?: string): void;
   /** Select Static and disable Live for a failed generation or view key. */

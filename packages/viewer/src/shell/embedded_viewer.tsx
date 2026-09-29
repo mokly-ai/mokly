@@ -13,9 +13,10 @@ import type {
 
 import { EmbeddedStageOverlay } from "./embedded_stage_overlay.js";
 import { ShellFrameMarkerLayer } from "./frame_marker_layer.js";
-import { useShellFragment, useShellIdentifier } from "./identifier_context.js";
+import { useShellFragment } from "./identifier_context.js";
 import { CatalogueNav } from "./nav.js";
 import { useNavigationBounds } from "./nav_resize.js";
+import { ShellStatusRegion } from "./status_region.js";
 import { useShellStore } from "./store_context.js";
 import { TopBar } from "./top_bar.js";
 import { ShellMain } from "./views.js";
@@ -44,7 +45,6 @@ export function EmbeddedViewerShell({
   const localRoot = useRef<HTMLDivElement>(null);
   const root = rootRef ?? localRoot;
   const mainFragment = useShellFragment("mb-main");
-  const statusId = useShellIdentifier("mb-status");
   useNavigationBounds(root);
   return (
     <div
@@ -104,15 +104,7 @@ export function EmbeddedViewerShell({
         {...(onMarkerChange ? { onMarkerChange } : {})}
       />
       {inspection ?? <div data-mokly-label-layer="" />}
-      <p
-        aria-atomic="true"
-        aria-live="polite"
-        className="mbk-route-status"
-        id={statusId}
-        role="status"
-      >
-        {store.state.announcement}
-      </p>
+      <ShellStatusRegion />
     </div>
   );
 }

@@ -5,9 +5,9 @@
 Delivered mockup scope for Milestone 2 of the
 [Serve rebuild status plan](../../plans/serve-rebuild-status.md). The design
 catalogue depicts the five states below, and this document records the final
-progress placement, dimensions and copy. The shell implements them in
-Milestone 5; until then no served page shows them. The behavioral source is the
-[rebuild status contract](./mokly-rebuild-status.md).
+progress placement, dimensions and copy. Milestone 5 implements them in the
+standalone shell of watched Serve with the same geometry and copy. The
+behavioral source is the [rebuild status contract](./mokly-rebuild-status.md).
 
 ## Placement And Ownership
 
@@ -138,6 +138,14 @@ every 0.8s), a 6px gap, and “Updating…” in 12px/500 `--chrome-muted`, whic
 from 440px to 343px; at 390px, from 231px to 140px, keeping its placeholder on
 one line with an ellipsis. The Appearance control stays at x = 572px and 328px.
 
+A compact shell bar uses the mockups' 10px gap and 12px side padding, at every
+width below the shell breakpoint and whether or not progress shows, so the
+spacing never changes when progress appears. The shell's own menu button is
+30px and its compact Appearance control 49px, so at 390px its field narrows
+from 235px to 144px and Appearance stays at x = 329px; the slot, gaps and every
+other measurement are the mockups'. The search input ends a clipped query or
+placeholder in an ellipsis at every width.
+
 A 390px bar has no free room, so visible text must take space from the search
 field, the bar's only flexible control. The alternatives were rejected: a slot
 after Appearance moves Appearance at narrow widths; an overlay on the bar's
@@ -161,7 +169,12 @@ failure changes. The mockups use native `details`, whose summary carries both
 labels and shows only the one that matches its state; the hidden label is not
 named. Keyboard focus draws a 2px `--mbk-sage-deep` ring 2px outside the
 summary. Detail text is selectable, wraps long tokens, preserves line breaks,
-and cannot create horizontal page scrolling.
+and cannot create horizontal page scrolling. In the shell the disclosed detail
+is also a keyboard stop: a `region` named “Error details” that takes the same
+focus ring and scrolls with the keyboard within its 168px bound, which a static
+mockup cannot depict. When a replaced failure closes the disclosure while the
+detail has focus, focus returns to the disclosure control rather than being
+lost.
 
 Progress always has the visible text “Updating…”; the spinner is supplementary
 and hidden from assistive technology. Progress is ordinary text, not a live

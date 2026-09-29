@@ -43,6 +43,13 @@ npx mokly serve --no-watch
 That serves one deterministic snapshot: the same fast start, without picking
 up later edits.
 
+## When a save doesn't load
+
+If a saved change can't be loaded, a watched server keeps showing the last
+working version, and a notice under the top bar says so on every page. Fix the
+source and save again to clear it; the Serve CLI guide explains the notice and
+its details.
+
 ## What you can do there
 
 Browse the catalogue by collection, search it, switch viewport and color

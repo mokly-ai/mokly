@@ -40,11 +40,11 @@ breadcrumbs are text even after their parents are deleted. Ordinary
 publications omit the Changes filter and comparison band while preserving the
 same navigation, search, tags, and screen variants.
 
-The approved [rebuild status design](./mokly-rebuild-status-design.md) extends
-watched Serve with one full-width shell notice and delayed, layout-stable
-progress. Its mockups are delivered under `design/rebuild-status/`, and its
-full-surface, icon, placement, responsive, accessibility, and no-left-rail
-rules are binding on the implementation.
+The [rebuild status design](./mokly-rebuild-status-design.md) extends watched
+Serve with one full-width shell notice and delayed, layout-stable progress. Its
+mockups are delivered under `design/rebuild-status/`, and the shell implements
+their full-surface, icon, placement, responsive, accessibility, and
+no-left-rail rules.
 
 The comparison designs depict the implemented
 [comparison pane contract](./mokly-comparison-panes.md): Overlay and Difference
@@ -304,7 +304,8 @@ scrollable region scrolls internally:
   `mokly.` wordmark in its own `mbk-name` span), a centred search field
   (max-width 440px, led by a 15px stroked magnifier icon that holds its size
   while the field flexes)
-  that flexes down to whatever room the bar leaves it. Below the breakpoint a menu button opens the
+  that flexes down to whatever room the bar leaves it, ending a clipped query
+  or placeholder in an ellipsis. Below the breakpoint a menu button opens the
   catalogue drawer. The wordmark hides in the narrow header so the search
   retains space; the brand link keeps its `Mokly` accessible name. Search uses
   `Search catalogue` as its accessible name and `Search catalogue…` as its
@@ -331,6 +332,14 @@ scrollable region scrolls internally:
   route. A row stays visible only when it matches every tag term and that phrase;
   tag terms hide the groups they empty and open the groups they keep, and they
   compose with the All/Changes filter.
+- **Update notice** — in watched Serve only, a full-width band directly below
+  the top bar and above the body on every route, present while the latest
+  saved change could not be loaded: one danger-tinted card with a complete
+  outline, a circled-exclamation icon, the headline and explanation, and a
+  native Show details / Hide details disclosure over the developer detail, as
+  the [rebuild status design](./mokly-rebuild-status-design.md#placement-and-ownership)
+  fixes. It never enters a preview frame, and the narrow drawer and tag-picker
+  sheet open over it.
 - **Tag picker** — a tag-icon control at the trailing edge of the search
   field, muted like the leading search icon and filling to a soft rounded square
   on hover. It opens a panel anchored under the field and aligned to its width
@@ -573,6 +582,9 @@ The shell has one breakpoint at **56.25rem (900px)**:
 
 - At or above it, the navigation column is persistent and the layout is the
   fixed two-column split above.
+- Below it, the standalone top bar tightens to a 10px gap and 12px side
+  padding, so the query stays readable beside the menu, brand, delayed update
+  progress and Appearance.
 - Below it, the navigation becomes a scrimmed overlay drawer (82% width, max
   20rem) opened by the top-bar menu button throughout the catalogue. The
   drawer opens under the 48px bar and the bar stacks above the scrim, so the

@@ -2,11 +2,11 @@
 
 ## Delivery Status
 
-Approved target for Milestones 1, 3, and 5 of the
-[Serve rebuild status plan](../../plans/serve-rebuild-status.md). This document
-owns the private status model, ordering, transport, sanitizing, and shell
-behavior. The [design contract](./mokly-rebuild-status-design.md) owns its
-presentation. None of this target is implemented until those milestones land.
+Implemented by Milestones 1, 3, and 5 of the
+[Serve rebuild status plan](../../plans/serve-rebuild-status.md): watched Serve
+publishes the status and the shell presents it. This document owns the private
+status model, ordering, transport, sanitizing, and shell behavior. The
+[design contract](./mokly-rebuild-status-design.md) owns its presentation.
 
 ## Boundary And Model
 
@@ -190,7 +190,10 @@ document announces the headline and explanation through the existing polite,
 atomic `#mb-status` region once when it adopts a new `failure.id`; progress or
 replay of that id does not announce it again. A failure already present at
 first paint is the accessible document baseline, not a live change, so reloads
-and newly opened tabs do not reannounce it. Focus never moves automatically.
+and newly opened tabs do not reannounce it. Each announcement replaces the
+region's text node, so a later failure is spoken even when the words repeat;
+a cleared failure withdraws its text unless a newer message replaced it.
+Focus never moves to the notice when a failure appears, changes, or clears.
 
 Progress becomes visible exactly 1,000 ms after that client first observes one
 uninterrupted `updating: true` interval. A transition to false before the timer
@@ -205,7 +208,11 @@ The [design contract](./mokly-rebuild-status-design.md) fixes the notice,
 disclosure, copy, responsive states, and prohibition on a left-edge accent
 rail. Opening details is local shell state. It stays open while the same
 failure id remains, closes when that failure is replaced or cleared, is not
-part of reload recovery, and never changes the server status.
+part of reload recovery, and never changes the server status. A replacement
+closes the same native disclosure in place: focus on its control stays there,
+and focus inside the closing detail returns to that control instead of being
+lost. The disclosed detail is a keyboard-focusable region named "Error
+details", so it can be reached and scrolled without a pointer.
 
 ## Failure Handling And Verification
 

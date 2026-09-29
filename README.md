@@ -153,7 +153,12 @@ npx --no-install mokly --open
 
 The development server prints its URL, renders previews on demand, watches
 authored inputs, and prepares Git change evidence in the background. The
-default port is `4173`; use `--port 0` to choose any available port.
+default port is `4173`; use `--port 0` to choose any available port. When a
+saved change can't be loaded, every page keeps the last working version under
+a notice whose **Show details** reveals the error, and an update that takes
+more than a second shows **Updating…** beside search; the
+[Serve guide](./docs/guides/cli/serve.md#when-a-change-cant-be-loaded) explains
+what to do.
 
 Previews are static documents, so comparisons read exact bytes. Setting
 `interactive: "serve"` adds a Static/Live control to screens and saved

@@ -72,6 +72,7 @@ export function createInitialShellState(
     componentDefault;
   return {
     announcement: "",
+    announcementKey: 0,
     changesStatus: recovery?.changesStatus ?? context.changesStatus,
     detailsOpen,
     disclosures,

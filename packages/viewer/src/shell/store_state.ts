@@ -47,7 +47,14 @@ export interface ShellInitialState {
 
 /** Complete interaction state for one standalone shell mount. */
 export interface ShellState {
+  /** Polite text for the atomic `#mb-status` live region. */
   announcement: string;
+  /**
+   * Changes whenever a status message must be spoken again, even when its
+   * text repeats, so the live region replaces its content rather than
+   * keeping identical text that assistive technology would not re-read.
+   */
+  announcementKey: number;
   changesStatus: LiveChangesStatus | undefined;
   detailsOpen: boolean;
   disclosures: Readonly<Record<string, boolean>>;

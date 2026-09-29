@@ -58,6 +58,13 @@ export function shellStore(input: StoreActionsInput): ShellStore {
     sections: input.sections,
     state: input.state,
     ...input.navigation,
+    announce(message) {
+      input.setState((current) => ({
+        ...current,
+        announcement: message,
+        announcementKey: current.announcementKey + 1,
+      }));
+    },
     collapseAll() {
       input.setState((current) => {
         const disclosures = Object.fromEntries(
@@ -162,6 +169,13 @@ export function shellStore(input: StoreActionsInput): ShellStore {
       const query = parseSearchQuery(nextQuery);
       updateSelection({ search: query.freeText, tags: query.tags }, nextQuery);
       input.setState((state) => ({ ...state, tagPickerOpen: false }));
+    },
+    withdrawAnnouncement(message) {
+      input.setState((current) =>
+        current.announcement === message
+          ? { ...current, announcement: "" }
+          : current,
+      );
     },
   };
 }

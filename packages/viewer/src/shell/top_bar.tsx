@@ -9,8 +9,12 @@ import { BrandIcon, IconSvg, SearchIcon } from "./icons.js";
 import { useShellIdentifier } from "./identifier_context.js";
 import { useOptionalShellStore } from "./store_context.js";
 import { SearchTagPicker } from "./tags.js";
+import { SearchSlot } from "./update_progress.js";
 
-/** The shared 48px catalogue header keeps search available at every width. */
+/**
+ * The shared 48px catalogue header keeps search available at every width. In
+ * watched Serve, delayed update progress shares the search field's room.
+ */
 export function TopBar(props: {
   appearance?: StandaloneAppearanceState;
   catalogue: Catalogue;
@@ -63,23 +67,25 @@ export function TopBar(props: {
       >
         <SearchIcon />
       </button>
-      <div className="mbk-search">
-        <SearchIcon />
-        <input
-          aria-label="Search catalogue"
-          data-mokly-search=""
-          id={searchId}
-          onChange={(event) => store?.setSearch(event.currentTarget.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") setCompactSearchOpen(false);
-          }}
-          placeholder="Search catalogue…"
-          ref={searchInput}
-          type="search"
-          value={store?.state.query}
-        />
-        <SearchTagPicker tags={props.catalogue.tags} />
-      </div>
+      <SearchSlot>
+        <div className="mbk-search">
+          <SearchIcon />
+          <input
+            aria-label="Search catalogue"
+            data-mokly-search=""
+            id={searchId}
+            onChange={(event) => store?.setSearch(event.currentTarget.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") setCompactSearchOpen(false);
+            }}
+            placeholder="Search catalogue…"
+            ref={searchInput}
+            type="search"
+            value={store?.state.query}
+          />
+          <SearchTagPicker tags={props.catalogue.tags} />
+        </div>
+      </SearchSlot>
       <button
         aria-label="Close search"
         className="mbk-search-close"

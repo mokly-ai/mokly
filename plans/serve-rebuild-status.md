@@ -174,23 +174,29 @@ Backend. Closes interactive views review finding 1.
       interactive views finding 1 is closed; run `cargo xtask check`; commit
       and push.
 
-## Milestone 5: Present rebuild status in the shell
+## Milestone 5: Present rebuild status in the shell — completed
 
 Tags: ui
 
-- [ ] Render the failure notice below the top bar on every shell route with the
+- [x] Render the failure notice below the top bar on every shell route with the
       approved copy, icon, details disclosure and accessibility, and the
       progress indicator in its approved placement after the approved delay,
       reading only the private status from Milestone 3.
-- [ ] Keep the notice correct across page reloads, route changes, Static and
+- [x] Keep the notice correct across page reloads, route changes, Static and
       Live, comparisons, and narrow and wide layouts, announcing each failure
       once.
-- [ ] Browser tests with a real watched Serve: break a source and see the
+- [x] Adopt the mockups' compact top-bar spacing (10px gap, 12px padding) in
+      the standalone shell and end a clipped search query or placeholder with
+      an ellipsis, so the narrow bar matches the approved progress geometry.
+- [x] Give `#mb-status` one shared component whose keyed text node speaks a
+      repeated failure announcement again, withdraw a cleared failure's text,
+      and keep focus in the disclosure when a replaced failure closes it.
+- [x] Browser tests with a real watched Serve: break a source and see the
       notice in Static and Live, with the previous content still shown and
       Live still working; open the details; save again and see progress; fix
       the source and see the notice clear after the reload; confirm fast
       updates never show progress.
-- [ ] Update `packages/viewer/README.md`, `packages/viewer/src/shell/README.md`,
+- [x] Update `packages/viewer/README.md`, `packages/viewer/src/shell/README.md`,
       `docs/guides/cli/serve.md` and the root README; run `cargo xtask check`;
       commit and push.
 

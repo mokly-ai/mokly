@@ -92,6 +92,19 @@ export const PALETTE_PAIRS: readonly PalettePair[] = [
     "--chrome-surface",
     4.5,
   ],
+  ["notice headline on its surface", "--chrome-ink", "--mbk-danger-bg", 4.5],
+  [
+    "notice explanation on its surface",
+    "--chrome-ink-2",
+    "--mbk-danger-bg",
+    4.5,
+  ],
+  [
+    "focus ring on the notice surface",
+    "--mbk-accent-deep",
+    "--mbk-danger-bg",
+    3,
+  ],
   [
     "disabled ink on its surface",
     "--chrome-disabled-ink",

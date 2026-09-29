@@ -356,6 +356,15 @@ previous view's control until its eligibility arrives, never mounting Live
 before then.
 Embedded `MoklyViewer` hosts never receive it, so they keep Static previews and
 the unchanged toolbar.
+Watched Serve also carries a private rebuild status. With it, the standalone
+shell shows a full-width notice below the top bar on every route while the
+latest saved change could not be loaded: Static and Live keep the last working
+version, and the error sits behind Show details. Once an update has run for a
+second, “Updating…” appears beside search without moving any other control.
+Unwatched Serve, exports and embedded `MoklyViewer` hosts never receive the
+status and render neither; the
+[rebuild status contract](../../docs/protocol/mokly-rebuild-status.md) defines
+it.
 
 ### Standalone reader preferences
 
