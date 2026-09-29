@@ -40,21 +40,21 @@ fail before any subprocess starts.
 
 | Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                                                                |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Repository       | Live dependency audit first; Prettier; ESLint; TypeScript length, protocol-cap, and unused-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                                                                                                                                                         |
+| Repository       | Live dependency audit first; Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, and unused-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                                                                                                                                              |
 | Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; all five clean consumer smokes using that pair. Real `prepack` builds remain part of packing. |
 | Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most two files active. A shard runs its whole-file partition.                                                                                                                                                                                                                                |
 | Browser          | One ordinary package/example preparation followed by every discovered Playwright spec, with `fullyParallel: false`, one worker, existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                                                                                 |
 | Native platforms | On macOS and Windows, build once and run export transaction and destination-race tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                                                            |
 | Required CI      | Evaluate the result and evidence from the repository job, every package runtime selected for this event, all selected unit and browser runtime/shard combinations, and both native platforms.                                                                                                                                                                                              |
 
-Complete and selected suites share gate definitions, so adding a suite command
-adds it to the complete gate. In-process auditors have the same failure
-semantics as subprocesses.
+Complete and selected suites share gate definitions; adding a suite command
+adds it to the complete gate. In-process auditors fail like subprocesses.
 
-Milestone 13 makes `cargo xtask check` fail when changed TypeScript crosses 300
-lines or grows while already over, a protocol cap is raised or added, or an
-internal export is newly unused outside the shrinking baseline. The
-[ratchet contract](./verification-ratchets.md) owns exact scopes and exceptions.
+Every ratchet compares against `git merge-base HEAD origin/main`. The
+[owning contract](./verification-ratchets.md) applies file-length and export
+checks to `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.mjs`, and `.cjs` under the
+three source roots, forbids baseline growth, and scans `docs/protocol/**`
+recursively except `fixtures/`.
 
 The ESLint configuration derives global ignores from the repository
 `.gitignore`, then layers its broader ESLint-only ignores. Git-ignored build,

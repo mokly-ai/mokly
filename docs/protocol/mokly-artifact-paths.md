@@ -62,19 +62,26 @@ function snapshotViewPath(
   colorScheme: "light" | "dark",
 ): string;
 function snapshotPagePath(id: string): string;
+function snapshotSidePath(side: SnapshotSide): string;
+function snapshotResourcePath(side: SnapshotSide, route: string): string;
 function pagePreviewMetadataPath(id: string): string;
 ```
 
 `snapshotViewPath` returns
 `snapshots/<side>/<viewRoute(kind, id, viewport, colorScheme)>`.
 `snapshotPagePath` returns `snapshots/before/pages/<id>.html`; removed pages
-have no after side. `pagePreviewMetadataPath` returns `pages/<id>.json` within
-the comparison generation. Each function validates its typed axes and entry id
-before composing a relative POSIX path.
+have no after side. `snapshotSidePath` returns the directory prefix
+`snapshots/<side>/`, including its trailing slash. `snapshotResourcePath`
+appends one nonempty path accepted by `isSafeRepositoryPath` to that prefix;
+it rejects absolute paths, empty or dot segments, backslashes, colons, and NUL.
+`pagePreviewMetadataPath` returns `pages/<id>.json` within the comparison
+generation. Each identity-specific function validates its typed axes and entry
+id before composing a relative POSIX path.
 
 Review production, selected capture, packaging, export checks, shell comparison
-frames, and previous-version requests call these functions. They do not join a
-`snapshots/` or `pages/` string themselves. Review result v4 and catalogue v3
+frames, previous-version requests, snapshot presentation roots, and public
+generation validation call these functions. They do not join or slice a
+`snapshots/` or `pages/` literal themselves. Review result v4 and catalogue v3
 carry identity and axes rather than any of these paths.
 
 ## Browser Path Helpers

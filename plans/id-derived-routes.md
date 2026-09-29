@@ -723,7 +723,7 @@ Update the protocol docs, guides, and READMEs for the user's decisions on the
 follow-up review (2026-09-29) before any code changes. Finding numbers refer
 to the [follow-up review](#follow-up-review-milestones-915).
 
-- [ ] Deleted resources (finding 1, option B): one owning paragraph in
+- [x] Deleted resources (finding 1, option B): one owning paragraph in
       `mokly-changes.md` states the single rule both comparison paths share:
       a resource that is a regular file at the branch point, is deleted, and
       is still referenced by the current document is a verified deletion in
@@ -733,7 +733,7 @@ to the [follow-up review](#follow-up-review-milestones-915).
       present at the branch point, dangling or escaping symlinks, unsafe or
       source-root paths, newly missing files) and states that snapshot
       generation still requires current references to resolve.
-- [ ] Ratchets (findings 4, 6, 12, 13): `verification-ratchets.md`,
+- [x] Ratchets (findings 4, 6, 12, 13): `verification-ratchets.md`,
       `ci-verification.md`, and `xtask/README.md` state that every ratchet
       compares with `git merge-base HEAD origin/main`; the file-length and
       unused-export ratchets audit `.ts`, `.tsx`, `.mts`, `.cts`, `.js`,
@@ -741,20 +741,23 @@ to the [follow-up review](#follow-up-review-milestones-915).
       baseline rejects any entry absent from the merge-base baseline, so it
       can only shrink; and the protocol doc cap ratchet scans
       `docs/protocol/**` recursively, excluding `fixtures/`.
-- [ ] Release notes (finding 5, option B): restore the unreleased
+- [x] Release notes (finding 5, option B): restore the unreleased
       navigation-path breaking-change note and add the
       `defineComponent().entry` to `.entries` change in `npm-release.md`,
       splitting the doc instead of raising its cap; state the release-note
       coverage rule: before a close-out commit, the note names every `feat!`
       commit in `origin/main..HEAD`.
-- [ ] Docs corrections (findings 14, 15, 17): update the delivery-status lines
+- [x] Docs corrections (findings 14, 15, 17): update the delivery-status lines
       of the eight protocol docs that still describe delivered milestones as
       approved targets; `ScreenNavigateEvent.snapshotId` is present when the
       committed historical record has a published identity (`mokly-viewer.md`
       and `packages/viewer/README.md`); `mokly-catalogue.md` states that
       removed variants of a removed parent follow that parent in baseline
       authored order.
-- [ ] `npm run format:check`, the protocol and guide doc tests, and a relative
+- [x] Artifact paths (finding 10): define the shared snapshot-side and
+      snapshot-resource builders, their exact output and confinement rules, and
+      the callers that must not compose or slice snapshot literals themselves.
+- [x] `npm run format:check`, the protocol and guide doc tests, and a relative
       link check pass; review the diff; commit.
 
 ## Milestone 17: Follow-up fixes in review, registry, and paths

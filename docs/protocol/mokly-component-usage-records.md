@@ -2,9 +2,8 @@
 
 ## Delivery Status
 
-Implemented for manifest v7. Strict baseline-v7 admission is the approved
-Milestone 11 boundary in the active
-[id-derived routes plan](../../plans/id-derived-routes.md).
+Implemented for manifest v7, including strict admission of baseline-v7 usage
+records.
 
 This contract owns the per-view component instance, slot, range, style, and
 resource records stored by [manifest v7](./mokly-component-manifest.md).

@@ -8,7 +8,7 @@ runs in Serve, export, and application-owned hosts; every selection names a
 global entry id. [Appearance](./mokly-viewer-appearance.md) and
 [removed previews](./mokly-removed-previews.md) retain their host-specific
 controls and shared presentation in that tree.
-The host event/reference corrections are approved for Milestone 14.
+The host event and instance-reference corrections are implemented.
 
 ## Package And Props
 
@@ -127,10 +127,11 @@ interface MoklyViewerProps {
 }
 ```
 
-`ScreenNavigateEvent` names the destination by `screenId`; `snapshotId` is
-present exactly when historical content was committed. It has no `route`,
-`variantId`, or `kind`: hosts resolve the entry through the read model and use
-`viewHref(kind, id)` when they need its shell URL.
+`ScreenNavigateEvent` names the destination by `screenId`. Its `snapshotId` is
+present when the committed historical record has an opaque identity published
+by the catalogue; it is absent for current content and historical records
+without one. The event has no `route`, `variantId`, or `kind`: hosts resolve the
+entry through the read model and use `viewHref(kind, id)` for its shell URL.
 
 For an object source, `baseUrl` is required and supplies its HTTP(S) artifact
 origin root. A URL/string source must be an absolute HTTP(S) catalogue URL;
@@ -188,9 +189,8 @@ entries, proposing `select({ screenId })` for the chosen variant; in controlled
 mode it changes only after the host supplies that selection back. Comparison
 mode behavior across siblings follows
 [variant navigation](./mokly-variant-navigation.md). A committed selection
-replaces frames and announces `onScreenNavigate` once, with
-`snapshotId` when historical content was committed. Switching control mode
-requires remounting.
+replaces frames and announces `onScreenNavigate` once under the event identity
+rule above. Switching control mode requires remounting.
 Never mutate supplied objects/arrays.
 
 The Viewer rebuilds `variantOf` for current and removed entries of both kinds

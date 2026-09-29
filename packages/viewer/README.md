@@ -250,8 +250,10 @@ newer catalogue without fetching preview evidence.
 
 `InstanceRef.screenId` is the owning entry's id, including for a component
 variant; the shape has no `variantId`. `onScreenNavigate` reports
-`{ screenId, snapshotId?, fragment?, navigation? }`, with `snapshotId` present
-exactly after historical content is committed and with no route or variant id.
+`{ screenId, snapshotId?, fragment?, navigation? }`, with no route or variant
+id. Under the [viewer event contract](../../docs/protocol/mokly-viewer.md#package-and-props),
+`snapshotId` is present when the committed historical record publishes an
+opaque identity and is absent when that record has no published identity.
 
 Markers accept unique IDs, exact instance references and React content. Marker
 content is pointer-inert by default; opt an interactive child in with
@@ -317,8 +319,9 @@ automatically hydrates a matching standalone Mokly document.
 
 `@mokly/viewer/data` also exports the shared path helpers `entryRoute`,
 `viewRoute`, `viewHref`, `snapshotViewPath`, `snapshotPagePath`, and
-`pagePreviewMetadataPath`. `parseViewHref` reads canonical and
-provider-normalized `/view/` paths back into identity;
+`pagePreviewMetadataPath`, plus `snapshotSidePath` and `snapshotResourcePath`
+for snapshot roots and their confined resources. `parseViewHref` reads
+canonical and provider-normalized `/view/` paths back into identity;
 `providerNormalizedHtmlPath` and `unavailableViewHref` own the browser forms.
 The complete naming contract is
 [identity-derived artifact paths](../../docs/protocol/mokly-artifact-paths.md).

@@ -2,9 +2,7 @@
 
 ## Delivery Status
 
-The fast path is implemented. Its strict-v7 baseline boundary is the approved
-Milestone 11 target in the active
-[id-derived routes plan](../../plans/id-derived-routes.md).
+The fast path and its strict-v7 baseline boundary are implemented.
 
 This contract owns the unchanged-view decision used by component-aware Changes
 classification. Input ownership and materiality remain defined by

@@ -8,7 +8,7 @@ import { repositoryRoot } from "./helpers/fixture.js";
 const protocolDirectory = path.join(repositoryRoot, "docs/protocol");
 const oversizedCaps: Readonly<Record<string, number>> = {
   "ci-verification.md": 341,
-  "mokly-catalogue.md": 325,
+  "mokly-catalogue.md": 324,
   "mokly-changes.md": 435,
   "mokly-comparison-panes.md": 258,
   "mokly-configuration.md": 333,
@@ -25,7 +25,7 @@ const oversizedCaps: Readonly<Record<string, number>> = {
   "mokly-viewer-appearance.md": 382,
   "mokly-viewer.md": 498,
   "mokly-watch.md": 296,
-  "npm-release.md": 414,
+  "npm-release.md": 391,
 };
 
 function sizeIssue(name: string, lines: number, cap: number | undefined) {

@@ -2,11 +2,10 @@
 
 ## Delivery Status
 
-Serve, export, repository preview, and the viewer share public read model v3;
-strict current/removed collision rejection is the approved Milestone 11 target.
-The manifest stays private; local Browse retains embedded state. Removed-entry
-descriptors follow [removed previews](./mokly-removed-previews.md). Records carry
-identity only, with every route and view path derived from kind and id.
+Serve, export, repository preview, and the viewer share read model v3 and reject
+current/removed id collisions. The manifest stays private. Removed records
+follow [removed previews](./mokly-removed-previews.md), carry identity only, and
+derive every route and view path from kind and id.
 
 ## Location And Types
 
@@ -214,16 +213,16 @@ Comparison files load only on selection.
 ## Serialization, Identity And Versions
 
 Sort object keys recursively by UTF-16 code units; preserve authored steps and
-tags. Entry arrays sort by kind name in UTF-16 order (`component`, `page`,
-`screen`, `use-case`) and then id. The variants of one parent are the
-exception: emit them in authored order directly after their parent and before
-the next entry in kind-then-id order. That sibling order is the order
-`variantsById`, the navigation list, the details `Variants` row, and the
-public tree's entry-node `children` present. Build `removedEntries` through the
-combined current/baseline ordering: a removed variant of a surviving parent is
-emitted at that parent's kind/id position, retaining baseline authored sibling
-order; a variant without an eligible current parent stays in ordinary
-kind-then-id order. Instances/slots sort by key and ranges by DOM start order.
+tags. Entry arrays sort by kind and id in UTF-16 order, yielding `component`,
+`page`, `screen`, `use-case`; a parent's variants instead follow it in authored
+order before the next entry. `variantsById`, navigation, the details `Variants`
+row, and public-tree entry children use that same sibling order. Build
+`removedEntries` from current and baseline entries. A removed parent appears at
+its kind/id position, immediately followed by its removed variants in baseline
+authored order; variants of a surviving parent occupy that current parent's
+position in the same order. Only a variant without an eligible current or
+removed parent falls back to kind-then-id order. Instances/slots sort by key and
+ranges by DOM start order.
 Tree siblings follow the
 [shared comparator](./mokly-nav-paths.md#order-and-keys); entry-node variant
 children retain authored order. Emit required empties, omit absent optionals,

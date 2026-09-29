@@ -2,9 +2,7 @@
 
 ## Delivery Status
 
-Tree authoring is implemented. Root-cause diagnostic precedence is the approved
-Milestone 12 follow-up in the active
-[id-derived routes plan](../../plans/id-derived-routes.md).
+Tree authoring and root-cause diagnostic precedence are implemented.
 
 This contract owns `defineRoot`, folder inputs, nested screen/page inputs, and
 their authoring-time diagnostics. Shared entry inputs and generated paths remain

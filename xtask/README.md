@@ -8,8 +8,8 @@ internal binary and is not published to npm or crates.io.
 - Run the current source-level TypeScript, package, example, and Rust suite.
 - Fail verification when the live dependency audit reports an advisory or error.
 - Enforce the Rust file-length limit.
-- Ratchet TypeScript length and protocol caps against `origin/main`, and reject
-  new unused exports or stale baseline entries.
+- Ratchet JavaScript/TypeScript length, protocol caps, and internal exports
+  against the branch point shared by `HEAD` and `origin/main`.
 - Keep the complete local gate aligned with the approved independent CI suites.
 
 ## What This Crate Does
@@ -27,13 +27,15 @@ The [CI verification contract](../docs/protocol/ci-verification.md) defines the
 suite boundaries, shard evidence, and fail-closed CI aggregate. Selected suites
 are partial verification; the unqualified command remains the complete gate.
 The [repository ratchet contract](../docs/protocol/verification-ratchets.md)
-defines the changed-file scopes, caps, and shrinking unused-export baseline.
-The repository suite makes `cargo xtask check` fail when changed
-TypeScript crosses 300 lines or grows while already over, a protocol cap is
-raised or added, or an internal export is newly unused outside that baseline.
+owns the exact scopes and exceptions. Every ratchet compares against
+`git merge-base HEAD origin/main`; length and internal-export analysis cover
+`.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.mjs`, and `.cjs` under the three source
+roots, the internal-export baseline rejects entries absent at that merge base,
+and protocol caps scan `docs/protocol/**` recursively except `fixtures/`.
 All three checks belong to the repository suite and complete gate. The sole
 current unused-export exception is the component renderer imported by generated
-consumer-module source; its exact entry lives in the reviewed baseline.
+consumer-module source; its exact entry lives in the shrink-only reviewed
+baseline.
 Ordinary CI runs functional suites on the minimum Node 22.14 runtime. Release
 Please pull requests add Node 24; CI resolves the latest patch in its repository
 prerequisite and explicitly shares that exact result with dependent jobs,

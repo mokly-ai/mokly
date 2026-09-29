@@ -123,6 +123,7 @@ readers accept only v7; earlier output follows
   — implemented shared design components and ownership rules, with the
   [component library inventory](./mokly-design-component-library.md).
 - [CI and npm release contract](./npm-release.md)
+  - [Repository preview deployments](./npm-preview-deployments.md)
   - [Release verification evidence](./npm-release-evidence.md)
   - [One-time registry bootstrap](./npm-bootstrap.md)
   - [GitHub publishing protections](./npm-github-protections.md)

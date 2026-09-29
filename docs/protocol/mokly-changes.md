@@ -9,19 +9,17 @@ Review tab, report, or `mokly review`; `--out` belongs only to static `export`.
 
 [Pages](./mokly-pages.md) participate in Changes and removed-entry states,
 while comparison controls remain exclusive to changed screens and eligible
-component variants. A [variant](./mokly-variants.md) of either kind is an
-entry of its parent's kind for every rule in this document: it has its own
-derived route, row, count contribution, views, and comparison result, and only
-its navigation placement under the parent is variant-specific. The
+component variants. Each [variant](./mokly-variants.md) is an entry of its
+parent's kind with its own route, row, count, views, and comparison; only its
+navigation placement under the parent is variant-specific. The
 [shared catalogue snapshot](./mokly-catalogue-changes.md) supplies metadata
 independently of screen results; removed pages are flat Changes-only rows with
 baseline ancestry. Review reads follow the [source policy](./mokly-source-protection.md).
 
-[Published Changes](./mokly-publication.md) are opt-in through
-`npm run preview:build -- --include-changes`. Default publication omits Changes,
-comparisons, history, and removals; both options omit live updates.
-Strict baseline admission and pairing/order fixes are approved for Milestones
-11 and 12 of the active [id-derived routes plan](../../plans/id-derived-routes.md).
+Opt into [Published Changes](./mokly-publication.md) with
+`npm run preview:build -- --include-changes`; default publication omits Changes,
+comparisons, history, and removals. Both options omit live updates. Strict
+baseline admission and pairing/order fixes run in Serve, export, and publish.
 
 ## Changes membership
 
@@ -71,18 +69,20 @@ is unchanged. Obtain both identities from the same confined reader used by
 resource watching; source, internal-metadata, and escape checks still apply.
 Historical snapshot reads continue to require regular Git files and reject
 symlink blobs; detecting current impact does not relax baseline validation.
-A deleted resource still marks its consumers only when its closest existing
-ancestor is a confined public directory and its baseline is a regular Git file.
+Both comparison paths share one rule. A resource is a verified deletion in
+committed and derived modes, for every type including embedded HTML, only when
+it was a regular file at the branch point, is now deleted, and remains
+referenced by a current document. It marks consumers changed and never makes
+Changes unavailable. Reject resources absent at the branch point, dangling or
+escaping symlinks, unsafe or source-root paths, and newly missing files that are
+not verified deletions. Snapshot generation still requires current references
+to resolve.
 Live classification walks a changed or moved document's branch-point resource
 graph whenever the document changed or one of its current stylesheets changed,
 regardless of whether any stylesheet is in the diff, so verified deletions of
 non-stylesheet resources keep marking their consumers. Only an unchanged,
 unmoved view with no changed stylesheet skips that walk, and the complete
 comparison produces the same retained evidence for every view.
-Dangling symlinks, escaping symlinks, source-root references, and newly missing
-resources fail validation rather than being treated as deletions. Snapshot
-generation still requires current references to resolve, including resources
-whose verified deletion made their consumers eligible for Changes.
 
 Linked stylesheet edits are narrowed by
 [CSS change attribution](./mokly-css-attribution.md): a changed stylesheet
@@ -106,11 +106,11 @@ with classification evidence, preserving retained stylesheet selectors,
 exclusions, shared-impact, and ignored-content details without duplicate cards.
 See [CSS evidence presentation](./mokly-css-evidence-presentation.md).
 
-This detection reads baseline files without writing snapshots or generating a
-comparison; derived mode obtains them from the completed cache entry. Baseline reads are batched; shared resource edges
-are cached within one calculation and cycles terminate. Apart from verified
-resource deletions, an unavailable or invalid input leaves Changes explicitly
-unavailable, preserving the tabs and access through All in live Serve.
+Classification reads baseline files without writing snapshots or a comparison;
+derived mode uses the completed cache entry. Baseline reads are batched, shared
+resource edges are cached, and cycles terminate. Apart from verified deletions,
+an unavailable or invalid input makes Changes unavailable while preserving the
+tabs and access through All in live Serve.
 Watched updates and static publishing use this same membership calculation.
 A classifier error in a screen-only catalogue is logged through the ordinary
 safe diagnostic path and publishes unavailable; Serve never falls back to a

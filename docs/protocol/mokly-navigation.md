@@ -6,7 +6,7 @@ Implemented by the [in-frame navigation plan](../../plans/in-frame-catalogue-lin
 [Pages](./mokly-pages.md) share the screen/flow link and breadcrumb rules. The
 hydrated shell and [frame adapters](./mokly-frame-adapter.md) apply every marker,
 sandbox, target, and outer-navigation rule in Serve, export, and embedded hosts.
-Controlled unknown-id handling is the approved Milestone 14 follow-up.
+Controlled and uncontrolled unknown-id handling is implemented.
 
 ## Scope
 

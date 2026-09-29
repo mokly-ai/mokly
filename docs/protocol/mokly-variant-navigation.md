@@ -2,10 +2,9 @@
 
 ## Delivery Status
 
-Existing variant entry navigation is implemented. Component-shaped icons,
-sibling comparison continuity, removed-variant Dark availability, and fallback
-breadcrumbs are approved for Milestones 10 and 14 of the active
-[id-derived routes plan](../../plans/id-derived-routes.md).
+Variant entry navigation, component-shaped icons, sibling comparison
+continuity, removed-variant Dark availability, and fallback breadcrumbs are
+implemented.
 
 This contract owns the shell presentation of screen and component variants.
 Variant authoring, inheritance, manifest relationships, and generated views are

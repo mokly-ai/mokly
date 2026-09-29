@@ -157,11 +157,11 @@ resource watches. Independently, visited previews send generation-tagged documen
 closures to the parent, which attaches incremental resource watches immediately,
 even when exhaustive rendering has not finished or fails elsewhere. Incremental
 watches accumulate within a source generation and are replaced by the next
-generation's visited closure. Discovery repeats after watcher readiness. Reloads
-keep missing or invalid paths and their last-known
-descendants observable until repaired or unreferenced. Invalid resources still
-make Changes unavailable, while verified baseline deletions identify affected
-screens. Neither case prevents a live reload or comparison-cache invalidation.
+generation's visited closure. Discovery repeats after watcher readiness.
+Missing or invalid paths and last-known descendants stay observable until
+repaired or unreferenced. [Changes resource handling](./mokly-changes.md#changes-membership)
+distinguishes invalid inputs from verified deletions; neither blocks reload or
+comparison-cache invalidation.
 Resource watches coalesce file and entry-replacement notifications and replace
 their observers when validity changes, so repairing a dangling alias as a regular
 file also restores subsequent edits. Unnamed raw events and unrelated generated
