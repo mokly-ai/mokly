@@ -3,7 +3,9 @@ import { generatedSource } from "../build/ownership.js";
 const ID = "[a-z0-9]+(?:-[a-z0-9]+)*";
 const KEY = "[a-f0-9]{64}";
 const MARKER_SCAN = /<!--mokly-review-ignore:[\s\S]*?-->/g;
-const MARKER = new RegExp(`^<!--mokly-review-ignore:(start|end):(${ID})-->$`);
+export const REVIEW_IGNORE_MARKER = new RegExp(
+  `^mokly-review-ignore:(start|end):(${ID})$`,
+);
 const MATERIAL_SCAN = /<!--mokly-review-material:[\s\S]*?-->/g;
 const MATERIAL = new RegExp(`^<!--mokly-review-material:(${ID}):(${KEY})-->$`);
 
@@ -98,7 +100,7 @@ function parseDocument(content: string, route: string): ParsedDocument {
   let cursor = 0;
   let open: { contentStart: number; id: string } | undefined;
   for (const match of matches) {
-    const exact = match[0].match(MARKER);
+    const exact = match[0].slice(4, -3).match(REVIEW_IGNORE_MARKER);
     if (!exact || match.index === undefined)
       throw ignoreError(route, `invalid marker ${match[0]}`);
     const boundary = exact[1];

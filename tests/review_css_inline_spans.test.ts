@@ -154,6 +154,25 @@ test("paired ignored styles stay in place while one-sided regions are analyzed",
   assert.deepEqual(oneSided.rules[0]?.attribution, { kind: "excluded" });
 });
 
+test("retired ignore markers do not create or replace a paired current region", () => {
+  const source = html(
+    "<!--mokly-review-ignore:start:styles--><style>.current{}</style><!--mokly-review-ignore:end:styles-->" +
+      "<!--mokabook-review-ignore:start:styles--><style>.retired{}</style><!--mokabook-review-ignore:end:styles-->",
+    "",
+  );
+  const pair = normalizeReviewPair(source, source, "test.html");
+  assert.deepEqual(pair.pairedIgnoreIds, ["styles"]);
+  const spans = findUnownedInlineStyles(
+    source,
+    [],
+    new Set(pair.pairedIgnoreIds),
+  );
+  assert.deepEqual(
+    spans.map(({ text }) => text),
+    [".retired{}"],
+  );
+});
+
 test("one-sided material evidence removes an otherwise paired ignore id", () => {
   const region =
     "<!--mokly-review-ignore:start:styles--><style>.a{}</style><!--mokly-review-ignore:end:styles-->";

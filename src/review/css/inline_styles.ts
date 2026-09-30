@@ -2,12 +2,10 @@
 import { html, parse, type DefaultTreeAdapterMap } from "parse5";
 
 import type { RenderedRange } from "../../components/ranges.js";
+import { REVIEW_IGNORE_MARKER } from "../ignore.js";
 
 type Node = DefaultTreeAdapterMap["node"];
 type Element = DefaultTreeAdapterMap["element"];
-
-const IGNORE_MARKER =
-  /^(?:mokly|mokabook)-review-ignore:(start|end):([a-z0-9]+(?:-[a-z0-9]+)*)$/;
 
 /** Original source boundaries and parser input for one style element. */
 export interface InlineStyleSpan {
@@ -70,7 +68,7 @@ function pairedIgnoreRegions(
   const regions = new Map<string, { start?: number; end?: number }>();
   visitAll(document, (node) => {
     if (node.nodeName !== "#comment" || !("data" in node)) return;
-    const marker = IGNORE_MARKER.exec(node.data);
+    const marker = REVIEW_IGNORE_MARKER.exec(node.data);
     const location = node.sourceCodeLocation;
     const id = marker?.[2];
     if (!id || !location || !pairedIgnoreIds.has(id)) return;
