@@ -8,6 +8,7 @@ import { promisify } from "node:util";
 import type { JSONReport } from "@playwright/test/reporter";
 
 import { parseManifest } from "../dist/registry/manifest.js";
+import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 
@@ -25,8 +26,8 @@ test("every catalogue route has an independently timed hydration test", async ()
       ),
     ),
   );
-  const routes = manifest.entries.flatMap((entry) =>
-    entry.kind === "collection" ? [] : [entry.route],
+  const routes = manifest.entries.map((entry) =>
+    entryRoute(entry.kind, entry.id),
   );
   assert.ok(routes.length > 80);
   const { stdout } = await execute(

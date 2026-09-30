@@ -10,11 +10,11 @@ type Viewport = "desktop" | "mobile";
 
 /** Design routes whose comparisons stack both versions in one chrome. */
 const STACKED = [
-  ["design/review/controls/overlay", "overlay"],
-  ["design/review/controls/overlay-long", "overlay"],
-  ["design/review/controls/overlay-panel", "overlay"],
-  ["design/review/outcomes/difference", "difference"],
-  ["design/browse/appearance/workspaces/difference", "difference"],
+  ["design-changes-overlay", "overlay"],
+  ["design-changes-overlay-long", "overlay"],
+  ["design-changes-overlay-panel", "overlay"],
+  ["design-review-difference", "difference"],
+  ["design-appearance-difference", "difference"],
 ] as const;
 
 /** The opaque screen background each depicted scheme paints under a blend. */
@@ -34,7 +34,7 @@ async function open(
       ? { width: 390, height: 844 }
       : { width: 1440, height: 1000 },
   );
-  const file = `${route}.${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
+  const file = `screens/${route}.${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
   await page.goto(
     pathToFileURL(path.join(repositoryRoot, "examples/basic/generated", file))
       .href,
@@ -126,7 +126,7 @@ test("the long overlay depicts both versions part-way down one viewport", async 
       const where = `${viewport} ${scheme}`;
       const scroller = await open(
         page,
-        "design/review/controls/overlay-long",
+        "design-changes-overlay-long",
         viewport,
         scheme,
       );

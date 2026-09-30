@@ -6,12 +6,11 @@ import type { GeneratedOutputStore } from "../build/output_store.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timingArguments } from "../diagnostics/timings.js";
 
-import type { RunningServer } from "./http_types.js";
 import type {
   PreparedResourceWatch,
   ResourceWatcher,
 } from "./resource_watcher.js";
-import type { RunningServe, ServeOptions } from "./serve.js";
+import type { ServeOptions } from "./serve.js";
 import type {
   ProcessSupervisor,
   ProcessSupervisorFactory,
@@ -36,11 +35,6 @@ export function createWatchedSupervisor(
     ],
     options.port,
   );
-}
-
-/** Present a deterministic child server through the public Serve lifecycle. */
-export function serverLifecycle(server: RunningServer): RunningServe {
-  return { close: () => server.close(), port: server.port, url: server.url };
 }
 
 /** Stop waiting for a candidate watcher as soon as watched shutdown begins. */

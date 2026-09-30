@@ -7,9 +7,11 @@ import { compareReview } from "../../dist/review/compare.js";
 import { writeReviewArtifact } from "../../dist/review/write.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 import type { RunningServer } from "../../dist/server/http_types.js";
+import { componentEntrySource } from "../helpers/component_fixture.js";
 import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 
 import { loadComparison, PANE_SOURCE } from "./comparison_actions.js";
+import { chooseVariant } from "./workspace_actions.js";
 
 let server: RunningServer;
 const cleanup: (() => Promise<void>)[] = [];
@@ -27,9 +29,15 @@ test.beforeAll(async () => {
           '<button className="revised" data-viewport=',
         )
         .replace(
-          '{ id: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }]',
-          '{ id: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }, { id: "new", title: "New", props: { label: "New" } }]',
+          '{ id: "action-disabled", title: "Disabled", description: "The saved action is unavailable.", props: { label: "Continue", disabled: true } }]',
+          '{ id: "action-disabled", title: "Disabled", description: "The saved action is unavailable.", props: { label: "Continue", disabled: true } }, { id: "action-new", title: "New", props: { label: "New" } }]',
         ),
+    componentEntrySource({
+      body: '<pane.Component><p>Screen content</p><action.Component label="Slot action" /></pane.Component><action.Component moklyInstance="footer" label="Finish" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><MockLink to="action">Open Action</MockLink><MockLink to="action-disabled">Open Disabled Action</MockLink>',
+    }).replace(
+      '{ id: "action-disabled", title: "Disabled", props:',
+      '{ id: "action-disabled", title: "Disabled", description: "The saved action is unavailable.", props:',
+    ),
   );
   const compared = await compareReview(
     fixture.after,
@@ -37,13 +45,18 @@ test.beforeAll(async () => {
     fixture.git,
     "main",
   );
-  if (compared.result.schemaVersion !== 3)
+  if (compared.result.schemaVersion !== 4)
     throw new Error("Expected component result");
   const result = compared.result;
   server = await startCatalogueServer(fixture.config, {
     base: "main",
     port: 0,
     componentChanges: { baseline: fixture.before.manifest, result },
+    changedIds: result.components.flatMap((component) =>
+      component.variants
+        .filter((variant) => variant.state !== "unchanged")
+        .map((variant) => variant.id),
+    ),
     review: {
       base: "main",
       outDir: path.join(fixture.root, ".review"),
@@ -72,6 +85,16 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
     page.getByRole("heading", { name: "Action", exact: true }),
   ).toBeVisible();
   await expect(
+    page.locator(
+      '[data-nav-disclosure="variants:components:action"] [data-route="components/action-default.html"]',
+    ),
+  ).toBeVisible();
+  await expect(
+    page.locator(
+      '[data-nav-disclosure="variants:components:action"] [data-route="components/action-disabled.html"]',
+    ),
+  ).toBeVisible();
+  await expect(
     page.getByRole("tab", { name: "Nested components" }),
   ).toHaveCount(0);
   await expect(
@@ -81,10 +104,28 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
   await expect(
     mobile.getByRole("button", { name: "Continue" }),
   ).toHaveAttribute("data-viewport", "mobile");
-  await page
-    .getByLabel("Saved variant", { exact: true })
-    .selectOption("disabled");
-  await expect(page).toHaveURL(/variant=disabled/);
+  const variants = page.getByRole("navigation", { name: "Saved variants" });
+  await expect(
+    variants.getByRole("link", { name: "Default", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await variants.getByRole("link", { name: "Disabled", exact: true }).click();
+  await expect(page).toHaveURL(/\/view\/components\/action-disabled\.html$/);
+  await expect(
+    page.getByRole("heading", { name: "Action", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Copy ID action-disabled" }),
+  ).toHaveText("#action-disabled");
+  await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
+  await expect(
+    page.getByLabel("Catalogue location").getByRole("link"),
+  ).toHaveText("Action");
+  await expect(page.locator('[data-inspector-panel="details"]')).toContainText(
+    "Variant ofAction",
+  );
+  await expect(page.locator('[data-inspector-panel="details"]')).toContainText(
+    "The saved action is unavailable.",
+  );
   await expect(mobile.getByRole("button", { name: "Continue" })).toBeDisabled();
   await page.getByRole("tab", { name: "Props", exact: true }).click();
   await expect(page.locator('[data-prop-control="disabled"]')).toBeChecked();
@@ -94,19 +135,102 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
     0,
   );
   await page.goBack();
-  await expect(page.getByLabel("Saved variant", { exact: true })).toHaveValue(
-    "default",
-  );
-  await expect(mobile.getByRole("button", { name: "Continue" })).toBeEnabled();
-  await page.goto(`${server.url}/view/components/action.html?variant=missing`);
+  await expect(page).toHaveURL(/\/view\/components\/action\.html$/);
   await expect(
-    page.getByRole("status").filter({ hasText: "This saved variant" }),
-  ).toBeVisible();
-  await page
-    .getByLabel("Saved variant", { exact: true })
-    .selectOption("default");
-  await expect(mobile.getByRole("button", { name: "Continue" })).toBeVisible();
+    variants.getByRole("link", { name: "Default", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(mobile.getByRole("button", { name: "Continue" })).toBeEnabled();
+  await page.goForward();
+  await expect(page).toHaveURL(/\/view\/components\/action-disabled\.html$/);
+  await expect(
+    variants.getByRole("link", { name: "Disabled", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
   expect(errors).toEqual([]);
+});
+
+test("Changes lists changed component variants beneath their parent", async ({
+  page,
+}) => {
+  await page.goto(`${server.url}/view/screens/home.html`);
+  await page.click('[data-filter="changed"]');
+
+  const parent = page.locator(
+    'a[data-nav-row][data-route="components/action.html"]',
+  );
+  await expect(parent).toHaveAttribute("data-changed-variants", "true");
+  await expect(
+    page.locator(
+      '[data-nav-disclosure="variants:components:action"] [data-route="components/action-default.html"]',
+    ),
+  ).toBeVisible();
+  await expect(
+    page.locator(
+      '[data-nav-disclosure="variants:components:action"] [data-route="components/action-disabled.html"]',
+    ),
+  ).toBeVisible();
+});
+
+test("a generated MockLink opens a component variant entry", async ({
+  page,
+}) => {
+  await page.goto(`${server.url}/view/screens/home.html`);
+  await page
+    .frameLocator('[data-workspace-frame="mobile"]')
+    .getByRole("link", { name: "Open Disabled Action", exact: true })
+    .click();
+
+  await expect(page).toHaveURL(/\/view\/components\/action-disabled\.html$/);
+  await expect(
+    page.getByRole("heading", { name: "Action", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .frameLocator('[data-workspace-frame="mobile"]')
+      .getByRole("button", { name: "Continue" }),
+  ).toBeDisabled();
+});
+
+test("a standalone frame miss keeps navigation available for a later route", async ({
+  page,
+}) => {
+  await page.goto(`${server.url}/view/screens/home.html`);
+  const link = page
+    .frameLocator('[data-workspace-frame="mobile"]')
+    .getByRole("link", { name: "Open Disabled Action", exact: true });
+  await link.evaluate((element) =>
+    element.setAttribute("data-mokly-link", "missing-entry"),
+  );
+  await link.click();
+  await expect(page).toHaveURL(/\/view\/missing-entry$/);
+  await expect(
+    page.getByRole("heading", { name: "Item not found", exact: true }),
+  ).toBeVisible();
+
+  await page.getByRole("link", { name: "Home", exact: true }).click();
+  await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+  await expect(
+    page.getByRole("heading", { name: "Home", exact: true }),
+  ).toBeVisible();
+});
+
+test("Side by side stays authoritative while switching sibling variants", async ({
+  page,
+}) => {
+  await page.goto(`${server.url}/view/components/action-default.html`);
+  await page.getByLabel("Viewport", { exact: true }).selectOption("mobile");
+  await loadComparison(page, "Side by side");
+
+  await chooseVariant(page, "Disabled");
+  await expect(
+    page.getByRole("button", { name: "Side by side" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("tab", { name: "Props", exact: true }).click();
+  await expect(page.locator("[data-controls-status]")).toHaveText(
+    "Comparisons show the saved variant. Return to Current to edit props.",
+  );
+  await expect(
+    page.getByRole("button", { name: "Highlight components", exact: true }),
+  ).toBeDisabled();
 });
 
 test("screen inspection records real nested, repeated and hidden instances without listing the screen in Changes", async ({
@@ -260,9 +384,7 @@ test("component comparisons follow changed variants while added variants stay cu
   await expect(
     page.getByRole("button", { name: "Highlight components", exact: true }),
   ).toBeDisabled();
-  await page
-    .getByLabel("Saved variant", { exact: true })
-    .selectOption("disabled");
+  await chooseVariant(page, "Disabled");
   await expect(page.locator("[data-diff-stage] iframe").last()).toHaveAttribute(
     PANE_SOURCE,
     /disabled\.mobile\.html$/,
@@ -273,7 +395,7 @@ test("component comparisons follow changed variants while added variants stay cu
       .frameLocator('[data-workspace-frame="mobile"]')
       .getByRole("button", { name: "Continue" }),
   ).toBeDisabled();
-  await page.getByLabel("Saved variant", { exact: true }).selectOption("new");
+  await chooseVariant(page, "New");
   await expect(page.locator("[data-workspace-variant-status]")).toHaveText(
     "New · Added",
   );

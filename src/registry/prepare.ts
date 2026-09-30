@@ -6,7 +6,14 @@ import type {
   RegistryDefinition,
   ResolvedRegistryEntry,
 } from "../authoring/types.js";
-import { validateComponentDefinition } from "../components/definition.js";
+import {
+  validateComponentDefinition,
+  validateComponentVariantDefinition,
+} from "../components/definition.js";
+import type {
+  ComponentDefinition,
+  ComponentVariantDefinition,
+} from "../components/types.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
@@ -23,7 +30,7 @@ import {
 /**
  * Validate loaded values and prepare stable source-attributed entries. Valid
  * sibling variants follow their parent in authored order; a variant without a
- * uniquely valid root-screen parent stays in route/id order for validation.
+ * uniquely valid root-screen parent stays in kind/id order for validation.
  */
 export function prepareRegistry(
   values: readonly unknown[],
@@ -31,6 +38,7 @@ export function prepareRegistry(
 ): PreparedRegistry {
   const violations: RegistryViolation[] = [];
   const entries: ResolvedRegistryEntry[] = [];
+  const validComponentParents = new Set<ResolvedRegistryEntry>();
   const flattened = values.flatMap((value) =>
     Array.isArray(value) ? value : [value],
   );
@@ -52,24 +60,30 @@ export function prepareRegistry(
     } as ResolvedRegistryEntry;
     const metadataViolations = validateEntry(entry, config);
     violations.push(...metadataViolations);
-    if (entry.kind === "component") {
-      if (metadataViolations.length) return;
+    if (entry.kind === "component" && !("variantOf" in entry)) {
+      if (metadataViolations.length) {
+        entries.push(entry);
+        return;
+      }
       try {
-        entries.push({
+        const definition = {
           ...validateComponentDefinition(entry),
           sourcePath,
           sourceRelativePath,
-        });
+        };
+        entries.push(definition);
+        validComponentParents.add(definition);
       } catch (error) {
         if (!(error instanceof ComponentValidationError)) throw error;
+        entries.push(entry);
         violations.push(problem(entry, "invalid-component", error.message));
       }
     } else entries.push(entry);
   });
+  validateComponentVariants(entries, validComponentParents, violations);
   const orderedEntries = orderEntriesWithVariants(entries, (entry) => entry);
   violations.push(
     ...duplicateViolations(orderedEntries, "id"),
-    ...duplicateViolations(orderedEntries, "route"),
     ...crossReferenceViolations(orderedEntries),
   );
   if (entries.length === 0) {
@@ -84,6 +98,54 @@ export function prepareRegistry(
     byId: new Map(orderedEntries.map((entry) => [entry.id, entry])),
     entries: orderedEntries,
   };
+}
+
+function validateComponentVariants(
+  entries: ResolvedRegistryEntry[],
+  validParents: ReadonlySet<ResolvedRegistryEntry>,
+  violations: RegistryViolation[],
+): void {
+  const byId = new Map<string, ResolvedRegistryEntry[]>();
+  for (const entry of entries)
+    byId.set(entry.id, [...(byId.get(entry.id) ?? []), entry]);
+  for (const [index, entry] of entries.entries()) {
+    if (entry.kind !== "component" || !("variantOf" in entry)) continue;
+    if (typeof entry.variantOf !== "string") continue;
+    const candidates = byId.get(entry.variantOf) ?? [];
+    const parent = candidates.length === 1 ? candidates[0] : undefined;
+    if (!parent || parent.kind !== "component" || "variantOf" in parent)
+      continue;
+    for (const field of [
+      "dependencies",
+      "relatedDocs",
+      "colorSchemes",
+      "tags",
+    ] as const) {
+      if (JSON.stringify(entry[field]) !== JSON.stringify(parent[field])) {
+        violations.push(
+          problem(
+            entry,
+            "invalid-variants",
+            `component variant ${entry.id} must inherit ${field} from ${parent.id}`,
+          ),
+        );
+      }
+    }
+    if (!validParents.has(parent)) continue;
+    try {
+      entries[index] = {
+        ...validateComponentVariantDefinition(
+          entry as ComponentVariantDefinition,
+          parent as ComponentDefinition,
+        ),
+        sourcePath: entry.sourcePath,
+        sourceRelativePath: entry.sourceRelativePath,
+      };
+    } catch (error) {
+      if (!(error instanceof ComponentValidationError)) throw error;
+      violations.push(problem(entry, "invalid-component", error.message));
+    }
+  }
 }
 
 /** Label registry-wide violations with the configured entry globs. */
@@ -101,7 +163,6 @@ function isDefinition(value: unknown): value is RegistryDefinition {
   return (
     kind === "page" ||
     kind === "screen" ||
-    kind === "collection" ||
     kind === "use-case" ||
     kind === "component"
   );

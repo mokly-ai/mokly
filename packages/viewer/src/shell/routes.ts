@@ -1,13 +1,18 @@
 /** URL-derived route state for the standalone hydrated shell. */
 
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
-import type { StaticDelivery } from "../navigation/delivery.js";
 import { isLogicalFragment } from "../navigation/logical.js";
+import { parseViewHref, viewHref } from "../navigation/routes.js";
+import type { EntryRouteKind } from "../navigation/routes.js";
 import { parseViewAxes } from "../navigation/view_axes.js";
-import type { ManifestEntry } from "../registry/types.js";
 
-import { catalogueRouteEntry, type Catalogue } from "./catalogue.js";
-import { toRouteTarget, type RoutedEntry } from "./target.js";
+import {
+  catalogueRouteEntry,
+  catalogueSelectionEntry,
+  type Catalogue,
+  type CatalogueManifestEntry,
+} from "./catalogue.js";
+import { toRouteTarget } from "./target.js";
 import type { ShellView } from "./views.js";
 
 /** Route state whose view identity always comes from the document URL. */
@@ -18,62 +23,53 @@ export interface ShellRoute {
   fragment?: string;
   instance?: string;
   snapshot?: string;
-  variant?: string;
-  /** Every component variant query value, including invalid empty or duplicate values. */
-  variantValues?: readonly string[];
   viewport?: "both" | "desktop" | "mobile";
 }
 
 /** Resolve a browser URL strictly against the accepted catalogue snapshot. */
-export function routeFromUrl(
-  catalogue: Catalogue,
-  url: URL,
-  delivery?: StaticDelivery,
-): ShellRoute {
-  const entry = routeEntry(catalogue, url.pathname, delivery);
+export function routeFromUrl(catalogue: Catalogue, url: URL): ShellRoute {
+  const entry = routeEntry(catalogue, url.pathname);
   const snapshots = url.searchParams.getAll("snapshot");
   const historical = entry
     ? catalogue.removedEntries.find(
-        ({ entry: candidate }) => candidate.route === entry.route,
+        ({ entry: candidate }) =>
+          candidate.id === entry.id && candidate.kind === entry.kind,
       )
     : undefined;
-  const alias = /^\/id\//.test(url.pathname);
   const requestedSnapshot =
     snapshots.length === 1 && isHistoricalSnapshotId(snapshots[0])
       ? snapshots[0]
       : undefined;
+  const currentEntry = entry
+    ? catalogue.manifest.entries.some(
+        (candidate) =>
+          candidate.id === entry.id && candidate.kind === entry.kind,
+      )
+    : false;
   const snapshot =
     historical &&
-    (snapshots.length === 0 ||
-      (!alias && requestedSnapshot === historical.snapshotId))
+    ((!currentEntry && snapshots.length === 0) ||
+      requestedSnapshot === historical.snapshotId)
       ? (requestedSnapshot ?? historical.snapshotId)
       : undefined;
-  const collidingLegacy =
-    historical !== undefined &&
-    historical.snapshotId === undefined &&
-    catalogue.manifest.entries.some(
-      (candidate) => candidate.id === historical.entry.id,
-    );
   const validSnapshot = historical
-    ? snapshot !== undefined || (snapshots.length === 0 && !collidingLegacy)
+    ? snapshots.length === 0 || snapshot !== undefined
     : snapshots.length === 0;
-  const target = entry && validSnapshot ? toRouteTarget(entry) : undefined;
+  const selectedEntry =
+    entry && snapshot
+      ? catalogueSelectionEntry(catalogue, entry.id, snapshot)
+      : entry;
+  const target =
+    selectedEntry && validSnapshot ? toRouteTarget(selectedEntry) : undefined;
   const view = target
     ? { kind: "target" as const, target }
     : url.pathname === "/" && snapshots.length === 0
       ? { kind: "home" as const }
       : { kind: "missing" as const, requested: requestedPath(url.pathname) };
   const fragments = url.searchParams.getAll("fragment");
-  const variants = url.searchParams.getAll("variant");
   const axes = parseViewAxes(url.searchParams);
   const instances = url.searchParams.getAll("instance");
   const comparisons = url.searchParams.getAll("comparison");
-  const variant =
-    entry?.kind === "component" && variants.length === 1 && variants[0]
-      ? variants[0]
-      : undefined;
-  const variantValues =
-    entry?.kind === "component" && variants.length > 0 ? variants : undefined;
   return {
     view,
     ...axes,
@@ -87,35 +83,21 @@ export function routeFromUrl(
     ...(fragments.length === 1 && isLogicalFragment(fragments[0])
       ? { fragment: fragments[0] }
       : {}),
-    ...(variant ? { variant } : {}),
-    ...(variantValues ? { variantValues } : {}),
   };
 }
 
 /** Canonical URL for a validated catalogue entry and logical fragment. */
 export function routeHref(
-  route: string,
+  kind: EntryRouteKind,
+  id: string,
   fragment?: string,
-  variant?: string,
   workspace: Pick<
     ShellRoute,
-    | "colorScheme"
-    | "comparison"
-    | "instance"
-    | "snapshot"
-    | "variantValues"
-    | "viewport"
+    "colorScheme" | "comparison" | "instance" | "snapshot" | "viewport"
   > = {},
 ): string {
-  const url = new URL(
-    `/view/${route.split("/").map(encodeURIComponent).join("/")}`,
-    "https://mokly.invalid",
-  );
+  const url = new URL(viewHref(kind, id), "https://mokly.invalid");
   if (fragment) url.searchParams.set("fragment", fragment);
-  if (workspace.variantValues)
-    for (const value of workspace.variantValues)
-      url.searchParams.append("variant", value);
-  else if (variant) url.searchParams.set("variant", variant);
   if (workspace.viewport) url.searchParams.set("viewport", workspace.viewport);
   if (workspace.colorScheme)
     url.searchParams.set("scheme", workspace.colorScheme);
@@ -139,36 +121,11 @@ export function routeScreenId(route: ShellRoute): string | null {
 function routeEntry(
   catalogue: Catalogue,
   pathname: string,
-  delivery?: StaticDelivery,
-): RoutedEntry | undefined {
-  if (pathname.startsWith("/view/")) {
-    const route = decodePath(pathname.slice("/view/".length));
-    if (route === undefined) return undefined;
-    const exact = routedEntry(catalogueRouteEntry(catalogue, route));
-    if (exact || !delivery || route.endsWith(".html")) return exact;
-    const normalizedRoute = `${route}.html`;
-    const normalized = routedEntry(
-      catalogueRouteEntry(catalogue, normalizedRoute),
-    );
-    if (!normalized) return undefined;
-    const canonicalPath = `/view/${normalizedRoute}`;
-    const current = Object.values(delivery.idRoutes).includes(canonicalPath);
-    const historical = catalogue.removedEntries.some(
-      ({ entry }) => entry.route === normalizedRoute,
-    );
-    return current || historical ? normalized : undefined;
-  }
-  const match = /^\/id\/([^/]+)(?:\/(?:index\.html)?)?$/.exec(pathname);
-  if (!match) return undefined;
-  const id = decodeSegment(match[1] ?? "");
-  const entry = id === undefined ? undefined : catalogue.byId.get(id);
-  return routedEntry(entry);
-}
-
-function routedEntry(
-  entry: ManifestEntry | undefined,
-): RoutedEntry | undefined {
-  return entry?.kind === "collection" ? undefined : entry;
+): CatalogueManifestEntry | undefined {
+  const identity = parseViewHref(pathname);
+  return identity
+    ? catalogueRouteEntry(catalogue, identity.id, identity.kind)
+    : undefined;
 }
 
 function decodePath(value: string): string | undefined {

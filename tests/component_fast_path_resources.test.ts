@@ -42,24 +42,24 @@ for (const direction of ["added", "removed"] as const)
   });
 
 for (const generatedOutput of ["derived", "committed"] as const)
-  test(`relocated views use the complete path in ${generatedOutput} mode`, async (t) => {
+  test(`legacy route fields cannot relocate views in ${generatedOutput} mode`, async (t) => {
     const fixture = await relocatedFixture(t);
     const beforePath = actionViewPath(fixture.before);
     const afterPath = actionViewPath(fixture.after);
-    assert.notEqual(beforePath, afterPath);
+    assert.equal(beforePath, afterPath);
     assert.equal(
       fixture.before.outputs.get(beforePath),
       fixture.after.outputs.get(afterPath),
     );
     const changedPaths = ["entries/fixture.mockup.tsx"];
-    if (generatedOutput === "committed")
-      changedPaths.push("mockups/components/image.svg");
+    if (generatedOutput === "committed") changedPaths.push("mockups/image.svg");
     const beforeResources = {
       "image.svg": "image",
       "components/image.svg": "image",
     };
     const afterResources = {
       ...beforeResources,
+      ...(generatedOutput === "committed" ? { "image.svg": "updated" } : {}),
       "components/nested/image.svg": "image",
     };
     const result = await assertFastPathEquivalent({
@@ -72,7 +72,7 @@ for (const generatedOutput of ["derived", "committed"] as const)
     });
     assert.equal(
       result.components.find((component) => component.id === "action")?.state,
-      "changed",
+      generatedOutput === "committed" ? "changed" : "unchanged",
     );
   });
 
@@ -97,8 +97,8 @@ async function relocatedFixture(t: TestContext) {
   await fs.writeFile(
     fixture.entryPath,
     source.replace(
-      'route: "components/action.html"',
-      'route: "components/nested/action.html"',
+      'id: "action",',
+      'id: "action", route: "components/nested/action.html",',
     ),
   );
   const after = await compileCatalogue(config);
@@ -107,7 +107,7 @@ async function relocatedFixture(t: TestContext) {
 
 function actionViewPath(compilation: Compilation): string {
   const action = compilation.manifest.entries.find(
-    (entry) => entry.kind === "component" && entry.id === "action",
+    (entry) => entry.kind === "component" && entry.id === "action-default",
   );
   assert.ok(action);
   return generatedViews(action)[0]!.path;

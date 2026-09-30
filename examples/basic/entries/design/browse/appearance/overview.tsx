@@ -34,6 +34,5 @@ export const appearanceOverviewScreen = screen({
   mobile: <AppearanceOverview viewport="mobile" />,
   rationale:
     "Standalone Browse holds one Appearance setting, so the chrome and the screens it shows change together rather than needing two controls. The artboard draws that one selector in its top bar; use the preview control above to move between the two renderings.",
-  slug: "overview",
   title: "Catalogue appearance",
 });

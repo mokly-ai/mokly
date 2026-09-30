@@ -11,10 +11,10 @@ const noop = () => {};
 export function createComponents(area: string) {
   const action = defineComponent({
     ...metadata,
+    navPath: [area.replaceAll("-", " "), "Components"],
     id: `${area}-action`,
     title: "Action",
     description: "A reusable action.",
-    route: `${area}/components/action.html`,
     propSchema: {
       kind: "object",
       properties: {
@@ -38,14 +38,18 @@ export function createComponents(area: string) {
       </Button>
     ),
     variants: [
-      { id: "default", title: "Default", props: { label: "Continue" } },
       {
-        id: "secondary",
+        id: `${area}-action-default`,
+        title: "Default",
+        props: { label: "Continue" },
+      },
+      {
+        id: `${area}-action-secondary`,
         title: "Secondary",
         props: { label: "Save for later", secondary: true },
       },
       {
-        id: "disabled",
+        id: `${area}-action-disabled`,
         title: "Disabled",
         props: { label: "Continue", disabled: true },
       },
@@ -53,10 +57,10 @@ export function createComponents(area: string) {
   });
   const panel = defineComponent({
     ...metadata,
+    navPath: [area.replaceAll("-", " "), "Components"],
     id: `${area}-panel`,
     title: "Panel",
     description: "A summary with caller-owned content.",
-    route: `${area}/components/panel.html`,
     propSchema: {
       kind: "object",
       properties: { title: { schema: { kind: "string" } } },
@@ -72,7 +76,7 @@ export function createComponents(area: string) {
     ),
     variants: [
       {
-        id: "default",
+        id: `${area}-panel-default`,
         title: "Default",
         props: {
           title: "Overview",
@@ -80,12 +84,12 @@ export function createComponents(area: string) {
         },
       },
       {
-        id: "empty",
+        id: `${area}-panel-empty`,
         title: "Empty",
         props: { title: "Overview", children: <p>No activity yet.</p> },
       },
       {
-        id: "detailed",
+        id: `${area}-panel-detailed`,
         title: "Detailed",
         props: {
           title: "Overview",

@@ -1,11 +1,14 @@
-import type { ReviewArtifact } from "@mokly/viewer/data";
+import type { HistoricalManifest, ReviewArtifact } from "@mokly/viewer/data";
 
+import { isIncompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { compileCatalogue } from "../build/compile.js";
 import { writeCompilation } from "../build/transaction.js";
 import { projectRealPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { removedManifestEntries } from "../registry/changes.js";
+import { parseHistoricalManifest } from "../registry/manifest.js";
+import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
 import { readBaseManifest } from "../review/base_manifest.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { compareReview } from "../review/compare.js";
@@ -64,9 +67,20 @@ async function generateExport(
           ...(options.signal ? { signal: options.signal } : {}),
           ...(options.diagnostic ? { diagnostic: options.diagnostic } : {}),
         });
-    const baseline = prepared
-      ? await readBaseManifest(prepared.reader, prepared.commit, config)
-      : undefined;
+    let incompatible = false;
+    let baseline: HistoricalManifest | undefined;
+    if (prepared)
+      try {
+        baseline = await readBaseManifest(
+          prepared.reader,
+          prepared.commit,
+          config,
+        );
+      } catch (error) {
+        if (!isIncompatibleEarlierBaseline(error)) throw error;
+        incompatible = true;
+        options.incompatibleBaseline?.(prepared.commit);
+      }
     const compilation = await compileCatalogue(config);
     config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
     assertExportActive(options.signal);
@@ -77,15 +91,16 @@ async function generateExport(
     );
     const assetReader = capturedAssetReader(publicFiles, config);
     const exclusions = [output, transaction.reservationRoot];
-    const changed = prepared
-      ? await reviewChangedPaths(
-          prepared.evidence,
-          prepared.commit,
-          config,
-          config.review.outDir,
-          exclusions,
-        )
-      : [];
+    const changed =
+      prepared && baseline
+        ? await reviewChangedPaths(
+            prepared.evidence,
+            prepared.commit,
+            config,
+            config.review.outDir,
+            exclusions,
+          )
+        : [];
     let comparison: ReviewArtifact | undefined;
     let contentChanges: readonly string[] = [];
     if (prepared && baseline) {
@@ -109,7 +124,7 @@ async function generateExport(
         prepared.commit,
         changed,
         assetReader,
-        comparison.result.schemaVersion === 3 ? "pages" : "all",
+        hasRegisteredComponents(compilation.manifest) ? "pages" : "all",
       );
       const removedEntries = removedManifestEntries(
         compilation.manifest,
@@ -122,7 +137,7 @@ async function generateExport(
           baseline,
           baseCommit: comparison.result.baseCommit,
           baseRef: comparison.result.baseRef,
-          changedRoutes: removedEntries.map(({ entry }) => entry.route),
+          changedIds: removedEntries.map(({ entry }) => entry.id),
           removedEntries,
         },
         options.signal ?? new AbortController().signal,
@@ -135,17 +150,21 @@ async function generateExport(
     const site = assembleExport(
       config,
       compilation,
-      baseline ?? compilation.manifest,
+      baseline ?? parseHistoricalManifest(compilation.manifest),
       comparison,
       publicFiles,
       contentChanges,
+      options.noChanges ? "disabled" : incompatible ? "unavailable" : "ready",
     );
-    if (!options.noChanges && site.delivery.comparisonUrl === null)
+    if (
+      !options.noChanges &&
+      !incompatible &&
+      site.delivery.comparisonUrl === null
+    )
       throw exportError("Consumer export comparison metadata is missing.");
     const routes: ExportRoutes = Object.freeze({
       outDir: output,
       comparisonUrl: site.delivery.comparisonUrl,
-      idRoutes: Object.freeze({ ...site.delivery.idRoutes }),
     });
     const aliases = new Map(
       (await options.adapter?.transform(site.inventory.files, routes)) ?? [],
@@ -165,6 +184,7 @@ async function generateExport(
       prepared,
       changed,
       exclusions,
+      baseline !== undefined,
     );
     assertExportActive(options.signal);
     if (

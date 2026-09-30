@@ -22,7 +22,7 @@ test("private controls rerender actual consumer code, keep immutable bundles and
   await fs.writeFile(fixture.entryPath, "invalid candidate source");
   const request = {
     componentId: "action",
-    variantId: "default",
+    variantId: "action-default",
     generation: runtime.generation,
     viewport: "desktop",
     colorScheme: "light",
@@ -94,7 +94,7 @@ test("render HTTP validates authority, body limits and methods; memory documents
   const capability = descriptor.renderCapability;
   const body = {
     componentId: "action",
-    variantId: "default",
+    variantId: "action-default",
     viewport: "mobile",
     colorScheme: "light",
     generation: capability.generation,

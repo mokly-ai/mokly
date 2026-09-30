@@ -15,7 +15,7 @@ import { workspaceData, type WorkspaceData } from "./workspace_data.js";
 import { mergeWorkspaceEvidence } from "./workspace_evidence_merge.js";
 
 /** Current evidence plus the live request that owns any follow-up work. */
-export interface RoutedWorkspaceData {
+export interface WorkspaceDataState {
   data: WorkspaceData;
   refresh(): void;
   request?: ViewerCapabilityRequest;
@@ -26,7 +26,7 @@ export function useWorkspaceData(
   catalogue: Catalogue,
   context: ShellContext,
   entry: WorkspaceData["entry"] | undefined,
-): RoutedWorkspaceData | undefined {
+): WorkspaceDataState | undefined {
   const live = useViewerLiveState();
   const initial = useViewerInitialWorkspace();
   const staticEvidence = useStaticWorkspaceEvidence();
@@ -93,7 +93,6 @@ function matchingWorkspace(
   return (
     entry !== undefined &&
     data?.entry.id === entry.id &&
-    data.entry.kind === entry.kind &&
-    data.entry.route === entry.route
+    data.entry.kind === entry.kind
   );
 }

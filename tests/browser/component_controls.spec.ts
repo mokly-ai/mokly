@@ -79,7 +79,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await expect(
       controls.getByRole("textbox", { name: "label", exact: true }),
     ).toHaveValue("Continue");
-    await page.getByRole("link", { name: "Disabled", exact: true }).click();
+    await page
+      .getByRole("navigation", { name: "Saved variants" })
+      .getByRole("link", { name: "Disabled", exact: true })
+      .click();
     await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
     await expect(page.locator(".ce-canvas:visible .ce-action")).toBeDisabled();
     await expect(
@@ -154,7 +157,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
         .getByRole("region", { name: "Controls", exact: true })
         .locator("input, select"),
     ).toHaveCount(0);
-    await page.getByRole("link", { name: "Disabled", exact: true }).click();
+    await page
+      .getByRole("navigation", { name: "Saved variants" })
+      .getByRole("link", { name: "Disabled", exact: true })
+      .click();
     await expect(page).toHaveURL(
       componentDesignUrl("controls/published/variant", viewport),
     );

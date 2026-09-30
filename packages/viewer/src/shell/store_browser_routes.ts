@@ -26,9 +26,7 @@ export function eligibleShellAnchor(
       routeDocumentKey(url) === routeDocumentKey(new URL(location.href)) &&
       url.hash !== ""
     ) &&
-    (url.pathname === "/" ||
-      url.pathname.startsWith("/view/") ||
-      url.pathname.startsWith("/id/"))
+    (url.pathname === "/" || url.pathname.startsWith("/view/"))
   );
 }
 
@@ -43,8 +41,6 @@ export function sameShellRoute(
     left.comparison !== right.comparison ||
     left.instance !== right.instance ||
     left.snapshot !== right.snapshot ||
-    left.variant !== right.variant ||
-    !sameValues(left.variantValues, right.variantValues) ||
     left.viewport !== right.viewport ||
     left.view.kind !== right.view.kind
   )
@@ -55,19 +51,7 @@ export function sameShellRoute(
   return (
     left.view.kind === "target" &&
     right.view.kind === "target" &&
-    left.view.target.entry.route === right.view.target.entry.route
-  );
-}
-
-function sameValues(
-  left: readonly string[] | undefined,
-  right: readonly string[] | undefined,
-): boolean {
-  return (
-    left === right ||
-    (left !== undefined &&
-      right !== undefined &&
-      left.length === right.length &&
-      left.every((value, index) => value === right[index]))
+    left.view.target.entry.id === right.view.target.entry.id &&
+    left.view.target.entry.kind === right.view.target.entry.kind
   );
 }

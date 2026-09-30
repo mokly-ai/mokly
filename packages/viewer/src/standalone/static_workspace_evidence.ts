@@ -1,10 +1,8 @@
 /** Route-scoped workspace evidence read from another page in one static deployment. */
 
 import { readViewerWorkspace } from "../client/workspace_descriptor.js";
-import {
-  catalogueViewHref,
-  type StaticDelivery,
-} from "../navigation/delivery.js";
+import type { StaticDelivery } from "../navigation/delivery.js";
+import { providerNormalizedHtmlPath, viewHref } from "../navigation/routes.js";
 import { readShellDelivery } from "../shell/delivery.js";
 import type { WorkspaceData } from "../shell/workspace_data.js";
 
@@ -49,7 +47,7 @@ async function loadWorkspace(
   entry: WorkspaceData["entry"],
   signal: AbortSignal,
 ): Promise<WorkspaceData | undefined> {
-  const requested = new URL(catalogueViewHref(entry.route), win.location.href);
+  const requested = new URL(viewHref(entry.kind, entry.id), win.location.href);
   try {
     const response = await win.fetch(requested, {
       cache: "no-store",
@@ -65,7 +63,7 @@ async function loadWorkspace(
     if (
       !delivery ||
       !sameDeployment(delivery, installedDelivery) ||
-      delivery.canonicalPath !== catalogueViewHref(entry.route)
+      delivery.canonicalPath !== viewHref(entry.kind, entry.id)
     )
       return;
     const bootstrapValue = scriptValue(
@@ -81,18 +79,14 @@ async function loadWorkspace(
       ),
       delivery,
     );
-    if (!sameStaticSource(bootstrap, installed, entry.route)) return;
+    if (!sameStaticSource(bootstrap, installed, entry.id, entry.kind)) return;
     const workspace = readViewerWorkspace(workspaceValue, {
       base: installed.context.base,
       ...(installed.context.previewGeneration
         ? { previewGeneration: installed.context.previewGeneration }
         : {}),
     });
-    if (
-      workspace.entry.id !== entry.id ||
-      workspace.entry.kind !== entry.kind ||
-      workspace.entry.route !== entry.route
-    )
+    if (workspace.entry.id !== entry.id || workspace.entry.kind !== entry.kind)
       return;
     return workspace;
   } catch {
@@ -108,13 +102,11 @@ function scriptValue(page: Document, selector: string): unknown {
 
 function sameResponseUrl(response: Response, requested: URL): boolean {
   const received = new URL(response.url, requested);
-  const normalized = requested.pathname.endsWith(".html")
-    ? requested.pathname.slice(0, -5)
-    : requested.pathname;
+  const normalized = providerNormalizedHtmlPath(requested.pathname);
   return (
     received.origin === requested.origin &&
     (received.pathname === requested.pathname ||
-      received.pathname === normalized) &&
+      (normalized !== undefined && received.pathname === normalized)) &&
     received.search === "" &&
     received.hash === ""
   );
@@ -124,27 +116,23 @@ function sameDeployment(
   candidate: StaticDelivery,
   installed: StaticDelivery,
 ): boolean {
-  const candidateIds = Object.keys(candidate.idRoutes);
-  const installedIds = Object.keys(installed.idRoutes);
   return (
     candidate.schemaVersion === installed.schemaVersion &&
     candidate.deploymentId === installed.deploymentId &&
-    candidate.comparisonUrl === installed.comparisonUrl &&
-    candidateIds.length === installedIds.length &&
-    candidateIds.every(
-      (id) => candidate.idRoutes[id] === installed.idRoutes[id],
-    )
+    candidate.comparisonUrl === installed.comparisonUrl
   );
 }
 
 function sameStaticSource(
   candidate: ShellBootstrap,
   installed: ShellBootstrap,
-  route: string,
+  id: string,
+  kind: WorkspaceData["entry"]["kind"],
 ): boolean {
   return (
     candidate.view.kind === "target" &&
-    candidate.view.route === route &&
+    candidate.view.entryId === id &&
+    candidate.view.entryKind === kind &&
     candidate.catalogue.identity.id === installed.catalogue.identity.id &&
     candidate.catalogue.deploymentId === installed.catalogue.deploymentId &&
     candidate.catalogue.revision.content ===

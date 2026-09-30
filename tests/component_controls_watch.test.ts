@@ -49,7 +49,7 @@ test(
         },
         body: JSON.stringify({
           componentId: "action",
-          variantId: "default",
+          variantId: "action-default",
           viewport: "desktop",
           colorScheme: "light",
           generation: capability.generation,

@@ -53,7 +53,6 @@ export const removedPageScreens = [
     mobile: <LongDocument viewport="mobile" />,
     rationale:
       "Reading a removed document means moving through it, so the pane keeps the document's own scrolling and its headings stay reachable from the section list instead of being flattened into a preview image.",
-    slug: "long-document",
     title: "Long previous document",
   }),
   screen({
@@ -65,7 +64,6 @@ export const removedPageScreens = [
     mobile: <Loading viewport="mobile" />,
     rationale:
       "The previous version is retrieved only when the document is opened, so the stage names the wait while the navigation, badge, and details stay in place.",
-    slug: "loading",
     title: "Loading previous document",
   }),
   screen({
@@ -77,7 +75,6 @@ export const removedPageScreens = [
     mobile: <Unavailable viewport="mobile" />,
     rationale:
       "Nothing current may stand in for missing history, so the stage says plainly that the previous version is unavailable and offers one repeatable action rather than naming a reason.",
-    slug: "unavailable",
     title: "Previous document unavailable",
   }),
 ];

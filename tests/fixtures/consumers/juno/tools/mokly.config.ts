@@ -8,5 +8,7 @@ export default defineConfig({
     outDir: "../.context/review",
     sharedImpact: ["spec/ui/**"],
   },
-  stylesheets: [{ match: "workspace/**/*.html", stylesheets: ["juno.css"] }],
+  stylesheets: [
+    { match: "screens/workspace-overview.html", stylesheets: ["juno.css"] },
+  ],
 });

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { entryRoute } from "../packages/viewer/dist/data.js";
+
 import {
   attribute,
   byClass,
@@ -19,22 +21,31 @@ import {
 } from "./helpers/design_rows.js";
 
 const variantScreens = [
-  ["design-browse-variant-selected", "design/browse/variants/selected.html"],
-  ["design-browse-variant-changes", "design/browse/variants/changes.html"],
-  ["design-browse-variant-removed", "design/browse/variants/removed.html"],
+  [
+    "design-browse-variant-selected",
+    "screens/design-browse-variant-selected.html",
+  ],
+  [
+    "design-browse-variant-changes",
+    "screens/design-browse-variant-changes.html",
+  ],
+  [
+    "design-browse-variant-removed",
+    "screens/design-browse-variant-removed.html",
+  ],
   [
     "design-browse-variant-reparented",
-    "design/browse/variants/reparented.html",
+    "screens/design-browse-variant-reparented.html",
   ],
-  ["design-browse-changed-views", "design/browse/variants/changed-views.html"],
+  ["design-browse-changed-views", "screens/design-browse-changed-views.html"],
 ] as const;
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: variant states render as light-only shells`, async () => {
     for (const [id, route] of variantScreens) {
       const { entry, document } = await designDocument(id, viewport);
-      assert.equal(entry.route, route, id);
-      assert.equal(entry.darkFragments, undefined, id);
+      assert.equal(entryRoute("screen", entry.id), route, id);
+      assert.deepEqual(entry.colorSchemes, ["light"], id);
       assert.equal(byClass(document, "mbk-shell").length, 1, id);
     }
   });
@@ -90,7 +101,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
       assert.equal(byClass(document, "mbk-cmp-toolbar").length, 0, id);
       const details = byClass(document, "mbk-details-body")[0];
       assert.ok(details, id);
-      assert.match(textContent(details), /No current screen/, id);
+      assert.match(textContent(details), /Previous version/, id);
+      assert.doesNotMatch(textContent(details), /Generated/, id);
       assert.doesNotMatch(textContent(details), /screens\/welcome\.html/, id);
     }
   });
@@ -136,7 +148,9 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
 test("the canonical tree keeps Welcome's variant list collapsed", async () => {
   const { document } = await designDocument("design-browse-screen", "desktop");
-  const toggles = variantToggles(document);
+  const toggles = variantToggles(document).filter((toggle) =>
+    attribute(toggle, "aria-label")?.endsWith("variants of Welcome"),
+  );
   assert.equal(toggles.length, 1);
   assert.equal(attribute(toggles[0]!, "aria-expanded"), "false");
   assert.equal(
@@ -152,7 +166,9 @@ test("a selected variant discloses its parent's variant rows", async () => {
     "design-browse-variant-selected",
     "desktop",
   );
-  const toggles = variantToggles(document);
+  const toggles = variantToggles(document).filter((toggle) =>
+    attribute(toggle, "aria-label")?.endsWith("variants of Welcome"),
+  );
   assert.equal(toggles.length, 1);
   assert.equal(attribute(toggles[0]!, "aria-expanded"), "true");
   assert.equal(
@@ -184,7 +200,7 @@ test("a selected variant discloses its parent's variant rows", async () => {
   assert.equal(
     textContent(byClass(screens!, "mbk-nav-count")[0]!).trim(),
     "2",
-    "variants are not collection children",
+    "variants are not folder members",
   );
 });
 

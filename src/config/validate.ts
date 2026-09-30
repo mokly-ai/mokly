@@ -103,15 +103,6 @@ export function resolveConfig(
   const watchRules = validateWatchRules(input.watch?.rules ?? []);
   if (input.review?.base !== undefined)
     requireString(input.review.base, "review.base");
-  if (
-    input.compatibility?.readManifestV2 !== undefined &&
-    typeof input.compatibility.readManifestV2 !== "boolean"
-  ) {
-    throw new MoklyError(
-      "config-invalid",
-      "compatibility.readManifestV2 must be boolean",
-    );
-  }
   const reviewOut = resolveInside(
     repoRoot,
     configDir,
@@ -128,7 +119,6 @@ export function resolveConfig(
     generatedOutput,
     colorSchemes,
     compatibility: {
-      readManifestV2: input.compatibility?.readManifestV2 ?? false,
       ...(compatibilityTransformer
         ? { transformer: compatibilityTransformer }
         : {}),

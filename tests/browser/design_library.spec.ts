@@ -4,13 +4,14 @@ import { pathToFileURL } from "node:url";
 
 import { expect, test } from "@playwright/test";
 
-import type { ManifestV5 } from "../../packages/viewer/dist/registry/types.js";
+import { viewRoute } from "../../packages/viewer/dist/data.js";
+import type { ManifestV7 } from "../../packages/viewer/dist/registry/types.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 const generated = path.join(repositoryRoot, "examples/basic/generated");
 const manifest = JSON.parse(
   await fs.readFile(path.join(generated, "mokly-manifest.json"), "utf8"),
-) as ManifestV5;
+) as ManifestV7;
 const fileUrl = (route: string) =>
   pathToFileURL(path.join(generated, route)).href;
 
@@ -30,10 +31,16 @@ for (const viewport of ["desktop", "mobile"] as const) {
       const failed: string[] = [];
       page.on("requestfailed", (request) => failed.push(request.url()));
       for (const entry of manifest.entries) {
-        if (entry.kind !== "component" || !entry.id.startsWith("design-ui-"))
+        if (
+          entry.kind !== "component" ||
+          !("variantOf" in entry) ||
+          !entry.id.startsWith("design-ui-")
+        )
           continue;
-        for (const variant of entry.variants) {
-          await page.goto(fileUrl(variant.fragments[viewport]));
+        {
+          await page.goto(
+            fileUrl(viewRoute("component", entry.id, viewport, "light")),
+          );
           await expect(page.locator(".mbk-library-host")).toBeVisible();
           for (const panel of await page
             .locator(".ce-workspace details[open] > .ce-inspector-panel")
@@ -44,7 +51,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
             await page.evaluate(
               () => document.documentElement.scrollWidth <= innerWidth,
             ),
-            `${entry.id}/${variant.id} fits`,
+            `${entry.variantOf}/${entry.id} fits`,
           ).toBe(true);
           const urls = await page
             .locator("a[href],link[rel=stylesheet]")
@@ -56,7 +63,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
             await fs.access(new URL(url));
           }
           await page.screenshot({
-            path: testInfo.outputPath(`${entry.id}-${variant.id}.png`),
+            path: testInfo.outputPath(`${entry.variantOf}-${entry.id}.png`),
             fullPage: true,
           });
         }
@@ -83,15 +90,15 @@ for (const viewport of ["desktop", "mobile"] as const) {
           });
       await page.goto(
         fileUrl(
-          `design/library/chrome/catalogue-navigation.variants/all.${viewport}.html`,
+          `components/design-ui-catalogue-navigation-all.${viewport}.html`,
         ),
       );
       const isolated = await typography();
       await page.goto(
         fileUrl(
           viewport === "mobile"
-            ? "design/browse/states/navigation.mobile.html"
-            : "design/browse/views/details-screen.desktop.html",
+            ? "screens/design-browse-navigation.mobile.html"
+            : "screens/design-browse-details-screen.desktop.html",
         ),
       );
       const inScreen = await typography();
@@ -120,12 +127,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
           };
         });
       await page.goto(
-        fileUrl(
-          `design/library/chrome/top-bar.variants/default.${viewport}.html`,
-        ),
+        fileUrl(`components/design-ui-top-bar-default.${viewport}.html`),
       );
       const isolated = await logo();
-      await page.goto(fileUrl(`design/browse/views/home.${viewport}.html`));
+      await page.goto(fileUrl(`screens/design-browse-home.${viewport}.html`));
       const inScreen = await logo();
       expect(inScreen).toEqual({
         brand: "rgb(26, 29, 28)",
@@ -139,7 +144,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
     test("the last flow step has no trailing connector after registered boundaries", async ({
       page,
     }) => {
-      await page.goto(fileUrl(`design/browse/views/use-case.${viewport}.html`));
+      await page.goto(
+        fileUrl(`screens/design-browse-use-case.${viewport}.html`),
+      );
       const steps = page.locator(".flow-step");
       await expect(steps).toHaveCount(2);
       expect(
@@ -162,10 +169,16 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ["change-status", ".ce-change-status"],
       ]) {
         const entry = manifest.entries.find(
-          (entry) => entry.id === `design-ui-${slug}`,
+          (entry) =>
+            entry.kind === "component" &&
+            "variantOf" in entry &&
+            entry.variantOf === `design-ui-${slug}`,
         );
-        if (entry?.kind !== "component") throw new Error(`Missing ${slug}`);
-        await page.goto(fileUrl(entry.variants[0]!.fragments[viewport]));
+        if (entry?.kind !== "component" || !("variantOf" in entry))
+          throw new Error(`Missing ${slug}`);
+        await page.goto(
+          fileUrl(viewRoute("component", entry.id, viewport, "light")),
+        );
         expect(
           (await page.locator(selector!).boundingBox())!.width,
         ).toBeLessThan(150);
@@ -176,15 +189,12 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       const entry = manifest.entries.find(
-        (entry) => entry.id === "design-ui-inspector",
+        (entry) => entry.id === "design-ui-inspector-details",
       );
-      if (entry?.kind !== "component") throw new Error("Missing footer panel");
+      if (entry?.kind !== "component" || !("variantOf" in entry))
+        throw new Error("Missing footer panel");
       await page.goto(
-        fileUrl(
-          entry.variants.find((variant) => variant.id === "details")!.fragments[
-            viewport
-          ],
-        ),
+        fileUrl(viewRoute("component", entry.id, viewport, "light")),
       );
       await expect(
         page.getByText(
@@ -200,10 +210,10 @@ test("mobile comparison samples fit with wider fallback fonts", async ({
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   for (const route of [
-    "chrome/screen-header.variants/changed",
-    "controls/comparison-toolbar.variants/side-by-side",
+    "components/design-ui-screen-header-changed",
+    "components/design-ui-comparison-toolbar-side-by-side",
   ]) {
-    await page.goto(fileUrl(`design/library/${route}.mobile.html`));
+    await page.goto(fileUrl(`${route}.mobile.html`));
     await page.addStyleTag({
       content: ":root { --sans: Verdana, sans-serif; }",
     });
@@ -222,15 +232,11 @@ test("mobile footer component owns its full-width sheet surface", async ({
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const entry = manifest.entries.find(
-    (candidate) => candidate.id === "design-ui-inspector",
+    (candidate) => candidate.id === "design-ui-inspector-details",
   );
-  if (entry?.kind !== "component") throw new Error("Missing footer panel");
-  await page.goto(
-    fileUrl(
-      entry.variants.find((variant) => variant.id === "details")!.fragments
-        .mobile,
-    ),
-  );
+  if (entry?.kind !== "component" || !("variantOf" in entry))
+    throw new Error("Missing footer panel");
+  await page.goto(fileUrl(viewRoute("component", entry.id, "mobile", "light")));
   const workspace = page.locator(".ce-workspace");
   const dock = page.locator(".ce-inspector-dock");
   const inspector = page.locator(".ce-inspector");

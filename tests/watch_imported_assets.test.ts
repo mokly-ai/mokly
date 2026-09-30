@@ -20,7 +20,7 @@ test(
   async (context) => {
     const source =
       validEntrySource() +
-      '\nimport image from "../mockups/image.svg"; mockups[1].title = "Asset " + image.length;';
+      '\nimport image from "../mockups/image.svg"; mockups[0].title = "Asset " + image.length;';
     const fixture = await changedFixture(
       context,
       source,

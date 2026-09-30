@@ -30,7 +30,6 @@ export function ComparisonControlsMobile() {
 export const statesScreens = [
   screen({
     id: "design-component-controls-pending",
-    slug: "pending",
     title: "Updating preview",
     description:
       "The last valid preview stays visible while a newer edit renders.",
@@ -40,7 +39,6 @@ export const statesScreens = [
   }),
   screen({
     id: "design-component-controls-invalid",
-    slug: "invalid",
     title: "Invalid prop value",
     description:
       "An inline number error keeps the last valid preview and preserves the entered value.",
@@ -50,7 +48,6 @@ export const statesScreens = [
   }),
   screen({
     id: "design-component-controls-error",
-    slug: "error",
     title: "Render failed",
     description:
       "A failed render keeps edits and the last working preview, with retry and reset available.",
@@ -60,7 +57,6 @@ export const statesScreens = [
   }),
   screen({
     id: "design-component-controls-comparison",
-    slug: "comparison",
     title: "Controls during comparison",
     description:
       "Saved props remain readable in comparison; Current is required before editing.",

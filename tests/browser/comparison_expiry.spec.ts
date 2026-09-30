@@ -28,7 +28,7 @@ test.afterAll(async () => {
 async function expireSnapshots(page: Page, snapshot: string): Promise<void> {
   now += 120_001;
   const pruning = await page.request.get(
-    `${server.url}/__mokly/diffs/review.json?route=components%2Faction.html&variant=default`,
+    `${server.url}/__mokly/diffs/review.json?id=action-default`,
   );
   expect(pruning.ok()).toBe(true);
   expect((await page.request.get(snapshot)).status()).toBe(404);
@@ -87,7 +87,7 @@ for (const change of ["theme", "viewport"] as const)
       "difference",
     );
     expect(requests).toHaveLength(2);
-    expect(requests[1]!.searchParams.get("route")).toBe("screens/home.html");
+    expect(requests[1]!.searchParams.get("id")).toBe("home");
     expect(requests[1]!.searchParams.has("refresh")).toBe(false);
     expect(failedPanes).toEqual([]);
   });
@@ -98,7 +98,7 @@ test("snapshot recovery keeps the selected saved variant", async ({ page }) => {
     const url = new URL(request.url());
     if (url.pathname === "/__mokly/diffs/review.json") requests.push(url);
   });
-  await page.goto(`${server.url}/view/components/action.html?variant=disabled`);
+  await page.goto(`${server.url}/view/components/action-disabled.html`);
   await chooseViewport(page, "desktop");
   await loadComparison(page, "Side by side");
   await expect(
@@ -123,6 +123,6 @@ test("snapshot recovery keeps the selected saved variant", async ({ page }) => {
       .getByRole("button", { name: "Proceed", exact: true }),
   ).toBeDisabled();
   expect(requests).toHaveLength(2);
-  expect(requests[1]!.searchParams.get("route")).toBe("components/action.html");
-  expect(requests[1]!.searchParams.get("variant")).toBe("disabled");
+  expect(requests[1]!.searchParams.get("id")).toBe("action-disabled");
+  expect(requests[1]!.searchParams.size).toBe(1);
 });

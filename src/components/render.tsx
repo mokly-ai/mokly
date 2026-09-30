@@ -11,7 +11,10 @@ import { componentInputs } from "./inputs.js";
 import { serializeComponentSentinels } from "./ranges.js";
 import { ComponentContext } from "./render_context.js";
 import { rebaseStyleOwnership } from "./style_ownership.js";
-import type { ComponentDefinition } from "./types.js";
+import type {
+  ComponentDefinition,
+  ComponentVariantDefinition,
+} from "./types.js";
 
 export interface ComponentRenderOutput {
   html: string;
@@ -32,14 +35,20 @@ export const renderWithComponents: ComponentGraphRenderer = (
   const collector = new ComponentCollector(
     new Map(definitions.map((entry) => [entry.id, entry])),
     input,
-    `${input.entry.id} / ${input.variantId ?? "screen"} / ${input.viewport} / ${input.colorScheme}`,
+    `${input.entry.id} / ${input.viewport} / ${input.colorScheme}`,
   );
   const node = (
     <ComponentContext
       value={{ collector, owner: { kind: "entry" }, placement: 0 }}
     >
       {input.entry.kind === "component" ? (
-        <ComponentRoot definition={input.entry} input={input} />
+        <ComponentRoot
+          definition={definitions.find(
+            (definition) => definition.id === input.entry.variantOf,
+          )}
+          entry={input.entry}
+          input={input}
+        />
       ) : (
         input.node
       )}
@@ -83,19 +92,21 @@ export const renderWithComponents: ComponentGraphRenderer = (
 
 function ComponentRoot({
   definition,
+  entry,
   input,
 }: {
-  definition: ComponentDefinition;
+  definition: ComponentDefinition | undefined;
+  entry: ComponentVariantDefinition;
   input: RenderInput;
 }): ReactNode {
-  const variant = definition.variants.find(
-    (variant) => variant.id === input.variantId,
-  );
-  if (!variant) invalidData(definition.id, "unknown saved variant");
+  if (!definition) invalidData(entry.id, "unknown component parent");
   const { data, slots } = componentInputs(
     definition,
-    input.componentProps ?? variant.props,
-    `${definition.id} / ${variant.id}`,
+    entry.props,
+    `${definition.id} / ${entry.id}`,
   );
-  return definition.render({ ...data, ...slots }, input);
+  return definition.render(
+    { ...(input.componentProps ?? data), ...slots },
+    input,
+  );
 }

@@ -89,12 +89,12 @@ test("static hydration adopts choices made after load while its catalogue is pen
   );
 });
 
-test("development React hydrates removed and renamed finalized routes", async ({
+test("development React hydrates removed and replaced finalized routes", async ({
   page,
 }) => {
   const errors = captureBrowserErrors(page);
   await installDevelopmentBundle(page, developmentBundle);
-  for (const route of ["removed.html", "guides/original.html"]) {
+  for (const route of ["pages/removed.html", "pages/renamed-old.html"]) {
     const response = await page.goto(
       `${historical.url}/view/${encodeRoute(route)}`,
     );

@@ -2,6 +2,7 @@
 import type { ManifestComponentVariant } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import { encodeUrlPath } from "../data/paths.js";
+import { viewRoute } from "../navigation/routes.js";
 
 import { generatedFrameSource, generatedView } from "./stage_sources.js";
 
@@ -36,11 +37,11 @@ export function ComponentStage({
         );
         const light = previewLight
           ? generatedFrameSource(previewLight)
-          : `/static/${encodeUrlPath(variant.fragments[viewport])}`;
+          : `/static/${encodeUrlPath(viewRoute("component", variant.id, viewport, "light"))}`;
         const dark = previewDark
           ? generatedFrameSource(previewDark)
-          : variant.darkFragments?.[viewport]
-            ? `/static/${encodeUrlPath(variant.darkFragments[viewport])}`
+          : variant.colorSchemes.includes("dark")
+            ? `/static/${encodeUrlPath(viewRoute("component", variant.id, viewport, "dark"))}`
             : undefined;
         return (
           <section

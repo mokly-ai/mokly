@@ -2,11 +2,9 @@
 
 ## Delivery Status
 
-Design revision for Milestones 4b, 4c, and 4g of the
-[component explorer plan](../../plans/component-explorer.md). It replaces the
-single crowded Details disclosure in component and consuming-screen mockups.
-The runtime inspector implements the same layout and interaction. Existing non-component Browse/Changes
-artboards continue to document the currently implemented shell. Removed
+The [component explorer plan](../../plans/component-explorer.md) delivered this
+replacement for the crowded Details disclosure. Runtime and mockups share the
+layout; non-component artboards retain the shell. Removed
 consumer stages retain this inspector around the previous version delivered by
 the [removed content previews plan](../../plans/removed-content-previews.md).
 
@@ -77,17 +75,18 @@ render the same metadata in Details and source references.
 
 The existing component and inspection artboards cover open panels. A separate
 bounded Inspector gallery adds closed-panel states, each with its own mobile and
-desktop screen component:
+desktop screen component. Each entry's route is `screens/<id>.html` under the
+[derived route rule](./mokly-authoring.md#derived-routes):
 
-| Entry id                                   | Route                                        | State                                      |
-| ------------------------------------------ | -------------------------------------------- | ------------------------------------------ |
-| `design-component-inspector-closed`        | `design/components/inspector/component.html` | Component with all inspector panels closed |
-| `design-component-screen-inspector-closed` | `design/components/inspector/screen.html`    | Screen with all inspector panels closed    |
+| Entry id                                   | State                                      |
+| ------------------------------------------ | ------------------------------------------ |
+| `design-component-inspector-closed`        | Component with all inspector panels closed |
+| `design-component-screen-inspector-closed` | Screen with all inspector panels closed    |
 
 ## Verification
 
 Browser tests open each icon, switch and close panels, exercise keyboard focus,
 verify that closed panels reserve no space, and inspect both viewport layouts.
-Catalogue checks cover all owning routes and every current-page destination.
+Catalogue checks cover all owning entries and every current-page destination.
 Regression tests verify explicit Help hint source metadata and the removal of
 footer navigation. Preserve component highlight geometry and attribution checks.

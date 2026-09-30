@@ -1,7 +1,6 @@
 import React from "react";
 
 import {
-  defineCollection,
   definePage,
   defineScreen,
   defineUseCase,
@@ -17,29 +16,16 @@ const metadata = {
 export const mockups = [
   definePage({
     ...metadata,
+    navPath: ["Packed ESM"],
     id: "packed-handbook",
     title: "Handbook",
     description: "Whole document in the packed API",
-    route: "handbook.html",
     render: () =>
       '<html><body><main id="handbook">Handbook</main><a href="mock:packed-home">Home</a></body></html>',
   }),
-  defineCollection({
-    ...metadata,
-    childIds: ["packed-pages", "packed-tour", "packed-handbook"],
-    description: "Packed ESM consumer catalogue.",
-    id: "packed-esm",
-    title: "Packed ESM",
-  }),
-  defineCollection({
-    ...metadata,
-    childIds: ["packed-home", "packed-detail", "packed-card"],
-    description: "Screens loaded from an installed tarball.",
-    id: "packed-pages",
-    title: "Packed pages",
-  }),
   defineScreen({
     ...metadata,
+    navPath: ["Packed ESM", "Packed pages"],
     description: "A clean ESM consumer screen.",
     desktop: (
       <main data-fixture="esm-desktop">
@@ -59,7 +45,6 @@ export const mockups = [
         </MockLink>
       </main>
     ),
-    route: "screens/home.html",
     title: "Packed home",
     useCaseIds: ["packed-tour"],
     variants: [
@@ -68,13 +53,13 @@ export const mockups = [
         desktop: <main data-fixture="esm-empty-desktop">Empty</main>,
         id: "packed-home-empty",
         mobile: <main data-fixture="esm-empty-mobile">Empty</main>,
-        slug: "empty",
         title: "Packed home, empty",
       },
     ],
   }),
   defineScreen({
     ...metadata,
+    navPath: ["Packed ESM", "Packed pages"],
     description: "The destination in the clean ESM consumer.",
     desktop: (
       <main data-fixture="esm-detail-desktop" id="packed-section">
@@ -87,15 +72,14 @@ export const mockups = [
         Packed details
       </main>
     ),
-    route: "screens/detail.html",
     title: "Packed details",
     useCaseIds: ["packed-tour"],
   }),
   defineUseCase({
     ...metadata,
+    navPath: ["Packed ESM"],
     description: "A two-step packed package journey.",
     id: "packed-tour",
-    route: "user-flows/packed-tour.html",
     steps: [{ screenId: "packed-home" }, { screenId: "packed-detail" }],
     title: "Packed tour",
   }),

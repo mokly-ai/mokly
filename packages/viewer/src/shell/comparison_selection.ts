@@ -1,5 +1,6 @@
 /** Pure selection of the views and pane documents one comparison shows. */
 
+import { snapshotViewPath, type ViewRouteKind } from "../navigation/routes.js";
 import type { ViewReview } from "../review/types.js";
 
 import type { LoadedComparison } from "./comparison_request.js";
@@ -15,38 +16,49 @@ export interface SelectedComparisonView {
   viewport: "desktop" | "mobile";
 }
 
-/** The screen or saved variant record owning a route's comparison views. */
+/** Find the identity-only v4 result record for one routed screen or variant. */
 function comparisonEntry(
   loaded: LoadedComparison,
-  route: string,
-  variantId: string | undefined,
+  kind: ViewRouteKind,
+  id: string,
 ): { views: readonly ViewReview[] } | undefined {
-  const component =
-    loaded.result.schemaVersion === 3
-      ? loaded.result.components.find((candidate) => candidate.route === route)
-      : undefined;
-  if (component)
-    return component.variants.find((candidate) => candidate.id === variantId);
-  return loaded.result.screens.find((candidate) => candidate.route === route);
+  if (kind === "screen")
+    return loaded.result.screens.find((candidate) => candidate.id === id);
+  return loaded.result.components
+    .flatMap((component) => component.variants)
+    .find((candidate) => candidate.id === id);
 }
 
-/** Resolve a metadata-named snapshot beneath its comparison's generation. */
-function snapshotUrl(base: string, source: string): string {
+/** Resolve a derived snapshot path beneath its comparison's generation. */
+function snapshotUrl(
+  base: string,
+  side: "after" | "before",
+  kind: ViewRouteKind,
+  id: string,
+  view: ViewReview,
+): string {
+  const source = snapshotViewPath(
+    side,
+    kind,
+    id,
+    view.viewport,
+    view.colorScheme,
+  );
   return new URL(source.split("/").map(encodeURIComponent).join("/"), base)
     .href;
 }
 
 /**
  * The views a presentation shows, mobile first, each in the selected scheme
- * or its Light fallback. `undefined` means the route has no comparison record.
+ * or its Light fallback. `undefined` means the identity has no result record.
  */
 export function selectedComparisonViews(
   loaded: LoadedComparison,
   presentation: ComparisonPresentation,
-  route: string,
-  variantId: string | undefined,
+  kind: ViewRouteKind,
+  id: string,
 ): readonly SelectedComparisonView[] | undefined {
-  const entry = comparisonEntry(loaded, route, variantId);
+  const entry = comparisonEntry(loaded, kind, id);
   if (!entry) return;
   return (["mobile", "desktop"] as const).flatMap((viewport) => {
     if (presentation.viewport !== "both" && presentation.viewport !== viewport)
@@ -62,17 +74,19 @@ export function selectedComparisonViews(
           candidate.viewport === viewport && candidate.colorScheme === "light",
       );
     if (!view) return [];
+    const before = view.state !== "added";
+    const after = view.state !== "removed";
     return [
       {
         documents: {
-          ...(view.beforePath
-            ? { before: snapshotUrl(loaded.url, view.beforePath) }
+          ...(before
+            ? { before: snapshotUrl(loaded.url, "before", kind, id, view) }
             : {}),
-          ...(view.afterPath
-            ? { after: snapshotUrl(loaded.url, view.afterPath) }
+          ...(after
+            ? { after: snapshotUrl(loaded.url, "after", kind, id, view) }
             : {}),
         },
-        mode: view.beforePath && view.afterPath ? presentation.mode : "side",
+        mode: before && after ? presentation.mode : "side",
         view,
         viewport,
       },

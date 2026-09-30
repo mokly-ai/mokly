@@ -157,7 +157,6 @@ export const appearanceWorkspaceScreens = [
     mobile: <NavigationDrawerMobile />,
     rationale:
       "The drawer dims the catalogue behind it while the top bar stays at full strength, so the scrim and the drawer's own elevation need values in each appearance that still separate the two layers.",
-    slug: "drawer",
     title: "Navigation drawer",
   }),
   screen({
@@ -168,7 +167,6 @@ export const appearanceWorkspaceScreens = [
     mobile: <SideBySideCompare viewport="mobile" />,
     rationale:
       "The comparison band, the Before and Current captions, the stage behind the frames and both compared screens follow the one catalogue appearance, so a side-by-side read stays in a single scheme rather than mixing chrome and content.",
-    slug: "side-by-side",
     title: "Side by side",
   }),
   screen({
@@ -179,7 +177,6 @@ export const appearanceWorkspaceScreens = [
     mobile: <DifferenceCompare viewport="mobile" />,
     rationale:
       "Difference blends the two versions, so the blend needs an opaque base taken from the compared screens rather than the stage behind them. Both versions follow the catalogue appearance together, so the difference stays legible in either one.",
-    slug: "difference",
     title: "Difference",
   }),
 ];

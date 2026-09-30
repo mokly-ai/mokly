@@ -2,26 +2,27 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type {
-  ManifestCollection,
   ManifestEntry,
   ManifestPage,
   ManifestScreen,
-  ManifestV5,
+  ManifestV7,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
+import { targetHead } from "../packages/viewer/dist/shell/head.js";
 import {
   buildNavSections,
   type NavLeafNode,
   type NavNode,
 } from "../packages/viewer/dist/shell/nav_tree.js";
+import { toRouteTarget } from "../packages/viewer/dist/shell/target.js";
 
 const removed = {
+  entryId: "welcome-error",
   entryKind: "screen" as const,
   key: "removed:welcome-error",
   kind: "leaf" as const,
   label: "Save failed · Removed",
   removedPage: true,
-  route: "welcome-error.html",
   variantOf: "welcome",
 };
 
@@ -29,24 +30,20 @@ test("removed variants remain represented exactly once across parent transitions
   const cases = [
     {
       label: "surviving parent",
-      entries: [
-        collection("screens", "Screens", ["welcome"]),
-        screen("welcome", "Welcome"),
-      ],
+      entries: [screen("welcome", "Welcome", ["Screens"])],
       nested: true,
     },
     {
       label: "former parent became a variant",
       entries: [
-        collection("screens", "Screens", ["workspace"]),
-        screen("workspace", "Workspace"),
-        variant("welcome", "Welcome", "workspace"),
+        screen("workspace", "Workspace", ["Screens"]),
+        variant("welcome", "Welcome", "workspace", ["Screens"]),
       ],
       nested: false,
     },
     {
       label: "parent was deleted",
-      entries: [collection("screens", "Screens", [])],
+      entries: [],
       nested: false,
     },
     {
@@ -63,8 +60,8 @@ test("removed variants remain represented exactly once across parent transitions
       [removed],
     );
     const nodes = sections.flatMap(({ children }) => children);
-    assert.equal(occurrences(nodes, removed.route), 1, current.label);
-    const represented = findLeaf(nodes, removed.route);
+    assert.equal(occurrences(nodes, removed.entryId), 1, current.label);
+    const represented = findLeaf(nodes, removed.entryId);
     assert.ok(represented, current.label);
     assert.equal(
       represented.removedVariant === true,
@@ -74,85 +71,90 @@ test("removed variants remain represented exactly once across parent transitions
   }
 });
 
+test("an ineligible former parent remains a plain-text breadcrumb", () => {
+  const removedVariant = variant("welcome-error", "Save failed", "welcome", [
+    "Example",
+    "Screens",
+  ]);
+  const catalogue = createCatalogue(
+    manifest([
+      screen("workspace", "Workspace", ["Example", "Screens"]),
+      variant("welcome", "Welcome", "workspace", ["Example", "Screens"]),
+    ]),
+    [{ entry: removedVariant, snapshotId: "d".repeat(64) }],
+  );
+  const target = toRouteTarget(removedVariant);
+  assert.ok(target);
+
+  assert.deepEqual(targetHead(catalogue, target).crumbs, [
+    { label: "Example" },
+    { label: "Screens" },
+    { label: "Welcome" },
+  ]);
+});
+
 function findLeaf(
   nodes: readonly NavNode[],
-  route: string,
+  id: string,
 ): NavLeafNode | undefined {
   for (const node of nodes) {
     if (node.kind === "group") {
-      const nested = findLeaf(node.children, route);
+      const nested = findLeaf(node.children, id);
       if (nested) return nested;
     } else {
-      if (node.route === route) return node;
-      const nested = findLeaf(node.variants ?? [], route);
+      if (node.entryId === id) return node;
+      const nested = findLeaf(node.variants ?? [], id);
       if (nested) return nested;
     }
   }
   return undefined;
 }
 
-function occurrences(nodes: readonly NavNode[], route: string): number {
+function occurrences(nodes: readonly NavNode[], id: string): number {
   return nodes.reduce((count, node) => {
-    if (node.kind === "group") return count + occurrences(node.children, route);
+    if (node.kind === "group") return count + occurrences(node.children, id);
     return (
-      count +
-      Number(node.route === route) +
-      occurrences(node.variants ?? [], route)
+      count + Number(node.entryId === id) + occurrences(node.variants ?? [], id)
     );
   }, 0);
 }
 
-function collection(
+function screen(
   id: string,
   title: string,
-  childIds: readonly string[],
-): ManifestCollection {
+  navPath: readonly string[] = [],
+): ManifestScreen {
   return {
-    childIds,
-    dependencies: [],
+    colorSchemes: ["light"],
+    declaredDependencies: [],
     description: title,
-    id,
-    kind: "collection",
-    navPath: [],
-    relatedDocs: [],
-    sourcePath: `entries/${id}.tsx`,
-    title,
-  };
-}
-
-function screen(id: string, title: string): ManifestScreen {
-  return {
-    dependencies: [],
-    description: title,
-    fragments: {
-      desktop: `${id}.desktop.html`,
-      mobile: `${id}.mobile.html`,
-    },
     id,
     kind: "screen",
-    navPath: [],
+    navPath,
     relatedDocs: [],
-    route: `${id}.html`,
     sourcePath: `entries/${id}.tsx`,
     title,
     useCaseIds: [],
-    viewports: ["mobile", "desktop"],
   };
 }
 
-function variant(id: string, title: string, variantOf: string): ManifestScreen {
-  return { ...screen(id, title), variantOf };
+function variant(
+  id: string,
+  title: string,
+  variantOf: string,
+  navPath: readonly string[],
+): ManifestScreen {
+  return { ...screen(id, title, navPath), variantOf };
 }
 
-function page(id: string, title: string, route: string): ManifestPage {
+function page(id: string, title: string, _route: string): ManifestPage {
   return {
-    dependencies: [],
+    declaredDependencies: [],
     description: title,
     id,
     kind: "page",
     navPath: [],
     relatedDocs: [],
-    route,
     sourcePath: `entries/${id}.tsx`,
     title,
   };
@@ -161,7 +163,7 @@ function page(id: string, title: string, route: string): ManifestPage {
 function manifest(
   entries: readonly ManifestEntry[],
   pages: readonly ManifestPage[] = [],
-): ManifestV5 {
+): ManifestV7 {
   const all = [...entries, ...pages];
   return {
     entries: all.map((entry) => ({
@@ -169,7 +171,7 @@ function manifest(
       declaredDependencies: entry.declaredDependencies ?? [],
     })),
     generatedBy: "mokly",
-    schemaVersion: 5,
+    schemaVersion: 7,
     sourceFiles: [...new Set(all.map(({ sourcePath }) => sourcePath))].sort(),
   };
 }

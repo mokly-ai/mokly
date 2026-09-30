@@ -117,7 +117,7 @@ test("a component comparison scrolls inside its bordered frame", async ({
 }) => {
   await openComparison(
     page,
-    `${fixture.url}/view/components/checklist.html?variant=long`,
+    `${fixture.url}/view/components/checklist-long.html`,
     "desktop",
     "Overlay",
   );

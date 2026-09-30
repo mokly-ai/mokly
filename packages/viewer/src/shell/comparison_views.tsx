@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { entryRoute, type ViewRouteKind } from "../navigation/routes.js";
 import type { SnapshotPresentation } from "../previews/presentation.js";
 
 import { comparisonChrome, type PaneDocument } from "./comparison_chrome.js";
@@ -27,12 +28,12 @@ const stateLabels = {
 } as const;
 
 interface SectionProps {
-  component: boolean;
+  entryId: string;
+  entryKind: ViewRouteKind;
   /** The last-scrolled version, shared by every section of the comparison. */
   owner: ScrollOwner;
   presentation: ComparisonPresentation;
   presentations: ReadonlyMap<string, SnapshotPresentation>;
-  route: string;
   selected: SelectedComparisonView;
   /** Whether Scroll together is on; switching it never reloads a pane. */
   together: boolean;
@@ -66,11 +67,11 @@ export function ComparisonViews({
 
 /** One viewport's heading and panes, owning the section's scroll offset. */
 function ComparisonSection({
-  component,
+  entryId,
+  entryKind,
   owner,
   presentation,
   presentations,
-  route,
   selected,
   together,
 }: SectionProps) {
@@ -79,6 +80,7 @@ function ComparisonSection({
   );
   useEffect(() => sync.setTogether(together), [sync, together]);
   const { documents, mode, view, viewport } = selected;
+  const component = entryKind === "component";
   const wording = entryWording(component ? "component" : "screen");
   const label = isStyleOnlyView(view)
     ? "Styles this screen uses changed"
@@ -95,7 +97,11 @@ function ComparisonSection({
   };
   const before = pane("before");
   const after = pane("after");
-  const chrome = comparisonChrome(component, viewport, route);
+  const chrome = comparisonChrome(
+    component,
+    viewport,
+    entryRoute(entryKind, entryId),
+  );
   return (
     <section
       className={`mbk-diff-view mbk-diff-${viewport}`}

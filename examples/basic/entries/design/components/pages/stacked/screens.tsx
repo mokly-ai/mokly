@@ -1,4 +1,4 @@
-import { collection, screen } from "@mokly/mokly";
+import { folder, screen } from "@mokly/mokly";
 
 import { ComponentPage } from "../../parts/component_page.js";
 
@@ -22,16 +22,11 @@ export function TallComponentOverlayMobile() {
 }
 
 /** Overlay and Difference hold a saved variant's versions in one bordered frame. */
-export const stackedDesigns = collection({
-  id: "design-component-stacked",
-  segment: "stacked",
+export const stackedDesigns = folder({
   title: "Stacked comparisons",
-  description:
-    "Overlay and Difference of a saved component variant inside one bordered frame, including a component taller than its frame.",
   children: [
     screen({
       id: "design-component-overlay",
-      slug: "overlay",
       title: "Overlay a component",
       colorSchemes: ["light"],
       description:
@@ -43,7 +38,6 @@ export const stackedDesigns = collection({
     }),
     screen({
       id: "design-component-difference",
-      slug: "difference",
       title: "Component difference",
       colorSchemes: ["light"],
       description:
@@ -55,7 +49,6 @@ export const stackedDesigns = collection({
     }),
     screen({
       id: "design-component-overlay-tall",
-      slug: "overlay-tall",
       title: "Overlay on a tall component",
       colorSchemes: ["light"],
       description:

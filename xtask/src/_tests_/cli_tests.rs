@@ -8,7 +8,7 @@ use super::{Cli, Command};
 
 #[test]
 fn parses_every_suite_and_a_valid_shard() {
-    for suite in ["repository", "package", "unit", "browser"] {
+    for suite in ["repository", "package", "unit", "browser", "hydration"] {
         let cli =
             Cli::try_parse_from(["xtask", "check", "--suite", suite]).expect("known suite parses");
         let Command::Check {

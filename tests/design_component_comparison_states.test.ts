@@ -67,7 +67,7 @@ test("component comparison captions follow the recorded change, never the depict
     );
 });
 
-test("the tall Checklist depicts its own one-entry Changes", async () => {
+test("the tall Checklist depicts its parent and selected variant in Changes", async () => {
   const id = "design-component-overlay-tall";
   for (const viewport of ["desktop", "mobile"] as const) {
     const { document, route } = await designDocument(id, viewport);
@@ -86,8 +86,11 @@ test("the tall Checklist depicts its own one-entry Changes", async () => {
           attribute(row, "data-mokly-link"),
           attribute(row, "aria-current"),
         ]),
-        [["Checklist", id, "page"]],
-        `${route}: Changes lists only Checklist`,
+        [
+          ["ChecklistChanged", id, undefined],
+          ["DefaultChanged", id, "page"],
+        ],
+        `${route}: Changes groups the selected variant under Checklist`,
       );
       assert.deepEqual(
         byClass(document, "mbk-nav-filter-count").map(textContent),

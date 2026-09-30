@@ -29,6 +29,13 @@ export async function chooseViewport(
 ): Promise<void> {
   await page.getByLabel("Viewport", { exact: true }).selectOption(value);
 }
+/** Navigate through the workspace's entry-backed saved-variant bar. */
+export async function chooseVariant(page: Page, title: string): Promise<void> {
+  await page
+    .getByRole("navigation", { name: "Saved variants" })
+    .getByRole("link", { name: title, exact: true })
+    .click();
+}
 /** Assert the actual immediate document, including history-replacing frame swaps. */
 export async function expectFramePath(
   page: Page,

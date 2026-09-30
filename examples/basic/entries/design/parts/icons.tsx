@@ -74,7 +74,7 @@ export function ChevronDownIcon({ size }: IconProps) {
   );
 }
 
-/** A collapsed collection: a closed folder grouping child screens. */
+/** A collapsed folder grouping child screens. */
 export function FolderIcon({ size }: IconProps) {
   return (
     <IconSvg size={size ?? 13}>
@@ -83,7 +83,7 @@ export function FolderIcon({ size }: IconProps) {
   );
 }
 
-/** An expanded collection: an open folder revealing its contents. */
+/** An expanded folder revealing its contents. */
 export function FolderOpenIcon({ size }: IconProps) {
   return (
     <IconSvg size={size ?? 13}>
@@ -102,6 +102,23 @@ export function ScreenIcon({ size }: IconProps) {
   );
 }
 
+/** A registered component, drawn as the cube used by the Components section. */
+export function ComponentIcon({ size }: IconProps) {
+  const dimension = size ?? 15;
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height={dimension}
+      stroke="currentColor"
+      viewBox="0 0 16 16"
+      width={dimension}
+    >
+      <path d="m8 1 6 3.5v7L8 15l-6-3.5v-7L8 1Zm0 7 6-3.5M8 8v7M8 8 2 4.5" />
+    </svg>
+  );
+}
+
 /**
  * A screen variant: one authored state of a screen, drawn as a screen sitting
  * in front of the screen it belongs to. The screen behind is a partial outline
@@ -117,6 +134,27 @@ export function VariantIcon({ size }: IconProps) {
       <rect height={14} rx={2} width={16} x={2} y={6} />
       <path d="M2 10h16" />
     </IconSvg>
+  );
+}
+
+/**
+ * A component variant: one component outline in front of the partial outline
+ * of the component it belongs to.
+ */
+export function ComponentVariantIcon({ size }: IconProps) {
+  const dimension = size ?? 15;
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height={dimension}
+      stroke="currentColor"
+      viewBox="0 0 16 16"
+      width={dimension}
+    >
+      <path d="M6 4.5V3L10.5.5l5 2.9v5.8L12 11.3" strokeLinecap="butt" />
+      <path d="m6 4.5 5 2.9v5.3l-5 2.9-5-2.9V7.4l5-2.9Zm0 5.8 5-2.9M6 10.3v5.3M6 10.3 1 7.4" />
+    </svg>
   );
 }
 

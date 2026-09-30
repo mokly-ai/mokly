@@ -22,7 +22,7 @@ import { send } from "./respond.js";
 import type { ReviewRoutes } from "./review_routes.js";
 import { serveStatic } from "./static_routes.js";
 import type { ChangesStatus } from "./update_messages.js";
-import { redirectId, renderView } from "./view_routes.js";
+import { renderView } from "./view_routes.js";
 
 /** Dispatch a request against one validated catalogue generation. */
 export async function handleCatalogueRequest(
@@ -32,7 +32,7 @@ export async function handleCatalogueRequest(
   catalogue: Catalogue,
   config: ResolvedConfig,
   base: string,
-  currentChangedRoutes: () => readonly string[] | undefined,
+  currentChangedIds: () => readonly string[] | undefined,
   streams: Set<ServerResponse>,
   assets: ServedAssets,
   currentVersion: () => number,
@@ -43,6 +43,7 @@ export async function handleCatalogueRequest(
   changesStatus?: ChangesStatus,
   contentVersion?: number,
   publicCatalogue?: PublicCatalogueSource,
+  unavailableComparisons = false,
 ): Promise<void> {
   if (method !== "GET" && method !== "HEAD")
     return send(response, 405, "text/plain", "Method not allowed", method);
@@ -104,26 +105,26 @@ export async function handleCatalogueRequest(
       method,
     );
   const changed =
-    componentChanges?.changedRoutes ??
+    componentChanges?.changedIds ??
     (componentChanges?.result
       ? componentChanges.result.changes.map(
-          (entry) => (entry.after ?? entry.before)!.route,
+          (entry) => (entry.after ?? entry.before)!.id,
         )
-      : currentChangedRoutes());
+      : currentChangedIds());
   const context = shellContext(
     base,
     changed
       ? [
           ...new Set([
             ...changed,
-            ...catalogue.removedEntries.map(({ entry }) => entry.route),
+            ...catalogue.removedEntries.map(({ entry }) => entry.id),
           ]),
         ]
       : undefined,
     requestVersion,
   );
   if (publicCatalogue) context.readModel = readPublicCatalogue(publicCatalogue);
-  context.comparisons = reviewRoutes !== undefined;
+  context.comparisons = reviewRoutes !== undefined || unavailableComparisons;
   if (contentVersion !== undefined) context.contentVersion = contentVersion;
   if (documents && renderCapability)
     context.previewGeneration = renderCapability.generation;
@@ -137,17 +138,6 @@ export async function handleCatalogueRequest(
       "text/html",
       homePage(catalogue, context),
       method,
-    );
-  if (url.pathname.startsWith("/id/"))
-    return redirectId(
-      response,
-      url,
-      url.pathname.slice(4),
-      catalogue,
-      config,
-      context,
-      method,
-      documents,
     );
   if (url.pathname.startsWith("/view/"))
     return renderView(

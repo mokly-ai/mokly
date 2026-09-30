@@ -9,10 +9,8 @@ import type {
 
 export interface ViewerSelection {
   screenId: string | null;
-  /** Exact removed record; absent selects current or uniquely identified legacy history. */
+  /** Exact removed record; absent selects current or uniquely identified history. */
   snapshotId?: string | undefined;
-  /** Saved variant of a selected component; absent means its default variant. */
-  variantId?: string | undefined;
   view: "all" | "changes";
   viewport: "mobile" | "desktop" | "both";
   colorScheme: "light" | "dark";
@@ -26,7 +24,6 @@ export type CatalogueSource =
   CatalogueReadModel | string | URL | CatalogueFetcher;
 export interface InstanceRef {
   screenId: string;
-  variantId?: string;
   /** Required for a flow occurrence; absent for a standalone screen or component. */
   stepIndex?: number;
   viewport: "mobile" | "desktop";
@@ -50,9 +47,8 @@ export interface MarkerState {
 }
 export interface ScreenNavigateEvent {
   screenId: string;
-  route: string;
+  /** Present exactly when the committed destination is historical content. */
   snapshotId?: string;
-  variantId?: string;
   fragment?: string;
   navigation?: FrameNavigation;
 }

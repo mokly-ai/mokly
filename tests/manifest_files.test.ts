@@ -9,7 +9,6 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { pendingGeneratedOrphanRoutes } from "../dist/build/ownership.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
-import type { ResolvedConfig } from "../dist/config/types.js";
 import {
   createManifest,
   MANIFEST_NAME,
@@ -19,15 +18,13 @@ import {
 } from "../dist/registry/manifest.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
-
-test("current filesystem reads reject legacy-only output even with historical compatibility", async (context) => {
+test("current filesystem reads reject an earlier-name manifest sentinel", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
-  const config = withV2Compatibility(await loadConfig(fixture.root));
-  const legacy = toV2Manifest((await compileCatalogue(config)).manifest);
+  const config = await loadConfig(fixture.root);
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, "mockbook-manifest.json"),
-    JSON.stringify(legacy),
+    '{"schemaVersion":6}\n',
   );
 
   assert.throws(() => readManifest(config), /could not read/);
@@ -36,7 +33,7 @@ test("current filesystem reads reject legacy-only output even with historical co
 test("filesystem manifest loading never accepts v2 under the canonical filename", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
-  const config = withV2Compatibility(await loadConfig(fixture.root));
+  const config = await loadConfig(fixture.root);
   const legacy = toV2Manifest((await compileCatalogue(config)).manifest);
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, MANIFEST_NAME),
@@ -47,65 +44,38 @@ test("filesystem manifest loading never accepts v2 under the canonical filename"
     JSON.stringify(legacy),
   );
 
-  assert.throws(() => readManifest(config), /schema version 5/);
+  assert.throws(() => readManifest(config), /schema version 7/);
 });
 
-test("manifest loading rejects URL-sensitive catalogue routes", async (context) => {
+test("manifest loading rejects stored routes", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const manifest = structuredClone((await compileCatalogue(config)).manifest);
   const screen = manifest.entries.find((entry) => entry.kind === "screen");
   if (!screen || screen.kind !== "screen") throw new Error("screen missing");
-  screen.route = "screens/home?alternate.html";
+  Object.assign(screen, { route: "screens/home?alternate.html" });
 
-  assert.throws(() => parseManifest(manifest), /unsafe route/);
+  assert.throws(() => parseManifest(manifest), /unsupported route/);
 });
 
-test("manifest validates darkFragments names and collisions", () => {
-  const manifest = manifestWithScreen("a", "a.html");
+test("manifest validates retained color schemes and rejects stored view paths", () => {
+  const manifest = manifestWithScreen("a");
   const screen = manifest.entries[0];
   if (!screen || screen.kind !== "screen") throw new Error("screen missing");
-  screen.darkFragments = {
-    desktop: "a.desktop.dark.html",
-    mobile: "a.mobile.dark.html",
-  };
+  screen.colorSchemes = ["light", "dark"];
   assert.doesNotThrow(() => parseManifest(manifest));
 
-  const wrongName = structuredClone(manifest);
-  const wrongScreen = wrongName.entries[0];
-  if (!wrongScreen || wrongScreen.kind !== "screen") {
-    throw new Error("screen missing");
-  }
-  wrongScreen.darkFragments = {
-    desktop: "a.desktop.dark.html",
-    mobile: "wrong.mobile.dark.html",
-  };
-  assert.throws(
-    () => parseManifest(wrongName),
-    /has invalid or colliding mobile dark fragment/,
-  );
-
-  const collision = {
-    ...structuredClone(manifest),
-    sourceFiles: ["entries/a.mockup.tsx", "entries/b.mockup.tsx"],
-    entries: [
-      ...manifest.entries,
-      manifestWithScreen("b", "a.mobile.dark.html").entries[0]!,
-    ],
-  };
-  assert.throws(
-    () => parseManifest(collision),
-    /has invalid or colliding mobile dark fragment/,
-  );
-
   const invalidShape = structuredClone(manifest);
-  Object.assign(invalidShape.entries[0]!, { darkFragments: [] });
-  assert.throws(() => parseManifest(invalidShape), /invalid darkFragments/);
+  Object.assign(invalidShape.entries[0]!, { colorSchemes: ["dark"] });
+  assert.throws(() => parseManifest(invalidShape), /invalid colorSchemes/);
+  const stored = structuredClone(manifest);
+  Object.assign(stored.entries[0]!, { fragments: {} });
+  assert.throws(() => parseManifest(stored), /unsupported fragments/);
 });
 
 test("manifest validation accepts tags and rejects invalid ones", () => {
-  const manifest = manifestWithScreen("a", "a.html");
+  const manifest = manifestWithScreen("a");
   const screen = manifest.entries[0];
   if (!screen || screen.kind !== "screen") throw new Error("screen missing");
   screen.tags = ["forms", "onboarding"];
@@ -124,7 +94,7 @@ test("light-only manifests remain deterministic without variant metadata", () =>
     entries: [
       {
         declaredDependencies: [],
-        dependencies: ["entries/a.mockup.tsx"],
+        colorSchemes: ["light"],
         description: "A screen",
         id: "a",
         kind: "screen",
@@ -132,18 +102,12 @@ test("light-only manifests remain deterministic without variant metadata", () =>
         relatedDocs: [],
         sourcePath: "entries/a.mockup.tsx",
         title: "A",
-        fragments: {
-          desktop: "a.desktop.html",
-          mobile: "a.mobile.html",
-        },
-        route: "a.html",
         useCaseIds: [],
-        viewports: ["mobile", "desktop"],
       },
     ],
     generatedBy: "mokly",
     sourceFiles: ["entries/a.mockup.tsx"],
-    schemaVersion: 5,
+    schemaVersion: 7,
   });
 
   const serialized = serializeManifest(createManifest([entry], [], ["light"]));
@@ -156,14 +120,14 @@ test("manifest serializes declared tags and omits absent ones", () => {
   const serialized = serializeManifest(
     createManifest(
       [
-        resolvedScreen("a", "a.html", {
+        resolvedScreen("a", {
           tags: ["onboarding", "forms"],
           useCaseIds: ["tour", "untagged-tour"],
         }),
-        resolvedScreen("b", "b.html", { tags: [] }),
-        resolvedScreen("c", "c.html"),
+        resolvedScreen("b", { tags: [] }),
+        resolvedScreen("c"),
         resolvedUseCase(["forms"]),
-        resolvedUseCase([], "untagged-tour", "untagged-tour.html"),
+        resolvedUseCase([], "untagged-tour"),
       ],
       [],
       ["light"],
@@ -221,10 +185,6 @@ test("disabling dark orphans committed dark fragments", async (context) => {
   }
 });
 
-function withV2Compatibility(config: ResolvedConfig): ResolvedConfig {
-  return { ...config, compatibility: { readManifestV2: true } };
-}
-
 function toV2Manifest(manifest: unknown): Record<string, unknown> {
   const legacy: Record<string, unknown> = {
     ...(manifest as Record<string, unknown>),
@@ -234,14 +194,13 @@ function toV2Manifest(manifest: unknown): Record<string, unknown> {
   return legacy;
 }
 
-function manifestWithScreen(id: string, route: string) {
-  return createManifest([resolvedScreen(id, route)], [], ["light"]);
+function manifestWithScreen(id: string) {
+  return createManifest([resolvedScreen(id)], [], ["light"]);
 }
 
 function resolvedUseCase(
   tags?: readonly string[],
   id = "tour",
-  route = "tour.html",
 ): ResolvedRegistryEntry {
   return {
     __viaDefine: true,
@@ -249,8 +208,8 @@ function resolvedUseCase(
     description: "A journey",
     id,
     kind: "use-case",
+    navPath: [],
     relatedDocs: [],
-    route,
     sourcePath: `/repo/entries/${id}.mockup.tsx`,
     sourceRelativePath: `entries/${id}.mockup.tsx`,
     steps: [{ screenId: "a" }],
@@ -261,7 +220,6 @@ function resolvedUseCase(
 
 function resolvedScreen(
   id = "a",
-  route = "a.html",
   options: { tags?: readonly string[]; useCaseIds?: readonly string[] } = {},
 ): ResolvedRegistryEntry {
   return {
@@ -271,9 +229,9 @@ function resolvedScreen(
     desktop: null,
     id,
     kind: "screen",
+    navPath: [],
     mobile: null,
     relatedDocs: [],
-    route,
     sourcePath: `/repo/entries/${id}.mockup.tsx`,
     sourceRelativePath: `entries/${id}.mockup.tsx`,
     ...(options.tags ? { tags: options.tags } : {}),

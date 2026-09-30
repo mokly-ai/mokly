@@ -1,5 +1,6 @@
 import { MockLink } from "@mokly/mokly";
 
+import { COMPONENT_NAVIGATION } from "../../../parts/component_nav_data.js";
 import type { ArtboardViewport } from "../../../parts/shell.js";
 import { ComparisonDetails } from "../../parts/comparison_details.js";
 import { actionComparison } from "../../parts/comparison_fixtures.js";
@@ -8,6 +9,7 @@ import { ComponentLayout } from "../../parts/component_layout.js";
 import { UsedBy } from "../../parts/component_usage.js";
 import { CONTROLS_PAGES } from "../../parts/destinations.js";
 import { Inspector } from "../../parts/inspector.js";
+import { COMPONENT_ENTRIES } from "../../parts/metadata.js";
 import {
   ActionExample,
   ComponentCanvas,
@@ -63,9 +65,19 @@ export function ControlsPage({
   viewport: ArtboardViewport;
 }) {
   const fixture = controlsFixtures[state];
+  const entry =
+    fixture.variant === "disabled"
+      ? COMPONENT_ENTRIES.actionDisabled
+      : COMPONENT_ENTRIES.actionDefault;
   return (
     <ComponentLayout
       design={CONTROLS_PAGES[state]}
+      entry={entry}
+      navigationKey={
+        fixture.variant === "disabled"
+          ? COMPONENT_NAVIGATION.action.variants[1].id
+          : COMPONENT_NAVIGATION.action.variants[0].id
+      }
       mode={state === "comparison" ? "side-by-side" : "current"}
       status={state === "comparison" ? actionComparison.status : "unmodified"}
       scenario={state === "comparison" ? "component" : "all"}
@@ -80,7 +92,7 @@ export function ControlsPage({
               label: "Details",
               content: (
                 <>
-                  <ComponentInfo identity="action" />
+                  <ComponentInfo entry={entry} />
                   <ComparisonDetails
                     comparison={
                       state === "comparison" ? actionComparison : undefined

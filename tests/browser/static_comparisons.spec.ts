@@ -85,7 +85,7 @@ test("isolated comparisons stay lazy, immutable, sandboxed, and responsive", asy
 test("added and removed screens stay current while light-only comparisons retain their sides", async ({
   page,
 }) => {
-  await page.goto(`${site.url}/id/added/`);
+  await page.goto(`${site.url}/view/screens/added.html`);
   await chooseViewport(page, "mobile");
   await expect(page).toHaveURL(`${site.url}/view/screens/added.html`);
   await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
@@ -93,7 +93,7 @@ test("added and removed screens stay current while light-only comparisons retain
     page.frameLocator('[data-workspace-frame="mobile"]').locator("main"),
   ).toHaveText("added");
 
-  await page.goto(`${site.url}/id/removed/`);
+  await page.goto(`${site.url}/view/screens/removed.html`);
   await chooseViewport(page, "mobile");
   const catalogue = readCatalogue(
     JSON.parse(site.files.get("__mokly/catalogue.json")!.toString()),

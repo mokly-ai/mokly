@@ -54,18 +54,16 @@ async function stated(file: string, pattern: RegExp): Promise<number[]> {
 test("documented design-screen counts match the compiled catalogue", async () => {
   const { manifest } = await designCatalogue;
   const designs = manifest.entries.flatMap((entry) =>
-    entry.kind === "screen" && entry.route.startsWith("design/") ? [entry] : [],
+    entry.kind === "screen" && entry.id.startsWith("design-") ? [entry] : [],
   );
   const components = designs.filter((entry) =>
-    entry.route.startsWith("design/components/"),
+    entry.id.startsWith("design-component-"),
   );
-  const dual = designs.filter((entry) => entry.darkFragments !== undefined);
+  const dual = designs.filter((entry) => entry.colorSchemes.includes("dark"));
   const dualBrowse = dual.filter((entry) =>
-    entry.route.startsWith("design/browse/views/"),
+    entry.navPath.includes("Catalogue views"),
   );
-  const variants = dualBrowse.filter((entry) =>
-    entry.route.includes(".variants/"),
-  );
+  const variants = dualBrowse.filter((entry) => entry.variantOf !== undefined);
   const shell = designs.length - components.length;
   const readme = "examples/basic/README.md";
   const word = "([A-Za-z]+(?:-[a-z]+)?)";
@@ -108,10 +106,8 @@ test("documented design-screen counts match the compiled catalogue", async () =>
       ),
       [
         dual.length,
-        dual.filter((entry) =>
-          entry.route.startsWith("design/browse/appearance/"),
-        ).length,
-        dual.filter((entry) => entry.route.startsWith("design/review/")).length,
+        dual.filter((entry) => entry.navPath.includes("Appearance")).length,
+        dual.filter((entry) => entry.navPath.includes("Changes")).length,
         dualBrowse.length - variants.length,
         variants.length,
       ],
@@ -144,9 +140,8 @@ test("documented design-screen counts match the compiled catalogue", async () =>
     );
   assert.equal(
     dual.length,
-    dual.filter((entry) => entry.route.startsWith("design/browse/appearance/"))
-      .length +
-      dual.filter((entry) => entry.route.startsWith("design/review/")).length +
+    dual.filter((entry) => entry.navPath.includes("Appearance")).length +
+      dual.filter((entry) => entry.navPath.includes("Changes")).length +
       dualBrowse.length,
     "every light/dark design belongs to one documented group",
   );

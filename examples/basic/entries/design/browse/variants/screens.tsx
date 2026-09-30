@@ -237,7 +237,6 @@ export const variantScreens = [
     mobile: <SelectedVariant viewport="mobile" />,
     rationale:
       "The parent row stays the link to the parent screen and carries a separate 16px chevron disclosure, because a row cannot be both a link and a disclosure summary. Variant rows sit one indent step deeper with the same guide painting and their own icon, a screen drawn over a second screen behind it, so a variant reads as a state of the screen above it rather than another screen. The breadcrumb ends in the parent's title as a link, and the variant supplies only its own title, description, and render. The navigation fixture is static here; no screen in this group uses an authored variant list yet.",
-    slug: "selected",
     title: "Selected variant",
   }),
   screen({
@@ -249,7 +248,6 @@ export const variantScreens = [
     mobile: <ChangedVariant viewport="mobile" />,
     rationale:
       "A variant is its own routed entry, so the count is one and the changed row is the variant, not the parent. The parent stays visible through its trailing changed dot and opens the first changed variant when activated, which keeps the group readable without claiming the parent itself changed. The comparison band opens in Current; the remaining modes are depictions until a matching comparison state is authored.",
-    slug: "changes",
     title: "Changed variant",
   }),
   screen({
@@ -261,7 +259,6 @@ export const variantScreens = [
     mobile: <RemovedVariant viewport="mobile" />,
     rationale:
       "A removed variant follows the removed-screen rules: it is hidden from All, shown in Changes under the parent it belonged to, and has no current preview. Its recorded details stay available so a reviewer can see what was deleted, and All returns to the parent rather than to catalogue home because the parent still exists.",
-    slug: "removed",
     title: "Removed variant",
   }),
   screen({
@@ -273,7 +270,6 @@ export const variantScreens = [
     mobile: <ReparentedRemovedVariant viewport="mobile" />,
     rationale:
       "A current variant cannot own its own variant list. When the former parent id is reused as a variant, only the historical child changes: Changes hides the unmodified parent and its variant and shows the child once as a flat Removed row.",
-    slug: "reparented",
     title: "Removed variant after reparenting",
   }),
   screen({
@@ -285,7 +281,6 @@ export const variantScreens = [
     mobile: <ChangedViews viewport="mobile" />,
     rationale:
       "Color scheme and viewport stay view axes rather than variants, so a change confined to one view is evidence on the view controls: a mark on top-bar Appearance and on the viewport dropdown points at the views that changed, the status beside the title describes the shown view, and the details list names them exactly. Appearance selects the scheme; the navigation and Details retain the links to the changed screen.",
-    slug: "changed-views",
     title: "Changed views",
   }),
 ];

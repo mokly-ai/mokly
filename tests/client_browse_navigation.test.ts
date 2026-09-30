@@ -15,10 +15,7 @@ import type {
   NavSectionNode,
 } from "../packages/viewer/dist/shell/nav_tree.js";
 import { parseSearchQuery } from "../packages/viewer/dist/shell/search_query.js";
-import {
-  closedDisclosures,
-  openDisclosures,
-} from "../packages/viewer/dist/shell/store_state.js";
+import { openDisclosures } from "../packages/viewer/dist/shell/store_state.js";
 import {
   defaultSelection,
   revealSelection,
@@ -41,39 +38,42 @@ const details = leaf(
 );
 const glossary = leaf("glossary", "docs/glossary.html", "Glossary");
 
-test("stable collection keys preserve independent disclosure values", () => {
+test("stable folder keys preserve independent disclosure values", () => {
   const disclosures = {
-    "collection:pages:alpha": false,
-    "collection:pages:beta": true,
+    "folder:pages:alpha": false,
+    "folder:pages:beta": true,
   };
-  assert.deepEqual(closedDisclosures(disclosures), ["collection:pages:alpha"]);
-  assert.deepEqual(openDisclosures(disclosures, ["collection:pages:alpha"]), {
-    "collection:pages:alpha": true,
-    "collection:pages:beta": true,
+  assert.deepEqual(openDisclosures(disclosures, ["folder:pages:alpha"]), {
+    "folder:pages:alpha": true,
+    "folder:pages:beta": true,
   });
 });
 
 test("legacy label paths cannot match current disclosure keys", () => {
   const state = fixtureShellState({
     href: "https://example.test/",
-    initial: { recovery: recovery(["/Example/Screens"]) },
+    initial: { recovery: recovery({ "/Example/Screens": false }) },
   });
-  assert.equal(state.disclosures["collection:pages:product"], true);
+  assert.equal(state.disclosures["folder:pages:Product"], true);
 });
 
-test("obsolete keys do not discard a valid collection preference", () => {
+test("obsolete keys do not discard a current folder preference", () => {
   const state = fixtureShellState({
     href: "https://example.test/",
     initial: {
-      recovery: recovery(["legacy:example", "collection:product"]),
+      recovery: recovery({
+        "legacy:example": false,
+        "collection:Product": false,
+        "folder:pages:Product": false,
+      }),
     },
   });
-  assert.equal(state.disclosures["collection:pages:product"], false);
-  assert.equal(state.disclosures["collection:components:product"], false);
+  assert.equal(state.disclosures["folder:pages:Product"], false);
+  assert.equal(state.disclosures["folder:components:Product"], true);
 });
 
 test("removed pages appear only in Changes while removed screens remain in All", () => {
-  const context = navigationContext([glossary.route, details.route]);
+  const context = navigationContext([glossary.entryId, details.entryId]);
   const removedPage = { ...glossary, removedPage: true };
   assert.equal(navLeafVisible(removedPage, defaultSelection, context), false);
   assert.equal(navLeafVisible(details, defaultSelection, context), true);
@@ -94,7 +94,7 @@ test("a tag term hides unmatched rows and the groups they empty", () => {
 });
 
 test("a tag term composes with the Changes filter", () => {
-  const context = navigationContext([welcome.route, glossary.route]);
+  const context = navigationContext([welcome.entryId, glossary.entryId]);
   const selection = {
     ...querySelection("tag:onboarding"),
     view: "changes" as const,
@@ -131,12 +131,12 @@ test("free text matches untagged rows and structured entry ids", () => {
 test("a parent remains visible when a filtered variant matches", () => {
   const failure = leaf(
     "welcome-failure",
-    "screens/welcome.variants/failure.html",
+    "screens/welcome-failure.html",
     "Failure",
     ["errors"],
   );
   const parent = { ...welcome, variants: [failure] };
-  const context = navigationContext([failure.route]);
+  const context = navigationContext([failure.entryId]);
   const selection = {
     ...querySelection("tag:errors"),
     view: "changes" as const,
@@ -151,12 +151,12 @@ test("a removed variant is hidden in All and visible in Changes", () => {
   const removed = {
     ...leaf(
       "welcome-legacy",
-      "screens/welcome.variants/legacy.html",
+      "screens/welcome-legacy.html",
       "Legacy · Removed",
     ),
     removedVariant: true,
   };
-  const context = navigationContext([removed.route]);
+  const context = navigationContext([removed.entryId]);
 
   assert.equal(navLeafVisible(removed, defaultSelection, context), false);
   assert.equal(
@@ -168,7 +168,7 @@ test("a removed variant is hidden in All and visible in Changes", () => {
 test("an active variant opens its persisted list and ancestry", () => {
   const failure = leaf(
     "welcome-failure",
-    "screens/welcome.variants/failure.html",
+    "screens/welcome-failure.html",
     "Failure",
   );
   const section: NavSectionNode = {
@@ -180,10 +180,10 @@ test("an active variant opens its persisted list and ancestry", () => {
   const sections = [section];
 
   assert.equal(
-    defaultDisclosures(sections, failure.route)["variants:pages:welcome"],
+    defaultDisclosures(sections, failure.entryId)["variants:pages:welcome"],
     true,
   );
-  assert.deepEqual(disclosurePath(sections, failure.route), [
+  assert.deepEqual(disclosurePath(sections, failure.entryId), [
     "section:pages",
     "variants:pages:welcome",
   ]);
@@ -203,10 +203,10 @@ test("navigation clears only a query that hides its destination", () => {
   );
 });
 
-function navigationContext(changedRoutes: readonly string[]): ShellContext {
+function navigationContext(changedIds: readonly string[]): ShellContext {
   return {
     base: "",
-    changedRoutes,
+    changedIds,
     changesStatus: "ready",
     updateVersion: 0,
   };
@@ -223,7 +223,7 @@ function querySelection(raw: string) {
 
 function leaf(
   entryId: string,
-  route: string,
+  _route: string,
   label: string,
   tags: readonly string[] = [],
 ): NavLeafNode {
@@ -233,7 +233,6 @@ function leaf(
     key: `entry:${entryId}`,
     kind: "leaf",
     label,
-    route,
     tags,
   };
 }
@@ -241,19 +240,19 @@ function leaf(
 function group(label: string, children: NavLeafNode[]): NavGroupNode {
   return {
     children,
-    key: `collection:${label.toLowerCase()}`,
+    key: `folder:${label.toLowerCase()}`,
     kind: "group",
     label,
   };
 }
 
-function recovery(closedCollectionIds: readonly string[]) {
+function recovery(disclosures: Readonly<Record<string, boolean>>) {
   return {
-    closedCollectionIds,
+    disclosures,
     colorScheme: "light" as const,
     detailsOpen: false,
     drawerOpen: false,
-    filterBaselineClosedCollectionIds: null,
+    filterBaselineDisclosures: null,
     navScroll: 0,
     query: "",
     regionScrolls: {},
@@ -270,15 +269,13 @@ function navigationModel(): CatalogueReadModel {
     screens: [
       {
         ...template,
-        id: welcome.entryId!,
-        route: welcome.route,
+        id: welcome.entryId,
         tags: welcome.tags ?? [],
         title: welcome.label,
       },
       {
         ...template,
         id: "details",
-        route: details.route,
         tags: details.tags ?? [],
         title: details.label,
       },

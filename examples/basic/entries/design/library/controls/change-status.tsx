@@ -31,7 +31,7 @@ export const changeStatusBadge = defineComponent({
   render: ChangeStatusView,
   variants: (["unmodified", "added", "changed", "removed"] as const).map(
     (status) => ({
-      id: status,
+      id: `design-ui-change-status-${status}`,
       title: status[0]!.toUpperCase() + status.slice(1),
       props: { status },
     }),
