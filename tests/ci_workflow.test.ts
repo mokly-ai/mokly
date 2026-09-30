@@ -193,6 +193,50 @@ test("CI shards complete verification behind one prerequisite", async () => {
     assert.equal(setupNode?.with?.cache, "npm");
     assert.ok(job.steps.some((step) => step.run === "npm ci"));
   }
+  for (const job of [packageJob, unit, browser, hydration]) {
+    assert.equal(
+      job.steps.some(
+        (step) => step.name === "Read baseline dependency lockfile",
+      ),
+      false,
+    );
+    const setupNode = job.steps.find((step) =>
+      step.uses?.startsWith("actions/setup-node@"),
+    );
+    assert.equal(
+      setupNode?.with?.["cache-dependency-path"],
+      "package-lock.json",
+    );
+  }
+  for (const [job, suite] of [
+    [unit, "unit"],
+    [browser, "browser"],
+    [hydration, "hydration"],
+  ] as const) {
+    const installIndex = job.steps.findIndex((step) => step.run === "npm ci");
+    const chromiumIndex = job.steps.findIndex((step) =>
+      step.run?.includes("playwright install --with-deps chromium"),
+    );
+    const suiteIndex = job.steps.findIndex((step) =>
+      step.run?.includes(`cargo xtask check --suite ${suite}`),
+    );
+    assert.ok(installIndex >= 0 && installIndex < suiteIndex);
+    if (suite === "browser" || suite === "hydration")
+      assert.ok(chromiumIndex >= 0 && chromiumIndex < suiteIndex);
+    const commands = job.steps.map((step) => step.run ?? "").join("\n");
+    assert.doesNotMatch(
+      commands,
+      /git merge-base HEAD origin\/main/u,
+      `${suite} must not resolve its cache input from origin/main`,
+    );
+    assert.doesNotMatch(
+      commands,
+      /(?:branch-point|baseline-package-lock|git show [^\n]*package-lock\.json)/u,
+      `${suite} must use the checked-out lockfile`,
+    );
+  }
+  assert.doesNotMatch(source, /origin\/main/u);
+  assert.doesNotMatch(source, /baseline-package-lock/u);
   assert.equal(setupNodeVersion(repository), 24);
   assert.equal(setupNodeVersion(native), minimumTestedNode);
   assert.equal(

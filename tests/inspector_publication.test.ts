@@ -157,8 +157,11 @@ test("export includes the inspector while generated and comparison bytes stay un
       "utf8",
     ),
   );
-  assert.ok(inventory.files.includes("__mokly/client/appearance-startup.js"));
-  assert.ok(inventory.files.includes("__mokly/client/inspector.js"));
+  const ownedPaths = inventory.files.map(
+    ({ path: name }: { path: string }) => name,
+  );
+  assert.ok(ownedPaths.includes("__mokly/client/appearance-startup.js"));
+  assert.ok(ownedPaths.includes("__mokly/client/inspector.js"));
   assert.ok(result.comparisonUrl);
 });
 
