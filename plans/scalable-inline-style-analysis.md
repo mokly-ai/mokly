@@ -15,11 +15,15 @@ apart from the documented cases in Decisions 4, 5 and 10.
 This plan builds on the
 [inferred inline style ownership plan](./inferred-inline-style-ownership.md),
 which is implemented but not yet merged, on branch `calummoore/irvine-v6` at
-`6a2ff27e`. That plan's Milestone 8 scale diagnosis is the evidence for this
-plan, and its review findings stay recorded there. This plan resolves these
-of them: Milestone 3 finding 1 (Decision 4), Milestone 4 finding 1 and
-Milestone 5 finding 3 (Decision 9), Milestone 5 finding 2 (Decision 5), and
-Milestone 8 findings 1, 2 and 4 (Decisions 7 and 8 and Milestone 2).
+`6a2ff27e`. Before Milestone 1 starts, `origin/main` at `b4314fec` (pull
+request #123, which replaces collections with navigation paths and moves the
+manifest to schema v6) is merged into this branch, so the contracts and code
+this plan changes are current. That plan's Milestone 8 scale diagnosis is the
+evidence for this plan, and its review findings stay recorded there. This plan
+resolves these of them: Milestone 3 finding 1 (Decision 4), Milestone 4
+finding 1 and Milestone 5 finding 3 (Decision 9), Milestone 5 finding 2
+(Decision 5), and Milestone 8 findings 1, 2 and 4 (Decisions 7 and 8 and
+Milestone 2).
 
 The analysis this plan changes lives under `src/review/css/` and is specified
 by [inline style ownership](../docs/protocol/mokly-inline-styles.md) and
@@ -158,13 +162,15 @@ fixed before this plan can prove its result.
    the prerequisite plan. Referenced HTML resources are still parsed as today.
 10. **Selector matching uses the original page.** Inline and linked-stylesheet
     matching evaluate selectors against each side's original tree from its
-    page analysis. An element that starts inside a paired ignored region
-    grants no match, but it stays in the tree for combinators and structural
-    pseudo-classes. Owners are resolved against the original ranges. This
+    page analysis. An element that starts inside a paired ignored region is
+    never a matching subject, but it stays in the tree as context for
+    combinators, `:has()` and structural pseudo-classes such as `:nth-child`
+    and `:empty`. Owners are resolved against the original ranges. This
     replaces matching on the ignore-normalized page, where removing an ignored
-    region shifted sibling positions, and it removes the normalized parses.
-    Results change only for combinators and structural pseudo-classes next to
-    an ignored region, where the new result follows the real page.
+    region changed the context of the elements around it, and it removes the
+    normalized parses. Results change only where that context differs; the new
+    result follows the real page, so a rule whose subject is outside an
+    ignored region is no longer falsely excluded.
 11. **Comparison materials carry fingerprints instead of style text.** When
     the inline analysis runs, the canonical rule list appended to a material
     becomes one comment holding the SHA-256 digest of its canonical rendering.
@@ -276,20 +282,25 @@ The route runs after a failed quick check. Every condition must hold:
 
 1. The view is paired, both sides use the same path, both have usage records,
    and the usage topology is equal.
-2. After dialect normalization of the base, the common prefix and common
-   suffix of the two texts leave one changed window per side.
+2. The base contains no retired marker prefix, and the common prefix and
+   common suffix of the two texts leave one changed window per side.
 3. The head analysis has an unowned eligible style element whose content
-   contains the head window. The base window then lies in the same element,
-   because the prefix and suffix are shared.
-4. Neither window, nor the eight code units on either side of it, contains
-   `<`, and neither window matches the resource-reference prefilter.
-5. No resource reachable from the head analysis changed: no Git changed path
-   in committed mode and no byte change in derived mode.
-6. Both element texts parse, and no diffed rule's resolved selectors use
-   `:empty`, `:contains` or `:icontains`.
+   contains the head window.
+4. Neither window contains `<`, and neither do the eight code units before the
+   windows. The HTML tokenizer's state then enters both windows as plain style
+   text, stays there, and leaves both identically, so the base window lies in
+   the same element and the suffix parses identically on both sides.
+5. Both element texts parse, and no added, removed or changed rule of the
+   element carries a reference or has resolved selectors that use `:empty`,
+   `:contains` or `:icontains`. References are judged by stored per-rule
+   references, because a reference can straddle a window boundary.
+6. The quick check's resource test passes on the head analysis's references,
+   collected through each side's reader: no Git changed path in committed mode
+   and no byte change in derived mode.
 
-The markup is then identical on both sides, so the diffed rules are attributed
-once, on the head tree, for both sides. The view receives the full comparison's
+The markup is then identical on both sides, and so are the element's
+references, so the diffed rules are attributed once, on the head tree, for
+both sides. The view receives the full comparison's
 state, `material` flag, reasons including the usage signals, owned set and
 `inlineStyles` evidence, with no ignored ids and no owned resources. A
 test-only switch beside `useFastPath` disables the route.
@@ -303,8 +314,8 @@ carries `elements`, `segments`, `segmentHits`, `segmentParses` and
 `fallbacks`. One `review.document-work` counts record carries `htmlParses`,
 `htmlParseBytes`, `htmlParseMs`, `rangeMs`, `styleDiscoveryMs`,
 `referenceMs`, `matchingMs`, `normalizationMs`, `projectionMs`,
-`implementationMs` and `inlineRuleMs`. All of them are collected only when
-timings are enabled.
+`implementationMs`, `inlineRuleMs` and `hashMs`. All of them are collected only
+when timings are enabled.
 
 ## Milestone 1: Protocol And Documentation Contract
 
@@ -534,10 +545,12 @@ are gone, and confirm that the page-work milestones target the largest
 measured costs. Documentation-only; validated with Prettier and a diff review.
 
 - [ ] Run the full committed matrix once on each fixture with document-work
-      counts.
+      counts, and capture one CPU profile of the background worker's
+      classification for the no-change and component-style scenarios on the
+      cumulative fixture.
 - [ ] Record per scenario the classification time, `heapPeakMiB`, HTML parses
-      and per-step times in the fixture README, beside the Milestone 2
-      baseline.
+      and per-step times, and the profiles' top self-time functions, in the
+      fixture README beside the Milestone 2 baseline.
 - [ ] Confirm that Milestones 7 to 9 address the largest measured costs, in
       that order. If the data shows otherwise, reorder or amend those
       not-started milestones and record why in this milestone.
