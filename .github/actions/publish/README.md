@@ -2,8 +2,10 @@
 
 This public composite action installs an exact `@mokly/mokly` npm release in
 runner temporary storage and runs its `mokly publish` command. It supports any
-receiver implementing [upload v1](../../../docs/protocol/mokly-upload.md),
-including self-hosted services. It uses no private repository or package API.
+receiver implementing the
+[catalogue upload contract](../../../docs/protocol/mokly-upload.md) and
+[exchange](../../../docs/protocol/mokly-upload-exchange.md), including
+self-hosted services. It uses no private repository or package API.
 
 The action is maintained here at `mokly-ai/mokly/.github/actions/publish`.
 Pin it to a reviewed commit SHA (or a release tag containing this directory).
@@ -63,13 +65,14 @@ Actions environment. Other CI systems can invoke the npm CLI directly.
 | Input        | Required | Behavior                                                                      |
 | ------------ | -------- | ----------------------------------------------------------------------------- |
 | `version`    | yes      | Exact SemVer npm release; ranges, tags and URLs are rejected                  |
-| `endpoint`   | yes      | Full receiver HTTP(S) URL                                                     |
+| `endpoint`   | yes      | Full HTTP(S) URL of the receiver's plan route                                 |
 | `token`      | yes      | Bearer credential, forwarded only through the environment                     |
 | `config`     | no       | Config path relative to the consumer working directory; omission discovers it |
 | `base`       | no       | Comparison ref; omission uses the config or `origin/main`                     |
 | `no-changes` | no       | `true` omits comparisons; defaults to `false`, conflicts with `base`          |
 
-The action sets up the tested Node 24.21.0 lane. Published Mokly releases support
+The action exposes no input for the CLI's upload concurrency option; the
+command's default applies. The action sets up the tested Node 24.21.0 lane. Published Mokly releases support
 Node.js `>=22.14.0 <24.14.0` or `>=24.19.0`; the action's pin is a tested
 representative, not the lower bound. The action does not check out the consumer,
 install its dependencies, fetch history, publish an npm package or comment on
@@ -78,7 +81,8 @@ Consumer authoring code runs during export, so only grant upload credentials to
 trusted workflows. Use a receiver-scoped token through GitHub secrets; do not
 pass it in a workflow shell command. The receiver controls repository access.
 
-Success means the receiver accepted the upload; this action has no outputs.
+Success means the receiver completed the publication; this action has no
+outputs.
 Errors propagate the CLI's nonzero exit code and typed category. The complete
 local export remains under the config-relative `.context/mokly-publish` path.
 
@@ -92,4 +96,5 @@ npm run package:smoke
 
 The action tests run its actual composite shell steps with an injected npm
 installer. Packed-consumer smoke tests install the real package archive, run
-publish against a local HTTP receiver, and inspect the uploaded tarball.
+publish against a local HTTP receiver, and inspect the plan archive and every
+content-addressed blob.

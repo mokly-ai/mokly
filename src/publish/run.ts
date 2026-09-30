@@ -5,15 +5,19 @@ import { parseReviewResult } from "@mokly/viewer/data";
 import type { BuildDiagnostic } from "../build/build_warnings.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { MoklyError } from "../errors.js";
+import { withPreInstallationCancellation } from "../export/error.js";
 import type { exportCatalogue } from "../export/run.js";
 import type { GitCommandRunner } from "../review/git.js";
 
-import { bundleUpload } from "./bundle.js";
-import { uploadCatalogue } from "./http.js";
+import { invalidBundle, publishIdentityFailed } from "./errors.js";
+import { exchangeUpload } from "./exchange.js";
 import { UPLOAD_MANIFEST, validateUploadManifest } from "./manifest.js";
 import { readHeadSha, readUploadIdentity } from "./metadata.js";
-import type { UploadOptions } from "./types.js";
+import type { RetryDependencies } from "./retry.js";
+import { readUploadSnapshot, type UploadSnapshot } from "./snapshot.js";
+import type { PublishProgress, PublishResult, UploadOptions } from "./types.js";
+
+export type { PublishProgress, PublishUploadProgress } from "./types.js";
 
 /** One publication request, including explicitly selected export behavior. */
 export interface PublishOptions extends UploadOptions {
@@ -22,28 +26,20 @@ export interface PublishOptions extends UploadOptions {
   noChanges?: boolean;
   onBuildDiagnostics?: (diagnostics: readonly BuildDiagnostic[]) => void;
   repository?: string;
+  uploadConcurrency?: number;
   diagnostic?: (message: string) => void;
   incompatibleBaseline?: (commit: string) => void;
 }
 
 /** Injectable runtime boundaries for publish orchestration. */
-export interface PublishDependencies {
+export interface PublishDependencies extends RetryDependencies {
   git: GitCommandRunner;
   export: typeof exportCatalogue;
   fetch: typeof fetch;
-  now(): Date;
   progress?: PublishProgress;
 }
 
-/** Optional command-presentation observer around publication work. */
-export interface PublishProgress {
-  run<Result>(
-    phase: "export" | "prepare" | "upload",
-    action: () => Promise<Result>,
-  ): Promise<Result>;
-}
-
-/** Export one pinned generation, then send exactly its finalized archive bytes. */
+/** Export one pinned generation, then exchange its finalized files by digest. */
 export async function publishCatalogue(
   config: ResolvedConfig,
   options: PublishOptions,
@@ -51,11 +47,13 @@ export async function publishCatalogue(
   env: Readonly<Record<string, string | undefined>>,
   dependencies: PublishDependencies,
   signal?: AbortSignal,
-): Promise<void> {
+): Promise<PublishResult> {
   const identity = await withProgress(dependencies, "prepare", () =>
-    readUploadIdentity(dependencies.git, env, options.repository),
+    withPreInstallationCancellation(signal, () =>
+      readUploadIdentity(dependencies.git, env, options.repository),
+    ),
   );
-  let bundle: Buffer | undefined;
+  let snapshot: UploadSnapshot | undefined;
   await withProgress(dependencies, "export", () =>
     dependencies.export(config, {
       outDir: options.out ?? ".context/mokly-publish",
@@ -70,6 +68,7 @@ export async function publishCatalogue(
         ? { incompatibleBaseline: options.incompatibleBaseline }
         : {}),
       adapter: {
+        publicationMetadata: [UPLOAD_MANIFEST],
         transform(files, routes) {
           const comparisonPath = routes.comparisonUrl?.slice(1) ?? null;
           const reviewBytes = comparisonPath
@@ -85,8 +84,7 @@ export async function publishCatalogue(
             (comparisonPath !== null && !review) ||
             files.has(UPLOAD_MANIFEST)
           )
-            throw new MoklyError(
-              "upload-invalid-bundle",
+            throw invalidBundle(
               "The export has missing comparison metadata or a reserved manifest path.",
             );
           const manifest = validateUploadManifest({
@@ -108,22 +106,18 @@ export async function publishCatalogue(
         },
       },
       capture: async (files) => {
-        bundle = await bundleUpload(files, signal);
+        snapshot = readUploadSnapshot(files);
       },
     }),
   );
-  await withProgress(dependencies, "upload", async () => {
+  return withProgress(dependencies, "upload", async () => {
     if ((await readHeadSha(dependencies.git)) !== identity.headSha)
-      throw new MoklyError(
-        "git-failed",
+      throw publishIdentityFailed(
         "HEAD changed during export. Retry publication from a stable checkout.",
       );
-    if (!bundle)
-      throw new MoklyError(
-        "upload-invalid-bundle",
-        "The export did not produce an upload bundle.",
-      );
-    await uploadCatalogue(options, bundle, dependencies.fetch, signal);
+    if (!snapshot)
+      throw invalidBundle("The export did not produce an upload snapshot.");
+    return exchangeUpload(snapshot, options, dependencies, signal);
   });
 }
 

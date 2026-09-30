@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { isCancellation } from "../dist/errors.js";
 import { validateUploadManifest } from "../dist/publish/manifest.js";
 import {
   parseRepository,
+  readHeadSha,
   readUploadIdentity,
 } from "../dist/publish/metadata.js";
 import type { GitCommandRunner } from "../dist/review/git.js";
@@ -119,6 +121,48 @@ test("repository override requires no remotes, while ambiguous or absent remotes
     manifest.repository,
   );
   await assert.rejects(readUploadIdentity(runner, {}), /git-failed/);
+});
+
+test("publish identity readers preserve Git cancellation", async () => {
+  const abort = new Error("stopped");
+  abort.name = "AbortError";
+  const runner: GitCommandRunner = {
+    run: async () => {
+      throw abort;
+    },
+  };
+  for (const read of [
+    readHeadSha(runner),
+    readUploadIdentity(runner, {}, "github.com/sample/catalogue"),
+  ])
+    await assert.rejects(read, (error) => {
+      assert.equal(error, abort);
+      assert.equal(isCancellation(error), true);
+      return true;
+    });
+
+  const original = gitRunner();
+  const branchCancelled: GitCommandRunner = {
+    run: async (args) => {
+      if (args[0] === "symbolic-ref") throw abort;
+      return original.run(args);
+    },
+  };
+  await assert.rejects(
+    readUploadIdentity(branchCancelled, {}, "github.com/sample/catalogue"),
+    (error) => error === abort,
+  );
+
+  const failed: GitCommandRunner = {
+    run: async () => {
+      throw new Error("ordinary failure");
+    },
+  };
+  await assert.rejects(readHeadSha(failed), /git-failed/u);
+  await assert.rejects(
+    readUploadIdentity(failed, {}, "github.com/sample/catalogue"),
+    /git-failed/u,
+  );
 });
 
 test("manifest validates exact fields, paired comparison metadata, versions, sizes and paths", () => {

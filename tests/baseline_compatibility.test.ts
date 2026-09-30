@@ -82,11 +82,11 @@ test("publish uploads current-only output for an earlier baseline", async (t) =>
   t.after(() => fixture.close());
   await installBaseline(fixture, { version: 6 });
   const messages: string[] = [];
-  let uploaded = false;
+  const requests: Array<{ method: string | undefined; url: string }> = [];
   await publishCatalogue(
     fixture.config,
     {
-      endpoint: "https://uploads.example.test",
+      endpoint: "https://uploads.example.test/plan",
       token: "fixture-token",
       repository: "github.com/example/catalogue",
       base: "HEAD",
@@ -103,15 +103,41 @@ test("publish uploads current-only output for an earlier baseline", async (t) =>
         } as Parameters<typeof exportCatalogue>[1] & {
           incompatibleBaseline: () => void;
         }),
-      fetch: async () => {
-        uploaded = true;
-        return new Response(null, { status: 204 });
+      fetch: async (url, init) => {
+        const address = String(url);
+        requests.push({ method: init?.method, url: address });
+        if (address === "https://uploads.example.test/plan")
+          return Response.json({
+            schemaVersion: 1,
+            upload: {
+              id: "baseline-upload",
+              expiresAt: "2026-09-28T01:00:00.000Z",
+            },
+            missing: [],
+            blobUrl:
+              "https://uploads.example.test/blobs/baseline-upload/{sha256}",
+            completeUrl:
+              "https://uploads.example.test/uploads/baseline-upload/complete",
+          });
+        assert.equal(
+          address,
+          "https://uploads.example.test/uploads/baseline-upload/complete",
+        );
+        return Response.json({}, { status: 201 });
       },
       now: () => new Date("2026-09-28T00:00:00.000Z"),
+      random: () => 0,
+      sleep: async () => undefined,
     },
   );
 
-  assert.equal(uploaded, true);
+  assert.deepEqual(requests, [
+    { method: "POST", url: "https://uploads.example.test/plan" },
+    {
+      method: "POST",
+      url: "https://uploads.example.test/uploads/baseline-upload/complete",
+    },
+  ]);
   assert.deepEqual(messages, [EARLIER_BASELINE_LINE]);
   const manifest = JSON.parse(
     await fs.readFile(

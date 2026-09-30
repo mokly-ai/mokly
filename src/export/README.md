@@ -36,8 +36,8 @@ metadata beside `review.json`; `snapshotPagePath(id)` names its document, and
 the local closure shares the snapshot tree with screen comparisons. Removed
 page and screen descriptors are emitted only for a complete generation. These
 files enter comparison identity before the generation path is chosen, then the
-normal reference checks, ownership inventory, deployment identity and upload
-capture. A missing local closure fails the transaction and preserves the prior
+non-marker inventory, deployment identity, ownership marker, reference checks
+and upload capture. A missing local closure fails the transaction and preserves the prior
 artifact. Current-only assembly branches before preparation or capture and
 replaces any previously owned historical files.
 The descriptor builder lives in `publication/removed_previews.ts` and is shared
@@ -77,10 +77,19 @@ outside that span; the caller's `export` span includes all phases.
 The [public ownership schema and fixtures](../../docs/protocol/mokly-export-ownership.md)
 define the emitted inventory and reader compatibility. Tests exercise them
 against this parser and an independent reader in the packed-consumer smoke.
-`deployment.ts` finalizes a separate complete-artifact identity after provider
-transformation and ownership assembly. `content_id.ts` uses deterministic file
+The shipped contract is schema 2 with a SHA-256 digest and byte size per entry.
+`stage.ts` builds it from exact finalized bytes and every local reader accepts
+only that version. `portable_path.ts` owns the path rule applied by the
+inventory, marker builder/parser and upload metadata validation.
+`publication_metadata.ts` accepts only new root files explicitly declared by
+the adapter. `deployment.ts` finalizes a separate artifact identity after
+provider transformation, that declaration and non-marker assembly.
+`content_id.ts` uses deterministic file
 hashes and alias edges; `shell_metadata.ts` normalizes and stamps only known
 shell roots while preserving other bytes and rejecting adapter metadata drift.
+The ownership marker and adapter-declared publication metadata are excluded
+from the identity hash; both remain in the ownership inventory, and the marker
+is added last from every finalized file.
 Descriptor version 3 carries `deploymentId`, `canonicalPath`, and
 `comparisonUrl` so clients reload across incompatible deployments; it carries
 no id-to-route map. Comparison generation URLs retain their separate content
@@ -89,7 +98,7 @@ identity.
 `site.ts` also writes the [public catalogue projection](../catalogue/README.md)
 at `__mokly/catalogue.json`. Its per-entry Changes state uses the same accepted
 attribution as the shell. It enters the normal collision-checked inventory,
-ownership v1 marker and upload v1 archive without changing either schema.
+ownership marker and upload inventories without changing either schema.
 Each shell page embeds only a compact reference with this catalogue's identity
 and revisions. The standalone browser validates and fetches the shared finalized
 resource once before hydration, avoiding catalogue-sized bytes repeated for
@@ -136,8 +145,12 @@ platform dependencies when installing the package.
 `inventory.ts` and `references.ts` use
 `path_index.ts` for one case-folded file/alias collision policy, including
 directory prefixes and the final ownership marker. Reference validation also
-proves local resource closure. `ignored.ts` keeps owned
-outputs and transactions out of broad Watch rules. The repository-only preview
+proves local resource closure. `ignored.ts` keeps schema 2 owned outputs and
+transactions out of broad Watch rules. It caches parsed ownership by file
+identity and timestamps as bounded path/prefix sets, revalidating with one
+metadata read per lookup. Retired schema 1 outputs are
+intentionally treated as unowned, so their events are not suppressed and their
+files never gain replacement authority. The repository-only preview
 adapter supplies validated host aliases and legacy ownership explicitly. It
 captures already-built Browse output, retaining optional Changes and its
 source/resource fingerprint contract. Its capture server disables live Changes
@@ -174,7 +187,18 @@ unlisted authored files while ignoring the recorded generated files.
 allowlisted, non-recursive cleanup. `operations.ts` is the injectable filesystem
 boundary; recursive removal is reserved for the private generated stage.
 `cleanup.ts` preserves primary and secondary failures through setup, orchestration,
-and CLI output. See the [recovery contract](../../docs/protocol/mokly-export-recovery.md).
+and CLI output. In the documented pre-installation phases, a failure waits one
+event-loop turn for an already-delivered signal before classification. A
+`MoklyError` is marked in place, preserving its class, fields, message and
+diagnostic stack; non-Mokly failures retain the contextual export wrapper.
+Export transaction setup and generated-output writes keep their own recovery
+errors. `runExport` holds a referenced handle for its signal-aware lifetime so
+helper shutdown cannot end Node before Mokly reports status 1. Cancellation
+remains a cancellation only when cleanup, or any required rollback, succeeds.
+A restore, backup or reservation-cleanup failure instead keeps its normal
+`export-invalid` recovery message and path; `mokly export` presentation is
+unchanged. See the
+[recovery contract](../../docs/protocol/mokly-export-recovery.md).
 
 Focused verification:
 

@@ -1,16 +1,17 @@
 import assert from "node:assert/strict";
-import { execFile } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { promisify } from "node:util";
 
+import { compileCatalogue } from "../dist/build/compile.js";
+import { writeCompilation } from "../dist/build/transaction.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
 
-import { createCommittedExampleBaseline } from "./helpers/example_baseline.js";
+import {
+  createCommittedExampleBaseline,
+  createExampleBaseline,
+} from "./helpers/example_baseline.js";
 import { repositoryRoot } from "./helpers/fixture.js";
-
-const execute = promisify(execFile);
 
 test("preview build snapshots a static Browse catalogue", async (context) => {
   const contextDir = path.join(repositoryRoot, ".context");
@@ -18,25 +19,70 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   const root = await fs.promises.mkdtemp(
     path.join(contextDir, "preview-test-root-"),
   );
-  const output = path.join(root, ".context/preview");
   context.after(() => fs.promises.rm(root, { force: true, recursive: true }));
   const config = await createCommittedExampleBaseline(root, "static-example");
-
-  await buildPreview(config, output, { includeChanges: true, base: "HEAD" });
-  await buildPreview(config, output, { includeChanges: true, base: "HEAD" });
+  const entry = path.join(root, "examples/basic/entries/catalogue.mockup.tsx");
+  const source = await fs.promises.readFile(entry, "utf8");
+  const current = source.replace(
+    '<Badge tone="primary">Example</Badge>',
+    '<Badge tone="primary">Tree-owned example</Badge>',
+  );
+  assert.notEqual(current, source);
+  await fs.promises.writeFile(entry, current);
+  await writeCompilation(await compileCatalogue(config), config);
+  const output = path.join(root, ".context/preview");
+  const options = { includeChanges: true as const, base: "HEAD" };
+  await buildPreview(config, output, options);
+  await buildPreview(config, output, options);
 
   await assertClientGraphIsComplete(output);
   const index = await read(output, "index.html");
   assert.match(index, /<title>Mokly<\/title>/);
   assert.match(index, /data-mokly-filter/);
-  assert.match(index, /class="mbk-nav-filter-count">\d+</);
   assert.match(index, /\/__mokly\/client\/react-shell\.js/);
   assert.doesNotMatch(index, /\/__mokly\/client\/browser\.js/);
   assert.match(index, /href="\/view\/screens\/example-welcome"/);
   assert.doesNotMatch(index, /href="\/view\/screens\/example-welcome\.html"/);
+  const catalogue = JSON.parse(
+    await read(output, "__mokly/catalogue.json"),
+  ) as PublishedCatalogue;
+  const changedIds = [
+    ...catalogue.components,
+    ...catalogue.pages,
+    ...catalogue.screens,
+    ...catalogue.useCases,
+  ]
+    .filter((entry) => entry.changes.included)
+    .map((entry) => entry.id)
+    .sort();
+  assert.deepEqual(changedIds, ["example-tour", "example-welcome"]);
+  const changedCount = changedIds.length;
+  assert.equal(changedCount, 2);
+  const filterCount = /class="mbk-nav-filter-count">(\d+)</u.exec(index);
+  assert.ok(filterCount);
+  assert.equal(Number(filterCount[1]), changedCount);
+  assert.match(navigationRow(index, "example-welcome"), /data-changed="true"/u);
+  assert.doesNotMatch(
+    navigationRow(index, "example-details"),
+    /data-changed=/u,
+  );
+  assert.deepEqual(publishedScreen(catalogue, "example-welcome").changes, {
+    included: true,
+    kind: "changed",
+    status: "ready",
+  });
+  assert.deepEqual(publishedScreen(catalogue, "example-details").changes, {
+    included: false,
+    kind: "unmodified",
+    status: "ready",
+  });
   const welcome = await read(output, "view/screens/example-welcome.html");
   assert.match(welcome, /Welcome · Mokly/);
   assert.match(welcome, /data-diff-screen="example-welcome"/);
+  assert.match(
+    welcome,
+    /class="mbk-entry-status" data-status="Changed" data-workspace-status="">Changed<\/span>/u,
+  );
   for (const mode of ["current", "side", "overlay", "difference"])
     assert.match(welcome, new RegExp(`data-diff-mode="${mode}"`));
   // A static export carries the one Appearance control, and requests the asset
@@ -71,6 +117,10 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
     await read(output, "static/screens/example-welcome.desktop.dark.html"),
     /data-color-scheme="dark"/,
   );
+  assert.match(
+    await read(output, "view/screens/example-details.html"),
+    /class="mbk-entry-status" data-status="Unmodified" data-workspace-status="">Unmodified<\/span>/u,
+  );
   assert.match(await read(output, "__mokly/shell.css"), /--mbk-/);
   assert.match(
     await read(output, "__mokly/client/appearance-startup.js"),
@@ -94,20 +144,17 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
 test("preview build refuses to replace an unowned directory", async (context) => {
   const contextDir = path.join(repositoryRoot, ".context");
   await fs.promises.mkdir(contextDir, { recursive: true });
-  const output = await fs.promises.mkdtemp(
-    path.join(contextDir, "preview-unowned-"),
+  const root = await fs.promises.mkdtemp(
+    path.join(contextDir, "preview-unowned-repository-"),
   );
+  context.after(() => fs.promises.rm(root, { force: true, recursive: true }));
+  const config = await createExampleBaseline(root);
+  const output = path.join(root, ".context/preview");
+  await fs.promises.mkdir(output, { recursive: true });
   await fs.promises.writeFile(path.join(output, "keep.txt"), "owned by user\n");
-  context.after(() => fs.promises.rm(output, { force: true, recursive: true }));
 
   await assert.rejects(
-    execute(
-      process.execPath,
-      ["scripts/preview/build.mjs", "--include-changes", "--out", output],
-      {
-        cwd: repositoryRoot,
-      },
-    ),
+    buildPreview(config, output, { includeChanges: true, base: "HEAD" }),
     /refusing to replace unowned preview directory/,
   );
   assert.equal(await read(output, "keep.txt"), "owned by user\n");
@@ -157,4 +204,38 @@ function relativeImports(source: string): string[] {
     if (match[1] !== undefined) targets.push(match[1]);
   }
   return targets;
+}
+
+interface PublishedEntry {
+  readonly changes: {
+    readonly included: boolean;
+    readonly kind: string;
+    readonly status: string;
+  };
+  readonly id: string;
+}
+
+interface PublishedCatalogue {
+  readonly components: readonly PublishedEntry[];
+  readonly pages: readonly PublishedEntry[];
+  readonly screens: readonly PublishedEntry[];
+  readonly useCases: readonly PublishedEntry[];
+}
+
+function navigationRow(source: string, id: string): string {
+  const rows = source.match(/<a\b[^>]*data-nav-row=""[^>]*>/gu) ?? [];
+  const row = rows.find((candidate) =>
+    candidate.includes(`data-entry-id="${id}"`),
+  );
+  assert.ok(row, `missing navigation row for ${id}`);
+  return row;
+}
+
+function publishedScreen(
+  catalogue: PublishedCatalogue,
+  id: string,
+): PublishedEntry {
+  const screen = catalogue.screens.find((entry) => entry.id === id);
+  assert.ok(screen, `missing published screen ${id}`);
+  return screen;
 }

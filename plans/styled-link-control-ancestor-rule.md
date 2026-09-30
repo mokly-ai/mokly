@@ -268,6 +268,8 @@ authored values.
 - [x] Harden the design-link history regression to wait for the active iframe
       route after Back and Forward; prove the mobile case with ten repeated
       browser runs.
+- [x] Merge `origin/main` at `0c8245f8`, preserving delta-publish progress and
+      cancellation while enforcing strict warnings before capture or upload.
 - [x] Run the focused build-warning, link-control, reporter, documentation, and
       Serve suites, then run `cargo xtask check` under a supported Node release.
 - [ ] Run `git add -A`, commit the completed fixes using Conventional Commits,

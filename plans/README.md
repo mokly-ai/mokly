@@ -7,6 +7,21 @@
   warnings, and `--strict`; Milestone 5 addresses the post-merge review's
   terminal-safety and protocol-ownership findings before the pull request
   merges.
+- [Delta Publishing](./delta-publishing.md) — replace the single-archive
+  `mokly publish` upload with the content-addressed plan, blob and complete
+  exchange, the schema 2 export ownership marker, v2 fixtures and guides for
+  the next minor release. Implemented, verified, pushed and reviewed; the
+  approved [review findings](../docs/reviews/delta-publishing.md) were fixed
+  in Milestones 7–13, second-review findings 1 and 2 in Milestones 14–17 and
+  the third-review findings in Milestones 18–22 and the fourth-review findings
+  in Milestones 23–27, and the remote-state cleanup script was removed in
+  Milestones 28–29, and the remote-branch lint was replaced by a workflow
+  guard in Milestones 30–31, and the guard's scanner moved into a test helper
+  in Milestones 32–33, and the browser shard that exceeded CI's job timeout was
+  rebalanced in Milestones 34–39, and main's navigation paths and derived
+  routes were merged in Milestones 40–41. The remaining open review
+  findings await the user's decision. The plan stays Active until its pull
+  request merges.
 - [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) — replace
   collection entities and `childIds` with a Storybook-style `navPath` on
   every leaf, derived from nested `folder` titles; manifest v6 and read

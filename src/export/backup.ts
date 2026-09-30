@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { errorMessage } from "../errors.js";
+import { errorMessage, isCancellation } from "../errors.js";
 
 import {
   assertDestination,
@@ -54,6 +54,7 @@ export class ExportBackup {
     throw exportError(
       `Could not install export; the previous output was restored. ${errorMessage(primary)}`,
       primary,
+      { cancelled: isCancellation(primary) },
     );
   }
 

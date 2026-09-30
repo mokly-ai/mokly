@@ -337,7 +337,7 @@ merge.
 - [`src/export`](./src/export/README.md) — static catalogue export.
 - [`src/publication`](./src/publication/README.md) — shared static shell and
   previous-version publication.
-- [`src/publish`](./src/publish/README.md) — archive creation and upload.
+- [`src/publish`](./src/publish/README.md) — content-addressed publication exchange.
 - [`packages/viewer`](./packages/viewer/README.md) — React shell, catalogue read
   model, navigation, frames, and inspection.
 - [`scripts/preview/baseline.mjs`](./scripts/preview/baseline.mjs) and

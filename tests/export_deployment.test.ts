@@ -100,3 +100,92 @@ test("consumer lookalike descriptors are included verbatim, not stamped", async 
   assert.match(result.deploymentId, /^[a-f0-9]{64}$/);
   assert.notEqual(result.deploymentId, "0".repeat(64));
 });
+
+test("publish manifest revisions leave identity, every shell and catalogue unchanged", async (context) => {
+  const fixture = await createExportFixture();
+  context.after(() => fixture.close());
+  const baseManifest = {
+    schemaVersion: 1,
+    moklyVersion: "1.2.3",
+    repository: { host: "example.com", owner: "team", name: "catalogue" },
+    branch: "main",
+    baseRef: null,
+    baseSha: null,
+    pullRequest: null,
+    configPath: "mokly.config.ts",
+    comparisonPath: null,
+  };
+  const build = async (headSha: string, exportedAt: string) => {
+    const result = await exportCatalogue(fixture.config, {
+      outDir: "site",
+      noChanges: true,
+      adapter: {
+        publicationMetadata: ["mokly-upload.json"],
+        transform(files) {
+          files.set(
+            "mokly-upload.json",
+            `${JSON.stringify({ ...baseManifest, headSha, exportedAt })}\n`,
+          );
+        },
+      },
+    });
+    return { result, files: await directoryFiles(fixture.output) };
+  };
+  const first = await build("a".repeat(40), "2026-09-26T12:00:00.000Z");
+  const second = await build("b".repeat(40), "2026-09-26T13:00:00.000Z");
+  assert.equal(second.result.deploymentId, first.result.deploymentId);
+  const stable = [...first.files.keys()].filter(
+    (name) =>
+      name === "index.html" ||
+      name === "404.html" ||
+      name === "__mokly/catalogue.json" ||
+      name.startsWith("view/") ||
+      (name.startsWith("id/") && name.endsWith("/index.html")),
+  );
+  assert.ok(stable.length > 5);
+  for (const name of stable)
+    assert.deepEqual(second.files.get(name), first.files.get(name), name);
+  assert.notDeepEqual(
+    second.files.get("mokly-upload.json"),
+    first.files.get("mokly-upload.json"),
+  );
+  assert.notDeepEqual(
+    second.files.get(".mokly-export-artifact"),
+    first.files.get(".mokly-export-artifact"),
+  );
+});
+
+test("publication metadata declarations must name new root files", async (context) => {
+  const fixture = await createExportFixture();
+  context.after(() => fixture.close());
+  for (const adapter of [
+    {
+      publicationMetadata: ["missing.json"],
+      transform() {},
+    },
+    {
+      publicationMetadata: ["index.html"],
+      transform(files: Map<string, string | Uint8Array>) {
+        files.set("index.html", "Replaced shell");
+      },
+    },
+    {
+      publicationMetadata: ["__mokly/catalogue.json"],
+      transform() {},
+    },
+    {
+      publicationMetadata: ["nested/publication.json"],
+      transform(files: Map<string, string | Uint8Array>) {
+        files.set("nested/publication.json", "Nested metadata");
+      },
+    },
+  ])
+    await assert.rejects(
+      exportCatalogue(fixture.config, {
+        outDir: "site",
+        noChanges: true,
+        adapter,
+      }),
+      /export-invalid/u,
+    );
+});

@@ -29,10 +29,11 @@ takes no value. There are no silent positional arguments.
 | `--no-watch`                         | `serve`                               | Serve one deterministic snapshot                               |
 | `--base <ref>`                       | `serve`, `export`, `publish`          | Git base ref used to find the branch point                     |
 | `--out <path>`                       | `export`, `publish`                   | Config-relative output directory                               |
-| `--endpoint <url>`                   | `publish`                             | Upload URL, or `MOKLY_ENDPOINT`                                |
+| `--endpoint <url>`                   | `publish`                             | The service's plan URL, or `MOKLY_ENDPOINT`                    |
 | `--token <token>`                    | `publish`                             | Bearer token, or `MOKLY_TOKEN`                                 |
 | `--repository <host>/<owner>/<name>` | `publish`                             | Override the detected repository identity                      |
 | `--no-changes`                       | `publish`                             | Publish with no comparison baseline                            |
+| `--upload-concurrency <n>`           | `publish`                             | Upload 1 to 32 missing files at once; defaults to 8            |
 | `--strict`                           | `build`, `check`, `export`, `publish` | Fail when the build reports warnings                           |
 | `--help`                             | every command                         | Show the commands and their options                            |
 | `-h`                                 | every command                         | Short form of `--help`                                         |
@@ -94,3 +95,8 @@ stack trace:
 a command failure. Serve stays available, and export or publish exits `0`
 without Changes; those commands print the product line defined by the
 baseline compatibility protocol instead of an error prefix.
+
+Cancelling publish keeps `upload-failed` but prints
+`Publication was cancelled. Run mokly publish again when you are ready.` An
+exhausted request prints
+`The catalogue upload did not complete. Check the endpoint and connection, then retry.`

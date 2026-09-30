@@ -6,7 +6,7 @@ import { errorMessage } from "../../errors.js";
 import type { ServeReadyReport, WatchReport } from "../../server/reporter.js";
 import { cliErrorPresentation } from "../errors.js";
 
-import { renderPhase, type ActivePhase } from "./phase.js";
+import { RichPhaseRenderer } from "./rich_phase.js";
 import {
   catalogueCounts,
   reportPaths,
@@ -15,6 +15,7 @@ import {
 } from "./serve_lines.js";
 import { renderServeReady } from "./serve_ready.js";
 import {
+  formatCount,
   formatDuration,
   terminalGlyphs,
   terminalStyle,
@@ -32,8 +33,8 @@ import type {
 export class RichReporter implements CliReporter {
   readonly mode = "rich" as const;
   readonly #glyphs;
+  readonly #phases;
   readonly #success;
-  #active: ActivePhase | undefined;
   #serveReport: ServeReadyReport | undefined;
   #servePhase: ReporterPhase | undefined;
   readonly #incompatible = new Set<string>();
@@ -45,6 +46,12 @@ export class RichReporter implements CliReporter {
       environment.stdout,
       "green",
       this.#glyphs.success,
+    );
+    this.#phases = new RichPhaseRenderer(
+      environment,
+      this.#glyphs,
+      this.#success,
+      (output, value) => this.line(output, value),
     );
   }
 
@@ -96,7 +103,7 @@ export class RichReporter implements CliReporter {
     this.settleServePhase();
     this.line(
       this.environment.stdout,
-      `  ${this.#success} Changes ready · ${changed} changed ${changed === 1 ? "screen" : "screens"} (${formatDuration(durationMs)})`,
+      `  ${this.#success} Changes ready · ${formatCount(changed, "changed screen")} (${formatDuration(durationMs)})`,
     );
   }
 
@@ -172,41 +179,7 @@ export class RichReporter implements CliReporter {
   }
 
   startPhase(label: string): ReporterPhase {
-    this.clearPhase();
-    const active: ActivePhase = {
-      frame: 0,
-      label,
-      startedAt: this.environment.now(),
-    };
-    this.#active = active;
-    this.renderPhase(active, !this.environment.stdout.isTTY);
-    if (this.environment.stdout.isTTY) {
-      const timer = setInterval(() => {
-        if (this.#active !== active) return;
-        active.frame++;
-        this.renderPhase(active, false);
-      }, 80);
-      timer.unref();
-      Object.assign(active, { timer });
-    }
-    let settled = false;
-    return {
-      fail: () => {
-        if (settled) return;
-        settled = true;
-        if (this.#active === active) this.clearPhase();
-      },
-      succeed: (message) => {
-        if (settled) return;
-        settled = true;
-        const duration = this.environment.now() - active.startedAt;
-        if (this.#active === active) this.clearPhase();
-        this.line(
-          this.environment.stdout,
-          `  ${this.#success} ${message} (${formatDuration(duration)})`,
-        );
-      },
-    };
+    return this.#phases.start(label);
   }
 
   showShortcuts(): void {
@@ -270,12 +243,7 @@ export class RichReporter implements CliReporter {
   }
 
   private clearPhase(): void {
-    const active = this.#active;
-    if (!active) return;
-    if (active.timer) clearInterval(active.timer);
-    if (this.environment.stdout.isTTY)
-      this.environment.stdout.write("\r\x1b[2K");
-    this.#active = undefined;
+    this.#phases.clear();
   }
 
   private line(output: CliOutput, value: string): void {
@@ -287,9 +255,5 @@ export class RichReporter implements CliReporter {
   private settleServePhase(): void {
     this.#servePhase?.fail();
     this.#servePhase = undefined;
-  }
-
-  private renderPhase(active: ActivePhase, newline: boolean): void {
-    renderPhase(active, this.#glyphs.spinner, this.environment, newline);
   }
 }

@@ -10,9 +10,11 @@ commit returned by
   path note below;
 - `d227702e feat!: close out id-derived routes plan` — the identity note;
 - `40ab4324 feat!: drop comparisons against older baselines` — the comparison
-  baseline note; and
+  baseline note;
 - `c16926ba feat!: close out id-derived routes review fixes` — the baseline and
-  viewer host notes.
+  viewer host notes; and
+- `52ca8548 feat(publish)!: upload catalogue content deltas` — the delta
+  publishing note.
 
 ## Breaking Navigation Path Upgrade Release Note
 
@@ -103,6 +105,25 @@ generated navigation does not carry it. Link a variant as its own entry with
 Comparisons require a base built by this Mokly version. An earlier base makes
 Changes unavailable until the base includes this version, while export and
 publish still complete without Changes.
+
+## Breaking Delta Publishing Release Note
+
+`mokly publish` now uses the content-addressed Plan, Blob, and Complete exchange
+instead of sending one archive containing the complete exported catalogue.
+Independent receivers must accept the v1 Plan archive, answer with the missing
+content digests and upload URLs, verify raw Blob PUTs by digest and size, and
+make Complete idempotent under the documented first-publication rule. Clients
+upload only content the receiver does not already hold.
+
+Export ownership marker schema 2 replaces schema 1. Each owned file is recorded
+as `{ path, sha256, size }`, and the marker covers the exact finalized bytes that
+the exchange addresses. Export folders written by earlier releases are not
+recognized as owned: move any files you added, delete the old export folder,
+and export again. The public `export-ownership-v1.json` compatibility fixture is
+removed; receiver conformance uses `export-ownership-v2.json`.
+
+The new `--upload-concurrency <n>` publish option controls parallel Blob PUTs.
+It accepts integers from 1 through 32 and defaults to 8.
 
 ## Breaking Viewer Host API Release Note
 
