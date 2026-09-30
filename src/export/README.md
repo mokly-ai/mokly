@@ -5,6 +5,12 @@ hosting. Consumers use `mokly export --out <path>`, not a JavaScript deep import
 The separate `mokly publish` command uploads through the
 [public upload boundary](../publish/README.md); export itself performs no upload.
 
+The primary compilation reports its sorted build diagnostics through
+`ExportOptions.onBuildDiagnostics` immediately after rendering and before
+generated output or staged export bytes are written. The CLI uses that seam for
+warning presentation and `--strict`. The final freshness compilation remains a
+private consistency check and deliberately does not report its diagnostics.
+
 `run.ts` pins one merge-base commit through `RepositoryEvidence`, retains the
 independent `BaselineReader`, runs the normal build, captures public inputs,
 compares them through the existing review engine, and verifies inputs again

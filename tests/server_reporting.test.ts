@@ -3,11 +3,18 @@ import test from "node:test";
 
 import type { ManifestV7 } from "@mokly/viewer/data";
 
+import type { BuildDiagnostic } from "../dist/build/build_warnings.js";
+import type { Compilation } from "../dist/build/compile.js";
 import { FileSystemGeneratedOutputStore } from "../dist/build/output_store.js";
 import { FileSystemConfigLoader, loadConfig } from "../dist/config/load.js";
 import type { ChildHandle } from "../dist/server/child_process.js";
 import { NodeCatalogueServerFactory } from "../dist/server/factory.js";
-import type { ServeReporter, WatchReport } from "../dist/server/reporter.js";
+import {
+  PlainServeReporter,
+  reportCatalogueReady,
+  type ServeReporter,
+  type WatchReport,
+} from "../dist/server/reporter.js";
 import { serve } from "../dist/server/serve.js";
 import {
   NodeProcessSupervisorFactory,
@@ -102,6 +109,65 @@ test("the supervisor forwards validated child diagnostics", async () => {
   const closing = supervisor.close();
   child.exit();
   await closing;
+});
+
+test("Serve reports one generation's warnings immediately before catalogue ready", () => {
+  const reporter = new RecordingReporter();
+  const compilation: Compilation = {
+    diagnostics: [
+      {
+        code: "link-control-ancestor",
+        route: "screens/home.desktop.html",
+        message: "MockLink child control is inside <button>",
+      },
+    ],
+    manifest: {
+      entries: [],
+      generatedBy: "mokly",
+      schemaVersion: 7,
+      sourceFiles: [],
+    },
+    outputs: new Map(),
+  };
+
+  reportCatalogueReady(reporter, compilation, 12);
+
+  assert.deepEqual(reporter.events, [
+    "warning:screens/home.desktop.html",
+    "catalogue:screen=0",
+  ]);
+});
+
+test("plain standalone Serve uses the stable warning stderr format", () => {
+  const output: string[] = [];
+  const reporter = new PlainServeReporter((value) => output.push(value));
+  reporter.buildWarnings([
+    {
+      code: "link-control-descendant",
+      route: "screens/home.mobile.html",
+      message: 'MockLink child control contains <span tabindex="0">',
+    },
+  ]);
+  assert.deepEqual(output, [
+    '[mokly/warning] screens/home.mobile.html: MockLink child control contains <span tabindex="0">\n',
+  ]);
+});
+
+test("plain standalone Serve escapes warning control characters", () => {
+  const output: string[] = [];
+  const reporter = new PlainServeReporter((value) => output.push(value));
+  reporter.buildWarnings([
+    {
+      code: "link-control-ancestor",
+      route: "screens/home\u001b[2J.html",
+      message: "warning\u009b2J",
+    },
+  ]);
+  assert.deepEqual(output, [
+    "[mokly/warning] screens/home\\u001b[2J.html: warning\\u009b2J\n",
+  ]);
+  assert.ok(!output[0]!.includes("\u001b"));
+  assert.ok(!output[0]!.includes("\u009b"));
 });
 
 test(
@@ -218,6 +284,10 @@ class RecordingReporter implements ServeReporter {
     this.events.push(
       `baseline-ready:${commit}:${cacheHit ? "reused" : "rebuilt"}`,
     );
+  }
+  buildWarnings(diagnostics: readonly BuildDiagnostic[]): void {
+    for (const diagnostic of diagnostics)
+      this.events.push(`warning:${diagnostic.route}`);
   }
   catalogueReady(manifest: ManifestV7): void {
     const screens = manifest.entries.filter(

@@ -88,6 +88,7 @@ test("assignments cannot bypass boolean syntax, numeric validation or command re
     "--debug-timings",
     "--retained-runtime",
     "--strict-port",
+    "--strict",
     "--unknown",
   ])
     for (const value of ["", "true", "false"])
@@ -110,6 +111,24 @@ test("assignments cannot bypass boolean syntax, numeric validation or command re
     ["export", "--out=site", "--upload-concurrency=4"],
   ])
     assert.throws(() => parseArguments(argv), /cli-invalid/);
+});
+
+test("strict belongs to build, check, export, and publish", () => {
+  for (const argv of [
+    ["build", "--strict"],
+    ["check", "--strict"],
+    ["export", "--out", "site", "--strict"],
+    ["publish", "--strict"],
+  ])
+    assert.equal(parseArguments(argv).strict, true);
+
+  assert.throws(
+    () => parseArguments(["serve", "--strict"]),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.message ===
+        "[mokly/cli-invalid] --strict belongs to build, check, export or publish",
+  );
 });
 
 test("assigned bearer tokens are redacted in raw and URI-encoded diagnostics", () => {

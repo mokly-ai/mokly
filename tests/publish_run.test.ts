@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import type { BuildDiagnostic } from "../dist/build/build_warnings.js";
+import { enforceStrictBuildWarnings } from "../dist/build/build_warnings.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
 import { isCancellation, MoklyError } from "../dist/errors.js";
 import {
@@ -383,6 +385,37 @@ test("invalid metadata prevents capture and upload", async () => {
       fixture.boundaries,
     ),
     /upload-invalid-bundle/,
+  );
+  assert.equal(fixture.uploaded(), false);
+});
+
+test("publish observes export diagnostics before bundle capture or upload", async () => {
+  const fixture = dependencies();
+  const warning: BuildDiagnostic = {
+    code: "link-control-ancestor",
+    route: "screens/home.desktop.html",
+    message: "MockLink child control is inside <button>",
+  };
+  fixture.boundaries.export = async (_config, selected) => {
+    selected.onBuildDiagnostics?.([warning]);
+    assert.fail("strict diagnostics should stop export");
+  };
+
+  await assert.rejects(
+    publishCatalogue(
+      config,
+      {
+        ...options,
+        onBuildDiagnostics(diagnostics) {
+          enforceStrictBuildWarnings(diagnostics, true);
+        },
+      },
+      "1.2.3",
+      {},
+      fixture.boundaries,
+    ),
+    (error: unknown) =>
+      error instanceof MoklyError && error.code === "build-invalid",
   );
   assert.equal(fixture.uploaded(), false);
 });

@@ -2,6 +2,11 @@
 
 ## Active
 
+- [Styled Link Control Ancestor Rule](./styled-link-control-ancestor-rule.md)
+  — delivered tiered `MockLink asChild` placement, deterministic build
+  warnings, and `--strict`; Milestone 5 addresses the post-merge review's
+  terminal-safety and protocol-ownership findings before the pull request
+  merges.
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive
   `mokly publish` upload with the content-addressed plan, blob and complete
   exchange, the schema 2 export ownership marker, v2 fixtures and guides for

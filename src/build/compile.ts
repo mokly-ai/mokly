@@ -23,6 +23,10 @@ import {
 import { prepareRegistry } from "../registry/prepare.js";
 import { normalizeSingleDocument } from "../review/ignore.js";
 
+import {
+  normalizeBuildDiagnostics,
+  type BuildDiagnostic,
+} from "./build_warnings.js";
 import { rememberRuntime } from "./component_runtime.js";
 import { validateHtmlLinks } from "./html_links.js";
 import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
@@ -34,6 +38,7 @@ import { renderCooperatively } from "./render_cooperative.js";
 
 /** Complete in-memory static compilation result. */
 export interface Compilation {
+  diagnostics: readonly BuildDiagnostic[];
   manifest: ManifestV7;
   outputs: ReadonlyMap<string, string>;
 }
@@ -119,7 +124,7 @@ async function compileMeasured(
   }
   const beforeTransform = new Map(outputs);
   await accepted?.checkpoint();
-  const logicalRecords = timeSync("html.compatibility", () =>
+  const compatibility = timeSync("html.compatibility", () =>
     transformCompatibilityDocuments(
       outputs,
       registry.entries,
@@ -146,7 +151,12 @@ async function compileMeasured(
     validateGeneratedOwnershipHeaders(outputs, generatedOwners),
   );
   timeSync("html.logical-links", () =>
-    validateLogicalFragments(outputs, logicalRecords, registry.entries, config),
+    validateLogicalFragments(
+      outputs,
+      compatibility.records,
+      registry.entries,
+      config,
+    ),
   );
   await accepted?.checkpoint();
   timeSync("html.ignore-rules", () => {
@@ -176,7 +186,11 @@ async function compileMeasured(
   timeSync("output.paths", () =>
     validateGeneratedOutputPaths(outputs.keys(), config),
   );
-  const compilation = { manifest, outputs };
+  const compilation: Compilation = {
+    diagnostics: normalizeBuildDiagnostics(compatibility.diagnostics),
+    manifest,
+    outputs,
+  };
   timeSync("runtime.retain", () => rememberRuntime(compilation, graph, config));
   timingCounts("output", () => ({
     files: outputs.size,

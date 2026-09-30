@@ -22,6 +22,7 @@ test("build renders deterministic fragments, resolves id links, and checks commi
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const first = await compileCatalogue(config);
+  assert.deepEqual(first.diagnostics, []);
   await writeCompilation(first, config);
   checkCompilation(await compileCatalogue(config), config);
   const home = await fs.promises.readFile(
@@ -31,6 +32,7 @@ test("build renders deterministic fragments, resolves id links, and checks commi
   assert.match(home, /href="\.\/details\.mobile\.html"/);
   assert.equal(home.includes(fixture.root), false);
   const second = await compileCatalogue(config);
+  assert.deepEqual(second.diagnostics, []);
   assert.deepEqual([...second.outputs], [...first.outputs]);
 });
 

@@ -21,6 +21,10 @@ import { extractHtmlReferences } from "../html_references.js";
 import { prepareRegistry } from "../registry/prepare.js";
 import { normalizeSingleDocument } from "../review/ignore.js";
 
+import {
+  normalizeBuildDiagnostics,
+  type BuildDiagnostic,
+} from "./build_warnings.js";
 import type { ComponentRuntime } from "./component_runtime.js";
 import { DocumentCache } from "./document_cache.js";
 import { validateHtmlLinks, type HtmlValidationContext } from "./html_links.js";
@@ -32,6 +36,7 @@ import { validateGeneratedOwnershipHeaders } from "./ownership.js";
 import { renderFragments } from "./render.js";
 
 export interface CompiledDocument {
+  diagnostics: readonly BuildDiagnostic[];
   route: string;
   html: string;
   view?: ComponentViewRecord;
@@ -128,6 +133,7 @@ export class DocumentCompiler {
         if (this.routes.has(target)) this.links.parsed.delete(target);
     }
     return {
+      diagnostics: document.diagnostics,
       route,
       html: document.html,
       ...(document.view ? { view: document.view } : {}),
@@ -166,7 +172,7 @@ export class DocumentCompiler {
       target,
     );
     const original = outputs.get(route)!;
-    const records = transformCompatibilityDocuments(
+    const compatibility = transformCompatibilityDocuments(
       outputs,
       this.entries,
       config,
@@ -202,9 +208,10 @@ export class DocumentCompiler {
       validateComponentResources(new Map([[route, view]]), config);
     }
     const prepared = {
+      diagnostics: normalizeBuildDiagnostics(compatibility.diagnostics),
       route,
       html,
-      records,
+      records: compatibility.records,
       anchors: extractHtmlReferences(html).anchors,
       ...(view ? { view } : {}),
     };

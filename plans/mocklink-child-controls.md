@@ -5,6 +5,10 @@ so consumers can use their existing styled controls with Mokabook navigation.
 Scope is the Mokabook package, documentation, and consumer/browser fixtures.
 Downstream adoption and publishing a package release are subsequent work.
 
+> This is a historical delivery record. Its ancestor-`tabindex` decision and
+> single interactive tier were superseded by the
+> [styled link control ancestor rule plan](./styled-link-control-ancestor-rule.md).
+
 ## Milestone 1: Define the contract — completed
 
 Specify a complete opt-in API and its ownership, accessibility, and build rules.

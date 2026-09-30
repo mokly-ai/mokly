@@ -93,6 +93,21 @@ Export and Review boundaries continue to use directories that hold resolved
 entry modules. Source locations do not enter instance keys, props keys, slot
 identities, or Changes projections.
 
+## Build Warnings
+
+`build_warnings.ts` owns the validated code, route, and single-line message
+record plus deterministic sorting and de-duplication. The child-control adapter
+and compatibility transform return diagnostics beside their output;
+`compile.ts` puts the normalized list on `Compilation`, while
+`document_compiler.ts` retains the requested document's list without reporting
+it. Diagnostics never enter generated files, the manifest, HTTP bytes, or
+timing records. Authored C0/C1 controls become visible `\uXXXX` escapes before
+normalization, and reporters defensively apply the same encoder.
+`link_control_tiers.ts` owns the explicit ancestor and
+descendant tier sets, feature precedence, and one-line element descriptions
+used by both errors and warnings. See the
+[build warnings contract](../../docs/protocol/mokly-build-warnings.md).
+
 ## Development
 
 ```sh
@@ -107,8 +122,10 @@ The example uses derived output: generation writes local ignored HTML and a
 manifest; authored public CSS remains tracked. Committed output and historical
 manifest rejection are tested with isolated consumers.
 
-- `compile.ts`, `render.ts`, `document_compiler.ts`: exhaustive and requested-view
-  compilation using the same validation boundary.
+- `compile.ts`, `build_warnings.ts`, `render.ts`, `document_compiler.ts`:
+  exhaustive and requested-view compilation using the same validation boundary.
+- `link_control_tiers.ts`, `link_control_nodes.ts`, `link_controls.ts`: tiered
+  placement validation and source-byte-preserving styled-control adaptation.
 - `load_graph.ts`, `consumer_entry.ts`, `consumer_resolution.ts`: one consumer
   graph, discovered through `config/entry_discovery.ts`, and its module
   resolution.

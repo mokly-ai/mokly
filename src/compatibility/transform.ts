@@ -3,6 +3,7 @@ import path from "node:path";
 import { entryRoute, type ArtifactView } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
+import type { BuildDiagnostic } from "../build/build_warnings.js";
 import { walkFiles } from "../build/discovery.js";
 import { validateControlMetadata } from "../build/link_control_metadata.js";
 import { adaptLinkControls } from "../build/link_controls.js";
@@ -18,6 +19,12 @@ import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
 
+/** Compatibility records and non-fatal diagnostics from transformed documents. */
+export interface CompatibilityTransform {
+  readonly diagnostics: readonly BuildDiagnostic[];
+  readonly records: readonly LogicalReferenceRecord[];
+}
+
 /** Resolve catalogue id links and apply an explicitly configured migration bridge. */
 export function transformCompatibilityDocuments(
   outputs: Map<string, string>,
@@ -27,10 +34,11 @@ export function transformCompatibilityDocuments(
   fragmentViews: ReadonlyMap<string, ArtifactView>,
   retainedRoutes?: readonly string[],
   context?: CompatibilityContext,
-): readonly LogicalReferenceRecord[] {
+): CompatibilityTransform {
   const byId =
     context?.byId ?? new Map(entries.map((entry) => [entry.id, entry]));
   const records: LogicalReferenceRecord[] = [];
+  const diagnostics: BuildDiagnostic[] = [];
   const outputRoutes = [...outputs.keys()];
   const availableRoutes = graph.compatibilityTransformer
     ? (context?.availableRoutes ??
@@ -45,8 +53,10 @@ export function transformCompatibilityDocuments(
       colorScheme: "light",
       viewport: "desktop",
     };
+    const adapted = adaptLinkControls(original, route);
+    diagnostics.push(...adapted.diagnostics);
     const linked = rewriteMockLinks(
-      adaptLinkControls(original, route),
+      adapted.html,
       route,
       viewport,
       colorScheme,
@@ -103,7 +113,7 @@ export function transformCompatibilityDocuments(
     validateCompatibilityRecords(route, normalized, linked.records);
     outputs.set(route, normalized);
   }
-  return records;
+  return { diagnostics, records };
 }
 
 /** Immutable-route indexes reused across documents of one consumer generation. */

@@ -169,7 +169,8 @@ follow the command, for example `mokly build --config tools/mokly.config.ts`.
 
 The CLI uses stable plain output in CI and a richer interactive display in a
 terminal. During watched Serve, press `h` to see shortcuts for opening,
-rebuilding, clearing, and quitting.
+rebuilding, clearing, and quitting. Build warnings print on standard error
+without changing the exit status; `--strict` turns them into a failed command.
 
 Detailed command references:
 
