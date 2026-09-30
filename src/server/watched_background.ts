@@ -54,12 +54,12 @@ export class WatchedBackground {
         const duration = Date.now() - this.changesStartedAt;
         if (snapshot)
           options.reporter.changesReady(
-            snapshot.changedRoutes?.length ?? 0,
+            snapshot.changedIds?.length ?? 0,
             duration,
           );
         else options.reporter.changesUnavailable(duration);
         options.running.notifyUpdate(
-          snapshot?.changedRoutes,
+          snapshot?.changedIds,
           snapshot,
           snapshot ? "ready" : "unavailable",
           "evidence",
@@ -83,6 +83,8 @@ export class WatchedBackground {
           ),
         baselineProgress: (event) => this.reportBaseline(event),
         diagnostic: options.report,
+        incompatibleBaseline: (commit) =>
+          options.reporter.incompatibleBaseline(commit),
         resources: options.resources,
         shutdown: options.shutdown,
         ...(options.baselineBuilder

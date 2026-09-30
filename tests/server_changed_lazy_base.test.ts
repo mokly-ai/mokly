@@ -155,9 +155,7 @@ test("changed documents retain a removed image without any stylesheet in the dif
     assert.ok(
       result.changedPaths.includes(`mockups/screens/home.${viewport}.html`),
     );
-  const consumer = result.screens.find(
-    (screen) => screen.route === "screens/home.html",
-  );
+  const consumer = result.screens.find((screen) => screen.id === "home");
   assert.equal(consumer?.views.length, 2);
   for (const view of consumer!.views)
     assert.deepEqual(view.reasons, [

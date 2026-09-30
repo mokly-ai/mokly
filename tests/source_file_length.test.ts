@@ -131,3 +131,40 @@ test("staged-only, exact-limit and subdirectory invocation use the repository ro
   assert.equal(all.status, 1);
   assert.match(all.stderr, /packages\/viewer\/scripts\/long\.jsx/);
 });
+
+test("an in-progress merge audits resolved changes, not untouched main additions", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-length-merge-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const git = (...args: string[]) => execFileSync("git", args, { cwd: root });
+  git("init", "-q");
+  git("config", "user.name", "Mokly Test");
+  git("config", "user.email", "mokly@example.invalid");
+  await fs.writeFile(path.join(root, "README.md"), "baseline\n");
+  git("add", ".");
+  git("commit", "-qm", "baseline");
+  git("branch", "feature");
+  await fs.mkdir(path.join(root, "docs/protocol"), { recursive: true });
+  await fs.writeFile(
+    path.join(root, "docs/protocol/main.md"),
+    "x\n".repeat(251),
+  );
+  git("add", ".");
+  git("commit", "-qm", "main addition");
+  git("update-ref", "refs/remotes/origin/main", "HEAD");
+  git("checkout", "-q", "feature");
+  await fs.writeFile(path.join(root, "README.md"), "feature\n");
+  git("add", ".");
+  git("commit", "-qm", "feature change");
+  git("merge", "--no-commit", "--no-ff", "origin/main");
+  const check = () =>
+    spawnSync(process.execPath, [script], { cwd: root, encoding: "utf8" });
+  assert.equal(check().status, 0);
+  await fs.writeFile(
+    path.join(root, "docs/protocol/feature.md"),
+    "x\n".repeat(251),
+  );
+  const failed = check();
+  assert.equal(failed.status, 1);
+  assert.match(failed.stderr, /docs\/protocol\/feature\.md: 251 lines/);
+  assert.doesNotMatch(failed.stderr, /main\.md/);
+});

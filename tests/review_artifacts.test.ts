@@ -1,14 +1,16 @@
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
+import { promisify } from "node:util";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import {
-  NodeGitCommandRunner,
   CommittedRepository,
+  NodeGitCommandRunner,
 } from "../dist/review/git.js";
 import { runReview } from "../dist/review/run.js";
 import { writeReviewArtifact } from "../dist/review/write.js";
@@ -18,7 +20,8 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
-import { git } from "./helpers/review_fixtures.js";
+
+const execFileAsync = promisify(execFile);
 
 test("Review compares Git base without checkout and writes deterministic artifacts", async (context) => {
   const fixture = await createFixture();
@@ -47,8 +50,7 @@ test("Review compares Git base without checkout and writes deterministic artifac
     new CommittedRepository(new NodeGitCommandRunner(fixture.root)),
   );
   assert.equal(
-    result.screens.find((screen) => screen.route === "screens/home.html")
-      ?.state,
+    result.screens.find((screen) => screen.id === "home")?.state,
     "changed",
   );
   assert.deepEqual(result.sharedImpact, ["notes.md"]);
@@ -61,7 +63,7 @@ test("Review compares Git base without checkout and writes deterministic artifac
       "utf8",
     ),
   ) as { baseCommit: string; schemaVersion: number };
-  assert.equal(reviewJson.schemaVersion, 2);
+  assert.equal(reviewJson.schemaVersion, 4);
   assert.match(reviewJson.baseCommit, /^[a-f0-9]{40}$/);
   assert.equal(
     fs.existsSync(path.join(config.review.outDir, "index.html")),
@@ -128,3 +130,7 @@ test("Review writer will not replace an unowned directory or repository root", a
     /must not overlap/,
   );
 });
+
+async function git(cwd: string, arguments_: readonly string[]): Promise<void> {
+  await execFileAsync("git", [...arguments_], { cwd });
+}

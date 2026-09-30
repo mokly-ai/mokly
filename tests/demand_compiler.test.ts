@@ -64,8 +64,13 @@ test("live index checks dependency declarations before accepting unrendered entr
   t.after(() => removeFixture(fixture));
   const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
   const corrupt = structuredClone(runtime.manifest);
-  const entry = corrupt.entries.find((value) => value.kind === "component")!;
-  Object.assign(entry, { declaredDependencies: [] });
+  const entry = corrupt.entries.find(
+    (value) => value.kind === "component" && !("variantOf" in value),
+  )!;
+  Object.assign(entry, {
+    declaredDependencies: [],
+    ownedDependencies: ["notes.md"],
+  });
   assert.throws(() => parseCatalogueIndex(corrupt), /dependencies/);
 });
 

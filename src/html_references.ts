@@ -90,7 +90,11 @@ export function extractHtmlReferences(
       resources.push(...extractCssReferences(style));
     }
   });
-  return { anchors, hrefs, resources };
+  return {
+    anchors,
+    hrefs,
+    resources,
+  };
 }
 
 /** Extract `url()` and string-form `@import` references from CSS. */

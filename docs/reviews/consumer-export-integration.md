@@ -82,10 +82,10 @@ unresolved, and the two code recommendations below need a user decision.
 
 ### 1. Medium — Deployment identity covers only comparison output
 
-The exporter hashes `comparisonFiles` in [site.ts](../../src/export/site.ts),
-then adds shell HTML, navigation, public files, CSS, modules, fonts, and adapter
-output. [The former static-delivery check](../../packages/viewer/src/shell/delivery.ts) uses only
-`comparisonUrl` to decide whether a page belongs to the current deployment.
+The exporter once hashed only `comparisonFiles`, then added shell HTML,
+navigation, public files, CSS, modules, fonts, and adapter output. The
+then-current `adoptStaticDelivery` used only `comparisonUrl` to
+decide whether a page belonged to the current deployment.
 An independent in-memory check confirmed that changed route metadata with the
 same comparison URL is adopted without a full reload.
 

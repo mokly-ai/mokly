@@ -29,12 +29,15 @@ through the current filesystem.
 view's checked snapshot closure. Neither reader executes historical code.
 `page_preview.ts` captures one page selected from an accepted removed-entry
 snapshot. Its caller supplies the pinned `BaselineReader`; the provider verifies
-the page against that snapshot's historical manifest, then reuses
+the page against that snapshot's baseline manifest, then reuses
 `GitReviewAssetReader`, `SelectedAssetReader` and `copySnapshotDependencies` for
 the same confinement, source exclusions, regular-file checks, transitive
 resource traversal and 64 MiB bound as screen panes. It returns typed
 `RemovedPagePreview` metadata plus the baseline files; the artifact renderer adds
 strictly validated `preview.json` without creating page records in `review.json`.
+Current and baseline manifests both require v7; recognized earlier output is
+handled before comparison under the
+[baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
 
 Server classification and export use the same interfaces. Export pins only
 repository evidence and retains the same baseline reader, including its optional
@@ -64,7 +67,15 @@ binary files), alongside its digests, so selected diffs use the accepted
 compilation across worker and child-process boundaries without decoding assets.
 Derived classification compares all generated documents and reachable resource
 bytes even without changed Git output paths. Cache paths and their physical
-aliases are excluded before dependency or shared-impact matching.
+aliases are excluded before dependency or shared-impact matching. Component
+catalogues follow the [path evidence rule](../../docs/protocol/mokly-component-changes.md#dependencies-and-styles):
+`component_metadata.ts` owns glob matching, owned/exact reasons, and unowned
+directory evidence. The classifier combines that evidence with reasons to
+preserve the [v4 result set](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
+The classifier records each entry's scope-filtered path reasons, retained view
+paths, exact screen stylesheet reasons, and actual-invocation owned CSS by entry
+pair. Source validation accepts dependency reasons only from that record; it
+does not re-evaluate the path policy or trust result view records as sources.
 
 ```bash
 npm run build
@@ -79,12 +90,18 @@ and [export boundary](../export/README.md).
 
 `css/` provides parsing, diffing, and document matching for
 [CSS change attribution](../../docs/protocol/mokly-css-attribution.md).
-Both result versions, live membership, watched updates and publishing use it to
+Review v4, live membership, watched updates and publishing use it to
 exclude changed stylesheets whose changed rules cannot match a view. Public
 resource globs cannot bypass the graph or restore excluded stylesheets. These
 review interfaces are internal; the package authoring API is unchanged.
+
+Review result v4 replaces both earlier result versions; a catalogue without
+registered components emits the same shape with empty component arrays.
+
 `analysisOwnsStylesheet` owns the shared public-output boundary. Source/token
-stylesheets outside that boundary retain file-level shared impact in both schemas.
+stylesheets outside that boundary retain file-level evidence under
+[CSS attribution](../../docs/protocol/mokly-css-attribution.md) and the
+[v4 result definition](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
 `imported_changes.ts` compares accepted generated CSS and binary asset bytes
 against the pinned branch-point reader, even when Git ignores derived output.
 It merges those route changes with Git's authored paths and removes file-level
@@ -92,7 +109,7 @@ shared impact for **every** delivered CSS source whenever any generated
 stylesheet's bytes change, or for an
 asset whose matching generated route changed. A baseline predating generated
 CSS makes a one-time jump; unrelated transformer-only and PostCSS candidate
-sources retain their independent impact. Both result versions and live Changes
+sources retain their independent impact. Review result v4 and live Changes
 use the same byte comparison and source filter.
 Accepted generations carry their stylesheet/asset route index, output bytes
 when available, and delivered sources through the runtime and background
@@ -202,7 +219,10 @@ documents also supply matching trees. Base resource reads are batched by graph
 depth; optional counterpart CSS reads distinguish missing files from invalid
 ones. Per-side readers cache bytes, and the injected parser caches identical CSS
 text for the run. Live resource validation additionally retains its alias and
-verified-deletion behavior.
+verified-deletion behavior. `deleted_resource.ts` owns that one decision for
+both unified and screen-level classification, including derived byte comparison
+and paired embedded-document normalization; each caller still supplies its
+confinement-aware current and baseline readers.
 Committed live classification batches base documents for changed or moved documents and
 for views with changed stylesheet resources. Only an unchanged, unmoved view
 without changed CSS skips base view reads and base graph traversal, so verified
@@ -215,7 +235,7 @@ material resource-byte changes without inventing dependency paths.
 Unexpected parser or matcher failures keep only the failing resource
 unresolved, with any recoverable changed selectors, and classification continues.
 
-Both result versions retain `material: true` exactly when the actual paired,
+Review v4 retains `material: true` exactly when the actual paired,
 ignore-normalized documents differ, including added and removed views. Ownership
 projections do not define this flag. A material change keeps the ordinary screen
 heading even when stylesheet evidence is also present. Both versions retain
@@ -224,12 +244,13 @@ Entry reasons merge by path and union selectors, with
 unresolved evidence taking precedence. The shared browser/server decoder rejects
 invalid or contradictory evidence; canonical artifact serialization preserves it.
 Owned CSS retained at an actual invocation also keeps its component in Changes
-when saved variants exclude it. Exact screen declarations remain independent
-only for retained CSS; non-CSS declarations keep their existing file-level policy.
+when its variant entries exclude it. Exact screen declarations remain
+independent only for retained CSS; non-CSS path-only evidence follows the
+component path rule.
 The screen-only live classifier retains a `ScreenResourceEvidence` slice from
 the same traversal that determines membership. The shell receives its selected
-`ViewResourceEvidence` records without requesting snapshots or component
-classification. Export projects the same slice from its existing v2 result;
+`ViewResourceEvidence` records without requesting snapshots. Export projects
+the same slice from its unified v4 result;
 both producers omit empty views and screens left without evidence. The inspector
 merges it with loaded comparison details. Result schemas and
 classification policy stay unchanged.
@@ -255,8 +276,18 @@ Key code:
   with accepted generated stylesheet/asset bytes and delivered-source stripping;
   live, export and Changes-enabled publication use the same typed input for
   comparison and membership.
-- `compare.ts`, `screen_compare.ts`: screen comparisons and retained artifacts.
+- `compare.ts`, `component_compare.ts`: the unified v4 comparison and retained
+  artifacts for every catalogue.
 - `page_preview.ts`: typed before-only page capture from accepted removal state.
+- `artifact_files.ts` and the shared viewer-data builders: collision-checked
+  writes plus snapshot and removed-page artifact naming from entry identity.
+- `deleted_resource.ts`: shared verification and byte comparison for a
+  currently referenced resource that may have been deleted.
+- `component_variant_classification.ts`: flat component variant entry pairing,
+  reasons, view evidence, and grouped v4 result records.
+- `component_classification_sources.ts`, `component_classification_entries.ts`,
+  `component_reason_sources.ts`, and `component_result_sources.ts`:
+  source-complete v4 assembly, entry-view preparation, and validation.
 - `component_classification.ts`, `component_view.ts`: component ownership policy.
   `compareComponentView` has two paths: an unchanged decision that settles a
   paired view only when marker-retaining documents, routes, and usage topology
@@ -281,7 +312,7 @@ Key code:
   removed. Views without ownership text edits use actual-document evidence
   alone.
 - `component_resource_attribution.ts`: actual-invocation CSS ownership and entry
-  evidence aggregation without inventing saved variants.
+  evidence aggregation without inventing variants.
 - `assets.ts`, `component_resources.ts`, `resource_graph.ts`: confined reads and
   traversal shared by resource evidence and snapshots.
 - `css/types.ts`: rule records, the parser interface, and result/error contracts.
@@ -295,10 +326,12 @@ Key code:
 - `css/nesting.ts`, `css/pseudos.ts`: parent substitution and static match bounds.
 - `css/material.ts`: changed custom-property and URL-reference detection.
 - `css/paths.ts`: shared public stylesheet analysis scope.
-- `css/stylesheet_path.ts`: browser-safe, case-insensitive stylesheet identity.
+- `../../packages/viewer/src/review/css/stylesheet_path.ts`: browser-safe,
+  case-insensitive stylesheet identity shared with readers.
 - `resource_comparison.ts`, `css/resource_analysis.ts`: shared resource evidence
   and the classification-scoped parser cache.
-- `result_resources.ts`: browser-safe validation of retained/excluded evidence.
+- `../../packages/viewer/src/review/result_resources.ts`: browser-safe
+  validation of retained/excluded evidence shared with readers.
 - `resource_documents.ts`: one paired normalization for embedded-document
   discovery and matching; normalized ignore tokens are never parsed a second time.
 - `artifact_resources.ts`: validation of evidence against retained snapshot resources.

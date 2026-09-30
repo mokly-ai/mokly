@@ -16,6 +16,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
     }) => {
       for (const route of [
         "pages/comparison",
+        "design-component-overlay",
+        "design-component-difference",
+        "design-component-overlay-tall",
         "pages/affected",
         "controls/states/comparison",
         "states/removed",
@@ -27,12 +30,15 @@ for (const viewport of ["desktop", "mobile"] as const) {
           page.locator(".ce-preview-pane .ce-comparison-evidence"),
         ).toHaveCount(0);
         await expect(page.locator(".ce-change-context")).toHaveCount(0);
-        await page
-          .getByRole("button", { name: "Details", exact: true })
-          .click();
-        await expect(
-          page.getByRole("region", { name: "Details", exact: true }),
-        ).toContainText("Comparison details");
+        const details = page.getByRole("region", {
+          name: "Details",
+          exact: true,
+        });
+        if (!(await details.isVisible()))
+          await page
+            .getByRole("button", { name: "Details", exact: true })
+            .click();
+        await expect(details).toContainText("Comparison details");
         await expect(page.locator(".ce-comparison-evidence")).toHaveCount(1);
         await expect(page.locator(".ce-comparison-evidence")).not.toContainText(
           "corners and spacing",
@@ -145,7 +151,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       for (const [route, status] of [
         ["pages/affected", "Changed"],
         ["inspection/direct-change", "Changed"],
-        ["states/removed", "Changed"],
+        ["states/removed", "Removed"],
         ["states/removed-consumer", "Removed"],
         ["states/unused", "Unmodified"],
         ["controls/editing/edited", "Unmodified"],
@@ -167,8 +173,15 @@ for (const viewport of ["desktop", "mobile"] as const) {
           viewport === "desktop" ? ".mbk-nav-filter-count" : ".ce-change-count",
         ),
       ).toHaveText("1");
-      if (viewport === "desktop")
-        await expect(page.locator(".mbk-nav-scroll a")).toHaveText("Badge");
+      if (viewport === "desktop") {
+        await expect(page.locator(".mbk-nav-scroll a")).toContainText([
+          "Badge",
+          "Default",
+        ]);
+        await expect(
+          page.locator(".mbk-nav-scroll .mbk-nav-changed"),
+        ).toHaveCount(2);
+      }
     });
   });
 }

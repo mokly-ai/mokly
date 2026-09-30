@@ -36,8 +36,8 @@ for (const mode of ["committed", "derived"] as const) {
           .map((screen) => screen.id),
         ["home"],
       );
-      assert.equal(live.changedRoutes?.includes("screens/home.html"), true);
-      assert.equal(live.changedRoutes?.includes("screens/details.html"), false);
+      assert.equal(live.changedIds?.includes("home"), true);
+      assert.equal(live.changedIds?.includes("details"), false);
       assert.ok(
         !artifact.result.sharedImpact.includes(
           `entries/${path.basename(fixture.cssPath)}`,
@@ -80,9 +80,9 @@ for (const mode of ["committed", "derived"] as const) {
       fixture.repository,
       mode === "committed" ? compilation.manifest : undefined,
     );
-    assert.equal(live.changedRoutes.includes("screens/home.html"), true);
-    assert.equal(live.changedRoutes.includes("screens/details.html"), true);
-    assert.equal(live.changedRoutes.includes("screens/secondary.html"), false);
+    assert.equal(live.changedIds.includes("home"), true);
+    assert.equal(live.changedIds.includes("details"), true);
+    assert.equal(live.changedIds.includes("secondary"), false);
     assert.ok(live.componentChanges?.comparison);
     assert.ok(
       !live.componentChanges.comparison.changedPaths.includes(

@@ -12,7 +12,7 @@ import {
   CommittedRepository,
 } from "../dist/review/git.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 import { changedContentPaths } from "../dist/server/changed_content.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
@@ -58,12 +58,12 @@ for (const resource of ["nested.css", "image.svg"]) {
       resource.endsWith(".css") ? "\nmain { color: red; }" : "\n",
     );
     assert.deepEqual(
-      await computeChangedRoutes(
+      await computeChangedIds(
         fixture.config,
         "HEAD",
         committedReviewRepository(fixture.config),
       ),
-      ["screens/home.html", "user-flows/tour.html"],
+      ["home", "tour"],
     );
     const result = await exportCatalogue(fixture.config, {
       outDir: "site",
@@ -176,7 +176,7 @@ test("material Changes can use captured documents without reading current file b
   assert.ok(reads.includes(fragment));
 });
 
-test("review export retains a removed variant route, id redirect, and parent context", async (context) => {
+test("review export retains a removed variant route and parent context", async (context) => {
   const fixture = await createExportFixture(screenVariantEntrySource());
   context.after(() => fixture.close());
   await fs.writeFile(
@@ -184,9 +184,8 @@ test("review export retains a removed variant route, id redirect, and parent con
     screenVariantEntrySource({ includeVariant: false }),
   );
 
-  const result = await exportCatalogue(fixture.config, { outDir: "site" });
-  const route = "screens/home.variants/empty.html";
-  assert.equal(result.idRoutes["home-empty"], `/view/${route}`);
+  await exportCatalogue(fixture.config, { outDir: "site" });
+  const route = "screens/home-empty.html";
   const removed = await fs.readFile(
     path.join(fixture.output, "view", route),
     "utf8",
@@ -199,12 +198,7 @@ test("review export retains a removed variant route, id redirect, and parent con
     /<div class="mbk-nav-variants" data-nav-disclosure="variants:pages:home"[^>]*id="mb-nav-variants-pages-home"><a [^>]*data-nav-removed=""[^>]*data-removed-variant=""/,
   );
   assert.match(removed, /Home empty · Removed/);
-  const redirect = await fs.readFile(
-    path.join(fixture.output, "id/home-empty/index.html"),
-    "utf8",
-  );
-  assert.match(documentText(redirect), /Showing previous version/);
-  assert.match(documentText(redirect), /Previous version unavailable/);
+  await assert.rejects(fs.access(path.join(fixture.output, "id")));
 
   const catalogue = JSON.parse(
     await fs.readFile(
@@ -213,13 +207,12 @@ test("review export retains a removed variant route, id redirect, and parent con
     ),
   ) as {
     removedEntries: {
-      ancestors: readonly { id: string; title: string }[];
-      entry: { id: string; variantOf?: string };
+      entry: { id: string; navPath: readonly string[]; variantOf?: string };
     }[];
   };
   const snapshot = catalogue.removedEntries.find(
     ({ entry }) => entry.id === "home-empty",
   );
   assert.equal(snapshot?.entry.variantOf, "home");
-  assert.deepEqual(snapshot?.ancestors, [{ id: "fixture", title: "Fixture" }]);
+  assert.deepEqual(snapshot?.entry.navPath, ["Fixture"]);
 });

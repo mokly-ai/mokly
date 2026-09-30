@@ -33,7 +33,7 @@ JSON beside your catalogue is unaffected.
 
 Mokly will not overwrite an HTML file that does not carry a valid Mokly
 ownership header, so authored output is never deleted by a build. Move the
-file, or choose a route that does not collide.
+authored file or choose a different entry id; Mokly derives the route from it.
 
 Mokly owns and replaces the entire `mokly-generated/` directory: do not put
 consumer-authored files there. Build removes obsolete files anywhere in that

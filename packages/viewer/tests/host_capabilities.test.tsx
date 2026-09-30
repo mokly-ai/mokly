@@ -30,7 +30,7 @@ const catalogue = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v1.json",
+        "../../../docs/protocol/fixtures/catalogue-v3.json",
         import.meta.url,
       ),
       "utf8",
@@ -62,12 +62,12 @@ test("the provider exposes live capabilities and export-style omission", () => {
     },
   } satisfies ViewerHostCapabilities;
   const workspace = {
-    entry: { route: "components/action.html" },
+    entry: { id: "action" },
   } as unknown as WorkspaceData;
   const Probe = () => (
     <span>
       {useViewerCapabilities()?.source.catalogueId ?? "export"}:
-      {useViewerInitialWorkspace()?.entry.route ?? "none"}
+      {useViewerInitialWorkspace()?.entry.id ?? "none"}
     </span>
   );
   assert.equal(
@@ -79,7 +79,7 @@ test("the provider exposes live capabilities and export-style omission", () => {
         <Probe />
       </ViewerCapabilityBoundary>,
     ),
-    `<span>${catalogue.identity.id}:components/action.html</span>`,
+    `<span>${catalogue.identity.id}:action</span>`,
   );
   assert.equal(renderToStaticMarkup(<Probe />), "<span>export:none</span>");
 });
@@ -147,7 +147,7 @@ test("evidence adoption fences source identity and monotonic revisions", () => {
   assert.equal(
     readViewerEvidenceRevision(
       source,
-      viewerCapabilityRequest({ ...source, base: "release" }, request.route),
+      viewerCapabilityRequest({ ...source, base: "release" }, request.entryId),
       nextSource,
       next,
     ),
@@ -216,7 +216,7 @@ test("live SSR carries a private descriptor while export carries no host loader"
   assert.equal(view.kind, "target");
   if (view.kind !== "target")
     throw new Error("Expected a target fixture view.");
-  assert.equal(descriptor.workspace.entry.route, view.target.entry.route);
+  assert.equal(descriptor.workspace.entry.id, view.target.entry.id);
   assert.equal(descriptor.workspace.base, source.base);
   assert.equal("renderCapability" in descriptor.workspace, false);
   for (const leaked of [{ token }, { renderCapability: { generation, token } }])
@@ -229,11 +229,10 @@ test("live SSR carries a private descriptor while export carries no host loader"
   const exported = renderHydratedShellPage(view, {
     base: source.base,
     delivery: {
-      schemaVersion: 2,
+      schemaVersion: 3,
       deploymentId,
       canonicalPath: "/",
       comparisonUrl: null,
-      idRoutes: {},
     },
     readModel: { ...catalogue, deploymentId },
     updateVersion: 0,

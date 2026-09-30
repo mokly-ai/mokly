@@ -27,7 +27,7 @@ adapt explicit child controls -> resolve mock:id links -> compatibility bridge
 validate markers/links/resources
         |
         v
-mobile/desktop light and optional dark HTML for every screen and variant screen, saved component variants, whole documents + schema-v5 manifest + CSS and binary asset outputs in memory
+mobile/desktop light and optional dark HTML for every screen, screen variant, and component variant entry, whole documents + schema-v7 manifest + CSS and binary asset outputs in memory
         |
         +---- check (committed): compare with disk, write nothing
         |
@@ -90,7 +90,10 @@ compatibility transformer is a graph source, not a CSS delivery root;
 its CSS tree is inventoried without publishing a stylesheet. The union of
 both passes and plugin dependencies is used even by inventory-only freshness
 checks. Generated text and binary bytes share the same ownership, check,
-transaction and export boundaries without changing manifest v5.
+transaction and export boundaries without changing manifest v7.
+Imported CSS does not add a separate
+manifest schema. Routes derive from entry kind and id, while navigation uses
+authored `navPath`.
 
 The resolved entry modules, the configured renderer, imported page
 helpers, and an optional temporary compatibility transformer are imported by a single virtual entry and
@@ -157,8 +160,8 @@ its neutral default. The renderer receives:
 
 ```ts
 interface RenderInput {
-  entry: ScreenDefinition | ComponentDefinition;
-  variantId?: string;
+  entry: ScreenDefinition | ComponentVariantDefinition;
+  componentProps?: Readonly<Record<string, unknown>>;
   node: ReactNode;
   stylesheets: readonly string[];
   viewport: "mobile" | "desktop";
@@ -168,16 +171,21 @@ interface RenderInput {
 type Renderer = (input: RenderInput) => string | RenderResult;
 ```
 
+`RenderInput` has no `variantId`: for a component render, `entry` is the
+variant entry itself and `componentProps` carries its validated props.
+
 The returned string, or `RenderResult.html`, must be a complete HTML document.
 The optional structured result supplies exact component style/resource ownership;
 see the [component manifest](../protocol/mokly-component-manifest.md).
-Registered entries render each saved variant in every configured context through
-the same consumer graph. Wrappers record actual invocations, data, caller-owned
-slots, and layout-neutral ranges. The root saved variant is not its own instance.
-All catalogues emit manifest v5 with the complete source inventory. Registered
-components add saved variants and complete per-view invocation/ownership records;
-explicit page callbacks still emit exactly one complete document. Both historical
-v4 envelopes remain readable only at the Git boundary. Current readers require v5.
+Each component variant entry renders in every configured context through the
+same consumer graph. Wrappers record actual invocations, data, caller-owned
+slots, and layout-neutral ranges. The variant's root render is not its own
+instance. All catalogues emit manifest v7 with the complete source inventory.
+Registered components add variant entries and complete per-view
+invocation/ownership records; explicit page callbacks still emit exactly one
+complete document. Current and Git-baseline readers require v7; earlier output
+makes Changes unavailable under
+[baseline compatibility](../protocol/mokly-baseline-compatibility.md).
 
 The [child-control adapter](../protocol/mokly-link-controls.md) uses parsed
 source locations to patch only the marked control and its boundary templates.
@@ -232,7 +240,7 @@ the completed HTML string.
 
 ## 4. Validation And Commit
 
-Registry ids, routes, relationships, files, output collisions, stylesheets,
+Registry ids, relationships, files, output collisions, stylesheets,
 ordinary and `data-nav-href` links, anchors, local HTML resource attributes,
 `srcset`, inline/style-block CSS, transitive CSS imports/URLs,
 Review-ignore/material markers, protected source inventory, and manifest data are
@@ -271,11 +279,13 @@ comment-safe, newline-portable ownership proof when pruning or presenting
 generated HTML. Public HTML without the header remains a consumer-owned static
 input and may be classified by an explicit watch rule.
 
-Catalogue routes use portable URL-unreserved segments, reject Windows device
-filename stems, and end in `.html`. Framework-generated links and redirects
-still percent-encode every path segment defensively; static asset paths may
-therefore contain characters such as spaces without corrupting HTML attributes
-or URL query/fragment boundaries.
+Catalogue routes derive from each entry's kind and id (`screens/<id>.html`,
+`pages/<id>.html`, `user-flows/<id>.html`, and `components/<id>.html`), so
+their segments are portable ASCII letters, digits, and `-` ending in `.html`;
+an id that is a Windows device filename stem is rejected. Framework-generated
+links and redirects still percent-encode every path segment defensively; static
+asset paths may therefore contain characters such as spaces without corrupting
+HTML attributes or URL query/fragment boundaries.
 
 `build` writes a same-filesystem staging tree, backs up only files identified by
 Mokly's generated header and a source path beneath this config's authored
@@ -316,10 +326,9 @@ React-free IIFE under its byte budget.
 Static shell documents reference the single owned catalogue JSON and validate
 its identity and finalized deployment before hydration. They still contain the
 complete server-rendered route, but do not repeat the full catalogue payload
-for every route and alias. Serve retains its inline accepted snapshot.
+for every route. Serve retains its inline accepted snapshot.
 Shared catalogue validation uses synchronous browser-safe SHA-256, checked against
 Node digests; source inventory excludes the resolved viewer runtime even when
 npm installs it as a workspace symlink. Browser
 packaging fails if a client imports Node-only code. Comparison JSON is decoded
-with the same new-record validator used by its producer; v2 artifacts remain
-supported without adding component suppression.
+with the same strict review-result v4 validator used by its producer.

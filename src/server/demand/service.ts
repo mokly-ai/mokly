@@ -2,7 +2,7 @@
 import type { EventEmitter } from "node:events";
 import { Worker } from "node:worker_threads";
 
-import { generatedViews } from "@mokly/viewer/data";
+import { entryRoute, generatedViews } from "@mokly/viewer/data";
 
 import { compactRuntime } from "../../build/compact_runtime.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
@@ -54,7 +54,7 @@ export class DocumentService {
     this.routes = new Set(
       runtime.manifest.entries.flatMap((entry) =>
         entry.kind === "page"
-          ? [entry.route]
+          ? [entryRoute("page", entry.id)]
           : generatedViews(entry).map((view) => view.path),
       ),
     );

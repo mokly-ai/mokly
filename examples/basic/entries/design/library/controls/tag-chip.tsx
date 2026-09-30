@@ -26,7 +26,7 @@ export const tagChip = defineComponent({
   render: TagChipView,
   variants: [
     {
-      id: "default",
+      id: "design-ui-tag-chip-default",
       title: "Default",
       props: {
         id: "forms",
@@ -36,7 +36,7 @@ export const tagChip = defineComponent({
       },
     },
     {
-      id: "selected",
+      id: "design-ui-tag-chip-selected",
       title: "Selected",
       props: {
         id: "forms",
@@ -46,7 +46,7 @@ export const tagChip = defineComponent({
       },
     },
     {
-      id: "inactive",
+      id: "design-ui-tag-chip-inactive",
       title: "Inactive",
       props: { id: "onboarding", label: "onboarding", selected: false },
     },

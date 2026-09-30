@@ -25,7 +25,7 @@ import type { ReactNode } from "react";
 import type {
   ColorScheme,
   ScreenDefinition,
-  ComponentDefinition,
+  ComponentVariantDefinition,
   ComponentStyleOwnership,
   ComponentResourceOwnership,
   Viewport,
@@ -33,8 +33,7 @@ import type {
 
 interface RenderInput {
   colorScheme: ColorScheme;
-  entry: ScreenDefinition | ComponentDefinition;
-  variantId?: string;
+  entry: ScreenDefinition | ComponentVariantDefinition;
   componentProps?: Readonly<Record<string, unknown>>;
   node: ReactNode;
   stylesheets: readonly string[];
@@ -49,6 +48,10 @@ interface RenderResult {
 
 export default function render(input: RenderInput): string | RenderResult;
 ```
+
+For a component variant entry, `entry` is the variant entry itself and
+`componentProps` carries its validated props; the parent component is never
+rendered on its own, and `RenderInput` has no `variantId` field.
 
 The string or `html` field must contain a complete `<html>` document. Optional
 style/resource records provide exact component ownership; unclaimed or mixed
@@ -102,8 +105,8 @@ type CompatibilityTransformer = (input: CompatibilityTransformInput) => string;
 
 `availableRoutes` contains the complete pending output plus retained existing
 public static files; generated files scheduled for orphan removal are excluded.
-`logicalRoutes` maps screen/use-case catalogue routes to concrete artifacts for
-the current viewport and color scheme. A dark document targets dark fragments
+`logicalRoutes` maps screen/use-case catalogue routes, derived from kind and
+id, to concrete artifacts for the current viewport and color scheme. A dark document targets dark fragments
 when the destination supports them and otherwise falls back to the light
 fragment. `outputPath` is repository-relative; no absolute checkout path is
 exposed. Mokly applies the transformer after id links resolve and before
@@ -119,18 +122,119 @@ and cannot weaken final validation. New catalogues should author portable links
 directly and leave this option unset.
 
 Stylesheet rules are ordered, declarative consumer configuration. Their globs
-match the catalogue route before viewport fragments are derived, so one exact
-screen-route rule applies to both viewports and every enabled scheme. Shared
+match the entry's catalogue route (`<prefix>/<id>.html`) before viewport
+fragments are derived, so one exact screen-route rule applies to both viewports
+and every enabled scheme. Shared
 stylesheets come first, followed by the matching scheme-specific list.
 Generated fragment links are relative to the fragment route and URL-encoded by
 segment.
-With [imported CSS](./mokly-imported-styles.md), the
-configured renderer stylesheet follows these links, then the entry
-stylesheet, even when no configured rule matches. The built-in renderer adds
-none; the custom renderer emits any `<link>` tags. Complete page callbacks
-receive no `RenderInput` or injected links; their entry CSS is still generated
-for explicit relative linking.
 Shell and device-frame CSS is package-owned and self-contained; product CSS is
 never copied into the npm package.
 
-The remaining contract is continued in [Generated Rendering Contract](./mokly-rendering-generated.md).
+With [imported CSS](./mokly-imported-styles.md), the configured renderer
+stylesheet follows configured links, then the entry stylesheet. The built-in
+renderer adds none; a custom renderer emits the supplied links. Complete page
+callbacks receive no injected links and must link their generated entry CSS
+explicitly.
+
+## Generated Contract
+
+`mokly build` writes deterministic screen/component views, complete page
+documents, and `mokly-manifest.json` beneath `mockupsDir`. The
+[artifact path contract](./mokly-artifact-paths.md) owns every exact name.
+Component parents have no views, and dark views exist only for entries whose
+effective schemes include dark.
+
+Screen, use-case, and component routes are durable identifiers and do not imply
+a composed HTML file. A screen's fragments are bare product renders with required head
+content but without Mokly shell chrome. Navigation folders generate no page.
+Light fragments remain canonical and unsuffixed. Turning dark off makes the
+previous dark documents proven generated orphans: `check` reports them and
+`build` removes them through the normal ownership-safe lifecycle.
+
+Manifest source paths are repository-relative; derived routes are relative to
+`mockupsDir` and are not stored. The manifest includes every entry, source
+input, relationship, related doc, and declared dependency needed by Browse and
+Review; every view and document path derives from an entry's kind and id. It is
+stable across operating systems and independent of absolute checkout paths.
+Repository paths are canonical POSIX paths with no empty, dot, parent, drive,
+or backslash segments; generated manifests are self-validated before writing.
+
+Generated documents carry a generic generated-file header. After compatibility
+transformation, every pending document must retain the expected source path in
+that header. The same parser accepts LF and CRLF and lets Build remove only
+files proven to have been generated by the configured catalogue: an HTML
+header's source must belong to the current entries root even when
+that source was just deleted. It never deletes an unknown or foreign-catalogue
+file.
+
+All catalogues emit [manifest v7](./mokly-component-manifest.md), including
+pages, source inventory, component variant entries and per-view
+invocation/ownership records. Current and baseline readers accept only v7;
+earlier output follows [baseline compatibility](./mokly-baseline-compatibility.md).
+Version 7 stores no route, view path, or other value derivable from identity and
+configuration. The common shape is:
+
+```ts
+interface ManifestV7 {
+  schemaVersion: 7;
+  generatedBy: "mokly";
+  entries: readonly ManifestEntry[];
+  sourceFiles: readonly string[];
+}
+
+interface CommonEntry {
+  id: string;
+  kind: "screen" | "use-case" | "page" | "component";
+  title: string;
+  description: string;
+  rationale?: string;
+  navPath: readonly string[];
+  sourcePath: string;
+  relatedDocs: readonly string[];
+  declaredDependencies: readonly string[];
+  tags?: readonly string[];
+}
+
+type ManifestEntry =
+  | ManifestComponent // See the component manifest contract for the parent shape.
+  | ManifestComponentVariant // The variant entry shape lives there too.
+  | (CommonEntry & { kind: "page" })
+  | (CommonEntry & {
+      kind: "screen";
+      address?: string;
+      colorSchemes: readonly ColorScheme[];
+      componentViews: readonly ComponentViewRecord[];
+      variantOf?: string; // Present exactly on variant screens.
+      useCaseIds: readonly string[];
+    })
+  | (CommonEntry & {
+      kind: "use-case";
+      steps: readonly {
+        screenId: string;
+        title?: string;
+        description?: string;
+      }[];
+    });
+```
+
+Entries sort by kind name in UTF-16 order (`component`, `page`, `screen`,
+`use-case`) and then id, with a parent's variants directly after it in authored
+order; source inputs, dependencies, and generated files sort lexically.
+Optional properties are omitted, not emitted as `null`.
+`navPath` is required on every v7 entry; its derivation and meaning follow
+the [navigation path contract](./mokly-nav-paths.md).
+`colorSchemes` is the entry's effective, sorted, light-first scheme set; a
+screen or component variant has dark views exactly when that set includes dark.
+Its `.mobile.dark.html` and `.desktop.dark.html` view routes derive from the
+entry's kind and id, are not stored, and participate in the same safe-route and
+collision validation as light fragments.
+`tags` carries the authored classification list, in authored order and never
+sorted, and is written only for an entry that declares a non-empty one; an
+absent or empty declaration is omitted, so an untagged catalogue serializes
+exactly as it did before the field existed.
+`sourcePath`, related docs, and declared dependencies use repo-relative POSIX
+paths. An entry's complete dependency set is the union of `sourcePath` and
+`declaredDependencies`; readers derive it, and the manifest does not store it.
+Declared dependencies retain the file-or-directory-root matching semantics of
+the authoring API.

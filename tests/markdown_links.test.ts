@@ -93,11 +93,13 @@ test("local documentation links resolve and anchors match GitHub headings", asyn
       if (/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(destination)) continue;
       const [relative, hash] = destination.split("#", 2);
       if (!relative && !hash) continue;
-      const candidate = path.resolve(
-        repositoryRoot,
-        path.dirname(source),
-        decodeURIComponent(relative ?? ""),
-      );
+      const candidate = relative
+        ? path.resolve(
+            repositoryRoot,
+            path.dirname(source),
+            decodeURIComponent(relative),
+          )
+        : path.join(repositoryRoot, source);
       let target = path
         .relative(repositoryRoot, candidate)
         .split(path.sep)

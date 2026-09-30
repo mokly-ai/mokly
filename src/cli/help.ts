@@ -8,7 +8,7 @@ Usage:
   mokly export --out <path> [--config <path>] [--base <ref>]
   mokly publish [--endpoint <url>] [--token <token>] [--out <path>]
                 [--config <path>] [--base <ref> | --no-changes]
-                [--repository <host>/<owner>/<name>]
+                [--repository <host>/<owner>/<name>] [--upload-concurrency <n>]
 
 Commands:
   serve    Build and serve the catalogue with on-demand diffs
@@ -28,6 +28,7 @@ Options:
   --token <token>  Bearer token (publish; or MOKLY_TOKEN)
   --repository <host>/<owner>/<name>  Override publish repository identity
   --no-changes     Publish current catalogue without a comparison baseline
+  --upload-concurrency <n>  Parallel file uploads from 1 to 32 (default 8)
   --watch          Watch consumer inputs (serve default)
   --no-watch       Serve one deterministic snapshot
   --open           Open the served URL in the default browser

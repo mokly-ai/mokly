@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import type { ArtifactView } from "@mokly/viewer/data";
+import { entryRoute, type ArtifactView } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { walkFiles } from "../build/discovery.js";
@@ -9,7 +9,7 @@ import { adaptLinkControls } from "../build/link_controls.js";
 import type { LoadedGraph } from "../build/load_graph.js";
 import type { LogicalReferenceRecord } from "../build/logical_record_types.js";
 import { validateCompatibilityRecords } from "../build/logical_records.js";
-import { logicalArtifactRoutes } from "../build/logical_routes.js";
+import { artifactRouteForEntry } from "../build/mock_link_routes.js";
 import { rewriteMockLinks } from "../build/mock_links.js";
 import { pendingGeneratedOrphanRoutes } from "../build/ownership.js";
 import type { PendingGeneratedFiles } from "../build/pending_generated.js";
@@ -41,10 +41,7 @@ export function transformCompatibilityDocuments(
     : [];
   if (context && graph.compatibilityTransformer)
     context.availableRoutes = availableRoutes;
-  const routeIndexes = new Map<
-    string,
-    ReturnType<typeof logicalArtifactRoutes>
-  >();
+  const routeIndexes = new Map<string, LogicalArtifactRouteIndex>();
   const indexes = context?.routeIndexes ?? routeIndexes;
   for (const [route, original] of outputs) {
     const { colorScheme, viewport } = fragmentViews.get(route) ?? {
@@ -116,7 +113,32 @@ export function transformCompatibilityDocuments(
 export interface CompatibilityContext {
   byId: ReadonlyMap<string, ResolvedRegistryEntry>;
   availableRoutes?: string[];
-  routeIndexes: Map<string, ReturnType<typeof logicalArtifactRoutes>>;
+  routeIndexes: Map<string, LogicalArtifactRouteIndex>;
+}
+
+type LogicalArtifactRouteIndex = Readonly<Record<string, string>>;
+
+function logicalArtifactRoutes(
+  entries: readonly ResolvedRegistryEntry[],
+  viewport: Parameters<typeof artifactRouteForEntry>[1],
+  colorScheme: Parameters<typeof artifactRouteForEntry>[2],
+  catalogueSchemes: Parameters<typeof artifactRouteForEntry>[4],
+): LogicalArtifactRouteIndex {
+  const byId = new Map(entries.map((entry) => [entry.id, entry]));
+  return Object.fromEntries(
+    entries.flatMap((entry) => {
+      const artifact = artifactRouteForEntry(
+        entry,
+        viewport,
+        colorScheme,
+        byId,
+        catalogueSchemes,
+      );
+      return artifact
+        ? [[entryRoute(entry.kind, entry.id), artifact] as const]
+        : [];
+    }),
+  );
 }
 
 function availablePublicRoutes(

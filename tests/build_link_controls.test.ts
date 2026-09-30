@@ -210,7 +210,7 @@ return input.content; };`,
   );
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
-  for (const route of ["screens/home.mobile.html", "old.html"]) {
+  for (const route of ["screens/home.mobile.html", "pages/old.html"]) {
     assert.match(
       textOutput(compilation.outputs, route) ?? "",
       /data-mokly-link="details"/,

@@ -45,6 +45,11 @@ status colors, Light appearance and authored preview colors keep their own
 roles. Mockups and runtime adopt these values locally; no cloud package or
 network request is needed to render the viewer.
 
+The Mokly logo is identity, so `--chrome-brand` reuses Mokly Cloud's own
+accent in each appearance (`accent` in the same `tokens.ts`) rather than a
+viewer role: the mark matches the Cloud's published light and dark logos, and
+its rules take `--chrome-surface` as the Cloud's rules take its surface.
+
 ### Swatches
 
 | Role                     | Light                                    | Dark                                  |
@@ -60,6 +65,7 @@ network request is needed to render the viewer.
 | `--chrome-border-strong` | `#c8ccc4`                                | `#8b8478`                             |
 | `--chrome-control-edge`  | `#868e88`                                | `#8b8478`                             |
 | `--chrome-accent`        | `#2a4733`                                | `#a5cdb6`                             |
+| `--chrome-brand`         | `#2f5945`                                | `#a3cdb4`                             |
 | `--mbk-sage`             | `#4f7864`                                | `#86b79b`                             |
 | `--mbk-sage-deep`        | `#2f5945`                                | `#b6d8c4`                             |
 | `--mbk-accent-contrast`  | `#ffffff`                                | `#0e1a14`                             |
@@ -108,6 +114,7 @@ Ignored use `--chrome-muted` on `--chrome-surface` inside `--chrome-border`.
 | muted on raised (navigation)                 | 5.05  | 7.57  | 4.5 text    |
 | muted on hover surface                       | 4.81  | 6.35  | 4.5 text    |
 | accent link on surface                       | 10.25 | 9.38  | 4.5 text    |
+| brand mark on surface                        | 7.96  | 9.33  | 3 non-text  |
 | sage on surface                              | 4.99  | 7.23  | 4.5 text    |
 | deep sage on surface                         | 7.96  | 10.63 | 4.5 text    |
 | deep sage on accent surface                  | 7.08  | 8.79  | 4.5 text    |

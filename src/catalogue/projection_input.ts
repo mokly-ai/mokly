@@ -14,7 +14,7 @@ export interface CatalogueProjectionInput {
   configPath: string;
   catalogue: Catalogue;
   changesStatus: ChangesStatus;
-  changedRoutes?: readonly string[] | undefined;
+  changedIds?: readonly string[] | undefined;
   evidence?: ComponentChangeSnapshot | undefined;
   comparison?: ReviewResult | undefined;
   comparisonUrl: string | null;

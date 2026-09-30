@@ -1,0 +1,233 @@
+/* Drawn scroll positions for the Diff controls comparisons: a long page and an
+   app shell's panel, each drawn part-way down with its own scrollbar. A
+   static artboard cannot scroll, so the offsets are set here; every row has a
+   fixed height, so no position depends on how text wraps. The scrollbar's
+   look is shared with the stacked comparisons in design-review.css. */
+
+/* Each region states its visible height, the height of its content and how
+   far down it is drawn, all in pixels; the content's offset and its
+   scrollbar's thumb both follow those numbers, so they always agree. A
+   comparison's browser viewport is 428px tall and the small phone's 530px; an
+   app panel is that height less the app's bars. */
+.mbk-scrollbar-thumb {
+  height: calc(100% * var(--mbk-scroll-view) / var(--mbk-scroll-content));
+  top: calc(100% * var(--mbk-scroll-offset) / var(--mbk-scroll-content));
+}
+
+/* A phone shows the thin indicator a touch screen draws while scrolling. */
+.phone-screen .mbk-scrollbar {
+  background: none;
+  border: 0;
+  width: 8px;
+}
+
+.phone-screen .mbk-scrollbar-thumb {
+  left: 2px;
+  right: 3px;
+}
+
+/* Welcome's long content in rows of fixed height, for drawn positions. */
+.mbk-shot-rows {
+  padding: 0 20px;
+}
+
+.mbk-shot-rows > .mbk-shot-hero {
+  height: 128px;
+  min-height: 0;
+  overflow: hidden;
+  padding-top: 18px;
+}
+
+.mbk-shot-rows .mbk-shot-sections > section {
+  height: 64px;
+  overflow: hidden;
+}
+
+.mbk-shot-rows .mbk-shot-sections h3 {
+  margin: 12px 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mbk-shot-rows .mbk-shot-sections p {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phone-screen .mbk-shot-rows > .mbk-shot-hero {
+  height: 160px;
+}
+
+.phone-screen .mbk-shot-rows .mbk-shot-sections > section {
+  height: 72px;
+}
+
+.phone-screen .mbk-shot-rows .mbk-shot-sections h3 {
+  margin: 10px 0 2px;
+}
+
+.phone-screen .mbk-shot-rows .mbk-shot-sections p {
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+}
+
+/* An app-shell screen: the page never scrolls, its top bar and navigation stay
+   in place, and its main panel scrolls on its own, drawn part-way down with
+   its own scrollbar. The chrome viewport around it therefore has nothing to
+   scroll and draws no scrollbar. */
+.mbk-shot.mbk-shot--app {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  grid-template-rows: 44px minmax(0, 1fr);
+  height: 100%;
+}
+
+.mbk-app-bar {
+  align-items: center;
+  border-bottom: 1px solid var(--mbk-screen-border);
+  display: flex;
+  font-size: 12.5px;
+  font-weight: 600;
+  grid-column: 1 / -1;
+  padding: 0 20px;
+}
+
+.mbk-app-nav {
+  align-content: start;
+  border-right: 1px solid var(--mbk-screen-border);
+  display: grid;
+  grid-auto-rows: 32px;
+  padding: 12px 10px;
+}
+
+.mbk-app-nav > span {
+  align-items: center;
+  border-radius: 6px;
+  color: var(--mbk-screen-muted);
+  display: flex;
+  font-size: 12px;
+  overflow: hidden;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+.mbk-app-nav > [data-current] {
+  background-color: color-mix(in srgb, var(--mbk-screen-link) 14%, var(--mbk-screen-bg));
+  color: var(--mbk-screen-ink);
+  font-weight: 600;
+}
+
+.mbk-app-panel {
+  --mbk-scroll-content: 768;
+  --mbk-scroll-offset: 216;
+  --mbk-scroll-view: 384;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* The panel's content is laid out outside the flow, so however long it is,
+   the app shell stays exactly the size of the chrome's viewport. */
+.mbk-app-panel-content {
+  height: calc(1px * var(--mbk-scroll-content));
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.mbk-app-panel[data-scrolled] > .mbk-app-panel-content {
+  transform: translateY(calc(-1px * var(--mbk-scroll-offset)));
+}
+
+.phone-screen .mbk-shot.mbk-shot--app {
+  flex: none;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 40px minmax(0, 1fr) 50px;
+  height: 100%;
+}
+
+.phone-screen .mbk-app-bar {
+  font-size: 12px;
+}
+
+/* On a phone the navigation is a tab bar under the panel, lifted clear of the
+   home indicator. */
+.phone-screen .mbk-app-nav {
+  border-right: 0;
+  border-top: 1px solid var(--mbk-screen-border);
+  gap: 4px;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  grid-auto-rows: auto;
+  padding: 6px 8px 14px;
+}
+
+.phone-screen .mbk-app-nav > span {
+  font-size: 11px;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.phone-screen .mbk-app-panel {
+  --mbk-scroll-content: 880;
+  --mbk-scroll-offset: 242;
+  --mbk-scroll-view: 440;
+}
+
+/* Side by side with Scroll together off: each version's chrome viewport is
+   drawn at its own place down the page, with its own scrollbar. */
+.mbk-page-viewport {
+  --mbk-scroll-content: 856;
+  --mbk-scroll-view: 428;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.mbk-page-viewport[data-scrolled="short"] {
+  --mbk-scroll-offset: 168;
+}
+
+.mbk-page-viewport[data-scrolled="long"] {
+  --mbk-scroll-offset: 330;
+}
+
+.mbk-shot.mbk-shot--page {
+  flex: none;
+  height: calc(1px * var(--mbk-scroll-content));
+  transform: translateY(calc(-1px * var(--mbk-scroll-offset)));
+}
+
+.mbk-shot--page > .mbk-shot-nav {
+  height: 44px;
+  margin: 0 20px;
+  overflow: hidden;
+  padding: 16px 0 0;
+  white-space: nowrap;
+}
+
+.phone-screen .mbk-page-viewport {
+  --mbk-scroll-content: 960;
+  --mbk-scroll-view: 530;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.phone-screen .mbk-page-viewport[data-scrolled="short"] {
+  --mbk-scroll-offset: 196;
+}
+
+.phone-screen .mbk-page-viewport[data-scrolled="long"] {
+  --mbk-scroll-offset: 372;
+}
+
+.phone-screen .mbk-shot--page > .mbk-shot-nav {
+  height: 40px;
+  padding-top: 14px;
+}

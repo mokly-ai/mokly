@@ -2,8 +2,8 @@
 export const CSS_NORMAL = 0;
 export const CSS_WHITESPACE = 1;
 export const CSS_COMMENT = 2;
-export const CSS_STRING = 3;
-export const CSS_ESCAPE = 4;
+const CSS_STRING = 3;
+const CSS_ESCAPE = 4;
 
 export interface HexEscape {
   readonly start: number;

@@ -26,11 +26,19 @@ pub(crate) enum VerificationSuite {
     Unit,
     /// Playwright browser tests.
     Browser,
+    /// Unsharded Playwright hydration tests.
+    Hydration,
 }
 
 impl VerificationSuite {
     /// Suites in authoritative complete-gate order.
-    pub(crate) const ALL: [Self; 4] = [Self::Repository, Self::Package, Self::Unit, Self::Browser];
+    pub(crate) const ALL: [Self; 5] = [
+        Self::Repository,
+        Self::Package,
+        Self::Unit,
+        Self::Browser,
+        Self::Hydration,
+    ];
 
     /// Stable CLI name for the suite.
     pub(crate) const fn as_str(self) -> &'static str {
@@ -39,6 +47,7 @@ impl VerificationSuite {
             Self::Package => "package",
             Self::Unit => "unit",
             Self::Browser => "browser",
+            Self::Hydration => "hydration",
         }
     }
 
@@ -189,6 +198,7 @@ fn commands_for(suite: VerificationSuite, shard: Option<Shard>) -> Vec<CommandSp
         VerificationSuite::Package => package_commands(),
         VerificationSuite::Unit => prepared_suite("test:prepared", shard),
         VerificationSuite::Browser => prepared_suite("test:browser:prepared", shard),
+        VerificationSuite::Hydration => prepared_suite("test:hydration:prepared", shard),
     }
 }
 
@@ -198,6 +208,7 @@ fn repository_commands() -> Vec<CommandSpec> {
         npm(&["run", "format:check"]),
         npm(&["run", "lint"]),
         CommandSpec::new("node").args(["scripts/verification/source-file-length.mjs"]),
+        node(&["scripts/verification/repository-ratchets.mjs"]),
         cargo(&["fmt", "--all", "--", "--check"]),
         cargo(&[
             "clippy",
@@ -250,6 +261,10 @@ fn invalid_shard(shard: &str) -> Error {
 
 fn npm(args: &[&str]) -> CommandSpec {
     CommandSpec::new("npm").args(args.iter().copied())
+}
+
+fn node(args: &[&str]) -> CommandSpec {
+    CommandSpec::new("node").args(args.iter().copied())
 }
 
 fn cargo(args: &[&str]) -> CommandSpec {

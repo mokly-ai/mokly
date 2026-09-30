@@ -7,7 +7,7 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentGit } from "./helpers/component_review_fixture.js";
@@ -44,16 +44,17 @@ for (const exact of [false, true])
     await writeCompilation(before, config);
     const git = componentGit(before, ["shared/button.ts"]);
     const { result } = await compareReview(before, config, git, "main");
-    assert.equal(result.schemaVersion, 3);
-    if (result.schemaVersion !== 3) return;
-    const expected = exact
-      ? ["components/action.html", "screens/home.html"]
-      : ["components/action.html"];
+    assert.equal(result.schemaVersion, 4);
+    if (result.schemaVersion !== 4) return;
+    const expected = exact ? ["action", "home"] : ["action"];
     assert.deepEqual(
-      result.changes.map((entry) => entry.after!.route),
+      result.changes.map((entry) => entry.after!.id),
       expected,
     );
-    assert.deepEqual(await computeChangedRoutes(config, "main", git), expected);
+    assert.deepEqual(
+      await computeChangedIds(config, "main", git),
+      [...expected].sort(),
+    );
     assert.ok(
       result.affectedConsumers.some((item) => item.consumer.kind === "screen"),
     );
@@ -105,21 +106,20 @@ for (const ownership of ["dependency", "renderer", "unowned"] as const)
     await writeCompilation(after, config);
     const git = componentGit(baseline, ["mockups/action.css"]);
     const artifact = await compareReview(after, config, git, "main");
-    assert.equal(artifact.result.schemaVersion, 3);
-    if (artifact.result.schemaVersion !== 3) return;
+    assert.equal(artifact.result.schemaVersion, 4);
+    if (artifact.result.schemaVersion !== 4) return;
     const expected =
       ownership === "unowned"
-        ? [
-            "components/action.html",
-            "components/pane.html",
-            "screens/home.html",
-          ]
-        : ["components/action.html"];
+        ? ["action-default", "action-disabled", "pane-default", "home"]
+        : ["action"];
     assert.deepEqual(
-      artifact.result.changes.map((entry) => entry.after!.route),
+      artifact.result.changes.map((entry) => entry.after!.id),
       expected,
     );
-    assert.deepEqual(await computeChangedRoutes(config, "main", git), expected);
+    assert.deepEqual(
+      await computeChangedIds(config, "main", git),
+      [...expected].sort(),
+    );
     assert.equal(
       Buffer.from(
         artifact.files.get("snapshots/before/action.css")!,
@@ -154,16 +154,10 @@ for (const owned of [false, true])
     await writeCompilation(after, config);
     const git = componentGit(before, ["renderer.tsx"]);
     const { result } = await compareReview(after, config, git, "main");
-    assert.equal(result.schemaVersion, 3);
-    if (result.schemaVersion !== 3) return;
+    assert.equal(result.schemaVersion, 4);
+    if (result.schemaVersion !== 4) return;
     assert.deepEqual(
-      result.changes.map((entry) => entry.after!.route),
-      owned
-        ? ["components/action.html"]
-        : [
-            "components/action.html",
-            "components/pane.html",
-            "screens/home.html",
-          ],
+      result.changes.map((entry) => entry.after!.id),
+      owned ? ["action"] : ["action", "pane", "home"],
     );
   });

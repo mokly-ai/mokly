@@ -94,7 +94,7 @@ test("ordinary publication needs no Git and omits review and watch artifacts", a
   );
   assert.doesNotMatch(
     await fs.promises.readFile(path.join(output, "_redirects"), "utf8"),
-    /diffs|events/,
+    /diffs|events|^\/id\//m,
   );
 });
 

@@ -58,11 +58,13 @@ the repository when possible before truncation.
 
 One reporter owns both terminal streams. It renders at most one in-place
 spinner line, advances it every 80 milliseconds, and `unref()`s the timer. The
-cursor is never hidden. Before any event, warning, diagnostic, error, or success
-line is written, the reporter clears the spinner with carriage return plus the
-ANSI erase-line sequence. Completing a phase replaces the spinner with one
-durable line; failing or abandoning a phase clears it first. Shutdown always
-clears the timer and current line.
+cursor is never hidden. Every in-place frame begins with `\r\x1b[2K` (carriage
+return and ANSI erase-line) before writing its new bounded label, including a
+timer frame and an immediate phase-label update. This makes a shorter label
+replace every character of a longer one. Before any event, warning, diagnostic,
+error, or success line, the reporter performs the same erase. Completing a
+phase replaces the spinner with one durable line; failing or abandoning a phase
+clears it first. Shutdown always clears the timer and current line.
 
 When output is forced rich through a non-TTY pipe, progress frames are not
 animated. The starting line and durable completion lines remain observable and
@@ -112,7 +114,8 @@ watched catalogue then reports existing lifecycle boundaries:
 Catalogue counts come from accepted manifest entries. Zero-valued kinds are
 omitted. A baseline cache hit says `Baseline ready · reused <short-sha>`; a
 committed catalogue omits baseline preparation. Unavailable Changes says
-`! Changes unavailable` and preserves All browsing.
+`! Changes unavailable` and preserves All browsing. Counted nouns use singular
+only for one, including `1 changed screen` and `2 changed screens`.
 
 Watched actions use one durable line after the action settles:
 
@@ -149,6 +152,26 @@ actually performs. Phase labels are outcome-oriented: `Loading configuration`,
 `Rendering catalogue`, `Writing generated output`, `Checking generated output`,
 `Exporting catalogue`, `Preparing upload`, and `Uploading catalogue`.
 
+While `Uploading catalogue` runs an exchange round with a nonempty `missing`
+set, its spinner label becomes
+`Uploading <n> of <total> <file/files> · <size>`. The
+[exchange accounting rule](./mokly-upload-exchange.md#accounting-and-output)
+defines all three values: Plan-archive entries count from the first frame,
+entries sharing a completed digest advance together, and `<size>` counts
+distinct round content including the Plan archive. A re-plan restarts with the
+new round's values. No progress label is shown for empty `missing`.
+
+The label uses `file` only when `<total>` is one, whole bytes below 1 KiB and
+one decimal place from KiB upward:
+
+```text
+Uploading 0 of 1 file · 312 B
+Uploading 2 of 4 files · 4.1 KiB
+```
+
+Each completion updates the label; a forced-rich pipe shows only the starting
+line and durable `Catalogue uploaded` line.
+
 Completion summaries are:
 
 ```text
@@ -156,68 +179,28 @@ Completion summaries are:
   ✔ Mokly output is valid and untracked · 278 files (5.9s)
   ✔ Mokly output is current · 278 files (5.9s)
   ✔ Exported Mokly to .context/mokly-site (8.1s)
-  ✔ Published Mokly catalogue (9.3s)
+  ✔ Published Mokly catalogue · 1 file uploaded, 0 unchanged (9.3s)
+  ✔ Published Mokly catalogue · 12 files uploaded, 266 unchanged (9.3s)
+  ✔ Mokly catalogue already published for this commit (2.1s)
 ```
 
 Export follows its summary with the unstyled guidance
 `Deploy this directory at your site's root with your hosting provider.`
+Publish follows its summary with the receiver's viewer URL on its own unstyled
+line when the completion response supplied an accepted URL, and adds nothing
+otherwise. Omit that line when the normalized URL contains the bearer token or
+its `encodeURIComponent` form. The counted summary uses `file` only for one
+uploaded marker entry; zero and every other count use `files`. `unchanged` has
+no following noun. The exchange contract defines which digests count across
+Plan files, Blob attempts and re-plans. The already-published summary replaces
+the counted one only when Complete returns `200`, meaning a different upload
+kept the first publication for the same commit and config path.
 
-## Plain compatibility
+## Plain Compatibility And Errors
 
-Successful plain commands retain these exact strings, including punctuation,
-capitalization, spacing, and trailing newlines:
-
-```text
-Mokly listening at <url> (watching)
-Mokly listening at <url>
-Generated <n> Mokly files.
-Mokly output is valid and untracked (<n> files).
-Mokly output is current (<n> files).
-Exported Mokly to <outDir>.
-Deploy this directory at your site's root with your hosting provider.
-Published Mokly catalogue.
-```
-
-Plain commands add no phase or watch-event lines. Successful plain commands
-write nothing to stderr unless `--debug-timings` was requested. Expected plain
-errors remain exactly `[mokly/<code>] <message>\n`. Timing mode retains the
-same stdout and writes only its documented JSON lines plus existing failures.
-
-## Rich errors
-
-Rich errors use `✖ <headline>  [mokly/<code>]`, with the code dimmed, followed
-by the original safe detail when it adds information and one indented hint.
-Secrets are redacted before every line and optional stack. `MOKLY_DIAGNOSTIC=1`
-still appends the redacted stack; otherwise expected failures show no stack.
-
-| Code                           | Headline                                       | Hint                                                   |
-| ------------------------------ | ---------------------------------------------- | ------------------------------------------------------ |
-| `baseline-history-unavailable` | Comparison history is unavailable.             | Fetch the configured base and retry.                   |
-| `baseline-extraction-failed`   | The comparison baseline could not be prepared. | Check the Git object and temporary storage.            |
-| `baseline-command-failed`      | The comparison baseline build failed.          | Run the configured baseline command locally.           |
-| `baseline-output-invalid`      | The comparison baseline output is invalid.     | Build the baseline and fix its generated output.       |
-| `baseline-interrupted`         | Comparison preparation was interrupted.        | Retry when the repository is idle.                     |
-| `baseline-lock-timeout`        | The comparison baseline is busy.               | Stop the other Mokly process or retry later.           |
-| `build-invalid`                | The catalogue could not be built.              | Fix the reported catalogue source and retry.           |
-| `cli-invalid`                  | The command could not be understood.           | Run `mokly --help` to see commands.                    |
-| `config-invalid`               | The Mokly configuration is invalid.            | Fix the reported configuration value and retry.        |
-| `config-missing`               | No Mokly configuration was found.              | Run inside a consumer repository or pass `--config`.   |
-| `export-invalid`               | The catalogue could not be exported.           | Fix the reported destination or input and retry.       |
-| `git-failed`                   | Git information could not be read.             | Check the repository and configured base.              |
-| `manifest-invalid`             | The generated catalogue is invalid.            | Rebuild the catalogue and fix the reported entry.      |
-| `review-invalid`               | The comparison could not be created.           | Fix the reported comparison input and retry.           |
-| `server-failed`                | The catalogue server could not start.          | Check the reported port or process and retry.          |
-| `upload-failed`                | The catalogue could not be published.          | Check the endpoint and connection, then retry.         |
-| `upload-invalid-bundle`        | The catalogue upload is invalid.               | Rebuild the export and retry.                          |
-| `upload-too-large`             | The catalogue is too large to publish.         | Reduce the export size or raise the receiver limit.    |
-| `upload-unauthorized`          | The catalogue upload was not authorized.       | Check the token and repository access.                 |
-| `upload-unsupported-version`   | The receiver does not support this catalogue.  | Upgrade the receiver or use a supported Mokly version. |
-
-For `unknown command: <candidate>`, the headline is
-`Unknown command "<candidate>".` and the hint names the closest public command
-when its edit distance is unambiguous; otherwise it uses the standard help hint.
-Unknown options similarly quote the option in the headline. Argument values and
-the original typed error remain unchanged outside this CLI presentation layer.
+Exact plain command strings, cancellation and transport copy, and rich error
+headlines and hints follow the separate
+[terminal compatibility contract](./mokly-terminal-errors.md).
 
 ## Interactive controls
 

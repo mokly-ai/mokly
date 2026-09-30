@@ -103,10 +103,11 @@ public-safe inventory is distinct from private comparison metadata.
 
 [`__mokly/catalogue.json`](./mokly-catalogue.md) is implemented in the same
 collision-checked ownership/upload inventories, alongside the implemented
-`__mokly/client/inspector.js`. The read model is a public allowlist projection of manifest v5;
-`mokly-manifest.json` remains excluded. Ownership v1, upload v1, review v2/v3
-and delivery descriptor v2 keep their schema versions. Deployment identity
-includes the catalogue under the [delivery hashing rule](./mokly-export-delivery.md#deployment-identity)
+`__mokly/client/inspector.js`. The read model v3 is a public allowlist
+projection of manifest v7; `mokly-manifest.json` remains excluded. Ownership
+v2, upload v1, review result v4 and delivery descriptor v3 keep their
+respective schema versions. Deployment identity includes the catalogue under
+the [delivery hashing rule](./mokly-export-browser.md#deployment-identity)
 and includes the inspector and its inert maps.
 Only the ownership-aware adapter's current published HTML copies gain the
 Mokly-owned inspector script and bounded inert boundary metadata. The
@@ -146,7 +147,7 @@ fragments keep their existing direct-from-disk behavior.
 ## Verification
 
 Implementation must cover option validation and config-relative paths, custom
-renderer/module resolution, v5 pages, both schemes/viewports, invalid empty and
+renderer/module resolution, v7 pages, both schemes/viewports, invalid empty and
 removed catalogues, non-default bases, missing history/resources, output overlap,
 symlinks, ownership/collisions, concurrent writers, input changes, rollback,
 shutdown, export self-attribution, public-file exclusion, and asset closure.
@@ -159,7 +160,7 @@ Cloudflare preview regression coverage and the existing build/check/serve gate.
 
 ## Registered Components
 
-Component catalogues retain manifest-v5 saved variants and comparison-schema-v3
+Component catalogues retain manifest-v7 saved variants and comparison-schema-v4
 evidence, including removed variants and actual affected consumers. The same
 inspector renders in served and exported shells. Export supplies no local render
 capability or token; controls are read-only and make no render requests. The

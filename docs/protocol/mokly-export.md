@@ -2,30 +2,23 @@
 
 ## Delivery Status
 
-Implemented consumer CLI and shared export engine. Repository preview capture
-shares its artifact validation, static delivery, and output transaction. The
-[consumer static export plan](../../plans/consumer-static-export.md) tracks
-delivery of this contract and the [static delivery contract](./mokly-export-delivery.md).
-Normal build validation and the existing comparison schema remain authoritative.
-
-The [viewer library plan](../../plans/mokly-viewer-library.md) tracks the
-implemented public catalogue, inert published inspector and separate viewer
-package. Serve and export now share a server-rendered React shell that hydrates
-with the bundled viewer runtime. Consumer frames and comparison documents remain
-static, and the existing presentation and interactions are preserved.
+The consumer CLI, shared engine, and repository preview reuse artifact
+validation, [static delivery](./mokly-export-delivery.md), and one transaction.
+Serve/export share the viewer's server-rendered, hydrated React shell; consumer
+and comparison frames remain static. Build and comparison contracts stay
+authoritative.
 
 ## Scope
 
 For imported CSS, the public capture includes only generated stylesheet and
 asset routes owned by the accepted compilation. Committed mode captures checked
 disk bytes; derived mode captures the compiled CSS text and opaque asset bytes
-directly (not stale files below `mockupsDir`). Private stylesheet inputs and
+directly, not stale files below `mockupsDir`. Private stylesheet inputs and
 PostCSS-discovered sources never enter the static inventory. Validate decoded
-relative links to scoped npm assets (`%40scope`) against captured routes.
-An `assets/**/node_modules/@scope/**` route is package-owned public output,
-not a private consumer dependency directory. In derived mode, do not walk the
-reserved tree on disk at all; include only the compilation's routes, so stale
-reserved files cannot enter an export.
+relative links to scoped npm assets (`%40scope`) against captured routes. An
+`assets/**/node_modules/@scope/**` route is package-owned public output, not a
+private consumer dependency directory. Derived mode never walks the reserved
+tree on disk; only the compilation's routes enter an export.
 
 An installed consumer can create a complete static Mokly catalogue using
 their existing config, entries, renderer, and assets. The resulting directory
@@ -72,7 +65,8 @@ their existing execution boundary; export adds no hosting network calls.
 
 ## Baseline And Comparisons
 
-The `export` command always includes comparisons. `publish --no-changes` uses
+The `export` command always requests Changes; an incompatible base follows the
+[baseline contract](./mokly-baseline-compatibility.md). `publish --no-changes` uses
 the same transactional engine with current-only assembly, no baseline reads,
 and the same source/public-byte consistency checks. It omits removed entries,
 diff files and comparison controls; delivery metadata has a null comparison URL.
@@ -84,32 +78,35 @@ and their merge base. Committed mode also needs the committed baseline artifacts
 at that commit; derived mode instead rebuilds the commit before capture under
 the [derived baselines contract](./mokly-derived-baselines.md). CI must fetch
 sufficient history before invoking the command; export never fetches it.
-Unavailable or invalid baselines fail explicitly, including shallow-history
-failures. It does not silently export a zero Changes count or disable controls.
+Missing or invalid baselines fail explicitly, including shallow history.
+Recognized earlier output is the one exception: export succeeds with Changes
+unavailable, no history files, and the exact diagnostic defined by
+[baseline compatibility](./mokly-baseline-compatibility.md).
 
-Resolve and pin one merge-base commit for the operation. Both route-level
+Resolve and pin one merge-base commit for the operation. Both entry-level
 Changes attribution and screen comparisons use that commit, the same current
 manifest/generated documents, and the same changed-path exclusions. Apply the
 shared Changes calculation to captured public bytes: normalize paired ignored
 regions, compare reviewable metadata, and follow rendered local resources.
 Ignored-only edits, source moves, and dependency/shared-impact evidence alone
-do not add entries. Retain that evidence in comparisons, and do not derive the
-navigation filter by counting materially changed comparison screens.
+do not add entries, except the owned and exact declared paths of [component attribution](./mokly-component-changes.md#dependencies-and-styles).
+Retain that evidence in comparisons, and do not derive the navigation filter by counting materially changed comparison screens.
 
-Use Review schema v3 when either manifest contains registered components;
-otherwise retain schema v2. Both formats retain all existing states,
-shared/dependency impact, ignored regions, both viewports and all effective color
-schemes; see the [supported format matrix](./README.md#supported-formats).
-Removed screens, pages and components retain their baseline context; current ids
-and routes win when reused. Pages have no visual comparisons. A route absent
-from a side's manifest follows the existing added/removed rules. A declared but
+Comparisons use [review result v4](./mokly-changes-engine.md#comparison-engine) for
+every catalogue. It retains all existing states, shared/dependency impact,
+ignored regions, both viewports and all effective color schemes; see the
+[supported format matrix](./README.md#supported-formats). Removed screens,
+pages, components and variants retain their baseline context; current and
+removed records never share an id. Pages have no visual comparisons. An id
+absent from a side's manifest follows the
+existing added/removed rules. A declared but
 missing baseline document, invalid manifest, or unavailable resource fails;
 none becomes an invented empty baseline. Empty registries retain the normal
 build error; export does not weaken registry validation to create an empty site.
 
 Comparisons use private temporary storage, independent of `review.outDir` and
 any running development server. Exclude the final export directory, its
-temporary stage/backup/lock paths, and their resolved aliases from route and
+temporary stage/backup/lock paths, and their resolved aliases from entry and
 comparison change attribution before broad dependencies/shared-impact globs
 are evaluated. Exporting twice must not make the export affect its own Changes.
 Watch also ignores owned export artifacts and export transaction paths before
@@ -135,8 +132,18 @@ broad rules, without ignoring unrelated authored files with similar names.
    graph, and comparison engine as development. An ephemeral loopback server
    may be used, but no watcher or persistent process is started.
 5. Assemble all routes and resources defined by the static delivery contract.
-   Verify internal references, ownership, route collisions, and complete local
-   dependency closure before writing the export ownership inventory.
+   Validate every file path against the ownership contract's portable-path
+   rule when it enters the collision-checked inventory. Finalize the deployment
+   identity from every staged file except the ownership marker and any
+   publication metadata path declared by the adapter. Stamp that identity into
+   the owned catalogue and shell documents, then hash the exact final bytes of
+   every file, including publication metadata, and add the schema 2 marker
+   last. Verify internal references, ownership, all route and directory-prefix
+   collisions including the marker path, and complete local dependency closure
+   before writing the stage. A regular file over 64 MiB fails as
+   `export-invalid` before staging. The marker and declared publication
+   metadata are excluded from identity only; both remain owned and hashed by
+   the marker.
 6. Drain generation work and close temporary servers before installing the
    stage. Replace owned output with rollback protection, then clean owned
    temporary resources and release the writer reservation.
@@ -155,4 +162,22 @@ Cancellation is checked again after ownership validation and after the old
 directory moves to backup. The final stage-to-output rename is the commit point;
 once started it is drained along with cleanup, not interrupted mid-rename.
 
-The remaining contract is continued in [Export Ownership And Public Boundaries](./mokly-export-boundary.md).
+A non-portable candidate fails with this exact product message, where `path`
+is interpolated with `JSON.stringify` so invisible characters are visible and
+no file content is exposed:
+
+```text
+[mokly/export-invalid] The export path ${JSON.stringify(path)} is not portable. Rename that file or folder, then export again.
+```
+
+`JSON.stringify` supplies the quoted representation. Because JSON permits DEL
+and C1 controls as literal characters, the exporter renders any category Cc
+character still present in that representation as lowercase `\uXXXX` before it
+reaches the terminal.
+
+## Output Safety
+
+Output confinement and ownership reservations follow the separate
+[export safety contract](./mokly-export-safety.md).
+
+The output inventory continues in [Export Public Files And Package Boundary](./mokly-export-public-files.md); the [ownership contract](./mokly-export-boundary.md) defines imported stylesheet and asset capture.

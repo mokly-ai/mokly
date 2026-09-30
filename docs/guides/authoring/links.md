@@ -30,7 +30,8 @@ const detailsHref = mockLink("account-detail", "summary");
 
 The id is lowercase kebab-case. Neither helper accepts `id#fragment`,
 percent-encoded syntax or a `mock:` value in the id, and an unknown but
-well-formed id fails later when the catalogue is built.
+well-formed id fails later when the catalogue is built. A link may name any
+entry, including a screen or component variant.
 
 ## Style your own control
 
@@ -57,8 +58,9 @@ an accidental resource request.
 
 ## What the build checks
 
-Generated files keep portable relative links, so standalone documents and
-comparison snapshots still navigate. The build validates every destination and
+Generated files keep portable relative links, so standalone documents still
+navigate and comparison snapshots stay portable on disk, even though links
+inside a comparison pane do nothing. The build validates every destination and
 every fragment, and a fragment must exist in each generated view the catalogue
 may show for that destination. A document that contains an activatable logical
 link must not contain a `base href`. Root-absolute links and links into your

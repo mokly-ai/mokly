@@ -24,7 +24,7 @@ for (const components of [false, true]) {
       "main",
       committedReviewRepository(fixture.config),
     );
-    assert.ok(!live.changedRoutes?.includes("screens/home.html"));
+    assert.ok(!live.changedIds?.includes("home"));
     const { result } = await fixture.compare();
     for (const view of result.screens.find((screen) => screen.id === "home")!
       .views)
@@ -45,7 +45,7 @@ for (const components of [false, true]) {
       "main",
       committedReviewRepository(fixture.config),
     );
-    assert.ok(live.changedRoutes?.includes("screens/home.html"));
+    assert.ok(live.changedIds?.includes("home"));
     const { result } = await fixture.compare();
     for (const view of result.screens.find((screen) => screen.id === "home")!
       .views) {
@@ -55,7 +55,7 @@ for (const components of [false, true]) {
         selectors: [".inside-frame"],
       });
     }
-    if (result.schemaVersion === 3)
+    if (result.schemaVersion === 4)
       assert.deepEqual(live.componentChanges?.result, result);
   });
 
@@ -78,14 +78,14 @@ for (const components of [false, true]) {
       "main",
       committedReviewRepository(fixture.config),
     );
-    assert.ok(!live.changedRoutes?.includes("screens/home.html"));
+    assert.ok(!live.changedIds?.includes("home"));
     const { result } = await fixture.compare();
     for (const view of result.screens.find((screen) => screen.id === "home")!
       .views)
       assert.deepEqual(view.excludedResources, [
         { path: "mockups/nested.css", reason: "no-matching-rule" },
       ]);
-    if (result.schemaVersion === 3)
+    if (result.schemaVersion === 4)
       assert.deepEqual(live.componentChanges?.result, result);
   });
 

@@ -12,6 +12,7 @@ import {
 import { expectFrameSource } from "./workspace_actions.js";
 
 const home = "screens/home.html";
+const homeId = "home";
 
 test("restored Dark hydrates the active workspace's changed-view evidence", async ({
   page,
@@ -20,7 +21,7 @@ test("restored Dark hydrates the active workspace's changed-view evidence", asyn
   try {
     fixture.server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [home],
+      changedIds: [homeId],
       changesStatus: "ready",
       componentChanges: {
         baseline: fixture.compilation.manifest,
@@ -49,7 +50,7 @@ test("Changes navigation respects a reader's Light choice and clears route evide
   try {
     fixture.server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [home],
+      changedIds: [homeId],
       changesStatus: "ready",
       componentChanges: {
         baseline: fixture.compilation.manifest,

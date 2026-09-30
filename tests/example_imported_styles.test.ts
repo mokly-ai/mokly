@@ -4,6 +4,8 @@ import test from "node:test";
 
 import { parse } from "parse5";
 
+import { generatedViews } from "../packages/viewer/dist/data.js";
+
 import {
   attribute,
   designCatalogue,
@@ -37,11 +39,10 @@ test("example Welcome delivers scoped CSS, Tailwind utilities, prefixes and a bi
   const welcome = manifest.entries.find(
     (entry) => entry.id === "example-welcome",
   );
-  assert.ok(welcome?.kind === "screen" && welcome.darkFragments);
-  for (const route of [
-    ...Object.values(welcome.fragments),
-    ...Object.values(welcome.darkFragments),
-  ]) {
+  assert.ok(
+    welcome?.kind === "screen" && welcome.colorSchemes.includes("dark"),
+  );
+  for (const route of generatedViews(welcome).map((view) => view.path)) {
     const document = parse(textOutput(outputs, route) ?? "");
     const stylesheets = elements(
       document,

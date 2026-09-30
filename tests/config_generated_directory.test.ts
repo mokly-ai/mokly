@@ -8,7 +8,7 @@ import { validateGeneratedOutputPaths } from "../dist/build/output_paths.js";
 import { normalizeSourceFiles } from "../dist/build/source_inventory.js";
 import { loadConfig } from "../dist/config/load.js";
 import { resolveConfig } from "../dist/config/validate.js";
-import { validateRoute } from "../dist/registry/manifest_values.js";
+import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 
 import {
   createFixture,
@@ -142,27 +142,26 @@ test("broad entry glob skips generated tree while discovering co-located entries
   ]);
 });
 
-test("catalogue routes cannot occupy the reserved output tree", async (t) => {
+test("identity-derived catalogue routes cannot occupy the reserved output tree", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
-  const route = "mokly-generated/home.html";
-  const message = `route must not start with mokly-generated/: ${route}; choose a consumer-owned HTML route`;
-  assert.throws(
-    () => validateRoute(route, "home"),
-    (error: Error & { code?: string }) =>
-      error.code === "manifest-invalid" &&
-      error.message === `[mokly/manifest-invalid] ${message}`,
+  assert.equal(entryRoute("screen", "home"), "screens/home.html");
+  assert.equal(
+    viewRoute("screen", "home", "mobile", "light"),
+    "screens/home.mobile.html",
   );
   await fs.writeFile(
     fixture.entryPath,
     validEntrySource().replace(
       'route: "screens/home.html"',
-      `route: "${route}"`,
+      'route: "mokly-generated/home.html"',
     ),
   );
-  await assert.rejects(
-    compileCatalogue(await loadConfig(fixture.root)),
-    /route must not start with mokly-generated/,
+  const compilation = await compileCatalogue(await loadConfig(fixture.root));
+  assert.ok(
+    [...compilation.outputs.keys()].every(
+      (route) => route !== "mokly-generated/home.html",
+    ),
   );
 });
 

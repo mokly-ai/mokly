@@ -3,7 +3,9 @@
 </p>
 
 <p align="center">
-  <strong>Build browsable, reviewable mockup catalogues from real React components.</strong>
+  <strong>
+    Build browsable, reviewable mockup catalogues from real React components.
+  </strong>
 </p>
 
 <p align="center">
@@ -21,35 +23,36 @@
 </p>
 
 Mokly is an open-source TypeScript toolkit for turning React-authored product
-screens into a searchable static catalogue. It renders the components and
-themes from your repository, presents every screen at mobile and desktop
-sizes, and shows which screens changed from a Git baseline.
+screens into a searchable static catalogue. It renders the components and themes
+from your repository, presents every screen at mobile and desktop sizes, and
+shows which screens changed from a Git baseline.
 
-Run Mokly locally while you build, export the same catalogue as static files,
-or embed its viewer in another React application. Local Serve and static exports
+Run Mokly locally while you build, export the same catalogue as static files, or
+embed its viewer in another React application. Local Serve and static exports
 share the standalone presentation, whose single Auto/Light/Dark Appearance
 selector changes the interface and previews together. Embedded hosts render the
-same shell but choose its interface appearance independently with `theme`.
-The Dark interface uses warm neutral surfaces aligned with Mokly Cloud.
-Mokly owns the catalogue; your repository keeps ownership of its UI, data,
-styling, and rendering context.
+same shell but choose its interface appearance independently with `theme`. The
+Dark interface uses warm neutral surfaces aligned with Mokly Cloud. Mokly owns
+the catalogue; your repository keeps ownership of its UI, data, styling, and
+rendering context.
 
-> Mokly is pre-1.0. The package is [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly)
-> and the executable is `mokly`.
+> Mokly is pre-1.0. The package is
+> [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly) and the
+> executable is `mokly`.
 
 ## Why Mokly
 
 - **Use real product UI.** Screens are React nodes composed from the same
   components, providers, styles, and assets as the product.
-- **See the whole product in one place.** Collections, search, tags, mobile and
-  desktop views, color schemes, pages, components, screen variants, and user
-  flows share one catalogue. Variants remain grouped beneath their parent
-  screen while keeping their own stable ids and routes.
+- **See the whole product in one place.** Path-based folders, search, tags,
+  mobile and desktop views, color schemes, pages, components, screen and
+  component variants, and user flows share one catalogue. Variants remain
+  grouped beneath their parent while keeping their own stable ids and routes.
 - **Review outcomes, not file lists.** The Changes view compares rendered
   screens and their reachable resources with the branch point of your Git base,
   while removed screens and pages retain a read-only previous version.
-- **Inspect reusable components.** Register typed props, saved variants, slots,
-  and local controls, then see where each component is used.
+- **Inspect reusable components.** Register typed props, variants, slots, and
+  local controls, then see where each component is used.
 - **Keep delivery simple.** A catalogue can be exported as static files and
   hosted without a Mokly server, source checkout, or Git installation.
 - **Stay app-independent.** Plain React, React Native Web, design systems, and
@@ -60,9 +63,9 @@ styling, and rendering context.
 
 ### 1. Install
 
-Mokly requires Node.js 22.14 or newer, except Node 24.14 through 24.18.
-The supported range is `>=22.14.0 <24.14.0 || >=24.19.0`. You also need npm 11
-and React 19 or newer.
+Mokly requires Node.js 22.14 or newer, except Node 24.14 through 24.18. The
+supported range is `>=22.14.0 <24.14.0 || >=24.19.0`. You also need npm 11 and
+React 19 or newer.
 
 ```bash
 npm install --save-dev @mokly/mokly react react-dom
@@ -97,22 +100,14 @@ React Native Web style collection. See the
 Create `docs/mockups/entries/account.mockup.tsx`:
 
 ```tsx
-import { defineCollection, defineScreen } from "@mokly/mokly";
+import { defineScreen } from "@mokly/mokly";
 
 export const mockups = [
-  defineCollection({
-    id: "account",
-    title: "Account",
-    description: "Account product screens.",
-    childIds: ["account-home"],
-    dependencies: [],
-    relatedDocs: [],
-  }),
   defineScreen({
     id: "account-home",
     title: "Account home",
     description: "The account landing screen.",
-    route: "account/home.html",
+    navPath: ["Account"],
     mobile: <main>Account on mobile</main>,
     desktop: <main>Account on desktop</main>,
     dependencies: [],
@@ -124,7 +119,9 @@ export const mockups = [
 
 Replace the example `<main>` nodes with your product components, then list their
 source files or directories in `dependencies`. An entry file ends in
-`.mockup.ts` or `.mockup.tsx` and exports a `mockups` array.
+`.mockup.ts` or `.mockup.tsx` and exports a `mockups` array. Mokly derives every
+route from the id: this screen lives at `screens/account-home.html`, with one
+generated view per viewport and color scheme beside it.
 
 Mokly derives generated output by default. Keep its HTML, manifest, and cache
 out of Git:
@@ -136,8 +133,10 @@ docs/mockups/generated/mokly-manifest.json
 docs/mockups/generated/mokly-generated/
 ```
 
-Mokly's current output requires manifest v5; compatibility readers for older
-formats are limited to historical Git baselines.
+Current output uses manifest v7, and comparison-base output must do the same.
+Earlier baselines leave Changes unavailable until the base includes this
+version; see
+[baseline compatibility](./docs/protocol/mokly-baseline-compatibility.md).
 
 ### 4. Open the catalogue
 
@@ -146,8 +145,8 @@ npx --no-install mokly --open
 ```
 
 The development server prints its URL, renders previews on demand, watches
-authored inputs, and prepares Git change evidence in the background. The
-default port is `4173`; use `--port 0` to choose any available port.
+authored inputs, and prepares Git change evidence in the background. The default
+port is `4173`; use `--port 0` to choose any available port.
 
 When the first screen is working, continue with the guides for
 [theming and configuration](./docs/guides/authoring/config.md),
@@ -187,15 +186,15 @@ Detailed command references:
 Mokly's public API is declarative. Definitions describe what belongs in a
 catalogue; your React tree still owns what each screen looks like.
 
-| Concept              | Use it for                                                  | Guide                                                                   |
-| -------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Screens              | Product states, view renders, and full-screen variants      | [Screens](./docs/guides/authoring/screens.md)                           |
-| Collections and tags | Navigation hierarchy and searchable vocabulary              | [Collections and tags](./docs/guides/authoring/collections-and-tags.md) |
-| Components           | Typed props, saved variants, controls, and usage inspection | [Components](./docs/guides/authoring/components.md)                     |
-| Use-case flows       | Ordered journeys composed from existing screens             | [Use-case flows](./docs/guides/authoring/use-case-flows.md)             |
-| Pages                | Existing complete HTML documents without device variants    | [Pages](./docs/guides/authoring/pages.md)                               |
-| Styles               | Imported CSS, modules, assets and optional PostCSS          | [Styles](./docs/guides/authoring/styles.md)                             |
-| `MockLink`           | Portable links between catalogue entries                    | [Links](./docs/guides/authoring/links.md)                               |
+| Concept          | Use it for                                                  | Guide                                                               |
+| ---------------- | ----------------------------------------------------------- | ------------------------------------------------------------------- |
+| Screens          | Product states, view renders, and full-screen variants      | [Screens](./docs/guides/authoring/screens.md)                       |
+| Folders and tags | Navigation paths and searchable vocabulary                  | [Folders and tags](./docs/guides/authoring/collections-and-tags.md) |
+| Components       | Typed props, saved variants, controls, and usage inspection | [Components](./docs/guides/authoring/components.md)                 |
+| Use-case flows   | Ordered journeys composed from existing screens             | [Use-case flows](./docs/guides/authoring/use-case-flows.md)         |
+| Pages            | Existing complete HTML documents without device variants    | [Pages](./docs/guides/authoring/pages.md)                           |
+| Styles           | Imported CSS, modules, assets and optional PostCSS          | [Styles](./docs/guides/authoring/styles.md)                         |
+| `MockLink`       | Portable links between catalogue entries                    | [Links](./docs/guides/authoring/links.md)                           |
 
 A custom renderer is the integration boundary for product providers, themes,
 stylesheets, fonts, and full-document markup. Mokly resolves React from the
@@ -214,13 +213,13 @@ preflight-free Tailwind v4 utilities to exercise this delivery end to end.
 The local **Changes** view compares the working tree with the merge base of
 `HEAD` and `origin/main` by default. It accounts for generated documents,
 reachable resources, catalogue metadata, registered components, and applicable
-stylesheet changes. Changed screens, screen variants, and saved component
-variants generate comparisons only when an eligible shown view is opened.
-Per-view evidence keeps known unchanged views marked Unmodified without offering
-a comparison. A light-only screen or saved component variant uses its effective
-Light view for status and marks even while Dark stays selected for the rest of
-the catalogue. Missing per-view evidence preserves the selected entry or saved
-variant's existing comparison eligibility. Removed screens and pages load their read-only
+stylesheet changes. Changed screens, screen variants, and component variants
+generate comparisons only when an eligible shown view is opened. Per-view
+evidence keeps known unchanged views marked Unmodified without offering a
+comparison. A light-only screen or component variant uses its effective Light
+view for status and marks even while Dark stays selected for the rest of the
+catalogue. Missing per-view evidence preserves the selected entry's existing
+comparison eligibility. Removed screens and pages load their read-only
 [previous version](./docs/protocol/mokly-removed-previews.md) from the branch
 point.
 
@@ -251,9 +250,9 @@ self-hosted receivers.
 
 Use `@mokly/mokly` to create and deliver a catalogue. Use `@mokly/viewer` when
 another React application owns the surrounding navigation, branding,
-authentication, or discussion experience. Embedded viewer roots accept
-`theme` independently from `selection.colorScheme`, so hosts can pair any
-interface appearance with any preview scheme. See the
+authentication, or discussion experience. Embedded viewer roots accept `theme`
+independently from `selection.colorScheme`, so hosts can pair any interface
+appearance with any preview scheme. See the
 [viewer appearance contract](./docs/protocol/mokly-viewer-appearance.md) and
 [semantic palette](./docs/protocol/mokly-viewer-palette.md).
 
@@ -265,15 +264,15 @@ interface appearance with any preview scheme. See the
 - [Protocol and specification index](./docs/protocol/README.md)
 - [Removed content previews](./docs/protocol/mokly-removed-previews.md)
 - [Viewer appearance and preview schemes](./docs/protocol/mokly-viewer-appearance.md)
-- [Screen variants](./docs/protocol/mokly-screen-variants.md)
+- [Variants](./docs/protocol/mokly-variants.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
 - [Implementation plans](./plans/README.md)
 - [Changelog](./CHANGELOG.md)
 
-The guides are user-facing and ship with the npm package. The protocol
-documents are the detailed implementation contracts used to keep the CLI,
-viewer, generated output, and tests aligned.
+The guides are user-facing and ship with the npm package. The protocol documents
+are the detailed implementation contracts used to keep the CLI, viewer,
+generated output, and tests aligned.
 
 ## Develop Mokly
 
@@ -290,9 +289,10 @@ npm run example:build
 npm run dev
 ```
 
-`npm run dev` serves the synthetic consumer in [`examples/basic`](./examples/basic/README.md)
-and watches its entries, renderer, and stylesheets. Changes to Mokly's own
-`src/` files require restarting the command so the CLI is rebuilt.
+`npm run dev` serves the synthetic consumer in
+[`examples/basic`](./examples/basic/README.md) and watches its entries,
+renderer, and stylesheets. Changes to Mokly's own `src/` files require
+restarting the command so the CLI is rebuilt.
 
 Run the complete repository gate before submitting a change:
 
@@ -301,8 +301,9 @@ cargo xtask check
 ```
 
 That command runs formatting, linting, type checks, unit and integration tests,
-packed-package smoke tests, browser tests, dependency checks, and Rust checks.
-See the [xtask README](./xtask/README.md) for focused suites. Hosted CI runs the
+packed-package smoke tests, sharded browser coverage, the separate hydration
+suite, dependency checks, and Rust checks. See the
+[xtask README](./xtask/README.md) for focused suites. Hosted CI runs the
 functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
@@ -314,16 +315,43 @@ merge.
 - [`src/build`](./src/build) — bundling, rendering, validation, and generated
   output transactions; see the [imported CSS contract](./docs/protocol/mokly-imported-styles.md)
   for the stylesheet pass and binary output boundary.
-- [`src/cli`](./src/cli/README.md) — command parsing, reporting, and composition.
-- [`src/server`](./src/server/README.md) — local HTTP server and watched runtime.
+- [`src/build/mock_link_routes.ts`](./src/build/mock_link_routes.ts) —
+  identity-derived logical-link targets and portable artifact URLs.
+- [`src/components/manifest_entry_validation.ts`](./src/components/manifest_entry_validation.ts)
+  — manifest-v7 component-entry validation.
+- [`src/registry/changed_ids.ts`](./src/registry/changed_ids.ts) and
+  [`manifest_validation.ts`](./src/registry/manifest_validation.ts) —
+  identity-keyed change membership and the strict baseline-v7 boundary.
+- [`src/baseline/compatibility.ts`](./src/baseline/compatibility.ts) and
+  [`src/server/classification_result.ts`](./src/server/classification_result.ts)
+  — the typed earlier-baseline outcome from admission through Serve.
+- [`src/cli`](./src/cli/README.md) — command parsing, reporting, and
+  composition.
+- [`src/server`](./src/server/README.md) — local HTTP server and watched
+  runtime.
+- [`src/server/http_request_handler.ts`](./src/server/http_request_handler.ts) —
+  request dispatch against the server's current accepted snapshot.
 - [`src/review`](./src/review/README.md) — Git baselines, comparison, and change
   attribution.
+- [`src/review/component_variant_classification.ts`](./src/review/component_variant_classification.ts)
+  and
+  [`component_classification_sources.ts`](./src/review/component_classification_sources.ts)
+  — flat variant classification and review-result assembly.
+- [`src/review/artifact_files.ts`](./src/review/artifact_files.ts) and
+  [`component_classification_entries.ts`](./src/review/component_classification_entries.ts)
+  — collision-safe artifact writes and per-entry comparison preparation.
+- [`src/review/deleted_resource.ts`](./src/review/deleted_resource.ts) — the
+  shared verified-deletion and byte-comparison decision used by both Changes
+  classifiers.
 - [`src/export`](./src/export/README.md) — static catalogue export.
 - [`src/publication`](./src/publication/README.md) — shared static shell and
   previous-version publication.
-- [`src/publish`](./src/publish/README.md) — archive creation and upload.
+- [`src/publish`](./src/publish/README.md) — content-addressed publication exchange.
 - [`packages/viewer`](./packages/viewer/README.md) — React shell, catalogue read
   model, navigation, frames, and inspection.
+- [`scripts/preview/baseline.mjs`](./scripts/preview/baseline.mjs) and
+  [`html_paths.mjs`](./scripts/preview/html_paths.mjs) — preview publication's
+  baseline-availability and provider-path adapters.
 - [`examples/basic`](./examples/basic/README.md) — reference consumer and design
   catalogue.
 

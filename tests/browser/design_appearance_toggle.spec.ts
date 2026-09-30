@@ -9,9 +9,9 @@ const BACKGROUNDS = {
 } as const;
 
 const routes = [
-  ["design/browse/appearance/overview.html", "a selected screen"],
-  ["design/browse/appearance/workspaces/side-by-side.html", "a comparison"],
-  ["design/browse/appearance/states/light-only.html", "a light-only screen"],
+  ["screens/design-appearance-overview.html", "a selected screen"],
+  ["screens/design-appearance-side-by-side.html", "a comparison"],
+  ["screens/design-appearance-light-only.html", "a light-only screen"],
 ] as const;
 
 async function artboard(
@@ -82,7 +82,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
-    await page.goto("/view/design/browse/appearance/states/light-only.html");
+    await page.goto("/view/screens/design-appearance-light-only.html");
     await chooseViewport(page, viewport);
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
     for (const scheme of ["dark", "light", "dark"] as const) {
@@ -103,7 +103,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
-    await page.goto("/view/design/browse/appearance/overview.html");
+    await page.goto("/view/screens/design-appearance-overview.html");
     await chooseViewport(page, viewport);
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
     for (const scheme of ["dark", "light", "dark"] as const) {

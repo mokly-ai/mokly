@@ -6,7 +6,7 @@ import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 import { createFixture, removeFixture } from "../helpers/fixture.js";
 import { screenVariantEntrySource } from "../helpers/screen_variant_fixture.js";
 
-const ROUTE = "screens/home.variants/empty.html";
+const ROUTE = "screens/home-empty.html";
 const ROW = `a[data-nav-row][data-route="${ROUTE}"]`;
 const LIST = '[data-nav-disclosure="variants:pages:home"]';
 const HOME = 'a[data-nav-row][data-route="screens/home.html"]';
@@ -23,14 +23,17 @@ test("a background baseline places a removed variant under its parent", async ({
       await loadConfig(before.root),
     );
     const current = fixture.compilation.manifest;
-    const publish = (entries: (typeof baseline)["entries"], routes: string[]) =>
+    const publish = (
+      entries: (typeof baseline)["entries"],
+      changedIds: string[],
+    ) =>
       fixture.server.publishUpdate({
         kind: "evidence",
         changesStatus: "ready",
-        changedRoutes: routes,
+        changedIds,
         componentChanges: {
           baseline: { ...baseline, entries },
-          changedRoutes: routes,
+          changedIds,
         },
       });
 
@@ -38,7 +41,7 @@ test("a background baseline places a removed variant under its parent", async ({
     await expect(page.locator(ROW)).toHaveCount(0);
     await expect(page.locator(LIST)).toHaveCount(0);
 
-    publish(baseline.entries, [ROUTE]);
+    publish(baseline.entries, ["home-empty"]);
 
     await expect(page.locator(`${LIST} ${ROW}`)).toHaveCount(1);
     await expect(page.locator(HOME)).toHaveAttribute("aria-current", "page");
@@ -65,7 +68,7 @@ test("a background baseline places a removed variant under its parent", async ({
     await page.fill("[data-mokly-search]", "");
     const retained = await page.locator(ROW).elementHandle();
 
-    publish(baseline.entries, [ROUTE]);
+    publish(baseline.entries, ["home-empty"]);
 
     expect(await retained!.evaluate((row) => row.isConnected)).toBe(true);
     await expect(page.locator(ROW)).toHaveCount(1);

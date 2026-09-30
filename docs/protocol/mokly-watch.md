@@ -13,15 +13,6 @@ by generated output:
 - resolved entry modules, page/renderer/transformer imports, and every other
   inventoried source rebuild generated output, including imported bytes handled
   by asset loaders;
-- for [imported CSS](./mokly-imported-styles.md), changed plain/module
-  CSS, nested imports, referenced assets, and PostCSS-reported files rebuild;
-  PostCSS directory dependencies watch matching file additions, not deletions,
-  and any newly added non-ignored subdirectory beneath a reported directory,
-  even when its reported glob is `*` and did not yet cover the new child;
-  deletion of generated output cannot start a rebuild. An absent glob means
-  `**/*`. The PostCSS module and its imports reload config before
-  rebuilding; the accepted generation and browser reload event advance together;
-  generated output, including symlink aliases, never schedules a rebuild loop;
 - a created, renamed, or deleted regular file whose repository-relative path
   matches an `entries` glob re-runs discovery before that rebuild, so the
   resolved entry set follows the filesystem; the glob defines the complete
@@ -30,6 +21,17 @@ by generated output:
 - an input shared with shell metadata rebuilds before restarting the child;
 - configured stylesheets and referenced local CSS, fonts, images, and other
   resources used only through public URLs reload the browser without rebuilding;
+- [imported CSS](./mokly-imported-styles.md), including modules, nested
+  imports, local assets and PostCSS-reported files, rebuilds from source.
+  Plain and module CSS, nested imports, referenced assets, and
+  PostCSS-reported files all participate. PostCSS directory dependencies watch
+  matching file additions, not deletions, and any newly added non-ignored
+  subdirectory beneath the reported directory, even when a reported `*` glob
+  does not yet cover it. An absent glob means `**/*`. The PostCSS module and
+  its imports reload configuration before rebuilding; the accepted generation
+  and browser reload event advance together. Deleting generated output cannot
+  trigger a rebuild; generated routes and their symlink aliases never schedule
+  a feedback loop;
 - header-proven generated output plus `.git`, `.context`, `node_modules`,
   `dist`, `target`, coverage, browser-test output, comparison output, and Mokly
   transaction trees are pruned from broad watches and classify as ignored;
@@ -69,16 +71,7 @@ Exact required files, including the config and its imports, inventoried sources,
 the renderer, and configured stylesheets, retain both their ancestor path and the
 file itself even when intentionally nested beneath an ordinarily ignored
 directory. Configured stylesheet files remain reload inputs.
-The logical path of a previously reachable public resource remains a reload
-input when its symlink temporarily points outside the repository or dangles;
-never watch the escaped physical target. Generated output, Review output and
-cache still take precedence, so only an authored public alias can recover.
-Generated output, Review output and the cache take precedence over exact
-required inputs; denied directory **names** apply only to discovery and
-directory scans, not inventoried files, configured modules or their ancestors.
-Classify logical and physical aliases by these distinct reasons before applying
-the required-input exception. Those package-owned output classifications take
-precedence over additional watch rules.
+Those package-owned classifications take precedence over additional watch rules.
 A created path beneath a denied directory relative to its glob root, or beneath
 `review.outDir`, is ignored because discovery cannot accept it. A file created
 under an entry glob root that no `entries` glob matches and that is not imported
@@ -129,18 +122,6 @@ fail; watch classification does not grant permission to overwrite them.
 The input graphs are resolved before the source/config watcher is constructed.
 It becomes ready before initial index preparation; import changes replace its watch
 set using the same readiness and recovery rules as configuration adoption.
-Build a generation-scoped index of exact required files and their ancestors
-once per accepted config/inventory. Ignore callbacks consult that index in
-constant time; watch targets omit individual files already covered by an entry
-glob root, PostCSS directory-dependency root or watch-rule root unless a
-denied-name directory lies between that root and a required file. Such files
-remain explicit targets, including when they appear after watcher readiness;
-their arrival changes the effective watch-target set and replaces the watcher.
-Reconfigure replaces the
-watcher only when the set of effective watch roots changes, not when another
-file joins an already-watched reported directory. A newly added matching file
-there causes one rebuild and browser reload without extra graph loads for
-watcher replacement.
 Resource watches are discovered from candidate output and become ready before
 it is written. Discovery repeats after readiness to capture newly introduced
 references during watcher attachment. Notifications during generation and child
@@ -159,4 +140,25 @@ the same serialized action queue used for authored changes. The supervisor
 retains ownership until terminal confirmation; a replacement cannot bypass an
 in-progress cleanup or contend with the failed child's still-bound port.
 
-Continue with [watched adoption and recovery](./mokly-watch-lifecycle.md).
+The supervisor retains the five-minute readiness safety allowance for the child
+to receive the accepted config, live index and retained renderer, construct its
+catalogue and bind. The interactive performance target is under five seconds;
+the timeout is not an acceptable startup duration. Startup transfers no rendered
+HTML and avoids rereading the large manifest file. The child
+still validates the transferred metadata and re-resolves the config and consumer
+input graphs to enforce source-inventory freshness before binding. These checks
+are visible separately with `--debug-timings`. Local controls are available at
+readiness. The older full-manifest internal startup path retains its post-ready
+runtime handoff; live Serve uses the lightweight pre-ready handoff.
+
+On a config-file change, the parent first loads and validates the candidate,
+starts a replacement watcher, waits for readiness and validates a new index and
+rendering graph. It then adopts the config, closes the old watcher and restarts
+the child. Load, watcher-readiness or index-validation failure retains the previous
+config, watcher, output and child. Full rendering and transactional output writing
+follow in the background. Their failure preserves old disk output and withholds
+complete usage/Changes; valid current previews remain available. An explicit CLI
+`--base` remains pinned; without one, the restarted child uses the newly loaded
+config's comparison base.
+
+Resource adoption and recovery continue in [Watch Runtime And Recovery](./mokly-watch-runtime.md).

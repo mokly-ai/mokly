@@ -7,6 +7,7 @@ import {
   FramedShot,
   type CompareViewport,
 } from "./parts/compare_page.js";
+import { ComparisonStack, deviceChrome } from "./parts/compare_stack.js";
 import { DESTINATIONS } from "./parts/destinations.js";
 import { ExampleWorkspace } from "./parts/example_workspace.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
@@ -35,7 +36,7 @@ function ChangedCompare({ viewport }: { viewport: CompareViewport }) {
               dark={dark}
               viewport={previewViewport}
             >
-              <MiniWelcome compact={previewViewport === "mobile"} />
+              <MiniWelcome compact={previewViewport === "mobile"} inert />
             </FramedShot>
           </Pane>
           <Pane label="Current" side="after">
@@ -44,7 +45,11 @@ function ChangedCompare({ viewport }: { viewport: CompareViewport }) {
               dark={dark}
               viewport={previewViewport}
             >
-              <MiniWelcome compact={previewViewport === "mobile"} revised />
+              <MiniWelcome
+                compact={previewViewport === "mobile"}
+                inert
+                revised
+              />
             </FramedShot>
           </Pane>
         </CompareGrid>
@@ -108,26 +113,18 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
       title="Welcome"
       viewport={viewport}
       render={(previewViewport) => (
-        <CompareGrid difference>
-          <Pane label="Before" side="before">
-            <FramedShot
-              address="example.test/welcome"
-              dark={dark}
-              viewport={previewViewport}
-            >
-              <MiniWelcome compact={previewViewport === "mobile"} />
-            </FramedShot>
-          </Pane>
-          <Pane label="Current" side="after">
-            <FramedShot
-              address="example.test/welcome"
-              dark={dark}
-              viewport={previewViewport}
-            >
-              <MiniWelcome compact={previewViewport === "mobile"} revised />
-            </FramedShot>
-          </Pane>
-        </CompareGrid>
+        <ComparisonStack
+          after={
+            <MiniWelcome compact={previewViewport === "mobile"} inert revised />
+          }
+          before={<MiniWelcome compact={previewViewport === "mobile"} inert />}
+          chrome={deviceChrome({
+            address: "example.test/welcome",
+            dark,
+            viewport: previewViewport,
+          })}
+          mode="difference"
+        />
       )}
     />
   );
@@ -141,7 +138,6 @@ export const reviewOutcomeScreens = [
     desktop: <ChangedCompare viewport="desktop" />,
     id: "design-review-changed",
     mobile: <ChangedCompare viewport="mobile" />,
-    slug: "changed",
     title: "Changed screen",
   }),
   screen({
@@ -150,7 +146,6 @@ export const reviewOutcomeScreens = [
     desktop: <AddedCurrent viewport="desktop" />,
     id: "design-review-added",
     mobile: <AddedCurrent viewport="mobile" />,
-    slug: "added",
     title: "Added screen",
   }),
   screen({
@@ -162,7 +157,6 @@ export const reviewOutcomeScreens = [
     mobile: <RemovedPrevious viewport="mobile" />,
     rationale:
       "A removed screen has nothing current to compare, so the stage carries its previous views under a quiet label instead of a comparison band. The catalogue-wide Appearance selector remains the only theme control, while the historical frame stays Light because that is the only scheme captured for those views.",
-    slug: "removed",
     title: "Removed screen",
   }),
   screen({
@@ -171,7 +165,6 @@ export const reviewOutcomeScreens = [
     desktop: <DifferenceCompare viewport="desktop" />,
     id: "design-review-difference",
     mobile: <DifferenceCompare viewport="mobile" />,
-    slug: "difference",
     title: "Difference mode",
   }),
 ];

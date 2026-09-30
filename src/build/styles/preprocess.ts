@@ -31,7 +31,7 @@ export interface ProcessedStyleText {
 }
 
 /** Identity processor when no PostCSS module has been configured. */
-export class IdentityStyleProcessor implements StyleTextProcessor {
+class IdentityStyleProcessor implements StyleTextProcessor {
   /** Retain the original CSS when the consumer has no PostCSS module. */
   async process(_source: string, text: string): Promise<ProcessedStyleText> {
     return { css: text, sourceFiles: [] };

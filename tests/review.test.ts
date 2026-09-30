@@ -1,138 +1,297 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
-import { loadConfig } from "../dist/config/load.js";
-import { compareReview } from "../dist/review/compare.js";
-import { CommittedRepository } from "../dist/review/git.js";
+import type { Compilation } from "../dist/build/compile.js";
 import {
-  normalizeReviewPair,
-  normalizeSingleDocument,
-} from "../dist/review/ignore.js";
+  generatedBytes,
+  generatedText,
+  type GeneratedFile,
+} from "../dist/build/generated_file.js";
+import { loadConfig } from "../dist/config/load.js";
+import { renderReviewArtifact } from "../dist/review/artifact.js";
+import { compareReview } from "../dist/review/compare.js";
+import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
+import { generatedViews } from "../packages/viewer/dist/data.js";
+import type {
+  ManifestScreen,
+  ManifestV7,
+} from "../packages/viewer/dist/registry/types.js";
+import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
-test("Review ignore normalizes paired regions and retains malformed content", () => {
-  const base =
-    "<main><!--mokly-review-ignore:start:nav--><nav>A</nav><!--mokly-review-ignore:end:nav--><p>Body</p></main>";
-  const head =
-    "<main><!--mokly-review-ignore:start:nav--><nav>B</nav><!--mokly-review-ignore:end:nav--><p>Body</p></main>";
-  const pair = normalizeReviewPair(base, head, "screen.mobile.html");
-  assert.equal(pair.base, pair.head);
-  assert.deepEqual(pair.ignoredIds, ["nav"]);
-  assert.equal(
-    normalizeSingleDocument(base, "screen.mobile.html").includes(
-      "<nav>A</nav>",
-    ),
-    true,
-  );
-  assert.throws(
-    () =>
-      normalizeReviewPair(
-        base,
-        head.replace("end:nav", "end:other"),
-        "screen.mobile.html",
-      ),
-    /does not match/,
-  );
-});
-
-test("Git failures keep typed operation context", async () => {
-  const git = new CommittedRepository({
-    run: async () => {
-      throw new Error("not a repository");
-    },
+test("dark views compare and classify against a pre-dark base", async (context) => {
+  const fixture = await createFixture(undefined, {
+    extraConfig: 'colorSchemes: ["light", "dark"],',
   });
-  await assert.rejects(
-    () => git.evidence.mergeBase("origin/main", "HEAD"),
-    /find merge base of origin\/main and HEAD.*not a repository/,
-  );
-});
-
-test("Review classifies added, removed, and unchanged routes independently", async (context) => {
-  const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
-  const compilation = await compileCatalogue(config);
-  const detail = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "details",
-  );
-  const home = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "home",
-  );
-  assert.ok(detail?.kind === "screen" && home?.kind === "screen");
-  const old = {
-    ...home,
-    fragments: {
-      desktop: "screens/old.desktop.html",
-      mobile: "screens/old.mobile.html",
-    },
-    id: "old-screen",
-    route: "screens/old.html",
-    title: "Old screen",
-    useCaseIds: [],
-  };
-  const baseManifest = {
-    entries: [{ ...detail, useCaseIds: [] }, old],
-    generatedBy: "mokly" as const,
-    sourceFiles: compilation.manifest.sourceFiles,
-    schemaVersion: 5 as const,
-  };
-  const gitFiles = new Map<string, string>([
-    ["mockups/mokly-manifest.json", `${JSON.stringify(baseManifest)}\n`],
-    [
-      "mockups/screens/details.mobile.html",
-      textOutput(compilation.outputs, "screens/details.mobile.html") ?? "",
-    ],
-    [
-      "mockups/screens/details.desktop.html",
-      textOutput(compilation.outputs, "screens/details.desktop.html") ?? "",
-    ],
-    ["mockups/screens/old.mobile.html", "<html><body>Old mobile</body></html>"],
-    [
-      "mockups/screens/old.desktop.html",
-      "<html><body>Old desktop</body></html>",
-    ],
-  ]);
+  const rawCompilation = await compileCatalogue(config);
+  const compilation = withHomeIgnoredRegions(rawCompilation, "after");
+  const baseCompilation = withHomeIgnoredRegions(rawCompilation, "before");
+  const baseManifest = withoutDarkFragments(baseCompilation.manifest);
+
   const artifact = await compareReview(
     compilation,
     config,
-    {
-      evidence: {
-        changedPaths: async () => [],
-        mergeBase: async () => "a".repeat(40),
-      },
-      reader: {
-        fileExists: async (_commit, repoPath) => gitFiles.has(repoPath),
-        fileKind: async (_commit, repoPath) =>
-          gitFiles.has(repoPath) ? "regular" : "missing",
-        readFile: async (_commit, repoPath) => {
-          const content = gitFiles.get(repoPath);
-          if (content === undefined)
-            throw new Error(`missing fake Git path ${repoPath}`);
-          return content;
-        },
-        readFileBytes: async (_commit, repoPath) => {
-          const content = gitFiles.get(repoPath);
-          if (content === undefined)
-            throw new Error(`missing fake Git path ${repoPath}`);
-          return Buffer.from(content);
-        },
-      },
-    },
+    fakeGit(filesForCompilation(baseManifest, baseCompilation)),
     "HEAD",
   );
-  assert.equal(
-    artifact.result.screens.find((screen) => screen.id === "home")?.state,
-    "added",
+
+  const home = artifact.result.screens.find((screen) => screen.id === "home");
+  assert.ok(home);
+  assert.deepEqual(
+    home.views.map(({ colorScheme, state, viewport }) => ({
+      colorScheme,
+      state,
+      viewport,
+    })),
+    [
+      { colorScheme: "light", state: "ignored-only", viewport: "mobile" },
+      { colorScheme: "dark", state: "added", viewport: "mobile" },
+      { colorScheme: "light", state: "ignored-only", viewport: "desktop" },
+      { colorScheme: "dark", state: "added", viewport: "desktop" },
+    ],
   );
-  assert.equal(
-    artifact.result.screens.find((screen) => screen.id === "old-screen")?.state,
-    "removed",
+  const reviewJson = JSON.parse(
+    renderReviewArtifact(artifact).get("review.json") as string,
+  ) as ReviewResult;
+  assert.equal(reviewJson.schemaVersion, 4);
+  const jsonHome = reviewJson.screens.find((screen) => screen.id === "home");
+  assert.ok(jsonHome);
+  assert.deepEqual(
+    jsonHome.views.map(({ colorScheme, ignoredIds, state, viewport }) => ({
+      after: state !== "removed",
+      before: state !== "added",
+      colorScheme,
+      ignoredIds,
+      state,
+      viewport,
+    })),
+    [
+      {
+        after: true,
+        before: true,
+        colorScheme: "light",
+        ignoredIds: ["nav"],
+        state: "ignored-only",
+        viewport: "mobile",
+      },
+      {
+        after: true,
+        before: false,
+        colorScheme: "dark",
+        ignoredIds: [],
+        state: "added",
+        viewport: "mobile",
+      },
+      {
+        after: true,
+        before: true,
+        colorScheme: "light",
+        ignoredIds: ["nav"],
+        state: "ignored-only",
+        viewport: "desktop",
+      },
+      {
+        after: true,
+        before: false,
+        colorScheme: "dark",
+        ignoredIds: [],
+        state: "added",
+        viewport: "desktop",
+      },
+    ],
   );
-  assert.equal(
-    artifact.result.screens.find((screen) => screen.id === "details")?.state,
-    "unchanged",
+  assert.deepEqual(reviewJson.ignoredImpact, [
+    { colorScheme: "light", count: 1, id: "nav", viewport: "mobile" },
+    { colorScheme: "light", count: 1, id: "nav", viewport: "desktop" },
+  ]);
+});
+
+test("removing dark classifies dark views removed", async (context) => {
+  const fixture = await createFixture(undefined, {
+    extraConfig: 'colorSchemes: ["light", "dark"],',
+  });
+  context.after(() => removeFixture(fixture));
+  const darkConfig = await loadConfig(fixture.root);
+  const darkCompilation = await compileCatalogue(darkConfig);
+  await fs.promises.writeFile(
+    fixture.configPath,
+    `import { defineConfig } from "@mokly/mokly";
+export default defineConfig({
+  entriesDir: "entries",
+  mockupsDir: "mockups",
+  repoRoot: ".",
+  review: { outDir: ".review", sharedImpact: ["notes.md"] }
+});
+`,
+  );
+  const lightConfig = await loadConfig(fixture.root);
+  const lightCompilation = await compileCatalogue(lightConfig);
+
+  const artifact = await compareReview(
+    lightCompilation,
+    lightConfig,
+    fakeGit(filesForCompilation(darkCompilation.manifest, darkCompilation)),
+    "HEAD",
+  );
+
+  const home = artifact.result.screens.find((screen) => screen.id === "home");
+  assert.ok(home);
+  assert.deepEqual(
+    home.views.map(({ colorScheme, state, viewport }) => ({
+      colorScheme,
+      state,
+      viewport,
+    })),
+    [
+      { colorScheme: "light", state: "unchanged", viewport: "mobile" },
+      { colorScheme: "dark", state: "removed", viewport: "mobile" },
+      { colorScheme: "light", state: "unchanged", viewport: "desktop" },
+      { colorScheme: "dark", state: "removed", viewport: "desktop" },
+    ],
   );
 });
+
+test("ignoredImpact sorts by viewport then scheme then id", async (context) => {
+  const fixture = await createFixture(undefined, {
+    extraConfig: 'colorSchemes: ["light", "dark"],',
+  });
+  context.after(() => removeFixture(fixture));
+  const config = await loadConfig(fixture.root);
+  const compilation = await compileCatalogue(config);
+  const baseCompilation = withHomeIgnoredRegions(compilation, "before", [
+    "z-nav",
+    "a-nav",
+  ]);
+  const headCompilation = withHomeIgnoredRegions(compilation, "after", [
+    "z-nav",
+    "a-nav",
+  ]);
+
+  const artifact = await compareReview(
+    headCompilation,
+    config,
+    fakeGit(filesForCompilation(baseCompilation.manifest, baseCompilation)),
+    "HEAD",
+  );
+
+  assert.deepEqual(artifact.result.ignoredImpact, [
+    { colorScheme: "light", count: 1, id: "a-nav", viewport: "mobile" },
+    { colorScheme: "light", count: 1, id: "z-nav", viewport: "mobile" },
+    { colorScheme: "dark", count: 1, id: "a-nav", viewport: "mobile" },
+    { colorScheme: "dark", count: 1, id: "z-nav", viewport: "mobile" },
+    { colorScheme: "light", count: 1, id: "a-nav", viewport: "desktop" },
+    { colorScheme: "light", count: 1, id: "z-nav", viewport: "desktop" },
+    { colorScheme: "dark", count: 1, id: "a-nav", viewport: "desktop" },
+    { colorScheme: "dark", count: 1, id: "z-nav", viewport: "desktop" },
+  ]);
+});
+
+function fakeGit(
+  files: ReadonlyMap<string, GeneratedFile>,
+): ReadOnlyReviewRepository {
+  return {
+    evidence: {
+      changedPaths: async () => [],
+      mergeBase: async () => "a".repeat(40),
+    },
+    reader: {
+      fileExists: async (_commit, repoPath) => files.has(repoPath),
+      fileKind: async (_commit, repoPath) =>
+        files.has(repoPath) ? "regular" : "missing",
+      readFile: async (_commit, repoPath) => {
+        const content = files.get(repoPath);
+        if (content === undefined)
+          throw new Error(`missing fake Git path ${repoPath}`);
+        return generatedText(content, repoPath)!;
+      },
+      readFileBytes: async (_commit, repoPath) => {
+        const content = files.get(repoPath);
+        if (content === undefined)
+          throw new Error(`missing fake Git path ${repoPath}`);
+        return generatedBytes(content);
+      },
+    },
+  };
+}
+
+function filesForCompilation(
+  manifest: ManifestV7,
+  compilation: Compilation,
+): Map<string, GeneratedFile> {
+  const files = new Map<string, GeneratedFile>([
+    ["mockups/mokly-manifest.json", `${JSON.stringify(manifest)}\n`],
+  ]);
+  for (const [route, content] of compilation.outputs) {
+    if (route === "mokly-manifest.json") continue;
+    files.set(`mockups/${route}`, content);
+  }
+  return files;
+}
+
+function withoutDarkFragments(manifest: ManifestV7): ManifestV7 {
+  return {
+    ...manifest,
+    entries: manifest.entries.map((entry) => {
+      if (entry.kind !== "screen") return entry;
+      return {
+        ...entry,
+        colorSchemes: ["light"],
+        ...(entry.componentViews
+          ? {
+              componentViews: entry.componentViews.filter(
+                (view) => view.colorScheme === "light",
+              ),
+            }
+          : {}),
+      };
+    }),
+  };
+}
+
+function withHomeIgnoredRegions(
+  compilation: Compilation,
+  label: string,
+  ids: readonly string[] = ["nav"],
+): Compilation {
+  const home = compilation.manifest.entries.find(
+    (entry) => entry.kind === "screen" && entry.id === "home",
+  );
+  if (home?.kind !== "screen") throw new Error("missing home screen");
+  const outputs = new Map(compilation.outputs);
+  for (const fragment of screenFragments(home)) {
+    const content = outputs.get(fragment);
+    if (content === undefined) throw new Error(`missing output ${fragment}`);
+    outputs.set(
+      fragment,
+      insertIgnoredRegions(textOutput(outputs, fragment)!, label, ids),
+    );
+  }
+  return { ...compilation, outputs };
+}
+
+function screenFragments(screen: ManifestScreen): string[] {
+  return generatedViews(screen).map((view) => view.path);
+}
+
+function insertIgnoredRegions(
+  content: string,
+  label: string,
+  ids: readonly string[],
+): string {
+  const regions = ids
+    .map(
+      (id) =>
+        `<!--mokly-review-ignore:start:${id}-->` +
+        `<span>${label}-${id}</span>` +
+        `<!--mokly-review-ignore:end:${id}-->`,
+    )
+    .join("");
+  if (!content.includes("</main>")) throw new Error("missing main close tag");
+  return content.replace("</main>", `${regions}</main>`);
+}

@@ -44,8 +44,6 @@ export interface ReviewConfig {
 
 /** Temporary compatibility accepted during a consumer cutover. */
 export interface CompatibilityConfig {
-  /** Read historical v2 Git output only when its canonical manifest is absent. */
-  readManifestV2?: boolean;
   /** Config-relative module applying a temporary deterministic document bridge. */
   transformer?: string;
 }
@@ -118,7 +116,6 @@ export interface ResolvedConfig {
   generatedOutput: "committed" | "derived";
   colorSchemes: readonly ColorScheme[];
   compatibility: {
-    readManifestV2: boolean;
     transformer?: string;
   };
   configPath: string;

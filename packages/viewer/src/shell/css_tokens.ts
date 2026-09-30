@@ -30,6 +30,7 @@ export const SHELL_TOKENS_CSS = `
   --chrome-border-strong: #c8ccc4;
   --chrome-control-edge: #868e88;
   --chrome-accent: #2a4733;
+  --chrome-brand: #2f5945;
   --chrome-count-bg: rgba(20, 28, 22, 0.08);
   --chrome-scrim: rgba(20, 28, 22, 0.45);
   --chrome-disabled-bg: #e6ebe7;
@@ -42,6 +43,7 @@ export const SHELL_TOKENS_CSS = `
   --chrome-shadow-sheet: 0 6px 28px rgba(36, 55, 43, 0.15);
   --sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
+  --serif: Georgia, "Times New Roman", serif;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   --_mokly-private-on-ink: #ffffff;
   --_mokly-private-on-accent-deep: #ffffff;

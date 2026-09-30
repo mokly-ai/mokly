@@ -22,7 +22,7 @@ const requiredIndexes = new WeakMap<ResolvedConfig, RequiredWatchIndex>();
 const globRootIndexes = new WeakMap<ResolvedConfig, readonly string[]>();
 
 /** Stable prefixes of every entry glob, watched so new entry modules are found. */
-export function entryGlobRoots(config: ResolvedConfig): string[] {
+function entryGlobRoots(config: ResolvedConfig): string[] {
   const existing = globRootIndexes.get(config);
   if (existing) return [...existing];
   const roots = [

@@ -188,7 +188,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
 test("view controls and highlighting work inside sandboxed Browse frames", async ({
   page,
 }) => {
-  await page.goto("/view/design/components/inspection/details.html");
+  await page.goto("/view/screens/design-component-inspection-details.html");
   const frame = page.frameLocator(".mbk-frame-desktop iframe");
   const toolbar = frame.getByRole("toolbar", { name: "Preview options" });
   await toolbar

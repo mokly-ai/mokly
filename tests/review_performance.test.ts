@@ -6,9 +6,12 @@ import { promisify } from "node:util";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
+import { renderReviewArtifact } from "../dist/review/artifact.js";
 import { compareReview } from "../dist/review/compare.js";
 import { CommittedRepository } from "../dist/review/git.js";
 import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
+import { generatedViews } from "../packages/viewer/dist/data.js";
+import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
@@ -27,7 +30,7 @@ test("Review batches base viewport reads", async (context) => {
     ["mockups/mokly-manifest.json", JSON.stringify(compilation.manifest)],
   ]);
   for (const screen of screens) {
-    for (const fragment of Object.values(screen.fragments)) {
+    for (const fragment of generatedViews(screen).map((view) => view.path)) {
       files.set(
         `mockups/${fragment}`,
         textOutput(compilation.outputs, fragment) ?? "",
@@ -105,13 +108,8 @@ test("Review batches dark base fragments through CommittedRepository", async (co
     (entry) => entry.kind === "screen",
   );
   const expected = screens.flatMap((screen) => {
-    assert.ok(screen.darkFragments);
-    return [
-      `mockups/${screen.fragments.mobile}`,
-      `mockups/${screen.darkFragments.mobile}`,
-      `mockups/${screen.fragments.desktop}`,
-      `mockups/${screen.darkFragments.desktop}`,
-    ];
+    assert.ok(screen.colorSchemes.includes("dark"));
+    return generatedViews(screen).map((view) => `mockups/${view.path}`);
   });
   const batchedPathspecs = calls
     .filter((arguments_) => arguments_[0] === "ls-tree")
@@ -130,57 +128,107 @@ test("Review batches dark base fragments through CommittedRepository", async (co
   );
 });
 
-test("Git reads regular base files through two batch commands", async () => {
-  const regularObject = "b".repeat(40);
-  const symlinkObject = "c".repeat(40);
-  const regularContent = Buffer.from("content");
-  const calls: string[][] = [];
+test("Git rejects a blob too large for a bounded batch", async () => {
+  const objectId = "d".repeat(40);
+  let contentReads = 0;
+  const client = new CommittedRepository({
+    run: async () =>
+      `100644 blob ${objectId} ${48 * 1024 * 1024 + 1}\tmockups/huge.html\0`,
+    runBytesWithInput: async () => {
+      contentReads += 1;
+      return Buffer.alloc(0);
+    },
+  });
+
+  await assert.rejects(
+    client.reader.readFiles("a".repeat(40), ["mockups/huge.html"]),
+    /too large.*bounded Git batch/i,
+  );
+  assert.equal(contentReads, 0);
+});
+
+test("Git bounds zero-byte blob batches by object count", async () => {
+  const paths = Array.from(
+    { length: 4_100 },
+    (_, index) => `mockups/empty-${String(index).padStart(4, "0")}.html`,
+  );
+  const objects = new Map(
+    paths.map((repoPath, index) => [
+      repoPath,
+      index.toString(16).padStart(40, "0"),
+    ]),
+  );
+  const contentBatchSizes: number[] = [];
   const client = new CommittedRepository({
     run: async (arguments_) => {
-      calls.push([...arguments_]);
-      return [
-        `100644 blob ${regularObject} 7\tmockups/regular.html`,
-        `120000 blob ${symlinkObject} 6\tmockups/linked.html`,
-        "",
-      ].join("\0");
+      const separator = arguments_.indexOf("--");
+      return arguments_
+        .slice(separator + 1)
+        .map((pathspec) => {
+          const repoPath = pathspec.slice(":(literal)".length);
+          return `100644 blob ${objects.get(repoPath)} 0\t${repoPath}\0`;
+        })
+        .join("");
     },
-    runBytesWithInput: async (arguments_, input) => {
-      calls.push([...arguments_]);
-      assert.equal(Buffer.from(input).toString("utf8"), `${regularObject}\n`);
-      return Buffer.concat([
-        Buffer.from(`${regularObject} blob 7\n`),
-        regularContent,
-        Buffer.from("\n"),
-      ]);
+    runBytesWithInput: async (_arguments, input) => {
+      const objectIds = Buffer.from(input).toString("utf8").trim().split("\n");
+      contentBatchSizes.push(objectIds.length);
+      return Buffer.concat(
+        objectIds.map((objectId) =>
+          Buffer.from(`${objectId} blob 0\n\n`, "utf8"),
+        ),
+      );
     },
   });
 
-  const files = await client.reader.readFiles("a".repeat(40), [
-    "mockups/regular.html",
-    "mockups/linked.html",
-    "mockups/missing.html",
-  ]);
+  const files = await client.reader.readFiles("a".repeat(40), paths);
 
-  assert.deepEqual(files.get("mockups/regular.html"), {
-    bytes: regularContent,
-    kind: "regular",
-  });
-  assert.deepEqual(files.get("mockups/linked.html"), { kind: "symlink" });
-  assert.deepEqual(files.get("mockups/missing.html"), { kind: "missing" });
-  assert.deepEqual(
-    calls.map(([command]) => command),
-    ["ls-tree", "cat-file"],
+  assert.equal(files.size, paths.length);
+  assert.ok(contentBatchSizes.length > 1);
+  assert.ok(Math.max(...contentBatchSizes) < paths.length);
+});
+
+test("Comparison metadata has no per-screen HTML or navigation copies", () => {
+  const screens = Array.from({ length: 40 }, (_, index) => ({
+    after: { id: `screen-${index}`, title: `Screen ${index}` },
+    before: { id: `screen-${index}`, title: `Screen ${index}` },
+    dependencies: [],
+    id: `screen-${index}`,
+    sharedImpact: [],
+    state: "changed" as const,
+    title: `Screen ${index}`,
+    views: [
+      {
+        colorScheme: "light" as const,
+        ignoredIds: [],
+        state: "changed" as const,
+        viewport: "mobile" as const,
+      },
+    ],
+  })).sort((left, right) =>
+    left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
   );
-  assert.deepEqual(calls[0], [
-    "ls-tree",
-    "-zl",
-    "--full-tree",
-    "a".repeat(40),
-    "--",
-    ":(literal)mockups/linked.html",
-    ":(literal)mockups/missing.html",
-    ":(literal)mockups/regular.html",
+  const result: ReviewResult = {
+    baseCommit: "a".repeat(40),
+    baseRef: "origin/main",
+    changedPaths: [],
+    ignoredImpact: [],
+    schemaVersion: 4,
+    screens,
+    sharedImpact: [],
+    components: [],
+    changes: [],
+    affectedConsumers: [],
+  };
+
+  const files = renderReviewArtifact({ files: new Map(), result });
+  assert.deepEqual([...files.keys()].sort(), [
+    ".mokly-review-artifact",
+    "review.json",
+    "summary.md",
   ]);
+  const metadata = JSON.parse(String(files.get("review.json"))) as ReviewResult;
+  assert.equal(metadata.screens.length, 40);
 });
 
 function requiredFile(

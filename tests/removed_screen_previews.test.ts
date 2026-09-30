@@ -4,7 +4,13 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { ManifestScreen, ManifestV5 } from "@mokly/viewer/data";
+import {
+  generatedViews,
+  viewRoute,
+  type ManifestScreen,
+  type ManifestV7,
+  type ReviewResultV4,
+} from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import {
@@ -13,10 +19,10 @@ import {
   type GeneratedFile,
 } from "../dist/build/generated_file.js";
 import { loadConfig } from "../dist/config/load.js";
+import { parseHistoricalManifest } from "../dist/registry/manifest.js";
 import { compareReview } from "../dist/review/compare.js";
 import type { BaselineReader, GitFile } from "../dist/review/git.js";
 import { RepositorySelectedReview } from "../dist/review/selected.js";
-import type { ManifestV3 } from "../packages/viewer/dist/registry/types.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
@@ -34,6 +40,7 @@ for (const mode of ["committed", "derived"] as const) {
       baseRef: "main",
       changedPaths: [],
       headDigests: {},
+      result: removedScreenResult(fixture.screen),
       ...(mode === "derived"
         ? {
             headOutputs: [...fixture.current.outputs].map(
@@ -46,23 +53,16 @@ for (const mode of ["committed", "derived"] as const) {
     const artifact = await new RepositorySelectedReview(
       { ...fixture.config, generatedOutput: mode },
       fixture.reader,
-    ).generate(
-      source,
-      { route: fixture.screen.route },
-      new AbortController().signal,
-    );
+    ).generate(source, { id: fixture.screen.id }, new AbortController().signal);
 
-    assert.equal(artifact.result.schemaVersion, 2);
+    assert.equal(artifact.result.schemaVersion, 4);
     const screen = artifact.result.screens[0]!;
     assert.equal(screen.state, "removed");
     assert.equal(screen.views.length, 4);
     for (const view of screen.views) {
-      assert.ok(view.beforePath);
-      assert.equal(view.afterPath, undefined);
-      assert.match(
-        String(artifact.files.get(view.beforePath)),
-        /baseline view/,
-      );
+      assert.equal(view.state, "removed");
+      const snapshot = `snapshots/before/${viewRoute("screen", screen.id, view.viewport, view.colorScheme)}`;
+      assert.match(String(artifact.files.get(snapshot)), /baseline view/);
     }
     assert.equal(
       String(artifact.files.get("snapshots/before/assets/removed.css")),
@@ -80,7 +80,7 @@ for (const mode of ["committed", "derived"] as const) {
       fixture.git,
       "main",
     );
-    assert.equal(complete.result.schemaVersion, 3);
+    assert.equal(complete.result.schemaVersion, 4);
     const selected = await new RepositorySelectedReview(
       { ...fixture.config, generatedOutput: mode },
       fixture.git.reader,
@@ -102,60 +102,31 @@ for (const mode of ["committed", "derived"] as const) {
           : {}),
         result: complete.result,
       },
-      { route: "screens/home.html" },
+      { id: "home" },
       new AbortController().signal,
     );
 
-    assert.equal(selected.result.schemaVersion, 3);
+    assert.equal(selected.result.schemaVersion, 4);
     const screen = selected.result.screens[0]!;
     assert.equal(screen.state, "removed");
     assert.ok(screen.views.length > 0);
-    assert.ok(screen.views.every((view) => view.beforePath && !view.afterPath));
+    assert.ok(screen.views.every((view) => view.state === "removed"));
     for (const view of screen.views)
       assert.deepEqual(
-        Buffer.from(selected.files.get(view.beforePath!)!),
+        Buffer.from(
+          selected.files.get(
+            `snapshots/before/${viewRoute("screen", screen.id, view.viewport, view.colorScheme)}`,
+          )!,
+        ),
         Buffer.from(
           textOutput(
             fixture.before.outputs,
-            view.beforePath!.slice("snapshots/before/".length),
+            viewRoute("screen", screen.id, view.viewport, view.colorScheme),
           )!,
         ),
       );
   });
 }
-
-test("complete comparison retains a removed screen from a v3 manifest", async (t) => {
-  const fixture = await screenFixture(t);
-  const old = fixture.screen;
-  const historical: ManifestV3 = {
-    entries: [old],
-    generatedBy: "mokly",
-    legacyPages: [],
-    schemaVersion: 3,
-  };
-  fixture.files.set(
-    "mockups/mokly-manifest.json",
-    Buffer.from(JSON.stringify(historical)),
-  );
-
-  const artifact = await compareReview(
-    fixture.current,
-    fixture.config,
-    repository(fixture.reader),
-    "main",
-  );
-  const screen = artifact.result.screens.find(
-    (entry) => entry.route === old.route,
-  )!;
-  assert.equal(screen.state, "removed");
-  assert.ok(screen.views.every((view) => view.beforePath && !view.afterPath));
-  for (const view of screen.views)
-    assert.match(String(artifact.files.get(view.beforePath!)), /baseline view/);
-  assert.equal(
-    String(artifact.files.get("snapshots/before/assets/removed.css")),
-    "body { color: baseline; }",
-  );
-});
 
 test("removed screen capture never substitutes current files for deleted history", async (t) => {
   const fixture = await screenFixture(t);
@@ -164,7 +135,7 @@ test("removed screen capture never substitutes current files for deleted history
   await assert.rejects(
     new RepositorySelectedReview(fixture.config, fixture.reader).generate(
       selectedSource(fixture),
-      { route: fixture.screen.route },
+      { id: fixture.screen.id },
       new AbortController().signal,
     ),
     /Snapshot file is missing: assets\/removed\.css/,
@@ -178,7 +149,7 @@ test("removed screen capture fails when a historical view is missing", async (t)
   await assert.rejects(
     new RepositorySelectedReview(fixture.config, fixture.reader).generate(
       selectedSource(fixture),
-      { route: fixture.screen.route },
+      { id: fixture.screen.id },
       new AbortController().signal,
     ),
     /Snapshot file is missing: screens\/removed\.desktop\.dark\.html/,
@@ -198,20 +169,11 @@ async function screenFixture(t: test.TestContext) {
   assert.ok(currentHome?.kind === "screen");
   const screen: ManifestScreen = {
     ...currentHome,
-    darkFragments: {
-      desktop: "screens/removed.desktop.dark.html",
-      mobile: "screens/removed.mobile.dark.html",
-    },
-    fragments: {
-      desktop: "screens/removed.desktop.html",
-      mobile: "screens/removed.mobile.html",
-    },
     id: "removed",
-    route: "screens/removed.html",
     title: "Removed",
     useCaseIds: [],
   };
-  const baseline: ManifestV5 = {
+  const storedBaseline: ManifestV7 = {
     entries: [
       {
         ...screen,
@@ -219,17 +181,17 @@ async function screenFixture(t: test.TestContext) {
       },
     ],
     generatedBy: "mokly",
-    schemaVersion: 5,
+    schemaVersion: 7,
     sourceFiles: current.manifest.sourceFiles,
   };
   const files = new Map<string, Uint8Array>([
-    ["mockups/mokly-manifest.json", Buffer.from(JSON.stringify(baseline))],
+    [
+      "mockups/mokly-manifest.json",
+      Buffer.from(JSON.stringify(storedBaseline)),
+    ],
     ["mockups/assets/removed.css", Buffer.from("body { color: baseline; }")],
   ]);
-  for (const route of [
-    ...Object.values(screen.fragments),
-    ...Object.values(screen.darkFragments ?? {}),
-  ])
+  for (const route of generatedViews(screen).map((view) => view.path))
     files.set(
       `mockups/${route}`,
       Buffer.from(
@@ -242,6 +204,7 @@ async function screenFixture(t: test.TestContext) {
     "body { color: current; }",
   );
   const reader = baselineReader(files);
+  const baseline = parseHistoricalManifest(storedBaseline);
   return { ...fixture, baseline, config, current, files, reader, screen };
 }
 
@@ -253,6 +216,37 @@ function selectedSource(fixture: Awaited<ReturnType<typeof screenFixture>>) {
     baseRef: "main",
     changedPaths: [],
     headDigests: {},
+    result: removedScreenResult(fixture.screen),
+  };
+}
+
+function removedScreenResult(screen: ManifestScreen): ReviewResultV4 {
+  return {
+    affectedConsumers: [],
+    baseCommit: commit,
+    baseRef: "main",
+    changedPaths: [],
+    changes: [],
+    components: [],
+    ignoredImpact: [],
+    schemaVersion: 4,
+    screens: [
+      {
+        before: { id: screen.id, title: screen.title },
+        dependencies: [],
+        id: screen.id,
+        sharedImpact: [],
+        state: "removed",
+        title: screen.title,
+        views: generatedViews(screen).map((view) => ({
+          colorScheme: view.colorScheme,
+          ignoredIds: [],
+          state: "removed",
+          viewport: view.viewport,
+        })),
+      },
+    ],
+    sharedImpact: [],
   };
 }
 
@@ -275,16 +269,6 @@ function baselineReader(
             : { kind: "missing" },
         ]),
       ),
-  };
-}
-
-function repository(reader: BaselineReader) {
-  return {
-    evidence: {
-      changedPaths: async () => [],
-      mergeBase: async () => commit,
-    },
-    reader,
   };
 }
 

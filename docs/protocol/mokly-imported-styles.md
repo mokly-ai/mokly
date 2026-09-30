@@ -10,7 +10,7 @@ Custom renderers must emit the supplied stylesheet links; pages link CSS
 themselves. This contract extends
 [configuration](./mokly-configuration.md),
 [rendering](./mokly-rendering.md), and [source protection](./mokly-source-protection.md)
-without changing manifest v5. [Exact diagnostics](./mokly-imported-styles-errors.md)
+without changing manifest v7. [Exact diagnostics](./mokly-imported-styles-errors.md)
 are normative.
 
 ## Routes And Ownership

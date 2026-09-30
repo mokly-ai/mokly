@@ -2,8 +2,8 @@
 import type {
   HistoricalManifest,
   RemovedPagePreviewArtifact,
-  Manifest,
-  ReviewResultV3,
+  ManifestV7,
+  ReviewResultV4,
   ReviewArtifact,
 } from "@mokly/viewer/data";
 
@@ -11,14 +11,13 @@ import type { TransferredGeneratedFile } from "../build/generated_file.js";
 import type { CatalogueChangeSnapshot } from "../registry/changes.js";
 
 export interface ReviewSelection {
-  readonly route: string;
-  readonly variantId?: string;
+  readonly id: string;
 }
 
 /** Explicit selection for a page proven removed by the accepted snapshot. */
 export interface RemovedPageSelection {
   readonly kind: "page";
-  readonly route: string;
+  readonly id: string;
 }
 
 /** Private evidence retained by background classification, never published as JSON. */
@@ -35,9 +34,9 @@ export interface ReviewEvidence {
 }
 
 export interface SelectedReviewSource extends ReviewEvidence {
-  readonly before: Manifest;
-  readonly after: Manifest;
-  readonly result?: ReviewResultV3;
+  readonly before: HistoricalManifest;
+  readonly after: ManifestV7;
+  readonly result: ReviewResultV4;
 }
 
 /** Pinned removal metadata and its already-validated historical manifest. */

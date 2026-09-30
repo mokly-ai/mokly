@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { entryRoute, generatedViews } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../browse/document_adapter.js";
@@ -85,13 +86,8 @@ export async function copyPublicFiles(
 function catalogueDocuments(catalogue: Catalogue): readonly string[] {
   return catalogue.manifest.entries.flatMap((entry) =>
     entry.kind === "page"
-      ? [entry.route]
-      : entry.kind === "screen"
-        ? [
-            ...Object.values(entry.fragments),
-            ...Object.values(entry.darkFragments ?? {}),
-          ]
-        : [],
+      ? [entryRoute("page", entry.id)]
+      : generatedViews(entry).map((view) => view.path),
   );
 }
 

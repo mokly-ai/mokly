@@ -10,12 +10,9 @@ let navigation: NavigationFixture;
 const LIST = '[data-nav-disclosure="variants:pages:home"]';
 const TOGGLE = "[data-nav-variants-toggle]";
 const HOME_ROW = 'a[data-nav-row][data-route="screens/home.html"]';
-const EMPTY_ROW =
-  'a[data-nav-row][data-route="screens/home.variants/empty.html"]';
-const ERROR_ROW =
-  'a[data-nav-row][data-route="screens/home.variants/error.html"]';
-const GONE_ROW =
-  'a[data-nav-row][data-route="screens/home.variants/gone.html"]';
+const EMPTY_ROW = 'a[data-nav-row][data-route="screens/home-empty.html"]';
+const ERROR_ROW = 'a[data-nav-row][data-route="screens/home-error.html"]';
+const GONE_ROW = 'a[data-nav-row][data-route="screens/home-gone.html"]';
 const DETAILS_ROW = 'a[data-nav-row][data-route="screens/details.html"]';
 
 /** The trailing changed dot the stylesheet draws, or `none` when unmarked. */
@@ -77,7 +74,7 @@ test("the variant disclosure opens, navigates, and returns through history", asy
   await expect(page.locator(ERROR_ROW)).toBeVisible();
 
   await page.click(EMPTY_ROW);
-  await expect(page).toHaveURL(/\/view\/screens\/home\.variants\/empty\.html$/);
+  await expect(page).toHaveURL(/\/view\/screens\/home-empty\.html$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Empty workspace");
   await expect(page.locator(EMPTY_ROW)).toHaveAttribute("aria-current", "page");
   await expect(page.locator(HOME_ROW)).not.toHaveAttribute(
@@ -92,7 +89,7 @@ test("the variant disclosure opens, navigates, and returns through history", asy
   await page.goBack();
   await expect(page).toHaveURL(/\/view\/screens\/details\.html$/);
   await page.goForward();
-  await expect(page).toHaveURL(/\/view\/screens\/home\.variants\/empty\.html$/);
+  await expect(page).toHaveURL(/\/view\/screens\/home-empty\.html$/);
   await expect(page.locator(EMPTY_ROW)).toHaveAttribute("aria-current", "page");
 
   await crumbLink.click();
@@ -104,7 +101,7 @@ test("the variant disclosure opens, navigates, and returns through history", asy
 test("Collapse all closes a variant list and reload restores the choice", async ({
   page,
 }) => {
-  await page.goto(`${navigation.url}/view/screens/home.variants/empty.html`);
+  await page.goto(`${navigation.url}/view/screens/home-empty.html`);
   await expect(page.locator(LIST)).toBeVisible();
 
   await page.getByRole("button", { name: "Collapse all" }).click();
@@ -177,7 +174,7 @@ test("Changes opens the first changed variant of an unmodified parent", async ({
 
   await page.click(HOME_ROW);
 
-  await expect(page).toHaveURL(/\/view\/screens\/home\.variants\/error\.html$/);
+  await expect(page).toHaveURL(/\/view\/screens\/home-error\.html$/);
   await expect(page.locator("#mb-main h2")).toHaveText("Save failed");
   await expect(page.locator(ERROR_ROW)).toHaveAttribute("aria-current", "page");
   await expect(page.locator('[data-filter="changed"]')).toHaveAttribute(
@@ -234,7 +231,7 @@ test("a removed variant keeps a Removed row under its surviving parent", async (
 
   await page.click(GONE_ROW);
 
-  await expect(page).toHaveURL(/\/view\/screens\/home\.variants\/gone\.html$/);
+  await expect(page).toHaveURL(/\/view\/screens\/home-gone\.html$/);
   await expect(page.locator(".mbk-screen-head h2")).toHaveText(
     "Workspace deleted",
   );

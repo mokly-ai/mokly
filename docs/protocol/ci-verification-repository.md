@@ -1,0 +1,23 @@
+# Repository Gate And Length Audits
+
+Continuation of [CI Verification](./ci-verification.md). The repository suite
+starts with the live `npm run dependencies:check` audit, then Prettier, ESLint,
+changed source/protocol file-length audit, Rust formatting, workspace Clippy
+with warnings denied, Rust tests and the Rust file-length audit. The live
+dependency audit fails before any later gate on an advisory or registry error.
+
+The Rust file-length auditor is implemented inside `xtask` rather than as a
+subprocess in the command list; it has the same failure semantics as the
+listed commands. The source/protocol auditor is an xtask-invoked Node command:
+it checks files changed against fetched `origin/main`, plus working-tree and
+untracked files. It covers all repository TypeScript/JavaScript extensions
+(`.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, `.cjs`, `.mts`, `.cts`) and
+`docs/protocol` Markdown. There are no directory exclusions beyond
+Git-ignored untracked files; tracked files remain in scope. Every xtask
+subprocess starts at the workspace root, even when xtask starts elsewhere.
+Use `cargo xtask source-file-length-lint --all` to audit every scoped file
+instead of only the changed set. Mainline's independent ratchets remain
+additional gates under [Repository Verification Ratchets](./verification-ratchets.md).
+During an uncommitted merge, the changed-file audit uses the resolved tree
+against `origin/main`; outside a merge, it uses the branch-point diff and
+working-tree changes.

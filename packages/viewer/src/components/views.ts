@@ -1,4 +1,5 @@
 import type { ColorScheme, Viewport } from "../data/axes.js";
+import { viewRoute } from "../navigation/routes.js";
 import type { ManifestEntry, ManifestScreen } from "../registry/types.js";
 import { VIEWPORTS } from "../registry/views.js";
 
@@ -6,6 +7,7 @@ import type {
   ComponentViewRecord,
   ManifestComponentVariant,
 } from "./manifest_types.js";
+import { isManifestComponentVariant } from "./manifest_types.js";
 
 export interface GeneratedComponentView {
   viewport: Viewport;
@@ -15,12 +17,12 @@ export interface GeneratedComponentView {
   usage?: ComponentViewRecord;
 }
 
-/** Enumerate actual artifacts, preserving the distinction between absent and empty usage. */
+/** Derive current and historical-v7 artifacts from identity and view axes. */
 export function generatedViews(entry: ManifestEntry): GeneratedComponentView[] {
   if (entry.kind === "component")
-    return entry.variants.flatMap((variant) =>
-      fragmentViews(variant, variant.id),
-    );
+    return isManifestComponentVariant(entry)
+      ? fragmentViews(entry, entry.id)
+      : [];
   if (entry.kind === "screen") return fragmentViews(entry);
   return [];
 }
@@ -40,34 +42,24 @@ export function orderedInstances(usage?: ComponentViewRecord) {
   );
 }
 
+/** Derive current view artifacts from entry identity and retained axes. */
 export function fragmentViews(
-  fragments:
-    | Pick<ManifestScreen, "fragments" | "darkFragments" | "componentViews">
-    | ManifestComponentVariant,
+  entry: ManifestScreen | ManifestComponentVariant,
   variantId?: string,
 ): GeneratedComponentView[] {
-  return VIEWPORTS.flatMap((viewport) => {
-    const makeView = (
-      colorScheme: ColorScheme,
-      path: string,
-    ): GeneratedComponentView => {
-      const usage = fragments.componentViews?.find(
+  return VIEWPORTS.flatMap((viewport) =>
+    entry.colorSchemes.map((colorScheme) => {
+      const usage = entry.componentViews?.find(
         (view) =>
           view.viewport === viewport && view.colorScheme === colorScheme,
       );
       return {
         viewport,
         colorScheme,
-        path,
+        path: viewRoute(entry.kind, entry.id, viewport, colorScheme),
         ...(usage ? { usage } : {}),
         ...(variantId ? { variantId } : {}),
       };
-    };
-    return [
-      makeView("light", fragments.fragments[viewport]),
-      ...(fragments.darkFragments
-        ? [makeView("dark", fragments.darkFragments[viewport])]
-        : []),
-    ];
-  });
+    }),
+  );
 }

@@ -161,6 +161,16 @@
   margin: 16px 0 6px;
 }
 
+/* A long screen's introduction keeps one height in every version, so the
+   sections below it stay in place when the introduction changes. */
+.mbk-shot-hero {
+  min-height: 104px;
+}
+
+.phone-screen .mbk-shot-hero {
+  min-height: 140px;
+}
+
 .mbk-shot {
   background: var(--mbk-screen-bg);
   color: var(--mbk-screen-ink);

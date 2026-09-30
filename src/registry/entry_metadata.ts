@@ -1,14 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import {
-  isSafeCatalogueRoute,
-  isSafeRepositoryPath,
-  isCatalogueId,
-} from "@mokly/viewer/data";
+import { isSafeRepositoryPath, isCatalogueId } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
-import { isGeneratedRoute } from "../build/styles/routes.js";
 import { isInside } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 
@@ -28,59 +23,10 @@ export function problem(
   };
 }
 
-export function validateRoute(
-  entry: ResolvedRegistryEntry,
-  violations: RegistryViolation[],
-): void {
-  const route = "route" in entry ? entry.route : "";
-  if (typeof route === "string" && isGeneratedRoute(route)) {
-    violations.push(
-      problem(
-        entry,
-        "invalid-route",
-        `route must not start with mokly-generated/: ${route}; choose a consumer-owned HTML route`,
-      ),
-    );
-    return;
-  }
-  const invalid = !nonEmpty(route) || !isSafeCatalogueRoute(route);
-  if (invalid) {
-    violations.push(
-      problem(
-        entry,
-        "invalid-route",
-        "route must use portable URL-safe segments and end in .html",
-      ),
-    );
-  }
-  if (entry.kind === "screen" && route.endsWith("/index.html")) {
-    violations.push(
-      problem(entry, "invalid-route", "screen routes must name the screen"),
-    );
-  }
-  if (entry.kind === "use-case" && !route.startsWith("user-flows/")) {
-    violations.push(
-      problem(
-        entry,
-        "invalid-route",
-        "use-case routes must live under user-flows/",
-      ),
-    );
-  }
-}
-
 export function validateTags(
   entry: ResolvedRegistryEntry,
   violations: RegistryViolation[],
 ): void {
-  if (entry.kind === "collection") {
-    if ("tags" in entry) {
-      violations.push(
-        problem(entry, "invalid-tags", "tags are not supported on collections"),
-      );
-    }
-    return;
-  }
   const tags = entry.tags;
   if (tags === undefined) return;
   if (!Array.isArray(tags) || !tags.every(isCatalogueId)) {

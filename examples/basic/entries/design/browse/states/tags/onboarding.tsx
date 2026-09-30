@@ -29,6 +29,5 @@ export const onboardingFilterVariant = {
   desktop: <OnboardingFilterDesktop />,
   id: "design-browse-tag-onboarding",
   mobile: <OnboardingFilterMobile />,
-  slug: "onboarding",
   title: "Onboarding filter",
 } satisfies ScreenVariantInput;

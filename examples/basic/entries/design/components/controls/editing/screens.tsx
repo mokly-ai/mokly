@@ -30,7 +30,6 @@ export function ResetControlsMobile() {
 export const editingScreens = [
   screen({
     id: "design-component-controls-edited",
-    slug: "edited",
     title: "Edited props",
     description:
       "Edited values update the component example while leaving the saved Default variant intact.",
@@ -40,7 +39,6 @@ export const editingScreens = [
   }),
   screen({
     id: "design-component-controls-unset",
-    slug: "unset",
     title: "Optional prop unset",
     description:
       "The hint prop is absent, distinct from an explicitly empty hint.",
@@ -50,7 +48,6 @@ export const editingScreens = [
   }),
   screen({
     id: "design-component-controls-variant",
-    slug: "variant",
     title: "Switch saved variant",
     description:
       "Choosing Disabled replaces temporary edits with its complete saved preset.",
@@ -60,7 +57,6 @@ export const editingScreens = [
   }),
   screen({
     id: "design-component-controls-reset",
-    slug: "reset",
     title: "Reset saved values",
     description:
       "Reset restores the selected preset and clears the Edited indicator.",

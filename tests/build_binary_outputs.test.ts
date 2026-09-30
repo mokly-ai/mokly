@@ -193,7 +193,7 @@ test("props render captures linked CSS and binary assets from the accepted gener
   const result = await service.render(
     {
       componentId: "action",
-      variantId: "default",
+      variantId: "action-default",
       viewport: "desktop",
       colorScheme: "light",
       generation: runtime.generation,

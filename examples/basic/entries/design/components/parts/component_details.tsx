@@ -3,6 +3,7 @@ import { MockLink } from "@mokly/mokly";
 import { MetaRow } from "../../parts/metadata_row.js";
 
 import { ActionPropValues, actionVariants } from "./action_props.js";
+import { checklistCompleted, checklistTitle } from "./checklist.js";
 import { ComparisonDetails } from "./comparison_details.js";
 import { componentComparison } from "./comparison_fixtures.js";
 import { ComponentInfo } from "./component_info.js";
@@ -10,18 +11,22 @@ import { UsedBy, AffectedScreens } from "./component_usage.js";
 import { CONTROLS_PAGES } from "./destinations.js";
 import { toolbarPrompt } from "./fixtures.js";
 import { Inspector } from "./inspector.js";
-import { COMPONENT_BY_STATE } from "./metadata.js";
+import { COMPONENT_ENTRY_BY_STATE } from "./metadata.js";
 
 export type ComponentPageState =
   | "default"
   | "disabled"
   | "comparison"
+  | "overlay"
+  | "difference"
+  | "overlay-tall"
   | "affected"
   | "toolbar"
   | "hidden"
   | "unused"
   | "added"
   | "removed"
+  | "shared-impact"
   | "closed";
 
 function ComponentChildren() {
@@ -36,34 +41,41 @@ function ComponentChildren() {
   );
 }
 
+/** One supplied prop row: its design instance name, prop name and value. */
+type SuppliedProp = readonly [instance: string, prop: string, value: string];
+
+/** Supplied props of the examples outside Action's saved variants. */
+const SUPPLIED_PROPS: Partial<
+  Record<ComponentPageState, readonly SuppliedProp[]>
+> = {
+  toolbar: [["selected-prop", "prompt", `"${toolbarPrompt}"`]],
+  hidden: [["selected-prop", "visible", "false"]],
+  unused: [["selected-prop", "label", '"New"']],
+  added: [["selected-prop", "label", '"New"']],
+  "overlay-tall": [
+    ["title", "title", `"${checklistTitle}"`],
+    ["completed", "completed", String(checklistCompleted)],
+  ],
+};
+
 function ComponentProps({ state }: { state: ComponentPageState }) {
+  const entry = COMPONENT_ENTRY_BY_STATE[state];
+  const supplied = SUPPLIED_PROPS[state];
   return (
     <section>
       <h3>Supplied props</h3>
-      {state === "toolbar" ||
-      state === "hidden" ||
-      state === "unused" ||
-      state === "added" ? (
+      {supplied ? (
         <dl className="ce-props" aria-label="Supplied props">
-          <MetaRow
-            name="selected-prop"
-            label={
-              state === "toolbar"
-                ? "prompt"
-                : state === "hidden"
-                  ? "visible"
-                  : "label"
-            }
-            presentation="props"
-          >
-            <code>
-              {state === "toolbar"
-                ? `"${toolbarPrompt}"`
-                : state === "hidden"
-                  ? "false"
-                  : '"New"'}
-            </code>
-          </MetaRow>
+          {supplied.map(([instance, prop, value]) => (
+            <MetaRow
+              key={prop}
+              name={instance}
+              label={prop}
+              presentation="props"
+            >
+              <code>{value}</code>
+            </MetaRow>
+          ))}
         </dl>
       ) : (
         <ActionPropValues
@@ -72,7 +84,7 @@ function ComponentProps({ state }: { state: ComponentPageState }) {
           }
         />
       )}
-      {COMPONENT_BY_STATE[state] === "action" && state !== "removed" ? (
+      {entry.component === "action" && state !== "removed" ? (
         <MockLink
           to={
             state === "disabled"
@@ -88,8 +100,13 @@ function ComponentProps({ state }: { state: ComponentPageState }) {
 }
 
 export function ComponentDetails({ state }: { state: ComponentPageState }) {
+  const entry = COMPONENT_ENTRY_BY_STATE[state];
   const changed =
-    state === "affected" || state === "comparison" || state === "removed";
+    state === "affected" ||
+    state === "comparison" ||
+    state === "overlay" ||
+    state === "difference" ||
+    state === "removed";
   const initial =
     state === "closed"
       ? "closed"
@@ -107,7 +124,7 @@ export function ComponentDetails({ state }: { state: ComponentPageState }) {
           label: "Details",
           content: (
             <>
-              <ComponentInfo identity={COMPONENT_BY_STATE[state]} />
+              <ComponentInfo entry={entry} />
               <ComparisonDetails comparison={componentComparison(state)} />
             </>
           ),

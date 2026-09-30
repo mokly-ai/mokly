@@ -14,7 +14,6 @@ export function WorkspaceStage({
   context,
   previewViews,
   data,
-  error,
   target,
   variantId,
   variantRemoved,
@@ -23,22 +22,10 @@ export function WorkspaceStage({
   context: ShellContext;
   previewViews: readonly GeneratedComponentView[];
   data: WorkspaceData;
-  error?: string;
   target: RouteTarget;
   variantId?: string;
   variantRemoved: boolean;
 }) {
-  if (error)
-    return (
-      <div
-        className="mbk-empty"
-        data-mokly-stage=""
-        data-viewport="both"
-        data-workspace-empty=""
-      >
-        <p>Choose a saved variant to see its preview.</p>
-      </div>
-    );
   if (data.removed)
     return (
       <div className="mbk-empty" data-mokly-stage="" data-viewport="both">

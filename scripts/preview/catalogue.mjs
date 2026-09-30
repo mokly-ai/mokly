@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
+import { viewHref } from "@mokly/viewer/data";
+
 import { compileCatalogue } from "../../dist/build/compile.js";
 import { componentRuntime } from "../../dist/build/component_runtime.js";
 import { generatedBytes } from "../../dist/build/generated_file.js";
@@ -19,15 +21,12 @@ import { resolveExportOutput } from "../../dist/export/paths.js";
 import { ExportTransaction } from "../../dist/export/transaction.js";
 import { publicationOptions } from "../../dist/publication/options.js";
 import { copyPublicFiles } from "../../dist/publication/resources.js";
-import { acceptedGenerationFromCompilation } from "../../dist/review/accepted_generation.js";
 import { prepareReviewRepository } from "../../dist/review/prepare.js";
-import { loadCatalogueSnapshot } from "../../dist/server/catalogue_snapshot.js";
-import { computeCatalogueChanges } from "../../dist/server/changed.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 
 import { previewOwnership, stagePreviewArtifact } from "./artifact.mjs";
+import { publicationSnapshot } from "./baseline.mjs";
 import { captureAssets, capturePage, writeText } from "./capture.mjs";
-import { publicationChangeEvidence } from "./change_evidence.mjs";
 import {
   captureComparison,
   capturePublicationPagePreviews,
@@ -47,7 +46,7 @@ export async function buildPreview(config, output, options = {}) {
     await assertExportOwnership(destination, ownership);
   } catch (cause) {
     throw new Error(
-      `refusing to replace unowned preview directory: ${output}`,
+      `refusing to replace unowned preview directory: ${output}. ${errorMessage(cause)}`,
       { cause },
     );
   }
@@ -73,38 +72,30 @@ export async function buildPreview(config, output, options = {}) {
           throw new Error(
             "consumer inputs changed during publication; retry with stable inputs",
           );
-        const changeEvidence = git
-          ? await publicationChangeEvidence(
-              config,
-              git,
-              compiled,
-              excludedRoots,
-            )
-          : undefined;
-        const snapshot = await loadCatalogueSnapshot(
-          config,
-          git
-            ? (manifest, accepted) =>
-                computeCatalogueChanges(
-                  config,
-                  base,
-                  git,
-                  manifest,
-                  changeEvidence,
-                  compiled
-                    ? acceptedGenerationFromCompilation(compiled)
-                    : accepted,
-                )
-            : undefined,
-          compiled?.manifest ?? inputs.manifest,
-        );
+        const { incompatible, snapshot, changeEvidence } =
+          await publicationSnapshot(
+            config,
+            git,
+            base,
+            compiled?.manifest ?? inputs.manifest,
+            compiled,
+            excludedRoots,
+          );
         const { catalogue, changes } = snapshot;
         const manifest = catalogue.manifest;
-        const review = git
-          ? previewComparisonProvider(config, stage, base, git, changeEvidence)
-          : undefined;
+        const review =
+          git && !incompatible
+            ? previewComparisonProvider(
+                config,
+                stage,
+                base,
+                git,
+                changeEvidence,
+              )
+            : undefined;
         const server = await startCatalogueServer(config, {
           base,
+          ...(incompatible ? { changesStatus: "unavailable" } : {}),
           liveChanges: false,
           snapshot,
           port: 0,
@@ -128,14 +119,9 @@ export async function buildPreview(config, output, options = {}) {
           await capturePage(server.url, "/", stage, "index.html");
           capturedShells.add("index.html");
           for (const entry of [...manifest.entries, ...removed]) {
-            if (entry.kind === "collection") continue;
-            const name = `view/${entry.route}`;
-            await capturePage(
-              server.url,
-              `/view/${encodePath(entry.route)}`,
-              stage,
-              name,
-            );
+            const route = viewHref(entry.kind, entry.id);
+            const name = route.slice(1);
+            await capturePage(server.url, route, stage, name);
             capturedShells.add(name);
           }
           await capturePage(
@@ -171,8 +157,12 @@ export async function buildPreview(config, output, options = {}) {
             .split(path.sep)
             .join("/"),
           catalogue,
-          changesStatus: comparison ? "ready" : "disabled",
-          changedRoutes: changes?.changedRoutes,
+          changesStatus: comparison
+            ? "ready"
+            : incompatible
+              ? "unavailable"
+              : "disabled",
+          changedIds: changes?.changedIds,
           evidence: snapshot.componentChanges,
           comparison: comparison?.result,
           comparisonUrl: comparison
@@ -258,8 +248,4 @@ function assertSafeOutput(output, repoRoot) {
   ) {
     throw new Error(`preview output must be inside ${contextRoot}`);
   }
-}
-
-function encodePath(value) {
-  return value.split("/").map(encodeURIComponent).join("/");
 }

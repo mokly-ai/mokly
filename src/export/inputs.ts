@@ -59,6 +59,7 @@ export async function assertInputsUnchanged(
   prepared: PreparedReviewRepository | undefined,
   changed: readonly string[],
   exclusions: readonly string[],
+  compareEvidence = true,
 ): Promise<void> {
   const freshConfig = await loadConfig(config.repoRoot, config.configPath);
   const fresh = await compileCatalogue(freshConfig);
@@ -67,15 +68,16 @@ export async function assertInputsUnchanged(
     freshConfig,
     freshConfig.generatedOutput === "derived" ? fresh.outputs : undefined,
   );
-  const changedNow = prepared
-    ? await reviewChangedPaths(
-        prepared.evidence,
-        prepared.commit,
-        config,
-        config.review.outDir,
-        exclusions,
-      )
-    : [];
+  const changedNow =
+    prepared && compareEvidence
+      ? await reviewChangedPaths(
+          prepared.evidence,
+          prepared.commit,
+          config,
+          config.review.outDir,
+          exclusions,
+        )
+      : [];
   if (
     !isDeepStrictEqual(materialConfig(config), materialConfig(freshConfig)) ||
     !isDeepStrictEqual(compilation, fresh) ||

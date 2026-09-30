@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import { test } from "node:test";
 
+import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
+
 import {
   attribute,
   byClass,
@@ -84,7 +86,10 @@ for (const viewport of ["mobile", "desktop"] as const) {
         ["Details", "design-browse-details-screen"],
         ["Example tour", "design-browse-use-case"],
         ["Action", "design-component-overview"],
+        ["Default", "design-component-overview"],
+        ["Disabled", "design-component-variants"],
         ["Toolbar", "design-component-toolbar"],
+        ["Default", "design-component-toolbar"],
       ],
     );
     assert.equal(
@@ -116,8 +121,8 @@ test("every design link resolves to a real same-viewport design artifact without
   const componentDesigns = designs.filter((entry) =>
     entry.id.startsWith("design-component-"),
   );
-  assert.equal(componentDesigns.length, 32);
-  assert.equal(designs.length - componentDesigns.length, 60);
+  assert.equal(componentDesigns.length, 36);
+  assert.equal(designs.length - componentDesigns.length, 63);
   for (const entry of designs) {
     for (const viewport of ["mobile", "desktop"] as const) {
       const { document, route } = await designDocument(entry.id, viewport);
@@ -140,7 +145,7 @@ test("every design link resolves to a real same-viewport design artifact without
           path.posix.normalize(
             path.posix.join(path.posix.dirname(route), href),
           ),
-          target.fragments[viewport],
+          viewRoute("screen", target.id, viewport, "light"),
         );
         assert.equal(attribute(link, "role"), undefined);
         for (const child of link.childNodes) {
@@ -171,4 +176,24 @@ test("every design link resolves to a real same-viewport design artifact without
         );
     }
   }
+});
+
+test("no design route doubles as a directory holding another design route", async () => {
+  const { manifest } = await designCatalogue;
+  const routes = manifest.entries.flatMap((entry) =>
+    entry.kind === "screen" && entry.id.startsWith("design-")
+      ? [entryRoute("screen", entry.id)]
+      : [],
+  );
+  const directories = new Set(
+    routes.flatMap((route) => {
+      const segments = route.split("/").slice(0, -1);
+      return segments.map((_, index) => segments.slice(0, index + 1).join("/"));
+    }),
+  );
+  for (const route of routes)
+    assert.ok(
+      !directories.has(route.replace(/\.html$/, "")),
+      `${route} collides with a route directory segment of the same name`,
+    );
 });

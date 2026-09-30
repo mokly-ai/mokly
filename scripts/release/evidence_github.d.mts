@@ -38,5 +38,3 @@ export function createEvidenceGithub(options: {
   ) => Promise<{ stderr: string; stdout: string }>;
   write?: (file: string, bytes: Uint8Array) => Promise<void>;
 }): EvidenceGithub;
-
-export function githubApiRoot(serverUrl: string): string;

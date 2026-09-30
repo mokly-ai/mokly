@@ -6,10 +6,11 @@ import type {
   InstanceRef,
   MoklyViewerProps,
 } from "@mokly/viewer";
+import { catalogueComponentVariants } from "@mokly/viewer/data";
 
 import { followupFixture } from "./viewer_followup_fixture.js";
-
 import type {} from "./viewer_harness.js";
+import { chooseVariant } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof followupFixture>>;
 test.beforeAll(async () => {
@@ -34,8 +35,8 @@ async function start(page: Page, cross: boolean, screenId = "home") {
         {
           kind: "use-case",
           id: "tour",
+          navPath: [],
           title: "Tour",
-          route: "flows/tour.html",
           tags: [],
           details: catalogue.screens[0]!.details,
           changes: { status: "disabled" },
@@ -177,10 +178,11 @@ for (const cross of [false, true]) {
     const component = fixture.catalogue.components.find(
       (entry) => entry.id === "pane",
     )!;
-    for (const variant of component.variants) {
-      await page
-        .getByRole("combobox", { name: "Saved variant" })
-        .selectOption(variant.id);
+    for (const variant of catalogueComponentVariants(
+      fixture.catalogue,
+      component.id,
+    )) {
+      await chooseVariant(page, variant.title);
       await expect(page.locator("[data-mokly-label-layer] button")).toHaveCount(
         0,
       );
@@ -189,8 +191,7 @@ for (const cross of [false, true]) {
       await highlight(
         page,
         {
-          screenId: "pane",
-          variantId: variant.id,
+          screenId: variant.id,
           key: usage.instances[0]!.key,
           viewport: "desktop",
           colorScheme: "light",

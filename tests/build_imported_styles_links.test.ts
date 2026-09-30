@@ -12,6 +12,7 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 import { styleFixture } from "./helpers/imported_styles_fixture.js";
 
 const hrefs = (html: string): string[] =>
@@ -21,9 +22,9 @@ const hrefs = (html: string): string[] =>
 
 test("renderer and exporting entry links follow configured order across nested and dark views", async (t) => {
   const fixture = await createFixture(
-    validEntrySource().replaceAll(
-      "screens/home.html",
-      "screens/nested/home.html",
+    validEntrySource().replace(
+      'navPath: ["Fixture"]',
+      'navPath: ["Fixture", "Nested"]',
     ),
     {
       extraConfig:
@@ -47,19 +48,19 @@ test("renderer and exporting entry links follow configured order across nested a
   );
   await fs.appendFile(fixture.entryPath, '\nimport "./entry.css";');
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
-  const route = "screens/nested/home.mobile.dark.html";
-  assert.deepEqual(hrefs(compiled.outputs.get(route) as string), [
-    "../../shared.css",
-    "../../night.css",
-    "../../mokly-generated/styles/renderer.tsx.css",
-    "../../mokly-generated/styles/entries/fixture.mockup.tsx.css",
+  const route = "screens/home.mobile.dark.html";
+  assert.deepEqual(hrefs(textOutput(compiled.outputs, route)!), [
+    "../shared.css",
+    "../night.css",
+    "../mokly-generated/styles/renderer.tsx.css",
+    "../mokly-generated/styles/entries/fixture.mockup.tsx.css",
   ]);
   assert.deepEqual(
-    hrefs(compiled.outputs.get("screens/nested/home.desktop.html") as string),
+    hrefs(textOutput(compiled.outputs, "screens/home.desktop.html")!),
     [
-      "../../shared.css",
-      "../../mokly-generated/styles/renderer.tsx.css",
-      "../../mokly-generated/styles/entries/fixture.mockup.tsx.css",
+      "../shared.css",
+      "../mokly-generated/styles/renderer.tsx.css",
+      "../mokly-generated/styles/entries/fixture.mockup.tsx.css",
     ],
   );
 });
@@ -84,7 +85,7 @@ test("a re-exported helper screen links its exporting entry's stylesheet", async
     'export { mockups } from "./helper"; import "./one.css";',
   );
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
-  const html = compiled.outputs.get("screens/home.mobile.html") as string;
+  const html = textOutput(compiled.outputs, "screens/home.mobile.html")!;
   assert.match(html, /source-base64=/);
   assert.deepEqual(hrefs(html), [
     "../mokly-generated/styles/entries/fixture.mockup.tsx.css",
@@ -114,11 +115,11 @@ test("a helper-registered component links the entry stylesheet in saved variants
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
   const routes = [...compiled.outputs.keys()].filter(
     (route) =>
-      route.startsWith("components/action.") && route.endsWith(".html"),
+      route.startsWith("components/action-") && route.endsWith(".html"),
   );
   assert.ok(routes.length >= 4, routes.join(", "));
   for (const route of routes)
-    assert.deepEqual(hrefs(compiled.outputs.get(route) as string), [
+    assert.deepEqual(hrefs(textOutput(compiled.outputs, route)!), [
       path.posix.relative(
         path.posix.dirname(route),
         "mokly-generated/styles/entries/fixture.mockup.tsx.css",
@@ -140,11 +141,11 @@ test("each exporting entry links its own CSS while a page receives no automatic 
   );
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
   assert.deepEqual(
-    hrefs(compiled.outputs.get("screens/home.mobile.html") as string),
+    hrefs(textOutput(compiled.outputs, "screens/home.mobile.html")!),
     ["../mokly-generated/styles/entries/fixture.mockup.tsx.css"],
   );
   assert.deepEqual(
-    hrefs(compiled.outputs.get("screens/second.mobile.html") as string),
+    hrefs(textOutput(compiled.outputs, "screens/second.mobile.html")!),
     ["../mokly-generated/styles/entries/second.mockup.tsx.css"],
   );
   assert.ok(
@@ -152,5 +153,8 @@ test("each exporting entry links its own CSS while a page receives no automatic 
       "mokly-generated/styles/entries/second.mockup.tsx.css",
     ),
   );
-  assert.deepEqual(hrefs(compiled.outputs.get("paper.html") as string), []);
+  assert.deepEqual(
+    hrefs(textOutput(compiled.outputs, "pages/paper.html")!),
+    [],
+  );
 });

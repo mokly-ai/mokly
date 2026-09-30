@@ -1,5 +1,5 @@
 import { invalidData, record } from "../components/data.js";
-import { isSafeCatalogueRoute, isSafeRepositoryPath } from "../data/paths.js";
+import { isSafeRepositoryPath } from "../data/paths.js";
 import { isCatalogueId } from "../navigation/logical.js";
 
 export function object(value: unknown): Record<string, unknown> {
@@ -53,18 +53,6 @@ export function repositoryPath(value: unknown): string {
     invalidData("$catalogue", "expected repository-relative path");
   return result;
 }
-export function route(value: unknown): string {
-  const result = text(value);
-  if (!isSafeCatalogueRoute(result)) invalidData("$catalogue", "invalid route");
-  return result;
-}
-export function publicPath(value: unknown): string | null {
-  if (value === null) return null;
-  const result = repositoryPath(value);
-  if (!result.startsWith("static/") || /[?#]/.test(result))
-    invalidData("$catalogue", "invalid public path");
-  return result;
-}
 export function comparisonPath(value: unknown): string | null {
   if (value === null) return null;
   const result = string(value);
@@ -72,15 +60,6 @@ export function comparisonPath(value: unknown): string | null {
     !/^__mokly\/diffs\/__generations\/[a-f0-9]{64}\/review\.json$/.test(result)
   )
     invalidData("$catalogue", "invalid comparison path");
-  return result;
-}
-export function pagePreviewPath(value: unknown): string {
-  const result = repositoryPath(value);
-  const match = result.match(
-    /^__mokly\/diffs\/__generations\/([a-f0-9]{64})\/pages\/(.+)\.json$/,
-  );
-  if (!match || !isSafeCatalogueRoute(match[2] ?? ""))
-    invalidData("$catalogue", "invalid page preview path");
   return result;
 }
 export function relatedDoc(value: unknown): string {

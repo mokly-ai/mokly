@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import { isSafeRepositoryPath, snapshotSidePath } from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import {
@@ -16,6 +16,8 @@ import { classifyResourceUrl } from "../resource_url.js";
 
 import { exportError } from "./error.js";
 import { ExportPathIndex } from "./path_index.js";
+
+const SNAPSHOT_MARKER = `/${path.posix.dirname(snapshotSidePath("before"))}/`;
 
 /** Prove every local document/resource/module request has an exported target. */
 export function validateExportReferences(
@@ -39,9 +41,12 @@ export function validateExportReferences(
         ? [
             [
               name,
-              htmlResource(
-                extractHtmlReferences(Buffer.from(bytes).toString("utf8")),
-              ),
+              (() => {
+                const extracted = extractHtmlReferences(
+                  Buffer.from(bytes).toString("utf8"),
+                );
+                return htmlResource(extracted);
+              })(),
             ] as const,
           ]
         : [],
@@ -54,7 +59,7 @@ export function validateExportReferences(
     if (extension === ".html" || extension === ".htm") {
       references.push(
         ...(documents.get(name)?.references ?? []).filter(
-          (item) => !item.checkFragment || !name.includes("/snapshots/"),
+          (item) => !item.checkFragment || !name.includes(SNAPSHOT_MARKER),
         ),
       );
     } else if (extension === ".css")

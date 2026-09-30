@@ -1,7 +1,7 @@
 /** The last successfully compiled consumer graph, passed to Serve only in memory. */
 import { randomBytes } from "node:crypto";
 
-import type { ManifestV5 } from "@mokly/viewer/data";
+import type { ManifestV7 } from "@mokly/viewer/data";
 
 import type { ResolvedConfig } from "../config/types.js";
 import type { CatalogueIndex } from "../registry/catalogue_index.js";
@@ -20,7 +20,7 @@ export interface ComponentRuntime {
   bundle: ConsumerBundle;
   config: ResolvedConfig;
   generation: string;
-  manifest: ManifestV5 | CatalogueIndex;
+  manifest: ManifestV7 | CatalogueIndex;
   outputs: readonly (readonly [string, GeneratedFile])[];
   stylesheetRoutes: readonly (readonly [string, string])[];
   styleOutputs: readonly (readonly [string, GeneratedFile])[];

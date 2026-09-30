@@ -1,17 +1,17 @@
 # Mokly Configuration Contract
 
 This is the detailed configuration boundary of the
-[package contract](./mokly-package.md). Settings below describe current
+[package contract](./mokly-package.md). These settings describe current
 behavior, including imported CSS and optional PostCSS.
 
 ## Delivery Status
 
-Existing settings are implemented, including glob-based entry
+Every setting in this document is implemented, including glob-based entry
 discovery through `entries` and the `entriesDir` shorthand delivered by the
 [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
-The reserved CSS output directory, CSS delivery, and `postcss` key are
-implemented. See [imported stylesheet delivery](./mokly-imported-styles.md) and its
-[diagnostics](./mokly-imported-styles-errors.md) for exact reserved-path errors.
+The reserved CSS output directory, CSS delivery and `postcss` key are
+implemented. See [imported stylesheet delivery](./mokly-imported-styles.md)
+and [diagnostics](./mokly-imported-styles-errors.md) for exact errors.
 
 ## Configuration Discovery
 
@@ -122,7 +122,6 @@ interface MoklyConfig {
     }[];
   };
   compatibility?: {
-    readManifestV2?: boolean; // false
     transformer?: string;
   };
 }
@@ -132,14 +131,13 @@ Filesystem fields (`repoRoot`, `entriesDir`, `mockupsDir`, `renderer`,
 compatibility transformer, module-resolution package
 roots, and Review `outDir`) are config-relative. `entries` globs are
 repository-relative, like `review.sharedImpact` and `watch.rules[].paths`;
-see [entry discovery](./mokly-configuration-discovery.md#entry-discovery). Stylesheet file paths are
+see [entry discovery](./mokly-configuration-mainline-discovery.md#entry-discovery). Stylesheet file paths are
 relative to `mockupsDir`; HTTP(S) stylesheet URLs are allowed.
 `colorSchemes` is a non-empty, duplicate-free subset of `"light" | "dark"`
 that must include `"light"`; it defaults to `["light"]` and normalizes to
 light-first order. Shared `stylesheets` apply to every generated view, with a
 matching `lightStylesheets` or `darkStylesheets` list appended in declaration
-order. Generated renderer and entry links follow
-those configured links; the built-in renderer has no stylesheet.
+order.
 `generatedOutput` defaults to `"derived"`; the derived-only
 `review.baselineBuild` argv list and explicit `"committed"` alternative follow the
 [derived baselines contract](./mokly-derived-baselines.md).
@@ -196,49 +194,22 @@ stylesheets, including transitive imports, are attributed by rule under
 a view's dependency evidence only when a changed rule could match its before or
 after document, or analysis is unresolved. Otherwise it is examined and excluded.
 Shared-impact globs cannot override this exclusion or add unreferenced public
-files to Changes; they retain the existing ownership and membership rules in
-[Changes](./mokly-changes.md) and [component attribution](./mokly-component-changes.md).
+files to Changes, and a glob match alone never adds an entry; see
+[component attribution](./mokly-component-changes.md#dependencies-and-styles).
 
 `moduleResolution` has no defaults beyond esbuild's platform behavior. Package
 roots must be in-repository directories containing `package.json`; their
 `node_modules` directories supplement consumer lookup. Aliases accept bare
 package specifiers only. Conditions, package fields, and extensions are ordered,
 deduplicated lists, while loader keys are extensions and values are supported
-JavaScript-safe esbuild loader names; the `css` loader is rejected for every
-extension because it would emit an undelivered sibling stylesheet. React and React DOM still resolve through Mokly's
+esbuild loader names. React and React DOM still resolve through Mokly's
 consumer-peer plugin so these options cannot introduce a second React runtime.
 
-### Imported CSS configuration
+The obsolete `legacy` config key is rejected, including `legacy: undefined`.
 
-`postcss` optionally names a config-relative local module inside `repoRoot`.
-Mokly inventories its local imports, loads consumer plugin packages unbundled,
-and isolates plugin state per graph load. PostCSS 8-compatible arrays include
-instances, uncalled creators, plain functions and `{ postcss: fn }` objects;
-ordered package-name records are also accepted. ESM imports and CommonJS
-`require()` use their respective Node resolution conditions. The complete
-module format, loading, transform and dependency contract is
-[Imported Stylesheet PostCSS](./mokly-imported-styles-postcss.md); exact
-diagnostics are in [the error catalogue](./mokly-imported-styles-errors.md).
+`postcss` and reserved-output configuration continues in
+[Imported CSS Configuration](./mokly-configuration-imported-styles.md).
+Register every complete document explicitly with `definePage` or nested `page`;
+baseline compatibility never restores source discovery or old configuration.
 
-Mokly owns `.css` and `.module.css` handling. At those keys,
-`moduleResolution.loaders` accepts only `"empty"`: `.css` skips both plain and
-module CSS, `.module.css` skips only module CSS and its class map. Opted-out
-CSS is still inventoried. A `file` loader on another JavaScript-imported
-asset fails Build.
-`moduleResolution.loaders[".pcss"] = "css"` and every other consumer `css`
-loader are rejected at config validation; rename to `.css` or use a
-JavaScript-safe loader. An `entries` glob cannot have a static prefix inside
-`<mockupsDir>/mokly-generated/`; `entriesDir` and `review.outDir` cannot be
-equal to or inside it, and entry discovery skips it for broader globs. Local
-`stylesheets` paths and authored inputs cannot live there, including symlink
-aliases. Consumer `publicExclude` globs cannot start with literal
-`mokly-generated` after brace expansion. Broad globs are allowed, but Build
-rejects any generated stylesheet or asset matched by a consumer or default
-public exclusion. Consumer public files may live elsewhere below `mockupsDir`.
-
-The `legacy` config key is rejected, including `legacy: undefined`. Register
-complete documents explicitly with `definePage` or nested `page`, following the
-[source-preserving migration](./mokly-page-migration.md). Historical manifest
-compatibility does not restore source discovery or legacy configuration.
-
-The remaining contract is continued in [Configuration Discovery And Exclusions](./mokly-configuration-discovery.md).
+Entry discovery and public exclusions continue in [Configuration Discovery And Exclusions](./mokly-configuration-mainline-discovery.md). [Imported stylesheet delivery](./mokly-imported-styles.md) specifies reserved CSS output and consumer PostCSS.

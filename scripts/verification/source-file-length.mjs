@@ -41,11 +41,25 @@ if (process.argv.slice(2).some((argument) => argument !== "--all")) {
 }
 
 function changedFiles(root) {
-  const commands = [
-    ["diff", "--name-only", "-z", "origin/main...HEAD"],
-    ["diff", "--name-only", "-z", "HEAD"],
-    ["ls-files", "--others", "--exclude-standard", "-z"],
-  ];
+  const mergeHead = execFileSync(
+    "git",
+    ["rev-parse", "--git-path", "MERGE_HEAD"],
+    {
+      cwd: root,
+      encoding: "utf8",
+    },
+  ).trim();
+  const merging = fs.existsSync(path.resolve(root, mergeHead));
+  const commands = merging
+    ? [
+        ["diff", "--name-only", "-z", "origin/main"],
+        ["ls-files", "--others", "--exclude-standard", "-z"],
+      ]
+    : [
+        ["diff", "--name-only", "-z", "origin/main...HEAD"],
+        ["diff", "--name-only", "-z", "HEAD"],
+        ["ls-files", "--others", "--exclude-standard", "-z"],
+      ];
   return commands.flatMap((arguments_) =>
     execFileSync("git", arguments_, { cwd: root, encoding: "utf8" })
       .split("\0")

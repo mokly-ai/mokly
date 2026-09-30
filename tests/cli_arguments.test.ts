@@ -13,6 +13,7 @@ test("all value options accept assignment with the same validation as separate v
     ["publish", "--endpoint", "https://receiver.invalid/upload?one=a=b"],
     ["publish", "--token", "synthetic-token=="],
     ["publish", "--repository", "github.com/team/catalogue"],
+    ["publish", "--upload-concurrency", "4"],
     ["__serve-child", "--update-version", "2"],
   ] as const) {
     assert.deepEqual(
@@ -54,6 +55,7 @@ test("empty assignments and missing separate values fail without consuming the n
     "--endpoint",
     "--token",
     "--repository",
+    "--upload-concurrency",
     "--port",
     "--update-version",
   ]) {
@@ -103,6 +105,9 @@ test("assignments cannot bypass boolean syntax, numeric validation or command re
     ["__serve-child", "--update-version=0"],
     ["export", "--out=site", "--token=synthetic-token"],
     ["publish", "--no-changes", "--base=HEAD"],
+    ["publish", "--upload-concurrency=0"],
+    ["publish", "--upload-concurrency=33"],
+    ["export", "--out=site", "--upload-concurrency=4"],
   ])
     assert.throws(() => parseArguments(argv), /cli-invalid/);
 });

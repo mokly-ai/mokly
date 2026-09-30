@@ -36,7 +36,6 @@ export function ConsumerMobile() {
 export const inspectionScreens = [
   screen({
     id: "design-component-inspection-details",
-    slug: "details",
     title: "Screen component details",
     colorSchemes: ["light"],
     description:
@@ -46,7 +45,6 @@ export const inspectionScreens = [
   }),
   screen({
     id: "design-component-inspection-highlight",
-    slug: "highlight",
     title: "Highlight components",
     colorSchemes: ["light"],
     description:
@@ -56,7 +54,6 @@ export const inspectionScreens = [
   }),
   screen({
     id: "design-component-inspection-nested",
-    slug: "nested",
     title: "Select a nested component",
     colorSchemes: ["light"],
     description:
@@ -66,7 +63,6 @@ export const inspectionScreens = [
   }),
   screen({
     id: "design-component-inspection-direct-change",
-    slug: "direct-change",
     title: "Independent screen prop change",
     colorSchemes: ["light"],
     description:
@@ -76,7 +72,6 @@ export const inspectionScreens = [
   }),
   screen({
     id: "design-component-inspection-consumer",
-    slug: "consumer",
     title: "Open a consuming screen",
     colorSchemes: ["light"],
     description:

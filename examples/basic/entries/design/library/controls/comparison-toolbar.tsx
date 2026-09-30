@@ -11,6 +11,7 @@ const propSchema = {
     mode: comparisonMode,
     eligible: flag,
     accessible: flag,
+    scrollTogether: flag,
     destinations: comparisonDestinations,
   },
 } as const;
@@ -33,11 +34,31 @@ export const comparisonToolbar = defineComponent({
       })),
     },
     eligible: { kind: "boolean", label: "Eligible" },
+    scrollTogether: { kind: "boolean", label: "Scroll together" },
   },
   render: ComparisonToolbarView,
-  variants: comparisonMode.schema.values.map((mode) => ({
-    id: mode,
-    title: mode,
-    props: { mode, eligible: true, accessible: true, destinations: {} },
-  })),
+  variants: [
+    ...comparisonMode.schema.values.map((mode) => ({
+      id: `design-ui-comparison-toolbar-${mode}`,
+      title: mode,
+      props: {
+        mode,
+        eligible: true,
+        accessible: true,
+        scrollTogether: true,
+        destinations: {},
+      },
+    })),
+    {
+      id: "design-ui-comparison-toolbar-side-by-side-apart",
+      title: "side-by-side-apart",
+      props: {
+        mode: "side-by-side",
+        eligible: true,
+        accessible: true,
+        scrollTogether: false,
+        destinations: {},
+      },
+    },
+  ],
 });

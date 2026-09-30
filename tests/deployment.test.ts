@@ -91,6 +91,10 @@ test("browser checks support an isolated workspace port", async () => {
   ]);
   assert.match(config, /process\.env\["MOKLY_PLAYWRIGHT_PORT"\]/);
   assert.match(config, /globalSetup: "\.\/tests\/browser\/setup\.ts"/);
+  assert.match(
+    config,
+    /serve --config examples\/basic\/mokly\.config\.ts --base HEAD --port \$\{port\} --no-watch/u,
+  );
   assert.match(browseTest, /browser\.newContext\(\{\s+baseURL,/);
   assert.doesNotMatch(browseTest, /127\.0\.0\.1:4517/);
 });
@@ -131,7 +135,14 @@ test("PR install caching includes the branch-point lockfile and verification ret
       "utf8",
     ),
   ) as Workflow;
-  for (const job of ["repository", "package", "unit", "browser", "native"])
+  for (const job of [
+    "repository",
+    "package",
+    "unit",
+    "browser",
+    "hydration",
+    "native",
+  ])
     assertFullHistoryCheckout(ci.jobs[job]!);
 });
 

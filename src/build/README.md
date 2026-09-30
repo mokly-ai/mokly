@@ -1,7 +1,7 @@
 # Catalogue Compilation
 
 This internal module loads consumer definitions, renders every configured view,
-validates the complete catalogue and produces deterministic HTML and manifest v5.
+validates the complete catalogue and produces deterministic HTML and manifest v7.
 The supported external interface is `mokly build` and `mokly check`; Serve,
 export and local prop controls reuse the same consumer graph and validators.
 
@@ -208,6 +208,19 @@ consumer code; the collector retains it only as optional manifest metadata.
 the public authoring API, including `resolveInstance`. Every repository-owned
 importer of `@mokly/mokly` receives the attributed facade; installed packages
 under `node_modules` and Mokly's own runtime receive the plain API. Registry
+checks run outside the consumer bundle, so CLI-read authoring markers use
+`Symbol.for` in `src/authoring/markers.ts` instead of private `Symbol()` or class
+identity; both variant forbidden-field metadata and nested authored-path facts
+must survive the boundary. `MoklyError` carries a `Symbol.for` brand and
+`isMoklyError` checks that brand, a known code, and the unprefixed detail. The
+facade adds the source module; `load_graph.ts` reconstructs branded errors as
+CLI `MoklyError`s without double prefixes. Unrelated evaluation failures remain
+bundling errors. `src/registry/manifest_validation.ts` applies the strict v7
+baseline boundary before comparison. `mock_links.ts` rewrites id links while
+`mock_link_routes.ts` resolves the identity-derived target artifact and relative
+destination. Together they build the compatibility transform's logical-route
+index from the shared path helpers; a use case without a screen
+as its first step is an invalid registry invariant, not a navigation folder. Registry
 validation and `ownership.ts` accept an attributed owner only when it is a
 resolved entry module or an inventoried source file. Ownership headers and
 tracked output additionally trust repository-relative owners that match an
@@ -231,7 +244,7 @@ cargo xtask check
 
 The example uses derived output: generation writes local ignored HTML and a
 manifest; authored public CSS remains tracked. Committed output and historical
-manifest compatibility are tested with isolated consumers.
+manifest rejection are tested with isolated consumers.
 
 - `compile.ts`, `render.ts`, `document_compiler.ts`: exhaustive and requested-view
   compilation using the same validation boundary.
@@ -242,6 +255,9 @@ manifest compatibility are tested with isolated consumers.
   resource lookup and relative encoded stylesheet delivery for every view.
 - `jsx_dev_runtime.ts`, `component_source.ts`: invocation capture without output
   or input-identity changes.
+- `mock_links.ts`, `mock_link_routes.ts`, `logical_records.ts`:
+  identity-derived link rewriting, target resolution, and compatibility
+  invariants.
 - `source_inventory.ts`: complete private authoring inventory, separate from
   individual invocation metadata.
 - `transaction.ts`, `check.ts`: safe output installation and verification.

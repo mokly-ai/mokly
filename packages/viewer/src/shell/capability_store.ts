@@ -19,7 +19,7 @@ import {
 
 import {
   shellContextWithViewerEvidence,
-  viewerCapabilityRoute,
+  viewerCapabilityEntryId,
 } from "./capability_adoption.js";
 import {
   commitViewerEvidence,
@@ -67,7 +67,7 @@ export function useViewerCapabilityStore(input: {
   const [snapshot, setSnapshot] = useState<ViewerCapabilitySnapshot>(() => ({
     catalogue: input.catalogue,
     ...(initialRequest ? { source: initialRequest.source } : {}),
-    ...(initialRequest && initialWorkspace?.entry.route === initialRequest.route
+    ...(initialRequest && initialWorkspace?.entry.id === initialRequest.entryId
       ? { workspace: { request: initialRequest, value: initialWorkspace } }
       : {}),
   }));
@@ -76,13 +76,13 @@ export function useViewerCapabilityStore(input: {
   snapshotRef.current = snapshot;
   recoveryRef.current = input.captureRecovery;
 
-  const route = viewerCapabilityRoute(input.state.route);
+  const entryId = viewerCapabilityEntryId(input.state.route);
   const request = useMemo(
     () =>
       snapshot.source
-        ? viewerCapabilityRequest(snapshot.source, route)
+        ? viewerCapabilityRequest(snapshot.source, entryId)
         : undefined,
-    [route, snapshot.source],
+    [entryId, snapshot.source],
   );
   const workspace =
     request && sameRequest(snapshot.workspace?.request, request)
@@ -110,13 +110,13 @@ export function useViewerCapabilityStore(input: {
         adoptEvidence(revision) {
           if (controller.signal.aborted) return true;
           const current = snapshotRef.current;
-          const currentRoute = viewerCapabilityRoute(
+          const currentEntryId = viewerCapabilityEntryId(
             input.stateRef.current.route,
           );
           if (
             !current.source ||
             !viewerCapabilitySourceEquals(current.source, request.source) ||
-            currentRoute !== request.route
+            currentEntryId !== request.entryId
           )
             return true;
           const commit = commitViewerEvidence(
@@ -197,7 +197,7 @@ function useRouteEvidence(
         if (
           !current.source ||
           !viewerCapabilitySourceEquals(current.source, request.source) ||
-          viewerCapabilityRoute(stateRef.current.route) !== request.route
+          viewerCapabilityEntryId(stateRef.current.route) !== request.entryId
         )
           return;
         const commit = commitViewerEvidence(
@@ -231,7 +231,7 @@ function capabilityRequest(
   state: ShellState,
 ): ViewerCapabilityRequest | undefined {
   return source
-    ? viewerCapabilityRequest(source, viewerCapabilityRoute(state.route))
+    ? viewerCapabilityRequest(source, viewerCapabilityEntryId(state.route))
     : undefined;
 }
 
@@ -241,7 +241,7 @@ function sameRequest(
 ): boolean {
   return (
     left !== undefined &&
-    left.route === right.route &&
+    left.entryId === right.entryId &&
     viewerCapabilitySourceEquals(left.source, right.source)
   );
 }

@@ -8,10 +8,8 @@ import {
   type ReloadLocation,
   type UpdateEventStream,
 } from "../dist/client/react_update_controller.js";
-import {
-  parseBrowseRecoveryState,
-  type BrowseRecoveryState,
-} from "../packages/viewer/dist/runtime.js";
+
+import { browseState } from "./helpers/browse_recovery_state.js";
 
 test("live updates are latest-wins and recovery is consumed once", () => {
   const stream = new FakeStream();
@@ -60,57 +58,6 @@ test("a ready version newer than the served page reloads immediately", () => {
     url: location.href,
     version: 5,
   });
-});
-
-test("Browse recovery parsing rejects malformed session state", () => {
-  for (const changesStatus of [
-    "preparing",
-    "pending",
-    "ready",
-    "unavailable",
-  ] as const) {
-    const state = { ...browseState(), changesStatus };
-    assert.deepEqual(parseBrowseRecoveryState(state), state);
-  }
-  assert.equal(
-    parseBrowseRecoveryState({ ...browseState(), changesStatus: "unknown" }),
-    undefined,
-  );
-  assert.equal(
-    parseBrowseRecoveryState({ ...browseState(), changesStatus: null }),
-    undefined,
-  );
-  assert.deepEqual(parseBrowseRecoveryState(browseState()), browseState());
-  const legacyState: Record<string, unknown> = { ...browseState() };
-  delete legacyState["filterBaselineClosedCollectionIds"];
-  assert.deepEqual(parseBrowseRecoveryState(legacyState), {
-    ...browseState(),
-    filterBaselineClosedCollectionIds: null,
-  });
-  assert.equal(
-    parseBrowseRecoveryState({ ...browseState(), viewport: "tablet" }),
-    undefined,
-  );
-  assert.equal(
-    parseBrowseRecoveryState({
-      ...browseState(),
-      regionScrolls: { stage: -1 },
-    }),
-    undefined,
-  );
-  assert.equal(
-    parseBrowseRecoveryState({ ...browseState(), regionScrolls: [4] }),
-    undefined,
-  );
-  assert.equal(
-    parseBrowseRecoveryState({
-      ...browseState(),
-      changedOnly: false,
-      filterBaselineClosedCollectionIds: [],
-      query: "",
-    }),
-    undefined,
-  );
 });
 
 test("background refresh is latest-wins and catches up beyond its triggering version", async () => {
@@ -200,21 +147,6 @@ test("shutdown cancels refreshes and ignores late failures and newer events", as
   await setImmediate();
   assert.equal(location.reloads, 0);
 });
-
-function browseState(): BrowseRecoveryState {
-  return {
-    changedOnly: true,
-    closedCollectionIds: ["collection:fixture"],
-    colorScheme: "dark",
-    detailsOpen: true,
-    drawerOpen: true,
-    filterBaselineClosedCollectionIds: ["collection:fixture"],
-    navScroll: 18,
-    query: "home",
-    regionScrolls: { flow: 8, stage: 42 },
-    viewport: "mobile",
-  };
-}
 
 class FakeStream implements UpdateEventStream {
   closed = false;

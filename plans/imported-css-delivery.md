@@ -38,7 +38,9 @@ findings 2–4 remain open for the user's decision. Milestone 34 (`583af0a9`) re
 finding 2 in the
 [Milestone 33 review record](../docs/reviews/imported-css-delivery-milestone-33.md);
 findings 1 and 3 remain open.
-Milestone 36 merges the latest `origin/main` before the implementation PR.
+Milestone 36 is integrating the latest `origin/main` before the implementation
+PR. Its preservation audit found omitted CSS contract text and stale pre-v7
+tests; those are being restored before the merge commit.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -967,7 +969,7 @@ navigation, publication and manifest changes.
 - [x] Fetch and audit main from the pre-merge source tip; save main additions under `.context/merge/`.
 - [ ] Merge `origin/main` path-by-path; accept main's three reviewed deletions and port their binary-safe and Changes adaptations to the owning replacements.
 - [ ] Review every clean overlapping auto-merge for semantic preservation, not just conflicts.
-- [ ] Integrate manifest v6 and read model v2 with stylesheet metadata, navigation paths and CSS attribution.
+- [ ] Integrate manifest v7 and read model v3 with stylesheet metadata, navigation paths and CSS attribution.
 - [ ] Integrate generated CSS and binary assets with export ownership schema 2, delta publication and aligned `srcdoc` comparison panes; add missing publication and browser coverage.
 - [ ] Keep the example and fixtures reachable through `navPath`/`folder()`, reconcile documentation and split over-limit merged files.
 - [ ] Prove no unapproved deletion or feature-wide reduction against `origin/main`; run Build, focused and browser tests, example Chrome smoke and the complete `cargo xtask check` gate.

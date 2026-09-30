@@ -12,7 +12,7 @@ import { buildPreview } from "../scripts/preview/catalogue.mjs";
 import { importedChangesFixture } from "./helpers/imported_changes_fixture.js";
 
 interface PublishedEntry {
-  readonly route: string;
+  readonly id: string;
   readonly changes: { readonly kind: string; readonly included: boolean };
 }
 
@@ -24,9 +24,7 @@ async function readMembership(
   ) as {
     screens: PublishedEntry[];
   };
-  return new Map(
-    catalogue.screens.map((entry) => [entry.route, entry.changes]),
-  );
+  return new Map(catalogue.screens.map((entry) => [entry.id, entry.changes]));
 }
 
 for (const mode of ["committed", "derived"] as const)
@@ -55,17 +53,17 @@ for (const mode of ["committed", "derived"] as const)
         );
         await exportCatalogue(fixture.config, { outDir: "site", base: "HEAD" });
         const exported = await readMembership(path.join(fixture.root, "site"));
-        for (const [route, changes] of exported) {
-          const expected = live.changedRoutes.includes(route);
+        for (const [id, changes] of exported) {
+          const expected = live.changedIds.includes(id);
           assert.equal(
             changes.included,
             expected,
-            `export ${route}: ${changes.kind}`,
+            `export ${id}: ${changes.kind}`,
           );
           assert.equal(
             changes.kind === "unmodified",
             !expected,
-            `export ${route}`,
+            `export ${id}`,
           );
         }
         const publishedDir = path.join(fixture.root, ".context/published");
@@ -74,12 +72,8 @@ for (const mode of ["committed", "derived"] as const)
           base: "HEAD",
         });
         const published = await readMembership(publishedDir);
-        for (const [route, changes] of exported) {
-          assert.deepEqual(
-            published.get(route),
-            changes,
-            `publication ${route}`,
-          );
+        for (const [id, changes] of exported) {
+          assert.deepEqual(published.get(id), changes, `publication ${id}`);
         }
       },
     );

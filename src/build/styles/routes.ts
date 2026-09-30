@@ -39,7 +39,7 @@ export function isGeneratedRoute(route: string): boolean {
 }
 
 /** Is a path portable, with npm scopes allowed only immediately after node_modules? */
-export function isPortableGeneratedPath(value: string): boolean {
+function isPortableGeneratedPath(value: string): boolean {
   if (!value.split("/").some((part) => part.startsWith("@")))
     return isPortableUrlPath(value);
   const parts = value.split("/");

@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import type { RunningServer } from "../../dist/server/http_types.js";
 
-import { loadComparison } from "./comparison_actions.js";
+import { loadComparison, PANE_SOURCE } from "./comparison_actions.js";
 import { selectedComparisonFixture } from "./selected_comparison_fixture.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
@@ -28,7 +28,7 @@ test.afterAll(async () => {
 async function expireSnapshots(page: Page, snapshot: string): Promise<void> {
   now += 120_001;
   const pruning = await page.request.get(
-    `${server.url}/__mokly/diffs/review.json?route=components%2Faction.html&variant=default`,
+    `${server.url}/__mokly/diffs/review.json?id=action-default`,
   );
   expect(pruning.ok()).toBe(true);
   expect((await page.request.get(snapshot)).status()).toBe(404);
@@ -65,7 +65,7 @@ for (const change of ["theme", "viewport"] as const)
     );
     const snapshot = await page
       .locator(".mb-pane--after iframe")
-      .getAttribute("src");
+      .getAttribute(PANE_SOURCE);
     expect(snapshot).not.toBeNull();
     await expireSnapshots(page, snapshot!);
 
@@ -79,7 +79,7 @@ for (const change of ["theme", "viewport"] as const)
       page.frameLocator(".mb-pane--after iframe").locator("main"),
     ).toContainText("Updated screen");
     await expect(page.locator(".mb-pane--after iframe")).toHaveAttribute(
-      "src",
+      PANE_SOURCE,
       change === "theme" ? /\.desktop\.dark\.html$/ : /\.mobile\.html$/,
     );
     await expect(page.locator(".mb-panes")).toHaveAttribute(
@@ -87,7 +87,7 @@ for (const change of ["theme", "viewport"] as const)
       "difference",
     );
     expect(requests).toHaveLength(2);
-    expect(requests[1]!.searchParams.get("route")).toBe("screens/home.html");
+    expect(requests[1]!.searchParams.get("id")).toBe("home");
     expect(requests[1]!.searchParams.has("refresh")).toBe(false);
     expect(failedPanes).toEqual([]);
   });
@@ -98,7 +98,7 @@ test("snapshot recovery keeps the selected saved variant", async ({ page }) => {
     const url = new URL(request.url());
     if (url.pathname === "/__mokly/diffs/review.json") requests.push(url);
   });
-  await page.goto(`${server.url}/view/components/action.html?variant=disabled`);
+  await page.goto(`${server.url}/view/components/action-disabled.html`);
   await chooseViewport(page, "desktop");
   await loadComparison(page, "Side by side");
   await expect(
@@ -108,7 +108,7 @@ test("snapshot recovery keeps the selected saved variant", async ({ page }) => {
   ).toBeDisabled();
   const snapshot = await page
     .locator(".mb-pane--after iframe")
-    .getAttribute("src");
+    .getAttribute(PANE_SOURCE);
   expect(snapshot).not.toBeNull();
   await expireSnapshots(page, snapshot!);
   await chooseViewport(page, "mobile");
@@ -123,6 +123,6 @@ test("snapshot recovery keeps the selected saved variant", async ({ page }) => {
       .getByRole("button", { name: "Proceed", exact: true }),
   ).toBeDisabled();
   expect(requests).toHaveLength(2);
-  expect(requests[1]!.searchParams.get("route")).toBe("components/action.html");
-  expect(requests[1]!.searchParams.get("variant")).toBe("disabled");
+  expect(requests[1]!.searchParams.get("id")).toBe("action-disabled");
+  expect(requests[1]!.searchParams.size).toBe(1);
 });

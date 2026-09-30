@@ -11,7 +11,7 @@ export const toolbar = defineComponent({
   id: "example-toolbar",
   title: "Toolbar",
   description: "A composed toolbar with caller-supplied content.",
-  route: "components/toolbar.html",
+  navPath: ["Example", "Components"],
   dependencies: [dependency, implementation],
   ownedDependencies: [dependency, implementation],
   relatedDocs: ["examples/basic/README.md"],
@@ -46,7 +46,7 @@ export const toolbar = defineComponent({
   ),
   variants: [
     {
-      id: "default",
+      id: "example-toolbar-default",
       title: "Default",
       props: {
         title: "Workspace actions",

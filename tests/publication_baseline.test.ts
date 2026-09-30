@@ -65,7 +65,7 @@ test("publication pins one baseline for Changes and comparisons when its ref adv
     /Previous home/,
   );
   assert.match(
-    documentText(await read("view/removed-document.html")),
+    documentText(await read("view/pages/removed-document.html")),
     /Showing previous version/,
   );
   assert.match(await read("index.html"), /data-removed-page/);

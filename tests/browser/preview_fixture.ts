@@ -1,13 +1,15 @@
-import { execFile, type ChildProcess } from "node:child_process";
+import type { ChildProcess } from "node:child_process";
 import path from "node:path";
 import { setTimeout as pause } from "node:timers/promises";
-import { promisify, stripVTControlCharacters } from "node:util";
+import { stripVTControlCharacters } from "node:util";
 
 import {
   NodeBaselineProcessScopeFactory,
   type BaselineProcessScope,
   type BaselineProcessScopeFactory,
 } from "../../dist/baseline/process_scope.js";
+import { buildPreview } from "../../scripts/preview/catalogue.mjs";
+import { createCommittedExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { timeFixturePhase } from "../helpers/fixture_timing.js";
 
@@ -19,7 +21,6 @@ import {
   type PreviewEndpoint,
 } from "./preview_fixture_owner.js";
 
-const execute = promisify(execFile);
 const MAX_DIAGNOSTIC_BYTES = 64 * 1_024;
 const STARTUP_ATTEMPTS = 150;
 const WRANGLER_EPHEMERAL_PORT = 0;
@@ -57,23 +58,22 @@ export async function startPreviewFixture(
   includeChanges = false,
 ): Promise<OwnedPreviewFixture> {
   return startOwnedPreviewFixture({
+    artifactRelative: ".context/site",
     build: (output) =>
       timeFixturePhase(
         "preview-preparation",
         "preview:build",
         true,
         async () => {
-          await execute(
-            "npm",
-            [
-              "run",
-              "preview:build",
-              "--",
-              "--out",
-              output,
-              ...(includeChanges ? ["--include-changes"] : []),
-            ],
-            { cwd: repositoryRoot, maxBuffer: 16 * 1_024 * 1_024 },
+          const fixtureRoot = path.dirname(path.dirname(output));
+          const config = await createCommittedExampleBaseline(
+            fixtureRoot,
+            "static-example",
+          );
+          await buildPreview(
+            config,
+            output,
+            includeChanges ? { includeChanges: true, base: "HEAD" } : {},
           );
         },
       ),

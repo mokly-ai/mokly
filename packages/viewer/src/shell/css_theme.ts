@@ -18,6 +18,7 @@ const DARK_ROLES = `
   --chrome-border-strong: #8b8478;
   --chrome-control-edge: #8b8478;
   --chrome-accent: #a5cdb6;
+  --chrome-brand: #a3cdb4;
   --chrome-count-bg: rgba(240, 236, 228, 0.1);
   --chrome-scrim: rgba(0, 0, 0, 0.55);
   --chrome-disabled-bg: #1c1b17;

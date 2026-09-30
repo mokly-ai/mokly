@@ -3,7 +3,8 @@
 import path from "node:path";
 
 import type {
-  Manifest,
+  HistoricalManifest,
+  ManifestV7,
   ScreenResourceEvidence,
   ViewResourceEvidence,
 } from "@mokly/viewer/data";
@@ -13,11 +14,7 @@ import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
-import {
-  FORMER_MANIFEST_NAME,
-  LEGACY_MANIFEST_NAME,
-  MANIFEST_NAME,
-} from "../registry/manifest.js";
+import { EARLIER_MANIFEST_NAMES, MANIFEST_NAME } from "../registry/manifest.js";
 import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
@@ -27,7 +24,6 @@ import { baselineResourceConfig } from "../review/base_manifest.js";
 import type { ChangeEvidence } from "../review/change_evidence.js";
 import type { BaselineReader } from "../review/git.js";
 import {
-  normalizeHistoricalDocument,
   normalizeReviewPair,
   normalizeSingleDocument,
 } from "../review/ignore.js";
@@ -46,8 +42,8 @@ export interface ChangedContent {
  * Exclude authoring paths lexically so retargeted public aliases still reach validation.
  */
 export async function changedContentPaths(
-  manifest: Manifest,
-  baseline: Manifest,
+  manifest: ManifestV7,
+  baseline: HistoricalManifest,
   config: ResolvedConfig,
   git: BaselineReader,
   commit: string,
@@ -73,8 +69,8 @@ export async function changedContentPaths(
 
 /** Preserve resource evidence from the v2 membership pass without repeating analysis. */
 export async function classifyChangedContent(
-  manifest: Manifest,
-  baseline: Manifest,
+  manifest: ManifestV7,
+  baseline: HistoricalManifest,
   config: ResolvedConfig,
   git: BaselineReader,
   commit: string,
@@ -96,8 +92,7 @@ export async function classifyChangedContent(
         return [];
       const route = toPosixPath(path.relative(config.mockupsDir, candidate));
       return route === MANIFEST_NAME ||
-        route === FORMER_MANIFEST_NAME ||
-        route === LEGACY_MANIFEST_NAME
+        EARLIER_MANIFEST_NAMES.includes(route as never)
         ? []
         : [route];
     }),
@@ -135,9 +130,7 @@ export async function classifyChangedContent(
           "review-invalid",
           `base fragment is missing: ${pair.base}`,
         );
-      const before = normalizeHistoricalDocument(
-        Buffer.from(base).toString("utf8"),
-      );
+      const before = Buffer.from(base).toString("utf8");
       const after =
         headDocuments.get(pair.head) ??
         Buffer.from(await headReader.read(pair.head)).toString("utf8");
@@ -209,8 +202,8 @@ export async function classifyChangedContent(
           pair.view &&
           (evidence.reasons?.length || evidence.excludedResources?.length)
         ) {
-          const { route, viewport, colorScheme } = pair.view;
-          const views = screens.get(route) ?? [];
+          const { id, viewport, colorScheme } = pair.view;
+          const views = screens.get(id) ?? [];
           views.push({
             viewport,
             colorScheme,
@@ -233,7 +226,7 @@ export async function classifyChangedContent(
                 }
               : {}),
           });
-          screens.set(route, views);
+          screens.set(id, views);
         }
       }
     }
@@ -242,6 +235,6 @@ export async function classifyChangedContent(
     changedPaths: [...result].sort(),
     screens: [...screens.keys()]
       .sort()
-      .map((route) => ({ route, views: screens.get(route)! })),
+      .map((id) => ({ id, views: screens.get(id)! })),
   };
 }

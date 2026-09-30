@@ -72,7 +72,7 @@ export interface DebounceClock {
 }
 
 /** Runtime clock backed by Node timers. */
-export const systemDebounceClock: DebounceClock = {
+const systemDebounceClock: DebounceClock = {
   clear: clearTimeout,
   schedule: setTimeout,
 };

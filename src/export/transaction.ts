@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { projectRealPath } from "../config/paths.js";
-import { errorMessage } from "../errors.js";
+import { errorMessage, isCancellation } from "../errors.js";
 
 import { ExportBackup } from "./backup.js";
 import { failAfterExportCleanup } from "./cleanup.js";
@@ -108,6 +108,7 @@ export class ExportTransaction {
       throw exportError(
         `Could not install export; no previous output was moved. ${errorMessage(error)}`,
         error,
+        { cancelled: isCancellation(error) },
       );
     }
     this.installed = true;

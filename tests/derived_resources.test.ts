@@ -63,18 +63,14 @@ for (const components of [false, true]) {
         ),
       );
       assert.deepEqual(changes.result?.changedPaths, []);
-    } else
-      assert.deepEqual(changes.changedRoutes, [
-        "screens/home.html",
-        "user-flows/tour.html",
-      ]);
+    } else assert.deepEqual(changes.changedIds, ["home", "tour"]);
   });
 }
 
 test("derived whole-document pages compare source-only material changes", async (t) => {
   const source = `${validEntrySource()}
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ id: "guide", title: "Guide", description: "Guide", route: "guide.html", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body><p>Original guide</p></body></html>" }));`;
+mockups.push(definePage({ id: "guide", title: "Guide", description: "Guide", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body><p>Original guide</p></body></html>" }));`;
   const fixture = await derivedFixture(t, source);
   await fs.writeFile(
     fixture.entryPath,
@@ -85,5 +81,5 @@ mockups.push(definePage({ id: "guide", title: "Guide", description: "Guide", rou
     "HEAD",
     await prepareReviewRepository(fixture.config, "HEAD"),
   );
-  assert.deepEqual(changes.changedRoutes, ["guide.html"]);
+  assert.deepEqual(changes.changedIds, ["guide"]);
 });

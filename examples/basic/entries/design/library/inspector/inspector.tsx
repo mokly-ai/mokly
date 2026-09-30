@@ -88,8 +88,16 @@ export const inspector = defineComponent({
   },
   render: InspectorView,
   variants: [
-    { id: "details", title: "Details", props: sample },
-    { id: "props", title: "Props", props: { ...sample, initial: "props" } },
-    { id: "closed", title: "Closed", props: { ...sample, initial: "closed" } },
+    { id: "design-ui-inspector-details", title: "Details", props: sample },
+    {
+      id: "design-ui-inspector-props",
+      title: "Props",
+      props: { ...sample, initial: "props" },
+    },
+    {
+      id: "design-ui-inspector-closed",
+      title: "Closed",
+      props: { ...sample, initial: "closed" },
+    },
   ],
 });
