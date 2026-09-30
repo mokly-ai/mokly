@@ -14,8 +14,8 @@
   in progress, and compile Live previews from each generation's accepted
   sources. Milestones 1–5 have delivered the contracts, five approved mockup
   states, watched status transport, generation-pinned Live sources, and the
-  shell's notice and delayed progress; the final smoke test and review
-  (Milestone 6) remain active.
+  shell's notice and delayed progress. The final smoke test and full check are
+  complete; only the independent review in Milestone 6 remains active.
 - [Comparison Pane Scroll Alignment](./comparison-pane-scroll-alignment.md)
   — Overlay and Difference drift apart when scrolled because each snapshot
   scrolls inside its own opaque frame; comparison panes become viewer-owned,

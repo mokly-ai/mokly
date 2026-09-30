@@ -163,7 +163,11 @@ function absolutePath(
     }
   }
   if (/^(?:[A-Za-z]:[\\/]|\\\\)/.test(value)) return { kind: "windows", value };
-  if (value.startsWith("/")) return { kind: "posix", value };
+  if (
+    value.startsWith("/") &&
+    value.split("/").filter((segment) => segment.length > 0).length >= 2
+  )
+    return { kind: "posix", value };
   return;
 }
 

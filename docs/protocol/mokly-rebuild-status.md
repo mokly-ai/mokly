@@ -94,11 +94,14 @@ string coercion), never a stack. The parent applies these steps in order:
 2. Normalize CRLF and CR to LF, replace each tab with two spaces, replace
    unpaired UTF-16 surrogates with U+FFFD, and remove every remaining C0/C1
    control plus DEL except LF.
-3. Rewrite absolute POSIX, Windows drive, UNC, and `file:` paths that resolve to
-   `repoRoot` or a descendant as `.` or a repository-relative POSIX path.
-   Preserve any trailing `:line[:column]` location. Replace every other
-   absolute filesystem path with the literal `<absolute path>`. HTTP(S) URLs
-   are not filesystem paths and remain unchanged.
+3. Treat an unprefixed POSIX token as a path only when it has at least two
+   non-empty segments (for example `/tmp/x`); `/`, closing-tag/operator syntax,
+   and a one-segment token such as `/tmp` remain unchanged. Rewrite qualifying
+   POSIX, Windows drive, UNC, and `file:` paths that resolve to `repoRoot` or a
+   descendant as `.` or a repository-relative POSIX path. Preserve any trailing
+   `:line[:column]` location. Replace every other absolute filesystem path with
+   the literal `<absolute path>`. HTTP(S) URLs are not filesystem paths and
+   remain unchanged.
 4. Trim surrounding whitespace. If nothing remains, use
    `No additional details are available.`
 5. Limit the result to 2,048 Unicode scalar values and 8,192 UTF-8 bytes. If

@@ -168,6 +168,18 @@ test("failure detail strips terminal controls and rewrites absolute paths", () =
   assert.equal(sanitizeRebuildFailure("\u0000\t", "/repo"), FALLBACK);
 });
 
+test("failure detail preserves slash syntax and one-segment POSIX tokens", () => {
+  assert.equal(
+    sanitizeRebuildFailure(
+      'Expected ">" but found "/" Unexpected "</h2>" a / b /tmp ' +
+        "/tmp/private.ts /repo/src/view.tsx:12:4",
+      "/repo",
+    ),
+    'Expected ">" but found "/" Unexpected "</h2>" a / b /tmp ' +
+      "<absolute path> src/view.tsx:12:4",
+  );
+});
+
 test("failure detail normalizes file URLs, Windows paths, UNC paths, and surrogates", () => {
   assert.equal(
     sanitizeRebuildFailure(

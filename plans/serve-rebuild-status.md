@@ -202,10 +202,10 @@ Tags: ui
 
 ## Milestone 6: Smoke test and review
 
-- [ ] Smoke through `npm run dev` with the example catalogue: break and fix a
+- [x] Smoke through `npm run dev` with the example catalogue: break and fix a
       screen, a component and the config at desktop and mobile widths in
       Static and Live, and save screenshots under `.context/`.
-- [ ] Run the full check set and `cargo xtask check` if anything changed;
+- [x] Run the full check set and `cargo xtask check` if anything changed;
       `git add -A`, commit with a Conventional Commits message, and push.
 - [ ] Review: after the push, use `docs/implementation-review-prompt.md`
       against `origin/main` and report numbered findings with severity,
