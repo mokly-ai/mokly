@@ -49,7 +49,7 @@ The fix works:
 
 The three findings below were reproduced in scratch copies. The parent session
 confirmed the new false rejection in finding 2 and the input-side cases in
-finding 1. All three remain open for the user's decision.
+finding 1. Finding 2 was resolved in `583af0a9`; findings 1 and 3 remain open.
 
 `origin/main` is now three commits ahead of the merge base, not two. The new
 commit, `b4314fe` ("replace collections with navigation paths"), changes
@@ -141,6 +141,13 @@ preservation check from `AGENTS.md`.
      of false rejections for unchanged selectors, whatever disagreement
      between PostCSS and the parser causes them. Add B to close the older
      case too.
+
+   Resolved in `583af0a9`: option A accepts rule selectors and `@scope`
+   preludes only when authored and shipped text are byte-identical. Changed
+   text still uses the normal check, and the early guard's documented scope
+   is now hex escapes. The older changed-selector non-hex escape case from
+   option B remains open by the user's choice.
+
 3. **Low — the protocol now contradicts itself about `@scope` text outside the
    groups.**
    - What happens: the new sentence says the comparison removes comments

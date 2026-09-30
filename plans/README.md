@@ -30,7 +30,7 @@
   [Milestone 29 review](../docs/reviews/imported-css-delivery-milestone-29.md).
   Milestone 32 (`6a02190`) resolves only finding 1 in the
   [Milestone 31 review](../docs/reviews/imported-css-delivery-milestone-31.md);
-  findings 2–4 remain open. Milestone 34 addresses only finding 2 in the
+  findings 2–4 remain open. Milestone 34 (`583af0a9`) resolves only finding 2 in the
   [Milestone 33 review](../docs/reviews/imported-css-delivery-milestone-33.md);
   findings 1 and 3 remain open.
   Move this plan to Completed when its

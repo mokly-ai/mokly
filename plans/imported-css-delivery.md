@@ -34,7 +34,7 @@ approved findings in the
 [Milestone 29 review record](../docs/reviews/imported-css-delivery-milestone-29.md).
 Milestone 32 (`6a02190`) resolves only finding 1 in the
 [Milestone 31 review record](../docs/reviews/imported-css-delivery-milestone-31.md);
-findings 2–4 remain open for the user's decision. Milestone 34 addresses only
+findings 2–4 remain open for the user's decision. Milestone 34 (`583af0a9`) resolves only
 finding 2 in the
 [Milestone 33 review record](../docs/reviews/imported-css-delivery-milestone-33.md);
 findings 1 and 3 remain open.
@@ -955,7 +955,7 @@ that ships, while retaining every changed-text verification and rejection.
 
 ## Milestone 35: Commit, push, and review
 
-- [ ] Commit and push the approved fix and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Commit and push the approved fix and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
 - [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
 
 ## Post-merge follow-up (non-blocking)
