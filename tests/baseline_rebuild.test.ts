@@ -5,6 +5,7 @@ import test from "node:test";
 import { cacheLayout } from "../dist/baseline/cache_layout.js";
 import { BaselineCommandError } from "../dist/baseline/errors.js";
 import type { BaselineProgress } from "../dist/baseline/types.js";
+import { isCancellation } from "../dist/errors.js";
 
 import { baselineFixture, success } from "./helpers/baseline_fixture.js";
 
@@ -156,7 +157,10 @@ test("a live lock times out and cancellation never removes its holder's files", 
   fixture.clock.onSleep = () => controller.abort();
   await assert.rejects(
     fixture.builder.build({ ...fixture.request, signal: controller.signal }),
-    (error) => code(error, "baseline-interrupted"),
+    (error) => {
+      assert.equal(isCancellation(error), true);
+      return code(error, "baseline-interrupted");
+    },
   );
   assert.ok(await fixture.fs.stat(layout.lock));
 });
@@ -206,7 +210,10 @@ test("aborted command removes partial output and emits a typed failure", async (
       signal: controller.signal,
       onProgress: (event) => events.push(event),
     }),
-    (error) => code(error, "baseline-interrupted"),
+    (error) => {
+      assert.equal(isCancellation(error), true);
+      return code(error, "baseline-interrupted");
+    },
   );
   assert.deepEqual(
     events.map((event) => event.type),

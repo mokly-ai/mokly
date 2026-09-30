@@ -249,7 +249,7 @@ produces different ids, so an unknown, stale, or cross-catalogue selection
 fails closed rather than retargeting content.
 
 `deploymentId` is the artifact's 64-hex identity. The
-[delivery hashing rule](./mokly-export-delivery.md#deployment-identity) additionally
+[delivery hashing rule](./mokly-export-browser.md#deployment-identity) additionally
 normalizes this owned JSON's top-level `deploymentId` to 64 zeroes before hashing
 and stamps it afterward, alongside shell descriptors. Other catalogue bytes
 participate unchanged. Export revisions are `{ content: 0, evidence: 0 }`.
@@ -260,7 +260,7 @@ owns the intentional change from v1's authored tree order. Version 3 removes
 every route and path field, makes component variants entries, and keys removal
 by id. Optional fields are additive; removals, required additions, changed
 meaning, new union discriminants or incompatible paths require a new version.
-This file and the inspector asset are additive inventory entries: ownership v1
+This file and the inspector asset are additive inventory entries: ownership v2,
 and upload v1 remain unchanged; the review result and delivery descriptor
 follow the [Changes](./mokly-changes.md) and
 [static delivery](./mokly-export-delivery.md) contracts.

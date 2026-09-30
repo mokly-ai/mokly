@@ -1,6 +1,7 @@
 import type { BaselineErrorCode } from "./baseline/errors.js";
 
 const MOKLY_ERROR = Symbol.for("mokly.error");
+const MOKLY_CANCELLATION = Symbol.for("mokly.error.cancelled");
 
 /** Stable error codes callers and CLI formatting may branch on. */
 
@@ -21,6 +22,18 @@ export type MoklyErrorCode =
   | "upload-too-large"
   | "upload-unauthorized"
   | "upload-unsupported-version";
+
+/** Optional rich-presentation variant carried by a typed Mokly failure. */
+export type MoklyErrorPresentation =
+  "publish-cancelled" | "publish-transport-failed";
+
+/** Standard Error options plus a typed rich-presentation variant. */
+export interface MoklyErrorOptions extends ErrorOptions {
+  readonly cancelled?: boolean;
+  readonly presentation?: MoklyErrorPresentation;
+}
+
+const cancellationMarks = new WeakSet<MoklyError>();
 
 const knownCodes: Record<MoklyErrorCode, true> = {
   "baseline-incompatible-earlier": true,
@@ -46,18 +59,63 @@ const knownCodes: Record<MoklyErrorCode, true> = {
   "upload-unsupported-version": true,
 };
 
+interface CancellationCarrier {
+  readonly [MOKLY_CANCELLATION]?: boolean;
+}
+
 /** Typed user-facing failure from a Mokly boundary. */
 export class MoklyError extends Error {
   readonly [MOKLY_ERROR] = true;
   readonly code: MoklyErrorCode;
   readonly detail: string;
+  readonly presentation: MoklyErrorPresentation | undefined;
 
-  constructor(code: MoklyErrorCode, message: string, options?: ErrorOptions) {
+  /** Whether this exact failure was explicitly classified as cancellation. */
+  get cancelled(): boolean {
+    return (
+      cancellationMarks.has(this) ||
+      (this as CancellationCarrier)[MOKLY_CANCELLATION] === true
+    );
+  }
+
+  constructor(
+    code: MoklyErrorCode,
+    message: string,
+    options?: MoklyErrorOptions,
+  ) {
     super(`[mokly/${code}] ${message}`, options);
     this.name = "MoklyError";
     this.code = code;
     this.detail = message;
+    this.presentation = options?.presentation;
+    if (options?.cancelled) markCancellation(this);
   }
+}
+
+/** Mark one existing Mokly failure as cancellation without replacing it. */
+export function markCancellation<Failure extends MoklyError>(
+  error: Failure,
+): Failure {
+  cancellationMarks.add(error);
+  if ((error as CancellationCarrier)[MOKLY_CANCELLATION] !== true)
+    Object.defineProperty(error, MOKLY_CANCELLATION, {
+      enumerable: false,
+      value: true,
+    });
+  return error;
+}
+
+/** Identify only explicitly marked failures and platform AbortError values. */
+export function isCancellation(error: unknown): boolean {
+  if (isMoklyError(error))
+    return (
+      error.cancelled === true ||
+      (error as CancellationCarrier)[MOKLY_CANCELLATION] === true
+    );
+  const platformError =
+    error instanceof Error ||
+    (typeof DOMException !== "undefined" && error instanceof DOMException);
+  return platformError && error.name === "AbortError";
 }
 
 /** Recognize a typed Mokly error from another copy of the consumer runtime. */

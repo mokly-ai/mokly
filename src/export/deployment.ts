@@ -13,11 +13,12 @@ import {
   type ExportShellMetadata,
 } from "./shell_metadata.js";
 
-/** Hash the complete final artifact, then stamp only its authenticated shell roots. */
+/** Hash identity-participating files, then stamp authenticated shell roots. */
 export function finalizeDeployment(
   files: Map<string, ReviewArtifactContent>,
   shells: ReadonlyMap<string, StaticDelivery>,
   aliases: ReadonlyMap<string, string>,
+  publicationMetadata: ReadonlySet<string> = new Set(),
 ): string {
   const catalogueBytes = files.get(CATALOGUE_PATH);
   if (catalogueBytes === undefined)
@@ -41,7 +42,7 @@ export function finalizeDeployment(
     metadata.set(name, shell);
     files.set(name, stampExportShell(shell, STAGED_DEPLOYMENT_ID));
   }
-  const deploymentId = deploymentContentId(files, aliases);
+  const deploymentId = deploymentContentId(files, aliases, publicationMetadata);
   for (const [name, shell] of metadata)
     files.set(name, stampExportShell(shell, deploymentId));
   catalogue.deploymentId = deploymentId;

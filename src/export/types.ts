@@ -18,6 +18,8 @@ export interface ExportAdapter {
   /** Optional stricter config-relative root, pinned for this operation. */
   outputRoot?: string;
   legacyOwnership?: LegacyExportOwnership;
+  /** Root files added by transform that describe publication, not content. */
+  publicationMetadata?: readonly string[];
   transform(
     files: Map<string, ReviewArtifactContent>,
     result: ExportRoutes,

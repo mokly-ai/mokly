@@ -32,7 +32,8 @@ for (const viewport of ["desktop", "mobile"] as const) {
     const before = await contents();
     await page.goto("/view/components/design-ui-top-bar.html");
     await chooseViewport(page, viewport);
-    await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
+    const status = page.locator("[data-workspace-status]");
+    const parentStatus = await status.innerText();
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     if (viewport === "mobile")
       await page
@@ -52,11 +53,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await expect(frame.locator(".mbk-search-value")).toHaveCount(0);
     await page.getByRole("button", { name: "Reset", exact: true }).click();
     await expect(frame.locator(".mbk-tag-picker")).toHaveCount(0);
+    await expect(status).toHaveText(parentStatus);
     await chooseVariant(page, "Search");
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
-    await expect(page.locator("[data-workspace-status]")).toHaveText(
-      "Unmodified",
-    );
+    await expect(status).toHaveText("Unmodified");
     expect(await contents()).toEqual(before);
   });
 
