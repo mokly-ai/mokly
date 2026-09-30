@@ -13,8 +13,8 @@
   Milestones 28–29, and the remote-branch lint was replaced by a workflow
   guard in Milestones 30–31, and the guard's scanner moved into a test helper
   in Milestones 32–33, and the browser shard that exceeded CI's job timeout was
-  rebalanced in Milestones 34–39, and the merge of main's navigation paths
-  and derived routes lands in Milestones 40–41. The remaining open review
+  rebalanced in Milestones 34–39, and main's navigation paths and derived
+  routes were merged in Milestones 40–41. The remaining open review
   findings await the user's decision. The plan stays Active until its pull
   request merges.
 - [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) — replace

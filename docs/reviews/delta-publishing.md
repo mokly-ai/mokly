@@ -1344,3 +1344,120 @@ unit shard" hold. Residual risk: only a doc comment and a contract sentence
 keep the balance test's listings one at a time, and the two unit tests that
 list the real specs land in different CI unit shards only because of the
 current file order.
+
+## Tenth Review
+
+Reviewed on 2026-09-30 with
+[the implementation review prompt](../implementation-review-prompt.md), after
+the merge of `origin/main` `b4314fe` ("feat!: replace collections with
+navigation paths (#123)") was pushed as `cd08836c`, against `origin/main`. One
+independent read-only reviewer replayed the merge in a scratch clone, which
+produced exactly the 21 recorded conflicts, and reviewed all 65 files where the
+committed merge differs from the automatic merge result. Every line main added
+across its 1,028 changed files is present or is a plan-approved change, moved
+paragraph or reconciled wording; a sentence-by-sentence three-way check of 17
+protocol docs found no main sentence dropped and none main deleted brought
+back; and the only file deleted relative to `origin/main` is
+`export-ownership-v1.json`. Main's own CI on `b4314fe` failed its dependency
+audit on `brace-expansion`, which confirms the lockfile bump. Four findings
+follow, one Medium and three Low. None was changed; each awaits the user's
+decision.
+
+1. **P2 / Medium — The doc splits moved rules off the public documentation
+   site's Reference pages.** The npm package ships every protocol doc, but
+   `mokly-guides.md` says the cloud documentation site publishes only seven:
+   export-delivery, export-ownership, upload, upload-exchange, navigation,
+   link-controls and pages; links from those pages to any other protocol doc
+   go to GitHub. To meet the size caps the merge moved main's already-published
+   "Browser Modules" and "Deployment Identity" sections into
+   `mokly-export-browser.md`, and the branch's "Rejections", "Export Files And
+   Limits" and "Receiver Validation" sections into
+   `mokly-upload-validation.md`; neither is on the list. The published pages
+   shrink from 1,799 to 1,612 lines. `mokly-upload-exchange.md` still says it
+   "owns all exchange and receiver behavior", export-ownership's "Upload
+   limits" link now leaves the site, and the guide test's example link
+   `/docs/reference/upload-exchange/#export-files-and-limits` names an anchor
+   that no longer exists (the test ignores anchors). **Impact of no change:**
+   the next release's site sends readers to GitHub for the rules independent
+   receivers must implement and for deployment-identity rules main already
+   published; no test notices. **Options:** **A)** publish both new docs (slugs
+   `upload-validation` and `export-browser`) in `mokly-guides.md` and
+   `REFERENCE_SLUGS`, fix the ownership sentence and the example link, and add
+   a post-merge note for the cloud repository to render them; **B)** re-split so
+   the rules stay on published pages (move export-delivery's Browser
+   Acceptance and upload-exchange's CLI-only Accounting And Output instead);
+   **C)** add a guide test that `REFERENCE_SLUGS` equals the published table
+   and that any doc supplementing a published doc is itself published;
+   **D)** leave it. **Recommended: A plus C** (B instead of A if the cloud team
+   would rather not add pages). The caps will force more splits, and nothing
+   ties a split to the publication list.
+
+2. **P3 / Low — The release-notes coverage command cannot find the entry the
+   merge added.** `npm-release-notes.md` requires naming every commit that
+   `git log --oneline origin/main..HEAD | grep 'feat!'` prints. On `cd08836c`
+   it prints nothing: the plain pattern misses the scoped
+   `52ca8548 feat(publish)!:` commit, although the title rule allows scopes,
+   and the four main commits it lists are no longer reachable because #123 was
+   squash-merged. **Impact of no change:** following the documented command for
+   the next scoped breaking change finds nothing, and its migration note can
+   be skipped. **Options:** **A)** use
+   `grep -E '^[0-9a-f]+ [a-z]+(\([a-z0-9._/-]+\))?!:'`; **B)** A, plus say
+   listed hashes are pre-squash history; **C)** A and B, plus a unit test that
+   the documented pattern matches the title rule's breaking examples;
+   **D)** leave it. **Recommended: C.**
+
+3. **P3 / Low — The cross-copy cancellation test uses a hand-built object, and
+   the README gives the wrong reason cross-copy recognition works.** Mokly code
+   can run as separate copies in one process, where `instanceof` fails across
+   copies. The merge made `isCancellation` use main's brand check and also
+   writes a shared `Symbol.for("mokly.error.cancelled")` property. With two
+   real copies loaded (source and built output), a failure marked in one is
+   classified as cancelled by the other even with the symbol write removed,
+   because the foreign error's own `cancelled` getter checks its own registry;
+   the brand check is what makes it work. The only test builds a plain object
+   with the symbols set by hand, and `src/publish/README.md` credits the
+   symbol. **Impact of no change:** a future change to the brand check could
+   break real cross-copy classification while the test still passes.
+   **Options:** **A)** add a real two-copy test (import `../src/errors.ts`
+   beside `../dist/errors.js`) covering the constructor option and
+   `markCancellation` in both directions, and correct the README; **B)** A,
+   and remove the redundant symbol; **C)** leave it. **Recommended: A.**
+
+4. **P3 / Low — Three small merge leftovers.** (a)
+   `tests/publish_progress.test.ts` still puts `idRoutes: {}` in its fake
+   export routes; main removed that field and the same line from
+   `publish_run.test.ts`, and TypeScript does not flag an untyped local.
+   (b) `scripts/package/ownership.d.mts` declares two of the four functions
+   `ownership.mjs` exports; main added it for a direct import, but the merge
+   kept the branch's dynamic import with a hand-written interface whose types
+   already differ. (c) `mokly-export-safety.md` is titled "Static Export Safety
+   And Public Files", but the public-files section stayed in
+   `mokly-export.md`. **Impact of no change:** misleading test data and
+   headings; a future direct import of the ownership reader would fail type
+   checking. **Options:** **A)** delete `idRoutes` and type the fake routes as
+   `ExportRoutes`, declare all four ownership functions and use main's direct
+   imports, and retitle the safety doc; **B)** A, plus a check that every
+   `.d.mts` matches its module; **C)** leave it. **Recommended: A.**
+
+Effect on earlier open findings: main's 30-minute timeouts and unsharded
+hydration job change ninth-review finding 1 substantially. The four browser
+shards now hold 191, 180, 194 and 158 tests and took 7m04s, 7m03s, 7m57s and
+5m04s on `cd08836c`, and the file-order scenario and its option E no longer
+exist; what remains is that the balance test counts tests rather than minutes
+and nothing bounds the hydration job (218 tests, 10m34s), so option B would
+need to cover it and option C is no longer needed. Ninth-review finding 3 no
+longer applies, because the split files and their helper are gone.
+Ninth-review finding 2 is half fixed: the protocol docs no longer quote the
+mixed-run figures, but the plan still does. Main's size ratchets partly fix
+fifth-review finding 5; three test files remain over 300 lines, outside the
+ratchet's scope.
+
+Tenth-review verification: the four repository ratchets pass; focused tests
+passed 72/72 (guides, CI workflow, protocol size and history, error markers,
+receiver and plan contracts, ownership, cancellation) and 4/4 (shard balance,
+discovery, hydration inventory); 511 relative links and anchors in the 41
+changed Markdown files resolve, with no new broken link across all 216 tracked
+Markdown files; and every job on `cd08836c` passed in CI. Residual risk: the
+reviewer relied on the recorded `cargo xtask check` and CI rather than
+re-running the suites, and nothing bounds how long the growing hydration job
+can take.

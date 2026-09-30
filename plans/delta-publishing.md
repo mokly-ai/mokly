@@ -1341,19 +1341,23 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       the merge-base ratchets, and no npm-running job keys its cache from a
       branch-point lockfile.
 
-## Milestone 41: Merge verification and delivery
+## Milestone 41: Merge verification and delivery — completed
 
-- [ ] Commit the merge locally, run `cargo xtask check --suite repository`
+- [x] Commit the merge locally, run `cargo xtask check --suite repository`
       so main's ratchets compare with the new merge base, and resolve every
       finding.
-- [ ] Run `cargo xtask check`; resolve every failure.
-- [ ] Audit deletions against `origin/main`, push the branch, and confirm
-      every pull request check passes.
-- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] Run `cargo xtask check`; resolve every failure.
+- [x] Audit deletions against `origin/main`, push the branch, and confirm
+      every pull request check passes. Committed as
+      `cd08836c chore: merge main into bogota-v7`; `cargo xtask check`
+      passed (unit 2,813, browser 723, hydration 218) and every check on the
+      pull request passed.
+- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
-      without changing the implementation.
+      without changing the implementation. Four findings (one Medium, three
+      Low) are recorded in its Tenth Review for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
