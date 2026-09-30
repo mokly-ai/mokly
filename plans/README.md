@@ -32,7 +32,8 @@
   [Milestone 31 review](../docs/reviews/imported-css-delivery-milestone-31.md);
   findings 2–4 remain open. Milestone 34 (`583af0a9`) resolves only finding 2 in the
   [Milestone 33 review](../docs/reviews/imported-css-delivery-milestone-33.md);
-  findings 1 and 3 remain open.
+  findings 1 and 3 remain open, as do the two findings in the
+  [Milestone 35 review](../docs/reviews/imported-css-delivery-milestone-35.md).
   Milestone 36 (`d72abaeb`) merged `origin/main` at `0c8245f8` with imported
   CSS, the v7 manifest, v3 read model, aligned comparison panes and delta
   publishing. The full gate passes; the final review remains with the user.

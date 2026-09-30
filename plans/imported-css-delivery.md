@@ -37,7 +37,8 @@ Milestone 32 (`6a02190`) resolves only finding 1 in the
 findings 2–4 remain open for the user's decision. Milestone 34 (`583af0a9`) resolves only
 finding 2 in the
 [Milestone 33 review record](../docs/reviews/imported-css-delivery-milestone-33.md);
-findings 1 and 3 remain open.
+findings 1 and 3 remain open, as do the two findings in the
+[Milestone 35 review record](../docs/reviews/imported-css-delivery-milestone-35.md).
 Milestone 36 (`d72abaeb`) merged `origin/main` at `0c8245f8` before the
 implementation PR. The merged tree retains imported CSS with manifest v7,
 read model v3, aligned comparison panes and delta publishing. Main's removal
@@ -959,10 +960,10 @@ that ships, while retaining every changed-text verification and rejection.
 - [x] Apply one raw-text helper to authored and shipped rule selectors and `@scope` preludes, accepting only byte-identical text before normal comparison.
 - [x] Run mutation and corpus checks, Build, every CSS Modules suite, example Build/Check, lint, typecheck, focused browsers and `cargo xtask check`.
 
-## Milestone 35: Commit, push, and review
+## Milestone 35: Commit, push, and review (complete)
 
 - [x] Commit and push the approved fix and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
-- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Two new findings (both Low) are recorded in the [Milestone 35 review record](../docs/reviews/imported-css-delivery-milestone-35.md) for the user's decision.
 
 ## Milestone 36: Merge latest main (complete)
 
