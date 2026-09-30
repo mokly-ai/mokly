@@ -332,6 +332,15 @@ The complete naming contract is
 to the broader `isCatalogueId` grammar used by tags and logical links;
 `isWindowsDeviceName` exposes that filename check directly.
 
+Tooling that validates component usage calls
+`validateComponentViews(value, components, at, { dark, historical? })` or
+`validateComponentViewRecord(view, components, at, { historicalUsage? })`.
+Both require an options object; use `{}` for a current single-view record.
+Legacy boolean/root-id arguments fail with `ComponentValidationError`, rather
+than enabling historical validation. The
+[usage validation contract](../../docs/protocol/mokly-component-usage-records.md#validation)
+defines the separate historical modes.
+
 ## Server Rendering
 
 `renderViewer` accepts an in-memory catalogue and returns the complete viewer

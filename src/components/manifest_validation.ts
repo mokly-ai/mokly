@@ -34,10 +34,12 @@ export function validateManifestComponentUsage(
       if (components.size)
         validateComponentViews(
           entry.componentViews,
-          (entry.colorSchemes as string[]).includes("dark"),
           components,
           String(entry.id),
-          historical,
+          {
+            dark: (entry.colorSchemes as string[]).includes("dark"),
+            historical,
+          },
         );
       else if (entry.componentViews !== undefined)
         invalidData(
@@ -51,12 +53,9 @@ export function validateManifestComponentUsage(
     const parent = components.get(entry.variantOf);
     if (!parent) continue;
     validateVariantAgainstParent(entry, parent);
-    validateComponentViews(
-      entry.componentViews,
-      (entry.colorSchemes as string[]).includes("dark"),
-      components,
-      String(entry.id),
+    validateComponentViews(entry.componentViews, components, String(entry.id), {
+      dark: (entry.colorSchemes as string[]).includes("dark"),
       historical,
-    );
+    });
   }
 }

@@ -164,7 +164,7 @@ function validateViews(
         },
         components,
         entry.id,
-        historical,
+        { historicalUsage: historical },
       );
   }
 }

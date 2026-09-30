@@ -15,16 +15,33 @@ import { validateComponentSource } from "./source.js";
 import { sortedStrings } from "./validation_helpers.js";
 import { validateViewReferences } from "./view_references.js";
 
+export interface ComponentViewsValidationOptions {
+  dark: boolean;
+  historical?: boolean;
+}
+
+export interface ComponentViewValidationOptions {
+  historicalUsage?: boolean;
+}
+
 export function validateComponentViews(
   value: unknown,
-  dark: boolean,
   components: ReadonlyMap<
     string,
     Pick<ManifestComponent, "propSchema" | "slots">
   >,
   at: string,
-  historical = false,
+  options: ComponentViewsValidationOptions,
 ): asserts value is readonly ComponentViewRecord[] {
+  if (arguments.length !== 4 || typeof at !== "string")
+    invalidData(
+      "$componentViews",
+      "expected components, path and options object",
+    );
+  validateOptions(options, ["dark", "historical"], `${at}.options`);
+  if (typeof options.dark !== "boolean")
+    invalidData(`${at}.options.dark`, "expected a boolean");
+  const { dark, historical = false } = options;
   const axes = ["mobile", "desktop"].flatMap((viewport) =>
     (dark ? ["light", "dark"] : ["light"]).map(
       (scheme) => `${viewport}/${scheme}`,
@@ -34,6 +51,18 @@ export function validateComponentViews(
     invalidData(at, "componentViews must record every available view");
   value.forEach((view, i) => {
     const record = view as Record<string, unknown>;
+    exactKeys(
+      record,
+      [
+        "viewport",
+        "colorScheme",
+        "instances",
+        "slots",
+        "ranges",
+        ...(historical ? ["styles", "resources"] : []),
+      ],
+      at,
+    );
     if (historical)
       for (const key of ["styles", "resources"])
         if (Object.hasOwn(record, key)) {
@@ -41,11 +70,6 @@ export function validateComponentViews(
             invalidData(at, `historical ${key} must be an array`);
           Reflect.deleteProperty(record, key);
         }
-    exactKeys(
-      record,
-      ["viewport", "colorScheme", "instances", "slots", "ranges"],
-      at,
-    );
     if (`${String(view.viewport)}/${String(view.colorScheme)}` !== axes[i])
       invalidData(at, "view axes must be unique and ordered");
     for (const field of ["instances", "slots", "ranges"])
@@ -55,6 +79,7 @@ export function validateComponentViews(
       view as unknown as ComponentViewRecord,
       components,
       `${at} / ${axes[i]}`,
+      {},
     );
   });
 }
@@ -67,8 +92,15 @@ export function validateComponentViewRecord(
     Pick<ManifestComponent, "propSchema" | "slots">
   >,
   at: string,
-  historicalUsage = false,
+  options: ComponentViewValidationOptions,
 ): void {
+  if (arguments.length !== 4 || typeof at !== "string")
+    invalidData(
+      "$componentView",
+      "expected components, path and options object",
+    );
+  validateOptions(options, ["historicalUsage"], `${at}.options`);
+  const { historicalUsage = false } = options;
   for (const instance of view.instances) {
     exactKeys(
       instance,
@@ -151,6 +183,17 @@ export function validateComponentViewRecord(
     at,
     historicalUsage,
   );
+}
+
+function validateOptions(
+  value: unknown,
+  fields: readonly string[],
+  at: string,
+): void {
+  exactKeys(value, fields, at);
+  for (const field of Object.keys(value))
+    if (typeof value[field] !== "boolean")
+      invalidData(`${at}.${field}`, "expected a boolean");
 }
 
 function validateOwner(

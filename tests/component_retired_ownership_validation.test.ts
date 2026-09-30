@@ -8,6 +8,7 @@ import {
   parseManifest,
 } from "../dist/registry/manifest.js";
 import {
+  ComponentValidationError,
   encodeProps,
   reviewMaterialKey,
   slotKey,
@@ -16,6 +17,31 @@ import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+
+test("historical v7 null view records fail with typed plain-object validation", async (context) => {
+  const fixture = await createFixture(componentEntrySource());
+  context.after(() => removeFixture(fixture));
+  const original = (await compileCatalogue(await loadConfig(fixture.root)))
+    .manifest;
+  for (const kind of ["screen", "variant"] as const) {
+    const value = structuredClone(original);
+    const entry = value.entries.find((entry) =>
+      kind === "screen"
+        ? entry.kind === "screen"
+        : entry.kind === "component" && "variantOf" in entry,
+    )!;
+    assert.ok("componentViews" in entry);
+    Object.assign(entry.componentViews!, { 0: null });
+    assert.throws(
+      () => parseHistoricalManifest(value),
+      (error) => {
+        assert.ok(error instanceof ComponentValidationError);
+        assert.equal(error.detail, "expected a plain object");
+        return true;
+      },
+    );
+  }
+});
 
 test("historical v7 retirement keeps instance props and slot validation strict", async (context) => {
   const fixture = await createFixture(componentEntrySource());

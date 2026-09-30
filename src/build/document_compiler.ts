@@ -182,7 +182,7 @@ export class DocumentCompiler {
     const view = componentViews.get(route);
     if (view) {
       validateComponentRanges(html, view.ranges);
-      validateComponentViewRecord(view, this.components, route);
+      validateComponentViewRecord(view, this.components, route, {});
     }
     const prepared = {
       route,

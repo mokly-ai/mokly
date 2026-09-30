@@ -130,3 +130,16 @@ incorrect ordering, duplicate records, invalid source locations, and owners
 absent from the view. Optional
 invocation source is secondary metadata and never enters keys, props hashes, or
 Changes projections.
+
+The public `@mokly/viewer/data` validators require an explicit options object:
+`validateComponentViews(value, components, at, { dark, historical? })` checks
+the complete axis-ordered view list; `dark` is required and `historical` defaults
+to false. `validateComponentViewRecord(view, components, at, { historicalUsage? })`
+checks one record; `historicalUsage` defaults to false, so pass `{}` for current
+usage. Only `historical` admits the retired arrays above; `historicalUsage` is
+the distinct public-catalogue mode, never a manifest-admission option.
+Options must be plain objects with only the named boolean-valued fields.
+Missing options, positional booleans/root ids, unknown keys, non-booleans and
+extra arguments fail with `ComponentValidationError` before record mutation.
+Historical retirement validates a plain view object before inspecting keys;
+a null view fails with the same typed plain-object diagnostic as current usage.

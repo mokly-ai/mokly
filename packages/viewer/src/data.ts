@@ -90,6 +90,10 @@ export {
   validateComponentViews,
   validateComponentViewRecord,
 } from "./components/view_validation.js";
+export type {
+  ComponentViewsValidationOptions,
+  ComponentViewValidationOptions,
+} from "./components/view_validation.js";
 export { generatedViews, fragmentViews } from "./components/views.js";
 export type { GeneratedComponentView } from "./components/views.js";
 export type {

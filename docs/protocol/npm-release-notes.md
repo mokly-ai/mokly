@@ -6,13 +6,12 @@ Before a close-out commit, `npm-release-notes.md` must name every `feat!`
 commit returned by
 `git log --oneline origin/main..HEAD | grep 'feat!'`. The current coverage is:
 
-- `7aba5ec2 feat!: replace collections with navigation paths` — the navigation
-  path note below;
-- `d227702e feat!: close out id-derived routes plan` — the identity note;
-- `40ab4324 feat!: drop comparisons against older baselines` — the comparison
-  baseline note; and
-- `c16926ba feat!: close out id-derived routes review fixes` — the baseline and
-  viewer host notes.
+- `f439de0c feat!: infer inline style ownership` — the renderer ownership
+  note below.
+
+The navigation, identity, baseline and viewer-host notes also cover the
+changes integrated from main's squash; its pre-squash commits are not ancestors
+of this branch and do not appear in the coverage command.
 
 ## Breaking Navigation Path Upgrade Release Note
 
@@ -112,19 +111,27 @@ and becomes `{ screenId, snapshotId?, fragment?, navigation? }`. Its optional
 `snapshotId` is present only when the committed historical record publishes an
 opaque identity.
 
-Release notes and the close-out commit use a `BREAKING CHANGE:` footer naming
-the applicable upgrades above; the release PR owns versions and changelogs.
-
 ## Breaking Renderer Ownership Release Note
 
 Custom renderers return only the complete HTML string. Remove object-shaped
-`RenderResult` returns and the released `ComponentStyleOwnership` and
-`ComponentResourceOwnership` types from `@mokly/mokly` and `@mokly/viewer`
-imports. Remove `styles` and `resources` from current usage records: Mokly
+`RenderResult` returns and its type from `@mokly/mokly` imports. The released
+`ComponentStyleOwnership` and `ComponentResourceOwnership` types were removed
+from `@mokly/viewer/data` as well as the root viewer and Mokly exports.
+Remove `styles` and `resources` from current usage records: Mokly
 infers inline-rule ownership and uses declared `ownedDependencies` for files.
 Historical v7 readers discard array-valued retired keys without weakening
 other validation; the current manifest remains v7.
 
-`validateComponentViewRecord` removes its obsolete component-root argument.
-Its optional fourth `historicalUsage` argument is only for validated historical
-catalogue usage, not for admitting historical manifest records.
+Both `@mokly/viewer/data` validators remove positional booleans and obsolete
+component-root arguments. Use
+`validateComponentViews(value, components, at, { dark, historical? })` and
+`validateComponentViewRecord(view, components, at, { historicalUsage? })`.
+The fourth options object is required; pass `{}` for current single-view usage.
+`historical` defaults to false and is only for historical manifest retirement;
+`historicalUsage` defaults to false and is only for already-admitted historical
+catalogue usage, never for accepting retired manifest keys. The
+[usage validation contract](./mokly-component-usage-records.md#validation)
+defines strict option shapes and the typed rejection of old calls.
+
+Release notes and the close-out commit use a `BREAKING CHANGE:` footer naming
+the applicable upgrades above; the release PR owns versions and changelogs.
