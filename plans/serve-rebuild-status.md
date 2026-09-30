@@ -282,9 +282,16 @@ then recovered is reported as a source failure, showing a false notice.
       through watched Serve, confirming that only the source failure reaches
       browser status and the delivery error is reported once in the terminal.
 - [x] Update `src/server/README.md`; run `cargo xtask check`; commit and push.
-- [ ] Review: after the push, use `docs/implementation-review-prompt.md`
+- [x] Review: after the push, use `docs/implementation-review-prompt.md`
       against `origin/main` and report numbered findings with severity,
       impact and lettered options, without changing the implementation.
+      Reviewed at `453db854`: no findings in the Milestone 8 phase split, and
+      one Medium finding in Milestone 7, confirmed against the code and
+      reported to the user for a decision: an installed package that imports
+      a linked repository workspace package is neither recorded nor
+      classified, so that repository file still resolves from disk and an
+      accepted generation's Live bundle can change or fail after it is edited
+      or deleted.
 
 ## Post-merge follow-up (non-blocking)
 
