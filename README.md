@@ -3,7 +3,9 @@
 </p>
 
 <p align="center">
-  <strong>Build browsable, reviewable mockup catalogues from real React components.</strong>
+  <strong>
+    Build browsable, reviewable mockup catalogues from real React components.
+  </strong>
 </p>
 
 <p align="center">
@@ -21,21 +23,22 @@
 </p>
 
 Mokly is an open-source TypeScript toolkit for turning React-authored product
-screens into a searchable static catalogue. It renders the components and
-themes from your repository, presents every screen at mobile and desktop
-sizes, and shows which screens changed from a Git baseline.
+screens into a searchable static catalogue. It renders the components and themes
+from your repository, presents every screen at mobile and desktop sizes, and
+shows which screens changed from a Git baseline.
 
-Run Mokly locally while you build, export the same catalogue as static files,
-or embed its viewer in another React application. Local Serve and static exports
+Run Mokly locally while you build, export the same catalogue as static files, or
+embed its viewer in another React application. Local Serve and static exports
 share the standalone presentation, whose single Auto/Light/Dark Appearance
 selector changes the interface and previews together. Embedded hosts render the
-same shell but choose its interface appearance independently with `theme`.
-The Dark interface uses warm neutral surfaces aligned with Mokly Cloud.
-Mokly owns the catalogue; your repository keeps ownership of its UI, data,
-styling, and rendering context.
+same shell but choose its interface appearance independently with `theme`. The
+Dark interface uses warm neutral surfaces aligned with Mokly Cloud. Mokly owns
+the catalogue; your repository keeps ownership of its UI, data, styling, and
+rendering context.
 
-> Mokly is pre-1.0. The package is [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly)
-> and the executable is `mokly`.
+> Mokly is pre-1.0. The package is
+> [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly) and the
+> executable is `mokly`.
 
 ## Why Mokly
 
@@ -60,9 +63,9 @@ styling, and rendering context.
 
 ### 1. Install
 
-Mokly requires Node.js 22.14 or newer, except Node 24.14 through 24.18.
-The supported range is `>=22.14.0 <24.14.0 || >=24.19.0`. You also need npm 11
-and React 19 or newer.
+Mokly requires Node.js 22.14 or newer, except Node 24.14 through 24.18. The
+supported range is `>=22.14.0 <24.14.0 || >=24.19.0`. You also need npm 11 and
+React 19 or newer.
 
 ```bash
 npm install --save-dev @mokly/mokly react react-dom
@@ -116,9 +119,9 @@ export const mockups = [
 
 Replace the example `<main>` nodes with your product components, then list their
 source files or directories in `dependencies`. An entry file ends in
-`.mockup.ts` or `.mockup.tsx` and exports a `mockups` array. Mokly derives
-every route from the id: this screen lives at `screens/account-home.html`,
-with one generated view per viewport and color scheme beside it.
+`.mockup.ts` or `.mockup.tsx` and exports a `mockups` array. Mokly derives every
+route from the id: this screen lives at `screens/account-home.html`, with one
+generated view per viewport and color scheme beside it.
 
 Mokly derives generated output by default. Keep its HTML, manifest, and cache
 out of Git:
@@ -130,7 +133,8 @@ docs/mockups/generated/mokly-manifest.json
 ```
 
 Current output uses manifest v7, and comparison-base output must do the same.
-Earlier baselines leave Changes unavailable until the base includes this version; see
+Earlier baselines leave Changes unavailable until the base includes this
+version; see
 [baseline compatibility](./docs/protocol/mokly-baseline-compatibility.md).
 
 ### 4. Open the catalogue
@@ -140,8 +144,8 @@ npx --no-install mokly --open
 ```
 
 The development server prints its URL, renders previews on demand, watches
-authored inputs, and prepares Git change evidence in the background. The
-default port is `4173`; use `--port 0` to choose any available port.
+authored inputs, and prepares Git change evidence in the background. The default
+port is `4173`; use `--port 0` to choose any available port.
 
 When the first screen is working, continue with the guides for
 [theming and configuration](./docs/guides/authoring/config.md),
@@ -237,9 +241,9 @@ self-hosted receivers.
 
 Use `@mokly/mokly` to create and deliver a catalogue. Use `@mokly/viewer` when
 another React application owns the surrounding navigation, branding,
-authentication, or discussion experience. Embedded viewer roots accept
-`theme` independently from `selection.colorScheme`, so hosts can pair any
-interface appearance with any preview scheme. See the
+authentication, or discussion experience. Embedded viewer roots accept `theme`
+independently from `selection.colorScheme`, so hosts can pair any interface
+appearance with any preview scheme. See the
 [viewer appearance contract](./docs/protocol/mokly-viewer-appearance.md) and
 [semantic palette](./docs/protocol/mokly-viewer-palette.md).
 
@@ -257,9 +261,9 @@ interface appearance with any preview scheme. See the
 - [Implementation plans](./plans/README.md)
 - [Changelog](./CHANGELOG.md)
 
-The guides are user-facing and ship with the npm package. The protocol
-documents are the detailed implementation contracts used to keep the CLI,
-viewer, generated output, and tests aligned.
+The guides are user-facing and ship with the npm package. The protocol documents
+are the detailed implementation contracts used to keep the CLI, viewer,
+generated output, and tests aligned.
 
 ## Develop Mokly
 
@@ -276,9 +280,10 @@ npm run example:build
 npm run dev
 ```
 
-`npm run dev` serves the synthetic consumer in [`examples/basic`](./examples/basic/README.md)
-and watches its entries, renderer, and stylesheets. Changes to Mokly's own
-`src/` files require restarting the command so the CLI is rebuilt.
+`npm run dev` serves the synthetic consumer in
+[`examples/basic`](./examples/basic/README.md) and watches its entries,
+renderer, and stylesheets. Changes to Mokly's own `src/` files require
+restarting the command so the CLI is rebuilt.
 
 Run the complete repository gate before submitting a change:
 
@@ -287,8 +292,9 @@ cargo xtask check
 ```
 
 That command runs formatting, linting, type checks, unit and integration tests,
-packed-package smoke tests, browser tests, dependency checks, and Rust checks.
-See the [xtask README](./xtask/README.md) for focused suites. Hosted CI runs the
+packed-package smoke tests, sharded browser coverage, the separate hydration
+suite, dependency checks, and Rust checks. See the
+[xtask README](./xtask/README.md) for focused suites. Hosted CI runs the
 functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
@@ -309,14 +315,17 @@ merge.
 - [`src/baseline/compatibility.ts`](./src/baseline/compatibility.ts) and
   [`src/server/classification_result.ts`](./src/server/classification_result.ts)
   — the typed earlier-baseline outcome from admission through Serve.
-- [`src/cli`](./src/cli/README.md) — command parsing, reporting, and composition.
-- [`src/server`](./src/server/README.md) — local HTTP server and watched runtime.
+- [`src/cli`](./src/cli/README.md) — command parsing, reporting, and
+  composition.
+- [`src/server`](./src/server/README.md) — local HTTP server and watched
+  runtime.
 - [`src/server/http_request_handler.ts`](./src/server/http_request_handler.ts) —
   request dispatch against the server's current accepted snapshot.
 - [`src/review`](./src/review/README.md) — Git baselines, comparison, and change
   attribution.
 - [`src/review/component_variant_classification.ts`](./src/review/component_variant_classification.ts)
-  and [`component_classification_sources.ts`](./src/review/component_classification_sources.ts)
+  and
+  [`component_classification_sources.ts`](./src/review/component_classification_sources.ts)
   — flat variant classification and review-result assembly.
 - [`src/review/artifact_files.ts`](./src/review/artifact_files.ts) and
   [`component_classification_entries.ts`](./src/review/component_classification_entries.ts)

@@ -50,19 +50,22 @@ test("release evidence constants match the CI job and artifact namespace", async
     String(profile?.run),
     /verification-runtimes=node-22\.14\.0,node-24/,
   );
-  for (const jobName of ["unit", "browser"]) {
+  for (const jobName of ["unit", "browser", "hydration"]) {
     const upload = workflow.jobs[jobName]?.steps.find((step) =>
       step.name?.startsWith("Retain "),
     );
     assert.equal(typeof upload?.with?.name, "string");
     assert.match(String(upload?.with?.name), VERIFICATION_ARTIFACT_PATTERN);
   }
-  const expectedReports = ["unit", "browser"].reduce((total, jobName) => {
-    const matrix = workflow.jobs[jobName]?.strategy?.matrix;
-    return (
-      total +
-      RELEASE_VERIFICATION_RUNTIMES.length * (matrix?.shard?.length ?? 0)
-    );
-  }, 0);
+  const expectedReports = ["unit", "browser", "hydration"].reduce(
+    (total, jobName) => {
+      const matrix = workflow.jobs[jobName]?.strategy?.matrix;
+      return (
+        total +
+        RELEASE_VERIFICATION_RUNTIMES.length * (matrix?.shard?.length ?? 1)
+      );
+    },
+    0,
+  );
   assert.equal(expectedReports, VERIFICATION_REPORT_COUNT);
 });

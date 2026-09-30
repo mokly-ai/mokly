@@ -63,6 +63,7 @@
     "test": "npm run prepare:verification && node scripts/verification/run-unit-dev.mjs",
     "test:browser": "npm run prepare:verification && playwright test",
     "test:browser:prepared": "node scripts/verification/run-browser.mjs",
+    "test:hydration:prepared": "node scripts/verification/run-browser.mjs --suite hydration",
     "test:prepared": "node scripts/verification/run-unit.mjs",
     "typecheck": "npm run build && npm run typecheck:prepared",
     "typecheck:prepared": "node scripts/verification/prepared.mjs package && tsc --project tsconfig.json --noEmit && npm run typecheck --workspace @mokly/viewer"

@@ -44,6 +44,8 @@ fn complete_gate_is_the_ordered_union_of_every_suite() {
             "npm run test:prepared",
             "npm run prepare:verification",
             "npm run test:browser:prepared",
+            "npm run prepare:verification",
+            "npm run test:hydration:prepared",
         ]
     );
 }
@@ -69,6 +71,20 @@ fn selected_unit_shard_prepares_then_propagates_the_shard() {
     .expect("unit suites support shards");
 
     runner.run(request).expect("selected shard succeeds");
+}
+
+#[test]
+fn selected_hydration_suite_prepares_then_runs_its_project() {
+    assert_eq!(
+        commands_for(VerificationSuite::Hydration, None)
+            .iter()
+            .map(|command| command.display())
+            .collect::<Vec<_>>(),
+        [
+            "npm run prepare:verification",
+            "npm run test:hydration:prepared",
+        ]
+    );
 }
 
 #[test]
@@ -182,6 +198,7 @@ fn shard_requires_a_supported_selected_suite() {
     for suite in [
         Some(VerificationSuite::Repository),
         Some(VerificationSuite::Package),
+        Some(VerificationSuite::Hydration),
     ] {
         assert!(matches!(
             CheckRequest::new(suite, Some(shard)),

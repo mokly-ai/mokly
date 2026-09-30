@@ -2,11 +2,17 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { readReport } from "./evidence.mjs";
-import { validateShardReports } from "./report-validation.mjs";
+import {
+  validatePlaywrightPartition,
+  validateShardReports,
+  validateUnshardedReport,
+} from "./report-validation.mjs";
 
 const RUNTIME_PROFILES = [["node-22.14.0"], ["node-22.14.0", "node-24"]];
-const SUITES = ["unit", "browser"];
+const SHARDED_SUITES = ["unit", "browser"];
+const SUITES = [...SHARDED_SUITES, "hydration"];
 const SHARDS = 4;
+const REPORTS_PER_RUNTIME = SHARDED_SUITES.length * SHARDS + 1;
 
 export function validateCiReports(reports, commit, runtimes) {
   if (!/^[a-f0-9]{40}$/.test(commit))
@@ -15,16 +21,17 @@ export function validateCiReports(reports, commit, runtimes) {
   const expectedKeys = new Set(
     SUITES.flatMap((suite) => runtimes.map((runtime) => `${suite}:${runtime}`)),
   );
-  if (reports.length !== expectedKeys.size * SHARDS)
+  const expectedReports = runtimes.length * REPORTS_PER_RUNTIME;
+  if (reports.length !== expectedReports)
     throw new Error(
-      `missing or extra CI evidence: expected ${expectedKeys.size * SHARDS} reports`,
+      `missing or extra CI evidence: expected ${expectedReports} reports`,
     );
   for (const report of reports) {
     const key = `${report.suite}:${report.runtime}`;
     if (!expectedKeys.has(key))
       throw new Error(`unexpected CI evidence group ${key}`);
   }
-  for (const suite of SUITES) {
+  for (const suite of SHARDED_SUITES) {
     for (const runtime of runtimes) {
       const group = reports.filter(
         (report) => report.suite === suite && report.runtime === runtime,
@@ -44,6 +51,31 @@ export function validateCiReports(reports, commit, runtimes) {
           },
         );
       }
+    }
+  }
+  for (const runtime of runtimes) {
+    const browser = reports.filter(
+      (report) => report.suite === "browser" && report.runtime === runtime,
+    );
+    const hydration = reports.filter(
+      (report) => report.suite === "hydration" && report.runtime === runtime,
+    );
+    if (hydration.length !== 1)
+      throw new Error(
+        `hydration ${runtime} evidence failed: expected exactly one report`,
+      );
+    try {
+      validateUnshardedReport(hydration[0], {
+        commit,
+        runtime,
+        suite: "hydration",
+      });
+      validatePlaywrightPartition(browser, hydration[0]);
+    } catch (error) {
+      throw new Error(
+        `hydration ${runtime} evidence failed: ${error.message}`,
+        { cause: error },
+      );
     }
   }
 }
@@ -90,7 +122,7 @@ if (
     0,
   );
   process.stdout.write(
-    `Validated ${reports.length} shard reports with ${totalTests} observed test results.\n`,
+    `Validated ${reports.length} verification reports with ${totalTests} observed test results.\n`,
   );
 }
 

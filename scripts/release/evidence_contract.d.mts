@@ -37,6 +37,7 @@ export interface VerificationReport {
   commit?: string;
   suite?: string;
   fullFiles?: string[];
+  playwrightFiles?: string[];
   [key: string]: unknown;
 }
 
@@ -88,6 +89,7 @@ export function classifyEvidence(
     taggedTree: string;
     evidenceTree: string;
     liveUnitFiles: readonly string[];
+    liveBrowserFiles: readonly string[];
   },
   validateReports: (
     reports: readonly unknown[],

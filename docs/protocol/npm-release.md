@@ -4,9 +4,10 @@ Breaking-change notes: [npm release notes](./npm-release-notes.md).
 
 ## Package Metadata
 
-`package.json` describes public ESM package `@mokly/mokly`: managed version,
-MIT license, Mokly authorship, exact repository metadata, Node range
-`>=22.14.0 <24.14.0 || >=24.19.0`, `mokly` bin, exports, types, and file allowlist.
+`package.json` describes public ESM package `@mokly/mokly`: managed version, MIT
+license, Mokly authorship, exact repository metadata, Node range
+`>=22.14.0 <24.14.0 || >=24.19.0`, `mokly` bin, exports, types, and file
+allowlist.
 
 Read the checkout's version from `package.json`; `.release-please-manifest.json`
 tracks release-please's version state, and `package-lock.json` mirrors package
@@ -14,54 +15,52 @@ metadata. Release PRs update these together. The completed one-time
 [registry bootstrap](./npm-bootstrap.md) registered `@mokly/mokly@0.8.0` without
 changing those release-managed files. It is the accepted initial `latest`
 release and also retains the `bootstrap` tag. Do not repeat the bootstrap
-publication; later reviewed releases advance `latest` through the normal
-release workflow.
+publication; later reviewed releases advance `latest` through the normal release
+workflow.
 
-`publishConfig` targets the public npm registry with public access. The CLI package
-contains compiled runtime code, declarations, private host modules,
+`publishConfig` targets the public npm registry with public access. The CLI
+package contains compiled runtime code, declarations, private host modules,
 README, LICENSE, CHANGELOG, package metadata, `docs/guides`, and
 `docs/protocol`. The CLI guides and protocol documents ship with the exact
-package version so the cloud documentation site and independent upload
-receivers can implement that release's documented boundaries. Source fixtures,
-tests, plans, caches, review artifacts and generated demo output are not
-published.
+package version so the cloud documentation site and independent upload receivers
+can implement that release's documented boundaries. Source fixtures, tests,
+plans, caches, review artifacts and generated demo output are not published.
 
-The repository also builds the `@mokly/viewer` workspace, initially version 0.1.0. Its
-MIT ESM distribution owns shell assets, public data readers, adapters, React
-mounting and Node-only SSR. The CLI declares an exact registry version dependency.
-Root build, clean, formatting, lint, typecheck and package gates cover both
-packages. Pack the viewer first; local smoke and release fixtures install both
-tarballs explicitly so an unpublished viewer is never resolved from the registry.
-Consumer fixtures exercise every public viewer entry, SSR of the
-[public v3 fixture](./fixtures/catalogue-v3.json) in
+The repository also builds the `@mokly/viewer` workspace, initially version
+0.1.0. Its MIT ESM distribution owns shell assets, public data readers,
+adapters, React mounting and Node-only SSR. The CLI declares an exact registry
+version dependency. Root build, clean, formatting, lint, typecheck and package
+gates cover both packages. Pack the viewer first; local smoke and release
+fixtures install both tarballs explicitly so an unpublished viewer is never
+resolved from the registry. Consumer fixtures exercise every public viewer
+entry, SSR of the [public v3 fixture](./fixtures/catalogue-v3.json) in
 `scripts/package/viewer.mjs` (`smokeViewer`), browser bundle boundaries and
-NodeNext declarations. Both manifests,
-packed metadata, export targets, allowlists, licenses, React peers and the exact
-viewer dependency are checked. Packed dependencies cannot use `workspace:` or
-`file:` links; local links exist only in the test consumer's install manifest.
-Archive regressions exercise the checkout version and several later viewer
-versions; intentionally mismatched dependencies are derived from each packed
-viewer's actual version, so future release PRs cannot invalidate the test.
+NodeNext declarations. Both manifests, packed metadata, export targets,
+allowlists, licenses, React peers and the exact viewer dependency are checked.
+Packed dependencies cannot use `workspace:` or `file:` links; local links exist
+only in the test consumer's install manifest. Archive regressions exercise the
+checkout version and several later viewer versions; intentionally mismatched
+dependencies are derived from each packed viewer's actual version, so future
+release PRs cannot invalidate the test.
 
-Runtime dependencies are intentional and minimal. Mokly does not take a
-runtime dependency on consumer applications, their component systems, or
-Playwright. Development and browser-test packages remain development
-dependencies.
-The exporter's Koffi dependency supplies OS-enforced exclusive directory rename;
-its optional platform binaries must remain available for export. The native
-bridge is lazy and does not load for build/check/serve or help.
-The standalone CSS rule parser uses the production `lightningcss` dependency.
-Keep its optional native packages installed: Linux x64 glibc, macOS arm64/x64,
-and Windows x64 binaries cover the CI runners. Its Node floor is below Mokly's
-22.14 floor. The installed Node package has no automatic WASM fallback;
-upstream's separate `lightningcss-wasm` package is not a Mokly dependency.
-Publish uses `tar-stream` to encode finalized export bytes as portable USTAR/PAX
-without invoking a platform tar executable or walking the output again.
+Runtime dependencies are intentional and minimal. Mokly does not take a runtime
+dependency on consumer applications, their component systems, or Playwright.
+Development and browser-test packages remain development dependencies. The
+exporter's Koffi dependency supplies OS-enforced exclusive directory rename; its
+optional platform binaries must remain available for export. The native bridge
+is lazy and does not load for build/check/serve or help. The standalone CSS rule
+parser uses the production `lightningcss` dependency. Keep its optional native
+packages installed: Linux x64 glibc, macOS arm64/x64, and Windows x64 binaries
+cover the CI runners. Its Node floor is below Mokly's 22.14 floor. The installed
+Node package has no automatic WASM fallback; upstream's separate
+`lightningcss-wasm` package is not a Mokly dependency. Publish uses `tar-stream`
+to encode finalized export bytes as portable USTAR/PAX without invoking a
+platform tar executable or walking the output again.
 
 ## Local Verification
 
-`cargo xtask check` is the complete repository and release gate. It delegates
-to npm scripts and includes:
+`cargo xtask check` is the complete repository and release gate. It delegates to
+npm scripts and includes:
 
 - a live audit of all workspace dependency categories, failing on any known
   advisory or registry error;
@@ -77,7 +76,8 @@ to npm scripts and includes:
 - a production-dependency audit of the freshly resolved packed ESM consumer;
 - local-npx and clean-cache npx-style execution from the packed artifact;
 - consumer exports from the installed CLI, including custom configs/bases,
-  cross-platform renderers, registered pages, and the compiled static client graph;
+  cross-platform renderers, registered pages, and the compiled static client
+  graph;
 - installed `publish` uploads with and without comparisons to a local receiver,
   inspecting the gzip tarball, documented metadata and exact exported bytes;
 - source-tree ESM, declaration, CLI, workspace-resolution, server, Review, and
@@ -89,14 +89,14 @@ to npm scripts and includes:
 Tests that mutate files use isolated temporary directories and clean up child
 processes. Package smokes execute the packed artifact, not the source tree or a
 workspace symlink. Historical cross-repository parity audits are release
-evidence rather than recurring CI dependencies on other repositories.
-The independent suite and shard commands, including their complete command
-mapping and fail-closed inventory evidence, are defined by the
-[CI verification contract](./ci-verification.md). Selected suites and shards
-are partial checks; the unqualified command remains the complete release gate.
-The release workflow's `complete` verification mode runs this command directly.
-Its default `evidence` mode may instead consume a validated aggregate that
-proves the same tree under the
+evidence rather than recurring CI dependencies on other repositories. The
+independent suite and shard commands, including their complete command mapping
+and fail-closed inventory evidence, are defined by the
+[CI verification contract](./ci-verification.md). Selected suites and shards are
+partial checks; the unqualified command remains the complete release gate. The
+release workflow's `complete` verification mode runs this command directly. Its
+default `evidence` mode may instead consume a validated aggregate that proves
+the same tree under the
 [release verification evidence contract](./npm-release-evidence.md).
 
 Browser assertions that depend on a navigated preview's layout wait for the
@@ -110,31 +110,12 @@ must continue to exercise pending states and command-to-preview timings.
 
 ## Continuous Integration
 
-`.github/workflows/ci.yml` runs on pull requests and pushes to `main`, with
-read-only repository contents permission and concurrency cancellation for
-superseded validation. An audit-first repository job gates independent package
-jobs, four unit shards, four browser shards, and focused macOS/Windows native
-jobs. Ordinary pull requests and `main` pushes run the functional suites on the
-minimum supported Node 22.14 runtime. Same-repository Release Please pull
-requests add Node 24 to every functional suite, while the shared repository job
-resolves the latest Node 24 patch for every event. An explicit capture step
-passes that exact patch to every selected Node 24 job. Chromium is installed
-only by browser jobs. Every npm-running job installs npm 11.7.0 and runs
-`npm ci`. CI caches only npm downloads and includes the merge-base lockfile in
-cache keys for jobs that build historical baselines.
-
-The stable `Required CI` branch-rule status fails unless every prerequisite
-result is exactly successful and the event-selected eight or sixteen
-unit/browser reports prove the expected commit, runtimes, shards, and complete
-test inventories. Only a same-repository branch with the Release Please prefix
-or autorelease label can select the dual-runtime profile. Stable report artifact
-names support failed-job and whole-workflow reruns by replacing each shard's
-evidence; browser traces remain attempt-specific. Full Git history is available
-where baseline resolution requires `origin/main`. Action revisions are
-immutable commit hashes with reviewed version comments, runtime versions are
-explicit, and fork pull requests receive no release secrets or write
-permissions. The [CI verification contract](./ci-verification.md) defines the
-complete graph, evidence, caching, and failure semantics.
+The hosted job graph, trusted runtime profiles, checkout ownership, 30-minute
+timeouts, and stable branch-rule status follow the
+[CI workflow graph contract](./ci-workflow.md). Suite ownership and report
+completeness follow the [CI verification contract](./ci-verification.md).
+Release publishing accepts only the dual-runtime profile under the
+[release verification evidence contract](./npm-release-evidence.md).
 
 ## Preview Deployments
 
@@ -155,8 +136,8 @@ Both tags must identify the same reviewed release commit.
 
 The root component also owns the literal documentation version in
 `docs/guides/start/install.md` and `docs/guides/ci/github-action.md` through
-`generic` `extra-files`. Each version-bearing region is bounded by the
-Release Please HTML markers defined in the
+`generic` `extra-files`. Each version-bearing region is bounded by the Release
+Please HTML markers defined in the
 [guides contract](./mokly-guides.md#versions-and-releases). Release PRs update
 those literals with the root package version; root tests reject drift.
 
@@ -167,13 +148,13 @@ than applying a conventional bump to the 0.0.0 marker. The working viewer
 package is already 0.1.0 so clean local workspace installs can resolve the CLI's
 exact dependency before that release. Subsequent release PRs own both package
 versions; the initial-version setting is ignored after a release exists, and no
-runtime or packaging gate may remain hardcoded to 0.1.0.
-`bump-minor-pre-major` keeps breaking pre-1.0 changes on the minor stream.
-The requested 0.8.0 → 0.9.0 CLI pairing was overtaken by main's already
-published `v0.9.0` (`87daaa4`, release PR #73). The current manifest retains
-that released **0.9.0** state, so this feature proposes **CLI 0.10.0** with
-**viewer 0.1.0**, tagged `v0.10.0` and `viewer-v0.1.0`. Never reuse 0.9.0 or
-move its tag; release-managed package versions advance in the release PR.
+runtime or packaging gate may remain hardcoded to 0.1.0. `bump-minor-pre-major`
+keeps breaking pre-1.0 changes on the minor stream. The requested 0.8.0 → 0.9.0
+CLI pairing was overtaken by main's already published `v0.9.0` (`87daaa4`,
+release PR #73). The current manifest retains that released **0.9.0** state, so
+this feature proposes **CLI 0.10.0** with **viewer 0.1.0**, tagged `v0.10.0` and
+`viewer-v0.1.0`. Never reuse 0.9.0 or move its tag; release-managed package
+versions advance in the release PR.
 
 The `node-workspace` plugin uses `updateAllPackages: true` to propose both
 packages whenever either releases, including a patch of an otherwise unchanged
@@ -197,15 +178,15 @@ The release workflow then:
 4. Verifies both local and remote tags identify `HEAD`, the source tree is clean
    including untracked files, and each tag matches its package version.
 5. Runs `npm ci`, performs the live workspace dependency audit, then selects
-   applicable complete CI evidence for the tag's exact tree or falls back to
-   the complete `cargo xtask check` gate. The
+   applicable complete CI evidence for the tag's exact tree or falls back to the
+   complete `cargo xtask check` gate. The
    [release verification evidence contract](./npm-release-evidence.md) defines
    candidate selection, validation and failure semantics.
 6. Packs viewer then CLI, validates both packed manifests and inventories plus
    the runtime license closure, and smoke-tests those exact paths in clean
    consumers. Each archive has its own integrity, shasum, inventory and size
-   report under `release-artifact/viewer` or `release-artifact/cli`. Rechecks the
-   source and tags after lifecycle scripts and preserves both artifacts.
+   report under `release-artifact/viewer` or `release-artifact/cli`. Rechecks
+   the source and tags after lifecycle scripts and preserves both artifacts.
 7. Queries npm. A recognized missing-version response (`E404` or `ETARGET`)
    permits a publish; any other lookup failure stops the workflow. An existing
    version must byte-for-byte match the checked report and commit or the
@@ -224,10 +205,10 @@ Publishing occurs in the workflow invocation that creates both GitHub releases.
 A manual dispatch from workflow ref `main` retries an existing `publish_ref`
 (`vX.Y.Z`) and `viewer_ref` (`viewer-vX.Y.Z`) pair through the identical path.
 Its `verification` input defaults to `evidence`; selecting `complete` forces the
-full local gate without making GitHub evidence requests.
-A single concurrency group serializes automatic runs and manual retries without
-cancelling an in-progress publish. A completed viewer publication is verified
-and skipped on retry; the CLI cannot publish before that verification succeeds.
+full local gate without making GitHub evidence requests. A single concurrency
+group serializes automatic runs and manual retries without cancelling an
+in-progress publish. A completed viewer publication is verified and skipped on
+retry; the CLI cannot publish before that verification succeeds.
 
 Merging the combined Release Please PR is the human authorization to publish.
 The `npm` environment does not require a second reviewer: its purpose is to bind
@@ -239,12 +220,11 @@ or rebuilding different release bytes.
 The publish job alone receives `id-token: write`, plus read-only Actions and
 contents access, and runs in the protected GitHub environment named `npm`.
 Release-please receives only contents, pull-request, and issue write
-permissions. Prefer a
-repository-owned fine-grained token or GitHub App credential in the
-`RELEASE_PLEASE_TOKEN` secret so release PR events trigger normal checks. The
-workflow falls back to `GITHUB_TOKEN`; GitHub suppresses most follow-on workflow
-events created with that token, so maintainers must verify the release PR's
-required checks when using the fallback.
+permissions. Prefer a repository-owned fine-grained token or GitHub App
+credential in the `RELEASE_PLEASE_TOKEN` secret so release PR events trigger
+normal checks. The workflow falls back to `GITHUB_TOKEN`; GitHub suppresses most
+follow-on workflow events created with that token, so maintainers must verify
+the release PR's required checks when using the fallback.
 
 ## Mokly Registry Bootstrap
 
@@ -253,15 +233,15 @@ The repository and release history moved from `futex-ai/mokabook` to
 The former unscoped `mokabook` package remains reserved at `0.8.0`; it is not a
 runtime alias or a second publication target. Because npm trusted publishing can
 only be configured after a package exists, the scoped `@mokly/mokly` package
-required one reviewed bootstrap publication before normal releases could use OIDC.
-The attempted unscoped `mokly` registration was rejected by npm's name-similarity
-policy; it was never published. The scope change does not reset release history
-or rename the `mokly` executable.
+required one reviewed bootstrap publication before normal releases could use
+OIDC. The attempted unscoped `mokly` registration was rejected by npm's
+name-similarity policy; it was never published. The scope change does not reset
+release history or rename the `mokly` executable.
 
-Registration completed on 14 September 2026 as `@mokly/mokly@0.8.0`. npm assigned
-both `bootstrap` and `latest` despite the explicit bootstrap tag, and the
-maintainer accepted that initial `latest`. Keep `bootstrap` on `0.8.0`; do not
-remove `latest` or republish to undo registration. The
+Registration completed on 14 September 2026 as `@mokly/mokly@0.8.0`. npm
+assigned both `bootstrap` and `latest` despite the explicit bootstrap tag, and
+the maintainer accepted that initial `latest`. Keep `bootstrap` on `0.8.0`; do
+not remove `latest` or republish to undo registration. The
 [bootstrap record](./npm-bootstrap.md) retains the reviewed source and archive
 procedure. Its dedicated `scripts/release/bootstrap.mjs` command builds a fresh
 isolated checkout of an explicit reviewed full commit SHA and records source
@@ -270,9 +250,9 @@ bootstrap source proof.
 
 The bootstrap used interactive maintainer authentication, not OIDC. The CLI
 subsequently published 0.9.0. Viewer 0.1.0 was registered separately with
-interactive authentication on 17 September 2026 from the same reviewed commit
-as CLI 0.10.0. The paired workflow verified and skipped the matching viewer
-archive before publishing the CLI through OIDC. The
+interactive authentication on 17 September 2026 from the same reviewed commit as
+CLI 0.10.0. The paired workflow verified and skipped the matching viewer archive
+before publishing the CLI through OIDC. The
 [bootstrap record](./npm-bootstrap.md#completed-viewer-registration) preserves
 that boundary. Verify each package's own trusted publisher before its next
 release; one package's trust configuration is not evidence for the other.
@@ -286,24 +266,25 @@ Before enabling publish, maintainers must configure and verify:
 - the branch rule requires the exact `Required CI` status;
 - the direct-upload Cloudflare Pages project `mokabook` exists with production
   branch `main`, repository variable `CLOUDFLARE_ACCOUNT_ID` is set, and
-  repository secret `CLOUDFLARE_PAGES_API_TOKEN` or `CLOUDFLARE_API_TOKEN`
-  holds a least-privilege token with Pages write access;
-- the protected `npm` environment allows only the workflow's `main` branch,
-  has no required reviewer or wait timer, and disables administrator bypass,
-  without storing an npm token. Checking out a release tag does not change the
-  workflow deployment ref; manual retries must also dispatch from `main`;
+  repository secret `CLOUDFLARE_PAGES_API_TOKEN` or `CLOUDFLARE_API_TOKEN` holds
+  a least-privilege token with Pages write access;
+- the protected `npm` environment allows only the workflow's `main` branch, has
+  no required reviewer or wait timer, and disables administrator bypass, without
+  storing an npm token. Checking out a release tag does not change the workflow
+  deployment ref; manual retries must also dispatch from `main`;
 - the `RELEASE_PLEASE_TOKEN` credential owner, least-privilege repository
   access, expiry/rotation, and fallback behavior;
 - approved Mokly npm maintainer accounts and teams, enforced 2FA, public
   scoped-package access, and the intended initial owner list;
 - each package's trusted-publisher repository, workflow filename, environment,
   and allowed publish action exactly match the values above; and
-- immutable `v*` and `viewer-v*` tag update/deletion protection and who may invoke
-  the manual retry with both tags.
+- immutable `v*` and `viewer-v*` tag update/deletion protection and who may
+  invoke the manual retry with both tags.
 
-No long-lived npm write token is stored in GitHub Actions.
-See [GitHub publishing protections](./npm-github-protections.md) for exact setup,
-read-back verification, merge-authorized publishing policy, and credential blockers.
+No long-lived npm write token is stored in GitHub Actions. See
+[GitHub publishing protections](./npm-github-protections.md) for exact setup,
+read-back verification, merge-authorized publishing policy, and credential
+blockers.
 
 ## Release Evidence
 
@@ -333,12 +314,12 @@ changes over time:
 - [release-please manifest and workspace plugins](https://github.com/googleapis/release-please/blob/v17.6.0/docs/manifest-releaser.md)
 
 As rechecked on 15 September 2026, npm trusted publishing requires Node 22.14 or
-newer and npm 11.5.1 or newer. Use npm 11.15 or newer for `npm trust` management,
-including allowed-action permissions added in 11.15.
-The package must already exist before a trust relationship can be configured.
-The workflow's npm 11.7.0 satisfies publishing; use npm 11.15 or newer only for
-the separate interactive trust-management command. Trusted publishing creates
-provenance automatically on supported GitHub-hosted runners.
+newer and npm 11.5.1 or newer. Use npm 11.15 or newer for `npm trust`
+management, including allowed-action permissions added in 11.15. The package
+must already exist before a trust relationship can be configured. The workflow's
+npm 11.7.0 satisfies publishing; use npm 11.15 or newer only for the separate
+interactive trust-management command. Trusted publishing creates provenance
+automatically on supported GitHub-hosted runners.
 
 ## Related Docs
 

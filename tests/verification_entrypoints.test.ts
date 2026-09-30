@@ -6,6 +6,8 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { minimatch } from "minimatch";
+
 import browserConfig from "../playwright.config.js";
 import { discoverUnitFiles } from "../scripts/verification/evidence.mjs";
 
@@ -74,6 +76,35 @@ test("unit discovery never loads a file from Playwright's testDir", async () => 
   );
 });
 
+test("Playwright projects partition specs by the hydration filename rule", async () => {
+  const projects = browserConfig.projects ?? [];
+  assert.deepEqual(
+    projects.map((project) => project.name),
+    ["chromium", "hydration"],
+  );
+  const chromium = projects.find((project) => project.name === "chromium");
+  const hydration = projects.find((project) => project.name === "hydration");
+  assert.ok(chromium);
+  assert.ok(hydration);
+  assert.deepEqual(chromium.use, hydration.use);
+  if (typeof chromium.testIgnore !== "string")
+    assert.fail("chromium must ignore one hydration filename glob");
+  assert.equal(hydration.testMatch, chromium.testIgnore);
+
+  const testDirectory = path.resolve(repositoryRoot, browserConfig.testDir!);
+  const files = await specFiles(testDirectory, testDirectory);
+  const pattern = chromium.testIgnore;
+  const hydrationFiles = files.filter((file) => minimatch(file, pattern));
+  const browserFiles = files.filter((file) => !minimatch(file, pattern));
+  assert.ok(hydrationFiles.length > 0);
+  assert.ok(browserFiles.length > 0);
+  assert.deepEqual(
+    hydrationFiles,
+    files.filter((file) => path.basename(file).includes("hydration")),
+  );
+  assert.deepEqual([...browserFiles, ...hydrationFiles].sort(), files);
+});
+
 test("prepared verification commands remain shard-only wrappers", async () => {
   const packageJson = JSON.parse(
     await fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
@@ -87,6 +118,10 @@ test("prepared verification commands remain shard-only wrappers", async () => {
   assert.equal(
     scripts["test:browser:prepared"],
     "node scripts/verification/run-browser.mjs",
+  );
+  assert.equal(
+    scripts["test:hydration:prepared"],
+    "node scripts/verification/run-browser.mjs --suite hydration",
   );
 });
 
@@ -136,3 +171,14 @@ test("public package wrappers preserve caller arguments through npm", async (con
     ]);
   }
 });
+
+async function specFiles(directory: string, root: string): Promise<string[]> {
+  const files: string[] = [];
+  for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
+    const target = path.join(directory, entry.name);
+    if (entry.isDirectory()) files.push(...(await specFiles(target, root)));
+    else if (entry.isFile() && entry.name.endsWith(".spec.ts"))
+      files.push(path.relative(root, target).split(path.sep).join("/"));
+  }
+  return files.sort();
+}

@@ -1,12 +1,21 @@
 export function validateCompletedReport(report, options = {}) {
   if (report?.schemaVersion !== 1) throw new Error("invalid report schema");
-  if (!["unit", "browser"].includes(report.suite))
+  if (!["unit", "browser", "hydration"].includes(report.suite))
     throw new Error("invalid report suite");
   for (const field of ["commit", "runtime", "nodeVersion"])
     if (typeof report[field] !== "string" || report[field].length === 0)
       throw new Error(`report is missing ${field}`);
   validateRuntime(report.runtime, report.nodeVersion);
   validateShard(report.shard);
+  const isPlaywright = ["browser", "hydration"].includes(report.suite);
+  if (report.suite === "hydration" && report.shard !== null)
+    throw new Error("hydration report must be unsharded");
+  if (isPlaywright)
+    validateUniqueStrings(
+      report.playwrightFiles,
+      "complete Playwright file inventory",
+      false,
+    );
   validateUniqueStrings(report.fullFiles, "complete file inventory", false);
   validateUniqueStrings(report.assignedFiles, "assigned file inventory", false);
   const observedFiles = report.observedFiles?.map((entry) => entry.file);
@@ -17,6 +26,12 @@ export function validateCompletedReport(report, options = {}) {
     "assigned and observed files",
   );
   requireSubset(report.assignedFiles, report.fullFiles, "assigned files");
+  if (isPlaywright)
+    requireSubset(
+      report.fullFiles,
+      report.playwrightFiles,
+      "suite Playwright files",
+    );
   if (!report.shard)
     requireSameValues(
       report.fullFiles,
@@ -49,7 +64,7 @@ export function validateCompletedReport(report, options = {}) {
   )
     throw new Error("report process outcome is not a successful zero exit");
   if (report.suite === "unit") validateUnitFailures(report);
-  if (report.suite === "browser") validateBrowserTests(report);
+  if (isPlaywright) validateBrowserTests(report);
 }
 
 export function validateShardReports(reports, expected) {
@@ -109,6 +124,40 @@ export function validateShardReports(reports, expected) {
       "observed browser tests",
     );
   }
+}
+
+export function validateUnshardedReport(report, expected) {
+  validateCompletedReport(report);
+  if (report.suite !== expected.suite)
+    throw new Error(`wrong suite ${report.suite}`);
+  if (report.commit !== expected.commit)
+    throw new Error(`wrong commit ${report.commit}`);
+  if (report.runtime !== expected.runtime)
+    throw new Error(`wrong runtime ${report.runtime}`);
+  if (report.shard !== null) throw new Error("report must be unsharded");
+}
+
+export function validatePlaywrightPartition(browserReports, hydrationReport) {
+  const first = browserReports[0];
+  if (!first) throw new Error("missing browser shard reports");
+  const reports = [...browserReports, hydrationReport];
+  for (const report of reports) {
+    validateUniqueStrings(
+      report?.playwrightFiles,
+      "complete Playwright file inventory",
+      false,
+    );
+    requireSameValues(
+      first.playwrightFiles,
+      report.playwrightFiles,
+      "complete Playwright file inventories",
+    );
+  }
+  requireDisjointComplete(
+    [first.fullFiles, hydrationReport.fullFiles],
+    first.playwrightFiles,
+    "browser and hydration file inventories",
+  );
 }
 
 function validateUnitFailures(report) {
