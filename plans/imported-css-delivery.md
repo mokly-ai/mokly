@@ -38,9 +38,12 @@ findings 2–4 remain open for the user's decision. Milestone 34 (`583af0a9`) re
 finding 2 in the
 [Milestone 33 review record](../docs/reviews/imported-css-delivery-milestone-33.md);
 findings 1 and 3 remain open.
-Milestone 36 is integrating the latest `origin/main` before the implementation
-PR. Its preservation audit found omitted CSS contract text and stale pre-v7
-tests; those are being restored before the merge commit.
+Milestone 36 (`d72abaeb`) merged `origin/main` at `0c8245f8` before the
+implementation PR. The merged tree retains imported CSS with manifest v7,
+read model v3, aligned comparison panes and delta publishing. Main's removal
+of historical v2 manifest parsing remains in force; `compatibility.transformer`
+remains available. The full gate passed before and after the merge commit;
+the plan stays active until the PR merges and the user runs the final review.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -961,22 +964,22 @@ that ships, while retaining every changed-text verification and rejection.
 - [x] Commit and push the approved fix and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
 - [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
 
-## Milestone 36: Merge latest main
+## Milestone 36: Merge latest main (complete)
 
 Preserve the imported CSS delivery contract while integrating main's viewer,
 navigation, publication and manifest changes.
 
 - [x] Fetch and audit main from the pre-merge source tip; save main additions under `.context/merge/`.
-- [ ] Merge `origin/main` path-by-path; accept main's three reviewed deletions and port their binary-safe and Changes adaptations to the owning replacements.
-- [ ] Review every clean overlapping auto-merge for semantic preservation, not just conflicts.
-- [ ] Integrate manifest v7 and read model v3 with stylesheet metadata, navigation paths and CSS attribution.
-- [ ] Integrate generated CSS and binary assets with export ownership schema 2, delta publication and aligned `srcdoc` comparison panes; add missing publication and browser coverage.
-- [ ] Keep the example and fixtures reachable through `navPath`/`folder()`, reconcile documentation and split over-limit merged files.
-- [ ] Prove no unapproved deletion or feature-wide reduction against `origin/main`; run Build, focused and browser tests, example Chrome smoke and the complete `cargo xtask check` gate.
+- [x] Merge `origin/main` path-by-path; accept main's three reviewed deletions and port their binary-safe and Changes adaptations to the owning replacements.
+- [x] Review every clean overlapping auto-merge for semantic preservation, not just conflicts.
+- [x] Integrate manifest v7 and read model v3 with stylesheet metadata, navigation paths and CSS attribution.
+- [x] Integrate generated CSS and binary assets with export ownership schema 2, delta publication and aligned `srcdoc` comparison panes; add missing publication and browser coverage.
+- [x] Keep the example and fixtures reachable through `navPath`/`folder()`, reconcile documentation and split over-limit merged files.
+- [x] Prove no unapproved deletion or feature-wide reduction against `origin/main`; run Build, focused and browser tests, example Chrome smoke and the complete `cargo xtask check` gate.
 
 ## Milestone 37: Commit, push, and review
 
-- [ ] Commit and push the merge and final bookkeeping; confirm the remote ref and a clean tree.
+- [x] Commit and push the merge and final bookkeeping; confirm the remote ref and a clean tree.
 - [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
 
 ## Post-merge follow-up (non-blocking)
