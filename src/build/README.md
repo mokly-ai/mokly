@@ -29,6 +29,8 @@ it reads the shipped selector or `@scope` prelude on the output side but
 the cleaned text the plugins processed on the input side. Comments outside
 `@scope` groups are ignored; only a comment-separated redundant whitespace
 combinator is merged with its neighbor, never two explicit combinators.
+An unchanged authored selector or `@scope` prelude that ships byte for byte
+passes without this token comparison; changed text still takes the normal path.
 Wrapper empty tails and comments follow the plugin output.
 
 CSS Modules mutation checklist:

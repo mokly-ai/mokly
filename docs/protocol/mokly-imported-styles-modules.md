@@ -120,10 +120,16 @@ against the cleaned input text the plugins processed or the exact scoped text
 that ships, respectively, with the shared scanner. PostCSS can discard a
 comment touching whitespace from its cleaned selector or `@scope` params
 while preserving it in the serialized CSS. Keep the input side cleaned to
-model the plugins; the early escape guard protects authored syntax whose
+model the plugins; the early escape guard protects authored hex escapes whose
 meaning cleaning would change. On the output side, use the PostCSS raw
 selector or `@scope` params only when its recorded value equals the cleaned
-field; otherwise use that field. An escape-consumed
+field; otherwise use that field. Before this cleaned-input/shipped-output
+comparison, accept a rule selector or `@scope` prelude when its exact authored
+text and shipped text are byte-identical. Still compare its children and
+declarations. Changed selectors continue through the normal check. This
+does not detect every non-hex escape changed by scoping: for example,
+`.card .x\,/**/y` can ship a class named `x,y` after the comment is removed.
+An escape-consumed
 character is never a combinator; if no unconsumed CSS whitespace remains,
 the neighboring simple selectors form one compound. A second space remains
 a descendant after the first is swallowed. Explicit `>`, `+` and `~`

@@ -67,4 +67,12 @@ export const shippedOracleCases: readonly OracleCase[] = [
     css: "@scope (.a) /* c */ to (.b){.target{color:red}}",
   },
   { name: "unchanged rule comment", css: "[data-x] /* c */ div{color:red}" },
+  {
+    name: "byte-identical escaped comma",
+    css: String.raw`::part(a\,/**/b){color:red}`,
+  },
+  {
+    name: "byte-identical escaped space",
+    css: String.raw`::part(a\ /**/b){color:red}`,
+  },
 ];

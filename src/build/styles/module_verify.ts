@@ -76,13 +76,14 @@ function firstDifference(
     }
     case "rule": {
       const changed = output as Rule;
-      // The plugins saw PostCSS's cleaned input; compare it with the exact output that ships.
+      // Identical shipped text is safe; otherwise compare cleaned plugin input with shipped output.
+      const outputSelector = shippedText(
+        changed.selector,
+        changed.raws.selector,
+      );
       if (
-        !moduleSelectorsMatch(
-          input.selector,
-          shippedText(changed.selector, changed.raws.selector),
-          prefix,
-        )
+        shippedText(input.selector, input.raws.selector) !== outputSelector &&
+        !moduleSelectorsMatch(input.selector, outputSelector, prefix)
       )
         return input;
       break;
@@ -128,12 +129,14 @@ function atRuleParamsMatch(
   output: AtRule,
   prefix: string,
 ): boolean {
-  const outputParams =
-    input.name.toLowerCase() === "scope"
-      ? shippedText(output.params, output.raws.params)
-      : output.params;
+  const isScope = input.name.toLowerCase() === "scope";
+  const outputParams = isScope
+    ? shippedText(output.params, output.raws.params)
+    : output.params;
+  if (isScope && shippedText(input.params, input.raws.params) === outputParams)
+    return true;
   if (input.params === outputParams) return true;
-  if (input.name.toLowerCase() === "scope") {
+  if (isScope) {
     try {
       const first = scanScopePrelude(input.params);
       const second = scanScopePrelude(outputParams);
