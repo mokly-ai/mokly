@@ -10,6 +10,7 @@ import postcss, {
 
 import { MoklyError } from "../../errors.js";
 
+import { scanCssText } from "./module_css_scan.js";
 import { scanScopePrelude, type ScopeGroup } from "./module_scope.js";
 import { moduleSelectorsMatch } from "./module_verify_selector.js";
 import {
@@ -73,12 +74,19 @@ function firstDifference(
         return input;
       break;
     }
-    case "rule":
+    case "rule": {
+      const changed = output as Rule;
+      // The plugins saw PostCSS's cleaned input; compare it with the exact output that ships.
       if (
-        !moduleSelectorsMatch(input.selector, (output as Rule).selector, prefix)
+        !moduleSelectorsMatch(
+          input.selector,
+          shippedText(changed.selector, changed.raws.selector),
+          prefix,
+        )
       )
         return input;
       break;
+    }
     case "atrule": {
       const changed = output as AtRule;
       if (
@@ -120,25 +128,29 @@ function atRuleParamsMatch(
   output: AtRule,
   prefix: string,
 ): boolean {
-  if (input.params === output.params) return true;
+  const outputParams =
+    input.name.toLowerCase() === "scope"
+      ? shippedText(output.params, output.raws.params)
+      : output.params;
+  if (input.params === outputParams) return true;
   if (input.name.toLowerCase() === "scope") {
     try {
       const first = scanScopePrelude(input.params);
-      const second = scanScopePrelude(output.params);
+      const second = scanScopePrelude(outputParams);
       return (
         scopeOutside(input.params, first.start, first.limit) ===
-          scopeOutside(output.params, second.start, second.limit) &&
+          scopeOutside(outputParams, second.start, second.limit) &&
         scopeGroupMatches(
           input.params,
           first.start,
-          output.params,
+          outputParams,
           second.start,
           prefix,
         ) &&
         scopeGroupMatches(
           input.params,
           first.limit,
-          output.params,
+          outputParams,
           second.limit,
           prefix,
         )
@@ -173,7 +185,27 @@ function scopeOutside(
     .filter((part): part is ScopeGroup => part !== undefined)
     .sort((left, right) => right.start - left.start))
     result = result.slice(0, group.start) + "\0" + result.slice(group.end);
-  return result;
+  const scan = scanCssText(result);
+  let withoutComments = "";
+  let cursor = 0;
+  for (const comment of scan.comments) {
+    withoutComments += result.slice(cursor, comment.start);
+    cursor = comment.end;
+  }
+  return withoutComments + result.slice(cursor);
+}
+
+function shippedText(cleaned: string, raw: unknown): string {
+  if (
+    raw &&
+    typeof raw === "object" &&
+    "raw" in raw &&
+    "value" in raw &&
+    typeof raw.raw === "string" &&
+    raw.value === cleaned
+  )
+    return raw.raw;
+  return cleaned;
 }
 
 function scopeGroupMatches(

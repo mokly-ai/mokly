@@ -103,9 +103,13 @@ function normalizeChildren(
   const normalized: SelectorShape[] = [];
   let movedWrapperSpace = false;
   let afterWrapper = false;
+  let ignoredComment = false;
   for (let index = 0; index < nodes.length; index += 1) {
     const node = nodes[index]!;
-    if (node.type === "comment") continue;
+    if (node.type === "comment") {
+      ignoredComment = true;
+      continue;
+    }
     if (
       input &&
       node.type === "pseudo" &&
@@ -117,6 +121,7 @@ function normalizeChildren(
         if (nodes[index + 1]?.type === "combinator") index += 1;
         movedWrapperSpace = false;
         afterWrapper = false;
+        ignoredComment = false;
         continue;
       }
       if (node.nodes?.length) {
@@ -139,6 +144,7 @@ function normalizeChildren(
         afterWrapper = true;
       } else return [{ type: "invalid", value: "", children: [] }];
       movedWrapperSpace = wrapperMovedSpace(scan, node);
+      ignoredComment = false;
       continue;
     }
     if (node.type === "combinator" && cssWhitespaceOnly(node.value ?? "")) {
@@ -150,19 +156,31 @@ function normalizeChildren(
       if (!hasCssWhitespace(scan, start, end)) {
         movedWrapperSpace = false;
         afterWrapper = false;
+        ignoredComment = false;
         continue;
       }
     }
     const child = normalize(node, scan, input);
     if (child.type === "combinator") {
-      normalized.push(child);
+      const previous = normalized.at(-1);
+      if (
+        ignoredComment &&
+        previous?.type === "combinator" &&
+        (previous.value === " " || child.value === " ")
+      ) {
+        if (previous.value === " ") normalized.pop();
+        if (child.value !== " ") normalized.push(child);
+        else if (previous.value === " ") normalized.push(previous);
+      } else normalized.push(child);
       movedWrapperSpace = false;
       afterWrapper = false;
+      ignoredComment = false;
       continue;
     }
     appendChildren(normalized, [child], movedWrapperSpace, afterWrapper);
     movedWrapperSpace = input && wrapperMovedSpace(scan, node);
     afterWrapper = false;
+    ignoredComment = false;
   }
   return normalized;
 }

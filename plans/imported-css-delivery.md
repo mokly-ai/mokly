@@ -32,9 +32,9 @@ Milestone 28 (`c482bd0`) resolves the four approved findings in the
 other open findings remain unchanged. Milestone 30 (`5ae34be`) resolves the three
 approved findings in the
 [Milestone 29 review record](../docs/reviews/imported-css-delivery-milestone-29.md).
-The four findings in the
-[Milestone 31 review record](../docs/reviews/imported-css-delivery-milestone-31.md)
-remain open for the user's decision.
+Milestone 32 addresses only finding 1 in the
+[Milestone 31 review record](../docs/reviews/imported-css-delivery-milestone-31.md);
+findings 2–4 remain open for the user's decision.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -909,6 +909,8 @@ follow plugin-owned empty tails, and compare only real Chrome-parsed selectors.
 
 Verify combinators from CSS text on both sides of scoping, give escape edits
 that preserve selector meaning, and cover the missing scanner boundaries.
+Milestone 32 follows up on "keep current valid output building": re-parsing
+the scoped CSS had hidden comments that ship and rejected those valid rules.
 
 - [x] Add failing regressions for wrapper-created escaped combinators, advice edits, escaped quotes, U+00A0 and the exact comment boundary; record corpus baseline.
 - [x] Update the CSS Modules protocol, error catalogue, Styles guide, build README and ignored PR draft for browser-accurate combinators and meaning-preserving advice.
@@ -920,6 +922,23 @@ that preserve selector meaning, and cover the missing scanner boundaries.
 
 - [x] Commit and push the approved fixes and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
 - [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Four new findings (all Low) are recorded in the [Milestone 31 review record](../docs/reviews/imported-css-delivery-milestone-31.md) for the user's decision.
+
+## Milestone 32: Compare the scoped text that ships (complete)
+
+Read shipped selectors and `@scope` preludes on the output side, while
+modelling the cleaned input the CSS Modules plugins processed.
+
+- [x] Add failing Node and Chrome regressions for every approved reproduction, unchanged and changed `@scope` comments, and preserved prior rejections; record the CSS corpus baseline.
+- [x] Update the CSS Modules protocol, build README and ignored PR draft for the cleaned-input/shipped-output distinction and comment-insensitive `@scope` outside text.
+- [x] Compare raw shipped output selectors and `@scope` groups when PostCSS's raw value matches; strip comments only outside `@scope` groups with the shared scanner.
+- [x] Merge comment-separated whitespace combinators narrowly on both sides; keep explicit and non-comment-adjacent combinators distinct, with Node, Chrome and mutation regressions.
+- [x] Patch the transitive `brace-expansion` advisory that blocks the dependency gate (5.0.9 to 5.0.12) in `fa43083`.
+- [x] Run three mutation checks, corpus comparison, Build, every CSS Modules suite, example Build/Check, lint, typecheck, focused browsers, CLI smoke and `cargo xtask check`.
+
+## Milestone 33: Commit, push, and review
+
+- [ ] Commit and push the approved fix and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
 
 ## Post-merge follow-up (non-blocking)
 

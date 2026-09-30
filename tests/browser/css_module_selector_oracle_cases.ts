@@ -1,3 +1,6 @@
+import { combinatorOracleCases } from "./css_module_selector_oracle_combinator_cases.js";
+import { shippedOracleCases } from "./css_module_selector_oracle_shipped_cases.js";
+
 export type SelectorFamily =
   "is" | "where" | "not" | "has" | "nth-child" | "host" | "slotted";
 
@@ -230,5 +233,8 @@ for (const css of [
   "@scope (.card) to (.limit:is(.a, ).active){.target{color:red}}",
 ])
   cases.push({ name: `scope/${css}`, css, kind: "scope" });
+
+cases.push(...shippedOracleCases);
+cases.push(...combinatorOracleCases);
 
 export const oracleCases: readonly OracleCase[] = cases;

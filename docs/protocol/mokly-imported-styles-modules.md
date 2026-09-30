@@ -116,12 +116,30 @@ ignored on both sides, including a selector comment hoisted just before its
 rule; unrelated standalone comments stay exact. Comma joins use authored
 source offsets, not whitespace the selector parser moved out of unrelated
 pseudos. Every parser-produced or inserted whitespace combinator is checked
-against the input or output text with the shared scanner. An escape-consumed
+against the cleaned input text the plugins processed or the exact scoped text
+that ships, respectively, with the shared scanner. PostCSS can discard a
+comment touching whitespace from its cleaned selector or `@scope` params
+while preserving it in the serialized CSS. Keep the input side cleaned to
+model the plugins; the early escape guard protects authored syntax whose
+meaning cleaning would change. On the output side, use the PostCSS raw
+selector or `@scope` params only when its recorded value equals the cleaned
+field; otherwise use that field. An escape-consumed
 character is never a combinator; if no unconsumed CSS whitespace remains,
 the neighboring simple selectors form one compound. A second space remains
 a descendant after the first is swallowed. Explicit `>`, `+` and `~`
 combinators remain even when surrounding whitespace is consumed. This rule
-also applies in nested rules, pseudo-classes and both `@scope` groups. Every
+also handles comments in shipped selectors: after comment nodes are ignored,
+merge a whitespace combinator with an adjacent explicit combinator, or two
+whitespace combinators, only when an ignored comment separated those nodes.
+Two explicit combinators are never merged, and adjacent combinators without
+an ignored comment keep their existing behavior. This is not a general
+invalid-selector cleanup. The narrow rule also applies in nested rules,
+pseudo-classes and both `@scope` groups. Compare
+text outside `@scope` start and limit groups after removing comments with the
+shared scanner on each side, preserving every other character; require the
+same group presence and `to` keyword, then compare each group interior as a
+selector. Keyframe params, other at-rule params and declaration values retain
+their existing comparison. Every
 meaningful combinator remains. Only class, ID and `[class=…]`
 values may gain the exact module prefix. A keyframes-family
 at-rule param may likewise gain that prefix after optional local/global

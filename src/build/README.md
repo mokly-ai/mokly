@@ -25,7 +25,11 @@ Empty `:global()` and `:local()` wrappers fail before the plugins run.
 One CSS scanner distinguishes escape-consumed whitespace from combinators
 and checks raw selectors and `@scope` preludes for unsafe escapes before
 scoping. The comparison applies that scanner to output combinators too;
-wrapper empty tails and comments follow the plugin output.
+it reads the shipped selector or `@scope` prelude on the output side but
+the cleaned text the plugins processed on the input side. Comments outside
+`@scope` groups are ignored; only a comment-separated redundant whitespace
+combinator is merged with its neighbor, never two explicit combinators.
+Wrapper empty tails and comments follow the plugin output.
 
 CSS Modules mutation checklist:
 
