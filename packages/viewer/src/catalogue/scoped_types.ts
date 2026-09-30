@@ -2,12 +2,12 @@
 
 import type {
   CatalogueComponent,
+  CatalogueComponentVariant,
   CataloguePage,
   CatalogueReadModel,
   CatalogueScreen,
   CatalogueUsage,
   CatalogueUseCase,
-  CatalogueVariant,
   CatalogueView,
 } from "./types.js";
 
@@ -15,46 +15,44 @@ import type {
 export type ShellCatalogueUsage =
   CatalogueUsage | { readonly status: "omitted" };
 
-/** One public view whose usage may be outside the current route's scope. */
+/** One public view whose usage may be outside the current entry's scope. */
 export interface ShellCatalogueView extends Omit<CatalogueView, "usage"> {
   usage: ShellCatalogueUsage;
 }
 
-/** A screen retained in the shell index with route-scoped view usage. */
+/** A screen retained in the shell index with entry-scoped view usage. */
 export interface ShellCatalogueScreen extends Omit<CatalogueScreen, "views"> {
   views: readonly ShellCatalogueView[];
 }
 
-/** A saved component variant with route-scoped view usage. */
-export interface ShellCatalogueVariant extends Omit<CatalogueVariant, "views"> {
+/** A component variant retained with entry-scoped view usage. */
+export interface ShellCatalogueVariant extends Omit<
+  CatalogueComponentVariant,
+  "views"
+> {
   views: readonly ShellCatalogueView[];
 }
 
-/** A component retained in the shell index with route-scoped variant usage. */
-export interface ShellCatalogueComponent extends Omit<
-  CatalogueComponent,
-  "variants"
-> {
-  variants: readonly ShellCatalogueVariant[];
-}
+/** Component parents own schema while their variant entries own views. */
+export type ShellCatalogueComponent = CatalogueComponent;
 
 /** Any current or historical entry retained by a scoped shell catalogue. */
 export type ShellCatalogueRoutedEntry =
   | ShellCatalogueScreen
   | CataloguePage
   | CatalogueUseCase
-  | ShellCatalogueComponent;
+  | ShellCatalogueComponent
+  | ShellCatalogueVariant;
 
-/** Complete public index data with usage projected to one shell route. */
+/** Complete public index data with usage projected to one shell entry. */
 export interface ShellCatalogueReadModel extends Omit<
   CatalogueReadModel,
   "screens" | "components" | "removedEntries"
 > {
   screens: readonly ShellCatalogueScreen[];
-  components: readonly ShellCatalogueComponent[];
+  components: readonly (ShellCatalogueComponent | ShellCatalogueVariant)[];
   removedEntries: readonly {
     entry: ShellCatalogueRoutedEntry;
-    ancestors: readonly { id: string; title: string }[];
     snapshotId?: string;
     preview?: CatalogueReadModel["removedEntries"][number]["preview"];
   }[];

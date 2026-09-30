@@ -12,7 +12,7 @@ export function VariantPicker({ state }: { state: ComponentPageState }) {
       ? "design-component-toolbar"
       : state === "hidden"
         ? "design-component-help"
-        : state === "unused" || state === "added"
+        : state === "unused" || state === "added" || state === "overlay-tall"
           ? COMPONENT_PAGES[state]
           : "design-component-overview";
   return (

@@ -167,7 +167,6 @@ export const appearanceStatusScreens = [
     mobile: <HomeAndEmpty viewport="mobile" />,
     rationale:
       "Home is the first paint a reader sees, so each appearance has to be complete before any screen is chosen rather than arriving once a preview loads.",
-    slug: "home",
     title: "Home and empty",
   }),
   screen({
@@ -190,7 +189,6 @@ export const appearanceStatusScreens = [
     ),
     rationale:
       "The spinner, the reserved count slot and the waiting message are drawn from the catalogue palette, so a loading catalogue never falls back to the other appearance's chrome around a page.",
-    slug: "loading",
     title: "Catalogue loading",
   }),
   screen({
@@ -201,7 +199,6 @@ export const appearanceStatusScreens = [
     mobile: <ErrorAndRetry viewport="mobile" />,
     rationale:
       "Recovery states are reached by readers who are already lost, so they keep the chosen appearance, the navigation and the details panel instead of resetting to a bare page.",
-    slug: "error",
     title: "Error and retry",
   }),
   screen({
@@ -224,7 +221,6 @@ export const appearanceStatusScreens = [
     ),
     rationale:
       "The one unavailable message and the dash in the count slot have to read as ordinary secondary text in both appearances, not as an error colour only one of them uses.",
-    slug: "unavailable",
     title: "Changes unavailable",
   }),
   screen({
@@ -235,7 +231,6 @@ export const appearanceStatusScreens = [
     mobile: <UseCaseFlow viewport="mobile" />,
     rationale:
       "Flow steps carry their own numbered tiles, connector line and links, so they prove the catalogue palette reaches content that sits on the stage rather than in a panel.",
-    slug: "flow",
     title: "Use-case flow",
   }),
 ];

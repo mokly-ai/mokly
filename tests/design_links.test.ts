@@ -5,10 +5,16 @@ import { test } from "node:test";
 
 import { parse } from "parse5";
 
+import { actionModes } from "../examples/basic/entries/design/components/parts/navigation_states.js";
 import {
   appearanceModes,
   welcomeModes,
 } from "../examples/basic/entries/design/parts/navigation_states.js";
+import {
+  entryRoute,
+  generatedViews,
+  viewRoute,
+} from "../packages/viewer/dist/data.js";
 
 import {
   attribute,
@@ -93,7 +99,10 @@ for (const viewport of ["mobile", "desktop"] as const) {
         ["Details", "design-browse-details-screen"],
         ["Example tour", "design-browse-use-case"],
         ["Action", "design-component-overview"],
+        ["Default", "design-component-overview"],
+        ["Disabled", "design-component-variants"],
         ["Toolbar", "design-component-toolbar"],
+        ["Default", "design-component-toolbar"],
       ],
     );
     assert.equal(
@@ -125,8 +134,8 @@ test("every design link resolves to a real same-viewport design artifact without
   const componentDesigns = designs.filter((entry) =>
     entry.id.startsWith("design-component-"),
   );
-  assert.equal(componentDesigns.length, 35);
-  assert.equal(designs.length - componentDesigns.length, 60);
+  assert.equal(componentDesigns.length, 39);
+  assert.equal(designs.length - componentDesigns.length, 63);
   for (const entry of designs) {
     for (const viewport of ["mobile", "desktop"] as const) {
       const { document, route } = await designDocument(entry.id, viewport);
@@ -149,7 +158,7 @@ test("every design link resolves to a real same-viewport design artifact without
           path.posix.normalize(
             path.posix.join(path.posix.dirname(route), href),
           ),
-          target.fragments[viewport],
+          viewRoute("screen", target.id, viewport, "light"),
         );
         assert.equal(attribute(link, "role"), undefined);
         for (const child of link.childNodes) {
@@ -186,7 +195,7 @@ test("no design route doubles as a directory holding another design route", asyn
   const { manifest } = await designCatalogue;
   const routes = manifest.entries.flatMap((entry) =>
     entry.kind === "screen" && entry.id.startsWith("design-")
-      ? [entry.route]
+      ? [entryRoute("screen", entry.id)]
       : [],
   );
   const directories = new Set(
@@ -198,11 +207,11 @@ test("no design route doubles as a directory holding another design route", asyn
   for (const route of routes)
     assert.ok(
       !directories.has(route.replace(/\.html$/, "")),
-      `${route} collides with a collection segment of the same name`,
+      `${route} collides with a route directory segment of the same name`,
     );
 });
 
-test("the canonical documented inventory exactly matches the complete design registry", async () => {
+test("the canonical documented inventory exactly matches the complete design ids", async () => {
   const { manifest } = await designCatalogue;
   const spec = (
     await Promise.all(
@@ -214,15 +223,13 @@ test("the canonical documented inventory exactly matches the complete design reg
       ].map((file) => fs.readFile(path.join(repositoryRoot, file), "utf8")),
     )
   ).join("\n");
-  const documented = [
-    ...spec.matchAll(/\|\s*`(design-[^`]+)`\s*\|\s*`([^`]+)`/g),
-  ]
-    .map((match) => `${match[1]} ${match[2]}`)
+  const documented = [...spec.matchAll(/\|\s*`(design-[^`]+)`\s*\|/g)]
+    .map((match) => match[1])
     .sort();
   const actual = manifest.entries
     .flatMap((entry) =>
       entry.kind === "screen" && entry.id.startsWith("design-")
-        ? [`${entry.id} ${entry.route}`]
+        ? [entry.id]
         : [],
     )
     .sort();
@@ -233,6 +240,7 @@ test("the canonical documented inventory exactly matches the complete design reg
 const COMPARISON_FAMILIES = [
   Object.values(welcomeModes),
   Object.values(appearanceModes),
+  Object.values(actionModes),
 ];
 
 test("a dark fragment's links stay dark wherever the target has a dark render", async () => {
@@ -242,9 +250,10 @@ test("a dark fragment's links stay dark wherever the target has a dark render", 
   );
   let checked = 0;
   for (const entry of designs) {
-    if (entry.kind !== "screen" || !entry.darkFragments) continue;
+    if (entry.kind !== "screen" || !entry.colorSchemes.includes("dark"))
+      continue;
     for (const viewport of ["mobile", "desktop"] as const) {
-      const route: string | undefined = entry.darkFragments[viewport];
+      const route = viewRoute("screen", entry.id, viewport, "dark");
       assert.ok(route, `${entry.id} ${viewport}`);
       const html = outputs.get(route);
       assert.ok(html, route);
@@ -262,7 +271,12 @@ test("a dark fragment's links stay dark wherever the target has a dark render", 
           path.posix.normalize(
             path.posix.join(path.posix.dirname(route), href),
           ),
-          target.darkFragments?.[viewport] ?? target.fragments[viewport],
+          viewRoute(
+            "screen",
+            target.id,
+            viewport,
+            target.colorSchemes.includes("dark") ? "dark" : "light",
+          ),
           `${route}: link to ${id} leaves the dark render`,
         );
       }
@@ -273,18 +287,22 @@ test("a dark fragment's links stay dark wherever the target has a dark render", 
 
 test("comparison families publish the same schemes for every member", async () => {
   const { manifest } = await designCatalogue;
+  const dualFamilies: boolean[] = [];
   for (const family of COMPARISON_FAMILIES) {
     const members = family.map((id) => {
       const entry = manifest.entries.find((entry) => entry.id === id);
       assert.ok(entry?.kind === "screen", id);
-      return [id, entry.darkFragments !== undefined] as const;
+      return [id, entry.colorSchemes.includes("dark")] as const;
     });
+    const dual = members[0]![1];
+    dualFamilies.push(dual);
     assert.deepEqual(
-      members.filter(([, dual]) => !dual).map(([id]) => id),
+      members.filter(([, member]) => member !== dual).map(([id]) => id),
       [],
-      `light-only members would strand a dark comparison: ${family[0]}`,
+      `a member with other schemes would strand a comparison: ${family[0]}`,
     );
   }
+  assert.deepEqual(dualFamilies, [true, true, false]);
 });
 
 test("a tag chip without a destination is a label, not a control", async () => {
@@ -309,8 +327,10 @@ test("a tag chip without a destination is a label, not a control", async () => {
       );
   let labels = 0;
   for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.route.startsWith("design/")) continue;
-    for (const route of Object.values(entry.fragments)) {
+    if (entry.kind !== "screen" || !entry.id.startsWith("design-")) continue;
+    for (const route of generatedViews(entry)
+      .filter((view) => view.colorScheme === "light")
+      .map((view) => view.path)) {
       const html = outputs.get(route);
       assert.ok(html, route);
       for (const chip of byClass(parse(html), "tag")) {

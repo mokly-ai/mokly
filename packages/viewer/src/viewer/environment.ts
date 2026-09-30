@@ -1,6 +1,7 @@
 /** Explicit browser boundaries for application-owned shell roots. */
 
 import type { ComparisonEnvironment } from "../shell/comparison_context.js";
+import type { ScrollTogetherPreference } from "../shell/comparison_scroll_preference.js";
 import type { EmbeddedShellEnvironment } from "../shell/store_host.js";
 
 import type { LoadedCatalogue } from "./source.js";
@@ -29,10 +30,15 @@ export function viewerShellEnvironment(
   };
 }
 
-/** Keep embedded comparisons pinned to the catalogue that declared them. */
+/**
+ * Keep embedded comparisons pinned to the catalogue that declared them. The
+ * Scroll together choice belongs to the mounted viewer, not to one source, so
+ * the caller supplies the one it keeps above source replacement.
+ */
 export function viewerComparisonEnvironment(
   loaded: LoadedCatalogue,
   reportError?: (error: unknown) => void,
+  scrollTogether?: ScrollTogetherPreference,
 ): ComparisonEnvironment {
   return {
     baseUrl: loaded.url,
@@ -42,5 +48,6 @@ export function viewerComparisonEnvironment(
     }),
     fetch: (input, init) => fetch(input, init),
     ...(reportError ? { reportError } : {}),
+    ...(scrollTogether ? { scrollTogether } : {}),
   };
 }

@@ -1,0 +1,177 @@
+import { expect, type Locator, type Page } from "@playwright/test";
+
+import {
+  paneFrame,
+  type Offset,
+  type Side,
+} from "./comparison_alignment_helpers.js";
+
+/** The selector of one region in each version, or one selector for both. */
+export type RegionSelector = string | Record<Side, string>;
+
+function selectorFor(selector: RegionSelector, side: Side): string {
+  return typeof selector === "string" ? selector : selector[side];
+}
+
+/** Read one region's scroll offset inside a pane frame. */
+export function regionOffset(
+  frame: Locator,
+  selector: string,
+): Promise<Offset> {
+  return frame
+    .contentFrame()
+    .locator(selector)
+    .evaluate((node) => ({ x: node.scrollLeft, y: node.scrollTop }));
+}
+
+/** Read one region's offsets in both versions of a section. */
+export async function regionOffsets(
+  section: Locator,
+  selector: RegionSelector,
+): Promise<Record<Side, Offset>> {
+  return {
+    before: await regionOffset(
+      paneFrame(section, "before"),
+      selectorFor(selector, "before"),
+    ),
+    after: await regionOffset(
+      paneFrame(section, "after"),
+      selectorFor(selector, "after"),
+    ),
+  };
+}
+
+/** Expect a region's vertical offsets, `[before, after]`, to settle. */
+export async function expectRegionsAt(
+  section: Locator,
+  selector: RegionSelector,
+  expected: [number, number],
+  axis: keyof Offset = "y",
+): Promise<void> {
+  await expect
+    .poll(async () => {
+      const offsets = await regionOffsets(section, selector);
+      return [offsets.before[axis], offsets.after[axis]];
+    })
+    .toEqual(expected);
+}
+
+/** Expect both versions of a region at one positive offset, returning it. */
+export async function expectRegionsTogether(
+  section: Locator,
+  selector: RegionSelector,
+  axis: keyof Offset = "y",
+): Promise<number> {
+  let shared = 0;
+  await expect
+    .poll(async () => {
+      const offsets = await regionOffsets(section, selector);
+      shared = offsets.after[axis];
+      return offsets.before[axis] === shared && shared !== 0;
+    })
+    .toBe(true);
+  return shared;
+}
+
+/**
+ * Wheel over the centre of one region inside a pane frame, first scrolling
+ * the comparison stage so the region's centre is well inside the stage.
+ */
+export async function wheelOverRegion(
+  page: Page,
+  frame: Locator,
+  selector: string,
+  deltaY: number,
+  deltaX = 0,
+): Promise<void> {
+  const region = frame.contentFrame().locator(selector);
+  const stage = (await page.locator("[data-diff-stage]").boundingBox())!;
+  let box = await region.boundingBox();
+  if (!box) throw new Error(`The region ${selector} is not rendered`);
+  const centre = box.y + box.height / 2;
+  if (centre < stage.y + 40 || centre > stage.y + stage.height - 40) {
+    await frame.evaluate(
+      (element, delta) =>
+        element.closest("[data-diff-stage]")?.scrollBy(0, delta),
+      centre - (stage.y + stage.height / 2),
+    );
+    box = (await region.boundingBox())!;
+  }
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.wheel(deltaX, deltaY);
+}
+
+/** Scroll a region the way the browser would on its own, such as find. */
+export function scrollRegion(
+  frame: Locator,
+  selector: string,
+  offset: Partial<Offset>,
+): Promise<void> {
+  return frame
+    .contentFrame()
+    .locator(selector)
+    .evaluate((node, to) => {
+      node.scrollTo({
+        behavior: "instant",
+        ...(to.x === undefined ? {} : { left: to.x }),
+        ...(to.y === undefined ? {} : { top: to.y }),
+      });
+    }, offset);
+}
+
+/**
+ * Wait until a region reaches an offset, then let a few rendering updates
+ * pass, so any scroll event it still owes has run before a caller asserts that
+ * another region did not follow.
+ */
+export async function settleRegion(
+  page: Page,
+  frame: Locator,
+  selector: string,
+  expected: Partial<Offset>,
+): Promise<void> {
+  await expect
+    .poll(async () => {
+      const offset = await regionOffset(frame, selector);
+      return (
+        (expected.x === undefined || offset.x === expected.x) &&
+        (expected.y === undefined || offset.y === expected.y)
+      );
+    })
+    .toBe(true);
+  for (let frames = 0; frames < 3; frames += 1)
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(resolve)),
+    );
+}
+
+/** Every error the shell page raises while a test runs. */
+export function collectPageErrors(page: Page): string[] {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  return errors;
+}
+
+/** The Scroll together switch of the comparison band. */
+export function scrollTogether(page: Page): Locator {
+  return page.getByRole("switch", { name: "Scroll together" });
+}
+
+/** Mark every pane document so a later check can prove none reloaded. */
+export async function markPaneDocuments(section: Locator): Promise<void> {
+  for (const frame of await section.locator("iframe").all())
+    await frame.evaluate((element: HTMLIFrameElement) => {
+      element.contentDocument!.documentElement.dataset["probe"] = "kept";
+    });
+}
+
+/** Expect every pane document marked earlier to be the same document. */
+export async function expectPaneDocumentsKept(section: Locator): Promise<void> {
+  for (const frame of await section.locator("iframe").all())
+    expect(
+      await frame.evaluate(
+        (element: HTMLIFrameElement) =>
+          element.contentDocument?.documentElement.dataset["probe"],
+      ),
+    ).toBe("kept");
+}

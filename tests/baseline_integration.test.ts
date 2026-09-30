@@ -95,7 +95,10 @@ test("real Git baseline lifecycle: reuse, interruption, failure and confinement"
     request.mockupsPath,
   );
   assert.match(
-    await reader.readFile(request.commit, "generated/catalogue/page.html"),
+    await reader.readFile(
+      request.commit,
+      "generated/catalogue/pages/page.html",
+    ),
     /Historical page/,
   );
   const layout = cacheLayout(root, request.commit);
@@ -214,10 +217,11 @@ if (mode === "wait") {
   fs.mkdirSync(root, { recursive: true });
   const sourcePath = "entries/page.mockup.tsx";
   fs.writeFileSync(root + "/mokly-manifest.json", JSON.stringify({
-    schemaVersion: 5, generatedBy: "mokly", sourceFiles: ["catalogue.json", sourcePath, "mokly.config.ts"],
-    entries: [{ id: "page", kind: "page", route: "page.html", title: "Historical page", description: "A tiny consumer catalogue", navPath: [], sourcePath, relatedDocs: [], dependencies: [sourcePath], declaredDependencies: [] }]
+    schemaVersion: 7, generatedBy: "mokly", sourceFiles: ["catalogue.json", sourcePath, "mokly.config.ts"],
+    entries: [{ id: "page", kind: "page", title: "Historical page", description: "A tiny consumer catalogue", navPath: [], sourcePath, relatedDocs: [], declaredDependencies: [] }]
   }));
-  fs.writeFileSync(root + "/page.html", "<!doctype html><html><body>Historical page</body></html>");
-  if (mode === "output-link") fs.symlinkSync("page.html", root + "/alias.html");
+  fs.mkdirSync(root + "/pages", { recursive: true });
+  fs.writeFileSync(root + "/pages/page.html", "<!doctype html><html><body>Historical page</body></html>");
+  if (mode === "output-link") fs.symlinkSync("pages/page.html", root + "/alias.html");
 }
 `;

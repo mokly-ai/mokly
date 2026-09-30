@@ -81,7 +81,6 @@ export interface BaselineBuildRequest {
   /** Repository-relative location of historical generated output. */
   readonly mockupsPath: string;
   readonly commands: readonly (readonly string[])[];
-  readonly allowManifestV2?: boolean;
   readonly signal?: AbortSignal;
   readonly onProgress?: (progress: BaselineProgress) => void;
 }

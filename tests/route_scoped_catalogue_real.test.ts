@@ -3,6 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 
 import { projectCatalogue } from "../dist/catalogue/projection.js";
+import type { CatalogueRecord } from "../packages/viewer/dist/catalogue/types.js";
 import {
   projectScopedCatalogue,
   readScopedShellBootstrap,
@@ -28,14 +29,21 @@ const context = {
 };
 
 test("real example scoped bytes ignore another entry's usage", () => {
-  const view = { kind: "target" as const, route: "screens/welcome.html" };
+  const screen = model.screens.find(({ id }) => id === "example-welcome")!;
+  const view = target(screen);
   const changed = structuredClone(model);
-  changed.components[0]!.variants[0]!.views[0]!.usage = {
+  const changedVariant = changed.components.find(
+    (entry) => "variantOf" in entry,
+  )!;
+  const originalVariant = model.components.find(
+    (entry) => "variantOf" in entry,
+  )!;
+  changedVariant.views[0]!.usage = {
     status: "pending",
   };
   assert.notDeepEqual(
-    changed.components[0]!.variants[0]!.views[0]!.usage,
-    model.components[0]!.variants[0]!.views[0]!.usage,
+    changedVariant.views[0]!.usage,
+    originalVariant.views[0]!.usage,
   );
   assert.equal(scopedBytes(model, view), scopedBytes(changed, view));
 });
@@ -51,19 +59,16 @@ test("the largest real example scoped bootstrap passes the strict reader", () =>
   assert.equal(serializeShellBootstrap(parsed), largest.bytes);
   assert.equal(parsed.view.kind, largest.view.kind);
   if (parsed.view.kind === "target" && largest.view.kind === "target")
-    assert.equal(parsed.view.route, largest.view.route);
+    assert.equal(parsed.view.entryId, largest.view.entryId);
 });
 
 function allViews(): readonly ShellBootstrapView[] {
   return [
     { kind: "home" },
-    ...model.screens.map(({ route }) => ({ kind: "target" as const, route })),
-    ...model.pages.map(({ route }) => ({ kind: "target" as const, route })),
-    ...model.useCases.map(({ route }) => ({ kind: "target" as const, route })),
-    ...model.components.map(({ route }) => ({
-      kind: "target" as const,
-      route,
-    })),
+    ...model.screens.map(target),
+    ...model.pages.map(target),
+    ...model.useCases.map(target),
+    ...model.components.map(target),
   ];
 }
 
@@ -76,4 +81,12 @@ function scopedBytes(
     context,
     view,
   });
+}
+
+function target(entry: Pick<CatalogueRecord, "id" | "kind">) {
+  return {
+    kind: "target" as const,
+    entryId: entry.id,
+    entryKind: entry.kind,
+  };
 }

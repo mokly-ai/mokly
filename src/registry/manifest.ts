@@ -1,16 +1,23 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import type { ColorScheme, Viewport, ComponentViewRecord } from "@mokly/viewer";
-import type { ManifestV5, HistoricalManifest } from "@mokly/viewer/data";
+import type { ColorScheme, ComponentViewRecord } from "@mokly/viewer";
+import type { ManifestV7, HistoricalManifest } from "@mokly/viewer/data";
 import {
   canonicalJson,
-  analyzeHierarchy,
   effectiveColorSchemes,
+  viewRoute,
 } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
-import { componentManifestEntry } from "../components/manifest_build.js";
+import {
+  componentManifestEntry,
+  componentVariantManifestEntry,
+} from "../components/manifest_build.js";
+import {
+  isComponentVariantDefinition,
+  type ComponentDefinition,
+} from "../components/types.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 
@@ -19,21 +26,11 @@ import { validateManifest } from "./manifest_validation.js";
 /** Canonical generated manifest filename. */
 export const MANIFEST_NAME = "mokly-manifest.json";
 
-/** Former package manifest filename accepted only from Git history. */
-export const FORMER_MANIFEST_NAME = "mokabook-manifest.json";
-
-/** Legacy version 2 manifest filename accepted only during migration. */
-export const LEGACY_MANIFEST_NAME = "mockbook-manifest.json";
-
-/** Derive one viewport and color-scheme fragment route from a screen route. */
-export function fragmentRoute(
-  route: string,
-  viewport: Viewport,
-  colorScheme: ColorScheme = "light",
-): string {
-  const schemeSuffix = colorScheme === "dark" ? ".dark" : "";
-  return route.replace(/\.html$/, `.${viewport}${schemeSuffix}.html`);
-}
+/** Earlier manifest names retained only as incompatibility sentinels and stale output. */
+export const EARLIER_MANIFEST_NAMES = [
+  "mokabook-manifest.json",
+  "mockbook-manifest.json",
+] as const;
 
 /** Create deterministic manifest data from prepared entries and the source inventory. */
 export function createManifest(
@@ -41,17 +38,15 @@ export function createManifest(
   sourceFiles: readonly string[],
   catalogueSchemes: readonly ColorScheme[],
   componentViews: ReadonlyMap<string, ComponentViewRecord> = new Map(),
-): ManifestV5 {
-  const hierarchy = analyzeHierarchy(entries).hierarchy;
+): ManifestV7 {
   return {
     entries: entries.map((entry) =>
       toManifestEntry(
         entry,
         catalogueSchemes,
         componentViews,
-        hierarchy.ancestorsById
-          .get(entry.id)
-          ?.map((ancestor) => ancestor.title) ?? [],
+        entry.navPath ?? [],
+        entries,
       ),
     ),
     generatedBy: "mokly",
@@ -61,40 +56,24 @@ export function createManifest(
         ...entries.map((entry) => entry.sourceRelativePath),
       ]),
     ].sort(),
-    schemaVersion: 5,
+    schemaVersion: 7,
   };
 }
 
 /** Serialize the current manifest with canonical object-key ordering. */
-export function serializeManifest(manifest: ManifestV5): string {
+export function serializeManifest(manifest: ManifestV7): string {
   return `${canonicalJson(manifest, 2)}\n`;
 }
 
-/** Read strictly current schema-v5 canonical output. */
-export function readManifest(config: ResolvedConfig): ManifestV5 {
+/** Read strictly current schema-v7 canonical output. */
+export function readManifest(config: ResolvedConfig): ManifestV7 {
   const canonicalPath = path.join(config.mockupsDir, MANIFEST_NAME);
   const manifest = readManifestFile(canonicalPath);
   config.sourceFiles = manifest.sourceFiles;
   return manifest;
 }
 
-/** Select the strict canonical input or the explicitly enabled legacy input. */
-export function selectManifestInput(
-  canonicalExists: boolean,
-  formerExists: boolean,
-  allowLegacyV2: boolean,
-): { allowV2: boolean; filename: string } {
-  if (canonicalExists) {
-    return { allowV2: false, filename: MANIFEST_NAME };
-  }
-  if (formerExists) {
-    return { allowV2: false, filename: FORMER_MANIFEST_NAME };
-  }
-  if (!allowLegacyV2) return { allowV2: false, filename: MANIFEST_NAME };
-  return { allowV2: true, filename: LEGACY_MANIFEST_NAME };
-}
-
-function readManifestFile(candidate: string): ManifestV5 {
+function readManifestFile(candidate: string): ManifestV7 {
   let value: unknown;
   try {
     value = JSON.parse(fs.readFileSync(candidate, "utf8"));
@@ -110,17 +89,14 @@ function readManifestFile(candidate: string): ManifestV5 {
   return parseManifest(value);
 }
 
-/** Validate manifest-shaped JSON and normalize temporary version 2 input. */
-export function parseManifest(value: unknown): ManifestV5 {
-  return validateManifest(value, false, false) as ManifestV5;
+/** Validate manifest-shaped JSON against the current v7 contract. */
+export function parseManifest(value: unknown): ManifestV7 {
+  return validateManifest(value);
 }
 
-/** Read old schemas only at the historical comparison boundary. */
-export function parseHistoricalManifest(
-  value: unknown,
-  allowV2 = false,
-): HistoricalManifest {
-  return validateManifest(value, allowV2, true);
+/** Apply the earlier/newer version gate, then fully validate historical v7. */
+export function parseHistoricalManifest(value: unknown): HistoricalManifest {
+  return validateManifest(value, true);
 }
 
 function toManifestEntry(
@@ -128,12 +104,10 @@ function toManifestEntry(
   catalogueSchemes: readonly ColorScheme[],
   componentViews: ReadonlyMap<string, ComponentViewRecord>,
   navPath: readonly string[],
-): ManifestV5["entries"][number] {
+  entries: readonly ResolvedRegistryEntry[],
+): ManifestV7["entries"][number] {
   const common = {
     declaredDependencies: [...new Set(entry.dependencies)].sort(),
-    dependencies: [
-      ...new Set([entry.sourceRelativePath, ...entry.dependencies]),
-    ].sort(),
     description: entry.description,
     id: entry.id,
     kind: entry.kind,
@@ -143,65 +117,64 @@ function toManifestEntry(
     sourcePath: entry.sourceRelativePath,
     title: entry.title,
   };
+  if (entry.kind === "component" && isComponentVariantDefinition(entry)) {
+    const parent = entries.find(
+      (candidate): candidate is ComponentDefinition & ResolvedRegistryEntry =>
+        candidate.kind === "component" &&
+        !isComponentVariantDefinition(candidate) &&
+        candidate.id === entry.variantOf,
+    )!;
+    return componentVariantManifestEntry(
+      entry,
+      parent,
+      common,
+      catalogueSchemes,
+      componentViews,
+    );
+  }
   if (entry.kind === "component")
     return {
-      ...componentManifestEntry(
-        entry,
-        common,
-        catalogueSchemes,
-        componentViews,
-      ),
+      ...componentManifestEntry(entry, common, catalogueSchemes),
       declaredDependencies: common.declaredDependencies,
     };
-  if (entry.kind === "collection")
-    return { ...common, childIds: [...entry.childIds], kind: "collection" };
   if (entry.kind === "page")
     return {
       ...common,
       kind: "page",
-      route: entry.route,
       ...(entry.tags?.length ? { tags: [...entry.tags] } : {}),
     };
   if (entry.kind === "use-case") {
     return {
       ...common,
       kind: "use-case",
-      route: entry.route,
       steps: entry.steps.map((step) => ({ ...step })),
       ...(entry.tags && entry.tags.length > 0 ? { tags: [...entry.tags] } : {}),
     };
   }
+  const colorSchemes = effectiveColorSchemes(entry, catalogueSchemes);
   return {
     ...common,
     ...(entry.address ? { address: entry.address } : {}),
-    ...(effectiveColorSchemes(entry, catalogueSchemes).includes("dark")
-      ? {
-          darkFragments: {
-            desktop: fragmentRoute(entry.route, "desktop", "dark"),
-            mobile: fragmentRoute(entry.route, "mobile", "dark"),
-          },
-        }
-      : {}),
-    fragments: {
-      desktop: fragmentRoute(entry.route, "desktop"),
-      mobile: fragmentRoute(entry.route, "mobile"),
-    },
+    colorSchemes: [...colorSchemes],
     kind: "screen",
     ...(componentViews.size
       ? {
           componentViews: ["mobile", "desktop"].flatMap((viewport) =>
-            effectiveColorSchemes(entry, catalogueSchemes).map((scheme) =>
+            colorSchemes.map((scheme) =>
               componentViews.get(
-                fragmentRoute(entry.route, viewport as Viewport, scheme),
+                viewRoute(
+                  "screen",
+                  entry.id,
+                  viewport as "desktop" | "mobile",
+                  scheme,
+                ),
               )!,
             ),
           ),
         }
       : {}),
-    route: entry.route,
     ...(entry.tags && entry.tags.length > 0 ? { tags: [...entry.tags] } : {}),
     useCaseIds: [...entry.useCaseIds],
     ...(entry.variantOf !== undefined ? { variantOf: entry.variantOf } : {}),
-    viewports: ["mobile", "desktop"],
   };
 }

@@ -31,6 +31,5 @@ export const onboardingPickerVariant = {
   desktop: <OnboardingPickerDesktop />,
   id: "design-browse-tag-onboarding-picker",
   mobile: <OnboardingPickerMobile />,
-  slug: "onboarding-picker",
   title: "Onboarding tag picker",
 } satisfies ScreenVariantInput;

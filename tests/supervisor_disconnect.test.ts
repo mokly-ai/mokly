@@ -35,7 +35,7 @@ for (const phase of ["waiting", "ready"] as const) {
       assert.match(failures[0]!.message, /IPC disconnected/);
     else assert.equal(started.status, "pending");
     child.ready();
-    supervisor.notifyUpdate(["screens/home.html"]);
+    supervisor.notifyUpdate(["home"]);
     assert.deepEqual(child.messages, [{ type: "shutdown" }]);
     const closing = supervisor.close();
     const closed = settlement(closing);

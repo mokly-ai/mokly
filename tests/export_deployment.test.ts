@@ -50,12 +50,7 @@ for (const name of [
         normalizedNonClientFiles(beforeFiles, before.deploymentId),
         normalizedNonClientFiles(files, after.deploymentId),
       );
-    for (const shell of [
-      "index.html",
-      "404.html",
-      "view/screens/home.html",
-      "id/home/index.html",
-    ])
+    for (const shell of ["index.html", "404.html", "view/screens/home.html"])
       assert.equal(
         exportedDelivery(files, shell).deploymentId,
         after.deploymentId,

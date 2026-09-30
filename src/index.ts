@@ -11,8 +11,7 @@ export type {
   WatchRule,
 } from "./config/types.js";
 export {
-  collection,
-  defineCollection,
+  folder,
   defineRoot,
   definePage,
   page,
@@ -27,14 +26,12 @@ export type {
   PageInput,
   PageDefinition,
   NestedPageInput,
-  CollectionDefinition,
-  CollectionInput,
   EntryInput,
-  NestedCollectionInput,
+  NestedFolderInput,
+  NestedFolderMarker,
   NestedScreenInput,
   RegistryDefinition,
   RootInput,
-  RoutedEntryInput,
   ScreenDefinition,
   ScreenInput,
   ScreenVariantInput,
@@ -48,10 +45,12 @@ export { resolveInstance } from "@mokly/viewer";
 export type { InstanceResolution } from "@mokly/viewer";
 export type {
   ComponentDefinition,
+  ComponentEntryDefinition,
   ComponentInput,
   ComponentProps,
   ComponentRenderContext,
   ComponentVariant,
+  ComponentVariantDefinition,
   RegisteredComponent,
 } from "./components/types.js";
 export type {

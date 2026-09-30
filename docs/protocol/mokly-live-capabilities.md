@@ -121,7 +121,7 @@ when all of these remain true:
 - the bootstrap context and route exactly match the descriptor and current
   logical route;
 - the render generation and token still match the installed host;
-- the returned workspace route equals the current logical route.
+- the returned workspace names the entry of the current logical route.
 
 Before that candidate is accepted, a route-scoped public fallback reports
 Usage as loading and derives no cross-route list from omitted records. If the

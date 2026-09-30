@@ -9,10 +9,27 @@ const modes = [
   ["overlay", "Overlay"],
   ["difference", "Difference"],
 ] as const;
+
+/**
+ * Scroll together, the native switch that follows the mode group in every
+ * diff mode. It toggles in place and opens nothing, because a static artboard
+ * has no versions to scroll.
+ */
+function ScrollTogether({ on }: { on: boolean }) {
+  return (
+    <label className="mbk-cmp-sync">
+      <input type="checkbox" role="switch" defaultChecked={on} />
+      <span className="mbk-cmp-sync-track" aria-hidden="true" />
+      Scroll together
+    </label>
+  );
+}
+
 export function ComparisonToolbarView({
   mode,
   eligible,
   accessible,
+  scrollTogether,
   destinations,
 }: ComparisonToolbarProps) {
   useDesignStyle("comparison-toolbar", eligible);
@@ -31,9 +48,12 @@ export function ComparisonToolbarView({
         ))}
       </span>
       {mode !== "current" ? (
-        <span className="mbk-cmp-refresh" aria-label="Refresh comparison">
-          ↻
-        </span>
+        <>
+          <ScrollTogether on={scrollTogether} />
+          <span className="mbk-cmp-refresh" aria-label="Refresh comparison">
+            ↻
+          </span>
+        </>
       ) : null}
     </div>
   );

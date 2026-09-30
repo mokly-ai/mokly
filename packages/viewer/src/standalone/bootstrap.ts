@@ -1,12 +1,15 @@
 /** Serializable state shared by standalone shell SSR and browser hydration. */
 
-import { resolveCatalogueRoute } from "../catalogue/entry_selection.js";
-import { readCatalogue } from "../catalogue/reader.js";
+import { resolveCatalogueEntry } from "../catalogue/entry_selection.js";
 import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import { canonicalJson } from "../components/data.js";
 import type { StaticDelivery } from "../navigation/delivery.js";
-import { catalogueRouteEntry } from "../shell/catalogue.js";
+import type { EntryRouteKind } from "../navigation/routes.js";
+import {
+  catalogueRouteEntry,
+  catalogueSelectionEntry,
+} from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
 import { toRouteTarget } from "../shell/target.js";
 import type { ShellView } from "../shell/views.js";
@@ -14,35 +17,24 @@ import { viewerCatalogue, viewerContext } from "../viewer/projection.js";
 import { defaultSelection } from "../viewer/selection.js";
 import { normalizeTheme } from "../viewer/theme.js";
 
-import {
-  readShellBootstrapEnvelope,
-  type ShellBootstrapEnvelope,
-  type ShellBootstrapView,
-} from "./bootstrap_envelope.js";
-import {
-  catalogueReferenceMatches,
-  externalCatalogueReference,
-  isExternalCatalogueReference,
-  readExternalCatalogueReference,
-  type ExternalCatalogueReference,
-} from "./catalogue_reference.js";
+import type { ShellBootstrapEnvelope } from "./bootstrap_envelope.js";
+import type {
+  ExternalShellBootstrap,
+  ShellBootstrap,
+} from "./bootstrap_types.js";
+import { externalCatalogueReference } from "./catalogue_reference.js";
 
-export { readShellBootstrapEnvelope } from "./bootstrap_envelope.js";
+export type { BootstrapView as ShellBootstrapView } from "./bootstrap_envelope.js";
 export type {
-  ShellBootstrapContext,
-  ShellBootstrapEnvelope,
-  ShellBootstrapView,
-} from "./bootstrap_envelope.js";
-
-/** Public-catalogue state embedded in one server-rendered standalone page. */
-export type ShellBootstrap = ShellBootstrapEnvelope<CatalogueReadModel>;
-
-/** Compact static-page state resolved from the deployment catalogue before hydration. */
-export type ExternalShellBootstrap =
-  ShellBootstrapEnvelope<ExternalCatalogueReference>;
-
-/** Either a self-contained live bootstrap or a static shared-catalogue reference. */
-export type ShellBootstrapState = ShellBootstrap | ExternalShellBootstrap;
+  ExternalShellBootstrap,
+  ShellBootstrap,
+  ShellBootstrapState,
+} from "./bootstrap_types.js";
+export {
+  readShellBootstrap,
+  readShellBootstrapState,
+  resolveShellBootstrap,
+} from "./bootstrap_validation.js";
 
 /** Build the browser-safe hydration state from an accepted server snapshot. */
 export function shellBootstrap(
@@ -70,7 +62,14 @@ export function shellBootstrap(
     },
     view:
       view.kind === "target"
-        ? { kind: "target", route: view.target.entry.route }
+        ? {
+            kind: "target",
+            entryId: view.target.entry.id,
+            entryKind: view.target.entry.kind,
+            ...(context.snapshotId === undefined
+              ? {}
+              : { snapshotId: context.snapshotId }),
+          }
         : view.kind === "missing"
           ? { kind: "missing", requested: view.requested }
           : { kind: "home" },
@@ -87,40 +86,6 @@ export function externalShellBootstrap(
   };
 }
 
-/** Validate embedded JSON before it can select routes or delivery metadata. */
-export function readShellBootstrap(value: unknown): ShellBootstrap {
-  const state = readShellBootstrapState(value);
-  if (isExternalShellBootstrap(state))
-    throw new Error("External shell hydration requires a catalogue.");
-  return state;
-}
-
-/** Validate either supported embedded bootstrap representation. */
-export function readShellBootstrapState(value: unknown): ShellBootstrapState {
-  const envelope = readShellBootstrapEnvelope(value);
-  if (isExternalCatalogueReference(envelope.catalogue))
-    return {
-      catalogue: readExternalCatalogueReference(envelope.catalogue),
-      context: envelope.context,
-      view: envelope.view,
-    };
-  const catalogue = readCatalogue(envelope.catalogue);
-  validateTarget(catalogue, envelope.view);
-  return { ...envelope, catalogue };
-}
-
-/** Resolve a compact static bootstrap against its validated deployment catalogue. */
-export function resolveShellBootstrap(
-  state: ShellBootstrapState,
-  catalogue: CatalogueReadModel,
-): ShellBootstrap {
-  if (!isExternalShellBootstrap(state)) return state;
-  if (!catalogueReferenceMatches(state.catalogue, catalogue))
-    throw new Error("The deployed catalogue does not match the page.");
-  validateTarget(catalogue, state.view);
-  return { catalogue, context: state.context, view: state.view };
-}
-
 /** Encode hydration state with stable lexical object-key ordering. */
 export function serializeShellBootstrap(
   bootstrap: ShellBootstrapEnvelope<unknown>,
@@ -135,10 +100,17 @@ export function shellBootstrapProps(
   const catalogue = viewerCatalogue(bootstrap.catalogue);
   const selected =
     bootstrap.view.kind === "target"
-      ? resolveCatalogueRoute(bootstrap.catalogue, bootstrap.view.route)
+      ? resolveCatalogueEntry(
+          bootstrap.catalogue,
+          {
+            id: bootstrap.view.entryId,
+            kind: bootstrap.view.entryKind,
+          },
+          bootstrap.view.snapshotId,
+        )
       : undefined;
   const selectedEntry = selected
-    ? catalogueRouteEntry(catalogue, selected.entry.route)
+    ? catalogueSelectionEntry(catalogue, selected.entry.id, selected.snapshotId)
     : undefined;
   const selectedId = selectedEntry?.id ?? null;
   const selection = {
@@ -169,7 +141,7 @@ export function shellBootstrapProps(
       ? {}
       : { theme: bootstrap.context.theme }),
     ...(bootstrap.view.kind === "target"
-      ? { activeRoute: bootstrap.view.route }
+      ? { activeId: bootstrap.view.entryId }
       : {}),
   };
   const view: ShellView =
@@ -177,7 +149,12 @@ export function shellBootstrapProps(
       ? { kind: "home" }
       : bootstrap.view.kind === "missing"
         ? bootstrap.view
-        : targetView(catalogue, bootstrap.view.route);
+        : targetView(
+            catalogue,
+            bootstrap.view.entryId,
+            bootstrap.view.entryKind,
+            bootstrap.view.snapshotId,
+          );
   return { catalogue, context, view };
 }
 
@@ -198,25 +175,16 @@ export function shellBootstrapWithDelivery<
   };
 }
 
-function isExternalShellBootstrap(
-  state: ShellBootstrapState,
-): state is ExternalShellBootstrap {
-  return isExternalCatalogueReference(state.catalogue);
-}
-
-function validateTarget(
-  catalogue: CatalogueReadModel,
-  view: ShellBootstrapView,
-): void {
-  if (view.kind === "target" && !resolveCatalogueRoute(catalogue, view.route))
-    throw new Error("Invalid shell hydration target.");
-}
-
 function targetView(
   catalogue: ReturnType<typeof viewerCatalogue>,
-  route: string,
+  id: string,
+  kind: EntryRouteKind,
+  snapshotId?: string,
 ): ShellView {
-  const entry = catalogueRouteEntry(catalogue, route);
+  const entry = snapshotId
+    ? catalogueSelectionEntry(catalogue, id, snapshotId)
+    : catalogueRouteEntry(catalogue, id, kind);
+  if (entry?.kind !== kind) throw new Error("Invalid shell hydration target.");
   const target = entry && toRouteTarget(entry);
   if (!target) throw new Error("Invalid shell hydration target.");
   return { kind: "target", target };

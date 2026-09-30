@@ -55,7 +55,8 @@ export function externalizeCapturedShell(
   }
   const expected = projectScopedCatalogue(catalogue, bootstrap.view);
   if (
-    bootstrap.context.comparisons !== (catalogue.comparisonUrl !== null) ||
+    bootstrap.context.comparisons !==
+      (catalogue.changesStatus !== "disabled") ||
     !capturedPreviewsRemainValid(bootstrap.catalogue, catalogue) ||
     !sameRenderedCatalogue(bootstrap.catalogue, expected)
   )

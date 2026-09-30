@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { viewRoute } from "../packages/viewer/dist/data.js";
+
 import {
   attribute,
   byClass,
@@ -12,21 +14,9 @@ import {
 } from "./helpers/design_catalogue.js";
 
 const loadingScreens = [
-  [
-    "design-component-usage-loading",
-    "design/components/states/loading/usage.html",
-    "Usage loading",
-  ],
-  [
-    "design-component-inspection-loading",
-    "design/components/states/loading/inspection.html",
-    "Inspection loading",
-  ],
-  [
-    "design-component-usage-failed",
-    "design/components/states/loading/failed.html",
-    "Usage failed to load",
-  ],
+  ["design-component-usage-loading", "Usage loading"],
+  ["design-component-inspection-loading", "Inspection loading"],
+  ["design-component-usage-failed", "Usage failed to load"],
 ] as const;
 
 function openPanel(
@@ -52,27 +42,28 @@ function normalizedText(node: Element): string {
 
 test("Loading and recovery is a bounded child of component States", async () => {
   const { manifest } = await designCatalogue;
-  const states = manifest.entries.find(
-    (entry) => entry.id === "design-component-states",
-  );
-  const loading = manifest.entries.find(
-    (entry) => entry.id === "design-component-loading-states",
-  );
-  assert.ok(states?.kind === "collection");
-  assert.ok(states.childIds.includes("design-component-loading-states"));
-  assert.ok(loading?.kind === "collection");
-  assert.deepEqual(
-    loading.childIds,
-    loadingScreens.map(([id]) => id),
-  );
-  assert.ok(loading.childIds.length <= 5);
-
-  for (const [id, route, title] of loadingScreens) {
+  assert.ok(loadingScreens.length <= 5);
+  for (const [id, title] of loadingScreens) {
     const entry = manifest.entries.find((entry) => entry.id === id);
     assert.ok(entry?.kind === "screen", id);
-    assert.equal(entry.route, route, id);
+    assert.deepEqual(
+      entry.navPath,
+      [
+        "Design",
+        "Mokly design",
+        "Component explorer",
+        "Empty and change states",
+        "Loading and recovery",
+      ],
+      id,
+    );
+    assert.equal(
+      viewRoute("screen", entry.id, "desktop", "light"),
+      `screens/${id}.desktop.html`,
+      id,
+    );
     assert.equal(entry.title, title, id);
-    assert.equal(entry.darkFragments, undefined, id);
+    assert.deepEqual(entry.colorSchemes, ["light"], id);
   }
 });
 

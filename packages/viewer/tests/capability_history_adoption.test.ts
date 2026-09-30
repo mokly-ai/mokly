@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
+import { viewHref } from "../src/navigation/routes.js";
 import {
   adoptedViewerCatalogue,
   shellStateWithViewerEvidence,
@@ -23,12 +24,12 @@ test("live evidence retains unchanged identity-less historical metadata", () => 
   const historical: CatalogueReadModel = {
     ...model,
     screens: model.screens.slice(1),
-    removedEntries: [{ entry: screen, ancestors: [] }],
+    removedEntries: [{ entry: screen }],
   };
   const current = viewerCatalogue(historical);
   const route = routeFromUrl(
     current,
-    new URL(`https://example.test/view/${screen.route}`),
+    new URL(`https://example.test${viewHref(screen.kind, screen.id)}`),
   );
   const source = capabilitySource(historical, 4);
   const unchanged: CatalogueReadModel = {
@@ -67,12 +68,12 @@ test("live evidence rejects changed or removed identity-less history", () => {
   const historical: CatalogueReadModel = {
     ...model,
     screens: model.screens.slice(1),
-    removedEntries: [{ entry: screen, ancestors: [] }],
+    removedEntries: [{ entry: screen }],
   };
   const current = viewerCatalogue(historical);
   const route = routeFromUrl(
     current,
-    new URL(`https://example.test/view/${screen.route}`),
+    new URL(`https://example.test${viewHref(screen.kind, screen.id)}`),
   );
   const source = capabilitySource(historical, 4);
   const changed: CatalogueReadModel = {
@@ -81,9 +82,7 @@ test("live evidence rejects changed or removed identity-less history", () => {
       ...historical.revision,
       evidence: historical.revision.evidence + 1,
     },
-    removedEntries: [
-      { entry: { ...screen, title: "Earlier home" }, ancestors: [] },
-    ],
+    removedEntries: [{ entry: { ...screen, title: "Earlier home" } }],
   };
   const removed: CatalogueReadModel = {
     ...changed,

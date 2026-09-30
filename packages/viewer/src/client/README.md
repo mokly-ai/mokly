@@ -51,7 +51,8 @@ scroll restoration and authenticated temporary control previews. Direct frame
 document/window access lives in the local transport, rather than workspace,
 Browse state, or controls. `component_geometry.ts` retains its existing geometry
 entrypoints and shares containing-block-aware clipping with the inspector in
-`inspector/clipping.ts`; `same_origin_highlight.ts` owns the unchanged
+[`../inspector/clipping.ts`](../inspector/clipping.ts);
+`same_origin_highlight.ts` owns the unchanged
 mask, labels, selection and observer lifecycle.
 
 `same_origin_identity.ts` is the single document-authentication boundary for
@@ -78,13 +79,18 @@ for completion before inspection becomes ready. Matching URLs alone do not
 authorize reuse.
 
 Frames holding a previous version carry `data-mokly-preview-frame` and
-`data-mokly-preview-source`. They are owned directly by the
-[React preview controller](../previews/README.md), not a frame adapter, so no
-inspector or logical-navigation handshake happens for historical documents.
-The controller fetches each historical document and presents it as a
-viewer-origin, script-disabled `srcdoc`; its parent guard therefore cancels
-every link and form in every host, owns same-document anchor scrolling, and
-restores the accepted presentation if the frame navigates.
+`data-mokly-preview-source`; comparison pane frames carry
+`data-mokly-comparison-frame`, `data-mokly-preview-source` and
+`scrolling="no"`. Both are owned directly by React controllers, the
+[preview controller](../previews/README.md) and the comparison pane modules in
+[the shell](../shell/README.md), not a frame adapter, so no inspector or
+logical-navigation handshake happens for them. Each controller fetches every
+snapshot document and presents it as a viewer-origin, script-disabled
+`srcdoc`; its parent guard therefore cancels every link and form in every host,
+owns same-document anchors, and restores the accepted presentation if the frame
+navigates. Comparison pages are driven by their chrome viewports, while paired
+inner regions, keys, and anchors follow the
+[comparison scrolling contract](../../../../docs/protocol/mokly-comparison-scrolling.md).
 
 `post_message_adapter.ts` explicitly opts into a separate HTTP(S) origin. It sets
 the cross-origin sandbox, replaces iframe history, and negotiates a fresh random
@@ -117,10 +123,10 @@ existing route/new-context handling. Events contain logical identities and
 activation metadata, never consumer URLs. The transport does not open windows.
 Local Serve/export do not select this adapter or expose a pick control.
 
-Standalone saved variants use shell history. Embedded viewers propose public
-selection through the host boundary, and apply a variant only after controlled
-or uncontrolled selection commits. This avoids a second private variant state
-or direct history write inside embedded viewers.
+Standalone component variant entries use shell history. Embedded viewers
+propose public selection through the host boundary, and apply a variant only
+after controlled or uncontrolled selection commits. This avoids a second
+private variant state or direct history write inside embedded viewers.
 
 ```bash
 npm run build

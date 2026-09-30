@@ -9,6 +9,9 @@ export const COMPONENT_PAGES = {
   default: "design-component-overview",
   disabled: "design-component-variants",
   comparison: "design-component-comparison",
+  overlay: "design-component-overlay",
+  difference: "design-component-difference",
+  "overlay-tall": "design-component-overlay-tall",
   affected: "design-component-affected",
   toolbar: "design-component-toolbar",
   hidden: "design-component-help",
@@ -17,6 +20,7 @@ export const COMPONENT_PAGES = {
   removed: "design-component-removed",
   "usage-loading": "design-component-usage-loading",
   "usage-failed": "design-component-usage-failed",
+  "shared-impact": "design-component-shared-impact",
 } as const satisfies Record<ComponentPageState, string>;
 
 /** Screen inspection states remain separate from the existing Browse subjects. */

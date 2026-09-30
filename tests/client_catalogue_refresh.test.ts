@@ -15,7 +15,7 @@ import { createReactUpdateCapability } from "../dist/client/react_capability_upd
 
 const catalogue = readCatalogue(
   JSON.parse(
-    fs.readFileSync("docs/protocol/fixtures/catalogue-v1.json", "utf8"),
+    fs.readFileSync("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
   ),
 );
 
@@ -70,7 +70,7 @@ function descriptor(
 }
 
 function request(value: ViewerCapabilityDescriptor): ViewerCapabilityRequest {
-  return { route: null, source: value.source };
+  return { entryId: null, source: value.source };
 }
 
 class FakeSource {

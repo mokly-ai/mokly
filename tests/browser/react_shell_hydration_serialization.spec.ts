@@ -39,7 +39,7 @@ test("hydration and shell rerenders do not serialize embedded state", async ({
     detailed: true,
   });
   try {
-    await page.goto("/view/screens/welcome.html");
+    await page.goto("/view/screens/example-welcome.html");
     await expectCleanHydration(page, errors);
     const embedded = await embeddedState(page);
     assertNoSerialization(await serializationCalls(session), "hydration");
@@ -54,9 +54,9 @@ test("hydration and shell rerenders do not serialize embedded state", async ({
     assertNoSerialization(await serializationCalls(session), "drawer toggle");
 
     await page
-      .locator('[data-mokly-nav] a[href="/view/screens/details.html"]')
+      .locator('[data-mokly-nav] a[href="/view/screens/example-details.html"]')
       .click();
-    await expect(page).toHaveURL(/\/view\/screens\/details\.html$/);
+    await expect(page).toHaveURL(/\/view\/screens\/example-details\.html$/);
     await settleRender(page);
     await expectEmbeddedState(page, embedded);
     assertNoSerialization(

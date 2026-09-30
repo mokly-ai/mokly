@@ -17,13 +17,20 @@ Loading and failed route-evidence Usage presentation is implemented by the
 Components are a distinct entry kind in a dedicated collapsible Components
 section, with a component icon and the same All/Changes filter, count, search,
 tags, breadcrumbs, id chip, and responsive navigation. Screens, whole-document
-pages, and use cases stay in the sibling Pages section. Collection membership
-remains the hierarchy within both projections; a separate explorer application
+pages, and use cases stay in the sibling Pages section. Section-scoped `navPath`
+folders remain the hierarchy within both projections; a separate explorer application
 or automatically invented Components folder is not required. The example
 catalogue still provides its authored Components group.
 
-A component page contains its title, description, selected saved variant,
-preview canvas, grouped view controls, eligible comparison controls, and an icon inspector.
+A component page contains its title, description, a variant bar linking its
+variant entries, preview canvas, grouped view controls, eligible comparison
+controls, and an icon inspector.
+The heading uses the parent component's title on the parent page and on every
+variant entry page, while the variant bar marks the shown entry. The id chip,
+status beside the heading, Details, and URL describe that shown entry. The
+parent page shows its first variant on the stage but keeps the parent id and
+parent entry details. Screen variants have no variant bar and keep their own
+title as the heading.
 The canvas uses the consumer renderer and gives a small component suitable
 space without implying it is a whole phone screen. Mobile/desktop still select
 distinct viewport contexts; controls must not fake scaling or modify consumer
@@ -43,39 +50,36 @@ action stay outside scrolling content. Closing leaves the icon strip with no
 selected icon; reopening retains edits. The mockups use a native switch for
 size changes; gesture handling belongs to the runtime.
 
-Saved variants are selectable by name. One component page shows one selected
-variant at a time; variants are not independent Changes rows. A validated
-`variant` query parameter makes the selection linkable and preserves it through
-Back/Forward. No parameter selects the first variant. Unknown or duplicate
-values produce a clear selection error with valid variants still accessible.
-Viewport/theme changes retain the variant, applying existing light-only rules.
+Each component variant is an entry, nav/search/Changes row, and `mock:` target
+under the [variant contract](./mokly-variants.md). The variant bar navigates by
+global id in authored order, so URLs and Back/Forward need no query parameter;
+the parent page shows the first variant.
 
-Current / Side by side / Overlay / Difference operate on the selected saved
-variant and viewport/theme. Changing variant while comparing uses that variant's
-comparison; late responses cannot replace a newer selection. Added/removed
-variants retain their recorded state, but only removed variants need an explicit
-missing side. Added variants stay in Current without comparison modes because
-there is no baseline view. Page navigation and reload start in Current, as
-screens do today. Saved variant selection and comparison are fully usable in
-served and published catalogues.
+Comparison modes apply to the shown variant and view axes. Sibling-mode
+retention, read-only Props, disabled highlighting, and response fencing follow
+[variant navigation](./mokly-variant-navigation.md). A removed component
+variant remains eligible with a missing current side; Added stays in Current.
+Fresh page loads start in Current in served and published catalogues.
 
 Only expose comparison modes when the shown status is Changed or when a
-component saved variant's shown status is Removed. A known selection shows
+component variant entry's shown status is Removed. A known selection shows
 Added, Changed, Removed, or Unmodified beside its title from the selected
 viewport and scheme; Both follows the aggregation rule in the
-[Changes contract](./mokly-changes.md#screen-controls). A removed variant does
-not mark its surviving component Removed. Added and Unmodified show only their
-current preview. Missing per-view evidence retains route-level status and
+[Changes contract](./mokly-changes.md#screen-controls). A removed variant is its
+own Removed entry and does not mark its surviving parent Removed; the parent's
+status describes the parent only. Added and Unmodified show only their
+current preview. Missing per-view evidence retains entry-level status and
 eligibility rather than implying Unmodified. Affected
 consumers can remain eligible without entering Changes; temporary control edits
 never establish comparison eligibility. Do not eagerly generate screenshots to
 decide whether the mode row is available.
 
-`MockLink` and id redirects can target a component's default variant using the
-existing logical-id contract. Generated standalone links resolve to the default
-variant's viewport/theme fragment. Variant selectors and Used by links are
-shell-owned URLs; do not overload the existing logical fragment grammar with
-component prop JSON or variant suffixes.
+`MockLink` can target a component parent or any of its variant entries by id
+using the existing logical-id contract. A generated standalone link to the
+parent resolves to its first variant entry's viewport/theme view; a link to a
+variant entry resolves to that entry's own view. Variant bar and Used by links
+are shell-owned `/view/<route>` URLs; do not overload the existing logical
+fragment grammar with component prop JSON or variant suffixes.
 Affected-consumer links carry explicit comparison eligibility. A removed screen
 link opens its Removed state, showing its
 [previous version](./mokly-removed-previews.md) without a
@@ -120,7 +124,7 @@ with nested relationships and readable instance labels. Selecting an instance
 opens Props with supplied data, slot references, and links to its component page.
 Unrendered conditional branches do not appear; null-rendering instances are
 listed without a visible region. An empty usage set says no registered components
-are used in this view. Legacy/missing metadata says inspection is unavailable.
+are used in this view. Missing metadata says inspection is unavailable.
 
 Bootstrap usage omitted only while route evidence is loading is neither empty
 nor unavailable metadata. The Components panel and Highlight control use
@@ -190,7 +194,7 @@ Component-page nested inspection can reuse this same mechanism.
 
 By default, package-owned shell code inspects its immediate, same-origin, authenticated
 generated frame. Component metadata extends the existing Browse ownership
-validation. Arbitrary legacy documents, nested frames, and comparison snapshots
+validation. Unvalidated documents, nested frames, and comparison snapshots
 receive no new inspection privileges. Consumer scripts, forms, popups, and top
 navigation remain disabled; do not loosen frame sandbox policy for this feature.
 
@@ -210,7 +214,7 @@ document scripts; local frames and comparison snapshots keep their existing
 restrictions. Host-only pick mode reuses Highlight components and adds no local
 control. Instance lookup uses the [scoped identity contract](./mokly-instances.md),
 not source locations, DOM text or guessed geometry.
-Public imperative highlighting keeps viewport, scheme, variant and flow-step
+Public imperative highlighting keeps entry, viewport, scheme, and flow-step
 scope through masks, labels and emitted events. This differs from the workspace's
 intentional multi-view highlighting of one selected key. Frame replacement ends
 host picking and clears stale inspection under the viewer lifecycle contract.

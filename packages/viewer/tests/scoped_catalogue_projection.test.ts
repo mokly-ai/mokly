@@ -2,8 +2,12 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { projectScopedCatalogue } from "../src/catalogue/scoped_projection.js";
+import type { CatalogueRecord } from "../src/catalogue/types.js";
 import { catalogueUsageViews } from "../src/catalogue/usage_scope.js";
-import { serializeShellBootstrap } from "../src/standalone/bootstrap.js";
+import {
+  serializeShellBootstrap,
+  type ShellBootstrapView,
+} from "../src/standalone/bootstrap.js";
 
 import { scopedCatalogueFixture } from "./scoped_catalogue_fixture.js";
 
@@ -16,10 +20,7 @@ const context = {
 
 test("projection retains real route usage and omits every other view", () => {
   const screen = model.screens.find(({ id }) => id === "home")!;
-  const projected = projectScopedCatalogue(model, {
-    kind: "target",
-    route: screen.route,
-  });
+  const projected = projectScopedCatalogue(model, target(screen));
   const projectedScreen = projected.screens.find(({ id }) => id === screen.id)!;
   assert.deepEqual(
     projectedScreen.views.map(({ usage }) => usage),
@@ -34,21 +35,29 @@ test("projection retains real route usage and omits every other view", () => {
 test("synthetic screen bytes ignore another entry's usage", () => {
   const screen = model.screens.find(({ id }) => id === "home")!;
   const changed = structuredClone(model);
-  changed.components[0]!.variants[0]!.views[0]!.usage = {
+  const changedVariant = changed.components.find(
+    (entry) => "variantOf" in entry,
+  )!;
+  const originalVariant = model.components.find(
+    (entry) => "variantOf" in entry,
+  )!;
+  changedVariant.views[0]!.usage = {
     status: "pending",
   };
   assert.notDeepEqual(
-    changed.components[0]!.variants[0]!.views[0]!.usage,
-    model.components[0]!.variants[0]!.views[0]!.usage,
+    changedVariant.views[0]!.usage,
+    originalVariant.views[0]!.usage,
   );
   assert.equal(
-    scopedBytes(model, { kind: "target", route: screen.route }),
-    scopedBytes(changed, { kind: "target", route: screen.route }),
+    scopedBytes(model, target(screen)),
+    scopedBytes(changed, target(screen)),
   );
 });
 
 test("synthetic component bytes ignore another entry's usage", () => {
-  const component = model.components.find(({ id }) => id === "action")!;
+  const component = model.components.find(
+    (entry) => entry.id === "action" && !("variantOf" in entry),
+  )!;
   const changed = structuredClone(model);
   changed.screens[0]!.views[0]!.usage = { status: "unavailable" };
   assert.notDeepEqual(
@@ -56,21 +65,26 @@ test("synthetic component bytes ignore another entry's usage", () => {
     model.screens[0]!.views[0]!.usage,
   );
   assert.equal(
-    scopedBytes(model, { kind: "target", route: component.route }),
-    scopedBytes(changed, { kind: "target", route: component.route }),
+    scopedBytes(model, target(component)),
+    scopedBytes(changed, target(component)),
   );
 });
 
 function scopedBytes(
   catalogue: typeof model,
-  view:
-    | { kind: "home" }
-    | { kind: "missing"; requested: string }
-    | { kind: "target"; route: string },
+  view: ShellBootstrapView,
 ): string {
   return serializeShellBootstrap({
     catalogue: projectScopedCatalogue(catalogue, view),
     context,
     view,
   });
+}
+
+function target(entry: Pick<CatalogueRecord, "id" | "kind">) {
+  return {
+    kind: "target" as const,
+    entryId: entry.id,
+    entryKind: entry.kind,
+  };
 }

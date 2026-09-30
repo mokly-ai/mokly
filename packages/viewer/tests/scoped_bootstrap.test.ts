@@ -5,14 +5,18 @@ import { test } from "node:test";
 
 import { readCatalogue } from "../src/catalogue/reader.js";
 import { projectScopedCatalogue } from "../src/catalogue/scoped_projection.js";
+import type {
+  CatalogueComponentVariant,
+  CatalogueRecord,
+} from "../src/catalogue/types.js";
 import {
   serializeShellBootstrap,
   type ShellBootstrapView,
 } from "../src/standalone/bootstrap.js";
-import { readScopedShellBootstrap } from "../src/standalone/scoped_bootstrap.js";
 import {
   readLiveShellBootstrap,
   readLiveShellBootstrapState,
+  readScopedShellBootstrap,
 } from "../src/standalone/scoped_bootstrap.js";
 
 import { scopedCatalogueFixture } from "./scoped_catalogue_fixture.js";
@@ -24,20 +28,19 @@ const context = {
   updateVersion: 7,
 };
 
-test("scoped bootstraps for every route shape round-trip canonical bytes", () => {
+test("scoped bootstraps for every entry shape round-trip canonical bytes", () => {
   const views: ShellBootstrapView[] = [
     { kind: "home" },
-    { kind: "missing", requested: "not-here.html" },
-    ...model.screens.map(({ route }) => ({ kind: "target" as const, route })),
-    ...model.components.map(({ route }) => ({
-      kind: "target" as const,
-      route,
-    })),
-    ...model.useCases.map(({ route }) => ({ kind: "target" as const, route })),
-    ...model.pages.map(({ route }) => ({ kind: "target" as const, route })),
-    ...model.removedEntries.map(({ entry }) => ({
-      kind: "target" as const,
-      route: entry.route,
+    { kind: "missing", requested: "not-here" },
+    ...[
+      ...model.screens,
+      ...model.components,
+      ...model.useCases,
+      ...model.pages,
+    ].map(target),
+    ...model.removedEntries.map(({ entry, snapshotId }) => ({
+      ...target(entry),
+      ...(snapshotId ? { snapshotId } : {}),
     })),
   ];
   for (const view of views) {
@@ -47,8 +50,9 @@ test("scoped bootstraps for every route shape round-trip canonical bytes", () =>
   }
 });
 
-test("the live reader accepts only exact route scope", () => {
-  const view = { kind: "target" as const, route: "screens/home.html" };
+test("the live reader accepts only exact entry scope", () => {
+  const screen = model.screens.find(({ id }) => id === "home")!;
+  const view = target(screen);
   const complete = { catalogue: model, context, view };
   const scoped = JSON.parse(scopedBytes(view));
   assert.deepEqual(
@@ -61,8 +65,8 @@ test("the live reader accepts only exact route scope", () => {
   );
 
   const hybrid = JSON.parse(scopedBytes(view));
-  hybrid.catalogue.components[0].variants[0].views[0].usage =
-    model.components[0]!.variants[0]!.views[0]!.usage;
+  shellVariant(hybrid.catalogue).views[0]!.usage =
+    firstVariant().views[0]!.usage;
   assert.throws(
     () => readLiveShellBootstrap(hybrid),
     /out-of-scope usage must be omitted/i,
@@ -84,16 +88,15 @@ test("the live state reader leaves static external references unchanged", () => 
 });
 
 test("public catalogue reading still rejects shell-only omitted usage", () => {
-  const value = JSON.parse(
-    scopedBytes({ kind: "target", route: "screens/home.html" }),
-  );
+  const screen = model.screens.find(({ id }) => id === "home")!;
+  const value = JSON.parse(scopedBytes(target(screen)));
   assert.throws(
     () => readCatalogue(value.catalogue),
     /unsupported discriminant/i,
   );
 });
 
-test("scoped reader rejects omitted usage on the selected route", () => {
+test("scoped reader rejects omitted usage on the selected entry", () => {
   const value = screenBootstrapValue();
   value.catalogue.screens[0].views[0].usage = { status: "omitted" };
   assert.throws(
@@ -104,8 +107,8 @@ test("scoped reader rejects omitted usage on the selected route", () => {
 
 test("scoped reader rejects leaked usage from another entry", () => {
   const value = screenBootstrapValue();
-  value.catalogue.components[0].variants[0].views[0].usage =
-    model.components[0]!.variants[0]!.views[0]!.usage;
+  shellVariant(value.catalogue).views[0]!.usage =
+    firstVariant().views[0]!.usage;
   assert.throws(
     () => readScopedShellBootstrap(value),
     /out-of-scope usage must be omitted/i,
@@ -114,11 +117,11 @@ test("scoped reader rejects leaked usage from another entry", () => {
 
 test("scoped reader rejects missing and evidence-carrying omitted usage", () => {
   const missing = screenBootstrapValue();
-  delete missing.catalogue.components[0].variants[0].views[0].usage;
+  delete shellVariant(missing.catalogue).views[0]!.usage;
   assert.throws(() => readScopedShellBootstrap(missing));
 
   const malformed = screenBootstrapValue();
-  malformed.catalogue.components[0].variants[0].views[0].usage = {
+  shellVariant(malformed.catalogue).views[0]!.usage = {
     instances: [],
     ranges: [],
     slots: [],
@@ -130,11 +133,8 @@ test("scoped reader rejects missing and evidence-carrying omitted usage", () => 
   );
 });
 
-test("scoped reader retains index, hierarchy, axis, path and snapshot checks", () => {
+test("scoped reader retains hierarchy, axis, relationship and snapshot checks", () => {
   const mutations = [
-    (value: ReturnType<typeof screenBootstrapValue>) => {
-      value.catalogue.collections[0].childIds.push("missing-entry");
-    },
     (value: ReturnType<typeof screenBootstrapValue>) => {
       value.catalogue.tree.pages = [];
     },
@@ -142,7 +142,7 @@ test("scoped reader retains index, hierarchy, axis, path and snapshot checks", (
       value.catalogue.screens[0].views.pop();
     },
     (value: ReturnType<typeof screenBootstrapValue>) => {
-      value.catalogue.screens[0].views[0].fragmentPath = "static/wrong.html";
+      value.catalogue.screens[1].navPath = ["Wrong"];
     },
     (value: ReturnType<typeof screenBootstrapValue>) => {
       value.catalogue.removedEntries[1].snapshotId =
@@ -158,33 +158,42 @@ test("scoped reader retains index, hierarchy, axis, path and snapshot checks", (
 
 test("scoped reader rejects unknown targets and complete live bootstraps", () => {
   const unknown = screenBootstrapValue();
-  unknown.view.route = "screens/not-present.html";
+  unknown.view.entryId = "not-present";
   assert.throws(() => readScopedShellBootstrap(unknown), /invalid.*target/i);
+  const screen = model.screens.find(({ id }) => id === "home")!;
   assert.throws(
     () =>
       readScopedShellBootstrap({
         catalogue: model,
         context,
-        view: { kind: "target", route: "screens/home.html" },
+        view: target(screen),
       }),
     /out-of-scope usage must be omitted/i,
   );
 });
 
-test("the canonical public v1 fixture bytes remain unchanged", () => {
+test("the canonical public v3 fixture bytes remain unchanged", () => {
   const bytes = fs.readFileSync(
     new URL(
-      "../../../docs/protocol/fixtures/catalogue-v1.json",
+      "../../../docs/protocol/fixtures/catalogue-v3.json",
       import.meta.url,
     ),
   );
-  assert.equal(bytes.byteLength, 9_042);
+  assert.equal(bytes.byteLength, 9_506);
   assert.equal(
     createHash("sha256").update(bytes).digest("hex"),
-    "1221b6d08e323de7fbbc71c0d470c60a80cbbc3f2330dc57e8479ae796e7e173",
+    "3266711eeece53579204bcec65e9e3106bd6028a8483b67124bcc53d7a3ce5ad",
   );
   assert.doesNotThrow(() => readCatalogue(JSON.parse(bytes.toString("utf8"))));
 });
+
+function target(entry: Pick<CatalogueRecord, "id" | "kind">) {
+  return {
+    kind: "target" as const,
+    entryId: entry.id,
+    entryKind: entry.kind,
+  };
+}
 
 function scopedBytes(view: ShellBootstrapView): string {
   return serializeShellBootstrap({
@@ -195,7 +204,24 @@ function scopedBytes(view: ShellBootstrapView): string {
 }
 
 function screenBootstrapValue() {
-  return JSON.parse(
-    scopedBytes({ kind: "target", route: "screens/home.html" }),
-  );
+  const screen = model.screens.find(({ id }) => id === "home")!;
+  return JSON.parse(scopedBytes(target(screen)));
+}
+
+function firstVariant(): CatalogueComponentVariant {
+  return model.components.find(
+    (entry): entry is CatalogueComponentVariant =>
+      "variantOf" in entry && entry.variantOf === "action",
+  )!;
+}
+
+function shellVariant(value: {
+  components: Array<{
+    variantOf?: string;
+    views: Array<{ usage?: unknown }>;
+  }>;
+}) {
+  return value.components.find(
+    (entry) => "variantOf" in entry && entry.variantOf === "action",
+  )!;
 }

@@ -11,6 +11,7 @@ import {
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
 import { prepareRegistry } from "../dist/registry/prepare.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 
 import { generateLargeFixture, largeSize } from "./fixtures/large/generate.js";
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -42,7 +43,7 @@ test("large fixture validates dimensions and defaults to high-scale routes", () 
 });
 
 for (const screens of [10, 11, 20, 21]) {
-  test(`large fixture keeps collection ownership unique at ${screens} screens`, async (t) => {
+  test(`large fixture keeps folder membership unique at ${screens} screens`, async (t) => {
     const root = await fs.mkdtemp(
       path.join(repositoryRoot, ".context/large-test-"),
     );
@@ -87,14 +88,10 @@ test("scaled consumer exercises the same render, hierarchy, resource and compone
       write: (event) => events.push(event),
     },
   );
-  assert.equal(fixture.routes, 16);
+  assert.equal(fixture.routes, 28);
   assert.equal(fixture.documents, 82);
   assert.equal(compilation.outputs.size, fixture.documents + 1);
-  assert.equal(
-    compilation.manifest.entries.filter((entry) => entry.kind !== "collection")
-      .length,
-    fixture.routes,
-  );
+  assert.equal(compilation.manifest.entries.length, fixture.routes);
   assert.ok(
     compilation.manifest.entries.some((entry) => entry.kind === "page"),
   );
@@ -110,7 +107,9 @@ test("scaled consumer exercises the same render, hierarchy, resource and compone
       (view) => view.instances.length >= 4 && view.slots.length > 0,
     ),
   );
-  const html = compilation.outputs.get(screen.fragments.desktop)!;
+  const html = compilation.outputs.get(
+    viewRoute("screen", screen.id, "desktop", "light"),
+  )!;
   assert.match(html, /react-native-stylesheet/);
   assert.match(html, /data-mokly-link/);
   assert.match(html, /assets\/mark.svg/);

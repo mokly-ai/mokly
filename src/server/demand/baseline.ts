@@ -120,7 +120,6 @@ function preparationKey(config: ResolvedConfig): string {
     config.configPath,
     config.mockupsDir,
     config.review.baselineBuild,
-    config.compatibility.readManifestV2,
   ]);
 }
 

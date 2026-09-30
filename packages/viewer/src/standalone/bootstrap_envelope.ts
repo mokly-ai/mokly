@@ -1,20 +1,27 @@
 /** Shared shell-bootstrap envelope types and context/view parsing. */
 
+import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
 import {
   parseStaticDelivery,
   type StaticDelivery,
 } from "../navigation/delivery.js";
-import { isLogicalFragment } from "../navigation/logical.js";
+import { isEntryId, isLogicalFragment } from "../navigation/logical.js";
+import type { EntryRouteKind } from "../navigation/routes.js";
 import type { ViewerTheme } from "../viewer/types.js";
 
-/** Route selection serialized independently of the catalogue payload form. */
-export type ShellBootstrapView =
+/** Entry selection serialized independently of the catalogue payload form. */
+export type BootstrapView =
   | { kind: "home" }
   | { kind: "missing"; requested: string }
-  | { kind: "target"; route: string };
+  | {
+      kind: "target";
+      entryId: string;
+      entryKind: EntryRouteKind;
+      snapshotId?: string;
+    };
 
 /** Browser-safe standalone context serialized beside the catalogue payload. */
-export interface ShellBootstrapContext {
+export interface BootstrapContext {
   base: string;
   updateVersion: number;
   contentVersion?: number;
@@ -28,8 +35,8 @@ export interface ShellBootstrapContext {
 /** Common envelope accepted by canonical standalone bootstrap serialization. */
 export interface ShellBootstrapEnvelope<Catalogue> {
   catalogue: Catalogue;
-  context: ShellBootstrapContext;
-  view: ShellBootstrapView;
+  context: BootstrapContext;
+  view: BootstrapView;
 }
 
 /** Read the shared context and view while leaving catalogue validation to its reader. */
@@ -45,7 +52,7 @@ export function readShellBootstrapEnvelope(
   };
 }
 
-function readContext(value: Record<string, unknown>): ShellBootstrapContext {
+function readContext(value: Record<string, unknown>): BootstrapContext {
   if (
     typeof value["base"] !== "string" ||
     !isVersion(value["updateVersion"]) ||
@@ -87,12 +94,27 @@ function readContext(value: Record<string, unknown>): ShellBootstrapContext {
   };
 }
 
-function readView(value: Record<string, unknown>): ShellBootstrapView {
+function readView(value: Record<string, unknown>): BootstrapView {
   if (value["kind"] === "home") return { kind: "home" };
   if (value["kind"] === "missing" && typeof value["requested"] === "string")
     return { kind: "missing", requested: value["requested"] };
-  if (value["kind"] === "target" && typeof value["route"] === "string")
-    return { kind: "target", route: value["route"] };
+  if (
+    value["kind"] === "target" &&
+    isEntryId(value["entryId"]) &&
+    (value["snapshotId"] === undefined ||
+      isHistoricalSnapshotId(value["snapshotId"])) &&
+    ["component", "page", "screen", "use-case"].includes(
+      String(value["entryKind"]),
+    )
+  )
+    return {
+      kind: "target",
+      entryId: value["entryId"],
+      entryKind: value["entryKind"] as EntryRouteKind,
+      ...(value["snapshotId"] === undefined
+        ? {}
+        : { snapshotId: value["snapshotId"] }),
+    };
   throw new Error("Invalid shell hydration view.");
 }
 

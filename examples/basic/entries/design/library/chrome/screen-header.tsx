@@ -30,6 +30,7 @@ const propSchema = {
     status: { ...changeStatus, optional: true },
     comparisons: flag,
     mode: comparisonMode,
+    scrollTogether: flag,
     accessible: flag,
     destinations: comparisonDestinations,
   },
@@ -46,6 +47,7 @@ const sample = {
   idChip: "welcome",
   comparisons: false,
   mode: "current",
+  scrollTogether: true,
   accessible: true,
   destinations: {},
 } as const;
@@ -71,9 +73,9 @@ export const screenHeader = defineComponent({
   },
   render: ScreenHeaderView,
   variants: [
-    { id: "screen", title: "Screen", props: sample },
+    { id: "design-ui-screen-header-screen", title: "Screen", props: sample },
     {
-      id: "component",
+      id: "design-ui-screen-header-component",
       title: "Component",
       props: {
         ...sample,
@@ -83,12 +85,12 @@ export const screenHeader = defineComponent({
       },
     },
     {
-      id: "changed",
+      id: "design-ui-screen-header-changed",
       title: "Changed",
       props: { ...sample, status: "changed", comparisons: true },
     },
     {
-      id: "removed",
+      id: "design-ui-screen-header-removed",
       title: "Removed",
       props: {
         ...sample,

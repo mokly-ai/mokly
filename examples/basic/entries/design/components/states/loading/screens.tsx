@@ -1,4 +1,4 @@
-import { collection, screen } from "@mokly/mokly";
+import { folder, screen } from "@mokly/mokly";
 
 import { ComponentPage } from "../../parts/component_page.js";
 import { ScreenPage } from "../../parts/screen_page.js";
@@ -27,15 +27,11 @@ export function UsageFailedMobile() {
   return <ComponentPage state="usage-failed" viewport="mobile" />;
 }
 
-export const loadingStateDesigns = collection({
-  id: "design-component-loading-states",
-  segment: "loading",
+export const loadingStateDesigns = folder({
   title: "Loading and recovery",
-  description: "Usage loading, inspection waiting, and recovery states.",
   children: [
     screen({
       id: "design-component-usage-loading",
-      slug: "usage",
       title: "Usage loading",
       colorSchemes: ["light"],
       description: "A component page while its usage is being found.",
@@ -44,7 +40,6 @@ export const loadingStateDesigns = collection({
     }),
     screen({
       id: "design-component-inspection-loading",
-      slug: "inspection",
       title: "Inspection loading",
       colorSchemes: ["light"],
       description:
@@ -54,7 +49,6 @@ export const loadingStateDesigns = collection({
     }),
     screen({
       id: "design-component-usage-failed",
-      slug: "failed",
       title: "Usage failed to load",
       colorSchemes: ["light"],
       description:

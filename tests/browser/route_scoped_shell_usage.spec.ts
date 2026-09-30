@@ -10,9 +10,9 @@ import {
   recordFalseEmptyState,
 } from "./scoped_shell_helpers.js";
 
-const actionRoute = "/view/components/action.html";
-const toolbarRoute = "/view/components/toolbar.html";
-const welcomeRoute = "/view/screens/welcome.html";
+const actionRoute = "/view/components/example-action.html";
+const toolbarRoute = "/view/components/example-toolbar.html";
+const welcomeRoute = "/view/screens/example-welcome.html";
 
 test("scoped navigation shows Loading then complete Usage without a false zero", async ({
   page,

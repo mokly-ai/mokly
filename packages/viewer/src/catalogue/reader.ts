@@ -1,11 +1,6 @@
 import { exactKeys, invalidData } from "../components/data.js";
 
-import {
-  CHANGE_STATUSES,
-  readCollection,
-  readEntry,
-  readShellEntry,
-} from "./entry_reader.js";
+import { CHANGE_STATUSES, readEntry, readShellEntry } from "./entry_reader.js";
 import { assertPublicCatalogue } from "./privacy.js";
 import { validateCatalogueReferences } from "./references.js";
 import type {
@@ -19,7 +14,7 @@ import {
 import type {
   CatalogueNode,
   CatalogueReadModel,
-  CatalogueRoutedEntry,
+  CatalogueRecord,
   RemovedEntryPreview,
 } from "./types.js";
 import {
@@ -30,11 +25,10 @@ import {
   hash,
   id,
   object,
-  pagePreviewPath,
   text,
 } from "./values.js";
 
-/** Parse known v1 fields; ignore compatible additions without exposing private data. */
+/** Parse known v3 fields; ignore compatible additions without exposing private data. */
 export function readCatalogue(value: unknown): CatalogueReadModel {
   const model = readCatalogueModel(value, readEntry);
   validateCatalogueReferences(model);
@@ -48,7 +42,7 @@ export function readShellCatalogue(value: unknown): ShellCatalogueReadModel {
   return model;
 }
 
-type ParsedRoutedEntry = CatalogueRoutedEntry | ShellCatalogueRoutedEntry;
+type ParsedRoutedEntry = CatalogueRecord | ShellCatalogueRoutedEntry;
 type ParsedCatalogue<Entry extends ParsedRoutedEntry> = Omit<
   CatalogueReadModel,
   "screens" | "pages" | "useCases" | "components" | "removedEntries"
@@ -59,7 +53,6 @@ type ParsedCatalogue<Entry extends ParsedRoutedEntry> = Omit<
   components: readonly Extract<Entry, { kind: "component" }>[];
   removedEntries: readonly {
     entry: Entry;
-    ancestors: readonly { id: string; title: string }[];
     snapshotId?: string;
     preview?: RemovedEntryPreview;
   }[];
@@ -70,7 +63,7 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
   readRoutedEntry: (value: unknown) => Entry,
 ): ParsedCatalogue<Entry> {
   const input = object(value);
-  if (input.schemaVersion !== 1)
+  if (input.schemaVersion !== 3)
     invalidData("$catalogue", "unsupported schemaVersion");
   assertPublicCatalogue(input);
   const identity = object(input.identity),
@@ -87,7 +80,7 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
       return entry as Extract<Entry, { kind: Kind }>;
     });
   return {
-    schemaVersion: 1,
+    schemaVersion: 3,
     identity: { id: catalogueIdentity, title: text(identity.title) },
     deploymentId: hash(input.deploymentId),
     revision: {
@@ -96,7 +89,6 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
     },
     changesStatus: choice(input.changesStatus, CHANGE_STATUSES),
     comparisonUrl,
-    collections: array(input.collections).map(readCollection),
     tree: {
       pages: array(tree.pages).map(readNode),
       components: array(tree.components).map(readNode),
@@ -120,10 +112,6 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
           : hash(removed.snapshotId);
       return {
         entry,
-        ancestors: array(removed.ancestors).map((raw) => {
-          const ancestor = object(raw);
-          return { id: id(ancestor.id), title: text(ancestor.title) };
-        }),
         ...(snapshotId ? { snapshotId } : {}),
         ...(removed.preview === undefined
           ? {}
@@ -136,19 +124,13 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
 function readPreview(value: unknown): RemovedEntryPreview {
   const input = object(value),
     kind = choice(input.kind, ["screen", "page"] as const);
-  exactKeys(
-    input,
-    kind === "screen" ? ["kind"] : ["kind", "path"],
-    "$catalogue.preview",
-  );
-  return kind === "screen"
-    ? { kind }
-    : { kind, path: pagePreviewPath(input.path) };
+  exactKeys(input, ["kind"], "$catalogue.preview");
+  return { kind };
 }
 
 function readNode(value: unknown): CatalogueNode {
   const input = object(value),
-    kind = choice(input.kind, ["collection", "entry"] as const);
+    kind = choice(input.kind, ["folder", "entry"] as const);
   return kind === "entry"
     ? {
         kind,
@@ -157,5 +139,9 @@ function readNode(value: unknown): CatalogueNode {
           ? { children: array(input.children).map(readNode) }
           : {}),
       }
-    : { kind, id: id(input.id), children: array(input.children).map(readNode) };
+    : {
+        kind,
+        label: text(input.label),
+        children: array(input.children).map(readNode),
+      };
 }

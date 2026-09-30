@@ -4,6 +4,8 @@ Serve publishes a validated catalogue, renders requested documents and exposes
 comparison snapshots. `serve.ts` owns single-process Serve; `serve_watched.ts`
 owns watchers, background work and the supervised HTTP child. `http.ts` and
 `child.ts` serve accepted inputs and never prepare historical baselines.
+`http_request_handler.ts` isolates per-request routing from the server's
+mutable catalogue and evidence lifecycle.
 `http_shutdown.ts` stops HTTP admission, ends live-update streams, and disconnects
 open clients before draining every owned service. Incomplete request headers or
 unfinished responses cannot keep shutdown waiting for the browser.
@@ -31,7 +33,7 @@ lexical fallback if its projection fails. Source notifications
 are isolated at the gate: classifier failures are reported, that notification
 is dropped, and later notifications continue through the same watcher.
 
-GET/HEAD `/__mokly/catalogue.json` returns the public v1
+GET/HEAD `/__mokly/catalogue.json` returns the public v3
 [read model](../catalogue/README.md) as complete JSON with
 `Cache-Control: no-store`; it never contains bootstrap-only omitted usage.
 `public_catalogue.ts` serializes an atomic snapshot when accepted content,
@@ -41,12 +43,17 @@ evidence revisions advance independently. Failed candidates preserve the last
 snapshot, and superseded generations cannot replace it. `catalogue_update.ts`
 prepares updates before publication; `http_types.ts` owns the lifecycle types.
 
+Entry shells are served at canonical `/view/<kind-prefix>/<id>.html` and the
+matching provider-normalized `/view/<kind-prefix>/<id>` path; both return the
+same 200 shell when the identity exists, while generated links stay canonical.
+ID-alias paths receive the ordinary not-found shell and are never redirected.
+
 Shell pages render through `@mokly/viewer/server` with CLI-owned live context.
 `public_catalogue_model.ts` validates each serialized public revision once and
 reuses it across shell requests until the bytes change. CSS, browser modules,
 fonts, events and static documents bypass that decoding entirely.
-Each shell request derives the usage scope from its route/snapshot, embeds that
-route-scoped public projection, and computes its private workspace from the
+Each shell request derives the usage scope from its entry identity and snapshot,
+embeds that entry-scoped public projection, and computes its private workspace from the
 complete private catalogue so `Used by` and `Affected` remain complete. The
 server serializes the bootstrap and capability descriptor once and passes the
 strings through document rendering unchanged. Live pages load `react-host.js`,
@@ -64,6 +71,8 @@ The CLI host modules retain private live-update and capability transports.
 `screen_view_changes.ts` retains per-view screen-only material decisions from
 the existing classification pass. The public projection does not infer Changes
 membership from visual comparisons or invent empty usage for unfinished views.
+Any classifier failure, including in a screen-only catalogue, is logged and
+publishes Changes unavailable; there is no secondary comparison fallback.
 `public_review.ts` adds content-addressed aliases for matching complete explicit
 comparisons, verifying snapshot bytes against accepted input digests. Selected
 comparisons leave the catalogue pointer null. Public aliases never regenerate or
@@ -99,17 +108,24 @@ unselected route reports `config-invalid` for a nested `repoRoot` while All
 remains available. Parent preparation, classification and selected readers use
 the same config-owned validation.
 
+Both readers accept only manifest v7. Recognized earlier output follows the
+successful unavailable behavior and single terminal line in the
+[baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
+`classification_result.ts` carries that expected typed outcome across the
+background worker without converting it into a generic classifier failure;
+unsupported newer or malformed v7 data keeps the normal safe diagnostic path.
+
 `configured_review.ts` requires an injected `ReadOnlyReviewRepository` or a
 `ReviewRepositorySource` that supplies the current reader. The full comparison
 route fails with typed `review-invalid` ("The comparison is not prepared")
 until a derived reader is available. `selected_review_routes.ts` owns one
 bounded generation service for screen/component comparisons and removed-page
-previews. The latter uses
-`review.json?page=<encoded-route>`, redirects to an immutable `preview.json`,
+previews. Pages use `review.json?page=<page-id>`, while screens and component
+variants use `review.json?id=<entry-id>`; each redirects to immutable metadata
 and serves only its captured `snapshots/before/**` closure. Both selection kinds
 share coalescing, refresh, admission, timeout, byte, retention, epoch and
 shutdown bounds. `review_sources.ts` derives selections only from accepted
-evidence; route, baseline commit and base ref must match the provider response.
+evidence; identity, baseline commit and base ref must match the provider response.
 Neither route can import or invoke a baseline builder. Preparing or unavailable
 evidence returns the existing retryable failure while current routes remain
 usable. Evidence updates invalidate selected generations and atomically clear
@@ -144,6 +160,8 @@ public content-change classification test both candidate and realpath-alias
 paths relative to `mockupsDir`. Excluded requests return 404; excluded edits are
 not public content evidence, and exclusion alone never adds `sourceFiles`.
 Manifest/cache privacy and independently discovered authoring inputs remain protected.
+Screen-level resource classification shares Review's verified-deletion decision,
+so committed and derived runs agree without weakening these path checks.
 
 When controls are active, every Serve request uses the
 [Host contract](../../docs/protocol/mokly-component-controls.md#request-and-lifecycle-rules):
@@ -156,7 +174,8 @@ Preview GET/HEAD uses Host and its authenticated render id; it does
 not require the POST token or Origin. Non-loopback hosts and `x-forwarded-*`
 headers grant no access; invalid required authorization returns 403.
 
-`shell/usage_links.ts` deduplicates the shared served/published Affected list
+`packages/viewer/src/shell/usage_links.ts` deduplicates the shared
+served/published Affected list
 using complete serialized-link identity, keeping the first occurrence in evidence
 order and serializing each input only once. Distinct usage contexts retain their
 comparison eligibility; deduplication does not alter Changes membership.
@@ -168,7 +187,7 @@ retryable Usage rather than a partial or zero-consumer list. See the
 [bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md).
 
 Run the server tests with `npm test` and the navigation/comparison smoke tests
-with `npm run test:browser`. `derived_child_repository.test.ts` covers revocation,
+with `npm run test:browser`. `tests/derived_child_repository.test.ts` covers revocation,
 reader replacement and the transitive child-module boundary; `derived_serve`
 tests exercise both parent compositions.
 

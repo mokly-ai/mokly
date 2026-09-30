@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { projectScopedCatalogue } from "../src/catalogue/scoped_projection.js";
 import { viewerCapabilityRequest } from "../src/client/host_capability_descriptor.js";
+import { viewHref } from "../src/navigation/routes.js";
 import {
   adoptedViewerCatalogue,
   shellContextWithViewerEvidence,
@@ -29,7 +30,7 @@ test("live evidence rebinds records while preserving interaction state", () => {
     new URL("https://example.test/view/screens/home.html"),
   );
   const source = capabilitySource(model, 4);
-  const nextModel = evidenceRevision(model, ["screens/home.html"]);
+  const nextModel = evidenceRevision(model, ["home"]);
   const revision = viewerRevision(nextModel, source, route);
   const next = adoptedViewerCatalogue(current, source, route, revision);
   assert.ok(next);
@@ -42,11 +43,11 @@ test("live evidence rebinds records while preserving interaction state", () => {
   };
   const initial = createInitialShellState(current, context, route.view, {
     recovery: {
-      closedCollectionIds: [],
+      disclosures: {},
       colorScheme: "light",
       detailsOpen: true,
       drawerOpen: true,
-      filterBaselineClosedCollectionIds: null,
+      filterBaselineDisclosures: null,
       navScroll: 73,
       query: "home",
       regionScrolls: { stage: 29 },
@@ -72,7 +73,7 @@ test("live evidence rebinds records while preserving interaction state", () => {
     adopted,
   );
   assert.equal(projected.updateVersion, 5);
-  assert.deepEqual(projected.changedRoutes, ["screens/home.html"]);
+  assert.deepEqual(projected.changedIds, ["home"]);
 });
 
 test("live evidence preserves host shell mode and comparison availability", () => {
@@ -113,7 +114,7 @@ test("newer evidence adopts when the server update version is unchanged", () => 
     new URL("https://example.test/view/screens/home.html"),
   );
   const source = capabilitySource(model, 4);
-  const nextModel = evidenceRevision(model, ["screens/home.html"]);
+  const nextModel = evidenceRevision(model, ["home"]);
   const revision = viewerRevision(nextModel, source, route);
   revision.source = { ...revision.source, updateVersion: source.updateVersion };
   const context = {
@@ -142,32 +143,33 @@ test("newer evidence adopts when the server update version is unchanged", () => 
   );
   assert.deepEqual(commit.snapshot.source, revision.source);
   assert.deepEqual(commit.snapshot.workspace?.request.source, revision.source);
-  assert.equal(
-    commit.snapshot.workspace?.value.entry.route,
-    "screens/home.html",
-  );
+  assert.equal(commit.snapshot.workspace?.value.entry.id, "home");
 });
 
 test("route adoption replaces scoped usage and private workspace atomically", () => {
-  const componentRoute = model.components[0]!.route;
-  const screenRoute = model.screens[0]!.route;
+  const component = model.components.find((entry) => !("variantOf" in entry));
+  const screen = model.screens[0];
+  assert.ok(component?.kind === "component");
+  assert.ok(screen);
   const componentScope = projectScopedCatalogue(model, {
     kind: "target",
-    route: componentRoute,
+    entryId: component.id,
+    entryKind: component.kind,
   });
   const screenScope = projectScopedCatalogue(model, {
     kind: "target",
-    route: screenRoute,
+    entryId: screen.id,
+    entryKind: screen.kind,
   });
   const current = viewerCatalogue(componentScope);
   const complete = viewerCatalogue(model);
-  const component = complete.byRoute.get(componentRoute);
-  const screen = complete.byRoute.get(screenRoute);
-  assert.ok(component?.kind === "component");
-  assert.ok(screen?.kind === "screen");
+  const componentEntry = complete.byId.get(component.id);
+  const screenEntry = complete.byId.get(screen.id);
+  assert.ok(componentEntry?.kind === "component");
+  assert.ok(screenEntry?.kind === "screen");
   const route = routeFromUrl(
     current,
-    new URL(`https://example.test/view/${screenRoute}`),
+    new URL(`https://example.test${viewHref("screen", screen.id)}`),
   );
   const source = capabilitySource(model, 4);
   const state = createInitialShellState(
@@ -179,7 +181,7 @@ test("route adoption replaces scoped usage and private workspace atomically", ()
     route.view,
     undefined,
   );
-  const componentRequest = viewerCapabilityRequest(source, componentRoute);
+  const componentRequest = viewerCapabilityRequest(source, component.id);
   const commit = commitViewerEvidence(
     {
       catalogue: current,
@@ -187,26 +189,28 @@ test("route adoption replaces scoped usage and private workspace atomically", ()
       source,
       workspace: {
         request: componentRequest,
-        value: publicWorkspace(model, component),
+        value: publicWorkspace(model, componentEntry),
       },
     },
     state,
     {
       catalogue: screenScope,
       source,
-      workspace: publicWorkspace(model, screen),
+      workspace: publicWorkspace(model, screenEntry),
     },
   );
   assert.ok(commit);
-  assert.equal(commit.snapshot.workspace?.value.entry.route, screenRoute);
-  assert.equal(commit.snapshot.routeEvidence?.route, screenRoute);
+  assert.equal(commit.snapshot.workspace?.value.entry.id, screen.id);
+  assert.equal(commit.snapshot.routeEvidence?.entryId, screen.id);
   const adopted = commit.snapshot.catalogue.publicModel!;
   assert.ok(
     adopted.screens[0]!.views.every(({ usage }) => usage.status !== "omitted"),
   );
   assert.ok(
-    adopted.components[0]!.variants.every((variant) =>
-      variant.views.every(({ usage }) => usage.status === "omitted"),
-    ),
+    adopted.components
+      .filter((entry) => "variantOf" in entry)
+      .every((variant) =>
+        variant.views.every(({ usage }) => usage.status === "omitted"),
+      ),
   );
 });

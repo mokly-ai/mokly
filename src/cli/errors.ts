@@ -14,6 +14,10 @@ interface ErrorCopy {
 }
 
 const ERROR_COPY: Readonly<Record<MoklyErrorCode, ErrorCopy>> = {
+  "baseline-incompatible-earlier": {
+    headline: "Changes are unavailable for this comparison base.",
+    hint: "Retry once the base includes this Mokly version.",
+  },
   "baseline-history-unavailable": {
     headline: "Comparison history is unavailable.",
     hint: "Fetch the configured base and retry.",

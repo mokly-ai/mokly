@@ -16,12 +16,13 @@ import {
 
 const catalogue = readCatalogue(
   JSON.parse(
-    fs.readFileSync("docs/protocol/fixtures/catalogue-v1.json", "utf8"),
+    fs.readFileSync("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
   ),
 );
 const view = {
   kind: "target" as const,
-  route: catalogue.screens[0]!.route,
+  entryId: catalogue.screens[0]!.id,
+  entryKind: catalogue.screens[0]!.kind,
 };
 const bootstrap = {
   catalogue: projectScopedCatalogue(catalogue, view),
@@ -52,8 +53,15 @@ test("capture externalizes one exact scoped projection", () => {
 
 test("capture rejects one extra out-of-scope usage record", () => {
   const leaked = structuredClone(bootstrap);
-  leaked.catalogue.components[0]!.variants[0]!.views[0]!.usage =
-    structuredClone(catalogue.components[0]!.variants[0]!.views[0]!.usage);
+  const leakedVariant = leaked.catalogue.components.find(
+    (entry) => "variantOf" in entry,
+  )!;
+  const completeVariant = catalogue.components.find(
+    (entry) => "variantOf" in entry,
+  )!;
+  leakedVariant.views[0]!.usage = structuredClone(
+    completeVariant.views[0]!.usage,
+  );
   assert.throws(
     () =>
       externalizeCapturedShell(

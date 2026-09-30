@@ -8,9 +8,10 @@ import type { CatalogueUsage } from "../catalogue/types.js";
 import type { ComponentViewRecord } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import { encodeUrlPath } from "../data/paths.js";
+import { viewRoute } from "../navigation/routes.js";
 
 export const unavailableUsage: CatalogueUsage = { status: "unavailable" };
-export const pendingUsage: CatalogueUsage = { status: "pending" };
+const pendingUsage: CatalogueUsage = { status: "pending" };
 const generatedUsages = new WeakMap<ComponentViewRecord, CatalogueUsage>();
 
 export function framePath(path: string, fragment?: string): string {
@@ -19,13 +20,14 @@ export function framePath(path: string, fragment?: string): string {
 }
 
 export function frameSource(
+  entry: { id: string; kind: "component" | "screen" },
   view: ShellCatalogueView | undefined,
   fragment?: string,
   stepIndex?: number,
 ): string | undefined {
-  if (!view?.fragmentPath) return;
+  if (!view) return;
   return framePath(
-    view.fragmentPath,
+    `static/${viewRoute(entry.kind, entry.id, view.viewport, view.colorScheme)}`,
     stepIndex === undefined || stepIndex === 0 ? fragment : undefined,
   );
 }

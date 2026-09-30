@@ -6,6 +6,7 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
+import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import {
   createFixture,
@@ -148,7 +149,7 @@ test("link validation rejects generated targets pending orphan removal", async (
   await assert.rejects(() => compileCatalogue(config), /missing target/);
 });
 
-test("catalogue routes reject URL and HTML attribute delimiters", async () => {
+test("legacy authored routes cannot change derived documents", async () => {
   for (const route of [
     'screens/details.mobile.html" onclick="alert.html',
     "screens/CON.html",
@@ -159,7 +160,17 @@ test("catalogue routes reject URL and HTML attribute delimiters", async () => {
     const fixture = await createFixture(routeSource(route));
     try {
       const config = await loadConfig(fixture.root);
-      await assert.rejects(() => compileCatalogue(config), /invalid-route/);
+      const compilation = await compileCatalogue(config);
+      assert.ok(compilation.outputs.has("screens/unsafe-target.mobile.html"));
+      const entry = compilation.manifest.entries.find(
+        ({ id }) => id === "unsafe-target",
+      );
+      assert.ok(entry);
+      assert.equal(
+        entryRoute(entry.kind, entry.id),
+        "screens/unsafe-target.html",
+      );
+      assert.equal("route" in entry, false);
     } finally {
       await removeFixture(fixture);
     }

@@ -1,14 +1,13 @@
 /** Exact current or historical entry resolution for public selection. */
 
-import type { CatalogueRoutedEntry } from "./types.js";
+import type { CatalogueRecord } from "./types.js";
 
-interface CatalogueRouteEntry {
+interface CatalogueIdentity {
   id: string;
-  kind: CatalogueRoutedEntry["kind"];
-  route: string;
+  kind: CatalogueRecord["kind"];
 }
 
-interface CatalogueRouteIndex<Entry extends CatalogueRouteEntry> {
+interface CatalogueIndex<Entry extends CatalogueIdentity> {
   screens: readonly Entry[];
   pages: readonly Entry[];
   useCases: readonly Entry[];
@@ -16,16 +15,21 @@ interface CatalogueRouteIndex<Entry extends CatalogueRouteEntry> {
   removedEntries: readonly { entry: Entry; snapshotId?: string }[];
 }
 
+type ComponentVariant<Entry extends CatalogueIdentity> = Extract<
+  Entry,
+  { kind: "component"; variantOf: string }
+>;
+
 export interface ResolvedCatalogueEntry<
-  Entry extends CatalogueRouteEntry = CatalogueRoutedEntry,
+  Entry extends CatalogueIdentity = CatalogueRecord,
 > {
   entry: Entry;
   snapshotId?: string;
 }
 
 /** Current routed entries in public model order. */
-export function currentCatalogueEntries<Entry extends CatalogueRouteEntry>(
-  model: CatalogueRouteIndex<Entry>,
+export function currentCatalogueEntries<Entry extends CatalogueIdentity>(
+  model: CatalogueIndex<Entry>,
 ): readonly Entry[] {
   return [
     ...model.screens,
@@ -35,9 +39,27 @@ export function currentCatalogueEntries<Entry extends CatalogueRouteEntry>(
   ];
 }
 
+/** Component variants in current order followed by retained removed variants. */
+export function catalogueComponentVariants<
+  Entry extends CatalogueIdentity = CatalogueRecord,
+>(
+  model: CatalogueIndex<Entry>,
+  componentId: string,
+): readonly ComponentVariant<Entry>[] {
+  return [
+    ...model.components,
+    ...model.removedEntries.map(({ entry }) => entry),
+  ].filter(
+    (entry): entry is ComponentVariant<Entry> =>
+      entry.kind === "component" &&
+      "variantOf" in entry &&
+      entry.variantOf === componentId,
+  );
+}
+
 /** Resolve the complete public selection; explicit snapshots never downgrade. */
-export function resolveCatalogueSelection<Entry extends CatalogueRouteEntry>(
-  model: CatalogueRouteIndex<Entry>,
+export function resolveCatalogueSelection<Entry extends CatalogueIdentity>(
+  model: CatalogueIndex<Entry>,
   entryId: string,
   snapshotId?: string,
 ): ResolvedCatalogueEntry<Entry> | undefined {
@@ -57,64 +79,19 @@ export function resolveCatalogueSelection<Entry extends CatalogueRouteEntry>(
   );
   if (historical.length !== 1) return undefined;
   const [record] = historical;
-  return record
-    ? {
-        entry: record.entry,
-        ...(record.snapshotId ? { snapshotId: record.snapshotId } : {}),
-      }
-    : undefined;
+  if (!record) return undefined;
+  return {
+    entry: record.entry,
+    ...(record.snapshotId ? { snapshotId: record.snapshotId } : {}),
+  };
 }
 
-/** Resolve one route, inferring a published snapshot only from that exact route. */
-export function resolveCatalogueRoute<Entry extends CatalogueRouteEntry>(
-  model: CatalogueRouteIndex<Entry>,
-  route: string,
+/** Resolve one kind-and-id address, inferring its published snapshot when unique. */
+export function resolveCatalogueEntry<Entry extends CatalogueIdentity>(
+  model: CatalogueIndex<Entry>,
+  identity: { id: string; kind: Entry["kind"] },
   snapshotId?: string,
 ): ResolvedCatalogueEntry<Entry> | undefined {
-  const current = currentCatalogueEntries(model).find(
-    (entry) => entry.route === route,
-  );
-  if (current) return snapshotId === undefined ? { entry: current } : undefined;
-  const historical = model.removedEntries.filter(
-    (record) => record.entry.route === route,
-  );
-  if (historical.length !== 1) return undefined;
-  const [record] = historical;
-  if (!record) return undefined;
-  if (snapshotId !== undefined)
-    return record.snapshotId === snapshotId
-      ? { entry: record.entry, snapshotId }
-      : undefined;
-  if (record.snapshotId)
-    return { entry: record.entry, snapshotId: record.snapshotId };
-  const collides = currentCatalogueEntries(model).some(
-    (entry) => entry.id === record.entry.id,
-  );
-  return collides ? undefined : { entry: record.entry };
-}
-
-/** Resolve the public record corresponding to an already exact routed entry. */
-export function resolveCatalogueRecord<Entry extends CatalogueRouteEntry>(
-  model: CatalogueRouteIndex<Entry>,
-  entry: { id: string; kind: string; route: string },
-): ResolvedCatalogueEntry<Entry> | undefined {
-  const current = currentCatalogueEntries(model).find(
-    (candidate) =>
-      candidate.id === entry.id &&
-      candidate.kind === entry.kind &&
-      candidate.route === entry.route,
-  );
-  if (current) return { entry: current };
-  const historical = model.removedEntries.find(
-    (record) =>
-      record.entry.id === entry.id &&
-      record.entry.kind === entry.kind &&
-      record.entry.route === entry.route,
-  );
-  return historical
-    ? {
-        entry: historical.entry,
-        ...(historical.snapshotId ? { snapshotId: historical.snapshotId } : {}),
-      }
-    : undefined;
+  const selected = resolveCatalogueSelection(model, identity.id, snapshotId);
+  return selected?.entry.kind === identity.kind ? selected : undefined;
 }

@@ -117,9 +117,10 @@ export function readViewerRouteEvidenceRevision(
   workspace?: WorkspaceData,
 ): ViewerEvidenceRevision | undefined {
   const bootstrap = readLiveShellBootstrap(value);
-  const route = bootstrap.view.kind === "target" ? bootstrap.view.route : null;
+  const entryId =
+    bootstrap.view.kind === "target" ? bootstrap.view.entryId : null;
   if (
-    route !== request.route ||
+    entryId !== request.entryId ||
     bootstrap.context.base !== nextSource.base ||
     bootstrap.context.contentVersion !== nextSource.contentRevision ||
     bootstrap.context.updateVersion !== nextSource.updateVersion ||
@@ -152,14 +153,13 @@ function validateEvidenceRevision(
     catalogue.revision.evidence !== nextSource.evidenceRevision
   )
     return;
-  const expected = workspaceEntry(catalogue, request.route);
+  const expected = workspaceEntry(catalogue, request.entryId);
   if (
     (expected === undefined) !== (workspace === undefined) ||
     (expected &&
       workspace &&
       (workspace.entry.id !== expected.id ||
-        workspace.entry.kind !== expected.kind ||
-        workspace.entry.route !== expected.route))
+        workspace.entry.kind !== expected.kind))
   )
     return;
   return {
@@ -178,7 +178,7 @@ function evidenceSourceMatches(
   return (
     viewerCapabilityRequestMatches(installed, request) &&
     viewerCapabilityRequestMatches(request.source, {
-      route: request.route,
+      entryId: request.entryId,
       source: nextSource,
     }) &&
     (!requireAdvance || sourceAdvances(request.source, nextSource))
@@ -225,16 +225,16 @@ function sameRequest(
   right: ViewerCapabilityRequest,
 ): boolean {
   return (
-    left.route === right.route &&
+    left.entryId === right.entryId &&
     viewerCapabilitySourceEquals(left.source, right.source)
   );
 }
 
 function workspaceEntry(
   catalogue: ShellCatalogueReadModel,
-  route: string | null,
+  entryId: string | null,
 ) {
-  if (route === null) return;
+  if (entryId === null) return;
   return [
     ...catalogue.screens,
     ...catalogue.components,
@@ -242,6 +242,6 @@ function workspaceEntry(
   ].find(
     (entry) =>
       (entry.kind === "screen" || entry.kind === "component") &&
-      entry.route === route,
+      entry.id === entryId,
   );
 }

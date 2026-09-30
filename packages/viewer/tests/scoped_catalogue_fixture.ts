@@ -3,7 +3,7 @@ import fs from "node:fs";
 import { readCatalogue } from "../src/catalogue/reader.js";
 import type {
   CatalogueComponent,
-  CatalogueNode,
+  CatalogueComponentVariant,
   CatalogueReadModel,
 } from "../src/catalogue/types.js";
 
@@ -14,19 +14,18 @@ type Mutable<Value> = Value extends readonly (infer Item)[]
     : Value;
 type MutableCatalogue = Mutable<CatalogueReadModel>;
 
-/** Build a valid fixture covering every route-scoping entry shape. */
+/** Build a valid fixture covering every entry-scoping shape. */
 export function scopedCatalogueFixture(): CatalogueReadModel {
   const value = JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v1.json",
+        "../../../docs/protocol/fixtures/catalogue-v3.json",
         import.meta.url,
       ),
       "utf8",
     ),
   ) as MutableCatalogue;
-  addVariantScreen(value);
-  addRemovedVariant(value.components[0]!);
+  addRemovedVariant(value);
   addRemovedComponent(value);
   addRemovedUseCase(value);
   const useCase = value.useCases[0]!;
@@ -34,73 +33,63 @@ export function scopedCatalogueFixture(): CatalogueReadModel {
   return readCatalogue(value);
 }
 
-function addVariantScreen(value: MutableCatalogue): void {
-  const parent = value.screens[0]!;
-  const variant = structuredClone(parent);
-  variant.id = "home-empty";
-  variant.route = "screens/home.variants/empty.html";
-  variant.title = "Home, empty";
-  variant.useCaseIds = [];
-  variant.variantOf = parent.id;
-  for (const view of variant.views) {
-    const dark = view.colorScheme === "dark" ? ".dark" : "";
-    view.fragmentPath = `static/screens/home.variants/empty.${view.viewport}${dark}.html`;
-  }
-  value.screens.push(variant);
-  const node = findNode(value.tree.pages, parent.id);
-  if (!node || node.kind !== "entry") throw new Error("Missing home node");
-  node.children = [{ id: variant.id, kind: "entry" }];
-}
-
-function addRemovedVariant(component: Mutable<CatalogueComponent>): void {
-  const variant = structuredClone(component.variants[0]!);
-  variant.id = "retired";
+function addRemovedVariant(value: MutableCatalogue): void {
+  const variant = structuredClone(
+    value.components.find(
+      (entry): entry is Mutable<CatalogueComponentVariant> =>
+        "variantOf" in entry,
+    )!,
+  );
+  variant.id = "action-retired";
   variant.title = "Retired";
+  variant.changes = { included: true, kind: "removed", status: "ready" };
   variant.comparison = {
     eligible: true,
     kind: "removed",
     status: "ready",
   };
-  for (const view of variant.views) view.fragmentPath = null;
-  component.variants.push(variant);
+  value.removedEntries.push({
+    entry: variant,
+    snapshotId: "c".repeat(64),
+  });
 }
 
 function addRemovedComponent(value: MutableCatalogue): void {
-  const component = structuredClone(value.components[0]!);
-  component.id = "removed-action";
-  component.route = "components/removed-action.html";
-  component.title = "Removed action";
-  component.changes = { included: true, kind: "removed", status: "ready" };
-  for (const variant of component.variants)
-    for (const view of variant.views) view.fragmentPath = null;
-  value.removedEntries.push({
-    ancestors: [{ id: "product", title: "Product" }],
-    entry: component,
-    snapshotId: "d".repeat(64),
-  });
+  const parent = structuredClone(
+    value.components.find(
+      (entry): entry is Mutable<CatalogueComponent> => !("variantOf" in entry),
+    )!,
+  );
+  parent.id = "removed-action";
+  parent.title = "Removed action";
+  parent.changes = { included: true, kind: "removed", status: "ready" };
+  const sourceVariant = value.components.find(
+    (entry): entry is Mutable<CatalogueComponentVariant> =>
+      "variantOf" in entry,
+  )!;
+  const variant = structuredClone(sourceVariant);
+  variant.id = "removed-action-default";
+  variant.title = "Default";
+  variant.variantOf = parent.id;
+  variant.changes = { included: true, kind: "removed", status: "ready" };
+  variant.comparison = {
+    eligible: true,
+    kind: "removed",
+    status: "ready",
+  };
+  value.removedEntries.push(
+    { entry: parent, snapshotId: "d".repeat(64) },
+    { entry: variant, snapshotId: "f".repeat(64) },
+  );
 }
 
 function addRemovedUseCase(value: MutableCatalogue): void {
   const useCase = structuredClone(value.useCases[0]!);
   useCase.id = "removed-tour";
-  useCase.route = "user-flows/removed-tour.html";
   useCase.title = "Removed tour";
   useCase.changes = { included: true, kind: "removed", status: "ready" };
   value.removedEntries.push({
-    ancestors: [{ id: "product", title: "Product" }],
     entry: useCase,
     snapshotId: "e".repeat(64),
   });
-}
-
-function findNode(
-  nodes: Mutable<CatalogueNode>[],
-  id: string,
-): Mutable<CatalogueNode> | undefined {
-  for (const node of nodes) {
-    if (node.id === id) return node;
-    const nested = findNode(node.children ?? [], id);
-    if (nested) return nested;
-  }
-  return undefined;
 }

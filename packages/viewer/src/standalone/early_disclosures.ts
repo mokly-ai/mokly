@@ -1,11 +1,19 @@
 /** Native disclosure choices captured before a shell runtime can adopt them. */
 
+import { isDisclosureKey } from "../shell/disclosure_keys.js";
+import {
+  disclosureStorageKey,
+  encodeDisclosureMap,
+  obsoleteDisclosureStorageKey,
+  parseDisclosureMap,
+} from "../shell/disclosure_storage.js";
+import { queryConstrains, parseSearchQuery } from "../shell/search_query.js";
+
 import { HYDRATED_EVENT } from "./hydration_event.js";
 
 const stateKey = "__moklyEarlyDisclosuresV1";
 const detailsStateKey = "__moklyEarlyDetailsV1";
 const detailsStorageKey = "mokly:details-disclosure";
-const storageKey = "mokly:nav-disclosure:v2";
 
 type EarlyDisclosureState = Map<string, boolean>;
 type StateWindow = Window &
@@ -91,21 +99,18 @@ export function readEarlyDetailsOpen(doc: Document): boolean | undefined {
   return (doc.defaultView as StateWindow | null)?.[detailsStateKey];
 }
 
-/** Expand stored closed keys into the disclosure map used by initial state. */
+/** Read only values for disclosures present in this document. */
 export function readStoredDisclosures(
   doc: Document,
 ): Readonly<Record<string, boolean>> {
   const win = doc.defaultView;
   if (!win) return {};
-  const closed = storedClosedDisclosures(win);
-  if (!closed) return {};
+  const stored = storedDisclosures(win);
   return Object.fromEntries(
     [...doc.querySelectorAll<HTMLElement>("[data-nav-disclosure]")].flatMap(
       (group) => {
         const key = group.getAttribute("data-nav-disclosure");
-        return key && isDisclosureKey(key)
-          ? [[key, !isDisclosureClosed(closed, key)]]
-          : [];
+        return key && Object.hasOwn(stored, key) ? [[key, stored[key]!]] : [];
       },
     ),
   );
@@ -125,20 +130,6 @@ export function readStoredDetailsPreference(
   return undefined;
 }
 
-/** Read the actual disclosure DOM handed to React after preference capture. */
-export function readHydrationDisclosures(
-  doc: Document,
-): Readonly<Record<string, boolean>> {
-  return Object.fromEntries(
-    [...doc.querySelectorAll<HTMLElement>("[data-nav-disclosure]")]
-      .map((group) => [
-        group.getAttribute("data-nav-disclosure"),
-        disclosureOpen(group),
-      ])
-      .filter((entry): entry is [string, boolean] => entry[0] !== null),
-  );
-}
-
 /** Persist the disclosure DOM that React adopts, including an early choice. */
 export function persistHydrationDisclosures(doc: Document): void {
   const win = doc.defaultView;
@@ -146,7 +137,7 @@ export function persistHydrationDisclosures(doc: Document): void {
 }
 
 /** A native activation is newer than any stored preference or snapshot. */
-export function restoreEarlyDisclosures(doc: Document): void {
+function restoreEarlyDisclosures(doc: Document): void {
   const win = doc.defaultView as StateWindow | null;
   const state = win?.[stateKey];
   if (!state) return;
@@ -163,14 +154,31 @@ function rememberDisclosures(
   doc: Document,
   win: Window & typeof globalThis,
 ): void {
-  const closed = [
-    ...doc.querySelectorAll<HTMLElement>("[data-nav-disclosure]"),
-  ].flatMap((group) => {
-    const key = group.getAttribute("data-nav-disclosure");
-    return !disclosureOpen(group) && key && isDisclosureKey(key) ? [key] : [];
-  });
+  const search = doc.querySelector<HTMLInputElement>("[data-mokly-search]");
+  if (
+    queryConstrains(parseSearchQuery(search?.value ?? "")) ||
+    doc.querySelector(
+      '[data-mokly-filter] [data-filter="changed"][aria-pressed="true"]',
+    ) ||
+    doc.querySelector("[data-nav-disclosure][data-filter-open]")
+  )
+    return;
+  const disclosures = Object.fromEntries(
+    [...doc.querySelectorAll<HTMLElement>("[data-nav-disclosure]")].flatMap(
+      (group) => {
+        const key = group.getAttribute("data-nav-disclosure");
+        return key && isDisclosureKey(key)
+          ? [[key, disclosureOpen(group)]]
+          : [];
+      },
+    ),
+  );
   try {
-    win.localStorage.setItem(storageKey, JSON.stringify(closed));
+    win.localStorage.setItem(
+      disclosureStorageKey,
+      encodeDisclosureMap(disclosures),
+    );
+    win.localStorage.removeItem(obsoleteDisclosureStorageKey);
   } catch {
     return;
   }
@@ -180,55 +188,28 @@ function applyStoredDisclosures(
   doc: Document,
   win: Window & typeof globalThis,
 ): void {
-  const closed = storedClosedDisclosures(win);
-  if (!closed) return;
+  const stored = storedDisclosures(win);
   for (const group of doc.querySelectorAll<HTMLElement>(
     "[data-nav-disclosure]",
   )) {
     const key = group.getAttribute("data-nav-disclosure");
-    if (!key || !isDisclosureKey(key)) continue;
-    setDisclosureOpen(group, !isDisclosureClosed(closed, key));
+    if (!key || !Object.hasOwn(stored, key)) continue;
+    setDisclosureOpen(group, stored[key]!);
   }
 }
 
-function storedClosedDisclosures(
+function storedDisclosures(
   win: Window & typeof globalThis,
-): ReadonlySet<string> | undefined {
+): Readonly<Record<string, boolean>> {
   try {
-    const raw = win.localStorage.getItem(storageKey);
-    if (raw === null) return;
-    const value: unknown = JSON.parse(raw);
-    if (
-      !Array.isArray(value) ||
-      !value.every((item) => typeof item === "string")
-    )
-      return;
-    return new Set(value.filter(isDisclosureKey));
+    return parseDisclosureMap(win.localStorage.getItem(disclosureStorageKey));
   } catch {
-    return;
+    return {};
   }
-}
-
-function isDisclosureClosed(closed: ReadonlySet<string>, key: string): boolean {
-  if (closed.has(key)) return true;
-  for (const prefix of ["collection:pages:", "collection:components:"]) {
-    if (key.startsWith(prefix))
-      return closed.has(`collection:${key.slice(prefix.length)}`);
-  }
-  return false;
-}
-
-function isDisclosureKey(value: string): boolean {
-  return (
-    value.startsWith("collection:") ||
-    /^variants:(?:components|pages):[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) ||
-    value === "section:pages" ||
-    value === "section:components"
-  );
 }
 
 /** Read either a native group or a screen-variant list disclosure. */
-export function disclosureOpen(group: HTMLElement): boolean {
+function disclosureOpen(group: HTMLElement): boolean {
   return group.hasAttribute("data-nav-variants")
     ? !group.hidden
     : (group as HTMLDetailsElement).open;

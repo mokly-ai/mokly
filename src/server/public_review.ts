@@ -1,7 +1,13 @@
 import { createHash } from "node:crypto";
 import type { ServerResponse } from "node:http";
+import path from "node:path";
 
-import { generatedViews, parseReviewResult } from "@mokly/viewer/data";
+import {
+  generatedViews,
+  parseReviewResult,
+  snapshotSidePath,
+  snapshotViewPath,
+} from "@mokly/viewer/data";
 import type { ReviewResult } from "@mokly/viewer/data";
 
 import { comparisonContentId } from "../export/content_id.js";
@@ -21,6 +27,9 @@ export interface PublicComparison {
   result: ReviewResult;
 }
 
+const SNAPSHOT_ROOT = `${path.posix.dirname(snapshotSidePath("before"))}/`;
+const AFTER_SNAPSHOT_PREFIX = snapshotSidePath("after");
+
 /** Content-addressed aliases never redirect, render, or initiate a new generation. */
 export class PublicReviewAliases {
   private readonly aliases = new Map<string, string>();
@@ -33,7 +42,7 @@ export class PublicReviewAliases {
   ): Promise<PublicComparison | undefined> {
     const files = new Map<string, Buffer>();
     for (const name of (await ownedEntries(generation.directory)).files) {
-      if (name !== "review.json" && !name.startsWith("snapshots/")) continue;
+      if (name !== "review.json" && !isSnapshotPath(name)) continue;
       const bytes = readConfinedFile(generation.directory, name);
       if (!bytes) return;
       files.set(name, bytes);
@@ -46,18 +55,29 @@ export class PublicReviewAliases {
       result.baseRef !== source.baseRef
     )
       return;
-    for (const view of source.after.entries.flatMap(generatedViews)) {
-      const bytes = files.get(`snapshots/after/${view.path}`);
-      if (
-        !bytes ||
-        createHash("sha256").update(bytes).digest("hex") !==
-          source.headDigests[view.path]
-      )
-        return;
+    for (const entry of source.after.entries) {
+      if (entry.kind !== "screen" && entry.kind !== "component") continue;
+      for (const view of generatedViews(entry)) {
+        const bytes = files.get(
+          snapshotViewPath(
+            "after",
+            entry.kind,
+            entry.id,
+            view.viewport,
+            view.colorScheme,
+          ),
+        );
+        if (
+          !bytes ||
+          createHash("sha256").update(bytes).digest("hex") !==
+            source.headDigests[view.path]
+        )
+          return;
+      }
     }
     for (const [name, bytes] of files) {
-      const expected = name.startsWith("snapshots/after/")
-        ? source.headDigests[name.slice(16)]
+      const expected = name.startsWith(AFTER_SNAPSHOT_PREFIX)
+        ? source.headDigests[name.slice(AFTER_SNAPSHOT_PREFIX.length)]
         : undefined;
       if (
         expected &&
@@ -88,11 +108,15 @@ export class PublicReviewAliases {
     if (
       !generation ||
       !relative ||
-      (relative !== "review.json" && !relative.startsWith("snapshots/"))
+      (relative !== "review.json" && !isSnapshotPath(relative))
     )
       send(response, 404, "text/plain", "Not found", method);
     else
       serveReviewArtifactFile(generation.directory, relative, response, method);
     return true;
   }
+}
+
+function isSnapshotPath(value: string): boolean {
+  return value.startsWith(SNAPSHOT_ROOT);
 }

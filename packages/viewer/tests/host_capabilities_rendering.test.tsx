@@ -64,7 +64,7 @@ test("live SSR carries a private descriptor while export carries no host loader"
   assert.equal(view.kind, "target");
   if (view.kind !== "target")
     throw new Error("Expected a target fixture view.");
-  assert.equal(descriptor.workspace.entry.route, view.target.entry.route);
+  assert.equal(descriptor.workspace.entry.id, view.target.entry.id);
   assert.equal(descriptor.workspace.base, source.base);
   assert.equal("renderCapability" in descriptor.workspace, false);
   for (const leaked of [{ token }, { renderCapability: { generation, token } }])
@@ -77,11 +77,10 @@ test("live SSR carries a private descriptor while export carries no host loader"
   const exported = renderHydratedShellPage(view, {
     base: source.base,
     delivery: {
-      schemaVersion: 2,
+      schemaVersion: 3,
       deploymentId,
       canonicalPath: "/",
       comparisonUrl: null,
-      idRoutes: {},
     },
     readModel: { ...catalogue, deploymentId },
     updateVersion: 0,
@@ -143,11 +142,10 @@ test("static shell, workspace and deployment derive from the complete model", ()
   const deploymentId = "d".repeat(64);
   const publicModel = { ...catalogue, deploymentId };
   const delivery = {
-    schemaVersion: 2 as const,
+    schemaVersion: 3 as const,
     deploymentId,
     canonicalPath: "/view/components/action.html",
     comparisonUrl: null,
-    idRoutes: {},
   };
   const context = {
     base: source.base,

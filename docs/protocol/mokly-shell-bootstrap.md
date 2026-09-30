@@ -2,14 +2,9 @@
 
 ## Delivery Status
 
-Implemented by the
-[route-scoped shell bootstrap plan](../../plans/route-scoped-shell-bootstrap.md):
-serialize-once embedded state, the runtime-only scoped model and strict reader,
-scoped hydration and evidence adoption, exact Serve emission, and captured-page
-validation all use this contract. The public catalogue v1 format and
-application-owned `MoklyViewer` sources remain unchanged. Static content
-retains its bytes after deployment-identity normalization; the shared viewer
-client may change with viewer source.
+Implemented: Serve uses a serialize-once scoped model and strict reader; static
+delivery validates captured pages and keeps the public catalogue v3 and
+application-owned `MoklyViewer` sources complete.
 
 ## Purpose And Boundary
 
@@ -20,9 +15,7 @@ the existing React tree. It contains public display data only. Private
 workspace evidence, renderer capabilities, tokens, Git evidence, and source
 inventories never enter it.
 
-There are two serialized forms:
-
-- **Live Serve** embeds a route-scoped projection of the accepted public read
+- **Live Serve** embeds an entry-scoped projection of the accepted public read
   model together with the page view and shell context.
 - **Static export and repository preview** embed the existing compact external
   reference: `kind: "external"`, the fixed `/__mokly/catalogue.json` path, and
@@ -30,20 +23,20 @@ There are two serialized forms:
   finalized deployment catalogue before hydration.
 
 Both forms retain the existing view discriminants: home, missing, or target. A
-target records its canonical route. Resolving that route against the bootstrap
-catalogue binds it to the exact current or historical record and its opaque
-snapshot identity; any selected snapshot query must match that record. Context
-retains the base, revisions, comparison and preview state, optional fragment,
-appearance, and static delivery descriptor. The resolved view and context
-determine scope; no serialized list of permitted usage is trusted.
+target records its entry id and kind plus an optional opaque snapshot identity.
+Resolving that identity against the bootstrap catalogue binds it to the exact
+current or historical record; any selected snapshot must match that record.
+Context retains the base, revisions, comparison and preview state, optional
+fragment, appearance, and static delivery descriptor. The resolved view and
+context determine scope; no serialized list of permitted usage is trusted.
 
-## Route-Scoped Live Catalogue
+## Entry-Scoped Live Catalogue
 
 The live projection retains the complete catalogue index needed to render the
 shell: identity, deployment and revision fields, Changes state, comparison URL,
-collections and trees, routed entries, removed records and ancestor labels,
-details, tags, paths, saved variants, controls, props, comparison selections,
-and every view axis. It changes only each view's `usage` value.
+folder trees, entries, removed records, navigation paths, controls, props,
+comparison selections, and every view axis. Component variants remain flat
+entries with `variantOf`. The projection changes only each view's `usage` value.
 
 The public `CatalogueUsage` union remains `ready | pending | unavailable`.
 `@mokly/viewer/runtime` additionally types this bootstrap-only state:
@@ -52,21 +45,22 @@ The public `CatalogueUsage` union remains `ready | pending | unavailable`.
 type ShellCatalogueUsage = CatalogueUsage | { status: "omitted" };
 ```
 
-`omitted` means that valid usage may exist but is outside this page's route
+`omitted` means that valid usage may exist but is outside this page's entry
 scope. It never means empty, unavailable, or unrecorded. An omitted view keeps
-its fragment path and comparison state. No instances, slots, or ranges are
-serialized with it.
+its axes and comparison state; its document path remains derivable from kind,
+id, viewport, and scheme. No instances, slots, or ranges are serialized with it.
 
 Derive the exact retained scope from the bootstrap's own resolved view:
 
-| Bootstrap view                             | Usage that must be retained                         |
-| ------------------------------------------ | --------------------------------------------------- |
-| Current screen, including a screen variant | Every view of that selected screen                  |
-| Current component                          | Every view of every saved variant on that component |
-| Current use case                           | Every view of each screen named by its steps        |
-| Selected removed screen or component       | Every view on that exact historical record          |
-| Selected removed page or use case          | None; those records own no view usage               |
-| Current page, home, or missing route       | None                                                |
+| Bootstrap view                                | Usage that must be retained                                     |
+| --------------------------------------------- | --------------------------------------------------------------- |
+| Current screen, including a screen variant    | Every view of that selected screen                              |
+| Current component parent or component variant | Every variant view belonging to that component parent           |
+| Current use case                              | Every view of each screen named by its steps                    |
+| Selected removed screen                       | Every view on that exact historical record                      |
+| Selected removed component parent or variant  | Every retained variant view belonging to that historical parent |
+| Selected removed page or use case             | None; those records own no view usage                           |
+| Current page, home, or missing entry          | None                                                            |
 
 Duplicate use-case steps do not duplicate data. In-scope views preserve their
 real `ready`, `pending`, or `unavailable` value byte-for-byte. Every other
@@ -74,32 +68,25 @@ screen view and component-variant view is present with exactly
 `{ "status": "omitted" }`.
 
 Changing usage on an out-of-scope entry must not change this page's serialized
-bootstrap. Changing index data, route-owned usage, view/context state, or an
+bootstrap. Changing index data, entry-owned usage, view/context state, or an
 in-scope use-case step may change it.
 
 ## Readers And Validation
 
-The public `readCatalogue` boundary accepts only complete catalogue v1. It
+The public `readCatalogue` boundary accepts only complete catalogue v3. It
 rejects `omitted` at any current or historical screen/component view. The
 public types, schema version, canonical serializer, and
-`docs/protocol/fixtures/catalogue-v1.json` bytes do not change.
+`docs/protocol/fixtures/catalogue-v3.json` bytes do not change.
 
-The live bootstrap reader performs these steps as one validation boundary:
+The live reader validates context and view fields, parses the shell catalogue
+with ordinary value, hierarchy, snapshot, and reference checks, resolves entry
+id/kind and any snapshot, then derives scope from that record. Every in-scope
+view must carry real usage and every other view exactly `omitted`; retained
+ready records still receive full instance, slot, range, props, key, and
+ownership validation.
 
-1. Parse and validate the known context and view fields.
-2. Parse the shell catalogue with the bootstrap-only usage union while keeping
-   all ordinary value, path, hierarchy, snapshot, and reference checks.
-3. Resolve the view, including its historical snapshot when present.
-4. Derive the permitted usage scope from that resolved view.
-5. Require every in-scope view to contain real usage and every out-of-scope
-   view to contain `omitted`.
-6. Fully validate ready instance, slot, range, props, key, and ownership
-   records only for retained views. Omitted views carry no such records to
-   validate.
-
-The reader rejects leaked out-of-scope usage, omitted in-scope usage, a scope
-that does not match the route/snapshot, dangling references, and all malformed
-real usage. It does not accept a producer-declared scope as evidence.
+The reader rejects malformed usage and any entry/snapshot scope with missing,
+leaked, misplaced, or dangling records.
 
 `readLiveShellBootstrap` accepts only an exactly scoped bootstrap that passes
 every strict scope rule above. Browser hydration, route evidence and live
@@ -110,32 +97,32 @@ unchanged compact static external form. Static external bootstraps and
 
 The external bootstrap reader validates the compact reference as today. After
 the complete deployment catalogue is fetched, identity, content revision,
-evidence revision, deployment identity, route, and snapshot must all match
+evidence revision, deployment identity, entry identity, and snapshot must all match
 before hydration. That complete catalogue remains suitable for the public
 reader and contains no `omitted` state.
 
 ## Private Workspace And Usage Presentation
 
-Cross-route Usage is private shell evidence, not a value reconstructed from a
+Cross-entry Usage is private shell evidence, not a value reconstructed from a
 partial public projection. Serve computes the initial `WorkspaceData` from the
 complete private catalogue. Its capability descriptor supplies complete
-route workspace, including complete `Used by` and `Affected` lists for a
-selected component. Route and live evidence responses pair that private
-workspace with the destination's route-scoped public bootstrap.
+entry workspace, including complete `Used by` and `Affected` lists for a
+selected component. Entry and live evidence responses pair that private
+workspace with the destination's entry-scoped public bootstrap.
 
 A workspace derived from a complete public catalogue, including a resolved
 static deployment or application-owned viewer source, keeps the existing
-fallback behavior. A workspace derived from a route-scoped live catalogue must
+fallback behavior. A workspace derived from an entry-scoped live catalogue must
 not scan omitted usage, publish a partial list, or infer zero consumers.
 
 The routed workspace has three delivery states:
 
-- **Loading:** private evidence for the current route has not been adopted.
+- **Loading:** private evidence for the current entry has not been adopted.
   Usage shows `Loading usage…`; it shows no counts, empty state, `Used by`, or
   `Affected` rows.
 - **Ready:** matching private workspace evidence was adopted atomically. Real
   lists render, including the existing explicit zero-consumer state.
-- **Failed:** the current route-evidence read failed or its candidate was
+- **Failed:** the current entry-evidence read failed or its candidate was
   rejected. Usage shows `Usage couldn’t be loaded.` and a `Try again` button.
   Retry repeats the evidence read without remounting the workspace.
 
@@ -145,29 +132,29 @@ descriptor may begin Ready on direct load; the shell must not insert a Loading
 flash before adopting that descriptor.
 
 Ready in a live shell always means private evidence bound to the current
-request: the same route and the same source revision. The initial descriptor
-workspace seeds only the first request's binding. After the route or source
+request: the same entry id and the same source revision. The initial descriptor
+workspace seeds only the first request's binding. After the entry or source
 changes, the shell never falls back to that page-lifetime copy. Returning to
-the first route after visiting another one is therefore Loading, then Ready or
+the first entry after visiting another one is therefore Loading, then Ready or
 Failed, like any other navigation. Static and application-owned shells have no
 live request and keep their inert initial and destination evidence.
 
 Displayed frames treat `omitted` as pending. Inspection uses the existing
-`Waiting for the component preview.` state until matching route evidence
+`Waiting for the component preview.` state until matching entry evidence
 commits real usage. The commit updates mounted frame usage in place: it does
 not replace the iframe, reset selection, lose focus, or clear valid local
 workspace state. A failed read moves Usage to Failed while inspection remains
 unavailable; it never presents omitted usage as a real empty view.
 
-## Atomic Route And Evidence Adoption
+## Atomic Entry And Evidence Adoption
 
-In-shell navigation commits the destination route immediately, then reads its
+In-shell navigation commits the destination entry immediately, then reads its
 shell page as evidence. The fetched scoped catalogue, source descriptor, and
-private workspace when that route owns one are a single candidate. Accept all
+private workspace when that entry owns one are a single candidate. Accept all
 of them or retain the installed candidate; never accumulate retained usage from
-previously visited routes.
+previously visited entries.
 
-Every committed live target route performs that evidence read, including use
+Every committed live target entry performs that evidence read, including use
 cases and pages that own no private workspace. This keeps the installed scope
 aligned with the destination: a use case adopts its step screens' usage, while
 a page adopts the zero-usage scope. While either read is pending, and if it
@@ -175,13 +162,13 @@ fails, complete index data still lets those frames load and navigate normally;
 any usage left omitted is treated as pending and cannot enable inspection or
 produce a partial cross-route list.
 
-The candidate must pass the live-capability route, location, base, catalogue
+The candidate must pass the live-capability entry id, location, base, catalogue
 identity, content/evidence revision, update version, preview/renderer
 generation, token, snapshot, and cancellation fences. Its private workspace
-must identify the current route's exact screen or component. On acceptance,
+must identify the current entry's exact screen or component. On acceptance,
 replace the installed scoped catalogue and workspace in one store commit.
 
-Live evidence refresh follows the same rule for the current route. Complete
+Live evidence refresh follows the same rule for the current entry. Complete
 `Used by` and `Affected` data comes from its paired private workspace. Per-view
 usage loaded on demand for an actual displayed document remains authoritative
 under the existing generation rules; the scoped bootstrap does not weaken or
@@ -208,22 +195,17 @@ serialization is not a correctness mechanism.
 ## Capture And Static Delivery
 
 Export and repository preview validate the complete published catalogue once
-per build. For every captured Serve page they then:
-
-1. parse and validate its route-scoped live bootstrap;
-2. project the complete published catalogue with the same bootstrap view and
-   scope resolver;
-3. compare the captured scoped model with that expected scoped projection,
-   applying only the existing deployment, revision, comparison-path, and
-   finalized-preview normalizations; and
-4. replace the inline model with the existing compact external reference.
+per build. Each captured Serve page must pass the scoped reader and exactly
+match the projection derived from that catalogue and view, apart from the
+existing deployment, revision, comparison-path, and finalized-preview
+normalizations. Capture then installs the compact external reference.
 
 Comparison is exact for all data the captured page carries. It cannot compare a
 scoped model directly with the complete published model, ignore extra retained
-usage, or accept missing route-owned usage.
+usage, or accept missing entry-owned usage.
 
 For identical catalogue, consumer, and comparison inputs,
-`__mokly/catalogue.json`, canonical and alias shell HTML, workspace JSON,
+`__mokly/catalogue.json`, canonical shell HTML, workspace JSON,
 ownership inventory, and comparison files remain byte-identical to the
 pre-scope export after replacing each tree's deployment identity with 64
 zeroes. Files under `__mokly/client/` may change when checked, type-checked
@@ -235,16 +217,16 @@ fallback Usage behavior.
 
 ## Size And Regression Guardrails
 
-Measure bootstrap size as the UTF-8 byte length of the text inside
-`data-mokly-shell-bootstrap`, after canonical serialization and script escaping.
-Every Serve route in the real example catalogue must stay below 1 MiB
+Measure the UTF-8 bytes inside `data-mokly-shell-bootstrap` after canonical
+serialization and script escaping.
+Every Serve entry in the real example catalogue must stay below 1 MiB
 (1,048,576 bytes). Raising that limit requires a protocol update with new
 measurements and rationale.
 
 Regression tests must also prove that changing only an out-of-scope entry's
 usage leaves the selected page's bootstrap bytes identical. This invariant is
 required for screen, component, use-case, historical, and zero-usage-scope
-routes.
+entries.
 
 ## Acceptance
 
@@ -254,14 +236,14 @@ Acceptance requires:
   missing, and every selected removed entry kind;
 - rejection of leaked, missing, misplaced, malformed, and public-catalogue
   `omitted` usage;
-- canonical scoped-bootstrap round trips and unchanged public v1 fixture bytes;
+- canonical scoped-bootstrap round trips and unchanged public v3 fixture bytes;
 - server/hydration serializer call counts of one/zero after initial creation;
 - no hydration mismatch in development React and no iframe remount on usage
   adoption;
 - Loading → Ready, Loading → Failed, retry, no false-zero flash, and instance
-  deep-link coverage with delayed route evidence, including a return to the
-  first-loaded route;
-- atomic route and live-evidence adoption with stale, mixed, rejected, aborted,
+  deep-link coverage with delayed entry evidence, including a return to the
+  first-loaded entry;
+- atomic entry and live-evidence adoption with stale, mixed, rejected, aborted,
   and historical candidates;
 - scoped capture drift rejection plus normalized static-content invariance,
   with any client and deployment-identity changes accounted for; and

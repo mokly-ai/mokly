@@ -125,8 +125,8 @@ test(
       "main",
       committedReviewRepository(config),
     );
-    assert.deepEqual(snapshot.changedRoutes, []);
-    assert.equal(snapshot.changedRoutes?.length, expectedStylesheetChanges);
+    assert.deepEqual(snapshot.changedIds, []);
+    assert.equal(snapshot.changedIds?.length, expectedStylesheetChanges);
     const result = snapshot.componentChanges?.result;
     assert.ok(result);
     assert.deepEqual(result.changedPaths, [changedPath]);

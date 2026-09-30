@@ -11,20 +11,9 @@ export function entryChanges(
   if (input.changesStatus !== "ready") return { status: input.changesStatus };
   const included =
     removed ||
-    (entry.kind === "collection"
-      ? (input.catalogue.hierarchy.childrenById.get(entry.id) ?? []).some(
-          (child) => {
-            const changes = entryChanges(child, input, false);
-            return changes.status === "ready" && changes.included;
-          },
-        )
-      : (input.changedRoutes ?? input.evidence?.changedRoutes ?? []).includes(
-          entry.route,
-        ));
-  const before = input.evidence?.baseline.entries.find((candidate) =>
-    entry.kind === "collection" || entry.kind === "component"
-      ? candidate.id === entry.id
-      : candidate.kind !== "collection" && candidate.route === entry.route,
+    (input.changedIds ?? input.evidence?.changedIds ?? []).includes(entry.id);
+  const before = input.evidence?.baseline.entries.find(
+    (candidate) => candidate.id === entry.id,
   );
   return {
     status: "ready",

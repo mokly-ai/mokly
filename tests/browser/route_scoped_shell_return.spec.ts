@@ -10,8 +10,8 @@ import {
   markDesktopFrame,
 } from "./scoped_shell_helpers.js";
 
-const actionRoute = "/view/components/action.html";
-const toolbarRoute = "/view/components/toolbar.html";
+const actionRoute = "/view/components/example-action.html";
+const toolbarRoute = "/view/components/example-toolbar.html";
 
 test("returning to the first route waits for its own evidence", async ({
   page,

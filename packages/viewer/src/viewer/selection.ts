@@ -19,7 +19,6 @@ export const defaultSelection: ViewerSelection = {
 const selectionKeys = new Set([
   "screenId",
   "snapshotId",
-  "variantId",
   "view",
   "viewport",
   "colorScheme",
@@ -45,12 +44,6 @@ export function normalizeSelection(
       (isHistoricalSnapshotId(value.snapshotId) && value.screenId !== null)
     ) ||
     (value.snapshotId !== undefined && entry === undefined) ||
-    !(
-      value.variantId === undefined ||
-      (typeof value.variantId === "string" &&
-        entry?.kind === "component" &&
-        entry.variants.some((variant) => variant.id === value.variantId))
-    ) ||
     !["all", "changes"].includes(value.view) ||
     !["mobile", "desktop", "both"].includes(value.viewport) ||
     !["light", "dark"].includes(value.colorScheme) ||
@@ -66,7 +59,6 @@ export function normalizeSelection(
   return {
     screenId: value.screenId,
     ...(resolved?.snapshotId ? { snapshotId: resolved.snapshotId } : {}),
-    ...(value.variantId === undefined ? {} : { variantId: value.variantId }),
     view: value.view,
     viewport: value.viewport,
     colorScheme: value.colorScheme,
@@ -83,7 +75,6 @@ export function sameSelection(a: ViewerSelection, b: ViewerSelection): boolean {
   return (
     a.screenId === b.screenId &&
     a.snapshotId === b.snapshotId &&
-    a.variantId === b.variantId &&
     a.view === b.view &&
     a.viewport === b.viewport &&
     a.colorScheme === b.colorScheme &&
@@ -92,7 +83,7 @@ export function sameSelection(a: ViewerSelection, b: ViewerSelection): boolean {
     a.tags.every((tag, index) => tag === b.tags[index])
   );
 }
-/** Merge one public proposal and reset a saved variant on entry changes. */
+/** Merge one public proposal and normalize route-owned entry identity. */
 export function mergeSelection(
   model: ShellCatalogueReadModel,
   current: ViewerSelection,
@@ -106,12 +97,6 @@ export function mergeSelection(
     (snapshotSupplied && partial.snapshotId === undefined)
   )
     delete candidate.snapshotId;
-  if (
-    (candidate.screenId !== current.screenId ||
-      candidate.snapshotId !== current.snapshotId) &&
-    !Object.hasOwn(partial, "variantId")
-  )
-    delete candidate.variantId;
   const next = normalizeSelection(model, candidate);
   return screenSupplied || snapshotSupplied
     ? revealSelection(model, next)
@@ -141,7 +126,11 @@ export function revealSelection(
   if (!entry) return value;
   const matches = rowMatchesQuery(
     { freeText: value.search, tags: value.tags },
-    { id: entry.id, route: entry.route, tags: entry.tags, text: entry.title },
+    {
+      id: entry.id,
+      tags: entry.tags,
+      text: entry.title,
+    },
   );
   return {
     ...value,

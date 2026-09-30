@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { readCatalogue } from "@mokly/viewer";
 
+import { expectPresentedPane, PANE_SOURCE } from "./comparison_actions.js";
 import { startStaticFixture } from "./static_fixture.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
@@ -54,10 +55,9 @@ test("isolated comparisons stay lazy, immutable, sandboxed, and responsive", asy
           ).toHaveText("Current home");
           for (const frame of await frames.all()) {
             await expect(frame).toHaveCSS("color-scheme", scheme);
-            await expect(frame).toHaveAttribute("sandbox", "");
-            await expect(frame).toHaveAttribute(
-              "src",
-              /\/diffs\/__generations\/[a-f0-9]{64}\//,
+            await expectPresentedPane(
+              frame,
+              /\/diffs\/__generations\/[a-f0-9]{64}\/snapshots\//,
             );
           }
         }
@@ -85,7 +85,7 @@ test("isolated comparisons stay lazy, immutable, sandboxed, and responsive", asy
 test("added and removed screens stay current while light-only comparisons retain their sides", async ({
   page,
 }) => {
-  await page.goto(`${site.url}/id/added/`);
+  await page.goto(`${site.url}/view/screens/added.html`);
   await chooseViewport(page, "mobile");
   await expect(page).toHaveURL(`${site.url}/view/screens/added.html`);
   await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
@@ -93,7 +93,7 @@ test("added and removed screens stay current while light-only comparisons retain
     page.frameLocator('[data-workspace-frame="mobile"]').locator("main"),
   ).toHaveText("added");
 
-  await page.goto(`${site.url}/id/removed/`);
+  await page.goto(`${site.url}/view/screens/removed.html`);
   await chooseViewport(page, "mobile");
   const catalogue = readCatalogue(
     JSON.parse(site.files.get("__mokly/catalogue.json")!.toString()),
@@ -124,7 +124,7 @@ test("added and removed screens stay current while light-only comparisons retain
     "Light only",
   );
   for (const frame of await page.locator("[data-diff-stage] iframe").all()) {
-    await expect(frame).not.toHaveAttribute("src", /\.dark\.html$/);
+    await expect(frame).not.toHaveAttribute(PANE_SOURCE, /\.dark\.html$/);
     await expect(frame).toHaveCSS("color-scheme", "light");
   }
 });

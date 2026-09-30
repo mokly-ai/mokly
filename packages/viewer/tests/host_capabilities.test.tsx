@@ -40,12 +40,12 @@ test("the provider exposes live capabilities and export-style omission", () => {
     },
   } satisfies ViewerHostCapabilities;
   const workspace = {
-    entry: { route: "components/action.html" },
+    entry: { id: "action" },
   } as unknown as WorkspaceData;
   const Probe = () => (
     <span>
       {useViewerCapabilities()?.source.catalogueId ?? "export"}:
-      {useViewerInitialWorkspace()?.entry.route ?? "none"}
+      {useViewerInitialWorkspace()?.entry.id ?? "none"}
     </span>
   );
   assert.equal(
@@ -57,28 +57,24 @@ test("the provider exposes live capabilities and export-style omission", () => {
         <Probe />
       </ViewerCapabilityBoundary>,
     ),
-    `<span>${catalogue.identity.id}:components/action.html</span>`,
+    `<span>${catalogue.identity.id}:action</span>`,
   );
   assert.equal(renderToStaticMarkup(<Probe />), "<span>export:none</span>");
 });
 
-test("a request scope cancels work when its source or route changes", () => {
-  const initial = viewerCapabilityRequest(source, "components/button.html");
+test("a request scope cancels work when its source or entry changes", () => {
+  const initial = viewerCapabilityRequest(source, "button");
   const scope = new ViewerCapabilityScope(initial);
   const first = scope.signal;
   assert.equal(scope.replace(initial), first);
-  const second = scope.replace(
-    viewerCapabilityRequest(source, "components/card.html"),
-  );
+  const second = scope.replace(viewerCapabilityRequest(source, "card"));
   assert.equal(first.aborted, true);
   assert.equal(second.aborted, false);
   const replacement = {
     ...source,
     contentRevision: source.contentRevision + 1,
   };
-  const third = scope.replace(
-    viewerCapabilityRequest(replacement, "components/card.html"),
-  );
+  const third = scope.replace(viewerCapabilityRequest(replacement, "card"));
   assert.equal(second.aborted, true);
   assert.equal(third.aborted, false);
   scope.close();
@@ -125,7 +121,7 @@ test("evidence adoption fences source identity and monotonic revisions", () => {
   assert.equal(
     readViewerEvidenceRevision(
       source,
-      viewerCapabilityRequest({ ...source, base: "release" }, request.route),
+      viewerCapabilityRequest({ ...source, base: "release" }, request.entryId),
       nextSource,
       next,
     ),

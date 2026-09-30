@@ -8,9 +8,10 @@ import { controlsEntrySource } from "../helpers/component_controls_fixture.js";
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 import { reparentedEntrySource } from "../helpers/fixture.js";
 
-import { expectFrameSource } from "./workspace_actions.js";
+import { chooseVariant, expectFrameSource } from "./workspace_actions.js";
 
 const HOME = "screens/home.html";
+const HOME_ID = "home";
 const HOME_ROW = `a[data-nav-row][data-route="${HOME}"]`;
 const SCHEME_DOT = '[data-view-changed="scheme"]';
 const VIEWPORT_DOT = '[data-view-changed="viewport"]';
@@ -47,7 +48,7 @@ test("a dark-only change marks the views it hides and opens on one", async ({
   try {
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [HOME],
+      changedIds: [HOME_ID],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
@@ -152,22 +153,25 @@ test("a dark-only change marks the views it hides and opens on one", async ({
 test("a light fallback rejects an ineligible comparison deep link", async ({
   page,
 }) => {
-  const source = reparentedEntrySource("screens").replace(
-    'defineScreen({ ...metadata, description: "Home screen"',
-    'defineScreen({ ...metadata, colorSchemes: ["light"], description: "Home screen"',
+  const original = reparentedEntrySource("screens");
+  const marker = 'description: "Home screen", desktop:';
+  expect(original.split(marker)).toHaveLength(2);
+  const source = original.replace(
+    marker,
+    'colorSchemes: ["light"], description: "Home screen", desktop:',
   );
   const fixture = await startEvidenceFixture(source);
   const { compilation, server } = fixture;
   try {
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [HOME],
+      changedIds: [HOME_ID],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
         screenViews: [
           {
-            route: HOME,
+            id: HOME_ID,
             views: [
               {
                 viewport: "mobile",
@@ -229,7 +233,7 @@ test("a background classification moves the marks without reloading the frames",
 
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [HOME],
+      changedIds: [HOME_ID],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
@@ -258,7 +262,7 @@ test("component view evidence follows the selected saved variant", async ({
   try {
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [],
+      changedIds: [],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
@@ -273,9 +277,7 @@ test("component view evidence follows the selected saved variant", async ({
     await expect(row).toBeHidden();
     await expectShownStatus(page, "Unmodified", false);
 
-    await page
-      .getByLabel("Saved variant", { exact: true })
-      .selectOption("disabled");
+    await chooseVariant(page, "Disabled");
 
     await expect(page.locator(SCHEME_DOT)).toBeVisible();
     await expect(row).toBeVisible();
@@ -297,7 +299,7 @@ test("Changes lands on the first changed view and every other arrival stays stic
   try {
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [HOME],
+      changedIds: [HOME_ID],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,

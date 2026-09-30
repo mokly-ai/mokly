@@ -1,6 +1,7 @@
 /** React-owned rows for the catalogue hierarchy. */
 
 import type { ShellContext } from "./context.js";
+import { folderDisclosureKey } from "./disclosure_keys.js";
 import { FolderIcon, FolderOpenIcon } from "./icons.js";
 import { navRowStyle } from "./nav_guides.js";
 import { LeafRow } from "./nav_leaf_rows.js";
@@ -8,18 +9,7 @@ import { navNodeVisible, navigationFiltering } from "./nav_model.js";
 import type { NavGroupNode, NavNode, NavSectionNode } from "./nav_tree.js";
 import { useOptionalShellStore } from "./store_context.js";
 
-/** The persisted disclosure identity of one projected collection group. */
-function collectionDisclosureKey(
-  sectionId: NavSectionNode["id"],
-  collectionKey: string,
-): string {
-  const id = collectionKey.startsWith("collection:")
-    ? collectionKey.slice("collection:".length)
-    : collectionKey;
-  return `collection:${sectionId}:${id}`;
-}
-
-/** One authored collection projected into a section as a native disclosure. */
+/** One authored folder projected into a section as a native disclosure. */
 function GroupRow(props: {
   context: ShellContext;
   depth: number;
@@ -28,7 +18,7 @@ function GroupRow(props: {
 }) {
   const store = useOptionalShellStore();
   const node = props.node;
-  const key = collectionDisclosureKey(props.sectionId, node.key);
+  const key = folderDisclosureKey(props.sectionId, node.key);
   const open = store?.state.disclosures[key] ?? props.depth === 0;
   const filtered = store ? navigationFiltering(store.state.selection) : false;
   const hidden = store
@@ -44,7 +34,7 @@ function GroupRow(props: {
             : "0"
           : undefined
       }
-      data-nav-collection={node.key}
+      data-nav-folder={node.key}
       data-nav-disclosure={key}
       hidden={filtered && hidden}
       onToggle={(event) => {

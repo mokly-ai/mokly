@@ -2,17 +2,17 @@
 
 ## Delivery Status
 
-Implemented through [viewer library Milestone 2](../../plans/mokly-viewer-library.md),
-including resolution and source capture. The key derivation and rendered boundaries
-retain their existing format. No new UI,
-changed key format, or visible local behavior is approved by this document.
+Implemented as recorded in the
+[viewer library plan](../../plans/mokly-viewer-library.md), including resolution
+and source capture. Key and boundary formats are unchanged; this document
+approves no new UI or visible local behavior.
 
 ## Identity And Scope
 
 An instance is one logical invocation of a `defineComponent` wrapper. Its
-`ComponentInstanceRecord` belongs to one screen or component variant's
+`ComponentInstanceRecord` belongs to one screen or component variant entry's
 `ComponentViewRecord`; see the [manifest schema](./mokly-component-manifest.md).
-The component root of its own saved variant is the entry owner, not a used
+The component root of its own variant entry is the entry owner, not a used
 instance. Replaying captured slot content can place one instance more than once.
 
 The exact algorithm in [`keys.ts`](../../packages/viewer/src/components/keys.ts) is:
@@ -36,13 +36,14 @@ component id when omitted. `owner` is `{ kind: "entry" }` or
 `{ kind: "instance", instanceKey }`. The separate receiving-slot key is the
 same digest operation over `["mokabook-slot-v1", instanceKey, name]`.
 
-The containing entry id, variant id, viewport, color scheme, `componentId`,
-props, and source location are **not** in the instance preimage. In particular,
-moving an entry-owned invocation to another screen can retain the same digest.
-Keys are unique within a view, not globally across a catalogue. A stored
-reference must include its catalogue identity, entry id, optional variant id,
-viewport, color scheme, and key. Moving to another entry changes that reference
-even if the digest is identical. Do not search other entries for a missing key.
+The containing entry id, viewport, color scheme, `componentId`, props, and
+source location are **not** in the instance preimage. In particular, moving an
+entry-owned invocation to another screen can retain the same digest. Keys are
+unique within a view, not globally across a catalogue. Public `InstanceRef`
+stores the owning entry id in `screenId` plus viewport, scheme, key, and optional
+flow `stepIndex`; it has no `variantId`, because a component variant's global id
+is already the owning entry id. Moving entries changes the scoped reference even
+if the digest is identical. Never search another entry for a missing key.
 
 `slotKey` denotes the original input slot scope. Forwarding a slot preserves
 that scope; it does not replace it with each later physical receiving slot.
@@ -67,9 +68,10 @@ Edits that keep it, provided those inputs stay the same, are:
 - Editing data props, slot content, component implementation, styles or assets.
 - Reordering siblings, or inserting/removing other siblings with distinct ids.
 - Changing source filename, invocation line/column, comments or formatting.
-- Renaming an entry title, route, collection, or containing entry id; moving
-  between entry scopes can retain the digest but changes the scoped reference.
-- Changing viewport/scheme or variant context; each context has its own record.
+- Renaming an entry title, `navPath`, or containing entry id; moving between
+  entry scopes can retain the digest but changes the scoped reference.
+- Changing viewport/scheme, or rendering under a sibling variant entry; each
+  context has its own record.
 - Moving, forwarding, or replaying an unchanged captured slot in the rendered
   DOM, or changing physical wrappers, range ids, or placement count.
 - Replacing the registered component while retaining an explicit local id;
@@ -124,7 +126,7 @@ errors, not a fourth resolution state.
 
 ## Optional Invocation Source
 
-Manifest v5 includes this optional instance field:
+Manifest v7 includes this optional instance field:
 
 ```ts
 interface ComponentSourceLocation {
@@ -161,10 +163,9 @@ The wrapper strips `__moklySource` before prop/slot validation, hashing and
 calling the consumer render function, just as it strips `moklyInstance`.
 The name is reserved from authored data props and slots. Capture it in the
 collector only; do not emit DOM attributes, source maps, or debug markup.
-Programmatic `createElement` calls and already-transformed modules without
-invocation information may omit `source`. Replayed slots retain the original
-invocation location. Existing v5 records without `source` remain valid; updated
-readers accept both forms without a schema-version bump.
+Programmatic `createElement` calls and transformed modules without invocation
+information may omit `source`. Replayed slots retain the original invocation
+location; manifest-v7 readers accept records with or without the optional field.
 
 `source` is excluded from instance/slot keys, `propsKey`, direct-input comparison,
 and every Changes projection. Line shifts and source moves alone are not material.
@@ -211,12 +212,13 @@ markers and incorrect range parentage. No template sentinel survives final
 serialization. Review-ignore regions cannot enclose component or caller-slot
 boundaries. Compatibility transforms must preserve validated pairs; adapters
 inspect current views using these comments without adding layout wrappers.
-Snapshot bytes and historical marker compatibility retain their existing rules.
+Accepted baseline and current v7 documents use the same marker spelling and
+validation; historical marker translation is not supported.
 
 ## Acceptance
 
-Milestone 2 needs key-stability fixtures, record-resolution truth-table tests,
+Coverage requires key-stability fixtures, record-resolution truth-table tests,
 source normalization/stripping and source-only Changes regressions, and marker
 conformance for every view, including null, nested, multi-root and replayed
-instances. Later viewer/adapter tests must preserve scoped lookup and treat
+instances. Viewer and adapter tests must preserve scoped lookup and treat
 unavailable geometry separately from a missing logical instance.

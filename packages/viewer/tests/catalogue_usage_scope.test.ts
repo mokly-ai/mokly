@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { CatalogueView } from "../src/catalogue/types.js";
+import { catalogueComponentVariants } from "../src/catalogue/entry_selection.js";
+import type { CatalogueRecord, CatalogueView } from "../src/catalogue/types.js";
 import {
   resolveCatalogueUsageScope,
   type CatalogueUsageScopeTarget,
@@ -11,26 +12,33 @@ import { scopedCatalogueFixture } from "./scoped_catalogue_fixture.js";
 
 const model = scopedCatalogueFixture();
 
-test("screen routes retain only the selected screen's views", () => {
+test("screen entries retain only the selected screen's views", () => {
   const screen = model.screens.find(({ id }) => id === "home")!;
-  assertScope({ kind: "target", route: screen.route }, screen.views);
+  assertScope(target(screen), screen.views);
 });
 
-test("screen variant routes retain only the selected variant screen", () => {
+test("screen variants retain only the selected variant screen", () => {
   const variant = model.screens.find(({ id }) => id === "home-empty")!;
   assert.equal(variant.variantOf, "home");
-  assertScope({ kind: "target", route: variant.route }, variant.views);
+  assertScope(target(variant), variant.views);
 });
 
-test("component routes retain current and removed saved variants", () => {
-  const component = model.components.find(({ id }) => id === "action")!;
+test("component entries retain current and removed saved variants", () => {
+  const component = model.components.find(
+    (entry) => entry.id === "action" && !("variantOf" in entry),
+  )!;
+  const variants = catalogueComponentVariants(model, component.id);
   assert.deepEqual(
-    component.variants.map(({ id }) => id),
-    ["default", "retired"],
+    variants.map(({ id }) => id),
+    ["action-default", "action-retired"],
   );
   assertScope(
-    { kind: "target", route: component.route },
-    component.variants.flatMap(({ views }) => views),
+    target(component),
+    variants.flatMap(({ views }) => views),
+  );
+  assertScope(
+    target(variants[0]!),
+    variants.flatMap(({ views }) => views),
   );
 });
 
@@ -38,7 +46,7 @@ test("use cases deduplicate repeated step-screen usage", () => {
   const useCase = model.useCases.find(({ id }) => id === "tour")!;
   const screen = model.screens.find(({ id }) => id === "home")!;
   assert.equal(useCase.steps.length, 2);
-  assertScope({ kind: "target", route: useCase.route }, screen.views);
+  assertScope(target(useCase), screen.views);
 });
 
 test("snapshot-selected removed screens retain their exact historical views", () => {
@@ -48,28 +56,21 @@ test("snapshot-selected removed screens retain their exact historical views", ()
   assert.ok(record.snapshotId);
   assert.equal(record.entry.kind, "screen");
   assertScope(
-    {
-      kind: "target",
-      route: record.entry.route,
-      snapshotId: record.snapshotId,
-    },
+    { ...target(record.entry), snapshotId: record.snapshotId },
     record.entry.views,
   );
 });
 
-test("snapshot-selected removed components retain all historical variants", () => {
+test("snapshot-selected removed components retain their historical variants", () => {
   const record = model.removedEntries.find(
-    ({ entry }) => entry.kind === "component",
+    ({ entry }) => entry.id === "removed-action",
   )!;
   assert.ok(record.snapshotId);
   assert.equal(record.entry.kind, "component");
+  const variants = catalogueComponentVariants(model, record.entry.id);
   assertScope(
-    {
-      kind: "target",
-      route: record.entry.route,
-      snapshotId: record.snapshotId,
-    },
-    record.entry.variants.flatMap(({ views }) => views),
+    { ...target(record.entry), snapshotId: record.snapshotId },
+    variants.flatMap(({ views }) => views),
   );
 });
 
@@ -79,13 +80,9 @@ test("page, removed non-usage entries, home and missing retain no usage", () => 
     ({ entry }) => entry.kind === "page",
   )!;
   assert.ok(removedPage.snapshotId);
-  assertScope({ kind: "target", route: page.route }, []);
+  assertScope(target(page), []);
   assertScope(
-    {
-      kind: "target",
-      route: removedPage.entry.route,
-      snapshotId: removedPage.snapshotId,
-    },
+    { ...target(removedPage.entry), snapshotId: removedPage.snapshotId },
     [],
   );
   const removedUseCase = model.removedEntries.find(
@@ -93,35 +90,34 @@ test("page, removed non-usage entries, home and missing retain no usage", () => 
   )!;
   assert.ok(removedUseCase.snapshotId);
   assertScope(
-    {
-      kind: "target",
-      route: removedUseCase.entry.route,
-      snapshotId: removedUseCase.snapshotId,
-    },
+    { ...target(removedUseCase.entry), snapshotId: removedUseCase.snapshotId },
     [],
   );
   assertScope({ kind: "home" }, []);
-  assertScope({ kind: "missing", requested: "not-here.html" }, []);
+  assertScope({ kind: "missing", requested: "not-here" }, []);
 });
 
-test("target routes cannot select another snapshot", () => {
+test("target entries cannot select another snapshot", () => {
   const removed = model.removedEntries.find(
     ({ entry }) => entry.kind === "screen",
   )!;
   assert.throws(() =>
     resolveCatalogueUsageScope(model, {
-      kind: "target",
-      route: removed.entry.route,
+      ...target(removed.entry),
       snapshotId: "f".repeat(64),
     }),
   );
 });
 
+function target(entry: Pick<CatalogueRecord, "id" | "kind">) {
+  return { kind: "target" as const, entryId: entry.id, entryKind: entry.kind };
+}
+
 function assertScope(
-  target: CatalogueUsageScopeTarget,
+  scopeTarget: CatalogueUsageScopeTarget,
   expected: readonly CatalogueView[],
 ): void {
-  const scope = resolveCatalogueUsageScope(model, target);
+  const scope = resolveCatalogueUsageScope(model, scopeTarget);
   assert.equal(scope.size, expected.length);
   for (const view of expected) assert.equal(scope.has(view), true);
 }

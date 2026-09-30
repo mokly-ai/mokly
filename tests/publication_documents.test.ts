@@ -8,10 +8,10 @@ import { buildPreview } from "../scripts/preview/catalogue.mjs";
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
 
-function pageSource(route: string): string {
+function pageSource(id = "handbook"): string {
   return `${validEntrySource()}
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ id: "handbook", title: "Handbook", route: ${JSON.stringify(route)},
+mockups.push(definePage({ id: ${JSON.stringify(id)}, title: "Handbook",
   description: "Catalogue guidance", dependencies: [], relatedDocs: [],
   render: () => "<!doctype html><html><body>Handbook</body></html>" }));`;
 }
@@ -21,26 +21,24 @@ for (const includeChanges of [false, true]) {
     ? { includeChanges: true as const, base: "HEAD" }
     : {};
   for (const directory of ["target", "node_modules"]) {
-    test(`public ${directory} routes survive publication (changes: ${includeChanges})`, async (context) => {
-      const fixture = await changedFixture(
-        context,
-        `${pageSource(`${directory}/handbook.html`)}\nmockups[1].route = ${JSON.stringify(`${directory}/home.html`)};`,
-      );
+    test(`public ${directory} ids survive publication (changes: ${includeChanges})`, async (context) => {
+      const id = `${directory.replaceAll("_", "-")}-handbook`;
+      const fixture = await changedFixture(context, pageSource(id));
       const output = path.join(fixture.root, ".context/published");
       await buildPreview(fixture.config, output, options);
       for (const document of [
-        "handbook.html",
-        "home.mobile.html",
-        "home.desktop.html",
+        `pages/${id}.html`,
+        "screens/home.mobile.html",
+        "screens/home.desktop.html",
       ])
         assert.equal(
-          fs.existsSync(path.join(output, "static", directory, document)),
+          fs.existsSync(path.join(output, "static", document)),
           true,
           document,
         );
       assert.match(
         await fs.promises.readFile(
-          path.join(output, "view", directory, "handbook.html"),
+          path.join(output, "view/pages", `${id}.html`),
           "utf8",
         ),
         /Handbook/,
@@ -48,12 +46,9 @@ for (const includeChanges of [false, true]) {
     });
   }
 
-  for (const route of ["handbook.html", "screens/home.desktop.html"]) {
+  for (const route of ["pages/handbook.html", "screens/home.desktop.html"]) {
     test(`publication requires the exported ${route} even if enumeration omits it (changes: ${includeChanges})`, async (context) => {
-      const fixture = await changedFixture(
-        context,
-        pageSource("handbook.html"),
-      );
+      const fixture = await changedFixture(context, pageSource());
       const output = path.join(fixture.root, ".context/published");
       await buildPreview(fixture.config, output, options);
       const before = await fs.promises.readFile(

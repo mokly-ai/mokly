@@ -8,6 +8,7 @@ import {
   useSyncExternalStore,
 } from "react";
 
+import type { ScrollTogetherPreference } from "../shell/comparison_scroll_preference.js";
 import { EmbeddedViewerShell } from "../shell/embedded_viewer.js";
 import { ShellIdentifierProvider } from "../shell/identifier_context.js";
 import { ShellStoreProvider } from "../shell/store.js";
@@ -30,6 +31,8 @@ type ReadyProps = MoklyViewerProps & {
   bridgeOwner: object;
   identifierPrefix: string;
   replaced: () => boolean;
+  /** The mounted viewer's Scroll together choice, kept across sources. */
+  scrollTogether: ScrollTogetherPreference;
 };
 
 const subscribeBrowser = () => () => undefined;
@@ -110,10 +113,14 @@ function MountedViewer(
   );
   const comparisonEnvironment = useMemo(
     () =>
-      viewerComparisonEnvironment(props.loaded, (error) => {
-        report(error, "comparison");
-      }),
-    [props.loaded, report],
+      viewerComparisonEnvironment(
+        props.loaded,
+        (error) => {
+          report(error, "comparison");
+        },
+        props.scrollTogether,
+      ),
+    [props.loaded, props.scrollTogether, report],
   );
   return (
     <ShellIdentifierProvider prefix={props.identifierPrefix}>

@@ -10,6 +10,7 @@ import {
   FramedShot,
   type CompareViewport,
 } from "../../../parts/compare_page.js";
+import { ComparisonStack, deviceChrome } from "../../../parts/compare_stack.js";
 import { DesignNavigation } from "../../../parts/design_navigation.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
 import { MiniWelcome } from "../../../parts/mini_screens.js";
@@ -76,7 +77,7 @@ function WelcomePanes({ viewport }: { viewport: CompareViewport }) {
           dark={dark}
           viewport={viewport}
         >
-          <MiniWelcome compact={viewport === "mobile"} />
+          <MiniWelcome compact={viewport === "mobile"} inert />
         </FramedShot>
       </Pane>
       <Pane label="Current" side="after">
@@ -85,10 +86,26 @@ function WelcomePanes({ viewport }: { viewport: CompareViewport }) {
           dark={dark}
           viewport={viewport}
         >
-          <MiniWelcome compact={viewport === "mobile"} revised />
+          <MiniWelcome compact={viewport === "mobile"} inert revised />
         </FramedShot>
       </Pane>
     </>
+  );
+}
+
+/** Difference stacks the same two versions inside one shared chrome. */
+function WelcomeStack({ viewport }: { viewport: CompareViewport }) {
+  return (
+    <ComparisonStack
+      after={<MiniWelcome compact={viewport === "mobile"} inert revised />}
+      before={<MiniWelcome compact={viewport === "mobile"} inert />}
+      chrome={deviceChrome({
+        address: "example.test/welcome",
+        dark: useDarkPreview(),
+        viewport,
+      })}
+      mode="difference"
+    />
   );
 }
 
@@ -120,11 +137,7 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
       idChip="example-welcome"
       mode="difference"
       nav={<ReviewNav activeTitle="Welcome" />}
-      render={(previewViewport) => (
-        <CompareGrid difference>
-          <WelcomePanes viewport={previewViewport} />
-        </CompareGrid>
-      )}
+      render={(previewViewport) => <WelcomeStack viewport={previewViewport} />}
       state="changed"
       subject="welcome"
       title="Welcome"
@@ -144,7 +157,6 @@ export const appearanceWorkspaceScreens = [
     mobile: <NavigationDrawerMobile />,
     rationale:
       "The drawer dims the catalogue behind it while the top bar stays at full strength, so the scrim and the drawer's own elevation need values in each appearance that still separate the two layers.",
-    slug: "drawer",
     title: "Navigation drawer",
   }),
   screen({
@@ -155,7 +167,6 @@ export const appearanceWorkspaceScreens = [
     mobile: <SideBySideCompare viewport="mobile" />,
     rationale:
       "The comparison band, the Before and Current captions, the stage behind the frames and both compared screens follow the one catalogue appearance, so a side-by-side read stays in a single scheme rather than mixing chrome and content.",
-    slug: "side-by-side",
     title: "Side by side",
   }),
   screen({
@@ -166,7 +177,6 @@ export const appearanceWorkspaceScreens = [
     mobile: <DifferenceCompare viewport="mobile" />,
     rationale:
       "Difference blends the two versions, so the blend needs an opaque base taken from the compared screens rather than the stage behind them. Both versions follow the catalogue appearance together, so the difference stays legible in either one.",
-    slug: "difference",
     title: "Difference",
   }),
 ];

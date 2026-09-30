@@ -3,6 +3,7 @@
 import { Fragment } from "react";
 
 import { decodeProps } from "../components/codec.js";
+import { viewHref } from "../navigation/routes.js";
 import type { EntryChangeReason } from "../review/component_types.js";
 import type { ReviewResult } from "../review/types.js";
 
@@ -28,11 +29,13 @@ export function WorkspaceEvidence({
   variantId?: string;
 }) {
   const evidence = workspaceComparisonEvidence(data, variantId, loaded);
+  const wording = entryWording(data.entry.kind);
   const hidden = data.status === undefined && !evidence.comparison;
-  const retained = [
-    ...new Set([...retainedPaths(evidence.reasons), ...evidence.legacyPaths]),
-  ].sort();
-  const excluded = excludedStylesheets(evidence.resourceViews, retained);
+  const reasonPaths = retainedPaths(evidence.reasons);
+  const excluded = excludedStylesheets(evidence.resourceViews, reasonPaths);
+  const retained = [...new Set([...reasonPaths, ...evidence.sharedImpact])]
+    .filter((path) => !excluded.includes(path))
+    .sort();
   const ignored = evidence.comparison
     ? [...new Set(evidence.views.flatMap((view) => view.ignoredIds))]
     : [];
@@ -51,9 +54,9 @@ export function WorkspaceEvidence({
           <h3>Comparison details</h3>
           <p>Compared with the branch point on {data.base}.</p>
           {data.relatedComponents.map((component) => (
-            <p key={component.route}>
+            <p key={component.id}>
               Changed component:{" "}
-              <a href={`/view/${encodeRoute(component.route)}`}>
+              <a href={viewHref("component", component.id)}>
                 {component.title}
               </a>
             </p>
@@ -79,13 +82,13 @@ export function WorkspaceEvidence({
           ))}
           {retained.length ? (
             <>
-              <p>Changes to these files may affect this screen:</p>
+              <p>{wording.filesLead}</p>
               <PathList paths={retained} />
             </>
           ) : null}
           {styleOutcomes(evidence.reasons).map((outcome) => (
             <Fragment key={outcome.status}>
-              <p>{styleOutcomeLead(outcome)}</p>
+              <p>{styleOutcomeLead(outcome, data.entry.kind)}</p>
               {outcome.selectors.length ? (
                 <ul>
                   {outcome.selectors.map((selector) => (
@@ -101,8 +104,8 @@ export function WorkspaceEvidence({
             <>
               <p>
                 {excluded.length === 1
-                  ? "This stylesheet changed, but none of the changed styles apply to this screen."
-                  : "These stylesheets changed, but none of the changed styles apply to this screen."}
+                  ? wording.excludedStylesheet
+                  : wording.excludedStylesheets}
               </p>
               <p>Examined and excluded:</p>
               <PathList paths={excluded} />
@@ -132,9 +135,7 @@ export function WorkspaceEvidence({
               <pre>{propText(decodeProps(variant.after.props))}</pre>
             </>
           ) : null}
-          {data.status === "Unmodified" ? (
-            <p>{entryWording(data.entry.kind).noChanges}</p>
-          ) : null}
+          {data.status === "Unmodified" ? <p>{wording.noChanges}</p> : null}
         </>
       ) : null}
     </section>
@@ -154,7 +155,7 @@ function Reason({ reason }: { reason: EntryChangeReason }) {
   return (
     <p>
       {reason.kind === "screen"
-        ? `A screen in this flow changed: ${reason.route}`
+        ? `A screen in this flow changed: ${reason.id}`
         : labels[reason.kind]}
     </p>
   );
@@ -174,10 +175,6 @@ function reasonKey(reason: EntryChangeReason): string {
   return reason.kind === "dependency"
     ? `${reason.kind}/${reason.path}`
     : reason.kind === "screen"
-      ? `${reason.kind}/${reason.route}`
+      ? `${reason.kind}/${reason.id}`
       : reason.kind;
-}
-
-function encodeRoute(route: string): string {
-  return route.split("/").map(encodeURIComponent).join("/");
 }

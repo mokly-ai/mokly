@@ -2,6 +2,7 @@ import { MockLink } from "@mokly/mokly";
 
 import type { ComponentPageState } from "./component_details.js";
 import { componentUses, usageViews } from "./fixtures.js";
+import { COMPONENT_ENTRY_BY_STATE, COMPONENTS } from "./metadata.js";
 
 export function UsageDeliveryState({ state }: { state: "loading" | "failed" }) {
   return (
@@ -25,7 +26,8 @@ export function UsageDeliveryState({ state }: { state: "loading" | "failed" }) {
 }
 
 export function UsedBy({ state }: { state: ComponentPageState }) {
-  const unused = state === "unused" || state === "added";
+  const unused =
+    state === "unused" || state === "added" || state === "overlay-tall";
   const uses =
     state === "toolbar" || state === "hidden"
       ? componentUses.slice(0, 1)
@@ -43,7 +45,9 @@ export function UsedBy({ state }: { state: ComponentPageState }) {
         </span>
       </h3>
       {unused ? (
-        <p className="ce-empty-copy">No screens or components use Badge yet.</p>
+        <p className="ce-empty-copy">
+          {`No screens or components use ${COMPONENTS[COMPONENT_ENTRY_BY_STATE[state].component].title} yet.`}
+        </p>
       ) : (
         <ul className="ce-usage-list">
           {uses.map((use) => (
