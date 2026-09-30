@@ -30,7 +30,8 @@
   [Milestone 29 review](../docs/reviews/imported-css-delivery-milestone-29.md).
   Milestone 32 (`6a02190`) resolves only finding 1 in the
   [Milestone 31 review](../docs/reviews/imported-css-delivery-milestone-31.md);
-  findings 2–4 remain open.
+  findings 2–4 remain open, as do the three findings in the
+  [Milestone 33 review](../docs/reviews/imported-css-delivery-milestone-33.md).
   Move this plan to Completed when its
   implementation PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one

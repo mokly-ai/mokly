@@ -34,7 +34,8 @@ approved findings in the
 [Milestone 29 review record](../docs/reviews/imported-css-delivery-milestone-29.md).
 Milestone 32 (`6a02190`) resolves only finding 1 in the
 [Milestone 31 review record](../docs/reviews/imported-css-delivery-milestone-31.md);
-findings 2–4 remain open for the user's decision.
+findings 2–4 remain open for the user's decision, as do the three findings in
+the [Milestone 33 review record](../docs/reviews/imported-css-delivery-milestone-33.md).
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -935,10 +936,10 @@ modelling the cleaned input the CSS Modules plugins processed.
 - [x] Patch the transitive `brace-expansion` advisory that blocks the dependency gate (5.0.9 to 5.0.12) in `fa43083`.
 - [x] Run three mutation checks, corpus comparison, Build, every CSS Modules suite, example Build/Check, lint, typecheck, focused browsers, CLI smoke and `cargo xtask check`.
 
-## Milestone 33: Commit, push, and review
+## Milestone 33: Commit, push, and review (complete)
 
 - [x] Commit and push the approved fix and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
-- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Three new findings (all Low) are recorded in the [Milestone 33 review record](../docs/reviews/imported-css-delivery-milestone-33.md) for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
