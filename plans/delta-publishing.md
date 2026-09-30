@@ -390,6 +390,44 @@ unit shard. Milestone 39 carries this work.
   standard error.
 - `ci-verification.md` states both rules.
 
+## Main Merge Decision
+
+On 2026-09-30 the user asked to merge the latest `origin/main` (`b4314fe`,
+"feat!: replace collections with navigation paths (#123)") and resolve its
+conflicts. That commit replaces collections with navigation paths, derives
+routes from kind and id (manifest v7, read model v3, review result v4, static
+delivery v3, no `/id/` alias), moves every `*hydration*` browser spec into an
+unsharded `hydration` Playwright project and CI job, raises CI job timeouts to
+30 minutes, and adds repository ratchets: a protocol doc cap table, a
+JavaScript and TypeScript file-length ratchet, unused internal and public
+export ratchets, a ban on plan-milestone history in protocol docs, and a rule
+that `npm-release-notes.md` covers every unreleased breaking change. A
+dry-run merge conflicts in 21 files. Milestones 40–41 carry this work.
+
+- Resolve every conflict path by path and keep every change main made. The
+  only removal relative to main stays the approved
+  `docs/protocol/fixtures/export-ownership-v1.json`; main's new
+  `id-derived-entry-routes` case moves into `export-ownership-v2.json` in
+  schema 2 form.
+- Main's hydration project supersedes this branch's route hydration split:
+  keep main's single `tests/browser/react_shell_hydration_routes.spec.ts` and
+  delete the branch-only `_2` to `_4` spec files and their route helper. Keep
+  the shard balance test, listing the browser job's `chromium` shards the way
+  `scripts/verification/run-browser.mjs` does and validating them with main's
+  report shape, and keep the discovery load-error diagnostics on main's
+  `{ project, shard }` signature.
+- The branch's deterministic-input rule applies to every test job, including
+  main's new `hydration` job: no job other than the repository job resolves
+  `origin/main` or reads a branch-point lockfile. The repository job keeps the
+  history the ratchets need.
+- Main's ratchets pass without raising a cap or a baseline. Protocol docs this
+  branch grew past their limits are split by responsibility, the stale
+  milestone sentence in `ci-verification.md` is removed, and
+  `scripts/package/publish.mjs` is split to at most 300 lines.
+- `npm-release-notes.md` gains the delta-publishing breaking-change note and
+  names `52ca8548 feat(publish)!: upload catalogue content deltas` in its
+  coverage list.
+
 ## Milestone 1: Protocol and guide contract — completed
 
 Define the complete receiver and CLI contract before any code changes. Docs
@@ -1271,6 +1309,44 @@ Documentation and contract only. Validate with Prettier and the guide tests;
 - [x] After checks pass, `git add -A`, commit with a Conventional Commits
       title of at most 50 characters, and push the branch. Committed as
       `2be592f fix(ci): list browser shards one at a time`.
+
+## Milestone 40: Merge main's navigation paths and derived routes
+
+- [ ] Merge `origin/main` with `git merge --no-ff --no-commit`, resolve the 21
+      conflicted files path by path, and keep every change main made.
+- [ ] Port main's `id-derived-entry-routes` ownership case into
+      `docs/protocol/fixtures/export-ownership-v2.json`.
+- [ ] Take main's route hydration spec, delete the branch's split files and
+      route helper, and adapt the shard balance test, the discovery
+      diagnostics and `scripts/verification/playwright.d.mts` to main's
+      projects and `{ project, shard }` signature.
+- [ ] Remove the branch-point lockfile read from main's `hydration` job and
+      extend `tests/ci_workflow.test.ts` to every test job.
+- [ ] Fix every semantic conflict the build, type check, lint and tests
+      reveal, including main's collection-model guard.
+- [ ] Split `ci-verification.md`, `mokly-export-delivery.md`,
+      `mokly-export.md`, `mokly-removed-previews.md`,
+      `mokly-terminal-output.md`, `mokly-upload-exchange.md` and
+      `npm-release.md` by responsibility within their caps or the 250-line
+      limit, lower any cap a doc shrinks below, remove the stale milestone
+      sentence, and update the protocol index, links and guide pins.
+- [ ] Split `scripts/package/publish.mjs` to at most 300 lines.
+- [ ] Add the delta-publishing breaking-change note to
+      `npm-release-notes.md`.
+
+## Milestone 41: Merge verification and delivery
+
+- [ ] Commit the merge locally, run `cargo xtask check --suite repository`
+      so main's ratchets compare with the new merge base, and resolve every
+      finding.
+- [ ] Run `cargo xtask check`; resolve every failure.
+- [ ] Audit deletions against `origin/main`, push the branch, and confirm
+      every pull request check passes.
+- [ ] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; append the
+      numbered, severity-rated findings with lettered options and a
+      recommendation to `docs/reviews/delta-publishing.md` and report them
+      without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
 
