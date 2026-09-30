@@ -10,6 +10,11 @@ import {
 import { sanitizeRebuildFailure } from "../dist/server/rebuild_status_detail.js";
 import type { ServeReporter } from "../dist/server/reporter.js";
 import {
+  completedWatchAction,
+  failedWatchAction,
+  WatchActionFailurePhase,
+} from "../dist/server/watch_action_outcome.js";
+import {
   WatchActionQueue,
   type RuntimeWatchAction,
 } from "../dist/server/watch_events.js";
@@ -18,19 +23,25 @@ import { reportedWatchProcessor } from "../dist/server/watch_reporting.js";
 test("source failure is replaced and only source success clears it", async () => {
   const publisher = new RecordingPublisher();
   const status = new WatchedRebuildStatus(publisher, () => "/repo");
-  const failures = new Set<RuntimeWatchAction>([
-    "rebuild",
-    "reload",
-    "restart",
-  ]);
+  const sourceFailures = new Set<RuntimeWatchAction>(["rebuild"]);
+  const deliveryFailures = new Set<RuntimeWatchAction>(["reload", "restart"]);
   const process = reportedWatchProcessor(
     async (action) => {
-      if (failures.has(action))
-        throw new Error(`${action} at /repo/src/app.ts`);
+      if (sourceFailures.has(action))
+        return failedWatchAction(
+          WatchActionFailurePhase.Source,
+          new Error(`${action} at /repo/src/app.ts`),
+        );
+      if (deliveryFailures.has(action))
+        return failedWatchAction(
+          WatchActionFailurePhase.Delivery,
+          new Error(`${action} at /repo/src/app.ts`),
+        );
       if (action === "rebuild" || action === "reconfigure") {
         publisher.version += 1;
         status.sourceSucceeded(publisher.version);
       }
+      return completedWatchAction;
     },
     quietReporter(),
     () => "/repo",
@@ -59,8 +70,8 @@ test("source failure is replaced and only source success clears it", async () =>
   await queue.settled();
   assert.ok((status.snapshot().failure?.id ?? 0) > (failureId ?? 0));
   const replacementFailure = status.snapshot().failure;
-  failures.delete("reload");
-  failures.delete("restart");
+  deliveryFailures.delete("reload");
+  deliveryFailures.delete("restart");
   queue.notify("reload");
   await queue.settled();
   assert.deepEqual(status.snapshot().failure, replacementFailure);
@@ -72,12 +83,12 @@ test("source failure is replaced and only source success clears it", async () =>
   await queue.settled();
   assert.equal(publisher.snapshots.length, beforeEvidence);
 
-  failures.delete("rebuild");
+  sourceFailures.delete("rebuild");
   queue.notify("rebuild");
   await queue.settled();
   assert.equal(status.snapshot().failure, null);
   assert.equal(status.snapshot().updateVersion, 2);
-  failures.add("rebuild");
+  sourceFailures.add("rebuild");
   queue.notify("rebuild");
   await queue.settled();
   assert.notEqual(status.snapshot().failure, null);
@@ -116,13 +127,13 @@ test("queue progress stays active across qualifying queued work", async () => {
   assert.deepEqual(changes, [true, false]);
 });
 
-for (const [action, showsProgress, replacesFailure] of [
-  ["reconfigure", true, true],
-  ["rebuild", true, true],
-  ["restart", true, false],
-  ["reload", true, false],
-  ["evidence", false, false],
-  ["ignore", false, false],
+for (const [action, showsProgress, phase, replacesFailure] of [
+  ["reconfigure", true, WatchActionFailurePhase.Source, true],
+  ["rebuild", true, WatchActionFailurePhase.Source, true],
+  ["restart", true, WatchActionFailurePhase.Delivery, false],
+  ["reload", true, WatchActionFailurePhase.Delivery, false],
+  ["evidence", false, WatchActionFailurePhase.Delivery, false],
+  ["ignore", false, WatchActionFailurePhase.Delivery, false],
 ] as const) {
   test(`${action} follows the rebuild status action matrix`, async () => {
     const publisher = new RecordingPublisher();
@@ -132,9 +143,7 @@ for (const [action, showsProgress, replacesFailure] of [
     const before = publisher.snapshots.length;
     const queue = new WatchActionQueue(
       reportedWatchProcessor(
-        async () => {
-          throw new Error(`${action} failed`);
-        },
+        async () => failedWatchAction(phase, new Error(`${action} failed`)),
         quietReporter(),
         () => "/repo",
         status,

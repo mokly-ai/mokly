@@ -129,11 +129,17 @@ without IPC retains direct diagnostic output.
 
 Watched Serve owns rebuild status in `rebuild_status.ts`, behind the
 `WatchRebuildStatus` interface. The serialized action queue keeps progress true
-across qualifying queued and running actions; only source rebuild/reconfigure
-outcomes replace or clear failures. Failure detail is normalized, stripped of
-terminal escapes, made repository-relative and bounded before publication. The
-supervisor retains each complete snapshot independently of its child and sends
-the exact validated `rebuild-status` envelope during every startup transfer.
+across qualifying queued and running actions. `watch_action_outcome.ts` gives
+every action a typed result and splits rebuild/reconfigure at runtime adoption:
+pre-adoption configuration, graph, validation and invalidation failures replace
+the browser failure, while post-adoption child delivery and watcher replacement
+failures remain terminal-only. Adoption clears an existing failure before a
+live update, restart/recovery, or previous-watcher close can fail, including the
+rebuild path that discovers new watch targets and reconfigures. Failure detail
+is normalized, stripped of terminal escapes, made repository-relative and
+bounded before publication. The supervisor retains each complete snapshot
+independently of its child and sends the exact validated `rebuild-status`
+envelope during every startup transfer.
 `rebuild_status_state.ts` stages future-fenced snapshots in the child until the
 matching update version commits, then the HTTP server exposes the snapshot only
 through the private capability descriptor and replayable `rebuild` SSE event.

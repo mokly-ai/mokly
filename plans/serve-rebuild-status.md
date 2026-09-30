@@ -261,7 +261,7 @@ Backend. Closes Milestone 6 review finding 2 (option A, chosen by the user): a
 rebuild whose source was accepted but whose first child restart failed and
 then recovered is reported as a source failure, showing a false notice.
 
-- [ ] Update the Watch Action Lifecycle section of
+- [x] Update the Watch Action Lifecycle section of
       `docs/protocol/mokly-rebuild-status.md`: a `rebuild` or `reconfigure`
       action has a source phase that ends when the new runtime is adopted, and
       a delivery phase after it (updating or restarting the HTTP child and
@@ -269,16 +269,19 @@ then recovered is reported as a source failure, showing a false notice.
       only then are the latest changes not what the browser shows.
       Delivery-phase failures keep terminal reporting and leave the accepted
       success in place, including when restart recovery succeeds.
-- [ ] Represent the two phases as typed outcomes in the watched Serve
+- [x] Represent the two phases as typed outcomes in the watched Serve
       orchestration so failure reporting never classifies an error by its
       action alone, and apply it to rebuild, reconfigure and the
       rebuild-to-reconfigure path.
-- [ ] Tests: an accepted rebuild whose first restart fails and whose recovery
+- [x] Tests: an accepted rebuild whose first restart fails and whose recovery
       succeeds shows no failure and reports the restart problem once in the
       terminal; the same for reconfigure, including a failing watcher close;
       source-phase failures still set the failure; a delivery failure's
       message never becomes failure detail.
-- [ ] Update `src/server/README.md`; run `cargo xtask check`; commit and push.
+- [x] Smoke-test a genuine source rejection and a recovered delivery failure
+      through watched Serve, confirming that only the source failure reaches
+      browser status and the delivery error is reported once in the terminal.
+- [x] Update `src/server/README.md`; run `cargo xtask check`; commit and push.
 - [ ] Review: after the push, use `docs/implementation-review-prompt.md`
       against `origin/main` and report numbered findings with severity,
       impact and lettered options, without changing the implementation.

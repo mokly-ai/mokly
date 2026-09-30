@@ -1,3 +1,5 @@
+import type { RebuildStatus } from "@mokly/viewer/runtime";
+
 import type { Compilation } from "../../dist/build/compile.js";
 import type { GeneratedOutputStore } from "../../dist/build/output_store.js";
 import type { ResolvedConfig } from "../../dist/config/types.js";
@@ -64,11 +66,15 @@ export class FakeWatcherFactory implements ConsumerWatcherFactory {
 
 /** Deliver typed changes while retaining observable close state. */
 export class FakeWatcher implements ConsumerWatcher {
+  closeAttempts = 0;
+  closeError: Error | undefined;
   closed = false;
   private changeCallback: ((event: WatchEvent) => void) | undefined;
   constructor(private readonly failReady = false) {}
 
   async close(): Promise<void> {
+    this.closeAttempts += 1;
+    if (this.closeError) throw this.closeError;
     this.closed = true;
   }
 
@@ -106,14 +112,19 @@ export class FakeSupervisorFactory implements ProcessSupervisorFactory {
 /** Count child restarts without creating a process. */
 export class FakeSupervisor implements ProcessSupervisor {
   replaceComponentRuntime(): void {}
+  readonly rebuildStatuses: RebuildStatus[] = [];
+  readonly restartErrors: Error[] = [];
   restarts = 0;
+  starts = 0;
   private version = 0;
 
   currentUpdateVersion(): number {
     return Math.max(1, this.version);
   }
 
-  publishRebuildStatus(): void {}
+  publishRebuildStatus(status: RebuildStatus): void {
+    this.rebuildStatuses.push(structuredClone(status));
+  }
 
   reserveUpdateVersion(): number {
     return ++this.version;
@@ -127,10 +138,13 @@ export class FakeSupervisor implements ProcessSupervisor {
 
   async restart(): Promise<number> {
     this.restarts += 1;
+    const error = this.restartErrors.shift();
+    if (error) throw error;
     return 48123;
   }
 
   async start(): Promise<number> {
+    this.starts += 1;
     return 48123;
   }
 }

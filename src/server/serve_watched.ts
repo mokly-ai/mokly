@@ -1,5 +1,4 @@
 /** Watched Serve adopts lightweight generations; exhaustive work follows in the background. */
-import { randomBytes } from "node:crypto";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import { prepareLiveRuntime } from "../build/live_runtime.js";
@@ -23,15 +22,20 @@ import type { RunningServe, ServeDependencies, ServeOptions } from "./serve.js";
 import {
   closeWatched,
   createWatchedSupervisor,
-  restartWithRecovery,
   watchedInteractiveAddress,
   watcherReadyBeforeShutdown,
 } from "./serve_lifecycle.js";
 import type { ProcessSupervisor } from "./supervisor.js";
+import { type WatchActionDelivery } from "./watch_action_outcome.js";
+import {
+  PhasedWatchActionProcessor,
+  type WatchActionProcessor,
+  type WatchRuntimeDelivery,
+  WatchedRuntimeDelivery,
+} from "./watch_action_processor.js";
 import {
   classifyWatchPath,
   NotificationGate,
-  type RuntimeWatchAction,
   WatchActionQueue,
   WatchDebouncer,
   type WatchEvent,
@@ -130,6 +134,17 @@ export async function serveWatched(
     shutdown,
   });
   running.onForeground?.((active) => background.foreground(active));
+  const delivery: WatchRuntimeDelivery = new WatchedRuntimeDelivery({
+    background,
+    isClosed: () => closed,
+    running,
+    runtime: {
+      current: () => runtime,
+      replace: (next) => {
+        runtime = next;
+      },
+    },
+  });
   let debouncer: WatchDebouncer | undefined;
   const notify = (event: WatchEvent) => {
     const action = classifyWatchPath(
@@ -140,21 +155,9 @@ export async function serveWatched(
     debouncer?.notify(action, event.path);
   };
 
-  const restart = async (version?: number) => {
-    try {
-      await restartWithRecovery(running, version);
-      running.notifyUpdate(
-        undefined,
-        undefined,
-        background.changesStatus,
-        "evidence",
-      );
-    } finally {
-      if (!closed) background.schedule(background.compilation);
-    }
-  };
-
-  const reconfigure = async (candidate?: ResolvedConfig): Promise<void> => {
+  const reconfigureSource = async (
+    candidate?: ResolvedConfig,
+  ): Promise<WatchActionDelivery | undefined> => {
     const nextConfig =
       candidate ?? (await configLoader.load(activeConfig.configPath));
     const nextInventory = await loadConsumerGraph(nextConfig, {
@@ -178,104 +181,80 @@ export async function serveWatched(
       await background.invalidate(next.config);
       if (closed) return;
       const previous = watcher;
+      const version = running.reserveUpdateVersion();
+      running.replaceComponentRuntime(next, "stage");
       activeConfig = next.config;
       runtime = next;
       background.clearCompilation();
-      references.replace(
-        activeConfig.repoRoot,
-        options.base ?? activeConfig.review.base,
-      );
       signature = JSON.stringify(next.manifest);
-      running.replaceComponentRuntime(next, "stage");
-      watcher = replacement;
       adopted = true;
-      debouncer?.close();
-      debouncer = new WatchDebouncer(
-        activeConfig.watch.debounceMs,
-        (action, paths) => queue.notify(action, paths),
-      );
-      nextGate.open(bindTimings(notify));
-      try {
-        await previous.close();
-      } finally {
-        if (!closed) {
-          const version = running.reserveUpdateVersion();
-          rebuildStatus.sourceSucceeded(version);
-          await restart(version);
+      return async () => {
+        watcher = replacement;
+        rebuildStatus.sourceSucceeded(version);
+        references.replace(
+          activeConfig.repoRoot,
+          options.base ?? activeConfig.review.base,
+        );
+        debouncer?.close();
+        debouncer = new WatchDebouncer(
+          activeConfig.watch.debounceMs,
+          (action, paths) => queue.notify(action, paths),
+        );
+        nextGate.open(bindTimings(notify));
+        try {
+          await previous.close();
+        } finally {
+          if (!closed) await delivery.restart(version);
         }
-      }
+      };
     } finally {
       if (!adopted) await replacement.close();
     }
   };
 
-  const performAction = async (action: RuntimeWatchAction): Promise<void> => {
+  const rebuildSource = async (): Promise<WatchActionDelivery | undefined> => {
+    const next = await prepareLiveRuntime(activeConfig);
+    if (
+      JSON.stringify(watchTargets(next.config)) !==
+      JSON.stringify(watchTargets(activeConfig))
+    )
+      return reconfigureSource(next.config);
     if (closed) return;
-    if (action === "reconfigure") return reconfigure();
-    if (action === "evidence") {
-      if (background.compilation) {
-        await background.invalidate();
-        if (!closed) {
-          running.notifyUpdate(
-            undefined,
-            undefined,
-            background.changesStatus,
-            "evidence",
-          );
-          background.schedule(background.compilation);
-        }
-      }
-      return;
-    }
-    if (action === "rebuild") {
-      const next = await prepareLiveRuntime(activeConfig);
-      if (
-        JSON.stringify(watchTargets(next.config)) !==
-        JSON.stringify(watchTargets(activeConfig))
-      )
-        return reconfigure(next.config);
-      if (closed) return;
-      await background.invalidate();
-      if (closed) return;
-      activeConfig = next.config;
-      runtime = next;
-      background.clearCompilation();
-      const nextSignature = JSON.stringify(next.manifest);
-      if (nextSignature !== signature) {
-        signature = nextSignature;
-        running.replaceComponentRuntime(next, "stage");
-        const version = running.reserveUpdateVersion();
-        rebuildStatus.sourceSucceeded(version);
-        await restart(version);
-      } else {
-        const version = running.reserveUpdateVersion();
-        rebuildStatus.sourceSucceeded(version);
-        running.replaceComponentRuntime(
-          next,
-          "live",
-          version,
-          background.changesStatus,
-        );
-        background.schedule();
-      }
-      return;
-    }
     await background.invalidate();
     if (closed) return;
-    runtime = { ...runtime, generation: randomBytes(16).toString("hex") };
-    running.replaceComponentRuntime(
-      runtime,
-      action === "reload" ? "live" : "stage",
-      action === "reload" ? running.reserveUpdateVersion() : undefined,
-      action === "reload" ? background.changesStatus : undefined,
-    );
-    if (action === "reload") {
-      background.schedule(background.compilation);
-    } else await restart();
+    const nextSignature = JSON.stringify(next.manifest);
+    const restartRequired = nextSignature !== signature;
+    const version = running.reserveUpdateVersion();
+    running.replaceComponentRuntime(next, "stage");
+    activeConfig = next.config;
+    runtime = next;
+    background.clearCompilation();
+    if (restartRequired) signature = nextSignature;
+    return async () => {
+      rebuildStatus.sourceSucceeded(version);
+      if (restartRequired) {
+        await delivery.restart(version);
+        return;
+      }
+      running.replaceComponentRuntime(
+        next,
+        "live",
+        version,
+        background.changesStatus,
+      );
+      background.schedule();
+    };
   };
+
+  const actionProcessor: WatchActionProcessor = new PhasedWatchActionProcessor({
+    delivery,
+    isClosed: () => closed,
+    rebuild: rebuildSource,
+    reconfigure: () => reconfigureSource(),
+  });
   const queue = new WatchActionQueue(
     reportedWatchProcessor(
-      performAction,
+      (action) => actionProcessor.process(action),
       reporter,
       () => activeConfig.repoRoot,
       rebuildStatus,

@@ -51,14 +51,14 @@ preparation happens before a browser can connect and does not show progress.
 After the watch debouncer chooses an action, the serialized queue applies these
 rules:
 
-| Selected action | Shows progress | Failure sets `failure` | Success clears it |
-| --------------- | -------------- | ---------------------- | ----------------- |
-| `reconfigure`   | yes            | yes                    | yes               |
-| `rebuild`       | yes            | yes                    | yes               |
-| `restart`       | yes            | no                     | no                |
-| `reload`        | yes            | no                     | no                |
-| `evidence`      | no             | no                     | no                |
-| `ignore`        | no             | no                     | no                |
+| Selected action | Shows progress | Source failure sets `failure` | Delivery failure sets `failure` | Adopted source clears it |
+| --------------- | -------------- | ----------------------------- | ------------------------------- | ------------------------ |
+| `reconfigure`   | yes            | yes                           | no                              | yes                      |
+| `rebuild`       | yes            | yes                           | no                              | yes                      |
+| `restart`       | yes            | n/a                           | no                              | no                       |
+| `reload`        | yes            | n/a                           | no                              | no                       |
+| `evidence`      | no             | n/a                           | no                              | no                       |
+| `ignore`        | no             | n/a                           | no                              | no                       |
 
 Progress begins when a qualifying action enters the action queue, including a
 manual rebuild or recovery restart, and covers all time queued and running. It
@@ -69,21 +69,40 @@ actions, progress begins with the first qualifying enqueue and stays true
 without a false transition while any qualifying action remains queued or
 running. A following evidence-only action does not extend it.
 
+A rebuild or reconfigure action has two explicit typed phases. Its source phase
+includes configuration loading, graph construction, registry and index
+validation, candidate watcher readiness, background invalidation, and every
+other operation before the new runtime is adopted. Adoption updates the
+parent's active configuration and runtime and stages or installs that runtime
+for the child. It ends the source phase and immediately clears the failure with
+the accepted runtime's reserved update version.
+
+Everything after adoption is the delivery phase. This includes replacing or
+closing watchers and updating, restarting, or recovering the HTTP child. A
+source-phase error replaces `failure`, because the latest authored source was
+not accepted and is not what the browser shows. A delivery-phase error never
+sets or replaces `failure`: the accepted success stays clear even if the first
+child restart fails, recovery also fails, or closing an old watcher fails. The
+delivery error is still reported once through the existing terminal watch
+failure path.
+
 A rebuild that discovers changed watch targets and executes reconfiguration is
-still one source-update action: either successful outcome clears a failure and
-either thrown outcome replaces it. Shutdown cancellation creates no failure.
-Failures from `reload`, `restart`, unexpected-child recovery, evidence refresh,
-or background Changes/render completion retain the existing failure and keep
-their current terminal or Changes reporting. A quick accepted source runtime
-therefore counts as a successful rebuild even if later background Changes work
+still one source-update action and uses the same boundary: failures before the
+reconfigured runtime is adopted are source failures, while failures afterward
+are delivery failures. Shutdown cancellation creates no failure. Failures from
+`reload`, `restart`, unexpected-child recovery, evidence refresh, or background
+Changes/render completion retain the existing failure and keep their current
+terminal or Changes reporting. A quick accepted source runtime therefore counts
+as a successful rebuild even if later delivery or background Changes work
 becomes unavailable.
 
 Starting another action while a failure is shown retains the notice and its
-id. After the progress delay, both are visible. A successful rebuild or
-reconfigure clears the failure only with the successful content update. A
-failed one atomically installs a newly sanitized detail and new id. Reload and
-restart completion only ends progress. When another qualifying action is
-already pending, the terminal snapshot retains `updating: true`.
+id. After the progress delay, both are visible. An adopted rebuild or
+reconfigure clears the failure with its accepted content update. A source-phase
+failure atomically installs a newly sanitized detail and new id; a delivery
+failure leaves the accepted clear state in place. Reload and restart completion
+only ends progress. When another qualifying action is already pending, the
+terminal snapshot retains `updating: true`.
 
 ## Sanitized Failure Detail
 
