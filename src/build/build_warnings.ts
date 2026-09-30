@@ -22,7 +22,7 @@ const CODES: readonly BuildDiagnosticCode[] = [
 const KEBAB_CASE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 
 /** Validate a diagnostic at the compilation boundary. */
-export function validateBuildDiagnostic(diagnostic: BuildDiagnostic): void {
+function validateBuildDiagnostic(diagnostic: BuildDiagnostic): void {
   if (
     typeof diagnostic.code !== "string" ||
     !KEBAB_CASE.test(diagnostic.code) ||

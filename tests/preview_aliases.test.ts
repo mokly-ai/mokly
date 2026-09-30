@@ -15,7 +15,7 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
 
-for (const source of ["routed pages", "public documents"]) {
+for (const source of ["public documents"]) {
   test(`preview rejects colliding ${source} aliases before replacing an existing site`, async (context) => {
     const fixture = await createExportFixture();
     context.after(() => fixture.close());
@@ -34,25 +34,15 @@ for (const source of ["routed pages", "public documents"]) {
       );
     await build();
     const previous = await directoryFiles(output);
-    if (source === "routed pages") {
-      await fs.promises.writeFile(
-        fixture.entryPath,
-        (await fs.promises.readFile(fixture.entryPath, "utf8")).replace(
-          'route: "screens/details.html"',
-          'route: "screens/home/details.html"',
-        ),
-      );
-    } else {
-      await fs.promises.mkdir(path.join(fixture.mockupsDir, "guide"));
-      await fs.promises.writeFile(
-        path.join(fixture.mockupsDir, "guide.html"),
-        "<h1>Guide</h1>",
-      );
-      await fs.promises.writeFile(
-        path.join(fixture.mockupsDir, "guide/details.html"),
-        "<h1>Details</h1>",
-      );
-    }
+    await fs.promises.mkdir(path.join(fixture.mockupsDir, "guide"));
+    await fs.promises.writeFile(
+      path.join(fixture.mockupsDir, "guide.html"),
+      "<h1>Guide</h1>",
+    );
+    await fs.promises.writeFile(
+      path.join(fixture.mockupsDir, "guide/details.html"),
+      "<h1>Details</h1>",
+    );
     await exportCatalogue(fixture.config, { outDir: "site" });
     await assert.rejects(build(), /Export file\/directory collision/);
     assert.deepEqual(await directoryFiles(output), previous);

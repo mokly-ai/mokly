@@ -19,7 +19,7 @@ const CHANGES_MESSAGES = {
 
 export function NavFilter({ context }: { context: ShellContext }) {
   const store = useOptionalShellStore();
-  const status = context.changedRoutes ? "ready" : context.changesStatus;
+  const status = context.changedIds ? "ready" : context.changesStatus;
   if (!status) return null;
   const selected = store?.state.selection.view ?? "all";
   return (
@@ -49,7 +49,7 @@ export function NavFilter({ context }: { context: ShellContext }) {
         Changes
         <span className="mbk-nav-filter-count">
           {status === "ready" ? (
-            context.changedRoutes?.length
+            context.changedIds?.length
           ) : status === "unavailable" ? (
             <span aria-label="Changes unavailable">—</span>
           ) : (
@@ -67,8 +67,8 @@ export function NavFilter({ context }: { context: ShellContext }) {
 
 export function NavStatus({ context }: { context: ShellContext }) {
   const store = useOptionalShellStore();
-  if (!context.changesStatus && !context.changedRoutes) return null;
-  const status = context.changedRoutes ? undefined : context.changesStatus;
+  if (!context.changesStatus && !context.changedIds) return null;
+  const status = context.changedIds ? undefined : context.changesStatus;
   const preparing = status === "preparing";
   const selected = store?.state.selection.view === "changes";
   const visible =
@@ -106,7 +106,7 @@ export function NavStatus({ context }: { context: ShellContext }) {
               {CHANGES_MESSAGES.preparing.detail}
             </span>
           </>
-        ) : context.changedRoutes ? (
+        ) : context.changedIds ? (
           constrained ? (
             "No matching changes."
           ) : (

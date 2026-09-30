@@ -60,7 +60,7 @@ never imports the CLI, Node built-ins, Git or consumer application code. Its `./
 is explicitly Node-only SSR and is excluded from the browser entry graph.
 
 The public boundary consists of [scoped instances](../protocol/mokly-instances.md),
-the [catalogue v1 projection](../protocol/mokly-catalogue.md), the
+the [catalogue v3 projection](../protocol/mokly-catalogue.md), the
 [React/SSR viewer API](../protocol/mokly-viewer.md) and
 [FrameAdapter](../protocol/mokly-frame-adapter.md). Hosts consume packages and
 documented public artifacts, without private manifest access, deep imports or
@@ -90,11 +90,11 @@ the viewer before the CLI that depends on it.
 ## Complete-Document Boundary
 
 Consumers register complete HTML with `definePage` or nested `page`. A callback
-may reuse an existing render helper, but discovery, comment expansion, route
-aliases, and legacy lint settings are removed. Consumer policy owns source
-allowlists and document-stage rules. A configured complete-document transformer
-remains an explicit, deterministic consumer boundary whose result receives all
-normal validation. Historical v2/v3 support belongs only to Git comparisons.
+may reuse an existing render helper; consumer policy owns source allowlists and
+document-stage rules. A configured complete-document transformer remains an
+explicit deterministic boundary whose result receives normal validation.
+Current and comparison-base manifests both require v7 under the
+[baseline compatibility contract](../protocol/mokly-baseline-compatibility.md).
 
 ## Runtime Boundary
 

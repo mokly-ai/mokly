@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
+import { generatedViews } from "../../packages/viewer/dist/components/views.js";
+
 import {
   attribute,
   byClass,
@@ -20,15 +22,15 @@ export async function renders(
   const { manifest, outputs } = await designCatalogue;
   const entry = manifest.entries.find((candidate) => candidate.id === id);
   assert.ok(entry?.kind === "screen", id);
-  return [
-    ...Object.values(entry.fragments).map((route) => [route, false] as const),
-    ...Object.values(entry.darkFragments ?? {}).map(
-      (route) => [route, true] as const,
-    ),
-  ].map(([route, dark]) => {
+  return generatedViews(entry).map((view) => {
+    const route = view.path;
     const html = outputs.get(route);
     assert.ok(html, route);
-    return { dark, document: parse(html), route };
+    return {
+      dark: view.colorScheme === "dark",
+      document: parse(html),
+      route,
+    };
   });
 }
 

@@ -24,8 +24,13 @@ test("a second origin can fetch catalogue and fragment with exact-origin headers
         credentials: "omit",
       });
       const model = await response.json();
+      const screen = model.screens[0];
+      const view = screen.views[0];
       const fragment = await fetch(
-        new URL(model.screens[0].views[0].fragmentPath, origin),
+        new URL(
+          `/static/screens/${screen.id}.${view.viewport}${view.colorScheme === "dark" ? ".dark" : ""}.html`,
+          origin,
+        ),
         { credentials: "omit" },
       );
       return {
@@ -34,7 +39,7 @@ test("a second origin can fetch catalogue and fragment with exact-origin headers
         html: await fragment.text(),
       };
     }, source.url);
-    expect(result.version).toBe(1);
+    expect(result.version).toBe(3);
     expect(result.status).toBe(200);
     expect(result.html).toContain("<html");
     expect(source.requestHeaders).toHaveLength(2);
@@ -120,7 +125,7 @@ test("Serve hydrates from its inline catalogue without an initial read", async (
   page.on("request", (request) =>
     requests.push(new URL(request.url()).pathname),
   );
-  await page.goto("/view/screens/welcome.html");
+  await page.goto("/view/screens/example-welcome.html");
   await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
   expect(requests).not.toContain("/__mokly/catalogue.json");
 });

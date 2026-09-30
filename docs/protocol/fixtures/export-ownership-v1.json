@@ -37,6 +37,19 @@
       }
     },
     {
+      "name": "id-derived-entry-routes",
+      "valid": true,
+      "document": {
+        "schemaVersion": 1,
+        "files": [
+          "view/components/action-disabled.html",
+          "view/pages/handbook.html",
+          "view/screens/home-empty.html",
+          "view/user-flows/tour.html"
+        ]
+      }
+    },
+    {
       "name": "lowercase-without-extra-folding-or-normalization",
       "valid": true,
       "document": {

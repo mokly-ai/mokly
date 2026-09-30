@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import {
+  entryRoute,
+  generatedViews,
+  viewRoute,
+} from "../packages/viewer/dist/data.js";
+
 import { designCatalogue } from "./helpers/design_catalogue.js";
 
 test("example catalogue generates exactly one inherited Welcome variant", async () => {
@@ -14,22 +20,18 @@ test("example catalogue generates exactly one inherited Welcome variant", async 
   assert.ok(variant?.kind === "screen");
   assert.equal(variant.id, "example-welcome-empty");
   assert.equal(variant.variantOf, "example-welcome");
-  assert.equal(variant.route, "screens/welcome.variants/empty.html");
+  assert.equal(
+    entryRoute("screen", variant.id),
+    "screens/example-welcome-empty.html",
+  );
   assert.deepEqual(variant.tags, ["forms", "onboarding"]);
   assert.deepEqual(variant.useCaseIds, []);
-  assert.deepEqual(variant.fragments, {
-    desktop: "screens/welcome.variants/empty.desktop.html",
-    mobile: "screens/welcome.variants/empty.mobile.html",
-  });
-  assert.ok(variant.darkFragments);
-  assert.deepEqual(variant.darkFragments, {
-    desktop: "screens/welcome.variants/empty.desktop.dark.html",
-    mobile: "screens/welcome.variants/empty.mobile.dark.html",
-  });
-  for (const route of [
-    ...Object.values(variant.fragments),
-    ...Object.values(variant.darkFragments),
-  ]) {
+  assert.deepEqual(variant.colorSchemes, ["light", "dark"]);
+  assert.equal(
+    viewRoute("screen", variant.id, "desktop", "light"),
+    "screens/example-welcome-empty.desktop.html",
+  );
+  for (const route of generatedViews(variant).map((view) => view.path)) {
     const html = outputs.get(route);
     assert.match(html ?? "", /aria-label="Workspace name"/);
     assert.match(html ?? "", /disabled=""/);

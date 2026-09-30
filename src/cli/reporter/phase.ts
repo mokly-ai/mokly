@@ -1,5 +1,13 @@
 import type { CliReporter } from "./types.js";
 
+/** Mutable rich-reporter state for one active terminal phase. */
+export interface ActiveReporterPhase {
+  readonly startedAt: number;
+  frame: number;
+  readonly label: string;
+  readonly timer?: ReturnType<typeof setInterval>;
+}
+
 /** Run one command boundary while settling its reporter phase on every path. */
 export async function reportPhase<Result>(
   reporter: CliReporter,

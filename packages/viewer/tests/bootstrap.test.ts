@@ -21,7 +21,7 @@ const catalogue = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v1.json",
+        "../../../docs/protocol/fixtures/catalogue-v3.json",
         import.meta.url,
       ),
       "utf8",
@@ -37,21 +37,19 @@ test("static hydration adopts the finalized authenticated deployment", () => {
       comparisons: false,
       updateVersion: 0,
       delivery: {
-        schemaVersion: 2,
+        schemaVersion: 3,
         deploymentId: "0".repeat(64),
         canonicalPath: "/",
         comparisonUrl: null,
-        idRoutes: {},
       },
     },
     view: { kind: "home" },
   });
   const delivery: StaticDelivery = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     deploymentId: "a".repeat(64),
     canonicalPath: "/",
     comparisonUrl: null,
-    idRoutes: {},
   };
   const finalized = shellBootstrapWithDelivery(staged, delivery);
   assert.equal(staged.catalogue.deploymentId, "0".repeat(64));
@@ -124,7 +122,6 @@ test("historical hydration reconstructs the exact removed selection", () => {
       entry: {
         ...source.entry,
         id: current.id,
-        route: "archive/guide.html",
         title: "Archived guide",
       },
       snapshotId,
@@ -140,7 +137,7 @@ test("historical hydration reconstructs the exact removed selection", () => {
   });
 
   const props = shellBootstrapProps(bootstrap);
-  assert.equal(props.context.activeRoute, "archive/guide.html");
+  assert.equal(props.context.activeId, current.id);
   assert.equal(props.context.snapshotId, snapshotId);
   assert.equal(props.view.kind, "target");
   assert.equal(

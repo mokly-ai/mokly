@@ -3,8 +3,13 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import type { ManifestComponent } from "@mokly/viewer";
-import { generatedViews, isLogicalFragment } from "@mokly/viewer/data";
+import type { ManifestComponentVariant } from "@mokly/viewer";
+import {
+  generatedViews,
+  entryRoute,
+  isLogicalFragment,
+  isManifestComponentVariant,
+} from "@mokly/viewer/data";
 import type { ManifestEntry, ManifestScreen } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 
@@ -27,7 +32,12 @@ export async function requestedFragment(
   const fragment = values.length === 1 ? values[0] : undefined;
   if (!fragment || !isLogicalFragment(fragment)) return null;
   if (entry?.kind === "page")
-    return (await containsFragment(entry.route, fragment, config, documents))
+    return (await containsFragment(
+      entryRoute("page", entry.id),
+      fragment,
+      config,
+      documents,
+    ))
       ? fragment
       : null;
   const screen = destinationScreen(entry, catalogue);
@@ -36,36 +46,28 @@ export async function requestedFragment(
   return fragment;
 }
 
-/** Add the one canonical encoded fragment query to a route. */
-export function withFragmentQuery(route: string, fragment?: string): string {
-  return fragment === undefined
-    ? route
-    : `${route}?fragment=${encodeURIComponent(fragment)}`;
-}
-
 function destinationScreen(
   entry: ManifestEntry | undefined,
   catalogue: Catalogue,
-): ManifestScreen | ManifestComponent | undefined {
-  if (entry?.kind === "screen" || entry?.kind === "component") return entry;
+): ManifestScreen | ManifestComponentVariant | undefined {
+  if (entry?.kind === "screen") return entry;
+  if (entry?.kind === "component")
+    return isManifestComponentVariant(entry)
+      ? entry
+      : (catalogue.hierarchy.variantsById.get(entry.id)?.[0] as
+          ManifestComponentVariant | undefined);
   if (entry?.kind !== "use-case" || !entry.steps[0]) return undefined;
   const candidate = catalogue.byId.get(entry.steps[0].screenId);
   return candidate?.kind === "screen" ? candidate : undefined;
 }
 
 async function allViewsContain(
-  screen: ManifestScreen | ManifestComponent,
+  screen: ManifestScreen | ManifestComponentVariant,
   fragment: string,
   config: ResolvedConfig,
   documents?: DocumentService,
 ): Promise<boolean> {
-  const routes = generatedViews(screen)
-    .filter(
-      (view) =>
-        screen.kind !== "component" ||
-        view.variantId === screen.variants[0]!.id,
-    )
-    .map((view) => view.path);
+  const routes = generatedViews(screen).map((view) => view.path);
   return (
     await Promise.all(
       routes.map((route) =>

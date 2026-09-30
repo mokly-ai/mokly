@@ -16,7 +16,7 @@ for (const viewport of ["desktop", "mobile"] as const)
     page.on("response", (response) => {
       if (response.status() >= 400) failures.push(response.url());
     });
-    await page.goto("/view/components/action.html");
+    await page.goto("/view/components/example-action.html");
     await chooseViewport(page, viewport);
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     if (viewport === "mobile")
@@ -48,12 +48,15 @@ for (const viewport of ["desktop", "mobile"] as const)
       .getByRole("tabpanel", { name: "Usage", exact: true })
       .locator(".mbk-usage-list")
       .first();
-    for (const title of ["Welcome", "Details", "Toolbar · default"])
+    for (const title of ["Welcome", "Details", "Toolbar · Default"])
       await expect(
         usage.getByRole("link", { name: title, exact: true }),
       ).toBeVisible();
     await usage
-      .getByRole("link", { name: "Toolbar · default", exact: true })
+      .getByRole("link", {
+        name: "Toolbar · Default",
+        exact: true,
+      })
       .click();
     await page
       .getByRole("tab", { name: "Nested components", exact: true })

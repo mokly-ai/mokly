@@ -88,6 +88,8 @@ async function execute(
         timeAsync("export", () =>
           runExport(config, {
             diagnostic: (message) => reporter.runtimeDiagnostic(message),
+            incompatibleBaseline: (commit) =>
+              reporter.incompatibleBaseline(commit),
             onBuildDiagnostics: (diagnostics) => {
               reporter.buildWarnings(diagnostics);
               enforceStrictBuildWarnings(

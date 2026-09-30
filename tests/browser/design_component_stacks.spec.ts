@@ -6,9 +6,9 @@ type Viewport = "desktop" | "mobile";
 
 /** Component routes whose comparisons stack both versions in one frame. */
 const STACKED = [
-  ["pages/stacked/overlay", "overlay"],
-  ["pages/stacked/difference", "difference"],
-  ["pages/stacked/overlay-tall", "overlay"],
+  ["design-component-overlay", "overlay"],
+  ["design-component-difference", "difference"],
+  ["design-component-overlay-tall", "overlay"],
 ] as const;
 
 async function open(
@@ -156,7 +156,11 @@ for (const viewport of ["desktop", "mobile"] as const) {
   test(`${viewport}: the tall Checklist is drawn part-way down one frame`, async ({
     page,
   }) => {
-    const scroller = await open(page, "pages/stacked/overlay-tall", viewport);
+    const scroller = await open(
+      page,
+      "design-component-overlay-tall",
+      viewport,
+    );
     const facts = await scroller.evaluate((node) => {
       const frame = node.getBoundingClientRect();
       const stack = node.querySelector(".mbk-stack")!;
@@ -230,13 +234,15 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ? { width: 390, height: 844 }
         : { width: 1440, height: 1000 },
     );
-    await page.goto(componentDesignUrl("pages/comparison", viewport));
+    await page.goto(
+      componentDesignUrl("design-component-comparison", viewport),
+    );
     const modes = page.getByRole("group", { name: "Comparison mode" });
     for (const [label, route] of [
-      ["Overlay", "pages/stacked/overlay"],
-      ["Difference", "pages/stacked/difference"],
-      ["Current", "pages/affected"],
-      ["Side by side", "pages/comparison"],
+      ["Overlay", "design-component-overlay"],
+      ["Difference", "design-component-difference"],
+      ["Current", "design-component-affected"],
+      ["Side by side", "design-component-comparison"],
     ] as const) {
       const link = modes.getByRole("link", { name: label, exact: true });
       await link.focus();

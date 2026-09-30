@@ -3,12 +3,12 @@
 // active-route helpers the document scaffold and progressive navigation use.
 
 import { canonicalJson } from "../components/data.js";
+import { isManifestComponentVariant } from "../components/manifest_types.js";
 import { sha256 } from "../data/sha256.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { DetailsPanel } from "./details.js";
-import { DiffScreen } from "./diffs.js";
 import {
   SchemeSwitch,
   ScreenHead,
@@ -61,7 +61,7 @@ function TargetView(props: {
   const removed =
     target.kind === "entry" &&
     props.catalogue.removedEntries.some(
-      ({ entry }) => entry.route === target.entry.route,
+      ({ entry }) => entry.id === target.entry.id,
     );
   const preview = removed
     ? removedPreviewData(props.catalogue, props.context, target.entry)
@@ -101,14 +101,7 @@ function TargetView(props: {
           ) : undefined
         }
       />
-      {!removed &&
-      (props.context.comparisons ?? false) &&
-      props.target.kind === "entry" &&
-      props.target.entry.kind === "screen" ? (
-        <DiffScreen route={props.target.entry.route}>{stage}</DiffScreen>
-      ) : (
-        stage
-      )}
+      {stage}
       <DetailsPanel catalogue={props.catalogue} target={props.target} />
     </>
   );
@@ -161,11 +154,11 @@ function MissingView(props: { requested: string }) {
 }
 
 /** The active catalogue route for a shell view, when it has one. */
-export function activeRouteForView(view: ShellView): string | undefined {
+function activeIdForView(view: ShellView): string | undefined {
   if (view.kind !== "target") {
     return undefined;
   }
-  return view.target.entry.route;
+  return view.target.entry.id;
 }
 
 /** The browser document title for a shell view. */
@@ -186,9 +179,9 @@ export function ShellMain(props: {
   view: ShellView;
 }) {
   const mainId = useShellIdentifier("mb-main");
-  const route = activeRouteForView(props.view);
+  const activeId = activeIdForView(props.view);
   const baseline = props.catalogue.removedEntries.find(
-    ({ entry }) => entry.route === route,
+    ({ entry }) => entry.id === activeId,
   );
   return (
     <main
@@ -214,7 +207,12 @@ export function ShellMain(props: {
             catalogue={props.catalogue}
             context={props.context}
             entry={props.view.target.entry}
-            key={props.view.target.entry.route}
+            key={
+              props.view.target.entry.kind === "component" &&
+              isManifestComponentVariant(props.view.target.entry)
+                ? props.view.target.entry.variantOf
+                : props.view.target.entry.id
+            }
           />
         ) : (
           <TargetView

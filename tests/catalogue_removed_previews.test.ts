@@ -12,7 +12,6 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 const generation = "c".repeat(64);
 const comparisonUrl = `__mokly/diffs/__generations/${generation}/review.json`;
-const pagePath = `__mokly/diffs/__generations/${generation}/pages/archive/guide.html.json`;
 
 test("projection and reader retain typed removed page and screen previews", async (t) => {
   const model = await previewModel(t);
@@ -20,20 +19,20 @@ test("projection and reader retain typed removed page and screen previews", asyn
   assert.deepEqual(
     model.removedEntries.map(({ entry, preview }) => [
       entry.kind,
-      entry.route,
+      entry.id,
       preview,
     ]),
     [
-      ["page", "archive/guide.html", { kind: "page", path: pagePath }],
-      ["screen", "screens/old.html", { kind: "screen" }],
+      ["page", "guide", { kind: "page" }],
+      ["screen", "old", { kind: "screen" }],
     ],
   );
   const page = model.removedEntries[0]!.entry;
   const screen = model.removedEntries[1]!.entry;
-  assert.ok(page.kind === "page" && page.documentPath === null);
+  assert.ok(page.kind === "page" && !("documentPath" in page));
   assert.ok(
     screen.kind === "screen" &&
-      screen.views.every((view) => view.fragmentPath === null),
+      screen.views.every((view) => !("fragmentPath" in view)),
   );
   assert.deepEqual(readCatalogue(JSON.parse(serializeCatalogue(model))), model);
 });
@@ -64,10 +63,10 @@ test("reader rejects malformed or incoherent removed preview descriptors", async
       value.removedEntries[0].preview = { kind: "screen" };
     },
     (value) => {
-      value.removedEntries[1].preview = { kind: "page", path: pagePath };
+      value.removedEntries[1].preview = { kind: "page" };
     },
     (value) => {
-      value.removedEntries[1].preview.path = pagePath;
+      value.removedEntries[1].preview.path = "unexpected.json";
     },
     (value) => {
       value.comparisonUrl = null;
@@ -94,15 +93,7 @@ test("projection requires descriptors to match a published comparison generation
   assert.throws(() =>
     projectCatalogue({
       ...input,
-      removedPreviews: new Map([
-        [
-          "archive/guide.html",
-          {
-            kind: "page" as const,
-            path: `__mokly/diffs/__generations/${"d".repeat(64)}/pages/archive/guide.html.json`,
-          },
-        ],
-      ]),
+      removedPreviews: new Map([["other-page", { kind: "page" as const }]]),
     }),
   );
 });
@@ -124,11 +115,11 @@ async function previewInput(t: test.TestContext) {
     configPath: "mokly.config.ts",
     catalogue: catalogueAtBaseline(current, before.manifest),
     changesStatus: "ready" as const,
-    changedRoutes: ["archive/guide.html", "screens/old.html"],
+    changedIds: ["guide", "old"],
     comparisonUrl,
     removedPreviews: new Map([
-      ["archive/guide.html", { kind: "page" as const, path: pagePath }],
-      ["screens/old.html", { kind: "screen" as const }],
+      ["guide", { kind: "page" as const }],
+      ["old", { kind: "screen" as const }],
     ]),
     revision: { content: 0, evidence: 0 },
   };
@@ -139,8 +130,8 @@ function source(): string {
 import { definePage, defineScreen } from "@mokly/mokly";
 const metadata = { dependencies: [], relatedDocs: [], description: "Fixture" };
 export const mockups = [
-  defineScreen({ ...metadata, id: "current", title: "Current", route: "screens/current.html", mobile: <p>Current</p>, desktop: <p>Current</p>, useCaseIds: [] }),
-  defineScreen({ ...metadata, id: "old", title: "Old", route: "screens/old.html", mobile: <p>Old</p>, desktop: <p>Old</p>, useCaseIds: [] }),
-  definePage({ ...metadata, id: "guide", title: "Guide", route: "archive/guide.html", render: () => "<!doctype html><html><body>Guide</body></html>" })
+  defineScreen({ ...metadata, id: "current", title: "Current", mobile: <p>Current</p>, desktop: <p>Current</p>, useCaseIds: [] }),
+  defineScreen({ ...metadata, id: "old", title: "Old", mobile: <p>Old</p>, desktop: <p>Old</p>, useCaseIds: [] }),
+  definePage({ ...metadata, id: "guide", title: "Guide", render: () => "<!doctype html><html><body>Guide</body></html>" })
 ];`;
 }

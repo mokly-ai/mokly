@@ -2,8 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { expectFrameSource } from "./workspace_actions.js";
 
-const welcome = "/view/screens/welcome.html";
-const details = "/view/screens/details.html";
+const welcome = "/view/screens/example-welcome.html";
+const details = "/view/screens/example-details.html";
 const select = "[data-mokly-appearance-select]";
 
 async function navigate(page: Page, route: string): Promise<void> {

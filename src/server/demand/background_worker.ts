@@ -2,7 +2,7 @@
 import { setImmediate, setTimeout } from "node:timers/promises";
 import { parentPort, workerData, type MessagePort } from "node:worker_threads";
 
-import type { ManifestV5 } from "@mokly/viewer/data";
+import type { ManifestV7 } from "@mokly/viewer/data";
 
 import { compileRuntime } from "../../build/compile_runtime.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
@@ -17,7 +17,7 @@ const { runtime, pause, debug, existingManifest, existingOutputs, gitPort } =
     runtime: ComponentRuntime;
     pause: SharedArrayBuffer;
     debug: boolean;
-    existingManifest?: ManifestV5;
+    existingManifest?: ManifestV7;
     existingOutputs?: ReadonlyMap<string, string>;
     gitPort: MessagePort;
   };
@@ -25,7 +25,7 @@ const classifier = new RepositoryCatalogueChangeClassifier(
   new WorkerGitCommandRunner(gitPort),
 );
 const state = new Int32Array(pause);
-let manifest: ManifestV5 | undefined = existingManifest;
+let manifest: ManifestV7 | undefined = existingManifest;
 let outputs = existingOutputs;
 const checkpoint = async () => {
   await setImmediate();
@@ -52,13 +52,13 @@ parentPort?.on(
         return;
       }
       await checkpoint();
-      const snapshot = await timeAsync("changes.classify", () =>
+      const classification = await timeAsync("changes.classify", () =>
         classifier.read(runtime.config, manifest!, message.base, undefined, {
           ...(message.commit ? { commit: message.commit } : {}),
           ...(outputs ? { outputs } : {}),
         }),
       );
-      parentPort?.postMessage({ type: "classified", snapshot });
+      parentPort?.postMessage({ type: "classified", snapshot: classification });
     });
   },
 );

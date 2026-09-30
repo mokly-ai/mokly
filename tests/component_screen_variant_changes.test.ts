@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { componentScreenVariantEntrySource } from "./helpers/screen_variant_fixture.js";
@@ -23,27 +23,23 @@ for (const changed of ["parent", "variant"] as const)
       fixture.git,
       "main",
     );
-    assert.equal(result.schemaVersion, 3);
-    if (result.schemaVersion !== 3) return;
+    assert.equal(result.schemaVersion, 4);
+    if (result.schemaVersion !== 4) return;
     const expected =
-      changed === "variant"
-        ? ["screens/home.variants/empty.html", "user-flows/variant.html"]
-        : ["screens/home.html"];
+      changed === "variant" ? ["home-empty", "variant-flow"] : ["home"];
 
     assert.deepEqual(
-      result.changes.map((entry) => (entry.after ?? entry.before)!.route),
+      result.changes.map((entry) => (entry.after ?? entry.before)!.id),
       expected,
     );
     assert.deepEqual(
-      await computeChangedRoutes(fixture.config, "main", fixture.git),
+      await computeChangedIds(fixture.config, "main", fixture.git),
       expected,
     );
     const flow = result.changes.find((entry) => entry.kind === "use-case");
     if (changed === "parent") assert.equal(flow, undefined);
     else
-      assert.deepEqual(flow?.reasons, [
-        { kind: "screen", route: "screens/home.variants/empty.html" },
-      ]);
+      assert.deepEqual(flow?.reasons, [{ kind: "screen", id: "home-empty" }]);
   });
 
 test("a variant consuming a changed component is an affected screen on its own route", async (t) => {
@@ -62,15 +58,15 @@ test("a variant consuming a changed component is an affected screen on its own r
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
 
   assert.ok(
     result.affectedConsumers.some(
       ({ changedComponentId, consumer }) =>
         changedComponentId === "action" &&
         consumer.kind === "screen" &&
-        consumer.route === "screens/home.variants/empty.html",
+        consumer.id === "home-empty",
     ),
   );
 });

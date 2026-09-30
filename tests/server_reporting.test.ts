@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ManifestV5 } from "@mokly/viewer/data";
+import type { ManifestV7 } from "@mokly/viewer/data";
 
 import type { BuildDiagnostic } from "../dist/build/build_warnings.js";
 import type { Compilation } from "../dist/build/compile.js";
@@ -124,7 +124,7 @@ test("Serve reports one generation's warnings immediately before catalogue ready
     manifest: {
       entries: [],
       generatedBy: "mokly",
-      schemaVersion: 5,
+      schemaVersion: 7,
       sourceFiles: [],
     },
     outputs: new Map(),
@@ -182,6 +182,33 @@ test(
     assert.match(reporter.events[2]!, /rebuilt/);
   },
 );
+
+test("screen-only Serve logs classifier failures and reports Changes unavailable", async (t) => {
+  const fixture = await createFixture();
+  t.after(() => removeFixture(fixture));
+  const reporter = new RecordingReporter();
+  const running = await serve(
+    await loadConfig(fixture.root),
+    { port: 0, watch: false },
+    {
+      changeClassifier: {
+        async read() {
+          throw new Error("screen classifier failed");
+        },
+      },
+      reporter,
+    },
+  );
+  fixture.beforeRemove(() => running.close());
+  await reporter.complete;
+
+  assert.ok(
+    reporter.events.some((event) =>
+      event.includes("diagnostic:screen classifier failed"),
+    ),
+  );
+  assert.ok(reporter.events.includes("changes-unavailable"));
+});
 
 test("the watched RunningServe rebuild hook uses the serialized queue", async (t) => {
   const fixture = await createFixture();
@@ -245,7 +272,7 @@ class RecordingReporter implements ServeReporter {
     for (const diagnostic of diagnostics)
       this.events.push(`warning:${diagnostic.route}`);
   }
-  catalogueReady(manifest: ManifestV5): void {
+  catalogueReady(manifest: ManifestV7): void {
     const screens = manifest.entries.filter(
       (entry) => entry.kind === "screen",
     ).length;
@@ -260,7 +287,12 @@ class RecordingReporter implements ServeReporter {
     this.resolve();
   }
   gitReferenceRefresh(_base: string): void {}
-  runtimeDiagnostic(_error: unknown): void {}
+  incompatibleBaseline(_commit: string): void {}
+  runtimeDiagnostic(error: unknown): void {
+    this.events.push(
+      `diagnostic:${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
   serveReady(): void {}
   watchFailed(_report: WatchReport, _error: unknown): void {}
   watchFinished(report: WatchReport): void {

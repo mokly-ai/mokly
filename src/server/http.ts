@@ -21,17 +21,15 @@ import {
   loadShellFontAssets,
 } from "./client_modules.js";
 import { ComponentChangeCache } from "./component_changes.js";
-import { handleControls, localHost } from "./controls/http.js";
 import { ComponentRenderService } from "./controls/service.js";
 import { ForegroundActivity } from "./demand/activity.js";
 import { DocumentService } from "./demand/service.js";
-import { handleCatalogueRequest } from "./http_routes.js";
+import { catalogueRequestHandler } from "./http_request_handler.js";
 import { closeCatalogueHttp } from "./http_shutdown.js";
 import type { RunningServer, ServerOptions } from "./http_types.js";
 import { listenOnAvailablePort } from "./ports.js";
 import { LivePublicCatalogue } from "./public_catalogue.js";
 import type { PublicComparison } from "./public_review.js";
-import { send } from "./respond.js";
 import { ReviewRoutes } from "./review_routes.js";
 import {
   livePublicInput,
@@ -128,13 +126,11 @@ export async function startCatalogueServer(
   let activeCatalogue = componentChanges
     ? catalogueAtBaseline(manifest, componentChanges.baseline)
     : catalogue;
-  let changedRoutes =
-    changes?.changedRoutes ??
-    options.changedRoutes ??
-    componentChanges?.changedRoutes;
+  let changedIds =
+    changes?.changedIds ?? options.changedIds ?? componentChanges?.changedIds;
   let changesStatus: ChangesStatus =
     options.changesStatus ??
-    (changedRoutes || componentChanges ? "ready" : "unavailable");
+    (changedIds || componentChanges ? "ready" : "unavailable");
   let updateVersion = options.updateVersion ?? 1;
   let contentVersion = updateVersion;
   let publicComparison: PublicComparison | undefined;
@@ -146,7 +142,8 @@ export async function startCatalogueServer(
     options.liveChanges === false &&
     !options.review &&
     routes === undefined &&
-    !hasEvidence
+    !hasEvidence &&
+    options.changesStatus !== "unavailable"
       ? ("disabled" as const)
       : status;
   const publicInput = (
@@ -155,11 +152,11 @@ export async function startCatalogueServer(
     livePublicInput(
       activeCatalogue,
       publicChangesStatus(
-        changedRoutes,
+        changedIds,
         componentChanges !== undefined,
         changesStatus,
       ),
-      changedRoutes,
+      changedIds,
       componentChanges,
       comparison,
     );
@@ -168,57 +165,25 @@ export async function startCatalogueServer(
     publicInput(),
     contentVersion,
   );
-  const server = http.createServer((request, response) => {
-    if (controls && !localHost(request))
-      return send(
-        response,
-        403,
-        "text/plain",
-        "This request is not allowed.",
-        request.method ?? "GET",
-      );
-    if (controls && request.url?.startsWith("/__mokly/components/")) {
-      const busy = activity.channel();
-      busy(true);
-      void handleControls(
-        request,
-        response,
-        controls,
-        options.onDiagnostic,
-      ).finally(() => busy(false));
-      return;
-    }
-    const requestedVersion = updateVersion;
-    const requestedChanges = changedRoutes;
-    void handleCatalogueRequest(
-      request.url ?? "/",
-      request.method ?? "GET",
-      response,
-      activeCatalogue,
+  const server = http.createServer(
+    catalogueRequestHandler({
+      activity,
+      activeCatalogue: () => activeCatalogue,
+      assets: { clientModules, fontAssets, navigationModules },
+      changedIds: () => changedIds,
+      changesStatus: () => changesStatus,
+      componentChanges: () => componentChanges,
       config,
-      options.base,
-      () => requestedChanges,
-      streams,
-      { clientModules, fontAssets, navigationModules },
-      () => requestedVersion,
-      reviewRoutes,
-      componentChanges,
-      controls?.capability(),
-      documents,
-      options.liveChanges === false ? undefined : changesStatus,
-      contentVersion,
+      contentVersion: () => contentVersion,
+      controls: () => controls,
+      documents: () => documents,
+      options,
       publicCatalogue,
-    ).catch(() => {
-      if (!response.destroyed && !response.headersSent)
-        send(
-          response,
-          500,
-          "text/plain",
-          "Could not open this page.",
-          request.method ?? "GET",
-        );
-    });
-  });
+      reviewRoutes,
+      streams,
+      updateVersion: () => updateVersion,
+    }),
+  );
   await timeAsync("server.listen", () =>
     listenOnAvailablePort(server, options.port, options.strictPort ?? false),
   );
@@ -272,7 +237,7 @@ export async function startCatalogueServer(
         {
           catalogue,
           activeCatalogue,
-          changedRoutes,
+          changedIds,
           componentChanges,
           changesStatus,
           updateVersion,
@@ -285,11 +250,11 @@ export async function startCatalogueServer(
         livePublicInput(
           next.activeCatalogue,
           publicChangesStatus(
-            next.changedRoutes,
+            next.changedIds,
             next.componentChanges !== undefined,
             next.changesStatus,
           ),
-          next.changedRoutes,
+          next.changedIds,
           next.componentChanges,
           undefined,
         ),
@@ -298,7 +263,7 @@ export async function startCatalogueServer(
       );
       ({
         activeCatalogue,
-        changedRoutes,
+        changedIds,
         componentChanges,
         changesStatus,
         updateVersion,

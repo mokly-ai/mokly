@@ -31,21 +31,12 @@ export function withRoute(
   let selection = { ...state.selection, screenId: routeScreenId(route) };
   if (route.snapshot) selection.snapshotId = route.snapshot;
   else delete selection.snapshotId;
-  const entry =
-    route.view.kind === "target" ? route.view.target.entry : undefined;
-  if (
-    route.variant &&
-    entry?.kind === "component" &&
-    entry.variants.some((variant) => variant.id === route.variant)
-  )
-    selection.variantId = route.variant;
-  else delete selection.variantId;
   if (route.viewport) selection.viewport = route.viewport;
   if (catalogue.publicModel)
     selection = revealSelection(catalogue.publicModel, selection);
   let next = withSelection(state, selection, false);
   if (route.view.kind === "target") {
-    const path = disclosurePath(sections, route.view.target.entry.route);
+    const path = disclosurePath(sections, route.view.target.entry.id);
     next = {
       ...next,
       disclosures: openDisclosures(next.disclosures, path),

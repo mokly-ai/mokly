@@ -1,7 +1,7 @@
 import { MOKLY_CACHE } from "./cache_paths.js";
 
 /** Directory names excluded from consumer source discovery and broad watches. */
-export const DENIED_SOURCE_DIRECTORY_NAMES: ReadonlySet<string> = new Set([
+const DENIED_SOURCE_DIRECTORY_NAMES: ReadonlySet<string> = new Set([
   ".context",
   ".git",
   MOKLY_CACHE,
@@ -14,7 +14,7 @@ export const DENIED_SOURCE_DIRECTORY_NAMES: ReadonlySet<string> = new Set([
 ]);
 
 /** Temporary-directory prefixes excluded from source discovery and broad watches. */
-export const DENIED_SOURCE_TEMPORARY_PREFIXES = [
+const DENIED_SOURCE_TEMPORARY_PREFIXES = [
   ".mokly-review-",
   ".mokly-write-",
 ] as const;

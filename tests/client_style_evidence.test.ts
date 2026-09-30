@@ -48,7 +48,7 @@ test("analysed reasons group into one list per retained outcome", () => {
 
 test("retained paths keep every changed dependency once, in order", () => {
   const reasons: readonly EntryChangeReason[] = [
-    { kind: "screen", route: "screens/home.html" },
+    { kind: "screen", id: "home" },
     { kind: "dependency", path: SHARED },
     { kind: "dependency", path: "mockups/logo.svg" },
     { kind: "dependency", path: SHARED },

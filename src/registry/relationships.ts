@@ -6,7 +6,7 @@ import { problem } from "./entry_metadata.js";
 import type { RegistryViolation } from "./prepared_types.js";
 import { crossReferenceVariantViolations } from "./variant_validation.js";
 
-/** Validate collection and reciprocal use-case references. */
+/** Validate navigation paths and reciprocal use-case references. */
 export function crossReferenceViolations(
   entries: readonly ResolvedRegistryEntry[],
 ): RegistryViolation[] {
@@ -27,19 +27,14 @@ export function crossReferenceViolations(
   return violations;
 }
 
-/** Find duplicate ids or routed values. */
+/** Find duplicate ids. */
 export function duplicateViolations(
   entries: readonly ResolvedRegistryEntry[],
-  field: "id" | "route",
+  field: "id",
 ): RegistryViolation[] {
   const groups = new Map<string, ResolvedRegistryEntry[]>();
   for (const entry of entries) {
-    const value =
-      field === "id"
-        ? entry.id
-        : entry.kind === "collection"
-          ? undefined
-          : entry.route;
+    const value = entry.id;
     if (value) groups.set(value, [...(groups.get(value) ?? []), entry]);
   }
   return [...groups.entries()].flatMap(([value, group]) =>

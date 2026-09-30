@@ -5,6 +5,10 @@ import { build } from "esbuild";
 
 import { crossOriginFixture } from "../../../tests/browser/frame_adapter_fixture.js";
 import { renderViewer } from "../dist/server.js";
+import type {
+  CatalogueComponent,
+  CatalogueComponentVariant,
+} from "../src/catalogue/types.js";
 
 export async function viewerFixture(
   extraConfig = "",
@@ -59,8 +63,14 @@ export async function viewerHydrationFixture() {
     tags: [],
   };
   const catalogue = structuredClone(fixture.catalogue);
-  const component = catalogue.components.find(({ id }) => id === "action");
-  const variant = component?.variants[0];
+  const component = catalogue.components.find(
+    (entry): entry is CatalogueComponent =>
+      entry.id === "action" && !("variantOf" in entry),
+  );
+  const variant = catalogue.components.find(
+    (entry): entry is CatalogueComponentVariant =>
+      "variantOf" in entry && entry.variantOf === "action",
+  );
   const control = component?.controls.label;
   const schema = component?.propSchema.properties.label;
   const value = variant?.props.label;

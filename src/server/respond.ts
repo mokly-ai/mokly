@@ -39,15 +39,6 @@ export function safeDecodePath(value: string): string | undefined {
   }
 }
 
-/** Decode one URL component, treating malformed input as empty. */
-export function safeDecode(value: string): string {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return "";
-  }
-}
-
 /** The response content type for a served artifact or static file. */
 export function contentType(candidate: string): string {
   const extension = path.extname(candidate).toLowerCase();

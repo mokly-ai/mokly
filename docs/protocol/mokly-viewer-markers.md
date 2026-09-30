@@ -50,8 +50,8 @@ with valid markers recovers without remounting the viewer.
 ## Matching And States
 
 Each marker matches its complete reference against the effective mounted view:
-screen, saved variant when present, flow step when present, viewport, effective
-scheme and instance key. A Dark selection that falls back to a light-only view
+entry, flow step when present, viewport, effective scheme and instance key. A
+component variant is addressed by its own entry id. A Dark selection that falls back to a light-only view
 mounts Light, so a Light reference matches it. A host supplies separate markers
 when one logical comment should appear on several views.
 
@@ -66,8 +66,8 @@ The viewer evaluates every marker to exactly one state:
   or unavailable; the key is absent; the entry is a page; the frame is showing
   a non-Current comparison; or boundary measurement fails.
 
-Unavailable markers do not cause navigation, variant changes, scrolling or
-fallback to another instance. Marker evaluation does not emit inspection,
+Unavailable markers do not cause navigation, scrolling or fallback to another
+instance. Marker evaluation does not emit inspection,
 selection or pick events.
 
 `onMarkerChange` receives the complete ordered state list once after the first
@@ -136,7 +136,7 @@ The operation is atomic. Before changing the current presentation, the viewer
 requires every reference to match a ready Current session with valid usage and
 a present key. Any mismatch rejects with the frame adapter's existing
 `missing-instance` semantics and leaves the prior highlight unchanged. The
-viewer never guesses a variant, flow step, viewport, scheme or replacement key.
+viewer never guesses an entry, flow step, viewport, scheme or replacement key.
 
 `highlightInstances([])` clears every highlight. `highlightInstance(ref)` is
 single-reference sugar over this operation; `highlightInstance(null)` also

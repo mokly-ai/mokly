@@ -18,7 +18,6 @@ export function ReadonlyVariantControlsMobile() {
 export const publishedScreens = [
   screen({
     id: "design-component-controls-readonly",
-    slug: "default",
     title: "Published saved props",
     description:
       "Published catalogues show saved values and explain how to edit locally.",
@@ -28,7 +27,6 @@ export const publishedScreens = [
   }),
   screen({
     id: "design-component-controls-readonly-variant",
-    slug: "variant",
     title: "Published saved variant",
     description:
       "Variant selection remains available while both published states stay read-only.",

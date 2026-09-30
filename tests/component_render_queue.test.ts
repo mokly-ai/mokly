@@ -13,7 +13,7 @@ import type { ComponentRenderRequest } from "../packages/viewer/dist/components/
 const result = { route: "result" } as TransientRender;
 const request = (id: number): ComponentRenderRequest => ({
   componentId: "action",
-  variantId: "default",
+  variantId: "action-default",
   viewport: "desktop",
   colorScheme: "light",
   generation: "g",

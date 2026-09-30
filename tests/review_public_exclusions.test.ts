@@ -20,50 +20,45 @@ const reader: BaselineReader = {
   readFileBytes: async () => Buffer.from("baseline"),
 };
 
-for (const schema of ["v2", "v3", "component-v4", "page-v4", "v5"]) {
-  test(`historical ${schema} resources use active exclusions relative to the baseline root`, async (t) => {
-    const fixture = await createFixture(undefined, {
-      extraConfig: 'publicExclude: ["INTERNAL/**"],',
-    });
-    t.after(() => removeFixture(fixture));
-    const config = await loadConfig(fixture.root);
-    const manifest = {
-      schemaVersion: Number(schema.slice(-1)),
-      entries: [],
-      legacyPages: [],
-      ...(schema === "page-v4" || schema === "v5"
-        ? { sourceFiles: ["old-output/source.json"] }
-        : {}),
-    } as unknown as HistoricalManifest;
-    const historical = new GitReviewAssetReader(
-      baselineResourceConfig(config, manifest),
-      reader,
-      "baseline",
-      "old-output",
-    );
-    for (const name of [
-      ...excludedNames,
-      "mokly-manifest.json",
-      "unused.source.html",
-    ])
-      await assert.rejects(
-        historical.read(name),
-        /not a public static file/,
-        name,
-      );
-    for (const name of permittedNames)
-      assert.equal(
-        Buffer.from(await historical.read(name)).toString(),
-        "baseline",
-        name,
-      );
-    if ("sourceFiles" in manifest)
-      await assert.rejects(
-        historical.read("source.json"),
-        /not a public static file/,
-      );
+test("historical v7 resources use active exclusions relative to the baseline root", async (t) => {
+  const fixture = await createFixture(undefined, {
+    extraConfig: 'publicExclude: ["INTERNAL/**"],',
   });
-}
+  t.after(() => removeFixture(fixture));
+  const config = await loadConfig(fixture.root);
+  const manifest = {
+    schemaVersion: 7,
+    generatedBy: "mokly",
+    entries: [],
+    sourceFiles: ["old-output/source.json"],
+  } as unknown as HistoricalManifest;
+  const historical = new GitReviewAssetReader(
+    baselineResourceConfig(config, manifest),
+    reader,
+    "baseline",
+    "old-output",
+  );
+  for (const name of [
+    ...excludedNames,
+    "mokly-manifest.json",
+    "unused.source.html",
+  ])
+    await assert.rejects(
+      historical.read(name),
+      /not a public static file/,
+      name,
+    );
+  for (const name of permittedNames)
+    assert.equal(
+      Buffer.from(await historical.read(name)).toString(),
+      "baseline",
+      name,
+    );
+  await assert.rejects(
+    historical.read("source.json"),
+    /not a public static file/,
+  );
+});
 
 test("historical regular resources ignore current filesystem aliases but still reject historical symlinks", async (t) => {
   const fixture = await createFixture();

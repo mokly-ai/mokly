@@ -11,10 +11,10 @@ order: 5
 npx mokly export --out .context/mokly-site
 ```
 
-Export builds first, then packages the complete catalogue: every screen, the
-id aliases, the assets and the Git comparisons. `--out` is required and is
-resolved beside the config, not beside your working directory; an absolute
-path must stay inside the repository root.
+Export builds first, then packages the complete catalogue: one shell page per
+entry, the generated views, assets and Git comparisons. `--out` is required
+and is resolved beside the config, not beside your working directory; an
+absolute path must stay inside the repository root.
 
 `--base` overrides the configured base ref for that run. The branch point must
 be present in the checkout, with the authored assets and either the committed

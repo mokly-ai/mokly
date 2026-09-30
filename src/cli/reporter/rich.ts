@@ -1,10 +1,12 @@
-import type { ManifestV5 } from "@mokly/viewer/data";
+import type { ManifestV7 } from "@mokly/viewer/data";
 
+import { EARLIER_BASELINE_MESSAGE } from "../../baseline/compatibility.js";
 import type { BuildDiagnostic } from "../../build/build_warnings.js";
 import { errorMessage } from "../../errors.js";
 import type { ServeReadyReport, WatchReport } from "../../server/reporter.js";
 import { cliErrorPresentation } from "../errors.js";
 
+import type { ActiveReporterPhase } from "./phase.js";
 import {
   catalogueCounts,
   reportPaths,
@@ -26,21 +28,15 @@ import type {
   TerminalEnvironment,
 } from "./types.js";
 
-interface ActivePhase {
-  readonly startedAt: number;
-  frame: number;
-  readonly label: string;
-  readonly timer?: ReturnType<typeof setInterval>;
-}
-
 /** TTY-oriented reporter that owns one spinner and all terminal writes. */
 export class RichReporter implements CliReporter {
   readonly mode = "rich" as const;
   readonly #glyphs;
   readonly #success;
-  #active: ActivePhase | undefined;
+  #active: ActiveReporterPhase | undefined;
   #serveReport: ServeReadyReport | undefined;
   #servePhase: ReporterPhase | undefined;
+  readonly #incompatible = new Set<string>();
 
   constructor(readonly environment: TerminalEnvironment) {
     this.#glyphs = terminalGlyphs(environment.platform, environment.env);
@@ -84,7 +80,7 @@ export class RichReporter implements CliReporter {
       this.warning(`${diagnostic.route}: ${diagnostic.message}`);
   }
 
-  catalogueReady(manifest: ManifestV5, durationMs: number): void {
+  catalogueReady(manifest: ManifestV7, durationMs: number): void {
     this.settleServePhase();
     const counts = catalogueCounts(manifest);
     this.line(
@@ -117,6 +113,13 @@ export class RichReporter implements CliReporter {
   }
 
   gitReferenceRefresh(_base: string): void {}
+
+  incompatibleBaseline(commit: string): void {
+    if (this.#incompatible.has(commit)) return;
+    this.#incompatible.add(commit);
+    this.clearPhase();
+    this.environment.stderr.write(`${EARLIER_BASELINE_MESSAGE}\n`);
+  }
 
   renderError(error: unknown, redact: (value: string) => string): void {
     this.clearPhase();
@@ -168,7 +171,7 @@ export class RichReporter implements CliReporter {
 
   startPhase(label: string): ReporterPhase {
     this.clearPhase();
-    const active: ActivePhase = {
+    const active: ActiveReporterPhase = {
       frame: 0,
       label,
       startedAt: this.environment.now(),
@@ -284,7 +287,7 @@ export class RichReporter implements CliReporter {
     this.#servePhase = undefined;
   }
 
-  private renderPhase(active: ActivePhase, newline: boolean): void {
+  private renderPhase(active: ActiveReporterPhase, newline: boolean): void {
     const glyph =
       this.#glyphs.spinner[active.frame % this.#glyphs.spinner.length];
     const value = truncateTerminalLine(

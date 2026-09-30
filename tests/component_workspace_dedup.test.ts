@@ -20,14 +20,15 @@ test("affected usage keeps complete serialized identity and evidence order with 
     fixture.git,
     "main",
   );
-  if (result.schemaVersion !== 3) assert.fail("Expected component result");
+  if (result.schemaVersion !== 4) assert.fail("Expected component result");
   const catalogue = createCatalogue(fixture.after.manifest);
   const entry = catalogue.byId.get("action");
-  if (entry?.kind !== "component") assert.fail("Expected component");
+  if (entry?.kind !== "component" || "variantOf" in entry)
+    assert.fail("Expected component");
   const base: UsageLink = {
-    title: "Pane",
-    route: "components/pane.html",
-    variantId: "default",
+    entryId: "pane-default",
+    entryKind: "component",
+    title: "Pane · Default",
     viewport: "desktop",
     colorScheme: "light",
     instanceKey: "action-1",
@@ -39,14 +40,14 @@ test("affected usage keeps complete serialized identity and evidence order with 
     base,
     { ...base, viewport: "mobile" },
     { ...base, colorScheme: "dark" },
-    { ...base, variantId: "disabled" },
+    { ...base, entryId: "action-disabled", title: "Action · Disabled" },
     { ...base, direct: false },
     { ...base, instanceKey: "action-2" },
-    { ...base, title: "Previous pane title" },
-    { ...base, route: "components/removed.html", removed: true },
+    { ...base, entryId: "removed", removed: true },
     {
+      entryId: "home",
+      entryKind: "screen",
       title: "Home",
-      route: "screens/home.html",
       viewport: "desktop",
       colorScheme: "light",
       instanceKey: "action-1",
@@ -57,17 +58,20 @@ test("affected usage keeps complete serialized identity and evidence order with 
   ];
   distinct.push({
     ...distinct.at(-1)!,
-    route: "screens/removed.html",
+    entryId: "removed",
     removed: true,
     comparisonEligible: false,
   });
-  const evidence = (link: UsageLink): AffectedUsageEvidence => ({
+  const evidence = (
+    link: UsageLink,
+    id = link.entryId,
+  ): AffectedUsageEvidence => ({
     side: "after",
     context: {
-      ...(link.variantId
-        ? { kind: "component", variantId: link.variantId }
+      ...(link.entryKind === "component"
+        ? { kind: "component", variantId: link.entryId }
         : { kind: "screen" }),
-      entry: { id: "consumer", title: link.title, route: link.route },
+      entry: { id, title: link.title },
       viewport: link.viewport,
       colorScheme: link.colorScheme,
     },

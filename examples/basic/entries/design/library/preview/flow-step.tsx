@@ -36,7 +36,7 @@ export const flowStep = defineComponent({
   render: FlowStepView,
   variants: [
     {
-      id: "first",
+      id: "design-ui-flow-step-first",
       title: "First step",
       props: {
         number: 1,
@@ -58,7 +58,7 @@ export const flowStep = defineComponent({
       },
     },
     {
-      id: "second",
+      id: "design-ui-flow-step-second",
       title: "Second step",
       props: {
         number: 2,

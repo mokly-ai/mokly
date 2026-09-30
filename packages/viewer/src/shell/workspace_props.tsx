@@ -9,6 +9,7 @@ import type {
   ComponentWireProps,
   PropValue,
 } from "../components/prop_types.js";
+import { viewHref } from "../navigation/routes.js";
 
 import type { WorkspaceData } from "./workspace_data.js";
 
@@ -70,7 +71,7 @@ export function WorkspaceProps({
             {` · ${selection.instance.id}`}
           </h3>
           {component ? (
-            <a href={`/view/${encodeRoute(component.route)}`}>Open component</a>
+            <a href={viewHref("component", component.id)}>Open component</a>
           ) : null}
         </>
       ) : null}
@@ -100,8 +101,4 @@ export function WorkspaceProps({
       ) : null}
     </>
   );
-}
-
-function encodeRoute(route: string): string {
-  return route.split("/").map(encodeURIComponent).join("/");
 }

@@ -36,6 +36,7 @@ export async function runPublish(
         ...arguments_,
         ...options,
         diagnostic: (message) => reporter.runtimeDiagnostic(message),
+        incompatibleBaseline: (commit) => reporter.incompatibleBaseline(commit),
         onBuildDiagnostics: (diagnostics) => {
           reporter.buildWarnings(diagnostics);
           enforceStrictBuildWarnings(diagnostics, arguments_.strict ?? false);

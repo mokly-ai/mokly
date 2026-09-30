@@ -1,5 +1,6 @@
 /** Fetch and prepare viewer-owned snapshot presentations. */
 
+import { snapshotSidePath } from "../navigation/routes.js";
 import type { ComparisonDelivery } from "../shell/comparison_context.js";
 
 import { presentSnapshotDocument } from "./presentation_document.js";
@@ -68,7 +69,7 @@ export function createSnapshotPresentationLoader(
   );
   const prefixes = Array.from(
     allowedSides,
-    (side) => new URL(`snapshots/${side}/`, generation),
+    (side) => new URL(snapshotSidePath(side), generation),
   );
   const cache = new Map<string, PendingPresentation | SnapshotPresentation>();
   return {

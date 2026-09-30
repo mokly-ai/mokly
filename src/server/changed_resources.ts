@@ -7,7 +7,6 @@ import { parse } from "parse5";
 import { isStylesheetPath } from "@mokly/viewer/data";
 
 import { timeAsync } from "../diagnostics/timings.js";
-import { MoklyError } from "../errors.js";
 import { referencedRoutes } from "../review/asset_references.js";
 import type {
   OptionalReviewAssetReader,
@@ -20,7 +19,7 @@ import {
   type ChangedResource,
   type ResourceEvidence,
 } from "../review/css/resource_analysis.js";
-import { normalizeReviewPair } from "../review/ignore.js";
+import { decideReferencedResource } from "../review/deleted_resource.js";
 import { ResourceGraph } from "../review/resource_graph.js";
 
 /** Cache shared resource edges for one immutable changed-route calculation. */
@@ -196,34 +195,24 @@ export class ChangedResourceGraph {
     if (content === undefined) {
       const asset = await this.reader.readLocated(route);
       this.#physicalRoutes.set(route, asset.location.physicalRelativePath);
-      const bytes = asset.content;
-      if (bytes === undefined) {
-        if (!this.compareBytes && !this.isChanged(route))
-          throw new MoklyError(
-            "review-invalid",
-            `referenced resource is missing: ${route}`,
-          );
-        await this.#base.prefetch([route]);
-        await this.#base.read(route);
+      const decision = await decideReferencedResource(
+        route,
+        {
+          readIfExists: (candidate) =>
+            this.baseline.readIfExists?.(candidate) ??
+            this.baseline.read(candidate),
+        },
+        { readIfExists: async () => asset.content },
+        this.isChanged(route),
+        this.compareBytes,
+      );
+      if (decision.kind === "verified-deletion") {
         this.#byteChanges.add(route);
         return [];
       }
+      const bytes = decision.after;
       const extension = path.posix.extname(route).toLowerCase();
-      if (this.compareBytes) {
-        const before = this.baseline.readIfExists
-          ? await this.baseline.readIfExists(route)
-          : await this.baseline.read(route);
-        if (before === undefined) this.#byteChanges.add(route);
-        else if ([".html", ".htm"].includes(extension)) {
-          const pair = normalizeReviewPair(
-            Buffer.from(before).toString("utf8"),
-            Buffer.from(bytes).toString("utf8"),
-            route,
-          );
-          if (pair.base !== pair.head) this.#byteChanges.add(route);
-        } else if (!Buffer.from(before).equals(bytes))
-          this.#byteChanges.add(route);
-      }
+      if (decision.byteChanged) this.#byteChanges.add(route);
       if (![".css", ".html", ".htm"].includes(extension)) return [];
       content = Buffer.from(bytes).toString("utf8");
       this.#rawContents.set(route, content);

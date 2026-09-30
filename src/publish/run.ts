@@ -23,6 +23,7 @@ export interface PublishOptions extends UploadOptions {
   onBuildDiagnostics?: (diagnostics: readonly BuildDiagnostic[]) => void;
   repository?: string;
   diagnostic?: (message: string) => void;
+  incompatibleBaseline?: (commit: string) => void;
 }
 
 /** Injectable runtime boundaries for publish orchestration. */
@@ -65,6 +66,9 @@ export async function publishCatalogue(
         ? { onBuildDiagnostics: options.onBuildDiagnostics }
         : {}),
       ...(options.diagnostic ? { diagnostic: options.diagnostic } : {}),
+      ...(options.incompatibleBaseline
+        ? { incompatibleBaseline: options.incompatibleBaseline }
+        : {}),
       adapter: {
         transform(files, routes) {
           const comparisonPath = routes.comparisonUrl?.slice(1) ?? null;

@@ -18,7 +18,7 @@ import {
 } from "./helpers/watched_catalogue.js";
 
 const warning =
-  "[mokly/warning] warning.html: MockLink child control is inside <button>; one click or key press has two targets\n";
+  "[mokly/warning] pages/warning-page.html: MockLink child control is inside <button>; one click or key press has two targets\n";
 
 test(
   "watched Serve reports each generation once and never an on-demand render",
@@ -59,7 +59,7 @@ function warnings(output: readonly string[]): string[] {
 }
 
 async function requestWarningPage(url: string): Promise<void> {
-  const response = await fetch(`${url}/static/warning.html`);
+  const response = await fetch(`${url}/static/pages/warning-page.html`);
   assert.equal(response.status, 200);
   assert.match(
     await response.text(),

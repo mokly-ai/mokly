@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 
 import { componentChangeCases } from "./helpers/component_change_cases.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
@@ -17,22 +17,22 @@ for (const [name, change, routes] of componentChangeCases)
       fixture.git,
       "main",
     );
-    assert.equal(artifact.result.schemaVersion, 3);
+    assert.equal(artifact.result.schemaVersion, 4);
     assert.ok("changes" in artifact.result);
     const result = artifact.result as unknown as {
-      changes: { after?: { route: string }; before?: { route: string } }[];
+      changes: { after?: { id: string }; before?: { id: string } }[];
       affectedConsumers: {
         changedComponentId: string;
-        consumer: { kind: string; route?: string; id?: string };
+        consumer: { kind: string; id: string };
         evidence: unknown[];
       }[];
     };
     assert.deepEqual(
-      result.changes.map((entry) => (entry.after ?? entry.before)!.route),
+      result.changes.map((entry) => (entry.after ?? entry.before)!.id),
       routes,
     );
     assert.deepEqual(
-      await computeChangedRoutes(fixture.config, "main", fixture.git),
+      await computeChangedIds(fixture.config, "main", fixture.git),
       routes,
     );
     if (
@@ -43,7 +43,7 @@ for (const [name, change, routes] of componentChangeCases)
         result.affectedConsumers.some(
           (item) =>
             item.changedComponentId === "action" &&
-            item.consumer.route === "screens/home.html" &&
+            item.consumer.id === "home" &&
             item.evidence.length > 0,
         ),
       );
@@ -61,7 +61,7 @@ for (const [name, change, routes] of componentChangeCases)
     }
   });
 
-test("metadata-only component titles do not invent affected consumers", async (t) => {
+test("component title changes mark its variants without inventing affected consumers", async (t) => {
   const fixture = await componentReviewFixture(t, (s) =>
     s.replace(
       'title: "Action", description:',
@@ -74,9 +74,12 @@ test("metadata-only component titles do not invent affected consumers", async (t
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
-  assert.equal(result.changes.length, 1);
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
+  assert.deepEqual(
+    result.changes.map((entry) => (entry.after ?? entry.before)!.id).sort(),
+    ["action", "action-default", "action-disabled"].sort(),
+  );
   assert.equal(result.affectedConsumers.length, 0);
 });
 
@@ -93,11 +96,11 @@ test("an implementation edit visible only at real consumer props still identifie
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
   assert.deepEqual(
-    result.changes.map((entry) => entry.after!.route),
-    ["components/action.html"],
+    result.changes.map((entry) => entry.after!.id),
+    ["action"],
   );
   assert.ok(
     result.affectedConsumers.some((entry) => entry.consumer.kind === "screen"),
@@ -129,11 +132,11 @@ for (const adopted of [false, true])
       fixture.git,
       "main",
     );
-    assert.equal(result.schemaVersion, 3);
-    if (result.schemaVersion !== 3) return;
+    assert.equal(result.schemaVersion, 4);
+    if (result.schemaVersion !== 4) return;
     assert.deepEqual(
-      result.changes.map((entry) => entry.after!.route),
-      adopted ? ["components/action.html"] : [],
+      result.changes.map((entry) => entry.after!.id),
+      adopted ? ["action"] : [],
     );
   });
 
@@ -150,11 +153,11 @@ test("affected-only views retain their real comparison state without entering Ch
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
   assert.deepEqual(
-    result.changes.map((entry) => entry.after!.route),
-    ["components/action.html"],
+    result.changes.map((entry) => entry.after!.id),
+    ["action"],
   );
   assert.ok(
     result.screens[0]!.views.every(

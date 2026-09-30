@@ -17,7 +17,7 @@ import {
 import { memoryTerminal } from "./helpers/terminal.js";
 
 const warning =
-  "[mokly/warning] warning.html: MockLink child control is inside <button>; one click or key press has two targets\n";
+  "[mokly/warning] pages/warning-page.html: MockLink child control is inside <button>; one click or key press has two targets\n";
 
 test("build and check report warnings and strict fails before writing", async (t) => {
   const fixture = await createFixture();
