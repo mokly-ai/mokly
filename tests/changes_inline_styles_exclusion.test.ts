@@ -11,10 +11,10 @@ test("a cumulative sheet excludes another component's unused rule from a zero-in
   );
   const live = await fixture.live();
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
   assert.deepEqual(result.changes, []);
-  assert.deepEqual(live.changedRoutes, []);
+  assert.deepEqual(live.changedIds, []);
   const plain = result.screens.find((screen) => screen.id === "plain")!;
   assert.equal(plain.views.length, 4);
   assert.ok(
@@ -37,10 +37,10 @@ test("formatting, comments, attributes and element splits carry no identity", as
   );
   const live = await fixture.live();
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
   assert.deepEqual(result.changes, []);
-  assert.deepEqual(live.changedRoutes, []);
+  assert.deepEqual(live.changedIds, []);
   assert.ok(
     [...result.screens, ...result.components].every(
       (entry) => entry.state === "unchanged",
@@ -61,13 +61,13 @@ test("a parse failure stays entry material with no inferred component owner", as
   );
   const live = await fixture.live();
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
-  assert.ok(live.changedRoutes?.includes("screens/home.html"));
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
+  assert.ok(live.changedIds?.includes("home"));
   assert.ok(
     result.changes.some(
       (entry) =>
-        entry.after?.route === "screens/home.html" &&
+        entry.after?.id === "home" &&
         entry.reasons.some((reason) => reason.kind === "material"),
     ),
   );

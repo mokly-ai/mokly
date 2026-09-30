@@ -37,7 +37,6 @@ export function RemovedConsumerMobile() {
 export const stateScreens = [
   screen({
     id: "design-component-empty",
-    slug: "empty",
     title: "No components in this view",
     colorSchemes: ["light"],
     description:
@@ -47,7 +46,6 @@ export const stateScreens = [
   }),
   screen({
     id: "design-component-unavailable",
-    slug: "unavailable",
     title: "Inspection unavailable",
     colorSchemes: ["light"],
     description:
@@ -57,7 +55,6 @@ export const stateScreens = [
   }),
   screen({
     id: "design-component-unused",
-    slug: "unused",
     title: "Component with no consumers",
     colorSchemes: ["light"],
     description:
@@ -67,7 +64,6 @@ export const stateScreens = [
   }),
   screen({
     id: "design-component-removed",
-    slug: "removed",
     title: "Removed variant and former consumer",
     colorSchemes: ["light"],
     description:
@@ -77,7 +73,6 @@ export const stateScreens = [
   }),
   screen({
     id: "design-component-removed-consumer",
-    slug: "removed-consumer",
     title: "Retained removed screen",
     colorSchemes: ["light"],
     description:

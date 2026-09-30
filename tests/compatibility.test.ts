@@ -79,9 +79,8 @@ export default function transform(input: CompatibilityTransformInput): string {
   const mobile = compilation.outputs.get("screens/home.mobile.html") ?? "";
   const mobileDark =
     compilation.outputs.get("screens/home.mobile.dark.html") ?? "";
-  const legacy = compilation.outputs.get("notice.html") ?? "";
-  const ambiguousLegacy =
-    compilation.outputs.get("archive/ambiguous.mobile.dark.html") ?? "";
+  const legacy = compilation.outputs.get("pages/notice.html") ?? "";
+  const ambiguousLegacy = compilation.outputs.get("pages/ambiguous.html") ?? "";
 
   assert.match(mobile, /href="#"/);
   assert.match(mobile, /href="\.\/details\.mobile\.html"/);
@@ -95,7 +94,7 @@ export default function transform(input: CompatibilityTransformInput): string {
     mobileDark,
     /data-logical-target="screens\/details\.mobile\.dark\.html"/,
   );
-  assert.match(legacy, /href="\.\/screens\/details\.desktop\.html"/);
+  assert.match(legacy, /href="\.\.\/screens\/details\.desktop\.html"/);
   assert.match(ambiguousLegacy, /data-color-scheme="light"/);
   assert.match(ambiguousLegacy, /data-viewport="desktop"/);
   assert.match(

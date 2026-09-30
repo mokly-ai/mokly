@@ -89,23 +89,22 @@ function smoothScreen(changed: boolean): string {
 /** Authored entries for the alignment catalogue before and after the change. */
 export function comparisonAlignmentSource(changed: boolean): string {
   const screen = (id: string, title: string, body: string) =>
-    `defineScreen({ ...metadata, id: "${id}", title: "${title}", route: "screens/${id}.html", description: "${title} screen", useCaseIds: [], mobile: ${body}, desktop: ${body} })`;
-  return `import { defineCollection, defineComponent, defineScreen } from "@mokly/mokly";
+    `defineScreen({ ...metadata, id: "${id}", title: "${title}", description: "${title} screen", useCaseIds: [], mobile: ${body}, desktop: ${body} })`;
+  return `import { defineComponent, defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"] };
+const metadata = { dependencies: ["notes.md"], navPath: ["Alignment"], relatedDocs: ["notes.md"] };
 const rows = Array.from({ length: 20 }, (_, index) => index);
 const checklist = defineComponent({ ...metadata,
-  id: "checklist", title: "Checklist", description: "A list taller than its frame", route: "components/checklist.html",
+  id: "checklist", title: "Checklist", description: "A list taller than its frame",
   propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } },
   render: (props) => <ol className="al-list">{rows.map((row) => <li className="al-row" id={"al-row-" + row} key={row}>{row === 7 ? props.label : "Row " + row}</li>)}</ol>,
-  variants: [{ id: "long", title: "Long", props: { label: "${changed ? "Current" : "Previous"} row" } }]
+  variants: [{ id: "checklist-long", title: "Long", props: { label: "${changed ? "Current" : "Previous"} row" } }]
 });
 export const mockups = [
-  defineCollection({ ...metadata, childIds: ["tall", "short", "inner", "smooth", "checklist"], description: "Alignment fixtures", id: "alignment", title: "Alignment" }),
   ${screen("tall", "Tall", tallScreen(changed))},
   ${screen("short", "Short", shortScreen(changed))},
   ${screen("inner", "Inner", innerScreen(changed))},
   ${screen("smooth", "Smooth", smoothScreen(changed))},
-  checklist.entry
+  ...checklist.entries
 ];`;
 }

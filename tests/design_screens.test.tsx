@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { entryRoute } from "../packages/viewer/dist/data.js";
+
 import {
   attribute,
   byClass,
@@ -11,19 +13,13 @@ import {
 } from "./helpers/design_catalogue.js";
 
 const additions = [
-  ["design-browse-details-screen", "design/browse/views/details-screen.html"],
-  [
-    "design-browse-tag-picker",
-    "design/browse/views/screen.variants/picker.html",
-  ],
-  ["design-browse-tag-forms", "design/browse/views/screen.variants/forms.html"],
-  [
-    "design-browse-tag-onboarding",
-    "design/browse/views/screen.variants/onboarding.html",
-  ],
+  ["design-browse-details-screen", "screens/design-browse-details-screen.html"],
+  ["design-browse-tag-picker", "screens/design-browse-tag-picker.html"],
+  ["design-browse-tag-forms", "screens/design-browse-tag-forms.html"],
+  ["design-browse-tag-onboarding", "screens/design-browse-tag-onboarding.html"],
   [
     "design-browse-tag-onboarding-picker",
-    "design/browse/views/screen.variants/onboarding-picker.html",
+    "screens/design-browse-tag-onboarding-picker.html",
   ],
 ] as const;
 
@@ -36,35 +32,33 @@ const convertedVariants = [
   ["design-browse-tag-onboarding-picker", "onboarding-picker"],
 ] as const;
 
-test("the Welcome conversion moves exactly the approved screens out of collections", async () => {
+test("the Welcome conversion keeps the approved screens as variants, not folder members", async () => {
   const { manifest } = await designCatalogue;
-  const collections = manifest.entries.filter(
-    (entry) => entry.kind === "collection",
+  const parent = manifest.entries.find(
+    (entry) => entry.id === "design-browse-screen",
   );
-  for (const [id, slug] of convertedVariants) {
+  assert.ok(parent?.kind === "screen");
+  for (const [id] of convertedVariants) {
     const entry = manifest.entries.find((candidate) => candidate.id === id);
     assert.equal(entry?.kind, "screen", id);
     if (entry?.kind !== "screen") continue;
-    assert.equal(
-      entry.route,
-      `design/browse/views/screen.variants/${slug}.html`,
-      id,
-    );
+    assert.equal(entryRoute("screen", entry.id), `screens/${id}.html`, id);
     assert.equal(entry.variantOf, "design-browse-screen", id);
-    assert.deepEqual(
-      collections.filter((collection) => collection.childIds.includes(id)),
-      [],
-      id,
-    );
+    assert.deepEqual(entry.navPath, parent.navPath, id);
   }
-  const tagStates = collections.find(
-    (entry) => entry.id === "design-browse-tags",
+  assert.equal(
+    manifest.entries.some((entry) => entry.id === "design-browse-tags"),
+    false,
   );
-  assert.deepEqual(tagStates?.childIds, []);
-  const shellStates = collections.find(
-    (entry) => entry.id === "design-browse-states",
+  const filter = manifest.entries.find(
+    (entry) => entry.id === "design-browse-tag-filter",
   );
-  assert.ok(shellStates?.childIds.includes("design-browse-tag-filter"));
+  assert.deepEqual(filter?.navPath, [
+    "Design",
+    "Mokly design",
+    "Browse shell",
+    "Shell states",
+  ]);
 });
 
 for (const viewport of ["mobile", "desktop"] as const) {
@@ -92,7 +86,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: all five owning destinations keep their route and frame`, async () => {
     for (const [id, route] of additions) {
       const { entry, document } = await designDocument(id, viewport);
-      assert.equal(entry.route, route);
+      assert.equal(entryRoute("screen", entry.id), route);
       assert.equal(byClass(document, "mbk-shell").length, 1);
       assert.equal(
         byClass(
@@ -142,7 +136,8 @@ test("inspector metadata belongs to its depicted subject", async () => {
   const detailBody = byClass(detailPage.document, "mbk-details-body")[0];
   assert.ok(detailBody);
   const details = textContent(detailBody);
-  assert.match(details, /screens\/details\.html/);
+  assert.match(details, /Additional context for the example catalogue/);
+  assert.doesNotMatch(details, /Generated|screens\/details\.html/);
   assert.doesNotMatch(
     details,
     /screens\/welcome\.html|landing screen|onboarding/,
@@ -162,27 +157,27 @@ test("inspector metadata belongs to its depicted subject", async () => {
 const stylesheetEvidence = [
   [
     "design-review-style-matched",
-    "design/review/impact/stylesheets/matched.html",
+    "screens/design-review-style-matched.html",
     "Changed styles that apply to this screen",
   ],
   [
     "design-review-style-unresolved",
-    "design/review/impact/stylesheets/unresolved.html",
+    "screens/design-review-style-unresolved.html",
     "This change can apply anywhere on the screen, so the screen stays in Changes:",
   ],
   [
     "design-review-style-unnamed",
-    "design/review/impact/stylesheets/unnamed.html",
+    "screens/design-review-style-unnamed.html",
     "This change can apply anywhere on the screen, so the screen stays in Changes.",
   ],
   [
     "design-review-style-excluded",
-    "design/review/impact/stylesheets/excluded.html",
+    "screens/design-review-style-excluded.html",
     "This stylesheet changed, but none of the changed styles apply to this screen",
   ],
   [
     "design-review-style-page-excluded",
-    "design/review/impact/stylesheets/page-excluded.html",
+    "screens/design-review-style-page-excluded.html",
     "Styles on this page changed, but none of the changed styles apply to this screen.",
   ],
 ] as const;
@@ -197,8 +192,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: stylesheet evidence states keep selectors out of headings`, async () => {
     for (const [id, route, copy] of stylesheetEvidence) {
       const { entry, document } = await designDocument(id, viewport);
-      assert.equal(entry.route, route);
-      assert.equal(entry.darkFragments, undefined);
+      assert.equal(entryRoute("screen", entry.id), route);
+      assert.deepEqual(entry.colorSchemes, ["light"]);
       const evidence = byClass(document, "mbk-comparison-details")[0];
       assert.ok(evidence, id);
       const text = textContent(evidence);

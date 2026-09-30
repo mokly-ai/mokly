@@ -7,6 +7,7 @@ import {
 } from "@mokly/viewer";
 import type {
   CatalogueReadModel,
+  ScreenNavigateEvent,
   ViewerError,
   ViewerSelection,
 } from "@mokly/viewer";
@@ -21,6 +22,10 @@ const messages: string[] = [];
 (window as unknown as { frameMessages: string[] }).frameMessages = messages;
 const errors: ViewerError[] = [];
 (window as unknown as { viewerErrors: ViewerError[] }).viewerErrors = errors;
+const navigations: ScreenNavigateEvent[] = [];
+(
+  window as unknown as { viewerNavigations: ScreenNavigateEvent[] }
+).viewerNavigations = navigations;
 window.addEventListener("message", (event) => {
   messages.push(String(event.data));
 });
@@ -54,6 +59,7 @@ function render(catalogue: CatalogueReadModel): void {
       defaultSelection={selection}
       frameAdapter={adapter}
       onError={(error) => errors.push(error)}
+      onScreenNavigate={(event) => navigations.push(event)}
       viewerId="removed-preview"
     />,
   );

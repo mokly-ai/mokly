@@ -9,7 +9,7 @@ import {
   cssSchemaFixture,
 } from "./helpers/review_css_schema.js";
 
-for (const version of [2, 3] as const) {
+for (const version of [4] as const) {
   test(`v${version} validates material even without resource evidence`, () => {
     const result = cssSchemaFixture(version);
     for (const view of result.screens[0]!.views) {
@@ -80,16 +80,13 @@ for (const version of [2, 3] as const) {
         analysis: patch,
       });
       assert.throws(() => parseReviewResult(value), /review/);
-      if (version === 3) {
-        const entry = cssSchemaFixture(3);
-        assert.ok(entry.schemaVersion === 3);
-        Object.assign(entry.changes[0]!, {
-          reasons: [
-            { kind: "dependency", path: "mockups/shared.css", analysis: patch },
-          ],
-        });
-        assert.throws(() => parseReviewResult(entry), /review/);
-      }
+      const entry = cssSchemaFixture(4);
+      Object.assign(entry.changes[0]!, {
+        reasons: [
+          { kind: "dependency", path: "mockups/shared.css", analysis: patch },
+        ],
+      });
+      assert.throws(() => parseReviewResult(entry), /review/);
     });
 
   for (const [name, patch] of [

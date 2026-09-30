@@ -51,13 +51,13 @@ Review phases use the same session, role and parent context as their caller:
   Pinned readers reuse the resolved commit without another Git span.
 - `review.changed-paths` covers output exclusions, tracked/untracked discovery,
   deduplication and sorting, including later input-freshness checks.
-- `review.base-manifest` covers historical manifest selection, reading, parsing
-  and validation, including compatibility fallback.
+- `review.base-manifest` covers canonical baseline reading, v7 validation, and
+  incompatible-version detection.
 - `review.base-documents` covers each bulk baseline-document read, including
   live component prefetch and bounded live document-comparison batches. It does
   not include subsequent lazy resource reads or an already-prefetched no-op.
 - `review.compare-screens` surrounds the complete screen comparison loop. The
-  component-aware loop also compares saved variants and entry metadata. Live
+  component-aware loop also compares component variant entries and metadata. Live
   document checks use separate occurrences for material and resource comparison
   loops; a baseline-document batch span can therefore be nested inside one.
   The component-aware loop ends with one `review.compare-screens` counts record
@@ -132,7 +132,7 @@ On a cache miss, `baseline.extract` includes Git object validation, archive
 reading and confined extraction. Each configured argv has its own zero-based
 `baseline.command[<index>]` span, including non-zero-exit validation. The exact
 configured command list is unchanged by profiling. `baseline.adopt` includes
-historical-manifest/output validation, output adoption, deleting source and
+baseline-manifest/output validation, output adoption, deleting source and
 writing the completion marker. The parent ends after cleanup and lock release,
 with `cacheHit: false`. A reused entry ends with `cacheHit: true` and omits the
 extraction, command and adoption spans. A waiter can also finish as a cache hit.
@@ -146,8 +146,8 @@ smoke-tested using the opt-in browser benchmark's under-five-second usable-start
 assertion. It runs with other heavy checks idle; CI's small correctness fixtures
 have no machine-specific wall-clock assertion.
 
-The fixture uses real React Native Web and Firna rendering, nested collections,
-saved component variants, repeated and nested component usage, caller-owned
+The fixture uses real React Native Web and Firna rendering, nested folders,
+component variant entries, repeated and nested component usage, caller-owned
 slots, both viewports and color schemes, logical links, whole-document pages,
 flows, local CSS imports, and images. Sizes are configurable. It is a repeatable
 workload for locating scaling costs, not a claim of identical production data

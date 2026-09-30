@@ -13,6 +13,7 @@ import {
 import { validateCiReports } from "../scripts/verification/aggregate.mjs";
 
 import {
+  browserInventory,
   gitExecutor,
   releaseReports,
   releaseRun,
@@ -104,6 +105,7 @@ test("evidence classification distinguishes unavailable, unrelated and invalid r
     taggedTree: TAG_TREE,
     evidenceTree: TAG_TREE,
     liveUnitFiles: unitInventory(reports),
+    liveBrowserFiles: browserInventory(reports),
   };
   assert.equal(classifyEvidence(base, validateCiReports).outcome, "applicable");
   assert.equal(
@@ -169,6 +171,13 @@ test("evidence classification distinguishes unavailable, unrelated and invalid r
     ).outcome,
     "invalid",
   );
+  assert.equal(
+    classifyEvidence(
+      { ...base, liveBrowserFiles: ["tests/browser/missing.spec.ts"] },
+      validateCiReports,
+    ).outcome,
+    "invalid",
+  );
 });
 
 test("entrypoint writes applicable evidence record and workflow output", async (t) => {
@@ -183,6 +192,7 @@ test("entrypoint writes applicable evidence record and workflow output", async (
     createGithub: () => githubFixture(run),
     readReports: async () => reports,
     discoverUnitFiles: async () => unitInventory(reports),
+    discoverBrowserFiles: async () => browserInventory(reports),
   });
   assert.deepEqual(record, {
     mode: "evidence",
@@ -192,7 +202,7 @@ test("entrypoint writes applicable evidence record and workflow output", async (
     selectedRunId: run.id,
     selectedRunUrl: run.html_url,
     evidenceCommit: TAG_COMMIT,
-    reportCount: 16,
+    reportCount: 18,
     reason: `run ${run.id} proves tagged tree ${TAG_TREE}`,
   });
   assert.deepEqual(
@@ -244,6 +254,7 @@ test("invalid evidence records complete output and exits non-zero", async (t) =>
           createGithub: () => githubFixture(releaseRun()),
           readReports: async () => reports,
           discoverUnitFiles: async () => unitInventory(),
+          discoverBrowserFiles: async () => browserInventory(),
         }),
         item.pattern,
       );

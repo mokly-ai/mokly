@@ -1,6 +1,6 @@
 import type { ColorScheme, Viewport } from "../data/axes.js";
 
-import type { ReviewResultV3 } from "./component_types.js";
+import type { ReviewResultV4 } from "./component_types.js";
 
 /** Text or binary bytes retained in one static Review artifact. */
 export type ReviewArtifactContent = string | Uint8Array;
@@ -33,10 +33,8 @@ export type InlineStyleEvidence =
   | { status: "matched" | "unresolved"; selectors: readonly string[] }
   | { status: "excluded" };
 
-/** One view comparison and its retained artifact paths. */
+/** One view comparison, addressed only by its axes. */
 export interface ViewReview {
-  afterPath?: string;
-  beforePath?: string;
   colorScheme: ColorScheme;
   ignoredIds: readonly string[];
   /** Present exactly when the view's actual comparison material differs. */
@@ -54,39 +52,20 @@ export type ViewResourceEvidence = Pick<
   "viewport" | "colorScheme" | "reasons" | "excludedResources" | "inlineStyles"
 >;
 
-/** Screen-only resource evidence retained by the existing live classification. */
+/** Screen-only resource evidence retained by live classification. */
 export interface ScreenResourceEvidence {
-  route: string;
+  id: string;
   views: readonly ViewResourceEvidence[];
 }
 
-/** One stable screen route comparison. */
+/** One stable screen identity comparison. */
 export interface ScreenReview {
   dependencies: readonly string[];
   id: string;
-  route: string;
   sharedImpact: readonly string[];
   state: ReviewState;
   title: string;
   views: readonly ViewReview[];
-}
-
-/** Deterministic machine-readable Review result. */
-export interface ReviewResultV2 {
-  /** Common ancestor shared by HEAD and the configured base ref. */
-  baseCommit: string;
-  /** Configured ref used to resolve the comparison branch point. */
-  baseRef: string;
-  changedPaths: readonly string[];
-  ignoredImpact: readonly {
-    colorScheme: ColorScheme;
-    count: number;
-    id: string;
-    viewport: Viewport;
-  }[];
-  screens: readonly ScreenReview[];
-  schemaVersion: 2;
-  sharedImpact: readonly string[];
 }
 
 /** Complete artifact file map plus summary model. */
@@ -95,5 +74,5 @@ export interface ReviewArtifact {
   result: ReviewResult;
 }
 
-/** Versioned comparison payload; legacy consumers retain schema v2. */
-export type ReviewResult = ReviewResultV2 | ReviewResultV3;
+/** The only accepted comparison payload. */
+export type ReviewResult = ReviewResultV4;

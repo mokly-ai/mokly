@@ -3,37 +3,27 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { ManifestScreen, ManifestV5 } from "../src/registry/types.js";
+import type { ManifestScreen, ManifestV7 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import type { ShellInitialState } from "../src/shell/store_state.js";
 import { StandaloneShellDocument } from "../src/standalone/document.js";
 
 const screen = {
+  colorSchemes: ["light", "dark"],
   declaredDependencies: [],
-  dependencies: [],
   description: "Welcome screen",
-  fragments: {
-    mobile: "welcome.mobile.html",
-    desktop: "welcome.desktop.html",
-  },
-  darkFragments: {
-    mobile: "welcome.mobile.dark.html",
-    desktop: "welcome.desktop.dark.html",
-  },
   id: "welcome",
   kind: "screen",
   navPath: [],
   relatedDocs: [],
-  route: "welcome.html",
   sourcePath: "entries/welcome.mockup.tsx",
   title: "Welcome",
   useCaseIds: [],
-  viewports: ["mobile", "desktop"],
 } satisfies ManifestScreen;
-const manifest: ManifestV5 = {
+const manifest: ManifestV7 = {
   entries: [screen],
   generatedBy: "mokly",
-  schemaVersion: 5,
+  schemaVersion: 7,
   sourceFiles: [screen.sourcePath],
 };
 
@@ -48,12 +38,12 @@ function render(colorScheme: "light" | "dark", home = false): string {
         base: "main",
         updateVersion: 1,
         changesStatus: "ready",
-        changedRoutes: [screen.route],
+        changedIds: [screen.id],
         componentChanges: {
           baseline: manifest,
           screenViews: [
             {
-              route: screen.route,
+              id: screen.id,
               views: [
                 { viewport: "mobile", colorScheme: "dark", state: "changed" },
               ],

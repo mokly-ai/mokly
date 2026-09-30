@@ -65,10 +65,8 @@ export default (input) => '<html><head><link rel="stylesheet" href="' + input.st
           "main",
           committedReviewRepository(fixture.config),
         );
-        const expected = matches
-          ? ["components/action.html", ...(exact ? ["screens/home.html"] : [])]
-          : [];
-        assert.deepEqual(live.changedRoutes, expected);
+        const expected = matches ? ["action", ...(exact ? ["home"] : [])] : [];
+        assert.deepEqual(live.changedIds, expected);
         const artifact = await compareReview(
           await compileCatalogue(fixture.config),
           fixture.config,
@@ -76,8 +74,8 @@ export default (input) => '<html><head><link rel="stylesheet" href="' + input.st
           "main",
         );
         const { result } = artifact;
-        assert.equal(result.schemaVersion, 3);
-        if (result.schemaVersion !== 3) return;
+        assert.equal(result.schemaVersion, 4);
+        if (result.schemaVersion !== 4) return;
         assert.deepEqual(live.componentChanges?.result, result);
         const reason = {
           kind: "dependency",
@@ -139,10 +137,10 @@ test("non-CSS declared public dependencies retain their existing file-level poli
     "main",
     committedReviewRepository(fixture.config),
   );
-  assert.deepEqual(live.changedRoutes, ["components/action.html"]);
+  assert.deepEqual(live.changedIds, ["action"]);
   const result = live.componentChanges?.result;
-  assert.equal(result?.schemaVersion, 3);
-  if (result?.schemaVersion !== 3) return;
+  assert.equal(result?.schemaVersion, 4);
+  if (result?.schemaVersion !== 4) return;
   assert.deepEqual(result.changes[0]?.reasons, [
     { kind: "dependency", path: "mockups/asset.svg" },
   ]);

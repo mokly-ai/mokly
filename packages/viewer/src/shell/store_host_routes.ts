@@ -17,6 +17,7 @@ import type { ShellContext } from "./context.js";
 import { disclosurePath } from "./nav_model.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import { routeFromUrl, type ShellRoute } from "./routes.js";
+import { sameShellRoute } from "./store_browser_routes.js";
 import type { EmbeddedShellEnvironment } from "./store_host.js";
 import { openDisclosures, type ShellState } from "./store_state.js";
 
@@ -38,18 +39,39 @@ export function hostRoute(
         selection.snapshotId,
       )
     : undefined;
-  const view =
-    entry && entry.kind !== "collection"
-      ? { kind: "target" as const, target: { kind: "entry" as const, entry } }
-      : selection.screenId === null
-        ? { kind: "home" as const }
-        : { kind: "missing" as const, requested: selection.screenId };
+  const view = entry
+    ? { kind: "target" as const, target: { kind: "entry" as const, entry } }
+    : selection.screenId === null
+      ? { kind: "home" as const }
+      : { kind: "missing" as const, requested: selection.screenId };
   return {
     view,
     ...(selection.snapshotId ? { snapshot: selection.snapshotId } : {}),
     ...(fragment ? { fragment } : {}),
-    ...(selection.variantId ? { variant: selection.variantId } : {}),
   };
+}
+
+/** Whether committing a selection must reinstall its route-owned display. */
+export function hostSelectionRouteChanged(
+  catalogue: Catalogue,
+  state: ShellState,
+  selection: ViewerSelection,
+  fragment = state.route.fragment,
+): boolean {
+  return !sameShellRoute(
+    state.route,
+    hostRoute(catalogue, selection, fragment),
+  );
+}
+
+/** Apply an unavailable frame destination only when the Viewer owns selection. */
+export function frameMissState(
+  state: ShellState,
+  route: ShellRoute,
+  sections: readonly NavSectionNode[],
+  controlled: boolean,
+): ShellState {
+  return controlled ? state : withHostRoute(state, route, sections);
 }
 
 export function withHostRoute(
@@ -59,7 +81,7 @@ export function withHostRoute(
 ): ShellState {
   const path =
     route.view.kind === "target"
-      ? disclosurePath(sections, route.view.target.entry.route)
+      ? disclosurePath(sections, route.view.target.entry.id)
       : [];
   return {
     ...state,
@@ -93,14 +115,9 @@ export function announceNavigation(
         )?.entry
       : undefined;
   if (!entry) return;
-  const variantId =
-    selection.variantId ??
-    (entry.kind === "component" ? entry.variants[0]?.id : undefined);
   environment.events().onScreenNavigate?.({
     screenId: entry.id,
-    route: entry.route,
     ...(selection.snapshotId ? { snapshotId: selection.snapshotId } : {}),
-    ...(variantId ? { variantId } : {}),
     ...(fragment ? { fragment } : {}),
     ...(pending?.navigation ? { navigation: pending.navigation } : {}),
   });
@@ -152,9 +169,7 @@ function ownedCatalogueUrl(
     (url.origin === baseUrl.origin ||
       url.origin === ownerDocument.location.origin) &&
     url.hash === "" &&
-    (url.pathname === "/" ||
-      url.pathname.startsWith("/view/") ||
-      url.pathname.startsWith("/id/"))
+    (url.pathname === "/" || url.pathname.startsWith("/view/"))
   );
 }
 

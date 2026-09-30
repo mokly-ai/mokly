@@ -53,7 +53,7 @@ test("catalogue GET/HEAD reads atomic live snapshots without rendering or Git", 
   );
   fixture.server.publishUpdate({
     kind: "evidence",
-    changedRoutes: [],
+    changedIds: [],
     version: 2,
   });
   const complete = await (await fetch(url)).json();
@@ -71,7 +71,7 @@ test("catalogue GET/HEAD reads atomic live snapshots without rendering or Git", 
   assert.equal(changed.changesStatus, "pending");
   fixture.server.publishUpdate({
     kind: "evidence",
-    changedRoutes: [],
+    changedIds: [],
     version: 2,
   });
   assert.deepEqual(await (await fetch(url)).json(), changed);

@@ -34,6 +34,7 @@ export function validateDependencyReason(
 export function validateResourceEvidence(
   view: Record<string, unknown>,
   changedPaths: readonly string[],
+  paired: boolean,
 ): void {
   if (
     view.material !== undefined &&
@@ -71,13 +72,16 @@ export function validateResourceEvidence(
     });
     requireOrdered(paths, (path) => path);
   }
-  if (view.inlineStyles !== undefined) validateInlineStyles(view);
+  if (view.inlineStyles !== undefined) validateInlineStyles(view, paired);
 }
 
-function validateInlineStyles(view: Record<string, unknown>): void {
+function validateInlineStyles(
+  view: Record<string, unknown>,
+  paired: boolean,
+): void {
   const shape = reviewObject(view.inlineStyles, ["status"], ["selectors"]);
-  const paired = view.beforePath !== undefined && view.afterPath !== undefined;
-  if (!paired) reviewInvalid("inline style evidence requires a paired view");
+  if (!paired || view.state === "added" || view.state === "removed")
+    reviewInvalid("inline style evidence requires a paired view");
   if (shape.status === "matched" || shape.status === "unresolved") {
     const evidence = reviewObject(view.inlineStyles, ["status", "selectors"]);
     const selectors = reviewStrings(evidence.selectors);

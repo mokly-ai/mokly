@@ -99,7 +99,7 @@ export function validatePackageReport(report, name = "@mokly/mokly") {
     "docs/protocol/mokly-export-ownership.md",
     "docs/protocol/fixtures/export-ownership-v1.json",
     "docs/protocol/mokly-catalogue.md",
-    "docs/protocol/fixtures/catalogue-v1.json",
+    "docs/protocol/fixtures/catalogue-v3.json",
     "dist/catalogue/projection.js",
     "dist/components/definition.js",
     "dist/server/controls/worker.js",
@@ -147,7 +147,7 @@ export async function inspectRuntimeLicenses(repositoryRoot) {
   assert.deepEqual(invalid, [], "runtime dependency licenses must be declared");
 }
 
-export function validateViewerReport(report) {
+function validateViewerReport(report) {
   assert.equal(report.name, "@mokly/viewer");
   assert.match(report.version, /^\d+\.\d+\.\d+$/);
   const files = report.files.map((file) => file.path);

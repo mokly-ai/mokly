@@ -33,11 +33,11 @@ and is not converted to a baseline history error.
    zero-based command index, argv, exit code or signal, and the last 40 output
    lines.
 5. Locate `<source>/<mockupsDir>` using the current config's repository-relative
-   `mockupsDir`. Parse its manifest with the historical-manifest reader; the
-   same version rules apply as for committed baselines. A missing directory,
-   missing manifest, or invalid manifest fails as
-   `baseline-output-invalid`. Moving `mockupsDir` between the base and head
-   commits is therefore unsupported in derived mode until the move is merged.
+   `mockupsDir`. Apply the same v7 compatibility gate as committed baselines.
+   Missing or malformed output fails as `baseline-output-invalid`; recognized
+   earlier output is cached as a completed but incompatible base so commands do
+   not rerun on every classification. Moving `mockupsDir` between base and head
+   remains unsupported until the move is merged.
 6. Move `<source>/<mockupsDir>` to the entry's `output` directory, delete the
    remaining `source` extraction including installed dependencies, write the
    completion marker. Successful completion of that write is the commit point:
@@ -77,7 +77,7 @@ and never a valid `mockupsDir`, entry glob root, resolved entry module,
 manifestVersion }`. An entry is complete only when the marker parses, its
 `commit` matches the directory name, and `output/<manifest>` exists. Anything
 else is a partial entry and is removed under the lock before the next attempt.
-The historical manifest is validated again on reuse. A complete entry with a
+The manifest compatibility result is validated again on reuse. A complete entry with a
 different `inputs.json` output path or command list fails as
 `baseline-output-invalid` and remains intact. The commit-only cache holds one
 catalogue/build configuration; remove that entry before changing those settings.

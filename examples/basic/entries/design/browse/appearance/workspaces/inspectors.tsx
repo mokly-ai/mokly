@@ -157,7 +157,6 @@ export const appearanceInspectorScreens = [
     mobile: <PropsValidation viewport="mobile" />,
     rationale:
       "Native fields, their descriptions and the message for a rejected value all have to stay legible in both appearances, so the field frame, the input surface and the error text each need their own value rather than a tint of the other one.",
-    slug: "props",
     title: "Props validation",
   }),
   screen({
@@ -168,7 +167,6 @@ export const appearanceInspectorScreens = [
     mobile: <SelectedInstance viewport="mobile" />,
     rationale:
       "Selecting a component keeps the chosen panel, its scroll position and the selected instance when the appearance changes, so the panel is drawn from the same semantic roles as the rest of the catalogue.",
-    slug: "instance",
     title: "Selected instance",
   }),
 ];

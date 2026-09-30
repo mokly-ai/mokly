@@ -1,19 +1,19 @@
 import type { ComponentViewRecord } from "@mokly/viewer";
 import {
-  componentFragmentRoute,
+  entryRoute,
   effectiveColorSchemes,
+  viewRoute,
   VIEWPORTS,
 } from "@mokly/viewer/data";
-import type { ManifestV5, ArtifactView } from "@mokly/viewer/data";
+import type { ManifestV7, ArtifactView } from "@mokly/viewer/data";
 
 import { transformCompatibilityDocuments } from "../compatibility/transform.js";
 import { validateComponentRanges } from "../components/ranges.js";
+import { isComponentVariantDefinition } from "../components/types.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
-import { MoklyError } from "../errors.js";
 import {
   createManifest,
-  fragmentRoute,
   MANIFEST_NAME,
   parseManifest,
   serializeManifest,
@@ -32,7 +32,7 @@ import { renderCooperatively } from "./render_cooperative.js";
 
 /** Complete in-memory static compilation result. */
 export interface Compilation {
-  manifest: ManifestV5;
+  manifest: ManifestV7;
   outputs: ReadonlyMap<string, string>;
 }
 
@@ -60,7 +60,7 @@ async function compileMeasured(
   timingCounts("catalogue", () => ({
     entries: registry.entries.length,
     ...Object.fromEntries(
-      ["collection", "screen", "component", "use-case", "page"].map((kind) => [
+      ["screen", "component", "use-case", "page"].map((kind) => [
         kind,
         registry.entries.filter((entry) => entry.kind === kind).length,
       ]),
@@ -89,55 +89,33 @@ async function compileMeasured(
           componentViews,
         ),
       );
-  const routedEntries = new Set(
-    registry.entries.flatMap((entry) =>
-      entry.kind === "collection" ? [] : [entry.route],
-    ),
-  );
   const generatedOwners = new Map<string, string>();
   for (const entry of registry.entries) {
     if (entry.kind === "page")
-      generatedOwners.set(entry.route, entry.sourceRelativePath);
-    if (entry.kind !== "screen" && entry.kind !== "component") continue;
-    for (const variantId of entry.kind === "component"
-      ? entry.variants.map((variant) => variant.id)
-      : [undefined]) {
+      generatedOwners.set(
+        entryRoute("page", entry.id),
+        entry.sourceRelativePath,
+      );
+    if (
+      entry.kind !== "screen" &&
+      !(entry.kind === "component" && isComponentVariantDefinition(entry))
+    )
+      continue;
+    {
       for (const viewport of VIEWPORTS) {
         for (const colorScheme of effectiveColorSchemes(
           entry,
           config.colorSchemes,
         )) {
           generatedOwners.set(
-            variantId
-              ? componentFragmentRoute(
-                  entry.route,
-                  variantId,
-                  viewport,
-                  colorScheme,
-                )
-              : fragmentRoute(entry.route, viewport, colorScheme),
+            viewRoute(entry.kind, entry.id, viewport, colorScheme),
             entry.sourceRelativePath,
           );
         }
       }
     }
   }
-  const fragmentRoutes = new Set(
-    [...generatedOwners.keys()].filter(
-      (route) =>
-        !registry.entries.some(
-          (entry) => entry.kind === "page" && entry.route === route,
-        ),
-    ),
-  );
-  for (const route of routedEntries) {
-    if (fragmentRoutes.has(route)) {
-      throw new MoklyError(
-        "build-invalid",
-        `fragment route collides with registry route: ${route}`,
-      );
-    }
-  }
+
   await accepted?.checkpoint();
   const logicalRecords = timeSync("html.compatibility", () =>
     transformCompatibilityDocuments(

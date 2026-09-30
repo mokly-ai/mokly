@@ -10,28 +10,22 @@ assertions, and historical readers discard the retired arrays. References
 inside inferred-owned rules follow their owners through the ordinary resource
 graph, including on the fast path. Component-aware results carry validated
 `inlineStyles` evidence and the shell presents each outcome. This document owns
-the analysis, attribution, comparison material, membership and evidence rules for
+the analysis, attribution, comparison material and membership rules for
 style material that a renderer places outside component markup. The
 [CSS change attribution contract](./mokly-css-attribution.md) owns the
 parser, rule diff, keep list and matcher that this analysis reuses; the
 [changes contract](./mokly-changes.md) owns the definition of a view's
 `material` flag and states; the
-[CSS evidence shell contract](./mokly-css-evidence-shell.md) owns the
+[CSS evidence presentation contract](./mokly-css-evidence-presentation.md) owns the
 presentation.
 
 ## Purpose
 
-A styling library can write the CSS of a registered component into a
-`<style>` element in the document head, outside every recorded component
-range. React Native Web atomic classes and CSS-in-JS output work this way.
-Markup ownership cannot attribute that CSS, and a renderer cannot know which
-registered component produced a rule. Mokly therefore infers the owner of each
-changed head rule from the rendered documents themselves: a rule belongs to
-the paired component instances whose markup it can match. The same sound
-matchability argument that narrows linked stylesheet evidence applies. The
-inference can prove a rule reaches only component-owned markup, or no markup
-at all; it never claims a rule has no visible effect when it can match
-entry-owned markup.
+Styling libraries can place component CSS outside recorded markup ranges,
+including atomic React Native Web rules and CSS-in-JS head output. Mokly
+therefore infers each changed rule's owner from all matching elements in the
+paired documents. It can prove a rule reaches only component-owned markup or
+no markup, but never claims exclusion when a rule reaches entry-owned markup.
 
 ## Scope
 
@@ -40,10 +34,9 @@ usage records on both sides, including a component-aware view whose records
 contain no instances. The complete path always considers it; the fast path runs
 it only for possible references. A one-sided view or a paired view missing
 either usage record keeps the existing comparison behavior.
-Catalogues without registered components keep the schema-v2 classifier, where
-an inline style edit remains an ordinary material change. One-sided views run
-no analysis. Views settled by the
-[unchanged view decision](./mokly-component-changes.md#unchanged-view-decision)
+Without component usage, inline style edits remain ordinary material changes
+in the unified v4 classifier. One-sided views run no analysis. Views settled by the
+[unchanged view decision](./mokly-component-review-fast-path.md)
 have equal marker-retaining documents, so there is nothing to diff; the
 analysis runs there only when an unowned rule carries a `url()` or `@import`
 reference, so that projected resource discovery applies the same exclusion on
@@ -58,7 +51,7 @@ elements. Their `type` attribute is absent, empty or ASCII-case-insensitively
 in the document and compares as ordinary markup. An eligible element is
 unowned when its start offset lies inside no recorded range and no paired
 manual-ignore region. It is located on each side's original document with the
-ranges validated in that side's own marker dialect. Its span uses that
+validated v7 ranges. Its span uses that
 document's coordinates and covers the start tag's start through the end tag's
 end; the record retains both that outer source and the content text between
 the tags.
@@ -66,9 +59,8 @@ the tags.
 Style elements inside an instance range already belong to that instance
 through markup ownership; style elements inside a slot range belong to the
 slot's owner. Ignore pairing exposes ids rather than normalized offsets,
-because generated-source removal and historical marker normalization change
-lengths. The span finder walks the original document's comment nodes, accepts
-current and retired ignore prefixes and leaves an element inside a paired id
+because generated-source removal changes lengths. The span finder walks the original document's comment nodes, accepts
+the current ignore prefix and leaves an element inside a paired id
 in place. A one-sided region remains ordinary analyzed material. The renderer
 supplies only the document string; the manifest supplies no head-style or
 public-resource assertions.
@@ -85,9 +77,9 @@ multisets are equal.
 ## Analysis
 
 1. **Documents.** Derive the paired ignore ids and marker-retaining texts once
-   with `normalizeReviewPair(normalizeHistoricalDocument(base), head, path)`.
+   with `normalizeReviewPair(base, head, path)` on validated v7 documents.
    Span discovery runs first against the original documents and their
-   own-dialect ranges. If the eligible outer-source sequences are identical and
+   v7 ranges. If the eligible outer-source sequences are identical and
    their parsed rules contain no reference, stop before validating ranges
    against the normalized texts or parsing source-located trees. Otherwise
    validate both sides' ranges against those texts and parse each side once
@@ -206,31 +198,8 @@ when no saved variant exercises the edited rule. A component's own
 saved-variant page reports root-owned rule edits as material through the
 ordinary entry path, because root-owned elements resolve to the entry.
 
-A `url()` or `@import` reference inside an owned rule follows that rule's
-owner: the projected material omits the rule, so the referenced file is not
-discovered as entry material, and an actual-view dependency reason for a path
-reached only through owned rules is attributed to those owners in the same
-way `ownedDependencies` owners are. A reference inside an `excluded` rule is
-discovered by neither material. A reference inside an `unresolved` or `entry`
-rule remains entry material.
-
-For ownership, canonically render the reference-bearing rules for each distinct
-component-owner set and traverse that fragment through the corresponding
-side's ordinary resource reader at the view route. Relative paths, the
-catalogue prefix, CSS imports and all transitive resources therefore resolve
-exactly as they do for actual material. Owners for one retained actual-view
-dependency reason are the union of matching inline owner sets and
-`ownedDependencies`, filtered to components present in that view. If projected
-entry material independently reaches the same path, its entry reason remains.
-In derived mode, a byte-only difference without Git evidence gives inferred
-owners a component `material` reason, matching `ownedDependencies`; it does not
-invent a dependency reason or changed path.
-
-An unchanged reference-bearing rule renders on both actual sides. If it is
-owned or excluded, its paired rule objects remove it symmetrically from both
-projected sides (and from both actual sides when excluded). It never contributes
-retained selectors, all-excluded evidence, material inequality or inline-style
-evidence; its sole purpose is resource ownership and exclusion.
+The [inline resource contract](./mokly-inline-style-resources.md) owns
+reference-bearing rule propagation, transitive paths and byte-only changes.
 
 ## Membership And States
 
@@ -252,57 +221,13 @@ materials decide `unchanged` against `ignored-only`.
   material, metadata, caller inputs, structure, linked-resource evidence,
   component ownership and use-case screen reasons.
 
-## Evidence Schema
+## Result Evidence
 
-`ViewReview` gains one optional field, allowed in both result schema versions
-and emitted only by the component-aware classifier:
-
-```ts
-type InlineStyleEvidence =
-  | { status: "matched" | "unresolved"; selectors: readonly string[] }
-  | { status: "excluded" };
-
-interface ViewReview {
-  // existing fields unchanged
-  inlineStyles?: InlineStyleEvidence;
-}
-```
-
-`matched` and `unresolved` mean the entry retained at least one analyzed
-diffed rule; `selectors` lists those rules' selectors in their original
-serialized form, sorted lexically by UTF-16 code units and duplicate-free.
-`unresolved` takes precedence when both apply and may have an empty list;
-`matched` requires at least one selector. `excluded` means the diff produced
-at least one rule, every diffed rule was excluded, and the view's resulting
-state is `unchanged`. When excluded rules exist but the view's state is
-`changed` or `ignored-only`, the view retains any reason, or owned rules
-exist, the field is omitted, because the view's other evidence explains it.
-Reference-bearing rules that are not diffed contribute no evidence. Views
-settled by the unchanged decision, one-sided views and views without unowned
-inline style differences carry no field.
-
-The component-aware live classification snapshot's full schema-v3 result, the
-complete comparison artifact, static publication and the selected live
-component-aware endpoint carry `inlineStyles` beside `reasons` and
-`excludedResources`, with the same omission and canonical ordering rules.
-Schema-v2 `screenEvidence` is produced only for catalogues without registered
-components, where inline ownership never runs, so that lightweight slice never
-carries the field. Schema versions do not change; results without the field
-remain valid and mean the analysis did not run.
-
-## Validation
-
-- `status` is one of `matched`, `unresolved` or `excluded`; `selectors` is
-  present exactly for `matched` and `unresolved`, sorted and duplicate-free,
-  and non-empty for `matched`.
-- A view carrying `inlineStyles` with status `matched` or `unresolved` has
-  state `changed` and `material`; a view carrying status `excluded` has state
-  `unchanged`, no `material` and no reason of its own.
-- The field never appears on one-sided views. Unknown keys and inconsistent
-  shapes fail rather than being dropped.
-- Browse's lightweight classification, complete comparison generation,
-  publishing and the selected live endpoint use one implementation and produce
-  identical membership and evidence.
+The [inline evidence contract](./mokly-inline-style-evidence.md)
+owns the optional `inlineStyles` shape, coupling to states and material, and
+delivery through live, complete, selected and published v4 results. The
+[validation contract](./mokly-component-review-validation.md#inline-style-evidence-validation)
+owns strict paired-view validation and canonical selector order.
 
 ## Diagnostics
 

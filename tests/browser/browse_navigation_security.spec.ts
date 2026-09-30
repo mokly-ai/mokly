@@ -92,8 +92,43 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
               .__moklyOpenCalls,
         ),
       )
-      .toEqual([["/id/details?fragment=section", "_blank", "noopener"]]);
+      .toEqual([
+        ["/view/screens/details.html?fragment=section", "_blank", "noopener"],
+      ]);
     await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+  });
+
+  await test.step("named target is opened at its canonical view URL", async () => {
+    await page.goto(`${navigation.url}/view/screens/home.html`);
+    await page.evaluate(() => {
+      const shell = window as typeof window & {
+        __moklyOpenCalls?: unknown[][];
+      };
+      shell.__moklyOpenCalls = [];
+      shell.open = (...args: Parameters<typeof window.open>) => {
+        shell.__moklyOpenCalls?.push(args);
+        return null;
+      };
+    });
+    await page
+      .frameLocator(".mbk-frame-mobile iframe")
+      .locator("#named-link")
+      .click();
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            (window as typeof window & { __moklyOpenCalls?: unknown[][] })
+              .__moklyOpenCalls,
+        ),
+      )
+      .toEqual([
+        [
+          "/view/screens/details.html?fragment=section",
+          "DetailsFrame",
+          "noopener",
+        ],
+      ]);
   });
 
   for (const selector of ["#top-link", "#parent-link"]) {

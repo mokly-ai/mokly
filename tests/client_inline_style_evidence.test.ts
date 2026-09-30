@@ -30,7 +30,7 @@ test("excluded page styles use the saved-view terminal copy", () => {
   });
   assert.match(
     markup,
-    /Styles on this page changed, but none of the changed styles apply to this screen\.<\/p><p>No changes to this saved view\./,
+    /Styles on this page changed, but none of the changed styles apply to this variant\.<\/p><p>No changes to this saved view\./,
   );
   assert.doesNotMatch(markup, /No changes to this screen\./);
 });

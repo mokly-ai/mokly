@@ -1,4 +1,6 @@
 /** Worker transfer never includes unrelated rendered HTML or usage evidence. */
+import { isManifestComponentVariant } from "@mokly/viewer/data";
+
 import type { ComponentRuntime } from "./component_runtime.js";
 
 export function compactRuntime(runtime: ComponentRuntime): ComponentRuntime {
@@ -14,13 +16,10 @@ export function compactRuntime(runtime: ComponentRuntime): ComponentRuntime {
           const { componentViews: _usage, ...metadata } = entry;
           return metadata;
         }
-        if (entry.kind === "component")
+        if (entry.kind === "component" && isManifestComponentVariant(entry))
           return {
             ...entry,
-            variants: entry.variants.map((variant) => ({
-              ...variant,
-              componentViews: [],
-            })),
+            componentViews: [],
           };
         return entry;
       }),

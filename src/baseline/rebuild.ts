@@ -142,7 +142,6 @@ export class CachedBaselineBuilder implements BaselineBuilder {
               this.fs,
               request.repoRoot,
               output,
-              request.allowManifestV2,
               request.signal,
             );
             await validateOutputTree(this.fs, output, request.signal);

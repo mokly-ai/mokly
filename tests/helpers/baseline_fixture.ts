@@ -19,7 +19,7 @@ import { MemoryBaselineFileSystem } from "./baseline_memory.js";
 
 export const baselineCommit = "a".repeat(40);
 export const baselineManifest = {
-  schemaVersion: 5,
+  schemaVersion: 7,
   generatedBy: "mokly",
   entries: [],
   sourceFiles: [],

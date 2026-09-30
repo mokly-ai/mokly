@@ -175,22 +175,21 @@ function soloScreen(changed: boolean): string {
 /** Authored entries for the region catalogue before and after the change. */
 export function comparisonRegionsSource(changed: boolean): string {
   const screen = (id: string, title: string, body: string) =>
-    `defineScreen({ ...metadata, id: "${id}", title: "${title}", route: "screens/${id}.html", description: "${title} screen", useCaseIds: [], mobile: ${body}, desktop: ${body} })`;
-  return `import { defineCollection, defineComponent, defineScreen } from "@mokly/mokly";
+    `defineScreen({ ...metadata, id: "${id}", title: "${title}", description: "${title} screen", useCaseIds: [], mobile: ${body}, desktop: ${body} })`;
+  return `import { defineComponent, defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"] };
+const metadata = { dependencies: ["notes.md"], navPath: ["Regions"], relatedDocs: ["notes.md"] };
 const rows = Array.from({ length: 20 }, (_, index) => index);
 const tasks = defineComponent({ ...metadata,
-  id: "tasks", title: "Tasks", description: "A list that scrolls inside its box", route: "components/tasks.html",
+  id: "tasks", title: "Tasks", description: "A list that scrolls inside its box",
   propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } },
   render: (props) => <ul aria-label="Tasks" className="rg-tasks">{rows.map((row) => <li className="rg-task" key={row}>{row === 3 ? props.label : "Task " + (row + 10)}</li>)}</ul>,
-  variants: [{ id: "list", title: "List", props: { label: "${changed ? "Current" : "Previous"} task" } }]
+  variants: [{ id: "tasks-list", title: "List", props: { label: "${changed ? "Current" : "Previous"} task" } }]
 });
 export const mockups = [
-  defineCollection({ ...metadata, childIds: ["shell", "page", "solo", "tasks"], description: "Region fixtures", id: "regions", title: "Regions" }),
   ${screen("shell", "Shell", shellScreen(changed))},
   ${screen("page", "Page", pageScreen(changed))},
   ${screen("solo", "Solo", soloScreen(changed))},
-  tasks.entry
+  ...tasks.entries
 ];`;
 }

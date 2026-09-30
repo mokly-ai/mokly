@@ -5,10 +5,7 @@ import type {
   ViewReview,
 } from "@mokly/viewer/data";
 
-import {
-  stripHistoricalMarkers,
-  stripMarkers,
-} from "../components/comparison_material.js";
+import { stripMarkers } from "../components/comparison_material.js";
 import { changedComponentImplementations } from "../components/comparison_projection.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { MoklyError } from "../errors.js";
@@ -32,7 +29,6 @@ import { changedResourceBytes } from "./component_resource_changes.js";
 import type { ComponentMaterialReader } from "./component_resources.js";
 import { compareUnchangedComponentView } from "./component_view_fast_path.js";
 import { normalizeSingleDocument } from "./ignore.js";
-import { snapshotPath } from "./paths.js";
 import type { ResourceComparison } from "./resource_comparison.js";
 
 export interface ComparedComponentView {
@@ -76,15 +72,13 @@ export async function compareComponentView(
     viewport: selected.viewport,
     colorScheme: selected.colorScheme,
     ignoredIds: [],
-    ...(before ? { beforePath: snapshotPath("before", before.path) } : {}),
-    ...(after ? { afterPath: snapshotPath("after", after.path) } : {}),
     state: before ? "removed" : "added",
   };
   if (base === undefined || head === undefined) {
     const normalized =
       base !== undefined
-        ? normalizeOneSidedView(base, before!, "historical")
-        : normalizeOneSidedView(head!, after!, "current");
+        ? normalizeOneSidedView(base, before!)
+        : normalizeOneSidedView(head!, after!);
     const evidence = await context.resources.compare(
       before ? { path: before.path, html: normalized } : undefined,
       after ? { path: after.path, html: normalized } : undefined,
@@ -267,14 +261,10 @@ function deliveredInlineStyles(
 function normalizeOneSidedView(
   html: string,
   view: GeneratedComponentView,
-  dialect: "current" | "historical",
 ): string {
   const ranges = view.usage
-    ? validateComponentRanges(html, view.usage.ranges, dialect)
+    ? validateComponentRanges(html, view.usage.ranges)
     : undefined;
-  const material =
-    dialect === "historical"
-      ? stripHistoricalMarkers(html)
-      : stripMarkers(html, view.usage, ranges);
+  const material = stripMarkers(html, view.usage, ranges);
   return normalizeSingleDocument(material, view.path);
 }

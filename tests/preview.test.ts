@@ -5,6 +5,9 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { buildPreview } from "../scripts/preview/catalogue.mjs";
+
+import { createCommittedExampleBaseline } from "./helpers/example_baseline.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
@@ -12,22 +15,15 @@ const execute = promisify(execFile);
 test("preview build snapshots a static Browse catalogue", async (context) => {
   const contextDir = path.join(repositoryRoot, ".context");
   await fs.promises.mkdir(contextDir, { recursive: true });
-  const output = await fs.promises.mkdtemp(
-    path.join(contextDir, "preview-test-"),
+  const root = await fs.promises.mkdtemp(
+    path.join(contextDir, "preview-test-root-"),
   );
-  await fs.promises.rm(output, { recursive: true });
-  context.after(() => fs.promises.rm(output, { force: true, recursive: true }));
+  const output = path.join(root, ".context/preview");
+  context.after(() => fs.promises.rm(root, { force: true, recursive: true }));
+  const config = await createCommittedExampleBaseline(root, "static-example");
 
-  await execute(
-    process.execPath,
-    ["scripts/preview/build.mjs", "--include-changes", "--out", output],
-    { cwd: repositoryRoot },
-  );
-  await execute(
-    process.execPath,
-    ["scripts/preview/build.mjs", "--include-changes", "--out", output],
-    { cwd: repositoryRoot },
-  );
+  await buildPreview(config, output, { includeChanges: true, base: "HEAD" });
+  await buildPreview(config, output, { includeChanges: true, base: "HEAD" });
 
   await assertClientGraphIsComplete(output);
   const index = await read(output, "index.html");
@@ -36,11 +32,11 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   assert.match(index, /class="mbk-nav-filter-count">\d+</);
   assert.match(index, /\/__mokly\/client\/react-shell\.js/);
   assert.doesNotMatch(index, /\/__mokly\/client\/browser\.js/);
-  assert.match(index, /href="\/view\/screens\/welcome"/);
-  assert.doesNotMatch(index, /href="\/view\/screens\/welcome\.html"/);
-  const welcome = await read(output, "view/screens/welcome.html");
+  assert.match(index, /href="\/view\/screens\/example-welcome"/);
+  assert.doesNotMatch(index, /href="\/view\/screens\/example-welcome\.html"/);
+  const welcome = await read(output, "view/screens/example-welcome.html");
   assert.match(welcome, /Welcome · Mokly/);
-  assert.match(welcome, /data-diff-screen="screens\/welcome.html"/);
+  assert.match(welcome, /data-diff-screen="example-welcome"/);
   for (const mode of ["current", "side", "overlay", "difference"])
     assert.match(welcome, new RegExp(`data-diff-mode="${mode}"`));
   // A static export carries the one Appearance control, and requests the asset
@@ -55,24 +51,24 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
     /<iframe[^>]*data-fragment-light="([^"]+)"[^>]*src="([^"]+)"/,
   );
   assert.ok(frame);
-  assert.equal(frame[1], "/static/screens/welcome.mobile");
+  assert.equal(frame[1], "/static/screens/example-welcome.mobile");
   assert.equal(frame[2], frame[1]);
   assert.match(
     welcome,
-    /data-fragment-dark="\/static\/screens\/welcome\.mobile\.dark"/,
+    /data-fragment-dark="\/static\/screens\/example-welcome\.mobile\.dark"/,
   );
-  assert.match(welcome, /src="\/static\/screens\/welcome\.desktop"/);
+  assert.match(welcome, /src="\/static\/screens\/example-welcome\.desktop"/);
   assert.doesNotMatch(
     welcome,
-    /src="\/static\/screens\/welcome\.desktop\.html"/,
+    /src="\/static\/screens\/example-welcome\.desktop\.html"/,
   );
   assert.doesNotMatch(welcome, /data-fragment-(?:light|dark)="[^"]+\.html"/);
   assert.match(
-    await read(output, "static/screens/welcome.desktop.html"),
+    await read(output, "static/screens/example-welcome.desktop.html"),
     /Welcome to Mokly/,
   );
   assert.match(
-    await read(output, "static/screens/welcome.desktop.dark.html"),
+    await read(output, "static/screens/example-welcome.desktop.dark.html"),
     /data-color-scheme="dark"/,
   );
   assert.match(await read(output, "__mokly/shell.css"), /--mbk-/);
@@ -88,10 +84,7 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
     ).size > 0,
   );
   assert.match(await read(output, "404.html"), /Item not found/);
-  assert.match(
-    await read(output, "_redirects"),
-    /\/id\/example-welcome \/view\/screens\/welcome 302/,
-  );
+  assert.doesNotMatch(await read(output, "_redirects"), /^\/id\//m);
   assert.equal(
     await read(output, ".mokly-preview-artifact"),
     "schemaVersion=1\n",

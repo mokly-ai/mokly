@@ -1,9 +1,9 @@
 import type { ServerResponse } from "node:http";
 
 import {
-  encodeUrlPath,
   isHistoricalSnapshotId,
-  resolveCatalogueRoute,
+  parseViewHref,
+  resolveCatalogueEntry,
 } from "@mokly/viewer/data";
 import { catalogueRouteEntry } from "@mokly/viewer/server";
 import type { Catalogue, ShellContext } from "@mokly/viewer/server";
@@ -11,61 +11,9 @@ import type { Catalogue, ShellContext } from "@mokly/viewer/server";
 import type { ResolvedConfig } from "../config/types.js";
 
 import type { DocumentService } from "./demand/service.js";
-import { requestedFragment, withFragmentQuery } from "./fragments.js";
+import { requestedFragment } from "./fragments.js";
 import { notFoundPage, viewPage } from "./pages.js";
-import { safeDecode, safeDecodePath, send } from "./respond.js";
-
-export async function redirectId(
-  response: ServerResponse,
-  url: URL,
-  encodedId: string,
-  catalogue: Catalogue,
-  config: ResolvedConfig,
-  context: ShellContext,
-  method: string,
-  documents?: DocumentService,
-): Promise<void> {
-  if (url.searchParams.has("snapshot"))
-    return send(
-      response,
-      400,
-      "text/plain",
-      "This version is unavailable. Open it from Changes.",
-      method,
-    );
-  const entry = catalogue.byId.get(safeDecode(encodedId));
-  if (!entry || entry.kind === "collection")
-    return send(
-      response,
-      404,
-      "text/html",
-      notFoundPage(encodedId, catalogue, context),
-      method,
-    );
-  const fragment = await requestedFragment(
-    url,
-    entry,
-    catalogue,
-    config,
-    documents,
-  );
-  if (fragment === null) {
-    return send(response, 400, "text/plain", "Invalid fragment query", method);
-  }
-  const selected = context.readModel
-    ? resolveCatalogueRoute(context.readModel, entry.route)
-    : undefined;
-  const location = new URL(
-    withFragmentQuery(`/view/${encodeUrlPath(entry.route)}`, fragment),
-    "https://mokly.invalid",
-  );
-  if (selected?.snapshotId)
-    location.searchParams.set("snapshot", selected.snapshotId);
-  response.writeHead(302, {
-    location: `${location.pathname}${location.search}`,
-  });
-  response.end();
-}
+import { safeDecodePath, send } from "./respond.js";
 
 export async function renderView(
   response: ServerResponse,
@@ -78,6 +26,7 @@ export async function renderView(
   documents?: DocumentService,
 ): Promise<void> {
   const route = safeDecodePath(encodedRoute);
+  const identity = route ? parseViewHref(`/view/${route}`) : undefined;
   const snapshots = url.searchParams.getAll("snapshot");
   const requestedSnapshot = snapshots.length === 1 ? snapshots[0] : undefined;
   if (
@@ -93,16 +42,26 @@ export async function renderView(
       method,
     );
   const selected =
-    route && context.readModel
-      ? resolveCatalogueRoute(context.readModel, route, requestedSnapshot)
+    identity && context.readModel
+      ? resolveCatalogueEntry(context.readModel, identity, requestedSnapshot)
       : undefined;
-  const entry = route
+  const entry = identity
     ? context.readModel
       ? selected
-        ? catalogueRouteEntry(catalogue, selected.entry.route)
+        ? selected.snapshotId
+          ? catalogue.removedEntries.find(
+              ({ entry: candidate }) =>
+                candidate.id === selected.entry.id &&
+                candidate.kind === selected.entry.kind,
+            )?.entry
+          : catalogueRouteEntry(
+              catalogue,
+              selected.entry.id,
+              selected.entry.kind,
+            )
         : undefined
       : requestedSnapshot === undefined
-        ? catalogueRouteEntry(catalogue, route)
+        ? catalogueRouteEntry(catalogue, identity.id, identity.kind)
         : undefined
     : undefined;
   if (!entry)
@@ -114,9 +73,11 @@ export async function renderView(
       method,
     );
   const manifestEntry = "kind" in entry ? entry : undefined;
-  const removed = catalogue.removedEntries.some(
-    ({ entry }) => entry.route === route,
-  );
+  const removed = context.readModel
+    ? selected?.snapshotId !== undefined
+    : catalogue.removedEntries.some(
+        ({ entry: candidate }) => candidate === entry,
+      );
   const fragment = removed
     ? url.searchParams.has("fragment")
       ? null
@@ -127,7 +88,7 @@ export async function renderView(
   }
   const viewContext = {
     ...context,
-    ...(route ? { activeRoute: route } : {}),
+    activeId: entry.id,
     ...(fragment ? { fragment } : {}),
     ...(selected?.snapshotId ? { snapshotId: selected.snapshotId } : {}),
   };

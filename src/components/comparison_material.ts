@@ -2,15 +2,9 @@ import type { ComponentInputOwner, ComponentViewRecord } from "@mokly/viewer";
 import { canonicalJson } from "@mokly/viewer/data";
 
 import type { InlineMaterialProjection } from "../review/css/inline_rendering.js";
-import { normalizeHistoricalDocument } from "../review/ignore.js";
 
 import { instanceInputs, instanceStructure } from "./instance_structure.js";
 import { validateComponentRanges, type RenderedRange } from "./ranges.js";
-
-/** Canonicalize historical material only after its original coordinates are consumed. */
-export function stripHistoricalMarkers(html: string): string {
-  return stripMarkers(normalizeHistoricalDocument(html));
-}
 
 /** Strip current component boundary comments without validating ownership ranges. */
 export function stripComponentMarkers(html: string): string {

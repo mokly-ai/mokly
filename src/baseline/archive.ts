@@ -6,7 +6,7 @@ import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { MAX_ARCHIVE_BYTES } from "./process.js";
 
-export const MAX_ARCHIVE_ENTRIES = 65_536;
+const MAX_ARCHIVE_ENTRIES = 65_536;
 export interface ArchiveEntry {
   readonly path: string;
   readonly kind: "file" | "directory" | "symlink";

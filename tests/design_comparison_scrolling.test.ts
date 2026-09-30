@@ -3,6 +3,8 @@ import test from "node:test";
 
 import { parse } from "parse5";
 
+import { generatedViews } from "../packages/viewer/dist/components/views.js";
+
 import {
   attribute,
   byClass,
@@ -148,34 +150,27 @@ const DIFF_MODE_DESIGNS = [
   "design-review-style-matched",
   "design-review-style-unnamed",
   "design-review-style-unresolved",
-  "design-ui-comparison-toolbar/difference",
-  "design-ui-comparison-toolbar/overlay",
-  "design-ui-comparison-toolbar/side-by-side",
-  "design-ui-comparison-toolbar/side-by-side-apart",
+  "design-ui-comparison-toolbar-difference",
+  "design-ui-comparison-toolbar-overlay",
+  "design-ui-comparison-toolbar-side-by-side",
+  "design-ui-comparison-toolbar-side-by-side-apart",
 ];
 
 /** The designs that depict Scroll together switched off. */
 const SCROLLING_APART = new Set([
   "design-changes-side-by-side-apart",
-  "design-ui-comparison-toolbar/side-by-side-apart",
+  "design-ui-comparison-toolbar-side-by-side-apart",
 ]);
 
 test("every diff-mode band draws Scroll together after its modes, and Current never does", async () => {
   const { manifest, outputs } = await designCatalogue;
   const views = manifest.entries.flatMap((entry) => {
     if (entry.kind !== "screen" && entry.kind !== "component") return [];
-    if (!entry.route.startsWith("design/")) return [];
-    if (entry.kind === "screen")
-      return [
-        ...Object.values(entry.fragments),
-        ...Object.values(entry.darkFragments ?? {}),
-      ].map((route) => ({ id: entry.id, route }));
-    return entry.variants.flatMap((variant) =>
-      Object.values(variant.fragments).map((route) => ({
-        id: `${entry.id}/${variant.id}`,
-        route,
-      })),
-    );
+    if (!entry.id.startsWith("design-")) return [];
+    return generatedViews(entry).map((view) => ({
+      id: entry.id,
+      route: view.path,
+    }));
   });
   const diffModes = new Set<string>();
   let current = 0;

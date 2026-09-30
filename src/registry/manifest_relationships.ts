@@ -1,6 +1,5 @@
 import { analyzeHierarchy, type HierarchyEntry } from "@mokly/viewer/data";
 
-import { isScreenVariantRoute } from "../authoring/variants.js";
 import { MoklyError } from "../errors.js";
 
 type ValidatedManifestEntry = Record<string, unknown> & HierarchyEntry;
@@ -12,14 +11,23 @@ export function validateManifestRelationships(
 ): void {
   const hierarchyEntries = entries as readonly ValidatedManifestEntry[];
   const hierarchyIssue = analyzeHierarchy(hierarchyEntries).issues[0];
-  if (hierarchyIssue) {
+  if (hierarchyIssue)
     relationshipError(hierarchyIssue.entry, hierarchyIssue.message);
-  }
-  validateVariantClaims(entries, byId);
   for (const entry of entries) {
     if (entry.kind === "screen") validateScreen(entry, byId);
+    else if (entry.kind === "component") validateVariantParent(entry, byId);
     else if (entry.kind === "use-case") validateUseCase(entry, byId);
   }
+  for (const entry of entries)
+    if (
+      entry.kind === "component" &&
+      typeof entry.variantOf !== "string" &&
+      !entries.some(
+        (candidate) =>
+          candidate.kind === "component" && candidate.variantOf === entry.id,
+      )
+    )
+      relationshipError(entry, "component has no variants");
 }
 
 function validateScreen(
@@ -51,32 +59,14 @@ function validateVariantParent(
 ): void {
   if (typeof entry.variantOf !== "string") return;
   const parent = byId.get(entry.variantOf);
-  if (!parent) relationshipError(entry, "parent screen does not exist");
-  if (parent.kind !== "screen")
-    relationshipError(entry, "parent is not a screen");
+  if (!parent) relationshipError(entry, "variant parent does not exist");
+  if (parent.kind !== entry.kind)
+    relationshipError(entry, `parent is not a ${String(entry.kind)}`);
   if (typeof parent.variantOf === "string") {
     relationshipError(entry, "parent is itself a variant");
   }
-  if (!isScreenVariantRoute(parent.route as string, entry.route as string)) {
-    relationshipError(entry, "route does not match its parent screen");
-  }
-}
-
-function validateVariantClaims(
-  entries: readonly Record<string, unknown>[],
-  byId: ReadonlyMap<string, Record<string, unknown>>,
-): void {
-  for (const collection of entries) {
-    if (collection.kind !== "collection") continue;
-    for (const childId of collection.childIds as string[]) {
-      const child = byId.get(childId);
-      if (child?.kind === "screen" && typeof child.variantOf === "string") {
-        relationshipError(
-          collection,
-          `collection ${String(collection.id)} claims variant ${childId}`,
-        );
-      }
-    }
+  if (JSON.stringify(entry.navPath) !== JSON.stringify(parent.navPath)) {
+    relationshipError(entry, "variant navPath does not match parent");
   }
 }
 

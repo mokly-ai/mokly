@@ -1,9 +1,9 @@
 // Shared Mokly shell glyphs: the disclosure chevron, the closed / open
-// folder icons for collapsible collections, the screen / page / use-case leaf
+// folder icons for collapsible folders, the screen / page / use-case leaf
 // icons, the top bar's brand, search and tag controls, and the device chrome's
 // copy and expand / collapse controls. Icons are stroke-based on a 24-unit
 // viewBox and inherit `currentColor`; the brand mark is the filled Mokly logo
-// on its own 32-unit grid. Authored collection groups swap closed and open
+// on its own 32-unit grid. Authored folder groups swap closed and open
 // folder icons; top-level catalogue sections and the details inspector use the
 // chevron.
 
@@ -66,7 +66,7 @@ export function ChevronIcon(props: { size?: number }) {
   );
 }
 
-/** A collapsed collection: a closed folder that groups child screens/pages. */
+/** A collapsed folder that groups child screens/pages. */
 export function FolderIcon(props: { size?: number }) {
   return (
     <IconSvg size={props.size ?? 13}>
@@ -75,7 +75,7 @@ export function FolderIcon(props: { size?: number }) {
   );
 }
 
-/** An expanded collection: an open folder revealing its contents. */
+/** An expanded folder revealing its contents. */
 export function FolderOpenIcon(props: { size?: number }) {
   return (
     <IconSvg size={props.size ?? 13}>
@@ -108,6 +108,24 @@ export function VariantIcon(props: { size?: number }) {
       <rect height={14} rx={2} width={16} x={2} y={6} />
       <path d="M2 10h16" />
     </IconSvg>
+  );
+}
+
+/** A component variant drawn over the partial outline of its parent kind. */
+export function ComponentVariantIcon(props: { size?: number }) {
+  const size = props.size ?? 15;
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height={size}
+      stroke="currentColor"
+      viewBox="0 0 16 16"
+      width={size}
+    >
+      <path d="M6 4.5V3L10.5.5l5 2.9v5.8L12 11.3" strokeLinecap="butt" />
+      <path d="m6 4.5 5 2.9v5.3l-5 2.9-5-2.9V7.4l5-2.9Zm0 5.8 5-2.9M6 10.3v5.3M6 10.3 1 7.4" />
+    </svg>
   );
 }
 

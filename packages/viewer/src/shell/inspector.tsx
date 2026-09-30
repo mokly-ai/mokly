@@ -16,8 +16,9 @@ import {
 } from "./identifier_context.js";
 import { useOptionalShellStore } from "./store_context.js";
 import type { WorkspaceData } from "./workspace_data.js";
+import { workspaceEvidenceEntry } from "./workspace_entry.js";
 import { WorkspaceIcon, type WorkspaceIconName } from "./workspace_icons.js";
-import { selectedVariantId } from "./workspace_selection.js";
+import { selectedVariant } from "./workspace_selection.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
 
 /** React content supplied by the owning workspace for each dynamic panel. */
@@ -61,12 +62,9 @@ export function Inspector({
   ];
   const active = store?.state.inspectorTab;
   const open = store?.state.detailsOpen ?? false;
-  const variant = selectedVariantId(
-    data,
-    store?.state.route.variantValues ?? store?.state.route.variant,
-  ).variant;
+  const variant = selectedVariant(data).variant;
   const changedViews = selectedChangedViews(
-    data.entry,
+    workspaceEvidenceEntry(data),
     data.changedViews,
     variant?.value.id,
   );

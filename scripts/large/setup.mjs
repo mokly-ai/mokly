@@ -8,7 +8,7 @@ import { start, stop } from "./process.mjs";
 import { prepareDerivedToolchain } from "./toolchain.mjs";
 
 const run = promisify(execFile);
-export function fixtureRecord(repository, size, generatedOutput = "committed") {
+function fixtureRecord(repository, size, generatedOutput = "committed") {
   return path.join(
     repository,
     ".context",

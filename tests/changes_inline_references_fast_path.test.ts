@@ -13,7 +13,9 @@ import { classifyComponents } from "../dist/review/component_classification.js";
 import { LightningCssRuleParser } from "../dist/review/css/rules.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
+import { assertComparisonPaths } from "./helpers/component_comparison_paths.js";
 import {
+  assertComparisonModesEquivalent,
   assertFastPathEquivalent,
   compilationFiles,
   memoryReader,
@@ -26,13 +28,13 @@ import {
 
 for (const mode of ["committed", "derived"] as const)
   for (const [name, selector, expected] of [
-    ["owned", ".actual-only", ["components/action.html"]],
+    ["owned", ".actual-only", ["action"]],
     ["excluded", ".unused", []],
-    ["entry", ".entry", ["screens/home.html"]],
+    ["entry", ".entry", ["home"]],
   ] as const)
-    test(`${mode} fast and complete paths agree for an ${name} inline image`, async (t) => {
+    test(`${mode} enabled and forced-complete paths agree for an ${name} changed inline image`, async (t) => {
       const fixture = await referenceFixture(t, selector);
-      const result = await assertFastPathEquivalent({
+      const input = {
         before: fixture.compilation.manifest,
         after: fixture.compilation.manifest,
         beforeFiles: compilationFiles(fixture.compilation, {
@@ -45,9 +47,11 @@ for (const mode of ["committed", "derived"] as const)
         }),
         changedPaths: mode === "committed" ? ["mockups/image.svg"] : [],
         config: { ...fixture.config, generatedOutput: mode },
-      });
+      };
+      await assertComparisonPaths(input, "complete");
+      const result = await assertComparisonModesEquivalent(input);
       assert.deepEqual(
-        result.changes.map((entry) => entry.after?.route),
+        result.changes.map((entry) => entry.after?.id),
         expected,
       );
       if (mode === "derived")
@@ -55,7 +59,31 @@ for (const mode of ["committed", "derived"] as const)
           assert.ok(entry.reasons.some((reason) => reason.kind === "material"));
     });
 
-test("fast-path reference analysis parses cached CSS once and prepares each view once", async (t) => {
+for (const mode of ["committed", "derived"] as const)
+  for (const [name, selector] of [
+    ["owned", ".actual-only"],
+    ["excluded", ".unused"],
+    ["entry", ".entry"],
+  ] as const)
+    test(`${mode} every view takes the fast path for an ${name} unchanged inline image`, async (t) => {
+      const fixture = await referenceFixture(t, selector);
+      const files = compilationFiles(fixture.compilation, {
+        "image.svg": "same-image",
+      });
+      const input = {
+        before: fixture.compilation.manifest,
+        after: fixture.compilation.manifest,
+        beforeFiles: files,
+        afterFiles: files,
+        changedPaths: [],
+        config: { ...fixture.config, generatedOutput: mode },
+      };
+      await assertComparisonPaths(input, "fast");
+      const result = await assertFastPathEquivalent(input);
+      assert.deepEqual(result.changes, []);
+    });
+
+test("changed-reference fallback parses cached CSS once and prepares each view once", async (t) => {
   const fixture = await referenceFixture(t, ".actual-only");
   const parser = new LightningCssRuleParser();
   let parseCount = 0;
@@ -107,7 +135,8 @@ test("fast-path reference analysis parses cached CSS once and prepares each view
     (event) =>
       event.stage === "review.compare-screens" && event.event === "counts",
   )?.counts;
-  assert.ok(Number(counts?.fastPath) > 0);
+  assert.equal(counts?.fastPath, 0);
+  assert.equal(counts?.completePath, views);
 });
 
 async function referenceFixture(t: TestContext, selector: string) {

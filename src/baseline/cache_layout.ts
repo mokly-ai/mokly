@@ -4,7 +4,7 @@ import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { BaselineError } from "./errors.js";
 
-export const BASELINE_CACHE_PATH = ".mokly-cache/baselines";
+const BASELINE_CACHE_PATH = ".mokly-cache/baselines";
 export const DEFAULT_RETAINED_COUNT = 3;
 export const LOCK_TIMEOUT_MS = 120_000;
 export const LOCK_POLL_MS = 100;
@@ -16,7 +16,7 @@ export interface CompletionMarker {
   readonly commit: string;
   readonly finishedAt: string;
   readonly commands: readonly (readonly string[])[];
-  readonly manifestVersion: 2 | 3 | 4 | 5;
+  readonly manifestVersion: number;
 }
 
 export interface CacheLayout {
@@ -88,7 +88,8 @@ export function parseCompletionMarker(
     typeof marker.finishedAt !== "string" ||
     !Number.isFinite(Date.parse(marker.finishedAt)) ||
     !validCommands(marker.commands) ||
-    ![2, 3, 4, 5].includes(marker.manifestVersion ?? 0)
+    !Number.isInteger(marker.manifestVersion) ||
+    (marker.manifestVersion as number) > 7
   )
     return;
   return marker as CompletionMarker;

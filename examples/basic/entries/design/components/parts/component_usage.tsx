@@ -2,7 +2,7 @@ import { MockLink } from "@mokly/mokly";
 
 import type { ComponentPageState } from "./component_details.js";
 import { componentUses, usageViews } from "./fixtures.js";
-import { COMPONENT_BY_STATE, COMPONENTS } from "./metadata.js";
+import { COMPONENT_ENTRY_BY_STATE, COMPONENTS } from "./metadata.js";
 
 export function UsedBy({ state }: { state: ComponentPageState }) {
   const unused =
@@ -25,7 +25,7 @@ export function UsedBy({ state }: { state: ComponentPageState }) {
       </h3>
       {unused ? (
         <p className="ce-empty-copy">
-          {`No screens or components use ${COMPONENTS[COMPONENT_BY_STATE[state]].title} yet.`}
+          {`No screens or components use ${COMPONENTS[COMPONENT_ENTRY_BY_STATE[state].component].title} yet.`}
         </p>
       ) : (
         <ul className="ce-usage-list">

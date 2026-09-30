@@ -13,8 +13,8 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 test("deep recursive usage keeps fixed-size deterministic keys", async (t) => {
   const source = componentEntrySource({
-    extra: `const chain = defineComponent({ ...metadata, id: "chain", title: "Chain", description: "Nested ownership", route: "components/chain.html", propSchema: { kind: "object", properties: { depth: { schema: { kind: "number", integer: true, minimum: 0, maximum: 32 } } } }, render: (props) => props.depth ? <div><chain.Component depth={props.depth - 1} /></div> : <action.Component label="Leaf" />, variants: [{ id: "default", title: "Default", props: { depth: 32 } }] });`,
-    exports: "action.entry, pane.entry, chain.entry,",
+    extra: `const chain = defineComponent({ ...metadata, id: "chain", title: "Chain", description: "Nested ownership", route: "components/chain.html", propSchema: { kind: "object", properties: { depth: { schema: { kind: "number", integer: true, minimum: 0, maximum: 32 } } } }, render: (props) => props.depth ? <div><chain.Component depth={props.depth - 1} /></div> : <action.Component label="Leaf" />, variants: [{ id: "chain-default", title: "Default", props: { depth: 32 } }] });`,
+    exports: "action.entries, pane.entries, chain.entries,",
     body: "<chain.Component depth={32} />",
   });
   const fixture = await createFixture(source);
@@ -51,7 +51,7 @@ test("a repeated slot rejects conflicting logical inputs from an impure child", 
   );
 });
 
-test("saved variants share transactional collision and orphan protection", async (t) => {
+test("saved variants share transactional orphan protection", async (t) => {
   const source = componentEntrySource();
   const fixture = await createFixture(source, {
     extraConfig: 'colorSchemes: ["light", "dark"],',
@@ -60,12 +60,12 @@ test("saved variants share transactional collision and orphan protection", async
   const config = await loadConfig(fixture.root);
   const first = await compileCatalogue(config);
   await writeCompilation(first, config);
-  const oldRoute = "components/action.variants/disabled.desktop.dark.html";
+  const oldRoute = "components/action-disabled.desktop.dark.html";
   assert.ok(first.outputs.has(oldRoute));
   await fs.writeFile(
     fixture.entryPath,
     source.replace(
-      ', { id: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+      ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
       "",
     ),
   );
@@ -76,17 +76,6 @@ test("saved variants share transactional collision and orphan protection", async
     code: "ENOENT",
   });
   checkCompilation(next, config);
-  await fs.writeFile(
-    fixture.entryPath,
-    source.replace(
-      'route: "screens/home.html"',
-      'route: "components/action.variants/default.html"',
-    ),
-  );
-  await assert.rejects(
-    compileCatalogue(config),
-    /collision|duplicate|already/i,
-  );
 });
 
 test("compatibility rejects removed component ownership", async (t) => {
@@ -131,11 +120,8 @@ test("compatibility may edit head styles before inferred comparison", async (t) 
   );
 });
 
-test("an actually invoked wrapper must be exported even when collections do not name it", async (t) => {
-  const source = componentEntrySource({ exports: "pane.entry," }).replace(
-    / {2}defineCollection\([^\n]+\),\n/,
-    "",
-  );
+test("an actually invoked wrapper must be exported", async (t) => {
+  const source = componentEntrySource({ exports: "pane.entries," });
   const fixture = await createFixture(source);
   t.after(() => removeFixture(fixture));
   await assert.rejects(

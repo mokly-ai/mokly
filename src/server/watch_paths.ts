@@ -15,7 +15,7 @@ import { MANIFEST_NAME } from "../registry/manifest.js";
 import type { WatchDirectoryStatus } from "./watch_events.js";
 
 /** Stable prefixes of every entry glob, watched so new entry modules are found. */
-export function entryGlobRoots(config: ResolvedConfig): string[] {
+function entryGlobRoots(config: ResolvedConfig): string[] {
   return [
     ...new Set(
       config.entryGlobs.map((glob) =>

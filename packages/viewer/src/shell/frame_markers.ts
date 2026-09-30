@@ -257,7 +257,6 @@ function sameTargets(
       return (
         candidate?.id === target.id &&
         candidate.instance.screenId === target.instance.screenId &&
-        candidate.instance.variantId === target.instance.variantId &&
         candidate.instance.stepIndex === target.instance.stepIndex &&
         candidate.instance.viewport === target.instance.viewport &&
         candidate.instance.colorScheme === target.instance.colorScheme &&

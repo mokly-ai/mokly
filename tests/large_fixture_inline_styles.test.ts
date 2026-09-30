@@ -77,14 +77,14 @@ test(
       committedReviewRepository(config),
     );
     const result = snapshot.componentChanges?.result;
-    assert.equal(result?.schemaVersion, 3);
-    if (result?.schemaVersion !== 3) return;
+    assert.equal(result?.schemaVersion, 4);
+    if (result?.schemaVersion !== 4) return;
     assert.deepEqual(
       result.changes.map((change) => ({
         kind: change.kind,
-        route: (change.after ?? change.before)!.route,
+        id: (change.after ?? change.before)!.id,
       })),
-      [{ kind: "component", route: "area-1/components/action.html" }],
+      [{ kind: "component", id: "area-1-action" }],
     );
     assert.deepEqual(
       [
@@ -92,29 +92,23 @@ test(
           result.affectedConsumers.flatMap((affected) =>
             affected.changedComponentId === "area-1-action" &&
             affected.consumer.kind === "screen"
-              ? [affected.consumer.route]
+              ? [affected.consumer.id]
               : [],
           ),
         ),
       ].sort(),
-      [
-        "area-1/screens/activity-1.html",
-        "area-1/screens/activity-2.html",
-        "area-1/screens/activity-3.html",
-      ],
+      ["area-1-screen-1", "area-1-screen-2", "area-1-screen-3"],
     );
     assert.ok(
       !result.changes.some(
-        (change) =>
-          (change.after ?? change.before)?.route ===
-          "area-2/screens/activity-1.html",
+        (change) => (change.after ?? change.before)?.id === "area-2-screen-1",
       ),
     );
     assert.ok(
       !result.affectedConsumers.some(
         (affected) =>
           affected.consumer.kind === "screen" &&
-          affected.consumer.route === "area-2/screens/activity-1.html",
+          affected.consumer.id === "area-2-screen-1",
       ),
     );
   },

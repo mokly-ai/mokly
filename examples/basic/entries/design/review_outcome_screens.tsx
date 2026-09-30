@@ -138,7 +138,6 @@ export const reviewOutcomeScreens = [
     desktop: <ChangedCompare viewport="desktop" />,
     id: "design-review-changed",
     mobile: <ChangedCompare viewport="mobile" />,
-    slug: "changed",
     title: "Changed screen",
   }),
   screen({
@@ -147,7 +146,6 @@ export const reviewOutcomeScreens = [
     desktop: <AddedCurrent viewport="desktop" />,
     id: "design-review-added",
     mobile: <AddedCurrent viewport="mobile" />,
-    slug: "added",
     title: "Added screen",
   }),
   screen({
@@ -159,7 +157,6 @@ export const reviewOutcomeScreens = [
     mobile: <RemovedPrevious viewport="mobile" />,
     rationale:
       "A removed screen has nothing current to compare, so the stage carries its previous views under a quiet label instead of a comparison band. The catalogue-wide Appearance selector remains the only theme control, while the historical frame stays Light because that is the only scheme captured for those views.",
-    slug: "removed",
     title: "Removed screen",
   }),
   screen({
@@ -168,7 +165,6 @@ export const reviewOutcomeScreens = [
     desktop: <DifferenceCompare viewport="desktop" />,
     id: "design-review-difference",
     mobile: <DifferenceCompare viewport="mobile" />,
-    slug: "difference",
     title: "Difference mode",
   }),
 ];

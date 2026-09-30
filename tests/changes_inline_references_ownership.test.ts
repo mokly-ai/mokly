@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
 
-import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV4 } from "../packages/viewer/dist/review/component_types.js";
 
 import {
   inlineChangesFixture,
@@ -27,20 +27,20 @@ async function resultFor(
   t: TestContext,
   styles: string,
   options: Parameters<typeof inlineChangesFixture>[3] = {},
-): Promise<ReviewResultV3> {
+): Promise<ReviewResultV4> {
   const fixture = await inlineChangesFixture(t, styles, styles, {
     files: imageFiles(),
     ...options,
   });
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 3);
-  assert.ok(result.schemaVersion === 3);
+  assert.equal(result.schemaVersion, 4);
+  assert.ok(result.schemaVersion === 4);
   return result;
 }
 
-function change(result: ReviewResultV3, route: string) {
+function change(result: ReviewResultV4, route: string) {
   return result.changes.find(
-    (entry) => (entry.after ?? entry.before)?.route === route,
+    (entry) => (entry.after ?? entry.before)?.id === route,
   );
 }
 
@@ -52,14 +52,14 @@ test("an image reached only by an owned inline rule belongs to its component", a
     fixture.live(),
     fixture.complete(),
   ]);
-  assert.equal(artifact.result.schemaVersion, 3);
-  if (artifact.result.schemaVersion !== 3) return;
-  assert.deepEqual(live.changedRoutes, ["components/action.html"]);
+  assert.equal(artifact.result.schemaVersion, 4);
+  if (artifact.result.schemaVersion !== 4) return;
+  assert.deepEqual(live.changedIds, ["action"]);
   assert.deepEqual(
-    artifact.result.changes.map((entry) => entry.after?.route),
-    ["components/action.html"],
+    artifact.result.changes.map((entry) => entry.after?.id),
+    ["action"],
   );
-  assert.deepEqual(change(artifact.result, "components/action.html")?.reasons, [
+  assert.deepEqual(change(artifact.result, "action")?.reasons, [
     { kind: "dependency", path: "mockups/image.svg" },
   ]);
   assert.ok(
@@ -67,7 +67,7 @@ test("an image reached only by an owned inline rule belongs to its component", a
       (item) =>
         item.changedComponentId === "action" &&
         item.consumer.kind === "screen" &&
-        item.consumer.route === "screens/home.html",
+        item.consumer.id === "home",
     ),
   );
 });
@@ -79,12 +79,10 @@ test("an unrelated entry edit keeps material without claiming the owned image", 
       "Changed screen content",
     ),
   });
-  assert.deepEqual(change(result, "components/action.html")?.reasons, [
+  assert.deepEqual(change(result, "action")?.reasons, [
     { kind: "dependency", path: "mockups/image.svg" },
   ]);
-  assert.deepEqual(change(result, "screens/home.html")?.reasons, [
-    { kind: "material" },
-  ]);
+  assert.deepEqual(change(result, "home")?.reasons, [{ kind: "material" }]);
 });
 
 test("entry markup independently referencing an owned image keeps both rows", async (t) => {
@@ -93,7 +91,7 @@ test("entry markup independently referencing an owned image keeps both rows", as
     '<main className="entry"><img src="../image.svg" />',
   );
   const result = await resultFor(t, ownedRule, { source });
-  for (const route of ["components/action.html", "screens/home.html"])
+  for (const route of ["action", "home"])
     assert.deepEqual(change(result, route)?.reasons, [
       { kind: "dependency", path: "mockups/image.svg" },
     ]);
@@ -105,8 +103,8 @@ test("a background image in a nested-parent rule follows the nested owner", asyn
     '<style>.entry{& .actual-only{background:url("../image.svg")}}</style>',
   );
   assert.deepEqual(
-    result.changes.map((entry) => entry.after?.route),
-    ["components/action.html"],
+    result.changes.map((entry) => entry.after?.id),
+    ["action"],
   );
 });
 
@@ -116,13 +114,20 @@ test("one referenced image can belong to two matched components", async (t) => {
     files: imageFiles(),
   });
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
+  const ownersAndVariants = [
+    "action",
+    "action-default",
+    "action-disabled",
+    "pane",
+    "pane-default",
+  ];
   assert.deepEqual(
-    result.changes.map((entry) => entry.after?.route),
-    ["components/action.html", "components/pane.html"],
+    result.changes.map((entry) => entry.after?.id),
+    ownersAndVariants,
   );
-  for (const id of ["action", "pane"])
+  for (const id of ownersAndVariants)
     assert.deepEqual(
       result.changes.find((entry) => entry.after?.id === id)?.reasons,
       [{ kind: "dependency", path: "mockups/image.svg" }],
@@ -136,8 +141,8 @@ test("inferred and declarative owners are unioned for one resource", async (t) =
   );
   const result = await resultFor(t, ownedRule, { source });
   assert.deepEqual(
-    result.changes.map((entry) => entry.after?.route),
-    ["components/action.html", "components/pane.html"],
+    result.changes.map((entry) => entry.after?.id),
+    ["action", "pane"],
   );
   for (const id of ["action", "pane"])
     assert.deepEqual(
@@ -165,10 +170,10 @@ test("transitive inline resources retain the rule owner's repository path", asyn
     },
   });
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
-  assert.deepEqual(change(result, "components/action.html")?.reasons, [
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
+  assert.deepEqual(change(result, "action")?.reasons, [
     { kind: "dependency", path: "mockups/deep.svg" },
   ]);
-  assert.equal(change(result, "screens/home.html"), undefined);
+  assert.equal(change(result, "home"), undefined);
 });

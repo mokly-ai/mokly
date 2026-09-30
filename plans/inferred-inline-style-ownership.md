@@ -88,6 +88,7 @@ record: `{ startOffset, endOffset, componentIds }` for style text and
    fixture and doc that names v5 for a field removal the historical reader
    must tolerate anyway, and readers of unknown versions already fail with a
    rebuild diagnostic.
+   Merge note: after integrating main's identity-keyed v7 schema, retirement applies to the current manifest version without another version bump.
 7. **Excluded page styles get their own evidence and presentation.** A view
    whose only inline-style change is excluded stays out of Changes and out of
    the `changed` state, and its Details panel says so with product copy that

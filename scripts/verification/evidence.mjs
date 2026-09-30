@@ -32,6 +32,16 @@ export async function discoverUnitFiles(repositoryRoot) {
   return files.filter((file) => /\.test\.tsx?$/.test(file)).sort();
 }
 
+export async function discoverBrowserFiles(repositoryRoot) {
+  const files = [];
+  await collectFiles(
+    path.join(repositoryRoot, "tests/browser"),
+    repositoryRoot,
+    files,
+  );
+  return files.filter((file) => file.endsWith(".spec.ts")).sort();
+}
+
 export function nodeShardFiles(files, shard) {
   if (!shard) return [...files];
   return files.filter((_, offset) => offset % shard.total === shard.index - 1);

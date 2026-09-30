@@ -24,7 +24,7 @@ adapt explicit child controls -> resolve mock:id links -> compatibility bridge
 validate markers/links/resources
         |
         v
-mobile/desktop light and optional dark HTML for every screen and variant screen, saved component variants, whole documents + schema-v5 manifest in memory
+mobile/desktop light and optional dark HTML for every screen, screen variant, and component variant entry, whole documents + schema-v7 manifest in memory
         |
         +---- check (committed): compare with disk, write nothing
         |
@@ -139,8 +139,8 @@ its neutral default. The renderer receives:
 
 ```ts
 interface RenderInput {
-  entry: ScreenDefinition | ComponentDefinition;
-  variantId?: string;
+  entry: ScreenDefinition | ComponentVariantDefinition;
+  componentProps?: Readonly<Record<string, unknown>>;
   node: ReactNode;
   stylesheets: readonly string[];
   viewport: "mobile" | "desktop";
@@ -150,17 +150,20 @@ interface RenderInput {
 type Renderer = (input: RenderInput) => string;
 ```
 
+`RenderInput` has no `variantId`: for a component render, `entry` is the
+variant entry itself and `componentProps` carries its validated props.
+
 The returned string must be a complete HTML document; any other result fails
-the build with a typed diagnostic. Ownership of head styles the renderer emits
-is inferred at comparison time; see
-[inline style ownership](../protocol/mokly-inline-styles.md).
-Registered entries render each saved variant in every configured context through
-the same consumer graph. Wrappers record actual invocations, data, caller-owned
-slots, and layout-neutral ranges. The root saved variant is not its own instance.
-All catalogues emit manifest v5 with the complete source inventory. Registered
-components add saved variants and complete per-view invocation, slot and range records;
-explicit page callbacks still emit exactly one complete document. Both historical
-v4 envelopes remain readable only at the Git boundary. Current readers require v5.
+the build with a typed diagnostic. Head-style ownership is inferred at
+comparison time under [inline style ownership](../protocol/mokly-inline-styles.md).
+Each component variant entry renders in every configured context through the
+same consumer graph. Wrappers record invocations, data, caller-owned slots,
+and layout-neutral ranges. The variant's root render is not its own instance.
+All catalogues emit manifest v7 with the complete source inventory. Registered
+components add variant entries and complete per-view instance, slot and range
+records; explicit page callbacks emit exactly one complete document. Current
+and Git-baseline readers require v7; earlier output makes Changes unavailable
+under [baseline compatibility](../protocol/mokly-baseline-compatibility.md).
 
 The [child-control adapter](../protocol/mokly-link-controls.md) uses parsed
 source locations to patch only the marked control and its boundary templates.
@@ -215,7 +218,7 @@ the completed HTML string.
 
 ## 4. Validation And Commit
 
-Registry ids, routes, relationships, files, output collisions, stylesheets,
+Registry ids, relationships, files, output collisions, stylesheets,
 ordinary and `data-nav-href` links, anchors, local HTML resource attributes,
 `srcset`, inline/style-block CSS, transitive CSS imports/URLs,
 Review-ignore/material markers, protected source inventory, and manifest data are
@@ -254,11 +257,13 @@ comment-safe, newline-portable ownership proof when pruning or presenting
 generated HTML. Public HTML without the header remains a consumer-owned static
 input and may be classified by an explicit watch rule.
 
-Catalogue routes use portable URL-unreserved segments, reject Windows device
-filename stems, and end in `.html`. Framework-generated links and redirects
-still percent-encode every path segment defensively; static asset paths may
-therefore contain characters such as spaces without corrupting HTML attributes
-or URL query/fragment boundaries.
+Catalogue routes derive from each entry's kind and id (`screens/<id>.html`,
+`pages/<id>.html`, `user-flows/<id>.html`, and `components/<id>.html`), so
+their segments are portable ASCII letters, digits, and `-` ending in `.html`;
+an id that is a Windows device filename stem is rejected. Framework-generated
+links and redirects still percent-encode every path segment defensively; static
+asset paths may therefore contain characters such as spaces without corrupting
+HTML attributes or URL query/fragment boundaries.
 
 `build` writes a same-filesystem staging tree, backs up only files identified by
 Mokly's generated header and a source path beneath this config's authored
@@ -299,10 +304,9 @@ React-free IIFE under its byte budget.
 Static shell documents reference the single owned catalogue JSON and validate
 its identity and finalized deployment before hydration. They still contain the
 complete server-rendered route, but do not repeat the full catalogue payload
-for every route and alias. Serve retains its inline accepted snapshot.
+for every route. Serve retains its inline accepted snapshot.
 Shared catalogue validation uses synchronous browser-safe SHA-256, checked against
 Node digests; source inventory excludes the resolved viewer runtime even when
 npm installs it as a workspace symlink. Browser
 packaging fails if a client imports Node-only code. Comparison JSON is decoded
-with the same new-record validator used by its producer; v2 artifacts remain
-supported without adding component suppression.
+with the same strict review-result v4 validator used by its producer.

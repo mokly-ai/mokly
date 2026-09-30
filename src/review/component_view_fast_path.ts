@@ -4,7 +4,7 @@ import {
   componentUsageSignals,
   componentUsageTopologyEqual,
   stripComponentMarkers,
-  stripHistoricalMarkers,
+  stripMarkers,
 } from "../components/comparison_material.js";
 import { mayContainCssReferences } from "../css_references.js";
 
@@ -17,11 +17,7 @@ import type {
   ComparedComponentView,
   ComponentViewContext,
 } from "./component_view.js";
-import {
-  normalizeHistoricalDocument,
-  normalizeReviewPair,
-  normalizeSingleDocument,
-} from "./ignore.js";
+import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
 
 export interface UnchangedComponentAttempt {
   comparison?: ComparedComponentView;
@@ -39,15 +35,11 @@ export async function compareUnchangedComponentView(
   root?: string,
 ): Promise<UnchangedComponentAttempt> {
   if (before.path !== after.path) return {};
-  const retained = normalizeReviewPair(
-    normalizeHistoricalDocument(base),
-    head,
-    after.path,
-  );
+  const retained = normalizeReviewPair(base, head, after.path);
   if (retained.base !== retained.head) return {};
   if (!componentUsageTopologyEqual(before.usage, after.usage)) return {};
 
-  const strippedBase = stripHistoricalMarkers(base);
+  const strippedBase = stripMarkers(base, before.usage);
   const strippedHead = stripComponentMarkers(head);
   const actual = normalizeReviewPair(strippedBase, strippedHead, after.path);
   if (actual.base !== actual.head) return {};

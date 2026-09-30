@@ -346,7 +346,7 @@ the design catalogue before the implementation lands.
       chrome, both layers at the same offset, the chrome viewport showing its
       scrollbar, and no annotations inside the screen area; register its
       destination in `examples/basic/entries/design/parts/destinations.ts`,
-      add its inventory row at `design/review/controls/overlay-long.html` to
+      add its inventory row at `screens/design-changes-overlay-long.html` to
       the table in `docs/protocol/mokly-shell-design.md`, and keep the Changes
       page within the five-screen limit.
 - [x] Restructure the Difference mockups in
@@ -699,8 +699,8 @@ and the "Scroll together" toggle on and off, before the runtime changes.
       the two panes at different offsets.
 - [x] Register both destinations, reach them from their Diff controls group
       like their siblings, add their inventory rows at
-      `design/review/controls/overlay-panel.html` and
-      `design/review/controls/side-by-side-apart.html` to the table in
+      `screens/design-changes-overlay-panel.html` and
+      `screens/design-changes-side-by-side-apart.html` to the table in
       `docs/protocol/mokly-shell-design.md`, change the Milestone 5 Design
       References wording from planned to existing, and keep the Changes page
       within five screens.
@@ -1225,7 +1225,7 @@ anchors to regions first, and prove both in the browser.
   2521/2521, browser 860/860) with zero failures, skips or cancellations.
   `git diff --diff-filter=D --name-status origin/main` lists nothing.
 - Smoke: `npm run dev` served the changed app-shell design screen
-  `design/review/outcomes/difference.html`, whose preview pane scrolls inside a
+  `screens/design-review-difference.html`, whose preview pane scrolls inside a
   `height: 100vh; overflow: hidden` shell, on desktop and at 800px for the
   phone. After a click inside the panel, PageDown, Space, ArrowUp, ArrowDown and
   Home moved both versions' panels together (236, 278, 238, 278, 0); the wheel

@@ -1,6 +1,8 @@
 /** Shared single-view render/validation with generation-local route and resource indexes. */
 import type { ComponentViewRecord } from "@mokly/viewer";
 import {
+  entryRoute,
+  isManifestComponentVariant,
   validateComponentViewRecord,
   generatedViews,
 } from "@mokly/viewer/data";
@@ -39,7 +41,6 @@ interface PreparedDocument extends CompiledDocument {
 }
 interface DocumentTarget extends ArtifactView {
   entryId: string;
-  variantId?: string;
 }
 
 export class DocumentCompiler {
@@ -65,12 +66,14 @@ export class DocumentCompiler {
     this.compatibility = { byId: registry.byId, routeIndexes: new Map() };
     this.components = new Map(
       runtime.manifest.entries.flatMap((entry) =>
-        entry.kind === "component" ? [[entry.id, entry] as const] : [],
+        entry.kind === "component" && !isManifestComponentVariant(entry)
+          ? [[entry.id, entry] as const]
+          : [],
       ),
     );
     for (const entry of runtime.manifest.entries) {
       if (entry.kind === "page")
-        this.routes.set(entry.route, {
+        this.routes.set(entryRoute("page", entry.id), {
           entryId: entry.id,
           viewport: "desktop",
           colorScheme: "light",
@@ -80,7 +83,6 @@ export class DocumentCompiler {
           entryId: entry.id,
           viewport: view.viewport,
           colorScheme: view.colorScheme,
-          ...(view.variantId ? { variantId: view.variantId } : {}),
         });
     }
     this.links = {

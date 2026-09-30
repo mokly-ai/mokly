@@ -186,8 +186,8 @@ for (const cross of [false, true]) {
         {
           kind: "use-case",
           id: "tour",
+          navPath: [],
           title: "Tour",
-          route: "flows/tour.html",
           tags: [],
           details: home.details,
           changes: { status: "disabled" },
@@ -234,8 +234,7 @@ for (const cross of [false, true]) {
         const host = window.viewerHarness.start("one", {
           cross,
           defaultSelection: {
-            screenId: "pane",
-            variantId: "second",
+            screenId: "pane-second",
             viewport: "mobile",
           },
         });

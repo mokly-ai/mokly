@@ -23,7 +23,7 @@ import {
   type InlineMaterialReplacements,
 } from "./css/inline_rendering.js";
 import { sameInlineOuterSources } from "./css/inline_styles.js";
-import { normalizeHistoricalDocument, normalizeReviewPair } from "./ignore.js";
+import { normalizeReviewPair } from "./ignore.js";
 
 export interface PreparedInlineStyleEvidence {
   allExcluded: boolean;
@@ -60,16 +60,12 @@ export function prepareComponentProjection(
   options: ProjectionPreparationOptions = {},
 ): PreparedComponentComparison {
   const baseRanges = before.usage
-    ? validateComponentRanges(base, before.usage.ranges, "historical")
+    ? validateComponentRanges(base, before.usage.ranges)
     : undefined;
   const headRanges = after.usage
     ? validateComponentRanges(head, after.usage.ranges)
     : undefined;
-  const matching = normalizeReviewPair(
-    normalizeHistoricalDocument(base),
-    head,
-    after.path,
-  );
+  const matching = normalizeReviewPair(base, head, after.path);
   const analysis =
     options.analyzeInline !== false &&
     before.usage &&
@@ -188,7 +184,7 @@ function inlineEvidence(analysis: InlineAttributionResult | undefined): {
 }
 
 /** Build the exact projected-resource exclusion used by complete comparison. */
-export function projectedResourceExclusion(
+function projectedResourceExclusion(
   context: ComponentViewContext,
   before: GeneratedComponentView,
   after: GeneratedComponentView,

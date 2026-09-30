@@ -8,8 +8,9 @@ import {
 } from "../../dist/diagnostics/timings.js";
 import { classifyComponents } from "../../dist/review/component_classification.js";
 import type { ComponentClassificationInput } from "../../dist/review/component_classification_input.js";
+import { classifyComponentsWithSources } from "../../dist/review/component_classification_sources.js";
 import type { Manifest } from "../../packages/viewer/dist/registry/types.js";
-import type { ReviewResultV3 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV4 } from "../../packages/viewer/dist/review/component_types.js";
 
 type FixtureFile = string | Uint8Array;
 
@@ -29,23 +30,37 @@ export function compilationFiles(
   return new Map([...compilation.outputs, ...Object.entries(resources)]);
 }
 
+/** Inspect the exact sources recorded by one real classifier run. */
+export function classifyFixtureWithSources(fixture: FastPathFixture) {
+  return classifyComponentsWithSources({
+    before: fixture.before,
+    after: fixture.after,
+    beforeReader: memoryReader(fixture.beforeFiles),
+    afterReader: memoryReader(fixture.afterFiles),
+    config: fixture.config,
+    changedPaths: fixture.changedPaths,
+    baseCommit: "a".repeat(40),
+    baseRef: "main",
+  });
+}
+
 export async function assertFastPathEquivalent(
   fixture: FastPathFixture,
-): Promise<ReviewResultV3> {
+): Promise<ReviewResultV4> {
   return comparisonModes(fixture, true);
 }
 
 /** Compare enabled and forced-complete modes without claiming a view settled early. */
 export async function assertComparisonModesEquivalent(
   fixture: FastPathFixture,
-): Promise<ReviewResultV3> {
+): Promise<ReviewResultV4> {
   return comparisonModes(fixture, false);
 }
 
 async function comparisonModes(
   fixture: FastPathFixture,
   requireFastPath: boolean,
-): Promise<ReviewResultV3> {
+): Promise<ReviewResultV4> {
   const input = {
     before: fixture.before,
     after: fixture.after,

@@ -90,6 +90,5 @@ export const useCaseScreen = screen({
   desktop: <UseCaseDesktop />,
   id: "design-browse-use-case",
   mobile: <UseCaseMobile />,
-  slug: "use-case",
   title: "Selected use case",
 });

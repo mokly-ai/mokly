@@ -19,6 +19,5 @@ export const tagPickerVariant = {
   desktop: <TagPickerDesktop />,
   id: "design-browse-tag-picker",
   mobile: <TagPickerMobile />,
-  slug: "picker",
   title: "Tag picker",
 } satisfies ScreenVariantInput;

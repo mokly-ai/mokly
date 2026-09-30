@@ -86,7 +86,11 @@ export function extractHtmlReferences(
       resources.push(...extractCssReferences(style));
     }
   });
-  return { anchors, hrefs, resources };
+  return {
+    anchors,
+    hrefs,
+    resources,
+  };
 }
 
 function extractSourceSetReferences(value: string): string[] {

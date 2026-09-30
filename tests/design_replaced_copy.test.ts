@@ -24,7 +24,10 @@ test("the replaced-copy list names a contract and a replacement for each entry",
 test("no design entry renders copy a protocol replaced", async () => {
   const { outputs } = await designCatalogue;
   const designs = [...outputs].filter(
-    ([route]) => route.startsWith("design/") && route.endsWith(".html"),
+    ([route]) =>
+      (route.startsWith("screens/design-") ||
+        route.startsWith("components/design-ui-")) &&
+      route.endsWith(".html"),
   );
   assert.ok(designs.length > 0);
   for (const [route, html] of designs) {

@@ -5,7 +5,7 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
-import { changedManifestRoutes } from "../dist/registry/changed_routes.js";
+import { changedManifestIds } from "../dist/registry/changed_ids.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
@@ -99,11 +99,11 @@ test("dark fragment changes attribute their screen", async (context) => {
   const config = await loadConfig(fixture.root);
   const manifest = (await compileCatalogue(config)).manifest;
 
-  const routes = changedManifestRoutes(manifest, manifest, config, [
+  const routes = changedManifestIds(manifest, manifest, config, [
     "mockups/screens/home.mobile.dark.html",
   ]);
-  assert.ok(routes.includes("screens/home.html"));
-  assert.equal(routes.includes("screens/details.html"), false);
+  assert.ok(routes.includes("home"));
+  assert.equal(routes.includes("details"), false);
 });
 
 function screenSource(id: string, route: string, title: string): string {

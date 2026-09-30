@@ -3,10 +3,10 @@
 ## Delivery Status
 
 The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-delivered the page-scrolling rules in Milestone 4 and the inner-region, key,
-anchor, and reader-control rules in Milestone 7. The design catalogue depicts
-them: `design-changes-overlay-panel`, `design-changes-side-by-side-apart`, and
-the switch in every diff-mode band of the
+records delivery of the page-scrolling, inner-region, key, anchor, and
+reader-control rules. The design catalogue depicts them in
+`design-changes-overlay-panel`, `design-changes-side-by-side-apart`, and the
+switch in every diff-mode band of the
 [shell design](./mokly-shell-design.md#in-place-comparisons).
 
 This contract owns every scroll interaction in the Before and Current panes
@@ -111,6 +111,16 @@ is not mirrored.
 These rules apply to Side by side in both directions, every layer in Overlay
 and Difference, the mobile and desktop sections independently when Both is
 shown, and component comparisons. Regions never pair across viewport sections.
+
+### Design Depictions
+
+`design-changes-overlay-panel` depicts a 44px top bar (40px on phone) and a
+148px desktop navigation column, or a phone tab bar below the panel, staying in
+place while both versions' main panels sit part-way down at one offset. The
+panel draws its own scrollbar and the zero-range page draws none.
+`design-changes-side-by-side-apart` depicts the switch off, with each version
+at a different position and its own scrollbar. Fixed row heights make every
+drawn offset and thumb independent of text wrapping.
 
 ## Scroll Keys
 

@@ -59,25 +59,31 @@ stack trace:
 [mokly/config-missing] no mokly.config file was found
 ```
 
-| Category                       | Raised when                                            |
-| ------------------------------ | ------------------------------------------------------ |
-| `cli-invalid`                  | An argument is unknown, misplaced or missing its value |
-| `config-missing`               | No configuration file was found                        |
-| `config-invalid`               | The configuration is not valid                         |
-| `build-invalid`                | The catalogue could not be built or validated          |
-| `manifest-invalid`             | A manifest could not be read or does not match         |
-| `review-invalid`               | A comparison could not be produced from the inputs     |
-| `export-invalid`               | An export destination or artifact was refused          |
-| `server-failed`                | The local server could not start or continue           |
-| `git-failed`                   | A Git command failed                                   |
-| `baseline-history-unavailable` | The branch point is not in the checkout                |
-| `baseline-extraction-failed`   | The historical checkout could not be extracted         |
-| `baseline-command-failed`      | A baseline build command failed                        |
-| `baseline-output-invalid`      | A baseline build produced no valid catalogue           |
-| `baseline-interrupted`         | Baseline preparation was interrupted                   |
-| `baseline-lock-timeout`        | The baseline cache stayed locked                       |
-| `upload-unauthorized`          | The service refused the token or the repository        |
-| `upload-invalid-bundle`        | The upload was rejected as malformed                   |
-| `upload-too-large`             | An upload limit was exceeded                           |
-| `upload-unsupported-version`   | The service does not support this upload version       |
-| `upload-failed`                | The upload failed for any other reason                 |
+| Category                        | Raised when                                            |
+| ------------------------------- | ------------------------------------------------------ |
+| `cli-invalid`                   | An argument is unknown, misplaced or missing its value |
+| `config-missing`                | No configuration file was found                        |
+| `config-invalid`                | The configuration is not valid                         |
+| `build-invalid`                 | The catalogue could not be built or validated          |
+| `manifest-invalid`              | A manifest could not be read or does not match         |
+| `review-invalid`                | A comparison could not be produced from the inputs     |
+| `export-invalid`                | An export destination or artifact was refused          |
+| `server-failed`                 | The local server could not start or continue           |
+| `git-failed`                    | A Git command failed                                   |
+| `baseline-history-unavailable`  | The branch point is not in the checkout                |
+| `baseline-incompatible-earlier` | The comparison base was built by an earlier Mokly      |
+| `baseline-extraction-failed`    | The historical checkout could not be extracted         |
+| `baseline-command-failed`       | A baseline build command failed                        |
+| `baseline-output-invalid`       | A baseline build produced no valid catalogue           |
+| `baseline-interrupted`          | Baseline preparation was interrupted                   |
+| `baseline-lock-timeout`         | The baseline cache stayed locked                       |
+| `upload-unauthorized`           | The service refused the token or the repository        |
+| `upload-invalid-bundle`         | The upload was rejected as malformed                   |
+| `upload-too-large`              | An upload limit was exceeded                           |
+| `upload-unsupported-version`    | The service does not support this upload version       |
+| `upload-failed`                 | The upload failed for any other reason                 |
+
+`baseline-incompatible-earlier` is a typed internal availability outcome, not
+a command failure. Serve stays available, and export or publish exits `0`
+without Changes; those commands print the product line defined by the
+baseline compatibility protocol instead of an error prefix.

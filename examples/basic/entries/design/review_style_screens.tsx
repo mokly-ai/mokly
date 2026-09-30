@@ -137,7 +137,6 @@ export const reviewStyleScreens = [
     desktop: <MatchedStyles viewport="desktop" />,
     id: "design-review-style-matched",
     mobile: <MatchedStyles viewport="mobile" />,
-    slug: "matched",
     title: "Matched styles",
   }),
   screen({
@@ -147,7 +146,6 @@ export const reviewStyleScreens = [
     desktop: <UnresolvedStyles viewport="desktop" />,
     id: "design-review-style-unresolved",
     mobile: <UnresolvedStyles viewport="mobile" />,
-    slug: "unresolved",
     title: "Unresolved styles",
   }),
   screen({
@@ -159,7 +157,6 @@ export const reviewStyleScreens = [
     mobile: <UnnamedStyles viewport="mobile" />,
     rationale:
       "A changed rule without a style name, such as an animation or font rule, keeps the screen in Changes with no list to show. The lead sentence therefore ends with a full stop instead of a colon, and the same wording carries both the listed and the unlisted case.",
-    slug: "unnamed",
     title: "Unnamed styles",
   }),
   screen({
@@ -181,7 +178,6 @@ export const reviewStyleScreens = [
         viewport="mobile"
       />
     ),
-    slug: "excluded",
     title: "Excluded styles",
   }),
   screen({
@@ -203,7 +199,6 @@ export const reviewStyleScreens = [
         viewport="mobile"
       />
     ),
-    slug: "page-excluded",
     title: "Excluded page styles",
   }),
 ];

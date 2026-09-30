@@ -19,10 +19,7 @@ import {
 import type { InlineRuleAttribution } from "../../src/review/css/inline_rule_matching.js";
 import { LightningCssRuleParser } from "../../src/review/css/rules.js";
 import type { CssRuleParser } from "../../src/review/css/types.js";
-import {
-  normalizeHistoricalDocument,
-  normalizeReviewPair,
-} from "../../src/review/ignore.js";
+import { normalizeReviewPair } from "../../src/review/ignore.js";
 
 export function key(seed: number): string {
   return seed.toString(16).padStart(64, "0");
@@ -88,13 +85,8 @@ export function view(
   };
 }
 
-export function markedRange(
-  id: number,
-  content: string,
-  dialect: "current" | "historical" = "current",
-): string {
-  const prefix = dialect === "historical" ? "mokabook" : "mokly";
-  return `<!--${prefix}-component:start:r-${id}-->${content}<!--${prefix}-component:end:r-${id}-->`;
+export function markedRange(id: number, content: string): string {
+  return `<!--mokly-component:start:r-${id}-->${content}<!--mokly-component:end:r-${id}-->`;
 }
 
 export function html(styles: string, body: string): string {
@@ -111,20 +103,15 @@ export function inlineInput(options: {
 }): InlineAttributionInput {
   const beforeUsage = options.beforeUsage ?? view();
   const afterUsage = options.afterUsage ?? view();
-  const normalizedBefore = normalizeHistoricalDocument(options.before);
   const normalized = normalizeReviewPair(
-    normalizedBefore,
+    options.before,
     options.after,
     "inline-test.html",
   );
   return {
     before: {
       source: options.before,
-      sourceRanges: validateComponentRanges(
-        options.before,
-        beforeUsage.ranges,
-        "historical",
-      ),
+      sourceRanges: validateComponentRanges(options.before, beforeUsage.ranges),
       usage: beforeUsage,
     },
     after: {

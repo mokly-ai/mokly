@@ -10,12 +10,12 @@ import {
   cssSchemaFixture,
 } from "./helpers/review_css_schema.js";
 
-function fixture(version: 2 | 3): ReviewResult {
+function fixture(version: 4): ReviewResult {
   return structuredClone(cssSchemaFixture(version));
 }
 
-test("schema-v2 artifact validation triggers for inline evidence alone", () => {
-  const result = fixture(2);
+test("schema-v4 artifact validation triggers for inline evidence alone", () => {
+  const result = fixture(4);
   for (const view of result.screens[0]!.views) {
     delete view.material;
     delete view.reasons;
@@ -39,7 +39,7 @@ function secondView(result: ReviewResult) {
   return result.screens[0]!.views[1]!;
 }
 
-for (const version of [2, 3] as const) {
+for (const version of [4] as const) {
   for (const evidence of [
     { status: "matched", selectors: [".a", ".z"] },
     { status: "unresolved", selectors: [] },
@@ -103,7 +103,7 @@ for (const version of [2, 3] as const) {
     Object.assign(view, {
       inlineStyles: { status: "matched", selectors: [".a"] },
     });
-    delete view.beforePath;
+    view.state = "added";
     assert.throws(() => parseReviewResult(result), /paired view/);
   });
 
@@ -141,7 +141,7 @@ for (const version of [2, 3] as const) {
     const result = fixture(version);
     const view = secondView(result);
     Object.assign(view, { inlineStyles: { status: "excluded" } });
-    delete view.beforePath;
+    view.state = "added";
     assert.throws(() => parseReviewResult(result), /paired view/);
   });
 }

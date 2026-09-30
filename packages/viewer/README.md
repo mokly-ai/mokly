@@ -161,6 +161,13 @@ or frame adapter intentionally remounts the viewer and cancels pending work.
 
 ### Selection
 
+`screenId` names one catalogue entry. Screen and component variants use their
+own global entry IDs, just like parents, pages and flows; there is no separate
+variant selection field. The component variant bar navigates between those
+entry IDs, so controlled hosts receive ordinary `screenId` proposals. A
+component variant page keeps the parent component title as its heading while
+the ID chip, status, URL, and Details describe the selected variant entry.
+
 Use `defaultSelection` for an uncontrolled viewer:
 
 ```tsx
@@ -197,25 +204,26 @@ Do not provide `defaultSelection` in controlled mode, and remount the viewer if
 you need to change modes.
 
 Removed entries advertise an optional opaque `snapshotId`. Supply it with the
-stable `screenId` to select that exact historical record when current content
-reuses the id. The viewer carries it through controlled proposals, navigation
-events and axis/filter changes. Supplying `screenId` without `snapshotId`
-selects current content; stale or unknown snapshots render unavailable rather
-than silently opening current content. Live evidence may update an explicit
-snapshot in place and makes a replaced identity unavailable. Legacy history
-without an identity is retained only while its complete record is unchanged;
-metadata changes use the full reload path.
+stable `screenId` to select that exact historical record. The viewer carries it
+through controlled proposals, navigation events and axis/filter changes. A
+historical usage record keeps its original values even when current component
+prop schemas or slot names change; wire data, identity and ownership remain
+validated. Manifest admission still validates against the historical schema.
+An id-only selection of a removed record normalizes to its published identity;
+stale or unknown snapshots render unavailable. Readers reject a catalogue in
+which current and removed records share an id. Live evidence may update an
+explicit snapshot in place and makes a replaced identity unavailable.
 
 Shell links may name `viewport` and `scheme` independently. Exactly one valid
 value for an axis applies in the same selection proposal; invalid or repeated
 values retain that sticky axis.
 
 The selected color scheme remains host-visible even when the chosen screen or
-saved variant has only a Light render. In that case the preview keeps the Dark
-selection and Light-only label, while status, change marks, and comparisons use
-the effective Light view. If ready evidence does not cover every shown view,
-the Viewer preserves the selected entry or variant's published status and
-comparison eligibility independently.
+component variant has only a Light render. In that case the preview keeps the
+Dark selection and Light-only label, while status, change marks, and
+comparisons use the effective Light view. If ready evidence does not cover
+every shown view, the Viewer preserves the selected entry's published status
+and comparison eligibility independently.
 
 ### Host integration
 
@@ -237,11 +245,18 @@ frame sessions.
 
 ### Component instance references
 
-Instance events return an `InstanceRef` scoped to a screen, saved variant or
-flow step, viewport, color scheme and stable component key. Persist that value
-to reconnect external data such as a review comment. `resolveInstance` compares
-a saved component record with its corresponding current record from a newer
-catalogue without fetching preview evidence.
+Instance events return an `InstanceRef` scoped to a screen, component variant
+or flow step, viewport, color scheme and stable component key. Persist that
+value to reconnect external data such as a review comment. `resolveInstance`
+compares a saved component record with its corresponding current record from a
+newer catalogue without fetching preview evidence.
+
+`InstanceRef.screenId` is the owning entry's id, including for a component
+variant; the shape has no `variantId`. `onScreenNavigate` reports
+`{ screenId, snapshotId?, fragment?, navigation? }`, with no route or variant
+id. Under the [viewer event contract](../../docs/protocol/mokly-viewer.md#package-and-props),
+`snapshotId` is present when the committed historical record publishes an
+opaque identity and is absent when that record has no published identity.
 
 Markers accept unique IDs, exact instance references and React content. Marker
 content is pointer-inert by default; opt an interactive child in with
@@ -305,6 +320,18 @@ React applications normally need only the root entry and stylesheet. Do not
 import `@mokly/viewer/browser` in an application-owned React root; it
 automatically hydrates a matching standalone Mokly document.
 
+`@mokly/viewer/data` also exports the shared path helpers `entryRoute`,
+`viewRoute`, `viewHref`, `snapshotViewPath`, `snapshotPagePath`, and
+`pagePreviewMetadataPath`, plus `snapshotSidePath` and `snapshotResourcePath`
+for snapshot roots and their confined resources. `parseViewHref` reads
+canonical and provider-normalized `/view/` paths back into identity;
+`providerNormalizedHtmlPath` and `unavailableViewHref` own the browser forms.
+The complete naming contract is
+[identity-derived artifact paths](../../docs/protocol/mokly-artifact-paths.md).
+`isEntryId` adds portable Windows filename rules
+to the broader `isCatalogueId` grammar used by tags and logical links;
+`isWindowsDeviceName` exposes that filename check directly.
+
 ## Server Rendering
 
 `renderViewer` accepts an in-memory catalogue and returns the complete viewer
@@ -346,7 +373,7 @@ Serve and export keep these origin-local preferences in `localStorage`:
 | Key                                | Choice                            |
 | ---------------------------------- | --------------------------------- |
 | `mokly:theme`                      | Explicit Light or Dark appearance |
-| `mokly:nav-disclosure:v2`          | Open catalogue groups             |
+| `mokly:nav-disclosure:v3`          | Open catalogue groups             |
 | `mokly:details-disclosure`         | Details open or closed            |
 | `mokly:navigation-width:v1`        | Navigation split width            |
 | `mokly:comparison-scroll-together` | `on` or `off`; missing means on   |
@@ -458,8 +485,36 @@ consumers.
 - [`src/viewer`](./src/viewer) — React lifecycle, selection, host integration
   and instance operations
 - [`src/shell`](./src/shell) — shared catalogue shell and scoped styles
+- [`src/registry/nav_paths.ts`](./src/registry/nav_paths.ts) and [`src/registry/hierarchy_conflicts.ts`](./src/registry/hierarchy_conflicts.ts) — shared folder keys, labels, sibling order and source-attributed path conflicts
 - [`src/client`](./src/client) — frame adapters, transport and geometry
 - [`src/catalogue`](./src/catalogue) — public catalogue types and validation
+- [`src/navigation/routes.ts`](./src/navigation/routes.ts) — shared entry,
+  view, snapshot, preview, shell-URL, and browser-path derivation
+- [`src/review/order.ts`](./src/review/order.ts) — canonical affected-consumer
+  ordering shared by review producers and readers
+- [`src/shell/workspace_entry.ts`](./src/shell/workspace_entry.ts) and
+  [`src/shell/workspace_variants.ts`](./src/shell/workspace_variants.ts) —
+  routed workspace identity and sibling component-variant entries
+- [`src/shell/use_comparison.ts`](./src/shell/use_comparison.ts),
+  [`src/shell/comparison_presentation.ts`](./src/shell/comparison_presentation.ts), and
+  [`src/shell/diffs.tsx`](./src/shell/diffs.tsx) — the single comparison-mode
+  owner, request identity, and current/comparison presentation
+- [`src/shell/store_browser_actions.ts`](./src/shell/store_browser_actions.ts)
+  and [`src/shell/store_browser_urls.ts`](./src/shell/store_browser_urls.ts) —
+  standalone DOM actions and provider-normalized URL policy
+- [`src/shell/workspace_data.ts`](./src/shell/workspace_data.ts) and
+  [`src/shell/workspace_usage_data.ts`](./src/shell/workspace_usage_data.ts) —
+  routed workspace data and its usage/affected-consumer projection
+- [`src/shell/store_host.ts`](./src/shell/store_host.ts) and
+  [`src/shell/store_host_routes.ts`](./src/shell/store_host_routes.ts) —
+  controlled and uncontrolled selection commits, frame-link misses, and
+  navigation events
+- [`src/shell/frame_instances.ts`](./src/shell/frame_instances.ts) — exact
+  documented `InstanceRef` matching against mounted preview frames
+- [`src/standalone/bootstrap.ts`](./src/standalone/bootstrap.ts),
+  [`src/standalone/bootstrap_types.ts`](./src/standalone/bootstrap_types.ts), and
+  [`src/standalone/bootstrap_validation.ts`](./src/standalone/bootstrap_validation.ts)
+  — standalone hydration projection, wire shape, and validation
 - [`src/inspector`](./src/inspector) — bounded in-frame inspection runtime
 - [`tests`](./tests) — package-level conformance tests
 

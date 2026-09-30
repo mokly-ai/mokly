@@ -158,7 +158,7 @@ test("a component's scrolling list moves in every version", async ({
 }) => {
   await openComparison(
     page,
-    `${fixture.url}/view/components/tasks.html?variant=list`,
+    `${fixture.url}/view/components/tasks-list.html`,
     "desktop",
     "Overlay",
   );

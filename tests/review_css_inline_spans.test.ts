@@ -64,7 +64,7 @@ test("style elements inside component ranges are not unowned material", () => {
   assert.equal(result.afterSpans.length, 0);
 });
 
-test("historical markers and a generated header keep original span coordinates", () => {
+test("baseline-v7 markers and a generated header keep original span coordinates", () => {
   const item = instance(1, "component");
   const usage = view({
     instances: [item],
@@ -73,12 +73,12 @@ test("historical markers and a generated header keep original span coordinates",
   const header = generatedHeader("entries/fixture.mockup.tsx");
   const styles = changedStyle();
   const historicalIgnored =
-    "<!--mokabook-review-ignore:start:legacy--><style>.ignored{color:red}</style><!--mokabook-review-ignore:end:legacy-->";
+    "<!--mokly-review-ignore:start:legacy--><style>.ignored{color:red}</style><!--mokly-review-ignore:end:legacy-->";
   const currentIgnored =
     "<!--mokly-review-ignore:start:legacy--><style>.ignored{color:blue}</style><!--mokly-review-ignore:end:legacy-->";
   const before = `${header}${html(
     styles.before,
-    `${markedRange(0, '<div class="target"></div>', "historical")}${historicalIgnored}`,
+    `${markedRange(0, '<div class="target"></div>')}${historicalIgnored}`,
   )}`;
   const after = `${header}${html(
     styles.after,

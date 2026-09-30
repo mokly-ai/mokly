@@ -41,11 +41,15 @@ selected, and **Changed variant** shows the Changes filter holding one changed
 variant under a parent whose own render is unmodified. A screen row that owns
 variants renders a `mbk-nav-leaf` container holding the unchanged row link plus
 a trailing chevron disclosure button; the row cannot be both a link and a
-disclosure summary. Variant rows render one indent step deeper with the variant
-icon — a screen outline over a second, partially drawn screen — on a
-`mbk-nav-ico variant` wrapper, only while the list is open. The changed mark is
-a trailing dot and never an edge or rail. Row rendering lives in
-`catalogue-navigation-row.view.tsx`, which the component owns beside its main
+disclosure summary. The All and drawer fixtures also disclose Action's Default,
+Disabled and Secondary rows and Toolbar's Default row in their real authored
+order. Component explorer and Changes artboards reuse those identities, while
+their synthetic Help hint and Badge examples each disclose their depicted
+Default state. Variant rows render one indent step deeper on a
+`mbk-nav-ico variant` wrapper. Screen variants use overlapping screen outlines;
+component variants use equivalent overlapping component outlines. Both stay
+muted. The changed mark is a trailing dot and never an edge or rail. Row rendering lives in
+`chrome/catalogue-navigation-row.view.tsx`, which the component owns beside its main
 view. Selected rows use the same appearance-aware contrast token for their
 labels, variant disclosures and changed marks.
 
@@ -64,7 +68,8 @@ views other than the shown one, so the details inspector names them.
 
 For each component, `{group}/{slug}.tsx` declares its typed schema, slots, saved
 variants and supported controls. `{slug}.view.tsx` implements its markup.
-`library.mockup.ts` registers the entries in four flat gallery collections.
+`library.mockup.ts` registers the entries with four flat-authored gallery
+folder paths.
 
 Call the registered `.Component` from screen adapters. Never import a `.view`
 module into a screen or create a second standalone implementation. Leave whole
@@ -76,8 +81,11 @@ bodies and native inputs. Resolve scenario navigation in an adapter before
 calling a component; missing destinations stay non-links. Top-bar Appearance owns scheme selection;
 header view controls own the viewport. Use ordinary `MockLink` anchors for inspector-body
 links and tag chips so they can live inside native `details` panels.
-`parts/nav_data.ts` is the canonical catalogue-navigation fixture for both the
+`../parts/nav_data.ts` is the canonical catalogue-navigation fixture for both the
 saved All example and in-screen artboards, so those two views stay aligned.
+`../parts/component_nav_data.ts` owns component parent and variant identities;
+the shared fixture and component-explorer scenarios compose its rows instead of
+copying titles or authored order.
 
 Use explicit semantic `moklyInstance` names for repeated siblings. The
 `DesignInstances` context supplies a stable prefix for simultaneous viewport

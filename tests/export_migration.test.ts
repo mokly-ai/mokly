@@ -13,7 +13,6 @@ test("only the repository adapter migrates a valid legacy preview", async (conte
   const fixture = await createPreviewComparisonFixture();
   context.after(() => fixture.close());
   await fs.promises.rm(path.join(fixture.output, EXPORT_MARKER));
-  await fs.promises.rm(path.join(fixture.output, "id"), { recursive: true });
   await fs.promises.rm(path.join(fixture.output, "__mokly/catalogue.json"));
   const legacy = await directoryFiles(fixture.output);
   await assert.rejects(
@@ -27,7 +26,7 @@ test("only the repository adapter migrates a valid legacy preview", async (conte
   await fixture.git("update-ref", "refs/remotes/origin/main", "HEAD");
   await fixture.build();
   assert.ok(fs.existsSync(path.join(fixture.output, EXPORT_MARKER)));
-  assert.ok(fs.existsSync(path.join(fixture.output, "id/home/index.html")));
+  assert.equal(fs.existsSync(path.join(fixture.output, "id")), false);
   assert.ok(fs.existsSync(path.join(fixture.output, "__mokly/catalogue.json")));
   await fs.promises.rm(path.join(fixture.output, EXPORT_MARKER));
   await fs.promises.writeFile(

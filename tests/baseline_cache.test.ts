@@ -12,7 +12,7 @@ import {
   baselineManifest,
 } from "./helpers/baseline_fixture.js";
 
-test("a former Mokabook manifest remains valid rebuilt history", async () => {
+test("an earlier manifest sentinel is retained for the compatibility gate", async () => {
   const fixture = baselineFixture();
   const run = fixture.runner.run;
   fixture.runner.run = async (command) => {
@@ -31,10 +31,10 @@ test("a former Mokabook manifest remains valid rebuilt history", async () => {
     return result;
   };
   const result = await fixture.builder.build(fixture.request);
-  assert.equal(result.marker.manifestVersion, 5);
+  assert.equal(result.marker.manifestVersion, 6);
 });
 
-test("legacy rebuilt manifests retain version 2 and require explicit compatibility", async () => {
+test("the oldest manifest sentinel is cached without parsing its contents", async () => {
   const fixture = baselineFixture();
   const run = fixture.runner.run;
   fixture.runner.run = async (command) => {
@@ -50,21 +50,15 @@ test("legacy rebuilt manifests retain version 2 and require explicit compatibili
             schemaVersion: 2,
             generatedBy: "mockbook",
             entries: [],
-            legacyPages: [],
           }),
         ),
       );
     }
     return result;
   };
-  const request = { ...fixture.request, allowManifestV2: true };
-  const result = await fixture.builder.build(request);
-  assert.equal(result.marker.manifestVersion, 2);
-  assert.equal((await fixture.builder.build(request)).cacheHit, true);
-  await assert.rejects(
-    fixture.builder.build({ ...fixture.request, commit: "b".repeat(40) }),
-    { code: "baseline-output-invalid" },
-  );
+  const result = await fixture.builder.build(fixture.request);
+  assert.equal(result.marker.manifestVersion, 6);
+  assert.equal((await fixture.builder.build(fixture.request)).cacheHit, true);
 });
 
 test("invalid cache markers are partial entries and cannot hide corrupt manifests", async () => {

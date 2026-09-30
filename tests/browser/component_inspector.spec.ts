@@ -48,7 +48,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
 test("the shared inspector opens and closes inside sandboxed Browse frames", async ({
   page,
 }) => {
-  await page.goto("/view/design/components/overview.html");
+  await page.goto("/view/screens/design-component-overview.html");
   for (const viewport of ["desktop", "mobile"] as const) {
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
     const inspector = frame.getByRole("region", {

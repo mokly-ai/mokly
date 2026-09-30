@@ -18,8 +18,8 @@ export function inlineComponentSource(): string {
       '(props) => <section className="pane shared">{props.children}<action.Component label="Inside" /></section>',
     body: '<main className="entry"><pane.Component><span className="slot-content">Screen content</span><action.Component label="Slot action" /></pane.Component><action.Component moklyInstance="footer" label="Finish" /></main>',
     extra:
-      'const plain = defineScreen({ ...metadata, id: "plain", title: "Plain", description: "No component instances", route: "screens/plain.html", mobile: <main className="plain">Plain</main>, desktop: <main className="plain">Plain</main> });',
-    exports: "action.entry, pane.entry, plain,",
+      'const plain = defineScreen({ ...metadata, id: "plain", title: "Plain", description: "No component instances", mobile: <main className="plain">Plain</main>, desktop: <main className="plain">Plain</main> });',
+    exports: "action.entries, pane.entries, plain,",
   });
 }
 

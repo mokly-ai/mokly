@@ -41,9 +41,11 @@ test("server validates before bind and supports safe no-watch routes on port zer
   const shellCss = await fetch(`${server.url}/__mokly/shell.css`);
   assert.equal(shellCss.status, 200);
   assert.match(await shellCss.text(), /--mokly-accent/);
-  const redirect = await fetch(`${server.url}/id/home`, { redirect: "manual" });
-  assert.equal(redirect.status, 302);
-  assert.equal(redirect.headers.get("location"), "/view/screens/home.html");
+  const removedAlias = await fetch(`${server.url}/id/home`, {
+    redirect: "manual",
+  });
+  assert.equal(removedAlias.status, 404);
+  assert.match(await removedAlias.text(), /Item not found/);
   assert.equal(
     (await fetch(`${server.url}/view/screens/home.html`)).status,
     200,
@@ -113,7 +115,7 @@ test("event-stream HEAD releases a keep-alive connection", async (context) => {
   assert.match(home.body, /data-mokly-shell/);
 });
 
-test("malformed manifest routes fail before server readiness", async (context) => {
+test("malformed manifest identities fail before server readiness", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -122,14 +124,15 @@ test("malformed manifest routes fail before server readiness", async (context) =
   const manifest = JSON.parse(
     await fs.promises.readFile(manifestPath, "utf8"),
   ) as {
-    entries: Array<{ fragments?: { mobile: string } }>;
+    entries: Array<{ id: string; kind: string }>;
   };
-  const screen = manifest.entries.find((entry) => entry.fragments);
-  if (screen?.fragments) screen.fragments.mobile = "../outside.html";
+  const screen = manifest.entries.find((entry) => entry.kind === "screen");
+  assert.ok(screen);
+  screen.id = "../outside";
   await fs.promises.writeFile(manifestPath, `${JSON.stringify(manifest)}\n`);
   await assert.rejects(
     () => startCatalogueServer(config, { base: "origin/main", port: 0 }),
-    /unsafe route/,
+    /invalid manifest id/,
   );
 });
 
@@ -367,10 +370,10 @@ async function waitFor(
 }
 
 function sourceWithHomeRoute(route: string, title: string): string {
-  return validEntrySource({ firstTitle: title }).replace(
-    'route: "screens/home.html"',
-    `route: ${JSON.stringify(route)}`,
-  );
+  const id = route.slice("screens/".length, -".html".length);
+  return validEntrySource({ firstTitle: title })
+    .replace('id: "home"', `id: ${JSON.stringify(id)}`)
+    .replace('screenId: "home"', `screenId: ${JSON.stringify(id)}`);
 }
 
 async function streamEnded(

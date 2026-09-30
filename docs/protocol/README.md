@@ -1,50 +1,56 @@
 # Protocol
 
-These documents define Mokly's implementation contract. They describe
-implemented pre-release behavior unless a document's Delivery Status explicitly
-labels an approved target that is still tracked by an active plan. Package,
-authoring, static build/check, responsive Browse, watched development, on-demand comparisons,
-packed consumer verification, CI, and npm release automation are implemented.
-The first public release remains an external delivery step.
+These documents define Mokly's implemented pre-release contract unless a
+Delivery Status names an approved active-plan target. The
+[id-derived routes plan](../../plans/id-derived-routes.md) defines the
+identity-only formats: paths derive from kind and id, and variants are entries.
+
+Protocol documents state the contract and current delivery status, but never
+record which plan milestone delivered a rule; plans keep that history.
+`tests/protocol_doc_history.test.ts` enforces the boundary outside `fixtures/`
+by rejecting the case-insensitive pattern `\bmilestones?\s+\d`.
 
 ## Supported Formats
 
 | Catalogue                     | Generated manifest | Comparison result |
 | ----------------------------- | ------------------ | ----------------- |
-| Without registered components | 5                  | 2                 |
-| With registered components    | 5                  | 3                 |
+| Without registered components | 7                  | 4                 |
+| With registered components    | 7                  | 4                 |
 
-All current catalogues emit manifest v5 with explicit pages, the complete
-source inventory and declared dependencies. Component catalogues also include
-saved variants and complete per-view usage. Comparisons use v3 whenever either
-side contains registered components, including when the last component is removed;
-otherwise they use v2. Pages participate in Browse Changes without visual comparisons.
-
-The current primary file requires v5. Git baseline readers accept v3 and both
-historical v4 formats: pages with `sourceFiles`, or components with `legacyPages`.
-These envelopes are disjoint; combining them is invalid. Explicit
-`compatibility.readManifestV2` permits the legacy v2-format fallback only
-when the historical primary file is absent, never when it is invalid.
+Manifest v7 carries explicit pages, `navPath`, source inventory, declared
+dependencies, component variants, and per-view usage, but no derivable path.
+Review result v4 addresses entries and views by identity and axes. The public
+read model and static delivery descriptor are v3. Current and baseline manifest
+readers accept only v7; earlier output follows
+[baseline compatibility](./mokly-baseline-compatibility.md).
 
 ## Contracts
 
-- [CI verification](./ci-verification.md) — implemented suite, shard, evidence,
-  cache and aggregation contract; hosted acceptance measurements remain tracked
-  by the active CI performance plan.
-- [Catalogue upload v1](./mokly-upload.md) — public CLI and hosted/self-hosted receiver boundary.
+- [CI verification](./ci-verification.md)
+- [CI workflow graph](./ci-workflow.md)
+- [Repository verification ratchets](./verification-ratchets.md)
+- [Catalogue upload v1](./mokly-upload.md) — public CLI and hosted/self-hosted
+  receiver boundary.
 - [Package and authoring contract](./mokly-package.md)
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
   interactive progress, errors, watched events, and shortcuts.
 - [Packaged CLI guides](./mokly-guides.md) — versioned Markdown consumed by the
   cloud documentation site.
-- [Configuration contract](./mokly-configuration.md) — includes public-exclusion validation and defaults.
+- [Configuration contract](./mokly-configuration.md) — includes public-exclusion
+  validation and defaults.
 - [Public authoring API](./mokly-authoring.md)
+- [Nested authoring trees](./mokly-nested-authoring.md)
+- [Identity-derived artifact paths](./mokly-artifact-paths.md)
 - [Rendering and generated output](./mokly-rendering.md)
 - [Build and Browse runtime](./mokly-runtime.md)
+- [Navigation disclosure persistence](./mokly-disclosure-persistence.md) —
+  storage, defaults, watched recovery, and in-place reconciliation.
 - [Component instance identity](./mokly-instances.md) — existing key/boundary
   rules and approved resolution/source-location target.
-- [Public catalogue read model](./mokly-catalogue.md) — implemented:
-  public inventory v1 beside the private manifest.
+- [Public catalogue read model v3](./mokly-catalogue.md) — identity-only public
+  inventory beside the private manifest.
+- [Navigation paths and folders](./mokly-nav-paths.md) — section trees, path
+  diagnostics, sibling order, and folder keys.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
   shared hydrated shell.
 - [Live viewer capabilities](./mokly-live-capabilities.md) — private Serve
@@ -54,20 +60,26 @@ when the historical primary file is absent, never when it is invalid.
   embedded theme beside independent preview controls.
 - [Viewer semantic palette](./mokly-viewer-palette.md) — Light and Dark
   swatches, recorded contrast and the Light corrections they required.
+- [Mokly shell brand](./mokly-shell-brand.md) — package-owned mark, wordmark,
+  responsive presentation, and palette boundary.
 - [Viewer markers and multi-instance highlights](./mokly-viewer-markers.md) —
   host-owned anchored content and exact atomic highlight behavior.
 - [Viewer frame adapter](./mokly-frame-adapter.md) — approved same-origin
   interface and cross-origin inspector protocol v1.
+- [Published inspector and overlay](./mokly-published-inspector.md) — static
+  injection, inert metadata, style isolation, and script budget.
 - [On-demand Serve](./mokly-on-demand.md)
 - [Selected live comparisons](./mokly-selected-comparisons.md)
 - [Live catalogue evidence updates](./mokly-live-evidence.md)
 - [Startup diagnostics and scale fixtures](./mokly-timings.md)
 - [Pages in the catalogue](./mokly-pages.md)
-- [Screen variants](./mokly-screen-variants.md) — implemented: variant
-  screens grouped under their parent screen with their own ids and routes.
+- [Variants](./mokly-variants.md) — screen and component variants as entries
+  with their own global ids, derived routes, and `variantOf`, grouped under
+  their parent.
+- [Variant navigation and Changes](./mokly-variant-navigation.md)
 - [Source protection](./mokly-source-protection.md)
 - [Catalogue change metadata](./mokly-catalogue-changes.md)
-- [Breaking page migration](./mokly-page-migration.md)
+- [Baseline compatibility](./mokly-baseline-compatibility.md)
 - [Optional changes in publication](./mokly-publication.md)
 - [Changes and screen comparisons](./mokly-changes.md)
 - [Comparison pane presentation](./mokly-comparison-panes.md) — viewer-owned,
@@ -78,35 +90,41 @@ when the historical primary file is absent, never when it is invalid.
   inner scroll region finds its counterpart in another version.
 - [Comparison Scroll together](./mokly-comparison-scroll-together.md) — the
   reader control, its preference, and realignment.
-- [Removed content previews](./mokly-removed-previews.md) — removed screens
-  and pages show their pinned baseline version.
+- [Removed content previews](./mokly-removed-previews.md) — removed screens and
+  pages show their pinned baseline version.
 - [Derived baselines](./mokly-derived-baselines.md) — default uncommitted
   generated output with per-commit rebuilt baselines.
-  - [Baseline storage and execution](./mokly-baseline-storage.md) — archive limits,
-    command environments, locking and crash cleanup.
+  - [Baseline storage and execution](./mokly-baseline-storage.md) — archive
+    limits, command environments, locking and crash cleanup.
 - [Registered components](./mokly-components.md)
 - [Component runtime prop schema](./mokly-component-props.md)
-- [Current manifest v5 schema](./mokly-component-manifest.md)
-- [Component comparison v3 schema](./mokly-component-review.md)
+- [Current manifest v7 schema](./mokly-component-manifest.md)
+- [Component usage records](./mokly-component-usage-records.md)
+- [Component comparison v4 schema](./mokly-component-review.md)
+- [Component review validation and canonical output](./mokly-component-review-validation.md)
 - [Component change attribution](./mokly-component-changes.md)
-- [CSS change attribution](./mokly-css-attribution.md) — approved
-  target: rule-aware stylesheet evidence.
+- [Component review fast path](./mokly-component-review-fast-path.md)
+- [CSS change attribution](./mokly-css-attribution.md)
+- [Inline style resource ownership](./mokly-inline-style-resources.md)
+- [Inline style evidence](./mokly-inline-style-evidence.md)
 - [Inline style ownership](./mokly-inline-styles.md) — document-derived
   ownership and comparison material for head styles.
 - [CSS evidence in the shell](./mokly-css-evidence-shell.md) — inspector and
   comparison-stage presentation of stylesheet evidence.
+- [CSS evidence presentation](./mokly-css-evidence-presentation.md)
 - [Component pages and screen inspection](./mokly-component-explorer.md)
 - [Component explorer design catalogue](./mokly-component-design.md)
 - [Component icon inspector design](./mokly-component-inspector-design.md)
 - [Component controls design catalogue](./mokly-component-controls-design.md)
-- [Component workspace design](./mokly-component-workspace-design.md) (view controls, resizing, and comparison eligibility)
+- [Component workspace design](./mokly-component-workspace-design.md) (view
+  controls, resizing, and comparison eligibility)
 - [Component controls](./mokly-component-controls.md)
-- [Consumer static export](./mokly-export.md) — consumer CLI and
-  transactional artifact-generation contract.
-- [Static export delivery](./mokly-export-delivery.md) — portable
-  hosting, navigation, and comparison behavior.
-- [Export recovery](./mokly-export-recovery.md) — backup ownership,
-  concurrent destination changes, bounded cleanup, and failure reporting.
+- [Consumer static export](./mokly-export.md) — consumer CLI and transactional
+  artifact-generation contract.
+- [Static export delivery](./mokly-export-delivery.md) — portable hosting,
+  navigation, and comparison behavior.
+- [Export recovery](./mokly-export-recovery.md) — backup ownership, concurrent
+  destination changes, bounded cleanup, and failure reporting.
 - [Export ownership v1](./mokly-export-ownership.md) — public inventory schema
   and compatibility fixtures for independent upload receivers.
 - [Watched development](./mokly-watch.md)
@@ -118,6 +136,8 @@ when the historical primary file is absent, never when it is invalid.
   — implemented shared design components and ownership rules, with the
   [component library inventory](./mokly-design-component-library.md).
 - [CI and npm release contract](./npm-release.md)
+  - [npm breaking-change release notes](./npm-release-notes.md)
+  - [Repository preview deployments](./npm-preview-deployments.md)
   - [Release verification evidence](./npm-release-evidence.md)
   - [One-time registry bootstrap](./npm-bootstrap.md)
   - [GitHub publishing protections](./npm-github-protections.md)

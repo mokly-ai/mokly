@@ -9,8 +9,8 @@ import { repositoryRoot } from "../helpers/fixture.js";
 type Scheme = "dark" | "light";
 type Viewport = "desktop" | "mobile";
 
-const PANEL = "design/review/controls/overlay-panel";
-const APART = "design/review/controls/side-by-side-apart";
+const PANEL = "design-changes-overlay-panel";
+const APART = "design-changes-side-by-side-apart";
 
 /** Tolerance for a drawn thumb, whose geometry is fixed by CSS alone. */
 const THUMB_TOLERANCE = 0.005;
@@ -26,7 +26,7 @@ async function open(
       ? { width: 390, height: 844 }
       : { width: 1440, height: 1000 },
   );
-  const file = `${route}.${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
+  const file = `screens/${route}.${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
   await page.goto(
     pathToFileURL(path.join(repositoryRoot, "examples/basic/generated", file))
       .href,
@@ -260,11 +260,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       page,
     }) => {
       const stageInk = await paletteColor(scheme, "--chrome-ink-2");
-      for (const route of [
-        "design/review/controls/overlay-long",
-        PANEL,
-        APART,
-      ]) {
+      for (const route of ["design-changes-overlay-long", PANEL, APART]) {
         const preview = await open(page, route, viewport, scheme);
         const facts = await preview.evaluate((node) => ({
           sections: [...node.querySelectorAll(".mbk-shot-sections h3")].map(

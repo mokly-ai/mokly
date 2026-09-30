@@ -17,6 +17,7 @@ import type {
 } from "../../packages/viewer/dist/client/frame_adapter.js";
 import type * as PostAdapter from "../../packages/viewer/dist/client/post_message_adapter.js";
 import type { ComponentViewRecord } from "../../packages/viewer/dist/components/manifest_types.js";
+import { viewRoute } from "../../packages/viewer/dist/data.js";
 import { createCatalogue } from "../../packages/viewer/dist/shell/catalogue.js";
 import { componentEntrySource } from "../helpers/component_fixture.js";
 import { createFixture, removeFixture } from "../helpers/fixture.js";
@@ -84,14 +85,12 @@ export async function crossOriginFixture(
     (entry) => entry.kind === "screen" && entry.id === "home",
   );
   if (home?.kind !== "screen") throw new Error("No fixture screen");
+  const mobileView = viewRoute("screen", home.id, "mobile", "light");
   const renderId = `${"a".repeat(48)}.${"b".repeat(64)}`;
-  const temporaryPath = `/__mokly/components/renders/${renderId}/${home.fragments.mobile}`;
+  const temporaryPath = `/__mokly/components/renders/${renderId}/${mobileView}`;
   const temporaryFile = path.join(root, temporaryPath.slice(1));
   await fs.mkdir(path.dirname(temporaryFile), { recursive: true });
-  await fs.copyFile(
-    path.join(root, "static", home.fragments.mobile),
-    temporaryFile,
-  );
+  await fs.copyFile(path.join(root, "static", mobileView), temporaryFile);
   const usage = home.componentViews![0]!;
   return {
     host,

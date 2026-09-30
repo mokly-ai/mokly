@@ -33,8 +33,8 @@ test("excluded inline evidence is omitted from an ignored-only view", async (t) 
     { source, afterSource: source.replaceAll(">Before<", ">After<") },
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
   const home = result.screens.find((screen) => screen.id === "home")!;
   assert.ok(
     home.views.every(
@@ -61,8 +61,8 @@ test("excluded inline evidence is omitted beside a resource reason", async (t) =
     },
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
   assert.ok(
     result.screens
       .find((screen) => screen.id === "home")!
@@ -90,11 +90,9 @@ test("excluded inline evidence is omitted beside an input reason", async (t) => 
     },
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
-  const home = result.changes.find(
-    (entry) => entry.after?.route === "screens/home.html",
-  );
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
+  const home = result.changes.find((entry) => entry.after?.id === "home");
   assert.deepEqual(home?.reasons, [{ kind: "inputs" }]);
   assert.ok(
     result.screens
@@ -139,8 +137,7 @@ test("excluded evidence is omitted for a derived byte-only material change", asy
     ),
   );
   assert.deepEqual(
-    result.changes.find((entry) => entry.after?.route === "screens/home.html")
-      ?.reasons,
+    result.changes.find((entry) => entry.after?.id === "home")?.reasons,
     [{ kind: "material" }],
   );
 });
@@ -165,8 +162,8 @@ test("views settled by the fast path emit no inline evidence", async (t) => {
       event.stage === "review.compare-screens" && event.event === "counts",
   )?.counts;
   assert.ok(Number(counts?.fastPath) > 0);
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
   assert.ok(
     [
       ...result.screens.flatMap((screen) => screen.views),

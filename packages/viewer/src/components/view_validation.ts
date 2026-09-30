@@ -55,12 +55,11 @@ export function validateComponentViews(
       view as unknown as ComponentViewRecord,
       components,
       `${at} / ${axes[i]}`,
-      historical,
     );
   });
 }
 
-/** Validate one actual render without asserting completeness of other views. */
+/** Historical catalogue usage keeps canonical data without applying current schemas. */
 export function validateComponentViewRecord(
   view: ComponentViewRecord,
   components: ReadonlyMap<
@@ -68,7 +67,7 @@ export function validateComponentViewRecord(
     Pick<ManifestComponent, "propSchema" | "slots">
   >,
   at: string,
-  historical = false,
+  historicalUsage = false,
 ): void {
   for (const instance of view.instances) {
     exactKeys(
@@ -106,13 +105,10 @@ export function validateComponentViewRecord(
       invalidData(at, "invalid instance order");
     const component = components.get(instance.componentId);
     if (!component) invalidData(at, "instance names an unknown component");
-    const props = historical
-      ? decodeProps(instance.props)
-      : validateProps(
-          component.propSchema,
-          decodeProps(instance.props),
-          `${at} / ${instance.id}`,
-        );
+    const decoded = decodeProps(instance.props);
+    const props = historicalUsage
+      ? decoded
+      : validateProps(component.propSchema, decoded, `${at} / ${instance.id}`);
     if (
       canonicalJson(encodeProps(props)) !== canonicalJson(instance.props) ||
       reviewMaterialKey(props) !== instance.propsKey
@@ -147,7 +143,14 @@ export function validateComponentViewRecord(
   const instances = new Map(view.instances.map((item) => [item.key, item]));
   const slots = new Map(view.slots.map((item) => [item.key, item]));
   validateOrders(view.instances, at);
-  validateViewReferences(view, components, instances, slots, at, historical);
+  validateViewReferences(
+    view,
+    components,
+    instances,
+    slots,
+    at,
+    historicalUsage,
+  );
 }
 
 function validateOwner(

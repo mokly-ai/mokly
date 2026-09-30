@@ -7,12 +7,13 @@ import { promisify } from "node:util";
 
 import { parseArguments } from "../dist/cli/arguments.js";
 import {
-  collection,
   defineRoot,
+  folder,
   mockLink,
   reviewMaterialKey,
   screen,
 } from "../dist/index.js";
+import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 import { GUIDE_PATHS } from "./helpers/guides.js";
@@ -41,34 +42,31 @@ test("public helpers retain stable authoring semantics", () => {
   );
   const definitions = defineRoot({
     children: [
-      collection({
+      folder({
         children: [
           screen({
             description: "Nested screen",
             desktop: "desktop",
             id: "nested-screen",
             mobile: "mobile",
-            slug: "screen",
             title: "Screen",
           }),
         ],
-        description: "Nested collection",
-        id: "nested-group",
-        segment: "group",
         title: "Group",
       }),
     ],
-    path: "screens",
   });
   assert.deepEqual(
     definitions.map((entry) => entry.id),
-    ["nested-group", "nested-screen"],
+    ["nested-screen"],
   );
   assert.equal(
-    definitions[1]?.kind === "screen" ? definitions[1].route : "",
-    "screens/group/screen.html",
+    definitions[0]?.kind === "screen"
+      ? entryRoute(definitions[0].kind, definitions[0].id)
+      : "",
+    "screens/nested-screen.html",
   );
-  assert.equal(Object.hasOwn(definitions[1] ?? {}, "navPath"), false);
+  assert.deepEqual(definitions[0]?.navPath, ["Group"]);
 
   const rooted = defineRoot({
     children: [
@@ -77,25 +75,16 @@ test("public helpers retain stable authoring semantics", () => {
         desktop: "desktop",
         id: "rooted-screen",
         mobile: "mobile",
-        slug: "rooted",
         title: "Rooted screen",
       }),
     ],
-    collection: {
-      description: "Visible root",
-      id: "visible-root",
-      title: "Visible root",
-    },
-    path: "screens",
+    navPath: ["Visible root"],
   });
   assert.deepEqual(
     rooted.map(({ id }) => id),
-    ["visible-root", "rooted-screen"],
+    ["rooted-screen"],
   );
-  assert.deepEqual(rooted[0]?.kind === "collection" ? rooted[0].childIds : [], [
-    "rooted-screen",
-  ]);
-  assert.equal(rooted[0]?.title, "Visible root");
+  assert.deepEqual(rooted[0]?.navPath, ["Visible root"]);
 });
 
 test("public link helpers reject non-string runtime values", () => {

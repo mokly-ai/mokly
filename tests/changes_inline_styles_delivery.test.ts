@@ -29,8 +29,8 @@ test("inline ownership agrees across live, complete, selected and publication bo
   const snapshot = await cache.read(1);
   assert.ok(snapshot?.result);
   const artifact = await fixture.complete();
-  assert.equal(artifact.result.schemaVersion, 3);
-  if (artifact.result.schemaVersion !== 3) return;
+  assert.equal(artifact.result.schemaVersion, 4);
+  if (artifact.result.schemaVersion !== 4) return;
   assert.deepEqual(snapshot.result, artifact.result);
   assert.ok(
     artifact.result.screens
@@ -56,7 +56,7 @@ test("inline ownership agrees across live, complete, selected and publication bo
   });
   t.after(() => server.close());
   const response = await fetch(
-    `${server.url}/__mokly/diffs/review.json?route=screens%2Fhome.html`,
+    `${server.url}/__mokly/diffs/review.json?id=home`,
   );
   assert.equal(response.status, 200, await response.clone().text());
   const selected = parseReviewResult(await response.json());

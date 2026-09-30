@@ -5,7 +5,7 @@ import path from "node:path";
 const MARKER = ".mokly-export-artifact";
 
 /** Independent marker-shape reader for package conformance, not a full receiver. */
-export function assertOwnershipMarker(value) {
+function assertOwnershipMarker(value) {
   assert.ok(value && typeof value === "object" && !Array.isArray(value));
   assert.ok(
     Object.hasOwn(value, "schemaVersion") && Object.hasOwn(value, "files"),

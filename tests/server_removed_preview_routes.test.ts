@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { readCatalogue } from "@mokly/viewer";
-import { parseRemovedPagePreview, parseReviewResult } from "@mokly/viewer/data";
+import {
+  entryRoute,
+  parseRemovedPagePreview,
+  parseReviewResult,
+  viewRoute,
+} from "@mokly/viewer/data";
 
 import { committedReviewRepository } from "../dist/review/repository.js";
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
@@ -77,28 +82,41 @@ test("Serve routes removed screens and pages without capture during browsing", a
   assert.ok(beforeCapture.removedEntries.every((entry) => !entry.preview));
 
   const screenResponse = await fetch(
-    `${server.url}/__mokly/diffs/review.json?route=screens%2Fremoved.html`,
+    `${server.url}/__mokly/diffs/review.json?id=removed-screen`,
   );
   assert.equal(screenResponse.status, 200, await screenResponse.clone().text());
   const screen = parseReviewResult(await screenResponse.json()).screens[0]!;
   assert.equal(screen.state, "removed");
-  assert.ok(screen.views.every((view) => view.beforePath && !view.afterPath));
+  assert.ok(screen.views.every((view) => view.state === "removed"));
+  const firstView = screen.views[0]!;
   assert.match(
     await (
-      await fetch(new URL(screen.views[0]!.beforePath!, screenResponse.url))
+      await fetch(
+        new URL(
+          `snapshots/before/${viewRoute("screen", screen.id, firstView.viewport, firstView.colorScheme)}`,
+          screenResponse.url,
+        ),
+      )
     ).text(),
     /Previous/,
   );
   assert.equal(screenCaptures, 1);
 
   const pageResponse = await fetch(
-    `${server.url}/__mokly/diffs/review.json?page=archive%2Fremoved.html`,
+    `${server.url}/__mokly/diffs/review.json?page=removed-page`,
   );
   assert.equal(pageResponse.status, 200, await pageResponse.clone().text());
   const preview = parseRemovedPagePreview(await pageResponse.json());
   assert.equal(preview.baseCommit, fixture.baseCommit);
   assert.match(
-    await (await fetch(new URL(preview.documentPath, pageResponse.url))).text(),
+    await (
+      await fetch(
+        new URL(
+          `snapshots/before/${entryRoute("page", preview.id)}`,
+          pageResponse.url,
+        ),
+      )
+    ).text(),
     /Previous page/,
   );
   assert.deepEqual(

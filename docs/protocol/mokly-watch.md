@@ -157,11 +157,11 @@ resource watches. Independently, visited previews send generation-tagged documen
 closures to the parent, which attaches incremental resource watches immediately,
 even when exhaustive rendering has not finished or fails elsewhere. Incremental
 watches accumulate within a source generation and are replaced by the next
-generation's visited closure. Discovery repeats after watcher readiness. Reloads
-keep missing or invalid paths and their last-known
-descendants observable until repaired or unreferenced. Invalid resources still
-make Changes unavailable, while verified baseline deletions identify affected
-screens. Neither case prevents a live reload or comparison-cache invalidation.
+generation's visited closure. Discovery repeats after watcher readiness.
+Missing or invalid paths and last-known descendants stay observable until
+repaired or unreferenced. [Changes resource handling](./mokly-changes.md#changes-membership)
+distinguishes invalid inputs from verified deletions; neither blocks reload or
+comparison-cache invalidation.
 Resource watches coalesce file and entry-replacement notifications and replace
 their observers when validity changes, so repairing a dangling alias as a regular
 file also restores subsequent edits. Unnamed raw events and unrelated generated
@@ -175,7 +175,7 @@ the last-good disk output without claiming completeness. Errors are reported whi
 the watcher waits for another authored change. A
 successful rebuild or healthy restart publishes a new update version. Browsers
 reload their current durable URL and restore search, changed-only selection,
-current collection disclosure, the disclosure baseline captured before active
+current folder disclosure, the disclosure baseline captured before active
 filtering, details disclosure, viewport and color-scheme selection, responsive
 drawer, catalogue scroll, and per-region stage scroll once. Recovery is strictly
 parsed with one compatibility rule: a payload from before filter-baseline
@@ -191,23 +191,23 @@ status (older payloads omit it). A selected Changes filter survives pending or
 unavailable states and their completion rather than switching to All to reveal an
 unchanged current preview. Explicit navigation still reveals its destination.
 
-When an authored rebuild reparents an entry, the new manifest relationships
-move its navigation row and ancestor crumbs in the same reload. Disclosure
-recovery still applies to every unchanged stable collection id; removed ids and
-obsolete label-path keys have no target and are ignored.
+Navigation follows the [path contract](./mokly-nav-paths.md); recovery uses the
+[disclosure persistence contract](./mokly-disclosure-persistence.md)
+for current keys, values, and incompatible snapshot handling.
 
 When a successful rebuild leaves the manifest structure unchanged, or a
 resource edit or explicit watch rule requests a reload, the parent keeps the
-ready child. It first publishes a typed update that clears stale route and
+ready child. It first publishes a typed update that clears stale entry and
 component evidence, making the successful content generation visible without
 waiting on Git. The parent then computes one complete classification outside the
 HTTP request path. A sequence token discards results superseded by a newer watch
 action; the current successful result publishes a second typed update that
-atomically replaces route membership, removed-entry baseline data, and component
-evidence. Both tabs are present from startup: pending status shows a spinner in
-the reserved count slot and, when selected, in the sidebar. An available empty list
-shows zero; a failed or unavailable comparison ends loading and shows a dash plus an
-unavailable sidebar. Every terminal status uses the same sequence/version checks as
+atomically replaces changed-entry membership, removed-entry baseline data, and
+component evidence. Both tabs are present from startup: pending status shows a
+spinner in the reserved count slot and, when selected, in the sidebar. An
+available empty list shows zero; a failed or unavailable comparison ends loading
+and shows a dash plus an unavailable sidebar. Every terminal status uses the
+same sequence/version checks as
 the result, including background build and write failures. Initial watched startup follows the
 same asynchronous classification rule after listener readiness, as does non-watched
 Serve. Watched Serve polls resolved HEAD/base commits once per second outside HTTP;

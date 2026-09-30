@@ -50,9 +50,9 @@ test("committed non-CSS actual-invocation evidence belongs to its declared owner
       "main",
     ),
   ]);
-  assert.deepEqual(live.changedRoutes, ["components/action.html"]);
-  assert.equal(artifact.result.schemaVersion, 3);
-  if (artifact.result.schemaVersion !== 3) return;
+  assert.deepEqual(live.changedIds, ["action"]);
+  assert.equal(artifact.result.schemaVersion, 4);
+  if (artifact.result.schemaVersion !== 4) return;
   assert.deepEqual(artifact.result.changes, [
     {
       kind: "component",
@@ -68,7 +68,7 @@ test("committed non-CSS actual-invocation evidence belongs to its declared owner
       (item) =>
         item.changedComponentId === "action" &&
         item.consumer.kind === "screen" &&
-        item.consumer.route === "screens/home.html",
+        item.consumer.id === "home",
     ),
   );
 });
@@ -96,10 +96,10 @@ test("derived non-CSS actual-invocation bytes become owner material", async (t) 
   });
   assert.deepEqual(
     result.changes.map((entry) => ({
-      route: entry.after?.route,
+      route: entry.after?.id,
       reasons: entry.reasons,
     })),
-    [{ route: "components/action.html", reasons: [{ kind: "material" }] }],
+    [{ route: "action", reasons: [{ kind: "material" }] }],
   );
   assert.ok(
     result.affectedConsumers.some(
@@ -135,10 +135,10 @@ test("non-public implementation dependencies keep declarative ownership", async 
     "main",
     committedReviewRepository(fixture.config),
   );
-  assert.deepEqual(live.changedRoutes, ["components/action.html"]);
+  assert.deepEqual(live.changedIds, ["action"]);
   const result = live.componentChanges?.result;
-  assert.equal(result?.schemaVersion, 3);
-  if (result?.schemaVersion !== 3) return;
+  assert.equal(result?.schemaVersion, 4);
+  if (result?.schemaVersion !== 4) return;
   assert.deepEqual(result.changes[0]?.reasons, [
     { kind: "dependency", path: "shared/action.ts" },
   ]);

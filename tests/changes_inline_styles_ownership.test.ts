@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV4 } from "../packages/viewer/dist/review/component_types.js";
 
 import { inlineChangesFixture } from "./helpers/inline_changes.js";
 
-function changedRoutes(result: ReviewResultV3): string[] {
-  return result.changes.map((entry) => (entry.after ?? entry.before)!.route);
+function changedRoutes(result: ReviewResultV4): string[] {
+  return result.changes.map((entry) => (entry.after ?? entry.before)!.id);
 }
 
 test("an actual-only component rule changes the component and affects its screen", async (t) => {
@@ -17,16 +17,16 @@ test("an actual-only component rule changes the component and affects its screen
   );
   const live = await fixture.live();
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
-  assert.deepEqual(changedRoutes(result), ["components/action.html"]);
-  assert.deepEqual(live.changedRoutes, ["components/action.html"]);
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
+  assert.deepEqual(changedRoutes(result), ["action"]);
+  assert.deepEqual(live.changedIds, ["action"]);
   assert.ok(
     result.affectedConsumers.some(
       (consumer) =>
         consumer.changedComponentId === "action" &&
         consumer.consumer.kind === "screen" &&
-        consumer.consumer.route === "screens/home.html",
+        consumer.consumer.id === "home",
     ),
   );
   const home = result.screens.find((screen) => screen.id === "home")!;
@@ -42,12 +42,9 @@ test("one rule shared by two components changes both and affects the screen", as
     "<style>.shared{color:blue}</style>",
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
-  assert.deepEqual(changedRoutes(result), [
-    "components/action.html",
-    "components/pane.html",
-  ]);
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
+  assert.deepEqual(changedRoutes(result), ["action", "pane"]);
   assert.deepEqual(
     [
       ...new Set(
@@ -87,13 +84,11 @@ for (const [name, selector, evidence] of [
     );
     const live = await fixture.live();
     const { result } = await fixture.complete();
-    assert.equal(result.schemaVersion, 3);
-    if (result.schemaVersion !== 3) return;
-    assert.ok(changedRoutes(result).includes("screens/home.html"));
-    assert.ok(live.changedRoutes?.includes("screens/home.html"));
-    const home = result.changes.find(
-      (entry) => entry.after?.route === "screens/home.html",
-    );
+    assert.equal(result.schemaVersion, 4);
+    if (result.schemaVersion !== 4) return;
+    assert.ok(changedRoutes(result).includes("home"));
+    assert.ok(live.changedIds?.includes("home"));
+    const home = result.changes.find((entry) => entry.after?.id === "home");
     assert.ok(home?.reasons.some((reason) => reason.kind === "material"));
     assert.ok(
       result.screens
@@ -112,15 +107,15 @@ test("a nested component inside a caller slot owns its implementation rule", asy
     "<style>.slot-child{color:blue}</style>",
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
-  assert.ok(changedRoutes(result).includes("components/action.html"));
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
+  assert.ok(changedRoutes(result).includes("action"));
   assert.ok(
     result.affectedConsumers.some(
       (item) =>
         item.changedComponentId === "action" &&
         item.consumer.kind === "screen" &&
-        item.consumer.route === "screens/home.html",
+        item.consumer.id === "home",
     ),
   );
 });
@@ -132,11 +127,9 @@ test("the root component keeps its own matching style edit", async (t) => {
     "<style>.action{color:blue}</style>",
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
-  const action = result.changes.find(
-    (entry) => entry.after?.route === "components/action.html",
-  );
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
+  const action = result.changes.find((entry) => entry.after?.id === "action");
   assert.ok(action?.reasons.some((reason) => reason.kind === "material"));
   assert.ok(
     result.components

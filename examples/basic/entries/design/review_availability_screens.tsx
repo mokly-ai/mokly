@@ -88,7 +88,6 @@ export const reviewAvailabilityScreens = [
     ),
     rationale:
       "Reviewers approve a distinct preparing state before the comparison data exists, separate from the pending check that follows it.",
-    slug: "preparing",
     title: "Preparing comparison",
   }),
   screen({
@@ -112,7 +111,6 @@ export const reviewAvailabilityScreens = [
     ),
     rationale:
       "A failed preparation must reuse the one unavailable presentation instead of naming why the comparison is missing.",
-    slug: "unavailable",
     title: "Comparison unavailable",
   }),
 ];

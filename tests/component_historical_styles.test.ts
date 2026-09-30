@@ -7,11 +7,11 @@ import { compileCatalogue, type Compilation } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import {
-  FORMER_MANIFEST_NAME,
+  parseHistoricalManifest,
   MANIFEST_NAME,
 } from "../dist/registry/manifest.js";
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
@@ -34,7 +34,7 @@ for (const edit of [
   "material-key",
   "implementation",
 ])
-  test(`historical markers preserve style coordinates and attribution: ${edit}`, async (t) => {
+  test(`historical v7 retired arrays preserve inline attribution: ${edit}`, async (t) => {
     const fixture = await createFixture(source, {
       extraConfig: 'renderer: "renderer.tsx", colorSchemes: ["light", "dark"],',
     });
@@ -71,25 +71,24 @@ for (const edit of [
     );
     const git = componentGit(before, changedPaths);
     const artifact = await compareReview(after, config, git, "main");
-    assert.equal(artifact.result.schemaVersion, 3);
-    if (artifact.result.schemaVersion !== 3) return;
+    assert.equal(artifact.result.schemaVersion, 4);
+    if (artifact.result.schemaVersion !== 4) return;
     const expected =
       edit === "owned-css" || edit === "implementation"
-        ? ["components/action.html"]
+        ? ["action"]
         : edit === "global-css"
-          ? [
-              "components/action.html",
-              "components/pane.html",
-              "screens/home.html",
-            ]
+          ? ["action", "pane", "home"]
           : edit === "caller" || edit === "material-key"
-            ? ["screens/home.html"]
+            ? ["home"]
             : [];
     assert.deepEqual(
-      artifact.result.changes.map((entry) => entry.after!.route),
+      artifact.result.changes.map((entry) => entry.after!.id),
       expected,
     );
-    assert.deepEqual(await computeChangedRoutes(config, "main", git), expected);
+    assert.deepEqual(
+      await computeChangedIds(config, "main", git),
+      [...expected].sort(),
+    );
     const screenReview = artifact.result.screens.find(
       (screen) => screen.id === "home",
     )!;
@@ -132,26 +131,23 @@ export default (input) => {
 };`;
 }
 
-/** Reconstruct old comment bytes with legitimate text-only UTF-16 style offsets. */
+/** Keep obsolete ownership data in the baseline blob, not in the accepted records. */
 function historical(compilation: Compilation): Compilation {
   const manifest = structuredClone(compilation.manifest);
   const outputs = new Map(
     [...compilation.outputs].map(([route, html]) => [
       route,
-      html
-        .replaceAll("<!--mokly-component:", "<!--mokabook-component:")
-        .replaceAll("<!--mokly-review-", "<!--mokabook-review-")
-        .replace(
-          `<style>body{display:block}${originalCss}</style>`,
-          `<style>${originalCss}body{display:block}</style>`,
-        ),
+      html.replace(
+        `<style>body{display:block}${originalCss}</style>`,
+        `<style>${originalCss}body{display:block}</style>`,
+      ),
     ]),
   );
   for (const entry of manifest.entries)
     for (const view of generatedViews(entry)) {
       const html = outputs.get(view.path)!;
       const startOffset = html.indexOf(originalCss);
-      assert.ok(startOffset > html.indexOf("<!--mokabook-component:"));
+      assert.ok(startOffset > html.indexOf("<!--mokly-component:"));
       assert.equal(
         html.slice(startOffset, startOffset + originalCss.length),
         originalCss,
@@ -167,10 +163,10 @@ function historical(compilation: Compilation): Compilation {
         resources: [{ malformed: true }],
       });
     }
-  outputs.delete(MANIFEST_NAME);
-  outputs.set(
-    FORMER_MANIFEST_NAME,
-    JSON.stringify({ ...manifest, generatedBy: "mokabook" }),
-  );
-  return { ...compilation, manifest, outputs };
+  outputs.set(MANIFEST_NAME, JSON.stringify(manifest));
+  return {
+    ...compilation,
+    manifest: parseHistoricalManifest(manifest),
+    outputs,
+  };
 }

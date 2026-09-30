@@ -21,12 +21,12 @@ export function referencedRoutes(
     typeof content === "string"
       ? content
       : Buffer.from(content).toString("utf8");
+  const html =
+    extension === ".html" || extension === ".htm"
+      ? extractHtmlReferences(text, options)
+      : undefined;
   const references =
-    extension === ".css"
-      ? extractCssReferences(text)
-      : extension === ".html" || extension === ".htm"
-        ? extractHtmlReferences(text, options).resources
-        : [];
+    extension === ".css" ? extractCssReferences(text) : (html?.resources ?? []);
   return [
     ...new Set(
       references.flatMap((reference) => {

@@ -2,12 +2,10 @@
 
 import { useContext, useMemo } from "react";
 
-import type {
-  CatalogueRoutedEntry,
-  CatalogueView,
-} from "../catalogue/types.js";
+import type { CatalogueRecord, CatalogueView } from "../catalogue/types.js";
 import { temporaryPreviewAdapter } from "../client/same_origin_adapter.js";
 import type { GeneratedComponentView } from "../components/views.js";
+import { entryRoute } from "../navigation/routes.js";
 import { DisplaySelection } from "../viewer/display_context.js";
 
 import { useMountedShellFrame } from "./frame_mount_hook.js";
@@ -39,7 +37,7 @@ export function StageFrame({
   views,
   viewport,
 }: {
-  entry: CatalogueRoutedEntry;
+  entry: Extract<CatalogueRecord, { kind: "component" | "screen" }>;
   flow?: boolean;
   fragment?: string;
   hasDarkFragments: boolean;
@@ -72,14 +70,13 @@ export function StageFrame({
       : previewLight;
   const source = preview
     ? generatedFrameSource(preview, fragment, stepIndex)
-    : frameSource(selected, fragment, stepIndex);
+    : frameSource(entry, selected, fragment, stepIndex);
   const temporary =
     preview?.path.startsWith("/__mokly/components/renders/") ?? false;
   const previewAdapter = useMemo(temporaryPreviewAdapter, []);
   const identity = useMemo<ShellFrameIdentity>(
     () => ({
       entryId: entry.id,
-      route: entry.route,
       viewport,
       ...(preview || selected
         ? { colorScheme: preview?.colorScheme ?? selected!.colorScheme }
@@ -87,7 +84,7 @@ export function StageFrame({
       ...(stepIndex === undefined ? {} : { stepIndex }),
       ...(variantId ? { variantId } : {}),
     }),
-    [entry.id, entry.route, preview, selected, stepIndex, variantId, viewport],
+    [entry.id, preview, selected, stepIndex, variantId, viewport],
   );
   const mounted = useMountedShellFrame({
     ...(temporary ? { adapter: previewAdapter } : {}),
@@ -116,14 +113,14 @@ export function StageFrame({
         hasDarkFragments
           ? previewLight
             ? generatedFrameSource(previewLight, fragment, stepIndex)
-            : frameSource(light, fragment, stepIndex)
+            : frameSource(entry, light, fragment, stepIndex)
           : undefined
       }
       data-fragment-dark={
         hasDarkFragments
           ? previewDark
             ? generatedFrameSource(previewDark, fragment, stepIndex)
-            : frameSource(dark, fragment, stepIndex)
+            : frameSource(entry, dark, fragment, stepIndex)
           : undefined
       }
       ref={mounted.frameRef}
@@ -138,9 +135,7 @@ export function StageFrame({
     <PhoneFrame>{frame}</PhoneFrame>
   ) : (
     <BrowserFrame
-      address={
-        entry.kind === "screen" ? (entry.address ?? entry.route) : entry.route
-      }
+      address={entry.address ?? entryRoute("screen", entry.id)}
       frameKey={frameIdentityKey(identity)}
     >
       {frame}
@@ -181,17 +176,15 @@ export function DocumentStageFrame({
   entry,
   fragment,
 }: {
-  entry: Extract<CatalogueRoutedEntry, { kind: "page" }>;
+  entry: Extract<CatalogueRecord, { kind: "page" }>;
   fragment?: string;
 }) {
   const store = useOptionalShellStore();
   const registry = useOptionalShellFrameRegistry();
-  const source = entry.documentPath
-    ? framePath(entry.documentPath, fragment)
-    : undefined;
+  const source = framePath(`static/${entryRoute("page", entry.id)}`, fragment);
   const identity = useMemo<ShellFrameIdentity>(
-    () => ({ entryId: entry.id, route: entry.route }),
-    [entry.id, entry.route],
+    () => ({ entryId: entry.id }),
+    [entry.id],
   );
   const mounted = useMountedShellFrame({
     enabled: store?.interactive ?? false,
@@ -253,7 +246,7 @@ function FrameLabel({
 
 function frameIdentityKey(identity: ShellFrameIdentity): string {
   return JSON.stringify([
-    identity.route,
+    identity.entryId,
     identity.variantId,
     identity.stepIndex,
     identity.viewport,

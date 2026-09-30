@@ -24,11 +24,9 @@ test("a caller prop edit under atomic CSS stays with the screen inputs", async (
     renderer: { before: atomicRenderer, after: atomicRenderer },
   });
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
-  const home = result.changes.find(
-    (entry) => entry.after?.route === "screens/home.html",
-  );
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
+  const home = result.changes.find((entry) => entry.after?.id === "home");
   assert.deepEqual(
     home?.reasons.map(({ kind }) => kind),
     ["inputs", "material"],
@@ -45,8 +43,8 @@ test("a parent implementation changing child props owns the atomic rule", async 
     actionRender:
       "(props) => <button className={`tone-${props.label}`}>{props.label}</button>",
     extra:
-      'const parent = defineComponent({ ...metadata, id: "parent", title: "Parent", description: "Parent", route: "components/parent.html", propSchema: { kind: "object", properties: {} }, render: () => <action.Component label="before" />, variants: [{ id: "default", title: "Default", props: {} }] });',
-    exports: "action.entry, pane.entry, parent.entry,",
+      'const parent = defineComponent({ ...metadata, id: "parent", title: "Parent", description: "Parent", propSchema: { kind: "object", properties: {} }, render: () => <action.Component label="before" />, variants: [{ id: "parent-default", title: "Default", props: {} }] });',
+    exports: "action.entries, pane.entries, parent.entries,",
     body: "<parent.Component />",
   });
   const after = before.replace(
@@ -59,13 +57,13 @@ test("a parent implementation changing child props owns the atomic rule", async 
     renderer: { before: atomicRenderer, after: atomicRenderer },
   });
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
   const routes = result.changes.map(
-    (entry) => (entry.after ?? entry.before)!.route,
+    (entry) => (entry.after ?? entry.before)!.id,
   );
-  assert.ok(routes.includes("components/parent.html"));
-  assert.ok(!routes.includes("components/action.html"));
+  assert.ok(routes.includes("parent"));
+  assert.ok(!routes.includes("action"));
   assert.ok(
     result.affectedConsumers.some(
       (item) => item.changedComponentId === "parent",

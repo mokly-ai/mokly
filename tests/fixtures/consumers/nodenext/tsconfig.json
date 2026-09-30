@@ -8,5 +8,10 @@
     "strict": true,
     "target": "ES2022"
   },
-  "include": ["api.tsx", "components.tsx", "viewer.tsx"]
+  "include": [
+    "api.tsx",
+    "components.tsx",
+    "renderer-contract.d.ts",
+    "viewer.tsx"
+  ]
 }

@@ -16,23 +16,22 @@ const AFTER =
 
 function entrySource(): string {
   return `import React from "react";
-import { defineCollection, defineComponent, defineScreen } from "@mokly/mokly";
-const metadata = { dependencies: ["notes.md"], relatedDocs: [] };
+import { defineComponent, defineScreen } from "@mokly/mokly";
+const metadata = { navPath: ["Fixture"], dependencies: ["notes.md"], relatedDocs: [] };
 const action = defineComponent({ ...metadata,
-  id: "action", title: "Action", description: "A shared action", route: "components/action.html",
+  id: "action", title: "Action", description: "A shared action",
   propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } },
   render: (props) => <button className="action">{props.label}</button>,
-  variants: [{ id: "default", title: "Default", props: { label: "Continue" } }]
+  variants: [{ id: "action-default", title: "Default", props: { label: "Continue" } }]
 });
 export const mockups = [
-  defineCollection({ ...metadata, id: "fixture", title: "Fixture", description: "Inline style evidence", childIds: ["matched", "excluded", "affected", "action"] }),
-  defineScreen({ ...metadata, id: "matched", title: "Matched", description: "Entry-owned styles", route: "screens/matched.html",
+  defineScreen({ ...metadata, id: "matched", title: "Matched", description: "Entry-owned styles",
     mobile: <main className="entry">Matched</main>, desktop: <main className="entry">Matched</main> }),
-  defineScreen({ ...metadata, id: "excluded", title: "Welcome", description: "Excluded page styles", route: "screens/excluded.html",
+  defineScreen({ ...metadata, id: "excluded", title: "Welcome", description: "Excluded page styles",
     mobile: <main className="plain">Welcome</main>, desktop: <main className="plain">Welcome</main> }),
-  defineScreen({ ...metadata, id: "affected", title: "Affected", description: "Component-owned styles", route: "screens/affected.html",
+  defineScreen({ ...metadata, id: "affected", title: "Affected", description: "Component-owned styles",
     mobile: <main><action.Component label="Affected" /></main>, desktop: <main><action.Component label="Affected" /></main> }),
-  action.entry
+  action.entries
 ];`;
 }
 

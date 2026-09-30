@@ -10,18 +10,20 @@ import { serveStaticFiles } from "../helpers/static_server.js";
 
 export const HISTORY_ENTRIES = [
   {
-    id: "history-screen",
+    previousId: "history-screen-old",
+    currentId: "history-screen",
     kind: "screen",
-    previousRoute: "screens/previous.html",
-    currentRoute: "screens/current.html",
+    previousRoute: "screens/history-screen-old.html",
+    currentRoute: "screens/history-screen.html",
     previousTitle: "Previous screen",
     currentTitle: "Current screen",
   },
   {
-    id: "history-page",
+    previousId: "history-page-old",
+    currentId: "history-page",
     kind: "page",
-    previousRoute: "pages/previous.html",
-    currentRoute: "pages/current.html",
+    previousRoute: "pages/history-page-old.html",
+    currentRoute: "pages/history-page.html",
     previousTitle: "Previous page",
     currentTitle: "Current page",
   },
@@ -29,20 +31,20 @@ export const HISTORY_ENTRIES = [
 
 function historySource(current: boolean): string {
   const version = current ? "Current" : "Previous";
-  const route = current ? "current" : "previous";
+  const suffix = current ? "" : "-old";
   return `import React from "react";
 import { definePage, defineScreen } from "@mokly/mokly";
 const metadata = { description: "History fixture", dependencies: [], relatedDocs: [] };
 export const mockups = [
-  defineScreen({ ...metadata, id: "history-screen", title: "${version} screen", route: "screens/${route}.html", useCaseIds: [],
+  defineScreen({ ...metadata, id: "history-screen${suffix}", title: "${version} screen", useCaseIds: [],
     mobile: <main><h1>${version} mobile screen</h1></main>,
     desktop: <main><h1>${version} desktop screen</h1></main> }),
-  definePage({ ...metadata, id: "history-page", title: "${version} page", route: "pages/${route}.html",
+  definePage({ ...metadata, id: "history-page${suffix}", title: "${version} page",
     render: () => '<!doctype html><html><body><h1>${version} page content</h1></body></html>' }),
 ];`;
 }
 
-/** A real Git baseline with a screen and page moved without changing their IDs. */
+/** A real Git baseline with a screen and page replaced under new IDs. */
 export async function startHistoricalSelectionHistory(
   mode: "serve" | "static",
 ) {

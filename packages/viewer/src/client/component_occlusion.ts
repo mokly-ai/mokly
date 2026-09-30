@@ -5,10 +5,7 @@ export interface VisibleBox {
   right: number;
   bottom: number;
 }
-export function intersectBoxes(
-  a: VisibleBox,
-  b: VisibleBox,
-): VisibleBox | undefined {
+function intersectBoxes(a: VisibleBox, b: VisibleBox): VisibleBox | undefined {
   const box = {
     left: Math.max(a.left, b.left),
     top: Math.max(a.top, b.top),
@@ -17,7 +14,7 @@ export function intersectBoxes(
   };
   return box.right > box.left && box.bottom > box.top ? box : undefined;
 }
-export function subtractBox(box: VisibleBox, cut: VisibleBox): VisibleBox[] {
+function subtractBox(box: VisibleBox, cut: VisibleBox): VisibleBox[] {
   const overlap = intersectBoxes(box, cut);
   if (!overlap) return [box];
   return [

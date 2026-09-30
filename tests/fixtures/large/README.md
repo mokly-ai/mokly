@@ -47,6 +47,8 @@ JSON records separate listening, usable startup, Props, cached delivery,
 complete Changes and classification times. It also records the interval-union
 share of background classification spent in `review.inline-style-analysis`.
 
+Setup with zero stylesheets or a zero share has no initial stylesheet edit.
+Either usable startup at five seconds or above fails the command.
 Chrome is launched before timing; “cold” means application-cold, not a flushed
 OS page cache. The benchmark emits the complete six-sample matrix before
 returning a failure if any usable startup is five seconds or above. A bounded
@@ -70,7 +72,8 @@ non-consumer absent from both sets.
 The 2026-09-28 committed-output measurement used Linux x64, Node 24.19.0,
 an Intel Xeon processor at 2.90 GHz, eight logical CPUs and 16.3 GiB RAM. Both
 fixtures used 30 areas, 40 screens per area, 12 rows per screen, four shared
-stylesheets and a 0.5 stylesheet share: 1,410 routes and 5,550 documents.
+stylesheets and a 0.5 stylesheet share: 1,410 routes and 5,550 documents,
+before mainline made the 180 saved variants independent routed entries.
 
 | Fixture          | Setup      | Fixture size |
 | ---------------- | ---------- | ------------ |
@@ -146,9 +149,9 @@ no five-second budget. To smoke-test faster, add matching
 `--areas 2 --screens 10 --rows 6` options to both setup and benchmark.
 
 Defaults are 30 areas, 40 screens per area, and 12 records per screen. Each area
-adds two registered components with three saved variants, a page and one flow
-per ten screens. The default therefore has 1,410 routed entries and 5,550
-documents plus the manifest. Collections are additional non-routed entries.
+adds two registered components, each with three saved variants, a page and one flow
+per ten screens. The default therefore has 1,590 routed entries and 5,550
+documents plus the manifest. Folder paths group entries without additional records.
 Each screen and component variant renders in mobile/desktop and light/dark.
 Flows reuse the canonical screens rather than adding documents. Shared panels
 contain nested actions and caller-owned slots; screens also invoke repeated
@@ -204,9 +207,9 @@ five-second interactive target.
 Key files: `generate.ts` produces consumer sources; `area.tsx`, `components.tsx`
 and `screens.tsx` define the catalogue; `renderer.tsx` collects native styles;
 `renderer_inline.tsx` and `inline_styles.tsx` provide the cumulative variant;
-`scripts/large/setup.mjs` owns baseline setup, `toolchain.mjs` archives the
-derived tooling, `baseline.mjs` resets the pinned cache safely,
-`scenarios.mjs` applies deterministic edits, `timings.mjs` aggregates spans, and
-`benchmark.mjs` owns browser acceptance. The
+`scripts/large/setup.mjs` owns baseline setup, `toolchain.mjs` archives derived
+tooling, `baseline.mjs` resets the pinned cache safely, `scenarios.mjs` applies
+deterministic edits, `timings.mjs` aggregates spans and `benchmark.mjs` owns
+browser acceptance. The
 [diagnostic contract](../../../docs/protocol/mokly-timings.md) describes timing
 records, inclusive durations and process boundaries.

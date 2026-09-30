@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { designLibrary } from "./helpers/design_library.js";
@@ -30,7 +30,7 @@ test("each exclusive library stylesheet changes its component and only affects r
               (instance) => instance.componentId === `design-ui-${slug}`,
             ),
           )
-            ? [entry.route]
+            ? [entry.id]
             : [],
         )
         .sort();
@@ -41,9 +41,7 @@ test("each exclusive library stylesheet changes its component and only affects r
       assert.deepEqual(
         result.affectedConsumers
           .flatMap((affected) =>
-            affected.consumer.kind === "screen"
-              ? [affected.consumer.route]
-              : [],
+            affected.consumer.kind === "screen" ? [affected.consumer.id] : [],
           )
           .sort(),
         consumers,
@@ -61,7 +59,10 @@ test("each exclusive library stylesheet changes its component and only affects r
             ? [evidence.context.variantId]
             : [],
         );
-        assert.deepEqual([...new Set(variants)], ["tag-picker"]);
+        assert.deepEqual(
+          [...new Set(variants)],
+          ["design-ui-top-bar-tag-picker"],
+        );
         assert.ok(
           topBar.evidence.some(
             (evidence) =>
@@ -94,7 +95,7 @@ test("real implementation and saved metadata edits have distinct impact", async 
       "chrome/top-bar.tsx",
       'title: "Search"',
       'title: "Filtered search"',
-      "top-bar",
+      "top-bar-search",
       false,
     ],
     [
@@ -108,7 +109,7 @@ test("real implementation and saved metadata edits have distinct impact", async 
       "chrome/top-bar.tsx",
       'query: "tag:forms"',
       'query: "tag:onboarding"',
-      "top-bar",
+      "top-bar-search",
       false,
     ],
   ] as const)
@@ -221,8 +222,8 @@ test("the committed catalogue uses one baseline view batch and agrees across Ser
   const git = fixture.git([file]);
   const expected = await fixture.compare(after);
   assert.deepEqual(
-    await computeChangedRoutes(fixture.config, "main", git),
-    expected.changes.map((change) => (change.after ?? change.before)!.route),
+    await computeChangedIds(fixture.config, "main", git),
+    expected.changes.map((change) => (change.after ?? change.before)!.id),
   );
   const viewBatches = fixture.batches.filter((files) =>
     files.some((file) => file.endsWith(".html")),
@@ -243,8 +244,8 @@ test("the committed catalogue uses one baseline view batch and agrees across Ser
   );
   assert.ok(resourceReads.length <= fixture.resources.size);
   const { result } = await compareReview(after, fixture.config, git, "main");
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion === 3) {
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion === 4) {
     assert.deepEqual(result.changes, expected.changes);
     assert.deepEqual(result.affectedConsumers, expected.affectedConsumers);
   }
