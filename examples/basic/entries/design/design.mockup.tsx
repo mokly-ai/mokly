@@ -78,7 +78,6 @@ const designMockups = defineRoot({
             ...reviewImpactScreens,
             folder({
               children: reviewStyleScreens,
-
               title: "Stylesheet evidence",
             }),
           ],
