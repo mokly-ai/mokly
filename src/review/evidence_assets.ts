@@ -1,6 +1,7 @@
 /** Record the checked bytes so later comparisons cannot silently use edited output. */
 import { createHash } from "node:crypto";
 
+import { documentWorkSync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
 
 import { type LocatedReviewAsset, type ReviewAssetReader } from "./assets.js";
@@ -100,7 +101,9 @@ export class SelectedAssetReader implements ReviewAssetReader {
 }
 
 function assetDigest(content: Uint8Array): string {
-  return createHash("sha256").update(content).digest("hex");
+  return documentWorkSync("hashMs", () =>
+    createHash("sha256").update(content).digest("hex"),
+  );
 }
 
 function changedAsset(route: string): MoklyError {

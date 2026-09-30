@@ -1,3 +1,5 @@
+import { documentWorkSync } from "../../diagnostics/timings.js";
+
 /** Attribute one diffed inline rule through matched document elements. */
 import type { CssDocument } from "./document.js";
 import { selectDocument } from "./document_query.js";
@@ -34,38 +36,40 @@ export function attributeInlineRule(
   before: MatchSide,
   after: MatchSide,
 ): AttributedInlineRule {
-  const prepared = prepareCssRule(change, "matchable");
-  if (prepared.status === "unresolved")
+  return documentWorkSync("matchingMs", () => {
+    const prepared = prepareCssRule(change, "matchable");
+    if (prepared.status === "unresolved")
+      return {
+        change,
+        attribution: { kind: "unresolved" },
+        selectors: prepared.selectors,
+      };
+    const owners: InlineElementOwner[] = [];
+    try {
+      for (const query of prepared.queries)
+        for (const side of [before, after])
+          for (const element of selectDocument(query, side.document)) {
+            const offset = element.sourceCodeLocation?.startOffset;
+            owners.push(
+              offset === undefined
+                ? { kind: "entry" }
+                : side.owners.ownerAt(offset),
+            );
+          }
+    } catch (error) {
+      if (!(error instanceof CssSelectorError)) throw error;
+      return {
+        change,
+        attribution: { kind: "unresolved" },
+        selectors: prepared.selectors,
+      };
+    }
     return {
       change,
-      attribution: { kind: "unresolved" },
+      attribution: reduceOwners(owners),
       selectors: prepared.selectors,
     };
-  const owners: InlineElementOwner[] = [];
-  try {
-    for (const query of prepared.queries)
-      for (const side of [before, after])
-        for (const element of selectDocument(query, side.document)) {
-          const offset = element.sourceCodeLocation?.startOffset;
-          owners.push(
-            offset === undefined
-              ? { kind: "entry" }
-              : side.owners.ownerAt(offset),
-          );
-        }
-  } catch (error) {
-    if (!(error instanceof CssSelectorError)) throw error;
-    return {
-      change,
-      attribution: { kind: "unresolved" },
-      selectors: prepared.selectors,
-    };
-  }
-  return {
-    change,
-    attribution: reduceOwners(owners),
-    selectors: prepared.selectors,
-  };
+  });
 }
 
 function reduceOwners(

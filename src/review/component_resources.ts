@@ -1,6 +1,10 @@
 import { createHash } from "node:crypto";
 
-import { timeAsync } from "../diagnostics/timings.js";
+import {
+  documentResourceReferences,
+  documentWorkSync,
+  timeAsync,
+} from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
 
 import { referencedRoutes } from "./asset_references.js";
@@ -191,7 +195,9 @@ export class ComponentMaterialReader {
       documents = new Map();
       this.viewResources.set(route, documents);
     }
-    const digest = createHash("sha256").update(html).digest("base64url");
+    const digest = documentWorkSync("hashMs", () =>
+      createHash("sha256").update(html).digest("base64url"),
+    );
     let cached = documents.get(digest);
     if (!cached) {
       cached = { filtered: new WeakMap() };
@@ -222,9 +228,10 @@ export class ComponentMaterialReader {
       (await this.optionalTexts([route])).get(route) === undefined
     )
       return [];
-    return referencedRoutes(route, await this.resourceText(route), {
-      resourceHints: false,
-    });
+    const text = await this.resourceText(route);
+    return documentResourceReferences(() =>
+      referencedRoutes(route, text, { resourceHints: false }),
+    );
   }
 
   private mayBeMissing(route: string): boolean {

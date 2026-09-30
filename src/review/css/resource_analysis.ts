@@ -2,6 +2,8 @@
 import type { DependencyReason, ExcludedResource } from "@mokly/viewer/data";
 import { isStylesheetPath } from "@mokly/viewer/data";
 
+import { documentWorkSync } from "../../diagnostics/timings.js";
+
 import { analyzeStylesheetChange } from "./analyze.js";
 import { diffCssRules } from "./diff.js";
 import type { CssDocumentPair } from "./document.js";
@@ -41,7 +43,9 @@ export class CssResourceAnalysis {
         let result = this.parsed.get(source);
         if (!result) {
           try {
-            result = parser.parse(source);
+            result = documentWorkSync("inlineRuleMs", () =>
+              parser.parse(source),
+            );
           } catch (cause) {
             result = {
               status: "unresolved",

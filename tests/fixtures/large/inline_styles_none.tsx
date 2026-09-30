@@ -7,7 +7,6 @@ export function InlineActionStyle({
 }: {
   area: string;
   children: ReactNode;
-  token: string;
 }) {
   return <span data-scale-action={area}>{children}</span>;
 }

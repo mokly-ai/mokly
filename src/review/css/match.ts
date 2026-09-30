@@ -3,6 +3,8 @@ import { compile } from "css-select";
 import { parse } from "css-what";
 import type { Selector } from "css-what";
 
+import { documentWorkSync } from "../../diagnostics/timings.js";
+
 import { cssDocumentOptions } from "./document.js";
 import type { CssDocumentPair } from "./document.js";
 import { matchesDocument } from "./document_query.js";
@@ -31,19 +33,24 @@ export function matchCssRules(
   diff: CssRuleDiffResult,
   documents: CssDocumentPair,
 ): CssRuleMatchResult {
-  if (diff.status === "unresolved") return diff;
-  const changes: CssRuleDelta[] = [
-    ...diff.added.map((after) => ({ kind: "added" as const, after })),
-    ...diff.removed.map((before) => ({ kind: "removed" as const, before })),
-    ...diff.changed.map((change) => ({ kind: "changed" as const, ...change })),
-  ];
-  return {
-    status: "resolved",
-    rules: changes.map((change) => ({
-      change,
-      outcome: matchRule(change, documents),
-    })),
-  };
+  return documentWorkSync("matchingMs", () => {
+    if (diff.status === "unresolved") return diff;
+    const changes: CssRuleDelta[] = [
+      ...diff.added.map((after) => ({ kind: "added" as const, after })),
+      ...diff.removed.map((before) => ({ kind: "removed" as const, before })),
+      ...diff.changed.map((change) => ({
+        kind: "changed" as const,
+        ...change,
+      })),
+    ];
+    return {
+      status: "resolved",
+      rules: changes.map((change) => ({
+        change,
+        outcome: matchRule(change, documents),
+      })),
+    };
+  });
 }
 
 function matchRule(

@@ -4,6 +4,14 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 
+import {
+  identityFilename,
+  moklyIdentity,
+  preparationCommand,
+  readFixtureIdentity,
+  renderingDependencies,
+  templateDigest,
+} from "./identity.mjs";
 import { start, stop } from "./process.mjs";
 import { prepareDerivedToolchain } from "./toolchain.mjs";
 
@@ -78,8 +86,27 @@ export async function prepareFixture(
     );
   const record = {
     ...fixture,
+    ...(await moklyIdentity(repository)),
+    templateDigest: await templateDigest(
+      path.join(repository, "tests/fixtures/large"),
+    ),
+    fixtureCommit: (await git("rev-parse", "HEAD")).stdout.trim(),
+    renderingDependencies: await renderingDependencies(repository, root),
     setupMs: Math.round(performance.now() - beginning),
   };
+  await fs.writeFile(
+    path.join(root, identityFilename),
+    JSON.stringify({
+      schemaVersion: 1,
+      ...size,
+      generatedOutput,
+      templateDigest: record.templateDigest,
+      moklyCommit: record.moklyCommit,
+      moklyDirty: record.moklyDirty,
+      fixtureCommit: record.fixtureCommit,
+      renderingDependencies: record.renderingDependencies,
+    }) + "\n",
+  );
   await fs.writeFile(
     fixtureRecord(repository, size, generatedOutput),
     JSON.stringify(record) + "\n",
@@ -87,27 +114,55 @@ export async function prepareFixture(
   process.stdout.write(
     `Fixture setup ${JSON.stringify(record)}\nReady for npm run dev:large or npm run benchmark:large${generatedOutput === "derived" ? " -- --derived" : ""}.\n`,
   );
+  return record;
 }
 
 export async function preparedFixture(
   repository,
   size,
   generatedOutput = "committed",
+  configPath,
 ) {
+  let fixture;
   try {
-    const fixture = JSON.parse(
-      await fs.readFile(
-        fixtureRecord(repository, size, generatedOutput),
-        "utf8",
-      ),
-    );
+    fixture = configPath
+      ? { configPath, root: path.dirname(configPath) }
+      : JSON.parse(
+          await fs.readFile(
+            fixtureRecord(repository, size, generatedOutput),
+            "utf8",
+          ),
+        );
     await fs.access(fixture.configPath);
-    if ((fixture.generatedOutput ?? "committed") !== generatedOutput)
-      throw new Error("Fixture output mode changed");
-    return fixture;
   } catch {
     throw new Error(
-      `Prepare this fixture first: npm run fixture:large -- --areas ${size.areas} --screens ${size.screens} --rows ${size.rows} --stylesheets ${size.stylesheets} --stylesheet-share ${size.stylesheetShare}${size.inlineStyles ? " --inline-styles" : ""}${generatedOutput === "derived" ? " --derived" : ""}`,
+      `Prepare this fixture first: ${preparationCommand(size, generatedOutput)}`,
     );
   }
+  const identity = await readFixtureIdentity(
+    repository,
+    fixture.root,
+    size,
+    generatedOutput,
+  );
+  const actualSize = Object.fromEntries(
+    Object.keys(size).map((name) => [name, identity[name]]),
+  );
+  return {
+    ...fixture,
+    ...identity,
+    size: actualSize,
+    routes:
+      actualSize.areas *
+      (actualSize.screens + 9 + Math.ceil(actualSize.screens / 10)),
+    documents: actualSize.areas * (actualSize.screens * 4 + 25),
+    preparedMoklyCommit: identity.moklyCommit,
+    preparedMoklyDirty: identity.moklyDirty,
+    preparedRenderingDependencies: identity.renderingDependencies,
+    ...(await moklyIdentity(repository)),
+    renderingDependencies: await renderingDependencies(
+      repository,
+      fixture.root,
+    ),
+  };
 }

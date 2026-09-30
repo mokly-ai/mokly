@@ -2,11 +2,13 @@
 
 import path from "node:path";
 
-import { parse } from "parse5";
-
 import { isStylesheetPath } from "@mokly/viewer/data";
 
-import { timeAsync } from "../diagnostics/timings.js";
+import { parseHtml } from "../diagnostics/html_parse.js";
+import {
+  documentResourceReferences,
+  timeAsync,
+} from "../diagnostics/timings.js";
 import { referencedRoutes } from "../review/asset_references.js";
 import type {
   OptionalReviewAssetReader,
@@ -65,12 +67,13 @@ export class ChangedResourceGraph {
         this.#base.prefetch(
           routes.filter((route) => /\.(css|html?)$/i.test(route)),
         ),
-      readReferences: async (route) =>
-        /\.(css|html?)$/i.test(route)
-          ? referencedRoutes(route, await this.#base.resourceText(route), {
-              resourceHints: false,
-            })
-          : [],
+      readReferences: async (route) => {
+        if (!/\.(css|html?)$/i.test(route)) return [];
+        const text = await this.#base.resourceText(route);
+        return documentResourceReferences(() =>
+          referencedRoutes(route, text, { resourceHints: false }),
+        );
+      },
     });
   }
 
@@ -152,8 +155,10 @@ export class ChangedResourceGraph {
     const pairs: CssDocumentPair[] = cssPaths.length
       ? [
           {
-            ...(before ? { before: parse(before.html) } : {}),
-            after: parse(document),
+            ...(before
+              ? { before: parseHtml("legacyStylesheetMatching", before.html) }
+              : {}),
+            after: parseHtml("legacyStylesheetMatching", document),
           },
         ]
       : [];
@@ -168,8 +173,12 @@ export class ChangedResourceGraph {
           ? await this.#head.resourceText(route)
           : undefined;
       pairs.push({
-        ...(base === undefined ? {} : { before: parse(base) }),
-        ...(head === undefined ? {} : { after: parse(head) }),
+        ...(base === undefined
+          ? {}
+          : { before: parseHtml("legacyResourceMatching", base) }),
+        ...(head === undefined
+          ? {}
+          : { after: parseHtml("legacyResourceMatching", head) }),
       });
     }
     return {
@@ -219,6 +228,8 @@ export class ChangedResourceGraph {
       if (extension !== ".css") content = await this.#head.resourceText(route);
     }
     this.#contents.set(route, content);
-    return referencedRoutes(route, content, { resourceHints: false });
+    return documentResourceReferences(() =>
+      referencedRoutes(route, content, { resourceHints: false }),
+    );
   }
 }

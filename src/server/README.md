@@ -1,5 +1,10 @@
 # Serving catalogues
 
+The component-aware classifier shares opt-in
+[document-work diagnostics](../diagnostics/README.md) across its page and shared
+view passes. Counter state exists only in an enabled timing session; ordinary
+classification and build output are unchanged.
+
 Serve publishes a validated catalogue, renders requested documents and exposes
 comparison snapshots. `serve.ts` owns single-process Serve; `serve_watched.ts`
 owns watchers, background work and the supervised HTTP child. `http.ts` and

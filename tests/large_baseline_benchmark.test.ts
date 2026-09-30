@@ -143,6 +143,8 @@ test("classification timing unions overlapping inline-analysis intervals", () =>
       classificationMs: 80,
       inlineStyleAnalysisMs: 45,
       inlineStyleAnalysisShare: 0.5625,
+      cssAnalysisMs: 0,
+      cssAnalysisShare: 0,
     },
   );
   assert.deepEqual(
@@ -160,6 +162,8 @@ test("classification timing unions overlapping inline-analysis intervals", () =>
       classificationMs: 80,
       inlineStyleAnalysisMs: 20,
       inlineStyleAnalysisShare: 0.25,
+      cssAnalysisMs: 0,
+      cssAnalysisShare: 0,
     },
   );
 });

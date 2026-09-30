@@ -1,7 +1,5 @@
 /** Shared ownership-projected resource policy for fast and complete comparisons. */
 
-import { parse } from "parse5";
-
 import type { GeneratedComponentView } from "@mokly/viewer/data";
 
 import {
@@ -12,6 +10,7 @@ import {
   validateComponentRanges,
   type RenderedRange,
 } from "../components/ranges.js";
+import { parseHtml } from "../diagnostics/html_parse.js";
 
 import type { ComponentViewContext } from "./component_view.js";
 import {
@@ -88,14 +87,18 @@ export function prepareComponentProjection(
           parser: context.resources.css.parser,
           prepare: () => ({
             before: {
-              document: parse(matching.base, { sourceCodeLocationInfo: true }),
+              document: parseHtml("inlineMatching", matching.base, {
+                sourceCodeLocationInfo: true,
+              }),
               ranges: validateComponentRanges(
                 matching.base,
                 before.usage!.ranges,
               ),
             },
             after: {
-              document: parse(matching.head, { sourceCodeLocationInfo: true }),
+              document: parseHtml("inlineMatching", matching.head, {
+                sourceCodeLocationInfo: true,
+              }),
               ranges: validateComponentRanges(
                 matching.head,
                 after.usage!.ranges,

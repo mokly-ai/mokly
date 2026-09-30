@@ -1,7 +1,9 @@
 /** Locate eligible unowned inline styles in original document coordinates. */
-import { html, parse, type DefaultTreeAdapterMap } from "parse5";
+import { html, type DefaultTreeAdapterMap } from "parse5";
 
 import type { RenderedRange } from "../../components/ranges.js";
+import { parseHtml } from "../../diagnostics/html_parse.js";
+import { documentWorkSync } from "../../diagnostics/timings.js";
 import { REVIEW_IGNORE_MARKER } from "../ignore.js";
 
 type Node = DefaultTreeAdapterMap["node"];
@@ -32,7 +34,19 @@ export function findUnownedInlineStyles(
   ranges: readonly RenderedRange[],
   pairedIgnoreIds: ReadonlySet<string>,
 ): InlineStyleSpan[] {
-  const document = parse(source, { sourceCodeLocationInfo: true });
+  return documentWorkSync("styleDiscoveryMs", () =>
+    findStyles(source, ranges, pairedIgnoreIds),
+  );
+}
+
+function findStyles(
+  source: string,
+  ranges: readonly RenderedRange[],
+  pairedIgnoreIds: ReadonlySet<string>,
+): InlineStyleSpan[] {
+  const document = parseHtml("styleDiscovery", source, {
+    sourceCodeLocationInfo: true,
+  });
   const ignored = pairedIgnoreRegions(document, pairedIgnoreIds);
   const spans: InlineStyleSpan[] = [];
   visit(document, (node) => {

@@ -30,11 +30,8 @@ export function createComponents(area: string) {
       disabled: { kind: "boolean" },
       secondary: { kind: "boolean" },
     },
-    render: (props, context) => (
-      <InlineActionStyle
-        area={area}
-        token={`${props.label}/${props.disabled ?? false}/${props.secondary ?? false}/${context.viewport}/${context.colorScheme}`}
-      >
+    render: (props) => (
+      <InlineActionStyle area={area}>
         <Button
           onPress={noop}
           disabled={props.disabled ?? false}

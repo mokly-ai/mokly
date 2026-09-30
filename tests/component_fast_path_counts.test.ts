@@ -53,7 +53,9 @@ for (const generatedOutput of ["committed", "derived"] as const)
       (event) =>
         event.stage === "review.compare-screens" && event.event === "counts",
     );
-    assert.deepEqual(counts?.counts, {
+    assert.ok((counts?.counts?.heapPeakMiB ?? 0) > 0);
+    const { heapPeakMiB: _heap, ...paths } = counts!.counts!;
+    assert.deepEqual(paths, {
       views,
       fastPath: views,
       completePath: 0,

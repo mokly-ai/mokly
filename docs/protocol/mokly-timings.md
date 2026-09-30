@@ -5,10 +5,10 @@
 Existing spans are implemented. Approved target of the
 [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
 [M2](../../plans/scalable-inline-style-analysis.md#milestone-2-deterministic-scale-fixture-and-complete-benchmark-evidence)
-delivers heap/document counts and complete sample outcomes;
+implements heap/document counts and complete sample outcomes;
 [M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse)
 delivers segment counts; [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
-delivers `stylePath`. These additions below are pending, not already measured.
+delivers `stylePath`. Segment/style-path counts remain pending; the reference is not measured yet.
 
 ## Opt-in timings
 
@@ -72,7 +72,7 @@ Review phases use the same session, role and parent context as their caller:
   loops; a baseline-document batch span can therefore be nested inside one.
   Its component-aware counts are defined below; live document checks emit no
   counts record. Before `stylePath` is delivered, the implemented record has
-  `views`, `fastPath`, `completePath` with `fastPath + completePath = views`.
+  `views`, `fastPath`, `completePath`, `heapPeakMiB` with `fastPath + completePath = views`.
 - `review.resource-graph` covers reference discovery and transitive traversal
   for each material view or live document, and each before/after snapshot-copy
   closure. It includes resource reads and copying into the in-memory artifact.
@@ -152,20 +152,18 @@ extraction, command and adoption spans. A waiter can also finish as a cache hit.
 ## Representative local fixture
 
 The [fixture README](../../tests/fixtures/large/README.md) describes preparation,
-current dimensions (1,590 entries, 5,550 documents), historical measurements,
-the independent five-second usable-startup check and committed/derived cache
-behavior. Its [benchmark contract](../../tests/fixtures/large/benchmark-contract.md)
-owns template identity, scenario filtering/restoration and classification
-performance acceptance. CI correctness fixtures have no wall-clock assertion.
+current dimensions (1,590 entries, 5,550 documents), startup and cache behavior.
+The [benchmark contract](../../tests/fixtures/large/benchmark-contract.md)
+owns identity, scenario state and acceptance; CI has no wall-clock assertion.
 
 ## Component Analysis Counts
 
 Collect counters, operation clocks and V8 heap samples **only when timings are
-enabled**. Emit each record once in the component-aware loop's `finally`,
-before its span ends, including partial completed work on a handled failure;
-hard termination may prevent all three records. They use the ordinary timing
-envelope with `event: counts` and a `counts` object, no paths or text. No
-component-free or live-document loop emits these new records.
+enabled**. One collector covers component-aware classification (including its
+preceding page pass), or a standalone component-aware loop. Emit once in its
+`finally`, including handled failures; hard termination can prevent records.
+Use the ordinary envelope with `event: counts`, numeric `counts`, no paths/text.
+Component-free/live loops emit no new records; build parses do not count.
 
 - `review.compare-screens`: `views`, `fastPath`, `completePath`,
   `heapPeakMiB`, and (when delivered) `stylePath`. Integer path counts partition
@@ -187,9 +185,14 @@ component-free or live-document loop emits these new records.
 - `review.document-work`: integer `htmlParses` and `htmlParseBytes`, plus
   `htmlParseMs`, `rangeMs`, `styleDiscoveryMs`, `referenceMs`, `matchingMs`,
   `normalizationMs`, `projectionMs`, `implementationMs`, `inlineRuleMs`, `hashMs`.
-  Count every HTML tree-parse attempt during the loop, including embedded
+  Count every HTML tree-parse attempt during classification, including embedded
   resources and, before page reuse, normalized/material parses. Bytes are
   UTF-8 input byte length, not string length or retained heap.
+  Nonzero per-step totals use `htmlParses.<step>`/`htmlParseBytes.<step>`:
+  `range`, `styleDiscovery`, `reference`, `inlineMatching`, `stylesheetMatching`,
+  `resourceReference`, `resourceMatching`, `legacyStylesheetMatching`,
+  `legacyResourceMatching`. Legacy steps belong to the preceding page pass;
+  resource steps count referenced HTML separately. Their sums equal the totals.
 
 Document-work times sum exclusive local operation durations, rounded once to
 two decimals in milliseconds, with zero fields retained. Charge HTML tree
@@ -233,17 +236,15 @@ completed counts records exist; absent diagnostics are not invented zeros.
   not worker duration or a bound; a stop request never invents a span end.
   Never label a bound `classificationMs` or compute a percentage without an end.
 
-For completed workers, each stage's interval union includes end records of
-either status, clipped to that worker's classify interval. For incomplete ones
-clip only at its start; never compare worker elapsed clocks with supervisor
-clocks. Report duration/unions to two decimals; shares divide those reported
-durations and round to four decimals, zero for a zero-duration complete span.
+For completed workers, clip all-status stage unions to the worker interval;
+for incomplete workers, clip only at its start. Never compare worker/supervisor
+elapsed clocks. Report durations/unions to two decimals, shares to four using
+reported durations (zero for a zero-duration complete span).
 Unfinished intervals contribute no measured duration. Duplicate/ambiguous
 classification spans are measurement errors, not successful samples. Outcome
 priority is incomplete, worker error, membership mismatch, then ok; unrelated
-infrastructure failure turns an otherwise-ok sample into error. The report
-retains all requested samples before returning nonzero for any failed sample,
-readiness assertion or restoration failure. Identity and acceptance belong to
+infrastructure failure turns an otherwise-ok sample into error. Report
+retention, identity and acceptance belong to
 the [benchmark contract](../../tests/fixtures/large/benchmark-contract.md).
 The separate five-second usable-startup budget does not relabel a successful
 classification outcome; `targetHeld: false` still fails the benchmark command.

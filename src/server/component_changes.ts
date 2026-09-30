@@ -12,6 +12,7 @@ import { isIncompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { ConfiguredGitCommandRunner } from "../config/git.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { runWithDocumentWork } from "../diagnostics/timings.js";
 import { errorMessage, isMoklyError } from "../errors.js";
 import { changedManifestIds } from "../registry/changed_ids.js";
 import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
@@ -204,75 +205,78 @@ export async function readCatalogueChanges(
     hasRegisteredComponents(baseline) || hasRegisteredComponents(manifest);
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const reader = new EvidenceAssetReader(config, outputs);
-  const content = await classifyChangedContent(
-    manifest,
-    baseline,
-    config,
-    git.reader,
-    commit,
-    changedPaths,
-    reader,
-    components ? "pages" : "all",
-  );
-  const result = await classifyComponents({
-    before: baseline,
-    after: manifest,
-    config,
-    baseCommit: commit,
-    baseRef: base,
-    changedPaths,
-    beforeReader: new GitReviewAssetReader(
-      baselineResourceConfig(config, baseline),
+  const classify = async () => {
+    const content = await classifyChangedContent(
+      manifest,
+      baseline,
+      config,
       git.reader,
       commit,
-      prefix,
-    ),
-    afterReader: reader,
-  });
-  const pageIds = new Set(
-    manifest.entries.flatMap((entry) =>
-      entry.kind === "page" ? [entry.id] : [],
-    ),
-  );
-  const ids = changedManifestIds(
-    manifest,
-    baseline,
-    config,
-    content.changedPaths,
-  ).filter((id) => !components || pageIds.has(id));
-  for (const entry of manifest.entries)
-    for (const view of generatedViews(entry))
-      if (!reader.digests[view.path]) await reader.read(view.path);
-  return {
-    baseline,
-    comparison: {
+      changedPaths,
+      reader,
+      components ? "pages" : "all",
+    );
+    const result = await classifyComponents({
+      before: baseline,
+      after: manifest,
+      config,
       baseCommit: commit,
       baseRef: base,
       changedPaths,
-      headDigests: reader.digests,
-      ...(outputs ? { headOutputs: [...outputs] } : {}),
-    },
-    result,
-    ...(!components
-      ? {
-          screenViews: screenViewChanges(
-            manifest,
-            baseline,
-            config,
-            content.changedPaths,
-          ),
-        }
-      : {}),
-    ...(!components && content.screens.length
-      ? { screenEvidence: content.screens }
-      : {}),
-    changedIds: [
-      ...new Set([
-        ...ids,
-        ...(components
-          ? result.changes.map((entry) => (entry.after ?? entry.before)!.id)
-          : []),
-      ]),
-    ].sort(),
+      beforeReader: new GitReviewAssetReader(
+        baselineResourceConfig(config, baseline),
+        git.reader,
+        commit,
+        prefix,
+      ),
+      afterReader: reader,
+    });
+    const pageIds = new Set(
+      manifest.entries.flatMap((entry) =>
+        entry.kind === "page" ? [entry.id] : [],
+      ),
+    );
+    const ids = changedManifestIds(
+      manifest,
+      baseline,
+      config,
+      content.changedPaths,
+    ).filter((id) => !components || pageIds.has(id));
+    for (const entry of manifest.entries)
+      for (const view of generatedViews(entry))
+        if (!reader.digests[view.path]) await reader.read(view.path);
+    return {
+      baseline,
+      comparison: {
+        baseCommit: commit,
+        baseRef: base,
+        changedPaths,
+        headDigests: reader.digests,
+        ...(outputs ? { headOutputs: [...outputs] } : {}),
+      },
+      result,
+      ...(!components
+        ? {
+            screenViews: screenViewChanges(
+              manifest,
+              baseline,
+              config,
+              content.changedPaths,
+            ),
+          }
+        : {}),
+      ...(!components && content.screens.length
+        ? { screenEvidence: content.screens }
+        : {}),
+      changedIds: [
+        ...new Set([
+          ...ids,
+          ...(components
+            ? result.changes.map((entry) => (entry.after ?? entry.before)!.id)
+            : []),
+        ]),
+      ].sort(),
+    };
   };
+  return components ? runWithDocumentWork(classify) : classify();
 }

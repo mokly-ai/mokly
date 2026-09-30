@@ -1,7 +1,10 @@
-import { parse, type DefaultTreeAdapterMap } from "parse5";
+import type { DefaultTreeAdapterMap } from "parse5";
 
 import type { ComponentRangeRecord, ComponentRangeTarget } from "@mokly/viewer";
 import { canonicalJson, invalidData } from "@mokly/viewer/data";
+
+import { parseHtml } from "../diagnostics/html_parse.js";
+import { documentWorkSync } from "../diagnostics/timings.js";
 
 type Node = DefaultTreeAdapterMap["node"];
 export interface RenderedRange {
@@ -22,7 +25,7 @@ export function serializeComponentSentinels(
   const stack: { token: string; record: ComponentRangeRecord }[] = [];
   const seen = new Set<string>();
   const ranges: ComponentRangeRecord[] = [];
-  visit(parse(html, { sourceCodeLocationInfo: true }), (node) => {
+  visit(parseHtml("range", html, { sourceCodeLocationInfo: true }), (node) => {
     if (
       node.nodeName === "#comment" &&
       "data" in node &&
@@ -92,6 +95,13 @@ export function validateComponentRanges(
   html: string,
   records: readonly ComponentRangeRecord[],
 ): RenderedRange[] {
+  return documentWorkSync("rangeMs", () => validateRanges(html, records));
+}
+
+function validateRanges(
+  html: string,
+  records: readonly ComponentRangeRecord[],
+): RenderedRange[] {
   const expected = new Map(records.map((record) => [record.id, record]));
   const result: RenderedRange[] = [];
   const stack: {
@@ -101,7 +111,7 @@ export function validateComponentRanges(
   }[] = [];
   let starts = 0;
   let ignored = false;
-  visit(parse(html, { sourceCodeLocationInfo: true }), (node) => {
+  visit(parseHtml("range", html, { sourceCodeLocationInfo: true }), (node) => {
     if (
       "attrs" in node &&
       node.attrs.some((attribute) =>

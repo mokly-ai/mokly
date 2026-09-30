@@ -10,7 +10,7 @@ import type {
 } from "@mokly/viewer/data";
 
 import { toPosixPath } from "../config/paths.js";
-import { timeAsync, timingCounts } from "../diagnostics/timings.js";
+import { runWithDocumentWork, timeAsync } from "../diagnostics/timings.js";
 
 import { affectedConsumers } from "./component_affected.js";
 import {
@@ -23,7 +23,7 @@ import {
   prefetchClassificationViews,
 } from "./component_classification_entries.js";
 import type { ComponentClassificationInput } from "./component_classification_input.js";
-import { ComponentComparisonCounts } from "./component_comparison_counts.js";
+import { compareComponentViews } from "./component_compare_views.js";
 import {
   address,
   baselineForCurrentIdentities,
@@ -47,10 +47,7 @@ import {
   classifyComponentVariants,
   componentVariantEntries,
 } from "./component_variant_classification.js";
-import {
-  compareComponentView,
-  type ComponentViewContext,
-} from "./component_view.js";
+import { type ComponentViewContext } from "./component_view.js";
 import {
   analysisOwnsStylesheet,
   assertViewAnalysisScope,
@@ -122,8 +119,7 @@ export async function classifyComponentsWithSources(
   const ownedResources: OwnedResourceReason[] = [];
   const reasonSources = new ComponentReasonSources();
   const pairs = entryPairs(before, after);
-  const comparisonCounts = new ComponentComparisonCounts();
-  await timeAsync("review.compare-screens", async () => {
+  const compare = async () => {
     for (const pair of pairs) {
       const entry = (pair.after ?? pair.before)!;
       const sides = {
@@ -164,19 +160,13 @@ export async function classifyComponentsWithSources(
       const baseViews = entryViews(pair.before, beforeVariantEntries);
       const headViews = entryViews(pair.after, afterVariantEntries);
       const pairedViews = viewPairs(baseViews, headViews);
-      const compared = await Promise.all(
-        pairedViews.map((view) =>
-          compareComponentView(
-            context,
-            view.before,
-            view.after,
-            entry.kind === "component" && !isManifestComponentVariant(entry)
-              ? entry.id
-              : undefined,
-          ),
-        ),
+      const compared = await compareComponentViews(
+        context,
+        pairedViews,
+        entry.kind === "component" && !isManifestComponentVariant(entry)
+          ? entry.id
+          : undefined,
       );
-      comparisonCounts.add(compared);
       assertViewAnalysisScope(
         compared.map((result) => result.view),
         config,
@@ -261,8 +251,10 @@ export async function classifyComponentsWithSources(
           reasons: uniqueReasons(reasons),
         });
     }
-    timingCounts("review.compare-screens", () => comparisonCounts.record());
-  });
+  };
+  await timeAsync("review.compare-screens", () =>
+    componentAware ? runWithDocumentWork(compare) : compare(),
+  );
   propagateOwnedResources(ownedResources, impacting, components, changes);
   reasonSources.recordOwnedResources(
     ownedResources,

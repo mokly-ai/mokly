@@ -4,7 +4,8 @@ import { AppRegistry } from "react-native-web";
 
 import type { RenderInput } from "@mokly/mokly";
 
-import { tokens, darkTokens } from "../../../examples/basic/theme.js";
+import { InlineViewKey } from "./inline_styles.js";
+import { tokens, darkTokens } from "./theme.js";
 
 const themes = {
   light: createSharedUiTheme(tokens),
@@ -17,7 +18,15 @@ const SCREEN_ONE_MARKUP = "";
 export default function render(input: RenderInput): string {
   const body = renderToStaticMarkup(
     <SharedUiThemeProvider theme={themes[input.colorScheme]}>
-      {input.node}
+      <InlineViewKey.Provider
+        value={JSON.stringify([
+          input.entry.id,
+          input.viewport,
+          input.colorScheme,
+        ])}
+      >
+        {input.node}
+      </InlineViewKey.Provider>
     </SharedUiThemeProvider>,
   );
   AppRegistry.registerComponent("scale-styles", () => Empty);

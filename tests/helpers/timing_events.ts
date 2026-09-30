@@ -39,7 +39,11 @@ export function assertReviewTimings(
     );
   for (const event of review) {
     assert.ok(
-      [...reviewStages, ...reviewAnalysisStages].includes(event.stage),
+      [
+        ...reviewStages,
+        ...reviewAnalysisStages,
+        "review.document-work",
+      ].includes(event.stage),
       event.stage,
     );
     assert.equal(event.schemaVersion, 1);
@@ -64,19 +68,22 @@ export function assertReviewTimings(
         ...(event.event === "counts" ? ["counts"] : []),
       ].sort(),
     );
-    if (event.event === "counts") continue;
-    if (event.event !== "start") continue;
+    if (event.stage === "review.document-work")
+      assert.equal(event.event, "counts");
+    if (event.event === "end") continue;
     const session = events.filter((item) => item.session === event.session);
-    const ends = session.filter(
-      (item) => item.id === event.id && item.event === "end",
-    );
-    assert.equal(ends.length, 1, event.stage);
-    const end = ends[0]!;
-    assert.equal(end.stage, event.stage);
-    assert.equal(end.parentId, event.parentId);
-    assert.equal(end.status, "ok");
-    assert.ok(Number.isFinite(end.durationMs) && end.durationMs! >= 0);
-    assert.ok(end.elapsedMs >= event.elapsedMs);
+    if (event.event === "start") {
+      const ends = session.filter(
+        (item) => item.id === event.id && item.event === "end",
+      );
+      assert.equal(ends.length, 1, event.stage);
+      const end = ends[0]!;
+      assert.equal(end.stage, event.stage);
+      assert.equal(end.parentId, event.parentId);
+      assert.equal(end.status, "ok");
+      assert.ok(Number.isFinite(end.durationMs) && end.durationMs! >= 0);
+      assert.ok(end.elapsedMs >= event.elapsedMs);
+    }
     let parent = event.parentId;
     const ancestors: string[] = [];
     const seen = new Set<number>([event.id]);
@@ -111,6 +118,7 @@ export function assertComparisonCounts(
   assert.deepEqual(Object.keys(counts ?? {}).sort(), [
     "completePath",
     "fastPath",
+    "heapPeakMiB",
     "views",
   ]);
   assert.ok(
@@ -119,4 +127,48 @@ export function assertComparisonCounts(
     ),
   );
   assert.equal(counts!.fastPath! + counts!.completePath!, counts!.views);
+  assert.ok(Number.isFinite(counts!.heapPeakMiB) && counts!.heapPeakMiB! > 0);
+  assertDocumentWorkCounts(events, role);
+}
+
+function assertDocumentWorkCounts(
+  events: readonly TimingEvent[],
+  role: string,
+): void {
+  const records = events.filter(
+    (event) =>
+      event.role === role &&
+      event.stage === "review.document-work" &&
+      event.event === "counts",
+  );
+  assert.equal(records.length, 1);
+  const counts = records[0]!.counts!;
+  const fields = [
+    "htmlParseMs",
+    "rangeMs",
+    "styleDiscoveryMs",
+    "referenceMs",
+    "matchingMs",
+    "normalizationMs",
+    "projectionMs",
+    "implementationMs",
+    "inlineRuleMs",
+    "hashMs",
+  ];
+  for (const field of fields) assert.ok(Object.hasOwn(counts, field), field);
+  for (const [name, value] of Object.entries(counts)) {
+    assert.ok(Number.isFinite(value) && value >= 0, name);
+    if (!fields.includes(name))
+      assert.ok(/^htmlParse(?:s|Bytes)(?:\.[A-Za-z]+)?$/.test(name), name);
+  }
+  for (const field of ["htmlParses", "htmlParseBytes"]) {
+    const steps = Object.entries(counts).filter(([name]) =>
+      name.startsWith(`${field}.`),
+    );
+    assert.equal(
+      counts[field],
+      steps.reduce((sum, [, count]) => sum + count, 0),
+    );
+    assert.ok(Number.isSafeInteger(counts[field]) && counts[field]! > 0);
+  }
 }

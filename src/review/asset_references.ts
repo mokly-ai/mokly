@@ -4,6 +4,7 @@ import { isSafeRepositoryPath } from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import { extractCssReferences } from "../css_references.js";
+import { documentWorkSync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
 import {
   extractHtmlReferences,
@@ -16,25 +17,29 @@ export function referencedRoutes(
   content: ReviewArtifactContent,
   options?: HtmlReferenceOptions,
 ): string[] {
-  const extension = path.posix.extname(sourceRoute).toLowerCase();
-  const text =
-    typeof content === "string"
-      ? content
-      : Buffer.from(content).toString("utf8");
-  const html =
-    extension === ".html" || extension === ".htm"
-      ? extractHtmlReferences(text, options)
-      : undefined;
-  const references =
-    extension === ".css" ? extractCssReferences(text) : (html?.resources ?? []);
-  return [
-    ...new Set(
-      references.flatMap((reference) => {
-        const resolved = resolveReference(sourceRoute, reference);
-        return resolved ? [resolved] : [];
-      }),
-    ),
-  ].sort();
+  return documentWorkSync("referenceMs", () => {
+    const extension = path.posix.extname(sourceRoute).toLowerCase();
+    const text =
+      typeof content === "string"
+        ? content
+        : Buffer.from(content).toString("utf8");
+    const html =
+      extension === ".html" || extension === ".htm"
+        ? extractHtmlReferences(text, options)
+        : undefined;
+    const references =
+      extension === ".css"
+        ? extractCssReferences(text)
+        : (html?.resources ?? []);
+    return [
+      ...new Set(
+        references.flatMap((reference) => {
+          const resolved = resolveReference(sourceRoute, reference);
+          return resolved ? [resolved] : [];
+        }),
+      ),
+    ].sort();
+  });
 }
 
 function resolveReference(

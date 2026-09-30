@@ -1,4 +1,5 @@
 import { generatedSource } from "../build/ownership.js";
+import { documentWorkSync } from "../diagnostics/timings.js";
 
 const ID = "[a-z0-9]+(?:-[a-z0-9]+)*";
 const KEY = "[a-f0-9]{64}";
@@ -42,49 +43,53 @@ export function normalizeReviewPair(
   headHtml: string,
   route: string,
 ): NormalizedReviewPair {
-  const base = parseDocument(baseHtml, route);
-  const head = parseDocument(headHtml, route);
-  const paired = new Set(
-    [...base.regions.keys()].filter((id) => head.regions.has(id)),
-  );
-  const materialIds = new Set([
-    ...base.materials.keys(),
-    ...head.materials.keys(),
-  ]);
-  const oneSidedMaterial = new Set(
-    [...materialIds].filter(
-      (id) => base.materials.has(id) !== head.materials.has(id),
-    ),
-  );
-  for (const id of oneSidedMaterial) paired.delete(id);
-  const baseOnly = [...base.regions.keys()]
-    .filter((id) => !head.regions.has(id))
-    .sort();
-  const headOnly = [...head.regions.keys()]
-    .filter((id) => !base.regions.has(id))
-    .sort();
-  let normalizedBase = render(base, paired, oneSidedMaterial);
-  let normalizedHead = render(head, paired, oneSidedMaterial);
-  if (baseOnly.length > 0 && headOnly.length > 0) {
-    normalizedBase += contractToken(baseOnly);
-    normalizedHead += contractToken(headOnly);
-  }
-  const ignoredIds = [...paired]
-    .filter(
-      (id) => base.regions.get(id)?.content !== head.regions.get(id)?.content,
-    )
-    .sort();
-  return {
-    base: normalizedBase,
-    head: normalizedHead,
-    ignoredIds,
-    pairedIgnoreIds: [...paired].sort(),
-  };
+  return documentWorkSync("normalizationMs", () => {
+    const base = parseDocument(baseHtml, route);
+    const head = parseDocument(headHtml, route);
+    const paired = new Set(
+      [...base.regions.keys()].filter((id) => head.regions.has(id)),
+    );
+    const materialIds = new Set([
+      ...base.materials.keys(),
+      ...head.materials.keys(),
+    ]);
+    const oneSidedMaterial = new Set(
+      [...materialIds].filter(
+        (id) => base.materials.has(id) !== head.materials.has(id),
+      ),
+    );
+    for (const id of oneSidedMaterial) paired.delete(id);
+    const baseOnly = [...base.regions.keys()]
+      .filter((id) => !head.regions.has(id))
+      .sort();
+    const headOnly = [...head.regions.keys()]
+      .filter((id) => !base.regions.has(id))
+      .sort();
+    let normalizedBase = render(base, paired, oneSidedMaterial);
+    let normalizedHead = render(head, paired, oneSidedMaterial);
+    if (baseOnly.length > 0 && headOnly.length > 0) {
+      normalizedBase += contractToken(baseOnly);
+      normalizedHead += contractToken(headOnly);
+    }
+    const ignoredIds = [...paired]
+      .filter(
+        (id) => base.regions.get(id)?.content !== head.regions.get(id)?.content,
+      )
+      .sort();
+    return {
+      base: normalizedBase,
+      head: normalizedHead,
+      ignoredIds,
+      pairedIgnoreIds: [...paired].sort(),
+    };
+  });
 }
 
 /** Validate and strip markers while retaining real child content. */
 export function normalizeSingleDocument(html: string, route: string): string {
-  return render(parseDocument(html, route), new Set());
+  return documentWorkSync("normalizationMs", () => {
+    return render(parseDocument(html, route), new Set());
+  });
 }
 
 function parseDocument(content: string, route: string): ParsedDocument {

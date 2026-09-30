@@ -1,6 +1,6 @@
-import { parse } from "parse5";
-
 import { extractCssReferences } from "./css_references.js";
+import { parseHtml } from "./diagnostics/html_parse.js";
+import { documentWorkSync } from "./diagnostics/timings.js";
 
 interface HtmlAttribute {
   name: string;
@@ -47,10 +47,19 @@ export function extractHtmlReferences(
   content: string,
   options: HtmlReferenceOptions = {},
 ): HtmlReferences {
+  return documentWorkSync("referenceMs", () =>
+    extractReferences(content, options),
+  );
+}
+
+function extractReferences(
+  content: string,
+  options: HtmlReferenceOptions,
+): HtmlReferences {
   const anchors = new Set<string>();
   const hrefs: string[] = [];
   const resources: string[] = [];
-  visit(parse(content) as unknown as HtmlNode, (node) => {
+  visit(parseHtml("reference", content) as unknown as HtmlNode, (node) => {
     const attributes = new Map(
       (node.attrs ?? []).map((attribute) => [attribute.name, attribute.value]),
     );

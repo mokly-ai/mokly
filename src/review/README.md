@@ -268,6 +268,11 @@ missing-usage comparisons keep their existing behavior. Each call emits
 
 ## Development
 
+Opt-in [classification diagnostics](../diagnostics/README.md) count HTML parses
+by step, exclusive document work and the classifying isolate's sampled heap.
+Disabled timings create no counter state and sample no heap. These counters
+include the server's preceding page pass without changing either matching policy.
+
 ```bash
 node --import tsx --test tests/review_css_*.test.ts
 npm run typecheck

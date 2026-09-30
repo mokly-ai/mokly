@@ -1,8 +1,11 @@
-import type { ReactNode } from "react";
+import { createHash } from "node:crypto";
+
+import { createContext, useContext, type ReactNode } from "react";
 import { StyleSheet, View, type ViewStyle } from "react-native";
 
 const ownerStyles = new Map<string, ViewStyle>();
 const renderedStyles = new Map<string, ViewStyle>();
+export const InlineViewKey = createContext("interactive");
 
 function areaNumber(area: string): number {
   const value = Number(area.slice("area-".length));
@@ -29,7 +32,15 @@ function renderedStyle(area: string, token: string): ViewStyle {
   const existing = renderedStyles.get(key);
   if (existing) return existing;
   const style = StyleSheet.create({
-    rendered: { zIndex: 1_000 + renderedStyles.size },
+    rendered: {
+      zIndex:
+        1_000 +
+        (createHash("sha256")
+          .update(JSON.stringify([area, token]), "utf8")
+          .digest()
+          .readUInt32BE(0) %
+          1_000_000),
+    },
   }).rendered;
   renderedStyles.set(key, style);
   return style;
@@ -39,12 +50,11 @@ function renderedStyle(area: string, token: string): ViewStyle {
 export function InlineActionStyle({
   area,
   children,
-  token,
 }: {
   area: string;
   children: ReactNode;
-  token: string;
 }) {
+  const token = useContext(InlineViewKey);
   return (
     <View style={[ownerStyle(area), renderedStyle(area, token)]}>
       {children}

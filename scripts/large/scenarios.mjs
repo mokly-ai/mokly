@@ -9,12 +9,39 @@ const BASE_COLOR = 'const AREA_ONE_ACTION_COLOR = "rgba(1,2,3,1.00)";';
 const EDITED_COLOR = 'const AREA_ONE_ACTION_COLOR = "rgba(4,5,6,1.00)";';
 const BASE_MARKUP = 'const SCREEN_ONE_MARKUP = "";';
 const EDITED_MARKUP = 'const SCREEN_ONE_MARKUP = "screen-edit";';
+const SETUP_RULE =
+  ".scale-unrelated-rule { outline: 1px solid rebeccapurple; }\n";
 
 export const classificationScenarios = [
-  { name: "no-changes", expectedChanges: 0 },
-  { name: "component-style", expectedChanges: 1 },
-  { name: "screen-markup", expectedChanges: 2 },
+  { name: "no-changes", expectedChangedIds: [], expectedChangedRoutes: [] },
+  {
+    name: "component-style",
+    expectedChangedIds: ["area-1-action"],
+    expectedChangedRoutes: ["components/area-1-action.html"],
+  },
+  {
+    name: "screen-markup",
+    expectedChangedIds: ["area-1-flow-1", "area-1-screen-1"],
+    expectedChangedRoutes: [
+      "user-flows/area-1-flow-1.html",
+      "screens/area-1-screen-1.html",
+    ],
+  },
+  {
+    name: "linked-stylesheet",
+    expectedChangedIds: [],
+    expectedChangedRoutes: [],
+  },
 ];
+
+export function selectScenarios(names = []) {
+  for (const name of names)
+    if (!classificationScenarios.some((scenario) => scenario.name === name))
+      throw new Error(`Unknown classification scenario: ${name}`);
+  return classificationScenarios.filter(
+    ({ name }) => !names.length || names.includes(name),
+  );
+}
 
 /** Restore the baseline, apply one edit, and build current committed bytes. */
 export async function prepareClassificationScenario(
@@ -41,7 +68,8 @@ export async function prepareClassificationScenario(
     await fs.access(path.join(fixture.root, shared));
     await fs.writeFile(
       path.join(fixture.root, shared),
-      await baselineFile(fixture.root, shared),
+      (await baselineFile(fixture.root, shared)) +
+        (scenario === "linked-stylesheet" ? SETUP_RULE : ""),
     );
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
@@ -57,6 +85,11 @@ export async function prepareClassificationScenario(
     { cwd: fixture.root, maxBuffer: 16 * 1024 * 1024 },
   );
   return selected;
+}
+
+/** Stop owned processes before calling; rebuild the setup state even after a failed row. */
+export async function restoreFixtureSetup(repository, fixture) {
+  await prepareClassificationScenario(repository, fixture, "linked-stylesheet");
 }
 
 async function baselineFile(root, relative) {

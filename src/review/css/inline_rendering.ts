@@ -1,3 +1,5 @@
+import { documentWorkSync } from "../../diagnostics/timings.js";
+
 /** Canonically render inline rules and material replacements for one source side. */
 import type { InlineAttributionResult } from "./inline_attribution.js";
 import type { AttributedInlineRule } from "./inline_rule_matching.js";
@@ -29,15 +31,17 @@ export function applyInlineMaterial(
   source: string,
   projection: InlineMaterialProjection,
 ): string {
-  let material = source;
-  for (const replacement of [...projection.replacements].sort(
-    (a, b) => b.start - a.start,
-  ))
-    material =
-      material.slice(0, replacement.start) +
-      replacement.text +
-      material.slice(replacement.end);
-  return material + projection.appendix;
+  return documentWorkSync("projectionMs", () => {
+    let material = source;
+    for (const replacement of [...projection.replacements].sort(
+      (a, b) => b.start - a.start,
+    ))
+      material =
+        material.slice(0, replacement.start) +
+        replacement.text +
+        material.slice(replacement.end);
+    return material + projection.appendix;
+  });
 }
 
 /** Render a rule multiset independently of source order and local ordinals. */
@@ -50,30 +54,32 @@ export function inlineMaterialReplacements(
   result: InlineAttributionResult,
   side: "before" | "after",
 ): InlineMaterialReplacements {
-  if (result.status !== "resolved") return unchanged();
-  const spans = side === "before" ? result.beforeSpans : result.afterSpans;
-  const rules = side === "before" ? result.beforeRules : result.afterRules;
-  const excluded = selectedRules(result.rules, side, "excluded");
-  const owned = selectedRules(result.rules, side, "owned");
-  const replacements = spans.map(({ start, end }) => ({
-    start,
-    end,
-    text: "",
-  }));
-  const projection = (
-    retained: readonly CssRule[],
-  ): InlineMaterialProjection => ({
-    replacements,
-    appendix: `<style>${renderInlineRules(retained)}</style>`,
-  });
-  return {
-    actual: projection(rules.filter((rule) => !selected(excluded, rule))),
-    projected: projection(
-      rules.filter(
-        (rule) => !selected(excluded, rule) && !selected(owned, rule),
+  return documentWorkSync("inlineRuleMs", () => {
+    if (result.status !== "resolved") return unchanged();
+    const spans = side === "before" ? result.beforeSpans : result.afterSpans;
+    const rules = side === "before" ? result.beforeRules : result.afterRules;
+    const excluded = selectedRules(result.rules, side, "excluded");
+    const owned = selectedRules(result.rules, side, "owned");
+    const replacements = spans.map(({ start, end }) => ({
+      start,
+      end,
+      text: "",
+    }));
+    const projection = (
+      retained: readonly CssRule[],
+    ): InlineMaterialProjection => ({
+      replacements,
+      appendix: `<style>${renderInlineRules(retained)}</style>`,
+    });
+    return {
+      actual: projection(rules.filter((rule) => !selected(excluded, rule))),
+      projected: projection(
+        rules.filter(
+          (rule) => !selected(excluded, rule) && !selected(owned, rule),
+        ),
       ),
-    ),
-  };
+    };
+  });
 }
 
 interface SelectedRules {

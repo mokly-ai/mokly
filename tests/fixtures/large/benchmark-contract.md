@@ -3,8 +3,9 @@
 ## Delivery Status
 
 Approved target of the [scalable analysis plan](../../../plans/scalable-inline-style-analysis.md),
-not yet implemented: Milestone 2 delivers template identity, stable values,
-the four-scenario matrix, filtering, restoration and report provenance.
+Milestone 2 delivers template identity, stable values, the four-scenario matrix,
+filtering, restoration and report provenance; its reference measurements await
+the supervisor's code check and approval to measure.
 Milestone 10 applies the acceptance procedure below and removes pending
 schedules. Timing fields and their delivery are owned by
 [timings](../../../docs/protocol/mokly-timings.md); setup, dimensions, cache
@@ -21,13 +22,15 @@ length, its UTF-8 path bytes, an eight-byte big-endian content-byte length, and
 the exact file bytes. No timestamps, modes or platform separators participate;
 reject symlinks rather than hash external content. Length framing makes the
 concatenation unambiguous. Both renderer modes use the same whole-tree digest.
+The fixture owns `theme.ts`; generation reads no repository file outside this
+template tree. The example theme is not a rendering input.
 
 Setup writes an authoritative `.mokly-large-fixture.json` beside the generated
 `mokly.config.ts` in the isolated fixture root, after creating its Git baseline.
 The fixture ignores this record in Git, so it is not a scenario edit or generated
 output. It contains `schemaVersion: 1`, all four identity fields, and the fixture's
 `areas`, `screens`, `rows`, `stylesheets`, `stylesheetShare`, `inlineStyles` and
-`generatedOutput`. The size-keyed record in this checkout's `.context/` remains
+`generatedOutput`, plus `renderingDependencies`. The size-keyed record in this checkout's `.context/` remains
 a lookup index; neither it nor `--config` may bypass the root identity record.
 
 `moklyCommit` is this checkout's HEAD; `moklyDirty` reports tracked/untracked
@@ -40,10 +43,20 @@ current Mokly identity and additionally preserves the preparation record's
 evolve while a fixture is reused; derived baselines keep the prepared toolchain
 as described in the README.
 
+Every setup, sample and matrix report also carries `renderingDependencies`,
+an object keyed by `react`, `react-dom`, `react-native-web`, `@firna/ui`,
+`lightningcss`, `parse5`, `css-select`, `css-what`, with their resolved installed
+version strings, not ranges. Rendering packages resolve from the fixture root
+(its own install in derived mode, the checkout's ancestor install otherwise);
+classification packages resolve from the current Mokly checkout. Preserve the
+setup map as `preparedRenderingDependencies` on reused matrix reports. Compare
+maps by exact name/version membership, not property order, during acceptance.
+
 `preparedFixture`, including `--config` reuse, loads the root record, recomputes
 the digest and rejects a missing record or missing/mismatched `templateDigest`
 **before starting Serve or editing a scenario**. It names
-`npm run fixture:large --` followed by recorded/requested areas, screens, rows,
+`npm run fixture:large --` followed by valid recorded areas, screens, rows
+or the requested dimensions when the record is malformed,
 stylesheet count/share and applicable `--inline-styles`/`--derived` flags.
 It does not silently regenerate or compare measurements from old templates.
 Only README reporting edits are excluded from the digest; other template-tree
@@ -131,7 +144,8 @@ ratios may round only after the pass decision. Pass iff **all** hold:
 
 Missing completed durations, zero ratio denominators, missing `heapPeakMiB`,
 any failure outcome in a required sample, or different `templateDigest`,
-dimensions, runtime or machine makes acceptance fail, not a discarded outlier.
+dimensions, runtime, `renderingDependencies` or machine makes acceptance fail,
+not a discarded outlier.
 Different `moklyCommit`, `moklyDirty` or prepared-code identity values do not
 fail acceptance by themselves: the reference and optimized commits must differ.
 Segment counts added after the reference step are not required on reference

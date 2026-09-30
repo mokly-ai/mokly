@@ -348,11 +348,52 @@ and a diff review.
       contracts against the plan. Documentation-only work does not require
       `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
+
+### Milestone 1 review findings
+
+Reported by the post-push review of commits `d9a04f33` and `1132e082`, after
+the supervisor check's fixes. Finding 3 is addressed in Milestone 2 because
+Milestone 2 implements the fixture identity; the others are recorded for the
+user's decision.
+
+1. Medium. The contracts scope page analysis and original-page matching to
+   "component-aware classification", but the code splits by path, not by
+   catalogue type: the shared per-view loop (`compareComponentView`,
+   `ResourceComparison`) runs for every catalogue, while pages in component
+   catalogues and every view of component-free catalogues also go through
+   `classifyChangedContent`, which has its own parse cache and
+   ignore-normalized matching. Milestone 7's "remove the normalized parses"
+   would therefore either change component-free results or require an
+   unplanned second path. Recommended: define component-aware as the shared
+   loop when either manifest registers components, pass that flag through
+   `ComponentViewContext` and `ResourceComparison`, state that component-free
+   catalogues and the page path keep current matching (and how their parse
+   cache relates), limit the Milestone 7 TODO accordingly, and add
+   component-free and component-catalogue page regression tests.
+2. Medium. Acceptance requires the Milestone 2 reference and the Milestone 10
+   run to share one `templateDigest`, but nothing defines what to do if it
+   changes (Milestone 10 merges `origin/main`, which has changed the fixture
+   templates before), so acceptance could become impossible. Recommended: a
+   re-reference procedure in the benchmark contract (rebuild the recorded
+   reference commit with only the template change applied, rerun the two
+   default matrices, record both digests), a Milestone 10 digest-comparison
+   TODO right after the merge, and running Milestone 2's checks before
+   recording the reference.
+3. Low. The digest omitted `examples/basic/theme.ts`, which the generator
+   copies into every fixture. Addressed in Milestone 2: the fixture owns its
+   theme, a test proves generation reads nothing outside
+   `tests/fixtures/large/`, and reports record rendering dependency versions.
+4. Low. Milestone 4 records no benchmark samples, although the fixture README
+   says Milestones 3 to 9 do and AGENTS.md requires smoke tests for new
+   features. Recommended: add a Milestone 4 TODO to record the no-change and
+   component-style samples of both fixtures and confirm the
+   `review.inline-style-analysis` counts record appears in the benchmark
+   JSON.
 
 ## Milestone 2: Deterministic Scale Fixture And Complete Benchmark Evidence
 
@@ -360,44 +401,59 @@ Summary: make the cumulative fixture reproducible, make the benchmark record
 every outcome and where document work goes, restore linked-stylesheet
 coverage, and measure the baseline that the performance targets use.
 
-- [ ] In `tests/fixtures/large/inline_styles.tsx`, derive each per-view rule's
+- [x] In `tests/fixtures/large/inline_styles.tsx`, derive each per-view rule's
       value from a stable hash of the view key instead of the global render
       counter, so class names depend only on style values.
-- [ ] Discovered: adding a screen necessarily adds unused rules to later
+- [x] Discovered: adding a screen necessarily adds unused rules to later
       cumulative sheets. Test that every other area's existing view values,
       class names and non-style markup remain byte-identical and its entries
       stay out of Changes, as the fixture contract specifies, rather than
       requiring impossible complete-document byte equality.
-- [ ] Record a digest of the fixture templates in the fixture record at setup
+- [x] Record a digest of the fixture templates in the fixture record at setup
       under the [benchmark identity contract](../tests/fixtures/large/benchmark-contract.md#template-identity-and-stable-values)
       and in every benchmark report; make `preparedFixture` reject a fixture
       whose digest differs from the current templates, naming the preparation
       command.
-- [ ] Model every sample outcome in `scripts/large/timings.mjs` and
+- [x] Discovered: the fixture owns its theme; prove generation from an isolated
+      copy of only `tests/fixtures/large/`. Record resolved `renderingDependencies`
+      in root identity and every report; acceptance requires identical maps.
+- [x] Model every sample outcome in `scripts/large/timings.mjs` and
       `benchmark.mjs` under the timing contract, including infrastructure/
       measurement errors without fabricated worker ends, incomplete upper/
       lower bounds, exact id-set mismatches and all-status interval unions.
-- [ ] Add a repeatable `--scenario <name>` filter to the benchmark.
-- [ ] Add a `linked-stylesheet` scenario that keeps setup's unused
+- [x] Add a repeatable `--scenario <name>` filter to the benchmark.
+- [x] Add a `linked-stylesheet` scenario that keeps setup's unused
       `shared-1.css` rule, expects zero Changes and reports the clipped
       `review.css-analysis` share; restore `renderer.tsx` and `shared-1.css`
       to their setup state after the matrix.
-- [ ] Sample the classifying isolate's used V8 heap after each compared view
+- [x] Sample the classifying isolate's used V8 heap after each compared view
       and emit the maximum as `heapPeakMiB` in the `review.compare-screens`
       counts record.
-- [ ] Emit the `review.document-work` counts record, collected only when
+- [x] Emit the `review.document-work` counts record, collected only when
       timings are enabled, and add an HTML parse counter at every current
       parse site.
-- [ ] Record `heapPeakMiB` and the document-work counts per benchmark sample.
-- [ ] Extend `tests/large_baseline_benchmark.test.ts` with ok, error,
+- [x] Record `heapPeakMiB` and the document-work counts per benchmark sample.
+- [x] Extend `tests/large_baseline_benchmark.test.ts` with ok, error,
       incomplete (heap-limit shaped and start-only delivery ceiling), mismatch
       and window-straddling records, including benchmark-clock wait-to-stop
       without an invented worker or supervisor end;
       the digest rejection, the scenario filter and state restoration.
-- [ ] Discovered: update the fixture README, benchmark contract and timing
+- [x] Discovered: update the fixture README, benchmark contract and timing
       contract's Delivery Status for M2 before regenerating fixtures and
       recording the reference. The benchmark contract participates in the
       template digest; later measurement tables belong in the excluded README.
+- [x] Discovered: update established diagnostic-envelope, path-count and
+      derived-fixture ignore-list assertions for numeric document-work/heap
+      counts and the ignored root identity. Retain strict byte, field and
+      parentage checks rather than weakening existing tests.
+- [x] Discovered: disabled per-view sampling must add no promises to the
+      delivered batch. Pin that bound against the direct comparison oracle;
+      malformed identity records must suggest a usable preparation command.
+- [ ] Discovered: finish targeted tests and the full suite, commit the code
+      locally, then run `npm run format:check`, `npm run lint` and
+      `npm run typecheck` under Node 24.19.0. Report and stop before regenerating
+      either default-size fixture or measuring; resume only on the supervisor's
+      approval. No push until the final `cargo xtask check` passes.
 - [ ] Regenerate both fixtures. Run the default fixture's full committed
       matrix twice and record the per-scenario, per-state mean as the
       Decision 13 reference. Run the cumulative matrix once and record every

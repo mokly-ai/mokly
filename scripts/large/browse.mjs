@@ -15,7 +15,7 @@ export async function waitForBrowseChanges(url, timeoutMs = 300000) {
     if (!response.ok)
       throw new Error(`Browse returned HTTP ${response.status}`);
     const html = await response.text();
-    if (html.includes('data-changes-status="ready"')) return;
+    if (html.includes('data-changes-status="ready"')) return html;
     if (html.includes('data-changes-status="unavailable"'))
       throw new Error("Changes is unavailable in Browse");
     await setTimeout(100);

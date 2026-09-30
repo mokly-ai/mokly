@@ -4,7 +4,7 @@ import { AppRegistry } from "react-native-web";
 
 import type { RenderInput } from "@mokly/mokly";
 
-import { tokens, darkTokens } from "../../../examples/basic/theme.js";
+import { tokens, darkTokens } from "./theme.js";
 
 const themes = {
   light: createSharedUiTheme(tokens),

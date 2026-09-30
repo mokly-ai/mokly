@@ -9,7 +9,7 @@ import { prepareDerivedToolchain } from "../scripts/large/toolchain.mjs";
 import { generateLargeFixture } from "./fixtures/large/generate.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
-test("the derived large fixture archives install/build inputs and ignores only generated output", async (t) => {
+test("the derived large fixture archives inputs and ignores generated output and fixture metadata", async (t) => {
   const root = await fs.mkdtemp(
     path.join(repositoryRoot, ".context/large-derived-"),
   );
@@ -34,6 +34,7 @@ test("the derived large fixture archives install/build inputs and ignores only g
       ".review/",
       ".mokly-cache/",
       "node_modules/",
+      ".mokly-large-fixture.json",
       "mockups/**/*.html",
       "mockups/mokly-manifest.json",
     ],

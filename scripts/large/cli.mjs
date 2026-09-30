@@ -1,6 +1,7 @@
 import path from "node:path";
 
 import { start, stop } from "./process.mjs";
+import { selectScenarios } from "./scenarios.mjs";
 import { prepareFixture, preparedFixture } from "./setup.mjs";
 
 const repository = path.resolve(import.meta.dirname, "../..");
@@ -20,9 +21,15 @@ async function main() {
   let debug = mode === "benchmark";
   let config;
   let generatedOutput = "committed";
+  const scenarioNames = [];
   while (args.length) {
     const flag = args.shift();
-    if (flag === "--debug-timings") debug = true;
+    if (flag === "--scenario") {
+      const value = args.shift();
+      if (mode !== "benchmark" || !value || value.startsWith("--"))
+        throw new Error("--scenario <name> is a benchmark-only filter");
+      scenarioNames.push(value);
+    } else if (flag === "--debug-timings") debug = true;
     else if (flag === "--derived") generatedOutput = "derived";
     else if (flag === "--inline-styles") size.inlineStyles = true;
     else if (flag === "--config") {
@@ -51,12 +58,16 @@ async function main() {
     throw new Error("screens must be at least two per area");
   if (mode === "generate")
     return prepareFixture(repository, size, debug, generatedOutput);
-  const fixture = config
-    ? { configPath: config, root: path.dirname(config), size }
-    : await preparedFixture(repository, size, generatedOutput);
+  const scenarios = selectScenarios(scenarioNames);
+  const fixture = await preparedFixture(
+    repository,
+    size,
+    generatedOutput,
+    config,
+  );
   if (mode === "benchmark") {
     const { benchmark } = await import("./benchmark.mjs");
-    return benchmark(repository, fixture);
+    return benchmark(repository, fixture, scenarios);
   }
   const running = start(
     [

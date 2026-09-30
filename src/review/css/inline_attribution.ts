@@ -3,7 +3,7 @@ import type { ComponentViewRecord } from "@mokly/viewer";
 
 import type { RenderedRange } from "../../components/ranges.js";
 import { mayContainCssReferences } from "../../css_references.js";
-import { timeSync } from "../../diagnostics/timings.js";
+import { documentWorkSync, timeSync } from "../../diagnostics/timings.js";
 
 import { diffCssRuleLists } from "./diff.js";
 import type { CssDocument } from "./document.js";
@@ -88,107 +88,111 @@ export function attributeInlineRules(
 }
 
 function analyze(input: InlineAttributionInput): InlineAttributionResult {
-  const paired = new Set(input.pairedIgnoreIds);
-  const beforeSpans = findUnownedInlineStyles(
-    input.before.source,
-    input.before.sourceRanges,
-    paired,
-  );
-  const afterSpans = findUnownedInlineStyles(
-    input.after.source,
-    input.after.sourceRanges,
-    paired,
-  );
-  const common = { beforeSpans, afterSpans };
-  const outerSourcesEqual = sameInlineOuterSources(beforeSpans, afterSpans);
-  if (
-    outerSourcesEqual &&
-    ![...beforeSpans, ...afterSpans].some((span) =>
-      mayContainCssReferences(span.text),
+  return documentWorkSync("inlineRuleMs", () => {
+    const paired = new Set(input.pairedIgnoreIds);
+    const beforeSpans = findUnownedInlineStyles(
+      input.before.source,
+      input.before.sourceRanges,
+      paired,
+    );
+    const afterSpans = findUnownedInlineStyles(
+      input.after.source,
+      input.after.sourceRanges,
+      paired,
+    );
+    const common = { beforeSpans, afterSpans };
+    const outerSourcesEqual = sameInlineOuterSources(beforeSpans, afterSpans);
+    if (
+      outerSourcesEqual &&
+      ![...beforeSpans, ...afterSpans].some((span) =>
+        mayContainCssReferences(span.text),
+      )
     )
-  )
-    return { ...common, status: "skipped" };
+      return { ...common, status: "skipped" };
 
-  const before = parseInlineRuleList(beforeSpans, input.parser);
-  const after = parseInlineRuleList(afterSpans, input.parser);
-  if (before.status === "unresolved" || after.status === "unresolved")
-    return {
-      ...common,
-      status: "unresolved",
-      failures: [
-        ...(before.status === "unresolved"
-          ? [{ side: "before" as const, error: before.error }]
-          : []),
-        ...(after.status === "unresolved"
-          ? [{ side: "after" as const, error: after.error }]
-          : []),
-      ],
-      retainedSelectors: { status: "unresolved", selectors: [] },
-    };
-
-  const diff = diffCssRuleLists(before.rules, after.rules);
-  const analyzed = inlineRuleDeltas(diff, before.rules, after.rules);
-  if (!analyzed.length)
-    if (outerSourcesEqual) return { ...common, status: "skipped" };
-    else
+    const before = parseInlineRuleList(beforeSpans, input.parser);
+    const after = parseInlineRuleList(afterSpans, input.parser);
+    if (before.status === "unresolved" || after.status === "unresolved")
       return {
         ...common,
-        status: "resolved",
-        beforeRules: before.rules,
-        afterRules: after.rules,
-        rules: [],
-        ownedComponentIds: new Set(),
+        status: "unresolved",
+        failures: [
+          ...(before.status === "unresolved"
+            ? [{ side: "before" as const, error: before.error }]
+            : []),
+          ...(after.status === "unresolved"
+            ? [{ side: "after" as const, error: after.error }]
+            : []),
+        ],
+        retainedSelectors: { status: "unresolved", selectors: [] },
       };
-  const matching = input.prepare();
-  const beforeOwners = createElementOwnerIndex({
-    ranges: matching.before.ranges,
-    usage: input.before.usage,
-    counterpart: input.after.usage,
-    rootComponentId: input.rootComponentId,
-  });
-  const afterOwners = createElementOwnerIndex({
-    ranges: matching.after.ranges,
-    usage: input.after.usage,
-    counterpart: input.before.usage,
-    rootComponentId: input.rootComponentId,
-  });
-  const rules = analyzed.map((change) =>
-    attributeInlineRule(
-      change,
-      { document: matching.before.document, owners: beforeOwners },
-      { document: matching.after.document, owners: afterOwners },
-    ),
-  );
-  const diffedRules = rules.filter(({ change }) => change.kind !== "unchanged");
-  const retained = diffedRules.filter(({ attribution }) =>
-    ["entry", "unresolved"].includes(attribution.kind),
-  );
-  const retainedSelectors = retained.length
-    ? {
-        status: retained.some(
-          ({ attribution }) => attribution.kind === "unresolved",
+
+    const diff = diffCssRuleLists(before.rules, after.rules);
+    const analyzed = inlineRuleDeltas(diff, before.rules, after.rules);
+    if (!analyzed.length)
+      if (outerSourcesEqual) return { ...common, status: "skipped" };
+      else
+        return {
+          ...common,
+          status: "resolved",
+          beforeRules: before.rules,
+          afterRules: after.rules,
+          rules: [],
+          ownedComponentIds: new Set(),
+        };
+    const matching = input.prepare();
+    const beforeOwners = createElementOwnerIndex({
+      ranges: matching.before.ranges,
+      usage: input.before.usage,
+      counterpart: input.after.usage,
+      rootComponentId: input.rootComponentId,
+    });
+    const afterOwners = createElementOwnerIndex({
+      ranges: matching.after.ranges,
+      usage: input.after.usage,
+      counterpart: input.before.usage,
+      rootComponentId: input.rootComponentId,
+    });
+    const rules = analyzed.map((change) =>
+      attributeInlineRule(
+        change,
+        { document: matching.before.document, owners: beforeOwners },
+        { document: matching.after.document, owners: afterOwners },
+      ),
+    );
+    const diffedRules = rules.filter(
+      ({ change }) => change.kind !== "unchanged",
+    );
+    const retained = diffedRules.filter(({ attribution }) =>
+      ["entry", "unresolved"].includes(attribution.kind),
+    );
+    const retainedSelectors = retained.length
+      ? {
+          status: retained.some(
+            ({ attribution }) => attribution.kind === "unresolved",
+          )
+            ? ("unresolved" as const)
+            : ("matched" as const),
+          selectors: [
+            ...new Set(retained.flatMap(({ selectors }) => selectors)),
+          ].sort(),
+        }
+      : undefined;
+    const ownedComponentIds = new Set(
+      diffedRules
+        .flatMap(({ attribution }) =>
+          attribution.kind === "owned" ? attribution.componentIds : [],
         )
-          ? ("unresolved" as const)
-          : ("matched" as const),
-        selectors: [
-          ...new Set(retained.flatMap(({ selectors }) => selectors)),
-        ].sort(),
-      }
-    : undefined;
-  const ownedComponentIds = new Set(
-    diffedRules
-      .flatMap(({ attribution }) =>
-        attribution.kind === "owned" ? attribution.componentIds : [],
-      )
-      .sort(),
-  );
-  return {
-    ...common,
-    status: "resolved",
-    beforeRules: before.rules,
-    afterRules: after.rules,
-    rules,
-    ...(retainedSelectors ? { retainedSelectors } : {}),
-    ownedComponentIds,
-  };
+        .sort(),
+    );
+    return {
+      ...common,
+      status: "resolved",
+      beforeRules: before.rules,
+      afterRules: after.rules,
+      rules,
+      ...(retainedSelectors ? { retainedSelectors } : {}),
+      ownedComponentIds,
+    };
+  });
 }

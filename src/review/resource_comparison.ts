@@ -1,6 +1,6 @@
-import { parse } from "parse5";
-
 import { isStylesheetPath } from "@mokly/viewer/data";
+
+import { parseHtml } from "../diagnostics/html_parse.js";
 
 import type { ComponentMaterialReader } from "./component_resources.js";
 import type { CssDocumentPair } from "./css/document.js";
@@ -86,10 +86,10 @@ export class ResourceComparison {
           {
             ...(matching.before === undefined
               ? {}
-              : { before: parse(matching.before) }),
+              : { before: parseHtml("stylesheetMatching", matching.before) }),
             ...(matching.after === undefined
               ? {}
-              : { after: parse(matching.after) }),
+              : { after: parseHtml("stylesheetMatching", matching.after) }),
           },
         ]
       : [];
@@ -121,8 +121,10 @@ export class ResourceComparison {
         documents.push({
           ...(baseDocument === undefined
             ? {}
-            : { before: parse(baseDocument) }),
-          ...(headDocument === undefined ? {} : { after: parse(headDocument) }),
+            : { before: parseHtml("resourceMatching", baseDocument) }),
+          ...(headDocument === undefined
+            ? {}
+            : { after: parseHtml("resourceMatching", headDocument) }),
         });
       }
     }

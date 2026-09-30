@@ -71,10 +71,10 @@ export async function generateLargeFixture(
   );
   await fs.writeFile(
     path.join(root, "renderer.tsx"),
-    renderer.replace('"../../../examples/basic/theme.js"', '"./theme.js"'),
+    renderer.replace('"./inline_styles.js"', '"./entries/inline_styles.js"'),
   );
   await fs.copyFile(
-    path.resolve(templates, "../../../examples/basic/theme.ts"),
+    path.join(templates, "theme.ts"),
     path.join(root, "theme.ts"),
   );
   for (const file of ["catalogue.css", "tokens.css", "mark.svg"])
@@ -113,7 +113,7 @@ export async function generateLargeFixture(
   );
   await fs.writeFile(
     path.join(root, ".gitignore"),
-    ".review/\n.mokly-cache/\nnode_modules/\n" +
+    ".review/\n.mokly-cache/\nnode_modules/\n.mokly-large-fixture.json\n" +
       (generatedOutput === "derived"
         ? "mockups/**/*.html\nmockups/mokly-manifest.json\n"
         : ""),
