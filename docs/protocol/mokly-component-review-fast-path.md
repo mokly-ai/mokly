@@ -81,9 +81,11 @@ weaker fast-path resource decision. One-sided views run neither paired route.
 Projected resources need not be a subset of actual resources: copying caller
 content out of an inert template can expose recorded references. Parser-discarded
 tokens remain absent under the page contract's provenance rule, even if reparsing
-rewritten HTML would expose them. Views without ownership text edits retain
-actual-only proof; instances or entry-owned slots require independent actual
-and projected proof. Reuse preparation on fall-through.
+rewritten HTML would expose them. The delivered decision requires independent
+actual and projected proof for views with instances, entry-owned slots or
+possible inline references. [M7 page reuse](./mokly-page-analysis.md#identical-text-quick-check)
+limits projection to ownership text edits; other views retain actual-only proof.
+Reuse preparation on fall-through.
 
 Resource discovery is reused by the complete path. Cache discovery by side,
 route, derived-reference identity and exclusion policy, without retaining

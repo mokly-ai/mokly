@@ -81,8 +81,11 @@ Review phases use the same session, role and parent context as their caller:
   inventory keeps its own stages.
   Under page reuse, each side's reader proves its own transitive closure even
   when both use the same raw seeds. Reuse discoveries by side/route/reference
-  identity/exclusion policy, never by a cross-side union. Instance/entry-slot
-  views also prove projected closures. One-sided views use their own reader;
+  identity/exclusion policy, never by a cross-side union. Delivered views with
+  instances, entry-owned slots or possible inline references also prove projected
+  closures; page reuse limits projection to ownership text edits under the
+  [fast-path rule](./mokly-component-review-fast-path.md#resource-and-one-sided-rules).
+  One-sided views use their own reader;
   repeated discovery of the same side and policy is a defect.
 - `review.css-analysis` measures the synchronous parse/diff/match/reduce pass
   for one changed, reachable stylesheet and one before/after document pair.

@@ -4,8 +4,9 @@
 
 Implemented for linked stylesheet and inline style evidence. This document owns
 compact visual rules; [CSS evidence presentation](./mokly-css-evidence-presentation.md)
-owns projection and exact copy, and [inline style ownership](./mokly-inline-styles.md)
-owns inline analysis and evidence validation.
+owns projection and exact copy. [Inline evidence](./mokly-inline-style-evidence.md)
+owns its shape; [review validation](./mokly-component-review-validation.md)
+owns evidence validation, and [inline ownership](./mokly-inline-styles.md) owns analysis.
 
 ## Shell Presentation
 
@@ -48,10 +49,6 @@ It fixes these presentation rules:
   or ignored-only, shows the plain preview with no heading.
 - Inline evidence follows the same compact Details layout; its exact merge
   rules and copy belong to [CSS evidence presentation](./mokly-css-evidence-presentation.md#inline-evidence).
-- The note "Shared component changes affect this preview. This page has no
-  independent entry in Changes." appears only when a changed component
-  affects the entry, never for a view whose only evidence is excluded inline
-  styles.
 - Selector text, status names, and analysis vocabulary never appear in a
   heading or in the catalogue tree; they appear only inside the secondary
   details list, and only where the detail has review value.

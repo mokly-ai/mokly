@@ -19,9 +19,8 @@ instances with or without it. The current manifest version is 7, defined by the
 identity only: no entry stores a route, view path, or other value derivable
 from its kind, id, and configuration.
 
-Current manifests omit the retired `styles` and `resources` view fields and
-reject those keys. Historical v5 readers accept arrays under them and discard
-the values before comparison.
+The [retired ownership-record rules](./mokly-component-usage-records.md#retired-ownership-records)
+own current rejection and historical handling of `styles` and `resources`.
 
 ## Entries And Variants
 
@@ -117,7 +116,7 @@ entry owner and is not listed as its own used instance.
 
 The [component usage-record contract](./mokly-component-usage-records.md) owns
 the complete types, key preimages, ownership graphs, ordering, range placement,
-style/resource ownership, and validation. The
+retired `styles`/`resources` handling, and validation. The
 [instance identity contract](./mokly-instances.md) owns reference scope,
 stability, source capture, and rendered sentinels.
 

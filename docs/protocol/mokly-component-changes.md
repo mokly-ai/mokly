@@ -53,8 +53,6 @@ not remove it from this list. Links can open the actual before/current screen
 comparison even when the screen has no row in Changes.
 
 Affected describes dependency/usage evidence, not proof of a visual regression.
-In derived mode, a resource-byte difference without a changed Git path is a
-material change. It does not invent a Git dependency reason or changed path.
 No pixel counts or layout-safety claims are inferred. A changed component can
 alter surrounding layout without changing any screen-owned markup.
 
@@ -177,8 +175,10 @@ alone therefore leaves every consumer out of Changes for that stylesheet.
 Retained resource evidence at an actual invocation keeps the union of declared
 `ownedDependencies` owners and inferred inline-rule owners in Changes when
 variant entries do not render that path. This applies to CSS and non-CSS public
-resources. A changed Git path supplies a component dependency reason; a derived
-byte-only difference supplies `material` without invented dependency evidence.
+resources. A changed Git path supplies a component dependency reason;
+[resource propagation](./mokly-inline-style-resources.md#resolution-and-propagation)
+owns reference traversal, owner unions, independent entry reachability and
+derived byte-only material reasons without invented Git evidence.
 Their view exclusions stay intact and affected links retain invocation context.
 An exact screen declaration independently retains a stylesheet only when its
 actual view keeps it. Non-CSS path-only evidence follows the independent-reason
@@ -189,17 +189,6 @@ assertions. [Inline ownership](./mokly-inline-styles.md) infers each rule's owne
 from paired documents and validated ranges; unresolved or entry-reaching rules
 stay with the entry, owned rules follow paired equal-input components, and
 unmatched rules are excluded. Root rules on a variant remain entry material.
-
-Reference ownership uses the same per-side resource traversal as actual
-material, rooted at the view path, so relative paths and transitive imports keep
-their normal meaning. A retained actual-view dependency reason is attributed to
-the union of inferred inline owners and `ownedDependencies` owners present in
-the view. Entry-projected reachability remains an independent screen reason.
-In derived mode, an owned referenced resource whose bytes differ without a Git
-changed path gives its component a `material` reason and affected consumers,
-but invents neither a dependency reason nor `changedPaths` evidence. The fast
-and complete paths apply this same propagation policy; the quick path's raw
-resource proof falls through when a possibly owned resource changes.
 
 Owned asset edits must flag component pages even when HTML is byte-identical.
 Retain actual styles, fonts, and images in screenshots and snapshot trees. Never
@@ -242,7 +231,7 @@ owned external styles and inline ownership: owned, shared, retained, unresolved,
 excluded, formatting-only, unpaired, caller-prop, nested-slot and root cases.
 Prove equal membership across live, complete, published and selected results,
 shared-impact overlap, independent screen edits, historical ownership retirement,
-compatible/incompatible baselines, removed consumers and watched updates;
+compatible/incompatible baselines, removed consumers and concurrent watched updates;
 affected-screen comparisons must visibly retain component styling edits.
 
 Dependency declaration provenance is attribution input. Changing declarations

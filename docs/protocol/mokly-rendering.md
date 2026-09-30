@@ -5,8 +5,8 @@ for the [authoring API](./mokly-authoring.md) and
 [configuration](./mokly-configuration.md). Public-resource eligibility follows
 [source protection](./mokly-source-protection.md), including configured
 public exclusions. The string-only renderer result below is the implemented
-contract. The builder rejects structured results, and current component view
-records contain only rendered-instance and range data; head styles and their
+contract. The builder rejects structured results, and current component views
+contain only instance, slot and range records; head styles and their
 resources are attributed during comparison.
 
 ## Rendering Boundary

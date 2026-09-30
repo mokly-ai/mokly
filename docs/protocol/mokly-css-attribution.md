@@ -135,9 +135,9 @@ This boundary does not attempt browser error recovery for incomplete source.
 
 ## Kept Constructs
 
-Every case the analysis cannot resolve keeps the rule and marks the reason
-`unresolved`. The list is closed; an implementation must not add silent
-exclusions beyond it.
+Unresolved cases keep the rule; this closed list permits no other silent
+exclusions. [Inline attribution](./mokly-inline-styles.md#attribution) disables
+only the changed-reference keep rule; linked stylesheets retain it.
 
 - A selector the matcher cannot parse.
 - Shadow-scoped selectors: `:host`, `:host()`, `:host-context()`, `::part()`,

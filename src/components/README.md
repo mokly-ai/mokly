@@ -88,8 +88,10 @@ on-demand document.
 Implementation changes belong to the component in Changes. Consuming pages are
 listed as affected; their own prop, slot, structure, layout, or explicit resource
 changes still count directly. Exact `ownedDependencies` assign files confined
-to the component. For style elements outside component markup, Review diffs
-rules and infers owners from every matched element in the paired documents.
+to the component. Global or mixed resources remain conservatively attributed.
+Dependency declarations and adopting an unrelated component alone do not
+invent a visible screen change. For style elements outside component markup,
+Review diffs rules and infers owners from every matched element in the paired documents.
 Entry-reaching or unresolved rules stay with the entry; unmatched rules are
 excluded. Referenced files follow inferred rule owners, while entry-owned
 references retain entry evidence. The renderer returns a complete document
@@ -100,8 +102,8 @@ Comparison projection can expose caller-owned slot material that HTML parsing
 discarded from contexts such as `template` or `select`. Removing component
 implementation text can likewise expose a sibling hidden by its unclosed HTML. The review shortcut
 therefore proves both actual and ownership-projected resource closures for
-views with instances or entry-owned slots, using the same root-specific
-ownership and resource exclusion policy as the complete comparison.
+views with instances, entry-owned slots or possible inline references, using the
+same root-specific ownership and resource exclusion policy as the complete comparison.
 
 ## Development
 

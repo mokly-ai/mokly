@@ -178,7 +178,7 @@ Never emit `sourceFiles`, `declaredDependencies`, `ownedDependencies`, resolved
 dependency evidence, changed-path inventories, source graphs, Git commands,
 private manifest envelopes, content digests for source inputs, retired
 style/resource ownership tables, absolute filesystem paths, credentials,
-render-capability tokens, or legacy manifests. No source
+or render-capability tokens. No source
 bytes, HTML, runtime React values, or source maps belong in this JSON. This
 privacy rule applies recursively, including removed entries and extension fields.
 `snapshotId` is a one-way digest, never a public commit, manifest, or generation
