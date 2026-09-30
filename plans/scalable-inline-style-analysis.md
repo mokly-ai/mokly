@@ -16,8 +16,9 @@ This plan builds on the
 [inferred inline style ownership plan](./inferred-inline-style-ownership.md),
 which is implemented but not yet merged, on branch `calummoore/irvine-v6` at
 `6a2ff27e`. Before Milestone 1 starts, `origin/main` at `b4314fec` (pull
-request #123, which replaces collections with navigation paths and moves the
-manifest to schema v6) is merged into this branch, so the contracts and code
+request #123, which replaces collections with navigation paths, derives
+routes from entry ids, keeps Changes to recorded evidence and moves the
+manifest to schema v7) is merged into this branch, so the contracts and code
 this plan changes are current. That plan's Milestone 8 scale diagnosis is the
 evidence for this plan, and its review findings stay recorded there. This plan
 resolves these of them: Milestone 3 finding 1 (Decision 4), Milestone 4
