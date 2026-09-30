@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { compileCatalogue } from "../dist/build/compile.js";
+
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { inlineChangesFixture } from "./helpers/inline_changes.js";
 
@@ -26,14 +28,15 @@ test("a caller prop edit under atomic CSS stays with the screen inputs", async (
   const { result } = await fixture.complete();
   assert.equal(result.schemaVersion, 4);
   if (result.schemaVersion !== 4) return;
+  const actionIds = await actionEntryIds(fixture.config);
   const home = result.changes.find((entry) => entry.after?.id === "home");
   assert.deepEqual(
     home?.reasons.map(({ kind }) => kind),
     ["inputs", "material"],
   );
   assert.ok(
-    !result.changes.some(
-      (entry) => entry.kind === "component" && entry.after?.id === "action",
+    !result.changes.some((entry) =>
+      actionIds.has((entry.after ?? entry.before)!.id),
     ),
   );
 });
@@ -59,14 +62,31 @@ test("a parent implementation changing child props owns the atomic rule", async 
   const { result } = await fixture.complete();
   assert.equal(result.schemaVersion, 4);
   if (result.schemaVersion !== 4) return;
+  const actionIds = await actionEntryIds(fixture.config);
   const routes = result.changes.map(
     (entry) => (entry.after ?? entry.before)!.id,
   );
   assert.ok(routes.includes("parent"));
   assert.ok(!routes.includes("action"));
   assert.ok(
+    !result.changes.some((entry) =>
+      actionIds.has((entry.after ?? entry.before)!.id),
+    ),
+  );
+  assert.ok(
     result.affectedConsumers.some(
       (item) => item.changedComponentId === "parent",
     ),
   );
 });
+
+async function actionEntryIds(config: Parameters<typeof compileCatalogue>[0]) {
+  const compilation = await compileCatalogue(config);
+  const entries = compilation.manifest.entries.filter(
+    (entry) =>
+      entry.id === "action" ||
+      ("variantOf" in entry && entry.variantOf === "action"),
+  );
+  assert.equal(entries.length, 3);
+  return new Set(entries.map((entry) => entry.id));
+}
