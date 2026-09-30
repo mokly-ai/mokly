@@ -32,7 +32,7 @@ Milestone 28 (`c482bd0`) resolves the four approved findings in the
 other open findings remain unchanged. Milestone 30 (`5ae34be`) resolves the three
 approved findings in the
 [Milestone 29 review record](../docs/reviews/imported-css-delivery-milestone-29.md).
-Milestone 32 addresses only finding 1 in the
+Milestone 32 (`6a02190`) resolves only finding 1 in the
 [Milestone 31 review record](../docs/reviews/imported-css-delivery-milestone-31.md);
 findings 2–4 remain open for the user's decision.
 Imported CSS, CSS Modules, binary assets and
@@ -937,7 +937,7 @@ modelling the cleaned input the CSS Modules plugins processed.
 
 ## Milestone 33: Commit, push, and review
 
-- [ ] Commit and push the approved fix and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Commit and push the approved fix and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
 - [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
 
 ## Post-merge follow-up (non-blocking)

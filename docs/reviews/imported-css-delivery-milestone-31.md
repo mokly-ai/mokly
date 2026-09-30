@@ -34,8 +34,8 @@ The fix works for the cases it targeted:
   equivalent.
 
 The four findings below were reproduced in scratch copies. The parent session
-confirmed finding 1 against builds before and after the change. All four
-remain open for the user's decision.
+confirmed finding 1 against builds before and after the change. Finding 1
+was resolved in `6a02190`; findings 2–4 remain open for the user's decision.
 
 ## Findings
 
@@ -78,6 +78,15 @@ remain open for the user's decision.
      escape error and its correct advice. C) document the limitation.
    - Recommended: A. It fixes the root cause, which is that the check reads
      different text from the text that ships. B is a reasonable stopgap.
+
+   Resolved in `6a02190`: the verifier now compares the shipped raw selector
+   and `@scope` group text against the cleaned input the plugins processed.
+   Comments outside `@scope` groups are ignored without changing their other
+   text, avoiding the prototype's unchanged-prelude regression. A narrow
+   comment-separated combinator merge also keeps valid selectors with `>`,
+   `+`, `~` and other explicit combinators building; unrelated and explicit
+   adjacency stays checked.
+
 2. **Low — the new fuzz is about a quarter of the requested size and cannot
    generate the shapes behind finding 1.**
    - What happens: `tests/browser/css_module_escape_fuzz.spec.ts` runs 600

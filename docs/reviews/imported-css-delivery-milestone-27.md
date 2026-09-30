@@ -120,6 +120,9 @@ user approved option A for all four, resolved in `c482bd0`.
    Extended in `5ae34be`: the check now also reads escapes in the scoped
    output the way browsers do (Milestone 29 finding 1).
 
+   Corrected in `6a02190`: the output side now reads the shipped text, so
+   comments PostCSS removes on re-parse no longer hide escape terminators.
+
 3. **Low — three wrapper spellings now fail Build although the plugins' output
    means what the docs say.**
    - Cases:

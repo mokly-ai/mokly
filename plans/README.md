@@ -28,7 +28,7 @@
   other open findings remain unchanged. Milestone 30 (`5ae34be`) resolves the three
   approved findings in the
   [Milestone 29 review](../docs/reviews/imported-css-delivery-milestone-29.md).
-  Milestone 32 addresses only finding 1 in the
+  Milestone 32 (`6a02190`) resolves only finding 1 in the
   [Milestone 31 review](../docs/reviews/imported-css-delivery-milestone-31.md);
   findings 2–4 remain open.
   Move this plan to Completed when its
