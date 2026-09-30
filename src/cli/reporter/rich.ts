@@ -1,12 +1,12 @@
 import type { ManifestV7 } from "@mokly/viewer/data";
 
 import { EARLIER_BASELINE_MESSAGE } from "../../baseline/compatibility.js";
-import type { BuildDiagnostic } from "../../build/build_warnings.js";
+import { formatBuildDiagnostic } from "../../build/build_warnings.js";
 import { errorMessage } from "../../errors.js";
 import type { ServeReadyReport, WatchReport } from "../../server/reporter.js";
 import { cliErrorPresentation } from "../errors.js";
 
-import type { ActiveReporterPhase } from "./phase.js";
+import { renderPhase, type ActivePhase } from "./phase.js";
 import {
   catalogueCounts,
   reportPaths,
@@ -33,7 +33,7 @@ export class RichReporter implements CliReporter {
   readonly mode = "rich" as const;
   readonly #glyphs;
   readonly #success;
-  #active: ActiveReporterPhase | undefined;
+  #active: ActivePhase | undefined;
   #serveReport: ServeReadyReport | undefined;
   #servePhase: ReporterPhase | undefined;
   readonly #incompatible = new Set<string>();
@@ -75,9 +75,11 @@ export class RichReporter implements CliReporter {
     this.#servePhase = this.startPhase("Checking changes");
   }
 
-  buildWarnings(diagnostics: readonly BuildDiagnostic[]): void {
+  buildWarnings(
+    diagnostics: Parameters<CliReporter["buildWarnings"]>[0],
+  ): void {
     for (const diagnostic of diagnostics)
-      this.warning(`${diagnostic.route}: ${diagnostic.message}`);
+      this.warning(formatBuildDiagnostic(diagnostic));
   }
 
   catalogueReady(manifest: ManifestV7, durationMs: number): void {
@@ -171,7 +173,7 @@ export class RichReporter implements CliReporter {
 
   startPhase(label: string): ReporterPhase {
     this.clearPhase();
-    const active: ActiveReporterPhase = {
+    const active: ActivePhase = {
       frame: 0,
       label,
       startedAt: this.environment.now(),
@@ -287,13 +289,7 @@ export class RichReporter implements CliReporter {
     this.#servePhase = undefined;
   }
 
-  private renderPhase(active: ActiveReporterPhase, newline: boolean): void {
-    const glyph =
-      this.#glyphs.spinner[active.frame % this.#glyphs.spinner.length];
-    const value = truncateTerminalLine(
-      `  ${glyph} ${active.label}…`,
-      terminalWidth(this.environment.stdout, this.environment.env),
-    );
-    this.environment.stdout.write(newline ? `${value}\n` : `\r${value}`);
+  private renderPhase(active: ActivePhase, newline: boolean): void {
+    renderPhase(active, this.#glyphs.spinner, this.environment, newline);
   }
 }

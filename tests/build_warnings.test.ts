@@ -66,6 +66,20 @@ test("build diagnostics reject invalid codes, routes, and messages", () => {
   }
 });
 
+test("build diagnostics reject terminal control characters", () => {
+  for (const diagnostic of [
+    { ...ancestor, route: "screens/home\u001b[2J.desktop.html" },
+    { ...ancestor, message: "warning\u001b[2J" },
+    { ...ancestor, message: "warning\u009b2J" },
+  ]) {
+    assert.throws(
+      () => normalizeBuildDiagnostics([diagnostic]),
+      (error: unknown) =>
+        error instanceof MoklyError && error.code === "build-invalid",
+    );
+  }
+});
+
 test("strict build warnings use singular and plural build-invalid messages", () => {
   enforceStrictBuildWarnings([], true);
   enforceStrictBuildWarnings([ancestor], false);

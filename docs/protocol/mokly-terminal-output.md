@@ -163,8 +163,9 @@ Completion summaries are:
 
 Export follows its summary with the unstyled guidance
 `Deploy this directory at your site's root with your hosting provider.`
-The [build warnings contract](./mokly-build-warnings.md) owns warning order,
-stderr formats, and `--strict` failures for one-shot commands and Serve.
+The build warnings contract owns warning order, exact stderr formats, and
+`--strict` failures for one-shot commands and Serve; see
+[Build warnings](./mokly-build-warnings.md).
 
 ## Plain compatibility
 

@@ -2,6 +2,11 @@
 
 ## Active
 
+- [Styled Link Control Ancestor Rule](./styled-link-control-ancestor-rule.md)
+  — delivered tiered `MockLink asChild` placement, deterministic build
+  warnings, and `--strict`; Milestone 5 addresses the post-merge review's
+  terminal-safety and protocol-ownership findings before the pull request
+  merges.
 - [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) — replace
   collection entities and `childIds` with a Storybook-style `navPath` on
   every leaf, derived from nested `folder` titles; manifest v6 and read
@@ -94,10 +99,6 @@
 
 ## Completed
 
-- [Styled Link Control Ancestor Rule](./styled-link-control-ancestor-rule.md)
-  — delivered and verified: tiered `MockLink asChild` placement, deterministic
-  build warnings, `--strict`, element-naming messages, and the complete Links
-  guide rule.
 - [Screen Variants](./screen-variants.md) — PR #101's delivered scope is
   complete: authoring, navigation, Changes, per-view evidence, and the approved
   review fixes. Unfinished work is owned by

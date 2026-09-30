@@ -153,6 +153,23 @@ test("plain standalone Serve uses the stable warning stderr format", () => {
   ]);
 });
 
+test("plain standalone Serve escapes warning control characters", () => {
+  const output: string[] = [];
+  const reporter = new PlainServeReporter((value) => output.push(value));
+  reporter.buildWarnings([
+    {
+      code: "link-control-ancestor",
+      route: "screens/home\u001b[2J.html",
+      message: "warning\u009b2J",
+    },
+  ]);
+  assert.deepEqual(output, [
+    "[mokly/warning] screens/home\\u001b[2J.html: warning\\u009b2J\n",
+  ]);
+  assert.ok(!output[0]!.includes("\u001b"));
+  assert.ok(!output[0]!.includes("\u009b"));
+});
+
 test(
   "derived Serve reports catalogue, baseline, and Changes lifecycle events",
   { timeout: 30_000 },

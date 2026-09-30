@@ -2,6 +2,10 @@
 
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
+import {
+  escapeTerminalControlCharacters,
+  hasTerminalControlCharacters,
+} from "../diagnostics/terminal_text.js";
 import { MoklyError } from "../errors.js";
 
 /** Stable codes available to build-warning producers. */
@@ -34,7 +38,8 @@ function validateBuildDiagnostic(diagnostic: BuildDiagnostic): void {
     );
   if (
     typeof diagnostic.route !== "string" ||
-    !isSafeRepositoryPath(diagnostic.route)
+    !isSafeRepositoryPath(diagnostic.route) ||
+    hasTerminalControlCharacters(diagnostic.route)
   )
     throw new MoklyError(
       "build-invalid",
@@ -44,12 +49,18 @@ function validateBuildDiagnostic(diagnostic: BuildDiagnostic): void {
     typeof diagnostic.message !== "string" ||
     diagnostic.message.trim().length === 0 ||
     diagnostic.message.includes("\n") ||
-    diagnostic.message.includes("\r")
+    diagnostic.message.includes("\r") ||
+    hasTerminalControlCharacters(diagnostic.message)
   )
     throw new MoklyError(
       "build-invalid",
       "build diagnostic message must be non-empty single-line text",
     );
+}
+
+/** Format one diagnostic defensively for a terminal reporter. */
+export function formatBuildDiagnostic(diagnostic: BuildDiagnostic): string {
+  return `${escapeTerminalControlCharacters(diagnostic.route)}: ${escapeTerminalControlCharacters(diagnostic.message)}`;
 }
 
 /** Validate, sort, and de-duplicate diagnostics independently of render order. */

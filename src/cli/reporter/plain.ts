@@ -1,7 +1,10 @@
 import type { ManifestV7 } from "@mokly/viewer/data";
 
 import { EARLIER_BASELINE_MESSAGE } from "../../baseline/compatibility.js";
-import type { BuildDiagnostic } from "../../build/build_warnings.js";
+import {
+  formatBuildDiagnostic,
+  type BuildDiagnostic,
+} from "../../build/build_warnings.js";
 import { errorMessage } from "../../errors.js";
 import type { ServeReadyReport, WatchReport } from "../../server/reporter.js";
 
@@ -38,7 +41,7 @@ export class PlainReporter implements CliReporter {
   buildWarnings(diagnostics: readonly BuildDiagnostic[]): void {
     for (const diagnostic of diagnostics)
       this.environment.stderr.write(
-        `[mokly/warning] ${diagnostic.route}: ${diagnostic.message}\n`,
+        `[mokly/warning] ${formatBuildDiagnostic(diagnostic)}\n`,
       );
   }
 

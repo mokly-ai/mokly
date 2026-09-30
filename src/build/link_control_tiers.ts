@@ -2,6 +2,8 @@
 
 import type { DefaultTreeAdapterMap } from "parse5";
 
+import { escapeTerminalControlCharacters } from "../diagnostics/terminal_text.js";
+
 type ControlElement = DefaultTreeAdapterMap["element"];
 type ClassifiedAttribute = "contenteditable" | "controls" | "role" | "tabindex";
 
@@ -121,9 +123,13 @@ export function describeLinkControlElement(
   placement: LinkControlPlacement,
 ): string {
   const { element, feature } = placement;
-  if (feature.kind === "element") return `<${element.tagName}>`;
-  if (feature.kind === "event") return `<${element.tagName} ${feature.name}>`;
-  return `<${element.tagName} ${feature.name}="${displayValue(feature.value)}">`;
+  const description =
+    feature.kind === "element"
+      ? `<${element.tagName}>`
+      : feature.kind === "event"
+        ? `<${element.tagName} ${feature.name}>`
+        : `<${element.tagName} ${feature.name}="${displayValue(feature.value)}">`;
+  return escapeTerminalControlCharacters(description);
 }
 
 interface Candidate {

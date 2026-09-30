@@ -1,4 +1,10 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import {
+  expect,
+  test,
+  type FrameLocator,
+  type Locator,
+  type Page,
+} from "@playwright/test";
 
 import { chooseViewport } from "./workspace_actions.js";
 
@@ -8,6 +14,24 @@ async function tabTo(page: Page, link: Locator): Promise<void> {
     if (await link.evaluate((node) => node === document.activeElement)) return;
   }
   throw new Error("Design link was not reachable with Tab");
+}
+
+function visibleShotLink(frame: FrameLocator, name: string): Locator {
+  return frame
+    .locator(".mbk-shot-link:visible")
+    .filter({ hasText: name })
+    .first();
+}
+
+async function expectFrameRoute(
+  page: Page,
+  viewport: "mobile" | "desktop",
+  id: string,
+): Promise<void> {
+  await expect(page.locator(`.mbk-frame-${viewport} iframe`)).toHaveAttribute(
+    "src",
+    new RegExp(`/static/screens/${id}\\.${viewport}\\.html$`, "u"),
+  );
 }
 
 for (const viewport of ["mobile", "desktop"] as const) {
@@ -22,12 +46,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await expect(page).toHaveURL(
       /\/view\/screens\/design-browse-screen\.html$/,
     );
-    const details = frame
-      .getByRole("link", {
-        name: "Open the details screen",
-        exact: true,
-      })
-      .first();
+    await expectFrameRoute(page, viewport, "design-browse-screen");
+    const details = visibleShotLink(frame, "Open the details screen");
     await frame.locator(".mbk-brand").focus();
     await tabTo(page, details);
     await expect(details).toHaveCSS("outline-style", "solid");
@@ -35,6 +55,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await expect(page).toHaveURL(
       /\/view\/screens\/design-browse-details-screen\.html$/,
     );
+    await expectFrameRoute(page, viewport, "design-browse-details-screen");
     const row = page.locator(
       'a[data-nav-row][data-route="screens/design-browse-details-screen.html"]',
     );
@@ -48,12 +69,12 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await expect(page).toHaveURL(
       /\/view\/screens\/design-browse-screen\.html$/,
     );
+    await expectFrameRoute(page, viewport, "design-browse-screen");
+    await expect(details).toBeVisible();
     await page.goForward();
     await expect(row).toHaveAttribute("aria-current", "page");
-    await frame
-      .getByRole("link", { name: "Return to welcome", exact: true })
-      .first()
-      .click();
+    await expectFrameRoute(page, viewport, "design-browse-details-screen");
+    await visibleShotLink(frame, "Return to welcome").click();
     await expect(page).toHaveURL(
       /\/view\/screens\/design-browse-screen\.html$/,
     );
@@ -79,17 +100,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await page.goto("/view/screens/design-browse-screen.html");
     await chooseViewport(page, viewport);
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
-    await frame
-      .getByRole("link", { name: "Open the details screen", exact: true })
-      .first()
-      .click();
+    await visibleShotLink(frame, "Open the details screen").click();
     await expect(page).toHaveURL(
       /\/view\/screens\/design-browse-details-screen\.html$/,
     );
-    await frame
-      .getByRole("link", { name: "Return to welcome", exact: true })
-      .first()
-      .click();
+    await visibleShotLink(frame, "Return to welcome").click();
     await expect(page).toHaveURL(
       /\/view\/screens\/design-browse-screen\.html$/,
     );

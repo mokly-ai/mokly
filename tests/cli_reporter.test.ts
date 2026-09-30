@@ -90,6 +90,31 @@ test("plain reporter writes sorted build warning lines only to stderr", () => {
   );
 });
 
+test("warning reporters escape terminal control characters", () => {
+  const diagnostic = {
+    code: "link-control-ancestor" as const,
+    route: "screens/home\u001b[2J.desktop.html",
+    message: "warning\u009b2J",
+  };
+  const plainTerminal = memoryTerminal({ isTTY: false });
+  new PlainReporter(plainTerminal.environment).buildWarnings([diagnostic]);
+  assert.equal(
+    plainTerminal.stderr(),
+    "[mokly/warning] screens/home\\u001b[2J.desktop.html: warning\\u009b2J\n",
+  );
+  assert.ok(!plainTerminal.stderr().includes("\u001b"));
+  assert.ok(!plainTerminal.stderr().includes("\u009b"));
+
+  const richTerminal = memoryTerminal({ columns: 200, isTTY: true });
+  new RichReporter(richTerminal.environment).buildWarnings([diagnostic]);
+  assert.equal(
+    richTerminal.stderr(),
+    "  ! screens/home\\u001b[2J.desktop.html: warning\\u009b2J\n",
+  );
+  assert.ok(!richTerminal.stderr().includes("\u001b"));
+  assert.ok(!richTerminal.stderr().includes("\u009b"));
+});
+
 test("rich reporter bounds build warning lines on stderr", () => {
   const terminal = memoryTerminal({ columns: 48, isTTY: true });
   const reporter = new RichReporter(terminal.environment);

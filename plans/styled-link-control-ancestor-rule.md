@@ -250,6 +250,32 @@ Complete the required delivery sequence after validation passes.
       a number, severity, impact, lettered options, and a recommendation
       without changing the implementation.
 
+## Milestone 5: Post-merge review fixes
+
+Close the three review findings without changing warning behavior for ordinary
+authored values.
+
+- [x] Add failing regressions proving C0/C1 terminal controls cannot survive
+      diagnostic normalization or reporter formatting, including an encoded
+      authored link-control attribute.
+- [x] Add one shared terminal-text encoder, use it at the warning producer and
+      reporter boundaries, and reject unencoded controls at the diagnostic
+      normalization boundary.
+- [x] Make `mokly-build-warnings.md` the single owner of exact plain and rich
+      warning formats, keep the terminal-output contract as a one-way link, and
+      describe warning routes through the generated artifact-path contract
+      instead of removed manifest route fields.
+- [x] Harden the design-link history regression to wait for the active iframe
+      route after Back and Forward; prove the mobile case with ten repeated
+      browser runs.
+- [x] Run the focused build-warning, link-control, reporter, documentation, and
+      Serve suites, then run `cargo xtask check` under a supported Node release.
+- [ ] Run `git add -A`, commit the completed fixes using Conventional Commits,
+      and push the branch.
+- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
+      complete local diff against `origin/main`; report findings without
+      changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - When the cloud site renders the package release containing this change,

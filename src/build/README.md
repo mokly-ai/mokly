@@ -101,7 +101,9 @@ and compatibility transform return diagnostics beside their output;
 `compile.ts` puts the normalized list on `Compilation`, while
 `document_compiler.ts` retains the requested document's list without reporting
 it. Diagnostics never enter generated files, the manifest, HTTP bytes, or
-timing records. `link_control_tiers.ts` owns the explicit ancestor and
+timing records. Authored C0/C1 controls become visible `\uXXXX` escapes before
+normalization, and reporters defensively apply the same encoder.
+`link_control_tiers.ts` owns the explicit ancestor and
 descendant tier sets, feature precedence, and one-line element descriptions
 used by both errors and warnings. See the
 [build warnings contract](../../docs/protocol/mokly-build-warnings.md).

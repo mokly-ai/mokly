@@ -109,6 +109,17 @@ test("ancestor role descriptions normalize whitespace and escape quotes", () => 
   assert.doesNotMatch(result.diagnostics[0]!.message, /[\r\n]/);
 });
 
+test("ancestor role descriptions escape terminal control characters", () => {
+  const result = adapt(`<div role="button &#x1b;[2J">${wrap()}</div>`);
+  assert.deepEqual(result.diagnostics, [
+    diagnostic(
+      "link-control-ancestor",
+      'MockLink child control is inside <div role="button \\u001b[2J">; one click or key press has two targets',
+    ),
+  ]);
+  assert.ok(!result.diagnostics[0]!.message.includes("\u001b"));
+});
+
 test("the closest warning ancestor is reported", () => {
   assert.deepEqual(
     adapt(`<label><button>${wrap()}</button></label>`).diagnostics,

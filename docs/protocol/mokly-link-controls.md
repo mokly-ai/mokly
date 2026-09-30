@@ -85,11 +85,11 @@ Messages describe the classified element as `<tag>` or
 `<tag attribute="value">`, where the attribute is the one that decided the
 tier: `role`, `contenteditable`, `controls`, or `tabindex`. Displayed authored
 values collapse each whitespace run to one space, trim leading and trailing
-whitespace, and escape `"` as `&quot;`, so every message remains one line. An
-`on*` attribute is shown by name only, never with its value. Errors keep the
-existing `<route>: MockLink child control` prefix; warning messages omit the
-route, which the [build warning record](./mokly-build-warnings.md#record)
-carries.
+whitespace, escape `"` as `&quot;`, and render C0/C1 terminal controls as
+lowercase `\uXXXX`, so every message remains safe on one line. An `on*`
+attribute is shown by name only, never with its value. Errors keep the existing
+`<route>: MockLink child control` prefix; warning messages omit the route, which
+the [build warning record](./mokly-build-warnings.md#record) carries.
 
 ```text
 MockLink child control is inside <a>; move the control outside it
