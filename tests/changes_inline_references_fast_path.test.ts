@@ -39,11 +39,9 @@ for (const mode of ["committed", "derived"] as const)
         after: fixture.compilation.manifest,
         beforeFiles: compilationFiles(fixture.compilation, {
           "image.svg": "before-image",
-          "components/image.svg": "component-image",
         }),
         afterFiles: compilationFiles(fixture.compilation, {
           "image.svg": "after-image",
-          "components/image.svg": "component-image",
         }),
         changedPaths: mode === "committed" ? ["mockups/image.svg"] : [],
         config: { ...fixture.config, generatedOutput: mode },
@@ -83,78 +81,107 @@ for (const mode of ["committed", "derived"] as const)
       assert.deepEqual(result.changes, []);
     });
 
-test("changed-reference fallback parses cached CSS once and prepares each view once", async (t) => {
-  const fixture = await referenceFixture(t, ".actual-only");
-  const parser = new LightningCssRuleParser();
-  let parseCount = 0;
-  const beforeFiles = compilationFiles(fixture.compilation, {
-    "image.svg": "before-image",
-    "components/image.svg": "component-image",
-  });
-  const afterFiles = compilationFiles(fixture.compilation, {
-    "image.svg": "after-image",
-    "components/image.svg": "component-image",
-  });
-  const events: TimingEvent[] = [];
-  await runWithTimings(
-    true,
-    "test",
-    () =>
-      classifyComponents({
-        before: fixture.compilation.manifest,
-        after: fixture.compilation.manifest,
-        beforeReader: memoryReader(beforeFiles),
-        afterReader: memoryReader(afterFiles),
-        config: fixture.config,
-        changedPaths: ["mockups/image.svg"],
-        baseCommit: "a".repeat(40),
-        baseRef: "main",
-        cssParser: {
-          parse: (source) => {
-            parseCount += 1;
-            return parser.parse(source);
+for (const mode of ["committed", "derived"] as const)
+  test(`${mode} mixed inline references use per-view paths and cached preparation`, async (t) => {
+    const fixture = await referenceFixture(t, ".actual-only", true);
+    const parser = new LightningCssRuleParser();
+    const parseCounts = new Map<string, number>();
+    const beforeFiles = compilationFiles(fixture.compilation, {
+      "image.svg": "before-image",
+      "other.svg": "same-image",
+    });
+    const afterFiles = compilationFiles(fixture.compilation, {
+      "image.svg": "after-image",
+      "other.svg": "same-image",
+    });
+    const input = {
+      before: fixture.compilation.manifest,
+      after: fixture.compilation.manifest,
+      beforeFiles,
+      afterFiles,
+      config: { ...fixture.config, generatedOutput: mode },
+      changedPaths: mode === "committed" ? ["mockups/image.svg"] : [],
+    };
+    await assertComparisonPaths(input, "complete", ["home"], 1);
+    await assertComparisonPaths(
+      input,
+      "fast",
+      fixture.compilation.manifest.entries
+        .filter((entry) => entry.id !== "home")
+        .map((entry) => entry.id),
+      1,
+    );
+    const events: TimingEvent[] = [];
+    const result = await runWithTimings(
+      true,
+      "test",
+      () =>
+        classifyComponents({
+          before: fixture.compilation.manifest,
+          after: fixture.compilation.manifest,
+          beforeReader: memoryReader(beforeFiles),
+          afterReader: memoryReader(afterFiles),
+          config: input.config,
+          changedPaths: input.changedPaths,
+          baseCommit: "a".repeat(40),
+          baseRef: "main",
+          cssParser: {
+            parse: (source) => {
+              parseCounts.set(source, (parseCounts.get(source) ?? 0) + 1);
+              return parser.parse(source);
+            },
           },
-        },
-      }),
-    { write: (event) => events.push(event) },
-  );
-  assert.equal(parseCount, 1);
-  const views = fixture.compilation.manifest.entries.reduce(
-    (count, entry) => count + generatedViews(entry).length,
-    0,
-  );
-  assert.equal(
-    events.filter(
+        }),
+      { write: (event) => events.push(event) },
+    );
+    assert.deepEqual(Object.fromEntries(parseCounts), {
+      '.actual-only{background:url("../image.svg")}': 1,
+      '.actual-only{background:url("../other.svg")}': 1,
+    });
+    assert.deepEqual(result, await assertComparisonModesEquivalent(input));
+    assert.deepEqual(
+      result.changes.map((entry) => entry.after?.id),
+      ["action"],
+    );
+    const views = fixture.compilation.manifest.entries.reduce(
+      (count, entry) => count + generatedViews(entry).length,
+      0,
+    );
+    assert.equal(
+      events.filter(
+        (event) =>
+          event.stage === "review.inline-style-analysis" &&
+          event.event === "start",
+      ).length,
+      views,
+    );
+    const counts = events.find(
       (event) =>
-        event.stage === "review.inline-style-analysis" &&
-        event.event === "start",
-    ).length,
-    views,
-  );
-  const counts = events.find(
-    (event) =>
-      event.stage === "review.compare-screens" && event.event === "counts",
-  )?.counts;
-  assert.equal(counts?.fastPath, 0);
-  assert.equal(counts?.completePath, views);
-});
+        event.stage === "review.compare-screens" && event.event === "counts",
+    )?.counts;
+    assert.equal(views, 10);
+    assert.equal(counts?.fastPath, 8);
+    assert.equal(counts?.completePath, 2);
+  });
 
-async function referenceFixture(t: TestContext, selector: string) {
+async function referenceFixture(
+  t: TestContext,
+  selector: string,
+  mixed = false,
+) {
   const fixture = await createFixture(inlineComponentSource(), {
     extraConfig: 'renderer: "renderer.tsx",',
   });
   t.after(() => removeFixture(fixture));
   const styles = `<style>${selector}{background:url("../image.svg")}</style>`;
-  await fs.writeFile(
-    path.join(fixture.root, "renderer.tsx"),
-    inlineRenderer(styles),
-  );
-  await fs.mkdir(path.join(fixture.mockupsDir, "components"));
+  const renderer = mixed
+    ? `import { renderToStaticMarkup } from "react-dom/server";
+export default (input) => '<!doctype html><html><head>' + (input.entry.id === "home" ? ${JSON.stringify(styles)} : ${JSON.stringify(styles.replace("../image.svg", "../other.svg"))}) + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`
+    : inlineRenderer(styles);
+  await fs.writeFile(path.join(fixture.root, "renderer.tsx"), renderer);
   await fs.writeFile(path.join(fixture.mockupsDir, "image.svg"), "image");
-  await fs.writeFile(
-    path.join(fixture.mockupsDir, "components/image.svg"),
-    "component-image",
-  );
+  if (mixed)
+    await fs.writeFile(path.join(fixture.mockupsDir, "other.svg"), "image");
   const config = await loadConfig(fixture.root);
   return { compilation: await compileCatalogue(config), config };
 }

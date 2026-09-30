@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import path from "node:path";
 
+import {
+  runWithTimings,
+  type TimingEvent,
+} from "../../dist/diagnostics/timings.js";
 import { ComponentDependencyPolicy } from "../../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../../dist/review/component_resources.js";
 import { compareComponentView } from "../../dist/review/component_view.js";
@@ -16,6 +20,7 @@ export async function assertComparisonPaths(
   fixture: FastPathFixture,
   expected: "fast" | "complete",
   entryIds?: readonly string[],
+  expectedInlineAnalyses?: number,
 ): Promise<void> {
   const beforeReader = new ComponentMaterialReader(
     memoryReader(fixture.beforeFiles),
@@ -63,14 +68,31 @@ export async function assertComparisonPaths(
         (candidate) => candidate.path === view.path,
       );
       assert.ok(base);
-      const comparison = await compareComponentView(
-        context,
-        base,
-        view,
-        entry.kind === "component" && isManifestComponentVariant(entry)
-          ? entry.variantOf
-          : undefined,
+      const events: TimingEvent[] = [];
+      const comparison = await runWithTimings(
+        expectedInlineAnalyses !== undefined,
+        "test",
+        () =>
+          compareComponentView(
+            context,
+            base,
+            view,
+            entry.kind === "component" && isManifestComponentVariant(entry)
+              ? entry.variantOf
+              : undefined,
+          ),
+        { write: (event) => events.push(event) },
       );
+      if (expectedInlineAnalyses !== undefined)
+        assert.equal(
+          events.filter(
+            (event) =>
+              event.stage === "review.inline-style-analysis" &&
+              event.event === "start",
+          ).length,
+          expectedInlineAnalyses,
+          `${entry.id}: ${view.path} inline analysis count`,
+        );
       assert.equal(
         comparison.comparisonPath,
         expected,
