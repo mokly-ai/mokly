@@ -25,7 +25,8 @@
   [Milestone 25 review](../docs/reviews/imported-css-delivery-milestone-25.md).
   Milestone 28 (`c482bd0`) resolves the four approved findings in the
   [Milestone 27 review](../docs/reviews/imported-css-delivery-milestone-27.md);
-  other open findings remain unchanged, as do the three findings in the
+  other open findings remain unchanged. Milestone 30 addresses the three
+  approved findings in the
   [Milestone 29 review](../docs/reviews/imported-css-delivery-milestone-29.md).
   Move this plan to Completed when its
   implementation PR merges.

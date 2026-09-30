@@ -1,8 +1,8 @@
 import { createRequire } from "node:module";
 
 import {
-  cssWhitespaceAt,
   cssWhitespaceOnly,
+  hasCssWhitespace,
   scanCssText,
   trimCssWhitespace,
   type CssScan,
@@ -130,8 +130,7 @@ function normalizeChildren(
           const separate = accepted
             ? previous !== undefined &&
               authoredCommaSpace(scan, previous, selector)
-            : movedWrapperSpace ||
-              cssWhitespaceAt(scan, (node.sourceIndex ?? 0) - 1);
+            : movedWrapperSpace;
           appendChildren(normalized, children, separate, true);
           accepted = true;
           previous = selector;
@@ -142,6 +141,18 @@ function normalizeChildren(
       movedWrapperSpace = wrapperMovedSpace(scan, node);
       continue;
     }
+    if (node.type === "combinator" && cssWhitespaceOnly(node.value ?? "")) {
+      const start = node.sourceIndex;
+      if (start === undefined)
+        return [{ type: "invalid", value: "", children: [] }];
+      const end =
+        nodes[index + 1]?.sourceIndex ?? start + node.toString().length;
+      if (!hasCssWhitespace(scan, start, end)) {
+        movedWrapperSpace = false;
+        afterWrapper = false;
+        continue;
+      }
+    }
     const child = normalize(node, scan, input);
     if (child.type === "combinator") {
       normalized.push(child);
@@ -149,12 +160,7 @@ function normalizeChildren(
       afterWrapper = false;
       continue;
     }
-    appendChildren(
-      normalized,
-      [child],
-      movedWrapperSpace || cssWhitespaceAt(scan, (node.sourceIndex ?? 0) - 1),
-      afterWrapper,
-    );
+    appendChildren(normalized, [child], movedWrapperSpace, afterWrapper);
     movedWrapperSpace = input && wrapperMovedSpace(scan, node);
     afterWrapper = false;
   }

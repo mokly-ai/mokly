@@ -54,6 +54,21 @@ test("strings and comments hide escape and whitespace syntax", () => {
   assert.equal(cssWhitespaceAt(scan, text.indexOf(" .x")), true);
 });
 
+test("escaped quotes do not terminate either kind of CSS string", () => {
+  for (const text of [String.raw`[x="a\"b"] .y`, String.raw`[x='a\'b'] .y`]) {
+    const scan = scanCssText(text);
+    assert.equal(scan.hexEscapes.length, 0);
+    assert.equal(cssWhitespaceAt(scan, text.indexOf(" .y")), true);
+  }
+});
+
+test("a real no-break space after a hex escape is not whitespace", () => {
+  const text = `.a\\31\u00a0.b`;
+  const scan = scanCssText(text);
+  assert.equal(cssWhitespaceAt(scan, text.indexOf("\u00a0")), false);
+  assert.equal(scan.hexEscapes[0]?.end, text.indexOf("\u00a0"));
+});
+
 test("a non-hex escape does not consume following whitespace", () => {
   const text = String.raw`.a\z .b`;
   const scan = scanCssText(text);

@@ -24,65 +24,74 @@ only a CSS Modules wrapper may move trailing-comma whitespace outward.
 Empty `:global()` and `:local()` wrappers fail before the plugins run.
 One CSS scanner distinguishes escape-consumed whitespace from combinators
 and checks raw selectors and `@scope` preludes for unsafe escapes before
-scoping; wrapper empty tails and comments follow the plugin output.
-Graph and stylesheet metafiles each resolve their physical working directory
-once for path mapping. Root-import diagnostics build edge provenance only
-when an outside-repository CSS file actually fails validation; successful
-graphs do not project every edge through the filesystem.
-CSS `url()` assets become
-byte-preserving files under `mokly-generated/assets/`, and CSS/asset inputs
-join the private source inventory in both full and inventory-only graph loads.
-An optional config-relative PostCSS module runs in a fresh isolated worker
-per graph load so plugin package caches cannot leak into the next compile.
-Unexpected worker errors, clone failures and exits reject every pending and
-later request promptly, including an exit with code zero.
-Each distinct effective stylesheet input runs once before CSS Modules naming;
-both passes share the result. Its local imports join `configSourceFiles` and trigger config
-reloads, while package imports stay unbundled to preserve plugin-native
-bindings. Only the module path, never plugin instances, crosses Serve IPC.
-Reported file dependencies join `sourceFiles`; globbed directory dependencies
-watch matching additions and newly added subdirectories, but not deletions.
-They compile their globs once per report and cache ownership classifications
-during a load; expanded files already reported explicitly are checked once.
-Inventory-only graph loads run the same plugins
-and collect the same dependencies. Generated output and public mockups files
-cannot enter that inventory; nested imports that a plugin reads from disk
-cannot bypass renderer pruning silently. See the
-[PostCSS contract](../../docs/protocol/mokly-imported-styles-postcss.md) for
-validation precedence and deterministic Tailwind settings.
-PostCSS 8 normalizes plugin instances, uncalled creators, plain functions and
-objects with `postcss` factories; Mokly does not narrow accepted plugin shapes.
-`package_owned_paths.ts` classifies logical and physical paths by generated,
-Review, cache, package-code, denied-directory-name and outside reasons. Exact
-reported files inside denied-name directories remain private and watchable;
-directory scans still prune those trees. Physical paths reported by PostCSS or
-esbuild map back to a symlinked configured root before inventory and guards.
-Fragment render input now lists the
-matching authored stylesheet rule, then generated renderer CSS, then the
-exporting entry's CSS, relative to the fragment route. Pages still render
-without automatic links. `consumer_entry.ts` records the exporting entry
-independently of the helper that defined a screen or component; it never
-changes authored-source attribution or the manifest.
-`pending_generated.ts` holds HTML text, CSS text and opaque asset bytes before
-the transaction writes anything. Full and on-demand rendering validate links,
-component resources and compatibility routes against this pending generation;
-generated CSS URLs resolve against pending assets, never stale files on disk.
-Each on-demand generation scans for orphan routes once and caches parsed CSS
-resources across view requests; request-specific HTML and temporary prop edits
-remain fresh. A new accepted generation creates new validation indexes.
-The reserved directory is already package-owned: Build removes unexpected
-regular files there as orphans, and committed Check reports them. The root
-and descendants cannot be symlinks or special files; Build and committed Check
-reject them before graph inventory or output writes. Build prunes empty reserved
-directories after successful writes, without touching ordinary public files.
-Derived Check rejects every indexed file there and suggests only the directory
-`.gitignore` rule, not redundant per-file rules. Only portable stylesheet and supported asset routes may be
-written beneath it. The exact diagnostics and precedence are in the
-[imported-styles error contract](../../docs/protocol/mokly-imported-styles-errors.md).
-Committed Build and Check ask Git whether each generated route is committable
-when `repoRoot` is the Git work-tree top level. Nested/non-Git fixtures skip
-the check; effective ignore rules and precise negations are reported before
-committed output is written or compared.
+scoping. The comparison applies that scanner to output combinators too;
+wrapper empty tails and comments follow the plugin output.
+
+CSS Modules mutation checklist:
+
+- Scanner escapes, strings and Unicode spacing: `tests/css_module_css_scan.test.ts`.
+- Raw escape guard and meaning-preserving advice: `tests/css_module_escape_regressions.test.ts` and `tests/browser/css_module_escape_advice.spec.ts`.
+- Empty tails and exact comment boundaries: `tests/css_module_empty_tail.test.ts`.
+- Output combinators after escapes: `tests/css_module_output_combinators.test.ts` and `tests/browser/css_module_escape_fuzz.spec.ts`.
+- Wrapper list joins: `tests/css_module_selector_plugin_acceptance.test.ts`.
+  Graph and stylesheet metafiles each resolve their physical working directory
+  once for path mapping. Root-import diagnostics build edge provenance only
+  when an outside-repository CSS file actually fails validation; successful
+  graphs do not project every edge through the filesystem.
+  CSS `url()` assets become
+  byte-preserving files under `mokly-generated/assets/`, and CSS/asset inputs
+  join the private source inventory in both full and inventory-only graph loads.
+  An optional config-relative PostCSS module runs in a fresh isolated worker
+  per graph load so plugin package caches cannot leak into the next compile.
+  Unexpected worker errors, clone failures and exits reject every pending and
+  later request promptly, including an exit with code zero.
+  Each distinct effective stylesheet input runs once before CSS Modules naming;
+  both passes share the result. Its local imports join `configSourceFiles` and trigger config
+  reloads, while package imports stay unbundled to preserve plugin-native
+  bindings. Only the module path, never plugin instances, crosses Serve IPC.
+  Reported file dependencies join `sourceFiles`; globbed directory dependencies
+  watch matching additions and newly added subdirectories, but not deletions.
+  They compile their globs once per report and cache ownership classifications
+  during a load; expanded files already reported explicitly are checked once.
+  Inventory-only graph loads run the same plugins
+  and collect the same dependencies. Generated output and public mockups files
+  cannot enter that inventory; nested imports that a plugin reads from disk
+  cannot bypass renderer pruning silently. See the
+  [PostCSS contract](../../docs/protocol/mokly-imported-styles-postcss.md) for
+  validation precedence and deterministic Tailwind settings.
+  PostCSS 8 normalizes plugin instances, uncalled creators, plain functions and
+  objects with `postcss` factories; Mokly does not narrow accepted plugin shapes.
+  `package_owned_paths.ts` classifies logical and physical paths by generated,
+  Review, cache, package-code, denied-directory-name and outside reasons. Exact
+  reported files inside denied-name directories remain private and watchable;
+  directory scans still prune those trees. Physical paths reported by PostCSS or
+  esbuild map back to a symlinked configured root before inventory and guards.
+  Fragment render input now lists the
+  matching authored stylesheet rule, then generated renderer CSS, then the
+  exporting entry's CSS, relative to the fragment route. Pages still render
+  without automatic links. `consumer_entry.ts` records the exporting entry
+  independently of the helper that defined a screen or component; it never
+  changes authored-source attribution or the manifest.
+  `pending_generated.ts` holds HTML text, CSS text and opaque asset bytes before
+  the transaction writes anything. Full and on-demand rendering validate links,
+  component resources and compatibility routes against this pending generation;
+  generated CSS URLs resolve against pending assets, never stale files on disk.
+  Each on-demand generation scans for orphan routes once and caches parsed CSS
+  resources across view requests; request-specific HTML and temporary prop edits
+  remain fresh. A new accepted generation creates new validation indexes.
+  The reserved directory is already package-owned: Build removes unexpected
+  regular files there as orphans, and committed Check reports them. The root
+  and descendants cannot be symlinks or special files; Build and committed Check
+  reject them before graph inventory or output writes. Build prunes empty reserved
+  directories after successful writes, without touching ordinary public files.
+  Derived Check rejects every indexed file there and suggests only the directory
+  `.gitignore` rule, not redundant per-file rules. Only portable stylesheet and supported asset routes may be
+  written beneath it. The exact diagnostics and precedence are in the
+  [imported-styles error contract](../../docs/protocol/mokly-imported-styles-errors.md).
+  Committed Build and Check ask Git whether each generated route is committable
+  when `repoRoot` is the Git work-tree top level. Nested/non-Git fixtures skip
+  the check; effective ignore rules and precise negations are reported before
+  committed output is written or compared.
 
 ## Consumer Graph
 

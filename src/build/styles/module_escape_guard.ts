@@ -48,6 +48,6 @@ function unsafeEscape(scan: CssScan): boolean {
 function error(relative: string, line = 1, column = 1): MoklyError {
   return new MoklyError(
     "build-invalid",
-    `CSS Modules cannot safely scope an escape in ${relative}:${line}:${column}; end a short escape with one space before comments, or remove whitespace after a six-digit escape`,
+    `CSS Modules cannot safely scope an escape in ${relative}:${line}:${column}; write the escape with at most five hex digits followed by exactly one space, then any spacing or comment`,
   );
 }

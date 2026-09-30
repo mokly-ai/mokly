@@ -42,6 +42,16 @@ export function cssWhitespaceAt(scan: CssScan, index: number): boolean {
   return scan.kinds[index] === CSS_WHITESPACE;
 }
 
+export function hasCssWhitespace(
+  scan: CssScan,
+  start: number,
+  end: number,
+): boolean {
+  for (let index = start; index < end; index += 1)
+    if (cssWhitespaceAt(scan, index)) return true;
+  return false;
+}
+
 export function cssWhitespaceOnly(text: string): boolean {
   if (!text) return true;
   return scanCssText(text).kinds.every((kind) => kind === CSS_WHITESPACE);

@@ -8,7 +8,7 @@ const relative = "entries/escape.module.css";
 const prefix = `mokly_${createHash("sha256").update(relative).digest("hex").slice(0, 12)}_`;
 const changed = `[mokly/build-invalid] CSS Modules scoping would change more than local names in ${relative}:1:1; move this CSS to a plain stylesheet`;
 const unsafe = (location: string) =>
-  `[mokly/build-invalid] CSS Modules cannot safely scope an escape in ${relative}:${location}; end a short escape with one space before comments, or remove whitespace after a six-digit escape`;
+  `[mokly/build-invalid] CSS Modules cannot safely scope an escape in ${relative}:${location}; write the escape with at most five hex digits followed by exactly one space, then any spacing or comment`;
 
 for (const [selector, expected] of [
   [String.raw`:global(.a\31) .b`, changed],
@@ -43,6 +43,31 @@ for (const [selector, expected] of [
       );
     }
   });
+
+test("a comment after intervening selector text does not trigger the escape guard", () => {
+  assert.doesNotThrow(() =>
+    scopeModule(String.raw`.a\31.b/**/ .c{color:red}`, relative),
+  );
+});
+
+test("escaped quotes inside a wrapper selector build", () => {
+  assert.doesNotThrow(() =>
+    scopeModule(String.raw`.w :global([x="a\"b"], .y){color:red}`, relative),
+  );
+});
+
+test("escaped quotes and parentheses inside scope groups build", () => {
+  assert.doesNotThrow(() =>
+    scopeModule(
+      String.raw`@scope ([x="a\")"] .b) to (.c){.target{color:red}}`,
+      relative,
+    ),
+  );
+});
+
+test("an actual no-break space after an escape stays in the class name", () => {
+  assert.doesNotThrow(() => scopeModule(`.a\\31\u00a0.b{color:red}`, relative));
+});
 
 for (const [selector, location] of [
   [`.a\\31\t.b`, "1:1"],

@@ -64,12 +64,14 @@ with guidance to add one or remove the wrapper. A trailing comma and space in
 spelling in `:is()` and similar selectors changes its meaning and fails Build.
 Remove that trailing comma to keep the selector attached. This follows the
 plugins used by css-loader and Vite.
-If Build cannot safely scope an escaped selector name, end a short escape
-with one space before any comment, or remove whitespace after a six-digit
-escape. Use a plain stylesheet if the selector cannot be written that way.
 To match either class, write
 `.wrap :global(.x), .wrap :global(.y)` or
 `.wrap :global(:is(.x, .y))` instead.
+If Build cannot safely scope an escaped selector name, remove leading zeros
+and write at most five hex digits followed by exactly one space. That space
+replaces the whitespace that ended the original escape; keep any further
+spacing or comment after it. If the character needs six hex digits, write
+the character itself. Use a plain stylesheet if it cannot be written that way.
 If Build says scoping would change more than local names,
 move that declaration to a plain stylesheet. Two current cases trigger that
 check: `animation: grow-progress auto linear` and quoted keyframe names such

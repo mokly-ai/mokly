@@ -29,9 +29,9 @@ approved findings in the
 [Milestone 25 review record](../docs/reviews/imported-css-delivery-milestone-25.md).
 Milestone 28 (`c482bd0`) resolves the four approved findings in the
 [Milestone 27 review record](../docs/reviews/imported-css-delivery-milestone-27.md);
-other open findings remain unchanged. The three findings in the
-[Milestone 29 review record](../docs/reviews/imported-css-delivery-milestone-29.md)
-remain open for the user's decision.
+other open findings remain unchanged. Milestone 30 addresses the three
+approved findings in the
+[Milestone 29 review record](../docs/reviews/imported-css-delivery-milestone-29.md).
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -901,6 +901,22 @@ follow plugin-owned empty tails, and compare only real Chrome-parsed selectors.
 
 - [x] Commit and push the approved fixes and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
 - [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Three new findings (1 Medium, 2 Low) are recorded in the [Milestone 29 review record](../docs/reviews/imported-css-delivery-milestone-29.md) for the user's decision.
+
+## Milestone 30: Browser-accurate escape combinators, meaning-preserving escape advice and missing tests (complete)
+
+Verify combinators from CSS text on both sides of scoping, give escape edits
+that preserve selector meaning, and cover the missing scanner boundaries.
+
+- [x] Add failing regressions for wrapper-created escaped combinators, advice edits, escaped quotes, U+00A0 and the exact comment boundary; record corpus baseline.
+- [x] Update the CSS Modules protocol, error catalogue, Styles guide, build README and ignored PR draft for browser-accurate combinators and meaning-preserving advice.
+- [x] Use the shared scanner for every parser-produced and inserted combinator; remove dead authored-whitespace checks and keep current valid output building.
+- [x] Extend the Chrome oracle and add a deterministic seeded wrapper/escape fuzz oracle with direct plugin reference output.
+- [x] Run mutation and corpus checks, Build, every CSS Modules suite, example Build/Check, lint, typecheck, focused browsers, CLI smoke and `cargo xtask check`.
+
+## Milestone 31: Commit, push, and review
+
+- [ ] Commit and push the approved fixes and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
 
 ## Post-merge follow-up (non-blocking)
 

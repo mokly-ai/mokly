@@ -8,7 +8,7 @@ import {
 } from "./helpers/imported_styles_fixture.js";
 
 const advice =
-  "end a short escape with one space before comments, or remove whitespace after a six-digit escape";
+  "write the escape with at most five hex digits followed by exactly one space, then any spacing or comment";
 
 for (const [name, css, location] of [
   ["tab-ended escape", `.a\\31\t.b{color:red}`, "1:1"],

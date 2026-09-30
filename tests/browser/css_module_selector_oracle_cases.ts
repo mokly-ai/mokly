@@ -125,6 +125,45 @@ for (const [source, expected] of [
     expected,
   });
 
+for (const [source, expected] of [
+  [String.raw`:global(.a\000031) .b`, String.raw`.a\000031  .b`],
+  [":global(.a\\1f)\t.b", String.raw`.a\1f ` + "\t.b"],
+  [String.raw`.x :global(.a\000031, .b)`, String.raw`.x .a\000031  .b`],
+  [String.raw`.w:global(.a\000031, ):hover`, String.raw`.w.a\000031  :hover`],
+  [String.raw`:local(.a\00006a) .b`, String.raw`.a\00006a  .b`],
+  [String.raw`:global(.a\000031)  .b`, String.raw`.a\000031  .b`],
+  [String.raw`:local(.a\00006A) .b`, String.raw`.a\00006A  .b`],
+  [
+    String.raw`.root:is(:global(.a\000031) .b)`,
+    String.raw`.root:is(.a\000031  .b)`,
+  ],
+] as const)
+  cases.push({
+    name: `output-escape/${source}`,
+    css: `${source}{color:red}`,
+    expected,
+  });
+cases.push(
+  {
+    name: "output escape in nested rule",
+    kind: "nested",
+    css: String.raw`.outer{& :global(.a\000031) .b{color:red}}`,
+    expected: String.raw`.outer{& .a\000031  .b{color:red}}`,
+  },
+  {
+    name: "output escape in scope start",
+    kind: "scope",
+    css: String.raw`@scope (:global(.a\000031) .b) to (.limit){.x{color:red}}`,
+    expected: String.raw`@scope (.a\000031  .b) to (.limit){.x{color:red}}`,
+  },
+  {
+    name: "output escape in scope limit",
+    kind: "scope",
+    css: String.raw`@scope (.root) to (:global(.a\000031) .b){.x{color:red}}`,
+    expected: String.raw`@scope (.root) to (.a\000031  .b){.x{color:red}}`,
+  },
+);
+
 for (const source of [
   `.a\\31\t.b`,
   `.a\\31\n.b`,

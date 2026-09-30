@@ -93,9 +93,14 @@ return, CRLF or form feed; if a six-digit escape is followed by any CSS
 whitespace; or if an escape is followed immediately by a comment immediately
 followed by CSS whitespace. Skip strings and comments themselves. A one-to-five
 digit escape ended by one space, or an escape ended by a non-whitespace
-character, remains supported. The [catalogued error](./mokly-imported-styles-errors.md)
-gives the edit to make. This guard uses raw selector/parameter text because
-PostCSS can remove a comment before the plugins see it.
+character, remains supported. To keep the authored meaning when editing a
+rejected escape, remove leading zeros so it has at most five hex digits, then
+use exactly one space to end it. Replace the original escape-ending whitespace
+with that space; keep any further spacing or comment after it. If the
+character needs six hex digits, write the character itself. The
+[catalogued error](./mokly-imported-styles-errors.md) gives this edit. This
+guard uses raw selector/parameter text because PostCSS can remove a comment
+before the plugins see it.
 
 After restoration, verify the scoping result against its input with parsed
 PostCSS trees. Remove only input `composes`/`compose-with` declarations
@@ -110,7 +115,14 @@ non-empty wrapped items by the plugin rule above. Selector comment nodes are
 ignored on both sides, including a selector comment hoisted just before its
 rule; unrelated standalone comments stay exact. Comma joins use authored
 source offsets, not whitespace the selector parser moved out of unrelated
-pseudos. Every meaningful combinator remains. Only class, ID and `[class=…]`
+pseudos. Every parser-produced or inserted whitespace combinator is checked
+against the input or output text with the shared scanner. An escape-consumed
+character is never a combinator; if no unconsumed CSS whitespace remains,
+the neighboring simple selectors form one compound. A second space remains
+a descendant after the first is swallowed. Explicit `>`, `+` and `~`
+combinators remain even when surrounding whitespace is consumed. This rule
+also applies in nested rules, pseudo-classes and both `@scope` groups. Every
+meaningful combinator remains. Only class, ID and `[class=…]`
 values may gain the exact module prefix. A keyframes-family
 at-rule param may likewise gain that prefix after optional local/global
 unwrapping. Scope params keep the same group structure and non-group bytes;
