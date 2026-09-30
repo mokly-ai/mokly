@@ -219,6 +219,68 @@ Tags: ui
       ECMA-48 string sequences terminated by U+009C bypass escape stripping and
       path redaction.
 
+## Milestone 7: Pin repository resolution identities
+
+Backend. Closes Milestone 6 review finding 1 (option A, chosen by the user):
+the capture records the resolution of relative and absolute imports only, so
+bare, configured-alias and repository-package imports still resolve through
+the file system, and deleting or renaming a source reached that way can fail
+an accepted generation's Live bundle.
+
+- [ ] Update the Generation-pinned repository sources section of
+      `docs/protocol/mokly-interactive-views-serve.md`: the accepted graph
+      records how every import that lands on a captured repository file
+      resolved, keyed by importer identity, specifier and resolution kind;
+      the browser build answers every recorded request from that record before
+      any file-system resolution, for relative, absolute, bare,
+      configured-alias and repository-package imports alike; unrecorded
+      requests that land in the repository keep the typed
+      `source-not-captured` failure; installed packages resolve normally.
+      Define the record's wire projection, bounds and validation, how
+      browser-only resolution differences for repository-owned packages
+      behave, how repository packages linked through `node_modules` are
+      classified, and narrow the resolution-metadata limitation to requests
+      the accepted graph did not record.
+- [ ] Record resolutions during the accepted graph build, carry them with the
+      capture through the runtime IPC, and replay them in the browser
+      resolver before any file-system resolution.
+- [ ] Tests: after generation G is accepted, delete and rename a source reached
+      through a configured alias and through a repository package, and require
+      G's Live bundle to equal its accepted sources; a later accepted
+      generation sees the change; an unrecorded repository request fails with
+      the typed diagnostic; strict IPC validation of the record; the example
+      catalogue's Live bundle is unchanged.
+- [ ] Update `src/interactive/README.md`; run `cargo xtask check`; commit and
+      push.
+
+## Milestone 8: Separate source failures from delivery failures
+
+Backend. Closes Milestone 6 review finding 2 (option A, chosen by the user): a
+rebuild whose source was accepted but whose first child restart failed and
+then recovered is reported as a source failure, showing a false notice.
+
+- [ ] Update the Watch Action Lifecycle section of
+      `docs/protocol/mokly-rebuild-status.md`: a `rebuild` or `reconfigure`
+      action has a source phase that ends when the new runtime is adopted, and
+      a delivery phase after it (updating or restarting the HTTP child and
+      replacing watchers). Only a source-phase failure sets a failure, because
+      only then are the latest changes not what the browser shows.
+      Delivery-phase failures keep terminal reporting and leave the accepted
+      success in place, including when restart recovery succeeds.
+- [ ] Represent the two phases as typed outcomes in the watched Serve
+      orchestration so failure reporting never classifies an error by its
+      action alone, and apply it to rebuild, reconfigure and the
+      rebuild-to-reconfigure path.
+- [ ] Tests: an accepted rebuild whose first restart fails and whose recovery
+      succeeds shows no failure and reports the restart problem once in the
+      terminal; the same for reconfigure, including a failing watcher close;
+      source-phase failures still set the failure; a delivery failure's
+      message never becomes failure detail.
+- [ ] Update `src/server/README.md`; run `cargo xtask check`; commit and push.
+- [ ] Review: after the push, use `docs/implementation-review-prompt.md`
+      against `origin/main` and report numbered findings with severity,
+      impact and lettered options, without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - Consider presenting background Changes failures the same way if the existing

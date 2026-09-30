@@ -12,9 +12,10 @@
 - [Serve Rebuild Status](./serve-rebuild-status.md) — tell the Browse shell
   when watched Serve could not load the latest changes and while an update is
   in progress, and compile Live previews from each generation's accepted
-  sources. Implementation is complete through the smoke test. The final review
-  reported two Medium findings and one Low that await a decision. Move this
-  plan to Completed when its implementation PR merges.
+  sources. Implementation is complete through the smoke test. Milestones 7
+  and 8 fix the Milestone 6 review's two Medium findings; its Low finding
+  (eight-bit terminal string sequences in failure detail) awaits a decision.
+  Move this plan to Completed when its implementation PR merges.
 - [Comparison Pane Scroll Alignment](./comparison-pane-scroll-alignment.md)
   — Overlay and Difference drift apart when scrolled because each snapshot
   scrolls inside its own opaque frame; comparison panes become viewer-owned,
