@@ -36,7 +36,9 @@
   [Milestone 35 review](../docs/reviews/imported-css-delivery-milestone-35.md).
   Milestone 36 (`d72abaeb`) merged `origin/main` at `0c8245f8` with imported
   CSS, the v7 manifest, v3 read model, aligned comparison panes and delta
-  publishing. The full gate passes; the final review remains with the user.
+  publishing. The full gate passes and PR #125 is open. The thirteen findings
+  in the [Milestone 37 review](../docs/reviews/imported-css-delivery-milestone-37.md)
+  remain open.
   Move this plan to Completed when its
   implementation PR merges.
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive

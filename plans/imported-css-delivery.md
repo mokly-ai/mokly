@@ -43,8 +43,11 @@ Milestone 36 (`d72abaeb`) merged `origin/main` at `0c8245f8` before the
 implementation PR. The merged tree retains imported CSS with manifest v7,
 read model v3, aligned comparison panes and delta publishing. Main's removal
 of historical v2 manifest parsing remains in force; `compatibility.transformer`
-remains available. The full gate passed before and after the merge commit;
-the plan stays active until the PR merges and the user runs the final review.
+remains available. The full gate passed before and after the merge commit,
+and the implementation PR is #125. The thirteen findings in the
+[Milestone 37 review record](../docs/reviews/imported-css-delivery-milestone-37.md),
+including contradictory duplicate protocol pages left by the merge, remain open
+for the user's decision. The plan stays active until the PR merges.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -978,10 +981,10 @@ navigation, publication and manifest changes.
 - [x] Keep the example and fixtures reachable through `navPath`/`folder()`, reconcile documentation and split over-limit merged files.
 - [x] Prove no unapproved deletion or feature-wide reduction against `origin/main`; run Build, focused and browser tests, example Chrome smoke and the complete `cargo xtask check` gate.
 
-## Milestone 37: Commit, push, and review
+## Milestone 37: Commit, push, and review (complete)
 
 - [x] Commit and push the merge and final bookkeeping; confirm the remote ref and a clean tree.
-- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Thirteen new findings (1 High, 3 Medium, 9 Low) are recorded in the [Milestone 37 review record](../docs/reviews/imported-css-delivery-milestone-37.md) for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
