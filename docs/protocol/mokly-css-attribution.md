@@ -2,28 +2,28 @@
 
 ## Delivery Status
 
-Rule parsing, diffing, matching and classification are implemented for
-screen-only and component catalogues, live Serve, watched updates and
-publication. The inspector receives retained and excluded stylesheet evidence
-before loading a comparison. Screen-only delivery reuses its classification,
-not component classification or an additional analysis.
-[Inline style ownership](./mokly-inline-styles.md) reuses this parser, diff,
-keep list, matcher and resource detector for component-aware head styles;
-reference-bearing rules follow inferred owners and deliver validated evidence.
+Rule analysis is implemented for screen-only and component catalogues, live
+Serve, watch and publication. Inspectors receive retained/excluded evidence
+before loading comparisons; screen-only delivery reuses classification without
+component classification or additional analysis. [Inline ownership](./mokly-inline-styles.md)
+shares this parser, diff, keep list, matcher and resource detector; its
+reference-bearing rules follow inferred owners with validated evidence.
+Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
+[M3](../../plans/scalable-inline-style-analysis.md#milestone-3-bounded-memory) bounds the parser cache,
+[M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse) stores rule data/forms,
+and [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis) uses original trees.
+Shared forms apply to both CSS paths; page analysis is component-aware only.
+The no-component classifier's routing is unchanged. These additions are pending.
 
 ## Purpose
 
-A linked stylesheet edit is conservative evidence that a screen may render
-differently. Without further analysis, every screen that loads the stylesheet
-is kept in Changes, even when the edit adds rules that no element on that
-screen can match. This contract narrows that evidence to the views whose
-documents a changed rule could apply to, while never claiming a screen is
-unchanged when a rule could apply.
+A linked stylesheet edit conservatively suggests different rendering. Without
+rule analysis, every loading screen is kept in Changes, even for rules no
+element can match. Analysis narrows evidence to views a changed rule could
+affect, never excluding a view where the rule could apply.
 
-The analysis is a sound exclusion, not a visual proof. It can prove that no
-changed rule matches a document. It cannot prove that a matching rule has a
-visible effect, and it does not try to. Browser-verified refinement is a
-separate future contract.
+This proves non-matching exclusion, not a matching rule's visible effect.
+Browser-verified refinement remains a separate future contract.
 
 ## Inputs
 
@@ -32,12 +32,12 @@ and already reachable from a view's document through the existing resource
 graph: linked stylesheets, transitive `@import` chains, and stylesheets
 referenced by embedded documents. It examines the resource's branch-point
 bytes and working-tree bytes, and the view's branch-point and working-tree
-documents after the same paired ignore normalization the comparison engine
-uses. It never widens the set of examined files; unreferenced public files and
+documents under [original-page matching](./mokly-page-analysis.md#original-page-matching)
+for component-aware classification; other catalogues retain delivered matching.
+It never widens the set of examined files; unreferenced public files and
 broad `review.sharedImpact` globs continue to add nothing on their own.
 
-Resources that are not stylesheets, including fonts, images, and embedded
-documents, keep their existing file-level attribution unchanged.
+Non-stylesheet resources (fonts, images, embedded documents) keep file-level attribution.
 
 ### Analysis scope
 
@@ -116,13 +116,13 @@ layer statements, empty grouping rules, and opaque unsupported at-rules. Opaque
 bodies remain one record, so their inner selectors cannot grant an exclusion.
 
 `diffCssRules(before: string, after: string, parser: CssRuleParser)` returns a
-`CssRuleDiffResult`. Rule identity consists of conditions, selectors, and
-declarations; selector-less identity additionally includes `atRule` and `prelude`
-so differently named animations, imports, or rule kinds cannot cancel each other.
-Ordinals are excluded from identity. Treat rule lists as multisets: cancel exact
-matches first, consuming duplicate occurrences in source order, then pair remaining
-rules with the same conditions/selectors (and at-rule name/prelude) in source order
-as changed declarations. Excess occurrences are added or removed.
+`CssRuleDiffResult`. The [stored rule data](./mokly-css-parse-reuse.md#stored-rule-data)
+own address/identity, including statement-or-block `block` form and excluding
+ordinals. Thus `@layer a;` against `@layer a{}` is an unresolved removed/added
+change on linked and inline paths. Treat lists as multisets: cancel earliest
+exact identities per address, then pair survivors in source order as changed
+declarations; excess occurrences are added/removed. Linked CSS does not use
+inline segment cancellation or its duplicate-displacement exception.
 
 A resolved diff has three lists: `added` sorts by after ordinal, `removed` by
 before ordinal, and `changed: { before, after }[]` by after ordinal. Both changed
@@ -171,8 +171,9 @@ CssRuleMatchResult` returns `status: "resolved"` with one `{ change, outcome }`
 per diffed rule, in added, removed, then changed list order. It preserves each
 list's ordinal ordering and original rule records. An unresolved diff passes
 through with its side-tagged parse failures. `CssDocumentPair.before` and
-`.after` are optional default-adapter parse5 documents supplied after paired
-normalization; the matcher performs no file reads or classification writes.
+`.after` are optional default-adapter parse5 documents. Component-aware calls
+use the page contract's original trees and ignored-subject predicate; the
+matcher performs no file reads or classification writes.
 
 `analyzeStylesheetChange(before: string, after: string, documents:
 CssDocumentPair, parser?: CssRuleParser): CssAnalysisOutcome` composes all three
@@ -256,13 +257,12 @@ carries these fields. Results without them remain valid and mean the analysis
 did not run.
 
 `reasons` holds the view's retained resource evidence; it is omitted when
-empty. View evidence describes the complete retained render; component entry
-reasons still apply component ownership separately. Match selectors
-against the actual paired-ignore-normalized documents, including component
-markup; ownership projections determine resource eligibility, not selector
-matchability. Embedded documents contribute their own normalized trees; pair
-their original bytes once before both reference discovery and matching. Never
-feed normalized ignore tokens back into the marker parser.
+empty. View evidence describes the complete retained render; entry reasons
+apply component ownership separately. Match component-aware original trees,
+including component markup, under [subject-only ignores](./mokly-page-analysis.md#original-page-matching).
+Projection controls resource eligibility, not matchability. Embedded reader
+documents use this policy on their own trees: pair original bytes once, never
+feed normalized tokens back into the marker parser.
 
 Entry dependency reasons merge by path across views, unioning selectors and
 giving `unresolved` precedence. Keep an in-scope stylesheet in entry `sharedImpact`
@@ -281,8 +281,8 @@ and, for component catalogues, the resulting `changes` membership.
 Baseline CSS uses the bounded Git batch reader, including optional counterpart
 reads for added/removed files. The head uses compilation outputs or the confined
 public reader. Resource bytes are cached per side/path within a classification;
-the injected parser cache additionally shares identical source text across
-paths and sides. Parsing a shared stylesheet therefore does not repeat per view.
+the [whole-input LRU](./mokly-css-parse-reuse.md#cache-lifetime-and-accounting)
+shares text across paths/sides; hits avoid parsing, eviction costs only time, and injection stays supported.
 
 ## Validation
 

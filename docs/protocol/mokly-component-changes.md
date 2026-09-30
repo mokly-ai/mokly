@@ -2,20 +2,24 @@
 
 ## Delivery Status
 
-The classifier, Browse/watch cache, comparison artifacts, and static exporter
-share this attribution policy. The [component explorer plan](../../plans/component-explorer.md)
-records delivery. Unregistered catalogues retain their ordinary behavior.
-Complete paired component-aware comparisons derive head-style ownership from
-documents and component ranges. References follow inferred owners, result views
-carry validated inline evidence, and the shell presents it.
+Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
+[M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
+delivers [page analysis](./mokly-page-analysis.md);
+[M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
+delivers the [equivalent route](./mokly-style-only-route.md). Both are pending;
+[fast-path](./mokly-component-review-fast-path.md) owns decision ordering.
+
+The classifier, Browse/watch cache, artifacts and static exporter share this
+policy; the [explorer plan](../../plans/component-explorer.md) records delivery.
+Unregistered catalogues retain ordinary behavior. Complete paired comparisons
+infer head-style ownership from documents/ranges; references follow owners,
+results carry validated inline evidence, and the shell presents it.
 
 ## Changes Membership
 
-Changes counts directly changed entries, including components and component
-variant entries, once per entry. Instances and affected consumers do not
-increase that count.
-Existing folder ancestor disclosure and screen-to-use-case propagation
-remain; an affected-only screen does not make its use cases changed.
+Changes counts each directly changed entry, including components/variants,
+once, not instances or affected consumers. Folder ancestor disclosure and
+screen-to-use-case propagation remain; affected-only screens do not flag use cases.
 
 | Edit                                                      | Direct Changes entries | Secondary impact                                              |
 | --------------------------------------------------------- | ---------------------- | ------------------------------------------------------------- |
@@ -163,8 +167,9 @@ Ownership is not inferred from a filename, one import, or the presence of a
 component marker somewhere in the document. Screen/component-owned
 dependency overlap must be validated and explained rather than silently dropped.
 The rule analysis is implemented in Browse/watch classification, complete and
-selected comparison evidence, and publication. Actual normalized view documents
-supply matching trees; ownership projections supply eligible resources. A public
+selected comparison evidence, and publication. Original view analyses supply
+matching trees under [page matching](./mokly-page-analysis.md#original-page-matching);
+ownership projections supply eligible resources. A public
 stylesheet glob or dependency declaration cannot restore an excluded stylesheet.
 Entry reasons combine retained view selectors by path, with unresolved evidence
 taking precedence, while excluded resources stay on their own views. Formatting
@@ -193,7 +198,8 @@ the view. Entry-projected reachability remains an independent screen reason.
 In derived mode, an owned referenced resource whose bytes differ without a Git
 changed path gives its component a `material` reason and affected consumers,
 but invents neither a dependency reason nor `changedPaths` evidence. The fast
-and complete paths apply this same rule.
+and complete paths apply this same propagation policy; the quick path's raw
+resource proof falls through when a possibly owned resource changes.
 
 Owned asset edits must flag component pages even when HTML is byte-identical.
 Retain actual styles, fonts, and images in screenshots and snapshot trees. Never
@@ -229,18 +235,16 @@ or check out the baseline during comparison.
 
 ## Required Evidence
 
-Unit/integration and browser fixtures must establish agreement between Changes
-rows/count, on-demand results, watch updates, and published output. Cover all
-rows in the table, repeated/nested/empty instances, caller-owned slots, invalid
-markers, unchanged-render prop edits, both viewports/themes, owned external
-styles, and inferred inline ownership: owned, shared, retained, unresolved,
+Unit/integration/browser fixtures prove agreement among Changes rows/count,
+on-demand, watch and publication. Cover table cases, repeated/nested/empty instances,
+caller-owned slots, invalid markers, unchanged-render props, both viewports/themes,
+owned external styles and inline ownership: owned, shared, retained, unresolved,
 excluded, formatting-only, unpaired, caller-prop, nested-slot and root cases.
 Prove equal membership across live, complete, published and selected results,
 shared-impact overlap, independent screen edits, historical ownership retirement,
-compatible/incompatible baselines, removed consumers and watched updates. Component styling
-must remain visibly changed in an affected screen's comparison.
+compatible/incompatible baselines, removed consumers and watched updates;
+affected-screen comparisons must visibly retain component styling edits.
 
-Dependency declaration provenance is attribution input, not display metadata.
-Changing declarations without a matching changed resource, or registering an
-unrelated component in a previously component-free catalogue, must not add an
-otherwise unchanged screen or component to Changes.
+Dependency declaration provenance is attribution input. Changing declarations
+without a matching resource edit or registering an unrelated component in a
+previously component-free catalogue must not flag unchanged screens/components.

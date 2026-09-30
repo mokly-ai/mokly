@@ -3,8 +3,8 @@
 ## Delivery Status
 
 Implemented across comparison, classification, result delivery and shell
-presentation. The span, diff, attribution and canonical-material engine runs on
-complete paired views and reference-bearing fast-path views. The renderer is
+presentation. The delivered engine runs on complete paired views and on
+reference-bearing fast-path views until the approved replacement below. The renderer is
 string-only, current manifests contain no head-style or public-resource
 assertions, and historical readers discard the retired arrays. References
 inside inferred-owned rules follow their owners through the ordinary resource
@@ -19,6 +19,16 @@ parser, rule diff, keep list and matcher that this analysis reuses; the
 [CSS evidence presentation contract](./mokly-css-evidence-presentation.md) owns the
 presentation.
 
+Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
+[M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse)
+delivers parse reuse; [M5](../../plans/scalable-inline-style-analysis.md#milestone-5-changed-segment-analysis)
+delivers cancellation and matched-copy pairing;
+[M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
+delivers original-page analysis/matching and removes fast-path inline work;
+[M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
+delivers the equivalent route; [M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprinted-comparison-materials)
+delivers fingerprinted material. Those rules below are pending, not delivered.
+
 ## Purpose
 
 Styling libraries can place component CSS outside recorded markup ranges,
@@ -31,18 +41,18 @@ no markup, but never claims exclusion when a rule reaches entry-owned markup.
 
 The analysis runs inside the component-aware classifier for a paired view with
 usage records on both sides, including a component-aware view whose records
-contain no instances. The complete path always considers it; the fast path runs
-it only for possible references. A one-sided view or a paired view missing
+contain no instances. The complete path always considers it; the unchanged
+fast path runs no inline analysis under the approved target. A one-sided view or a paired view missing
 either usage record keeps the existing comparison behavior.
 Without component usage, inline style edits remain ordinary material changes
 in the unified v4 classifier. One-sided views run no analysis. Views settled by the
 [unchanged view decision](./mokly-component-review-fast-path.md)
-have equal marker-retaining documents, so there is nothing to diff; the
-analysis runs there only when an unowned rule carries a `url()` or `@import`
-reference, so that projected resource discovery applies the same exclusion on
-both paths. Before doing span discovery on this fast path, test both original
-documents with the same `/url\(|@import|\\/i` prefilter as resource discovery.
-If neither can contain a reference, skip inline analysis entirely.
+use conservative raw reference proof, falling through on a changed resource.
+The [style-only route](./mokly-style-only-route.md) may instead settle a
+failed quick check before the full comparison, with the same attribution and
+evidence. [Page analysis](./mokly-page-analysis.md) owns scope, coordinates,
+original matching trees and derived material references; catalogues without
+registered components keep their existing classifier.
 
 The eligible style elements of a document are HTML-namespace `<style>`
 elements in the document tree, excluding template contents and SVG/MathML
@@ -66,8 +76,9 @@ supplies only the document string; the manifest supplies no head-style or
 public-resource assertions.
 
 When the ordered sequence of unowned outer sources is identical on both sides
-and neither side can contain a reference, the analysis is skipped and both
-materials keep the documents unchanged. A possible reference prevents that
+and neither side can contain a reference, the analysis is skipped; the
+[fingerprint rule](./mokly-page-analysis.md#fingerprinted-materials) preserves
+each element's source and position. A possible reference prevents that
 skip: the cached parser confirms it and owner attribution decides projected
 resource discovery. An attribute-only difference runs the analysis even when
 the content text is equal. Two sequences that split the same rules across
@@ -76,30 +87,17 @@ multisets are equal.
 
 ## Analysis
 
-1. **Documents.** Derive the paired ignore ids and marker-retaining texts once
-   with `normalizeReviewPair(base, head, path)` on validated v7 documents.
-   Span discovery runs first against the original documents and their
-   v7 ranges. If the eligible outer-source sequences are identical and
-   their parsed rules contain no reference, stop before validating ranges
-   against the normalized texts or parsing source-located trees. Otherwise
-   validate both sides' ranges against those texts and parse each side once
-   with source locations. Elements inside paired
-   manual-ignore regions therefore never grant a match, exactly as in
-   stylesheet matching. Matching and owner resolution use these normalized
-   documents; span removal uses the original documents, so the two coordinate
-   spaces never mix.
-2. **Rules.** Parse each element's content separately through the
-   classification's shared cached `CssRuleParser`, because each element is a
-   browser stylesheet. Concatenate a side's successful rule lists in document
-   order while rebasing ordinals to one unique monotonic sequence, then diff
-   the two lists as one multiset, so element order and formatting carry no
-   identity. Analyze the added, removed and changed rules of that diff plus
-   every eligible rule on either side that carries a reference. A rule carries
-   a reference when its declarations, its own at-rule prelude, or a
-   non-nesting condition prelude contains a tokenized `url()` or string-form or
-   `url()`-form `@import`. This is the same detector as HTML/CSS resource
-   discovery, including escaped identifier forms. Pair an unchanged reference
-   identity with both sides' rule records and analyze it once. One failed
+1. **Documents.** Read original ranges, style spans, paired ignore ids and
+   trees from the shared [page analysis](./mokly-page-analysis.md).
+   Its subject-only ignore rule preserves structural context. No normalized
+   matching tree or second coordinate system is constructed.
+2. **Rules.** Use [parse reuse](./mokly-css-parse-reuse.md) for independent
+   element parsing, rebased ordinals, segment cancellation, the residual rule
+   diff and canonical composition. Its duplicate-displacement exception is
+   explicit; equal CSS values do not by themselves prove equal changed pairing.
+   Analyze diffed occurrences and unchanged reference-bearing occurrences
+   paired by actual cancellation/exact matches, never an arbitrary identity
+   lookup. Stored per-rule references use the shared resource detector. One failed
    element makes the side and diff unresolved: there are no rule lists, no
    attribution, no owned set, no removals and no appended fragment. Both
    materials keep every unowned style element verbatim, and a view whose
@@ -110,9 +108,9 @@ multisets are equal.
    every matched element rather than the first. Stripping can only widen the
    matched set, which can only widen the owner set, so the result stays
    conservative.
-4. **Owners.** Resolve each matched element's start offset in the normalized,
-   marker-retaining document to the innermost range whose content contains it;
-   ranges are validated against that same text. An instance range resolves to
+4. **Owners.** Resolve each matched element's start offset in the original
+   document to the innermost validated range whose content contains it;
+   matching and ranges use that same text. An instance range resolves to
    that instance; a slot range resolves directly to its validated slot record's
    `owner`, which already names the original supplier through forwarding; no
    enclosing range resolves to the entry. An instance then resolves by this
@@ -155,9 +153,9 @@ one view and entry-retained on another.
 
 One analysis produces two renderings. Each removes every unowned style
 element, from its start tag through its end tag, from the original document in
-the original coordinates, and appends one `<style>` element containing the
-canonical rendering after the document, in the same way caller-slot material
-is appended. The projected rendering makes those removals in the same
+the original coordinates, and appends the canonical rule fingerprint defined
+by [page analysis](./mokly-page-analysis.md#fingerprinted-materials).
+The projected rendering makes those removals in the same
 replacement pass as its instance identity tokens and caller-slot projection;
 the actual rendering applies no tokens. The count, order and attributes of
 unowned style elements therefore carry no identity, so a library that emits
@@ -173,21 +171,17 @@ its rules alone.
   `owned` ones, beside the existing instance identity tokens and caller-slot
   projection.
 
-The canonical rendering ignores ordinals. It sorts statement at-rules that
-must lead a sheet (`@charset`, `@import`, `@namespace` and `@layer` statements)
-first in valid statement order, then sorts the remaining rules by identity
-(conditions, selectors, at-rule form/name/prelude and declarations). It emits
-statement and block at-rules faithfully, wraps conditions outermost first and
-renders nesting parents as enclosing selector blocks. Declaration text is the
-parser's normalized text, so `url()` and `@import` references survive resource
-discovery. Equal rule multisets render identically regardless of source order,
-element split, whitespace or comments; an entry-retained rule edit still
-changes material.
+The [stored rule data and composition](./mokly-css-parse-reuse.md#stored-rule-data)
+define canonical rendering, multiplicity and exact selected-occurrence
+omission. Fingerprinted rules supply stored references rather than parsing
+their comments. Equal retained rule multisets still yield equal material;
+entry-retained rule edits still differ.
 
 Resource discovery uses the actual or projected material appropriate to that
 comparison. Linked-stylesheet selector matching does not use either rewritten
-material: both resource comparisons match against the real paired-normalized,
-marker-retaining documents. Removing a style element or appending a canonical
+material: both resource comparisons match against the original trees under
+the [subject/context policy](./mokly-page-analysis.md#original-page-matching).
+Removing a style element or appending a canonical
 fragment therefore cannot alter sibling selectors such as `style + main` or
 `:last-child` during linked-stylesheet analysis.
 
@@ -231,11 +225,8 @@ owns strict paired-view validation and canonical selector order.
 
 ## Diagnostics
 
-`review.inline-style-analysis` measures the synchronous span, diff, match and
-attribution pass for one view, including parser-cache lookups. Contained parse
-and selector failures return `unresolved` attributions with span status `ok`;
-an escaping error ends the span with `error`. It logs no paths, selectors, CSS
-or document text.
+The [timing contract](./mokly-timings.md) owns the per-view
+`review.inline-style-analysis` span, error/privacy semantics and opt-in counts.
 
 ## Non-goals
 

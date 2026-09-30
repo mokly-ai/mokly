@@ -5,8 +5,18 @@ Delivery Status names an approved active-plan target. The
 [id-derived routes plan](../../plans/id-derived-routes.md) defines the
 identity-only formats: paths derive from kind and id, and variants are entries.
 
-Protocol documents state the contract and current delivery status, but never
-record which plan milestone delivered a rule; plans keep that history.
+## Delivery Status
+
+The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md) is
+the approved pending target: M2 diagnostics/fixture identity, M3 bounded memory,
+M4 parse reuse, M5 residual analysis, M7 page analysis, M8 the style-only route,
+and M9 fingerprints. Each owning contract below links its delivery step;
+M10 removes pending schedules after implementation and acceptance.
+
+Protocol documents state the contract and current delivery status. Pending
+Delivery Status schedules may link future plan steps as `M2`, `M3`, etc.; remove
+those schedules when the plan finishes. Never record delivered-step history;
+plans keep that history.
 `tests/protocol_doc_history.test.ts` enforces the boundary outside `fixtures/`
 by rejecting the case-insensitive pattern `\bmilestones?\s+\d`.
 
@@ -104,6 +114,12 @@ readers accept only v7; earlier output follows
 - [Component review validation and canonical output](./mokly-component-review-validation.md)
 - [Component change attribution](./mokly-component-changes.md)
 - [Component review fast path](./mokly-component-review-fast-path.md)
+- [CSS parse reuse](./mokly-css-parse-reuse.md) — bounded caches, verified
+  segments, rule data and changed-segment policy (approved target)
+- [Component-aware page analysis](./mokly-page-analysis.md) — provenance,
+  matching, quick checks and fingerprints (approved target)
+- [Component-aware style-only route](./mokly-style-only-route.md) — conditions,
+  equivalent results and fallback (approved target)
 - [CSS change attribution](./mokly-css-attribution.md)
 - [Inline style resource ownership](./mokly-inline-style-resources.md)
 - [Inline style evidence](./mokly-inline-style-evidence.md)

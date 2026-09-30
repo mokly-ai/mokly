@@ -1,5 +1,15 @@
 # Startup Diagnostics And Scale Fixtures
 
+## Delivery Status
+
+Existing spans are implemented. Approved target of the
+[scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
+[M2](../../plans/scalable-inline-style-analysis.md#milestone-2-deterministic-scale-fixture-and-complete-benchmark-evidence)
+delivers heap/document counts and complete sample outcomes;
+[M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse)
+delivers segment counts; [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
+delivers `stylePath`. These additions below are pending, not already measured.
+
 ## Opt-in timings
 
 `--debug-timings` is a common boolean CLI option for `serve` (including the
@@ -60,24 +70,20 @@ Review phases use the same session, role and parent context as their caller:
   component-aware loop also compares component variant entries and metadata. Live
   document checks use separate occurrences for material and resource comparison
   loops; a baseline-document batch span can therefore be nested inside one.
-  The component-aware loop ends with one `review.compare-screens` counts record
-  carrying `views` (paired and one-sided views compared), `fastPath` (views
-  settled by the [unchanged view decision](./mokly-component-changes.md#unchanged-view-decision))
-  and `completePath` (views that ran the complete comparison);
-  `fastPath + completePath` equals `views`. Live document checks emit no
-  counts record.
+  Its component-aware counts are defined below; live document checks emit no
+  counts record. Before `stylePath` is delivered, the implemented record has
+  `views`, `fastPath`, `completePath` with `fastPath + completePath = views`.
 - `review.resource-graph` covers reference discovery and transitive traversal
   for each material view or live document, and each before/after snapshot-copy
   closure. It includes resource reads and copying into the in-memory artifact.
   Snapshot-copy traversals are measured even when their reads are cached;
   classification discovery-cache hits emit no additional span. Watcher
   inventory keeps its own stages.
-  For fast-path-eligible views in a component-aware classification where no
-  view differs, the loop emits at most one actual occurrence per paired view
-  in committed mode and two in derived mode. Views with instances or
-  entry-owned slots may add one committed or two derived projected occurrences. One-sided views add
-  one occurrence. A repeated discovery for the same side,
-  route, content digest, and exclusion callback identity is a defect.
+  Under page reuse, each side's reader proves its own transitive closure even
+  when both use the same raw seeds. Reuse discoveries by side/route/reference
+  identity/exclusion policy, never by a cross-side union. Instance/entry-slot
+  views also prove projected closures. One-sided views use their own reader;
+  repeated discovery of the same side and policy is a defect.
 - `review.css-analysis` measures the synchronous parse/diff/match/reduce pass
   for one changed, reachable stylesheet and one before/after document pair.
   It includes parser-cache lookups or parsing, and runs for cache hits and empty
@@ -91,12 +97,12 @@ Review phases use the same session, role and parent context as their caller:
   view, including span discovery and parser-cache lookups. A direct call to the
   pure engine emits the span even when identical outer style sources let it
   skip parsing. Complete paired component-aware comparisons call the engine;
-  fast-path views call it only when the shared cheap prefilter finds a possible
-  reference. Contained parse or selector failures return unresolved
+  the approved target also calls it from the style-only route, but never from
+  a successful quick check. Contained parse or selector failures return unresolved
   attributions with span status `ok`; an
   escaping error ends the span with `error`. It logs no paths, selectors, CSS
-  or document text. See the
-  [inferred inline style ownership plan](../../plans/inferred-inline-style-ownership.md).
+  or document text. Counters aggregate across those engine calls, not skipped
+  quick-check views.
 - `review.write-artifact` surrounds the owned Review directory transaction,
   including validation and cleanup. Export uses it for the complete artifact's
   staged file-write loop, including comparison files; export validation and
@@ -113,6 +119,7 @@ adds review work to a command or writes artifacts during background classificati
 
 For aggregate stage time, take the union of each stage's
 `[elapsedMs - durationMs, elapsedMs]` end-record intervals within one session.
+Include every completed interval regardless of `ok`/`error` status.
 For a scale-fixture analysis share, clip those intervals to the enclosing
 background worker's `changes.classify` interval, then divide their union by
 that classification duration, separately for cold and warm runs. The large
@@ -139,64 +146,95 @@ extraction, command and adoption spans. A waiter can also finish as a cache hit.
 
 ## Representative local fixture
 
-The repository's large consumer is synthetic and opt-in. Its generator and
-screen/component templates live under `tests/fixtures/large`. A small instance
-of the same generator runs in automated tests. A full-sized instance must be
-smoke-tested using the opt-in browser benchmark's under-five-second usable-startup
-assertion. It runs with other heavy checks idle; CI's small correctness fixtures
-have no machine-specific wall-clock assertion.
+The [fixture README](../../tests/fixtures/large/README.md) owns preparation,
+template identity, scenario state/filtering, restoration and the precise
+classification-performance acceptance procedure. It retains current dimensions
+(1,590 entries, 5,550 documents), synthetic workload boundaries, historical
+measurements, the independent five-second usable-startup check, and committed/
+derived cache behavior. CI correctness fixtures have no wall-clock assertion.
 
-The fixture uses real React Native Web and Firna rendering, nested folders,
-component variant entries, repeated and nested component usage, caller-owned
-slots, both viewports and color schemes, logical links, whole-document pages,
-flows, local CSS imports, and images. Sizes are configurable. It is a repeatable
-workload for locating scaling costs, not a claim of identical production data
-or timings. It must provide a Git baseline so Changes performs real comparison.
-Additional shared stylesheets have configurable count and per-area screen share
-(defaults: four and 0.5, rounded up). After the baseline commit, setup adds an
-unrelated rule to the first sheet so an ordinary development server exercises
-actual stylesheet dependency exclusion. The benchmark restores that file, then
-runs no-change, component-head-style and screen-markup scenarios with expected
-Changes membership of zero, one component, and the screen plus its use case.
-The fixture guide documents zero-count/share cases and the separate
-complete-export measurement.
+## Component Analysis Counts
 
-Pass `--inline-styles` to select a separate record and a React Native Web
-renderer whose process-global sheet grows in exhaustive render order. Later
-screens therefore carry rules registered by earlier component variants and
-screens. The small correctness fixture proves that editing one component rule
-changes exactly its component and affects its consumers without adding a later
-non-consumer screen.
+Collect counters, operation clocks and V8 heap samples **only when timings are
+enabled**. Emit each record once in the component-aware loop's `finally`,
+before its span ends, including partial completed work on a handled failure;
+hard termination may prevent all three records. They use the ordinary timing
+envelope with `event: counts` and a `counts` object, no paths or text. No
+component-free or live-document loop emits these new records.
 
-`fixture:large` explicitly prepares and records an isolated baseline under
-`.context`; setup time includes exhaustive Build and Git and is reported separately.
-`dev:large` and `benchmark:large` reuse that fixture without compiling the package.
-Rebuild Mokly explicitly after package-source edits. Committed mode reuses the
-generated files in Git. Pass `--derived` to setup, Serve and benchmark to select
-a separate record for the same dimensions. Derived setup archives a packaged
-Mokly version and a consumer lockfile, installs the head dependencies, and
-commits only source, authored resources and tooling. Serve rebuilds the archived
-commit through its `baselineBuild` recipe; no cached or committed HTML stands in
-for that build.
-The benchmark launches Chrome before timing a fresh Serve subprocess and
-measures searchable navigation with real preview content. Each of the three
-scenarios gets a cold sample and an OS-warm restart in a fresh server and browser
-context. “Cold” means application-cold, not a flushed OS page cache. It also
-verifies theme/viewport changes, a real Props edit, whole-document pages and
-eventual Changes. Stdout reports each measurement as JSON and writes the full
-matrix before returning any navigation-target or bounded classification
-failure.
+- `review.compare-screens`: `views`, `fastPath`, `completePath`,
+  `heapPeakMiB`, and (when delivered) `stylePath`. Integer path counts partition
+  views whose comparison completed; attempts/failing views are not counted.
+  `fastPath + completePath + stylePath = views`; a style fallback counts as
+  complete, never twice. `heapPeakMiB` is the maximum V8 `used_heap_size` of the
+  **classifying isolate**, sampled after each completed view, divided by
+  `1,048,576`, rounded to two decimal places. Zero completed views gives zero;
+  never substitute parent RSS, heap limit or a different isolate's sample.
+- `review.inline-style-analysis`: integer `elements` (unowned element-side
+  occurrences presented to rule parsing), `segments` (occurrences emitted by
+  successful scanners), `segmentHits` (occurrences served from the LRU or
+  same-request verified run), `segmentParses` (distinct missing segment texts
+  attempted in batches), `fallbacks` (element occurrences using whole parsing).
+  A failed scan contributes no partial segments; contextual fallbacks can
+  contribute segments but no batch parses. Count successful cache lookups even
+  if another segment later causes fallback; duplicate misses count as hits only
+  after the request's run is verified. Hits after eviction are misses.
+- `review.document-work`: integer `htmlParses` and `htmlParseBytes`, plus
+  `htmlParseMs`, `rangeMs`, `styleDiscoveryMs`, `referenceMs`, `matchingMs`,
+  `normalizationMs`, `projectionMs`, `implementationMs`, `inlineRuleMs`, `hashMs`.
+  Count every HTML tree-parse attempt during the loop, including embedded
+  resources and, before page reuse, normalized/material parses. Bytes are
+  UTF-8 input byte length, not string length or retained heap.
 
-For derived mode, the benchmark clears only the pinned cache entry under the
-builder's exclusive lock before each scenario's cold run. A locked entry fails
-setup; stop other fixture servers before benchmarking. The warm run retains
-that output. Every run enforces `usableMs < 5000` and requires successful
-baseline timings with `cacheHit: false` or `true` as appropriate. `baselineMs`
-measures the whole builder; `baselineReadyMs` measures command start to receipt
-of its completion, using the benchmark process's clock.
-`preparingToPendingMs` is the cold builder duration, or zero when preparing is
-skipped on a hit. This phase measurement remains available even on Serve
-versions without the `preparing` presentation; it is not a browser paint
-measurement. `baselinePhases` records extraction, each command, and adoption
-separately. `changesReadyMs` still waits for delivered complete Changes in
-Browse. No wall-clock threshold is imposed on rebuilds or classification.
+Document-work times sum exclusive local operation durations, rounded once to
+two decimals in milliseconds, with zero fields retained. Charge HTML tree
+construction to `htmlParseMs`; range validation to `rangeMs`; eligible span
+discovery to `styleDiscoveryMs`; reference extraction/derivation to `referenceMs`;
+selector and owner matching to `matchingMs`; header/marker/ignore normalization
+to `normalizationMs`; kept/replacement/copy assembly to `projectionMs`;
+implementation-only direct work to `implementationMs`; CSS parse/cache/diff/
+canonical assembly to `inlineRuleMs`; digest operations to `hashMs`. Subtract
+nested counted work from its caller; do not count I/O/wait time in these fields
+or sum them with inclusive spans. This counter does not itself measure RSS.
+
+## Benchmark Sample Outcomes
+
+Every requested scenario/state gets one sample with `outcome`, `scenario`,
+`state` (`cold`/`warm`), sorted `expectedChangedIds` and `expectedChangedRoutes`.
+Report observed sorted `changedIds`/`changedRoutes` only when complete Changes
+is available. Keep available interactive/baseline fields even on failure.
+Include `heapPeakMiB`, `documentWork` and `inlineStyleCounts` only when their
+completed counts records exist; absent diagnostics are not invented zeros.
+
+- `ok`: background `changes.classify` ends `ok` and exact membership matches.
+  Carries `classificationStatus: ok`, `classificationMs`,
+  `inlineStyleAnalysisMs/Share` and `cssAnalysisMs/Share`.
+- `error`: classification ends `error`, with `classificationStatus: error`
+  and the same bounded duration/unions when available. Infrastructure or
+  measurement failure also uses `error` with `failurePhase` and `error` text;
+  it must not invent a classification status/end. Preserve successful worker
+  measurements if a later browser check fails.
+- `membership-mismatch`: classification ends `ok` but the delivered id set
+  differs; includes both sets/counts and the successful worker measurements.
+  Matching counts alone cannot prove matching membership.
+- `incomplete`: classification starts but has no end after worker stop or the
+  delivery ceiling. Includes `classificationStatus: incomplete`,
+  `classificationUpperBoundMs` from the supervising Serve wait span and
+  `inlineStyleAnalysisLowerBoundMs`/`cssAnalysisLowerBoundMs` from all completed
+  stage intervals in that worker session after classification start.
+  Never label a bound `classificationMs` or compute a percentage without an end.
+
+For completed workers, each stage's interval union includes end records of
+either status, clipped to that worker's classify interval. For incomplete ones
+clip only at its start; never compare worker elapsed clocks with supervisor
+clocks. Report duration/unions to two decimals; shares divide those reported
+durations and round to four decimals, zero for a zero-duration complete span.
+Unfinished intervals contribute no measured duration. Duplicate/ambiguous
+classification spans are measurement errors, not successful samples. Outcome
+priority is incomplete, worker error, membership mismatch, then ok; unrelated
+infrastructure failure turns an otherwise-ok sample into error. The report
+retains all requested samples before returning nonzero for any failed sample,
+readiness assertion or restoration failure. Identity and acceptance are owned
+by the fixture guide, not by a second timing definition.
+The separate five-second usable-startup budget does not relabel a successful
+classification outcome; `targetHeld: false` still fails the benchmark command.

@@ -2,24 +2,26 @@
 
 Make inferred inline style ownership work, and work fast, on a full-size React
 Native Web catalogue. Mokly must stop retaining memory it does not need, bound
-the memory it caches, parse each distinct CSS rule once, parse each page file
-once, and settle pages whose only difference is page style text without the
+the memory it caches, reuse repeated CSS parses, share each view-side page
+parse, and settle pages whose only difference is page style text without the
 full comparison. The target is that the React Native Web scale fixture
 classifies within twice the normal fixture's baseline time, and that one
 component style change costs at most 25% more than no change. The ownership
 contract, Changes membership, evidence and presentation stay as delivered,
-apart from the documented cases in Decisions 4, 5 and 10.
+apart from the documented cases in Decisions 4, 5, 9 and 10. The contracts
+linked below own the precise algorithms and exceptions, not this overview.
 
 ## Base And Prerequisites
 
 This plan builds on the
 [inferred inline style ownership plan](./inferred-inline-style-ownership.md),
 which is implemented but not yet merged, on branch `calummoore/irvine-v6` at
-`6a2ff27e`. Before Milestone 1 starts, `origin/main` at `b4314fec` (pull
+`6a2ff27e`. Task 0 merged `origin/main` at `b4314fec` (pull
 request #123, which replaces collections with navigation paths, derives
 routes from entry ids, keeps Changes to recorded evidence and moves the
-manifest to schema v7) is merged into this branch, so the contracts and code
-this plan changes are current. That plan's Milestone 8 scale diagnosis is the
+manifest to schema v7) in merge commit `7fd34132`, before Milestone 1;
+verification fixes followed in `31ffae9b` and `b3cec159`. The contracts and code
+this plan changes now use main's identity and navigation model. That plan's Milestone 8 scale diagnosis is the
 evidence for this plan, and its review findings stay recorded there. This plan
 resolves these of them: Milestone 3 finding 1 (Decision 4), Milestone 4
 finding 1 and Milestone 5 finding 3 (Decision 9), Milestone 5 finding 2
@@ -36,6 +38,11 @@ and the scale fixture by [its README](../tests/fixtures/large/README.md) and
 [timings](../docs/protocol/mokly-timings.md).
 
 ## Problem
+
+These measurements are historical evidence from the prerequisite plan before
+the main merge, not performance references for this plan. The current default
+fixture has **1,590 entries and 5,550 documents**; Milestone 2 regenerates it
+and records the template-identified reference used for acceptance.
 
 ### Memory And CSS Parsing
 
@@ -92,122 +99,81 @@ fixed before this plan can prove its result.
 ## Decisions
 
 1. **The background worker keeps compilation outputs only in derived mode.**
-   Committed-mode classification already reads committed files, so the worker
-   drops its reference after handing the compilation to the parent. Derived
-   mode is unchanged.
-2. **Parse caches are byte-bounded LRUs.** One classification has a
-   stylesheet-file cache (whole file text to parse result) and a rule-segment
-   cache (one top-level rule's text to its parsed rules). Each is bounded by an
-   estimated retained size of 64 MiB. Keys are flat copies that never keep a
-   larger document alive. Eviction can only cost time; it never changes a
-   result.
-3. **Inline elements are parsed one top-level rule at a time, with reuse.** An
-   element's normalized text is split into top-level rule segments by a fast
-   scanner with the boundary semantics of the existing tokenizer. Cached
-   segments are reused. An element's missing segments are parsed together in
-   one parser call and split back by top-level rule. Each segment must yield
-   exactly one top-level rule starting at its own start. An element falls back
-   to whole-element parsing on any scanner anomaly, any verification
-   mismatch, any batch parse failure, or any `@charset`, `@import` or
-   `@namespace` segment, whose meaning depends on neighboring rules. The
-   assembled rule list, including ordinals and parse failures, equals the
-   whole-element parse.
-4. **Each distinct rule's derived data is computed once.** When a rule is
-   parsed, Mokly stores its address key (conditions, selectors, at-rule name,
-   prelude and statement-or-block form), its identity key (address plus
-   declarations), its sheet-leading rank, its canonical rendered text and
-   its references. The rule diff groups by the address key and the canonical
-   renderer sorts by rank and identity, so both share one definition. The
-   block form joins the address, so `@layer a;` against `@layer a{}` becomes a
-   diffed, unresolved change on both the linked and the inline path. This
-   resolves Milestone 3 finding 1 of the prerequisite plan.
-5. **Analysis work follows the changed segments.** Before the rule diff,
-   identical segment texts cancel between the two sides as a multiset,
-   earliest occurrences first, because equal text parses to equal rules. Only
-   the remaining segments' rules enter the rule diff. Unchanged
-   reference-bearing rules are found from the stored references, and each is
-   paired only with a copy that actually matched: a cancelled segment or an
-   exact rule match. This resolves Milestone 5 finding 2 of the prerequisite
-   plan, where one rule object could receive two attributions. Each side's
-   canonical rule list is composed from the stored per-rule text of every
-   segment, omitting only the analyzed occurrences selected as excluded or
-   owned.
-6. **Results do not change otherwise.** Attributions, owned sets, retained
-   selectors, the all-excluded flag, material equality, Changes membership,
-   evidence and presentation equal the delivered engine's for every input,
-   except the cases documented in Decisions 4, 5 and 10. Differential tests
-   enforce this for every decision below.
-7. **The scale fixture is value-stable and self-identifying.** Per-view atomic
-   rules derive from a hash of the view key, not render order. The fixture
-   record and every benchmark report carry a digest of the fixture templates,
-   and the benchmark rejects a fixture generated from different templates.
-8. **Scale evidence records every outcome.** The benchmark records ok, error,
-   incomplete (the worker stopped without ending classification) and
-   membership-mismatch samples with the timing data available. The classifying
-   worker reports its peak V8 heap use, where document work goes, and the
-   inline analysis's segment reuse.
-9. **Each page file side is parsed once.** A page analysis parses one side's
-   original text once, with source locations. It supplies the validated
-   component ranges, the unowned style elements, the paired ignored regions,
-   the element tree for selector matching, and every resource reference with
-   the source span of the attribute or text that holds it. The quick check,
-   the full comparison, the style-only route and linked-stylesheet matching
-   read it; no other step parses the page. A comparison material's references
-   are derived from it: a reference drops out with a replaced, removed or
-   ignored span that contains its source span, caller-slot copies keep the
-   references of the content they copy, and inserted text contributes its
-   own. The full comparison therefore parses each side at most once. When the
-   two texts are identical, the quick check parses only the head side and
-   skips projection and normalization. The fast path no longer runs inline
-   analysis, which resolves Milestone 4 finding 1 and Milestone 5 finding 3 of
-   the prerequisite plan. Referenced HTML resources are still parsed as today.
-10. **Selector matching uses the original page.** Inline and linked-stylesheet
-    matching evaluate selectors against each side's original tree from its
-    page analysis. An element that starts inside a paired ignored region is
-    never a matching subject, but it stays in the tree as context for
-    combinators, `:has()` and structural pseudo-classes such as `:nth-child`
-    and `:empty`. Owners are resolved against the original ranges. This
-    replaces matching on the ignore-normalized page, where removing an ignored
-    region changed the context of the elements around it, and it removes the
-    normalized parses. Results change only where that context differs; the new
-    result follows the real page, so a rule whose subject is outside an
-    ignored region is no longer falsely excluded.
-11. **Comparison materials carry fingerprints instead of style text.** When
-    the inline analysis runs, the canonical rule list appended to a material
-    becomes one comment holding the SHA-256 digest of its canonical rendering.
-    When the analysis is skipped because the outer sources are identical and
-    reference-free, each unowned style element is replaced in place by a
-    comment holding the digest of its outer source, so its position still
-    counts. The references of fingerprinted rules come from their stored
-    references. Material equality and every result are unchanged, but
-    materials no longer grow with the page's style sheet.
-12. **Style-only differences skip the full comparison.** When a paired view's
-    texts differ only inside the text of one unowned style element, Mokly
-    decides the view from that element's rule diff and the head page analysis,
-    without projection, materials or the implementation check. The route
-    applies only when every condition in the Design Summary holds; otherwise
-    the full comparison runs. It produces exactly the full comparison's
-    result, including evidence.
-13. **Performance targets.** Classification time is the background worker's
-    `changes.classify` duration, measured by the large benchmark in committed
-    mode for every scenario, cold and warm. The reference is the mean of two
-    Milestone 2 runs of the default fixture, per scenario and state. At
-    acceptance, using the mean of two complete runs of each fixture:
-    - the cumulative fixture classifies each scenario within twice the
-      reference for the same scenario and state;
-    - on each fixture, the component-style scenario takes at most 1.25 times
-      the no-change scenario in the same state;
-    - no default-fixture scenario takes more than 1.05 times its reference;
-    - every sample completes with the expected Changes membership and a
-      `heapPeakMiB` below 1,024, including one derived-mode cold
-      component-style sample on the cumulative fixture.
+   [On-demand work](../docs/protocol/mokly-on-demand.md) owns the transfer and
+   release rule; committed-mode classification continues reading files.
+2. **Parse caches are byte-bounded LRUs.**
+   [Cache lifetime and accounting](../docs/protocol/mokly-css-parse-reuse.md#cache-lifetime-and-accounting)
+   owns both independent bounds, estimates, flat copies, recency and oversize
+   behavior. Eviction changes time only.
+3. **Inline elements reuse verified top-level segments.**
+   [Scanner](../docs/protocol/mokly-css-parse-reuse.md#segment-scanner) and
+   [batch verification](../docs/protocol/mokly-css-parse-reuse.md#batched-parsing-and-verification)
+   own exact keys, native-root attribution, flattened runs and whole-element
+   fallbacks. Assembly equals whole parsing, including form, ordinals and failures.
+4. **Rule data has one definition.**
+   [Stored rule data](../docs/protocol/mokly-css-parse-reuse.md#stored-rule-data)
+   owns the address, identity, rank, canonical text, references and custom flag.
+   Its block-form correction on both CSS paths resolves prerequisite
+   Milestone 3 finding 1.
+5. **Analysis work follows changed segments and actual matched copies.**
+   [Cancellation](../docs/protocol/mokly-css-parse-reuse.md#changed-segment-cancellation)
+   and [composition](../docs/protocol/mokly-css-parse-reuse.md#unchanged-references-and-composition)
+   own residual diffing, unchanged-reference pairing and selected-occurrence
+   omission. Segment-first cancellation can displace duplicate identities and
+   change source-order changed pairs; the contract gives the exact equality
+   criterion and required explicit differential outcomes. This and correcting
+   double attribution are approved differences, not universal equivalence.
+   Matched-copy pairing resolves prerequisite Milestone 5 finding 2.
+6. **Results do not change otherwise.** Differential tests compare full
+   attributions, owners, selectors, all-excluded status, material equality,
+   membership and evidence. Only the block-form correction (Decision 4),
+   matched-copy/displacement cases (5), provenance/parser-context cases (9),
+   and original-context matching (10) may differ from the delivered engine.
+   These exceptions require exact expected results, not blanket exemptions.
+7. **The scale fixture is value-stable and self-identifying.**
+   [Template identity and stable values](../tests/fixtures/large/README.md#template-identity-and-stable-values)
+   owns digest framing, records, mismatch rejection and value derivation.
+8. **Scale evidence records every outcome.**
+   [Timing counts](../docs/protocol/mokly-timings.md#component-analysis-counts)
+   and [sample outcomes](../docs/protocol/mokly-timings.md#benchmark-sample-outcomes)
+   own fields, units, rounding, worker/infrastructure errors and partial bounds.
+   [Scenario state](../tests/fixtures/large/README.md#scenario-matrix-and-restoration)
+   owns filtering and restoration.
+9. **Each page file side is parsed once.**
+   [Page analysis](../docs/protocol/mokly-page-analysis.md#scope-and-lifetime)
+   owns original coordinates, contents and sharing; its
+   [derived references](../docs/protocol/mokly-page-analysis.md#derived-material-references)
+   are normative. Whole-node edits alone do not guarantee the old reparsed
+   material's extraction visibility; the contract settles partial spans and
+   parser-context/copy cases explicitly. Its
+   [identical-text check](../docs/protocol/mokly-page-analysis.md#identical-text-quick-check)
+   removes all fast-path inline work, resolving prerequisite Milestone 4
+   finding 1 and Milestone 5 finding 3. Referenced HTML parsing stays separate.
+10. **Selector matching uses original-page context.**
+    [Original-page matching](../docs/protocol/mokly-page-analysis.md#original-page-matching)
+    owns the subject-only ignore predicate, structural context, owner ranges
+    and the intentional difference from ignore-normalized matching.
+11. **Materials carry fingerprints instead of style text.**
+    [Fingerprinted materials](../docs/protocol/mokly-page-analysis.md#fingerprinted-materials)
+    owns both forms, digest encoding, placement, stored references and the
+    equality guarantee, including a moved identical element.
+12. **Style-only differences skip full comparison when proven safe.**
+    [The route](../docs/protocol/mokly-style-only-route.md) owns ordering,
+    every eligibility condition (including ignore/material-span safety),
+    results, fallbacks, its test switch and per-view proof. It equals the full
+    comparison under the same new policies, not a second attribution policy.
+13. **Performance acceptance is a reproducible procedure.**
+    [Classification performance acceptance](../tests/fixtures/large/README.md#classification-performance-acceptance)
+    is the sole normative definition of samples, means, ratios, heap/membership
+    requirements and pass/fail treatment. Historical Problem measurements are
+    never substituted for the Milestone 2 reference.
 
 ## Non-Goals
 
 - A selector index; matching is under 0.1% of the analysis time.
 - Any change to the inline style ownership contract's scope, attribution
   rules, evidence schema, Changes membership or shell presentation beyond
-  Decisions 4, 5 and 10.
+  Decisions 4, 5, 9 and 10.
 - The five-second navigation target, which `origin/main` also missed cold in a
   paired run, and the background build that renders every page before
   classification (about 90 seconds on the cumulative fixture).
@@ -217,8 +183,7 @@ fixed before this plan can prove its result.
 
 ### Contracts
 
-Three new protocol documents own the new rules, because the inline style
-contract already exceeds the protocol length guideline:
+Three focused protocol documents own the new analysis rules:
 
 - `docs/protocol/mokly-css-parse-reuse.md` owns segmentation, verification and
   fallback, both caches and their byte estimate, per-rule derived data,
@@ -229,94 +194,52 @@ contract already exceeds the protocol length guideline:
 - `docs/protocol/mokly-style-only-route.md` owns the route's conditions,
   results, fallback and equivalence guarantee.
 
-The inline style, CSS attribution, component change, on-demand and timing
-contracts reference them.
+The merged inline ownership, resource and evidence contracts reference these
+owners. The unchanged decision lives in
+[`mokly-component-review-fast-path.md`](../docs/protocol/mokly-component-review-fast-path.md),
+usage shapes in [`mokly-component-usage-records.md`](../docs/protocol/mokly-component-usage-records.md),
+and shell presentation in
+[`mokly-css-evidence-presentation.md`](../docs/protocol/mokly-css-evidence-presentation.md).
+Usage/evidence wire shapes and presentation do not change. Page analysis,
+fingerprints and the route apply only to component-aware classification;
+catalogues without registered components keep their existing classifier.
 
 ### Caches And Segments
 
-The byte estimate for a cache entry is two bytes per UTF-16 code unit of its
-key and of every string it retains, plus 96 bytes per rule and 64 bytes per
-entry. The estimate is recomputed on insertion only.
-
-Segmentation normalizes an element's text exactly as the parser does (strip a
-leading byte-order mark, convert `\r\n`, `\r` and `\f` to `\n`), then scans
-code units once. It skips comments, quoted strings with escapes, escapes,
-unquoted `url(` tokens and bracket nesting. It treats top-level `<!--` and
-`-->` as separators. A top-level rule ends at a top-level `;` before any block
-or at the `}` matching its first top-level `{`. An unterminated construct, an
-unmatched closing bracket or trailing non-whitespace is an anomaly.
+Use the [parse-reuse contract](../docs/protocol/mokly-css-parse-reuse.md).
+Verification concerns native top-level roots; one root may flatten to several
+records. Parsing equivalence and changed-pairing equivalence are distinct:
+the latter has the Decision 5 duplicate-displacement exception. Both future
+differential suites follow the contract's explicit equality domains.
 
 ### Page Analysis
 
-A page analysis is created on first use for one view side and discarded with
-its view. It parses the side's original text, in its own marker dialect, once
-with source locations. Paired ignore ids come from the pair: a marker scan of
-both texts with the existing one-sided material rule. An element is ignored
-when its start offset lies inside a paired region. A reference record holds
-the raw value, its kind and the source span of its attribute or text node.
-
-A comparison material is a sequence of kept original spans, replacement texts
-and appended copies of original spans. Its references are the records inside
-kept or copied spans, minus those inside paired ignored regions, plus the
-references of replacement and appended text. Fingerprint comments carry none;
-fingerprinted rules contribute their stored references. The contract makes
-this derived set normative. It equals the set found by parsing the material
-whenever replaced and ignored spans contain whole nodes, which a differential
-test checks over every fixture.
-
-After dialect normalization of the base, when the two texts are identical and
-the usage topology is equal, the quick check reads only the head analysis. Its
-references serve the resource check on both sides, the usage signals give the
-reasons, the state is `unchanged` and there are no ignored ids. Every other
-quick check keeps its current decision, reading the page analyses.
+Use the [page-analysis contract](../docs/protocol/mokly-page-analysis.md).
+It owns lifetime, original coordinates, marker pairing, reference provenance,
+copy visibility and original-tree matching. The unchanged decision first
+tries its single-analysis identical-text check; all successful quick checks
+avoid inline analysis. Each reader still traverses its own resource closure.
+The plan does not introduce another marker dialect or normalized page tree.
 
 ### Fingerprints
 
-A rule fingerprint is `<!--mokly-inline-rules:<digest>-->` and an in-place
-style element fingerprint is `<!--mokly-inline-style:<digest>-->`, where the
-digest is the base64url SHA-256 of the canonical rendering or of the element's
-outer source. Neither form uses a review marker prefix.
+Use [fingerprinted materials](../docs/protocol/mokly-page-analysis.md#fingerprinted-materials)
+for both forms and their references/equality proof; preserve occurrence
+position when analysis is skipped.
 
 ### Style-Only Route
 
-The route runs after a failed quick check. Every condition must hold:
-
-1. The view is paired, both sides use the same path, both have usage records,
-   and the usage topology is equal.
-2. The base contains no retired marker prefix, and the common prefix and
-   common suffix of the two texts leave one changed window per side.
-3. The head analysis has an unowned eligible style element whose content
-   contains the head window.
-4. Neither window contains `<`, and neither do the eight code units before the
-   windows. The HTML tokenizer's state then enters both windows as plain style
-   text, stays there, and leaves both identically, so the base window lies in
-   the same element and the suffix parses identically on both sides.
-5. Both element texts parse, and no added, removed or changed rule of the
-   element carries a reference or has resolved selectors that use `:empty`,
-   `:contains` or `:icontains`. References are judged by stored per-rule
-   references, because a reference can straddle a window boundary.
-6. The quick check's resource test passes on the head analysis's references,
-   collected through each side's reader: no Git changed path in committed mode
-   and no byte change in derived mode.
-
-The markup is then identical on both sides, and so are the element's
-references, so the diffed rules are attributed once, on the head tree, for
-both sides. The view receives the full comparison's
-state, `material` flag, reasons including the usage signals, owned set and
-`inlineStyles` evidence, with no ignored ids and no owned resources. A
-test-only switch beside `useFastPath` disables the route.
+Use the [style-only contract](../docs/protocol/mokly-style-only-route.md).
+Its tokenizer and whole-rule-reference proofs justify bypassing projection,
+page materials and implementation work. Failed proofs reuse preparation on
+full fall-through. The disabled route is the differential oracle.
 
 ### Diagnostics
 
-The `review.compare-screens` counts record gains `heapPeakMiB` and
-`stylePath`; `fastPath + completePath + stylePath` equals `views`. One
-`review.inline-style-analysis` counts record after the component-aware loop
-carries `elements`, `segments`, `segmentHits`, `segmentParses` and
-`fallbacks`. One `review.document-work` counts record carries `htmlParses`,
-`htmlParseBytes`, `htmlParseMs`, `rangeMs`, `styleDiscoveryMs`,
-`referenceMs`, `matchingMs`, `normalizationMs`, `projectionMs`,
-`implementationMs`, `inlineRuleMs` and `hashMs`. All of them are collected only
-when timings are enabled.
+Use [timing counts and outcomes](../docs/protocol/mokly-timings.md#component-analysis-counts)
+for opt-in collection, units, isolate sampling and partial records. The
+[fixture guide](../tests/fixtures/large/README.md#scenario-matrix-and-restoration)
+owns benchmark states, identity and the Decision 13 acceptance procedure.
 
 ## Milestone 1: Protocol And Documentation Contract
 
@@ -327,55 +250,82 @@ targets before any code changes. Documentation-only; validated with Prettier
 and a diff review.
 
 - [x] Register this plan in [`plans/README.md`](./README.md).
-- [ ] Create `docs/protocol/mokly-css-parse-reuse.md` from Decisions 2 to 6
+- [x] Create `docs/protocol/mokly-css-parse-reuse.md` from Decisions 2 to 6
       and the Caches And Segments summary: segmentation semantics and
       anomalies, batched parsing and per-segment verification, fallback
       conditions, the equivalence guarantee, both caches with the byte
       estimate and flat keys, per-rule derived data, changed-segment
       cancellation, reference pairing and rule-list composition.
-- [ ] Create `docs/protocol/mokly-page-analysis.md` from Decisions 9 to 11 and
+- [x] Create `docs/protocol/mokly-page-analysis.md` from Decisions 9 to 11 and
       the Page Analysis and Fingerprints summaries: analysis contents and
       coordinates, paired ignore ids, reference records, derived material
       references, original-page matching with the ignore rule, the
       identical-text quick check, and both fingerprint forms.
-- [ ] Create `docs/protocol/mokly-style-only-route.md` from Decision 12 and the
+- [x] Create `docs/protocol/mokly-style-only-route.md` from Decision 12 and the
       Style-Only Route summary: every condition, the results, the fallback to
       the full comparison, the equivalence guarantee and the `stylePath`
       count.
-- [ ] Register the three documents in the
+- [x] Register the three documents in the
       [protocol index](../docs/protocol/README.md), each with a Delivery Status
       naming this plan as the approved target.
-- [ ] In [`mokly-inline-styles.md`](../docs/protocol/mokly-inline-styles.md),
-      state that the fast path runs no inline analysis and that style-only
-      differences take the route; make the Rules step reference parse reuse
-      and matched-copy reference pairing; make matching and owners use the
-      original page; replace the appended rule text with fingerprints; state
-      that the route emits the full comparison's evidence; and add the
-      approved-target sentence for this plan to its Delivery Status.
-- [ ] In [`mokly-css-attribution.md`](../docs/protocol/mokly-css-attribution.md),
+- [x] Discovered: main split inline ownership across
+      [`mokly-inline-styles.md`](../docs/protocol/mokly-inline-styles.md),
+      [`resources`](../docs/protocol/mokly-inline-style-resources.md) and
+      [`evidence`](../docs/protocol/mokly-inline-style-evidence.md).
+      Retarget the former combined-document TODO: ownership references parse
+      reuse, original matching and fingerprints; resources references exact
+      matched occurrences and derived seeds; evidence defines unchanged
+      delivery from the route. Add approved-target schedules to each owner.
+- [x] In [`mokly-css-attribution.md`](../docs/protocol/mokly-css-attribution.md),
       replace the parser-cache paragraph with the bounded stylesheet-file
       cache, add the statement-or-block form to the rule address and identity
       with the `@layer a;` against `@layer a{}` case, and make
       linked-stylesheet matching use the original page with the ignore rule.
-- [ ] In [`mokly-component-changes.md`](../docs/protocol/mokly-component-changes.md),
-      describe the identical-text quick check, place the style-only route
-      between the quick check and the full comparison, reference the page
-      analysis, and add the approved-target sentence.
-- [ ] In [`mokly-on-demand.md`](../docs/protocol/mokly-on-demand.md), state
+- [x] Discovered: main moved the unchanged decision to
+      [`mokly-component-review-fast-path.md`](../docs/protocol/mokly-component-review-fast-path.md).
+      Retarget that part of the former component-changes TODO there: reference
+      the identical-text check and its single analysis, remove inline work,
+      and place the style-only attempt before full fall-through.
+      [`Component changes`](../docs/protocol/mokly-component-changes.md) references
+      page matching/material references and the decision owner. Add target
+      schedules to both; do not duplicate the algorithm.
+- [x] Discovered: confirm the merged
+      [`usage`](../docs/protocol/mokly-component-usage-records.md) and
+      [`presentation`](../docs/protocol/mokly-css-evidence-presentation.md)
+      contracts remain authoritative and unchanged; no wire/presentation rule
+      belongs back in the inline or comparison document.
+- [x] In [`mokly-on-demand.md`](../docs/protocol/mokly-on-demand.md), state
       that the background worker retains compilation outputs only in derived
       mode.
-- [ ] In [`mokly-timings.md`](../docs/protocol/mokly-timings.md), add the
+- [x] In [`mokly-timings.md`](../docs/protocol/mokly-timings.md), add the
       Diagnostics summary's counts records and the four benchmark sample
       outcomes.
-- [ ] In [`tests/fixtures/large/README.md`](../tests/fixtures/large/README.md),
+- [x] In [`tests/fixtures/large/README.md`](../tests/fixtures/large/README.md),
       describe value-stable per-view rules, the template digest and its
       rejection rule, the `--scenario` filter, the `linked-stylesheet`
       scenario, setup-state restoration, sample outcomes, peak heap, document
       work and the Decision 13 targets, each marked as the approved target of
       this plan.
-- [ ] Validate the changed Markdown with `npx prettier --check` and review the
-      diff; documentation-only work does not require `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] Discovered: align Decisions and Design Summary with their sole contract
+      owners, record duplicate-pair displacement and provenance visibility
+      refinements, and require explicit expected cases in later differential
+      TODOs. Add ignore/material-span safety to the route's tests.
+- [x] Discovered: preserve fingerprint token provenance through normalization
+      and equality/hashing; require a moved-style/authored-lookalike test in
+      Milestone 9 so serialized source comments cannot alias inserted tokens.
+- [x] Discovered: style-only equivalence needs the full view-wide rule diff:
+      unchanged other elements can fail parsing or displace duplicate pairs.
+      Specify reuse of those runs and require both cases in Milestone 8 tests,
+      rather than silently deciding from an isolated element diff.
+- [x] Discovered: remove obsolete marker-dialect requirements throughout the
+      plan, label pre-merge measurements historical, and use current fixture
+      dimensions outside those measurements. Preserve existing protocol caps
+      and history rules without source/test edits.
+- [x] Validate the changed Markdown with `npx prettier --check` and review the
+      diff; check every changed-file link/anchor and re-read all touched
+      contracts against the plan. Documentation-only work does not require
+      `cargo xtask check`.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
@@ -391,18 +341,19 @@ coverage, and measure the baseline that the performance targets use.
 - [ ] In `tests/fixtures/large/inline_styles.tsx`, derive each per-view rule's
       value from a stable hash of the view key instead of the global render
       counter, so class names depend only on style values.
-- [ ] Add a small-fixture test: adding a screen to one area leaves every other
-      area's generated documents byte-identical and out of Changes.
+- [ ] Discovered: adding a screen necessarily adds unused rules to later
+      cumulative sheets. Test that every other area's existing view values,
+      class names and non-style markup remain byte-identical and its entries
+      stay out of Changes, as the fixture contract specifies, rather than
+      requiring impossible complete-document byte equality.
 - [ ] Record a digest of the fixture templates in the fixture record at setup
       and in every benchmark report; make `preparedFixture` reject a fixture
       whose digest differs from the current templates, naming the preparation
       command.
 - [ ] Model every sample outcome in `scripts/large/timings.mjs` and
-      `benchmark.mjs`: `ok`, `error` (the worker's `changes.classify` ended
-      with status `error`), `incomplete` (started but never ended; report the
-      Serve span as an upper bound and the completed inline union as a lower
-      bound) and `membership-mismatch` (ended `ok` with the wrong Changes).
-      Include every inline end record in the union, whatever its status.
+      `benchmark.mjs` under the timing contract, including infrastructure/
+      measurement errors without fabricated worker ends, incomplete upper/
+      lower bounds, exact id-set mismatches and all-status interval unions.
 - [ ] Add a repeatable `--scenario <name>` filter to the benchmark.
 - [ ] Add a `linked-stylesheet` scenario that keeps setup's unused
       `shared-1.css` rule, expects zero Changes and reports the clipped
@@ -478,7 +429,7 @@ whole-element parsing.
       condition.
 - [ ] Compute derived data once per parsed rule, for inline and stylesheet-file
       parses alike: address key with block form, identity key, rank,
-      canonical text and references. Make `diffCssRules`,
+      canonical text, references and the custom-property flag. Make `diffCssRules`,
       `diffCssRuleLists`, `cssRuleIdentity` and `renderInlineRules` use it.
 - [ ] Emit the `review.inline-style-analysis` counts record after the
       component-aware loop.
@@ -495,8 +446,9 @@ whole-element parsing.
       segment once through an injected counting parser, that each fallback
       condition falls back, and that `@layer a;` against `@layer a{}` is a
       diffed, unresolved change on both paths.
-- [ ] Run the existing inline, CSS, fast-path and Changes suites unchanged,
-      then the full suite and `cargo xtask check`.
+- [ ] Run the existing inline, CSS, fast-path and Changes suites, preserving
+      assertions outside the Decision 4 form correction; run the full suite
+      and `cargo xtask check`.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
@@ -523,8 +475,13 @@ lists from stored rule text.
       cumulative sequences, duplicates, formatting-only edits, reference
       rules, custom properties, nested and conditional rules and element
       splits, attributions, owned sets, retained selectors, the all-excluded
-      flag and both materials equal the Milestone 4 engine's, except the
-      duplicate-copy case tested below.
+      flag and both materials equal the Milestone 4 engine's in the
+      contract's agreeing-survivor domain. Compare ordered diffs too; no broad
+      duplicate exemption is allowed.
+- [ ] Discovered: assert explicit changed pairs and final outcomes for
+      displaced duplicate identities across differently formatted segments,
+      including the contract's red/blue/green example and custom-property/
+      URL variants. Test full-diff fallback when either side cannot segment.
 - [ ] Add a test for the duplicate-copy case (a rule with a custom property and
       a reference present once before and twice after): the added copy stays
       `unresolved`, the view is `changed` with a `material` reason, and no
@@ -579,22 +536,27 @@ the original page; give identical texts a single-parse quick check.
       for other callers.
 - [ ] Derive comparison-material references from the page analysis and use
       them for resource discovery. Add a differential test that the derived
-      set equals the set found by parsing the material for every view of the
-      design catalogue, the small large fixtures and the inline test
-      catalogues.
+      resource seeds and transitive closures equal discovery from old text
+      materials for every view of the design catalogue, small large fixtures
+      and inline test catalogues in the contract's visibility-preserving
+      domain. Assert explicit provenance-derived sets for partial spans,
+      template/caller copies and parser-recovery visibility differences.
 - [ ] Match inline and linked-stylesheet selectors on the original trees with
       the ignore rule, resolve owners on the original ranges, and remove the
-      normalized parses. Add tests for a sibling combinator and `:nth-child`
-      next to an ignored region on both paths; every other existing CSS and
-      inline test stays unchanged.
+      normalized parses. Add original-context tests for a sibling combinator,
+      `:nth-child`, `:has()` and `:empty` next to/containing ignored content on
+      both paths; every other existing CSS and inline test stays unchanged.
 - [ ] Add the identical-text quick check and remove inline analysis from the
       fast path. Test in committed and derived modes that a zero-change
       classification emits no `review.inline-style-analysis` span and parses
       each view once.
 - [ ] Assert with document-work counts that a full comparison parses each side
       at most once.
-- [ ] Run the fast-path, comparison-mode and Changes equivalence suites
-      unchanged.
+- [ ] Run the fast-path, comparison-mode and Changes equivalence suites;
+      preserve assertions outside the page contract's explicit provenance/
+      context cases. Retain the delivered text-material oracle and record old
+      and new expectations for every intentionally adapted test, including
+      select/template and malformed-HTML projected-resource fixtures.
 - [ ] Record the no-change and component-style samples of both fixtures.
 - [ ] Update `src/review/README.md` and the contracts' Delivery Status for
       delivered parts; run the suite and `cargo xtask check`.
@@ -618,11 +580,18 @@ to the full comparison.
       record.
 - [ ] Add a differential test (route enabled against disabled, identical
       results) over excluded, owned, entry and unresolved diffed rules; an
-      entry-owned input change; historical-dialect bases; committed and
+      entry-owned input change; committed and
       derived modes; and each fallback: a markup change, a start-tag
       attribute change, two changed style elements, a `<` or a reference in
       or beside the window, a changed reachable resource, a text-dependent
-      pseudo-class, a parse failure and unequal topology.
+      pseudo-class, a parse failure, unequal topology, missing usage, and a
+      window intersecting paired ignore/material-signal spans. Prove route or
+      fallback for the named view in each case, not a catalogue-wide bystander.
+- [ ] Discovered: include an unchanged malformed second style element (full
+      fallback), and identical other elements that displace duplicate pairs
+      (route/full equality using view-wide cancellation, including custom
+      properties and references). Do not use a changed-element-only diff;
+      complete-path oracles disable both fast and style switches.
 - [ ] Test that every view in the small cumulative fixture's component-style
       scenario whose markup is unchanged takes the route.
 - [ ] Record the no-change and component-style samples of both fixtures.
@@ -642,11 +611,13 @@ comparison's text work no longer grows with the style sheet.
 
 - [ ] Replace the appended canonical rule text with the rule fingerprint, and
       style elements of skipped analyses with in-place fingerprints; take the
-      references of fingerprinted rules from their stored references.
+      references of fingerprinted rules from their stored references. Preserve
+      token provenance for equality/hashing so authored lookalike comments
+      cannot alias inserted fingerprints.
 - [ ] Add a differential test: state, `material`, reasons, resource evidence
       and owned sets equal those of text materials for every inline, CSS and
       Changes test catalogue, and a moved identical style element still
-      changes the material.
+      changes the material, including movement past an authored lookalike.
 - [ ] Record the no-change and component-style samples of both fixtures.
 - [ ] Update `src/review/README.md` and the contracts' Delivery Status for
       delivered parts; run the suite and `cargo xtask check`.
