@@ -13,13 +13,16 @@ scope even when ordinary build timings are enabled.
 
 `html_parse.ts` preserves parse5 options and counts each attempt at its owning
 step. `document_work.ts` subtracts nested synchronous work from its caller and
-samples V8 used heap immediately after every completed compared view. Resource
+samples V8 used heap immediately after every completed compared view. Its
+sampler is injectable through the timing sink for deterministic tests; path
+counts remain owned by `review/component_comparison_counts.ts`. Resource
 I/O is outside local operation clocks. Counts have no document or path labels.
 
 The normative fields, units, rounding and emission rules live in
 [the timing contract](../../docs/protocol/mokly-timings.md#component-analysis-counts).
 Tests pin exact per-step parse counts and verify disabled collection, exclusive
-durations, UTF-8 byte accounting and shared classification lifetime.
+durations, UTF-8 byte accounting and shared classification lifetime. Real Serve
+tests pin the preceding page pass; real-view tests pin each heap sample and peak.
 
 Run `npm run build`, then:
 

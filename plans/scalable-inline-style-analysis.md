@@ -401,10 +401,10 @@ Summary: make the cumulative fixture reproducible, make the benchmark record
 every outcome and where document work goes, restore linked-stylesheet
 coverage, and measure the baseline that the performance targets use.
 
-Code checkpoint: implemented and verified locally in `46510f43`; post-commit
-format, lint and type checks pass under Node 24.19.0. Default-size fixture
-regeneration, reference measurements, the final check and push remain pending
-the supervisor's approval to measure. No new performance reference exists yet.
+Code checkpoint: `46510f43` and `4f8872fa` passed initial verification. The
+supervisor authorized measurements after the feedback fixes and their targeted,
+full unit/browser and committed-code checks. Reference recording and the final
+check/push follow those checks; no new performance reference exists yet.
 
 - [x] In `tests/fixtures/large/inline_styles.tsx`, derive each per-view rule's
       value from a stable hash of the view key instead of the global render
@@ -443,6 +443,28 @@ the supervisor's approval to measure. No new performance reference exists yet.
       and window-straddling records, including benchmark-clock wait-to-stop
       without an invented worker or supervisor end;
       the digest rejection, the scenario filter and state restoration.
+- [x] Discovered: keep tests below the file-size cap by placing outcomes in
+      `tests/large_sample_outcomes.test.ts`, identity/isolation in
+      `tests/large_template_identity.test.ts`, matrix/restoration in
+      `tests/large_scenario_matrix.test.ts`, and interruption in
+      `tests/large_scenario_cancellation.test.ts` instead of growing the baseline file.
+- [x] Discovered: install matrix-wide cancellation, disable Playwright signal
+      exits, abort preparation builds, stop active Serve and skip remaining
+      samples while restoring all setup bytes before exit. Prove both signal phases
+      with child processes and test restoration with an edited final row.
+- [x] Discovered: isolate templates under the OS temporary directory and
+      compare complete generated trees. Inject the heap sampler and pin every
+      completed real view plus a rejection; reuse main's path-count owner.
+      Test real Serve page/component collection including both legacy steps;
+      rename the synthetic nested-scope test to its actual proof.
+- [x] Discovered: define the exact token/provider fallback and update key-file
+      and sample-field summaries before fixing the measurement template digest.
+- [x] Discovered: preserve the previous measurements in
+      `docs/dev/large-fixture-history.md` and link them from the fixture README,
+      leaving room for current tables without changing the template digest.
+- [x] Discovered: register the sampler test's timer through
+      `fixture.beforeRemove()` so dependent cleanup precedes fixture teardown;
+      keep the lifecycle lint in targeted verification.
 - [x] Discovered: update the fixture README, benchmark contract and timing
       contract's Delivery Status for M2 before regenerating fixtures and
       recording the reference. The benchmark contract participates in the

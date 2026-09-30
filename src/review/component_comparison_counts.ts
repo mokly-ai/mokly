@@ -9,11 +9,13 @@ export class ComponentComparisonCounts {
   private completePath = 0;
 
   add(results: readonly ComparedComponentView[]): void {
-    this.views += results.length;
-    for (const result of results) {
-      if (result.comparisonPath === "fast") this.fastPath += 1;
-      else this.completePath += 1;
-    }
+    for (const result of results) this.addPath(result.comparisonPath);
+  }
+
+  addPath(path: ComparedComponentView["comparisonPath"]): void {
+    this.views += 1;
+    if (path === "fast") this.fastPath += 1;
+    else this.completePath += 1;
   }
 
   record(): { views: number; fastPath: number; completePath: number } {

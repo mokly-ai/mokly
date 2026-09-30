@@ -1,6 +1,8 @@
 /** Exclusive synchronous work and heap observations scoped to a comparison loop. */
 import { getHeapStatistics } from "node:v8";
 
+import { ComponentComparisonCounts } from "../review/component_comparison_counts.js";
+
 export type DocumentWorkField =
   | "htmlParseMs"
   | "rangeMs"
@@ -44,12 +46,14 @@ export class DocumentWork {
   };
   private readonly stack: { nested: number }[] = [];
   private heapPeak = 0;
-  private views = 0;
-  private fastPath = 0;
-  private completePath = 0;
+  private readonly paths = new ComponentComparisonCounts();
   private resourceReference = false;
 
-  constructor(private readonly clock: () => number) {}
+  constructor(
+    private readonly clock: () => number,
+    private readonly heapSample: () => number = () =>
+      getHeapStatistics().used_heap_size,
+  ) {}
 
   measure<T>(field: DocumentWorkField, operation: () => T): T {
     const frame = { nested: 0 };
@@ -93,17 +97,13 @@ export class DocumentWork {
   }
 
   comparedView(path: "fast" | "complete"): void {
-    this.views += 1;
-    if (path === "fast") this.fastPath += 1;
-    else this.completePath += 1;
-    this.heapPeak = Math.max(this.heapPeak, getHeapStatistics().used_heap_size);
+    this.paths.addPath(path);
+    this.heapPeak = Math.max(this.heapPeak, this.heapSample());
   }
 
   comparisonCounts(): Readonly<Record<string, number>> {
     return {
-      views: this.views,
-      fastPath: this.fastPath,
-      completePath: this.completePath,
+      ...this.paths.record(),
       heapPeakMiB: round(this.heapPeak / 1024 ** 2),
     };
   }

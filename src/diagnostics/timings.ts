@@ -23,6 +23,7 @@ export interface TimingEvent {
 
 interface TimingSink {
   clock?: () => number;
+  heapSample?: () => number;
   write?: (event: TimingEvent) => void;
 }
 
@@ -32,6 +33,7 @@ interface Session {
   origin: number;
   sequence: number;
   clock: () => number;
+  heapSample?: () => number;
   write: (event: TimingEvent) => void;
 }
 
@@ -58,6 +60,7 @@ export function runWithTimings<T>(
         id: randomUUID(),
         role,
         clock,
+        ...(sink.heapSample ? { heapSample: sink.heapSample } : {}),
         origin: clock(),
         sequence: 0,
         write:
@@ -162,7 +165,10 @@ export async function runWithDocumentWork<T>(
   const context = storage.getStore();
   if (!context) return operation();
   if (context.documentWork) return operation();
-  const documentWork = new DocumentWork(context.session.clock);
+  const documentWork = new DocumentWork(
+    context.session.clock,
+    context.session.heapSample,
+  );
   return storage.run({ ...context, documentWork }, async () => {
     try {
       return await operation();

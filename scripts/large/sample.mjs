@@ -15,7 +15,7 @@ export async function benchmarkSample(
   fixture,
   scenario,
   state,
-  cancelled,
+  cancellation,
 ) {
   const measured = {
     ...scenario,
@@ -35,12 +35,6 @@ export async function benchmarkSample(
   let running;
   let stopRequestedMs;
   let failurePhase = "startup";
-  const forward = () => {
-    cancelled.value = true;
-    if (running) void stop(running).catch(() => {});
-  };
-  process.once("SIGINT", forward);
-  process.once("SIGTERM", forward);
   try {
     page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
     page.on("pageerror", (error) => errors.push(error.message));
@@ -57,6 +51,7 @@ export async function benchmarkSample(
       ],
       fixture.root,
     );
+    cancellation.setActive(running);
     failurePhase = "browser";
     await measureInteractive(page, running, fixture, beginning, measured);
     failurePhase = "delivery";
@@ -84,8 +79,7 @@ export async function benchmarkSample(
       measured.error ??= error.message;
       measured.failurePhase ??= "browser";
     }
-    process.off("SIGINT", forward);
-    process.off("SIGTERM", forward);
+    cancellation.clearActive(running);
   }
   if (fixture.generatedOutput === "derived") {
     try {

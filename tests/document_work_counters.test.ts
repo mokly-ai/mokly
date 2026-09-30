@@ -41,7 +41,7 @@ test("document counters subtract nested local work and retain zero fields, UTF-8
   assert.equal(counts.htmlParseBytes, Buffer.byteLength("<main>é</main>"));
 });
 
-test("background classification shares one collector with its earlier document path and nested component loop", async () => {
+test("nested runWithDocumentWork reuses the outer collector and emits once", async () => {
   const events: TimingEvent[] = [];
   await runWithTimings(
     true,

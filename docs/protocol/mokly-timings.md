@@ -8,7 +8,7 @@ Existing spans are implemented. Approved target of the
 implements heap/document counts and complete sample outcomes;
 [M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse)
 delivers segment counts; [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
-delivers `stylePath`. Segment/style-path counts remain pending; the reference is not measured yet.
+delivers `stylePath`. Segment/style-path counts remain pending; M2 records the reference in the fixture README.
 
 ## Opt-in timings
 
@@ -125,11 +125,10 @@ adds review work to a command or writes artifacts during background classificati
 For aggregate stage time, take the union of each stage's
 `[elapsedMs - durationMs, elapsedMs]` end-record intervals within one session.
 Include every completed interval regardless of `ok`/`error` status.
-For a scale-fixture analysis share, clip those intervals to the enclosing
-background worker's `changes.classify` interval, then divide their union by
-that classification duration, separately for cold and warm runs. The large
-benchmark applies this rule to `review.inline-style-analysis`. Do not use the
-supervisor's wait span, whole startup time, or sums across sessions.
+For a scale-fixture share, clip each union to the background worker's
+`changes.classify` interval and divide by its duration, separately for cold/warm.
+This applies to `review.inline-style-analysis` and `review.css-analysis`. Never
+use supervisor wait, whole startup time or sums across sessions.
 
 ## Historical baseline phases
 
@@ -151,10 +150,11 @@ extraction, command and adoption spans. A waiter can also finish as a cache hit.
 
 ## Representative local fixture
 
-The [fixture README](../../tests/fixtures/large/README.md) describes preparation,
-current dimensions (1,590 entries, 5,550 documents), startup and cache behavior.
+The [fixture README](../../tests/fixtures/large/README.md) describes setup/caching for 1,590 entries and 5,550 documents.
+Samples report startup/Props/preview/Changes times, baseline phases, classification
+inline/CSS shares or incomplete bounds, and available heap/document-work counts.
 The [benchmark contract](../../tests/fixtures/large/benchmark-contract.md)
-owns identity, scenario state and acceptance; CI has no wall-clock assertion.
+owns identity, scenarios and acceptance; CI has no wall-clock assertion.
 
 ## Component Analysis Counts
 

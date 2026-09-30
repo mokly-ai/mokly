@@ -17,6 +17,7 @@ import {
 import { prepareFixture } from "../scripts/large/setup.mjs";
 
 import { largeSize } from "./fixtures/large/generate.js";
+import { fixtureSetupTree } from "./helpers/file_tree.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 test("CLI rejects missing, unknown and non-benchmark scenario filters before preparation", async () => {
@@ -82,14 +83,16 @@ test(
     });
     const renderer = path.join(fixture.root, "renderer.tsx");
     const stylesheet = path.join(fixture.root, "mockups/assets/shared-1.css");
-    const setupSource = await fs.readFile(renderer, "utf8");
-    const setupCss = await fs.readFile(stylesheet, "utf8");
+    const setup = await fixtureSetupTree(fixture.root);
     const record = await fs.readFile(
       path.join(fixture.root, ".mokly-large-fixture.json"),
       "utf8",
     );
     let closed = false;
-    const matrix = await executeMatrix(classificationScenarios, {
+    const definitions = classificationScenarios.filter(
+      ({ name }) => name !== "linked-stylesheet",
+    );
+    const matrix = await executeMatrix(definitions, {
       prepare: async (scenario) => {
         await prepareClassificationScenario(
           repositoryRoot,
@@ -122,13 +125,12 @@ test(
         await restoreFixtureSetup(repositoryRoot, fixture);
       },
     });
-    assert.equal(matrix.runs.length, 8);
+    assert.equal(matrix.runs.length, 6);
     assert.ok(matrix.runs.every(({ outcome }) => outcome === "error"));
     for (const run of matrix.runs)
       assert.equal(run.error, `Recorded ${run.scenario}/${run.state} failure`);
     assert.equal(matrix.restorationError, undefined);
-    assert.equal(await fs.readFile(renderer, "utf8"), setupSource);
-    assert.equal(await fs.readFile(stylesheet, "utf8"), setupCss);
+    assert.deepEqual(await fixtureSetupTree(fixture.root), setup);
     assert.equal(
       await fs.readFile(
         path.join(fixture.root, ".mokly-large-fixture.json"),

@@ -6,6 +6,7 @@ import { chromium } from "@playwright/test";
 import { loadConfig } from "../../dist/config/load.js";
 
 import { resetFixtureBaseline } from "./baseline.mjs";
+import { BenchmarkCancellation } from "./cancellation.mjs";
 import { executeMatrix } from "./matrix.mjs";
 import { benchmarkSample } from "./sample.mjs";
 import {
@@ -19,13 +20,24 @@ export async function benchmark(
   fixture,
   definitions = classificationScenarios,
 ) {
+  const cancellation = new BenchmarkCancellation();
+  try {
+    return await runBenchmark(repository, fixture, definitions, cancellation);
+  } finally {
+    cancellation.dispose();
+  }
+}
+
+async function runBenchmark(repository, fixture, definitions, cancellation) {
   const config = await loadConfig(fixture.root, fixture.configPath);
   let browser;
   let browserError;
-  const cancelled = { value: false };
   try {
     browser = await chromium.launch({
       channel: process.env.PLAYWRIGHT_CHANNEL ?? "chrome",
+      handleSIGINT: false,
+      handleSIGTERM: false,
+      handleSIGHUP: false,
     });
   } catch (error) {
     browserError = error;
@@ -35,36 +47,45 @@ export async function benchmark(
     {
       prepare: async (scenario) => {
         if (browserError) throw browserError;
-        if (cancelled.value) throw new Error("Benchmark interrupted");
-        await prepareClassificationScenario(repository, fixture, scenario.name);
+        await prepareClassificationScenario(
+          repository,
+          fixture,
+          scenario.name,
+          cancellation.signal,
+        );
         if (config.generatedOutput === "derived")
           await resetFixtureBaseline(config);
       },
       sample: (scenario, state) => {
-        if (cancelled.value) throw new Error("Benchmark interrupted");
         return benchmarkSample(
           browser,
           repository,
           fixture,
           scenario,
           state,
-          cancelled,
+          cancellation,
         );
       },
       close: () => browser?.close(),
       restore: () => restoreFixtureSetup(repository, fixture),
+      cancelled: () => cancellation.signal.aborted,
     },
     fixture,
   );
   const result = {
     ...fixture,
     ...matrix,
-    classificationComplete: matrix.runs.every((run) => run.outcome === "ok"),
+    classificationComplete:
+      !cancellation.signal.aborted &&
+      matrix.runs.every((run) => run.outcome === "ok"),
+    ...(cancellation.signal.aborted ? { cancelled: true } : {}),
     generatedOutput: config.generatedOutput,
     machine: machineDetails(),
-    targetHeld: matrix.runs.every(
-      (run) => Number.isFinite(run.usableMs) && run.usableMs < 5000,
-    ),
+    targetHeld:
+      !cancellation.signal.aborted &&
+      matrix.runs.every(
+        (run) => Number.isFinite(run.usableMs) && run.usableMs < 5000,
+      ),
   };
   process.stdout.write(`Benchmark ${JSON.stringify(result)}\n`);
   const failures = matrix.runs.flatMap((run) => [
@@ -81,6 +102,7 @@ export async function benchmark(
   ]);
   if (matrix.restorationError)
     failures.push(`Fixture restoration failed: ${matrix.restorationError}`);
+  if (cancellation.signal.aborted) failures.push("Benchmark interrupted");
   if (failures.length)
     throw new Error(`Benchmark failed:\n${failures.join("\n")}`);
   return result;

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
@@ -13,15 +14,13 @@ import {
 } from "../scripts/large/identity.mjs";
 import { prepareFixture, preparedFixture } from "../scripts/large/setup.mjs";
 
-import {
-  type generateLargeFixture,
-  largeSize,
-} from "./fixtures/large/generate.js";
+import { generateLargeFixture, largeSize } from "./fixtures/large/generate.js";
+import { fileTree } from "./helpers/file_tree.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 test("either renderer generates from a standalone copy of only the fixture templates", async (testContext) => {
   const directory = await fs.mkdtemp(
-    path.join(repositoryRoot, ".context/template-only-"),
+    path.join(os.tmpdir(), "mokly-template-only-"),
   );
   testContext.after(() => fs.rm(directory, { recursive: true, force: true }));
   const templates = path.join(directory, "templates");
@@ -40,6 +39,18 @@ test("either renderer generates from a standalone copy of only the fixture templ
       rows: 1,
       inlineStyles,
     });
+    const original = path.join(
+      directory,
+      inlineStyles ? "original-cumulative" : "original-default",
+    );
+    await fs.mkdir(original);
+    await generateLargeFixture(original, {
+      areas: 1,
+      screens: 2,
+      rows: 1,
+      inlineStyles,
+    });
+    assert.deepEqual(await fileTree(root), await fileTree(original));
     assert.equal(
       await fs.readFile(path.join(root, "theme.ts"), "utf8"),
       await fs.readFile(path.join(templates, "theme.ts"), "utf8"),

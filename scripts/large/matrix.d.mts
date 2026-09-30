@@ -15,6 +15,7 @@ export function executeMatrix(
     ): Promise<MatrixSample>;
     close(): Promise<void> | undefined;
     restore(): Promise<void>;
+    cancelled?(): boolean;
   },
   identity?: Record<string, unknown>,
 ): Promise<{ runs: MatrixSample[]; restorationError?: string }>;

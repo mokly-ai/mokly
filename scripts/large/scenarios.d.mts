@@ -18,4 +18,5 @@ export function prepareClassificationScenario(
   repository: string,
   fixture: { configPath: string; root: string },
   scenario: ClassificationScenario["name"],
+  signal?: AbortSignal,
 ): Promise<ClassificationScenario>;

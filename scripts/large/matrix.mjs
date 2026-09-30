@@ -6,6 +6,7 @@ export async function executeMatrix(definitions, operations, identity = {}) {
   let restorationError;
   try {
     for (const scenario of definitions) {
+      if (operations.cancelled?.()) break;
       let preparationError;
       try {
         await operations.prepare(scenario);
@@ -13,6 +14,7 @@ export async function executeMatrix(definitions, operations, identity = {}) {
         preparationError = error.message;
       }
       for (const state of ["cold", "warm"]) {
+        if (operations.cancelled?.()) break;
         let result;
         try {
           if (preparationError) throw new Error(preparationError);

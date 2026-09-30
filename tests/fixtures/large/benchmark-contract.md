@@ -4,8 +4,8 @@
 
 Approved target of the [scalable analysis plan](../../../plans/scalable-inline-style-analysis.md),
 Milestone 2 delivers template identity, stable values, the four-scenario matrix,
-filtering, restoration and report provenance; its reference measurements await
-the supervisor's code check and approval to measure.
+filtering, restoration and report provenance; its reference measurements are
+recorded separately in the fixture README during Milestone 2.
 Milestone 10 applies the acceptance procedure below and removes pending
 schedules. Timing fields and their delivery are owned by
 [timings](../../../docs/protocol/mokly-timings.md); setup, dimensions, cache
@@ -63,8 +63,10 @@ Only README reporting edits are excluded from the digest; other template-tree
 edits require preparation again. A changed Mokly commit or dirty flag alone
 is not a template mismatch.
 
-Per-view atomic values use SHA-256 of the UTF-8 JSON tuple `[area, token]`,
-where `token` is the stable rendered-view key, never the registration index.
+The renderer supplies `token = JSON.stringify([entry.id, viewport, colorScheme])`.
+Every Action in a view shares that rule; renders without the provider use
+the fallback token `"interactive"`. Per-view atomic values use SHA-256 of
+UTF-8 `JSON.stringify([area, token])`, never a registration index.
 Derive `zIndex` as `1000 + (first unsigned big-endian 32 bits % 1000000)`.
 Class names therefore depend on values only. Adding an entry can add unused
 rules to later cumulative sheets; it cannot change any existing view's own
@@ -105,7 +107,16 @@ Git baseline, identity record or archived toolchain. Restore even after failed
 samples, browser errors or cancellation; stop owned servers/browser first.
 A restoration error fails the command without discarding recorded samples.
 
-Record every requested sample, continue the matrix after bounded failures,
+One SIGINT/SIGTERM handler covers the whole matrix, including preparation.
+Disable Playwright's SIGINT/SIGTERM/SIGHUP handlers; interruption marks
+cancellation, aborts the active preparation `execFile` through its AbortSignal
+and stops the active Serve. Skip remaining rows/states, close Chrome and rebuild
+setup in `finally` before nonzero exit. Restoration itself is not aborted.
+The final report carries `cancelled: true` and retains started samples only;
+never invent records for skipped samples. Child-process tests interrupt both
+preparation and sampling and compare every setup source/output byte.
+
+Record every requested sample unless cancelled, continue after bounded failures,
 and write the full report before returning nonzero. The exact `ok`, `error`,
 `incomplete`, `membership-mismatch` fields, clocks, rounding and interval unions
 are owned by [sample outcomes](../../../docs/protocol/mokly-timings.md#benchmark-sample-outcomes).

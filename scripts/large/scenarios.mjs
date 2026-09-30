@@ -48,6 +48,7 @@ export async function prepareClassificationScenario(
   repository,
   fixture,
   scenario,
+  signal,
 ) {
   const selected = classificationScenarios.find(
     ({ name }) => name === scenario,
@@ -82,7 +83,7 @@ export async function prepareClassificationScenario(
       "--config",
       fixture.configPath,
     ],
-    { cwd: fixture.root, maxBuffer: 16 * 1024 * 1024 },
+    { cwd: fixture.root, maxBuffer: 16 * 1024 * 1024, signal },
   );
   return selected;
 }
