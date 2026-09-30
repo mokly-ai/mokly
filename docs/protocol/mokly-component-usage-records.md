@@ -143,3 +143,5 @@ Missing options, positional booleans/root ids, unknown keys, non-booleans and
 extra arguments fail with `ComponentValidationError` before record mutation.
 Historical retirement validates a plain view object before inspecting keys;
 a null view fails with the same typed plain-object diagnostic as current usage.
+If a retired key cannot be removed, validation fails rather than admitting a
+record that still carries it.

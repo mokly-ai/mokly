@@ -129,3 +129,21 @@ test("only explicit historical options retire arrays without changing current va
   });
   assert.deepEqual(views, emptyViews());
 });
+
+for (const field of ["styles", "resources"])
+  test(`historical view validation rejects an unremovable ${field} key`, () => {
+    const views = emptyViews();
+    Object.defineProperty(views[0]!, field, {
+      value: [],
+      enumerable: true,
+      configurable: false,
+    });
+    assert.throws(
+      () =>
+        validateComponentViews(views, new Map(), "entry", {
+          dark: false,
+          historical: true,
+        }),
+      ComponentValidationError,
+    );
+  });

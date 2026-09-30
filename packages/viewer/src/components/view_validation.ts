@@ -68,7 +68,8 @@ export function validateComponentViews(
         if (Object.hasOwn(record, key)) {
           if (!Array.isArray(record[key]))
             invalidData(at, `historical ${key} must be an array`);
-          Reflect.deleteProperty(record, key);
+          if (!Reflect.deleteProperty(record, key))
+            invalidData(at, `historical ${key} must be removable`);
         }
     if (`${String(view.viewport)}/${String(view.colorScheme)}` !== axes[i])
       invalidData(at, "view axes must be unique and ordered");
