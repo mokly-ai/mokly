@@ -117,6 +117,9 @@ user approved option A for all four, resolved in `c482bd0`.
    followed by a comment and then whitespace before PostCSS erases the
    comment. The diagnostic names the authored file and location.
 
+   Extended in `5ae34be`: the check now also reads escapes in the scoped
+   output the way browsers do (Milestone 29 finding 1).
+
 3. **Low — three wrapper spellings now fail Build although the plugins' output
    means what the docs say.**
    - Cases:

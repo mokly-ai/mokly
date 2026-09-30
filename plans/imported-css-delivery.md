@@ -29,7 +29,7 @@ approved findings in the
 [Milestone 25 review record](../docs/reviews/imported-css-delivery-milestone-25.md).
 Milestone 28 (`c482bd0`) resolves the four approved findings in the
 [Milestone 27 review record](../docs/reviews/imported-css-delivery-milestone-27.md);
-other open findings remain unchanged. Milestone 30 addresses the three
+other open findings remain unchanged. Milestone 30 (`5ae34be`) resolves the three
 approved findings in the
 [Milestone 29 review record](../docs/reviews/imported-css-delivery-milestone-29.md).
 Imported CSS, CSS Modules, binary assets and
@@ -915,7 +915,7 @@ that preserve selector meaning, and cover the missing scanner boundaries.
 
 ## Milestone 31: Commit, push, and review
 
-- [ ] Commit and push the approved fixes and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Commit and push the approved fixes and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
 - [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review.
 
 ## Post-merge follow-up (non-blocking)

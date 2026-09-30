@@ -32,7 +32,8 @@ The fix works for the cases it targeted:
   escape error never fires, and performance is unchanged.
 
 The three findings below were reproduced in scratch copies. The parent session
-confirmed finding 1 in Chrome. All three remain open for the user's decision.
+confirmed finding 1 in Chrome. The user approved option A for all three;
+they were resolved in `5ae34be`.
 
 ## Findings
 
@@ -87,6 +88,13 @@ confirmed finding 1 in Chrome. All three remain open for the user's decision.
      closes today's cases and any future plugin output that puts whitespace
      after an escape, without new false rejections. B is a reasonable
      stopgap. C covers only today's cases.
+
+   Resolved in `5ae34be`: parser-produced and inserted whitespace
+   combinators now require unconsumed CSS whitespace on both the authored
+   and scoped sides. The reviewed wrong accepts fail Build; two-space and
+   uppercase-escape controls still build. A 600-case seeded Chrome fuzz pins
+   the plugin-output comparison.
+
 2. **Low — the escape error's advice can change the selector's meaning, and
    the guide note breaks its paragraph.**
    - What happens: the message, the error catalogue and the Styles guide say
@@ -114,6 +122,12 @@ confirmed finding 1 in Chrome. All three remain open for the user's decision.
    - Recommended: A. A test that checks the advice keeps the meaning is the
      lasting guard, because the current advice was verified only on
      single-whitespace examples.
+
+   Resolved in `5ae34be`: the error and guide now prescribe a short escape,
+   exactly one ending space, then the intended spacing or comment. A
+   mechanical-edit test checks 42 rule and `@scope` cases against Chrome,
+   and the guide keeps the list example with its follow-up explanation.
+
 3. **Low — several new scanner and error rules are untested.**
    - Mutation testing broke one rule at a time across the 345 focused CSS
      Modules tests and the oracle. No test caught these four:
@@ -136,3 +150,8 @@ confirmed finding 1 in Chrome. All three remain open for the user's decision.
      for these files; B) add the tests only; C) leave as is.
    - Recommended: A. This is the second milestone in which mutation testing
      found untested whitespace logic in these files.
+
+   Resolved in `5ae34be`: tests cover escaped quotes, actual U+00A0, and a
+   comment after intervening selector text. The two dead inline whitespace
+   checks are removed, and the build README names a test for each scanner,
+   guard, tail, combinator and join rule.
