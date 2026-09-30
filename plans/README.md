@@ -33,6 +33,7 @@
   findings 2–4 remain open. Milestone 34 (`583af0a9`) resolves only finding 2 in the
   [Milestone 33 review](../docs/reviews/imported-css-delivery-milestone-33.md);
   findings 1 and 3 remain open.
+  Milestone 36 is merging latest `origin/main` before the PR.
   Move this plan to Completed when its
   implementation PR merges.
 - [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
