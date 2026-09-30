@@ -10,8 +10,12 @@ import type { ResolvedConfig } from "../config/types.js";
 
 /** Virtual module name for the complete consumer-owned build graph. */
 export const CONSUMER_ENTRY_PATH = "mokly:consumer-entry";
+/** Esbuild namespace for the complete Node consumer graph entry. */
+export const CONSUMER_ENTRY_NAMESPACE = "mokly-entry";
 /** Virtual module name for definitions and the optional Live renderer. */
 export const INTERACTIVE_CONSUMER_PATH = "mokly:interactive-consumer";
+/** Esbuild namespace for the browser consumer graph entry. */
+export const INTERACTIVE_CONSUMER_NAMESPACE = "mokly-interactive-entry";
 
 /** Load every registry entry, renderer, and document transformer. */
 export function consumerEntryPlugin(
@@ -22,14 +26,17 @@ export function consumerEntryPlugin(
     name: "mokly-consumer-entry",
     setup(pluginBuild: PluginBuild): void {
       pluginBuild.onResolve({ filter: /^mokly:consumer-entry$/ }, () => ({
-        namespace: "mokly-entry",
+        namespace: CONSUMER_ENTRY_NAMESPACE,
         path: CONSUMER_ENTRY_PATH,
       }));
-      pluginBuild.onLoad({ filter: /.*/, namespace: "mokly-entry" }, () => ({
-        contents: virtualEntryContents(config, entries),
-        loader: "ts",
-        resolveDir: path.dirname(config.configPath),
-      }));
+      pluginBuild.onLoad(
+        { filter: /.*/, namespace: CONSUMER_ENTRY_NAMESPACE },
+        () => ({
+          contents: virtualEntryContents(config, entries),
+          loader: "ts",
+          resolveDir: path.dirname(config.configPath),
+        }),
+      );
     },
   };
 }
@@ -43,11 +50,11 @@ export function interactiveConsumerPlugin(
     name: "mokly-interactive-consumer",
     setup(pluginBuild: PluginBuild): void {
       pluginBuild.onResolve({ filter: /^mokly:interactive-consumer$/ }, () => ({
-        namespace: "mokly-interactive-entry",
+        namespace: INTERACTIVE_CONSUMER_NAMESPACE,
         path: INTERACTIVE_CONSUMER_PATH,
       }));
       pluginBuild.onLoad(
-        { filter: /.*/, namespace: "mokly-interactive-entry" },
+        { filter: /.*/, namespace: INTERACTIVE_CONSUMER_NAMESPACE },
         () => ({
           contents: interactiveEntryContents(config, entries),
           loader: "ts",

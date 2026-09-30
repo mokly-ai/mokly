@@ -35,6 +35,9 @@ test("a missing captured module fails Live while Static stays available", async 
     files: runtime.interactiveSources.files.filter(
       (file) => !file.paths.includes("entries/value.ts"),
     ),
+    resolutions: runtime.interactiveSources.resolutions.filter(
+      (resolution) => resolution.target !== "entries/value.ts",
+    ),
   };
   const diagnostics: unknown[] = [];
   const server = await startCatalogueServer(runtime.config, {

@@ -16,7 +16,17 @@ import {
   type InteractiveSourceCapture,
   type InteractiveSourceFile,
 } from "../build/interactive_source_capture.js";
-import { isGraphRuntimePath } from "../build/source_inventory.js";
+import {
+  interactiveSourceResolutionKey,
+  interactiveSourceResolutionRequest,
+  repositoryInteractiveSourceImporter,
+  type InteractiveSourceResolution,
+  virtualInteractiveSourceImporter,
+} from "../build/interactive_source_resolution.js";
+import {
+  graphSourceLocation,
+  isGraphRuntimePath,
+} from "../build/source_inventory.js";
 import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 
@@ -42,6 +52,7 @@ export function interactiveSourceResolver(
 
 class CapturedSourceResolver {
   readonly byPath = new Map<string, InteractiveSourceFile>();
+  readonly byResolution = new Map<string, InteractiveSourceResolution>();
   failure: InteractiveBundleError | undefined;
 
   constructor(
@@ -50,6 +61,11 @@ class CapturedSourceResolver {
   ) {
     for (const file of capture.files)
       for (const sourcePath of file.paths) this.byPath.set(sourcePath, file);
+    for (const resolution of capture.resolutions)
+      this.byResolution.set(
+        interactiveSourceResolutionKey(resolution),
+        resolution,
+      );
   }
 
   plugin(): Plugin {
@@ -59,10 +75,16 @@ class CapturedSourceResolver {
       setup: (pluginBuild) => {
         pluginBuild.onResolve({ filter: /.*/ }, async (arguments_) => {
           if (arguments_.pluginData === skipResolution) return;
+          const recorded = this.recordedResolution(arguments_);
+          if (recorded) return this.resolveRecorded(recorded, arguments_);
           const direct = this.repositoryRequest(arguments_);
-          if (direct) return this.resolveRepository(direct, arguments_);
+          if (direct) return this.resolveCapturedPath(direct, arguments_);
           if (arguments_.namespace !== CAPTURED_SOURCE_NAMESPACE) return;
-          return this.resolveBare(pluginBuild, arguments_, skipResolution);
+          return this.classifyUnrecorded(
+            pluginBuild,
+            arguments_,
+            skipResolution,
+          );
         });
         pluginBuild.onLoad(
           { filter: /.*/, namespace: CAPTURED_SOURCE_NAMESPACE },
@@ -72,13 +94,55 @@ class CapturedSourceResolver {
     };
   }
 
-  private repositoryRequest(arguments_: OnResolveArgs): string | undefined {
-    const candidate = absoluteRequest(arguments_);
-    if (!candidate || !this.repositoryPath(candidate)) return;
-    return this.relative(candidate);
+  private recordedResolution(
+    arguments_: OnResolveArgs,
+  ): InteractiveSourceResolution | undefined {
+    const importer =
+      virtualInteractiveSourceImporter(arguments_) ??
+      (arguments_.namespace === CAPTURED_SOURCE_NAMESPACE &&
+      path.isAbsolute(arguments_.importer)
+        ? repositoryInteractiveSourceImporter(
+            this.relative(arguments_.importer),
+          )
+        : undefined);
+    if (!importer) return;
+    return this.byResolution.get(
+      interactiveSourceResolutionKey(
+        interactiveSourceResolutionRequest(arguments_, importer),
+      ),
+    );
   }
 
-  private resolveRepository(
+  private repositoryRequest(arguments_: OnResolveArgs): string | undefined {
+    const candidate = absoluteRequest(arguments_);
+    if (
+      !candidate ||
+      !isInside(this.config.repoRoot, candidate) ||
+      isGraphRuntimePath(candidate)
+    )
+      return;
+    const sourcePath = this.relative(candidate);
+    if (
+      this.byPath.has(sourcePath) ||
+      arguments_.namespace === CAPTURED_SOURCE_NAMESPACE ||
+      virtualInteractiveSourceImporter(arguments_)
+    )
+      return sourcePath;
+  }
+
+  private resolveRecorded(
+    resolution: InteractiveSourceResolution,
+    arguments_: OnResolveArgs,
+  ): OnResolveResult {
+    if (!this.byPath.has(resolution.target))
+      return this.missing(resolution.target, arguments_.importer);
+    return {
+      namespace: CAPTURED_SOURCE_NAMESPACE,
+      path: path.resolve(this.config.repoRoot, resolution.target),
+    };
+  }
+
+  private resolveCapturedPath(
     sourcePath: string,
     arguments_: OnResolveArgs,
   ): OnResolveResult {
@@ -93,7 +157,7 @@ class CapturedSourceResolver {
     };
   }
 
-  private async resolveBare(
+  private async classifyUnrecorded(
     pluginBuild: PluginBuild,
     arguments_: OnResolveArgs,
     skipResolution: object,
@@ -104,11 +168,13 @@ class CapturedSourceResolver {
       namespace: "file",
       pluginData: skipResolution,
       resolveDir: arguments_.resolveDir,
+      with: arguments_.with,
     });
     if (!resolved.path || resolved.external || resolved.errors.length > 0)
       return resolved;
-    if (!this.repositoryPath(resolved.path)) return resolved;
-    return this.resolveRepository(this.relative(resolved.path), arguments_);
+    const location = graphSourceLocation(resolved.path, this.config.repoRoot);
+    if (!location) return resolved;
+    return this.missing(location.relativePath, arguments_.importer);
   }
 
   private load(candidate: string) {
@@ -145,14 +211,6 @@ class CapturedSourceResolver {
 
   private relative(candidate: string): string {
     return toPosixPath(path.relative(this.config.repoRoot, candidate));
-  }
-
-  private repositoryPath(candidate: string): boolean {
-    if (!isInside(this.config.repoRoot, candidate)) return false;
-    if (isGraphRuntimePath(candidate)) return false;
-    const relative = this.relative(candidate);
-    if (this.byPath.has(relative)) return true;
-    return !relative.split("/").includes("node_modules");
   }
 }
 

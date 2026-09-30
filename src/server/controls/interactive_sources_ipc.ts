@@ -6,6 +6,21 @@ import type {
   InteractiveSourceCapture,
   InteractiveSourceFile,
 } from "../../build/interactive_source_capture.js";
+import {
+  INTERACTIVE_SOURCE_ATTRIBUTE_KEY_LIMIT,
+  INTERACTIVE_SOURCE_ATTRIBUTE_LIMIT,
+  INTERACTIVE_SOURCE_ATTRIBUTE_VALUE_LIMIT,
+  INTERACTIVE_SOURCE_RESOLUTION_LIMIT,
+  interactiveSourceResolutionKey,
+  isInteractiveSourceResolutionKind,
+  repositoryInteractiveSourceImporter,
+  type InteractiveSourceImportAttribute,
+  type InteractiveSourceImporter,
+  type InteractiveSourceResolution,
+  validInteractiveSourceResolutionRequest,
+  validInteractiveSourceResolutionSet,
+  validInteractiveSourceText,
+} from "../../build/interactive_source_resolution.js";
 
 /** JSON-safe transient projection sent with a watched runtime. */
 export interface InteractiveSourceCaptureMessage {
@@ -13,6 +28,7 @@ export interface InteractiveSourceCaptureMessage {
     readonly bytes: string;
     readonly paths: readonly string[];
   }[];
+  readonly resolutions: readonly InteractiveSourceResolution[];
 }
 
 /** Encode one accepted source capture as canonical padded base64. */
@@ -28,6 +44,7 @@ export function interactiveSourceCaptureMessage(
       ).toString("base64"),
       paths: file.paths,
     })),
+    resolutions: capture.resolutions,
   };
 }
 
@@ -36,7 +53,11 @@ export function readInteractiveSourceCapture(
   value: unknown,
   retained?: InteractiveSourceCapture,
 ): InteractiveSourceCapture | undefined {
-  if (!recordWithKeys(value, ["files"]) || !Array.isArray(value["files"]))
+  if (
+    !recordWithKeys(value, ["files", "resolutions"]) ||
+    !Array.isArray(value["files"]) ||
+    !Array.isArray(value["resolutions"])
+  )
     return;
   if (value["files"].length === 0) return;
   const seen = new Set<string>();
@@ -71,13 +92,19 @@ export function readInteractiveSourceCapture(
     if (bytes.toString("base64") !== candidate["bytes"]) return;
     files.push(Object.freeze({ bytes, paths: Object.freeze(paths) }));
   }
-  if (retained && sameCapture(retained, files)) return retained;
-  return Object.freeze({ files: Object.freeze(files) });
+  const resolutions = readResolutions(value["resolutions"], seen);
+  if (!resolutions) return;
+  if (retained && sameCapture(retained, files, resolutions)) return retained;
+  return Object.freeze({
+    files: Object.freeze(files),
+    resolutions: Object.freeze(resolutions),
+  });
 }
 
 function sameCapture(
   retained: InteractiveSourceCapture,
   decoded: readonly InteractiveSourceFile[],
+  resolutions: readonly InteractiveSourceResolution[],
 ): boolean {
   return (
     retained.files.length === decoded.length &&
@@ -94,8 +121,117 @@ function sameCapture(
           file.bytes.byteLength,
         ).equals(candidate.bytes)
       );
+    }) &&
+    retained.resolutions.length === resolutions.length &&
+    retained.resolutions.every((resolution, index) => {
+      const candidate = resolutions[index]!;
+      return (
+        interactiveSourceResolutionKey(resolution) ===
+          interactiveSourceResolutionKey(candidate) &&
+        resolution.target === candidate.target
+      );
     })
   );
+}
+
+function readResolutions(
+  values: readonly unknown[],
+  capturedPaths: ReadonlySet<string>,
+): InteractiveSourceResolution[] | undefined {
+  if (values.length > INTERACTIVE_SOURCE_RESOLUTION_LIMIT) return;
+  const resolutions: InteractiveSourceResolution[] = [];
+  let previousKey: string | undefined;
+  for (const value of values) {
+    const resolution = readResolution(value, capturedPaths);
+    if (!resolution) return;
+    const key = interactiveSourceResolutionKey(resolution);
+    if (previousKey !== undefined && key <= previousKey) return;
+    previousKey = key;
+    resolutions.push(resolution);
+  }
+  return validInteractiveSourceResolutionSet(resolutions)
+    ? resolutions
+    : undefined;
+}
+
+function readResolution(
+  value: unknown,
+  capturedPaths: ReadonlySet<string>,
+): InteractiveSourceResolution | undefined {
+  if (
+    !recordWithKeys(value, [
+      "attributes",
+      "importer",
+      "kind",
+      "specifier",
+      "target",
+    ]) ||
+    !Array.isArray(value["attributes"]) ||
+    value["attributes"].length > INTERACTIVE_SOURCE_ATTRIBUTE_LIMIT ||
+    typeof value["kind"] !== "string" ||
+    !isInteractiveSourceResolutionKind(value["kind"]) ||
+    typeof value["specifier"] !== "string" ||
+    typeof value["target"] !== "string" ||
+    !isSafeRepositoryPath(value["target"]) ||
+    !capturedPaths.has(value["target"])
+  )
+    return;
+  const importer = readImporter(value["importer"]);
+  const attributes = readAttributes(value["attributes"]);
+  if (!importer || !attributes) return;
+  const resolution = Object.freeze({
+    attributes: Object.freeze(attributes),
+    importer,
+    kind: value["kind"],
+    specifier: value["specifier"],
+    target: value["target"],
+  });
+  return validInteractiveSourceResolutionRequest(resolution)
+    ? resolution
+    : undefined;
+}
+
+function readImporter(value: unknown): InteractiveSourceImporter | undefined {
+  if (
+    !recordWithKeys(value, ["type"]) &&
+    !recordWithKeys(value, ["path", "type"])
+  )
+    return;
+  if (value["type"] === "entry" && !Object.hasOwn(value, "path"))
+    return Object.freeze({ type: "entry" });
+  if (value["type"] !== "repository" || typeof value["path"] !== "string")
+    return;
+  return repositoryInteractiveSourceImporter(value["path"]);
+}
+
+function readAttributes(
+  values: readonly unknown[],
+): InteractiveSourceImportAttribute[] | undefined {
+  const attributes: InteractiveSourceImportAttribute[] = [];
+  let previousKey: string | undefined;
+  for (const value of values) {
+    if (
+      !recordWithKeys(value, ["key", "value"]) ||
+      typeof value["key"] !== "string" ||
+      typeof value["value"] !== "string" ||
+      !validInteractiveSourceText(
+        value["key"],
+        INTERACTIVE_SOURCE_ATTRIBUTE_KEY_LIMIT,
+      ) ||
+      !validInteractiveSourceText(
+        value["value"],
+        INTERACTIVE_SOURCE_ATTRIBUTE_VALUE_LIMIT,
+        true,
+      ) ||
+      (previousKey !== undefined && value["key"] <= previousKey)
+    )
+      return;
+    previousKey = value["key"];
+    attributes.push(
+      Object.freeze({ key: value["key"], value: value["value"] }),
+    );
+  }
+  return attributes;
 }
 
 function recordWithKeys(

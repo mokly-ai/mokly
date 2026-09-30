@@ -15,6 +15,7 @@ import { GenerationInteractiveBundles } from "../dist/interactive/bundle_state.j
 const config = {} as ResolvedConfig;
 const sources: InteractiveSourceCapture = {
   files: [{ bytes: Buffer.from("source"), paths: ["entries/source.ts"] }],
+  resolutions: [],
 };
 
 test("evicting an in-flight cached compiler aborts its signal", async () => {

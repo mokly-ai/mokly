@@ -102,6 +102,7 @@ export const mockups = [defineScreen({
       signal: new AbortController().signal,
       sources: {
         files: [{ bytes, paths: ["entries/peer.mockup.tsx"] }],
+        resolutions: [],
       },
     }),
     (error: Error & { code?: string }) => {

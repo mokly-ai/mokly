@@ -42,9 +42,11 @@ ids; malformed or foreign ids return 404. Every response is `no-store` and
 
 Watched Serve transfers the accepted configuration, live catalogue index and bundle
 over private IPC before readiness. A Serve-mode Live runtime also carries its
-accepted repository source capture as strictly sorted, canonical padded base64;
-the child validates its exact envelope and reuses an identical decoded capture
-on later runtime messages. No rendered HTML or full manifest file is sent.
+accepted repository source capture as strictly sorted, canonical padded base64
+plus a bounded request-to-target resolution record. The child validates the
+exact envelope, safe paths, known resolution kinds, field bounds, ordering, and
+that every target belongs to a captured blob, then reuses an identical decoded
+capture on later runtime messages. No rendered HTML or full manifest file is sent.
 The child validates metadata and source freshness and binds with controls enabled.
 It requires the already-resolved `publicExclude` array and uses the shared
 config validator to adopt a frozen copy without prepending defaults again.

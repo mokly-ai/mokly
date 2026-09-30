@@ -17,6 +17,16 @@ import { isSafeRepositoryPath } from "@mokly/viewer/data";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
+import {
+  interactiveSourceResolutionKey,
+  interactiveSourceResolutionRequest,
+  repositoryInteractiveSourceImporter,
+  type InteractiveSourceResolution,
+  type InteractiveSourceResolutionRequest,
+  validInteractiveSourceResolutionRequest,
+  validInteractiveSourceResolutionSet,
+  virtualInteractiveSourceImporter,
+} from "./interactive_source_resolution.js";
 import { graphSourceLocation } from "./source_inventory.js";
 
 /** One immutable byte blob and every repository path that resolves to it. */
@@ -28,6 +38,7 @@ export interface InteractiveSourceFile {
 /** Decoded source capture retained with one accepted runtime. */
 export interface InteractiveSourceCapture {
   readonly files: readonly InteractiveSourceFile[];
+  readonly resolutions: readonly InteractiveSourceResolution[];
 }
 
 /** Candidate capture sealed only after the graph is accepted. */
@@ -66,6 +77,7 @@ export function interactiveSourceCapture(config: ResolvedConfig): {
 class SourceCapture implements InteractiveSourceCaptureCandidate {
   private readonly aliases = new Map<string, string>();
   private readonly files = new Map<string, MutableSourceFile>();
+  private readonly resolutions = new Map<string, InteractiveSourceResolution>();
   private sealed: InteractiveSourceCapture | undefined;
 
   constructor(private readonly config: ResolvedConfig) {}
@@ -106,9 +118,21 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
         }),
       )
       .sort((left, right) => compareText(left.paths[0]!, right.paths[0]!));
-    this.sealed = Object.freeze({ files: Object.freeze(files) });
+    const resolutions = [...this.resolutions.entries()]
+      .sort(([left], [right]) => compareText(left, right))
+      .map(([, resolution]) => resolution);
+    if (!validInteractiveSourceResolutionSet(resolutions))
+      throw new MoklyError(
+        "build-invalid",
+        "repository resolution record exceeds Live capture bounds",
+      );
+    this.sealed = Object.freeze({
+      files: Object.freeze(files),
+      resolutions: Object.freeze(resolutions),
+    });
     this.aliases.clear();
     this.files.clear();
+    this.resolutions.clear();
     return this.sealed;
   }
 
@@ -143,16 +167,10 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
       return;
     const target = graphSourceLocation(result.path, this.config.repoRoot);
     if (!target) return;
+    const request = this.resolutionRequest(arguments_);
+    if (!request) return;
     const alias = resolutionAlias(arguments_, this.config.repoRoot);
-    if (!alias) return;
     const key = target.physicalPath;
-    const existing = this.aliases.get(alias);
-    if (existing && existing !== key)
-      throw new MoklyError(
-        "build-invalid",
-        `consumer resolution alias maps to multiple inputs: ${alias}`,
-      );
-    this.aliases.set(alias, key);
     let file = this.files.get(key);
     if (!file) {
       file = {
@@ -161,9 +179,46 @@ class SourceCapture implements InteractiveSourceCaptureCandidate {
       };
       this.files.set(key, file);
     }
-    this.addPath(file, key, alias);
+    if (alias) this.addPath(file, key, alias);
     this.addPath(file, key, target.relativePath);
     this.addPath(file, key, target.physicalRelativePath);
+    this.addResolution(request, target.relativePath);
+  }
+
+  private resolutionRequest(
+    arguments_: OnResolveArgs,
+  ): InteractiveSourceResolutionRequest | undefined {
+    const location = arguments_.importer
+      ? graphSourceLocation(arguments_.importer, this.config.repoRoot)
+      : undefined;
+    const importer =
+      virtualInteractiveSourceImporter(arguments_) ??
+      (location
+        ? repositoryInteractiveSourceImporter(location.relativePath)
+        : undefined);
+    if (!importer) return;
+    const request = interactiveSourceResolutionRequest(arguments_, importer);
+    if (!validInteractiveSourceResolutionRequest(request))
+      throw new MoklyError(
+        "build-invalid",
+        `repository resolution request exceeds Live capture bounds: ${arguments_.path}`,
+      );
+    return request;
+  }
+
+  private addResolution(
+    request: InteractiveSourceResolutionRequest,
+    target: string,
+  ): void {
+    const key = interactiveSourceResolutionKey(request);
+    const existing = this.resolutions.get(key);
+    if (existing && existing.target !== target)
+      throw new MoklyError(
+        "build-invalid",
+        `consumer resolution maps to multiple repository inputs: ${request.specifier}`,
+      );
+    if (existing) return;
+    this.resolutions.set(key, Object.freeze({ ...request, target }));
   }
 
   private addPath(
@@ -198,6 +253,7 @@ async function resolveThroughEsbuild(
     namespace: arguments_.namespace,
     pluginData: skipResolution,
     resolveDir: arguments_.resolveDir,
+    with: arguments_.with,
   });
 }
 

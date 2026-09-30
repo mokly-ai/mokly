@@ -219,7 +219,7 @@ Tags: ui
       ECMA-48 string sequences terminated by U+009C bypass escape stripping and
       path redaction.
 
-## Milestone 7: Pin repository resolution identities
+## Milestone 7: Pin repository resolution identities — completed
 
 Backend. Closes Milestone 6 review finding 1 (option A, chosen by the user):
 the capture records the resolution of relative and absolute imports only, so
@@ -227,7 +227,7 @@ bare, configured-alias and repository-package imports still resolve through
 the file system, and deleting or renaming a source reached that way can fail
 an accepted generation's Live bundle.
 
-- [ ] Update the Generation-pinned repository sources section of
+- [x] Update the Generation-pinned repository sources section of
       `docs/protocol/mokly-interactive-views-serve.md`: the accepted graph
       records how every import that lands on a captured repository file
       resolved, keyed by importer identity, specifier and resolution kind;
@@ -241,16 +241,18 @@ an accepted generation's Live bundle.
       behave, how repository packages linked through `node_modules` are
       classified, and narrow the resolution-metadata limitation to requests
       the accepted graph did not record.
-- [ ] Record resolutions during the accepted graph build, carry them with the
+- [x] Record resolutions during the accepted graph build, carry them with the
       capture through the runtime IPC, and replay them in the browser
       resolver before any file-system resolution.
-- [ ] Tests: after generation G is accepted, delete and rename a source reached
+- [x] Tests: after generation G is accepted, delete and rename a source reached
       through a configured alias and through a repository package, and require
       G's Live bundle to equal its accepted sources; a later accepted
       generation sees the change; an unrecorded repository request fails with
       the typed diagnostic; strict IPC validation of the record; the example
       catalogue's Live bundle is unchanged.
-- [ ] Update `src/interactive/README.md`; run `cargo xtask check`; commit and
+- [x] Refresh the audited transitive `brace-expansion` lockfile entry after a
+      newly published advisory blocked the required repository gate.
+- [x] Update `src/interactive/README.md`; run `cargo xtask check`; commit and
       push.
 
 ## Milestone 8: Separate source failures from delivery failures

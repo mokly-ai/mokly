@@ -40,29 +40,36 @@ warnings without misclassifying ordinary JSX.
 Serve-mode graph preparation installs `build/interactive_source_capture.ts` in
 the Node consumer graph. Its load hook records the exact bytes esbuild receives
 for each repository-owned module or configured-loader input, groups logical and
-physical aliases around one byte blob, and seals the sorted capture only after
-registry and route validation accept the generation. The accepted
-`config.entryModules` and capture travel with `ComponentRuntime`; the watched
-IPC boundary converts the bytes to canonical padded base64 only while sending
-them. Off-mode Serve and exhaustive Build, Check, export, and publication do
-not create or retain this data.
+physical aliases around one byte blob, and records every repository resolution
+by normalized importer, original specifier, esbuild kind, and import attributes.
+The Node and browser virtual entries normalize to one identity; repository
+importers normalize to logical repository-relative paths. Esbuild gives both
+hooks the original configured-alias specifier, before applying the alias, so
+the record maps that request to the accepted target. The capture is sealed only
+after registry and route validation accept the generation. The accepted
+`config.entryModules` and capture travel with `ComponentRuntime`; watched IPC
+validates the bounded, sorted resolution record and converts file bytes to
+canonical padded base64 only while sending them. Off-mode Serve and exhaustive
+Build, Check, export, and publication do not create or retain this data.
 
-`source_resolution.ts` is the browser graph's repository resolver. Absolute
-entries plus relative, extension, index, symlink, and configured alias paths
-must resolve through the capture. A captured namespace load never reads a
-repository source from disk, and a missing path becomes
-`InteractiveBundleError` with reason `source-not-captured`. This is what lets a
-generation's first Live request succeed after the accepted source is edited,
-deleted, renamed, or made syntactically invalid. Bare installed packages,
-Mokly's runtime, and consumer React peers still use esbuild's normal filesystem
-resolution and intentionally remain unpinned.
+`source_resolution.ts` is the browser graph's repository resolver. It replays
+recorded relative, absolute, bare, configured-alias, and repository-package
+requests before any filesystem resolution. A recorded workspace linked through
+`node_modules` remains repository-owned because its physical target satisfies
+the same source-inventory rule; a physically installed package does not. A
+captured namespace load never reads a repository source from disk, and a
+missing or unrecorded repository request becomes `InteractiveBundleError` with
+reason `source-not-captured`. This lets a generation's first Live request
+succeed after an accepted target is edited, deleted, renamed, or made invalid.
+Bare installed packages, Mokly's runtime, and consumer React peers still use
+esbuild's normal filesystem resolution and intentionally remain unpinned.
 
-Resolution metadata is the deliberate limit of the guarantee. Esbuild may
-reread repository `tsconfig.json` settings and package `package.json` imports,
-exports, or browser fields during the lazy browser build. Changing that
-metadata can select an uncaptured repository module and produce the typed
-missing-capture failure, even though all captured module and loader-input bytes
-remain pinned.
+For recorded repository requests, Live deliberately keeps the Node graph's
+accepted target even when a browser condition or repository package `browser`
+field would choose another file. Resolution metadata is now a limit only for
+requests absent from the record. Esbuild may reread `tsconfig.json` or package
+metadata to classify such a request; a repository result produces the typed
+missing-capture failure, while an installed-package result proceeds normally.
 
 `document.ts` accepts only a document already processed by
 `adaptBrowseDocument`. It validates without rewriting that adapter's inert map,

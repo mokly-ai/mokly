@@ -7,10 +7,6 @@ import type { ComponentRuntime } from "../dist/build/component_runtime.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import { loadConfig } from "../dist/config/load.js";
 import { EsbuildInteractiveBundleCompiler } from "../dist/interactive/bundle.js";
-import {
-  InteractiveBundleError,
-  InteractiveBundleReason,
-} from "../dist/interactive/errors.js";
 
 import {
   createFixture,
@@ -154,7 +150,7 @@ test("installed-package modules remain filesystem-resolved", async (t) => {
   assert.doesNotMatch(code, /installed-accepted/);
 });
 
-test("repository package metadata is deliberately reread by Live resolution", async (t) => {
+test("a recorded package import ignores later repository metadata changes", async (t) => {
   const fixture = await createFixture(sourceWithImport("#fixture"), {
     extraConfig: 'interactive: "serve",',
   });
@@ -177,13 +173,13 @@ test("repository package metadata is deliberately reread by Live resolution", as
     '{"type":"module","imports":{"#fixture":"./entries/second.ts"}}\n',
   );
 
-  await assert.rejects(compile(accepted), (error: unknown) => {
-    assert.ok(error instanceof InteractiveBundleError);
-    assert.equal(error.reason, InteractiveBundleReason.SourceNotCaptured);
-    assert.equal(error.module, "entries/second.ts");
-    assert.equal(error.importer, "entries/fixture.mockup.tsx");
-    return true;
-  });
+  const acceptedCode = await compile(accepted);
+  assert.match(acceptedCode, /metadata-first/);
+  assert.doesNotMatch(acceptedCode, /metadata-second/);
+
+  const nextCode = await compile(await prepare(fixture.root));
+  assert.match(nextCode, /metadata-second/);
+  assert.doesNotMatch(nextCode, /metadata-first/);
 });
 
 async function pinnedFixture() {
