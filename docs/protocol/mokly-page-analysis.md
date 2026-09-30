@@ -58,6 +58,15 @@ ids whose content differs, sorted, as in the delivered normalizer. Selection
 and normalization use these same spans/ids, not a second marker parser on
 already inserted ignore tokens.
 
+These are flat source spans, not DOM comment-node spans. Markers inside raw
+text, including `<textarea>`, still delimit regions. The M7 expected case
+places a start marker inside one textarea and the paired end marker inside a
+later textarea, with an ordinary HTML style element between them. Its start
+lies in the paired span, so it is ineligible; its references do not seed either
+material. When only that region's content changes, report `ignored-only` and
+that id in `ignoredIds`, with no material flag or inline evidence. A one-sided
+region does not exclude the intervening style element.
+
 ## Reference Records
 
 Records retain the extractor's decoded raw value **before route resolution**,
@@ -73,8 +82,8 @@ Cover everything `extractHtmlReferences` reads:
 - `id` anchors on any element; navigation `href` unless it is a resource
   source attribute; `data-nav-href` on any element.
 - Resource attributes: `src` on audio, embed, iframe, img, input, script,
-  source and track; `href`/`xlink:href` on SVG image/use; link `href`;
-  object `data`; video `poster` and `src`.
+  source and track; `href`/`xlink:href` on any element named `image` or `use`,
+  regardless of namespace; link `href`; object `data`; video `poster` and `src`.
 - `srcset` on any element, one raw URL per candidate, using the delivered
   comma/descriptor tokenizer (including trailing-comma removal).
 - `style` attributes, one record per tokenized CSS reference.
@@ -91,8 +100,9 @@ with the existing CSS detector and resource readers.
 
 ## Derived Material References
 
-A material has provenance: ordered kept original spans, replacement text,
-and copies of original spans appended or inserted for caller slots. Apply the
+For reference derivation, retain the string's assembly recipe: ordered kept
+original spans, replacement text and copies appended/inserted for caller slots.
+This recipe is auxiliary metadata, not a different material value. Apply the
 same replacement precedence as material text (outer instance replacements
 suppress contained edits); coalesce adjacent unchanged original spans first.
 Keep a reference only when its **entire source
@@ -160,11 +170,13 @@ use it for both sides' range/style/reference questions, without projection,
 rewritten materials, hashing, inline rule analysis or implementation comparison.
 
 Its discovery seeds conservatively include original records **and** potential
-caller-slot-copy records. Both sides use the same raw seeds and route, but each
-reader resolves/collects its own transitive closure. Committed mode rejects a
-changed Git path in either reachable closure; derived mode additionally requires
-equal membership/bytes. Resource proof failure falls through with the prepared
-analysis. Equal original bytes need no canonical CSS parse to settle content.
+caller-slot-copy records. Both sides use the same raw seeds and route. Under
+the [resource proof](./mokly-component-review-fast-path.md#resource-and-one-sided-rules),
+committed mode traverses only the head reader's closure and rejects a changed
+Git path in it; derived mode traverses both readers independently and requires
+equal closure membership/bytes as well. Resource proof failure falls through
+with the prepared analysis. Equal original bytes need no canonical CSS parse
+to settle content.
 On success state is `unchanged`, `ignoredIds` is empty, `material`/inline/
 resource evidence and owned sets are absent/empty. Preserve usage `inputs`
 and `structure` signals as reasons; metadata/dependency reasons outside the
@@ -178,6 +190,14 @@ reference takes fall-through; otherwise raw reference proof is conservative
 and sufficient. Prepared analyses and discoveries are reused on fall-through.
 
 ## Fingerprinted Materials
+
+Materials remain plain strings; equality is string equality and hashing uses
+the existing string input. Insert fingerprints only when **neither side's
+original text contains the reserved substring `mokly-inline-`**. If either
+contains it, use delivered text materials for that entire paired view on both
+sides, actual and projected: append the canonical `<style>` text after
+successful analysis, or retain unchanged style elements when analysis is
+skipped. No fingerprint is inserted in copies or either material on that view.
 
 Use SHA-256 over **UTF-8 bytes**, encoded as unpadded base64url (43 characters):
 
@@ -196,20 +216,20 @@ Use SHA-256 over **UTF-8 bytes**, encoded as unpadded base64url (43 characters):
   fingerprint. Ownership projection/ignore normalization otherwise retain
   their existing ordering and semantics; copied spans carry the same edits.
 
-Neither form is a review/component marker or subject to marker stripping.
+Both comment forms pass unchanged through ignore normalization and component
+marker stripping: neither marker pattern matches them. The reserved-prefix
+guard ensures an authored lookalike cannot equal an inserted fingerprint;
+there is no token sequence, tagged material representation or consumer API change.
 Apart from the ordinary SHA-256 collision assumption, equal canonical inputs
 give equal rule comments, and unequal ones differ: replacing the old common
 appendix wrapper preserves material equality. In-place comments likewise keep
 each element's source identity **and position**, so moving an identical style
 past retained markup remains a material change. Do not append a single digest
-when analysis is skipped. Preserve generated-token provenance through
-normalization: equality/hashing uses an ordered sequence of `text`,
-`inline-rules` and `inline-style` tokens, with adjacent ordinary text coalesced
-and each token encoded as a JSON `[kind, value]` tuple. Only inserted
-fingerprints create fingerprint tokens; an authored lookalike comment remains
-ordinary text. This avoids a moved element becoming equal to an authored
-comment merely because their serialized comments look alike. Render the comment
-forms above for material text, but never recover token kinds from that text.
+when analysis is skipped.
 Differential tests compare state, material flags, reasons, resources, owners and
-evidence against text-material oracles, including authored lookalikes, not
-the deliberately changed material bytes.
+evidence against text-material oracles, not the deliberately changed bytes on
+fingerprinted views. Require string-material compatibility through normalization
+and hashing, unchanged stored references, and a moved identical style element.
+Test the reserved substring on only base, only head and both sides, including
+authored lookalikes and movement past one; those cases require verbatim material
+byte equality to the text oracle and no inserted fingerprints on either side.

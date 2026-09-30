@@ -34,7 +34,8 @@ by [inline style ownership](../docs/protocol/mokly-inline-styles.md) and
 comparison decisions are specified by
 [component change attribution](../docs/protocol/mokly-component-changes.md),
 the background worker by [on-demand work](../docs/protocol/mokly-on-demand.md),
-and the scale fixture by [its README](../tests/fixtures/large/README.md) and
+and the scale fixture by [its README](../tests/fixtures/large/README.md),
+[benchmark contract](../tests/fixtures/large/benchmark-contract.md) and
 [timings](../docs/protocol/mokly-timings.md).
 
 ## Problem
@@ -119,25 +120,27 @@ fixed before this plan can prove its result.
    [Cancellation](../docs/protocol/mokly-css-parse-reuse.md#changed-segment-cancellation)
    and [composition](../docs/protocol/mokly-css-parse-reuse.md#unchanged-references-and-composition)
    own residual diffing, unchanged-reference pairing and selected-occurrence
-   omission. Segment-first cancellation can displace duplicate identities and
-   change source-order changed pairs; the contract gives the exact equality
-   criterion and required explicit differential outcomes. This and correcting
-   double attribution are approved differences, not universal equivalence.
+   omission. Cached identity-run cancellation retains full-diff pairing for
+   flat sheets, including formatting duplicates; only differently shaped
+   grouped/nested runs can displace shared identities. The contract owns the
+   proof, equality criterion and explicit differential outcomes. That narrow
+   displacement and correcting double attribution are approved differences.
    Matched-copy pairing resolves prerequisite Milestone 5 finding 2.
 6. **Results do not change otherwise.** Differential tests compare full
    attributions, owners, selectors, all-excluded status, material equality,
    membership and evidence. Only the block-form correction (Decision 4),
-   matched-copy/displacement cases (5), provenance/parser-context cases (9),
-   and original-context matching (10) may differ from the delivered engine.
+   matched-copy/displacement cases (5), provenance/parser-context and flat
+   ignore-eligibility cases (9), and original-context matching (10) may differ
+   from the delivered engine.
    These exceptions require exact expected results, not blanket exemptions.
 7. **The scale fixture is value-stable and self-identifying.**
-   [Template identity and stable values](../tests/fixtures/large/README.md#template-identity-and-stable-values)
+   [Template identity and stable values](../tests/fixtures/large/benchmark-contract.md#template-identity-and-stable-values)
    owns digest framing, records, mismatch rejection and value derivation.
 8. **Scale evidence records every outcome.**
    [Timing counts](../docs/protocol/mokly-timings.md#component-analysis-counts)
    and [sample outcomes](../docs/protocol/mokly-timings.md#benchmark-sample-outcomes)
    own fields, units, rounding, worker/infrastructure errors and partial bounds.
-   [Scenario state](../tests/fixtures/large/README.md#scenario-matrix-and-restoration)
+   [Scenario state](../tests/fixtures/large/benchmark-contract.md#scenario-matrix-and-restoration)
    owns filtering and restoration.
 9. **Each page file side is parsed once.**
    [Page analysis](../docs/protocol/mokly-page-analysis.md#scope-and-lifetime)
@@ -145,7 +148,9 @@ fixed before this plan can prove its result.
    [derived references](../docs/protocol/mokly-page-analysis.md#derived-material-references)
    are normative. Whole-node edits alone do not guarantee the old reparsed
    material's extraction visibility; the contract settles partial spans and
-   parser-context/copy cases explicitly. Its
+   parser-context/copy cases explicitly. The same flat ignore spans govern
+   style eligibility, including raw-text markers; the contract's explicit
+   case replaces delivered DOM-comment discovery. Its
    [identical-text check](../docs/protocol/mokly-page-analysis.md#identical-text-quick-check)
    removes all fast-path inline work, resolving prerequisite Milestone 4
    finding 1 and Milestone 5 finding 3. Referenced HTML parsing stays separate.
@@ -153,17 +158,18 @@ fixed before this plan can prove its result.
     [Original-page matching](../docs/protocol/mokly-page-analysis.md#original-page-matching)
     owns the subject-only ignore predicate, structural context, owner ranges
     and the intentional difference from ignore-normalized matching.
-11. **Materials carry fingerprints instead of style text.**
+11. **Guarded fingerprints preserve string materials.**
     [Fingerprinted materials](../docs/protocol/mokly-page-analysis.md#fingerprinted-materials)
-    owns both forms, digest encoding, placement, stored references and the
-    equality guarantee, including a moved identical element.
+    owns the reserved-prefix guard, plain-string fallback, both forms, digest
+    encoding, placement, stored references and the equality guarantee,
+    including a moved identical element. No material consumer changes format.
 12. **Style-only differences skip full comparison when proven safe.**
     [The route](../docs/protocol/mokly-style-only-route.md) owns ordering,
     every eligibility condition (including ignore/material-span safety),
     results, fallbacks, its test switch and per-view proof. It equals the full
     comparison under the same new policies, not a second attribution policy.
 13. **Performance acceptance is a reproducible procedure.**
-    [Classification performance acceptance](../tests/fixtures/large/README.md#classification-performance-acceptance)
+    [Classification performance acceptance](../tests/fixtures/large/benchmark-contract.md#classification-performance-acceptance)
     is the sole normative definition of samples, means, ratios, heap/membership
     requirements and pass/fail treatment. Historical Problem measurements are
     never substituted for the Milestone 2 reference.
@@ -209,8 +215,9 @@ catalogues without registered components keep their existing classifier.
 Use the [parse-reuse contract](../docs/protocol/mokly-css-parse-reuse.md).
 Verification concerns native top-level roots; one root may flatten to several
 records. Parsing equivalence and changed-pairing equivalence are distinct:
-the latter has the Decision 5 duplicate-displacement exception. Both future
-differential suites follow the contract's explicit equality domains.
+the latter is exact for flat identity runs and has only the Decision 5
+grouped/nested displacement exception. Both future differential suites follow
+the contract's explicit equality domains.
 
 ### Page Analysis
 
@@ -218,14 +225,15 @@ Use the [page-analysis contract](../docs/protocol/mokly-page-analysis.md).
 It owns lifetime, original coordinates, marker pairing, reference provenance,
 copy visibility and original-tree matching. The unchanged decision first
 tries its single-analysis identical-text check; all successful quick checks
-avoid inline analysis. Each reader still traverses its own resource closure.
+avoid inline analysis. Committed mode keeps head-only resource traversal;
+derived mode traverses both readers independently and compares membership/bytes.
 The plan does not introduce another marker dialect or normalized page tree.
 
 ### Fingerprints
 
 Use [fingerprinted materials](../docs/protocol/mokly-page-analysis.md#fingerprinted-materials)
-for both forms and their references/equality proof; preserve occurrence
-position when analysis is skipped.
+for the reserved-prefix guard, string-material compatibility and both forms'
+references/equality proof; preserve occurrence position when analysis is skipped.
 
 ### Style-Only Route
 
@@ -238,7 +246,7 @@ full fall-through. The disabled route is the differential oracle.
 
 Use [timing counts and outcomes](../docs/protocol/mokly-timings.md#component-analysis-counts)
 for opt-in collection, units, isolate sampling and partial records. The
-[fixture guide](../tests/fixtures/large/README.md#scenario-matrix-and-restoration)
+[benchmark contract](../tests/fixtures/large/benchmark-contract.md#scenario-matrix-and-restoration)
 owns benchmark states, identity and the Decision 13 acceptance procedure.
 
 ## Milestone 1: Protocol And Documentation Contract
@@ -300,7 +308,10 @@ and a diff review.
 - [x] In [`mokly-timings.md`](../docs/protocol/mokly-timings.md), add the
       Diagnostics summary's counts records and the four benchmark sample
       outcomes.
-- [x] In [`tests/fixtures/large/README.md`](../tests/fixtures/large/README.md),
+- [x] Discovered: keep fixture usage and measurements in
+      [`tests/fixtures/large/README.md`](../tests/fixtures/large/README.md), and
+      move the normative rules into its focused
+      [`benchmark contract`](../tests/fixtures/large/benchmark-contract.md):
       describe value-stable per-view rules, the template digest and its
       rejection rule, the `--scenario` filter, the `linked-stylesheet`
       scenario, setup-state restoration, sample outcomes, peak heap, document
@@ -310,9 +321,10 @@ and a diff review.
       owners, record duplicate-pair displacement and provenance visibility
       refinements, and require explicit expected cases in later differential
       TODOs. Add ignore/material-span safety to the route's tests.
-- [x] Discovered: preserve fingerprint token provenance through normalization
-      and equality/hashing; require a moved-style/authored-lookalike test in
-      Milestone 9 so serialized source comments cannot alias inserted tokens.
+- [x] Discovered: guard fingerprints with the reserved prefix on both original
+      texts, retaining plain-string materials, equality and hashing. Require
+      moved-style/authored-lookalike and verbatim-fallback differential proof
+      in Milestone 9; do not introduce token-sequence consumers.
 - [x] Discovered: style-only equivalence needs the full view-wide rule diff:
       unchanged other elements can fail parsing or displace duplicate pairs.
       Specify reuse of those runs and require both cases in Milestone 8 tests,
@@ -321,6 +333,16 @@ and a diff review.
       plan, label pre-merge measurements historical, and use current fixture
       dimensions outside those measurements. Preserve existing protocol caps
       and history rules without source/test edits.
+- [x] Discovered: apply Milestone 1 feedback to identity-run cancellation,
+      flat/grouped pairing proofs, CDO-word anomalies, string-form imports and
+      flat ignore eligibility, with explicit M4, M5 and M7 test obligations.
+- [x] Discovered: preserve committed head-only resource traversal and its
+      occurrence bound, guard every child-content pseudo including `:parent`,
+      and keep all route test obligations in the route contract.
+- [x] Discovered: define the ignored fixture-root identity record and four
+      report identity fields, template-only mismatch and heap acceptance,
+      and start-only delivery-ceiling observations without fabricated ends.
+      Split the fixture README and retarget all owning links.
 - [x] Validate the changed Markdown with `npx prettier --check` and review the
       diff; check every changed-file link/anchor and re-read all touched
       contracts against the plan. Documentation-only work does not require
@@ -347,6 +369,7 @@ coverage, and measure the baseline that the performance targets use.
       stay out of Changes, as the fixture contract specifies, rather than
       requiring impossible complete-document byte equality.
 - [ ] Record a digest of the fixture templates in the fixture record at setup
+      under the [benchmark identity contract](../tests/fixtures/large/benchmark-contract.md#template-identity-and-stable-values)
       and in every benchmark report; make `preparedFixture` reject a fixture
       whose digest differs from the current templates, naming the preparation
       command.
@@ -367,14 +390,19 @@ coverage, and measure the baseline that the performance targets use.
       parse site.
 - [ ] Record `heapPeakMiB` and the document-work counts per benchmark sample.
 - [ ] Extend `tests/large_baseline_benchmark.test.ts` with ok, error,
-      incomplete (heap-limit shaped), mismatch and window-straddling records,
+      incomplete (heap-limit shaped and start-only delivery ceiling), mismatch
+      and window-straddling records, including benchmark-clock wait-to-stop
+      without an invented worker or supervisor end;
       the digest rejection, the scenario filter and state restoration.
+- [ ] Discovered: update the fixture README, benchmark contract and timing
+      contract's Delivery Status for M2 before regenerating fixtures and
+      recording the reference. The benchmark contract participates in the
+      template digest; later measurement tables belong in the excluded README.
 - [ ] Regenerate both fixtures. Run the default fixture's full committed
       matrix twice and record the per-scenario, per-state mean as the
       Decision 13 reference. Run the cumulative matrix once and record every
       sample, whatever its outcome, as the baseline.
-- [ ] Update the fixture README and timing contract text to delivered status;
-      run the suite and `cargo xtask check`.
+- [ ] Run the suite and `cargo xtask check` after recording the reference.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
@@ -424,7 +452,8 @@ whole-element parsing.
       output rules to segments by top-level rule start, and verify exactly one
       top-level rule per segment starting at its start.
 - [ ] Add the rule-segment cache (byte-bounded LRU, 64 MiB) whose entries hold
-      segment-local rules and their derived data; assemble element rule lists
+      segment-local rules, derived data and the cached ordered identity-run
+      key; assemble element rule lists
       in `parseInlineRuleList` with rebased ordinals; implement every fallback
       condition.
 - [ ] Compute derived data once per parsed rule, for inline and stylesheet-file
@@ -436,6 +465,10 @@ whole-element parsing.
 - [ ] Add scanner unit tests: comments, strings containing braces and quotes,
       escapes, unquoted `url(` containing braces, nested blocks and at-rules,
       CDO and CDC, and each anomaly.
+- [ ] Discovered: include `<!--a{color:red}`, `<!---->`,
+      `<!--body{color:red}-->` and `b{color:blue}<!--a{color:red}` in both scanner
+      and assembly differential tests: each is a CDO-word anomaly and whole
+      fallback must preserve the delivered unresolved result.
 - [ ] Add a differential test: segment assembly equals whole-element parsing,
       including ordinals and failures, over every CSS input in the existing
       `review_css_*` tests, React Native Web sheets from the small large
@@ -446,6 +479,9 @@ whole-element parsing.
       segment once through an injected counting parser, that each fallback
       condition falls back, and that `@layer a;` against `@layer a{}` is a
       diffed, unresolved change on both paths.
+- [ ] Discovered: assert stored references include `theme.css` for string-form
+      `@import "theme.css";` through the whole-input/fallback path, using the
+      shared reference definition rather than a bare-prelude detector.
 - [ ] Run the existing inline, CSS, fast-path and Changes suites, preserving
       assertions outside the Decision 4 form correction; run the full suite
       and `cargo xtask check`.
@@ -462,9 +498,9 @@ Summary: make per-view analysis cost follow the changed segments, pair
 unchanged reference-bearing rules only with matched copies, and compose rule
 lists from stored rule text.
 
-- [ ] Cancel identical segment texts between sides as a multiset before the
-      rule diff; diff only the remaining segments' rules with element-level
-      ordinals.
+- [ ] Cancel segments by their cached ordered identity-run keys, earliest
+      base occurrence first, before the rule diff; diff only the remaining
+      runs with original document-wide ordinals.
 - [ ] Find unchanged reference-bearing rules from the stored references and
       pair each only with a cancelled segment's copy or an exact rule match.
 - [ ] Compose each side's actual and projected rule lists from stored per-rule
@@ -475,13 +511,17 @@ lists from stored rule text.
       cumulative sequences, duplicates, formatting-only edits, reference
       rules, custom properties, nested and conditional rules and element
       splits, attributions, owned sets, retained selectors, the all-excluded
-      flag and both materials equal the Milestone 4 engine's in the
-      contract's agreeing-survivor domain. Compare ordered diffs too; no broad
-      duplicate exemption is allowed.
+      flag and both materials equal the Milestone 4 engine's for every flat
+      sheet (including differently formatted duplicates and React Native Web)
+      and the contract's agreeing-survivor grouped/nested domain. Compare
+      ordered diffs and actual occurrence pairs under those equality domains;
+      flat runs require equal ordinals too. No broad duplicate exemption is
+      allowed.
 - [ ] Discovered: assert explicit changed pairs and final outcomes for
-      displaced duplicate identities across differently formatted segments,
-      including the contract's red/blue/green example and custom-property/
-      URL variants. Test full-diff fallback when either side cannot segment.
+      displaced shared identities across differently shaped grouped/nested
+      runs, including the contract's worked example and custom-property/URL
+      variants. The flat red/blue/green example must agree with full diff.
+      Test full-diff fallback when either side cannot segment.
 - [ ] Add a test for the duplicate-copy case (a rule with a custom property and
       a reference present once before and twice after): the added copy stays
       `unresolved`, the view is `changed` with a `material` reason, and no
@@ -550,11 +590,18 @@ the original page; give identical texts a single-parse quick check.
       fast path. Test in committed and derived modes that a zero-change
       classification emits no `review.inline-style-analysis` span and parses
       each view once.
+- [ ] Discovered: preserve the mode-specific resource-graph bounds in the
+      timing contract; prove committed quick checks never traverse the base
+      reader and derived quick checks compare both closures independently.
+- [ ] Discovered: test flat ignore markers inside raw text, including the
+      textarea-bounded style case and its paired/one-sided expected results
+      under [ignore pairing](../docs/protocol/mokly-page-analysis.md#contents-and-ignore-pairing).
 - [ ] Assert with document-work counts that a full comparison parses each side
       at most once.
 - [ ] Run the fast-path, comparison-mode and Changes equivalence suites;
       preserve assertions outside the page contract's explicit provenance/
-      context cases. Retain the delivered text-material oracle and record old
+      ignore-eligibility/context cases. Retain the delivered text-material
+      oracle and record old
       and new expectations for every intentionally adapted test, including
       select/template and malformed-HTML projected-resource fixtures.
 - [ ] Record the no-change and component-style samples of both fixtures.
@@ -578,22 +625,14 @@ to the full comparison.
       disables it.
 - [ ] Count routed views as `stylePath` in the `review.compare-screens` counts
       record.
-- [ ] Add a differential test (route enabled against disabled, identical
-      results) over excluded, owned, entry and unresolved diffed rules; an
-      entry-owned input change; committed and
-      derived modes; and each fallback: a markup change, a start-tag
-      attribute change, two changed style elements, a `<` or a reference in
-      or beside the window, a changed reachable resource, a text-dependent
-      pseudo-class, a parse failure, unequal topology, missing usage, and a
-      window intersecting paired ignore/material-signal spans. Prove route or
-      fallback for the named view in each case, not a catalogue-wide bystander.
-- [ ] Discovered: include an unchanged malformed second style element (full
-      fallback), and identical other elements that displace duplicate pairs
-      (route/full equality using view-wide cancellation, including custom
-      properties and references). Do not use a changed-element-only diff;
-      complete-path oracles disable both fast and style switches.
-- [ ] Test that every view in the small cumulative fixture's component-style
-      scenario whose markup is unchanged takes the route.
+- [ ] Implement every differential and per-view path proof in the
+      [route contract's sole test list](../docs/protocol/mokly-style-only-route.md#fallback-counters-and-proof).
+      It owns positive cases, precise window/reference guards, all fallbacks
+      including `:parent`, view-wide grouped/nested displacement and the
+      complete-path oracle. Do not maintain a second case list here.
+- [ ] Discovered: reuse all unchanged element runs and full-path preparation
+      as the route contract requires; never decide from a changed-element-only
+      diff.
 - [ ] Record the no-change and component-style samples of both fixtures.
 - [ ] Update `src/review/README.md` and the contracts' Delivery Status for
       delivered parts; run the suite and `cargo xtask check`.
@@ -611,13 +650,14 @@ comparison's text work no longer grows with the style sheet.
 
 - [ ] Replace the appended canonical rule text with the rule fingerprint, and
       style elements of skipped analyses with in-place fingerprints; take the
-      references of fingerprinted rules from their stored references. Preserve
-      token provenance for equality/hashing so authored lookalike comments
-      cannot alias inserted fingerprints.
+      references of fingerprinted rules from their stored references. Apply
+      the reserved-prefix guard to both original texts and retain delivered
+      verbatim materials on guarded views; materials and consumers stay strings.
 - [ ] Add a differential test: state, `material`, reasons, resource evidence
       and owned sets equal those of text materials for every inline, CSS and
-      Changes test catalogue, and a moved identical style element still
-      changes the material, including movement past an authored lookalike.
+      Changes test catalogue, with all movement, reserved-prefix fallback and
+      string-normalization/hashing cases under the
+      [fingerprint proof](../docs/protocol/mokly-page-analysis.md#fingerprinted-materials).
 - [ ] Record the no-change and component-style samples of both fixtures.
 - [ ] Update `src/review/README.md` and the contracts' Delivery Status for
       delivered parts; run the suite and `cargo xtask check`.
@@ -633,6 +673,13 @@ comparison's text work no longer grows with the style sheet.
 Summary: prove the Decision 13 targets on both fixtures, record what now
 dominates, and leave every document aligned.
 
+- [ ] Discovered: before regenerating fixtures or running acceptance, fetch
+      and merge the latest `origin/main` under
+      [Mainline Feature Preservation](../AGENTS.md#mainline-feature-preservation).
+      Capture the source tip, audit main's additions, reconcile each path
+      without bulk side-taking, preserve delivered features and record the
+      reconciliations/deletion audits in the merge commit. Leave PR #122 and
+      later main commits unmerged until this step; do not rebase or force-push.
 - [ ] Regenerate both fixtures. Run the full committed matrix twice on each,
       and the derived-mode cold component-style sample on the cumulative
       fixture.

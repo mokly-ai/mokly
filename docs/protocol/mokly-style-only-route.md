@@ -45,16 +45,18 @@ Every condition must hold, otherwise use the full comparison:
    runs and compute the **view-wide** diff/cancellation with original ordinals,
    not an independent diff of just the edited element. Every added/removed/changed
    rule is reference-free by its **stored full-rule references**, not a search
-   only in the window. No resolved selector of those rules uses `:empty`,
-   `:contains` or `:icontains`, including inside functional selectors or
-   resolved nesting parents. Literal attribute/string values with those words
-   do not count. A selector compilation failure remains unresolved under the
-   closed keep policy, not a proof of exclusion.
+   only in the window. No resolved selector of those rules uses a pseudo-class
+   that the matcher evaluates from child content: `:empty`, `:parent`
+   (`:not(:empty)`), `:contains` or `:icontains`, including inside functional
+   selectors or resolved nesting parents. Literal attribute/string values with
+   those words do not count. A selector compilation failure remains unresolved
+   under the closed keep policy, not a proof of exclusion.
 6. The quick check's resource proof passes using the head analysis's shared
-   raw reference seeds through **each side's reader**: no changed reachable
-   Git path in committed mode, and additionally equal closure membership and
-   bytes in derived mode. These are transitive checks, not seed-path checks;
-   do not use a union in place of separate closures.
+   raw reference seeds. In committed mode traverse only the **head reader's
+   closure** and require no changed reachable Git path. In derived mode
+   traverse both readers independently, reject changed reachable paths and
+   require equal closure membership and bytes. These are transitive checks,
+   not seed-path checks; a union cannot replace the derived comparisons.
 
 Unchanged rules may contain references. Condition 5 means the diff changes
 none, even when a URL straddles a window boundary or lies in a condition
@@ -122,18 +124,29 @@ are not extra route exceptions.
 
 Any failed condition returns prepared analysis/discovery for the full path;
 do not publish a provisional owner set or partial evidence. The full path
-remains the oracle with `useStylePath: false`. Test both resource modes and
-all retained/excluded/owned/unresolved cases, usage-only input changes,
-empty windows and format-only changes. Prove every named eligible cumulative
-fixture view takes this route, not merely that a bystander increments a count.
+remains the oracle with `useStylePath: false`; a complete-path oracle disables
+both `useStylePath` and `useFastPath`. This section owns M8's test obligations:
 
-For each fallback test prove the named view takes the full path: markup/tags,
-attrs, multiple elements, `<` in/before a window, references crossing its edge,
-changed transitive resources, text predicates, a parse failure in the edited
-or an unchanged element, unequal topology,
-missing usage and a window intersecting paired ignore/material-signal spans.
-Also test accepted duplicate displacement across elements, subject to the same
-reference/text-predicate guards and exact route/full equality.
+- Compare route-enabled and disabled results in committed and derived modes
+  for excluded, owned, entry-retained and unresolved diffed rules, and an
+  entry-owned usage input change. Assert the named view's route, not a
+  catalogue-wide counter satisfied by a bystander. Prove every eligible view
+  of the small cumulative component-style fixture takes this route.
+- Positive cases include an adjacent **unchanged** reference-bearing rule,
+  a window ending at `</style>` (the `<` is in the suffix, not the window),
+  empty insertion/deletion windows, and format-only edits. All still satisfy
+  the reference, prefix and resource guards.
+- For each fallback prove the named view takes the full path: markup/tags,
+  attrs, multiple edited elements; **a `<` in or up to eight code units before
+  a window; a reference in a diffed rule, including one crossing the window
+  edge**; changed transitive resources; every child-content pseudo above,
+  explicitly `style:parent ~ main`, also inside functions/nesting parents;
+  a parse failure in the edited or an unchanged element; unequal topology,
+  missing usage; or a window intersecting paired ignore/material-signal spans.
+- Include grouped/nested duplicate displacement across differently shaped
+  runs/elements under the cancellation contract. Require route/full equality
+  when guards pass, and full fallback for reference-bearing diffed variants.
+  Never decide from an independent changed-element-only diff.
 
 The [timing counts](./mokly-timings.md#component-analysis-counts) increment
 `stylePath` once for each view settled here; attempted fallback increments

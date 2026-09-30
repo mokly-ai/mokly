@@ -22,8 +22,9 @@ paths and sides, and discarded when classification ends:
 - The **whole-input cache** keys the exact supplied stylesheet-file text (or
   whole-element fallback text) to its complete parse result, including failures.
 - The **segment cache** keys normalized segment text, defined below, to a
-  verified flat rule run with local ordinals and stored derived data. It never
-  caches a partially verified batch or a context-dependent segment.
+  verified flat rule run with local ordinals, stored derived data and its
+  identity-run key. It never caches a partially verified batch or a
+  context-dependent segment.
 
 Each bound is **64 MiB = 67,108,864 estimated bytes**, not a rule count or
 an actual-heap promise. An entry costs `64 + 96 * ruleCount + 2 * stringUnits`:
@@ -59,7 +60,8 @@ semantics of `tokenizeCss`, not a CSS validator:
 - Maintain typed nesting for `()`, `[]` and `{}`. Brackets inside strings,
   comments, escapes and unquoted URLs have no structural effect.
 - Between rules at depth zero, `<!--` (CDO) and `-->` (CDC) are separators,
-  not segments. Once a rule begins they remain part of its source.
+  not segments, except for the CDO anomaly below. Once a rule begins they
+  remain part of its source.
 - A rule begins at its first non-trivia token. It ends at the first top-level
   `;` before any block, or at the `}` closing its first top-level `{`.
   Parentheses/brackets in its prelude cannot end the rule.
@@ -71,6 +73,14 @@ trivia-only element has zero segments and a successful empty rule list.
 Unterminated comments, strings, escapes or URLs, unclosed or mismatched
 brackets, unmatched closings, or trailing non-trivia without a terminator are
 scanner anomalies. They request whole-element parsing, not an invented failure.
+Outside strings, comments and opaque URLs, a depth-zero `<!--` followed
+immediately by a word code unit
+(`[A-Za-z0-9_\-\\]` or any code unit at least U+0080) is also an anomaly.
+The delivered tokenizer joins that character to the `--` token beginning
+inside CDO; the parser skips that entire token. Treating only CDO as trivia
+would therefore change the whole parse. The scanner and assembly differential
+tests must cover `<!--a{color:red}`, `<!---->`, `<!--body{color:red}-->` and
+`b{color:blue}<!--a{color:red}`: whole fallback preserves their unresolved result.
 
 ## Batched Parsing And Verification
 
@@ -125,9 +135,12 @@ prelude ?? null, block ?? null]`, where each condition is `[kind, prelude]`
 - **Canonical text:** the delivered unoptimized rendering of this rule,
   including its outer conditions/nesting wrappers, faithfully preserving
   statement versus block form.
-- **References:** raw tokenized URL/import values from declarations, the
-  rule's own prelude and non-nesting condition preludes, using the shared
-  CSS reference detector (including escaped identifiers).
+- **References:** exactly `cssRuleReferences`' ordered concatenation of the
+  shared detector's results: apply it to each non-`nesting-parent` condition
+  prelude, then to `@<atRule> <prelude>;` when an at-rule exists (omit the space
+  when the prelude is empty), then to declarations. Preserve duplicates and
+  escaped-identifier handling. A bare own prelude is insufficient:
+  `@import "theme.css";` must record `theme.css`.
 - **Custom-property flag:** whether the normalized declaration runs contain
   custom properties; the existing changed-declaration keep policy still
   compares both sides, rather than treating any flag as a changed property.
@@ -141,42 +154,67 @@ pair under one address. They are removed/added selector-less rules, retained
 as unresolved on **both** linked and inline paths. This corrects the delivered
 diff's missing form distinction without optimizing away either record.
 
+For each verified segment run, compute one unambiguous **identity-run key**:
+JSON encoding of its ordered array of rule identity keys, including an empty
+array for a zero-rule run. Store it once with the cached run and count its
+string units in the cache estimate. This is the cancellation key, not the
+segment text key used for parsing reuse.
+
 ## Changed-Segment Cancellation
 
 After successful segment assembly on both sides, concatenate segments in
 element/document order. For each head segment, consume the earliest unused
-base segment with exactly equal key text. This is multiset cancellation,
+base segment with exactly equal identity-run key. This is multiset cancellation,
 not a set: duplicate occurrences count. Corresponding local rules become
 explicit unchanged occurrence pairs. Diff only the uncancelled runs using the
 ordinary [address-group diff](./mokly-css-attribution.md#rule-diff-representation).
 Keep original document-wide ordinals in output.
 
-Equal segment text guarantees equal parsed rule runs, but **does not guarantee
-the delivered rule diff chooses the same changed pairs**. That diff cancels
-the earliest occurrence of an identity, independently of segment formatting.
-Segment cancellation can remove a later identical rule instead, changing the
-order of survivors within an address. With before segments
+For runs containing a single rule, the key is just that rule's identity in an
+array. Both cancellation and the full rule diff pair the head's k-th occurrence
+of an identity with the base's k-th occurrence. Thus unchanged pairs, survivor
+occurrences, ordinals and source-order changed/added/removed pairs are identical
+when all runs contain at most one rule. Empty runs contribute nothing. This
+covers every flat stylesheet, including React Native Web output, independently
+of formatting or splits across elements. With before segments
 `.a {color:red}`, `.a{color:blue}`, `.a{color:red}` and after segments
-`.a{color:red}`, `.a{color:green}`, the delivered diff changes blue to green
-and removes red; segment-first diff changes red to green and removes blue.
-The multiset of before and after rule values is preserved, not their pairing.
+`.a{color:red}`, `.a{color:green}`, **both** paths cancel the first red, change
+blue to green and remove the last red.
+
+Displacement remains possible only when grouped/nested multi-rule runs share
+rule identities with differently shaped runs. For example, base segments are
+`@media screen{.a{color:red}}`, `@media screen{.a{color:blue}}` and
+`@media screen{.a{color:red}.b{color:black}}`; head segments are
+`@media screen{.a{color:red}.b{color:black}}` and
+`@media screen{.a{color:green}}`. Full diff cancels the first red and black,
+changes blue to green and removes the later red. Segment-first cancellation
+cancels the third base run as a whole, changes the first red to green and
+removes blue. The rule-value multisets are preserved, not their pairing.
 
 Precisely: compare, per address, the identity sequences left after **all**
-exact cancellations on each path. If both sequences agree, changed/added/
-removed values agree (duplicate occurrence ordinals may differ). If they
-differ, source-order changed pairing can differ. That can alter custom-property
+exact cancellations on each path. If both sequences agree, per-address changed/
+added/removed values agree, but choosing different duplicate occurrences can
+change ordinals and global diff ordering. If the sequences differ, source-order
+changed value pairing can differ. That can alter custom-property
 or changed-reference keep judgments, attribution, selected occurrences,
 materials and evidence; it is an approved Decision 5 difference, not a claim
 of universal semantic equivalence. It occurs only through displaced duplicate
-identities across differently keyed segments/runs; without that displacement
-the two diffs agree. The injected whole-input fallback has no such difference.
+identities across differently shaped grouped/nested runs; formatting alone
+cannot cause it. Without that displacement the two diffs agree. The injected
+whole-input fallback has no such difference.
 
 [M5](../../plans/scalable-inline-style-analysis.md#milestone-5-changed-segment-analysis)
 differential tests compare both ordered diffs and final attributions, owner
 sets, retained selectors, all-excluded status, materials, membership and
-evidence. Require equality in the agreeing-survivor cases, and explicit
-expected pairs/outcomes in displacement cases, including custom-property and
-URL variants of the example. Do not exempt arbitrary mismatches.
+evidence. Require exact ordered diffs and occurrence pairs/ordinals for flat
+formatting duplicates, the flat example above and cumulative React Native Web
+runs. For grouped/nested agreeing-survivor cases require equal per-address
+value diffs, attribution values/multiplicities and final results; assert the
+actual selected duplicate ordinals/pairs and any global ordering difference
+explicitly, rather than claiming ordinal equality. For displaced survivor
+sequences assert exact changed pairs and final outcomes, including
+custom-property and URL variants of the grouped example. Do not exempt
+arbitrary mismatches.
 
 ## Unchanged References And Composition
 

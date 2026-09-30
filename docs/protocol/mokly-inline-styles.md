@@ -69,9 +69,12 @@ the tags.
 Style elements inside an instance range already belong to that instance
 through markup ownership; style elements inside a slot range belong to the
 slot's owner. Ignore pairing exposes ids rather than normalized offsets,
-because generated-source removal changes lengths. The span finder walks the original document's comment nodes, accepts
-the current ignore prefix and leaves an element inside a paired id
-in place. A one-sided region remains ordinary analyzed material. The renderer
+because generated-source removal changes lengths. Style eligibility uses the
+flat original-source spans from
+[page analysis](./mokly-page-analysis.md#contents-and-ignore-pairing), exactly
+those used by normalization and `ignoredIds`, even for markers inside raw text;
+it does not walk DOM comment nodes. An element inside a paired span stays in
+place. A one-sided region remains ordinary analyzed material. The renderer
 supplies only the document string; the manifest supplies no head-style or
 public-resource assertions.
 
@@ -93,8 +96,8 @@ multisets are equal.
    matching tree or second coordinate system is constructed.
 2. **Rules.** Use [parse reuse](./mokly-css-parse-reuse.md) for independent
    element parsing, rebased ordinals, segment cancellation, the residual rule
-   diff and canonical composition. Its duplicate-displacement exception is
-   explicit; equal CSS values do not by themselves prove equal changed pairing.
+   diff and canonical composition. Flat runs retain full-diff pairing; the
+   grouped/nested duplicate-displacement exception is defined there.
    Analyze diffed occurrences and unchanged reference-bearing occurrences
    paired by actual cancellation/exact matches, never an arbitrary identity
    lookup. Stored per-rule references use the shared resource detector. One failed
@@ -153,8 +156,9 @@ one view and entry-retained on another.
 
 One analysis produces two renderings. Each removes every unowned style
 element, from its start tag through its end tag, from the original document in
-the original coordinates, and appends the canonical rule fingerprint defined
-by [page analysis](./mokly-page-analysis.md#fingerprinted-materials).
+the original coordinates, and appends the canonical rule material defined by
+[page analysis](./mokly-page-analysis.md#fingerprinted-materials): its fingerprint
+when the reserved-prefix guard permits, otherwise its delivered `<style>` text.
 The projected rendering makes those removals in the same
 replacement pass as its instance identity tokens and caller-slot projection;
 the actual rendering applies no tokens. The count, order and attributes of

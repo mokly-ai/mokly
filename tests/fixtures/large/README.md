@@ -8,7 +8,8 @@ example's generated files or shipped as product data.
 ## Delivery Status
 
 The existing three-scenario benchmark and cumulative renderer are delivered.
-The identity, stable-value, scenario-matrix and acceptance sections below are
+The identity, stable-value, scenario-matrix and acceptance rules in the
+[benchmark contract](./benchmark-contract.md) are
 the approved target of [scalable analysis](../../../plans/scalable-inline-style-analysis.md):
 Milestone 2 delivers fixture identity, stable values, four scenarios, outcomes
 and heap/document diagnostics; Milestone 4 adds segment-reuse diagnostics;
@@ -82,7 +83,8 @@ non-consumer absent from both sets.
 ### Measured default-size run
 
 Historical evidence only, not the current template-identified performance
-reference. Regenerate the current 1,590-entry fixtures for acceptance below.
+reference. Regenerate the current 1,590-entry fixtures for
+[benchmark acceptance](./benchmark-contract.md#classification-performance-acceptance).
 
 The 2026-09-28 committed-output measurement used Linux x64, Node 24.19.0,
 an Intel Xeon processor at 2.90 GHz, eight logical CPUs and 16.3 GiB RAM. Both
@@ -237,115 +239,10 @@ browser acceptance. The
 [diagnostic contract](../../../docs/protocol/mokly-timings.md) describes timing
 records, inclusive durations and process boundaries.
 
-## Template Identity And Stable Values
+## Benchmark Contract
 
-Preparation records `templateDigest`, `moklyCommit`, `moklyDirty` and the isolated
-`fixtureCommit`. `templateDigest` is lowercase hex SHA-256 over every regular
-file recursively under `tests/fixtures/large/`, including hidden files, except
-the root `README.md`. Sort POSIX relative paths by unsigned UTF-8 byte order.
-For each file hash, in order: a four-byte big-endian path-byte length, its UTF-8
-path bytes, an eight-byte big-endian content-byte length, and the exact file
-bytes. No timestamps, modes or platform separators participate; reject symlinks
-rather than hash external content. Length framing makes the concatenation
-unambiguous. The two renderer modes use the same digest of the entire tree.
-
-`moklyCommit` is this checkout's HEAD; `moklyDirty` reports tracked/untracked
-non-ignored changes from `git status --porcelain`, not the isolated fixture's
-intentional scenario edits. Every setup/sample/matrix report carries those
-three identity fields. A benchmark reports current Mokly identity and preserves
-the preparation record's identity separately as `preparedMoklyCommit` and
-`preparedMoklyDirty`; code may evolve while a fixture is reused. The archived
-derived baseline toolchain remains the prepared version as described above.
-
-`preparedFixture`, including `--config` reuse, recomputes the digest and rejects
-a missing or mismatched recorded value **before starting Serve or editing a
-scenario**. It names `npm run fixture:large --` followed by that fixture's
-areas/screens/rows/stylesheets/share and applicable `--inline-styles`/`--derived`
-flags. It does not silently regenerate or compare measurements from old
-templates. Excluding this README permits reporting results without invalidating
-the fixture. A changed Mokly commit alone is not a template mismatch.
-
-Per-view atomic values use SHA-256 of the UTF-8 JSON tuple `[area, token]`,
-where `token` is the stable rendered-view key, never the registration index.
-Derive `zIndex` as `1000 + (first unsigned big-endian 32 bits % 1000000)`.
-Class names therefore depend on values only. Adding an entry can add unused
-rules to later cumulative sheets; it cannot change any existing view's own
-values/classes or non-style markup. Small-fixture proof compares those bytes
-and requires every other area's unchanged entries to stay out of Changes,
-not impossible byte equality of complete cumulative sheets.
-
-## Scenario Matrix And Restoration
-
-The approved benchmark-only filter is repeatable `--scenario <name>`; examples:
-`npm run benchmark:large -- --scenario no-changes --scenario component-style`
-and `npm run benchmark:large -- --inline-styles --scenario linked-stylesheet`.
-No filter selects all four rows below. Unknown/missing names fail before any
-edit; duplicates collapse; selected rows retain the table's order. Each row
-gets one cold and one warm fresh-server/browser-context sample, not a warmed
-classification worker. Chrome is launched before the measured command.
-
-| Scenario            | Input state relative to isolated Git `main`                       | Expected Changes ids               |
-| ------------------- | ----------------------------------------------------------------- | ---------------------------------- |
-| `no-changes`        | Baseline renderer and baseline `shared-1.css`                     | none                               |
-| `component-style`   | Only the area-one Action color constant edited; baseline CSS      | `area-1-action`                    |
-| `screen-markup`     | Only screen-one markup constant edited; baseline CSS              | `area-1-screen-1`, `area-1-flow-1` |
-| `linked-stylesheet` | Baseline renderer, **keep setup's unused rule** in `shared-1.css` | none                               |
-
-Reset both mutatable files independently before each scenario; never carry a
-previous edit into the next one. Build current outputs after preparation,
-including in committed mode, before starting its cold server. Derived cache
-reset/hit rules remain as above. Zero shared-sheet count makes the linked row
-a no-op with zero CSS-analysis union; zero share keeps the unused rule but no
-reachable dependency. The ordinary stylesheet edit proves rule exclusion,
-not a matching-selector keep. Record `cssAnalysisMs/Share` as well as inline
-union/share, using the diagnostic contract's clipped intervals.
-
-In `finally`, restore `renderer.tsx` and `shared-1.css` to **setup state**:
-baseline renderer plus the unused setup rule when the sheet exists. Restore
-generated current outputs to that state too, without changing the fixture's
-Git baseline or archived toolchain. Restore even after failed samples, browser
-errors or cancellation; stop owned servers/browser first. A restoration error
-fails the command without discarding already recorded samples.
-
-Record every requested sample, continue the matrix after bounded failures,
-and write the full report before returning nonzero. The exact `ok`, `error`,
-`incomplete`, `membership-mismatch` fields, clocks, rounding and interval unions
-are owned by [sample outcomes](../../../docs/protocol/mokly-timings.md#benchmark-sample-outcomes).
-Preserve whole `documentWork`/`inlineStyleCounts` records and `heapPeakMiB` when
-available. Heap is classifying-isolate used V8 heap sampled after each compared
-view, not machine memory or RSS; missing end/count records are missing data.
-The independent `usableMs < 5000` check still applies; classification acceptance
-below cannot turn a failed navigation assertion into a benchmark success.
-
-## Classification Performance Acceptance
-
-Use default dimensions (30/40/12, four sheets, share 0.5), all four scenarios
-and both states in **committed mode**. At the reference step run two complete
-default-fixture matrices after regeneration. Retain every sample, including
-cumulative failures from its separate baseline matrix; old historical tables
-are not substituted for this reference. At acceptance regenerate both current
-fixtures and run two complete matrices per fixture, plus one derived-mode
-cold cumulative `component-style` sample. Use the same template digest,
-dimensions, Node runtime and machine, with other heavy work idle. Record
-`nproc`, `free -m` and `uptime` before/after each run.
-
-For scenario `s` and state `t`, let `B(s,t)` be the arithmetic mean of the two
-reference default `classificationMs` values. Let `D(s,t)` and `C(s,t)` be the
-two-run means for acceptance default/cumulative respectively. Times are the
-completed **background worker** `changes.classify` durations, not readiness,
-Serve wait, baseline build or inclusive child sums. Calculate means/ratios
-from recorded two-decimal durations without rounding intermediates; displayed
-ratios may round only after the pass decision. Pass iff **all** hold:
-
-- For every scenario/state, `C(s,t) / B(s,t) <= 2`.
-- On each fixture/state, its `component-style` mean divided by its
-  `no-changes` mean is `<= 1.25`.
-- For every scenario/state, `D(s,t) / B(s,t) <= 1.05`.
-- Every reference/acceptance committed sample and the derived spot sample is
-  `ok`, has exact expected membership and a present reported `heapPeakMiB < 1024`.
-
-Missing/zero reference durations, missing diagnostics, any failure outcome or
-different identity/dimensions/runtime/machine makes acceptance fail, not a
-discarded outlier. Do not drop a cold sample, substitute warm, average states,
-or replace a failed run with a faster retry. New measured-dominant work must
-be planned before claiming success; the plan's final acceptance remains open.
+The focused [benchmark contract](./benchmark-contract.md) owns
+[template identity and stable values](./benchmark-contract.md#template-identity-and-stable-values),
+[scenario state and restoration](./benchmark-contract.md#scenario-matrix-and-restoration),
+and [classification performance acceptance](./benchmark-contract.md#classification-performance-acceptance).
+Keep measurements and setup guidance here; do not duplicate its normative rules.

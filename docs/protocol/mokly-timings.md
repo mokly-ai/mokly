@@ -79,14 +79,16 @@ Review phases use the same session, role and parent context as their caller:
   Snapshot-copy traversals are measured even when their reads are cached;
   classification discovery-cache hits emit no additional span. Watcher
   inventory keeps its own stages.
-  Under page reuse, each side's reader proves its own transitive closure even
-  when both use the same raw seeds. Reuse discoveries by side/route/reference
-  identity/exclusion policy, never by a cross-side union. Delivered views with
-  instances, entry-owned slots or possible inline references also prove projected
-  closures; page reuse limits projection to ownership text edits under the
-  [fast-path rule](./mokly-component-review-fast-path.md#resource-and-one-sided-rules).
-  One-sided views use their own reader;
-  repeated discovery of the same side and policy is a defect.
+  Fast-path-eligible views in a component-aware classification where no view
+  differs emit at most **one actual occurrence per paired view in committed
+  mode, two in derived mode**. Delivered views with instances, entry-owned
+  slots or possible inline references may add one committed or two derived
+  projected occurrences. Page reuse limits projection to ownership text edits;
+  its identical-text check needs only actual proof. The
+  [resource rule](./mokly-component-review-fast-path.md#resource-and-one-sided-rules)
+  keeps committed traversal head-only and derived closures independent.
+  One-sided views add one occurrence. Repeated discovery for the same side,
+  route, reference identity and exclusion policy is a defect.
 - `review.css-analysis` measures the synchronous parse/diff/match/reduce pass
   for one changed, reachable stylesheet and one before/after document pair.
   It includes parser-cache lookups or parsing, and runs for cache hits and empty
@@ -149,12 +151,12 @@ extraction, command and adoption spans. A waiter can also finish as a cache hit.
 
 ## Representative local fixture
 
-The [fixture README](../../tests/fixtures/large/README.md) owns preparation,
-template identity, scenario state/filtering, restoration and the precise
-classification-performance acceptance procedure. It retains current dimensions
-(1,590 entries, 5,550 documents), synthetic workload boundaries, historical
-measurements, the independent five-second usable-startup check, and committed/
-derived cache behavior. CI correctness fixtures have no wall-clock assertion.
+The [fixture README](../../tests/fixtures/large/README.md) describes preparation,
+current dimensions (1,590 entries, 5,550 documents), historical measurements,
+the independent five-second usable-startup check and committed/derived cache
+behavior. Its [benchmark contract](../../tests/fixtures/large/benchmark-contract.md)
+owns template identity, scenario filtering/restoration and classification
+performance acceptance. CI correctness fixtures have no wall-clock assertion.
 
 ## Component Analysis Counts
 
@@ -222,9 +224,13 @@ completed counts records exist; absent diagnostics are not invented zeros.
   Matching counts alone cannot prove matching membership.
 - `incomplete`: classification starts but has no end after worker stop or the
   delivery ceiling. Includes `classificationStatus: incomplete`,
-  `classificationUpperBoundMs` from the supervising Serve wait span and
   `inlineStyleAnalysisLowerBoundMs`/`cssAnalysisLowerBoundMs` from all completed
   stage intervals in that worker session after classification start.
+  Emit `classificationUpperBoundMs` only from a completed supervisor Serve
+  wait span's duration. If the delivery ceiling leaves only a start, omit it;
+  emit `classificationWaitUntilStopMs` from that record's benchmark-clock
+  receipt to the stop request (omit if no receipt). This is observed waiting,
+  not worker duration or a bound; a stop request never invents a span end.
   Never label a bound `classificationMs` or compute a percentage without an end.
 
 For completed workers, each stage's interval union includes end records of
@@ -237,7 +243,7 @@ classification spans are measurement errors, not successful samples. Outcome
 priority is incomplete, worker error, membership mismatch, then ok; unrelated
 infrastructure failure turns an otherwise-ok sample into error. The report
 retains all requested samples before returning nonzero for any failed sample,
-readiness assertion or restoration failure. Identity and acceptance are owned
-by the fixture guide, not by a second timing definition.
+readiness assertion or restoration failure. Identity and acceptance belong to
+the [benchmark contract](../../tests/fixtures/large/benchmark-contract.md).
 The separate five-second usable-startup budget does not relabel a successful
 classification outcome; `targetHeld: false` still fails the benchmark command.

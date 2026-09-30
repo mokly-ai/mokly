@@ -44,8 +44,9 @@ Apply these steps in order:
    `source` is excluded, as it is from every Changes projection.
 3. Strip package component markers from both sides and apply paired
    manual-ignore normalization. If the documents differ, take fall-through.
-   Discover resources from the page analyses' derived records, with both
-   readers resolving/traversing independently; derived mode also checks bytes.
+   Discover resources from the page analyses' derived records under the
+   [resource proof](#resource-and-one-sided-rules), preserving its mode-specific
+   reader and closure bounds.
 4. When either usage record has instances or entry-owned slots,
    compute the complete comparison's ownership projection, including v7 range
    validation and root-specific ownership, but no inline analysis. Retain
@@ -77,6 +78,14 @@ with its exact conditions; otherwise run the complete comparison. It is not a
 weaker fast-path resource decision. One-sided views run neither paired route.
 
 ## Resource And One-Sided Rules
+
+Committed mode traverses only the head reader's actual closure, plus its
+projected closure when required below; a changed Git path in either takes
+fall-through. With shared seeds, a base-only dependency is reachable only
+through a resource whose content differs and whose changed Git path is already
+in the head closure. Base traversal is therefore redundant. Derived mode
+traverses both readers independently for each required material and compares
+membership and bytes; equal unions are not proof of equality.
 
 Projected resources need not be a subset of actual resources: copying caller
 content out of an inert template can expose recorded references. Parser-discarded
