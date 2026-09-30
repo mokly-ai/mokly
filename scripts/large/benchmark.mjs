@@ -150,9 +150,9 @@ export async function benchmark(repository, fixture) {
             fixture.size.inlineStyles ? 900_000 : undefined,
           );
           const classified = await (await fetch(url)).text();
-          const changedRoutes = scenario.expectedChanges;
+          const changedIds = scenario.expectedChanges;
           expect(classified).toContain(
-            `class="mbk-nav-filter-count">${changedRoutes}<`,
+            `class="mbk-nav-filter-count">${changedIds}<`,
           );
           const changesReadyMs = Math.round(performance.now() - beginning);
           expect(errors).toEqual([]);
@@ -163,7 +163,7 @@ export async function benchmark(repository, fixture) {
           runs.push({
             ...measured,
             changesReadyMs,
-            changedRoutes,
+            changedIds,
             ...classification,
             ...baseline,
           });
@@ -183,7 +183,7 @@ export async function benchmark(repository, fixture) {
             scenario: scenario.name,
             state,
             ...measured,
-            expectedChangedRoutes: scenario.expectedChanges,
+            expectedChangedIds: scenario.expectedChanges,
             ...classification,
             error: message,
           };
