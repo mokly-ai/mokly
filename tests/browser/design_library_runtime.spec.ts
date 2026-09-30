@@ -32,13 +32,20 @@ for (const viewport of ["desktop", "mobile"] as const) {
     const before = await contents();
     await page.goto("/view/components/design-ui-top-bar.html");
     await chooseViewport(page, viewport);
-    const status = await page.locator("[data-workspace-status]").textContent();
+    await chooseVariant(page, "Default");
+    const workspaceStatus = page.locator("[data-workspace-status]");
+    const defaultStatus = await workspaceStatus.textContent();
+    const frame = page.frameLocator(`[data-workspace-frame="${viewport}"]`);
+    await chooseVariant(page, "Search");
+    await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
+    const searchStatus = await workspaceStatus.textContent();
+    await chooseVariant(page, "Default");
+    await expect(workspaceStatus).toHaveText(defaultStatus!);
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     if (viewport === "mobile")
       await page
         .getByRole("button", { name: "Expand inspector", exact: true })
         .click();
-    const frame = page.frameLocator(`[data-workspace-frame="${viewport}"]`);
     await page.getByLabel("Supply Query", { exact: true }).check();
     await page.getByLabel("Query", { exact: true }).fill("New search");
     await expect(frame.locator(".mbk-search-value")).toHaveText("New search");
@@ -52,9 +59,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await expect(frame.locator(".mbk-search-value")).toHaveCount(0);
     await page.getByRole("button", { name: "Reset", exact: true }).click();
     await expect(frame.locator(".mbk-tag-picker")).toHaveCount(0);
+    await expect(workspaceStatus).toHaveText(defaultStatus!);
     await chooseVariant(page, "Search");
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
-    await expect(page.locator("[data-workspace-status]")).toHaveText(status!);
+    await expect(workspaceStatus).toHaveText(searchStatus!);
     expect(await contents()).toEqual(before);
   });
 
