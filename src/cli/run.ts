@@ -53,14 +53,12 @@ async function execute(
 ): Promise<number> {
   const startedAt = environment.now();
   if (arguments_.command === "publish") {
-    const [{ runPublish }, { publishOutput }] = await Promise.all([
-      import("./publish.js"),
-      import("./publish_output.js"),
-    ]);
+    const publish = await import("./publish.js");
+    const outputPresentation = await import("./publish_output.js");
     const result = await timeAsync("publish", () =>
-      runPublish(arguments_, cwd, reporter, environment.env),
+      publish.runPublish(arguments_, cwd, reporter, environment.env),
     );
-    const output = publishOutput(
+    const output = outputPresentation.publishOutput(
       result,
       arguments_.token ?? environment.env.MOKLY_TOKEN,
     );
@@ -91,6 +89,8 @@ async function execute(
         timeAsync("export", () =>
           runExport(config, {
             diagnostic: (message) => reporter.runtimeDiagnostic(message),
+            incompatibleBaseline: (commit) =>
+              reporter.incompatibleBaseline(commit),
             outDir: arguments_.out ?? "",
             ...(arguments_.base !== undefined ? { base: arguments_.base } : {}),
           }),

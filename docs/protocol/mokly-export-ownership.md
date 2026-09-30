@@ -118,7 +118,7 @@ Receivers validate the marker before answering a plan request:
 | Blob bytes whose digest or length differ from the entry             | 400 on that Blob                 |
 | Complete requested while a listed digest is still missing           | 409 on Complete                  |
 
-[Upload limits](./mokly-upload-exchange.md#export-files-and-limits) also apply to
+[Upload limits](./mokly-upload-validation.md#export-files-and-limits) also apply to
 every inventory path and file: at most 20,000 regular files including this
 marker and the per-file, path and manifest ceilings. The marker uses the
 regular-file limit (64 MiB), not the upload envelope's 16 KiB limit. An empty

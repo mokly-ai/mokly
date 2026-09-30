@@ -7,7 +7,7 @@ for the changes and verification.
 ## Initial Findings — addressed
 
 1. **P2 / Medium — Required ownership marker lacks a complete public schema.**
-   [Upload validation](../protocol/mokly-upload-exchange.md#receiver-validation),
+   [Upload validation](../protocol/mokly-upload-validation.md#receiver-validation),
    lines 189–191, requires receivers to validate `.mokly-export-artifact` and
    match its inventory to the archive. The linked export and delivery contracts
    describe a version and inventory but never define the JSON field names,

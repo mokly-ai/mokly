@@ -3,14 +3,14 @@
 ## Delivery Status
 
 The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-delivered the presentation below through Milestone 4: the existing design
-references, generation-confined snapshot loader, and device-sized pane runtime.
-Its [scrolling contract](./mokly-comparison-scrolling.md) records the delivered
-page scroller and inner-region mirroring, with the
+records delivery of the presentation below: the existing design references,
+generation-confined snapshot loader, and device-sized pane runtime. Its
+[scrolling contract](./mokly-comparison-scrolling.md) records the implemented
+page scroller and inner-region mirroring. The
 [region pairing](./mokly-comparison-region-pairing.md) and
-[Scroll together](./mokly-comparison-scroll-together.md) contracts, which
-Milestone 6 depicts in the design catalogue and Milestone 7 delivered. This
-contract governs the Before and Current panes that
+[Scroll together](./mokly-comparison-scroll-together.md) contracts are also
+implemented and depicted in the design catalogue. This contract governs the
+Before and Current panes that
 [Changes and screen comparisons](./mokly-changes.md) offer for changed screens
 and eligible component variants in Side by side, Overlay and Difference. It
 changes nothing about comparison eligibility, capture, generation, publishing,
@@ -44,6 +44,10 @@ established: the directory of the redirected live `review.json`, or of the
 pinned `comparisonUrl`. The GET carries the comparison's abort signal and uses
 the comparison credential rule: `credentials: "omit"` for pinned delivery and
 `credentials: "same-origin"` for live delivery.
+
+Review v4 supplies only entry identity, view axes, and state. The viewer derives
+each side's `snapshots/<side>/<viewRoute(...)>` address from kind and id; no
+entry route or snapshot path travels in comparison JSON.
 
 Acceptance, parsing, and transformation follow the
 [removed previews contract](./mokly-removed-previews.md#frames-and-lifecycle)
@@ -227,11 +231,9 @@ under `packages/viewer/tests/` cover the controllers.
 ## Design References
 
 The implemented design mockups depict this contract in both viewports, the
-screen comparisons in both schemes and the component comparisons in Light like
-every component design. `design-changes-overlay` at `design/review/controls/overlay.html`
-depicts a short screen in Overlay inside one chrome, and
-`design-changes-overlay-long` at `design/review/controls/overlay-long.html`
-depicts a long screen scrolled part-way inside its shared chrome viewport, with
+screen comparisons in both schemes and component comparisons in Light.
+`design-changes-overlay` depicts a short Overlay and
+`design-changes-overlay-long` a long screen part-way down its shared chrome, with
 both layers at one offset, unchanged sections aligned, one reworded section
 showing both versions, and the viewport's scrollbar drawn part-way down.
 `design-review-difference` and `design-appearance-difference` depict Difference
@@ -245,12 +247,10 @@ scrolled part-way inside it, with both versions at one scroll position and the
 frame's scrollbar drawn to match; `design-component-comparison` keeps one frame
 per version in Side by side. Links inside every depicted pane are inert.
 
-`design-changes-overlay-panel` at `design/review/controls/overlay-panel.html`
-depicts an app-shell screen in Overlay whose top bar and navigation stay in
+`design-changes-overlay-panel` depicts an app-shell screen in Overlay whose top bar and navigation stay in
 place while both versions' main panels sit part-way down at one position, with
 the panel's own scrollbar drawn and no page scrollbar on the chrome's viewport.
-`design-changes-side-by-side-apart` at
-`design/review/controls/side-by-side-apart.html` depicts Side by side with
+`design-changes-side-by-side-apart` depicts Side by side with
 Scroll together off, each version at its own place with its own scrollbar.
 Every diff-mode screen design draws the Scroll together switch after its mode
 group, on everywhere but that one, as the runtime does.

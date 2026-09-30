@@ -45,13 +45,16 @@ function dependencies(duplicate = false) {
         [
           comparisonPath,
           JSON.stringify({
-            schemaVersion: 2,
+            schemaVersion: 4,
             baseRef: "origin/main",
             baseCommit: base,
             changedPaths: [],
             ignoredImpact: [],
             screens: [],
             sharedImpact: [],
+            components: [],
+            changes: [],
+            affectedConsumers: [],
           }),
         ],
       ]);
@@ -60,7 +63,6 @@ function dependencies(duplicate = false) {
       const routes = {
         outDir: "/repo/site",
         comparisonUrl: `/${comparisonPath}`,
-        idRoutes: {},
       };
       await selected.adapter?.transform(files, routes);
       metadata = JSON.parse(String(files.get("mokly-upload.json")));

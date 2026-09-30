@@ -3,8 +3,8 @@
 ## Delivery Status
 
 The [comparison pane scroll alignment plan](../../plans/comparison-pane-scroll-alignment.md)
-delivered this reader control in Milestone 7. It decides whether the versions
-of an open comparison scroll together under the
+records delivery of this reader control. It decides whether the versions of an
+open comparison scroll together under the
 [comparison scrolling contract](./mokly-comparison-scrolling.md). The
 [shell design](./mokly-shell-design.md#in-place-comparisons) fixes how the
 switch is drawn and placed. The runtime implements it in
@@ -43,6 +43,25 @@ Changing the switch applies to the open comparison without refetching,
 re-presenting, or reloading a pane. Turning it off performs no write and leaves
 every page and region exactly where it settled. Matching and last-scroll
 tracking continue while off, but counterpart writes are suppressed.
+
+### Design Geometry
+
+The design catalogue draws a 30×18px pill track with a 1px border and a 12px
+knob inset 2px, followed by an 8px gap and a 12px/600 label in
+`--chrome-ink-2`. On uses `--mbk-sage-deep` for the track and border and
+`--mbk-accent-contrast` for the knob at the far end; off uses `--chrome-bg`
+for the track and `--chrome-control-edge` for its border and knob at the start.
+A keyboard-focused control draws a 2px `--mbk-sage-deep` ring 2px outside the
+track, and the transparent checkbox covers the whole control. Runtime colours
+map to `--mbk-accent-deep` and `--_mokly-private-on-accent-deep`, never the
+consumer-tunable `--mokly-accent-contrast`, and the knob has a border so forced
+colours keep it visible without opting out.
+
+The band keeps 16px between controls on a row and 8px between rows. Desktop
+places the switch after the mode group and Refresh at the far end. At the
+narrow breakpoint, the mode group fills the first row, then the switch starts
+the second and Refresh ends it. Every diff-mode artboard shows the switch on
+except `design-changes-side-by-side-apart`; Current shows none.
 
 ## Last-Scrolled Version
 

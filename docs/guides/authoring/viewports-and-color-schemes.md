@@ -54,7 +54,7 @@ defineScreen({
 ```
 
 A nested `screen` marker takes the same field, and it is never inherited from
-a collection or the root of a tree.
+a folder or the root of a tree.
 
 ## Stylesheets per scheme
 

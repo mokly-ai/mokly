@@ -117,7 +117,6 @@ interface MoklyConfig {
     }[];
   };
   compatibility?: {
-    readManifestV2?: boolean; // false
     transformer?: string;
   };
 }
@@ -190,8 +189,8 @@ stylesheets, including transitive imports, are attributed by rule under
 a view's dependency evidence only when a changed rule could match its before or
 after document, or analysis is unresolved. Otherwise it is examined and excluded.
 Shared-impact globs cannot override this exclusion or add unreferenced public
-files to Changes; they retain the existing ownership and membership rules in
-[Changes](./mokly-changes.md) and [component attribution](./mokly-component-changes.md).
+files to Changes, and a glob match alone never adds an entry; see
+[component attribution](./mokly-component-changes.md#dependencies-and-styles).
 
 `moduleResolution` has no defaults beyond esbuild's platform behavior. Package
 roots must be in-repository directories containing `package.json`; their
@@ -201,10 +200,9 @@ deduplicated lists, while loader keys are extensions and values are supported
 esbuild loader names. React and React DOM still resolve through Mokly's
 consumer-peer plugin so these options cannot introduce a second React runtime.
 
-The `legacy` config key is rejected, including `legacy: undefined`. Register
-complete documents explicitly with `definePage` or nested `page`, following the
-[source-preserving migration](./mokly-page-migration.md). Historical manifest
-compatibility does not restore source discovery or legacy configuration.
+The obsolete `legacy` config key is rejected, including `legacy: undefined`.
+Register every complete document explicitly with `definePage` or nested `page`;
+baseline compatibility never restores source discovery or old configuration.
 
 ## Entry Discovery
 

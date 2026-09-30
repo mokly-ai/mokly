@@ -35,7 +35,7 @@ export const propField = defineComponent({
   render: PropFieldView,
   variants: [
     {
-      id: "text",
+      id: "design-ui-prop-field-text",
       title: "Text",
       props: {
         label: "label",
@@ -48,7 +48,7 @@ export const propField = defineComponent({
       },
     },
     {
-      id: "boolean",
+      id: "design-ui-prop-field-boolean",
       title: "Boolean",
       props: {
         label: "disabled",
@@ -63,7 +63,7 @@ export const propField = defineComponent({
       },
     },
     {
-      id: "invalid-number",
+      id: "design-ui-prop-field-invalid-number",
       title: "Invalid number",
       props: {
         label: "cornerRadius",
@@ -85,7 +85,7 @@ export const propField = defineComponent({
       },
     },
     {
-      id: "select",
+      id: "design-ui-prop-field-select",
       title: "Selection",
       props: {
         label: "emphasis",
@@ -101,7 +101,7 @@ export const propField = defineComponent({
       },
     },
     {
-      id: "optional-unset",
+      id: "design-ui-prop-field-optional-unset",
       title: "Optional unset",
       props: {
         label: "hint",

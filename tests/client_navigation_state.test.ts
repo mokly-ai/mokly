@@ -17,23 +17,22 @@ import {
 import { catalogueModel } from "./helpers/viewer_catalogue.js";
 
 const welcome = {
-  route: "screens/welcome.html",
+  id: "welcome",
   tags: ["forms", "onboarding"],
   text: "Welcome",
 };
 const details = {
-  route: "screens/details.html",
+  id: "details",
   tags: ["forms"],
   text: "Details",
 };
 const glossary = {
-  route: "docs/glossary.html",
+  id: "glossary",
   tags: [],
   text: "Glossary",
 };
 const transferReady = {
   id: "transactions-list-transfer-ready",
-  route: "screens/transfer-ready.html",
   tags: ["operations"],
   text: "Ready to transfer",
 };
@@ -53,7 +52,6 @@ function selectionModel(detailsChanged: boolean): CatalogueReadModel {
         ...template,
         changes: changes(false),
         id: "welcome",
-        route: welcome.route,
         tags: welcome.tags,
         title: welcome.text,
       },
@@ -61,7 +59,6 @@ function selectionModel(detailsChanged: boolean): CatalogueReadModel {
         ...template,
         changes: changes(detailsChanged),
         id: "details",
-        route: details.route,
         tags: details.tags,
         title: details.text,
       },
@@ -93,12 +90,15 @@ test("active-row selection clears only constraints that hide it", () => {
     view: "changes" as const,
   };
   assert.deepEqual(revealSelection(changed, matching), matching);
-  const routeMatch = {
+  const derivedRouteOnly = {
     ...defaultSelection,
     screenId: "details",
     search: "screens/details",
   };
-  assert.deepEqual(revealSelection(unchanged, routeMatch), routeMatch);
+  assert.deepEqual(revealSelection(unchanged, derivedRouteOnly), {
+    ...derivedRouteOnly,
+    search: "",
+  });
 });
 
 test("a tag term clears the query only for a row that lacks the tag", () => {
@@ -204,7 +204,7 @@ test("rows match only when every tag term is declared on the row", () => {
 test("row tags lowercase defensively though authoring can never emit them", () => {
   assert.equal(
     rowMatchesQuery(parseSearchQuery("TAG:Forms"), {
-      route: "screens/legacy.html",
+      id: "legacy",
       tags: ["Forms"],
       text: "Legacy",
     }),
@@ -220,11 +220,11 @@ test("an unmatched tag term hides a row free text alone would match", () => {
   );
 });
 
-test("free text matches row text or route regardless of term order", () => {
+test("free text matches row id, title, or tags regardless of term order", () => {
   assert.equal(rowMatchesQuery(parseSearchQuery("WELCOME"), welcome), true);
   assert.equal(
     rowMatchesQuery(parseSearchQuery("screens/welcome"), welcome),
-    true,
+    false,
   );
   assert.equal(rowMatchesQuery(parseSearchQuery("glossary"), welcome), false);
   assert.equal(

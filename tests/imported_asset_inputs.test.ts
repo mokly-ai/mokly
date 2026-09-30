@@ -22,7 +22,7 @@ for (const loader of ["dataurl", "base64", "binary", "file", "text"]) {
     await fs.writeFile(asset, "<svg/>");
     await fs.appendFile(
       fixture.entryPath,
-      '\nimport image from "../mockups/image.svg"; mockups[1].title = String(image);',
+      '\nimport image from "../mockups/image.svg"; mockups[0].title = String(image);',
     );
     const config = await loadConfig(fixture.root);
     const compilation = await compileCatalogue(config);
@@ -66,7 +66,7 @@ test("an imported asset alias outside repoRoot is rejected before rendering", as
   );
   await fs.appendFile(
     fixture.entryPath,
-    '\nimport image from "../mockups/image.svg"; mockups[1].title = image;',
+    '\nimport image from "../mockups/image.svg"; mockups[0].title = image;',
   );
   await assert.rejects(
     compileCatalogue(await loadConfig(fixture.root)),

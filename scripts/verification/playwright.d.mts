@@ -16,14 +16,13 @@ export interface BrowserTestInventory {
   tests: DiscoveredBrowserTest[];
 }
 
-/** List every browser test, or one shard's tests, as Playwright assigns them. */
+export interface BrowserDiscoveryOptions {
+  project?: string;
+  shard?: VerificationShard;
+}
+
+/** List one Playwright project, optionally sharded, as Playwright assigns it. */
 export function discoverBrowserTests(
   repositoryRoot: string,
-  shard?: VerificationShard,
+  options?: BrowserDiscoveryOptions,
 ): Promise<BrowserTestInventory>;
-
-/** Flatten a Playwright JSON list report into repository-relative identities. */
-export function playwrightTests(
-  report: unknown,
-  repositoryRoot: string,
-): DiscoveredBrowserTest[];

@@ -1,12 +1,14 @@
 import path from "node:path";
 
-import type { Manifest, ReviewArtifact } from "@mokly/viewer/data";
+import type { HistoricalManifest, ReviewArtifact } from "@mokly/viewer/data";
 import {
   canonicalJson,
-  catalogueViewHref,
+  entryRoute,
   parseStaticDelivery,
   type StaticDelivery,
   parseReviewResult,
+  snapshotSidePath,
+  viewHref,
 } from "@mokly/viewer/data";
 import { createCatalogue, SHELL_CSS } from "@mokly/viewer/server";
 import type { ShellContext } from "@mokly/viewer/server";
@@ -21,7 +23,7 @@ import {
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { staticRemovedPreviews } from "../publication/removed_previews.js";
-import { changedManifestRoutes } from "../registry/changed_routes.js";
+import { changedManifestIds } from "../registry/changed_ids.js";
 import { removedManifestEntries } from "../registry/changes.js";
 import {
   loadBrowserClientModules,
@@ -50,43 +52,31 @@ const LIVE_HOST_BUNDLES = new Set([
 export function assembleExport(
   config: ResolvedConfig,
   compilation: Compilation,
-  baseline: Manifest,
+  baseline: HistoricalManifest,
   comparison: ReviewArtifact | undefined,
   publicFiles: ReadonlyMap<string, Buffer>,
   contentChanges: readonly string[],
+  changesStatus: "disabled" | "ready" | "unavailable" = comparison
+    ? "ready"
+    : "disabled",
 ): {
   inventory: ExportInventory;
   delivery: StaticDelivery;
   shells: ReadonlyMap<string, StaticDelivery>;
 } {
-  const current = createCatalogue(compilation.manifest);
-  const removedSnapshots = removedManifestEntries(
-    compilation.manifest,
-    baseline,
-  );
+  const removedSnapshots =
+    changesStatus === "ready"
+      ? removedManifestEntries(compilation.manifest, baseline)
+      : [];
   const removed = removedSnapshots.map(({ entry }) => entry);
   const catalogue = createCatalogue(compilation.manifest, removedSnapshots);
-  const entries = [...current.byRoute.values(), ...removed];
-  const idRoutes: Record<string, string> = Object.create(null) as Record<
-    string,
-    string
-  >;
-  for (const entry of [...compilation.manifest.entries, ...removed]) {
-    if (entry.kind === "collection") continue;
-    if (
-      removed.some((candidate) => candidate === entry) &&
-      current.byId.has(entry.id)
-    )
-      continue;
-    idRoutes[entry.id] = catalogueViewHref(entry.route);
-  }
+  const entries = [...compilation.manifest.entries, ...removed];
   const comparisonFiles = new Map(comparison?.files);
-  if (comparison?.result.schemaVersion === 3)
-    parseReviewResult(comparison.result);
+  if (comparison) parseReviewResult(comparison.result);
   if (comparison)
     comparisonFiles.set(
       "review.json",
-      `${comparison.result.schemaVersion === 3 ? canonicalJson(comparison.result, 2) : JSON.stringify(comparison.result, null, 2)}\n`,
+      `${canonicalJson(comparison.result, 2)}\n`,
     );
   const generation = comparisonContentId(comparisonFiles);
   const prefix = `__mokly/diffs/__generations/${generation}`;
@@ -94,14 +84,12 @@ export function assembleExport(
     removedSnapshots,
     comparison,
     comparisonFiles,
-    prefix,
   );
   const delivery = parseStaticDelivery({
-    schemaVersion: 2,
+    schemaVersion: 3,
     deploymentId: STAGED_DEPLOYMENT_ID,
     canonicalPath: "/",
     comparisonUrl: comparison ? `/${prefix}/review.json` : null,
-    idRoutes,
   });
   if (!delivery)
     throw exportError("Invalid static catalogue delivery metadata.");
@@ -113,94 +101,86 @@ export function assembleExport(
   };
   const resourceDenial = exportResourceDenial(config, false);
   for (const [name, bytes] of comparisonFiles) {
-    const denial = name.startsWith("snapshots/")
-      ? resourceDenial(name.slice(name.indexOf("/", 10) + 1))
-      : undefined;
+    const resource = snapshotResourceRoute(name);
+    const denial = resource ? resourceDenial(resource) : undefined;
     if (denial)
       throw exportError(
         `Comparison contains a private export resource: ${name} (${denial})`,
       );
     inventory.add(`${prefix}/${name}`, bytes);
   }
-  const materialRoutes = changedManifestRoutes(
+  const materialIds = changedManifestIds(
     compilation.manifest,
     baseline,
     config,
     contentChanges,
   );
-  const pageRoutes = new Set(
+  const pageIds = new Set(
     compilation.manifest.entries.flatMap((entry) =>
-      entry.kind === "page" ? [entry.route] : [],
+      entry.kind === "page" ? [entry.id] : [],
     ),
   );
-  const changes =
-    comparison?.result.schemaVersion === 3
-      ? [
-          ...comparison.result.changes.map(
-            (item) => (item.after ?? item.before)!.route,
-          ),
-          ...materialRoutes.filter((route) => pageRoutes.has(route)),
-        ]
-      : materialRoutes;
+  const changes = comparison
+    ? [
+        ...comparison.result.changes.map(
+          (item) => (item.after ?? item.before)!.id,
+        ),
+        ...materialIds.filter((id) => pageIds.has(id)),
+      ]
+    : materialIds;
   const context: ShellContext = {
     base: comparison?.result.baseRef ?? "",
-    ...(comparison
+    ...(changesStatus === "ready" && comparison
       ? {
-          changedRoutes: [
-            ...new Set([...changes, ...removed.map((entry) => entry.route)]),
+          changedIds: [
+            ...new Set([...changes, ...removed.map((entry) => entry.id)]),
           ],
           comparisons: true,
           componentChanges: {
             baseline,
-            ...(comparison.result.schemaVersion === 3
-              ? { result: comparison.result }
-              : {
-                  screenEvidence: comparison.result.screens
-                    .map(({ route, views }) => ({
-                      route,
-                      views: views
-                        .filter(
-                          (view) =>
-                            view.reasons?.length ||
-                            view.excludedResources?.length,
-                        )
-                        .map(
-                          ({
-                            viewport,
-                            colorScheme,
-                            reasons,
-                            excludedResources,
-                          }) => ({
-                            viewport,
-                            colorScheme,
-                            ...(reasons ? { reasons } : {}),
-                            ...(excludedResources ? { excludedResources } : {}),
-                          }),
-                        ),
-                    }))
-                    .filter((screen) => screen.views.length > 0),
-                  screenViews: comparison.result.screens.map(
-                    ({ route, views }) => ({
-                      route,
-                      views: views.map(({ viewport, colorScheme, state }) => ({
-                        viewport,
-                        colorScheme,
-                        state,
-                      })),
+            result: comparison.result,
+            screenEvidence: comparison.result.screens
+              .map(({ id, views }) => ({
+                id,
+                views: views
+                  .filter(
+                    (view) =>
+                      view.reasons?.length || view.excludedResources?.length,
+                  )
+                  .map(
+                    ({
+                      viewport,
+                      colorScheme,
+                      reasons,
+                      excludedResources,
+                    }) => ({
+                      viewport,
+                      colorScheme,
+                      ...(reasons ? { reasons } : {}),
+                      ...(excludedResources ? { excludedResources } : {}),
                     }),
                   ),
-                }),
+              }))
+              .filter((screen) => screen.views.length > 0),
+            screenViews: comparison.result.screens.map(({ id, views }) => ({
+              id,
+              views: views.map(({ viewport, colorScheme, state }) => ({
+                viewport,
+                colorScheme,
+                state,
+              })),
+            })),
           },
         }
-      : { comparisons: false }),
+      : { comparisons: changesStatus !== "disabled" }),
     updateVersion: 0,
     delivery,
   };
   const readModel = projectCatalogue({
     configPath: toPosixPath(path.relative(config.repoRoot, config.configPath)),
     catalogue,
-    changesStatus: comparison ? "ready" : "disabled",
-    changedRoutes: context.changedRoutes,
+    changesStatus,
+    changedIds: context.changedIds,
     evidence: context.componentChanges,
     comparison: comparison?.result,
     comparisonUrl: delivery.comparisonUrl?.slice(1) ?? null,
@@ -220,21 +200,15 @@ export function assembleExport(
     notFoundDelivery,
   );
   for (const entry of entries) {
-    if (!("route" in entry)) continue;
-    const canonicalPath = catalogueViewHref(entry.route);
+    const route = entryRoute(entry.kind, entry.id);
+    const canonicalPath = viewHref(entry.kind, entry.id);
     const descriptor = { ...delivery, canonicalPath };
     const html = viewPage(entry, catalogue, {
       ...context,
-      activeRoute: entry.route,
+      activeId: entry.id,
       delivery: descriptor,
     });
-    addShell(`view/${entry.route}`, html, descriptor);
-    if (
-      "id" in entry &&
-      typeof entry.id === "string" &&
-      idRoutes[entry.id] === canonicalPath
-    )
-      addShell(`id/${entry.id}/index.html`, html, descriptor);
+    addShell(`view/${route}`, html, descriptor);
   }
   for (const [name, bytes] of publicFiles) {
     const adapted = /\.html?$/i.test(name)
@@ -252,4 +226,11 @@ export function assembleExport(
   for (const [name, bytes] of loadShellFontAssets())
     inventory.add(`__mokly/fonts/${name}`, bytes);
   return { inventory, delivery, shells };
+}
+
+function snapshotResourceRoute(name: string): string | undefined {
+  const prefix = `${path.posix.dirname(snapshotSidePath("before"))}/`;
+  if (!name.startsWith(prefix)) return undefined;
+  const separator = name.indexOf("/", prefix.length);
+  return separator < 0 ? undefined : name.slice(separator + 1);
 }

@@ -20,7 +20,7 @@ export function releaseRun(overrides: Record<string, unknown> = {}) {
 }
 
 export function verificationArtifacts(expired = false) {
-  return Array.from({ length: 16 }, (_, index) => ({
+  return Array.from({ length: 18 }, (_, index) => ({
     id: index + 1,
     name: `verification-report-${index + 1}`,
     expired,
@@ -39,6 +39,13 @@ export function unitInventory(reports = releaseReports()): string[] {
   const report = reports.find((candidate) => candidate.suite === "unit");
   if (!report) throw new Error("test fixture has no unit report");
   return [...report.fullFiles];
+}
+
+export function browserInventory(reports = releaseReports()): string[] {
+  const report = reports.find((candidate) => candidate.suite === "browser");
+  if (!report || !("playwrightFiles" in report) || !report.playwrightFiles)
+    throw new Error("test fixture has no Playwright inventory");
+  return [...report.playwrightFiles];
 }
 
 export function gitExecutor(commit = TAG_COMMIT, tree = TAG_TREE) {

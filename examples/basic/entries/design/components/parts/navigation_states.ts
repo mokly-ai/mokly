@@ -42,6 +42,7 @@ export const COMPONENT_NAVIGATION_STATES = {
   [COMPONENT_PAGES.unused]: {},
   [COMPONENT_PAGES.added]: {},
   [COMPONENT_PAGES.removed]: {},
+  [COMPONENT_PAGES["shared-impact"]]: {},
   [INSPECTION_PAGES.details]: {},
   [INSPECTION_PAGES.highlight]: {},
   [INSPECTION_PAGES.nested]: {},

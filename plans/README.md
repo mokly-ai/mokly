@@ -14,8 +14,30 @@
   guard in Milestones 30–31, and the guard's scanner moved into a test helper
   in Milestones 32–33, and the browser shard that exceeded CI's job timeout was
   rebalanced in Milestones 34–39, and the merge of main's navigation paths
-  and derived routes lands in Milestones 40–41. The remaining open review findings await the
-  user's decision. The plan stays Active until its pull request merges.
+  and derived routes lands in Milestones 40–41. The remaining open review
+  findings await the user's decision. The plan stays Active until its pull
+  request merges.
+- [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) — replace
+  collection entities and `childIds` with a Storybook-style `navPath` on
+  every leaf, derived from nested `folder` titles; manifest v6 and read
+  model v2. Milestones 1–12 are implemented, verified, pushed, and reviewed;
+  findings 1–16 are fixed, findings 17–21 await the user's decision, and the
+  plan stays Active until its PR merges.
+- [Path-Only Evidence Stays Out Of Changes](./changes-path-only-evidence.md)
+  — a changed file matched only by a shared-impact glob or a declared
+  dependency directory becomes comparison evidence instead of listing every
+  matching entry in Changes; owned paths and exact declared files keep their
+  reasons. Milestones 1–12 are complete on the navigation path plan's branch
+  and findings 3–8 are fixed; finding 2 moves to
+  [Configurable Changes Listing](./configurable-changes-listing.md), findings
+  9–11 await the user's decision, and the plan stays Active until PR #118
+  merges.
+- [Configurable Changes Listing](./configurable-changes-listing.md) — settings
+  under `review.changes` decide which invisible change kinds (component data,
+  component structure, declared files, shared files) list an entry in Changes;
+  all default to not listed, metadata stays listed, and every reason is still
+  recorded as evidence. Planned for a new PR after PR #118 merges; the
+  settings UI comes later.
 - [Comparison Pane Scroll Alignment](./comparison-pane-scroll-alignment.md)
   — Overlay and Difference drift apart when scrolled because each snapshot
   scrolls inside its own opaque frame; comparison panes become viewer-owned,
@@ -72,6 +94,18 @@
   — publish consumes the release PR's validated CI evidence for the same
   tree instead of re-running the complete gate, with the complete gate as
   the fail-closed fallback.
+- [Id-Derived Routes, Unified Variants, And Identity-Keyed Wire](./id-derived-routes.md)
+  — identity is kind plus id: documents derive as `screens/<id>.html`,
+  `pages/<id>.html`, `user-flows/<id>.html`, and `components/<id>.html`;
+  authored `route`, `slug`, `segment`, and `path` go away; component
+  variants become entries with global ids like screen variants; the
+  manifest, read model, review result, and viewer indexes drop every
+  derivable path field and key on id; and the static export writes each
+  shell once without the `id/<id>/index.html` alias. No backwards
+  compatibility. Milestones 1–23 are implemented, verified, pushed, and
+  reviewed on `calummoore/halifax-v2`; the third follow-up review's 9 findings
+  await the user's decision, and the plan stays Active until its pull request
+  merges.
 
 ## Completed
 

@@ -1310,29 +1310,36 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       title of at most 50 characters, and push the branch. Committed as
       `2be592f fix(ci): list browser shards one at a time`.
 
-## Milestone 40: Merge main's navigation paths and derived routes
+## Milestone 40: Merge main's navigation paths and derived routes — completed
 
-- [ ] Merge `origin/main` with `git merge --no-ff --no-commit`, resolve the 21
+- [x] Merge `origin/main` with `git merge --no-ff --no-commit`, resolve the 21
       conflicted files path by path, and keep every change main made.
-- [ ] Port main's `id-derived-entry-routes` ownership case into
+- [x] Port main's `id-derived-entry-routes` ownership case into
       `docs/protocol/fixtures/export-ownership-v2.json`.
-- [ ] Take main's route hydration spec, delete the branch's split files and
+- [x] Take main's route hydration spec, delete the branch's split files and
       route helper, and adapt the shard balance test, the discovery
       diagnostics and `scripts/verification/playwright.d.mts` to main's
       projects and `{ project, shard }` signature.
-- [ ] Remove the branch-point lockfile read from main's `hydration` job and
+- [x] Remove the branch-point lockfile read from main's `hydration` job and
       extend `tests/ci_workflow.test.ts` to every test job.
-- [ ] Fix every semantic conflict the build, type check, lint and tests
+- [x] Fix every semantic conflict the build, type check, lint and tests
       reveal, including main's collection-model guard.
-- [ ] Split `ci-verification.md`, `mokly-export-delivery.md`,
+- [x] Split `ci-verification.md`, `mokly-export-delivery.md`,
       `mokly-export.md`, `mokly-removed-previews.md`,
       `mokly-terminal-output.md`, `mokly-upload-exchange.md` and
       `npm-release.md` by responsibility within their caps or the 250-line
       limit, lower any cap a doc shrinks below, remove the stale milestone
       sentence, and update the protocol index, links and guide pins.
-- [ ] Split `scripts/package/publish.mjs` to at most 300 lines.
-- [ ] Add the delta-publishing breaking-change note to
+- [x] Split `scripts/package/publish.mjs` to at most 300 lines.
+- [x] Add the delta-publishing breaking-change note to
       `npm-release-notes.md`.
+- [x] Bump `brace-expansion` from 5.0.9 to 5.0.12 in `package-lock.json`:
+      main's lockfile fails the gate's live dependency audit with a
+      high-severity advisory (GHSA-q2hr-2g5m-vwhr and two related ones).
+- [x] Move checkout ownership from `ci-verification.md` into main's
+      `ci-workflow.md`: the repository job resolves `origin/main` only for
+      the merge-base ratchets, and no npm-running job keys its cache from a
+      branch-point lockfile.
 
 ## Milestone 41: Merge verification and delivery
 

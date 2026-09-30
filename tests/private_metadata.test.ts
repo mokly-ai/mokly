@@ -8,8 +8,7 @@ import { validateGeneratedOutputPaths } from "../dist/build/output_paths.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import {
-  FORMER_MANIFEST_NAME,
-  LEGACY_MANIFEST_NAME,
+  EARLIER_MANIFEST_NAMES,
   MANIFEST_NAME,
   parseManifest,
   readManifest,
@@ -31,6 +30,8 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
+
+const [FORMER_MANIFEST_NAME, LEGACY_MANIFEST_NAME] = EARLIER_MANIFEST_NAMES;
 
 const metadataRoutes = [
   MANIFEST_NAME,
@@ -239,7 +240,7 @@ for (const includeChanges of [false, true]) {
   });
 }
 
-test("the former Mokabook manifest is accepted only from Git history", async (context) => {
+test("an earlier manifest name is only an incompatibility sentinel", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -250,7 +251,7 @@ test("the former Mokabook manifest is accepted only from Git history", async (co
   };
   assert.throws(
     () => parseManifest(formerManifest),
-    /expected Mokly manifest schema version 5/,
+    /expected Mokly manifest schema version 7/,
   );
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
@@ -269,8 +270,11 @@ test("the former Mokabook manifest is accepted only from Git history", async (co
     "test: former Mokabook metadata",
   ]);
   const git = new CommittedRepository(runner);
-  const baseline = await readBaseManifest(git.reader, "HEAD", config);
-  assert.deepEqual(baseline, compilation.manifest);
+  await assert.rejects(
+    readBaseManifest(git.reader, "HEAD", config),
+    (error: unknown) =>
+      (error as { code?: string }).code === "baseline-incompatible-earlier",
+  );
   const reader = new GitReviewAssetReader(
     config,
     git.reader,
@@ -282,81 +286,3 @@ test("the former Mokabook manifest is accepted only from Git history", async (co
     /not a public static file/,
   );
 });
-
-for (const schemaVersion of [2, 3, 4, 5]) {
-  test(`historical v${schemaVersion} manifests remain readable internally but cannot become Review assets`, async (context) => {
-    const fixture = await createFixture();
-    context.after(() => removeFixture(fixture));
-    const config = await loadConfig(fixture.root);
-    const compilation = await compileCatalogue(config);
-    await writeCompilation(compilation, config);
-    const { sourceFiles: _sources, ...historical } = compilation.manifest;
-    const manifest =
-      schemaVersion === 5
-        ? compilation.manifest
-        : schemaVersion === 4
-          ? {
-              ...compilation.manifest,
-              schemaVersion: 4,
-              entries: compilation.manifest.entries.map(
-                ({ declaredDependencies: _declared, ...entry }) => entry,
-              ),
-            }
-          : {
-              ...historical,
-              schemaVersion,
-              generatedBy: schemaVersion === 2 ? "mockbook" : "mokly",
-              legacyPages: [],
-            };
-    const filename = schemaVersion === 2 ? LEGACY_MANIFEST_NAME : MANIFEST_NAME;
-    if (schemaVersion === 2)
-      await fs.promises.rm(path.join(fixture.mockupsDir, MANIFEST_NAME));
-    await fs.promises.writeFile(
-      path.join(fixture.mockupsDir, filename),
-      JSON.stringify(manifest),
-    );
-    await fs.promises.symlink(
-      filename,
-      path.join(fixture.mockupsDir, "metadata.json"),
-    );
-    await fs.promises.writeFile(
-      path.join(fixture.mockupsDir, "public.json"),
-      publicJson,
-    );
-    const runner = new NodeGitCommandRunner(fixture.root);
-    await runner.run(["init", "-q"]);
-    await runner.run(["add", "."]);
-    await runner.run([
-      "-c",
-      "user.name=Test",
-      "-c",
-      "user.email=test@example.invalid",
-      "commit",
-      "-qm",
-      "test: historical metadata",
-    ]);
-    const git = new CommittedRepository(runner);
-    config.compatibility.readManifestV2 = schemaVersion === 2;
-    const baseline = await readBaseManifest(git.reader, "HEAD", config);
-    assert.equal(
-      baseline.schemaVersion,
-      schemaVersion === 2 ? 3 : schemaVersion,
-    );
-    const reader = new GitReviewAssetReader(
-      config,
-      git.reader,
-      "HEAD",
-      "mockups",
-    );
-    for (const route of [filename, "metadata.json"])
-      await assert.rejects(
-        reader.read(route),
-        /not a public static file|not a regular Git file/,
-        route,
-      );
-    assert.equal(
-      Buffer.from(await reader.read("public.json")).toString(),
-      publicJson,
-    );
-  });
-}

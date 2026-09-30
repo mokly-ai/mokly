@@ -1,10 +1,14 @@
 /** Latest-wins repository classification for a watched catalogue. */
 
-import type { Manifest } from "@mokly/viewer/data";
+import type { ManifestV7 } from "@mokly/viewer/data";
 
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timingCounts } from "../diagnostics/timings.js";
 
+import {
+  isEarlierBaselineClassification,
+  isInvalidBaselineClassification,
+} from "./classification_result.js";
 import type {
   CatalogueChangeClassifier,
   ComponentChangeSnapshot,
@@ -22,7 +26,7 @@ export class WatchClassification {
   ) {}
 
   /** Replace any active calculation with the current immutable generation. */
-  schedule(config: ResolvedConfig, manifest: Manifest, base: string): void {
+  schedule(config: ResolvedConfig, manifest: ManifestV7, base: string): void {
     if (this.closed) return;
     this.active?.abort();
     const controller = new AbortController();
@@ -32,9 +36,16 @@ export class WatchClassification {
       this.classifier.read(config, manifest, base, controller.signal),
     )
       .then((snapshot) => {
-        if (this.closed || sequence !== this.sequence || !snapshot) return;
+        if (
+          this.closed ||
+          sequence !== this.sequence ||
+          !snapshot ||
+          isEarlierBaselineClassification(snapshot) ||
+          isInvalidBaselineClassification(snapshot)
+        )
+          return;
         timingCounts("changes.publish", () => ({
-          changedRoutes: snapshot.changedRoutes?.length ?? 0,
+          changedIds: snapshot.changedIds?.length ?? 0,
         }));
         this.publish(snapshot);
       })

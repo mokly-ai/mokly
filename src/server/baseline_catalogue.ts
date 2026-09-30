@@ -1,4 +1,4 @@
-import type { Manifest } from "@mokly/viewer/data";
+import type { HistoricalManifest } from "@mokly/viewer/data";
 import { createCatalogue } from "@mokly/viewer/server";
 import type { Catalogue } from "@mokly/viewer/server";
 
@@ -8,7 +8,7 @@ import { removedManifestEntries } from "../registry/changes.js";
 /** Preserve baseline leaves without inserting them into current ownership. */
 export function catalogueAtBaseline(
   manifest: CatalogueMetadata,
-  baseline: Manifest,
+  baseline: HistoricalManifest,
 ): Catalogue {
   return createCatalogue(manifest, removedManifestEntries(manifest, baseline));
 }

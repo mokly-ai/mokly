@@ -158,7 +158,7 @@ selection under the repository's review rule.
    that would require an explicit provider decision beyond this demonstrated bug.
 
 3. **Medium — preserved legacy-page comparison is promised but absent. Fixed in the follow-up below.**
-   [The migration contract](../protocol/mokly-page-migration.md) requires an
+   [The then-current migration plan](../../plans/unified-catalogue-pages.md) requires an
    exact-route historical adapter using the current page's ID and the legacy
    document/source. [Document pairing](../../src/server/changed_content.ts)
    looks only at historical entries by ID. A validated v3 fixture with a matching
@@ -207,7 +207,7 @@ nested-page attribution finding remains unchanged.
    screen comparisons retain their existing provider policy.
 
 2. **Medium — historical page adapter. Fixed, option A.** A typed
-   [page-baseline index](../../src/review/page_baselines.ts) maps current IDs to
+   page-baseline index maps current IDs to
    v4 page IDs or exact preserved v2/v3 legacy routes. Existing paired-ignore,
    material-content, resource, and historical source-protection rules consume
    those artifacts. Current display metadata stays current, and unmatched legacy

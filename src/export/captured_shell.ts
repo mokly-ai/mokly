@@ -38,7 +38,8 @@ export function externalizeCapturedShell(
     throw exportError(`Invalid captured shell bootstrap: ${name}`, cause);
   }
   if (
-    bootstrap.context.comparisons !== (catalogue.comparisonUrl !== null) ||
+    bootstrap.context.comparisons !==
+      (catalogue.changesStatus !== "disabled") ||
     !capturedPreviewsRemainValid(bootstrap.catalogue, catalogue) ||
     !sameRenderedCatalogue(bootstrap.catalogue, catalogue)
   )

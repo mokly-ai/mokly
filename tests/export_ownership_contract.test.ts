@@ -74,6 +74,11 @@ test("the public ownership fixtures describe the exporter's accepted marker shap
       sample.valid ? "valid" : sample.rejection,
       sample.name,
     );
+    if (parsed.kind !== "valid") continue;
+    for (const entry of parsed.value.files) {
+      assert.equal(entry.path.startsWith("id/"), false, sample.name);
+      assert.equal(entry.path.includes(".variants/"), false, sample.name);
+    }
   }
 });
 

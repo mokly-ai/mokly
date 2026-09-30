@@ -1,13 +1,18 @@
 /** View enumeration and aggregation helpers for Review screen comparisons. */
 
 import type { ColorScheme, Viewport } from "@mokly/viewer";
-import { VIEWPORTS } from "@mokly/viewer/data";
+import { generatedViews } from "@mokly/viewer/data";
 import type {
+  HistoricalManifestScreen,
   ManifestScreen,
   ReviewResult,
   ReviewState,
   ScreenReview,
 } from "@mokly/viewer/data";
+
+import { lexical } from "./component_metadata.js";
+
+type ReviewScreen = ManifestScreen | HistoricalManifestScreen;
 
 const COLOR_SCHEMES: readonly ColorScheme[] = ["light", "dark"];
 const COLOR_SCHEME_RANK: Readonly<Record<ColorScheme, number>> = {
@@ -19,30 +24,21 @@ const VIEWPORT_RANK: Readonly<Record<Viewport, number>> = {
   mobile: 0,
 };
 
-/** List every generated fragment route declared by a manifest screen. */
-export function fragmentRoutes(screen: ManifestScreen): string[] {
-  return VIEWPORTS.flatMap((viewport) =>
-    COLOR_SCHEMES.flatMap(
-      (colorScheme) => fragmentForView(screen, viewport, colorScheme) ?? [],
-    ),
-  );
-}
-
 /** Resolve the manifest fragment for one viewport and color scheme. */
 export function fragmentForView(
-  screen: ManifestScreen,
+  screen: ReviewScreen,
   viewport: Viewport,
   colorScheme: ColorScheme,
 ): string | undefined {
-  return colorScheme === "light"
-    ? screen.fragments[viewport]
-    : screen.darkFragments?.[viewport];
+  return generatedViews(screen).find(
+    (view) => view.viewport === viewport && view.colorScheme === colorScheme,
+  )?.path;
 }
 
 /** Return the canonical color-scheme union for a base/head screen pair. */
 export function unionColorSchemes(
-  base: ManifestScreen | undefined,
-  head: ManifestScreen | undefined,
+  base: ReviewScreen | undefined,
+  head: ReviewScreen | undefined,
 ): readonly ColorScheme[] {
   const schemes = new Set([
     ...screenColorSchemes(base),
@@ -52,10 +48,10 @@ export function unionColorSchemes(
 }
 
 /** Return the color schemes represented by one manifest screen. */
-export function screenColorSchemes(
-  screen: ManifestScreen | undefined,
+function screenColorSchemes(
+  screen: ReviewScreen | undefined,
 ): readonly ColorScheme[] {
-  return screen?.darkFragments ? ["light", "dark"] : ["light"];
+  return screen?.colorSchemes ?? [];
 }
 
 /** Aggregate ignored regions in canonical viewport, scheme, then id order. */
@@ -86,7 +82,7 @@ export function aggregateIgnored(
         VIEWPORT_RANK[left.viewport] - VIEWPORT_RANK[right.viewport] ||
         COLOR_SCHEME_RANK[left.colorScheme] -
           COLOR_SCHEME_RANK[right.colorScheme] ||
-        left.id.localeCompare(right.id),
+        lexical(left.id, right.id),
     );
 }
 

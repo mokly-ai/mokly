@@ -3,11 +3,6 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
-import { Readable } from "node:stream";
-import { pipeline } from "node:stream/promises";
-import { gunzipSync } from "node:zlib";
-
-import { extract } from "tar-stream";
 
 import { inspectPublicCatalogue } from "./catalogue.mjs";
 import { runCommand } from "./command.mjs";
@@ -17,6 +12,12 @@ import {
   checkOwnershipFixtures,
   verifyOwnershipFiles,
 } from "./ownership.mjs";
+import {
+  assertBlob,
+  extractArchive,
+  requestBytes,
+  validBlob,
+} from "./publish_exchange.mjs";
 import { checkUploadPlanFixtures } from "./upload_plan.mjs";
 
 /** Exercise only the packed public CLI and documented files against a receiver. */
@@ -266,42 +267,12 @@ export async function smokeConsumerPublish(context, root) {
         path.join(packageRoot, "docs/protocol/mokly-upload-exchange.md"),
       ),
     );
+    assert.ok(
+      fs.existsSync(
+        path.join(packageRoot, "docs/protocol/mokly-upload-validation.md"),
+      ),
+    );
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
-}
-
-async function extractArchive(archive) {
-  const unpack = extract();
-  const files = new Map();
-  unpack.on("entry", (header, stream, next) => {
-    assert.equal(header.type, "file", header.name);
-    assert.equal(files.has(header.name), false, header.name);
-    const chunks = [];
-    stream.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
-    stream.on("end", () => {
-      files.set(header.name, Buffer.concat(chunks));
-      next();
-    });
-    stream.resume();
-  });
-  await pipeline(Readable.from([gunzipSync(archive)]), unpack);
-  return files;
-}
-
-function assertBlob(entry, digest, bytes) {
-  assert.equal(validBlob(entry, digest, bytes), true, entry.path);
-}
-
-function validBlob(entry, digest, bytes) {
-  return (
-    entry.size === bytes.length &&
-    crypto.createHash("sha256").update(bytes).digest("hex") === digest
-  );
-}
-
-async function requestBytes(request) {
-  const chunks = [];
-  for await (const chunk of request) chunks.push(Buffer.from(chunk));
-  return Buffer.concat(chunks);
 }

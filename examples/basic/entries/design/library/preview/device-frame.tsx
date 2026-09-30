@@ -54,9 +54,9 @@ export const deviceFrame = defineComponent({
   },
   render: DeviceFrameView,
   variants: [
-    { id: "phone", title: "Phone", props: sample },
+    { id: "design-ui-device-frame-phone", title: "Phone", props: sample },
     {
-      id: "browser",
+      id: "design-ui-device-frame-browser",
       title: "Browser",
       props: {
         ...sample,
@@ -65,9 +65,13 @@ export const deviceFrame = defineComponent({
         children: <MiniWelcome />,
       },
     },
-    { id: "dark", title: "Dark preview", props: { ...sample, dark: true } },
     {
-      id: "light-only",
+      id: "design-ui-device-frame-dark",
+      title: "Dark preview",
+      props: { ...sample, dark: true },
+    },
+    {
+      id: "design-ui-device-frame-light-only",
       title: "Light only",
       props: { ...sample, lightOnly: true },
     },

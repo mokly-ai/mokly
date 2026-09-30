@@ -19,7 +19,7 @@ jobs:
   repository:
     name: Repository
     runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 20
+    timeout-minutes: 30
     outputs:
       node-24-version: ${{ steps.node-version.outputs.value }}
       node-matrix: ${{ steps.profile.outputs.node-matrix }}
@@ -74,7 +74,7 @@ jobs:
     name: Package (Node ${{ matrix.node }})
     needs: [repository]
     runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -106,7 +106,7 @@ jobs:
     name: Unit (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
     needs: [repository]
     runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -152,7 +152,7 @@ jobs:
     name: Browser (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
     needs: [repository]
     runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -203,11 +203,65 @@ jobs:
           path: test-results/
           retention-days: 14
 
+  hydration:
+    name: Hydration (Node ${{ matrix.node }})
+    needs: [repository]
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ${{ fromJSON(needs.repository.outputs.node-matrix) }}
+    env:
+      MOKLY_VERIFICATION_RUNTIME: node-${{ matrix.node }}
+      MOKLY_VERIFICATION_REPORT: .context/verification-reports/hydration-node-${{ matrix.node }}-full.json
+    steps:
+      - name: Check out repository
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
+          package-manager-cache: false
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Set up npm
+        run: npm install --global npm@11.7.0
+      - name: Set up Rust
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal
+          rustup default 1.95.0
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run hydration verification
+        run: cargo xtask check --suite hydration
+      - name: Retain hydration inventory and timings
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: verification-hydration-node-${{ matrix.node }}
+          path: ${{ env.MOKLY_VERIFICATION_REPORT }}
+          if-no-files-found: error
+          include-hidden-files: true
+          overwrite: true
+          retention-days: 14
+      - name: Retain hydration failure evidence
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: hydration-failures-node-${{ matrix.node }}-attempt-${{ github.run_attempt }}
+          path: test-results/
+          retention-days: 14
+
   native:
     name: Native filesystem (${{ matrix.os }})
     needs: [repository]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -240,9 +294,9 @@ jobs:
   required:
     name: Required CI
     if: always()
-    needs: [repository, package, unit, browser, native]
+    needs: [repository, package, unit, browser, hydration, native]
     runs-on: blacksmith-2vcpu-ubuntu-2404
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Check out report validator
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
@@ -262,12 +316,14 @@ jobs:
           PACKAGE_RESULT: ${{ needs.package.result }}
           UNIT_RESULT: ${{ needs.unit.result }}
           BROWSER_RESULT: ${{ needs.browser.result }}
+          HYDRATION_RESULT: ${{ needs.hydration.result }}
           NATIVE_RESULT: ${{ needs.native.result }}
         run: |
           test "$REPOSITORY_RESULT" = success
           test "$PACKAGE_RESULT" = success
           test "$UNIT_RESULT" = success
           test "$BROWSER_RESULT" = success
+          test "$HYDRATION_RESULT" = success
           test "$NATIVE_RESULT" = success
       - name: Require complete shard evidence
         env:

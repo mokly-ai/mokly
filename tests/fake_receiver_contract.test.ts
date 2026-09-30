@@ -64,7 +64,7 @@ test("ownership rejection classes use the exchange contract statuses", async () 
     }>;
   };
   const exchange = await fs.readFile(
-    path.join(repositoryRoot, "docs/protocol/mokly-upload-exchange.md"),
+    path.join(repositoryRoot, "docs/protocol/mokly-upload-validation.md"),
     "utf8",
   );
   const documented = new Map([

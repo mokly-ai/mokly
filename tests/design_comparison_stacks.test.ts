@@ -3,6 +3,8 @@ import test from "node:test";
 
 import { parse } from "parse5";
 
+import { generatedViews } from "../packages/viewer/dist/components/views.js";
+
 import {
   attribute,
   byClass,
@@ -136,17 +138,8 @@ test("Side by side keeps one chrome per version", async () => {
 async function designOutputs(): Promise<string[]> {
   const { manifest } = await designCatalogue;
   return manifest.entries.flatMap((entry) => {
-    if (entry.kind === "screen" && entry.route.startsWith("design/"))
-      return [
-        ...Object.values(entry.fragments),
-        ...Object.values(entry.darkFragments ?? {}),
-      ];
-    if (entry.kind === "component" && entry.route.startsWith("design/"))
-      return entry.variants.flatMap((variant) => [
-        ...Object.values(variant.fragments),
-        ...Object.values(variant.darkFragments ?? {}),
-      ]);
-    return [];
+    if (!entry.id.startsWith("design-")) return [];
+    return generatedViews(entry).map((view) => view.path);
   });
 }
 
@@ -168,8 +161,7 @@ test("links inside every depicted comparison and pane sample do nothing", async 
     const depicted = COMPARISON_REGIONS.flatMap((name) =>
       byClass(document, name),
     );
-    if (depicted.length > 0 && route.startsWith("design/library/"))
-      samples += 1;
+    if (depicted.length > 0 && route.startsWith("components/")) samples += 1;
     for (const region of depicted) {
       regions += 1;
       assert.deepEqual(

@@ -73,9 +73,9 @@ export const screenHeader = defineComponent({
   },
   render: ScreenHeaderView,
   variants: [
-    { id: "screen", title: "Screen", props: sample },
+    { id: "design-ui-screen-header-screen", title: "Screen", props: sample },
     {
-      id: "component",
+      id: "design-ui-screen-header-component",
       title: "Component",
       props: {
         ...sample,
@@ -85,12 +85,12 @@ export const screenHeader = defineComponent({
       },
     },
     {
-      id: "changed",
+      id: "design-ui-screen-header-changed",
       title: "Changed",
       props: { ...sample, status: "changed", comparisons: true },
     },
     {
-      id: "removed",
+      id: "design-ui-screen-header-removed",
       title: "Removed",
       props: {
         ...sample,

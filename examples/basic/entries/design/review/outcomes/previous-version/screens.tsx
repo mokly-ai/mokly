@@ -88,7 +88,6 @@ export const removedOutcomeScreens = [
     mobile: <LongPreview viewport="mobile" />,
     rationale:
       "Reading a removed screen means moving through it, so the previous views keep the screen's own scrolling and in-screen positions instead of collapsing to a single visible region.",
-    slug: "long-preview",
     title: "Long previous screen",
   }),
   screen({
@@ -100,7 +99,6 @@ export const removedOutcomeScreens = [
     mobile: <Loading viewport="mobile" />,
     rationale:
       "Previous views are retrieved only when the screen is opened, so the wait belongs on the stage while the navigation, badge, and details stay in place.",
-    slug: "loading",
     title: "Loading previous screen",
   }),
   screen({
@@ -112,7 +110,6 @@ export const removedOutcomeScreens = [
     mobile: <Unavailable viewport="mobile" />,
     rationale:
       "Current output may never stand in for missing history, so the stage says plainly that the previous version is unavailable and offers one repeatable action rather than naming a reason.",
-    slug: "unavailable",
     title: "Previous screen unavailable",
   }),
   screen({
@@ -124,7 +121,6 @@ export const removedOutcomeScreens = [
     mobile: <NoCapturedView viewport="mobile" />,
     rationale:
       "A removed screen is only ever shown in the viewports it was captured in, so a viewport with no previous view says so on the stage instead of leaving it blank. Selecting both viewports already shows the captured one, so the stage drops the sentence naming it.",
-    slug: "no-captured-view",
     title: "Previous view not captured",
   }),
 ];

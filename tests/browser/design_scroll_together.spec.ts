@@ -15,32 +15,28 @@ type Box = { bottom: number; left: number; right: number; top: number };
  * and whether the design also renders in Dark.
  */
 const DIFF_MODES = [
-  ["design/review/controls/overlay", true, true],
-  ["design/review/controls/overlay-long", true, true],
-  ["design/review/controls/overlay-panel", true, true],
-  ["design/review/controls/side-by-side-apart", false, true],
-  ["design/review/outcomes/changed", true, true],
-  ["design/review/outcomes/difference", true, true],
-  ["design/review/impact/stylesheets/matched", true, false],
-  ["design/browse/appearance/workspaces/side-by-side", true, true],
-  ["design/browse/appearance/workspaces/difference", true, true],
-  ["design/components/pages/comparison", true, false],
-  ["design/components/pages/stacked/overlay-tall", true, false],
-  ["design/components/states/removed", true, false],
-  ["design/library/controls/comparison-toolbar.variants/overlay", true, false],
-  [
-    "design/library/controls/comparison-toolbar.variants/side-by-side-apart",
-    false,
-    false,
-  ],
+  ["design-changes-overlay", true, true],
+  ["design-changes-overlay-long", true, true],
+  ["design-changes-overlay-panel", true, true],
+  ["design-changes-side-by-side-apart", false, true],
+  ["design-review-changed", true, true],
+  ["design-review-difference", true, true],
+  ["design-review-style-matched", true, false],
+  ["design-appearance-side-by-side", true, true],
+  ["design-appearance-difference", true, true],
+  ["design-component-comparison", true, false],
+  ["design-component-overlay-tall", true, false],
+  ["design-component-removed", true, false],
+  ["design-ui-comparison-toolbar-overlay", true, false],
+  ["design-ui-comparison-toolbar-side-by-side-apart", false, false],
 ] as const;
 
 /** Bands showing Current, where one version has nothing to scroll with. */
 const CURRENT = [
-  "design/review/controls/current",
-  "design/components/pages/affected",
-  "design/library/controls/comparison-toolbar.variants/current",
-  "design/library/chrome/screen-header.variants/changed",
+  "design-changes-current",
+  "design-component-affected",
+  "design-ui-comparison-toolbar-current",
+  "design-ui-screen-header-changed",
 ];
 
 async function open(
@@ -54,7 +50,8 @@ async function open(
       ? { width: 390, height: 844 }
       : { width: 1440, height: 1000 },
   );
-  const file = `${route}.${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
+  const kind = route.startsWith("design-ui-") ? "components" : "screens";
+  const file = `${kind}/${route}.${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
   await page.goto(
     pathToFileURL(path.join(repositoryRoot, "examples/basic/generated", file))
       .href,
@@ -171,7 +168,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
   test(`${viewport}: Scroll together switches in place without opening anything`, async ({
     page,
   }) => {
-    await open(page, "design/review/controls/overlay-panel", viewport);
+    await open(page, "design-changes-overlay-panel", viewport);
     const address = page.url();
     const toggle = page.getByRole("switch", { name: "Scroll together" });
     await toggle.click();

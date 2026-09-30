@@ -21,22 +21,29 @@ import { assertUploadRequest } from "./helpers/upload_request.js";
 const read = (...parts: string[]) =>
   readFileSync(path.join(repositoryRoot, ...parts), "utf8");
 const protocol = read("docs/protocol/mokly-upload.md").replace(/\s+/gu, " ");
-const exchange = read("docs/protocol/mokly-upload-exchange.md").replace(
-  /\s+/gu,
-  " ",
-);
+const exchange = [
+  read("docs/protocol/mokly-upload-exchange.md"),
+  read("docs/protocol/mokly-upload-validation.md"),
+]
+  .join("\n")
+  .replace(/\s+/gu, " ");
 const recovery = read("docs/protocol/mokly-export-recovery.md").replace(
   /\s+/gu,
   " ",
 );
-const terminal = read("docs/protocol/mokly-terminal-output.md").replace(
-  /\s+/gu,
-  " ",
-);
-const verification = read("docs/protocol/ci-verification.md").replace(
-  /\s+/gu,
-  " ",
-);
+const terminal = [
+  read("docs/protocol/mokly-terminal-output.md"),
+  read("docs/protocol/mokly-terminal-errors.md"),
+]
+  .join("\n")
+  .replace(/\s+/gu, " ");
+const verification = [
+  read("docs/protocol/ci-verification.md"),
+  read("docs/protocol/ci-suite-evidence.md"),
+]
+  .join("\n")
+  .replace(/\s+/gu, " ");
+const workflow = read("docs/protocol/ci-workflow.md").replace(/\s+/gu, " ");
 const release = read("docs/protocol/npm-release.md").replace(/\s+/gu, " ");
 const sources = new Map(
   GUIDES.filter((page) => page.frontmatter.section === "ci").map((page) => [
@@ -274,11 +281,11 @@ test("test repository inputs are deterministic and title types stay fixed", () =
   );
   assert.match(
     verification,
-    /unit and browser jobs key npm's download cache from the checked-out `package-lock\.json`/u,
+    /package, unit, browser, and hydration jobs key npm's download cache from the checked-out `package-lock\.json`/u,
   );
   assert.match(
     verification,
-    /neither job resolves `origin\/main` or reads a branch-point lockfile/u,
+    /none resolves `origin\/main` or reads a branch-point lockfile/u,
   );
   assert.match(
     verification,
@@ -294,6 +301,10 @@ test("test repository inputs are deterministic and title types stay fixed", () =
     "tests/ci_workflow.test.ts",
   ])
     assert.ok(verification.includes(file), file);
+  assert.match(
+    verification,
+    /tests\/ci_workflow\.test\.ts.*package, unit, browser, and hydration jobs.*checked-out lockfile.*never resolve `origin\/main` or a branch-point lockfile/u,
+  );
   assert.match(
     verification,
     /Nothing scans test code for remote-branch reads.*New tests rely on review/u,
@@ -321,10 +332,34 @@ test("test repository inputs are deterministic and title types stay fixed", () =
     release,
     /CI verification contract.*dependency-cache-and-security.*owns cache inputs/u,
   );
+  assert.match(release, /CI workflow graph contract.*owns checkout history/u);
   assert.match(
-    release,
-    /CI graph and checkout contract.*ci-graph-and-checkout-ownership.*owns verification history/u,
+    workflow,
+    /It must fetch release tags for the public-package-export ratchet, plus `origin\/main` and enough history for merge-base ratchets; it resolves `origin\/main` for nothing else/u,
   );
+  assert.match(
+    workflow,
+    /same-repository Preview deployment resolves `origin\/main` for its branch comparison and branch-point lockfile/u,
+  );
+  assert.match(
+    workflow,
+    /package, unit, browser, and hydration jobs keep complete history for fixture-owned historical baselines but never read remote-tracking references/u,
+  );
+  assert.match(
+    workflow,
+    /Every npm-running job keys npm's download cache from the checked-out `package-lock\.json`; none reads a branch-point lockfile/u,
+  );
+  assert.match(
+    verification,
+    /The suites below own the report evidence that status validates/u,
+  );
+  for (const source of [verification, workflow]) {
+    assert.doesNotMatch(source, /the only job that intentionally resolves/iu);
+    assert.doesNotMatch(
+      source,
+      /include the merge-base lockfile in their cache key/iu,
+    );
+  }
   assert.doesNotMatch(
     release,
     /includes the merge-base lockfile in cache keys/u,
@@ -342,11 +377,11 @@ test("browser shards stay whole and balanced by test count", () => {
   );
   assert.match(
     verification,
-    /requires shard file assignments to be pairwise disjoint, so every browser spec stays whole and no spec uses parallel mode/u,
+    /requires browser shard file assignments to be pairwise disjoint; every browser spec therefore stays whole and no spec uses parallel mode/u,
   );
   assert.match(
     verification,
-    /`react_shell_hydration_routes\.spec\.ts` and `react_shell_hydration_routes_2\.spec\.ts` to `react_shell_hydration_routes_4\.spec\.ts` each cover every fourth catalogue route, and the first also covers the home, missing-route and id-redirect cases/u,
+    /Specs whose filenames contain `hydration` run unsharded in the separate `hydration` project and CI job/u,
   );
   assert.match(
     verification,
@@ -354,11 +389,11 @@ test("browser shards stay whole and balanced by test count", () => {
   );
   assert.match(
     verification,
-    /When the bound fails, split a large spec into smaller spec files/u,
+    /When the bound fails, split a large non-hydration spec into smaller spec files/u,
   );
   assert.match(
     verification,
-    /lists the complete inventory and each shard one at a time.*without an atomic rename.*concurrent listings on an empty cache/u,
+    /all-project Playwright inventory, then the complete `chromium` inventory and each `chromium` shard.*each listing one at a time.*without an atomic rename.*concurrent listings on an empty cache/u,
   );
   assert.match(
     verification,

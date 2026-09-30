@@ -28,7 +28,7 @@ test("evidence fetched for a previous route cannot replace the destination", asy
     });
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: ["screens/details.html"],
+      changedIds: ["details"],
       changesStatus: "ready",
     });
     await ready;
@@ -80,13 +80,13 @@ test("an older evidence response cannot overwrite the latest result", async ({
     });
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: ["screens/home.html"],
+      changedIds: ["home"],
       changesStatus: "ready",
     });
     await ready;
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [],
+      changedIds: [],
       changesStatus: "ready",
     });
     await expect(page.locator("html")).toHaveAttribute(
@@ -135,7 +135,7 @@ test("navigation and evidence responses converge on the current destination", as
     await ready;
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: ["screens/details.html"],
+      changedIds: ["details"],
       changesStatus: "ready",
     });
     release();
@@ -183,7 +183,7 @@ test("reconnecting to newer evidence keeps the page, while missed content change
     await page.locator("[data-mokly-search]").fill("tour");
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [],
+      changedIds: [],
       changesStatus: "ready",
     });
     release();
@@ -196,7 +196,7 @@ test("reconnecting to newer evidence keeps the page, while missed content change
     server.publishUpdate();
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [],
+      changedIds: [],
       changesStatus: "ready",
     });
     await expect(page.locator("html")).toHaveAttribute(

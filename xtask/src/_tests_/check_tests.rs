@@ -30,6 +30,7 @@ fn complete_gate_is_the_ordered_union_of_every_suite() {
             "npm run dependencies:check",
             "npm run format:check",
             "npm run lint",
+            "node scripts/verification/repository-ratchets.mjs",
             "cargo fmt --all -- --check",
             "cargo clippy --workspace --all-targets -- -D warnings",
             "cargo test --workspace",
@@ -43,6 +44,8 @@ fn complete_gate_is_the_ordered_union_of_every_suite() {
             "npm run test:prepared",
             "npm run prepare:verification",
             "npm run test:browser:prepared",
+            "npm run prepare:verification",
+            "npm run test:hydration:prepared",
         ]
     );
 }
@@ -71,6 +74,20 @@ fn selected_unit_shard_prepares_then_propagates_the_shard() {
 }
 
 #[test]
+fn selected_hydration_suite_prepares_then_runs_its_project() {
+    assert_eq!(
+        commands_for(VerificationSuite::Hydration, None)
+            .iter()
+            .map(|command| command.display())
+            .collect::<Vec<_>>(),
+        [
+            "npm run prepare:verification",
+            "npm run test:hydration:prepared",
+        ]
+    );
+}
+
+#[test]
 fn repository_suite_runs_audit_first_and_includes_file_length() {
     let command_runner = Arc::new(Unimock::new((
         CommandRunnerRunMock
@@ -81,6 +98,9 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
             .returns(Ok(())),
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "npm run lint"))
+            .returns(Ok(())),
+        CommandRunnerRunMock
+            .next_call(matching!((command) if command.display() == "node scripts/verification/repository-ratchets.mjs"))
             .returns(Ok(())),
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "cargo fmt --all -- --check"))
@@ -178,6 +198,7 @@ fn shard_requires_a_supported_selected_suite() {
     for suite in [
         Some(VerificationSuite::Repository),
         Some(VerificationSuite::Package),
+        Some(VerificationSuite::Hydration),
     ] {
         assert!(matches!(
             CheckRequest::new(suite, Some(shard)),

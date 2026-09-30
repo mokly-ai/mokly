@@ -8,7 +8,7 @@ import {
 } from "./retry.js";
 
 /** Maximum response body retained by plan and completion readers. */
-export const RESPONSE_BODY_LIMIT = 16 * 1024 * 1024;
+const RESPONSE_BODY_LIMIT = 16 * 1024 * 1024;
 
 const RETRYABLE_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
 

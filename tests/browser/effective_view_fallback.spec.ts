@@ -19,13 +19,13 @@ test("a light-only screen deep link keeps effective Light evidence through a bac
     );
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: ["screens/details.html"],
+      changedIds: ["details"],
       changesStatus: "ready",
       componentChanges: {
         baseline: compilation.manifest,
         screenViews: [
           {
-            route: "screens/details.html",
+            id: "details",
             views: [
               {
                 viewport: "mobile",
@@ -65,8 +65,8 @@ test("a light-only saved variant uses its displayed scheme for status and marks"
   page,
 }) => {
   const source = controlsEntrySource().replace(
-    'route: "components/action.html",',
-    'route: "components/action.html", colorSchemes: ["light"],',
+    'id: "action",',
+    'id: "action", colorSchemes: ["light"],',
   );
   const fixture = await startEvidenceFixture(source);
   const { compilation, server } = fixture;
@@ -77,18 +77,18 @@ test("a light-only saved variant uses its displayed scheme for status and marks"
       .filter(({ colorScheme }) => colorScheme === "light")
       .map((view) => ({
         ...view,
-        state: variant.id === "disabled" ? "changed" : "unchanged",
+        state: variant.id === "action-disabled" ? "changed" : "unchanged",
       }));
   }
   try {
     server.publishUpdate({
       kind: "evidence",
-      changedRoutes: [],
+      changedIds: [],
       changesStatus: "ready",
       componentChanges: { baseline: compilation.manifest, result },
     });
     await page.goto(
-      `${server.url}/view/components/action.html?variant=disabled&scheme=dark`,
+      `${server.url}/view/components/action-disabled.html?scheme=dark`,
     );
 
     await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");

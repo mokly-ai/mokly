@@ -26,6 +26,7 @@ export interface PublishOptions extends UploadOptions {
   repository?: string;
   uploadConcurrency?: number;
   diagnostic?: (message: string) => void;
+  incompatibleBaseline?: (commit: string) => void;
 }
 
 /** Injectable runtime boundaries for publish orchestration. */
@@ -58,6 +59,9 @@ export async function publishCatalogue(
       ...(signal === undefined ? {} : { signal }),
       noChanges: options.noChanges ?? false,
       ...(options.diagnostic ? { diagnostic: options.diagnostic } : {}),
+      ...(options.incompatibleBaseline
+        ? { incompatibleBaseline: options.incompatibleBaseline }
+        : {}),
       adapter: {
         publicationMetadata: [UPLOAD_MANIFEST],
         transform(files, routes) {

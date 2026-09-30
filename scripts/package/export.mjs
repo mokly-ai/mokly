@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 import { inspectPublicCatalogue } from "./catalogue.mjs";
 import { assertOwnershipMarker, verifyOwnershipFiles } from "./ownership.mjs";
@@ -10,7 +11,7 @@ export async function inspectConsumerExport(
   relative,
   base,
   expected = [],
-  schemaVersion = 2,
+  schemaVersion = 4,
 ) {
   const output = path.join(root, relative);
   const read = (name) => fs.promises.readFile(path.join(output, name), "utf8");
@@ -33,6 +34,8 @@ export async function inspectConsumerExport(
     assert.ok(files.includes(name), `export missing ${name}`);
   for (const name of files) {
     assert.ok(!name.split("/").includes(".."));
+    assert.equal(name.startsWith("id/"), false);
+    assert.equal(name.includes(".variants/"), false);
     assert.equal(
       /(?:^|\/)(?:node_modules|\.git|scripts|entries)\//.test(name),
       false,
@@ -64,18 +67,44 @@ export async function inspectConsumerExport(
   const review = JSON.parse(await read(comparison));
   assert.equal(review.baseRef, base);
   assert.equal(review.schemaVersion, schemaVersion);
-  for (const screen of [
-    ...review.screens,
-    ...(review.components ?? []).flatMap((component) => component.variants),
+  const { snapshotViewPath } = await import(
+    pathToFileURL(path.join(root, "node_modules/@mokly/viewer/dist/data.js"))
+      .href
+  );
+  let snapshotsChecked = 0;
+  for (const entry of [
+    ...review.screens.map((screen) => ({ ...screen, kind: "screen" })),
+    ...(review.components ?? []).flatMap((component) =>
+      component.variants.map((variant) => ({
+        ...variant,
+        kind: "component",
+      })),
+    ),
   ]) {
-    for (const view of screen.views) {
-      for (const snapshot of [view.beforePath, view.afterPath].filter(Boolean))
+    for (const view of entry.views) {
+      const sides =
+        view.state === "added"
+          ? ["after"]
+          : view.state === "removed"
+            ? ["before"]
+            : ["before", "after"];
+      for (const side of sides) {
+        const snapshot = snapshotViewPath(
+          side,
+          entry.kind,
+          entry.id,
+          view.viewport,
+          view.colorScheme,
+        );
+        snapshotsChecked++;
         assert.ok(
           files.includes(
             path.posix.join(path.posix.dirname(comparison), snapshot),
           ),
         );
+      }
     }
   }
+  assert.ok(snapshotsChecked > 0, "export inspection checked no snapshots");
   return review;
 }

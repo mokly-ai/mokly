@@ -1,7 +1,7 @@
 import { exportError } from "./error.js";
 
 /** Maximum UTF-8 length of every exported relative file path. */
-export const MAX_EXPORT_PATH_BYTES = 1024;
+const MAX_EXPORT_PATH_BYTES = 1024;
 
 /** Stable classification shared by export, ownership and upload validation. */
 export type PortableExportPathKind = "valid" | "too-large" | "invalid";

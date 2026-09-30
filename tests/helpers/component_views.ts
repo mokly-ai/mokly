@@ -1,17 +1,46 @@
 import assert from "node:assert/strict";
 
 import type { Compilation } from "../../dist/build/compile.js";
-import type { ComponentViewRecord } from "../../packages/viewer/dist/components/manifest_types.js";
-import type { Manifest } from "../../packages/viewer/dist/registry/types.js";
+import type {
+  ComponentViewRecord,
+  ManifestComponent,
+  ManifestComponentVariant,
+} from "../../packages/viewer/dist/components/manifest_types.js";
+import { isManifestComponentVariant } from "../../packages/viewer/dist/data.js";
+import type { ManifestV7 } from "../../packages/viewer/dist/registry/types.js";
 
 /** Every actual screen and saved-variant view, in its own entry scope. */
-export function componentViews(manifest: Manifest): ComponentViewRecord[] {
+export function componentViews(manifest: ManifestV7): ComponentViewRecord[] {
   return manifest.entries.flatMap((entry) =>
     entry.kind === "screen"
       ? [...(entry.componentViews ?? [])]
-      : entry.kind === "component"
-        ? entry.variants.flatMap((variant) => [...variant.componentViews])
+      : entry.kind === "component" && isManifestComponentVariant(entry)
+        ? [...entry.componentViews]
         : [],
+  );
+}
+
+export function componentParent(
+  manifest: ManifestV7,
+  id: string,
+): ManifestComponent {
+  const entry = manifest.entries.find((candidate) => candidate.id === id);
+  assert.ok(
+    entry?.kind === "component" && !isManifestComponentVariant(entry),
+    `Missing component ${id}`,
+  );
+  return entry;
+}
+
+export function componentVariants(
+  manifest: ManifestV7,
+  parentId: string,
+): ManifestComponentVariant[] {
+  return manifest.entries.filter(
+    (entry): entry is ManifestComponentVariant =>
+      entry.kind === "component" &&
+      isManifestComponentVariant(entry) &&
+      entry.variantOf === parentId,
   );
 }
 

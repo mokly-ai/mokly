@@ -90,6 +90,35 @@
       }
     },
     {
+      "name": "id-derived-entry-routes",
+      "valid": true,
+      "document": {
+        "schemaVersion": 2,
+        "files": [
+          {
+            "path": "view/components/action-disabled.html",
+            "sha256": "8187cecbb264f440c2188ce0d8490d5105ed784ea7490a80ff0a424ba2ef2d23",
+            "size": 29
+          },
+          {
+            "path": "view/pages/handbook.html",
+            "sha256": "e08a4c5524d815c66ebe2f0139d0d014592a62789e5cae46b760be3710a1b6e3",
+            "size": 22
+          },
+          {
+            "path": "view/screens/home-empty.html",
+            "sha256": "082e376f74c74c5caf61a86f171d9303f1c2716ecdba65909c16a63e5d7b811b",
+            "size": 24
+          },
+          {
+            "path": "view/user-flows/tour.html",
+            "sha256": "6c82868e41335cec367ffc6a7a37f8f05a34d7bdf33d9b61dca21730c57800a5",
+            "size": 18
+          }
+        ]
+      }
+    },
+    {
       "name": "lowercase-without-extra-folding-or-normalization",
       "valid": true,
       "document": {

@@ -5,8 +5,8 @@ import type {
   NavigationTarget,
 } from "../client/frame_adapter.js";
 export const BYTE_LIMIT = 262144;
-export const KEY = /^[a-f0-9]{64}$/;
-export const RANGE = /^r-\d+$/;
+const KEY = /^[a-f0-9]{64}$/;
+const RANGE = /^r-\d+$/;
 export const EVENTS = [
   "hover",
   "click",
@@ -24,7 +24,7 @@ export const object = (value: unknown): value is JsonObject =>
 /** Known fields are validated individually; an exact count rejects every extra. */
 export const shape = (value: JsonObject, count: number): boolean =>
   Object.keys(value).length === count;
-export const textMatch = (
+const textMatch = (
   value: unknown,
   pattern: RegExp,
   max: number,
@@ -56,7 +56,7 @@ export const boxes = (value: unknown): value is Box[] => {
     )
   );
 };
-export const target = (value: unknown): value is NavigationTarget =>
+const target = (value: unknown): value is NavigationTarget =>
   object(value) &&
   (value.kind === "named"
     ? shape(value, 2) &&

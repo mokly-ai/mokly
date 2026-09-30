@@ -40,12 +40,7 @@ for (const name of [
     assert.equal(after.comparisonUrl, before.comparisonUrl);
     assert.notEqual(after.deploymentId, before.deploymentId);
     const files = await directoryFiles(fixture.output);
-    for (const shell of [
-      "index.html",
-      "404.html",
-      "view/screens/home.html",
-      "id/home/index.html",
-    ])
+    for (const shell of ["index.html", "404.html", "view/screens/home.html"])
       assert.equal(
         exportedDelivery(files, shell).deploymentId,
         after.deploymentId,

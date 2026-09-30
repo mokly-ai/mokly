@@ -71,6 +71,8 @@ export async function runPublish(
           ...arguments_,
           ...options,
           diagnostic: (message) => reporter.runtimeDiagnostic(message),
+          incompatibleBaseline: (commit) =>
+            reporter.incompatibleBaseline(commit),
         },
         packageVersion(),
         env,

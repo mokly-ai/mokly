@@ -22,9 +22,9 @@ npx mokly export --out .context/mokly-site
 
 ## What it produces
 
-Export builds first, then packages the catalogue: every screen and page, the
-real id aliases, the assets and the Git comparisons. The result is a directory
-of static files. Export never uploads anything.
+Export builds first, then packages the catalogue: one shell page per entry,
+the generated views, assets and Git comparisons. The result is a directory of
+static files. Export never uploads anything.
 
 Deploy the directory's contents at the root of an HTTP(S) origin. Hosting
 requirements are on the Catalogue page for export and hosting.

@@ -1,134 +1,223 @@
-/** Entry fields needed to analyze collection membership. */
+import { FolderUses, folderLocation } from "./hierarchy_conflicts.js";
+import {
+  compareNavigationNodes,
+  navPathKey,
+  validNavLabel,
+} from "./nav_paths.js";
+
+/** Entry fields needed to analyze navigation paths. */
 export interface HierarchyEntry {
-  childIds?: unknown;
   id: string;
   kind: string;
+  navPath?: unknown;
+  sourceRelativePath?: string;
   title: string;
   variantOf?: unknown;
 }
 
-/** Structural collection-forest violation. */
+/** A routed entry at the end of its authored navigation path. */
+export interface HierarchyLeaf<T extends HierarchyEntry> {
+  entry: T;
+  key: string;
+  kind: "entry";
+  label: string;
+}
+
+/** A merged path prefix with at least one routed descendant. */
+export interface HierarchyFolder<T extends HierarchyEntry> {
+  children: HierarchyNode<T>[];
+  key: string;
+  kind: "folder";
+  label: string;
+  path: readonly string[];
+}
+
+/** A folder or routed entry in a section's current navigation tree. */
+export type HierarchyNode<T extends HierarchyEntry> =
+  HierarchyFolder<T> | HierarchyLeaf<T>;
+
+/** A source-attributed violation of a current navigation path. */
 export interface HierarchyIssue<T extends HierarchyEntry> {
-  code:
-    | "collection-cycle"
-    | "duplicate-child"
-    | "missing-child"
-    | "multiple-parents";
+  code: "invalid-nav-path" | "nav-path-conflict";
   entry: T;
   message: string;
 }
 
-/** Canonical collection forest derived from entry relationships. */
+/** Independent current trees and lookup tables for navigation and variants. */
 export interface CatalogueHierarchy<T extends HierarchyEntry> {
-  ancestorsById: ReadonlyMap<string, readonly T[]>;
+  ancestorsById: ReadonlyMap<string, readonly string[]>;
   byId: ReadonlyMap<string, T>;
-  childrenById: ReadonlyMap<string, readonly T[]>;
-  parentById: ReadonlyMap<string, T>;
-  roots: readonly T[];
+  roots: {
+    pages: readonly HierarchyNode<T>[];
+    components: readonly HierarchyNode<T>[];
+  };
   variantsById: ReadonlyMap<string, readonly T[]>;
   variantParentById: ReadonlyMap<string, T>;
 }
 
-/** Hierarchy data plus any structural issues found while deriving it. */
+/** Hierarchy data plus any current-path violations. */
 export interface HierarchyAnalysis<T extends HierarchyEntry> {
   hierarchy: CatalogueHierarchy<T>;
   issues: readonly HierarchyIssue<T>[];
 }
 
-/** Derive a cycle-guarded collection forest and deterministic diagnostics. */
+interface Siblings<T extends HierarchyEntry> {
+  children: HierarchyNode<T>[];
+  folders: Map<string, HierarchyFolder<T>>;
+}
+
+function siblings<T extends HierarchyEntry>(): Siblings<T> {
+  return { children: [], folders: new Map() };
+}
+
+/** Build one folder tree per section, validating labels and sibling conflicts. */
 export function analyzeHierarchy<T extends HierarchyEntry>(
   entries: readonly T[],
 ): HierarchyAnalysis<T> {
-  const ordered = [...entries].sort(compareEntries);
-  const byId = new Map<string, T>();
-  for (const entry of ordered) {
-    if (!byId.has(entry.id)) byId.set(entry.id, entry);
-  }
-
-  const collections = [...byId.values()].filter(isCollection);
-  const childrenById = new Map<string, readonly T[]>();
-  const parentById = new Map<string, T>();
-  const collectionEdges = new Map<string, readonly string[]>();
-  const mutableVariantsById = new Map<string, T[]>();
-  const variantParentById = new Map<string, T>();
   const issues: HierarchyIssue<T>[] = [];
+  const pages = siblings<T>();
+  const components = siblings<T>();
+  const foldersByPath = {
+    pages: new Map<string, Siblings<T>>(),
+    components: new Map<string, Siblings<T>>(),
+  };
+  const byId = new Map<string, T>();
+  const ancestorsById = new Map<string, readonly string[]>();
+  const variantsById = new Map<string, T[]>();
+  const variantParentById = new Map<string, T>();
+  const uses = new FolderUses<T>();
+  const pendingLeaves: {
+    entry: T;
+    siblings: Siblings<T>;
+    section: "pages" | "components";
+    parent: readonly string[];
+  }[] = [];
 
-  for (const collection of collections) {
-    const seen = new Set<string>();
-    const children: T[] = [];
-    const collectionChildren: string[] = [];
-    for (const childId of validChildIds(collection)) {
-      if (seen.has(childId)) {
-        issues.push({
-          code: "duplicate-child",
-          entry: collection,
-          message: `child id "${childId}" is listed more than once`,
-        });
-        continue;
-      }
-      seen.add(childId);
-      const child = byId.get(childId);
-      if (!child) {
-        issues.push({
-          code: "missing-child",
-          entry: collection,
-          message: `unknown child id: ${childId}`,
-        });
-        continue;
-      }
-      children.push(child);
-      if (child.kind === "collection") collectionChildren.push(childId);
-      const currentParent = parentById.get(childId);
-      if (currentParent && currentParent.id !== collection.id) {
-        issues.push({
-          code: "multiple-parents",
-          entry: collection,
-          message: `child ${childId} is already claimed by collection ${currentParent.id}`,
-        });
-      } else if (!currentParent) {
-        parentById.set(childId, collection);
-      }
-    }
-    childrenById.set(collection.id, children);
-    collectionEdges.set(collection.id, collectionChildren.sort());
-  }
-
+  for (const entry of entries)
+    if (!byId.has(entry.id)) byId.set(entry.id, entry);
   for (const entry of entries) {
-    if (typeof entry.variantOf !== "string" || byId.get(entry.id) !== entry) {
+    if (byId.get(entry.id) !== entry) continue;
+    const path = entry.navPath === undefined ? [] : entry.navPath;
+    const parent =
+      typeof entry.variantOf === "string"
+        ? byId.get(entry.variantOf)
+        : undefined;
+    const parentPath = parent?.navPath;
+    if (
+      parent &&
+      (path === parentPath ||
+        (Array.isArray(path) &&
+          Array.isArray(parentPath) &&
+          path.length === parentPath.length &&
+          path.every((label, index) => label === parentPath[index]))) &&
+      (!Array.isArray(path) || path.some((label) => !validNavLabel(label)))
+    )
+      continue;
+    if (!Array.isArray(path)) {
+      issues.push({
+        code: "invalid-nav-path",
+        entry,
+        message: `entry ${entry.id} navPath index -1 has invalid label ${String(path)}`,
+      });
       continue;
     }
-    const parent = byId.get(entry.variantOf);
-    if (!parent) continue;
-    variantParentById.set(entry.id, parent);
-    mutableVariantsById.set(parent.id, [
-      ...(mutableVariantsById.get(parent.id) ?? []),
-      entry,
-    ]);
-  }
-
-  issues.push(...cycleIssues(collections, collectionEdges, byId));
-  const ancestorsById = new Map<string, readonly T[]>();
-  for (const entry of byId.values()) {
-    ancestorsById.set(
-      entry.id,
-      ancestors(variantParentById.get(entry.id) ?? entry, parentById),
+    const invalid = path.flatMap((label: unknown, index: number) =>
+      validNavLabel(label)
+        ? []
+        : [
+            {
+              code: "invalid-nav-path" as const,
+              entry,
+              message: `entry ${entry.id} navPath index ${index} has invalid label ${JSON.stringify(label) ?? String(label)}`,
+            },
+          ],
     );
+    issues.push(...invalid);
+    if (invalid.length) continue;
+    const labels = path as string[];
+    ancestorsById.set(entry.id, [...labels]);
+    if (typeof entry.variantOf === "string") {
+      const parent = byId.get(entry.variantOf);
+      if (parent) {
+        variantParentById.set(entry.id, parent);
+        variantsById.set(parent.id, [
+          ...(variantsById.get(parent.id) ?? []),
+          entry,
+        ]);
+      }
+      continue;
+    }
+    const section = entry.kind === "component" ? "components" : "pages";
+    const root = section === "components" ? components : pages;
+    const indexed = foldersByPath[section];
+    let current = root;
+    const prefix: string[] = [];
+    for (const label of labels) {
+      uses.record(section, prefix, label, entry);
+      prefix.push(label);
+      const pathKey = navPathKey(prefix);
+      let folder = current.folders.get(label);
+      if (!folder) {
+        folder = {
+          kind: "folder",
+          label,
+          key: pathKey,
+          path: [...prefix],
+          children: [],
+        };
+        current.folders.set(label, folder);
+        current.children.push(folder);
+        indexed.set(pathKey, siblings<T>());
+      }
+      current = indexed.get(pathKey)!;
+    }
+    pendingLeaves.push({
+      entry,
+      siblings: current,
+      section,
+      parent: labels,
+    });
   }
-  const roots = [...byId.values()]
-    .filter(
-      (entry) =>
-        !parentById.has(entry.id) && typeof entry.variantOf !== "string",
-    )
-    .sort(compareEntries);
-  const variantsById = new Map<string, readonly T[]>(mutableVariantsById);
 
+  issues.push(...uses.issues());
+  pendingLeaves.sort(({ entry: left }, { entry: right }) =>
+    left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
+  );
+  for (const { entry, siblings: current, section, parent } of pendingLeaves) {
+    if (typeof entry.title !== "string") continue;
+    const folder = uses.matchingFolder(section, parent, entry.title);
+    if (folder !== undefined) {
+      issues.push({
+        code: "nav-path-conflict",
+        entry,
+        message: `leaf ${entry.id} label ${JSON.stringify(entry.title)} conflicts with folder label ${JSON.stringify(folder)} ${folderLocation(section, parent)}; append the folder label ${JSON.stringify(folder)} to the leaf's navPath`,
+      });
+      continue;
+    }
+    current.children.push({
+      kind: "entry",
+      entry,
+      key: entry.id,
+      label: entry.title,
+    });
+  }
+
+  for (const [pathKey, children] of foldersByPath.pages) {
+    const folder = findFolder(pages, foldersByPath.pages, pathKey);
+    if (folder) folder.children = sortNodes(children.children);
+  }
+  for (const [pathKey, children] of foldersByPath.components) {
+    const folder = findFolder(components, foldersByPath.components, pathKey);
+    if (folder) folder.children = sortNodes(children.children);
+  }
   return {
     hierarchy: {
       ancestorsById,
       byId,
-      childrenById,
-      parentById,
-      roots,
+      roots: {
+        pages: sortNodes(pages.children),
+        components: sortNodes(components.children),
+      },
       variantsById,
       variantParentById,
     },
@@ -136,98 +225,19 @@ export function analyzeHierarchy<T extends HierarchyEntry>(
   };
 }
 
-function ancestors<T extends HierarchyEntry>(
-  entry: T,
-  parentById: ReadonlyMap<string, T>,
-): readonly T[] {
-  const result: T[] = [];
-  const visited = new Set([entry.id]);
-  let parent = parentById.get(entry.id);
-  while (parent) {
-    if (visited.has(parent.id)) return [];
-    visited.add(parent.id);
-    result.push(parent);
-    parent = parentById.get(parent.id);
-  }
-  return result.reverse();
+function findFolder<T extends HierarchyEntry>(
+  root: Siblings<T>,
+  indexed: ReadonlyMap<string, Siblings<T>>,
+  key: string,
+): HierarchyFolder<T> | undefined {
+  const labels = key.split("/");
+  const parent =
+    labels.length === 1 ? root : indexed.get(navPathKey(labels.slice(0, -1)));
+  return parent?.folders.get(labels.at(-1) ?? "");
 }
 
-function cycleIssues<T extends HierarchyEntry>(
-  collections: readonly T[],
-  edges: ReadonlyMap<string, readonly string[]>,
-  byId: ReadonlyMap<string, T>,
-): readonly HierarchyIssue<T>[] {
-  const finished = new Set<string>();
-  const issues: HierarchyIssue<T>[] = [];
-  const reported = new Set<string>();
-  for (const collection of collections) {
-    if (finished.has(collection.id)) continue;
-    const stack: Array<{ id: string; nextChild: number }> = [
-      { id: collection.id, nextChild: 0 },
-    ];
-    const activeIndex = new Map<string, number>();
-    while (stack.length > 0) {
-      const frame = stack.at(-1);
-      if (!frame) break;
-      if (!activeIndex.has(frame.id)) {
-        activeIndex.set(frame.id, stack.length - 1);
-      }
-      const children = edges.get(frame.id) ?? [];
-      const childId = children[frame.nextChild];
-      if (childId === undefined) {
-        finished.add(frame.id);
-        activeIndex.delete(frame.id);
-        stack.pop();
-        continue;
-      }
-      frame.nextChild += 1;
-      const cycleStart = activeIndex.get(childId);
-      if (cycleStart !== undefined) {
-        const cycle = normalizeCycle([
-          ...stack.slice(cycleStart).map(({ id }) => id),
-          childId,
-        ]);
-        const signature = cycle.join(" -> ");
-        const owner = byId.get(frame.id);
-        if (owner && !reported.has(signature)) {
-          reported.add(signature);
-          issues.push({
-            code: "collection-cycle",
-            entry: owner,
-            message: `collection cycle: ${signature}`,
-          });
-        }
-      } else if (!finished.has(childId)) {
-        stack.push({ id: childId, nextChild: 0 });
-      }
-    }
-  }
-  return issues;
-}
-
-function normalizeCycle(cycle: readonly string[]): readonly string[] {
-  const nodes = cycle.slice(0, -1);
-  let first = 0;
-  for (let index = 1; index < nodes.length; index += 1) {
-    if ((nodes[index] ?? "").localeCompare(nodes[first] ?? "") < 0) {
-      first = index;
-    }
-  }
-  const rotated = [...nodes.slice(first), ...nodes.slice(0, first)];
-  return [...rotated, rotated[0] ?? ""];
-}
-
-function validChildIds(entry: HierarchyEntry): readonly string[] {
-  return Array.isArray(entry.childIds) &&
-    entry.childIds.every((value) => typeof value === "string")
-    ? entry.childIds
-    : [];
-}
-
-function isCollection<T extends HierarchyEntry>(entry: T): boolean {
-  return entry.kind === "collection";
-}
-
-function compareEntries(left: HierarchyEntry, right: HierarchyEntry): number {
-  return left.id.localeCompare(right.id);
+function sortNodes<T extends HierarchyEntry>(
+  nodes: readonly HierarchyNode<T>[],
+): HierarchyNode<T>[] {
+  return [...nodes].sort(compareNavigationNodes);
 }

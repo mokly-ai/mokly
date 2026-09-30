@@ -23,6 +23,7 @@ const resultVariables = [
   "PACKAGE_RESULT",
   "UNIT_RESULT",
   "BROWSER_RESULT",
+  "HYDRATION_RESULT",
   "NATIVE_RESULT",
 ] as const;
 
@@ -63,6 +64,7 @@ test("CI shards complete verification behind one prerequisite", async () => {
   assert.equal(workflow.concurrency["cancel-in-progress"], true);
   assert.deepEqual(Object.keys(workflow.jobs).sort(), [
     "browser",
+    "hydration",
     "native",
     "package",
     "repository",
@@ -73,30 +75,36 @@ test("CI shards complete verification behind one prerequisite", async () => {
   const packageJob = workflow.jobs.package;
   const unit = workflow.jobs.unit;
   const browser = workflow.jobs.browser;
+  const hydration = workflow.jobs.hydration;
   const native = workflow.jobs.native;
   const required = workflow.jobs.required;
   assert.ok(repository);
   assert.ok(packageJob);
   assert.ok(unit);
   assert.ok(browser);
+  assert.ok(hydration);
   assert.ok(native);
   assert.ok(required);
   for (const job of Object.values(workflow.jobs))
-    assert.equal(job["timeout-minutes"], 20);
+    assert.equal(job["timeout-minutes"], 30);
   assert.deepEqual(required.needs, [
     "repository",
     "package",
     "unit",
     "browser",
+    "hydration",
     "native",
   ]);
   assert.equal(required.name, "Required CI");
   assert.equal(required.if, "always()");
-  for (const job of [packageJob, unit, browser, native])
+  for (const job of [packageJob, unit, browser, hydration, native])
     assert.deepEqual(job.needs, ["repository"]);
   const selectedNodeMatrix =
     "${{ fromJSON(needs.repository.outputs.node-matrix) }}";
   assert.equal(packageJob.strategy?.matrix.node, selectedNodeMatrix);
+  assert.equal(hydration.strategy?.matrix.node, selectedNodeMatrix);
+  assert.equal(hydration.strategy?.["fail-fast"], false);
+  assert.equal(hydration.strategy?.matrix.shard, undefined);
   for (const job of [unit, browser]) {
     assert.equal(job.strategy?.["fail-fast"], false);
     assert.equal(job.strategy?.matrix.node, selectedNodeMatrix);
@@ -127,9 +135,14 @@ test("CI shards complete verification behind one prerequisite", async () => {
       step.run?.includes("cargo xtask check --suite browser --shard"),
     ),
   );
+  assert.ok(
+    hydration.steps.some((step) =>
+      step.run?.includes("cargo xtask check --suite hydration"),
+    ),
+  );
   assert.equal(
     (source.match(/playwright install --with-deps chromium/g) ?? []).length,
-    1,
+    2,
   );
   assert.match(source, /include-hidden-files: true/);
   assert.match(source, /scripts\/verification\/aggregate\.mjs/);
@@ -143,6 +156,14 @@ test("CI shards complete verification behind one prerequisite", async () => {
     );
     assert.equal(upload?.with?.overwrite, true);
   }
+  const hydrationUpload = hydration.steps.find((step) =>
+    step.uses?.startsWith("actions/upload-artifact@"),
+  );
+  assert.equal(
+    hydrationUpload?.with?.name,
+    "verification-hydration-node-${{ matrix.node }}",
+  );
+  assert.equal(hydrationUpload?.with?.overwrite, true);
   const download = required.steps.find((step) =>
     step.uses?.startsWith("actions/download-artifact@"),
   );
@@ -157,7 +178,14 @@ test("CI shards complete verification behind one prerequisite", async () => {
       step.run?.includes("tests/export_destination_races.test.ts"),
     ),
   );
-  for (const job of [repository, packageJob, unit, browser, native]) {
+  for (const job of [
+    repository,
+    packageJob,
+    unit,
+    browser,
+    hydration,
+    native,
+  ]) {
     assertFullHistoryCheckout(job);
     const setupNode = job.steps.find((step) =>
       step.uses?.startsWith("actions/setup-node@"),
@@ -165,7 +193,7 @@ test("CI shards complete verification behind one prerequisite", async () => {
     assert.equal(setupNode?.with?.cache, "npm");
     assert.ok(job.steps.some((step) => step.run === "npm ci"));
   }
-  for (const job of [packageJob, unit, browser]) {
+  for (const job of [packageJob, unit, browser, hydration]) {
     assert.equal(
       job.steps.some(
         (step) => step.name === "Read baseline dependency lockfile",
@@ -183,6 +211,7 @@ test("CI shards complete verification behind one prerequisite", async () => {
   for (const [job, suite] of [
     [unit, "unit"],
     [browser, "browser"],
+    [hydration, "hydration"],
   ] as const) {
     const installIndex = job.steps.findIndex((step) => step.run === "npm ci");
     const chromiumIndex = job.steps.findIndex((step) =>
@@ -192,7 +221,7 @@ test("CI shards complete verification behind one prerequisite", async () => {
       step.run?.includes(`cargo xtask check --suite ${suite}`),
     );
     assert.ok(installIndex >= 0 && installIndex < suiteIndex);
-    if (suite === "browser")
+    if (suite === "browser" || suite === "hydration")
       assert.ok(chromiumIndex >= 0 && chromiumIndex < suiteIndex);
     const commands = job.steps.map((step) => step.run ?? "").join("\n");
     assert.doesNotMatch(
@@ -271,7 +300,7 @@ test("CI resolves the latest Node 24 patch once for every dependent job", async 
     "${{ steps.node-version.outputs.value }}",
   );
   assert.doesNotMatch(source, /steps\.node\.outputs\.node-version/);
-  for (const name of ["package", "unit", "browser", "required"]) {
+  for (const name of ["package", "unit", "browser", "hydration", "required"]) {
     const job = workflow.jobs[name];
     assert.ok(job, name);
     assert.ok(job.needs?.includes("repository"), name);

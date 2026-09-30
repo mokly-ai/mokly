@@ -39,7 +39,7 @@ export async function checkUploadPlanFixtures(packageRoot) {
 }
 
 /** Validate one decoded plan response without importing package internals. */
-export function assertPlanResponse(value, endpoint, marker) {
+function assertPlanResponse(value, endpoint, marker) {
   if (!record(value) || value.schemaVersion !== 1 || !record(value.upload))
     throw new Error("invalid plan");
   if (

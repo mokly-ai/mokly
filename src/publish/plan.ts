@@ -118,7 +118,7 @@ export async function requestUploadPlan(
 }
 
 /** Validate a decoded plan document against the endpoint and marker digests. */
-export function validatePlanResponse(
+function validatePlanResponse(
   value: unknown,
   endpoint: string,
   markerDigests: ReadonlySet<string>,

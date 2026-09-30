@@ -1,8 +1,14 @@
-/** React lifecycle controller for one route's lazy comparison snapshots. */
+/** React lifecycle controller for one entry's lazy comparison snapshots. */
 
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 
 import { useComparisonEnvironment } from "./comparison_context.js";
+import {
+  comparisonDemand,
+  type ComparisonDemand,
+  type ComparisonMode,
+  type ComparisonPresentation,
+} from "./comparison_presentation.js";
 import {
   renewComparison,
   requestComparison,
@@ -11,23 +17,10 @@ import {
 } from "./comparison_request.js";
 import { useOptionalShellStore } from "./store_context.js";
 
-/** Available comparison presentations; Current never makes a request. */
-export type ComparisonMode = "current" | "side" | "overlay" | "difference";
-
-export interface ComparisonPresentation {
-  /** Scheme of the comparison artifact actually shown. */
-  colorScheme: "dark" | "light";
-  mode: Exclude<ComparisonMode, "current">;
-  /** Sticky control selection retained for fallback labels. */
-  requestedColorScheme: "dark" | "light";
-  viewport: "both" | "desktop" | "mobile";
-}
-
-interface Demand extends ComparisonPresentation {
-  key: string;
-  scope: ComparisonScope;
-  scopeKey: string;
-}
+export type {
+  ComparisonMode,
+  ComparisonPresentation,
+} from "./comparison_presentation.js";
 
 interface LoadedState {
   scopeKey: string;
@@ -60,27 +53,21 @@ export interface ComparisonController {
 export function useComparison({
   effectiveColorScheme,
   eligible,
-  route,
-  variantId,
+  entryId,
+  owner,
 }: {
   effectiveColorScheme?: "dark" | "light";
   eligible: boolean;
-  route: string;
-  variantId?: string;
+  entryId: string;
+  owner?: string;
 }): ComparisonController {
   const store = useOptionalShellStore();
   const environment = useComparisonEnvironment();
   const selection = store?.state.selection;
   const evidenceKey = `${store?.context.updateVersion ?? 0}:${store?.catalogue.publicModel?.revision.evidence ?? 0}`;
-  const scope = useMemo<ComparisonScope>(
-    () => ({ route, ...(variantId ? { variantId } : {}) }),
-    [route, variantId],
-  );
-  const scopeKey = useMemo(
-    () => JSON.stringify([route, variantId]),
-    [route, variantId],
-  );
-  const ownerKey = `${route}\u0000${evidenceKey}`;
+  const scope = useMemo<ComparisonScope>(() => ({ id: entryId }), [entryId]);
+  const scopeKey = useMemo(() => JSON.stringify([entryId]), [entryId]);
+  const ownerKey = `${owner ?? entryId}\u0000${evidenceKey}`;
   const [modeState, setModeState] = useReducer(
     (
       _current: { mode: ComparisonMode; ownerKey: string },
@@ -113,7 +100,7 @@ export function useComparison({
   const failureRef = useRef<FailureState | undefined>(undefined);
   const pendingRef = useRef<PendingOperation | undefined>(undefined);
   const completedRef = useRef<string | undefined>(undefined);
-  const latestDemand = useRef<Demand | undefined>(undefined);
+  const latestDemand = useRef<ComparisonDemand | undefined>(undefined);
   const currentOwner = useRef(ownerKey);
   const currentEligibility = useRef(eligible);
   currentOwner.current = ownerKey;
@@ -217,7 +204,7 @@ export function useComparison({
           ? "side"
           : "current",
     });
-  }, [eligible, environment, route]);
+  }, [eligible, environment, ownerKey]);
 
   useEffect(() => {
     if (!eligible) setModeState({ ownerKey, mode: "current" });
@@ -273,30 +260,5 @@ export function useComparison({
     refresh: () => begin("load", true),
     retry: () => begin("load", true),
     selectMode: (next) => setModeState({ mode: next, ownerKey }),
-  };
-}
-
-function comparisonDemand(
-  scope: ComparisonScope,
-  scopeKey: string,
-  mode: Exclude<ComparisonMode, "current">,
-  viewport: ComparisonPresentation["viewport"],
-  colorScheme: ComparisonPresentation["colorScheme"],
-  requestedColorScheme: ComparisonPresentation["requestedColorScheme"],
-): Demand {
-  return {
-    scope,
-    scopeKey,
-    mode,
-    viewport,
-    colorScheme,
-    requestedColorScheme,
-    key: JSON.stringify([
-      scopeKey,
-      mode,
-      viewport,
-      colorScheme,
-      requestedColorScheme,
-    ]),
   };
 }

@@ -77,9 +77,6 @@ test("publish uploads changed content and identity-stamped shells after an entry
   const identityStamped = [
     "404.html",
     "__mokly/catalogue.json",
-    "id/details/index.html",
-    "id/home/index.html",
-    "id/tour/index.html",
     "index.html",
     "view/screens/details.html",
     "view/screens/home.html",
@@ -92,8 +89,7 @@ test("publish uploads changed content and identity-stamped shells after an entry
         name === "index.html" ||
         name === "404.html" ||
         name === "__mokly/catalogue.json" ||
-        name.startsWith("view/") ||
-        (name.startsWith("id/") && name.endsWith("/index.html")),
+        name.startsWith("view/"),
     )
     .sort();
   assert.deepEqual([...identityStamped].sort(), allStamped);

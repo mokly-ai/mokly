@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
+import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -42,14 +43,20 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
   );
   const generation = path.dirname(jsonPath);
   for (const screen of result.screens) {
-    const page = await read(`view/${screen.route}`);
+    const route = entryRoute("screen", screen.id);
+    const page = await read(`view/${route}`);
     if (screen.state === "removed") {
       assert.ok(page.includes("Showing previous version"));
       assert.ok(!page.includes("data-diff-screen="));
-    } else assert.ok(page.includes(`data-diff-screen="${screen.route}"`));
+    } else assert.ok(page.includes(`data-diff-screen="${screen.id}"`));
     for (const view of screen.views) {
-      for (const snapshot of [view.beforePath, view.afterPath]) {
-        if (!snapshot) continue;
+      for (const side of ["before", "after"] as const) {
+        if (
+          (side === "before" && view.state === "added") ||
+          (side === "after" && view.state === "removed")
+        )
+          continue;
+        const snapshot = `snapshots/${side}/${viewRoute("screen", screen.id, view.viewport, view.colorScheme)}`;
         assert.match(await read(`${generation}/${snapshot}`), /<main/);
       }
     }
@@ -82,7 +89,7 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
   const publicCatalogue = JSON.parse(await read("__mokly/catalogue.json")) as {
     identity: { id: string };
     removedEntries: readonly {
-      entry: { id: string; route: string };
+      entry: { id: string };
       snapshotId?: string;
     }[];
     revision: { content: number; evidence: number };
@@ -104,8 +111,7 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
     revision: publicCatalogue.revision,
   });
   const removed = publicCatalogue.removedEntries.find(
-    ({ entry }) =>
-      entry.id === "removed" && entry.route === "screens/removed.html",
+    ({ entry }) => entry.id === "removed",
   );
   assert.match(removed?.snapshotId ?? "", /^[a-f0-9]{64}$/);
   assert.ok(
@@ -125,21 +131,21 @@ test("published comparisons retain real baseline bytes, removed routes, and isol
     documentText(await read("view/screens/removed.html")),
     /Showing previous version/,
   );
-  assert.match(redirects, /\/id\/removed \/view\/screens\/removed 302/);
+  assert.doesNotMatch(redirects, /^\/id\//m);
   assert.match(await read("_headers"), /Cache-Control: no-store/);
   assert.match(
-    documentText(await read("view/removed-document.html")),
+    documentText(await read("view/pages/removed-document.html")),
     /Showing previous version/,
   );
   assert.doesNotMatch(
-    await read("view/removed-document.html"),
-    /data-diff-screen|data-nav-collection="collection:documents"/,
+    await read("view/pages/removed-document.html"),
+    /data-diff-screen|data-nav-folder="folder:documents"/,
   );
   for (const file of [
     "index.html",
-    "view/handbook.html",
+    "view/pages/handbook.html",
     "view/screens/removed.html",
-    "view/removed-document.html",
+    "view/pages/removed-document.html",
     "404.html",
   ])
     assert.doesNotMatch(await read(file), /client\/browser\.js|EventSource/);
@@ -246,7 +252,7 @@ test("capture mutation aborts atomically and default replacement removes old rev
     { cwd: repositoryRoot },
   );
   for (const file of [
-    "view/removed-document.html",
+    "view/pages/removed-document.html",
     "view/screens/removed.html",
     "__mokly/diffs",
     "static/archived-review/private-snapshot.html",
@@ -257,19 +263,18 @@ test("capture mutation aborts atomically and default replacement removes old rev
     await fs.promises.readFile(path.join(fixture.output, "index.html"), "utf8"),
     /data-filter|removed-document/,
   );
-  assert.ok(fs.existsSync(path.join(fixture.output, "view/handbook.html")));
+  assert.ok(
+    fs.existsSync(path.join(fixture.output, "view/pages/handbook.html")),
+  );
 });
 
-test("a published renamed screen keeps its current id redirect and old comparison route", async (context) => {
+test("a published renamed screen keeps one derived route without an id redirect", async (context) => {
   const fixture = await createPreviewComparisonFixture();
   context.after(() => fixture.close());
   const source = await fs.promises.readFile(fixture.entryPath, "utf8");
   await fs.promises.writeFile(
     fixture.entryPath,
-    source.replace(
-      'route: "screens/home.html"',
-      'route: "screens/renamed.html"',
-    ),
+    source.replace('title: "Home"', 'title: "Renamed home"'),
   );
   await writeCompilation(
     await compileCatalogue(fixture.config),
@@ -280,12 +285,11 @@ test("a published renamed screen keeps its current id redirect and old compariso
     path.join(fixture.output, "_redirects"),
     "utf8",
   );
-  assert.match(redirects, /\/id\/home \/view\/screens\/renamed 302/);
-  assert.equal(redirects.match(/^\/id\/home /gm)?.length, 1);
-  const old = await fs.promises.readFile(
+  assert.doesNotMatch(redirects, /^\/id\//m);
+  const current = await fs.promises.readFile(
     path.join(fixture.output, "view/screens/home.html"),
     "utf8",
   );
-  assert.match(documentText(old), /Showing previous version/);
-  assert.doesNotMatch(old, /data-diff-mode="side"/);
+  assert.match(documentText(current), /Renamed home/);
+  assert.doesNotMatch(documentText(current), /Showing previous version/);
 });

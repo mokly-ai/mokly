@@ -2,9 +2,11 @@ import path from "node:path";
 
 import { runCaptured } from "./process.mjs";
 
-export async function discoverBrowserTests(repositoryRoot, shard) {
+export async function discoverBrowserTests(repositoryRoot, options = {}) {
+  const { project, shard } = options;
   const cli = path.join(repositoryRoot, "node_modules/@playwright/test/cli.js");
   const args = [cli, "test", "--list", "--reporter=json"];
+  if (project) args.push(`--project=${project}`);
   if (shard) args.push(`--shard=${shard.index}/${shard.total}`);
   const result = await runCaptured(process.execPath, args, {
     cwd: repositoryRoot,
@@ -49,7 +51,7 @@ function reportedErrors(stdout) {
   }
 }
 
-export function playwrightTests(report, repositoryRoot) {
+function playwrightTests(report, repositoryRoot) {
   const tests = [];
   const testRoot = path.resolve(report.config?.rootDir ?? repositoryRoot);
   for (const suite of report.suites ?? [])

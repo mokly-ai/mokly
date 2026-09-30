@@ -1,7 +1,7 @@
 /** Prepare a last-good routing generation without invoking a consumer renderer. */
 import { randomBytes } from "node:crypto";
 
-import { generatedViews } from "@mokly/viewer/data";
+import { entryRoute, generatedViews } from "@mokly/viewer/data";
 
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
@@ -32,7 +32,7 @@ export async function prepareLiveRuntime(
     validateGeneratedOutputPaths(
       manifest.entries.flatMap((entry) =>
         entry.kind === "page"
-          ? [entry.route]
+          ? [entryRoute("page", entry.id)]
           : generatedViews(entry).map((view) => view.path),
       ),
       config,

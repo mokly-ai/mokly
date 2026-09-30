@@ -60,7 +60,7 @@ export class PublishAccounting {
 }
 
 /** Progress accounting for one receiver Plan response. */
-export class PublishRoundAccounting {
+class PublishRoundAccounting {
   readonly #entries: ReadonlyMap<string, DigestEntries>;
   readonly #included = new Set<string>();
   readonly #completed = new Set<string>();

@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 
+import { COMPONENT_NAVIGATION } from "../../parts/component_nav_data.js";
 import type { ComparisonMode } from "../../parts/destinations.js";
 import { ScreenHead, type ArtboardViewport } from "../../parts/shell.js";
 
 import type { ChangeStatus } from "./comparison_fixtures.js";
 import type { ComponentDesignDestination } from "./destinations.js";
-import { COMPONENTS, type ComponentId } from "./metadata.js";
+import { COMPONENTS, type ComponentEntryMetadata } from "./metadata.js";
 import { ExplorerShell, type ChangeScenario } from "./navigation.js";
 import { ViewControls } from "./view_controls.js";
 import { PreviewWorkspace } from "./workspace.js";
@@ -16,8 +17,9 @@ export function ComponentLayout({
   mode = "current",
   status = "unmodified",
   design,
-  identity = "action",
+  entry,
   inspector,
+  navigationKey,
   scenario = "all",
   variants,
   viewport,
@@ -27,25 +29,27 @@ export function ComponentLayout({
   mode?: ComparisonMode | undefined;
   status?: ChangeStatus;
   design: ComponentDesignDestination;
-  identity?: ComponentId;
+  entry: ComponentEntryMetadata;
   inspector: ReactNode;
+  navigationKey?: string | undefined;
   scenario?: ChangeScenario;
   variants: ReactNode;
   viewport: ArtboardViewport;
 }) {
-  const { title, id } = COMPONENTS[identity];
+  const component = COMPONENTS[entry.component];
   return (
     <ExplorerShell
-      active={identity}
+      active={entry.component}
+      activeKey={navigationKey ?? COMPONENT_NAVIGATION[entry.component].id}
       design={design}
       scenario={scenario}
       viewport={viewport}
     >
       <ScreenHead
         accessibleControls
-        title={title}
+        title={component.title}
         crumbs={["Example", "Components"]}
-        idChip={id}
+        idChip={entry.id}
         action={<ViewControls viewport={viewport} />}
         comparisons={status === "changed" || status === "removed"}
         status={status}

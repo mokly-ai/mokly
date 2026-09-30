@@ -32,6 +32,7 @@ interface CiWorkflow {
 }
 
 interface ListedShards {
+  readonly playwright: BrowserTestInventory;
   readonly complete: BrowserTestInventory;
   readonly shards: readonly BrowserTestInventory[];
   readonly total: number;
@@ -50,9 +51,9 @@ test("every CI browser shard holds at most 125% of an even share of tests", asyn
 });
 
 test("CI browser shard listings satisfy the evidence aggregate", async () => {
-  const { complete, shards, total } = await listedShards();
+  const { playwright, complete, shards, total } = await listedShards();
   const reports = shards.map((shard, offset) =>
-    listedShardReport(offset + 1, total, shard, complete),
+    listedShardReport(offset + 1, total, shard, complete, playwright),
   );
   assert.doesNotThrow(
     () =>
@@ -80,11 +81,19 @@ function listedShards(): Promise<ListedShards> {
  */
 async function listShards(): Promise<ListedShards> {
   const total = await browserShardTotal();
-  const complete = await discoverBrowserTests(repositoryRoot);
+  const playwright = await discoverBrowserTests(repositoryRoot);
+  const complete = await discoverBrowserTests(repositoryRoot, {
+    project: "chromium",
+  });
   const shards: BrowserTestInventory[] = [];
   for (let index = 1; index <= total; index++)
-    shards.push(await discoverBrowserTests(repositoryRoot, { index, total }));
-  return { complete, shards, total };
+    shards.push(
+      await discoverBrowserTests(repositoryRoot, {
+        project: "chromium",
+        shard: { index, total },
+      }),
+    );
+  return { playwright, complete, shards, total };
 }
 
 function listedShardReport(
@@ -92,6 +101,7 @@ function listedShardReport(
   total: number,
   shard: BrowserTestInventory,
   complete: BrowserTestInventory,
+  playwright: BrowserTestInventory,
 ) {
   return {
     ...unitReport(index, shard.files, complete.files),
@@ -99,6 +109,7 @@ function listedShardReport(
     runtime: REPORT_RUNTIME,
     suite: "browser",
     shard: { index, total },
+    playwrightFiles: playwright.files,
     fullTests: complete.tests,
     assignedTests: shard.tests,
     observedTests: shard.tests.map((entry) => ({

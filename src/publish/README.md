@@ -50,7 +50,9 @@ publication-cancelled line while retaining the original typed failure for
 diagnostic stacks. During the export recovery contract's pre-installation
 window, it lets already-delivered signals run for one event-loop turn, then
 marks the original `MoklyError` without replacing its class, fields, message or
-stack. Every recovery or cleanup failure passes through unchanged with its
+stack. The cancellation mark uses a shared symbol as well as the local registry,
+so the CLI recognizes the same typed failure after a package or bundle-copy
+boundary. Every recovery or cleanup failure passes through unchanged with its
 recovery paths; export transaction setup and generated-output writes keep their
 own errors. `runPublish` keeps a referenced handle from signal listener
 installation through completion, so helper shutdown still reaches the Mokly

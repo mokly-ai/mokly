@@ -7,6 +7,7 @@ import type {
   InstanceRef,
   ViewerSelection,
 } from "@mokly/viewer";
+import { catalogueComponentVariants } from "@mokly/viewer/data";
 
 import { followupFixture } from "./viewer_followup_fixture.js";
 
@@ -31,8 +32,10 @@ async function openViewer(page: Page, cross: boolean, controlled = false) {
     { cross, controlled },
   );
   await expect(
-    page.getByRole("combobox", { name: "Saved variant" }),
-  ).toHaveValue("default");
+    page
+      .getByRole("navigation", { name: "Saved variants" })
+      .getByRole("link", { name: "Default", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
 }
 
 function appendScreenVariant(
@@ -64,10 +67,6 @@ function screenVariantCatalogue(): CatalogueReadModel {
   };
   const model: CatalogueReadModel = {
     ...source,
-    collections: source.collections.map((entry) => ({
-      ...entry,
-      changes: unmodified,
-    })),
     screens: source.screens.map((entry) => ({
       ...entry,
       changes: unmodified,
@@ -92,7 +91,7 @@ function screenVariantCatalogue(): CatalogueReadModel {
     ...parent,
     id: "home-error",
     title: "Save failed",
-    route: "screens/home.variants/error.html",
+    route: "screens/home-error.html",
     variantOf: parent.id,
     changes: {
       status: "ready" as const,
@@ -101,7 +100,7 @@ function screenVariantCatalogue(): CatalogueReadModel {
     },
     views: parent.views.map((view) => ({
       ...view,
-      fragmentPath: `static/screens/home.variants/error.${view.viewport}${
+      fragmentPath: `static/screens/home-error.${view.viewport}${
         view.colorScheme === "dark" ? ".dark" : ""
       }.html`,
       comparison:
@@ -218,9 +217,11 @@ for (const cross of [false, true]) {
     page,
   }) => {
     await openViewer(page, cross);
-    const selector = page.getByRole("combobox", { name: "Saved variant" });
-    await selector.selectOption("second");
-    await expect(selector).toHaveValue("second");
+    const variants = page.getByRole("navigation", { name: "Saved variants" });
+    const first = variants.getByRole("link", { name: "Default", exact: true });
+    const second = variants.getByRole("link", { name: "Second", exact: true });
+    await second.click();
+    await expect(second).toHaveAttribute("aria-current", "page");
     await expect(
       page
         .frameLocator('iframe[data-workspace-frame="desktop"]')
@@ -229,9 +230,9 @@ for (const cross of [false, true]) {
     await page.evaluate(() =>
       window.viewerHarness
         .get("one")
-        .ref.current.select({ variantId: "default" }),
+        .ref.current.select({ screenId: "pane-default" }),
     );
-    await expect(selector).toHaveValue("default");
+    await expect(first).toHaveAttribute("aria-current", "page");
     await expect(
       page
         .frameLocator('iframe[data-workspace-frame="desktop"]')
@@ -247,30 +248,22 @@ for (const cross of [false, true]) {
     expect(events).toEqual([
       {
         name: "navigate",
-        value: expect.objectContaining({
-          screenId: "pane",
-          variantId: "second",
-        }),
+        value: { screenId: "pane-second" },
       },
       {
         name: "selection",
         value: expect.objectContaining({
-          screenId: "pane",
-          variantId: "second",
+          screenId: "pane-second",
         }),
       },
       {
         name: "navigate",
-        value: expect.objectContaining({
-          screenId: "pane",
-          variantId: "default",
-        }),
+        value: { screenId: "pane-default" },
       },
       {
         name: "selection",
         value: expect.objectContaining({
-          screenId: "pane",
-          variantId: "default",
+          screenId: "pane-default",
         }),
       },
     ]);
@@ -280,9 +273,11 @@ for (const cross of [false, true]) {
     page,
   }) => {
     await openViewer(page, cross, true);
-    const selector = page.getByRole("combobox", { name: "Saved variant" });
-    await selector.selectOption("second");
-    await expect(selector).toHaveValue("default");
+    const variants = page.getByRole("navigation", { name: "Saved variants" });
+    const first = variants.getByRole("link", { name: "Default", exact: true });
+    const second = variants.getByRole("link", { name: "Second", exact: true });
+    await second.click();
+    await expect(first).toHaveAttribute("aria-current", "page");
     await expect(
       page
         .frameLocator('iframe[data-workspace-frame="desktop"]')
@@ -295,14 +290,14 @@ for (const cross of [false, true]) {
           .events.find((event) => event.name === "selection")!.value,
     );
     expect(proposal).toEqual(
-      expect.objectContaining({ screenId: "pane", variantId: "second" }),
+      expect.objectContaining({ screenId: "pane-second" }),
     );
     await page.evaluate((selection) => {
       window.viewerHarness
         .get("one")
         .setSelection(selection as ViewerSelection);
     }, proposal);
-    await expect(selector).toHaveValue("second");
+    await expect(second).toHaveAttribute("aria-current", "page");
     await expect(
       page
         .frameLocator('iframe[data-workspace-frame="desktop"]')
@@ -322,60 +317,47 @@ for (const cross of [false, true]) {
             .get("one")
             .events.find((event) => event.name === "navigate")?.value,
       ),
-    ).toEqual(
-      expect.objectContaining({ screenId: "pane", variantId: "second" }),
-    );
+    ).toEqual({ screenId: "pane-second" });
   });
 
-  test(`${adapter} rejects an invalid imperative variant once`, async ({
+  test(`${adapter} treats an unknown imperative entry as unavailable`, async ({
     page,
   }) => {
     await openViewer(page, cross);
-    const message = await page.evaluate(() => {
-      try {
-        window.viewerHarness
-          .get("one")
-          .ref.current.select({ variantId: "missing" });
-        return "resolved";
-      } catch (error) {
-        return error instanceof Error ? error.message : "rejected";
-      }
+    await page.evaluate(() => {
+      window.viewerHarness.get("one").ref.current.select({
+        screenId: "missing",
+      });
     });
-    expect(message).toBe("The requested catalogue selection is unavailable.");
     await expect(
-      page.getByRole("combobox", { name: "Saved variant" }),
-    ).toHaveValue("default");
+      page.getByRole("heading", { name: "Item not found" }),
+    ).toBeVisible();
     expect(
       await page.evaluate(() =>
         window.viewerHarness
           .get("one")
           .events.filter((event) => event.name === "error"),
       ),
-    ).toEqual([
-      {
-        name: "error",
-        value: {
-          code: "selection",
-          message: "The requested catalogue selection is unavailable.",
-        },
-      },
-    ]);
+    ).toEqual([]);
   });
 
   test(`${adapter} inspects only the selected non-default variant`, async ({
     page,
   }) => {
     await openViewer(page, cross);
-    const variant = fixture.catalogue.components
-      .find((entry) => entry.id === "pane")!
-      .variants.find((entry) => entry.id === "second")!;
+    const component = fixture.catalogue.components.find(
+      (entry) => entry.id === "pane",
+    )!;
+    const variant = catalogueComponentVariants(
+      fixture.catalogue,
+      component.id,
+    ).find((entry) => entry.id === "pane-second")!;
     const view = variant.views.find(
       (entry) => entry.viewport === "desktop" && entry.colorScheme === "light",
     )!;
     if (view.usage.status !== "ready") throw new Error("Expected ready usage");
     const instance: InstanceRef = {
-      screenId: "pane",
-      variantId: "second",
+      screenId: "pane-second",
       viewport: "desktop",
       colorScheme: "light",
       key: view.usage.instances[0]!.key,
@@ -383,7 +365,7 @@ for (const cross of [false, true]) {
     await page.evaluate(
       async ({ instance }) => {
         const viewer = window.viewerHarness.get("one").ref.current;
-        viewer.select({ variantId: "second" });
+        viewer.select({ screenId: "pane-second" });
         await viewer.scrollToInstance(instance);
         await viewer.highlightInstance(instance);
       },
@@ -394,7 +376,7 @@ for (const cross of [false, true]) {
     );
     const outcomes = await page.evaluate(async (instance) => {
       const viewer = window.viewerHarness.get("one").ref.current;
-      const mismatched = { ...instance, variantId: "default" };
+      const mismatched = { ...instance, screenId: "pane-default" };
       return Promise.all([
         viewer.highlightInstance(mismatched).then(
           () => "resolved",

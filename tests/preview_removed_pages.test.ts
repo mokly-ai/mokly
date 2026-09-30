@@ -6,7 +6,12 @@ import test from "node:test";
 import { promisify } from "node:util";
 
 import { readCatalogue } from "@mokly/viewer";
-import { parseRemovedPagePreview, parseReviewResult } from "@mokly/viewer/data";
+import {
+  entryRoute,
+  parseRemovedPagePreview,
+  parseReviewResult,
+  viewRoute,
+} from "@mokly/viewer/data";
 
 import { assertPublishedPagePreview } from "./helpers/published_preview.js";
 import {
@@ -41,23 +46,35 @@ test("the npm preview entrypoint advertises a removed page's packaged bytes", as
     ),
   );
   const page = model.removedEntries.find(
-    ({ entry }) => entry.route === "archive/removed.html",
+    ({ entry }) => entry.id === "removed-page",
   );
   assert.ok(page?.preview?.kind === "page");
   await assertPublishedPagePreview(output, page.preview);
-  assert.deepEqual(
-    page.ancestors.map(({ title }) => title),
-    ["Fixture", "Deleted archive", "Deleted section"],
-  );
+  assert.deepEqual(page.entry.navPath, [
+    "Fixture",
+    "Deleted archive",
+    "Deleted section",
+  ]);
   const preview = parseRemovedPagePreview(
-    JSON.parse(await fs.readFile(path.join(output, page.preview.path), "utf8")),
+    JSON.parse(
+      await fs.readFile(
+        path.join(
+          output,
+          path.posix.dirname(model.comparisonUrl!),
+          "pages/removed-page.json",
+        ),
+        "utf8",
+      ),
+    ),
   );
   assert.equal(preview.baseCommit, baseCommit);
-  const generation = path.posix.dirname(
-    path.posix.dirname(path.posix.dirname(page.preview.path)),
-  );
+  const generation = path.posix.dirname(model.comparisonUrl!);
   const document = await fs.readFile(
-    path.join(output, generation, preview.documentPath),
+    path.join(
+      output,
+      generation,
+      `snapshots/before/${entryRoute("page", preview.id)}`,
+    ),
     "utf8",
   );
   assert.match(document, /Previous page/);
@@ -75,11 +92,15 @@ test("the npm preview entrypoint advertises a removed page's packaged bytes", as
     ),
   );
   const desktop = review.screens
-    .find(({ route }) => route === "screens/removed.html")
+    .find(({ id }) => id === "removed-screen")
     ?.views.find(({ viewport }) => viewport === "desktop");
-  assert.ok(desktop?.beforePath);
+  assert.ok(desktop);
   const screenDocument = await fs.readFile(
-    path.join(output, generation, desktop.beforePath),
+    path.join(
+      output,
+      generation,
+      `snapshots/before/${viewRoute("screen", "removed-screen", desktop.viewport, desktop.colorScheme)}`,
+    ),
     "utf8",
   );
   assert.match(screenDocument, /Previous desktop screen/);

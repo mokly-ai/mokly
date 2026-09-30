@@ -6,27 +6,28 @@ Changes baseline, for the served shell, a static export and an embedded
 [removed previews contract](../../../../docs/protocol/mokly-removed-previews.md).
 
 `descriptor.ts` reads the stage host's `data-mokly-preview` attribute that
-`shell/previews.tsx` renders. A damaged or unknown descriptor advertises
+[`../shell/previews.tsx`](../shell/previews.tsx) renders. A damaged or unknown
+descriptor advertises
 nothing, so the stage reports the unavailable state instead of requesting an
 address the catalogue never published.
 
-`request.ts` resolves that descriptor to one metadata address. Development uses
-the stable selected endpoint (`route=` for a screen, `page=` for a page); static
-delivery uses `comparisonUrl` for a screen and the catalogue's advertised
-`preview.path` for a page, after checking that the path belongs to the
-comparison's generation and to this exact route. A page's documents resolve
-against the generation root, not the descriptor's own directory. Screen views
-render only where the comparison says `removed`; any `afterPath` for that route
-means a reused generation and is treated as unavailable. Before accepting
-either kind, the request recomputes the selected historical identity from the
-metadata's baseline commit. Legacy generation-backed selections must resolve
-from the same immutable generation named by both the request and final response.
+[`request.ts`](./request.ts) resolves that descriptor to one metadata address.
+Development uses the stable selected endpoint (`id=` for a screen or component
+variant, `page=` for a page); static delivery uses `comparisonUrl` for a screen
+and `pagePreviewMetadataPath(id)` for a page, confined to that comparison
+generation. Page documents use `snapshotPagePath(id)` from the generation root.
+Screen documents use `snapshotViewPath("before", ...)` only for views whose
+review state is `removed`; review v4 carries no stored before/after paths.
+Before accepting either kind, the request recomputes the selected historical
+identity from the metadata's baseline commit. A generation-backed selection
+must resolve from the immutable generation named by request and final response.
 This keeps a late response or Retry from replacing an open historical record
 after the baseline changes. `renewPreview`
 extends a live generation's retention before reusing it, exactly as comparisons
 do. `advertisedPreviewPaths` returns accepted metadata in `files` and the
 comparison generation's `snapshots/before/` and `snapshots/after/` directories
-in `prefixes`. This internal helper has no runtime consumer: it models the
+in `prefixes` through the shared `snapshotSidePath` builder. This internal
+helper has no runtime consumer: it models the
 documented embedded fetch set for tests, while each presentation loader enforces
 its own generation and side boundaries. Page-preview metadata files are
 unchanged.
@@ -48,8 +49,9 @@ serializes the preserved doctype and other nodes for `srcdoc`. These edits
 affect only the in-memory presentation; snapshot and comparison bytes do not
 change.
 
-`copy.ts` owns the unavailable copy and Retry hook shared by the server render
-and hydrated shell. `shell/previews.tsx` owns loading, retry and loaded states,
+[`copy.ts`](./copy.ts) owns the unavailable copy and Retry hook shared by the
+server render and hydrated shell. [`shell/previews.tsx`](../shell/previews.tsx)
+owns loading, retry and loaded states,
 using the same device chrome components as current screens. A selected viewport
 with no captured view keeps a note where its frame would be rather than an empty
 stage; its `mbk-preview-note` and `mbk-preview-switch` classes match the design
@@ -64,7 +66,7 @@ without applying `:target` (scrolling it into view for removed previews, or
 through the caller's `reveal` hook, which comparison panes use to reveal inner
 regions and then their page viewport), preserves Space for scrolling, and
 reapplies the accepted `srcdoc` if the frame navigates away.
-`shell/use_removed_preview.ts` is the
+[`../shell/use_removed_preview.ts`](../shell/use_removed_preview.ts) is the
 route-owned controller: its first effect replaces the honest server-rendered
 unavailable state with loading, requests on selection, fetches every document
 needed for that viewport and scheme before reporting ready, renews before
@@ -84,7 +86,8 @@ npx playwright test tests/browser/removed_previews.spec.ts tests/browser/removed
 
 The [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md)
 reuses this pipeline for the Before and Current panes of a comparison:
-`shell/use_comparison_documents.ts` creates a `before` and `after` loader for
+[`../shell/use_comparison_documents.ts`](../shell/use_comparison_documents.ts)
+creates a `before` and `after` loader for
 the accepted comparison's immutable generation and presents every selected pane
 document before the comparison is ready. The
 [comparison pane scroll alignment plan](../../../../plans/comparison-pane-scroll-alignment.md)
