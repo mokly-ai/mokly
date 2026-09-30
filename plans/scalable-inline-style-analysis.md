@@ -401,6 +401,11 @@ Summary: make the cumulative fixture reproducible, make the benchmark record
 every outcome and where document work goes, restore linked-stylesheet
 coverage, and measure the baseline that the performance targets use.
 
+Code checkpoint: implemented and verified locally in `46510f43`; post-commit
+format, lint and type checks pass under Node 24.19.0. Default-size fixture
+regeneration, reference measurements, the final check and push remain pending
+the supervisor's approval to measure. No new performance reference exists yet.
+
 - [x] In `tests/fixtures/large/inline_styles.tsx`, derive each per-view rule's
       value from a stable hash of the view key instead of the global render
       counter, so class names depend only on style values.
@@ -449,7 +454,7 @@ coverage, and measure the baseline that the performance targets use.
 - [x] Discovered: disabled per-view sampling must add no promises to the
       delivered batch. Pin that bound against the direct comparison oracle;
       malformed identity records must suggest a usable preparation command.
-- [ ] Discovered: finish targeted tests and the full suite, commit the code
+- [x] Discovered: finish targeted tests and the full suite, commit the code
       locally, then run `npm run format:check`, `npm run lint` and
       `npm run typecheck` under Node 24.19.0. Report and stop before regenerating
       either default-size fixture or measuring; resume only on the supervisor's
