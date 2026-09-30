@@ -207,9 +207,17 @@ Tags: ui
       Static and Live, and save screenshots under `.context/`.
 - [x] Run the full check set and `cargo xtask check` if anything changed;
       `git add -A`, commit with a Conventional Commits message, and push.
-- [ ] Review: after the push, use `docs/implementation-review-prompt.md`
+- [x] Review: after the push, use `docs/implementation-review-prompt.md`
       against `origin/main` and report numbered findings with severity,
       impact and lettered options, without changing the implementation.
+      Reviewed at `70d9bfe1`: two Medium findings and one Low, each confirmed
+      against the code and reported to the user for a decision: bare and
+      configured-alias repository imports still resolve through the file
+      system, so deleting an aliased source can fail an accepted generation's
+      Live bundle; a rebuild whose first child restart fails but recovers is
+      reported as a source failure, showing a false notice; and eight-bit
+      ECMA-48 string sequences terminated by U+009C bypass escape stripping and
+      path redaction.
 
 ## Post-merge follow-up (non-blocking)
 
