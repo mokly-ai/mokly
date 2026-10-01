@@ -173,6 +173,11 @@ Each prefix also has `.machine-before.txt`, `.machine-after.txt`,
 The [September 28 measurements](../../../docs/dev/large-fixture-history.md)
 remain historical evidence, not this template-identified reference.
 
+Milestone 3's [bounded-memory checkpoint](../../../docs/dev/large-fixture-memory.md)
+records the complete filtered matrix, machine/provenance and document work.
+Cold no-change heap falls from 910.55 to 275.75 MiB; both component-style rows
+reach the delivery ceiling without a recorded heap-limit failure.
+
 ### Derived baselines
 
 `--derived` uses a separate record for the same dimensions and leaves generated

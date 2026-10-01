@@ -568,17 +568,20 @@ stylesheet-file parse cache, without changing any result.
 - [x] Discovered: decode GC helper URLs for spaced checkouts, remove the
       non-discriminating property-name probe/copy, enumerate the exact safe
       error classes and rely on freezing for property flags.
-- [ ] Discovered: keep the fixture README below 300 lines by linking a focused
+- [x] Discovered: keep the fixture README below 300 lines by linking a focused
       developer report for the M3 samples, provenance and full document-work
       records rather than growing the existing baseline tables.
-- [ ] After that checkpoint is accepted, record, without requiring completion,
+- [x] After that checkpoint is accepted, record, without requiring completion,
       cold cumulative `no-changes` and `component-style` samples in the same
       filtered matrix with each outcome, `heapPeakMiB`, classification time and
       document work. Do not measure before authorization.
 - [x] Update `src/review/README.md`, `src/server/README.md` and the
       contracts' Delivery Status for delivered parts.
-- [ ] Run the suite and `cargo xtask check` on the final measured result.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] Run the suite and `cargo xtask check` on the final measured result.
+- [x] Discovered: after the VM reboot interrupted the final Chromium run,
+      verify dependencies, build output, Chrome and both setup fixtures survived;
+      rerun the complete check from the start under Node 24.19.0.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
