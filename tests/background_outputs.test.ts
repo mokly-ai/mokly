@@ -11,7 +11,7 @@ import {
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
 for (const mode of ["committed", "derived"] as const)
-  test(`${mode} worker keeps only the classification outputs it needs`, async (context) => {
+  test(`${mode} helpers select classification outputs and compact worker inputs`, async (context) => {
     const fixture = await componentReviewFixture(context, (source) => source);
     const compilation = fixture.after;
     assert.ok(compilation.outputs.size > 1);

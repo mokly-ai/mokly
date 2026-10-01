@@ -168,8 +168,10 @@ its optional third byte bound is an internal differential-test seam. Its shared
 whole-input cache uses the [parse-reuse accounting contract](../../docs/protocol/mokly-css-parse-reuse.md#cache-lifetime-and-accounting).
 `css/byte_lru.ts` owns eviction and detached UTF-16 keys, including on hits;
 `css/parse_cache.ts` copies/freeze-protects rules, and `css/cache_error.ts` copies
-safe failure data without retaining opaque input payloads. GC regressions cover
-every retained string slot; real committed/derived tests compare zero/default bounds.
+safe failure data without retaining opaque input payloads. Error property names
+are counted without copying; frozen snapshots preserve enumerability. GC probes
+cover source-derived string slots and checkout paths with spaces. Real committed/
+derived tests compare zero/default bounds on rich CSS and the design library.
 Selectors are the kept rules' original serialized selectors, sorted and unique;
 an unresolved rule takes precedence over matched rules in the reduction.
 

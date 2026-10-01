@@ -1,5 +1,9 @@
 /** Bound background lifetime to one accepted source generation. */
-import { MessageChannel, Worker } from "node:worker_threads";
+import {
+  MessageChannel,
+  Worker,
+  type WorkerOptions,
+} from "node:worker_threads";
 
 import type { Compilation } from "../../build/compile.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
@@ -23,11 +27,18 @@ export class BackgroundCompilation {
         reject(error: unknown): void;
       }
     | undefined;
-  constructor(runtime: ComponentRuntime, existing?: Compilation) {
+  constructor(
+    runtime: ComponentRuntime,
+    existing?: Compilation,
+    createWorker: (url: URL, options: WorkerOptions) => Worker = (
+      url,
+      options,
+    ) => new Worker(url, options),
+  ) {
     const { port1, port2 } = new MessageChannel();
     this.git = new BackgroundGitHost(runtime.config.repoRoot, port1);
     try {
-      this.worker = new Worker(
+      this.worker = createWorker(
         new URL("./background_worker.js", import.meta.url),
         {
           workerData: {

@@ -559,6 +559,18 @@ stylesheet-file parse cache, without changing any result.
 - [x] Discovered: finish targeted tests, full unit/browser suites and
       format/lint/typecheck under Node 24.19.0, commit the code, report and stop
       before measurements for the supervisor's code checkpoint.
+- [x] Discovered: move actual worker state into an injected compile/post/classify
+      module and pin fresh/existing committed/derived transitions plus the parent
+      worker factory's compact inputs; rename helper-only tests to their proof.
+- [x] Discovered: broaden zero/default-bound classification differentials to
+      statement/block at-rules, grouped/nested conditions, custom properties,
+      references, failure and the real design library in both output modes.
+- [x] Discovered: decode GC helper URLs for spaced checkouts, remove the
+      non-discriminating property-name probe/copy, enumerate the exact safe
+      error classes and rely on freezing for property flags.
+- [ ] Discovered: keep the fixture README below 300 lines by linking a focused
+      developer report for the M3 samples, provenance and full document-work
+      records rather than growing the existing baseline tables.
 - [ ] After that checkpoint is accepted, record, without requiring completion,
       cold cumulative `no-changes` and `component-style` samples in the same
       filtered matrix with each outcome, `heapPeakMiB`, classification time and

@@ -7,11 +7,10 @@ import {
   GitReviewAssetReader,
 } from "../dist/review/assets.js";
 import { readBaseManifest } from "../dist/review/base_manifest.js";
-import { classifyComponents } from "../dist/review/component_classification.js";
-import { LightningCssRuleParser } from "../dist/review/css/rules.js";
 import { CompiledReviewAssetReader } from "../dist/review/head_assets.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
 
+import { compareCacheBounds } from "./helpers/css_cache_classification.js";
 import { inlineChangesFixture } from "./helpers/inline_changes.js";
 
 const scenarios = [
@@ -66,50 +65,30 @@ for (const mode of ["committed", "derived"] as const)
       const changedPaths = (await git.evidence.changedPaths(commit)).filter(
         (route) => mode === "committed" || !generatedPaths.has(route),
       );
-      const classify = async (cssCacheBytes?: number) => {
-        const native = new LightningCssRuleParser();
-        let calls = 0;
-        const result = await classifyComponents({
-          before,
-          after: after.manifest,
-          beforeReader: new GitReviewAssetReader(
-            config,
-            git.reader,
-            commit,
-            "mockups",
-          ),
-          afterReader:
-            mode === "derived"
-              ? new CompiledReviewAssetReader(config, after.outputs)
-              : new FileSystemReviewAssetReader(config),
+      const result = await compareCacheBounds({
+        before,
+        after: after.manifest,
+        beforeReader: new GitReviewAssetReader(
           config,
-          changedPaths,
-          baseCommit: commit,
-          baseRef: "main",
-          ...(cssCacheBytes === undefined ? {} : { cssCacheBytes }),
-          useFastPath: false,
-          cssParser: {
-            parse(source) {
-              calls++;
-              return native.parse(source);
-            },
-          },
-        });
-        return { result, calls };
-      };
-      const uncached = await classify(0);
-      const bounded = await classify();
-      assert.deepEqual(bounded.result, uncached.result);
-      assert.ok(
-        uncached.calls > bounded.calls,
-        "the test must exercise cache hits",
-      );
+          git.reader,
+          commit,
+          "mockups",
+        ),
+        afterReader:
+          mode === "derived"
+            ? new CompiledReviewAssetReader(config, after.outputs)
+            : new FileSystemReviewAssetReader(config),
+        config,
+        changedPaths,
+        baseCommit: commit,
+        baseRef: "main",
+      });
       assert.deepEqual(
-        bounded.result.changes.map((entry) => entry.after?.id),
+        result.changes.map((entry) => entry.after?.id),
         scenario.expected,
       );
       if (inline) {
-        const home = bounded.result.screens.find(
+        const home = result.screens.find(
           (screen) => screen.after?.id === "home",
         );
         assert.equal(home?.views.length, 2);
@@ -122,7 +101,7 @@ for (const mode of ["committed", "derived"] as const)
           ),
         );
         assert.equal(
-          bounded.result.affectedConsumers.some(
+          result.affectedConsumers.some(
             (consumer) => consumer.changedComponentId === "action",
           ),
           inline === ".actual-only",
@@ -130,12 +109,12 @@ for (const mode of ["committed", "derived"] as const)
       }
       if (reference) {
         assert.equal(
-          bounded.result.affectedConsumers.length > 0,
+          result.affectedConsumers.length > 0,
           reference === ".actual-only",
         );
         if (reference !== ".unused")
           assert.ok(
-            bounded.result.changes.some((entry) =>
+            result.changes.some((entry) =>
               entry.reasons.some(
                 (reason) =>
                   reason.kind === "dependency" &&

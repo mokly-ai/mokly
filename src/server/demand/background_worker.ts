@@ -7,10 +7,9 @@ import type { ManifestV7 } from "@mokly/viewer/data";
 import { compileRuntime } from "../../build/compile_runtime.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { runWithTimings, timeAsync } from "../../diagnostics/timings.js";
-import { errorMessage } from "../../errors.js";
 import { RepositoryCatalogueChangeClassifier } from "../component_changes.js";
 
-import { classificationOutputs } from "./background_inputs.js";
+import { BackgroundWorkerState } from "./background_state.js";
 import { WorkerGitCommandRunner } from "./git_worker.js";
 
 const inputs = workerData as {
@@ -21,46 +20,29 @@ const inputs = workerData as {
   existingOutputs?: ReadonlyMap<string, string>;
   gitPort: MessagePort;
 };
-const { runtime, pause, debug, existingManifest, gitPort } = inputs;
+const { pause, debug, existingManifest, gitPort } = inputs;
 const classifier = new RepositoryCatalogueChangeClassifier(
   new WorkerGitCommandRunner(gitPort),
 );
-const state = new Int32Array(pause);
-let manifest: ManifestV7 | undefined = existingManifest;
-let outputs = classificationOutputs(runtime.config, inputs.existingOutputs);
-delete inputs.existingOutputs;
+const pauseState = new Int32Array(pause);
 const checkpoint = async () => {
   await setImmediate();
-  while (Atomics.load(state, 0)) await setTimeout(20);
+  while (Atomics.load(pauseState, 0)) await setTimeout(20);
 };
+const state = new BackgroundWorkerState(inputs, checkpoint, {
+  compile: compileRuntime,
+  post: (message) => parentPort?.postMessage(message),
+  classify: (config, manifest, base, accepted) =>
+    timeAsync("changes.classify", () =>
+      classifier.read(config, manifest, base, undefined, accepted),
+    ),
+});
 if (!existingManifest)
-  void runWithTimings(debug, "background", async () => {
-    try {
-      const compilation = await compileRuntime(runtime, checkpoint);
-      manifest = compilation.manifest;
-      parentPort?.postMessage({ type: "compiled", compilation });
-      outputs = classificationOutputs(runtime.config, compilation.outputs);
-    } catch (error) {
-      parentPort?.postMessage({ type: "failed", error: errorMessage(error) });
-    }
-  });
+  void runWithTimings(debug, "background", () => state.start());
 parentPort?.on(
   "message",
   (message: { type: string; base: string; commit?: string }) => {
-    if (message.type !== "classify" || !manifest) return;
-    void runWithTimings(debug, "background", async () => {
-      if (runtime.config.generatedOutput === "derived" && !message.commit) {
-        parentPort?.postMessage({ type: "classified" });
-        return;
-      }
-      await checkpoint();
-      const classification = await timeAsync("changes.classify", () =>
-        classifier.read(runtime.config, manifest!, message.base, undefined, {
-          ...(message.commit ? { commit: message.commit } : {}),
-          ...(outputs ? { outputs } : {}),
-        }),
-      );
-      parentPort?.postMessage({ type: "classified", snapshot: classification });
-    });
+    if (message.type !== "classify" || !state.ready) return;
+    void runWithTimings(debug, "background", () => state.classify(message));
   },
 );

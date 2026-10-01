@@ -118,6 +118,9 @@ consumes and clears that input property so it cannot be an additional root.
 The compiled-message path transfers the complete result for parent adoption,
 then retains only the manifest and mode-selected map, not its compilation
 object or completed callback. Consumer-runtime build caches use weak keys.
+The worker's state module owns startup consumption, full compiled delivery and
+mode-selected classifier inputs; injected compile/post/classify functions test
+those transitions. Parent worker creation uses the same compact-input policy.
 Committed-mode classification continues reading the committed/public sources
 through its existing readers and drops the output-map reference, without
 changing validation, parent adoption or current bytes. Derived mode retains

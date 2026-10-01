@@ -30,9 +30,7 @@ if (errorSlot) {
   const value =
     slot === "error-payload"
       ? error.cause.payload[0].source
-      : slot === "error-property-key"
-        ? Object.keys(error.cause)[0]
-        : error[slot.slice("error-".length)];
+      : error[slot.slice("error-".length)];
   assert.equal(value, units);
 } else if (!slot.startsWith("key")) {
   assert.equal(result.status, "parsed");
@@ -87,13 +85,9 @@ function populate() {
   let value = { status: "parsed", rules: [rule] };
   if (errorSlot) {
     const cause =
-      slot === "error-payload"
-        ? { payload: [{ source: sliced }] }
-        : slot === "error-property-key"
-          ? { [sliced]: true }
-          : "fixture";
+      slot === "error-payload" ? { payload: [{ source: sliced }] } : "fixture";
     const error = new CssRuleParseError(cause);
-    if (slot !== "error-payload" && slot !== "error-property-key")
+    if (slot !== "error-payload")
       Object.defineProperty(error, slot.slice("error-".length), {
         value: sliced,
         configurable: true,

@@ -151,3 +151,82 @@ for (const kind of ["accessor", "proxy"] as const)
     assert.equal(cache.estimatedBytes, 0);
     assert.equal(invocations, 0);
   });
+
+for (const cause of [
+  new Error("fixture"),
+  new EvalError("fixture"),
+  new RangeError("fixture"),
+  new ReferenceError("fixture"),
+  new SyntaxError("fixture"),
+  new TypeError("fixture"),
+  new URIError("fixture"),
+  new AggregateError([new Error("nested")], "fixture"),
+  new CssRuleParseError("fixture"),
+])
+  test(`${cause.constructor.name} snapshots preserve their prototype and data`, () => {
+    const parsed: CssRuleParseResult = {
+      status: "unresolved",
+      error: new CssRuleParseError(cause),
+    };
+    const cache = new ByteBoundedLru(detachParseResult);
+    const retained = cache.set("bad", parsed);
+    assert.deepEqual(retained, parsed);
+    assert.notEqual(retained, parsed);
+    assert.equal(retained.status, "unresolved");
+    if (retained.status !== "unresolved") return;
+    assert.equal(
+      Object.getPrototypeOf(retained.error.cause),
+      Object.getPrototypeOf(cause),
+    );
+    assert.ok(Object.isFrozen(retained.error.cause));
+  });
+
+test("every unlisted error prototype is opaque", () => {
+  class UnlistedError extends Error {}
+  const parsed: CssRuleParseResult = {
+    status: "unresolved",
+    error: new CssRuleParseError(new UnlistedError("fixture")),
+  };
+  const cache = new ByteBoundedLru(detachParseResult);
+  assert.equal(cache.set("bad", parsed), parsed);
+  assert.equal(cache.size, 0);
+});
+
+test("frozen error snapshots preserve enumerability while owning immutable properties", () => {
+  const cause = Object.defineProperties(
+    { values: ["kept"] },
+    {
+      hidden: {
+        value: "hidden",
+        enumerable: false,
+        configurable: true,
+        writable: true,
+      },
+      visible: {
+        value: "visible",
+        enumerable: true,
+        configurable: true,
+        writable: true,
+      },
+    },
+  );
+  const retained = detachParseResult({
+    status: "unresolved",
+    error: new CssRuleParseError(cause),
+  });
+  assert.ok(retained);
+  if (retained.value.status !== "unresolved") return;
+  const copied = retained.value.error.cause;
+  for (const [key, enumerable] of [
+    ["hidden", false],
+    ["visible", true],
+    ["values", true],
+  ] as const) {
+    const descriptor = Object.getOwnPropertyDescriptor(copied, key);
+    assert.equal(descriptor?.enumerable, enumerable);
+    assert.equal(descriptor?.configurable, false);
+    assert.equal(descriptor?.writable, false);
+  }
+  assert.deepEqual(copied, cause);
+  assert.ok(Object.isFrozen((copied as typeof cause).values));
+});

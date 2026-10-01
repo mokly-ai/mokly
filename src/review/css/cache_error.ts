@@ -68,12 +68,10 @@ export function detachParseError(
       )
         data = Reflect.get(value, key);
       else throw new TypeError("Opaque error data");
-      Object.defineProperty(result, copyString(key), {
+      stringUnits += key.length;
+      Object.defineProperty(result, key, {
         value: copy(data),
-        enumerable: descriptor.enumerable ?? false,
-        configurable: descriptor.configurable ?? false,
-        writable:
-          "writable" in descriptor ? (descriptor.writable ?? false) : true,
+        enumerable: descriptor.enumerable!,
       });
     }
     ancestors.delete(value);

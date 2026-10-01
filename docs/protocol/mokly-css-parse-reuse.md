@@ -36,12 +36,14 @@ and retained error data (including own property names). Fixed-shape record
 property names are not slots; string-valued tags such as `status` and condition
 `kind` are. Count repeated slots even if their strings share storage; count the
 key once. The estimate is computed on insertion only; entries are immutable.
-Safe error snapshots preserve built-in errors, the typed parse error, arrays,
-plain records, strings, numbers, booleans, null and undefined, including stacks
-and nested causes. Cycles,
-proxies, symbols, functions, custom prototypes and non-native accessors are
-opaque: use the original failure for the request without caching it or invoking
-its accessors. This also applies to an injected parser throwing such a payload.
+Safe error snapshots preserve exactly Error, EvalError, RangeError,
+ReferenceError, SyntaxError, TypeError, URIError, AggregateError and
+CssRuleParseError, plus arrays, plain records, strings, numbers, booleans,
+null and undefined, including stacks and nested causes. Property names are
+counted without copying. Every other error class, cycles, proxies, symbols,
+functions, custom prototypes and non-native accessors are opaque: use the
+original failure without caching or invoking its accessors. This also applies
+to an injected parser throwing such a payload.
 
 Every retained key and source-derived string is an independent flat copy with
 identical code units, not a slice keeping a larger stylesheet or HTML alive.

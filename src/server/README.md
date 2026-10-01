@@ -88,6 +88,10 @@ and chooses classification outputs by mode. The compiled message preserves full
 parent adoption; committed workers retain no output map, including startup inputs.
 Their confined readers still read current files. Derived workers retain their
 accepted map; classification-local prefetched documents and resource caches remain.
+`demand/background_state.ts` owns startup, compiled delivery and classifier input
+retention behind injected compile/post/classify functions. The worker file only
+wires timings, pausing, Git and messaging; the parent accepts a worker factory
+so tests pin compact `workerData` at the actual construction boundary.
 `baselinePrepared(commit)` publishes the read capability before classification;
 `baselinePrepared(null)` revokes it when the baseline commit/build settings
 change, history becomes unavailable, or the server closes. A content edit or
