@@ -5,6 +5,10 @@ import { diffCssRuleLists } from "../src/review/css/diff.js";
 import { attributeInlineRules } from "../src/review/css/inline_attribution.js";
 import { inlineMaterialReplacements } from "../src/review/css/inline_rendering.js";
 import { CssResourceAnalysis } from "../src/review/css/resource_analysis.js";
+import {
+  cssRuleData,
+  storeCssRuleData,
+} from "../src/review/css/rule_identity.js";
 
 import { html, inlineInput, resolved } from "./helpers/inline_styles.js";
 
@@ -31,16 +35,24 @@ for (const count of [10, 1000])
     assert.equal(diffCount, 1);
     assert.equal(result.rules.length, 1);
     assert.equal(result.rules[0]!.change.after?.ordinal, count);
-    assert.equal(
-      typeof Object.getOwnPropertyDescriptor(result, "beforeRules")?.get,
-      "function",
-    );
-    for (const key of ["beforeRules", "afterRules"])
-      Object.defineProperty(result, key, {
-        get() {
-          throw new Error("composition flattened cancelled rules");
+    let copies = 0;
+    for (const side of ["beforeRuns", "afterRuns"] as const)
+      result[side] = result[side].map(({ run, offset }) => ({
+        offset,
+        run: {
+          ...run,
+          rules: run.rules.map((rule) => {
+            const proxy = new Proxy(rule, {
+              ownKeys(target) {
+                copies++;
+                return Reflect.ownKeys(target);
+              },
+            });
+            storeCssRuleData(proxy, cssRuleData(rule));
+            return proxy;
+          }),
         },
-      });
+      }));
     assert.equal(
       inlineMaterialReplacements(result, "before").actual.appendix.match(
         /color:red/g,
@@ -53,4 +65,5 @@ for (const count of [10, 1000])
       )?.length,
       count,
     );
+    assert.equal(copies, 0, "composition must not copy any cached rule");
   });

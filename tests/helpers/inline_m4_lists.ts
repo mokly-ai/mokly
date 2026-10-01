@@ -9,6 +9,8 @@ import type {
   CssRuleParseResult,
 } from "../../src/review/css/types.js";
 
+import { assembleInlineParse } from "./inline_parse.js";
+
 const inlineParsers = new WeakMap<CssRuleParser, CssSegmentAnalysis>();
 
 /** Parse each element separately and rebase local ordinals monotonically. */
@@ -18,7 +20,7 @@ export function parseInlineRuleList(
 ): CssRuleParseResult {
   const rules: CssRule[] = [];
   let inline = inlineParsers.get(parser);
-  if (!parser.parseInline && !inline) {
+  if (!parser.parseInlineRuns && !inline) {
     inline = new CssSegmentAnalysis(parser);
     inlineParsers.set(parser, inline);
   }
@@ -26,9 +28,12 @@ export function parseInlineRuleList(
     const parsed = parseCssRules(
       {
         parse: (text) =>
-          parser.parseInline
-            ? parser.parseInline(text, rules.length)
-            : inline!.parse(text, rules.length),
+          assembleInlineParse(
+            parser.parseInlineRuns
+              ? parser.parseInlineRuns(text)
+              : inline!.parseRuns(text),
+            rules.length,
+          ),
       },
       span.text,
     );

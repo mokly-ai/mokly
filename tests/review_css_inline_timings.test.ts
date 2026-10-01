@@ -87,7 +87,7 @@ test("contained inline parser failures end the timing span successfully", () => 
   );
 });
 
-for (const method of ["parseInline", "parseInlineRuns"] as const)
+for (const method of ["parseInlineRuns"] as const)
   test(`throwing injected ${method} remains a contained unresolved parse`, () => {
     const parser: CssRuleParser = {
       parse: () => ({ status: "parsed", rules: [] }),

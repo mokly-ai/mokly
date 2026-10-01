@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { generatedHeader } from "../src/build/ownership.js";
+import { flattenInlineRules } from "../src/review/css/inline_rule_runs.js";
 import { findUnownedInlineStyles } from "../src/review/css/inline_styles.js";
 import { normalizeReviewPair } from "../src/review/ignore.js";
 
@@ -121,11 +122,11 @@ test("outer attributes and element splits run analysis by rule multiset", () => 
   );
   assert.equal(split.rules.length, 0);
   assert.deepEqual(
-    split.beforeRules.map(({ ordinal }) => ordinal),
+    flattenInlineRules(split.beforeRuns).map(({ ordinal }) => ordinal),
     [0, 1],
   );
   assert.deepEqual(
-    split.afterRules.map(({ ordinal }) => ordinal),
+    flattenInlineRules(split.afterRuns).map(({ ordinal }) => ordinal),
     [0, 1],
   );
 });

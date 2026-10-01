@@ -46,7 +46,7 @@ for (const kind of ["plain", "custom", "url", "agree"] as const)
     const actual = resolved(attributeInlineRules(input));
     const expected = reference(input);
     assert.ok(expected.status === "resolved");
-    const pairOrdinals = (value: typeof expected) =>
+    const pairOrdinals = (value: Pick<typeof expected, "rules">) =>
       value.rules.map(({ change }) => [
         change.kind,
         change.before?.ordinal,
@@ -111,7 +111,7 @@ for (const kind of ["plain", "custom", "url", "agree"] as const)
         );
     }
     if (kind === "agree") {
-      const values = (value: typeof expected) =>
+      const values = (value: Pick<typeof expected, "rules">) =>
         value.rules.map(({ change, attribution, selectors }) => ({
           kind: change.kind,
           from: change.before?.declarations,

@@ -109,7 +109,7 @@ function populate() {
     storeCssRuleData(rule, data);
   }
   if (slot === "identity-run")
-    value = { rules: [rule], identityRunKey: sliced };
+    value = { rules: [rule], identityRunKey: sliced, referenceOrdinals: [] };
   if (errorSlot) {
     const cause =
       slot === "error-payload" ? { payload: [{ source: sliced }] } : "fixture";

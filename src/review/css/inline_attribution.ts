@@ -13,7 +13,6 @@ import {
   type AttributedInlineRule,
 } from "./inline_rule_matching.js";
 import {
-  flattenInlineRules,
   parseInlineRuns,
   type InlineRunOccurrence,
 } from "./inline_rule_runs.js";
@@ -23,7 +22,7 @@ import {
   sameInlineOuterSources,
   type InlineStyleSpan,
 } from "./inline_styles.js";
-import type { CssRule, CssRuleDiffResult, CssRuleParser } from "./types.js";
+import type { CssRuleDiffResult, CssRuleParser } from "./types.js";
 
 /** One source side plus its separately validated normalized matching tree. */
 export interface InlineAttributionSide {
@@ -74,8 +73,6 @@ export type InlineAttributionResult = CommonResult &
       }
     | {
         status: "resolved";
-        beforeRules: readonly CssRule[];
-        afterRules: readonly CssRule[];
         beforeRuns: readonly InlineRunOccurrence[];
         afterRuns: readonly InlineRunOccurrence[];
         rules: readonly AttributedInlineRule[];
@@ -146,13 +143,13 @@ function analyze(input: InlineAttributionInput): InlineAttributionResult {
     if (!analyzed.length)
       if (outerSourcesEqual) return { ...common, status: "skipped" };
       else
-        return withRuleLists({
+        return {
           ...common,
           status: "resolved",
           ...material,
           rules: [],
           ownedComponentIds: new Set(),
-        });
+        };
     const matching = input.prepare();
     const beforeOwners = createElementOwnerIndex({
       ranges: matching.before.ranges,
@@ -198,34 +195,13 @@ function analyze(input: InlineAttributionInput): InlineAttributionResult {
         )
         .sort(),
     );
-    return withRuleLists({
+    return {
       ...common,
       status: "resolved",
       ...material,
       rules,
       ...(retainedSelectors ? { retainedSelectors } : {}),
       ownedComponentIds,
-    });
+    };
   });
-}
-
-type ResolvedInline = Extract<InlineAttributionResult, { status: "resolved" }>;
-
-function withRuleLists(
-  result: Omit<ResolvedInline, "beforeRules" | "afterRules">,
-): ResolvedInline {
-  let before: readonly CssRule[] | undefined;
-  let after: readonly CssRule[] | undefined;
-  return Object.defineProperties(result, {
-    beforeRules: {
-      enumerable: true,
-      configurable: true,
-      get: () => (before ??= flattenInlineRules(result.beforeRuns)),
-    },
-    afterRules: {
-      enumerable: true,
-      configurable: true,
-      get: () => (after ??= flattenInlineRules(result.afterRuns)),
-    },
-  }) as ResolvedInline;
 }

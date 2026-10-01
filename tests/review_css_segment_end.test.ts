@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parseInlineRuleList } from "../src/review/css/inline_rule_lists.js";
 import { CssResourceAnalysis } from "../src/review/css/resource_analysis.js";
 import { LightningCssRuleParser } from "../src/review/css/rules.js";
 
 import { parseSnapshot } from "./helpers/css_segments.js";
+import { parseInlineRuleList } from "./helpers/inline_parse.js";
 
 for (const prefix of ["#", "@", "\0"])
   for (const bound of [undefined, 0])

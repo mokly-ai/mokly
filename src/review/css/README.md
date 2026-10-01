@@ -24,16 +24,18 @@ import and namespace statements always use whole-element parsing.
 `segment_analysis.ts` resolves hits and verifies the entire batch before inserting
 anything. `inline_rule_runs.ts` keeps cached runs plus document ordinal offsets;
 its weak parser association supports standalone injected parsers without a second
-production cache. `inline_rule_lists.ts` assembles only explicit whole-list callers.
+production cache. Production parses expose runs only; M4 rebasing and whole-list
+assembly adapters live under `tests/helpers/inline_parse.ts`.
 
 `inline_segment_changes.ts` cancels cached identity runs earliest-first, expands
 only surviving rules and reference-bearing matched copies, and runs the ordinary
 diff on survivors. A whole-element fallback disables cancellation for the pair.
 `inline_rule_deltas.ts` pairs remaining exact reference occurrences without
 reusing added/removed/changed copies. `inline_rendering.ts` selects by document
-ordinal, sorts existing rule references by canonical rank/identity and concatenates
-stored text; cancelled runs need no rebased rule objects. Full lists on resolved
-attribution results are lazy compatibility getters, not production material inputs.
+ordinal, sorts existing rule references once per side by canonical rank/identity
+and filters that order for projected material before concatenating stored text.
+Exact selected-copy counts preserve duplicate multiplicity without copying rules;
+resolved results retain runs, not full-list compatibility getters.
 
 `rule_identity.ts` stores address/identity, rank, canonical text and references
 once in a weak rule association; the custom-property flag stays on the record.
@@ -68,7 +70,9 @@ Captured M4 orchestration under `tests/helpers/inline_m4_*.ts` pins flat pairing
 materials and reference behavior; grouped displacement and the duplicate-copy
 correction have explicit expected results. Seeded flat mutations and real RNW
 views exercise cancellation; a counting diff proves N-to-N+1 sheets analyse one
-rule. Page reuse and fingerprints remain later-milestone work.
+rule. Cached-rule Proxies reject copying during composition, and mixed-element
+fallback tests reject partial cancellation. Page reuse and fingerprints remain
+later-milestone work.
 
 See [parse reuse](../../../docs/protocol/mokly-css-parse-reuse.md),
 [inline ownership](../../../docs/protocol/mokly-inline-styles.md),

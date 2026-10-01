@@ -5,6 +5,8 @@ import { LightningCssRuleParser } from "../../src/review/css/rules.js";
 import { CssSegmentAnalysis } from "../../src/review/css/segment_analysis.js";
 import type { CssRuleParseResult } from "../../src/review/css/types.js";
 
+import { assembleInlineParse } from "./inline_parse.js";
+
 export function parseSnapshot(result: CssRuleParseResult): unknown {
   return result.status === "parsed"
     ? { ...result, derived: result.rules.map(cssRuleData) }
@@ -33,7 +35,7 @@ export function segmentOracle(cacheBytes?: number) {
   const native = new LightningCssRuleParser();
   const inline = new CssSegmentAnalysis(native, cacheBytes);
   return (source: string, context: string) => {
-    const assembled = inline.parse(source);
+    const assembled = assembleInlineParse(inline.parseRuns(source));
     const whole = native.parse(source);
     assert.deepEqual(parseSnapshot(assembled), parseSnapshot(whole), context);
     return assembled;

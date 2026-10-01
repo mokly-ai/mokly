@@ -24,7 +24,7 @@ test("grouped agreeing survivors preserve value diffs and materials while global
   const actual = resolved(attributeInlineRules(input));
   const expected = reference(input);
   assert.ok(expected.status === "resolved");
-  const pairs = (value: typeof expected) =>
+  const pairs = (value: Pick<typeof expected, "rules">) =>
     value.rules.map(({ change }) => [
       change.kind,
       change.before?.ordinal,
@@ -40,7 +40,7 @@ test("grouped agreeing survivors preserve value diffs and materials while global
     ["changed", 3, 1],
     ["changed", 2, 2],
   ]);
-  const values = (value: typeof expected) =>
+  const values = (value: Pick<typeof expected, "rules">) =>
     value.rules
       .map(({ change, attribution, selectors }) => ({
         kind: change.kind,
@@ -81,7 +81,7 @@ for (const middle of ["red", "blue"])
     const actual = resolved(attributeInlineRules(input));
     const expected = reference(input);
     assert.ok(expected.status === "resolved");
-    const pairs = (value: typeof expected) =>
+    const pairs = (value: Pick<typeof expected, "rules">) =>
       value.rules.map(({ change }) => [
         change.kind,
         change.before?.ordinal,

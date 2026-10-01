@@ -7,6 +7,8 @@ import { CssResourceAnalysis } from "../src/review/css/resource_analysis.js";
 import { cssRuleData } from "../src/review/css/rule_identity.js";
 import { LightningCssRuleParser } from "../src/review/css/rules.js";
 
+import { assembleInlineParse } from "./helpers/inline_parse.js";
+
 function observed(cacheBytes?: number) {
   const native = new LightningCssRuleParser();
   const batches: (readonly string[])[] = [];
@@ -38,7 +40,10 @@ test("cumulative elements parse each distinct segment once, in one batch per ele
   ];
   for (let count = 1; count <= texts.length; count++) {
     const source = texts.slice(0, count).join("\n");
-    assert.deepEqual(parser.parseInline!(source), native.parse(source));
+    assert.deepEqual(
+      assembleInlineParse(parser.parseInlineRuns!(source)),
+      native.parse(source),
+    );
   }
   assert.deepEqual(
     batches,
@@ -46,15 +51,18 @@ test("cumulative elements parse each distinct segment once, in one batch per ele
   );
   assert.deepEqual(whole, []);
   const fresh = observed();
-  assert.equal(fresh.parser.parseInline!(texts.join("\n")).status, "parsed");
+  assert.equal(
+    fresh.parser.parseInlineRuns!(texts.join("\n")).status,
+    "segmented",
+  );
   assert.deepEqual(fresh.batches, [texts]);
 });
 
 test("successful inline parsing never populates the whole-input cache; linked inputs retain it", () => {
   const { parser, batches, whole } = observed();
   const source = ".a{}\n.b{}";
-  parser.parseInline!(source);
-  parser.parseInline!(source);
+  parser.parseInlineRuns!(source);
+  parser.parseInlineRuns!(source);
   assert.equal(batches.length, 1);
   assert.deepEqual(whole, []);
   const linked = parser.parse(source);
@@ -66,7 +74,10 @@ test("successful inline parsing never populates the whole-input cache; linked in
 test("duplicates share one verified run and ordinals never mutate the cache", () => {
   const { parser, batches, native } = observed();
   for (const source of [".a{} .b{} .a{}", ".b{} .a{}", ".a{} .a{} .a{}"])
-    assert.deepEqual(parser.parseInline!(source), native.parse(source));
+    assert.deepEqual(
+      assembleInlineParse(parser.parseInlineRuns!(source)),
+      native.parse(source),
+    );
   assert.deepEqual(batches, [[".a{}", ".b{}"]]);
 });
 
@@ -113,7 +124,11 @@ test("segment accounting includes the identity run and every derived string", ()
 test("injected mutable segment runs still detach before retention", () => {
   const native = new LightningCssRuleParser().parse(".a{color:red}");
   assert.ok(native.status === "parsed");
-  const run = { rules: [...native.rules], identityRunKey: "injected" };
+  const run = {
+    rules: [...native.rules],
+    identityRunKey: "injected",
+    referenceOrdinals: [],
+  };
   const retained = new ByteBoundedLru(detachSegmentRun).set("key", run);
   assert.notEqual(retained, run);
   assert.notEqual(retained.rules[0], run.rules[0]);
@@ -123,7 +138,7 @@ test("injected mutable segment runs still detach before retention", () => {
 
 test("zero-byte segment caches still reuse duplicates in the current element only", () => {
   const { parser, batches } = observed(0);
-  for (let index = 0; index < 2; index++) parser.parseInline!(".a{} .a{}");
+  for (let index = 0; index < 2; index++) parser.parseInlineRuns!(".a{} .a{}");
   assert.deepEqual(batches, [[".a{}"], [".a{}"]]);
 });
 
@@ -133,11 +148,11 @@ test("oversize segments are usable but cannot evict a fitting verified run", () 
   const retained = detachSegmentRun(run);
   const bound = 64 + 96 + 2 * (4 + retained.stringUnits);
   const { parser, batches } = observed(bound);
-  parser.parseInline!(".a{}");
+  parser.parseInlineRuns!(".a{}");
   const large = `.oversize{--text:${"x".repeat(1000)}}`;
-  parser.parseInline!(large);
-  parser.parseInline!(".a{}");
-  parser.parseInline!(large);
+  parser.parseInlineRuns!(large);
+  parser.parseInlineRuns!(".a{}");
+  parser.parseInlineRuns!(large);
   assert.deepEqual(batches, [[".a{}"], [large], [large]]);
 });
 
@@ -146,6 +161,6 @@ test("segment hits refresh recency and insertions evict until the new run fits",
   const single = 64 + 96 + 2 * (4 + detachSegmentRun(run).stringUnits);
   const { parser, batches } = observed(2 * single);
   for (const source of [".a{} .b{}", ".a{}", ".c{}", ".a{}", ".b{}"])
-    parser.parseInline!(source);
+    parser.parseInlineRuns!(source);
   assert.deepEqual(batches, [[".a{}", ".b{}"], [".c{}"], [".b{}"]]);
 });

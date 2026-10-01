@@ -89,7 +89,13 @@ export class LightningCssRuleParser implements CssRuleParser {
                 throw new CssRuleParseError({ kind: "segment-root-boundary" });
               const rules: CssRule[] = [];
               new RuleCollector(source, rules).segment(root, interval, raw);
-              runs.push(detachSegmentRun({ rules, identityRunKey: "" }).value);
+              runs.push(
+                detachSegmentRun({
+                  rules,
+                  identityRunKey: "",
+                  referenceOrdinals: [],
+                }).value,
+              );
             }
           },
         },

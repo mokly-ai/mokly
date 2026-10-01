@@ -101,8 +101,14 @@ for (const side of ["before", "after"] as const)
     const native = new LightningCssRuleParser();
     const whole: string[] = [];
     const input = inlineInput({
-      before: html("<style>.a{color:red}.b{color:black}</style>", body),
-      after: html("<style>.a{color:blue}.b{color:black}</style>", body),
+      before: html(
+        `${side === "before" ? '<style>@import "t.css";</style>' : ""}<style>.a{color:red}.b{color:black}</style><style>.c{color:green}</style>`,
+        body,
+      ),
+      after: html(
+        `${side === "after" ? '<style>@import "t.css";</style>' : ""}<style>.a{color:blue}.b{color:black}</style><style>.c{color:green}</style>`,
+        body,
+      ),
       beforeUsage: usage,
       afterUsage: usage,
       parser: new CssResourceAnalysis({
@@ -110,12 +116,7 @@ for (const side of ["before", "after"] as const)
           whole.push(text);
           return native.parse(text);
         },
-        parseSegments: (texts) =>
-          texts.some((text) =>
-            text.includes(side === "before" ? "red" : "blue"),
-          )
-            ? undefined
-            : native.parseSegments(texts),
+        parseSegments: (texts) => native.parseSegments(texts),
       }).parser,
     });
     let sizes: number[] = [];
@@ -125,8 +126,37 @@ for (const side of ["before", "after"] as const)
     };
     const actual = compareInlineOracle(input);
     assert.equal(actual.status, "resolved");
-    assert.deepEqual(sizes, [2, 2]);
+    assert.deepEqual(sizes, side === "before" ? [4, 3] : [3, 4]);
     assert.ok(whole.length > 0);
+  });
+
+for (const side of ["before", "after"] as const)
+  test(`${side} whole-element fallback preserves full-diff grouped entry attribution`, () => {
+    const group = "@media screen{.a{--tone:red;color:red}.b{color:black}}";
+    const fallback = '<style>@import "t.css";</style>';
+    const result = compareInlineOracle(
+      inlineInput({
+        before: html(
+          `${side === "before" ? fallback : ""}<style>@media screen{.a{--tone:red;color:red}}@media screen{.a{--tone:blue;color:blue}}${group}</style>`,
+          '<main class="a"></main>',
+        ),
+        after: html(
+          `${side === "after" ? fallback : ""}<style>${group}@media screen{.a{--tone:blue;color:green}}</style>`,
+          '<main class="a"></main>',
+        ),
+      }),
+    );
+    assert.ok(result.status === "resolved");
+    const changed = result.rules.filter(
+      ({ change }) => change.kind === "changed",
+    );
+    assert.equal(changed.length, 1);
+    assert.equal(changed[0]!.attribution.kind, "entry");
+    assert.equal(
+      changed[0]!.change.before?.declarations,
+      "--tone:blue;color:blue",
+    );
+    assert.equal(changed[0]!.change.before?.ordinal, side === "before" ? 2 : 1);
   });
 
 for (const side of ["before", "after"] as const)

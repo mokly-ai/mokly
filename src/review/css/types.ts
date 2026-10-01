@@ -49,7 +49,6 @@ export type CssRuleParseResult =
 /** The sole parsing boundary; callers may inject already-parsed test fixtures. */
 export interface CssRuleParser {
   parse(stylesheet: string): CssRuleParseResult;
-  parseInline?(stylesheet: string, ordinalBase?: number): CssRuleParseResult;
   parseInlineRuns?(stylesheet: string): CssInlineParseResult;
   parseSegments?(
     segments: readonly string[],
@@ -60,7 +59,7 @@ export interface CssRuleParser {
 export interface CssSegmentRun {
   rules: readonly CssRule[];
   identityRunKey: string;
-  referenceOrdinals?: readonly number[];
+  referenceOrdinals: readonly number[];
 }
 
 export type CssInlineParseResult =

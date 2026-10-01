@@ -31,7 +31,7 @@ export function parseInlineRuns(
   parser: CssRuleParser,
 ): InlineRuleRunList {
   let driver = drivers.get(parser);
-  if (!parser.parseInlineRuns && !parser.parseInline && !driver) {
+  if (!parser.parseInlineRuns && !driver) {
     driver = new CssSegmentAnalysis(parser);
     drivers.set(parser, driver);
   }
@@ -43,9 +43,7 @@ export function parseInlineRuns(
     try {
       parsed = parser.parseInlineRuns
         ? parser.parseInlineRuns(span.text)
-        : parser.parseInline
-          ? parser.parseInline(span.text)
-          : driver!.parseRuns(span.text);
+        : driver!.parseRuns(span.text);
     } catch (cause) {
       return { status: "unresolved", error: new CssRuleParseError(cause) };
     }
@@ -59,6 +57,7 @@ export function parseInlineRuns(
                 .sort((left, right) => left.ordinal - right.ordinal)
                 .map((rule, ordinal) => rebaseCssRule(rule, ordinal)),
               identityRunKey: "",
+              referenceOrdinals: [],
             },
           ];
     if (parsed.status !== "segmented") segmented = false;

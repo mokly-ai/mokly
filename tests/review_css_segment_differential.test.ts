@@ -5,13 +5,13 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
-import { parseInlineRuleList } from "../src/review/css/inline_rule_lists.js";
 import { findUnownedInlineStyles } from "../src/review/css/inline_styles.js";
 import { CssResourceAnalysis } from "../src/review/css/resource_analysis.js";
 import { LightningCssRuleParser } from "../src/review/css/rules.js";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
 import { parseSnapshot, segmentOracle } from "./helpers/css_segments.js";
+import { parseInlineRuleList } from "./helpers/inline_parse.js";
 
 test("segment assembly equals every delivered CSS parser input", async () => {
   const corpus = JSON.parse(

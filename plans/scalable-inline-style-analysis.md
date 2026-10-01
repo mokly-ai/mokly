@@ -760,21 +760,33 @@ lists from stored rule text.
       text for all segments, omitting only analyzed occurrences selected as
       excluded or owned, without allocating per-rule objects for cancelled
       segments.
-- [x] Discovered: a counting diff and lazy-list poison checks prove that
+- [x] Discovered: a counting diff and cached-rule Proxy own-key checks prove that
       N-to-N+1 cumulative sheets with N = 10 and 1,000 send one rule to the
-      diff and attribution, and composition never reads the rebased full lists.
+      diff and attribution, and composition copies zero cached rules.
 - [x] Add a differential test: for before and after element pairs covering
       cumulative sequences, duplicates, formatting-only edits, reference
       rules, custom properties, nested and conditional rules and element
       splits, attributions, owned sets, retained selectors, the all-excluded
-      flag and both materials equal the Milestone 4 engine's within the
-      contract's flat-sheet equality domain (including differently formatted
-      duplicates and React Native Web), apart from the matched-copy correction
-      explicitly tested below,
+      flag and both materials equal the Milestone 4 engine's for every flat
+      sheet (including differently formatted duplicates and React Native Web)
       and the contract's agreeing-survivor grouped/nested domain. Compare
       ordered diffs and actual occurrence pairs under those equality domains;
       flat runs require equal ordinals too. No broad duplicate exemption is
       allowed.
+- [x] Discovered: the differential TODO's flat-sheet equality domain excludes
+      Decision 5's matched-copy correction, explicitly tested below; its
+      grouped/nested agreeing-survivor domain excludes the documented ordinal
+      and global-order displacement. Decisions 5 and 6 approve those narrow
+      differences; keep exact expected outcomes rather than blanket exemptions.
+- [x] Discovered: mixed fallback/segmented elements must send all rules to
+      full diff (`[4,3]`/`[3,4]`), preserving the grouped example's `entry`
+      attribution. Mutation checks must reject `&&` becoming `||`.
+- [x] Discovered: remove production-only test adapters, full-list getters and
+      the optional reference-index fallback. Move M4 whole-list rebasing to
+      test helpers; production exposes runs only. Deleting
+      `src/review/css/inline_rule_lists.ts` is explicitly supervisor-authorized.
+- [x] Discovered: sort canonical material once per side, derive projected order
+      by filtering, and prove the sort count and ordering against real runs.
 - [x] Discovered: assert explicit changed pairs and final outcomes for
       displaced shared identities across differently shaped grouped/nested
       runs, including the contract's worked example and custom-property/URL

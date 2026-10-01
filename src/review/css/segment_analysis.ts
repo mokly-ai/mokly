@@ -7,14 +7,11 @@ import {
 import { ByteBoundedLru } from "./byte_lru.js";
 import { parseCssRules } from "./diff.js";
 import { detachSegmentRun } from "./parse_cache.js";
-import { rebaseCssRule } from "./rule_identity.js";
 import { scanCssSegments } from "./segments.js";
 import { decodeCssIdentifier } from "./source.js";
 import type {
-  CssRule,
   CssInlineParseResult,
   CssRuleParser,
-  CssRuleParseResult,
   CssSegmentRun,
 } from "./types.js";
 
@@ -26,18 +23,6 @@ export class CssSegmentAnalysis {
     cacheBytes?: number,
   ) {
     this.cache = new ByteBoundedLru(detachSegmentRun, cacheBytes);
-  }
-
-  parse(source: string, ordinalBase = 0): CssRuleParseResult {
-    return documentWorkSync("inlineRuleMs", () => {
-      const result = this.parseRuns(source);
-      if (result.status !== "segmented") return result;
-      const rules: CssRule[] = [];
-      for (const run of result.runs)
-        for (const rule of run.rules)
-          rules.push(rebaseCssRule(rule, ordinalBase + rules.length));
-      return { status: "parsed", rules };
-    });
   }
 
   parseRuns(source: string): CssInlineParseResult {

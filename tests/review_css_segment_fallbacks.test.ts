@@ -9,6 +9,7 @@ import { LightningCssRuleParser } from "../src/review/css/rules.js";
 import type { CssRuleParser } from "../src/review/css/types.js";
 
 import { parseSnapshot } from "./helpers/css_segments.js";
+import { assembleInlineParse } from "./helpers/inline_parse.js";
 
 function fallbackParser(native: CssRuleParser) {
   const whole: string[] = [];
@@ -34,12 +35,12 @@ for (const source of [".a{", "/*unclosed", "<!--a{}", ".a([)]{}", "trailing"])
   test(`scanner fallback uses the original element and whole failure cache: ${source}`, () => {
     const original = `\uFEFF \r\n${source}`;
     const observed = fallbackParser(new LightningCssRuleParser());
-    const first = observed.parser.parseInline!(original);
+    const first = observed.parser.parseInlineRuns!(original);
     assert.deepEqual(
-      parseSnapshot(first),
+      parseSnapshot(assembleInlineParse(first)),
       parseSnapshot(new LightningCssRuleParser().parse(original)),
     );
-    assert.equal(observed.parser.parseInline!(original), first);
+    assert.equal(observed.parser.parseInlineRuns!(original), first);
     assert.deepEqual(observed.whole, [original]);
     assert.deepEqual(observed.batches, []);
   });
@@ -54,7 +55,9 @@ for (const source of [
   test(`contextual decoded at-rule falls back without a batch: ${source}`, () => {
     const observed = fallbackParser(new LightningCssRuleParser());
     assert.deepEqual(
-      parseSnapshot(observed.parser.parseInline!(source)),
+      parseSnapshot(
+        assembleInlineParse(observed.parser.parseInlineRuns!(source)),
+      ),
       parseSnapshot(new LightningCssRuleParser().parse(source)),
     );
     assert.deepEqual(observed.whole, [source]);
@@ -64,7 +67,7 @@ for (const source of [
 test("an injected parser without native verification uses the complete element", () => {
   const native = new LightningCssRuleParser();
   const observed = fallbackParser({ parse: (source) => native.parse(source) });
-  observed.parser.parseInline!(".a{} .b{}");
+  observed.parser.parseInlineRuns!(".a{} .b{}");
   assert.deepEqual(observed.whole, [".a{} .b{}"]);
   assert.deepEqual(observed.batches, []);
 });
@@ -82,8 +85,8 @@ for (const failure of ["undefined", "wrong-run-count", "throws"])
       },
     });
     const source = ".a{} .b{}";
-    observed.parser.parseInline!(source);
-    observed.parser.parseInline!(source);
+    observed.parser.parseInlineRuns!(source);
+    observed.parser.parseInlineRuns!(source);
     assert.deepEqual(observed.batches, [
       [".a{}", ".b{}"],
       [".a{}", ".b{}"],
@@ -201,7 +204,9 @@ for (const [name, mutate] of mutations)
     );
     const observed = fallbackParser(native);
     assert.deepEqual(
-      parseSnapshot(observed.parser.parseInline!(original)),
+      parseSnapshot(
+        assembleInlineParse(observed.parser.parseInlineRuns!(original)),
+      ),
       parseSnapshot(new LightningCssRuleParser().parse(original)),
     );
     assert.deepEqual(observed.whole, [original]);
@@ -220,13 +225,13 @@ test("native boundary verification rejects a root ending before its segment term
 test("a native batch parse failure is not returned as an element error or cached as a run", () => {
   const observed = fallbackParser(new LightningCssRuleParser());
   const source = "/* outside */ .a{} .b{notvalid} /* outside */";
-  const first = observed.parser.parseInline!(source);
+  const first = observed.parser.parseInlineRuns!(source);
   assert.deepEqual(
-    parseSnapshot(first),
+    parseSnapshot(assembleInlineParse(first)),
     parseSnapshot(new LightningCssRuleParser().parse(source)),
   );
-  observed.parser.parseInline!(source);
+  observed.parser.parseInlineRuns!(source);
   assert.equal(observed.batches.length, 2);
-  observed.parser.parseInline!(".a{}");
+  observed.parser.parseInlineRuns!(".a{}");
   assert.deepEqual(observed.batches.at(-1), [".a{}"]);
 });

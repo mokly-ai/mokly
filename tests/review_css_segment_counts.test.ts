@@ -34,9 +34,9 @@ async function counts(
 test("inline counts include element-side occurrences, successful segments, distinct misses and verified duplicates", async () => {
   assert.deepEqual(
     await counts((parser) => {
-      parser.parseInline!(".a{} .a{} .b{}");
-      parser.parseInline!(".a{} .b{} .c{}");
-      parser.parseInline!(" \t/*trivia*/");
+      parser.parseInlineRuns!(".a{} .a{} .b{}");
+      parser.parseInlineRuns!(".a{} .b{} .c{}");
+      parser.parseInlineRuns!(" \t/*trivia*/");
     }),
     {
       elements: 3,
@@ -51,9 +51,9 @@ test("inline counts include element-side occurrences, successful segments, disti
 test("scanner anomalies contribute no partial segments; contextual fallbacks keep existing hits but attempt no batch", async () => {
   assert.deepEqual(
     await counts((parser) => {
-      parser.parseInline!(".a{}");
-      parser.parseInline!(".a{} trailing");
-      parser.parseInline!('@import "theme.css";.a{}');
+      parser.parseInlineRuns!(".a{}");
+      parser.parseInlineRuns!(".a{} trailing");
+      parser.parseInlineRuns!('@import "theme.css";.a{}');
     }),
     {
       elements: 3,
@@ -68,8 +68,8 @@ test("scanner anomalies contribute no partial segments; contextual fallbacks kee
 test("failed batches count distinct attempted misses but not their unverified duplicates", async () => {
   assert.deepEqual(
     await counts((parser) => {
-      parser.parseInline!(".a{}");
-      parser.parseInline!(".a{} .b{broken} .b{broken}");
+      parser.parseInlineRuns!(".a{}");
+      parser.parseInlineRuns!(".a{} .b{broken} .b{broken}");
     }),
     {
       elements: 2,
@@ -99,8 +99,8 @@ test("disabled timings give inline parsing no document-work collector and emit n
             return native.parseSegments(texts);
           },
         }).parser;
-        parser.parseInline!(".a{}");
-        parser.parseInline!(".b{");
+        parser.parseInlineRuns!(".a{}");
+        parser.parseInlineRuns!(".b{");
         assert.equal(timingDocumentWork(), undefined);
       }),
     { write: (event) => events.push(event) },

@@ -44,9 +44,12 @@ export function applyInlineMaterial(
 }
 
 /** Render a rule multiset independently of source order and local ordinals. */
+export function canonicalInlineRules(rules: readonly CssRule[]): CssRule[] {
+  return [...rules].sort(compareRules);
+}
+
 export function renderInlineRules(rules: readonly CssRule[]): string {
-  return [...rules]
-    .sort(compareRules)
+  return canonicalInlineRules(rules)
     .map((rule) => cssRuleData(rule).canonicalText)
     .join("");
 }
@@ -71,18 +74,29 @@ export function inlineMaterialReplacements(
       retained: readonly CssRule[],
     ): InlineMaterialProjection => ({
       replacements,
-      appendix: `<style>${renderInlineRules(retained)}</style>`,
+      appendix: `<style>${retained.map((rule) => cssRuleData(rule).canonicalText).join("")}</style>`,
     });
     const actual: CssRule[] = [];
-    const projected: CssRule[] = [];
+    const ownedCopies = new Map<CssRule, number>();
     for (const { run, offset } of runs)
       for (const rule of run.rules) {
         const ordinal = offset + rule.ordinal;
         if (excluded.has(ordinal)) continue;
         actual.push(rule);
-        if (!owned.has(ordinal)) projected.push(rule);
+        if (owned.has(ordinal))
+          ownedCopies.set(rule, (ownedCopies.get(rule) ?? 0) + 1);
       }
-    return { actual: projection(actual), projected: projection(projected) };
+    const ordered = canonicalInlineRules(actual);
+    const projected = ordered.filter((rule) => {
+      const copies = ownedCopies.get(rule) ?? 0;
+      if (!copies) return true;
+      ownedCopies.set(rule, copies - 1);
+      return false;
+    });
+    return {
+      actual: projection(ordered),
+      projected: projection(projected),
+    };
   });
 }
 

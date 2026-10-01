@@ -9,7 +9,7 @@ import {
   type InlineRuleRunList,
   type InlineRunOccurrence,
 } from "./inline_rule_runs.js";
-import { cssRuleData, rebaseCssRule } from "./rule_identity.js";
+import { rebaseCssRule } from "./rule_identity.js";
 import type { CssRuleChange } from "./types.js";
 
 type ParsedRuns = Extract<InlineRuleRunList, { status: "parsed" }>;
@@ -35,10 +35,7 @@ export function inlineSegmentChanges(
       const base = buckets.get(head.run.identityRunKey)?.pop();
       if (!base) return true;
       cancelled.add(base);
-      for (const ordinal of base.run.referenceOrdinals ??
-        base.run.rules.flatMap((rule) =>
-          cssRuleData(rule).references.length ? [rule.ordinal] : [],
-        ))
+      for (const ordinal of base.run.referenceOrdinals)
         pairs.push({
           before: rebaseCssRule(
             base.run.rules[ordinal]!,

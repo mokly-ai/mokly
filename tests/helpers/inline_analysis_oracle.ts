@@ -10,7 +10,10 @@ import {
   applyInlineMaterial,
   inlineMaterialReplacements,
 } from "../../src/review/css/inline_rendering.js";
-import { parseInlineRuns } from "../../src/review/css/inline_rule_runs.js";
+import {
+  flattenInlineRules,
+  parseInlineRuns,
+} from "../../src/review/css/inline_rule_runs.js";
 import { inlineSegmentChanges } from "../../src/review/css/inline_segment_changes.js";
 
 import { parseSnapshot } from "./css_segments.js";
@@ -33,8 +36,6 @@ export function analysisSnapshot(
     };
   if (result.status !== "resolved") return result;
   const {
-    beforeRules,
-    afterRules,
     rules,
     ownedComponentIds,
     retainedSelectors,
@@ -43,8 +44,14 @@ export function analysisSnapshot(
   } = result;
   return {
     status: result.status,
-    beforeRules,
-    afterRules,
+    beforeRules:
+      "beforeRuns" in result
+        ? flattenInlineRules(result.beforeRuns)
+        : result.beforeRules,
+    afterRules:
+      "afterRuns" in result
+        ? flattenInlineRules(result.afterRuns)
+        : result.afterRules,
     rules,
     ownedComponentIds,
     retainedSelectors,
@@ -80,7 +87,10 @@ export function compareInlineOracle(
     assert.ok(base.status === "parsed" && head.status === "parsed");
     assert.deepEqual(
       inlineSegmentChanges(base, head).diff,
-      diffCssRuleLists(actual.beforeRules, actual.afterRules),
+      diffCssRuleLists(
+        flattenInlineRules(actual.beforeRuns),
+        flattenInlineRules(actual.afterRuns),
+      ),
       `${label}: ordered diff`,
     );
     assertUniqueOccurrences(actual);

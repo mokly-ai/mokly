@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { parse } from "parse5";
 
 import { attributeInlineRules } from "../../src/review/css/inline_attribution.js";
-import { parseInlineRuleList } from "../../src/review/css/inline_rule_lists.js";
+import { parseInlineRuns } from "../../src/review/css/inline_rule_runs.js";
 import { CssResourceAnalysis } from "../../src/review/css/resource_analysis.js";
 
 const [entrypoint, kind, mode] = process.argv.slice(2);
@@ -44,10 +44,10 @@ function populate() {
   const text = source.slice(start + 7, end - 8);
   if (entrypoint === "list") {
     const spans = [{ start, end, source: source.slice(start, end), text }];
-    const result = parseInlineRuleList(spans, cache.parser);
+    const result = parseInlineRuns(spans, cache.parser);
     assert.equal(result.status, kind === "invalid" ? "unresolved" : "parsed");
     if (kind === "segment") {
-      const warmed = parseInlineRuleList(spans, cache.parser);
+      const warmed = parseInlineRuns(spans, cache.parser);
       assert.deepEqual(warmed, result);
     }
   } else {

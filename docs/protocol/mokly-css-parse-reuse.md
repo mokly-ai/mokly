@@ -243,7 +243,7 @@ records having the identity. They contribute resource ownership only, never
 retained selectors, all-excluded status or inline change evidence.
 
 Compose actual/projected lists from **all** stored rules, including cancelled
-runs, in the common canonical order. Omit exact occurrences selected as
+runs: sort actual once per side and filter its order for projected. Omit exact occurrences selected as
 excluded from actual and projected, and those selected as owned from projected
 only. Paired unchanged omissions are symmetric. This fixes the delivered
 duplicate-copy attribution bug while preserving multiplicity and the
