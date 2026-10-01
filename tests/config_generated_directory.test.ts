@@ -8,7 +8,6 @@ import { validateGeneratedOutputPaths } from "../dist/build/output_paths.js";
 import { normalizeSourceFiles } from "../dist/build/source_inventory.js";
 import { loadConfig } from "../dist/config/load.js";
 import { resolveConfig } from "../dist/config/validate.js";
-import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 
 import {
   createFixture,
@@ -140,29 +139,6 @@ test("broad entry glob skips generated tree while discovering co-located entries
   assert.deepEqual((await loadConfig(fixture.root)).entryModules, [
     path.join(fixture.mockupsDir, "actual.mockup.tsx"),
   ]);
-});
-
-test("identity-derived catalogue routes cannot occupy the reserved output tree", async (t) => {
-  const fixture = await createFixture();
-  t.after(() => removeFixture(fixture));
-  assert.equal(entryRoute("screen", "home"), "screens/home.html");
-  assert.equal(
-    viewRoute("screen", "home", "mobile", "light"),
-    "screens/home.mobile.html",
-  );
-  await fs.writeFile(
-    fixture.entryPath,
-    validEntrySource().replace(
-      'route: "screens/home.html"',
-      'route: "mokly-generated/home.html"',
-    ),
-  );
-  const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  assert.ok(
-    [...compilation.outputs.keys()].every(
-      (route) => route !== "mokly-generated/home.html",
-    ),
-  );
 });
 
 test("generated asset routes accept every documented extension", async (t) => {

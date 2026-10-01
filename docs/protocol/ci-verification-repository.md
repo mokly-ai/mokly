@@ -16,7 +16,9 @@ untracked files. It covers all repository TypeScript/JavaScript extensions
 Git-ignored untracked files; tracked files remain in scope. Every xtask
 subprocess starts at the workspace root, even when xtask starts elsewhere.
 Use `cargo xtask source-file-length-lint --all` to audit every scoped file
-instead of only the changed set. Mainline's independent ratchets remain
+instead of only the changed set. Source modules have a 300-line limit;
+protocol pages have a 250-line limit or their exact reviewed cap in
+`tests/protocol_doc_sizes.test.ts`. The independent ratchets remain
 additional gates under [Repository Verification Ratchets](./verification-ratchets.md).
 During an uncommitted merge, the changed-file audit uses the resolved tree
 against `origin/main`; outside a merge, it uses the branch-point diff and

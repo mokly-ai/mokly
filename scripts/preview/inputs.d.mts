@@ -1,4 +1,4 @@
-import type { ManifestV5 } from "@mokly/viewer/data";
+import type { ManifestV7 } from "@mokly/viewer/data";
 
 import type { ResolvedConfig } from "../../dist/config/types.js";
 
@@ -6,4 +6,4 @@ import type { ResolvedConfig } from "../../dist/config/types.js";
 export function capturePublicationInputs(
   config: ResolvedConfig,
   excludedRoots: readonly string[],
-): Promise<{ fingerprint: string; manifest: ManifestV5 }>;
+): Promise<{ fingerprint: string; manifest: ManifestV7 }>;

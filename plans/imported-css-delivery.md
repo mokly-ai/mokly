@@ -44,10 +44,11 @@ implementation PR. The merged tree retains imported CSS with manifest v7,
 read model v3, aligned comparison panes and delta publishing. Main's removal
 of historical v2 manifest parsing remains in force; `compatibility.transformer`
 remains available. The full gate passed before and after the merge commit,
-and the implementation PR is #125. The thirteen findings in the
-[Milestone 37 review record](../docs/reviews/imported-css-delivery-milestone-37.md),
-including contradictory duplicate protocol pages left by the merge, remain open
-for the user's decision. The plan stays active until the PR merges.
+and the implementation PR is #125. The user approved all thirteen findings in
+the [Milestone 37 review record](../docs/reviews/imported-css-delivery-milestone-37.md)
+for Milestone 38; protocol-page reconciliation and verification are underway.
+Other previously unselected findings remain out of scope. The plan stays active
+until the PR merges.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -979,12 +980,31 @@ navigation, publication and manifest changes.
 - [x] Integrate manifest v7 and read model v3 with stylesheet metadata, navigation paths and CSS attribution.
 - [x] Integrate generated CSS and binary assets with export ownership schema 2, delta publication and aligned `srcdoc` comparison panes; add missing publication and browser coverage.
 - [x] Keep the example and fixtures reachable through `navPath`/`folder()`, reconcile documentation and split over-limit merged files.
+      Milestone 38 completed the protocol-page reconciliation after the merge review.
 - [x] Prove no unapproved deletion or feature-wide reduction against `origin/main`; run Build, focused and browser tests, example Chrome smoke and the complete `cargo xtask check` gate.
 
 ## Milestone 37: Commit, push, and review (complete)
 
 - [x] Commit and push the merge and final bookkeeping; confirm the remote ref and a clean tree.
 - [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Thirteen new findings (1 High, 3 Medium, 9 Low) are recorded in the [Milestone 37 review record](../docs/reviews/imported-css-delivery-milestone-37.md) for the user's decision.
+
+## Milestone 38: Reconcile merged protocol pages and restore main's tooling
+
+Make main's protocol pages authoritative, port still-current imported CSS
+rules, and guard documentation, merge and length-policy boundaries.
+
+- [x] Write failing protocol-structure, error-catalogue and preview-capture regressions; record the baseline evidence.
+- [x] Triage every sentence in the old-page report, port current rules, remove superseded pages, rename current pages and reconcile generated rendering; record the ignored crosswalk.
+- [x] Restore URL, watcher, configuration, CSS attribution, verification and release wording, with links and index tests aligned to current owners.
+- [x] Restore preview normalization, the narrowed merge-aware ratchet, the shared length policy, the fixture helper and script declaration checking.
+- [x] Add the merge-preservation command and its Git fixtures; run it against the merged result and justify every intentional move or removal.
+- [x] Add the output-path guard and derived binary publication regressions, with mutation evidence for the guard.
+- [ ] Run focused suites, example Build/Check, lint, typecheck, Markdown/overlap checks and the full `cargo xtask check` gate.
+
+## Milestone 39: Commit, push, and review
+
+- [ ] Commit and push the approved fixes and final bookkeeping; confirm the remote ref and a clean tree.
+- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review.
 
 ## Post-merge follow-up (non-blocking)
 

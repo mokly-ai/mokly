@@ -71,7 +71,16 @@ Exact required files, including the config and its imports, inventoried sources,
 the renderer, and configured stylesheets, retain both their ancestor path and the
 file itself even when intentionally nested beneath an ordinarily ignored
 directory. Configured stylesheet files remain reload inputs.
-Those package-owned classifications take precedence over additional watch rules.
+The logical path of a previously reachable public resource remains a reload
+input when its symlink temporarily points outside the repository or dangles;
+never watch the escaped physical target. Generated output, Review output and
+cache still take precedence, so only an authored public alias can recover.
+Generated output, Review output and the cache take precedence over exact
+required inputs; denied directory **names** apply only to discovery and
+directory scans, not inventoried files, configured modules or their ancestors.
+Classify logical and physical aliases by these distinct reasons before applying
+the required-input exception. Those package-owned output classifications take
+precedence over additional watch rules.
 A created path beneath a denied directory relative to its glob root, or beneath
 `review.outDir`, is ignored because discovery cannot accept it. A file created
 under an entry glob root that no `entries` glob matches and that is not imported
@@ -122,6 +131,17 @@ fail; watch classification does not grant permission to overwrite them.
 The input graphs are resolved before the source/config watcher is constructed.
 It becomes ready before initial index preparation; import changes replace its watch
 set using the same readiness and recovery rules as configuration adoption.
+Build a generation-scoped index of exact required files and their ancestors
+once per accepted config/inventory. Ignore callbacks consult that index in
+constant time; watch targets omit individual files already covered by an entry
+glob root, PostCSS directory-dependency root or watch-rule root unless a
+denied-name directory lies between that root and a required file. Such files
+remain explicit targets, including when they appear after watcher readiness;
+their arrival changes the effective watch-target set and replaces the watcher.
+Reconfigure replaces the watcher only when the set of effective watch roots
+changes, not when another file joins an already-watched reported directory.
+A newly added matching file there causes one rebuild and browser reload
+without extra graph loads for watcher replacement.
 Resource watches are discovered from candidate output and become ready before
 it is written. Discovery repeats after readiness to capture newly introduced
 references during watcher attachment. Notifications during generation and child

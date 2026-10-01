@@ -223,4 +223,5 @@ independent of comparison-mode eligibility and the inspector's initial
 disclosure; Added and Removed screens can retain factual Details without gaining
 comparison controls.
 
-Serving and comparison-engine behavior continues in [Changes Serving And Comparison](./mokly-changes-serving.md). [Changes Controls And Serving](./mokly-changes-controls.md) and [Changes Comparison Engine](./mokly-changes-engine.md) retain the detailed earlier contract.
+Serving and comparison-engine behavior continues in
+[Changes Serving And Comparison](./mokly-changes-serving.md).

@@ -6,19 +6,21 @@ import test from "node:test";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const pages = [
-  "ci-verification-evidence.md",
-  "mokly-changes-controls.md",
-  "mokly-changes-engine.md",
+  "ci-suite-evidence.md",
+  "ci-verification-repository.md",
+  "ci-verification-security.md",
+  "mokly-changes-serving.md",
   "mokly-configuration-discovery.md",
-  "mokly-css-attribution-rules.md",
-  "mokly-css-attribution-evidence.md",
-  "mokly-export-boundary.md",
+  "mokly-configuration-imported-styles.md",
+  "mokly-css-attribution-membership.md",
+  "mokly-export-public-files.md",
   "mokly-imported-styles-assets.md",
+  "mokly-imported-styles-errors.md",
   "mokly-imported-styles-modules.md",
+  "mokly-imported-styles-postcss.md",
   "mokly-publication-changes.md",
   "mokly-rendering-generated.md",
-  "mokly-source-inventory.md",
-  "mokly-watch-lifecycle.md",
+  "mokly-watch-runtime.md",
   "npm-release-management.md",
 ] as const;
 

@@ -114,9 +114,14 @@ Base and head panes live under separate snapshot roots. Their names come from
 [artifact path contract](./mokly-artifact-paths.md). Local
 resources referenced by pane HTML or CSS are copied transitively, including
 binary fonts and images, while explicit HTTP(S)/data resources remain external.
-Root-absolute, protocol-relative, and other scheme-qualified resource URLs are
-not portable in an isolated snapshot and fail comparison instead of being
-silently omitted.
+
+## Resource URL Classification
+
+HTTP(S) and data resource URLs are external. CSS protocol-relative `//` URLs
+are also external: they stay unchanged and are never fetched or inventoried.
+HTML protocol-relative and root-absolute URLs, and other unsupported schemes,
+are not portable in an isolated snapshot and fail comparison instead of being
+silently omitted. Export and removed previews use the same classification.
 Current resources and every base pane or transitive dependency must be regular
 public files, never protected authoring inputs. Pane bytes stay unchanged on
 disk and in artifacts; the viewer's script-disabled

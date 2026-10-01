@@ -69,7 +69,7 @@ blockers.
 Each pair records one checked commit, both immutable tags and versions, the
 CLI's exact viewer dependency, both uploaded tarballs and pack reports, both
 registry verification results, GitHub releases, npm URLs, provenance/signature
-results and the five clean-consumer smoke results. The preserved verification
+results and every clean-consumer smoke result. The preserved verification
 record identifies whether the workflow ran the complete gate or reused CI, and
 in evidence mode names the selected CI run, evidence commit, matching tree and
 report count. Retain the workflow run and protection read-backs. The first

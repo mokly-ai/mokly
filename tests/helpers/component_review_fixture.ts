@@ -4,7 +4,10 @@ import {
   compileCatalogue,
   type Compilation,
 } from "../../dist/build/compile.js";
-import { generatedBytes } from "../../dist/build/generated_file.js";
+import {
+  generatedBytes,
+  generatedText,
+} from "../../dist/build/generated_file.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
 import type { ReadOnlyReviewRepository } from "../../dist/review/repository.js";
@@ -63,8 +66,7 @@ export function componentGit(
       fileExists: async (_commit, route) => files.has(route),
       fileKind: async (_commit, route) =>
         files.has(route) ? "regular" : "missing",
-      readFile: async (_commit, route) =>
-        textOutput(compilation.outputs, route.slice("mockups/".length))!,
+      readFile: async (_commit, route) => generatedText(read(route), route)!,
       readFileBytes: async (_commit, route) => generatedBytes(read(route)),
     },
   };

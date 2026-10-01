@@ -1,6 +1,6 @@
 # Configuration Discovery And Exclusions
 
-Continuation of [Mokly Configuration Contract](./mokly-configuration.md).
+Continuation of [Configuration](./mokly-configuration.md).
 
 ## Entry Discovery
 

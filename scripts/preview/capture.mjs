@@ -7,6 +7,8 @@ import {
   loadShellFontAssets,
 } from "../../dist/server/client_modules.js";
 
+import { normalizeProviderHtmlAttributes } from "./html_paths.mjs";
+
 const liveHostScript =
   '<script src="/__mokly/client/react-host.js" type="module"></script>';
 const staticHydrationScript =
@@ -72,17 +74,15 @@ export async function capturePage(
 }
 
 function staticPage(html) {
-  return html
-    .replace(' data-mokly-host-capabilities=""', "")
-    .replace(
-      /<script data-mokly-host-capability-state="" type="application\/json">[^<]*<\/script>/,
-      "",
-    )
-    .replace(liveHostScript, staticHydrationScript)
-    .replace(
-      /(href|src|data-fragment-light|data-fragment-dark)="\/(static|view)\/([^"?#]+)\.html((?:\?|#)[^"]*)?"/g,
-      '$1="/$2/$3$4"',
-    );
+  return normalizeProviderHtmlAttributes(
+    html
+      .replace(' data-mokly-host-capabilities=""', "")
+      .replace(
+        /<script data-mokly-host-capability-state="" type="application\/json">[^<]*<\/script>/,
+        "",
+      )
+      .replace(liveHostScript, staticHydrationScript),
+  );
 }
 
 /** Stage UTF-8 shell or catalogue text at a relative preview path. */

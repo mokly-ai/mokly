@@ -92,7 +92,7 @@ Ignored-only edits, source moves, and dependency/shared-impact evidence alone
 do not add entries, except the owned and exact declared paths of [component attribution](./mokly-component-changes.md#dependencies-and-styles).
 Retain that evidence in comparisons, and do not derive the navigation filter by counting materially changed comparison screens.
 
-Comparisons use [review result v4](./mokly-changes-engine.md#comparison-engine) for
+Comparisons use [review result v4](./mokly-changes-serving.md#comparison-engine) for
 every catalogue. It retains all existing states, shared/dependency impact,
 ignored regions, both viewports and all effective color schemes; see the
 [supported format matrix](./README.md#supported-formats). Removed screens,
@@ -180,4 +180,6 @@ reaches the terminal.
 Output confinement and ownership reservations follow the separate
 [export safety contract](./mokly-export-safety.md).
 
-The output inventory continues in [Export Public Files And Package Boundary](./mokly-export-public-files.md); the [ownership contract](./mokly-export-boundary.md) defines imported stylesheet and asset capture.
+The output inventory and imported CSS capture continue in
+[Export Public Files And Package Boundary](./mokly-export-public-files.md);
+the [ownership marker](./mokly-export-ownership.md) records exact file bytes.

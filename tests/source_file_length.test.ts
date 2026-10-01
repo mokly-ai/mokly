@@ -168,3 +168,48 @@ test("an in-progress merge audits resolved changes, not untouched main additions
   assert.match(failed.stderr, /docs\/protocol\/feature\.md: 251 lines/);
   assert.doesNotMatch(failed.stderr, /main\.md/);
 });
+
+test("changed protocol pages follow exact reviewed caps", async (context) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-length-caps-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const git = (...args: string[]) => execFileSync("git", args, { cwd: root });
+  git("init", "-q");
+  git("config", "user.name", "Mokly Test");
+  git("config", "user.email", "mokly@example.invalid");
+  await fs.mkdir(path.join(root, "docs/protocol"), { recursive: true });
+  await fs.mkdir(path.join(root, "tests"));
+  const document = path.join(root, "docs/protocol/long.md");
+  const caps = path.join(root, "tests/protocol_doc_sizes.test.ts");
+  await fs.writeFile(document, "line\n".repeat(260));
+  await fs.writeFile(caps, 'const oversizedCaps = { "long.md": 260 };\n');
+  git("add", ".");
+  git("commit", "-qm", "baseline cap");
+  git("update-ref", "refs/remotes/origin/main", "HEAD");
+  const check = () =>
+    spawnSync(process.execPath, [script], { cwd: root, encoding: "utf8" });
+
+  await context.test(
+    "a lowered exact cap permits a shorter capped page",
+    async () => {
+      await fs.writeFile(document, "line\n".repeat(255));
+      await fs.writeFile(caps, 'const oversizedCaps = { "long.md": 255 };\n');
+      assert.equal(check().status, 0);
+    },
+  );
+  await context.test("a page above its recorded cap fails", async () => {
+    await fs.writeFile(document, "line\n".repeat(256));
+    const result = check();
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /long\.md: 256 lines \(limit 255\)/u);
+  });
+  await context.test("an uncapped page above 250 fails", async () => {
+    await fs.writeFile(document, "line\n".repeat(255));
+    await fs.writeFile(
+      path.join(root, "docs/protocol/uncapped.md"),
+      "line\n".repeat(251),
+    );
+    const result = check();
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /uncapped\.md: 251 lines \(limit 250\)/u);
+  });
+});

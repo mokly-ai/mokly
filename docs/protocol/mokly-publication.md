@@ -167,4 +167,7 @@ produce mixed navigation, missing pages, or stale shell metadata. Default
 publication performs the same filesystem consistency checks without consulting
 Git.
 
-Changes-enabled publication continues in [Publication Changes And Acceptance](./mokly-publication-mainline-changes.md); imported CSS capture follows the [imported-styles contract](./mokly-imported-styles.md).
+Changes-enabled publication continues in
+[Publication Changes And Acceptance](./mokly-publication-changes.md);
+imported CSS capture follows the
+[imported-styles contract](./mokly-imported-styles.md).

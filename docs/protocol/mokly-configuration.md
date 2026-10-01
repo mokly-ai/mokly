@@ -131,7 +131,7 @@ Filesystem fields (`repoRoot`, `entriesDir`, `mockupsDir`, `renderer`,
 compatibility transformer, module-resolution package
 roots, and Review `outDir`) are config-relative. `entries` globs are
 repository-relative, like `review.sharedImpact` and `watch.rules[].paths`;
-see [entry discovery](./mokly-configuration-mainline-discovery.md#entry-discovery). Stylesheet file paths are
+see [entry discovery](./mokly-configuration-discovery.md#entry-discovery). Stylesheet file paths are
 relative to `mockupsDir`; HTTP(S) stylesheet URLs are allowed.
 `colorSchemes` is a non-empty, duplicate-free subset of `"light" | "dark"`
 that must include `"light"`; it defaults to `["light"]` and normalizes to
@@ -202,14 +202,19 @@ roots must be in-repository directories containing `package.json`; their
 `node_modules` directories supplement consumer lookup. Aliases accept bare
 package specifiers only. Conditions, package fields, and extensions are ordered,
 deduplicated lists, while loader keys are extensions and values are supported
-esbuild loader names. React and React DOM still resolve through Mokly's
+JavaScript-safe esbuild loader names. The `css` loader is rejected for every
+extension because it would emit an undelivered sibling stylesheet. React and
+React DOM still resolve through Mokly's
 consumer-peer plugin so these options cannot introduce a second React runtime.
 
 The obsolete `legacy` config key is rejected, including `legacy: undefined`.
-
-`postcss` and reserved-output configuration continues in
-[Imported CSS Configuration](./mokly-configuration-imported-styles.md).
 Register every complete document explicitly with `definePage` or nested `page`;
 baseline compatibility never restores source discovery or old configuration.
 
-Entry discovery and public exclusions continue in [Configuration Discovery And Exclusions](./mokly-configuration-mainline-discovery.md). [Imported stylesheet delivery](./mokly-imported-styles.md) specifies reserved CSS output and consumer PostCSS.
+`postcss` and reserved-output configuration continues in
+[Imported CSS Configuration](./mokly-configuration-imported-styles.md).
+
+Entry discovery and public exclusions continue in
+[Configuration Discovery And Exclusions](./mokly-configuration-discovery.md).
+[Imported stylesheet delivery](./mokly-imported-styles.md) specifies reserved
+CSS output and consumer PostCSS.

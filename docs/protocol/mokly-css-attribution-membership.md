@@ -71,7 +71,7 @@ interface ViewReview {
 }
 ```
 
-Every [review result v4](./mokly-changes-engine.md#comparison-engine) view record
+Every [review result v4](./mokly-changes-serving.md#comparison-engine) view record
 carries these fields. Results without them remain valid and mean the analysis
 did not run.
 
@@ -92,6 +92,8 @@ even when every variant entry excludes the stylesheet. Variant view states and
 exclusions remain unchanged; no synthetic variant entry is created. An exact
 screen dependency remains independent when its actual view keeps the
 stylesheet.
+Entry analysis unions eligible saved-view and actual-invocation evidence; one
+view's exclusion does not cancel another view retaining the same path.
 A broad public stylesheet glob or declaration cannot bypass rule exclusion.
 Non-CSS path-only evidence follows [component attribution](./mokly-component-changes.md#dependencies-and-styles).
 Resource evidence makes a paired view

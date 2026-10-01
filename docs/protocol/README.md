@@ -28,7 +28,6 @@ readers accept only v7; earlier output follows
 
 - [CI verification](./ci-verification.md) — implemented suite, shard, evidence,
   cache and aggregation contract.
-  - [CI evidence, cache and cleanup](./ci-verification-evidence.md).
   - [CI dependency cache and security](./ci-verification-security.md).
   - [Repository gate and length audits](./ci-verification-repository.md).
 - [CI workflow graph](./ci-workflow.md)
@@ -50,7 +49,6 @@ readers accept only v7; earlier output follows
   cloud documentation site.
 - [Configuration contract](./mokly-configuration.md) — includes public-exclusion validation and defaults.
   - [Entry discovery and public exclusions](./mokly-configuration-discovery.md).
-  - [Mainline configuration discovery and exclusions](./mokly-configuration-mainline-discovery.md).
   - [Imported CSS configuration](./mokly-configuration-imported-styles.md).
 - [Public authoring API](./mokly-authoring.md)
 - [Nested authoring trees](./mokly-nested-authoring.md)
@@ -93,7 +91,6 @@ readers accept only v7; earlier output follows
   their parent.
 - [Variant navigation and Changes](./mokly-variant-navigation.md)
 - [Source protection](./mokly-source-protection.md)
-  - [Complete source inventory](./mokly-source-inventory.md).
 - [Imported stylesheets](./mokly-imported-styles.md) — implemented:
   renderer/entry CSS, CSS Modules, assets, PostCSS, inventory, and
   [exact diagnostics](./mokly-imported-styles-errors.md).
@@ -104,11 +101,8 @@ readers accept only v7; earlier output follows
 - [Baseline compatibility](./mokly-baseline-compatibility.md)
 - [Optional changes in publication](./mokly-publication.md)
   - [Published Changes and acceptance](./mokly-publication-changes.md).
-  - [Mainline publication Changes](./mokly-publication-mainline-changes.md).
 - [Changes and screen comparisons](./mokly-changes.md)
   - [Changes serving and comparison](./mokly-changes-serving.md).
-  - [Changes controls and serving](./mokly-changes-controls.md).
-  - [Changes comparison engine](./mokly-changes-engine.md).
 - [Comparison pane presentation](./mokly-comparison-panes.md) — viewer-owned,
   device-sized Overlay, Difference and Side by side panes.
 - [Comparison scrolling](./mokly-comparison-scrolling.md) — page alignment,
@@ -134,8 +128,6 @@ readers accept only v7; earlier output follows
 - [Component change attribution](./mokly-component-changes.md)
 - [CSS change attribution](./mokly-css-attribution.md) — implemented
   rule-aware stylesheet evidence.
-  - [CSS rule analysis](./mokly-css-attribution-rules.md).
-  - [CSS membership and evidence](./mokly-css-attribution-evidence.md).
   - [CSS attribution membership](./mokly-css-attribution-membership.md).
 - [Component review fast path](./mokly-component-review-fast-path.md)
 - [CSS evidence in the shell](./mokly-css-evidence-shell.md) — inspector and
@@ -150,7 +142,6 @@ readers accept only v7; earlier output follows
 - [Component controls](./mokly-component-controls.md)
 - [Consumer static export](./mokly-export.md) — consumer CLI and
   transactional artifact-generation contract.
-  - [Export ownership and public boundaries](./mokly-export-boundary.md).
   - [Export public files and package boundary](./mokly-export-public-files.md).
 - [Static export safety](./mokly-export-safety.md) — output confinement and
   ownership reservations.
@@ -164,7 +155,6 @@ readers accept only v7; earlier output follows
   inventory and compatibility fixtures for independent upload receivers.
 - [Watched development](./mokly-watch.md)
   - [Watch runtime and recovery](./mokly-watch-runtime.md).
-  - [Watch adoption and recovery](./mokly-watch-lifecycle.md).
 - [Catalogue navigation contract](./mokly-navigation.md)
 - [Styled catalogue link controls](./mokly-link-controls.md)
 - [Shell design contract](./mokly-shell-design.md)
@@ -173,8 +163,7 @@ readers accept only v7; earlier output follows
   — implemented shared design components and ownership rules, with the
   [component library inventory](./mokly-design-component-library.md).
 - [CI and npm release contract](./npm-release.md)
-  - [Release management and evidence](./npm-release-management.md).
-  - [npm release mainline management](./npm-release-mainline-management.md).
+  - [npm release management](./npm-release-management.md).
   - [npm release operations](./npm-release-operations.md)
   - [npm breaking-change release notes](./npm-release-notes.md)
   - [Repository preview deployments](./npm-preview-deployments.md)

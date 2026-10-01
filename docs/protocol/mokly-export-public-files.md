@@ -4,11 +4,14 @@ Continuation of [Consumer Static Export](./mokly-export.md).
 
 ## Public Files And Package Boundary
 
-For imported CSS, capture only the accepted compilation's generated
-stylesheet and opaque asset bytes. Committed mode reads checked disk bytes;
-derived mode uses compiled bytes and never walks the reserved tree on disk.
-Private stylesheet and PostCSS inputs stay outside the static inventory.
-Validate `%40`-encoded scoped package asset links against captured routes.
+For imported CSS, capture every accepted generated route under
+`mokly-generated/styles/` and `mokly-generated/assets/`, not their private
+source files. Committed mode checks and copies disk bytes; derived mode uses
+validated compiled text and opaque binary bytes without walking the reserved
+tree on disk. Inventory, route links and resource validation use that same
+capture; no manifest schema change is needed. Private stylesheet and PostCSS
+inputs stay outside the static inventory. Validate `%40`-encoded scoped
+package asset links against captured routes.
 
 Include current manifest-owned fragments and pages and all public
 regular assets/documents that Browse exposes beneath `mockupsDir`, subject to
@@ -84,6 +87,7 @@ shares final artifact validation, delivery identity, and the output transaction.
 It retains optional Changes and existing snapshot/alias rules. Cloudflare
 routing/header files remain adapter concerns. A provider adapter may add metadata before installation;
 it must not mutate an already-installed site or relax core confinement.
+Test legacy preview ownership migration independently of a clean CI output.
 
 The first version supports HTTP(S) deployment at the origin root. Subpath
 hosting, `file://` catalogue browsing, incremental/watch export, Git-free export,

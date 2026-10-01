@@ -127,10 +127,7 @@ test("CI and release contracts document the enforced title boundary", async () =
       "utf8",
     ),
     fs.readFile(
-      path.join(
-        repositoryRoot,
-        "docs/protocol/npm-release-mainline-management.md",
-      ),
+      path.join(repositoryRoot, "docs/protocol/npm-release-management.md"),
       "utf8",
     ),
   ]);
@@ -139,7 +136,7 @@ test("CI and release contracts document the enforced title boundary", async () =
   for (const type of PULL_REQUEST_TITLE_TYPES)
     assert.ok(ci.includes(`\`${type}\``), type);
   assert.match(ci, /\[a-z0-9\._\/-\]\+/u);
-  assert.match(release, /npm-release-mainline-management\.md/u);
+  assert.match(release, /npm-release-management\.md/u);
   assert.match(releaseManagement, /Pull Request Title Contract/u);
   assert.match(releaseManagement, /chore\(main\): release 0\.13\.0/u);
   assert.match(releaseManagement, /BREAKING CHANGE:/u);

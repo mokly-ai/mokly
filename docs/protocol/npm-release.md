@@ -73,8 +73,8 @@ platform tar executable or walking the output again.
 
 ## Local Verification
 
-`cargo xtask check` is the complete repository and release gate. It delegates to
-npm scripts and includes:
+`cargo xtask check` is the complete repository and release gate. It orchestrates
+npm, Node and Rust commands from the workspace root and includes:
 
 - a live audit of all workspace dependency categories, failing on any known
   advisory or registry error;
@@ -98,7 +98,8 @@ npm scripts and includes:
   watched-runtime regressions;
 - Playwright Browse and Review regressions using Chromium, including isolated
   exact-file exports after source removal and the actual Cloudflare runtime; and
-- Rust formatting, Clippy, tests, and file-length audits for `xtask`.
+- Rust formatting, Clippy and tests, plus repository-wide changed-source and
+  Rust file-length audits.
 
 Tests that mutate files use isolated temporary directories and clean up child
 processes. Package smokes execute the packed artifact, not the source tree or a
@@ -140,4 +141,5 @@ Repository catalogue preview publication, Cloudflare Pages delivery, artifact
 replacement, and pull-request cleanup follow the separate
 [preview deployment contract](./npm-preview-deployments.md).
 
-Release management and registry operations continue in [npm Release Mainline Management](./npm-release-mainline-management.md).
+Release management and registry operations continue in
+[npm Release Management](./npm-release-management.md).

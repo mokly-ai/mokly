@@ -141,7 +141,7 @@ after review, following the user's instruction to report new findings first.
    manually edited generated body, while `checkCompilation` rejected both.
    However, the supported `npm run preview:build` command explicitly rebuilds
    before capture. The
-   [source-inventory contract](../protocol/mokly-source-inventory.md#freshness-and-lifecycle)
+   [source-inventory contract](../protocol/mokly-source-protection.md#freshness-and-lifecycle)
    defines inventory freshness as path membership, with content edits applied
    by build/watch, and the publication contract snapshots existing generated
    files. The finding therefore does not establish a broken supported command

@@ -1,12 +1,13 @@
 # Publication Changes And Acceptance
 
-Continuation of [Optional Changes In Published Catalogues](./mokly-publication.md).
+Continuation of [Optional Changes In Publication](./mokly-publication.md).
 
 ## Explicitly Include Changes
 
 With `--include-changes`, publish the existing All/Changes navigation and screen
 comparison controls, including a zero changed count. Retain removed-screen
-metadata, routes, and comparisons under the existing ID/route precedence rules.
+metadata, previous-version pages, and comparisons. Current and removed entries
+never share an id.
 Render those removed screens with their Removed badge and no comparison
 controls. Publication packages their baseline views and advertises the
 descriptor defined by [removed previews](./mokly-removed-previews.md), which the
@@ -18,7 +19,7 @@ preview. Pages have no visual comparisons; screen metadata
 remains supported.
 
 Resolve the effective base and HEAD once, then pin their merge-base commit for
-both route impact and screen comparisons. Capture the current catalogue,
+both entry impact and screen comparisons. Capture the current catalogue,
 generated documents, and resources consistently for that build; fail if inputs
 change during capture rather than mix revisions. Record the resolved comparison
 baseline with the exported review metadata. The artifact represents the files
@@ -34,11 +35,11 @@ exporter's typed removed-preview descriptor builder and adds each descriptor to
 the matching captured static shell. This artifact-only step does not advertise
 page paths from the development server used during capture.
 
-An unavailable base, invalid historical manifest, capture inconsistency, or
-comparison failure aborts publication and preserves the previous owned output.
-Do not silently fall back to a catalogue without changes when they were
-explicitly requested. Preserve source protection, snapshot isolation, resource
-confinement, and sandbox restrictions in both options.
+Missing history, an invalid v7 baseline, capture inconsistency, or comparison
+failure aborts publication and preserves previous output. Recognized earlier
+output instead completes with Changes unavailable under the
+[baseline compatibility contract](./mokly-baseline-compatibility.md). Preserve
+source protection, snapshot isolation, resource confinement, and sandbox rules.
 Both options apply the
 [shared source policy](./mokly-source-protection.md), including unimported
 reserved files and complete config/consumer input inventories.
@@ -78,8 +79,8 @@ For both options, reject escaping context, parent, and output symlinks without
 changing the outside target. Prove valid in-repository symlinks and a symlinked
 repository root still support publication.
 Test a rebuild immediately before the first input scan and a manifest mutation
-after its initial read. Verify navigation, captured routes, ID redirects, and
-opted-in change metadata agree, and failed capture preserves the previous output.
+after its initial read. Verify navigation, captured pages, and opted-in change
+metadata agree, and failed capture preserves the previous output.
 Cover safe file/directory aliases in both options, target-only edits, private
 aliases, unrelated outside/dangling/cyclic links, and an escaping manifest before
 any target read. Remove a copied resource during staging to prove validation

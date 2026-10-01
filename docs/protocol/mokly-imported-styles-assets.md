@@ -66,7 +66,7 @@ decodes both forms. The complete stylesheet route obeys the usual rule.
 scheme-specific paths, then configured renderer stylesheet if present, then
 entry stylesheet if present; generated links exist even without a configured
 rule. Resolve/encode local paths relative to each fragment route, e.g. from
-`app/home.mobile.html` to `mokly-generated/styles/src/home.mockup.tsx.css`
+`screens/home.mobile.html` to `mokly-generated/styles/src/home.mockup.tsx.css`
 is `../mokly-generated/styles/src/home.mockup.tsx.css`. Same order for dark,
 component variants and saved viewports. The consumer renderer decides whether
 to emit links; Mokly does not inject link tags. Pages receive no render input

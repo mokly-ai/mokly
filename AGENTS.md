@@ -293,7 +293,7 @@
 
 ### Rust File Size Limits
 
-The repository gate also limits changed TypeScript/JavaScript anywhere in the repository to 300 lines and protocol Markdown to 250 lines; fetch `origin/main` before `cargo xtask source-file-length-lint`. It excludes only Git-ignored untracked files.
+The repository gate also limits changed TypeScript/JavaScript anywhere in the repository to 300 lines and protocol Markdown to 250 lines, except pages with exact reviewed caps in `tests/protocol_doc_sizes.test.ts`; fetch `origin/main` before `cargo xtask source-file-length-lint`. It excludes only Git-ignored untracked files.
 
 The file length linter enforces a **300-line** hard cap for Rust files under `crates/` and `xtask/` when they are changed relative to `origin/main` or present in the working tree. Run `cargo xtask rust-file-length-lint --all` to audit every Rust file under those directories. Files exceeding 300 lines must be refactored into multiple modules; there is no override mechanism.
 
@@ -510,6 +510,10 @@ docs, mockups, plans, migrations, or schema—without explicit user approval.
 
 - Resolve conflicts path-by-path; never bulk-take `--ours` or `--theirs` for a
   tree, directory, or feature. Passing CI does not prove preservation.
+- Run `node scripts/verification/merge-preservation.mjs` before committing a
+  merge, then run it with the merge commit and `--result HEAD` after any
+  follow-up fix. Restore or justify every reported passage in the merge
+  commit body; a passing gate does not replace this check.
 
 - Before commit and after commit, inspect the diff and deletions against main:
 

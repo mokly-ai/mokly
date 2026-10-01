@@ -9,7 +9,8 @@ internal binary and is not published to npm or crates.io.
 - Fail verification when the live dependency audit reports an advisory or error.
 - Enforce the Rust file-length limit.
 - Enforce changed repository-wide TypeScript/JavaScript (300 lines) and
-  protocol Markdown (250 lines) limits against the fetched `origin/main` baseline.
+  protocol Markdown (250 lines or an exact reviewed cap) limits against the
+  fetched `origin/main` baseline.
 - Ratchet JavaScript/TypeScript length, protocol caps, and internal exports
   against the branch point, and published-package exports against release tags.
 - Keep the complete local gate aligned with the approved independent CI suites.
@@ -102,8 +103,9 @@ cargo test --package xtask
   browser, hydration, and Rust verification sequence.
 - [`../scripts/package/browser_graph_analysis.mjs`](../scripts/package/browser_graph_analysis.mjs)
   validates the delivered browser module graph;
-  [`../scripts/package/consumer_cases`](../scripts/package/consumer_cases) owns
-  the five clean packed-consumer scenarios.
+  [`../scripts/package/consumer_cases`](../scripts/package/consumer_cases) and
+  [`../scripts/package/imported_styles.mjs`](../scripts/package/imported_styles.mjs)
+  own every clean packed-consumer smoke.
 - [`../scripts/verification/repository-ratchets.mjs`](../scripts/verification/repository-ratchets.mjs)
   dispatches the repository ratchets, and
   [`../scripts/verification/ratchets/git.mjs`](../scripts/verification/ratchets/git.mjs)

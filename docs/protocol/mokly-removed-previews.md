@@ -107,12 +107,12 @@ below the generation root: the directory of the redirected `preview.json` in
 development, or the directory of `comparisonUrl` in static delivery. Readers
 accept only version 2.
 
-Capture reads the page's single historical document and its transitive local
-closure through the pinned `BaselineReader` with the same Git asset reader,
-regular-file, bounded-batch, source-exclusion, reserved-file, and size rules as
-screen snapshots. Root-absolute, protocol-relative, and unsupported-scheme
-resource URLs fail capture. A current file at the same path never replaces a
-deleted or changed historical byte. The page must belong to the accepted
+Capture reads the historical page and its local closure through the pinned
+`BaselineReader`, with the same Git, regular-file, batch, source-exclusion,
+reserved-file and size rules as screen snapshots. The
+[resource URL rule](./mokly-changes-serving.md#resource-url-classification)
+keeps CSS `//` external and rejects non-portable HTML URLs; current files never
+replace historical bytes. The page must belong to the accepted
 removed-entry snapshot of the generation being served; a snapshot from another
 generation is rejected before capture. No baseline is rebuilt during an HTTP
 request; unprepared derived evidence returns the existing retryable failure.
