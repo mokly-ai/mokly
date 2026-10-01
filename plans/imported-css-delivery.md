@@ -54,7 +54,10 @@ diff, resolving findings 1, 2, 4 and 11 in the
 [Milestone 40 review record](../docs/reviews/imported-css-delivery-milestone-40.md).
 The other eight findings remain open. Milestone 42 (`beab8560`) merged main's
 release-runner fix at `b4a02a30`; the full gate passed on retry without any
-deletion of main content. Milestone 43's post-push review remains for the user.
+deletion of main content. The three findings in the
+[Milestone 43 review record](../docs/reviews/imported-css-delivery-milestone-43.md),
+mainly that the new remerge-diff step can review the wrong commit, remain open
+for the user's decision.
 Other previously unselected findings remain out of scope. The plan stays active
 until the PR merges.
 Imported CSS, CSS Modules, binary assets and
@@ -1041,10 +1044,10 @@ release protocol pages.
 - [x] Merge `origin/main`, resolve the release-protocol conflict path by path, and verify main's workflow and test updates.
 - [x] Review the committed merge with `git show --remerge-diff HEAD`, inspect deletions against `origin/main`, and run the focused checks and full gate.
 
-## Milestone 43: Commit, push, and review
+## Milestone 43: Commit, push, and review (complete)
 
 - [x] Commit and push the approved work, confirm the remote ref and a clean tree.
-- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Three new findings (1 Medium, 2 Low) are recorded in the [Milestone 43 review record](../docs/reviews/imported-css-delivery-milestone-43.md) for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
