@@ -57,8 +57,8 @@ release-runner fix at `b4a02a30`; the full gate passed on retry without any
 deletion of main content. Milestone 44 (`8729ec16`) resolves the selected findings in the
 [Milestone 43 review record](../docs/reviews/imported-css-delivery-milestone-43.md)
 by reviewing named merge commits and recording path-specific decisions.
-Other previously unselected findings remain out of scope. The plan stays active
-until the PR merges.
+Other previously unselected findings remain out of scope. Milestone 45's
+post-push review remains for the user; the plan stays active until the PR merges.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -1060,7 +1060,7 @@ path-complete record of intentional merge decisions.
 
 ## Milestone 45: Commit, push, and review
 
-- [ ] Commit and push the documentation changes; confirm the remote ref and a clean tree.
+- [x] Commit and push the documentation changes; confirm the remote ref and a clean tree.
 - [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review.
 
 ## Post-merge follow-up (non-blocking)
