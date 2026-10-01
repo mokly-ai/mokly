@@ -42,10 +42,11 @@
   0.13.0 release (`3a2d90a8`) and passed the complete gate without removing
   main content. The twelve findings in the
   [Milestone 40 review](../docs/reviews/imported-css-delivery-milestone-40.md)
-  are being addressed selectively: Milestone 41 replaces the custom merge
-  check for findings 1, 2, 4 and 11, and Milestone 42 will merge main's
-  release-runner fix. The other eight findings and earlier unselected findings
-  remain outside this work.
+  were addressed selectively: Milestone 41 (`7f64f8b0`) replaces the custom
+  merge check for findings 1, 2, 4 and 11, and Milestone 42 (`beab8560`)
+  merges main's release-runner fix at `b4a02a30`. The other eight findings
+  and earlier unselected findings remain outside this work. Milestone 43's
+  post-push review remains for the user.
   Move this plan to Completed when its
   implementation PR merges.
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive

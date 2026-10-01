@@ -66,6 +66,7 @@ while passages are missing. The parent session confirmed findings 1, 3, 6 and 10
      B) only validate `--result`; C) document the limits.
    - Recommended: A. The root cause is a catch-all that turns unexpected
      states into "nothing to check".
+   - Resolved in `7f64f8b0`: Removed the custom check. Reviewers now use Git's `--remerge-diff`, which compares against Git's own merge without the script's unreadable-result and deleted-file skips.
 2. **Medium — the merge check does not look where the last merge actually lost
    content.**
    - What happens: the check examines only files changed on both sides, and
@@ -94,6 +95,7 @@ while passages are missing. The parent session confirmed findings 1, 3, 6 and 10
      overlapping changes as conflicts; C) document the limits.
    - Recommended: A, with test cases shaped like the two real misses and a
      short description of what the check covers.
+   - Resolved in `7f64f8b0`: Removed the custom check. Git's `--remerge-diff` exposes conflict resolutions and edits to one-sided files, including the cases the script missed.
 3. **Medium — the URL classification rule still disagrees with the code for
    root-absolute CSS URLs.**
    - What happens: `classifyResourceUrl` treats a root-absolute `/x.png` as
@@ -124,6 +126,7 @@ while passages are missing. The parent session confirmed findings 1, 3, 6 and 10
    and treat only `+` lines after a hunk header as additions; B) adopt finding
    2's option A, which replaces this matching. Recommended: B if finding 2
    takes option A, otherwise A.
+   - Resolved in `7f64f8b0`: The custom line matcher was removed. Git's `--remerge-diff` shows actual changes from its automatic merge, so loose matching and skipped `++` lines no longer apply.
 5. **Low — the new URL heading splits `main`'s "Comparison engine" section.**
    The heading inserted in `mokly-changes-serving.md` files `main`'s
    `review.json` description and its `schemaVersion: 4` interface under the URL
@@ -213,6 +216,7 @@ while passages are missing. The parent session confirmed findings 1, 3, 6 and 10
     C) let the script read a tracked justification file and fail only on
     unlisted passages. Recommended: A, moving to C if merges from `main` stay
     frequent.
+    - Resolved in `7f64f8b0`: `AGENTS.md` directs intentional merge justifications to the PR description, which can change after the merge commit. The removed custom check's limits no longer apply; the user maintains PR #125's description.
 
 12. **Low — two imported-CSS watcher tests are flaky on CI.** PR #125's CI
     failed once on Node 22.14.0 and passed when only the failed jobs were
