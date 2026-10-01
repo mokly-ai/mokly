@@ -11,30 +11,26 @@ implementation and tests must preserve. Runtime behavior stays in
 
 ## Delivery Status
 
-This document describes the implemented shell design, including active-row
-ancestor disclosure, conditional filter clearing, nearest-row scrolling, the
-`tag:` search term, the details inspector's tag chips, the search field's tag
-control with its picker panel, the mark-only narrow brand, and the top bar's
-stacking above the navigation drawer scrim. Every state recorded here is
-implemented, including aligned comparison scrolling. The
-[React Browse shell plan](../../plans/react-browse-shell.md)
-changes how the shell is rendered and enhanced, not how it looks or behaves:
-this design, its tokens, dimensions, responsive rules and the design catalogue
-remain binding on the hydrated React implementation, and no mockup changes
-are part of that plan. The separate
+This document describes the implemented shell design; every state recorded
+here is implemented, including aligned comparison scrolling. The
+[React Browse shell plan](../../plans/react-browse-shell.md) changed how the
+shell is rendered, not how it looks or behaves, so this design, its tokens,
+dimensions, responsive rules, and the design catalogue bind the hydrated React
+implementation. The separate
 [component explorer designs](./mokly-component-design.md) are implemented
-mockups whose runtime-backed states are identified in their own contract.
+mockups whose runtime-backed states are identified in their own contract. The
+doc entries below are an approved target of [docs](./mokly-docs.md).
 
-Auto/Light/Dark interface appearance is designed in the
-`design-appearance-*` mockups and specified by the
-[semantic palette](./mokly-viewer-palette.md). The shell now carries that
-palette in both appearances, selected on a viewer root, and an embedded host
-chooses one with `theme`. A standalone document carries the delivered Appearance
-control at every width and uses it for both the shell and the previews.
+Auto/Light/Dark interface appearance is designed in the `design-appearance-*`
+mockups and specified by the [semantic palette](./mokly-viewer-palette.md).
+The shell carries that palette in both appearances, selected on a viewer root;
+an embedded host chooses one with `theme`, and a standalone document carries
+the Appearance control at every width for both the shell and the previews.
 
-The page and publication designs are implemented in the example catalogue and
-shared shell. Whole documents use a plain bordered pane and omit
-device/comparison controls. Removed pages are flat Changes rows; baseline
+The page, doc, and publication designs are implemented in the example
+catalogue and shared shell. Whole documents and docs use a plain bordered pane
+and omit device/comparison controls; a doc follows the Appearance control
+under [docs](./mokly-docs.md). Removed pages are flat Changes rows; baseline
 breadcrumbs are text even after their parents are deleted. Ordinary
 publications omit the Changes filter and comparison band while preserving the
 same navigation, search, tags, and variants.
@@ -115,6 +111,10 @@ contract until their standalone screens are implemented.
 | `design-page-removed-long`            | Browse shell › Document pages › Previous document versions | A long previous document scrolling inside its pane         |
 | `design-page-removed-loading`         | Browse shell › Document pages › Previous document versions | Waiting for a removed document's previous version          |
 | `design-page-removed-unavailable`     | Browse shell › Document pages › Previous document versions | Previous document unavailable, with Retry                  |
+| `design-doc-view`                     | Browse shell › Specification docs                          | A Markdown doc in its folder at reading width              |
+| `design-doc-details`                  | Browse shell › Specification docs                          | Doc metadata with a linked related doc                     |
+| `design-doc-navigation`               | Browse shell › Specification docs                          | Doc with its narrow drawer open                            |
+| `design-doc-removed`                  | Browse shell › Specification docs                          | Removed doc's previous version with baseline ancestry      |
 | `design-publication-catalogue`        | Browse shell › Published catalogue                         | Current catalogue with review omitted                      |
 | `design-publication-changes`          | Browse shell › Published catalogue                         | Catalogue with optional comparisons                        |
 | `design-appearance-overview`          | Browse shell › Appearance                                  | Canonical catalogue appearance around a selected screen    |
@@ -132,44 +132,42 @@ contract until their standalone screens are implemented.
 | `design-appearance-flow`              | Browse shell › Appearance › Status and recovery            | Use-case steps around light screens                        |
 
 The six entries marked as variants are variants of `design-browse-screen` and
-remain under that entry in authored order rather than becoming folder members.
-The formerly empty `design-browse-tags` (Tag states) folder is absent from
-navigation; Welcome still presents its variants. The other Shell states
-entries, including `design-browse-tag-filter`, keep their `navPath` labels.
+stay under it in authored order, not as folder members. The formerly empty
+`design-browse-tags` (Tag states) folder is absent; Welcome still presents its
+variants and the other Shell states entries keep their `navPath` labels.
 
 Additional owning groups keep each new page at no more than five screens:
 
 - `design-page-view`, `design-page-details`, `design-page-navigation`, and
   `design-page-removed` specify full documents, metadata, the drawer, and
   deleted-parent behavior.
+- `design-doc-view`, `design-doc-details`, `design-doc-navigation`, and
+  `design-doc-removed` specify a doc at reading width, its metadata with a
+  linked related doc, the drawer, and its previous version, all in both schemes under [docs](./mokly-docs.md).
 - The `Previous document versions` and `Previous screen versions` folders hold
   the removed-preview child pages (loading, unavailable with retry,
   long-document scrolling, and, for screens, a viewport with no captured
-  previous view) delivered by [removed previews](./mokly-removed-previews.md).
-  Each parent removed page renders its canonical preview and links to those
-  children.
-  The depicted branch removes four documents and five screens, so each child is
-  a sibling removed entry in the same flat Changes list and is selected the way
-  a reader selects it. A parent's document pane or device frames hold its
-  previous version under the "Showing previous version" label; a child's loading
-  or unavailable stage replaces that label and those frames while the catalogue
-  navigation, Removed badge, breadcrumbs, and Details stay in place. Retry
-  repeats the request, so it returns to the loaded preview. The
-  no-captured-view child keeps the label and the viewport control, replacing
-  only the selected viewport's frame with the stage note that
-  [removed previews](./mokly-removed-previews.md) fixes. Served and exported
-  previews are identical, so no static-delivery variant is designed.
+  previous view) from [removed previews](./mokly-removed-previews.md). Each
+  parent removed page renders its canonical preview and links to those
+  children; the depicted branch removes four documents and five screens, so
+  each child is a sibling removed entry in the same flat Changes list. A
+  parent's document pane or device frames hold its previous version under the
+  "Showing previous version" label; a child's loading or unavailable stage
+  replaces that label and those frames while navigation, the Removed badge,
+  breadcrumbs, and Details stay in place, and Retry returns to the loaded
+  preview. The no-captured-view child keeps the label and viewport control and
+  replaces only the selected viewport's frame with the fixed stage note.
+  Served and exported previews are identical.
 - `design-publication-catalogue` and `design-publication-changes` specify
   review omitted and included, using the existing Welcome stage.
 - `design-browse-variant-selected`, `design-browse-variant-changes`,
   `design-browse-variant-removed`, `design-browse-variant-reparented`, and
-  `design-browse-changed-views` specify a screen's variants: the
-  disclosed variant list with one variant selected, a changed variant row under
-  a parent whose own render is unmodified, a deleted variant retained under its
-  surviving parent, a deleted variant kept flat when its former parent becomes
-  another screen's variant, and a change confined to views other than the one
-  shown. `design-browse-variant-selected` is the group's canonical screen.
-  Their behavior contract is [variants](./mokly-variants.md).
+  `design-browse-changed-views` specify a screen's variants: the disclosed
+  list with one variant selected, a changed variant under an unmodified
+  parent, a deleted variant retained under its surviving parent, a deleted
+  variant kept flat when its former parent becomes another screen's variant,
+  and a change confined to other views. `design-browse-variant-selected` is
+  the canonical screen; the behavior contract is [variants](./mokly-variants.md).
 - `design-review-style-matched`, `design-review-style-unresolved`,
   `design-review-style-unnamed`, and `design-review-style-excluded` specify
   rule-aware stylesheet evidence beneath the impact states, so the impact group
@@ -366,8 +364,8 @@ scrollable region scrolls internally:
   - Folder groups are native
     `<details>` whose summary row shows a closed/open folder SVG pair (swapped
     via the `[open]` state), a bold label, and a monospace child count. Leaves
-    show a screen, variant, page, flow, or component SVG; flow icons read in
-    the accent.
+    show a screen, variant, page, doc, flow, or component SVG; flow icons read
+    in the accent.
   - Rows indent 16px per depth from an 8px root inset and paint one faint
     1px vertical guide per ancestor depth. The hover/active highlight is an
     inset pill starting at the row's indent (`--mbk-indent`), so guides stay
@@ -433,7 +431,8 @@ scrollable region scrolls internally:
   declares as pill chips with the tag icon: selecting one enters `tag:<tag>` in
   the search field, so the filter stays visible and clearable there, and the
   chip whose tag is in the entered query carries the accent active state with
-  contrast text and glyph. An entry that declares no tags omits the row.
+  contrast text and glyph. An entry that declares no tags omits the row. A
+  Related docs chip whose path is a doc's source file is a link to that doc.
 
 Details has no Generated or Route row: every route derives from the entry's
 kind and id, and the address bar already shows the shell URL.
@@ -441,7 +440,7 @@ kind and id, and the address bar already shows the shell URL.
 Shared home guidance asks visitors to choose an item from the navigation.
 Unknown routes use `Item not found` and offer another catalogue item or the
 catalogue home. Kind-specific wording is reserved for a known screen, page,
-or flow; shared controls and missing-route messages cover the whole catalogue.
+doc, or flow; shared controls and missing-route messages cover the catalogue.
 
 ## Device Chrome
 
@@ -478,7 +477,8 @@ or flow; shared controls and missing-route messages cover the whole catalogue.
   joined by a 2px connector line, each with title, description, a
   `This screen in the catalogue: <title> →` link, and one browser frame
   (height 640px) indented under the step head.
-- **Document pane** — a bordered, 12px-radius iframe pane on the dotted stage.
+- **Document pane** — a bordered, 12px-radius iframe pane on the dotted stage,
+  shared by pages and docs; a doc pane follows the effective preview scheme.
 
 ## Color Scheme
 
