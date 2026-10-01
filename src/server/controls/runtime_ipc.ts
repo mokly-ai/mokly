@@ -133,7 +133,7 @@ function parseRuntimeStartupMessage(
     !Array.isArray(config.publicExclude) ||
     !manifest ||
     !Array.isArray(manifest.entries) ||
-    (manifest.schemaVersion !== 5 &&
+    (manifest.schemaVersion !== 7 &&
       manifest.schemaVersion !== "live-index-1") ||
     !Array.isArray(manifest.sourceFiles)
   )

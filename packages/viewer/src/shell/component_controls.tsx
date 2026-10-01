@@ -60,7 +60,7 @@ export function useComponentControls({
   workspaceRef: RefObject<HTMLElement | null>;
 }): ComponentControlsResult {
   const capabilities = useViewerCapabilities();
-  const component = data.entry.kind === "component" ? data.entry : undefined;
+  const component = data.component;
   const generation = request?.source.renderGeneration;
   const scope = `${variant?.value.id ?? "none"}/${comparing}/${livePreview ? "live" : "static"}/${generation ?? "static"}/${variant ? JSON.stringify(variant.value.props) : ""}`;
   const initial = useMemo(

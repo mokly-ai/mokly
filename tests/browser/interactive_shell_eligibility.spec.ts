@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { entryRoute, viewHref } from "@mokly/viewer/data";
+
 import { interactiveShellFixture } from "./interactive_shell_fixture.js";
 import {
   expectLive,
@@ -9,6 +11,7 @@ import {
   previewMode,
   recordLiveRequests,
 } from "./interactive_shell_helpers.js";
+import { chooseVariant } from "./workspace_actions.js";
 
 const NOTICE = "Switch to Static to inspect or edit this view.";
 
@@ -42,10 +45,10 @@ test("opted-out screens and components keep their toolbar without Static and Liv
 }) => {
   const seen = recordLiveRequests(page, fixture.liveOrigin!);
   for (const [route, heading, eligible] of [
-    ["screens/home.html", "Home", true],
-    ["screens/notes.html", "Notes", false],
-    ["components/counter.html", "Counter", true],
-    ["components/badge.html", "Badge", false],
+    [entryRoute("screen", "home"), "Home", true],
+    [entryRoute("screen", "notes"), "Notes", false],
+    [entryRoute("component", "counter"), "Counter", true],
+    [entryRoute("component", "badge"), "Badge", false],
   ] as const) {
     const served = await page.request.get(`${fixture.url}/view/${route}`);
     expect((await served.text()).includes('aria-label="Preview mode"')).toBe(
@@ -71,11 +74,11 @@ test("Live follows eligible views while opted-out screens and components stay St
   page,
 }) => {
   const seen = recordLiveRequests(page, fixture.liveOrigin!);
-  await open(page, "screens/home.html");
+  await open(page, entryRoute("screen", "home"));
   await previewMode(page).getByRole("button", { name: "Live" }).click();
   await expectLiveReady(page);
 
-  await navigate(page, "screens/notes.html", "Notes");
+  await navigate(page, entryRoute("screen", "notes"), "Notes");
   await expect(previewMode(page)).toHaveCount(0);
   await expectStaticFrames(page);
   const staticDesktop = page.frameLocator(
@@ -85,20 +88,22 @@ test("Live follows eligible views while opted-out screens and components stay St
   await page.getByRole("tab", { name: "Components", exact: true }).click();
   await expect(panel(page, "Components")).not.toHaveText(NOTICE);
 
-  await navigate(page, "components/counter.html", "Counter");
+  await navigate(page, entryRoute("component", "counter"), "Counter");
   await expectLive(page);
   await expectLiveReady(page);
   await expect(liveFrame(page, "desktop").locator("#count")).toHaveText(
     "Saved: 0",
   );
 
-  await navigate(page, "components/badge.html", "Badge");
+  await navigate(page, entryRoute("component", "badge"), "Badge");
   await expect(previewMode(page)).toHaveCount(0);
   await expectStaticFrames(page);
   await page.getByRole("tab", { name: "Props", exact: true }).click();
   await expect(page.getByLabel("Label", { exact: true })).toHaveValue("Badge");
-  await page.getByLabel("Saved variant", { exact: true }).selectOption("quiet");
-  await expect(page).toHaveURL(/badge\.html\?variant=quiet$/);
+  await chooseVariant(page, "Quiet");
+  await expect(page).toHaveURL(
+    new URL(viewHref("component", "badge-quiet"), fixture.url).href,
+  );
   await expect(staticDesktop.locator("#count")).toHaveText("Quiet: 0");
   await expectStaticFrames(page);
   await expect(previewMode(page)).toHaveCount(0);
@@ -109,7 +114,7 @@ test("Live follows eligible views while opted-out screens and components stay St
   await expectLive(page);
   await expectLiveReady(page);
 
-  await navigate(page, "screens/home.html", "Home");
+  await navigate(page, entryRoute("screen", "home"), "Home");
   await expectLive(page);
   await expectLiveReady(page);
   await liveFrame(page, "desktop").locator("#increment").click();
@@ -123,24 +128,25 @@ test("route evidence that cannot load leaves the view Static without the control
   page,
 }) => {
   const seen = recordLiveRequests(page, fixture.liveOrigin!);
-  await open(page, "screens/home.html");
+  await open(page, entryRoute("screen", "home"));
   await previewMode(page).getByRole("button", { name: "Live" }).click();
   await expectLiveReady(page);
   let fetches = 0;
-  await page.route("**/view/screens/details.html", (route) =>
+  const detailsHref = viewHref("screen", "details");
+  await page.route(`**${detailsHref}`, (route) =>
     route.request().resourceType() === "fetch"
       ? ((fetches += 1), route.abort())
       : route.continue(),
   );
 
-  await navigate(page, "screens/details.html", "Details");
+  await navigate(page, entryRoute("screen", "details"), "Details");
   await expect.poll(() => fetches).toBeGreaterThan(0);
   await expect(previewMode(page)).toHaveCount(0);
   await expectStaticFrames(page);
   expect(seen.documents.filter((path) => path.includes("details"))).toEqual([]);
 
-  await page.unroute("**/view/screens/details.html");
-  await navigate(page, "components/counter.html", "Counter");
+  await page.unroute(`**${detailsHref}`);
+  await navigate(page, entryRoute("component", "counter"), "Counter");
   await expectLive(page);
   await expectLiveReady(page);
 });

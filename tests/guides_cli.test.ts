@@ -130,3 +130,24 @@ test("exit status and every public error category are documented", () => {
   }
   assert.ok(source.includes("[mokly/"));
 });
+
+test("publish and export guides carry the reviewed contract copy", () => {
+  const publish = (sources.get("cli/publish") ?? "").replace(/\s+/gu, " ");
+  assert.match(publish, /tried up to five times/u);
+  assert.match(publish, /1, 2, 4 and 8 seconds/u);
+  assert.match(publish, /1 file uploaded/u);
+  assert.match(publish, /12 files uploaded/u);
+  assert.match(publish, /first publish to an empty service.*`0 unchanged`/u);
+  assert.match(publish, /Uploading 0 of 1 file/u);
+  assert.match(publish, /empty missing set shows no progress label/u);
+  assert.match(publish, /Publication was cancelled/u);
+  assert.match(
+    publish,
+    /could not put your previous export back.*recovery error.*folder to recover/u,
+  );
+
+  const exportGuide = (sources.get("cli/export") ?? "").replace(/\s+/gu, " ");
+  assert.match(exportGuide, /at most 1,024 UTF-8 bytes/u);
+  assert.match(exportGuide, /invisible characters escaped/u);
+  assert.match(exportGuide, /move any files you added before deleting/u);
+});

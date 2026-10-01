@@ -19,6 +19,10 @@ import type {
   MountedFrame,
 } from "../../packages/viewer/dist/client/frame_adapter.js";
 import type * as PostAdapter from "../../packages/viewer/dist/client/post_message_adapter.js";
+import {
+  isManifestComponentVariant,
+  viewRoute,
+} from "../../packages/viewer/dist/data.js";
 import { createCatalogue } from "../../packages/viewer/dist/shell/catalogue.js";
 import { createFixture, removeFixture } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
@@ -45,7 +49,10 @@ export async function interactiveFixture() {
   const catalogue = createCatalogue(compilation.manifest);
   const generation = "browser_generation";
   const component = compilation.manifest.entries.find(
-    (entry) => entry.kind === "component" && entry.id === "live-panel",
+    (entry) =>
+      entry.kind === "component" &&
+      isManifestComponentVariant(entry) &&
+      entry.id === "live-panel-default",
   );
   const broken = compilation.manifest.entries.find(
     (entry) => entry.kind === "screen" && entry.id === "broken",
@@ -57,7 +64,10 @@ export async function interactiveFixture() {
     (entry) => entry.kind === "screen" && entry.id === "home",
   );
   const providerReader = compilation.manifest.entries.find(
-    (entry) => entry.kind === "component" && entry.id === "provider-reader",
+    (entry) =>
+      entry.kind === "component" &&
+      isManifestComponentVariant(entry) &&
+      entry.id === "provider-reader-default",
   );
   const staticChildren = compilation.manifest.entries.find(
     (entry) => entry.kind === "screen" && entry.id === "static-children",
@@ -71,9 +81,14 @@ export async function interactiveFixture() {
     staticChildren?.kind !== "screen"
   )
     throw new Error("Interactive browser fixture entries are missing");
-  const livePath = component.variants[0]?.fragments.mobile;
-  const providerPath = providerReader.variants[0]?.fragments.mobile;
-  const errorPath = broken.fragments.mobile;
+  const livePath = viewRoute("component", component.id, "mobile", "light");
+  const providerPath = viewRoute(
+    "component",
+    providerReader.id,
+    "mobile",
+    "light",
+  );
+  const errorPath = viewRoute("screen", broken.id, "mobile", "light");
   if (!livePath) throw new Error("Interactive component variant is missing");
   if (!providerPath)
     throw new Error("Interactive provider component variant is missing");
@@ -84,11 +99,19 @@ export async function interactiveFixture() {
     ],
   ]);
   for (const [route, entryId, variantId] of [
-    [livePath, "live-panel", "default"],
-    [providerPath, "provider-reader", "default"],
+    [livePath, "live-panel", "live-panel-default"],
+    [providerPath, "provider-reader", "provider-reader-default"],
     [errorPath, "broken", undefined],
-    [staticChildren.fragments.mobile, "static-children", undefined],
-    [dynamicChildren.fragments.mobile, "dynamic-children", undefined],
+    [
+      viewRoute("screen", staticChildren.id, "mobile", "light"),
+      "static-children",
+      undefined,
+    ],
+    [
+      viewRoute("screen", dynamicChildren.id, "mobile", "light"),
+      "dynamic-children",
+      undefined,
+    ],
   ] as const) {
     const compiled = compilation.outputs.get(route);
     if (!compiled) throw new Error(`Missing compiled fixture route: ${route}`);
@@ -105,7 +128,7 @@ export async function interactiveFixture() {
     });
     files.set(`static/${route}`, composeInteractiveDocument(adapted, built));
   }
-  const homePath = home.fragments.mobile;
+  const homePath = viewRoute("screen", home.id, "mobile", "light");
   const homeDocument = compilation.outputs.get(homePath);
   if (!homeDocument) throw new Error("Interactive home fixture is missing");
   const adaptedHome = adaptBrowseDocument(homeDocument, homePath, catalogue);
@@ -154,10 +177,10 @@ export async function interactiveFixture() {
     frames,
     host,
     livePath: `/static/${livePath}`,
-    dynamicChildrenPath: `/static/${dynamicChildren.fragments.mobile}`,
+    dynamicChildrenPath: `/static/${viewRoute("screen", dynamicChildren.id, "mobile", "light")}`,
     preMountPath,
     providerPath: `/static/${providerPath}`,
-    staticChildrenPath: `/static/${staticChildren.fragments.mobile}`,
+    staticChildrenPath: `/static/${viewRoute("screen", staticChildren.id, "mobile", "light")}`,
     async close() {
       await frames.close();
       await host.close();
@@ -201,11 +224,14 @@ export async function interactiveServeFixture() {
   });
   fixture.beforeRemove(() => server.close());
   const component = runtime.manifest.entries.find(
-    (entry) => entry.kind === "component" && entry.id === "live-panel",
+    (entry) =>
+      entry.kind === "component" &&
+      isManifestComponentVariant(entry) &&
+      entry.id === "live-panel-default",
   );
   const livePath =
     component?.kind === "component"
-      ? component.variants[0]?.fragments.mobile
+      ? viewRoute("component", component.id, "mobile", "light")
       : undefined;
   if (!livePath || !server.interactiveOrigin)
     throw new Error("Real Serve interactive fixture did not start");

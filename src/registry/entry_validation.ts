@@ -1,12 +1,12 @@
-import { isCatalogueId } from "@mokly/viewer/data";
+import { isEntryId } from "@mokly/viewer/data";
 
+import { nestedAuthoredNavPath } from "../authoring/definitions.js";
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { isResolvedEntryOrInventoriedSource } from "../config/entry_membership.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import {
   problem,
-  validateRoute,
   validateTags,
   validatePaths,
   validateTextList,
@@ -30,7 +30,7 @@ export function validateEntry(
       );
     }
   }
-  if (!isCatalogueId(entry.id)) {
+  if (!isEntryId(entry.id)) {
     violations.push(
       problem(entry, "invalid-id", "id must be globally unique kebab-case"),
     );
@@ -69,10 +69,14 @@ export function validateEntry(
   }
   validateTags(entry, violations);
   validateInteractive(entry, violations);
-  if (entry.kind === "collection") {
-    validateTextList(entry, "childIds", entry.childIds, true, violations);
-  } else {
-    validateRoute(entry, violations);
+  if (nestedAuthoredNavPath(entry)) {
+    violations.push(
+      problem(
+        entry,
+        "invalid-nested-nav-path",
+        `nested entry ${entry.id} cannot author navPath`,
+      ),
+    );
   }
   if (entry.kind === "page") {
     if (typeof entry.render !== "function")
@@ -86,7 +90,6 @@ export function validateEntry(
       "address",
       "useCaseIds",
       "steps",
-      "childIds",
       "viewports",
       "fragments",
       "darkFragments",

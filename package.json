@@ -1,6 +1,6 @@
 {
   "name": "@mokly/mokly",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "App-independent static mockup catalogues, development browsing, and on-demand visual comparisons.",
   "type": "module",
   "license": "MIT",
@@ -60,9 +60,10 @@
     "prepare:verification": "npm run build && npm run example:build",
     "prepack": "npm run build",
     "preview:build": "npm run build && npm run example:build && node scripts/preview/build.mjs",
-    "test": "npm run prepare:verification && tsx --test --test-concurrency=2 tests/**/*.test.ts tests/**/*.test.tsx packages/viewer/tests/*.test.ts packages/viewer/tests/*.test.tsx",
+    "test": "npm run prepare:verification && node scripts/verification/run-unit-dev.mjs",
     "test:browser": "npm run prepare:verification && playwright test",
     "test:browser:prepared": "node scripts/verification/run-browser.mjs",
+    "test:hydration:prepared": "node scripts/verification/run-browser.mjs --suite hydration",
     "test:prepared": "node scripts/verification/run-unit.mjs",
     "typecheck": "npm run build && npm run typecheck:prepared",
     "typecheck:prepared": "node scripts/verification/prepared.mjs package && tsc --project tsconfig.json --noEmit && npm run typecheck --workspace @mokly/viewer"
@@ -78,7 +79,7 @@
     "parse5": "^8.0.1",
     "tar": "^7.5.22",
     "tar-stream": "^3.2.1",
-    "@mokly/viewer": "0.3.0"
+    "@mokly/viewer": "0.4.0"
   },
   "peerDependencies": {
     "react": ">=19.0.0",

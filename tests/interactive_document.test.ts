@@ -202,21 +202,15 @@ function documentFailure(error: unknown): boolean {
 function screen(id: string): Extract<ManifestEntry, { kind: "screen" }> {
   const sourceRelativePath = "entries/interactive.mockup.tsx";
   return {
+    colorSchemes: ["light"],
     declaredDependencies: [],
-    dependencies: [],
     description: id,
-    fragments: {
-      desktop: `screens/${id}.desktop.html`,
-      mobile: `screens/${id}.mobile.html`,
-    },
     id,
     kind: "screen",
     navPath: [],
     relatedDocs: [],
-    route: `screens/${id}.html`,
     sourcePath: sourceRelativePath,
     title: id,
     useCaseIds: [],
-    viewports: ["mobile", "desktop"],
   };
 }

@@ -5,7 +5,6 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type {
-  CollectionInput,
   PageInput,
   RegistryDefinition,
   ResolvedRegistryEntry,
@@ -18,13 +17,13 @@ import type { ComponentInput } from "../dist/components/types.js";
 import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
 import {
-  defineCollection,
   defineComponent,
   definePage,
   defineRoot,
   defineScreen,
   defineUseCase,
   ReviewIgnore,
+  folder,
   screen,
 } from "../dist/index.js";
 import { createCatalogueIndex } from "../dist/registry/catalogue_index.js";
@@ -35,7 +34,7 @@ import { repositoryRoot } from "./helpers/fixture.js";
 const sourceRelativePath = "tests/interactive_authoring.test.tsx";
 const config: ResolvedConfig = {
   colorSchemes: ["light"],
-  compatibility: { readManifestV2: false },
+  compatibility: {},
   configPath: path.join(repositoryRoot, "mokly.config.ts"),
   entriesDir: path.join(repositoryRoot, "tests"),
   entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],
@@ -80,11 +79,10 @@ test("screen variants and nested screens resolve the false-only opt-out", () => 
         id: "nested",
         interactive: false,
         mobile: "Mobile",
-        slug: "nested",
         title: "Nested",
       }),
     ],
-    path: "screens",
+    navPath: ["Screens"],
   })[0];
 
   assert.deepEqual(
@@ -132,26 +130,31 @@ test("interactive accepts only false on screens and components", () => {
   assert.doesNotThrow(() => component(false));
 });
 
-test("collections, pages and use cases reject interactive", () => {
+test("folders, pages and use cases reject interactive", () => {
+  assert.throws(
+    () =>
+      defineRoot({
+        children: [
+          folder({
+            children: [screen(screenInput("folder-child"))],
+            interactive: false,
+            title: "Folder",
+          } as Parameters<typeof folder>[0] & { interactive: false }),
+        ],
+      }),
+    /interactive is not supported on folder markers/,
+  );
   const definitions = [
-    defineCollection({
-      ...common,
-      childIds: [],
-      id: "collection",
-      interactive: false,
-    } as CollectionInput & { interactive: false }),
     definePage({
       ...common,
       id: "page",
       interactive: false,
       render: () => "<html><body>Page</body></html>",
-      route: "page.html",
     } as PageInput & { interactive: false }),
     defineUseCase({
       ...common,
       id: "journey",
       interactive: false,
-      route: "journey.html",
       steps: [{ screenId: "screen" }],
     } as UseCaseInput & { interactive: false }),
   ];
@@ -171,15 +174,15 @@ test("catalogue index carries resolved eligibility only for Live entry kinds", (
       defineScreen({ ...screenInput("disabled-index"), interactive: false }),
     ),
   );
-  const collection = resolved(
-    defineCollection({
+  const page = resolved(
+    definePage({
       ...common,
-      childIds: [enabled.id, disabled.id],
-      id: "index-collection",
+      id: "index-page",
+      render: () => "<html><body>Page</body></html>",
     }),
   );
   const index = createCatalogueIndex(
-    [collection, enabled, disabled],
+    [page, enabled, disabled],
     [sourceRelativePath],
     ["light"],
   );
@@ -197,8 +200,7 @@ test("catalogue index carries resolved eligibility only for Live entry kinds", (
     false,
   );
   assert.equal(
-    "interactive" in
-      index.entries.find((entry) => entry.kind === "collection")!,
+    "interactive" in index.entries.find((entry) => entry.kind === "page")!,
     false,
   );
 });
@@ -229,7 +231,6 @@ function screenInput(id: string): ScreenInput {
     desktop: "Desktop",
     id,
     mobile: "Mobile",
-    route: `screens/${id}.html`,
   };
 }
 
@@ -240,7 +241,6 @@ function variant(id: string, interactive?: false) {
     id,
     ...(interactive === false ? { interactive } : {}),
     mobile: "Mobile",
-    slug: id,
     title: id,
   };
 }
@@ -254,8 +254,7 @@ function component(interactive: unknown) {
     interactive,
     propSchema: emptySchema,
     render: () => <button>Action</button>,
-    route: "components/action.html",
-    variants: [{ id: "default", props: {}, title: "Default" }],
+    variants: [{ id: "action-default", props: {}, title: "Default" }],
   };
   return defineComponent(
     input as unknown as ComponentInput<typeof emptySchema, readonly []>,

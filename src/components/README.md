@@ -1,8 +1,8 @@
 # Registered Components
 
 Use `defineComponent` to give a shared React component its own catalogue page,
-saved variants, controls, and recorded usage in screens or other components.
-Callers render the returned `Component` and export its `entry` in `mockups`.
+variants, controls, and recorded usage in screens or other components.
+Callers render the returned `Component` and export its `entries` in `mockups`.
 Mokly renders that wrapper in the consumer's existing React/provider graph.
 
 ```tsx
@@ -12,7 +12,6 @@ export const action = defineComponent({
   id: "action",
   title: "Action",
   description: "A shared action.",
-  route: "components/action.html",
   dependencies: [],
   relatedDocs: [],
   propSchema: {
@@ -21,13 +20,15 @@ export const action = defineComponent({
   },
   controls: { label: { kind: "text", label: "Label", maxLength: 80 } },
   render: (props) => <button>{props.label}</button>,
-  variants: [{ id: "default", title: "Default", props: { label: "Continue" } }],
+  variants: [
+    { id: "action-default", title: "Default", props: { label: "Continue" } },
+  ],
 });
-export const mockups = [action.entry];
+export const mockups = [...action.entries];
 ```
 
 A registration may live in any repository module, typically beside the
-component it adapts, and the entry module that exports its `entry` may be
+component it adapts, and the entry module that exports its `entries` may be
 discovered through any configured `entries` glob. The registration file is
 recorded as the component's source. The glob itself defines the entry shape;
 `.mockup.ts` and `.mockup.tsx` are the recommended convention selected by the
@@ -37,9 +38,15 @@ Render `<action.Component label="Save" />` in a screen. Give repeated siblings
 distinct `moklyInstance` values; stable ids preserve their identity across
 edits. Registered children inside another registered component appear in its
 Nested components tab. React content belongs in declared `slots`; data belongs
-in `propSchema`. The schema infers TypeScript props and validates actual values. Registry preparation
-revalidates exported definitions and snapshots component data before rendering,
-so malformed or mutated variants and controls produce author diagnostics.
+in `propSchema`. The schema infers TypeScript props and validates actual values.
+Registry preparation revalidates exported definitions and snapshots component
+data before rendering, so malformed or mutated variants and controls produce
+author diagnostics. An invalid component parent remains present for relationship
+validation, preventing its variants from adding misleading missing-parent errors
+to the root failure. Definition validation runs only after parent metadata is
+valid. A parent that fails either check keeps its violations and remains
+available for relationship and inherited-field checks; child props, controls,
+and slots are not validated against it until both checks pass.
 
 Instance keys remain stable across prop edits and sibling reorders. Changing the
 local id, input owner, or original slot changes the key. Keys are scoped to one
@@ -50,7 +57,7 @@ values from the same view. It returns `missing` for an absent or different key,
 classify visual or material Changes.
 
 Compiled JSX invocations record optional `source: { path, line, column }` in
-manifest v5. The path identifies the caller inside the repository, with 1-based
+manifest v7. The path identifies the caller inside the repository, with 1-based
 coordinates. Programmatic or already-compiled calls can omit it. The internal
 `__moklySource` prop is reserved from data schemas and slots and stripped before
 validation, hashing and rendering. Source metadata never affects identity or
@@ -59,9 +66,13 @@ original location and have one matched comment pair per recorded placement,
 including empty output.
 
 Variants are explicit named examples, never inferred from screenshots or every
-combination of controls. Both viewports and every configured scheme are built
-for each variant. `MockLink to="action"` opens the default variant; canonical
-page URLs use `?variant=default` to select a specific saved example.
+combination of controls. Each variant is its own `kind: "component"` entry with
+a global kebab-case id and `variantOf`, grouped beneath its component in
+navigation with its own route `components/<variant id>.html`, its own Changes
+row, and its own comparison. Both viewports and every configured scheme are
+built for each variant. `MockLink to="action"` opens the component page, which
+shows its first variant; `MockLink to="action-disabled"` opens that variant
+directly.
 
 Set `interactive: false` on a component definition to remove its local Live
 preview. In a Live tree, the registered wrapper still validates authored props
@@ -74,9 +85,9 @@ projections or temporary control edits.
 Local Serve edits declared text, boolean, number, and primitive preset controls.
 Complex props remain inspectable; an adapter can map a primitive preset key to
 a complex consumer value. Optional controls distinguish unset from empty text
-or null. Reset restores the saved variant; changing variants, routes, or entering
-comparisons discards edits. Published catalogues retain saved variants and
-inspection with controls read-only.
+or null. Reset restores the variant's declared props; navigating to another
+variant or entry, or entering comparisons, discards edits. Published catalogues
+retain variants and inspection with controls read-only.
 Background Usage and Changes completion preserves local prop edits and the
 current preview. Complete Used by data appears without resetting controls;
 per-view inspection continues to use the records from the actual displayed
@@ -88,9 +99,8 @@ changes still count directly. Exact `ownedDependencies` and renderer style or
 resource ownership records handle material outside the component's body. Global
 or mixed resources remain conservatively attributed. Dependency declarations
 and adopting an unrelated component alone do not invent a visible screen change.
-Historical Mokabook comparisons preserve the original document coordinates when
-applying recorded style ownership; internal marker renames alone do not create
-consumer changes or alter the retained snapshots.
+Compatible v7 baselines preserve each document's UTF-16 coordinates when
+applying recorded style ownership.
 
 Comparison projection can expose caller-owned slot material that HTML parsing
 discarded from contexts such as `template` or `select`. Removing component
@@ -106,17 +116,34 @@ npm run build
 node --import tsx --test tests/component_*.test.ts
 ```
 
-- `definition.ts`, `types.ts`: public authoring boundary and inference.
-- `props.ts`, `schema.ts`, `codec.ts`: declarative validation and lossless data.
-- `collector.ts`, `render.tsx`, `ranges.ts`: actual usage and neutral ranges.
-- `render_context.ts`, `wrapper.tsx`: static collection versus non-recording
-  browser rendering.
-- `resolve_instance.ts`: pure resolution for scoped, validated instance records.
-- `source.ts`, `../build/jsx_dev_runtime.ts`: source validation and capture.
-- `instance_structure.ts`: explicit logical inputs, excluding source metadata.
-- `comparison_projection.ts`: caller versus implementation material.
-- `../server/controls`: supervised local rendering and transient storage.
-- `../client/workspace.ts`: shared saved-view explorer and inspector.
+- [`definition.ts`](./definition.ts), [`types.ts`](./types.ts): public authoring
+  boundary and inference.
+- [`manifest_build.ts`](./manifest_build.ts) and
+  [`manifest_entry_validation.ts`](./manifest_entry_validation.ts): flattened
+  parent/variant records and manifest-v7 validation.
+- Viewer [`props.ts`](../../packages/viewer/src/components/props.ts),
+  [`schema.ts`](../../packages/viewer/src/components/schema.ts), and
+  [`codec.ts`](../../packages/viewer/src/components/codec.ts): declarative
+  validation and lossless data.
+- [`collector.ts`](./collector.ts), [`render.tsx`](./render.tsx), and
+  [`ranges.ts`](./ranges.ts): actual usage and neutral ranges.
+- [`render_context.ts`](./render_context.ts) and [`wrapper.tsx`](./wrapper.tsx):
+  static usage collection versus non-recording Live browser rendering.
+- Viewer [`resolve_instance.ts`](../../packages/viewer/src/components/resolve_instance.ts):
+  pure resolution for scoped, validated instance records.
+- Viewer [`source.ts`](../../packages/viewer/src/components/source.ts) and
+  [`../build/jsx_dev_runtime.ts`](../build/jsx_dev_runtime.ts): source
+  validation and capture.
+- [`instance_structure.ts`](./instance_structure.ts): explicit logical inputs,
+  excluding source metadata.
+- [`comparison_projection.ts`](./comparison_projection.ts): caller versus
+  implementation material.
+- [`../server/controls`](../server/controls): supervised local rendering and
+  transient storage.
+- Viewer [`workspace.tsx`](../../packages/viewer/src/shell/workspace.tsx),
+  [`workspace_entry.ts`](../../packages/viewer/src/shell/workspace_entry.ts),
+  and [`workspace_variants.ts`](../../packages/viewer/src/shell/workspace_variants.ts):
+  shared component explorer, routed entry, and sibling variants.
 
 See the [registered component contract](../../docs/protocol/mokly-components.md),
 [instance identity](../../docs/protocol/mokly-instances.md),

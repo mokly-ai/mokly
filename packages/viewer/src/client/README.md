@@ -56,7 +56,8 @@ scroll restoration and authenticated temporary control previews. Direct frame
 document/window access lives in the local transport, rather than workspace,
 Browse state, or controls. `component_geometry.ts` retains its existing geometry
 entrypoints and shares containing-block-aware clipping with the inspector in
-`inspector/clipping.ts`; `same_origin_highlight.ts` owns the unchanged
+[`../inspector/clipping.ts`](../inspector/clipping.ts);
+`same_origin_highlight.ts` owns the unchanged
 mask, labels, selection and observer lifecycle.
 
 `same_origin_identity.ts` is the single document-authentication boundary for
@@ -123,10 +124,10 @@ existing route/new-context handling. Events contain logical identities and
 activation metadata, never consumer URLs. The transport does not open windows.
 Local Serve/export do not select this adapter or expose a pick control.
 
-Standalone saved variants use shell history. Embedded viewers propose public
-selection through the host boundary, and apply a variant only after controlled
-or uncontrolled selection commits. This avoids a second private variant state
-or direct history write inside embedded viewers.
+Standalone component variant entries use shell history. Embedded viewers
+propose public selection through the host boundary, and apply a variant only
+after controlled or uncontrolled selection commits. This avoids a second
+private variant state or direct history write inside embedded viewers.
 
 ```bash
 npm run build

@@ -8,7 +8,7 @@ import {
   type ViewerCapabilityRequest,
 } from "../client/host_capability_descriptor.js";
 
-import { viewerCapabilityRoute } from "./capability_adoption.js";
+import { viewerCapabilityEntryId } from "./capability_adoption.js";
 import {
   commitViewerEvidence,
   type BoundViewerWorkspace,
@@ -82,7 +82,7 @@ export function useRouteEvidence(input: RouteEvidenceInput): boolean {
         if (
           !current.source ||
           !viewerCapabilitySourceEquals(current.source, request.source) ||
-          viewerCapabilityRoute(stateRef.current.route) !== request.route
+          viewerCapabilityEntryId(stateRef.current.route) !== request.entryId
         )
           return;
         const commit = commitViewerEvidence(
@@ -117,14 +117,14 @@ export function useRouteEvidence(input: RouteEvidenceInput): boolean {
   );
 }
 
-/** Two requests name the same logical route of the same installed source. */
+/** Two requests name the same logical entry of the same installed source. */
 export function sameCapabilityRequest(
   left: ViewerCapabilityRequest | undefined,
   right: ViewerCapabilityRequest,
 ): boolean {
   return (
     left !== undefined &&
-    left.route === right.route &&
+    left.entryId === right.entryId &&
     viewerCapabilitySourceEquals(left.source, right.source)
   );
 }

@@ -12,13 +12,11 @@ export function LibraryHost({
   input: InteractiveRenderInput;
   children: ReactNode;
 }) {
-  const slug = input.entry.id.slice("design-ui-".length);
-  const props =
-    input.componentProps ??
-    (input.entry.kind === "component"
-      ? input.entry.variants.find((variant) => variant.id === input.variantId)
-          ?.props
-      : undefined);
+  const slug =
+    input.entry.kind === "component"
+      ? input.entry.variantOf.slice("design-ui-".length)
+      : input.entry.id.slice("design-ui-".length);
+  const props = input.componentProps;
   const content =
     slug === "inspector" ? (
       <PreviewWorkspace

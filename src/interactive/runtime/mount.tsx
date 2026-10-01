@@ -2,10 +2,17 @@ import { type ReactNode } from "react";
 import { flushSync } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 
-import type { RegistryDefinition } from "../../authoring/types.js";
+import type {
+  RegistryDefinition,
+  ScreenDefinition,
+} from "../../authoring/types.js";
 import { componentInputs } from "../../components/inputs.js";
 import { ComponentContext } from "../../components/render_context.js";
-import type { ComponentDefinition } from "../../components/types.js";
+import {
+  isComponentVariantDefinition,
+  type ComponentDefinition,
+  type ComponentVariantDefinition,
+} from "../../components/types.js";
 import type { InteractiveRenderer } from "../../renderer/types.js";
 import type { InteractiveBootstrap } from "../types.js";
 
@@ -118,9 +125,7 @@ export function mountInteractiveDocument(
           <InteractiveView
             bootstrap={bootstrap}
             entry={selection.entry}
-            {...(selection.componentProps
-              ? { componentProps: selection.componentProps }
-              : {})}
+            {...(selection.component ? { component: selection.component } : {})}
             {...(input.interactiveRenderer
               ? { interactiveRenderer: input.interactiveRenderer }
               : {})}
@@ -150,8 +155,8 @@ export function mountInteractiveDocument(
 }
 
 interface InteractiveSelection {
-  componentProps?: Readonly<Record<string, unknown>>;
-  entry: Extract<RegistryDefinition, { kind: "component" | "screen" }>;
+  component?: ComponentDefinition;
+  entry: ComponentVariantDefinition | ScreenDefinition;
 }
 
 function interactiveSelection(
@@ -166,32 +171,41 @@ function interactiveSelection(
   if (entry.kind !== "screen" && entry.kind !== "component")
     throw new Error("Live entry has an unsupported kind.");
   if (entry.kind === "screen") return { entry };
+  if (isComponentVariantDefinition(entry))
+    throw new Error(
+      "Live component parent is missing from the browser registry.",
+    );
+  const variant = componentVariant(definitions, entry, bootstrap.variantId);
   return {
-    componentProps: componentVariantProps(entry, bootstrap.variantId),
-    entry,
+    component: entry,
+    entry: variant,
   };
 }
 
 function InteractiveView({
   bootstrap,
-  componentProps,
+  component,
   entry,
   interactiveRenderer,
 }: {
   bootstrap: InteractiveBootstrap;
-  componentProps?: Readonly<Record<string, unknown>>;
-  entry: Extract<RegistryDefinition, { kind: "component" | "screen" }>;
+  component?: ComponentDefinition;
+  entry: ComponentVariantDefinition | ScreenDefinition;
   interactiveRenderer?: InteractiveRenderer;
 }): ReactNode {
   const node =
     entry.kind === "screen" ? (
       entry[bootstrap.viewport]
-    ) : (
+    ) : component ? (
       <InteractiveComponentView
         bootstrap={bootstrap}
-        entry={entry}
-        props={componentProps!}
+        entry={component}
+        props={entry.props}
       />
+    ) : (
+      (() => {
+        throw new Error("Live component parent is missing.");
+      })()
     );
   if (!interactiveRenderer) return node;
   return interactiveRenderer({
@@ -200,7 +214,7 @@ function InteractiveView({
     node,
     viewport: bootstrap.viewport,
     ...(bootstrap.variantId ? { variantId: bootstrap.variantId } : {}),
-    ...(componentProps ? { componentProps } : {}),
+    ...(entry.kind === "component" ? { componentProps: entry.props } : {}),
   });
 }
 
@@ -231,15 +245,20 @@ function diagnosticGeneration(document: Document): string | undefined {
   return generations.length === 1 ? generations[0] : undefined;
 }
 
-function componentVariantProps(
+function componentVariant(
+  definitions: readonly RegistryDefinition[],
   entry: ComponentDefinition,
   variantId: string | undefined,
-): Readonly<Record<string, unknown>> {
-  const variant = entry.variants.find(
-    (candidate) => candidate.id === variantId,
+): ComponentVariantDefinition {
+  const variant = definitions.find(
+    (candidate): candidate is ComponentVariantDefinition =>
+      candidate.kind === "component" &&
+      isComponentVariantDefinition(candidate) &&
+      candidate.variantOf === entry.id &&
+      candidate.id === variantId,
   );
   if (!variant) throw new Error("Live component variant is missing.");
-  return variant.props;
+  return variant;
 }
 
 function renderComponent(

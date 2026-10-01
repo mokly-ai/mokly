@@ -4,6 +4,7 @@ import { parse, type DefaultTreeAdapterMap } from "parse5";
 
 import { compileCatalogue } from "../../dist/build/compile.js";
 import { loadConfig } from "../../dist/config/load.js";
+import { viewRoute } from "../../packages/viewer/dist/data.js";
 import type { ManifestScreen } from "../../packages/viewer/dist/registry/types.js";
 
 import { repositoryRoot } from "./fixture.js";
@@ -57,7 +58,7 @@ export async function designDocument(
   const compilation = await designCatalogue;
   const entry = compilation.manifest.entries.find((entry) => entry.id === id);
   assert.ok(entry?.kind === "screen", `Missing screen ${id}`);
-  const route = entry.fragments[viewport];
+  const route = viewRoute("screen", entry.id, viewport, "light");
   const html = compilation.outputs.get(route);
   assert.ok(html, `Missing ${viewport} output for ${id}`);
   return { document: parse(html), entry, html, route };

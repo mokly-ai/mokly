@@ -33,7 +33,7 @@ export const emptyState = defineComponent({
   render: EmptyStateView,
   variants: [
     {
-      id: "home",
+      id: "design-ui-empty-state-home",
       title: "Catalogue home",
       props: {
         title: "Mokly",
@@ -43,7 +43,7 @@ export const emptyState = defineComponent({
       },
     },
     {
-      id: "missing-route",
+      id: "design-ui-empty-state-missing-route",
       title: "Missing screen",
       props: {
         title: "Screen not found",
@@ -54,7 +54,7 @@ export const emptyState = defineComponent({
       },
     },
     {
-      id: "no-changes",
+      id: "design-ui-empty-state-no-changes",
       title: "No changes",
       props: {
         title: "No changed screens",

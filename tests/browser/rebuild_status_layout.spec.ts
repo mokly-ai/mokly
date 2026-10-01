@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { viewHref } from "@mokly/viewer/data";
+
 import {
   captureBrowserErrors,
   expectCleanHydration,
@@ -31,24 +33,29 @@ const SIZES = {
  */
 const ROUTES = [
   ["home", "/", "Mokly", "Browse the mockup catalogue"],
-  ["screen", "/view/screens/home.html", "Home", "Unmodified"],
-  ["component", "/view/components/counter.html", "Counter", "Variant"],
-  ["page", "/view/guide.html", "Guide", "guide.html"],
+  ["screen", viewHref("screen", "home"), "Home", "Unmodified"],
+  ["component", viewHref("component", "counter"), "Counter", "Variant"],
+  [
+    "page",
+    viewHref("page", "guide"),
+    "Guide",
+    "Description, rationale, source, related docs, and use cases",
+  ],
   [
     "flow",
-    "/view/user-flows/tour.html",
+    viewHref("use-case", "tour"),
     "Tour",
     "This screen in the catalogue",
   ],
   [
     "comparison",
-    "/view/screens/details.html?comparison=side",
+    `${viewHref("screen", "details")}?comparison=side`,
     "Details",
     "Before",
   ],
   [
     "removed",
-    "/view/screens/retired.html",
+    viewHref("screen", "retired"),
     "Retired",
     "Showing previous version",
   ],
@@ -148,7 +155,7 @@ for (const [viewport, size] of Object.entries(SIZES)) {
     test.setTimeout(240_000);
     await page.setViewportSize(size);
     await instrument(page);
-    await page.goto(`${serve.url}/view/screens/home.html`);
+    await page.goto(`${serve.url}${viewHref("screen", "home")}`);
     await hydrated(page);
     await expectOnlySearchNarrows(page);
     await failWith(serve.sources.broken);
@@ -164,7 +171,7 @@ for (const [viewport, size] of Object.entries(SIZES)) {
     test.setTimeout(120_000);
     await page.setViewportSize(size);
     await failWith(serve.sources.long);
-    await page.goto(`${serve.url}/view/screens/home.html`);
+    await page.goto(`${serve.url}${viewHref("screen", "home")}`);
     await hydrated(page);
     const control = summary(page);
     await control.focus();
@@ -210,7 +217,7 @@ test("mobile: the drawer opens under the bar and over the notice", async ({
   test.setTimeout(120_000);
   await page.setViewportSize(SIZES.mobile);
   await failWith(serve.sources.broken);
-  await page.goto(`${serve.url}/view/screens/home.html`);
+  await page.goto(`${serve.url}${viewHref("screen", "home")}`);
   await hydrated(page);
   await page.locator("[data-mokly-menu]").click();
   const drawer = page.locator("[data-mokly-nav]");
@@ -231,7 +238,7 @@ test("mobile: the drawer opens under the bar and over the notice", async ({
 test("reduced motion stills the ring and keeps the text", async ({ page }) => {
   test.setTimeout(120_000);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto(`${serve.url}/view/screens/home.html`);
+  await page.goto(`${serve.url}${viewHref("screen", "home")}`);
   await hydrated(page);
   await serve.gate.arm();
   await serve.save(serve.sources.held("fail"));
@@ -247,7 +254,7 @@ test("reduced motion stills the ring and keeps the text", async ({ page }) => {
 test("unwatched Serve shows neither the notice nor the progress slot", async ({
   page,
 }) => {
-  await page.goto("/view/screens/welcome.html");
+  await page.goto(viewHref("screen", "welcome"));
   await hydrated(page);
   await expect(page.locator(".mbk-search")).toBeVisible();
   await expect(

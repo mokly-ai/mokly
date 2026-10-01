@@ -4,6 +4,7 @@ import test from "node:test";
 import { setImmediate } from "node:timers/promises";
 
 import { readCatalogue } from "@mokly/viewer";
+import { viewHref } from "@mokly/viewer/data";
 import type {
   ViewerCapabilityDescriptor,
   ViewerCapabilityRequest,
@@ -18,7 +19,7 @@ import { mergeWorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_
 
 const catalogue = readCatalogue(
   JSON.parse(
-    fs.readFileSync("docs/protocol/fixtures/catalogue-v1.json", "utf8"),
+    fs.readFileSync("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
   ),
 );
 const descriptor: ViewerCapabilityDescriptor = {
@@ -167,7 +168,7 @@ test("React evidence refresh validates page descriptors before store adoption", 
     },
     workspace: {
       ...descriptor.workspace!,
-      relatedComponents: [{ title: "Field", route: "components/field.html" }],
+      relatedComponents: [{ id: "field", title: "Field" }],
     },
   };
   environment.responses.push(
@@ -235,12 +236,13 @@ test("React evidence refresh rejects mixed public and private revisions", async 
 
 test("route evidence loading fences revision, location, and cancellation", async () => {
   const environment = new FakeEnvironment();
-  const route = catalogue.screens[0]!.route;
-  const request = { ...currentRequest(), route };
-  environment.location.href = `http://localhost/view/${route}`;
+  const entry = catalogue.screens[0]!;
+  const entryId = entry.id;
+  const request = { ...currentRequest(), entryId };
+  environment.location.href = `http://localhost${viewHref(entry.kind, entryId)}`;
   environment.descriptor = {
     ...descriptor,
-    workspace: workspaceEvidence(route),
+    workspace: workspaceEvidence(entryId),
   };
   environment.responses.push(htmlResponse(environment.location.href));
   const capabilities = createReactViewerCapabilities(descriptor, environment);
@@ -250,8 +252,8 @@ test("route evidence loading fences revision, location, and cancellation", async
         request,
         new AbortController().signal,
       )
-    )?.workspace?.entry.route,
-    route,
+    )?.workspace?.entry.id,
+    entryId,
   );
 
   environment.descriptor = {
@@ -269,7 +271,7 @@ test("route evidence loading fences revision, location, and cancellation", async
 
   environment.descriptor = {
     ...descriptor,
-    workspace: workspaceEvidence(route),
+    workspace: workspaceEvidence(entryId),
   };
   environment.responses.push(
     htmlResponse(environment.location.href, () => {
@@ -293,18 +295,19 @@ test("route evidence loading fences revision, location, and cancellation", async
 
 test("route evidence atomically carries a newer public and private revision", async () => {
   const environment = new FakeEnvironment();
-  const route = catalogue.screens[0]!.route;
+  const entry = catalogue.screens[0]!;
+  const entryId = entry.id;
   const next = structuredClone(catalogue);
   next.revision.evidence += 2;
   environment.publicCatalogue = next;
-  environment.location.href = `http://localhost/view/${route}`;
+  environment.location.href = `http://localhost${viewHref(entry.kind, entryId)}`;
   environment.descriptor = {
     ...descriptor,
     source: {
       ...descriptor.source,
       evidenceRevision: next.revision.evidence,
     },
-    workspace: workspaceEvidence(route),
+    workspace: workspaceEvidence(entryId),
   };
   environment.responses.push(htmlResponse(environment.location.href));
 
@@ -312,7 +315,7 @@ test("route evidence atomically carries a newer public and private revision", as
     descriptor,
     environment,
   ).evidence.loadRouteEvidence(
-    { ...currentRequest(), route },
+    { ...currentRequest(), entryId },
     new AbortController().signal,
   );
 
@@ -320,7 +323,7 @@ test("route evidence atomically carries a newer public and private revision", as
   assert.equal(revision.source.updateVersion, descriptor.source.updateVersion);
   assert.equal(revision.source.evidenceRevision, next.revision.evidence);
   assert.equal(revision.catalogue.revision.evidence, next.revision.evidence);
-  assert.equal(revision.workspace?.entry.route, route);
+  assert.equal(revision.workspace?.entry.id, entryId);
 
   environment.publicCatalogue = {
     ...next,
@@ -332,7 +335,7 @@ test("route evidence atomically carries a newer public and private revision", as
       descriptor,
       environment,
     ).evidence.loadRouteEvidence(
-      { ...currentRequest(), route },
+      { ...currentRequest(), entryId },
       new AbortController().signal,
     ),
     undefined,
@@ -341,7 +344,8 @@ test("route evidence atomically carries a newer public and private revision", as
 
 test("route loads and evidence refreshes retain private Live eligibility", async () => {
   const installed = interactiveDescriptor(true);
-  const route = installed.workspace!.entry.route;
+  const entry = installed.workspace!.entry;
+  const href = viewHref(entry.kind, entry.id);
   const next = structuredClone(catalogue);
   next.revision.evidence += 1;
   const nextDescriptor: ViewerCapabilityDescriptor = {
@@ -356,14 +360,14 @@ test("route loads and evidence refreshes retain private Live eligibility", async
   const routeEnvironment = new FakeEnvironment();
   routeEnvironment.descriptor = nextDescriptor;
   routeEnvironment.publicCatalogue = next;
-  routeEnvironment.location.href = `http://localhost/view/${route}`;
+  routeEnvironment.location.href = `http://localhost${href}`;
   routeEnvironment.responses.push(htmlResponse(routeEnvironment.location.href));
 
   const routed = await createReactViewerCapabilities(
     installed,
     routeEnvironment,
   ).evidence.loadRouteEvidence(
-    { route, source: installed.source },
+    { entryId: entry.id, source: installed.source },
     new AbortController().signal,
   );
   assert.equal(routed?.workspace?.interactive, true);
@@ -376,7 +380,7 @@ test("route loads and evidence refreshes retain private Live eligibility", async
   const updateEnvironment = new FakeEnvironment();
   updateEnvironment.descriptor = nextDescriptor;
   updateEnvironment.publicCatalogue = next;
-  updateEnvironment.location.href = `http://localhost/view/${route}`;
+  updateEnvironment.location.href = `http://localhost${href}`;
   updateEnvironment.responses.push(
     htmlResponse(updateEnvironment.location.href),
     jsonResponse("http://localhost/__mokly/catalogue.json", next),
@@ -384,7 +388,7 @@ test("route loads and evidence refreshes retain private Live eligibility", async
   const adopted: boolean[] = [];
   const controller = new AbortController();
   createReactViewerCapabilities(installed, updateEnvironment).updates.subscribe(
-    { route, source: installed.source },
+    { entryId: entry.id, source: installed.source },
     {
       ...actions(),
       adoptEvidence(revision) {
@@ -419,9 +423,9 @@ test("workspace capabilities reject a stale routed request before transport", ()
   });
   assert.throws(() =>
     capabilities.onDemand!.loadWorkspace(
-      { ...currentRequest(), route: "screens/elsewhere.html" },
+      { ...currentRequest(), entryId: "elsewhere" },
       {
-        entry: { route: "components/button.html" },
+        entry: { id: "button" },
         previewGeneration: descriptor.source.previewGeneration,
       } as never,
       new AbortController().signal,
@@ -437,8 +441,8 @@ test("initial private workspace evidence is exact-source and route scoped", () =
     new FakeEnvironment(),
   );
   assert.equal(
-    capabilities.evidence.initialWorkspace(currentRequest())?.entry.route,
-    currentRequest().route,
+    capabilities.evidence.initialWorkspace(currentRequest())?.entry.id,
+    currentRequest().entryId,
   );
   assert.throws(() =>
     capabilities.evidence.initialWorkspace({
@@ -449,14 +453,14 @@ test("initial private workspace evidence is exact-source and route scoped", () =
   assert.throws(() =>
     capabilities.evidence.initialWorkspace({
       ...currentRequest(),
-      route: "screens/elsewhere.html",
+      entryId: "elsewhere",
     }),
   );
 });
 
 function currentRequest(): ViewerCapabilityRequest {
   return {
-    route: descriptor.workspace!.entry.route,
+    entryId: descriptor.workspace!.entry.id,
     source: descriptor.source,
   };
 }
@@ -484,11 +488,11 @@ function actions() {
 
 function shellRecovery() {
   return {
-    closedCollectionIds: ["collection:fixture"],
+    disclosures: { "folder:pages:fixture": false },
     colorScheme: "dark" as const,
     detailsOpen: true,
     drawerOpen: true,
-    filterBaselineClosedCollectionIds: ["collection:fixture"],
+    filterBaselineDisclosures: { "folder:pages:fixture": false },
     navScroll: 18,
     query: "home",
     regionScrolls: { stage: 42 },
@@ -586,7 +590,7 @@ class FakeEnvironment implements ReactCapabilityEnvironment {
 
   private shellBootstrap() {
     const source = this.descriptor.source;
-    const route = this.descriptor.workspace?.entry.route;
+    const entry = this.descriptor.workspace?.entry;
     return {
       catalogue: this.publicCatalogue,
       context: {
@@ -598,16 +602,16 @@ class FakeEnvironment implements ReactCapabilityEnvironment {
           ? { previewGeneration: source.previewGeneration }
           : {}),
       },
-      view: route ? { kind: "target", route } : { kind: "home" },
+      view: entry
+        ? { kind: "target", entryId: entry.id, entryKind: entry.kind }
+        : { kind: "home" },
     };
   }
 }
 
-function workspaceEvidence(
-  route = catalogue.components[0]!.route,
-): WorkspaceData {
+function workspaceEvidence(id = catalogue.components[0]!.id): WorkspaceData {
   const entry = [...catalogue.screens, ...catalogue.components].find(
-    (candidate) => candidate.route === route,
+    (candidate) => candidate.id === id,
   );
   if (!entry) throw new Error("Unknown workspace fixture route.");
   return {

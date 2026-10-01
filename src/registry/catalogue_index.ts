@@ -1,6 +1,9 @@
 /** Live routing metadata is deliberately not a publishable manifest. */
 import type { ColorScheme } from "@mokly/viewer";
-import type { Manifest, ManifestV5 } from "@mokly/viewer/data";
+import {
+  isManifestComponentVariant,
+  type ManifestV7,
+} from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { validateDependencyDeclarations } from "../components/dependency_validation.js";
@@ -12,10 +15,10 @@ import { validateManifestMetadata } from "./manifest_validation.js";
 /** One private live-index entry with resolved Live-preview eligibility. */
 export type CatalogueIndexEntry =
   | (Extract<
-      ManifestV5["entries"][number],
+      ManifestV7["entries"][number],
       { kind: "component" | "screen" }
     > & { interactive: boolean })
-  | Exclude<ManifestV5["entries"][number], { kind: "component" | "screen" }>;
+  | Exclude<ManifestV7["entries"][number], { kind: "component" | "screen" }>;
 
 export interface CatalogueIndex {
   schemaVersion: "live-index-1";
@@ -24,7 +27,7 @@ export interface CatalogueIndex {
   entries: readonly CatalogueIndexEntry[];
 }
 
-export type CatalogueMetadata = Manifest | CatalogueIndex;
+export type CatalogueMetadata = ManifestV7 | CatalogueIndex;
 
 export function createCatalogueIndex(
   entries: readonly ResolvedRegistryEntry[],
@@ -82,18 +85,16 @@ export function parseCatalogueIndex(value: unknown): CatalogueIndex {
   const metadata = validateManifestMetadata({
     ...index,
     entries,
-    schemaVersion: 5,
-  }) as ManifestV5;
+    schemaVersion: 7,
+  }) as ManifestV7;
   for (const entry of metadata.entries) {
     validateDependencyDeclarations(entry);
     if (
       (entry.kind === "screen" && entry.componentViews !== undefined) ||
       (entry.kind === "component" &&
-        entry.variants.some(
-          (variant) =>
-            !Array.isArray(variant.componentViews) ||
-            variant.componentViews.length > 0,
-        ))
+        isManifestComponentVariant(entry) &&
+        (!Array.isArray(entry.componentViews) ||
+          entry.componentViews.length > 0))
     )
       throw new MoklyError(
         "manifest-invalid",

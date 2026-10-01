@@ -3,6 +3,8 @@ import { pathToFileURL } from "node:url";
 
 import { expect, test, type Page } from "@playwright/test";
 
+import { viewRoute } from "@mokly/viewer/data";
+
 import { paletteColor } from "../helpers/design_palette.js";
 import {
   NOTICE_COPY,
@@ -67,7 +69,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
   }) => {
     for (const [before, after] of [
       [
-        "design/interactive/modes/static.html",
+        viewRoute("screen", "design-interactive-static", viewport, "light"),
         fragment(state("design-rebuild-updating"), viewport),
       ],
       [
@@ -75,10 +77,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         fragment(state("design-rebuild-failure-updating"), viewport),
       ],
     ] as const) {
-      const first = before.endsWith(`.${viewport}.html`)
-        ? before
-        : before.replace(/\.html$/u, `.${viewport}.html`);
-      await open(page, first, viewport);
+      await open(page, before, viewport);
       const hidden = await geometry(page);
       const field = (await page.locator(".mbk-search").boundingBox())!;
       await open(page, after, viewport);

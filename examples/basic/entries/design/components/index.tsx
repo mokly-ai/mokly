@@ -1,4 +1,4 @@
-import { collection, screen } from "@mokly/mokly";
+import { folder, screen } from "@mokly/mokly";
 
 import { controlsDesign } from "./controls/index.js";
 import { inspectionScreens } from "./inspection/screens.js";
@@ -11,6 +11,7 @@ import { componentDesignDocs } from "./parts/fixtures.js";
 import { componentStyleDependencies } from "./parts/styles.js";
 import { additionDesigns } from "./states/additions/screens.js";
 import { stateScreens } from "./states/screens.js";
+import { sharedImpactDesigns } from "./states/shared-impact/screens.js";
 
 export function ComponentOverviewDesktop() {
   return <ComponentPage state="default" viewport="desktop" />;
@@ -20,18 +21,13 @@ export function ComponentOverviewMobile() {
 }
 
 /** Canonical component page followed by linked, bounded groups of owning screens. */
-export const componentDesign = collection({
-  id: "design-components",
-  segment: "components",
+export const componentDesign = folder({
   title: "Component explorer",
-  description:
-    "Component pages, saved examples, change attribution, and screen inspection.",
   dependencies: componentStyleDependencies,
   relatedDocs: componentDesignDocs,
   children: [
     screen({
       id: "design-component-overview",
-      slug: "overview",
       title: "Component page",
       colorSchemes: ["light"],
       description:
@@ -39,48 +35,28 @@ export const componentDesign = collection({
       desktop: <ComponentOverviewDesktop />,
       mobile: <ComponentOverviewMobile />,
     }),
-    collection({
-      id: "design-component-inspector",
-      segment: "inspector",
+    folder({
       title: "Inspector closed",
-      description:
-        "Closed component and screen inspectors, with every icon available to open a panel.",
       children: inspectorScreens,
     }),
     controlsDesign,
-    collection({
-      id: "design-component-pages",
-      segment: "pages",
+    folder({
       title: "Pages and comparisons",
-      description:
-        "Saved variants, component comparisons, and usage relationships.",
       children: [...pageScreens, stackedDesigns],
     }),
-    collection({
-      id: "design-component-inspection",
-      segment: "inspection",
+    folder({
       title: "Screen inspection",
-      description:
-        "Repeated and nested components, highlighting, and independent screen changes.",
       children: [
         ...inspectionScreens,
-        collection({
-          id: "design-component-selection",
-          segment: "selection",
+        folder({
           title: "Selected instances",
-          description:
-            "Container and hidden instances reached from component usage links.",
           children: selectionScreens,
         }),
       ],
     }),
-    collection({
-      id: "design-component-states",
-      segment: "states",
+    folder({
       title: "Empty and change states",
-      description:
-        "Empty usage, unavailable inspection, unused components, and retained comparisons.",
-      children: [...stateScreens, additionDesigns],
+      children: [...stateScreens, additionDesigns, sharedImpactDesigns],
     }),
   ],
 });

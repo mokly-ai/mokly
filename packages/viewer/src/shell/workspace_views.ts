@@ -91,7 +91,7 @@ export function resolveWorkspaceView(
   });
   return {
     ...resolved,
-    comparisonEligible: !selection.error && presentation.comparisonEligible,
+    comparisonEligible: presentation.comparisonEligible,
     evidence: presentation.evidence === "matching" ? "view" : "selection",
     status: presentation.status,
   };

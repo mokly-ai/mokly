@@ -1,6 +1,6 @@
 /** Current-generation view identity used by the interactive HTTP boundary. */
 
-import { generatedViews } from "@mokly/viewer/data";
+import { generatedViews, isManifestComponentVariant } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
@@ -64,9 +64,14 @@ export function interactiveGeneration(
     for (const view of generatedViews(entry))
       views.set(view.path, {
         colorScheme: view.colorScheme,
-        entryId: entry.id,
+        entryId:
+          entry.kind === "component" && isManifestComponentVariant(entry)
+            ? entry.variantOf
+            : entry.id,
         route: view.path,
-        ...(view.variantId ? { variantId: view.variantId } : {}),
+        ...(entry.kind === "component" && isManifestComponentVariant(entry)
+          ? { variantId: entry.id }
+          : {}),
         viewport: view.viewport,
       });
   }

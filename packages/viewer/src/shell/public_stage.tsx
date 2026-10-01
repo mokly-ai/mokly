@@ -2,13 +2,15 @@
 
 import { useContext } from "react";
 
+import { catalogueComponentVariants } from "../catalogue/entry_selection.js";
 import type {
   CatalogueReadModel,
-  CatalogueRoutedEntry,
+  CatalogueRecord,
   CatalogueScreen,
 } from "../catalogue/types.js";
 import type { GeneratedComponentView } from "../components/views.js";
-import { encodeUrlPath } from "../data/paths.js";
+import { viewHref } from "../navigation/routes.js";
+import { VIEWPORTS } from "../registry/views.js";
 import { DisplaySelection } from "../viewer/display_context.js";
 
 import { DocumentStageFrame } from "./document_stage_frame.js";
@@ -24,7 +26,7 @@ export function PublicStage({
   variantId,
 }: {
   catalogue: CatalogueReadModel;
-  entry: CatalogueRoutedEntry;
+  entry: CatalogueRecord;
   fragment?: string;
   hasDarkFragments: boolean;
   previewViews?: readonly GeneratedComponentView[];
@@ -46,28 +48,33 @@ export function PublicStage({
     );
   const selectedVariant =
     entry.kind === "component"
-      ? (entry.variants.find(
-          (variant) => variant.id === (variantId ?? selection.variantId),
-        ) ?? entry.variants[0])
+      ? (("variantOf" in entry
+          ? [entry]
+          : catalogueComponentVariants(catalogue, entry.id)
+        ).find((variant) => variant.id === variantId) ??
+        ("variantOf" in entry
+          ? entry
+          : catalogueComponentVariants(catalogue, entry.id)[0]))
       : undefined;
   const views =
     entry.kind === "component"
       ? (selectedVariant?.views ?? [])
       : (entry as CatalogueScreen).views;
   const effectiveVariant = selectedVariant?.id;
+  const frameEntry = selectedVariant ?? entry;
   return (
     <div
       className={`mbk-stage ${entry.kind === "component" ? "mbk-component-stage" : "mbk-live"}`}
       data-mokly-scroll="stage"
       data-mokly-stage=""
       data-viewport={selection.viewport}
-      key={`${entry.route}:${effectiveVariant ?? ""}`}
+      key={`${entry.id}:${effectiveVariant ?? ""}`}
     >
-      {entry.viewports.map((viewport) => (
+      {VIEWPORTS.map((viewport) => (
         <StageFrame
-          entry={entry}
+          entry={frameEntry}
           hasDarkFragments={hasDarkFragments}
-          key={`${entry.route}:${effectiveVariant ?? ""}:${viewport}`}
+          key={`${entry.id}:${effectiveVariant ?? ""}:${viewport}`}
           views={views}
           viewport={viewport}
           {...(entry.kind === "component" && previewViews
@@ -88,7 +95,7 @@ function UseCaseFlow({
   hasDarkFragments,
 }: {
   catalogue: CatalogueReadModel;
-  entry: Extract<CatalogueRoutedEntry, { kind: "use-case" }>;
+  entry: Extract<CatalogueRecord, { kind: "use-case" }>;
   fragment?: string;
   hasDarkFragments: boolean;
 }) {
@@ -109,7 +116,7 @@ function UseCaseFlow({
                   {screen ? (
                     <a
                       className="flow-step-link"
-                      href={`/view/${encodeUrlPath(screen.route)}`}
+                      href={viewHref("screen", screen.id)}
                     >
                       This screen in the catalogue: {screen.title} →
                     </a>
@@ -121,7 +128,7 @@ function UseCaseFlow({
                   entry={screen}
                   flow
                   hasDarkFragments={hasDarkFragments}
-                  key={`${screen.route}:${index}`}
+                  key={`${screen.id}:${index}`}
                   stepIndex={index}
                   views={screen.views}
                   viewport="desktop"

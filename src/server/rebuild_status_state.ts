@@ -1,5 +1,7 @@
 /** Child-owned staging for update-version-fenced rebuild status snapshots. */
 
+import type { ServerResponse } from "node:http";
+
 import type { RebuildStatus } from "@mokly/viewer/runtime";
 
 /** Result of offering one validated parent snapshot to the child. */
@@ -58,6 +60,15 @@ export class VersionedRebuildStatus implements ServedRebuildStatus {
   current(): RebuildStatus {
     return this.active;
   }
+}
+
+/** Publish one complete private status snapshot to every connected shell. */
+export function publishRebuildEvent(
+  streams: ReadonlySet<ServerResponse>,
+  status: RebuildStatus,
+): void {
+  const payload = `event: rebuild\ndata: ${JSON.stringify(status)}\n\n`;
+  for (const stream of streams) stream.write(payload);
 }
 
 function sameStatus(left: RebuildStatus, right: RebuildStatus): boolean {

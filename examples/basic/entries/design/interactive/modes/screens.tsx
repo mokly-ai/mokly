@@ -25,7 +25,6 @@ export function UnavailablePreviewMobile() {
 export const modeScreens = [
   screen({
     id: "design-interactive-static",
-    slug: "static",
     title: "Static preview",
     colorSchemes: ["light"],
     description:
@@ -35,7 +34,6 @@ export const modeScreens = [
   }),
   screen({
     id: "design-interactive-preparing",
-    slug: "preparing",
     title: "Preparing the live preview",
     colorSchemes: ["light"],
     description:
@@ -45,7 +43,6 @@ export const modeScreens = [
   }),
   screen({
     id: "design-interactive-unavailable",
-    slug: "unavailable",
     title: "Live unavailable",
     colorSchemes: ["light"],
     description:

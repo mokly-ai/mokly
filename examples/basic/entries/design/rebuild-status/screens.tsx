@@ -77,7 +77,6 @@ export function RebuildLiveComponentMobile() {
 export const rebuildStatusScreens = [
   screen({
     id: "design-rebuild-failure",
-    slug: "failure",
     title: "Changes not loaded",
     colorSchemes: ["light"],
     description:
@@ -87,7 +86,6 @@ export const rebuildStatusScreens = [
   }),
   screen({
     id: "design-rebuild-details",
-    slug: "details",
     title: "Details open",
     colorSchemes: ["light"],
     description:
@@ -97,7 +95,6 @@ export const rebuildStatusScreens = [
   }),
   screen({
     id: "design-rebuild-updating",
-    slug: "updating",
     title: "Updating",
     colorSchemes: ["light"],
     description:
@@ -107,7 +104,6 @@ export const rebuildStatusScreens = [
   }),
   screen({
     id: "design-rebuild-failure-updating",
-    slug: "failure-updating",
     title: "Updating after a failure",
     colorSchemes: ["light"],
     description:
@@ -117,7 +113,6 @@ export const rebuildStatusScreens = [
   }),
   screen({
     id: "design-rebuild-live-component",
-    slug: "live-component",
     title: "Live component",
     colorSchemes: ["light"],
     dependencies: componentStyleDependencies,

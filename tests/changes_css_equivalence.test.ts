@@ -54,9 +54,9 @@ for (const scenario of [
       committedReviewRepository(fixture.config),
     );
     const { result } = await fixture.compare();
-    assert.equal(result.schemaVersion, 2);
-    assert.ok(live.changedRoutes?.includes("screens/home.html"));
-    assert.ok(!live.changedRoutes?.includes("screens/details.html"));
+    assert.equal(result.schemaVersion, 4);
+    assert.ok(live.changedIds?.includes("home"));
+    assert.ok(!live.changedIds?.includes("details"));
     assert.deepEqual(
       result.changedPaths.filter((route) => route.endsWith(".css")),
       scenario.stylesheet ? [`mockups/${scenario.stylesheet}`] : [],
@@ -64,13 +64,11 @@ for (const scenario of [
     const screenEvidence = live.componentChanges?.screenEvidence ?? [];
     assert.ok(
       screenEvidence.every((screen) =>
-        result.screens.some((compared) => compared.route === screen.route),
+        result.screens.some((compared) => compared.id === screen.id),
       ),
     );
     for (const screen of result.screens) {
-      const actual = screenEvidence.find(
-        (entry) => entry.route === screen.route,
-      );
+      const actual = screenEvidence.find((entry) => entry.id === screen.id);
       assert.equal(screen.views.length, 4);
       assert.equal(
         actual?.views.length ?? 0,
@@ -96,7 +94,7 @@ for (const scenario of [
               ? ["mockups/shared.css"]
               : [],
         };
-        const context = `${screen.route} (${view.viewport}, ${view.colorScheme})`;
+        const context = `${screen.id} (${view.viewport}, ${view.colorScheme})`;
         assert.deepEqual(evidencePaths(view), expected, context);
         assert.deepEqual(evidencePaths(liveView), evidencePaths(view), context);
       }

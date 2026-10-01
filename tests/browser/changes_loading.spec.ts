@@ -58,7 +58,7 @@ for (const mobile of [false, true]) {
       await changes.click();
 
       publish({
-        changedRoutes: ["screens/details.html"],
+        changedIds: ["details"],
         changesStatus: "ready",
       });
       await expect(filter).toHaveAttribute("data-changes-status", "ready");
@@ -71,16 +71,16 @@ for (const mobile of [false, true]) {
       expect(await filter.boundingBox()).toEqual(initialFilter);
       expect(await tree.boundingBox()).toEqual(initialTree);
 
-      publish({ changedRoutes: null, changesStatus: "pending" });
+      publish({ changedIds: null, changesStatus: "pending" });
       await expect(status).toContainText("Checking for changes");
       await expect(changes).toHaveAttribute("aria-pressed", "true");
-      publish({ changedRoutes: [], changesStatus: "ready" });
+      publish({ changedIds: [], changesStatus: "ready" });
       await expect(changes.locator(".mbk-nav-filter-count")).toHaveText("0");
       await expect(changes).toHaveAttribute("aria-pressed", "true");
       await expect(status).toContainText("No changes found");
       expect(await filter.boundingBox()).toEqual(initialFilter);
 
-      publish({ changedRoutes: null, changesStatus: "pending" });
+      publish({ changedIds: null, changesStatus: "pending" });
       await expect(filter).toHaveAttribute("data-changes-status", "pending");
       publish({ changesStatus: "unavailable" });
       await expect(status).toContainText("Changes are unavailable");
@@ -93,7 +93,7 @@ for (const mobile of [false, true]) {
       ).toBeVisible();
       expect(await filter.boundingBox()).toEqual(initialFilter);
       await page.emulateMedia({ reducedMotion: "reduce" });
-      publish({ changedRoutes: null, changesStatus: "pending" });
+      publish({ changedIds: null, changesStatus: "pending" });
       await expect(changes.locator(".mbk-nav-spinner")).toHaveCSS(
         "animation-name",
         "none",

@@ -52,7 +52,7 @@ its details.
 
 ## What you can do there
 
-Browse the catalogue by collection, search it, switch viewport and color
+Browse the catalogue by folder, search it, switch viewport and color
 scheme, open the details of a screen and compare a changed screen with its
 base. The Catalogue section describes each of those.
 

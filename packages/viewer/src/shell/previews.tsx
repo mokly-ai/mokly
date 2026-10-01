@@ -3,11 +3,11 @@
 // frames while the server render remains an explicit unavailable state.
 
 import type { RemovedEntryPreview } from "../catalogue/types.js";
+import { entryRoute } from "../navigation/routes.js";
 import type { SnapshotPresentation } from "../previews/presentation.js";
 import type { LoadedPreview, PreviewScreenView } from "../previews/request.js";
-import type { ManifestEntry } from "../registry/types.js";
 
-import type { Catalogue } from "./catalogue.js";
+import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { BrowserFrame, PhoneFrame } from "./frames.js";
 import { PreviewFrame } from "./preview_frame.js";
@@ -18,10 +18,9 @@ import { useRemovedPreview } from "./use_removed_preview.js";
 
 /** Everything the browser client needs to request one entry's previous version. */
 export interface RemovedPreviewData {
-  /** Stable entry id, so a reused route cannot adopt another entry's response. */
+  /** Stable entry id, so another entry cannot adopt this response. */
   id: string;
   kind: "page" | "screen";
-  route: string;
   title: string;
   /** Catalogue that owns the selected historical record. */
   catalogueIdentity?: string;
@@ -41,18 +40,17 @@ export interface RemovedPreviewData {
 export function removedPreviewData(
   catalogue: Catalogue,
   context: ShellContext,
-  entry: Exclude<ManifestEntry, { kind: "collection" }>,
+  entry: CatalogueManifestEntry,
 ): RemovedPreviewData | undefined {
   if (entry.kind !== "page" && entry.kind !== "screen") return undefined;
   const model = catalogue.publicModel ?? context.readModel;
   const removed = model?.removedEntries.find(
-    (removed) => removed.entry.route === entry.route,
+    (removed) => removed.entry.id === entry.id,
   );
   const published = removed?.preview;
   return {
     id: entry.id,
     kind: entry.kind,
-    route: entry.route,
     title: entry.title,
     ...(model && removed?.snapshotId
       ? {
@@ -114,7 +112,7 @@ function ScreenFrame(props: {
         <PhoneFrame>{content}</PhoneFrame>
       ) : (
         <BrowserFrame
-          address={props.data.address ?? props.data.route}
+          address={props.data.address ?? entryRoute("screen", props.data.id)}
           expandable={false}
         >
           {content}

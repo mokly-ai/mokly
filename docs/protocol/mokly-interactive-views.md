@@ -57,12 +57,12 @@ defines the listener and forwarding policy.
 
 ### Per-entry opt-out
 
-`defineScreen`, `defineComponent`, and nested `screen` inputs accept
-`interactive?: false`. Declaring `true` or any other value is rejected, so the
-field can only remove Live from one entry. Screen variants inherit the parent's
-value unless they declare their own. Collections, pages and use cases reject
-the field. An opted-out entry shows no Static/Live control, leaving no gap, and
-refuses Live document requests with 404 on the interactive origin.
+`defineScreen`, screen-variant inputs, `defineComponent`, and nested `screen`
+inputs inside `folder()` trees accept `interactive?: false`. Declaring `true`
+or any other value is rejected, so the field can only remove Live. Screen
+variants inherit the parent's value unless they declare their own. Folder
+markers, pages, and use cases reject the field. An opted-out entry shows no
+Static/Live control, leaves no gap, and refuses Live document requests with 404.
 
 When the global private interactive descriptor exists, each current screen or
 component route's private workspace evidence contains `interactive: boolean`
@@ -89,8 +89,8 @@ interactive descriptor.
 
 ## Views That Offer Live
 
-- Screen fragments: each mobile or desktop fragment in every configured scheme.
-- Component saved variants: each variant view in every viewport and scheme.
+- Screen entries: each mobile or desktop view in every configured scheme.
+- Component variants: each saved view in every viewport and scheme.
 
 These never offer Live: pages, use-case steps, comparison panes, removed
 previous versions, and transient control previews. Each is either a complete
@@ -107,18 +107,18 @@ never requests a Live document.
 
 ## Failure States
 
-| State                      | Cause                                               | Behaviour                                                          |
-| -------------------------- | --------------------------------------------------- | ------------------------------------------------------------------ |
-| `interactive-bundle`       | Node-only import or esbuild failure                 | 503 on Live documents; failure cached for generation               |
-| View ineligible            | Typed entry/kind/variant eligibility reason         | 404 on the interactive origin                                      |
-| Entry opted out            | `interactive: false` on the screen or component     | No control and no gap; Static frame; 404 on the interactive origin |
-| Eligibility unknown        | Value omitted by Serve or route evidence unloadable | No control; Static frame; never prepared or mounted                |
-| Composition fault          | Invalid generation or adapted document              | 500; never presented as a bundle-input problem                     |
-| Pre-mount failure          | Invalid bootstrap or missing registry view          | Static document untouched; one diagnostic                          |
-| Uncaught Live render error | Consumer render throws in the root                  | Static document restored; one diagnostic                           |
-| Caught Live render error   | Consumer error boundary catches                     | Boundary result retained; one diagnostic                           |
-| Origin unavailable         | Second listener cannot bind                         | Serve fails to start, naming the port                              |
-| Generation replaced        | Watched rebuild during a Live session               | Page reloads, keeps Live, mounts the new generation                |
+| State                      | Cause                                                   | Behaviour                                                          |
+| -------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------ |
+| `interactive-bundle`       | Node-only import or esbuild failure                     | 503 on Live documents; failure cached for generation               |
+| View ineligible            | Typed entry/kind/variant eligibility reason             | 404 on the interactive origin                                      |
+| Entry opted out            | `interactive: false` on a screen, variant, or component | No control and no gap; Static frame; 404 on the interactive origin |
+| Eligibility unknown        | Value omitted by Serve or route evidence unloadable     | No control; Static frame; never prepared or mounted                |
+| Composition fault          | Invalid generation or adapted document                  | 500; never presented as a bundle-input problem                     |
+| Pre-mount failure          | Invalid bootstrap or missing registry view              | Static document untouched; one diagnostic                          |
+| Uncaught Live render error | Consumer render throws in the root                      | Static document restored; one diagnostic                           |
+| Caught Live render error   | Consumer error boundary catches                         | Boundary result retained; one diagnostic                           |
+| Origin unavailable         | Second listener cannot bind                             | Serve fails to start, naming the port                              |
+| Generation replaced        | Watched rebuild during a Live session                   | Page reloads, keeps Live, mounts the new generation                |
 
 Runtime failures and restoration are defined by the
 [mount contract](./mokly-interactive-views-runtime.md#mount-contract). Origin,
@@ -141,6 +141,8 @@ provider stack and a stateful registered component in both Static and Live.
 
 - [Live document and browser runtime](./mokly-interactive-views-runtime.md)
 - [Interactive Serve delivery](./mokly-interactive-views-serve.md)
+- [Interactive host integration](./mokly-interactive-host-integration.md)
+- [Generation-pinned Live sources](./mokly-interactive-source-pinning.md)
 - [Interactive views shell](./mokly-interactive-views-shell.md)
 - [Interactive views design](./mokly-interactive-views-design.md)
 - [Configuration contract](./mokly-configuration.md)

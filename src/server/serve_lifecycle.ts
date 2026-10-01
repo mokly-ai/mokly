@@ -2,11 +2,11 @@
 import { fileURLToPath } from "node:url";
 
 import type { Compilation } from "../build/compile.js";
+import { loadConsumerGraph } from "../build/load_graph.js";
 import type { GeneratedOutputStore } from "../build/output_store.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timingArguments } from "../diagnostics/timings.js";
 
-import type { RunningServer } from "./http_types.js";
 import type {
   PreparedResourceWatch,
   ResourceWatcher,
@@ -15,7 +15,7 @@ import type { RunningServe, ServeOptions } from "./serve.js";
 import type {
   ProcessSupervisor,
   ProcessSupervisorFactory,
-} from "./supervisor.js";
+} from "./supervisor_types.js";
 import type { WatchActionQueue } from "./watch_events.js";
 import type { ConsumerWatcher } from "./watcher.js";
 
@@ -47,19 +47,13 @@ export function createWatchedSupervisor(
   );
 }
 
-/** Present a deterministic child server through the public Serve lifecycle. */
-export function serverLifecycle(server: RunningServer): RunningServe {
-  return {
-    close: () => server.close(),
-    ...(server.interactiveOrigin
-      ? { interactiveOrigin: server.interactiveOrigin }
-      : {}),
-    ...(server.interactivePort !== undefined
-      ? { interactivePort: server.interactivePort }
-      : {}),
-    port: server.port,
-    url: server.url,
-  };
+/** Refresh the entry and source inventory before watched runtime preparation. */
+export async function refreshWatchedSourceInventory(
+  config: ResolvedConfig,
+): Promise<void> {
+  const inventory = await loadConsumerGraph(config, { evaluate: false });
+  config.entryModules = inventory.entrySources;
+  config.sourceFiles = inventory.sourceFiles;
 }
 
 /** Project the child-resolved Live address into watched Serve readiness. */
@@ -76,7 +70,6 @@ export function watchedInteractiveAddress(
         interactivePort: port,
       };
 }
-
 /** Stop waiting for a candidate watcher as soon as watched shutdown begins. */
 export async function watcherReadyBeforeShutdown(
   watcher: ConsumerWatcher,

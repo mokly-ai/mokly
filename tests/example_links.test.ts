@@ -4,6 +4,8 @@ import { test } from "node:test";
 
 import { parse } from "parse5";
 
+import { viewRoute } from "../packages/viewer/dist/data.js";
+
 import {
   attribute,
   designCatalogue,
@@ -24,12 +26,12 @@ for (const viewport of ["mobile", "desktop"] as const) {
           (entry) => entry.id === target,
         );
         assert.ok(entry?.kind === "screen" && destination?.kind === "screen");
-        const route = (
-          scheme === "dark" ? entry.darkFragments : entry.fragments
-        )?.[viewport];
-        const targetRoute = (
-          scheme === "dark" ? destination.darkFragments : destination.fragments
-        )?.[viewport];
+        const route = entry.colorSchemes.includes(scheme)
+          ? viewRoute("screen", entry.id, viewport, scheme)
+          : undefined;
+        const targetRoute = destination.colorSchemes.includes(scheme)
+          ? viewRoute("screen", destination.id, viewport, scheme)
+          : undefined;
         assert.ok(route && targetRoute);
         const document = parse(outputs.get(route) ?? "");
         const link = elements(

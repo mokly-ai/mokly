@@ -80,7 +80,7 @@ export function CatalogueNav({
   const navigationId = useShellIdentifier("mb-nav");
   const sections = store?.sections ?? catalogueNavSections(catalogue);
   const scroll = useNavigationScroll(store, store?.state.route);
-  const changesStatus = context.changedRoutes ? "ready" : context.changesStatus;
+  const changesStatus = context.changedIds ? "ready" : context.changesStatus;
   const waiting =
     store?.state.selection.view === "changes" &&
     (changesStatus === "pending" || changesStatus === "preparing");

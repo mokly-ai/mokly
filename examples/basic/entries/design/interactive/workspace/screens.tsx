@@ -26,7 +26,6 @@ export function StaticCatalogueMobile() {
 export const workspaceScreens = [
   screen({
     id: "design-interactive-component",
-    slug: "component",
     title: "Component in Live",
     colorSchemes: ["light"],
     description:
@@ -36,7 +35,6 @@ export const workspaceScreens = [
   }),
   screen({
     id: "design-interactive-screen",
-    slug: "screen",
     title: "Screen in Live",
     colorSchemes: ["light"],
     description:
@@ -46,7 +44,6 @@ export const workspaceScreens = [
   }),
   screen({
     id: "design-interactive-static-catalogue",
-    slug: "static-only",
     title: "Catalogue without Live",
     colorSchemes: ["light"],
     description:

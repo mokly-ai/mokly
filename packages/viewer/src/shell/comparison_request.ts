@@ -14,10 +14,9 @@ export interface LoadedComparison {
   url: string;
 }
 
-/** Route and optional saved variant selected for comparison generation. */
+/** Entry identity selected for comparison generation. */
 export interface ComparisonScope {
-  route: string;
-  variantId?: string;
+  id: string;
 }
 
 /** Request current metadata, scoped only for live on-demand generation. */
@@ -96,8 +95,7 @@ function comparisonEndpoint(
   if (!sameOrigin(baseUrl, endpoint))
     throw new Error("The comparison is unavailable.");
   if (delivery.kind === "live") {
-    endpoint.searchParams.set("route", scope.route);
-    if (scope.variantId) endpoint.searchParams.set("variant", scope.variantId);
+    endpoint.searchParams.set("id", scope.id);
   }
   if (refresh) endpoint.searchParams.set("refresh", "1");
   return endpoint;

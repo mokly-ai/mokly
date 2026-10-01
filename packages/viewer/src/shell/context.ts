@@ -20,7 +20,7 @@ export interface ShellContext {
    */
   workspaceInteractive?: {
     entryId: string;
-    route: string;
+    entryKind: "component" | "screen";
     value: boolean;
   };
   /** Accepted public snapshot supplied by the first-party server integration. */
@@ -35,8 +35,8 @@ export interface ShellContext {
   renderCapability?: RenderCapability;
   /** Validated delivery information for a static export. */
   delivery?: StaticDelivery;
-  /** Route of the currently selected catalogue entry, when one is active. */
-  activeRoute?: string;
+  /** Id of the currently selected catalogue entry, when one is active. */
+  activeId?: string;
   /** Review comparison base ref for the serve session. */
   base: string;
   /** Interface appearance the document starts from; omission means `auto`. */
@@ -47,8 +47,8 @@ export interface ShellContext {
    * shows the one Appearance control.
    */
   embedded?: boolean;
-  /** Routes changed since the base-ref branch point; absent when unknown. */
-  changedRoutes?: readonly string[];
+  /** Entry ids changed since the base-ref branch point; absent when unknown. */
+  changedIds?: readonly string[];
   /** Whether on-demand comparison serving is available. */
   comparisons?: boolean;
   /** Validated lightweight component evidence, independent of snapshots. */
@@ -64,12 +64,12 @@ export interface ShellContext {
 /** Create one page context from the current mutable server snapshot. */
 export function shellContext(
   base: string,
-  changedRoutes: readonly string[] | undefined,
+  changedIds: readonly string[] | undefined,
   updateVersion: number,
 ): ShellContext {
   return {
     base,
-    ...(changedRoutes ? { changedRoutes } : {}),
+    ...(changedIds ? { changedIds } : {}),
     updateVersion,
   };
 }

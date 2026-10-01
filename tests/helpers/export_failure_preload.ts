@@ -4,15 +4,21 @@ import { fileExportOperations } from "../../dist/export/operations.js";
 const mode = process.env["MOKLY_TEST_EXPORT_FAILURE"];
 const originalRename = fileExportOperations.rename;
 const originalRmdir = fileExportOperations.rmdir;
+const cancelAfterBackup = [
+  "cancellation",
+  "publish-cancel-clean",
+  "publish-cancel-restore-failure",
+].includes(mode ?? "");
 
 fileExportOperations.rename = async (from, to) => {
   if (mode === "rollback" && from.endsWith("/stage"))
     throw new Error("Injected install failure");
   if (mode === "rollback" && from.endsWith("/backup"))
     throw new Error("Injected restore failure");
+  if (mode === "publish-cancel-restore-failure" && from.endsWith("/backup"))
+    throw new Error("Injected restore failure after cancellation");
   await originalRename(from, to);
-  if (mode === "cancellation" && to.endsWith("/backup"))
-    process.emit("SIGTERM");
+  if (cancelAfterBackup && to.endsWith("/backup")) process.emit("SIGTERM");
 };
 
 fileExportOperations.rmdir = async (candidate) => {

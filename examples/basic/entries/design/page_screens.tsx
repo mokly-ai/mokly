@@ -14,7 +14,7 @@ import { DocumentPane, Stage } from "./parts/stage.js";
 const nodes: readonly NavNode[] = [
   {
     key: "example",
-    kind: "collection",
+    kind: "folder",
     label: "Example",
     count: 3,
     depth: 0,
@@ -56,9 +56,6 @@ function PageDetails({ open = false }: { open?: boolean }) {
         <div className="mbk-meta">
           <MetaRow name="source" label="Source">
             <code className="mbk-code">entries/catalogue.mockup.tsx</code>
-          </MetaRow>
-          <MetaRow name="generated" label="Generated">
-            <code className="mbk-code">handbook.html</code>
           </MetaRow>
           <MetaRow name="tags" label="Tags">
             documents
@@ -157,7 +154,6 @@ export const pageScreens = [
     id: "design-page-view",
     title: "Document page",
     description: "A whole document beside screens and flows in one hierarchy.",
-    slug: "view",
     colorSchemes: ["light"],
     desktop: <PageDesktop />,
     mobile: <PageMobile />,
@@ -166,7 +162,6 @@ export const pageScreens = [
     id: "design-page-details",
     title: "Document details",
     description: "Page metadata and the narrow catalogue drawer.",
-    slug: "details",
     colorSchemes: ["light"],
     desktop: <PageDetailsDesktop />,
     mobile: <PageDetailsMobile />,
@@ -175,8 +170,7 @@ export const pageScreens = [
     id: "design-page-navigation",
     title: "Document navigation",
     description:
-      "A document in its declared collection, with the narrow catalogue drawer.",
-    slug: "navigation",
+      "A document in its declared folder, with the narrow catalogue drawer.",
     colorSchemes: ["light"],
     desktop: <PageNavigationDesktop />,
     mobile: <PageNavigationMobile />,
@@ -188,7 +182,6 @@ export const pageScreens = [
       "A removed document opens its previous version, keeping its flat Changes row and baseline ancestry.",
     rationale:
       "Deleting a document should not hide what it said. The previous version is the only readable copy left, so the stage shows it read-only under a quiet label instead of an empty state, while the Removed badge and the ancestry of the deleted parent stay in place.",
-    slug: "removed",
     colorSchemes: ["light"],
     desktop: <RemovedPageView viewport="desktop" />,
     mobile: <RemovedPageView viewport="mobile" />,

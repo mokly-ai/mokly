@@ -15,6 +15,11 @@ interface MemoryTerminalOptions {
   isTTY: boolean;
 }
 
+const ANSI_CONTROL = new RegExp(
+  `^${String.fromCharCode(27)}\\[[0-9;]*[A-Za-z]`,
+  "u",
+);
+
 class MemoryOutput extends Writable implements CliOutput {
   readonly chunks: string[] = [];
   constructor(
@@ -80,4 +85,41 @@ export function memoryTerminal(options: MemoryTerminalOptions): {
     stdin,
     stdout: () => stdout.chunks.join(""),
   };
+}
+
+/** Apply basic carriage-return and erase-line output to a terminal line buffer. */
+export function emulateTerminal(value: string): {
+  currentLine: string;
+  lines: string[];
+} {
+  const lines: string[] = [];
+  let current: string[] = [];
+  let cursor = 0;
+  for (let index = 0; index < value.length;) {
+    if (value.startsWith("\x1b[2K", index)) {
+      current = [];
+      index += 4;
+      continue;
+    }
+    const control = ANSI_CONTROL.exec(value.slice(index));
+    if (control) {
+      index += control[0].length;
+      continue;
+    }
+    const character = String.fromCodePoint(value.codePointAt(index)!);
+    index += character.length;
+    if (character === "\r") {
+      cursor = 0;
+      continue;
+    }
+    if (character === "\n") {
+      lines.push(current.join(""));
+      current = [];
+      cursor = 0;
+      continue;
+    }
+    while (current.length < cursor) current.push(" ");
+    current[cursor++] = character;
+  }
+  return { currentLine: current.join(""), lines };
 }

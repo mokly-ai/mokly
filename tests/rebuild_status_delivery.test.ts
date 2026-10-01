@@ -211,6 +211,7 @@ class RecordingReporter implements ServeReporter {
   changesReady() {}
   changesUnavailable() {}
   gitReferenceRefresh() {}
+  incompatibleBaseline() {}
   runtimeDiagnostic() {}
   serveReady() {}
   watchFinished() {}

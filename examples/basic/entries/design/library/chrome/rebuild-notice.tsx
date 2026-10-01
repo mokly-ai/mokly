@@ -28,12 +28,12 @@ export const rebuildNotice = defineComponent({
   render: RebuildNoticeView,
   variants: [
     {
-      id: "collapsed",
+      id: "design-ui-rebuild-notice-collapsed",
       title: "Collapsed",
       props: { detail: REBUILD_DETAIL, open: false },
     },
     {
-      id: "details",
+      id: "design-ui-rebuild-notice-details",
       title: "Details open",
       props: { detail: REBUILD_DETAIL, open: true },
     },

@@ -109,7 +109,7 @@ test("Browse strips reserved metadata from unowned HTML", () => {
     entries: [],
     generatedBy: "mokly",
     sourceFiles: [],
-    schemaVersion: 5,
+    schemaVersion: 7,
   });
   const original = `<!doctype html><html><body><a data-mokly-link="home" DATA-MOKLY-LINK="details" data-mokly-target="_top" DATA-MOKLY-TARGET="_blank" href="./home.html">Home</a></body></html>`;
   const adapted = adaptBrowseDocument(original, "unowned.html", catalogue);
@@ -217,22 +217,22 @@ test("Browse authenticates generated legacy links from their manifest owner", as
     "legacy/compact.mobile.source.ts",
   );
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const original = compilation.outputs.get("notice.html") ?? "";
+  const original = compilation.outputs.get("pages/notice.html") ?? "";
   const adapted = adaptBrowseDocument(
     original,
-    "notice.html",
+    "pages/notice.html",
     createCatalogue(compilation.manifest),
   );
 
-  assert.match(adapted, /href="\.\/screens\/details\.desktop\.html"/);
+  assert.match(adapted, /href="\.\.\/screens\/details\.desktop\.html"/);
   assert.match(adapted, /data-mokly-link="details"/);
 
-  const mobileRoute = "compact.mobile.html";
+  const mobileRoute = "pages/compact.html";
   const mobile = adaptBrowseDocument(
     compilation.outputs.get(mobileRoute) ?? "",
     mobileRoute,
     createCatalogue(compilation.manifest),
   );
-  assert.match(mobile, /href="\.\/screens\/details\.desktop\.html"/);
+  assert.match(mobile, /href="\.\.\/screens\/details\.desktop\.html"/);
   assert.match(mobile, /data-mokly-link="details"/);
 });

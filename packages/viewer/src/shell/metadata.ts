@@ -1,17 +1,21 @@
-import type { Manifest, ManifestEntry, ManifestV5 } from "../registry/types.js";
-import type { ReviewResultV3 } from "../review/component_types.js";
+import type {
+  HistoricalManifest,
+  HistoricalManifestEntry,
+  ManifestV7,
+} from "../registry/types.js";
+import type { ReviewResultV4 } from "../review/component_types.js";
 import type { ScreenResourceEvidence, ViewReview } from "../review/types.js";
 
 /** One private live-index entry with resolved Live-preview eligibility. */
 export type CatalogueIndexEntry =
   | (Extract<
-      ManifestV5["entries"][number],
+      ManifestV7["entries"][number],
       { kind: "component" | "screen" }
     > & { interactive: boolean })
-  | Exclude<ManifestV5["entries"][number], { kind: "component" | "screen" }>;
+  | Exclude<ManifestV7["entries"][number], { kind: "component" | "screen" }>;
 
 export type CatalogueMetadata =
-  | Manifest
+  | ManifestV7
   | {
       schemaVersion: "live-index-1";
       entries: readonly CatalogueIndexEntry[];
@@ -19,8 +23,7 @@ export type CatalogueMetadata =
       sourceFiles: readonly string[];
     };
 export interface RemovedEntrySnapshot {
-  entry: Exclude<ManifestEntry, { kind: "collection" }>;
-  ancestors: readonly { id: string; title: string }[];
+  entry: HistoricalManifestEntry | ManifestV7["entries"][number];
   snapshotId?: string;
 }
 /**
@@ -29,12 +32,12 @@ export interface RemovedEntrySnapshot {
  * it without depending on the build.
  */
 export interface ScreenViewChanges {
-  route: string;
+  id: string;
   views: readonly Pick<ViewReview, "colorScheme" | "state" | "viewport">[];
 }
 export interface ShellEvidence {
-  baseline: Manifest;
-  result?: ReviewResultV3;
+  baseline: HistoricalManifest;
+  result?: ReviewResultV4;
   screenEvidence?: readonly ScreenResourceEvidence[];
   screenViews?: readonly ScreenViewChanges[];
 }

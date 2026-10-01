@@ -1,25 +1,14 @@
-import { spawn, type ChildProcess } from "node:child_process";
 import fs from "node:fs";
-import path from "node:path";
 
 import { expect, test, type Locator } from "@playwright/test";
 
-import {
-  createFixture,
-  removeFixture,
-  reparentedEntrySource,
-  repositoryRoot,
-  type TestFixture,
-} from "../helpers/fixture.js";
+import { reparentedEntrySource } from "../helpers/fixture.js";
 
+import { startWatchedServe, type WatchedServe } from "./watched_serve.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 import { expectFrameSource } from "./workspace_actions.js";
 
-const cli = path.join(repositoryRoot, "dist/cli/bin.js");
-
-let fixture: TestFixture;
-let child: ChildProcess;
-let url: string;
+let server: WatchedServe;
 
 async function toggleDisclosure(disclosure: Locator): Promise<void> {
   const toggled = disclosure.evaluate(
@@ -32,44 +21,18 @@ async function toggleDisclosure(disclosure: Locator): Promise<void> {
         );
       }),
   );
-  await disclosure.locator("summary").click();
+  await disclosure.locator(":scope > summary").click();
   await toggled;
 }
 
 test.beforeAll(async () => {
-  fixture = await createFixture(reparentedEntrySource("screens"), {
+  server = await startWatchedServe(reparentedEntrySource("screens"), {
     extraConfig: `colorSchemes: ["light", "dark"],`,
-  });
-  child = spawn(
-    "node",
-    [cli, "serve", "--config", fixture.configPath, "--port", "0"],
-    {
-      stdio: ["ignore", "pipe", "pipe"],
-    },
-  );
-  url = await new Promise<string>((resolve, reject) => {
-    let buffered = "";
-    const timer = setTimeout(
-      () => reject(new Error(`serve did not start: ${buffered}`)),
-      30_000,
-    );
-    child.stdout?.on("data", (chunk: Buffer) => {
-      buffered += chunk.toString();
-      const match = buffered.match(/Mokly listening at (http:\/\/[^\s]+)/);
-      if (match?.[1]) {
-        clearTimeout(timer);
-        resolve(match[1]);
-      }
-    });
-    child.on("exit", (code) =>
-      reject(new Error(`serve exited early with ${code}: ${buffered}`)),
-    );
   });
 });
 
 test.afterAll(async () => {
-  if (child && child.exitCode === null) child.kill("SIGTERM");
-  if (fixture) await removeFixture(fixture);
+  if (server) await server.stop();
 });
 
 test("watched serve rebuilds and reloads after an authored change", async ({
@@ -80,26 +43,26 @@ test("watched serve rebuilds and reloads after an authored change", async ({
     releaseFirstEventRequest = resolve;
   });
   let blockFirstEventRequest = true;
-  await page.route(`${url}/__mokly/events`, async (route) => {
+  await page.route(`${server.url}/__mokly/events`, async (route) => {
     if (blockFirstEventRequest) {
       blockFirstEventRequest = false;
       await firstEventRequestBlocked;
     }
     await route.continue();
   });
-  await page.goto(`${url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/screens/home.html`);
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   const screens = page.locator(
-    'details[data-nav-collection="collection:screens"]',
+    'details[data-nav-folder="folder:Fixture/Screens"]',
   );
   const archive = page.locator(
-    'details[data-nav-collection="collection:archive"]',
+    'details[data-nav-folder="folder:Fixture/Archive"]',
   );
   await expect(screens).toHaveAttribute("open", "");
   await toggleDisclosure(screens);
   await expect(screens).not.toHaveAttribute("open", "");
   await expect(archive).not.toHaveAttribute("open", "");
-  await page.fill("[data-mokly-search]", "html");
+  await page.fill("[data-mokly-search]", "home");
   await expect(screens).toHaveAttribute("open", "");
   await expect(archive).toHaveAttribute("open", "");
   await chooseViewport(page, "mobile");
@@ -117,7 +80,7 @@ test("watched serve rebuilds and reloads after an authored change", async ({
   await page.setViewportSize({ height: 900, width: 420 });
   await page.click("[data-mokly-menu]");
   await fs.promises.writeFile(
-    fixture.entryPath,
+    server.fixture.entryPath,
     reparentedEntrySource("screens", {
       body: '<a href="mock:details">Details</a><p data-watch-version="2">Reloaded</p>',
     }),
@@ -126,7 +89,9 @@ test("watched serve rebuilds and reloads after an authored change", async ({
     .poll(async () => {
       try {
         return (
-          await (await fetch(`${url}/static/screens/home.mobile.html`)).text()
+          await (
+            await fetch(`${server.url}/static/screens/home.mobile.html`)
+          ).text()
         ).includes('data-watch-version="2"');
       } catch {
         return false;
@@ -140,7 +105,7 @@ test("watched serve rebuilds and reloads after an authored change", async ({
       .locator('[data-watch-version="2"]'),
   ).toHaveText("Reloaded", { timeout: 45_000 });
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
-  await expect(page.locator("[data-mokly-search]")).toHaveValue("html");
+  await expect(page.locator("[data-mokly-search]")).toHaveValue("home");
   await expect(screens).toHaveAttribute("open", "");
   await expect(archive).toHaveAttribute("open", "");
   await expect(page.locator(".mbk-frame-mobile")).toBeVisible();
@@ -174,20 +139,20 @@ test("watched serve rebuilds and reloads after an authored change", async ({
 test("watched reload reopens collapsed active route ancestry", async ({
   page,
 }) => {
-  await page.goto(`${url}/view/screens/home.html`);
+  await page.goto(`${server.url}/view/screens/home.html`);
   const screens = page.locator(
-    'details[data-nav-collection="collection:screens"]',
+    'details[data-nav-folder="folder:Fixture/Screens"]',
   );
   await expect(screens).toHaveAttribute("open", "");
   await toggleDisclosure(screens);
   await expect(screens).not.toHaveAttribute("open", "");
-  await page.fill("[data-mokly-search]", "html");
+  await page.fill("[data-mokly-search]", "home");
   await expect(screens).toHaveAttribute("open", "");
   await toggleDisclosure(screens);
   await expect(screens).not.toHaveAttribute("open", "");
 
   await fs.promises.writeFile(
-    fixture.entryPath,
+    server.fixture.entryPath,
     reparentedEntrySource("screens", {
       body: '<a href="mock:details">Details</a><p data-watch-version="3">Active route</p>',
     }),
@@ -198,93 +163,15 @@ test("watched reload reopens collapsed active route ancestry", async ({
       .frameLocator(".mbk-frame-mobile iframe")
       .locator('[data-watch-version="3"]'),
   ).toHaveText("Active route", { timeout: 45_000 });
-  await expect(page.locator("[data-mokly-search]")).toHaveValue("html");
+  await expect(page.locator("[data-mokly-search]")).toHaveValue("home");
   await expect(screens).toHaveAttribute("open", "");
   await page.fill("[data-mokly-search]", "");
   await expect(screens).toHaveAttribute("open", "");
 });
 
-test("watched reparenting moves navigation and crumbs together", async ({
-  page,
-}) => {
-  await page.goto(`${url}/view/screens/home.html`);
-  await expect(page.locator(".mbk-crumbs")).toHaveText("Fixture›Screens");
-  const screens = page.locator(
-    'details[data-nav-collection="collection:screens"]',
-  );
-  const archive = page.locator(
-    'details[data-nav-collection="collection:archive"]',
-  );
-  await toggleDisclosure(screens);
-  await expect(screens).not.toHaveAttribute("open", "");
-
-  await fs.promises.writeFile(
-    fixture.entryPath,
-    reparentedEntrySource("archive", { firstTitle: "Home Reloaded" }),
-  );
-
-  await expect(page.locator(".mbk-crumbs")).toHaveText("Fixture›Archive", {
-    timeout: 45_000,
-  });
-  await expect(
-    archive.locator('a[data-route="screens/home.html"]'),
-  ).toHaveAttribute("aria-current", "page");
-  await expect(archive).toHaveAttribute("open", "");
-  await expect(
-    screens.locator('a[data-route="screens/home.html"]'),
-  ).toHaveCount(0);
-  await expect(screens).not.toHaveAttribute("open", "");
-});
-
-test("duplicate titles retain independent disclosure across reloads", async ({
-  page,
-}) => {
-  await page.goto(`${url}/view/screens/home.html`);
-  await fs.promises.writeFile(
-    fixture.entryPath,
-    reparentedEntrySource("archive", {
-      archiveTitle: "Same title",
-      firstTitle: "Home Reloaded",
-      screensTitle: "Same title",
-    }),
-  );
-  const screens = page.locator(
-    'details[data-nav-collection="collection:screens"]',
-  );
-  const archive = page.locator(
-    'details[data-nav-collection="collection:archive"]',
-  );
-  await expect(screens.locator("summary .mbk-nav-label")).toHaveText(
-    "Same title",
-    { timeout: 45_000 },
-  );
-  await expect(archive.locator("summary .mbk-nav-label")).toHaveText(
-    "Same title",
-  );
-
-  await toggleDisclosure(screens);
-  await expect(screens).toHaveAttribute("open", "");
-  await toggleDisclosure(screens);
-  await expect(screens).not.toHaveAttribute("open", "");
-  await expect(archive).toHaveAttribute("open", "");
-  await expect
-    .poll(() =>
-      page.evaluate(() => localStorage.getItem("mokly:nav-disclosure:v2")),
-    )
-    .toContain("collection:pages:screens");
-
-  await page.reload();
-  await expect(screens).not.toHaveAttribute("open", "");
-  await expect(archive).toHaveAttribute("open", "");
-});
-
 test("watched serve shuts down cleanly", async () => {
-  const exited = new Promise<number | null>((resolve) => {
-    child.on("exit", (code) => resolve(code));
-  });
-  child.kill("SIGTERM");
-  expect(await exited).toBe(0);
+  expect(await server.stop()).toBe(0);
   await expect(async () => {
-    await fetch(`${url}/`);
+    await fetch(`${server.url}/`);
   }).rejects.toThrow();
 });

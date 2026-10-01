@@ -18,11 +18,11 @@ export interface WorkspaceHydrationState {
 /** Browser state captured for one automatic watched reload. */
 export interface ShellRecoverySnapshot {
   changesStatus?: LiveChangesStatus;
-  closedCollectionIds: readonly string[];
+  disclosures: Readonly<Record<string, boolean>> | null;
   colorScheme: ViewerSelection["colorScheme"];
   detailsOpen: boolean;
   drawerOpen: boolean;
-  filterBaselineClosedCollectionIds: readonly string[] | null;
+  filterBaselineDisclosures: Readonly<Record<string, boolean>> | null;
   navScroll: number;
   /** Carries Live across a watched reload; older payloads omit it. */
   previewMode?: PreviewMode;
@@ -75,15 +75,6 @@ export interface ShellState {
   selection: ViewerSelection;
   tagPickerIndex: number;
   tagPickerOpen: boolean;
-}
-
-/** Convert disclosure values into the persisted closed-key representation. */
-export function closedDisclosures(
-  disclosures: Readonly<Record<string, boolean>>,
-): readonly string[] {
-  return Object.entries(disclosures).flatMap(([key, open]) =>
-    open ? [] : [key],
-  );
 }
 
 /** Apply open values to a copy without mutating state supplied by React. */

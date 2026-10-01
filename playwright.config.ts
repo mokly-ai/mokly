@@ -8,6 +8,11 @@ if (!Number.isSafeInteger(port) || port < 1 || port > 65_535) {
   );
 }
 
+const hydrationSpecs = "**/*hydration*.spec.ts";
+const projectUse = {
+  channel: process.env["PLAYWRIGHT_CHANNEL"] ?? "chrome",
+};
+
 /** Browser regression configuration for the served Mokly shell. */
 export default defineConfig({
   forbidOnly: true,
@@ -16,21 +21,26 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: {
-        channel: process.env["PLAYWRIGHT_CHANNEL"] ?? "chrome",
-      },
+      testIgnore: hydrationSpecs,
+      use: projectUse,
+    },
+    {
+      name: "hydration",
+      testMatch: hydrationSpecs,
+      use: projectUse,
     },
   ],
   reporter: [["list"]],
   retries: 0,
   testDir: "tests/browser",
+  testMatch: "**/*.spec.ts",
   timeout: 60_000,
   use: {
     baseURL: `http://127.0.0.1:${port}`,
     trace: "retain-on-failure",
   },
   webServer: {
-    command: `node dist/cli/bin.js serve --config examples/basic/mokly.config.ts --port ${port} --no-watch`,
+    command: `node dist/cli/bin.js serve --config examples/basic/mokly.config.ts --base HEAD --port ${port} --no-watch`,
     reuseExistingServer: false,
     url: `http://127.0.0.1:${port}/`,
   },

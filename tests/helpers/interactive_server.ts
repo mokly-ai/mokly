@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { viewRoute } from "@mokly/viewer/data";
+
 import { prepareLiveRuntime } from "../../dist/build/live_runtime.js";
 import { loadConfig } from "../../dist/config/load.js";
 import type {
@@ -16,6 +18,7 @@ import {
   type TestFixture,
   validEntrySource,
 } from "./fixture.js";
+import { replaceRequired } from "./required_replacement.js";
 
 interface PendingBundle {
   reject(error: unknown): void;
@@ -120,17 +123,19 @@ export async function interactiveServerFixture(
       server.interactivePort === undefined
         ? undefined
         : `http://127.0.0.1:${String(server.interactivePort)}`,
-    mobileRoute: home.fragments.mobile,
+    mobileRoute: viewRoute("screen", home.id, "mobile", "light"),
     runtime,
     server,
   };
 }
 
 /** Opt out only the fixture Home screen while keeping other views eligible. */
-export function optedOutFixtureSource(): string {
-  return validEntrySource().replace(
-    'defineScreen({ ...metadata, description: "Home screen"',
-    'defineScreen({ ...metadata, interactive: false, description: "Home screen"',
+export function optedOutFixtureSource(source = validEntrySource()): string {
+  return replaceRequired(
+    source,
+    'description: "Home screen"',
+    'interactive: false, description: "Home screen"',
+    "interactive opt-out",
   );
 }
 

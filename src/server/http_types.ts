@@ -1,4 +1,4 @@
-import type { ManifestV5 } from "@mokly/viewer/data";
+import type { ManifestV7 } from "@mokly/viewer/data";
 import type { RebuildStatus } from "@mokly/viewer/runtime";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
@@ -26,7 +26,7 @@ export interface ServerOptions {
   /** Reuse a validated startup or publication generation without rereading metadata. */
   snapshot?: CatalogueSnapshot;
   componentRuntime?: ComponentRuntime;
-  changedRoutes?: readonly string[];
+  changedIds?: readonly string[];
   /** Precomputed component and screen evidence for the immutable generation. */
   componentChanges?: ComponentChangeSnapshot;
   componentChangeSource?: ComponentChangeSource;
@@ -49,7 +49,7 @@ export interface ServerOptions {
 
 /** Running server lifecycle and update-stream boundary. */
 export interface RunningServer {
-  completeCatalogue?(manifest: ManifestV5, generation: string): boolean;
+  completeCatalogue?(manifest: ManifestV7, generation: string): boolean;
   close(): Promise<void>;
   interactiveOrigin?: string;
   interactivePort?: number;

@@ -30,8 +30,8 @@ import {
 import { HYDRATED_EVENT } from "./nav_resize.js";
 import type { StaticWorkspaceEvidence } from "./static_workspace_evidence.js";
 
-export const REACT_SHELL_BUNDLE = "react-shell.js";
-export const REACT_HOST_BUNDLE = "react-host.js";
+const REACT_SHELL_BUNDLE = "react-shell.js";
+const REACT_HOST_BUNDLE = "react-host.js";
 
 /** Render the standalone document without changing the existing shell tree. */
 export function StandaloneShellDocument({

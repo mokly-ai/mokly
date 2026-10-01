@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { entryRoute } from "@mokly/viewer/data";
+
 import {
   attribute,
   byClass,
@@ -17,22 +19,13 @@ import {
 } from "./helpers/design_interactive.js";
 
 const OWNING = [
-  ["design-interactive-overview", "design/interactive/overview.html"],
-  ["design-interactive-static", "design/interactive/modes/static.html"],
-  ["design-interactive-preparing", "design/interactive/modes/preparing.html"],
-  [
-    "design-interactive-unavailable",
-    "design/interactive/modes/unavailable.html",
-  ],
-  [
-    "design-interactive-component",
-    "design/interactive/workspace/component.html",
-  ],
-  ["design-interactive-screen", "design/interactive/workspace/screen.html"],
-  [
-    "design-interactive-static-catalogue",
-    "design/interactive/workspace/static-only.html",
-  ],
+  ["design-interactive-overview", "Static and Live"],
+  ["design-interactive-static", "Preview states"],
+  ["design-interactive-preparing", "Preview states"],
+  ["design-interactive-unavailable", "Preview states"],
+  ["design-interactive-component", "Component workspace"],
+  ["design-interactive-screen", "Component workspace"],
+  ["design-interactive-static-catalogue", "Component workspace"],
 ] as const;
 
 /**
@@ -49,10 +42,11 @@ const REBUILD_STATUS_CARRIERS = [
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: the Static and Live gallery owns seven light-only artboards`, async () => {
-    for (const [id, route] of OWNING) {
+    for (const [id, folder] of OWNING) {
       const { entry, document } = await designDocument(id, viewport);
-      assert.equal(entry.route, route);
-      assert.equal(entry.darkFragments, undefined);
+      assert.equal(entryRoute("screen", entry.id), `screens/${id}.html`);
+      assert.equal(entry.navPath.at(-1), folder);
+      assert.deepEqual(entry.colorSchemes, ["light"]);
       assert.equal(byClass(document, "mbk-shell").length, 1, id);
       assert.equal(
         elements(document, (node) => node.tagName === "script").length,

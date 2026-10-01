@@ -1,6 +1,11 @@
 /** Strict shared validation for private control edits, separate from renderer execution. */
 
-import type { ComponentPropsData, PropValue } from "@mokly/viewer";
+import type {
+  ComponentPropsData,
+  ManifestComponent,
+  ManifestComponentVariant,
+  PropValue,
+} from "@mokly/viewer";
 import {
   decodeProps,
   decodeValue,
@@ -11,6 +16,7 @@ import {
   ComponentRenderError,
   type ComponentRenderRequest,
   generatedViews,
+  isManifestComponentVariant,
 } from "@mokly/viewer/data";
 
 import type { CatalogueMetadata } from "../registry/catalogue_index.js";
@@ -56,19 +62,25 @@ export function validateRenderRequest(
         "stale-generation",
         "The catalogue changed. Reload to continue editing.",
       );
-    const component = manifest.entries.find(
-      (entry) => entry.kind === "component" && entry.id === item.componentId,
+    const entries: readonly CatalogueMetadata["entries"][number][] =
+      manifest.entries;
+    const component = entries.find(
+      (entry): entry is ManifestComponent & { interactive?: boolean } =>
+        componentParent(entry) && entry.id === item.componentId,
     );
-    const variant =
-      component?.kind === "component" &&
-      component.variants.find((variant) => variant.id === item.variantId);
-    if (component?.kind !== "component" || !variant)
+    const variant = entries.find(
+      (entry): entry is ManifestComponentVariant & { interactive?: boolean } =>
+        componentVariant(entry) &&
+        entry.id === item.variantId &&
+        entry.variantOf === item.componentId,
+    );
+    if (!component || !variant)
       throw new ComponentRenderError(
         "unknown-entry",
         "This component or variant is unavailable.",
       );
     if (
-      !generatedViews(component).some(
+      !generatedViews(variant).some(
         (view) =>
           view.variantId === item.variantId &&
           view.viewport === item.viewport &&
@@ -108,4 +120,16 @@ export function validateRenderRequest(
       "Check the prop values and their allowed limits.",
     );
   }
+}
+
+function componentParent(
+  entry: CatalogueMetadata["entries"][number],
+): entry is ManifestComponent & { interactive?: boolean } {
+  return entry.kind === "component" && !isManifestComponentVariant(entry);
+}
+
+function componentVariant(
+  entry: CatalogueMetadata["entries"][number],
+): entry is ManifestComponentVariant & { interactive?: boolean } {
+  return entry.kind === "component" && isManifestComponentVariant(entry);
 }

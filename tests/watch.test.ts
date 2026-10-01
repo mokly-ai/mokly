@@ -16,7 +16,7 @@ import { restartWithRecovery } from "../dist/server/serve_lifecycle.js";
 import {
   type ProcessSupervisor,
   type ProcessSupervisorFactory,
-} from "../dist/server/supervisor.js";
+} from "../dist/server/supervisor_types.js";
 import {
   NotificationGate,
   WatchActionQueue,

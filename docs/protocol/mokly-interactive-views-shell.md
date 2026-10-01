@@ -2,10 +2,8 @@
 
 ## Delivery Status
 
-Implemented by Milestones 5, 7 and 9 of the
-[interactive views plan](../../plans/interactive-views.md), on the private
-route-scoped eligibility delivered in Milestone 6. This contract owns how the
-React shell offers, selects and presents Static and Live. The
+Implemented on private route-scoped eligibility. This contract owns how the
+React shell offers, selects, and presents Static and Live. The
 [interactive views overview](./mokly-interactive-views.md) owns configuration
 and the per-entry opt-out, the
 [Live runtime contract](./mokly-interactive-views-runtime.md) owns the document
@@ -18,7 +16,7 @@ approved presentation.
 
 The view toolbar shows a segmented control named "Preview mode" with Static
 and Live when the private descriptor exists, the routed view is a current
-screen or a current saved component variant, and that entry is eligible under
+screen or a current component variant, and that entry is eligible under
 [Eligibility](#eligibility). It sits after the Dark preview toggle, or after
 the viewport control when the shell shows no Dark preview toggle, and before
 Highlight components. The standalone top-bar Appearance selector remains the

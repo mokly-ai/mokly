@@ -42,7 +42,7 @@ const model = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v1.json",
+        "../../../docs/protocol/fixtures/catalogue-v3.json",
         import.meta.url,
       ),
       "utf8",
@@ -57,13 +57,19 @@ const descriptor: ViewerInteractiveDescriptor = {
   state: "idle",
 };
 const component = catalogue.byId.get("action");
+const componentVariant = catalogue.byId.get("action-default");
 const screen = catalogue.byId.get("home");
-if (component?.kind !== "component" || screen?.kind !== "screen")
+if (
+  component?.kind !== "component" ||
+  componentVariant?.kind !== "component" ||
+  !("variantOf" in componentVariant) ||
+  screen?.kind !== "screen"
+)
   throw new Error("Missing preview mode fixtures");
 const savedVariant: WorkspaceVariant = {
   comparisonEligible: false,
   removed: false,
-  value: component.variants[0]!,
+  value: componentVariant,
 };
 
 function initialState() {
@@ -86,20 +92,13 @@ test("only current screens and saved variants name a Live view", () => {
       comparisonEligible: false,
       variant: savedVariant,
     }),
-    { entryId: "action", variantId: "default" },
+    { entryId: "action", variantId: "action-default" },
   );
   assert.equal(
     livePreviewView(
       { ...screenData, removed: true },
       { comparisonEligible: false },
     ),
-    undefined,
-  );
-  assert.equal(
-    livePreviewView(componentData, {
-      comparisonEligible: false,
-      error: "Choose one saved variant.",
-    }),
     undefined,
   );
   assert.equal(

@@ -1,14 +1,17 @@
 // Which of an entry's generated views a classification marks changed. A ready
-// comparison result is authoritative; a screen-only catalogue, which never
-// generates comparisons, falls back to the per-view decisions the same
-// classification pass records. Unknown evidence stays an empty list, so the
-// workspace never claims a view is unmodified when it has not examined one.
+// comparison result is authoritative; legacy or pending evidence without a
+// result falls back to the per-view decisions the same classification pass
+// records. Unknown evidence stays an empty list, so the workspace never claims
+// a view is unmodified when it has not examined one.
 
-import type { ManifestComponent } from "../components/manifest_types.js";
+import type {
+  ManifestComponent,
+  ManifestComponentVariant,
+} from "../components/manifest_types.js";
 import type { ManifestScreen } from "../registry/types.js";
 import type {
   ComponentReview,
-  ScreenReviewV3,
+  ScreenReviewV4,
 } from "../review/component_types.js";
 import type { ReviewState, ViewReview } from "../review/types.js";
 
@@ -35,9 +38,9 @@ const CHANGED_STATES: ReadonlySet<ReviewState> = new Set<ReviewState>([
  * component's saved variant; a screen ignores it.
  */
 export function changedViews(
-  entry: ManifestComponent | ManifestScreen,
+  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV3 | undefined,
+  comparison: ComponentReview | ScreenReviewV4 | undefined,
   variantId?: string,
 ): readonly ChangedView[] {
   return orderChangedViews(
@@ -49,9 +52,9 @@ export function changedViews(
 
 /** Every known state for one screen or component saved variant. */
 export function viewStates(
-  entry: ManifestComponent | ManifestScreen,
+  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV3 | undefined,
+  comparison: ComponentReview | ScreenReviewV4 | undefined,
   variantId?: string,
 ): readonly ViewState[] | undefined {
   return evidenceViews(entry, context, comparison, variantId)?.map(
@@ -64,9 +67,9 @@ export function viewStates(
  * are both retained, including reviews that are not present in the manifest.
  */
 export function changedViewsBySelection(
-  entry: ManifestComponent | ManifestScreen,
+  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV3 | undefined,
+  comparison: ComponentReview | ScreenReviewV4 | undefined,
   variantIds: readonly string[] = [],
 ): ChangedViewsBySelection {
   if (entry.kind === "screen")
@@ -76,13 +79,7 @@ export function changedViewsBySelection(
       ? comparison.variants.map(({ id }) => id)
       : [];
   return Object.fromEntries(
-    [
-      ...new Set([
-        ...entry.variants.map(({ id }) => id),
-        ...variantIds,
-        ...reviewedIds,
-      ]),
-    ].map((variantId) => [
+    [...new Set([...variantIds, ...reviewedIds])].map((variantId) => [
       variantId,
       changedViews(entry, context, comparison, variantId),
     ]),
@@ -94,9 +91,9 @@ export function changedViewsBySelection(
  * reader can preserve its route-level status instead of inventing evidence.
  */
 export function viewStatesBySelection(
-  entry: ManifestComponent | ManifestScreen,
+  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV3 | undefined,
+  comparison: ComponentReview | ScreenReviewV4 | undefined,
   variantIds: readonly string[] = [],
 ): ViewStatesBySelection {
   if (entry.kind === "screen") {
@@ -108,11 +105,7 @@ export function viewStatesBySelection(
       ? comparison.variants.map(({ id }) => id)
       : [];
   const evidence: Record<string, readonly ViewState[]> = {};
-  for (const variantId of new Set([
-    ...entry.variants.map(({ id }) => id),
-    ...variantIds,
-    ...reviewedIds,
-  ])) {
+  for (const variantId of new Set([...variantIds, ...reviewedIds])) {
     const states = viewStates(entry, context, comparison, variantId);
     if (states !== undefined) evidence[variantId] = states;
   }
@@ -121,7 +114,7 @@ export function viewStatesBySelection(
 
 /** Read the screen or selected saved variant without a caller inventing a key. */
 export function selectedChangedViews(
-  entry: ManifestComponent | ManifestScreen,
+  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   evidence: ChangedViewsBySelection,
   variantId?: string,
 ): readonly ChangedView[] {
@@ -130,9 +123,9 @@ export function selectedChangedViews(
 }
 
 function evidenceViews(
-  entry: ManifestComponent | ManifestScreen,
+  entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV3 | undefined,
+  comparison: ComponentReview | ScreenReviewV4 | undefined,
   variantId?: string,
 ): readonly ReviewedView[] | undefined {
   const reviewed =
@@ -145,7 +138,7 @@ function evidenceViews(
     reviewed ??
     (entry.kind === "screen"
       ? context.componentChanges?.screenViews?.find(
-          (item) => item.route === entry.route,
+          (item) => item.id === entry.id,
         )?.views
       : undefined)
   );

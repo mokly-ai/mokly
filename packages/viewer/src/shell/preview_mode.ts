@@ -51,7 +51,7 @@ export function livePreviewView(
   data: WorkspaceData,
   selection: WorkspaceVariantSelection,
 ): LivePreviewView | undefined {
-  if (data.removed || selection.error) return;
+  if (data.removed) return;
   if (data.entry.kind === "screen") return { entryId: data.entry.id };
   const variant = selection.variant;
   return variant && !variant.removed
@@ -71,7 +71,7 @@ export function liveViewKey(generation: string, view: LivePreviewView): string {
 
 /**
  * Read eligibility only from the private workspace adopted for this exact
- * entry and route. Without one, the view stays `pending` while its route
+ * entry. Without one, the view stays `pending` while its route
  * evidence is still expected and is `ineligible` once that request settled.
  */
 export function liveEligibility(input: {
@@ -80,11 +80,7 @@ export function liveEligibility(input: {
   workspace: WorkspaceData | undefined;
 }): LiveEligibility {
   const { entry, workspace } = input;
-  if (
-    workspace?.entry.id === entry.id &&
-    workspace.entry.kind === entry.kind &&
-    workspace.entry.route === entry.route
-  )
+  if (workspace?.entry.id === entry.id && workspace.entry.kind === entry.kind)
     return workspace.interactive === true ? "eligible" : "ineligible";
   return input.pending ? "pending" : "ineligible";
 }

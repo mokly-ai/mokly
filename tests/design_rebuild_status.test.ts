@@ -3,6 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { entryRoute } from "@mokly/viewer/data";
+
 import { REBUILD_DETAIL } from "../examples/basic/entries/design/parts/rebuild_status.js";
 
 import {
@@ -42,25 +44,24 @@ const PREVIEW_REGIONS = [
   "ce-canvas",
 ];
 
-test("Update status owns five light-only states, the failure notice first", async () => {
+test("Update status owns the five approved light-only states", async () => {
   const { manifest } = await designCatalogue;
-  const page = manifest.entries.find(
-    (entry) => entry.id === "design-rebuild-status",
-  );
-  assert.ok(page?.kind === "collection");
-  assert.equal(page.title, "Update status");
   assert.deepEqual(
-    page.childIds,
-    REBUILD_STATES.map(({ id }) => id),
+    manifest.entries
+      .filter(
+        (entry) =>
+          entry.kind === "screen" && entry.navPath.at(-1) === "Update status",
+      )
+      .map(({ id }) => id)
+      .sort(),
+    REBUILD_STATES.map(({ id }) => id).sort(),
   );
-  const design = manifest.entries.find((entry) => entry.id === "design");
-  assert.ok(design?.kind === "collection");
-  assert.ok(design.childIds.includes("design-rebuild-status"));
+  assert.equal(REBUILD_STATES[0]?.id, "design-rebuild-failure");
   for (const state of REBUILD_STATES) {
     const entry = manifest.entries.find((entry) => entry.id === state.id);
     assert.ok(entry?.kind === "screen", state.id);
-    assert.equal(entry.route, state.route);
-    assert.equal(entry.darkFragments, undefined, state.id);
+    assert.equal(entryRoute("screen", entry.id), `screens/${state.id}.html`);
+    assert.deepEqual(entry.colorSchemes, ["light"], state.id);
   }
 });
 

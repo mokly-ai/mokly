@@ -57,15 +57,17 @@ async function execute(
 ): Promise<number> {
   const startedAt = environment.now();
   if (arguments_.command === "publish") {
-    const { runPublish } = await import("./publish.js");
-    await timeAsync("publish", () =>
-      runPublish(arguments_, cwd, reporter, environment.env),
+    const publish = await import("./publish.js");
+    const outputPresentation = await import("./publish_output.js");
+    const result = await timeAsync("publish", () =>
+      publish.runPublish(arguments_, cwd, reporter, environment.env),
     );
-    reporter.summary(
-      "Published Mokly catalogue.\n",
-      "Published Mokly catalogue",
-      environment.now() - startedAt,
+    const output = outputPresentation.publishOutput(
+      result,
+      arguments_.token ?? environment.env.MOKLY_TOKEN,
     );
+    reporter.summary(output.plain, output.rich, environment.now() - startedAt);
+    if (output.viewerUrl) reporter.write(`${output.viewerUrl}\n`);
     return 0;
   }
   const runtimeStartup =
@@ -93,6 +95,8 @@ async function execute(
         timeAsync("export", () =>
           runExport(config, {
             diagnostic: (message) => reporter.runtimeDiagnostic(message),
+            incompatibleBaseline: (commit) =>
+              reporter.incompatibleBaseline(commit),
             outDir: arguments_.out ?? "",
             ...(arguments_.base !== undefined ? { base: arguments_.base } : {}),
           }),

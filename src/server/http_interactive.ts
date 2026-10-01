@@ -32,6 +32,22 @@ export function defaultInteractivePort(appPort: number): number {
   return appPort < 65_535 ? appPort + 1 : 0;
 }
 
+/** Require retained Live sources exactly when this server enables Live. */
+export function validateInteractiveSources(
+  config: ResolvedConfig,
+  runtime?: ComponentRuntime,
+): void {
+  if (!runtime) return;
+  const captured = runtime.interactiveSources !== undefined;
+  if ((config.interactive === "serve") !== captured)
+    throw new MoklyError(
+      "server-failed",
+      config.interactive === "serve"
+        ? "Live runtime is missing its accepted source capture"
+        : "non-Live runtime must not retain an interactive source capture",
+    );
+}
+
 /** Start Live only after the app port resolves, closing app ownership on failure. */
 export async function startInteractiveHttp(
   input: StartInteractiveHttpInput,

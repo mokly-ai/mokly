@@ -119,7 +119,6 @@ interface MoklyConfig {
     }[];
   };
   compatibility?: {
-    readManifestV2?: boolean; // false
     transformer?: string;
   };
 }
@@ -142,31 +141,9 @@ order.
 `baselineBuild` is invalid in committed mode, including a staged migration;
 omit `generatedOutput` or set it to `"derived"` when supplying a
 repository-specific recipe.
-`interactive` defaults to `"off"`, which builds no browser bundle and shows no
-Static/Live control. `"serve"` enables Live views in local Serve only, as
-defined by the
-[interactive views configuration](./mokly-interactive-views.md#configuration);
-unknown strings are `config-invalid`. Build, check, export and publication
-ignore the option and emit identical bytes in both values. Serve's
-`--interactive-port` and `--interactive-origin` options are rejected when the
-resolved value is `"off"`. The Live listener starts at the resolved app port
-plus one unless `--interactive-port` supplies another start; either listener
-advances past occupied ports, `0` delegates to the operating system, and
-`--strict-port` makes both fail instead. When the app port is 65535, the
-otherwise-default Live port delegates to the operating system even in strict
-mode because no adjacent port exists. A watched child retains both resolved
-ports across restarts.
-
-`--interactive-origin` is a canonical browser-facing HTTP(S) origin for a
-forwarding layer; it does not change the loopback bind. Its exact authority is
-the only additional Live Host value admitted, and forwarded headers never
-grant access. Because the forwarded shell authority is not otherwise known,
-this explicit mode permits HTTP(S) frame ancestors and accepts the frame
-adapter's canonical, non-frame `mokly-host`; default local mode names only both
-loopback spellings at the resolved app port. Forwarding that changes either a
-browser-facing host name or only a port number requires this explicit origin;
-local derivation and policy always use Serve's socket ports. The private shell descriptor
-carries the resolved Live port and the explicit origin only when supplied.
+`interactive` accepts only `"off"` (the default) or `"serve"`. Its command,
+port, forwarding, and static-output behavior follows the
+[interactive host integration contract](./mokly-interactive-host-integration.md#configuration-and-listener-lifecycle).
 Derived Check accepts absent local generated output, rejects Git-tracked routes,
 the manifest and cache files, and prints their paths plus ignore guidance.
 Build writes transactionally in both modes. Serve and export await preparation
@@ -217,8 +194,8 @@ stylesheets, including transitive imports, are attributed by rule under
 a view's dependency evidence only when a changed rule could match its before or
 after document, or analysis is unresolved. Otherwise it is examined and excluded.
 Shared-impact globs cannot override this exclusion or add unreferenced public
-files to Changes; they retain the existing ownership and membership rules in
-[Changes](./mokly-changes.md) and [component attribution](./mokly-component-changes.md).
+files to Changes, and a glob match alone never adds an entry; see
+[component attribution](./mokly-component-changes.md#dependencies-and-styles).
 
 `moduleResolution` has no defaults beyond esbuild's platform behavior. Package
 roots must be in-repository directories containing `package.json`; their
@@ -228,10 +205,9 @@ deduplicated lists, while loader keys are extensions and values are supported
 esbuild loader names. React and React DOM still resolve through Mokly's
 consumer-peer plugin so these options cannot introduce a second React runtime.
 
-The `legacy` config key is rejected, including `legacy: undefined`. Register
-complete documents explicitly with `definePage` or nested `page`, following the
-[source-preserving migration](./mokly-page-migration.md). Historical manifest
-compatibility does not restore source discovery or legacy configuration.
+The obsolete `legacy` config key is rejected, including `legacy: undefined`.
+Register every complete document explicitly with `definePage` or nested `page`;
+baseline compatibility never restores source discovery or old configuration.
 
 ## Entry Discovery
 
@@ -336,27 +312,5 @@ matches it, or stop re-exporting registry arrays.
 
 ## Public Exclusion Configuration
 
-`publicExclude?: readonly string[]` extends the defaults in the
-[source-protection contract](./mokly-source-protection.md#public-exclusions):
-`**/README`, `**/README.*`, `**/tsconfig.json`, and `**/tsconfig.*.json`.
-The case-folded defaults are prepended without mutating consumer input;
-omission and an empty array produce the defaults alone.
-The resolved list is frozen. Watched children require this already-resolved
-array and use the shared glob validator to adopt a frozen copy with exactly
-the transferred entries, without prepending defaults again. Missing, non-array
-or unsafe values reject the startup message. Repeated globs are harmless and
-do not fail config.
-
-Validate the array and each string at config load. A safe relative POSIX glob
-is nonempty and contains no absolute/drive/UNC prefix, backslash,
-colon, NUL/control character, or empty, `.` or `..` path segment. Reject
-whitespace-only strings, leading `!` negation, and leading `#` comment syntax.
-Use the repository's minimatch glob syntax; any brace-expanded alternative must
-also satisfy those path rules. Invalid input fails with the typed `config-invalid`
-error naming `publicExclude` and the offending item, before publication or serving.
-
-Match the whole candidate path relative to `mockupsDir`, not relative to
-`repoRoot` or the config directory, with case-insensitive and dotfile matching.
-For example, `publicExclude: ["internal/**"]` hides that directory's contents
-under `mockupsDir` in addition to every shipped default. Realpath aliases and
-all public-resource boundaries use the same source-protection policy.
+Defaults, validation, watched-child transfer, and matching for `publicExclude`
+follow the focused [public exclusion contract](./mokly-public-exclusions.md).

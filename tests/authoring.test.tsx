@@ -6,7 +6,6 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type {
-  CollectionInput,
   RegistryDefinition,
   ResolvedRegistryEntry,
   ScreenDefinition,
@@ -16,8 +15,9 @@ import type {
 import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
 import {
-  defineCollection,
   defineRoot,
+  defineComponent,
+  definePage,
   defineScreen,
   defineUseCase,
   MockLink,
@@ -29,6 +29,7 @@ import {
 import { validateEntry } from "../dist/registry/entry_validation.js";
 import type { RegistryViolation } from "../dist/registry/prepared_types.js";
 import { serializeReviewSentinels } from "../dist/renderer/sentinels.js";
+import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 
@@ -38,7 +39,7 @@ const validationConfig: ResolvedConfig = {
   generatedOutput: "committed",
   publicExclude: DEFAULT_PUBLIC_EXCLUDE,
   colorSchemes: ["light"],
-  compatibility: { readManifestV2: false },
+  compatibility: {},
   configPath: path.join(repositoryRoot, "mokly.config.ts"),
   entriesDir: path.join(repositoryRoot, "tests"),
   entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],
@@ -59,25 +60,14 @@ const screenBase = {
   id: "tagged-screen",
   mobile: "Mobile",
   relatedDocs: [],
-  route: "screens/tagged.html",
   title: "Tagged screen",
 } satisfies ScreenInput;
-
-const collectionBase: CollectionInput = {
-  childIds: ["tagged-screen"],
-  dependencies: [],
-  description: "Tagged collection",
-  id: "tagged-collection",
-  relatedDocs: [],
-  title: "Tagged collection",
-};
 
 const useCaseBase: UseCaseInput = {
   dependencies: [],
   description: "Tagged journey",
   id: "tagged-journey",
   relatedDocs: [],
-  route: "user-flows/tagged-journey.html",
   steps: [{ screenId: "tagged-screen" }],
   title: "Tagged journey",
 };
@@ -132,6 +122,53 @@ test("review material keys reject cyclic or non-finite state", () => {
   assert.throws(() => reviewMaterialKey({ value: Number.NaN }), /finite/);
 });
 
+test("definitions keep identity while shared helpers derive every document", () => {
+  const screenDefinition = defineScreen(screenBase);
+  const pageDefinition = definePage({
+    dependencies: [],
+    description: "Account guide",
+    id: "account-guide",
+    relatedDocs: [],
+    render: () => "<html><body>Guide</body></html>",
+    title: "Account guide",
+  });
+  const useCaseDefinition = defineUseCase(useCaseBase);
+  const componentDefinition = defineComponent({
+    dependencies: [],
+    description: "Action",
+    id: "action",
+    propSchema: { kind: "object", properties: {} },
+    relatedDocs: [],
+    render: () => "Action",
+    title: "Action",
+    variants: [{ id: "action-default", props: {}, title: "Default" }],
+  }).entries[0];
+
+  for (const definition of [
+    screenDefinition,
+    pageDefinition,
+    useCaseDefinition,
+    componentDefinition,
+  ])
+    assert.equal(Object.hasOwn(definition, "route"), false);
+  assert.equal(
+    entryRoute(screenDefinition.kind, screenDefinition.id),
+    "screens/tagged-screen.html",
+  );
+  assert.equal(
+    entryRoute(pageDefinition.kind, pageDefinition.id),
+    "pages/account-guide.html",
+  );
+  assert.equal(
+    entryRoute(useCaseDefinition.kind, useCaseDefinition.id),
+    "user-flows/tagged-journey.html",
+  );
+  assert.equal(
+    entryRoute(componentDefinition.kind, componentDefinition.id),
+    "components/action.html",
+  );
+});
+
 test("nested screens retain colorSchemes through root flattening", () => {
   const definitions = defineRoot({
     children: [
@@ -141,17 +178,16 @@ test("nested screens retain colorSchemes through root flattening", () => {
         desktop: <main>Desktop</main>,
         id: "nested-screen",
         mobile: <main>Mobile</main>,
-        slug: "nested",
         title: "Nested screen",
       }),
     ],
-    path: "screens",
   });
 
   const definition = definitions[0];
   assert.equal(definition?.kind, "screen");
   if (definition?.kind !== "screen") throw new Error("screen missing");
   assert.deepEqual(definition.colorSchemes, ["light"]);
+  assert.equal(Object.hasOwn(definition, "route"), false);
 });
 
 test("defineScreen flattens declared variants after their parent", () => {
@@ -163,7 +199,6 @@ test("defineScreen flattens declared variants after their parent", () => {
         desktop: "Empty desktop",
         id: "tagged-screen-empty",
         mobile: "Empty mobile",
-        slug: "empty",
         title: "Tagged screen, empty",
       },
     ],
@@ -192,7 +227,6 @@ test("nested screens keep their own tags and inherit none", () => {
         desktop: "Desktop",
         id: "tagged-nested",
         mobile: "Mobile",
-        slug: "tagged",
         tags: ["forms"],
         title: "Tagged nested",
       }),
@@ -201,11 +235,9 @@ test("nested screens keep their own tags and inherit none", () => {
         desktop: "Desktop",
         id: "untagged-nested",
         mobile: "Mobile",
-        slug: "untagged",
         title: "Untagged nested",
       }),
     ],
-    path: "screens",
   });
 
   if (tagged?.kind !== "screen" || untagged?.kind !== "screen") {
@@ -260,29 +292,23 @@ test("empty tags are valid and equivalent to absent tags", () => {
   );
 });
 
-test("collections reject a declared tags field", () => {
-  const taggedInput = { ...collectionBase, tags: ["forms"] };
-  const undefinedInput = { ...collectionBase, tags: undefined };
-
-  assert.deepEqual(
-    validateEntry(resolved(defineCollection(taggedInput)), validationConfig),
-    [tagProblem("tags are not supported on collections", "tagged-collection")],
-  );
-  assert.deepEqual(
-    validateEntry(resolved(defineCollection(undefinedInput)), validationConfig),
-    [tagProblem("tags are not supported on collections", "tagged-collection")],
-  );
-  assert.deepEqual(
-    validateEntry(resolved(defineCollection(collectionBase)), validationConfig),
-    [],
-  );
+test("top-level entries default to an empty navigation path", () => {
+  const entry = defineScreen(screenBase);
+  assert.deepEqual(entry.navPath, []);
+  assert.deepEqual(validateEntry(resolved(entry), validationConfig), []);
 });
 
-test("empty structural collections are valid", () => {
-  const empty = defineCollection({ ...collectionBase, childIds: [] });
-
-  assert.deepEqual(empty.childIds, []);
-  assert.deepEqual(validateEntry(resolved(empty), validationConfig), []);
+test("entry validation rejects Windows device names without changing tag grammar", () => {
+  const definition = defineScreen({ ...screenBase, id: "con" });
+  assert.deepEqual(validateEntry(resolved(definition), validationConfig), [
+    {
+      code: "invalid-id",
+      id: "con",
+      message: "id must be globally unique kebab-case",
+      sourceRelativePath,
+    },
+  ]);
+  assert.deepEqual(tagViolations(["con"]), []);
 });
 
 function tagViolations(tags: unknown): RegistryViolation[] {

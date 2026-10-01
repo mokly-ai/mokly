@@ -21,6 +21,5 @@ export const formsFilterVariant = {
   desktop: <FormsFilterDesktop />,
   id: "design-browse-tag-forms",
   mobile: <FormsFilterMobile />,
-  slug: "forms",
   title: "Forms filter",
 } satisfies ScreenVariantInput;

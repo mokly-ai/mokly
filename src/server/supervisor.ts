@@ -1,6 +1,6 @@
 /** Restart supervision retains ownership until each child's cleanup completes. */
 
-import type { ManifestV5 } from "@mokly/viewer/data";
+import type { ManifestV7 } from "@mokly/viewer/data";
 import type { RebuildStatus } from "@mokly/viewer/runtime";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
@@ -15,61 +15,17 @@ import {
   parsePreviewObservation,
   type PreviewObservation,
 } from "./demand/observation.js";
-import type { RebuildStatusPublisher } from "./rebuild_status.js";
+import type {
+  ProcessSupervisor,
+  ProcessSupervisorFactory,
+  ProcessSupervisorOptions,
+} from "./supervisor_types.js";
 import {
   childUpdateMessage,
   parseChildDiagnosticMessage,
   type ChangesStatus,
   type CatalogueUpdateKind,
 } from "./update_messages.js";
-
-/** Restartable child interface used by watched Serve. */
-export interface ProcessSupervisor extends RebuildStatusPublisher {
-  interactivePort?(): number | undefined;
-  completeCatalogue?(manifest: ManifestV5, generation: string): void;
-  onForeground?(callback: (active: boolean) => void): void;
-  onDiagnostic?(callback: (message: string) => void): void;
-  onPreviewResources?(
-    callback: (observation: PreviewObservation) => void,
-  ): void;
-  /** Stage the next child's graph, or update a child whose catalogue is unchanged. */
-  replaceComponentRuntime(
-    runtime: ComponentRuntime,
-    delivery: "stage" | "live",
-    version?: number,
-    changesStatus?: "pending" | "preparing",
-  ): void;
-  close(): Promise<void>;
-  notifyUpdate(
-    changedRoutes: readonly string[] | undefined,
-    componentChanges?: ComponentChangeSnapshot,
-    changesStatus?: ChangesStatus,
-    kind?: CatalogueUpdateKind,
-    baselineCommit?: string | null,
-  ): void;
-  /** Register the watched-runtime handler for a post-readiness child failure. */
-  onUnexpectedExit(callback: (error: Error) => void): void;
-  reserveUpdateVersion(): number;
-  restart(version?: number): Promise<number>;
-  start(version?: number): Promise<number>;
-}
-
-/** Factory seam for selecting the watched child-process implementation. */
-export interface ProcessSupervisorFactory {
-  create(
-    binPath: string,
-    baseArguments: readonly string[],
-    requestedPort: number,
-    options?: ProcessSupervisorOptions,
-  ): ProcessSupervisor;
-}
-
-/** Listener options retained across watched child restarts. */
-export interface ProcessSupervisorOptions {
-  interactiveOrigin?: string;
-  interactivePort?: number;
-  strictPort?: boolean;
-}
 
 /** Node child-process supervisor factory. */
 export class NodeProcessSupervisorFactory implements ProcessSupervisorFactory {
@@ -272,7 +228,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   }
 
   notifyUpdate(
-    changedRoutes: readonly string[] | undefined,
+    changedIds: readonly string[] | undefined,
     componentChanges?: ComponentChangeSnapshot,
     changesStatus?: ChangesStatus,
     kind?: CatalogueUpdateKind,
@@ -284,7 +240,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     child.send(
       childUpdateMessage(
         version,
-        changedRoutes,
+        changedIds,
         componentChanges,
         changesStatus,
         kind,
@@ -293,7 +249,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     );
   }
 
-  completeCatalogue(manifest: ManifestV5, generation: string): void {
+  completeCatalogue(manifest: ManifestV7, generation: string): void {
     if (
       this.#runtime?.generation !== generation ||
       !this.#child ||

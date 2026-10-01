@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { ReviewResultV3 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV4 } from "../packages/viewer/dist/review/component_types.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
@@ -66,15 +66,15 @@ test("Review fast and complete paths agree for a Git asset-byte change", async (
 
 async function equivalentReview(
   fixture: Awaited<ReturnType<typeof cssAttributionFixture>>,
-): Promise<ReviewResultV3> {
+): Promise<ReviewResultV4> {
   const fast = await fixture.compare(true);
   const complete = await fixture.compare(false);
   assert.deepEqual(fast.result, complete.result);
-  assert.equal(fast.result.schemaVersion, 3);
+  assert.equal(fast.result.schemaVersion, 4);
   return fast.result;
 }
 
-function reasonPaths(result: ReviewResultV3) {
+function reasonPaths(result: ReviewResultV4) {
   return [
     ...new Set(
       result.changes.flatMap((entry) =>

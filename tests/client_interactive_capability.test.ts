@@ -126,7 +126,7 @@ test("private Live event updates advance state only for stable identity", () => 
 });
 
 function request(): ViewerCapabilityRequest {
-  return { route: null, source: descriptor.source };
+  return { entryId: null, source: descriptor.source };
 }
 
 class InteractiveSource {

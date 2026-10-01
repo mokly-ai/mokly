@@ -9,16 +9,14 @@ import type {
 } from "../dist/review/selection_types.js";
 import { SelectedReviewRoutes } from "../dist/server/selected_review_routes.js";
 
-const route = "archive/removed.html";
+const id = "removed-page";
 const page = {
   declaredDependencies: [],
-  dependencies: [],
   description: "Removed page",
-  id: "removed-page",
+  id,
   kind: "page" as const,
   navPath: [],
   relatedDocs: [],
-  route,
   sourcePath: "entries/removed.mockup.tsx",
   tags: [],
   title: "Removed page",
@@ -27,13 +25,13 @@ const source: RemovedPagePreviewSource = {
   baseline: {
     entries: [page],
     generatedBy: "mokly",
-    schemaVersion: 5,
-    sourceFiles: [],
+    schemaVersion: 7,
+    sourceFiles: [page.sourcePath],
   },
   baseCommit: "a".repeat(40),
   baseRef: "main",
-  changedRoutes: [route],
-  removedEntries: [{ entry: page, ancestors: [] }],
+  changedIds: [id],
+  removedEntries: [{ entry: page }],
   schemaVersion: 1,
 };
 
@@ -81,14 +79,16 @@ async function start(
 function artifact(selected: string, bytes = 16) {
   return {
     files: new Map([
-      [`snapshots/before/${selected}`, Buffer.alloc(bytes, selected)],
+      [
+        `snapshots/before/pages/${selected}.html`,
+        Buffer.alloc(bytes, selected),
+      ],
     ]),
     preview: {
-      schemaVersion: 1 as const,
+      schemaVersion: 2 as const,
       baseCommit: source.baseCommit,
       baseRef: source.baseRef,
-      route: selected,
-      documentPath: `snapshots/before/${selected}`,
+      id: selected,
     },
   };
 }
@@ -107,7 +107,7 @@ test("page generations enforce shared admission and deadlines", async (t) => {
           signal.addEventListener("abort", () => resolve(), { once: true }),
         );
         signal.throwIfAborted();
-        return artifact(selection.route);
+        return artifact(selection.id);
       },
     },
     {
@@ -119,11 +119,11 @@ test("page generations enforce shared admission and deadlines", async (t) => {
       retentionMs: 60_000,
     },
   );
-  const first = request(route);
+  const first = request(id);
   await arrived;
-  const second = request("archive/second.html");
+  const second = request("second");
   await new Promise<void>((resolve) => setImmediate(resolve));
-  assert.equal((await request("archive/third.html")).status, 500);
+  assert.equal((await request("third")).status, 500);
   assert.equal((await first).status, 500);
   assert.equal((await second).status, 500);
 });
@@ -133,7 +133,7 @@ test("page generations enforce shared artifact and retained-capacity bounds", as
     t,
     {
       async generate(_source, selection) {
-        return artifact(selection.route, 700);
+        return artifact(selection.id, 700);
       },
     },
     {
@@ -145,14 +145,14 @@ test("page generations enforce shared artifact and retained-capacity bounds", as
       retentionMs: 60_000,
     },
   );
-  assert.equal((await request(route)).status, 200);
-  assert.equal((await request("archive/second.html")).status, 500);
+  assert.equal((await request(id)).status, 200);
+  assert.equal((await request("second")).status, 500);
 
   const oversized = await start(
     t,
     {
       async generate(_source, selection) {
-        return artifact(selection.route, 1_100);
+        return artifact(selection.id, 1_100);
       },
     },
     {
@@ -164,5 +164,5 @@ test("page generations enforce shared artifact and retained-capacity bounds", as
       retentionMs: 60_000,
     },
   );
-  assert.equal((await oversized(route)).status, 500);
+  assert.equal((await oversized(id)).status, 500);
 });

@@ -87,24 +87,28 @@ export const viewControls = defineComponent({
   },
   render: ViewControlsView,
   variants: [
-    { id: "default", title: "Default", props: sample },
     {
-      id: "both",
+      id: "design-ui-view-controls-default",
+      title: "Default",
+      props: sample,
+    },
+    {
+      id: "design-ui-view-controls-both",
       title: "Both viewports",
       props: { ...sample, selection: "both" },
     },
     {
-      id: "highlighted",
+      id: "design-ui-view-controls-highlighted",
       title: "Highlighted",
       props: { ...sample, highlight: true },
     },
     {
-      id: "unavailable",
+      id: "design-ui-view-controls-unavailable",
       title: "Unavailable",
       props: { ...sample, highlight: false, unavailable: "empty" },
     },
     {
-      id: "live",
+      id: "design-ui-view-controls-live",
       title: "Live preview",
       props: {
         ...sample,
@@ -114,7 +118,7 @@ export const viewControls = defineComponent({
       },
     },
     {
-      id: "changed-views",
+      id: "design-ui-view-controls-changed-views",
       title: "Changed views",
       props: {
         ...sample,

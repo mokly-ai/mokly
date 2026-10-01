@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
 
+import { COMPONENT_NAVIGATION } from "../../parts/component_nav_data.js";
 import type { ComparisonMode } from "../../parts/destinations.js";
 import type { RebuildDepiction } from "../../parts/rebuild_status.js";
 import { ScreenHead, type ArtboardViewport } from "../../parts/shell.js";
 
 import type { ChangeStatus } from "./comparison_fixtures.js";
 import type { WorkspaceDesignDestination } from "./destinations.js";
-import { COMPONENTS, type ComponentId } from "./metadata.js";
+import { COMPONENTS, type ComponentEntryMetadata } from "./metadata.js";
 import { ExplorerShell, type ChangeScenario } from "./navigation.js";
 import { ViewControls, type HighlightOption } from "./view_controls.js";
 import { PreviewWorkspace } from "./workspace.js";
@@ -17,10 +18,11 @@ export function ComponentLayout({
   mode = "current",
   status = "unmodified",
   design,
+  entry,
   highlight,
-  identity = "action",
   inspector,
   rebuild,
+  navigationKey,
   scenario = "all",
   variants,
   viewport,
@@ -30,20 +32,22 @@ export function ComponentLayout({
   mode?: ComparisonMode | undefined;
   status?: ChangeStatus;
   design: WorkspaceDesignDestination;
+  entry: ComponentEntryMetadata;
   /** Supplied by consuming-screen workspaces that expose component highlighting. */
   highlight?: HighlightOption | undefined;
-  identity?: ComponentId;
   inspector: ReactNode;
+  navigationKey?: string | undefined;
   /** Watched Serve's status for the latest saved changes, when depicted. */
   rebuild?: RebuildDepiction | undefined;
   scenario?: ChangeScenario;
   variants: ReactNode;
   viewport: ArtboardViewport;
 }) {
-  const { title, id } = COMPONENTS[identity];
+  const component = COMPONENTS[entry.component];
   return (
     <ExplorerShell
-      active={identity}
+      active={entry.component}
+      activeKey={navigationKey ?? COMPONENT_NAVIGATION[entry.component].id}
       design={design}
       rebuild={rebuild}
       scenario={scenario}
@@ -51,9 +55,9 @@ export function ComponentLayout({
     >
       <ScreenHead
         accessibleControls
-        title={title}
+        title={component.title}
         crumbs={["Example", "Components"]}
-        idChip={id}
+        idChip={entry.id}
         action={<ViewControls viewport={viewport} highlight={highlight} />}
         comparisons={status === "changed" || status === "removed"}
         status={status}

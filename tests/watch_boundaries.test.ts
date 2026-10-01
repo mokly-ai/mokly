@@ -17,7 +17,7 @@ import { serve } from "../dist/server/serve.js";
 import type {
   ProcessSupervisor,
   ProcessSupervisorFactory,
-} from "../dist/server/supervisor.js";
+} from "../dist/server/supervisor_types.js";
 import { classifyWatchPath } from "../dist/server/watch_events.js";
 import { ChokidarWatcherFactory } from "../dist/server/watcher.js";
 

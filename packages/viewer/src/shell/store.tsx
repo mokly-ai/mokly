@@ -196,8 +196,6 @@ export function selectionForRoute(
   const next = { ...selection, screenId: routeScreenId(route) };
   if (route.snapshot) next.snapshotId = route.snapshot;
   else delete next.snapshotId;
-  if (route.variant) next.variantId = route.variant;
-  else delete next.variantId;
   return next;
 }
 
@@ -207,19 +205,19 @@ export function currentContext(
   state: ShellStore["state"],
 ) {
   const {
-    activeRoute: _activeRoute,
+    activeId: _activeId,
     changesStatus: _changesStatus,
     fragment: _fragment,
     snapshotId: _snapshotId,
     ...stable
   } = context;
-  const activeRoute =
+  const activeId =
     state.route.view.kind === "target"
-      ? state.route.view.target.entry.route
+      ? state.route.view.target.entry.id
       : undefined;
   return {
     ...stable,
-    ...(activeRoute ? { activeRoute } : {}),
+    ...(activeId ? { activeId } : {}),
     ...(state.changesStatus ? { changesStatus: state.changesStatus } : {}),
     ...(state.route.fragment ? { fragment: state.route.fragment } : {}),
     ...(state.route.snapshot ? { snapshotId: state.route.snapshot } : {}),

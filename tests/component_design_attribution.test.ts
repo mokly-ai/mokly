@@ -8,15 +8,15 @@ import { designLibraryFixture } from "./helpers/design_library_fixture.js";
 test("mixed component design styles retain their actual rendered resource scope", async (t) => {
   const fixture = await designLibraryFixture(t);
   for (const [stylesheet, screens, components] of [
-    ["design-components.css", 39, 17],
-    ["design-component-inspection.css", 39, 17],
-    ["design-component-details.css", 39, 17],
-    ["design-component-inspector.css", "all-design", 17],
-    ["design-component-workspace.css", "all-design", 17],
-    ["design-component-view.css", 39, 17],
-    ["design-component-controls.css", 11, 17],
-    ["design.css", "all-design", 17],
-    ["design-library.css", 0, 17],
+    ["design-components.css", 40, 71],
+    ["design-component-inspection.css", 40, 71],
+    ["design-component-details.css", 40, 71],
+    ["design-component-inspector.css", "all-design", 71],
+    ["design-component-workspace.css", "all-design", 71],
+    ["design-component-view.css", 40, 71],
+    ["design-component-controls.css", 11, 71],
+    ["design.css", "all-design", 71],
+    ["design-library.css", 0, 71],
   ] as const)
     await t.test(stylesheet, async () => {
       await fixture.reset();
@@ -34,8 +34,7 @@ test("mixed component design styles retain their actual rendered resource scope"
       );
       if (screens === "all-design") {
         const allDesignScreens = fixture.before.manifest.entries.filter(
-          (entry) =>
-            entry.kind === "screen" && entry.route.startsWith("design/"),
+          (entry) => entry.kind === "screen" && entry.id.startsWith("design-"),
         );
         assert.deepEqual(
           expectedScreens.map(({ id }) => id).sort(),
@@ -57,7 +56,7 @@ test("mixed component design styles retain their actual rendered resource scope"
       if (stylesheet !== "design.css")
         assert.ok(
           result.changes.every((change) =>
-            (change.after ?? change.before)!.route.startsWith("design/"),
+            (change.after ?? change.before)!.id.startsWith("design-"),
           ),
           "unrelated Example content stays unchanged",
         );

@@ -181,6 +181,6 @@ test("loading the published script directly never starts inspection or navigatio
     page.getByRole("button", { name: "Continue", exact: true }),
   ).toBeVisible();
   await expect(page).toHaveURL(
-    /\/static\/components\/action\.variants\/default\.mobile\.html$/,
+    /\/static\/components\/action-default\.mobile\.html$/,
   );
 });

@@ -19,11 +19,11 @@ import type {
   ServerOptions,
 } from "../dist/server/http_types.js";
 import { serve } from "../dist/server/serve.js";
-import {
-  ReadyProcessSupervisor,
-  type ProcessSupervisor,
-  type ProcessSupervisorFactory,
-} from "../dist/server/supervisor.js";
+import { ReadyProcessSupervisor } from "../dist/server/supervisor.js";
+import type {
+  ProcessSupervisor,
+  ProcessSupervisorFactory,
+} from "../dist/server/supervisor_types.js";
 import type { ChildCommand } from "../dist/server/update_messages.js";
 import type { WatchEvent } from "../dist/server/watch_events.js";
 import type {

@@ -3,6 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { viewRoute } from "@mokly/viewer/data";
+
 import { checkCompilation } from "../dist/build/check.js";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { componentRuntime } from "../dist/build/component_runtime.js";
@@ -28,28 +30,38 @@ test("the example's Live mode stays outside build, check, and export bytes", asy
   assert.equal(componentRuntime(serve).interactiveSources, undefined);
   assert.deepEqual(componentRuntime(serve).interactiveEntries, {
     "example-action": true,
+    "example-action-default": true,
+    "example-action-disabled": true,
+    "example-action-secondary": true,
     "example-details": false,
     "example-guest-picker": true,
+    "example-guest-picker-dinner": true,
+    "example-guest-picker-group": true,
     "example-visit": true,
     "example-welcome": true,
     "example-welcome-empty": true,
     "example-toolbar": true,
+    "example-toolbar-default": true,
     ...Object.fromEntries(
       Object.entries(componentRuntime(serve).interactiveEntries).filter(
         ([id]) => id.startsWith("design-"),
       ),
     ),
   });
-  const guestPicker = serve.manifest.entries.find(
-    (entry) => entry.id === "example-guest-picker",
+  const guestPickerVariants = serve.manifest.entries.filter(
+    (entry) =>
+      entry.kind === "component" &&
+      "variantOf" in entry &&
+      entry.variantOf === "example-guest-picker",
   );
-  assert.ok(guestPicker?.kind === "component");
   assert.deepEqual(
-    guestPicker.variants.map(({ id }) => id),
-    ["dinner", "group"],
+    guestPickerVariants.map(({ id }) => id),
+    ["example-guest-picker-dinner", "example-guest-picker-group"],
   );
   assert.match(
-    serve.outputs.get("screens/visit.desktop.html") ?? "",
+    serve.outputs.get(
+      viewRoute("screen", "example-visit", "desktop", "light"),
+    ) ?? "",
     /data-testid="guest-count"[^>]*>2</,
   );
 

@@ -135,7 +135,7 @@ when all of these remain true:
 - the bootstrap context and route exactly match the descriptor and current
   logical route;
 - the render generation and token still match the installed host;
-- the returned workspace route equals the current logical route.
+- the returned workspace names the entry of the current logical route.
 
 A route response may advance the evidence revision while retaining the update
 version. On-demand rendering can publish newer evidence without a watch event,
@@ -159,33 +159,11 @@ obsolete request while retaining the mounted shell.
 
 ## Interactive Bundle State
 
-The app-origin endpoint is
-`POST /__mokly/interactive/<generation>/prepare`. It exists only when the
-interactive descriptor exists, accepts only the current generation, starts or
-joins its one lazy build, and waits for a terminal result. Its exact JSON is
-`{ "generation": <32-lowercase-hex>, "state": "ready" | "failed" }`.
-Status is 200 for ready, 503 for a typed browser-bundle failure, 500 for an
-internal failure, and 404 for an absent capability or stale generation. The
-request Origin must equal `http://` plus the accepted loopback Host exactly;
-other origins receive 403. The browser transport validates the body,
-generation, state, and status before returning it. No consumer diagnostic text
-crosses this boundary.
-
-The descriptor state is the nonblocking transport for preparing and
-unavailable presentation. `/__mokly/events` emits a private `interactive`
-event containing the complete descriptor whenever the current generation
-enters `building`, `ready`, or `failed`, and sends the current descriptor when
-the stream opens. The client adopts a state event only when generation, port,
-and optional explicit origin exactly match the installed descriptor. The shell
-starts the preparation call only while Live is selected for a view and the
-descriptor is not `ready`, presents preparing while it awaits, adopts the
-validated result into the same descriptor, and mounts the cross-origin frame
-only after ready. Events, preparation results and adopted evidence cannot move
-one generation from `ready` or `failed` back to `building`.
-
-Watched Serve also replays private `rebuild` events. The CLI host validates
-and the viewer adopts that descriptor field and event under the status
-contract's sequence and update-version fences; other hosts never receive it.
+Preparation, readiness events, monotonic terminal states, and their origin and
+identity checks follow the
+[interactive host integration contract](./mokly-interactive-host-integration.md#private-readiness-transport).
+Private rebuild events follow the
+[rebuild status transport contract](./mokly-rebuild-status-transport.md).
 
 ## Watched Updates
 

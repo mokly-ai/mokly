@@ -95,124 +95,9 @@ naming the importing module; Static remains available. Builds appear as
 and never enter the source inventory, generated output, `check`, export, or
 publication.
 
-### Generation-pinned repository sources
-
-When Serve resolves `interactive: "serve"`, the Node consumer-graph build
-captures the exact bytes returned for every repository-owned file input before
-tree shaking. The capture uses the source-inventory ownership rule: entry,
-renderer, transformer, local helper, JSON, and configured-loader inputs are
-included; Mokly runtime files and installed-package files are not. Logical and
-physical in-repository aliases address the same immutable blob. Capture occurs
-in the same load that produces the accepted graph, never in a second disk pass,
-and is sealed only after graph evaluation and registry/index validation
-succeed. A capture failure rejects that candidate generation.
-
-The same build records every resolution whose target is one of those
-repository-owned files. A request key is its normalized importer, the exact
-specifier presented to the resolver, its esbuild resolution kind, and its
-sorted import attributes. A repository importer is its safe repository-relative
-logical path. The Node and browser virtual consumer entries share one stable
-`entry` importer identity even though their esbuild paths and namespaces differ.
-Esbuild presents configured-alias requests to both plugins before applying the
-alias, so the record keys the original specifier and stores the resolved target.
-Conflicting targets for one key reject the candidate.
-
-`ComponentRuntime.interactiveSources` carries the decoded capture. The existing
-runtime IPC message carries its exact wire projection:
-
-```ts
-interface InteractiveSourceCaptureMessage {
-  files: readonly {
-    bytes: string; // canonical padded RFC 4648 base64
-    paths: readonly string[];
-  }[];
-  resolutions: readonly {
-    attributes: readonly { key: string; value: string }[];
-    importer: { type: "entry" } | { type: "repository"; path: string };
-    kind:
-      | "entry-point"
-      | "import-statement"
-      | "require-call"
-      | "dynamic-import"
-      | "require-resolve"
-      | "import-rule"
-      | "composes-from"
-      | "url-token";
-    specifier: string;
-    target: string;
-  }[];
-}
-```
-
-Every path is a safe repository-relative POSIX path. Paths within a blob and
-blobs by their first path are strictly sorted; both are nonempty; no path
-occurs twice. The resolution list is strictly sorted by its complete request
-key and contains no duplicate key. It has at most 16,384 records and at most
-8 MiB total UTF-8 string data. A nonempty specifier is at most 2,048 UTF-8
-bytes. Each record has at most 16 uniquely named, strictly sorted attributes;
-each nonempty key is at most 256 UTF-8 bytes, each value at most 2,048, and all
-attribute keys and values in one record total at most 4,096. These strings
-contain no NUL. Repository importer and target paths are safe, every target is
-one of the capture's paths, and only the listed resolution kinds are accepted.
-The child validates this exact shape, canonical base64, ordering, bounds, and
-referential integrity before exposing the runtime. With `interactive: "serve"`
-the field is required; with `interactive: "off"` it is absent. Build, Check,
-export, publication, and an off Serve neither install the capture hook nor
-retain or transfer source data.
-
-The browser compiler uses the accepted `config.entryModules`; it never runs
-entry discovery again. Before any file-system resolution it replays every
-recorded request to the recorded captured target. This covers relative,
-absolute, bare, configured-alias, and repository-package requests, including
-extension and index selection. Replaying the Node graph deliberately keeps its
-repository target when a browser condition or a repository package's `browser`
-field would otherwise select another file: Live uses the identity accepted for
-Static, not a later browser-only repository identity. Unrecorded relative and
-absolute repository requests remain capture-only and never probe source files.
-
-An unrecorded bare request is resolved normally only to classify its target.
-An installed-package target passes through to ordinary browser resolution; a
-repository-owned target fails as not captured even if another path for its
-bytes exists in the capture. Ownership is exactly the source-inventory rule.
-In particular, a package reached through `node_modules` is repository-owned
-when the link's physical target is inside the repository and outside Mokly's
-runtime; a package physically installed under `node_modules` is not. Bare
-installed-package imports, their package-relative files, Mokly's runtime, and
-consumer React peers therefore remain unpinned.
-
-Recorded requests do not reread resolution metadata. Resolution-only inputs
-such as `tsconfig.json` settings and repository-package `package.json` imports,
-exports, conditions, or browser fields can affect only a request absent from
-the accepted record. Such an unrecorded request may resolve differently or
-fail until the next accepted generation; captured module and loader-input bytes
-remain pinned.
-
-If browser-specific resolution requests a repository-owned module absent from
-the accepted capture, compilation fails with typed code `interactive-bundle`,
-typed reason `source-not-captured`, and repository-relative `module` and
-optional `importer` fields. Its terminal message is
-`accepted Live sources do not contain <module>` followed by
-` (imported by <importer>)` when known. Classification uses the typed reason,
-never message matching. The generation enters the ordinary cached `failed`
-Live state and returns its existing consumer-text-free 503; its Static
-documents and the watched rebuild status remain successful.
-
-The interactive child retains each capture, including its resolution record,
-for exactly its current and immediately previous generations and evicts both
-with that generation's bundle state when a third arrives. Reload/restart
-generations reuse the same capture object; distinct generation records do not
-copy it. Eviction aborts an obsolete in-flight compiler and releases its
-capture after the request settles. The supervisor retains only the current
-capture needed to recover a child. If `Sg` is the sum of distinct decoded blobs
-for generation `g`, steady retained raw bytes are bounded by
-`Scurrent + Sprevious` in the child and `Scurrent` in the parent; candidate
-preparation adds only its candidate capture. Resolution metadata additionally
-obeys the per-capture bounds above and the same two/one-generation retention.
-IPC adds one transient base64 projection totaling
-`sum(4 * ceil(Sfile / 3))` bytes plus bounded resolution, path, and JSON
-metadata, discarded after decoding. There is no lower arbitrary byte ceiling
-for file bytes: the accepted consumer input defines `Sg`, while generation
-count and copies remain bounded as above.
+Generation-pinned repository bytes, resolution replay, validation limits, and
+two-generation retention follow the
+[Live source pinning contract](./mokly-interactive-source-pinning.md).
 
 The browser projection of the automatic development JSX runtime preserves
 esbuild's `isStaticChildren` signal: its `jsxDEV` shim delegates static sibling
@@ -265,6 +150,8 @@ interactive is off, and the narrowed resolution-metadata limitation.
 ## Related Docs
 
 - [Interactive views overview](./mokly-interactive-views.md)
+- [Interactive host integration](./mokly-interactive-host-integration.md)
+- [Generation-pinned Live sources](./mokly-interactive-source-pinning.md)
 - [Live document and browser runtime](./mokly-interactive-views-runtime.md)
 - [Interactive views shell](./mokly-interactive-views-shell.md)
 - [Live viewer capabilities](./mokly-live-capabilities.md)

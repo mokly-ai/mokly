@@ -138,8 +138,9 @@ test("failed page builds and source collisions preserve the previous inventory a
   const good = await compileCatalogue(config);
   await writeCompilation(good, config);
   const inventory = config.sourceFiles;
-  const source = path.join(fixture.mockupsDir, "document.html");
+  const source = path.join(fixture.mockupsDir, "pages/document.html");
   const bytes = "<html><body>Protected source</body></html>";
+  await fs.promises.mkdir(path.dirname(source), { recursive: true });
   await fs.promises.writeFile(source, bytes);
   await fs.promises.writeFile(
     fixture.configPath,
@@ -147,7 +148,7 @@ test("failed page builds and source collisions preserve the previous inventory a
   );
   await fs.promises.writeFile(
     fixture.entryPath,
-    'import { definePage } from "@mokly/mokly"; import html from "../mockups/document.html"; export const mockups = [definePage({ id: "page", title: "Page", description: "Page", dependencies: [], relatedDocs: [], route: "document.html", render: () => html })];',
+    'import { definePage } from "@mokly/mokly"; import html from "../mockups/pages/document.html"; export const mockups = [definePage({ id: "document", title: "Page", description: "Page", dependencies: [], relatedDocs: [], render: () => html })];',
   );
   const next = await loadConfig(fixture.root);
   await assert.rejects(compileCatalogue(next), /authoring|source/);

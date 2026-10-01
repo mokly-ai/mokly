@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { viewHref } from "@mokly/viewer/data";
+
 import { projectCatalogue } from "../../dist/catalogue/projection.js";
 import {
   CATALOGUE_PATH,
@@ -16,22 +18,18 @@ import { ExportTransaction } from "../../dist/export/transaction.js";
 import { publicationOptions } from "../../dist/publication/options.js";
 import { copyPublicFiles } from "../../dist/publication/resources.js";
 import { prepareReviewRepository } from "../../dist/review/prepare.js";
-import { loadCatalogueSnapshot } from "../../dist/server/catalogue_snapshot.js";
-import { computeCatalogueChanges } from "../../dist/server/changed.js";
-import {
-  loadBrowserClientModules,
-  loadBrowserNavigationModules,
-  loadShellFontAssets,
-} from "../../dist/server/client_modules.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 
 import { previewOwnership, stagePreviewArtifact } from "./artifact.mjs";
+import { captureAssets } from "./assets.mjs";
+import { publicationSnapshot } from "./baseline.mjs";
 import {
   captureComparison,
   capturePublicationPagePreviews,
   previewComparisonProvider,
   publishComparison,
 } from "./comparisons.mjs";
+import { normalizeProviderHtmlAttributes } from "./html_paths.mjs";
 import { capturePublicationInputs } from "./inputs.mjs";
 
 const liveHostScript =
@@ -51,7 +49,7 @@ export async function buildPreview(config, output, options = {}) {
     await assertExportOwnership(destination, ownership);
   } catch (cause) {
     throw new Error(
-      `refusing to replace unowned preview directory: ${output}`,
+      `refusing to replace unowned preview directory: ${output}. ${errorMessage(cause)}`,
       { cause },
     );
   }
@@ -72,21 +70,21 @@ export async function buildPreview(config, output, options = {}) {
           staticConfig,
           excludedRoots,
         );
-        const snapshot = await loadCatalogueSnapshot(
+        const { incompatible, snapshot } = await publicationSnapshot(
           staticConfig,
-          git
-            ? (manifest) =>
-                computeCatalogueChanges(staticConfig, base, git, manifest)
-            : undefined,
+          git,
+          base,
           inputs.manifest,
         );
         const { catalogue, changes } = snapshot;
         const manifest = catalogue.manifest;
-        const review = git
-          ? previewComparisonProvider(staticConfig, stage, base, git)
-          : undefined;
+        const review =
+          git && !incompatible
+            ? previewComparisonProvider(staticConfig, stage, base, git)
+            : undefined;
         const server = await startCatalogueServer(staticConfig, {
           base,
+          ...(incompatible ? { changesStatus: "unavailable" } : {}),
           liveChanges: false,
           snapshot,
           port: 0,
@@ -109,14 +107,9 @@ export async function buildPreview(config, output, options = {}) {
           await capturePage(server.url, "/", stage, "index.html");
           capturedShells.add("index.html");
           for (const entry of [...manifest.entries, ...removed]) {
-            if (entry.kind === "collection") continue;
-            const name = `view/${entry.route}`;
-            await capturePage(
-              server.url,
-              `/view/${encodePath(entry.route)}`,
-              stage,
-              name,
-            );
+            const route = viewHref(entry.kind, entry.id);
+            const name = route.slice(1);
+            await capturePage(server.url, route, stage, name);
             capturedShells.add(name);
           }
           await capturePage(
@@ -146,8 +139,12 @@ export async function buildPreview(config, output, options = {}) {
             .split(path.sep)
             .join("/"),
           catalogue,
-          changesStatus: comparison ? "ready" : "disabled",
-          changedRoutes: changes?.changedRoutes,
+          changesStatus: comparison
+            ? "ready"
+            : incompatible
+              ? "unavailable"
+              : "disabled",
+          changedIds: changes?.changedIds,
           evidence: snapshot.componentChanges,
           comparison: comparison?.result,
           comparisonUrl: comparison
@@ -205,43 +202,6 @@ export async function buildPreview(config, output, options = {}) {
   }
 }
 
-async function captureAssets(serverUrl, stage) {
-  for (const asset of shellAssets()) {
-    const response = await fetch(`${serverUrl}${asset}`);
-    if (!response.ok)
-      throw new Error(`preview asset ${asset} returned ${response.status}`);
-    await writeFile(
-      stage,
-      asset.slice(1),
-      Buffer.from(await response.arrayBuffer()),
-    );
-  }
-}
-
-function shellAssets() {
-  return [
-    "/__mokly/shell.css",
-    ...[...loadBrowserClientModules().keys()]
-      .filter(
-        (name) =>
-          name !== "host_capabilities.js" &&
-          name !== "host_capability_descriptor.js" &&
-          name !== "react_capabilities.js" &&
-          name !== "react_capability_updates.js" &&
-          name !== "react_transports.js" &&
-          name !== "react_update_controller.js" &&
-          name !== "react-host.js",
-      )
-      .map((name) => `/__mokly/client/${name}`),
-    ...[...loadBrowserNavigationModules().keys()].map(
-      (name) => `/__mokly/navigation/${name}`,
-    ),
-    ...[...loadShellFontAssets().keys()].map(
-      (name) => `/__mokly/fonts/${name}`,
-    ),
-  ];
-}
-
 async function capturePage(
   serverUrl,
   route,
@@ -263,17 +223,15 @@ async function capturePage(
 }
 
 function staticPage(html) {
-  return html
-    .replace(' data-mokly-host-capabilities=""', "")
-    .replace(
-      /<script data-mokly-host-capability-state="" type="application\/json">[^<]*<\/script>/,
-      "",
-    )
-    .replace(liveHostScript, staticHydrationScript)
-    .replace(
-      /(href|src|data-fragment-light|data-fragment-dark)="\/(static|view)\/([^"?#]+)\.html((?:\?|#)[^"]*)?"/g,
-      '$1="/$2/$3$4"',
-    );
+  return normalizeProviderHtmlAttributes(
+    html
+      .replace(' data-mokly-host-capabilities=""', "")
+      .replace(
+        /<script data-mokly-host-capability-state="" type="application\/json">[^<]*<\/script>/,
+        "",
+      )
+      .replace(liveHostScript, staticHydrationScript),
+  );
 }
 
 function assertSafeOutput(output, repoRoot) {
@@ -290,10 +248,6 @@ function assertSafeOutput(output, repoRoot) {
   ) {
     throw new Error(`preview output must be inside ${contextRoot}`);
   }
-}
-
-function encodePath(value) {
-  return value.split("/").map(encodeURIComponent).join("/");
 }
 
 async function writeText(root, relative, content) {

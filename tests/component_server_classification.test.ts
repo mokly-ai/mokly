@@ -21,8 +21,8 @@ test("Browse responds before separately computed component evidence arrives", as
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
   const server = await startCatalogueServer(fixture.config, {
     base: "main",
     port: 0,
@@ -34,8 +34,8 @@ test("Browse responds before separately computed component evidence arrives", as
   assert.match(initial, /data-changes-status="pending"/);
 
   server.publishUpdate({
-    changedRoutes: result.changes.map(
-      (entry) => (entry.after ?? entry.before)!.route,
+    changedIds: result.changes.map(
+      (entry) => (entry.after ?? entry.before)!.id,
     ),
     componentChanges: { baseline: fixture.before.manifest, result },
     version: 2,
@@ -58,8 +58,8 @@ test("ordinary Browse serves cached component evidence without generating or wri
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 3);
-  if (result.schemaVersion !== 3) return;
+  assert.equal(result.schemaVersion, 4);
+  if (result.schemaVersion !== 4) return;
   let comparisons = 0;
   const server = await startCatalogueServer(fixture.config, {
     base: "main",
@@ -84,7 +84,7 @@ test("ordinary Browse serves cached component evidence without generating or wri
     assert.equal((await fetch(server.url + route)).status, 200);
   assert.equal(comparisons, 0);
   server.publishUpdate({
-    changedRoutes: ["components/action.html"],
+    changedIds: ["action"],
     componentChanges: { baseline: fixture.before.manifest, result },
     version: 2,
   });

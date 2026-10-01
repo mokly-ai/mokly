@@ -92,29 +92,29 @@ export const topBar = defineComponent({
     />
   ),
   variants: [
-    { id: "default", title: "Default", props: sample },
+    { id: "design-ui-top-bar-default", title: "Default", props: sample },
     {
-      id: "search",
+      id: "design-ui-top-bar-search",
       title: "Search",
       props: { ...sample, query: "tag:forms", activeTag: "forms" },
     },
     {
-      id: "tag-picker",
+      id: "design-ui-top-bar-tag-picker",
       title: "Tag picker",
       props: { ...sample, pickerOpen: true },
     },
     {
-      id: "drawer-open",
+      id: "design-ui-top-bar-drawer-open",
       title: "Drawer open",
       props: { ...sample, menu: "close", menuDestination: DESTINATIONS.home },
     },
     {
-      id: "auto-appearance",
+      id: "design-ui-top-bar-auto-appearance",
       title: "Auto appearance",
       props: { ...sample, appearance: "auto" },
     },
     {
-      id: "updating",
+      id: "design-ui-top-bar-updating",
       title: "Updating",
       props: { ...sample, updating: true },
     },

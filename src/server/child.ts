@@ -158,8 +158,8 @@ function waitForChildShutdown(
           ...(update.kind ? { kind: update.kind } : {}),
           changesStatus:
             update.changesStatus ??
-            (update.changedRoutes === null ? "pending" : "ready"),
-          changedRoutes: update.changedRoutes,
+            (update.changedIds === null ? "pending" : "ready"),
+          changedIds: update.changedIds,
           componentChanges: update.componentChanges,
           version: update.version,
         });

@@ -1,5 +1,5 @@
 import type { ColorScheme, Viewport } from "@mokly/viewer";
-import { canonicalJson } from "@mokly/viewer/data";
+import { canonicalJson, isManifestComponentVariant } from "@mokly/viewer/data";
 import { readMetadata } from "@mokly/viewer/runtime";
 
 import {
@@ -62,15 +62,27 @@ export function buildInteractiveBootstrap(
       InteractiveViewEligibilityReason.MissingVariant,
       input.entryId,
     );
-  if (
-    entry.kind === "component" &&
-    !entry.variants.some((variant) => variant.id === input.variantId)
-  )
-    throw ineligible(
-      InteractiveViewEligibilityReason.UnknownVariant,
-      input.entryId,
-      input.variantId,
+  if (entry.kind === "component") {
+    const variant = input.entries.find(
+      (candidate) =>
+        candidate.kind === "component" &&
+        isManifestComponentVariant(candidate) &&
+        candidate.variantOf === entry.id &&
+        candidate.id === input.variantId,
     );
+    if (!variant)
+      throw ineligible(
+        InteractiveViewEligibilityReason.UnknownVariant,
+        input.entryId,
+        input.variantId,
+      );
+    if (variant.interactive === false)
+      throw ineligible(
+        InteractiveViewEligibilityReason.OptedOut,
+        input.entryId,
+        input.variantId,
+      );
+  }
   if (entry.kind === "screen" && input.variantId !== undefined)
     throw ineligible(
       InteractiveViewEligibilityReason.UnexpectedVariant,

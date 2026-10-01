@@ -14,10 +14,10 @@ test("supervisor waits for readiness and shuts down before restart", async () =>
   const starting = supervisor.start();
   factory.children[0]?.ready(48123);
   assert.equal(await starting, 48123);
-  supervisor.notifyUpdate(["screens/home.html"]);
+  supervisor.notifyUpdate(["home"]);
   assert.deepEqual(factory.children[0]?.messages, [
     {
-      changedRoutes: ["screens/home.html"],
+      changedIds: ["home"],
       type: "update",
       componentChanges: null,
       version: 2,
@@ -25,7 +25,7 @@ test("supervisor waits for readiness and shuts down before restart", async () =>
   ]);
   supervisor.notifyUpdate(undefined);
   assert.deepEqual(factory.children[0]?.messages[1], {
-    changedRoutes: null,
+    changedIds: null,
     componentChanges: null,
     type: "update",
     version: 3,
@@ -35,13 +35,13 @@ test("supervisor waits for readiness and shuts down before restart", async () =>
   await new Promise((resolve) => setImmediate(resolve));
   assert.deepEqual(factory.children[0]?.messages, [
     {
-      changedRoutes: ["screens/home.html"],
+      changedIds: ["home"],
       componentChanges: null,
       type: "update",
       version: 2,
     },
     {
-      changedRoutes: null,
+      changedIds: null,
       componentChanges: null,
       type: "update",
       version: 3,

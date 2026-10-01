@@ -2,11 +2,12 @@
 
 ## Delivery Status
 
-Implemented by Milestones 1, 3, and 5 of the
-[Serve rebuild status plan](../../plans/serve-rebuild-status.md): watched Serve
-publishes the status and the shell presents it. This document owns the private
-status model, ordering, transport, sanitizing, and shell behavior. The
-[design contract](./mokly-rebuild-status-design.md) owns its presentation.
+Implemented for watched Serve: the parent publishes private status and the
+shell presents it. This document owns the status model, action lifecycle,
+sanitizing, and shell behavior. The
+[transport contract](./mokly-rebuild-status-transport.md) owns IPC, descriptor,
+events, and adoption; the [design contract](./mokly-rebuild-status-design.md)
+owns presentation.
 
 ## Boundary And Model
 
@@ -132,76 +133,11 @@ The post-sanitizing value must be nonempty and within both limits before it can
 cross IPC. The disclosure renders it as a text node with preserved line breaks;
 it never uses HTML injection, Markdown, linkification, or terminal styling.
 
-## Parent-To-Child Transport
+## Transport And Adoption
 
-The exact private IPC command is:
-
-```json
-{
-  "type": "rebuild-status",
-  "status": {
-    "failure": null,
-    "sequence": 1,
-    "updateVersion": 1,
-    "updating": false
-  }
-}
-```
-
-The parser requires the exact envelope and status shapes, numeric bounds,
-failure-id relationship, and sanitized-detail bounds. It does not attempt to
-repair an invalid parent payload. A post-readiness invalid, conflicting, or
-oversized command emits one bounded child diagnostic and retains the last
-valid snapshot. A watched child must receive one valid snapshot during the
-existing 10-second startup transfer window and install it before announcing
-readiness; an absent or invalid initial snapshot fails startup. An unwatched
-child receives no such command.
-
-The supervisor retains the latest snapshot independently of the child and
-sends it to every replacement. A child restart while failed therefore has the
-same failure in its first served descriptor, including while the restart action
-also has progress. Older sequences are ignored; an identical replay is a
-no-op; the same sequence with different bytes is invalid.
-
-A command fenced above the child's current update version is staged, not
-visible. When that version becomes current, the child commits the staged
-status, catalogue/runtime update, private descriptor, and event-stream version
-as one state transition before notifying browsers. A successful source action
-reserves its resulting update version, sends the clearing snapshot with that
-fence, and only then publishes the update. A restarting child installs the
-matching snapshot before `ready`. Thus old content cannot adopt a clear, and a
-request cannot pair a new content version with the preceding failure.
-
-## Descriptor, Events, And Adoption
-
-The schema-1 private `ViewerCapabilityDescriptor` gains optional field
-`rebuildStatus: RebuildStatus`. It is present on every watched shell response
-and absent at every boundary listed above. The CLI host and viewer runtime both
-use one strict value validator; descriptor validation also requires
-`rebuildStatus.updateVersion <= source.updateVersion`. An invalid marked page
-is the existing hard descriptor error.
-
-`/__mokly/events` uses event name `rebuild`. Its `data` is canonical one-line
-JSON containing exactly `RebuildStatus`. On stream open, the child atomically
-captures one state and sends `ready`, then `rebuild`, then the optional
-`interactive` replay. Every active stream receives a `rebuild` event after an
-immediately active status transition. It sends no public or consumer data.
-
-The CLI host validates each event before offering it to the viewer. Invalid
-events are reported as browser warnings and ignored. The viewer keeps the
-greatest validated sequence. A newer snapshot whose fence is above the
-installed source is held pending; evidence adoption applies it atomically when
-that source reaches the fence, while a content change obtains it from the
-replacement page. Duplicate and older sequences cannot restore progress or a
-failure. Route-evidence reads may advance status only under the same source,
-route, and revision checks as their descriptor.
-
-Each shell request captures its source and active rebuild status atomically.
-Each new tab therefore renders the current notice immediately. A reconnecting
-stream receives the complete current snapshot, not deltas. A failure between
-HTML capture and stream connection wins by sequence on replay; a clear cannot
-win until its content fence does. Every tab converges independently without
-one tab acknowledging or clearing server state.
+Parent-to-child IPC, initial transfer, update-version staging, private
+descriptor and SSE shapes, replay, and browser ordering follow the
+[rebuild status transport contract](./mokly-rebuild-status-transport.md).
 
 ## Shell Behavior And Accessibility
 
@@ -247,16 +183,14 @@ details", so it can be reached and scrolled without a pointer.
 - Status never changes the terminal diagnostic, last-good catalogue, Changes
   state, update recovery, or public catalogue revision semantics.
 
-Milestone 3 must test the complete action matrix, debounce/queue coalescing,
+Verification covers the complete action matrix, debounce/queue coalescing,
 continuous queued progress, retry-while-failed behavior, sanitizing and both
-bounds, strict envelopes, staged success clears, child restart retention,
-descriptor/event validation, stream replay, stale/duplicate ordering, and
-absence from every excluded boundary. Milestone 4 must provide the pinned-source
-tests in the [Serve delivery contract](./mokly-interactive-views-serve.md).
-Milestone 5 must use a real watched Serve to test first paint, multiple tabs,
-reconnection, once-per-id announcements, the 1,000 ms threshold, Static/Live and
-every route at both widths. Milestone 6 must smoke source, config, and resource
-success/failure/recovery and retain screenshots.
+bounds, strict envelopes, staged clears, child restart retention,
+descriptor/event validation, replay and stale ordering, and absence from every
+excluded boundary. Browser coverage uses real watched Serve for first paint,
+multiple tabs, reconnection, once-per-id announcements, the 1,000 ms threshold,
+Static/Live, and every route at both widths. Smoke coverage exercises source,
+configuration, and resource failure and recovery.
 
 ## Related Docs
 

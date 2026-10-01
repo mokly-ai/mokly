@@ -9,10 +9,10 @@ import { readPreviewDescriptor } from "../../packages/viewer/dist/previews/descr
 /** Prove a captured page shell advertises metadata that reaches historical bytes. */
 export async function assertPublishedPagePreview(
   output: string,
-  published: { kind: "page"; path: string },
+  published: { kind: "page" },
 ): Promise<void> {
   const shell = await fs.readFile(
-    path.join(output, "view/archive/removed.html"),
+    path.join(output, "view/pages/removed-page.html"),
     "utf8",
   );
   const raw = /data-mokly-preview="([^"]*)"/.exec(shell)?.[1];
@@ -26,15 +26,18 @@ export async function assertPublishedPagePreview(
           .replaceAll("&amp;", "&"),
   );
   assert.deepEqual(descriptor?.published, published);
+  const catalogue = JSON.parse(
+    await fs.readFile(path.join(output, "__mokly/catalogue.json"), "utf8"),
+  ) as { comparisonUrl: string };
+  const generation = path.posix.dirname(catalogue.comparisonUrl);
+  const previewPath = `${generation}/pages/removed-page.json`;
   const preview = parseRemovedPagePreview(
-    JSON.parse(await fs.readFile(path.join(output, published.path), "utf8")),
+    JSON.parse(await fs.readFile(path.join(output, previewPath), "utf8")),
   );
-  const generation = path.posix.dirname(
-    path.posix.dirname(path.posix.dirname(published.path)),
-  );
+  assert.equal(preview.id, "removed-page");
   assert.match(
     await fs.readFile(
-      path.join(output, generation, preview.documentPath),
+      path.join(output, generation, "snapshots/before/pages/removed-page.html"),
       "utf8",
     ),
     /Previous page/,

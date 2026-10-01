@@ -1,14 +1,16 @@
 /** Deterministic shell-state initialization shared by SSR and hydration. */
 
-import { resolveCatalogueRoute } from "../catalogue/entry_selection.js";
+import { resolveCatalogueEntry } from "../catalogue/entry_selection.js";
 import { defaultSelection } from "../viewer/selection.js";
 
 import type { Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
+import { reconcileDisclosures } from "./disclosure_storage.js";
 import {
   catalogueNavSections,
   defaultDisclosures,
   disclosurePath,
+  navigationFiltering,
 } from "./nav_model.js";
 import { routeScreenId, type ShellRoute } from "./routes.js";
 import { parseSearchQuery } from "./search_query.js";
@@ -30,8 +32,10 @@ export function createInitialShellState(
   const snapshotId =
     context.snapshotId ??
     (context.readModel && view.kind === "target"
-      ? resolveCatalogueRoute(context.readModel, view.target.entry.route)
-          ?.snapshotId
+      ? resolveCatalogueEntry(context.readModel, {
+          id: view.target.entry.id,
+          kind: view.target.entry.kind,
+        })?.snapshotId
       : undefined);
   const route: ShellRoute = {
     view,
@@ -39,29 +43,54 @@ export function createInitialShellState(
     ...(snapshotId ? { snapshot: snapshotId } : {}),
   };
   const sections = catalogueNavSections(catalogue);
-  let disclosures = defaultDisclosures(sections, context.activeRoute);
+  const defaults = defaultDisclosures(sections, context.activeId);
+  const parsed = parseSearchQuery(recovery?.query ?? "");
+  const selection = {
+    ...defaultSelection,
+    screenId: routeScreenId(route),
+    ...(route.snapshot ? { snapshotId: route.snapshot } : {}),
+    view: recovery?.view ?? "all",
+    viewport: recovery?.viewport ?? "both",
+    colorScheme:
+      catalogue.hasDarkFragments &&
+      (initial?.colorScheme ?? recovery?.colorScheme) === "dark"
+        ? ("dark" as const)
+        : ("light" as const),
+    search: parsed.freeText,
+    tags: parsed.tags,
+  };
+  let disclosures = defaults;
   if (initial?.disclosures)
-    disclosures = { ...disclosures, ...initial.disclosures };
-  if (recovery)
-    disclosures = disclosuresFromClosed(
-      disclosures,
-      recovery.closedCollectionIds,
+    disclosures = reconcileDisclosures(
+      defaults,
+      initial.disclosures,
+      "default",
     );
-  let filterBaseline = recovery?.filterBaselineClosedCollectionIds
-    ? disclosuresFromClosed(
-        defaultDisclosures(sections, context.activeRoute),
-        recovery.filterBaselineClosedCollectionIds,
+  if (recovery)
+    disclosures = reconcileDisclosures(
+      defaults,
+      recovery.disclosures,
+      navigationFiltering(selection) ? "open" : "default",
+    );
+  let filterBaseline = recovery?.filterBaselineDisclosures
+    ? reconcileDisclosures(
+        defaults,
+        recovery.filterBaselineDisclosures,
+        "default",
       )
     : undefined;
   if (route.view.kind === "target") {
-    const activePath = disclosurePath(sections, route.view.target.entry.route);
+    const activePath = disclosurePath(sections, route.view.target.entry.id);
     disclosures = openDisclosures(disclosures, activePath);
     if (filterBaseline)
       filterBaseline = openDisclosures(filterBaseline, activePath);
   }
   if (initial?.earlyDisclosures)
-    disclosures = { ...disclosures, ...initial.earlyDisclosures };
-  const parsed = parseSearchQuery(recovery?.query ?? "");
+    disclosures = reconcileDisclosures(
+      defaults,
+      { ...disclosures, ...initial.earlyDisclosures },
+      "default",
+    );
   const componentDefault =
     route.view.kind === "target" &&
     route.view.target.entry.kind === "component";
@@ -88,40 +117,8 @@ export function createInitialShellState(
     query: recovery?.query ?? "",
     regionScrolls: recovery?.regionScrolls ?? {},
     route,
-    selection: {
-      ...defaultSelection,
-      screenId: routeScreenId(route),
-      ...(route.snapshot ? { snapshotId: route.snapshot } : {}),
-      view: recovery?.view ?? "all",
-      viewport: recovery?.viewport ?? "both",
-      colorScheme:
-        catalogue.hasDarkFragments &&
-        (initial?.colorScheme ?? recovery?.colorScheme) === "dark"
-          ? "dark"
-          : "light",
-      search: parsed.freeText,
-      tags: parsed.tags,
-    },
+    selection,
     tagPickerIndex: 0,
     tagPickerOpen: false,
   };
-}
-
-function disclosuresFromClosed(
-  defaults: Readonly<Record<string, boolean>>,
-  closed: readonly string[],
-): Record<string, boolean> {
-  const values = { ...defaults };
-  const keys = new Set(closed);
-  for (const key of Object.keys(values)) {
-    const legacy = legacyDisclosureKey(key);
-    values[key] = !keys.has(key) && !(legacy && keys.has(legacy));
-  }
-  return values;
-}
-
-function legacyDisclosureKey(key: string): string | undefined {
-  for (const prefix of ["collection:pages:", "collection:components:"])
-    if (key.startsWith(prefix)) return `collection:${key.slice(prefix.length)}`;
-  return undefined;
 }

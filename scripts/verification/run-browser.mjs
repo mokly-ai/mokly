@@ -15,11 +15,11 @@ import { runInherited } from "./process.mjs";
 import { validateCompletedReport } from "./report-validation.mjs";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
-const shard = parseShardArgument(process.argv.slice(2));
+const { suite, project, shard } = browserArguments(process.argv.slice(2));
 const identity = await verificationIdentity(repositoryRoot);
 const reportPath =
   process.env.MOKLY_VERIFICATION_REPORT ??
-  defaultReportPath(repositoryRoot, "browser", shard);
+  defaultReportPath(repositoryRoot, suite, shard);
 const eventPath = `${reportPath}.events`;
 await fs.mkdir(path.dirname(reportPath), { recursive: true });
 await Promise.all([
@@ -27,14 +27,16 @@ await Promise.all([
   fs.rm(eventPath, { force: true }),
 ]);
 await requirePrepared(repositoryRoot);
-const full = await discoverBrowserTests(repositoryRoot);
+const complete = await discoverBrowserTests(repositoryRoot);
+const full = await discoverBrowserTests(repositoryRoot, { project });
 const assigned = shard
-  ? await discoverBrowserTests(repositoryRoot, shard)
+  ? await discoverBrowserTests(repositoryRoot, { project, shard })
   : full;
 
 const args = [
   path.join(repositoryRoot, "node_modules/@playwright/test/cli.js"),
   "test",
+  `--project=${project}`,
   "--reporter=./scripts/verification/playwright-reporter.mjs",
 ];
 if (shard) args.push(`--shard=${shard.index}/${shard.total}`);
@@ -73,9 +75,10 @@ const cancelled = observedTests.filter((test) =>
 ).length;
 const report = {
   schemaVersion: 1,
-  suite: "browser",
+  suite,
   ...identity,
   shard: shard ?? null,
+  playwrightFiles: complete.files,
   fullFiles: full.files,
   assignedFiles: assigned.files,
   observedFiles,
@@ -109,6 +112,25 @@ try {
 await writeReport(reportPath, report);
 await fs.rm(eventPath, { force: true });
 if (evidenceError) throw evidenceError;
+
+function browserArguments(args) {
+  let suite = "browser";
+  let remaining = args;
+  if (remaining[0] === "--suite") {
+    suite = remaining[1];
+    remaining = remaining.slice(2);
+  }
+  if (!["browser", "hydration"].includes(suite))
+    throw new Error("browser suite must be browser or hydration");
+  const shard = parseShardArgument(remaining);
+  if (suite === "hydration" && shard)
+    throw new Error("hydration suite does not support --shard");
+  return {
+    suite,
+    project: suite === "hydration" ? "hydration" : "chromium",
+    shard,
+  };
+}
 
 function summarizeFiles(tests) {
   const files = new Map();

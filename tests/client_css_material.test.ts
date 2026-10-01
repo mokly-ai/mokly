@@ -21,11 +21,17 @@ function renderComparison(
   presentation: ComparisonPresentation,
 ): string {
   const loaded = { result, url: "https://example.test/review.json" };
-  const route = "screens/auth.html";
-  const views = selectedComparisonViews(loaded, presentation, route, undefined);
+  const entryId = "auth";
+  const views = selectedComparisonViews(
+    loaded,
+    presentation,
+    "screen",
+    entryId,
+  );
   return renderToStaticMarkup(
     createElement(ComparisonViews, {
-      component: false,
+      entryId,
+      entryKind: "screen",
       presentation,
       presentations: new Map(
         selectedComparisonDocuments(views).map((address) => [
@@ -33,7 +39,6 @@ function renderComparison(
           { snapshotAddress: address, srcdoc: "<p>Snapshot</p>" },
         ]),
       ),
-      route,
       together: true,
       views,
     }),
@@ -41,7 +46,7 @@ function renderComparison(
 }
 
 test("a material change with matched stylesheet evidence reads Screen changed", () => {
-  const result = cssSchemaFixture(2);
+  const result = cssSchemaFixture(4);
   const view = result.screens[0]!.views[0]!;
   Object.assign(view, { material: true });
 
@@ -58,7 +63,7 @@ test("a material change with matched stylesheet evidence reads Screen changed", 
 });
 
 test("an effective Light comparison retains the requested Dark fallback label", () => {
-  const result = cssSchemaFixture(2);
+  const result = cssSchemaFixture(4);
   const markup = renderComparison(result, {
     colorScheme: "light",
     mode: "side",

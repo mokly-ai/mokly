@@ -24,14 +24,7 @@ by generated output:
 - header-proven generated output plus `.git`, `.context`, `node_modules`,
   `dist`, `target`, coverage, browser-test output, comparison output, and Mokly
   transaction trees are pruned from broad watches and classify as ignored;
-- additional inputs use the explicit action declared in config;
-- every accepted source rebuild, reload/restart watch action, and configuration
-  replacement gives the in-memory Live runtime a fresh 32-lowercase-hex
-  generation; its browser bundle from the
-  [interactive Serve contract](./mokly-interactive-views-serve.md#browser-bundle)
-  is rebuilt lazily
-  on the next Live request while one predecessor is retained for unloading
-  frames. Evidence-only updates and recovery restarts keep the generation.
+- additional inputs use the explicit action declared in config.
 
 An entry glob's stable prefix is a traversal waypoint, not an exemption for its
 whole subtree. A candidate that is an ancestor of, or equal to, the prefix is
@@ -130,14 +123,7 @@ port in order when the address is occupied; port `0` delegates selection to the
 operating system. The resolved port remains stable across child restarts, which
 bind strictly rather than changing the published URL. Exhausting the valid port
 range or encountering another bind error exits non-zero without leaking
-watchers. When interactive Serve is enabled, the same HTTP child owns a second
-loopback listener, starting at the resolved app port plus one or the explicit
-interactive start; a resolved app port of 65535 makes the default Live port
-OS-selected because no adjacent port exists. The supervisor retains both
-resolved ports, and the public `--strict-port` flag prevents either listener
-from advancing. This ownership
-keeps Live documents on the same accepted runtime and document service as the
-app listener. An unexpected child failure after readiness reports its diagnostic
+watchers. An unexpected child failure after readiness reports its diagnostic
 once, starts cleanup if the process remains alive, and enqueues a restart through
 the same serialized action queue used for authored changes. The supervisor
 retains ownership until terminal confirmation; a replacement cannot bypass an
@@ -171,11 +157,11 @@ resource watches. Independently, visited previews send generation-tagged documen
 closures to the parent, which attaches incremental resource watches immediately,
 even when exhaustive rendering has not finished or fails elsewhere. Incremental
 watches accumulate within a source generation and are replaced by the next
-generation's visited closure. Discovery repeats after watcher readiness. Reloads
-keep missing or invalid paths and their last-known
-descendants observable until repaired or unreferenced. Invalid resources still
-make Changes unavailable, while verified baseline deletions identify affected
-screens. Neither case prevents a live reload or comparison-cache invalidation.
+generation's visited closure. Discovery repeats after watcher readiness.
+Missing or invalid paths and last-known descendants stay observable until
+repaired or unreferenced. [Changes resource handling](./mokly-changes.md#changes-membership)
+distinguishes invalid inputs from verified deletions; neither blocks reload or
+comparison-cache invalidation.
 Resource watches coalesce file and entry-replacement notifications and replace
 their observers when validity changes, so repairing a dangling alias as a regular
 file also restores subsequent edits. Unnamed raw events and unrelated generated
@@ -186,18 +172,15 @@ temporarily dangling resource remains observable and can recover after repair.
 Rebuilds are debounced and accept metadata and the retained graph together. A failed
 index candidate keeps the last-good server and output; a background failure keeps
 the last-good disk output without claiming completeness. Errors are reported while
-the watcher waits for another authored change. Failed and recovering source actions
-also follow the private [rebuild status contract](./mokly-rebuild-status.md), so
-watched browsers explain that they still show the last accepted catalogue. A
+the watcher waits for another authored change. A
 successful rebuild or healthy restart publishes a new update version. Browsers
 reload their current durable URL and restore search, changed-only selection,
-current collection disclosure, the disclosure baseline captured before active
-filtering, details disclosure, viewport and color-scheme selection, the
-Static/Live preview mode, responsive drawer, catalogue scroll, and per-region
-stage scroll once. Recovery is strictly parsed with two compatibility rules: a
-payload from before filter-baseline capture treats that missing baseline as
-unavailable, and a payload without a preview mode restores Static, while each
-restores its other valid state. Browse applies durable preferences and initial active-route
+current folder disclosure, the disclosure baseline captured before active
+filtering, details disclosure, viewport and color-scheme selection, responsive
+drawer, catalogue scroll, and per-region stage scroll once. Recovery is strictly
+parsed with one compatibility rule: a payload from before filter-baseline
+capture treats that missing baseline as unavailable while restoring its other
+valid state. Browse applies durable preferences and initial active-route
 selection before one-shot recovery. It then re-establishes active-route
 visibility, promoting a recovered pre-filter baseline only when a closed
 ancestor must be opened. A non-null baseline without active search or Changes
@@ -208,23 +191,23 @@ status (older payloads omit it). A selected Changes filter survives pending or
 unavailable states and their completion rather than switching to All to reveal an
 unchanged current preview. Explicit navigation still reveals its destination.
 
-When an authored rebuild reparents an entry, the new manifest relationships
-move its navigation row and ancestor crumbs in the same reload. Disclosure
-recovery still applies to every unchanged stable collection id; removed ids and
-obsolete label-path keys have no target and are ignored.
+Navigation follows the [path contract](./mokly-nav-paths.md); recovery uses the
+[disclosure persistence contract](./mokly-disclosure-persistence.md)
+for current keys, values, and incompatible snapshot handling.
 
 When a successful rebuild leaves the manifest structure unchanged, or a
 resource edit or explicit watch rule requests a reload, the parent keeps the
-ready child. It first publishes a typed update that clears stale route and
+ready child. It first publishes a typed update that clears stale entry and
 component evidence, making the successful content generation visible without
 waiting on Git. The parent then computes one complete classification outside the
 HTTP request path. A sequence token discards results superseded by a newer watch
 action; the current successful result publishes a second typed update that
-atomically replaces route membership, removed-entry baseline data, and component
-evidence. Both tabs are present from startup: pending status shows a spinner in
-the reserved count slot and, when selected, in the sidebar. An available empty list
-shows zero; a failed or unavailable comparison ends loading and shows a dash plus an
-unavailable sidebar. Every terminal status uses the same sequence/version checks as
+atomically replaces changed-entry membership, removed-entry baseline data, and
+component evidence. Both tabs are present from startup: pending status shows a
+spinner in the reserved count slot and, when selected, in the sidebar. An
+available empty list shows zero; a failed or unavailable comparison ends loading
+and shows a dash plus an unavailable sidebar. Every terminal status uses the
+same sequence/version checks as
 the result, including background build and write failures. Initial watched startup follows the
 same asynchronous classification rule after listener readiness, as does non-watched
 Serve. Watched Serve polls resolved HEAD/base commits once per second outside HTTP;
@@ -268,9 +251,7 @@ one regeneration and snapshots remain pinned to their immutable generation.
 
 Shutdown first stops queued work, aborts active Git classification, and waits
 for any active configuration transaction, then closes all final adopted
-watchers, timers, child processes, both HTTP listeners, event streams, and
-ports. The child closes active connections on both listeners, so a Live frame
-cannot keep shutdown waiting. A
+watchers, timers, child processes, HTTP servers, event streams, and ports. A
 candidate watcher is discarded if shutdown begins before adoption: shutdown
 interrupts an outstanding candidate readiness wait and closes that watcher
 before the action queue finishes draining. No later child restart is started.

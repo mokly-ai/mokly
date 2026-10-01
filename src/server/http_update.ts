@@ -10,11 +10,16 @@ import type { CatalogueUpdate, ChangesStatus } from "./update_messages.js";
 export function publicChangesStatus(
   liveChanges: boolean | undefined,
   review: boolean,
-  routes: readonly string[] | undefined,
+  ids: readonly string[] | undefined,
   hasEvidence: boolean,
   status: ChangesStatus,
+  preserveUnavailable = false,
 ): ChangesStatus | "disabled" {
-  return liveChanges === false && !review && !routes && !hasEvidence
+  return liveChanges === false &&
+    !review &&
+    !ids &&
+    !hasEvidence &&
+    !(preserveUnavailable && status === "unavailable")
     ? "disabled"
     : status;
 }
@@ -26,6 +31,7 @@ export function publishCatalogueUpdate(
   publicCatalogue: LivePublicCatalogue,
   liveChanges: boolean | undefined,
   review: boolean,
+  preserveUnavailable = false,
 ): CatalogueUpdateState | undefined {
   const next = advanceCatalogueState(current, update);
   if (!next) return;
@@ -35,11 +41,12 @@ export function publishCatalogueUpdate(
       publicChangesStatus(
         liveChanges,
         review,
-        next.changedRoutes,
+        next.changedIds,
         next.componentChanges !== undefined,
         next.changesStatus,
+        preserveUnavailable,
       ),
-      next.changedRoutes,
+      next.changedIds,
       next.componentChanges,
       undefined,
     ),

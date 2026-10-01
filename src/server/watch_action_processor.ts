@@ -6,7 +6,7 @@ import type { Compilation } from "../build/compile.js";
 import type { ComponentRuntime } from "../build/component_runtime.js";
 
 import { restartWithRecovery } from "./serve_lifecycle.js";
-import type { ProcessSupervisor } from "./supervisor.js";
+import type { ProcessSupervisor } from "./supervisor_types.js";
 import {
   completedWatchAction,
   deliveryPhaseWatchAction,

@@ -1,6 +1,6 @@
 import { exactKeys, invalidData } from "../components/data.js";
 
-import { CHANGE_STATUSES, readCollection, readEntry } from "./entry_reader.js";
+import { CHANGE_STATUSES, readEntry } from "./entry_reader.js";
 import { assertPublicCatalogue } from "./privacy.js";
 import { validateCatalogueReferences } from "./references.js";
 import {
@@ -20,14 +20,13 @@ import {
   hash,
   id,
   object,
-  pagePreviewPath,
   text,
 } from "./values.js";
 
-/** Parse known v1 fields; ignore compatible additions without exposing private data. */
+/** Parse known v3 fields; ignore compatible additions without exposing private data. */
 export function readCatalogue(value: unknown): CatalogueReadModel {
   const input = object(value);
-  if (input.schemaVersion !== 1)
+  if (input.schemaVersion !== 3)
     invalidData("$catalogue", "unsupported schemaVersion");
   assertPublicCatalogue(input);
   const identity = object(input.identity),
@@ -44,7 +43,7 @@ export function readCatalogue(value: unknown): CatalogueReadModel {
       return entry;
     });
   const model: CatalogueReadModel = {
-    schemaVersion: 1,
+    schemaVersion: 3,
     identity: { id: catalogueIdentity, title: text(identity.title) },
     deploymentId: hash(input.deploymentId),
     revision: {
@@ -53,7 +52,6 @@ export function readCatalogue(value: unknown): CatalogueReadModel {
     },
     changesStatus: choice(input.changesStatus, CHANGE_STATUSES),
     comparisonUrl,
-    collections: array(input.collections).map(readCollection),
     tree: {
       pages: array(tree.pages).map(readNode),
       components: array(tree.components).map(readNode),
@@ -83,10 +81,6 @@ export function readCatalogue(value: unknown): CatalogueReadModel {
           : hash(removed.snapshotId);
       return {
         entry,
-        ancestors: array(removed.ancestors).map((raw) => {
-          const ancestor = object(raw);
-          return { id: id(ancestor.id), title: text(ancestor.title) };
-        }),
         ...(snapshotId ? { snapshotId } : {}),
         ...(removed.preview === undefined
           ? {}
@@ -101,19 +95,13 @@ export function readCatalogue(value: unknown): CatalogueReadModel {
 function readPreview(value: unknown): RemovedEntryPreview {
   const input = object(value),
     kind = choice(input.kind, ["screen", "page"] as const);
-  exactKeys(
-    input,
-    kind === "screen" ? ["kind"] : ["kind", "path"],
-    "$catalogue.preview",
-  );
-  return kind === "screen"
-    ? { kind }
-    : { kind, path: pagePreviewPath(input.path) };
+  exactKeys(input, ["kind"], "$catalogue.preview");
+  return { kind };
 }
 
 function readNode(value: unknown): CatalogueNode {
   const input = object(value),
-    kind = choice(input.kind, ["collection", "entry"] as const);
+    kind = choice(input.kind, ["folder", "entry"] as const);
   return kind === "entry"
     ? {
         kind,
@@ -122,5 +110,9 @@ function readNode(value: unknown): CatalogueNode {
           ? { children: array(input.children).map(readNode) }
           : {}),
       }
-    : { kind, id: id(input.id), children: array(input.children).map(readNode) };
+    : {
+        kind,
+        label: text(input.label),
+        children: array(input.children).map(readNode),
+      };
 }

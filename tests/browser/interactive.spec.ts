@@ -1,5 +1,9 @@
+import path from "node:path";
+
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
+
+import { viewRoute } from "@mokly/viewer/data";
 
 import {
   interactiveFixture,
@@ -36,9 +40,11 @@ test("Live mounts state and sends MockLink navigation through the frame adapter"
   await expect(count).toHaveText("Saved: 0 items");
   await frame.locator("#increment").click();
   await expect(count).toHaveText("Saved: 1 items");
+  const sourceRoute = serveFixture.livePath.replace(/^\/static\//u, "");
+  const detailsRoute = viewRoute("screen", "details", "mobile", "light");
   await expect(frame.locator("#raw-link")).toHaveAttribute(
     "href",
-    "../../screens/details.mobile.html",
+    path.posix.relative(path.posix.dirname(sourceRoute), detailsRoute),
   );
   const initialPath = await frame
     .locator("body")

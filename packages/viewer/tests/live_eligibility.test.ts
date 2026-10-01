@@ -19,7 +19,7 @@ const catalogue = viewerCatalogue(
     JSON.parse(
       fs.readFileSync(
         new URL(
-          "../../../docs/protocol/fixtures/catalogue-v1.json",
+          "../../../docs/protocol/fixtures/catalogue-v3.json",
           import.meta.url,
         ),
         "utf8",
@@ -80,7 +80,7 @@ test("only an adopted true value makes a screen or component eligible", () => {
   }
 });
 
-test("a route without its adopted workspace is pending until the request settles", () => {
+test("an entry without its adopted workspace is pending until the request settles", () => {
   assert.equal(
     liveEligibility({ entry: screen, pending: true, workspace: undefined }),
     "pending",
@@ -93,15 +93,10 @@ test("a route without its adopted workspace is pending until the request settles
   assert.equal(
     liveEligibility({ entry: screen, pending: true, workspace: previous }),
     "pending",
-    "another entry's eligibility never answers for this route",
+    "another entry's eligibility never answers for this entry",
   );
   assert.equal(
     liveEligibility({ entry: screen, pending: false, workspace: previous }),
-    "ineligible",
-  );
-  const moved = adopted({ ...screen, route: "screens/moved.html" }, true);
-  assert.equal(
-    liveEligibility({ entry: screen, pending: false, workspace: moved }),
     "ineligible",
   );
 });

@@ -17,8 +17,8 @@ publication consume one hierarchy. Do not merge collections by display name.
 
 - [Pages in the catalogue](../docs/protocol/mokly-pages.md) owns the API,
   schema-v4 entry model, output, Browse, links, impact, and publication contract.
-- [Breaking page migration](../docs/protocol/mokly-page-migration.md)
-  owns generic consumer updates, safe regeneration, and historical readers.
+- Breaking page migration, recorded by this plan, owns generic consumer
+  updates, safe regeneration, and historical readers.
 - [Source protection](../docs/protocol/mokly-source-protection.md) and
   [catalogue changes](../docs/protocol/mokly-catalogue-changes.md) own shared
   source classification, change metadata, and removed-page presentation.

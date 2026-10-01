@@ -19,7 +19,7 @@ test.beforeAll(async () => {
       source
         .replace(/ {2}defineScreen\([^\n]+\)\n/, "")
         .replace(
-          ', { id: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+          ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
           "",
         )
         .replace(
@@ -33,7 +33,7 @@ test.beforeAll(async () => {
     fixture.git,
     "main",
   );
-  if (compared.result.schemaVersion !== 3)
+  if (compared.result.schemaVersion !== 4)
     throw new Error("Expected component result");
   server = await startCatalogueServer(fixture.config, {
     base: "main",
@@ -94,13 +94,24 @@ test("removed affected-screen links and legacy comparison URLs stay current", as
 test("removed component variants still honor eligible comparison URLs", async ({
   page,
 }) => {
-  await page.goto(
-    `${server.url}/view/components/action.html?variant=disabled&viewport=mobile&comparison=side`,
+  await page.goto(`${server.url}/view/components/action.html`);
+  await page.click('[data-filter="changed"]');
+  const removed = page.locator(
+    'a[data-nav-row][data-route="components/action-disabled.html"]',
+  );
+  await expect(removed).toHaveAttribute(
+    "href",
+    /\/view\/components\/action-disabled\.html\?snapshot=[a-f0-9]{64}$/,
+  );
+  await removed.click();
+  await expect(page).toHaveURL(
+    /\/view\/components\/action-disabled\.html\?snapshot=[a-f0-9]{64}$/,
   );
   await expect(page.locator("[data-workspace-variant-status]")).toHaveText(
     "Disabled · Removed",
   );
   await expect(page.locator(".mbk-diff-toolbar")).toBeVisible();
+  await page.getByRole("button", { name: "Side by side" }).click();
   await expect(page.locator("[data-current-screen]")).toBeHidden();
   await expect(page.locator("[data-diff-stage]")).toBeVisible();
   await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(1);

@@ -1,7 +1,8 @@
+import { viewRoute } from "@mokly/viewer/data";
+
 /** One rebuild status artboard and what it depicts. */
 export interface RebuildState {
   id: string;
-  route: string;
   /** The failure notice, collapsed or disclosed; absent once changes load. */
   notice: "collapsed" | "open" | undefined;
   /** Delayed progress shows in the top bar. */
@@ -12,11 +13,10 @@ export interface RebuildState {
   navigation: string;
 }
 
-/** The five states in catalogue order; the first is the canonical screen. */
+/** The five approved states; the first is the canonical screen. */
 export const REBUILD_STATES: readonly RebuildState[] = [
   {
     id: "design-rebuild-failure",
-    route: "design/rebuild-status/failure.html",
     notice: "collapsed",
     updating: false,
     workspace: "design-interactive-static",
@@ -24,7 +24,6 @@ export const REBUILD_STATES: readonly RebuildState[] = [
   },
   {
     id: "design-rebuild-details",
-    route: "design/rebuild-status/details.html",
     notice: "open",
     updating: false,
     workspace: "design-interactive-static",
@@ -32,7 +31,6 @@ export const REBUILD_STATES: readonly RebuildState[] = [
   },
   {
     id: "design-rebuild-updating",
-    route: "design/rebuild-status/updating.html",
     notice: undefined,
     updating: true,
     workspace: "design-interactive-static",
@@ -40,7 +38,6 @@ export const REBUILD_STATES: readonly RebuildState[] = [
   },
   {
     id: "design-rebuild-failure-updating",
-    route: "design/rebuild-status/failure-updating.html",
     notice: "collapsed",
     updating: true,
     workspace: "design-interactive-static",
@@ -48,7 +45,6 @@ export const REBUILD_STATES: readonly RebuildState[] = [
   },
   {
     id: "design-rebuild-live-component",
-    route: "design/rebuild-status/live-component.html",
     notice: "collapsed",
     updating: false,
     workspace: "design-interactive-component",
@@ -74,5 +70,5 @@ export function fragment(
   state: RebuildState,
   viewport: "desktop" | "mobile",
 ): string {
-  return state.route.replace(/\.html$/u, `.${viewport}.html`);
+  return viewRoute("screen", state.id, viewport, "light");
 }

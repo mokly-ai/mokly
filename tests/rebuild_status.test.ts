@@ -251,6 +251,7 @@ function quietReporter(): ServeReporter {
     changesReady() {},
     changesUnavailable() {},
     gitReferenceRefresh() {},
+    incompatibleBaseline() {},
     runtimeDiagnostic() {},
     serveReady() {},
     watchFailed() {},

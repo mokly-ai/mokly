@@ -5,7 +5,7 @@ import type {
   SnapshotPresentation,
   SnapshotPresentationLoader,
 } from "../src/previews/presentation.js";
-import type { ReviewResultV2, ViewReview } from "../src/review/types.js";
+import type { ReviewResult, ViewReview } from "../src/review/types.js";
 import { createComparisonDocuments } from "../src/shell/comparison_documents.js";
 import type { LoadedComparison } from "../src/shell/comparison_request.js";
 import {
@@ -21,17 +21,15 @@ function view(
   colorScheme: "dark" | "light",
   sides: readonly ("after" | "before")[] = ["before", "after"],
 ): ViewReview {
-  const file = `screens/home.${viewport}${colorScheme === "dark" ? ".dark" : ""}.html`;
   return {
-    ...(sides.includes("before")
-      ? { beforePath: `snapshots/before/${file}` }
-      : {}),
-    ...(sides.includes("after")
-      ? { afterPath: `snapshots/after/${file}` }
-      : {}),
     colorScheme,
     ignoredIds: [],
-    state: "changed",
+    state:
+      sides.length === 2
+        ? "changed"
+        : sides.includes("before")
+          ? "removed"
+          : "added",
     viewport,
   };
 }
@@ -40,17 +38,19 @@ function comparison(
   views: readonly ViewReview[],
   generation = GENERATION,
 ): LoadedComparison {
-  const result: ReviewResultV2 = {
+  const address = { id: "home", title: "Home" };
+  const result: ReviewResult = {
     baseCommit: "a".repeat(40),
     baseRef: "origin/main",
     changedPaths: [],
     ignoredImpact: [],
-    schemaVersion: 2,
+    schemaVersion: 4,
     screens: [
       {
+        after: address,
+        before: address,
         dependencies: [],
         id: "home",
-        route: "screens/home.html",
         sharedImpact: [],
         state: "changed",
         title: "Home",
@@ -58,6 +58,16 @@ function comparison(
       },
     ],
     sharedImpact: [],
+    components: [],
+    changes: [
+      {
+        after: address,
+        before: address,
+        kind: "screen",
+        reasons: [{ kind: "material" }],
+      },
+    ],
+    affectedConsumers: [],
   };
   return { result, url: `${generation}review.json` };
 }
@@ -96,8 +106,8 @@ test("selected views resolve both sides beneath the comparison generation", () =
   const both = selectedComparisonViews(
     loaded,
     presentation(),
-    "screens/home.html",
-    undefined,
+    "screen",
+    "home",
   );
   assert.deepEqual(selectedComparisonDocuments(both), [
     `${GENERATION}snapshots/before/screens/home.mobile.html`,
@@ -108,8 +118,8 @@ test("selected views resolve both sides beneath the comparison generation", () =
   const dark = selectedComparisonViews(
     loaded,
     presentation({ colorScheme: "dark", viewport: "desktop" }),
-    "screens/home.html",
-    undefined,
+    "screen",
+    "home",
   );
   assert.equal(dark?.[0]?.mode, "side");
   assert.deepEqual(selectedComparisonDocuments(dark), [
@@ -118,12 +128,12 @@ test("selected views resolve both sides beneath the comparison generation", () =
   const fallback = selectedComparisonViews(
     loaded,
     presentation({ colorScheme: "dark", viewport: "mobile" }),
-    "screens/home.html",
-    undefined,
+    "screen",
+    "home",
   );
   assert.equal(fallback?.[0]?.view.colorScheme, "light");
   assert.equal(
-    selectedComparisonViews(loaded, presentation(), "other.html", undefined),
+    selectedComparisonViews(loaded, presentation(), "screen", "other"),
     undefined,
   );
 });

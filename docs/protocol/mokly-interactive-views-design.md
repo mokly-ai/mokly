@@ -2,16 +2,13 @@
 
 ## Delivery Status
 
-Delivered mockup scope for Milestones 2 and 8 of the
-[interactive views plan](../../plans/interactive-views.md). These authored
-design states depict the [interactive views contract](./mokly-interactive-views.md)
-and extend the [shell design](./mokly-shell-design.md) and
+Implemented in the authored design catalogue and runtime shell. These states
+depict the [interactive views contract](./mokly-interactive-views.md) and extend
+the [shell design](./mokly-shell-design.md) and
 [component workspace design](./mokly-component-workspace-design.md). The
-runtime Static/Live control implemented these designs in Milestone 5,
-Milestone 7 removed it from opted-out entries, and Milestone 9 kept every
-narrow toolbar without it beside the title, as the
-[shell contract](./mokly-interactive-views-shell.md) records. Milestone 8 added
-the screen in Live whose Components tab points back to Static.
+[shell contract](./mokly-interactive-views-shell.md) owns the delivered control,
+opt-out behavior, narrow-toolbar placement, and the Live screen whose
+Components tab points back to Static.
 
 ## Static/Live Control
 
@@ -23,7 +20,7 @@ scheme, it follows the viewport control directly. It uses the existing
 segmented style, selected state, accessible group name ("Preview mode"), hover
 tooltips and visible keyboard focus, and matches the icon controls' height.
 Static is selected by default. The control
-appears only on screen fragments and component saved variants of a catalogue
+appears only on screen and component-variant entries in a catalogue
 whose local Serve offers Live; pages, use-case steps, comparison panes and
 removed previous versions never show it. A static-only catalogue, or an entry
 that opted out, shows the existing toolbar unchanged, with no placeholder gap;
@@ -99,15 +96,15 @@ The control itself carries every transition; no design-only navigation is
 added inside or under an artboard. The top-bar Appearance selector remains the
 standalone catalogue's only color-scheme control.
 
-| Source                         | Segment | Destination                           |
-| ------------------------------ | ------- | ------------------------------------- |
-| `design-browse-screen`         | Live    | `design-interactive-overview`         |
-| `design-interactive-overview`  | Static  | `design-interactive-static`           |
-| `design-interactive-static`    | Live    | `design-interactive-preparing`        |
-| `design-interactive-preparing` | Static  | `design-interactive-static`           |
-| `design-component-overview`    | Live    | `design-interactive-component`        |
-| `design-interactive-component` | Static  | `design-component-overview`           |
-| `design-interactive-screen`    | Static  | `design-component-inspection-details` |
+| Source                       | Segment | Destination                         |
+| ---------------------------- | ------- | ----------------------------------- |
+| design-browse-screen         | Live    | design-interactive-overview         |
+| design-interactive-overview  | Static  | design-interactive-static           |
+| design-interactive-static    | Live    | design-interactive-preparing        |
+| design-interactive-preparing | Static  | design-interactive-static           |
+| design-component-overview    | Live    | design-interactive-component        |
+| design-interactive-component | Static  | design-component-overview           |
+| design-interactive-screen    | Static  | design-component-inspection-details |
 
 Selecting Live for the first time prepares the preview, so the static screen
 opens the preparing state while the ready pair keeps its own transition.

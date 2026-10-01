@@ -13,7 +13,7 @@ const model = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v1.json",
+        "../../../docs/protocol/fixtures/catalogue-v3.json",
         import.meta.url,
       ),
       "utf8",
@@ -51,11 +51,14 @@ function served(
       readModel: model,
       updateVersion: 4,
       ...(descriptor ? { interactive: descriptor } : {}),
-      ...(descriptor && entry && eligible !== null
+      ...(descriptor &&
+      entry &&
+      (entry.kind === "component" || entry.kind === "screen") &&
+      eligible !== null
         ? {
             workspaceInteractive: {
               entryId: entry.id,
-              route: entry.route,
+              entryKind: entry.kind,
               value: eligible,
             },
           }
@@ -173,8 +176,7 @@ test("an exported page never offers Live, even from a Live context", () => {
           canonicalPath: "/",
           comparisonUrl: null,
           deploymentId,
-          idRoutes: {},
-          schemaVersion: 2,
+          schemaVersion: 3,
         },
         interactive: { ...interactive, state: "ready" },
         readModel: { ...model, deploymentId },

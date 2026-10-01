@@ -2,20 +2,11 @@
 
 ## Delivery Status
 
-This contract is implemented. Its delivery and verification history is recorded
-in the completed
-[in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
-
-[Whole-document pages](./mokly-pages.md) use the same logical links, IDs,
-source ownership, and collection ancestry as screens and use cases.
-
-The [frame adapters](./mokly-frame-adapter.md) and `@mokly/viewer` package
-are implemented. This document's same-origin interactions remain
-authoritative. The outer shell is a hydrated React tree that renders routes
-from the catalogue read model, as tracked in the
-[React Browse shell plan](../../plans/react-browse-shell.md). Every marker,
-sandbox, target-parsing and outer-navigation rule below applies to that shared
-shell in Serve, export and embedded hosts.
+Implemented by the [in-frame navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
+[Pages](./mokly-pages.md) share the screen/flow link and breadcrumb rules. The
+hydrated shell and [frame adapters](./mokly-frame-adapter.md) apply every marker,
+sandbox, target, and outer-navigation rule in Serve, export, and embedded hosts.
+Controlled and uncontrolled unknown-id handling is implemented.
 
 ## Scope
 
@@ -28,19 +19,23 @@ Mokly owns navigation between catalogue entries. Consumers continue to own
 their product's application routes and the behavior of ordinary document,
 asset, external, download, and same-document links.
 
-Collections remain viewless navigation folders. An authored collection with no
-children keeps its stable folder row in the Pages projection and has no link or
-destination; its empty Components projection is omitted. Empty membership adds
-no ancestry edge and does not weaken the normal collection-forest checks.
+Folders follow the [navigation path contract](./mokly-nav-paths.md) and have
+no link or destination.
+`design-browse-tags` (Tag states) has no routed descendants after its six
+screens became variants of `design-browse-screen`, so its former folder row
+is absent from the path-based example.
 
 ## Component Navigation
 
-Registered component ids share the existing catalogue namespace. Portable links
-resolve to the first saved variant in the effective viewport and color scheme;
-Browse opens the component page at its default variant. The [explorer contract](./mokly-component-explorer.md)
-owns saved-variant and usage queries, removed variants, and selecting an actual
-consumer instance. View/theme swaps replace iframe history; outer Back/Forward
-continues between catalogue pages and saved variants. Only authenticated immediate
+Registered component and component variant ids share the existing catalogue
+namespace. A portable link to a component parent resolves to its first variant
+entry's view in the effective viewport and color scheme, and a link to a
+variant resolves to that variant's own view; Browse opens the component page,
+which shows the first variant, or the variant entry. The
+[explorer contract](./mokly-component-explorer.md) owns usage queries and
+selecting an actual consumer instance; variant rows follow the
+[variant contract](./mokly-variants.md). View/theme swaps replace iframe
+history; outer Back/Forward continues between catalogue entries. Only authenticated immediate
 frames receive inspection/link enhancement. Temporary control documents retain
 the same script-disabled boundary and do not grant nested frames shell access.
 
@@ -75,8 +70,8 @@ build instead of becoming an accidental resource request. Authors use
 `data-nav-href` for metadata-only references; it is valid on any element but
 does not invent click or keyboard semantics. A logical `data-nav-href` may
 coexist with an eligible logical `href`, in which case both must name the same
-destination. The entry's `route` is its current Browse location. A collection
-remains an invalid destination. A use-case destination opens the use-case page,
+destination. The entry's derived route is its current Browse location. A
+folder has no id or route and is not a destination. A use-case destination opens the use-case page,
 even though its portable fragment fallback resolves through the first screen in
 that use case.
 
@@ -141,11 +136,8 @@ prevents Mokly from taking over product or asset navigation accidentally.
 Generated documents in both output modes keep their relative artifact `href`
 values. They must remain navigable when opened directly or copied without the
 Browse shell. Comparison snapshot trees copy the same portable documents and do
-not promote their marked links into Browse routes. Inside a comparison pane the
-viewer's read-only guard cancels every link and form activation. A
-same-document anchor reveals its enclosing inner regions before the pane's page
-viewport, with counterparts following while Scroll together is on under the
-[comparison scrolling contract](./mokly-comparison-scrolling.md#anchors).
+not promote links into Browse routes; the pane guard cancels activation and
+[reveals same-document anchors](./mokly-comparison-scrolling.md#anchors).
 
 ## Browse Presentation
 
@@ -155,10 +147,9 @@ Mokly authenticates its marker for trusted parent enhancement while retaining
 the portable `href` and live `target`. The trusted-document set is exactly every
 current manifest screen fragment, including dark fragments, plus every
 generated page in that manifest. Its generated header must name the same
-`sourcePath` as that manifest entry. The parent derives the canonical
-`/id/<encoded-id>` or
-`/id/<encoded-id>?fragment=<encoded-fragment>` destination from the marker; it
-never trusts the portable URL as route identity. The adapter removes any
+`sourcePath` as that manifest entry. The parent resolves the marker's id through its catalogue read model to the
+canonical `/view/<route>` or `/view/<route>?fragment=<encoded-fragment>`
+destination; it never trusts the portable URL as entry identity. The adapter removes any
 consumer-authored `data-mokly-target`, resolves the eligible link's effective
 request from its own `target` or the document's applicable first `<base target>`,
 parses it, and retains a valid non-self request only in newly derived inert
@@ -207,12 +198,10 @@ frames. Consumer-authored `_top`, `_parent`, named, `<base target>`, and
 `formtarget` values therefore cannot replace the shell even when they live in
 nested content the adapter cannot inspect. Trusted parent code is the only
 outer-navigation authority. Portable and comparison documents retain their original
-bytes; comparison panes are presented as viewer-owned, script-disabled
-documents whose navigation the parent guard cancels.
+bytes; viewer-owned, script-disabled comparison panes cancel navigation.
 
-In served Browse, the `/id/<id>` redirect preserves the optional
-request-visible `fragment` query on
-`/view/<route>?fragment=<encoded-fragment>`. The server accepts at most one
+In served Browse, `/view/<route>?fragment=<encoded-fragment>` carries the
+optional request-visible `fragment` query. The server accepts at most one
 value, decodes it exactly once, checks the grammar and cross-view anchor
 existence above, and returns HTTP 400 without injecting a fragment when
 validation fails. It renders the validated value as an encoded hash on every
@@ -272,11 +261,16 @@ result cannot replace the retained view. Saved scroll positions may be
 restored without a reload. A changed route or query still uses in-shell
 navigation and its normal history restoration.
 
-For exported catalogues the shared delivery resolver maps that trusted id to
-the exact `/view/<route>.html` URL in shell-owned metadata before rendering or
-opening any context. Development still follows the `/id` redirect. Real static
-id aliases show full content without JavaScript and normalize their history
-entry once hydrated; see [Static export delivery](./mokly-export-delivery.md).
+In every delivery the shell resolves that trusted id through its catalogue
+read model to the exact `/view/<route>` URL before rendering or opening any
+context; there is no id alias page or redirect. See
+[Static export delivery](./mokly-export-delivery.md).
+
+For an absent runtime frame id, standalone/uncontrolled shells show the shared
+missing destination and any later selection reinstalls its canonical route. A
+controlled Viewer emits one frame error, changes no selection/display, and emits
+no selection/navigation event. [Identity-derived paths](./mokly-artifact-paths.md)
+owns the helper.
 
 The same trusted parent enhancement exclusively handles modified pointer
 activation and explicit non-self targets after validating the marker and
@@ -292,8 +286,7 @@ outer-navigation fallback.
 Consumer scripts remain disabled in default Browse. It permits same-origin inspection but
 does not grant script, form, popup, download, or either top-navigation
 capability to consumer documents. Comparison panes are viewer-owned,
-script-disabled documents under the
-[comparison pane contract](./mokly-comparison-panes.md).
+script-disabled documents under the [pane contract](./mokly-comparison-panes.md).
 
 External, raw relative, download, same-document hash, metadata-only, and
 unmarked links retain their existing frame-owned behavior subject to the
@@ -320,18 +313,6 @@ never reads or changes `window.top` or `parent.location`. Cross-origin hosts
 grant `allow-same-origin allow-scripts` only under that explicit contract;
 default local Browse and all comparison snapshot restrictions remain unchanged.
 
-Live documents rebuild native `MockLink` and raw `mock:` hrefs from their
-bootstrap route table. Native links and `MockLink asChild` prevent unmodified
-primary activation and emit a package DOM event containing the validated
-logical identity `{ id, fragment?, target }`; the inspector adds primary
-activation and sends the same wire navigation event. The DOM event contains no
-href or arbitrary URL, and the host still validates the id and resolves its
-canonical route. Modified and middle activation emit no package event and keep
-native sandbox behavior on the resolved portable href. Missing route-table ids
-remain inert. The Live route table is independent of the static inspector map's
-1,024-link limit; restored static fallback nodes continue to use their original
-Browse-authenticated indices.
-
 ## Active Catalogue Visibility
 
 Every successful outer route change, including in-shell navigation, Back,
@@ -342,12 +323,13 @@ To establish the invariant, Browse must:
 
 1. remove `aria-current` from every other row;
 2. open each ancestor `[data-nav-disclosure]` of the active row, including
-   its Pages or Components section and, for a variant screen, the parent
+   its Pages or Components section and, for an entry with variants or one of
+   its variants, the parent
    row's variant list defined by the
-   [screen variants contract](./mokly-screen-variants.md). That list is a
+   [variant contract](./mokly-variants.md). That list is a
    container rather than a `<details>`, so opening it clears its `hidden`
    state and presses its disclosure button instead of setting `open`;
-3. preserve unrelated collection disclosures;
+3. preserve unrelated folder disclosures;
 4. clear a search query only when it would hide the destination;
 5. switch Changes to All only when the destination is not changed;
 6. reapply navigation visibility after those adjustments; and
@@ -383,18 +365,13 @@ receive the complete proposal and commit nothing until they supply it back.
 
 A removed-entry destination also carries its public `snapshot` identity. Route
 parsing accepts exactly one lowercase 64-hex value and requires it to match that
-historical route and id. The query survives same-entry axis and filter changes,
-Back/Forward and hydration; a current-entry link omits it and therefore clears
-historical selection. Unknown, stale, repeated, mismatched, or identity-less
-same-id history is unavailable through the Viewer error state rather than
-redirected to current content or left to native host navigation.
-Historical snapshot queries are supported only on the exact canonical
-`/view/<old-route>` URL or its provider-normalized extensionless form. The
-normalized form resolves against the retained historical route itself; it does
-not use `idRoutes`, which may map the same stable id to current content.
-`/id/<id>?snapshot=...` is rejected because an id alias cannot distinguish
-current and historical routes. Existing id-only aliases remain available for
-current entries and uniquely identified removed entries.
+removed entry's id. The query survives same-entry axis and filter changes,
+Back/Forward and hydration. Unknown, stale, repeated, or mismatched snapshots
+are unavailable through the Viewer error state rather than retargeted.
+Snapshot queries are supported only on the removed entry's
+canonical `/view/<route>` URL or its provider-normalized extensionless form,
+where the route derives from the removed entry's kind and id. Without the query,
+an id-only removed selection normalizes to its published identity when present.
 
 ## Verification Contract
 

@@ -281,7 +281,6 @@ function sameFrameIdentity(
   return (
     current.colorScheme === next.colorScheme &&
     current.entryId === next.entryId &&
-    current.route === next.route &&
     current.stepIndex === next.stepIndex &&
     current.variantId === next.variantId &&
     current.viewport === next.viewport

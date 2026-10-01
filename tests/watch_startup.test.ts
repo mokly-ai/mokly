@@ -15,7 +15,7 @@ import { serve } from "../dist/server/serve.js";
 import type {
   ProcessSupervisor,
   ProcessSupervisorFactory,
-} from "../dist/server/supervisor.js";
+} from "../dist/server/supervisor_types.js";
 import type { WatchEvent } from "../dist/server/watch_events.js";
 import type {
   ConsumerWatcher,
@@ -75,7 +75,7 @@ test("watched startup does not await repository classification", async (context)
     async read(_config, manifest) {
       events.push("classification:start");
       await pending;
-      return { baseline: manifest, changedRoutes: ["screens/home.html"] };
+      return { baseline: manifest, changedIds: ["home"] };
     },
   };
   const running = await serve(

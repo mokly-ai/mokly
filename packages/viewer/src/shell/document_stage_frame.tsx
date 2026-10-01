@@ -2,7 +2,8 @@
 
 import { useMemo } from "react";
 
-import type { CatalogueRoutedEntry } from "../catalogue/types.js";
+import type { CatalogueRecord } from "../catalogue/types.js";
+import { entryRoute } from "../navigation/routes.js";
 
 import { useMountedShellFrame } from "./frame_mount_hook.js";
 import {
@@ -18,17 +19,15 @@ export function DocumentStageFrame({
   entry,
   fragment,
 }: {
-  entry: Extract<CatalogueRoutedEntry, { kind: "page" }>;
+  entry: Extract<CatalogueRecord, { kind: "page" }>;
   fragment?: string;
 }) {
   const store = useOptionalShellStore();
   const registry = useOptionalShellFrameRegistry();
-  const source = entry.documentPath
-    ? framePath(entry.documentPath, fragment)
-    : undefined;
+  const source = framePath(`static/${entryRoute("page", entry.id)}`, fragment);
   const identity = useMemo<ShellFrameIdentity>(
-    () => ({ entryId: entry.id, route: entry.route }),
-    [entry.id, entry.route],
+    () => ({ entryId: entry.id }),
+    [entry.id],
   );
   const mounted = useMountedShellFrame({
     enabled: store?.interactive ?? false,

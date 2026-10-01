@@ -48,7 +48,7 @@ test("preview-resource exclusions reach stderr without exposing the cause in HTT
     },
     body: JSON.stringify({
       componentId: "action",
-      variantId: "default",
+      variantId: "action-default",
       viewport: "mobile",
       colorScheme: "light",
       generation: renderCapability.generation,

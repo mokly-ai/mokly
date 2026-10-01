@@ -1,4 +1,4 @@
-import { collection, screen } from "@mokly/mokly";
+import { folder, screen } from "@mokly/mokly";
 
 import { componentStyleDependencies } from "../components/parts/styles.js";
 
@@ -19,17 +19,12 @@ export function InteractiveOverviewMobile() {
 }
 
 /** Canonical Live screen followed by linked, bounded galleries of its states. */
-export const interactiveDesign = collection({
-  id: "design-interactive",
-  segment: "interactive",
+export const interactiveDesign = folder({
   title: "Static and Live",
-  description:
-    "One preview toolbar control chooses between the generated screen and the same screen running in the browser, with the states each choice reaches.",
   relatedDocs: INTERACTIVE_DOCS,
   children: [
     screen({
       id: "design-interactive-overview",
-      slug: "overview",
       title: "Live preview",
       colorSchemes: ["light"],
       description:
@@ -37,20 +32,12 @@ export const interactiveDesign = collection({
       desktop: <InteractiveOverviewDesktop />,
       mobile: <InteractiveOverviewMobile />,
     }),
-    collection({
-      id: "design-interactive-modes",
-      segment: "modes",
+    folder({
       title: "Preview states",
-      description:
-        "Static selected, the wait while a live preview is prepared, and a view that cannot offer one.",
       children: modeScreens,
     }),
-    collection({
-      id: "design-interactive-workspace",
-      segment: "workspace",
+    folder({
       title: "Component workspace",
-      description:
-        "A saved component example and a screen in Live, and the component workspace in a catalogue with no live preview.",
       dependencies: componentStyleDependencies,
       relatedDocs: INTERACTIVE_DOCS,
       children: workspaceScreens,

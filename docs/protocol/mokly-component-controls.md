@@ -2,32 +2,20 @@
 
 ## Delivery Status
 
-Local Serve implements temporary prop editing through the registered consumer
-renderer. Published catalogues keep saved variants and read-only controls. The
-[controls mockups](./mokly-component-controls-design.md) and
-[component explorer plan](../../plans/component-explorer.md) describe the same
-shared icon inspector and lifecycle. Forwarded loopback ports follow the
-admission rule below; verification is recorded in Milestone 4 of the
-[dependency patch upstreaming plan](../../plans/mokabook-dependency-patch-upstreaming.md).
+Local Serve edits props through the registered renderer; published controls are
+read-only. [Controls mockups](./mokly-component-controls-design.md) share the
+icon inspector and lifecycle. Forwarded loopback ports follow the rule below.
 
 ## Scope And User Behavior
 
-Saved variants work locally and in published static catalogues. Local Serve
-additionally supports temporary editing of declared component props through a
-server render. Arbitrary interactive controls in published catalogues would
-require a browser renderer or hosted rendering service and are outside this
-change. No consumer JavaScript runtime is added to static preview frames. The
-optional Live preview defined by the
-[interactive Serve contract](./mokly-interactive-views-serve.md#interactive-origin)
-runs on a separate origin and does not host controls: editing and inspection
-stay on the Static frame, and switching to Live discards temporary edits
-exactly as changing the saved variant does, under the
-[shell contract](./mokly-interactive-views-shell.md#inspector-while-live).
+Saved variants work in every catalogue. Local Serve temporarily edits declared
+props through server rendering; static frames add neither interactive controls
+nor a consumer JavaScript runtime.
 
 The Props/Controls tab in the shared component inspector lists only explicitly declared editable
 props. Data props without controls remain visible in the inspector and still
-participate in change detection. A control starts from the selected saved
-variant's actual value, updates the preview after validation, and has a label
+participate in change detection. A control starts from the shown variant
+entry's actual value, updates the preview after validation, and has a label
 derived from declared metadata or the prop name. No invented sample values
 replace missing values; optional fields expose their unset state.
 
@@ -65,9 +53,10 @@ zero for lossless schema JSON. Every saved value must satisfy its prop schema
 and control limits/options. A number control still sends negative-zero inputs
 losslessly through the tagged wire codec.
 
-Reset restores the selected saved variant's complete props. Changing the saved
-variant discards temporary edits. Viewport/theme changes preserve validated edits
-and render them in the new context. Route navigation or reload discards edits.
+Reset restores the shown variant entry's complete props. Navigating to another
+variant entry discards temporary edits, as does any other navigation or reload.
+Viewport/theme changes preserve validated edits and render them in the new
+context.
 Temporary state is neither written to source/generated files nor encoded as
 arbitrary prop data in URLs, local storage, comparisons, or Changes counts.
 
@@ -75,7 +64,7 @@ Temporary edits operate in Current. Selecting a comparison restores the saved
 variant and compares its baseline output with its current rendered output;
 controls become unavailable while comparing. The product explains that the
 comparison shows the saved variant. Controls render responses cannot overwrite
-a comparison, another variant, a new viewport/theme, or a different route.
+a comparison, another variant entry, a new viewport/theme, or a different entry.
 
 Published pages show the same saved variants and props with controls read-only
 and a secondary message, "Open this catalogue locally to edit props."
@@ -84,16 +73,13 @@ Users can browse, inspect, and compare the saved variants normally.
 
 ## Rendering Boundary
 
-Serve exposes a private POST endpoint at `/__mokly/components/render`.
-The request carries a component id, variant id, viewport, color scheme,
-catalogue generation, page id, and a data object containing only declared control
-overrides. It does not accept a module path, source code, arbitrary component
-name, callback, resource path, or renderer selection.
+Serve exposes private POST `/__mokly/components/render`. Its request carries a
+parent component id, global variant-entry id, view axes, catalogue generation,
+page id, and declared control overrides. It accepts no module path, source,
+callback, resource path, or renderer selection.
 
-The exact request and success-response shapes are below. The response's `view`
-uses [manifest usage records](./mokly-component-manifest.md). Errors retain
-the HTTP/code contract below. The token is a separate
-`X-Mokly-Render-Token` header and is never stored in generated metadata.
+The response's `view` uses [manifest usage records](./mokly-component-manifest.md).
+The separate `X-Mokly-Render-Token` header never enters generated metadata.
 
 ```ts
 interface ComponentRenderRequest {
@@ -119,6 +105,11 @@ interface ComponentRenderSuccess {
   view: ComponentViewRecord;
 }
 ```
+
+`componentId` names the parent and `variantId` names the global variant entry.
+The server requires that entry's `variantOf` to equal `componentId`, then uses
+the parent schema/controls and variant props. Neither field is inferred or
+accepted independently.
 
 The parent creates one random 32-hex `pageId` per mounted component edit owner
 and rendered viewport/color-scheme context, retaining it until that owner is
@@ -175,9 +166,6 @@ socket port: forwarded local ports are supported. Serve binds only to
 widen the Host surface without a working path; IPv6 support is out of scope.
 Forwarded headers (`x-forwarded-*`) grant nothing; never use those headers to
 repair Host, Origin, or authorization.
-The separate Live listener has its own explicit `--interactive-origin` Host
-exception for forwarded frames; it does not widen this app-origin controls
-rule.
 
 On render POST, Origin must equal `http://` plus the accepted Host exactly,
 including its explicit port, and `X-Mokly-Render-Token` must match the shell-issued

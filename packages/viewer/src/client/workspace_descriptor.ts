@@ -45,7 +45,6 @@ function readWorkspace(
   if (
     (entry["kind"] !== "screen" && entry["kind"] !== "component") ||
     typeof entry["id"] !== "string" ||
-    typeof entry["route"] !== "string" ||
     typeof value["base"] !== "string" ||
     typeof value["comparisons"] !== "boolean" ||
     typeof value["comparisonEligible"] !== "boolean" ||

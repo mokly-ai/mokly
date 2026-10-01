@@ -22,7 +22,7 @@ export interface ComponentEditorState {
 
 /** Reset state for a new variant, renderer generation, or comparison mode. */
 export function initialComponentEditorState(
-  component: Extract<WorkspaceData["entry"], { kind: "component" }> | undefined,
+  component: WorkspaceData["component"],
   variant: WorkspaceVariant | undefined,
   scope: string,
   draft: ControlDraft,
@@ -57,10 +57,7 @@ export function controlsUnavailable(
     return "Comparisons show the saved variant. Return to Current to edit props.";
   if (livePreview) return LIVE_PREVIEW_COPY.notice;
   if (!live) return "Open this catalogue locally to edit props.";
-  if (
-    data.entry.kind === "component" &&
-    !Object.keys(data.entry.controls).length
-  )
+  if (data.component && !Object.keys(data.component.controls).length)
     return "No editable props are declared for this component.";
 }
 

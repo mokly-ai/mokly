@@ -20,8 +20,8 @@ import {
 } from "./logical_record_types.js";
 import {
   artifactRouteForEntry,
-  portableArtifactHref,
-} from "./logical_routes.js";
+  portableMockTarget,
+} from "./mock_link_routes.js";
 
 interface HtmlAttribute {
   name: string;
@@ -125,13 +125,12 @@ export function rewriteMockLinks(
       catalogueSchemes,
     );
     if (!targetRoute) {
-      throw invalid(sourceRoute, `links to collection id: ${destination.id}`);
+      throw invalid(
+        sourceRoute,
+        `use case ${destination.id} has no screen as its first step`,
+      );
     }
-    const linked = portableArtifactHref(
-      sourceRoute,
-      targetRoute,
-      destination.fragment,
-    );
+    const linked = portableMockTarget(sourceRoute, targetRoute, destination);
     const rewrittenAttributes = logicalAttributes.map(({ attribute }) => {
       replacements.push(
         attributeReplacement(html, sourceRoute, node, attribute.name, linked),

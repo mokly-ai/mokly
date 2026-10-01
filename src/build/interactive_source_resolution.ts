@@ -12,7 +12,7 @@ import {
 /** Maximum recorded repository resolutions in one accepted generation. */
 export const INTERACTIVE_SOURCE_RESOLUTION_LIMIT = 16_384;
 /** Maximum UTF-8 bytes in one recorded import specifier. */
-export const INTERACTIVE_SOURCE_SPECIFIER_LIMIT = 2_048;
+const INTERACTIVE_SOURCE_SPECIFIER_LIMIT = 2_048;
 /** Maximum import attributes attached to one resolution request. */
 export const INTERACTIVE_SOURCE_ATTRIBUTE_LIMIT = 16;
 /** Maximum UTF-8 bytes in one import-attribute key. */
@@ -20,12 +20,12 @@ export const INTERACTIVE_SOURCE_ATTRIBUTE_KEY_LIMIT = 256;
 /** Maximum UTF-8 bytes in one import-attribute value. */
 export const INTERACTIVE_SOURCE_ATTRIBUTE_VALUE_LIMIT = 2_048;
 /** Maximum combined attribute UTF-8 bytes in one request. */
-export const INTERACTIVE_SOURCE_ATTRIBUTES_SIZE_LIMIT = 4_096;
+const INTERACTIVE_SOURCE_ATTRIBUTES_SIZE_LIMIT = 4_096;
 /** Maximum variable UTF-8 string bytes across one resolution record. */
-export const INTERACTIVE_SOURCE_RESOLUTIONS_SIZE_LIMIT = 8 * 1024 * 1024;
+const INTERACTIVE_SOURCE_RESOLUTIONS_SIZE_LIMIT = 8 * 1024 * 1024;
 
 /** Every esbuild request kind admitted by the capture wire format. */
-export const INTERACTIVE_SOURCE_RESOLUTION_KINDS = [
+const INTERACTIVE_SOURCE_RESOLUTION_KINDS = [
   "entry-point",
   "import-statement",
   "require-call",
@@ -114,7 +114,7 @@ export function interactiveSourceResolutionKey(
 }
 
 /** Count bounded variable string data retained by one record. */
-export function interactiveSourceResolutionBytes(
+function interactiveSourceResolutionBytes(
   resolution: InteractiveSourceResolution,
 ): number {
   return (
@@ -201,7 +201,7 @@ export function isInteractiveSourceResolutionKind(
 }
 
 /** Return the UTF-8 byte length used by capture and wire validation. */
-export function utf8Bytes(value: string): number {
+function utf8Bytes(value: string): number {
   return Buffer.byteLength(value, "utf8");
 }
 

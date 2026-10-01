@@ -20,10 +20,8 @@ import {
 import { PlainServeReporter, type ServeReporter } from "./reporter.js";
 import { ServedReviewRepository } from "./review_repository.js";
 import { serveWatched } from "./serve_watched.js";
-import {
-  NodeProcessSupervisorFactory,
-  type ProcessSupervisorFactory,
-} from "./supervisor.js";
+import { NodeProcessSupervisorFactory } from "./supervisor.js";
+import type { ProcessSupervisorFactory } from "./supervisor_types.js";
 import {
   ChokidarWatcherFactory,
   type ConsumerWatcherFactory,
@@ -105,11 +103,11 @@ export async function serve(
       (snapshot) => {
         const duration = Date.now() - changesStartedAt;
         if (snapshot)
-          reporter.changesReady(snapshot.changedRoutes?.length ?? 0, duration);
+          reporter.changesReady(snapshot.changedIds?.length ?? 0, duration);
         else reporter.changesUnavailable(duration);
         server.publishUpdate({
           kind: "evidence",
-          changedRoutes: snapshot?.changedRoutes ?? null,
+          changedIds: snapshot?.changedIds ?? null,
           componentChanges: snapshot ?? null,
           changesStatus: snapshot ? "ready" : "unavailable",
         });
@@ -137,6 +135,7 @@ export async function serve(
             );
         },
         diagnostic: (error) => reporter.runtimeDiagnostic(error),
+        incompatibleBaseline: (commit) => reporter.incompatibleBaseline(commit),
         ...(dependencies.baselineBuilder
           ? { builder: dependencies.baselineBuilder }
           : {}),

@@ -32,7 +32,7 @@ const cases: readonly EligibilityCase[] = [
     name: "unknown entry",
   },
   {
-    entries: [entry("collection", "home")],
+    entries: [entry("page", "home")],
     expected: InteractiveViewEligibilityReason.NotLiveKind,
     name: "non-Live kind",
   },
@@ -89,13 +89,12 @@ for (const { entries, entryId, expected, name, variantId } of cases) {
 }
 
 function entry(
-  kind: "collection" | "component" | "screen",
+  kind: "component" | "page" | "screen",
   id: string,
 ): InteractiveSourceEntry {
   const sourceRelativePath = "entries/interactive.mockup.tsx";
   const common = {
     declaredDependencies: [],
-    dependencies: [],
     description: id,
     id,
     navPath: [],
@@ -103,41 +102,21 @@ function entry(
     sourcePath: sourceRelativePath,
     title: id,
   };
-  if (kind === "collection")
-    return { ...common, childIds: [], kind: "collection" };
+  if (kind === "page") return { ...common, kind: "page" };
   if (kind === "screen")
     return {
       ...common,
-      fragments: {
-        desktop: `screens/${id}.desktop.html`,
-        mobile: `screens/${id}.mobile.html`,
-      },
+      colorSchemes: ["light"],
       kind: "screen",
-      route: `screens/${id}.html`,
       useCaseIds: [],
-      viewports: ["mobile", "desktop"],
     };
   return {
     ...common,
+    colorSchemes: ["light"],
     controls: {},
     kind: "component",
     ownedDependencies: [],
     propSchema: { kind: "object", properties: {} },
-    route: `components/${id}.html`,
     slots: [],
-    variants: [
-      {
-        componentViews: [],
-        fragments: {
-          desktop: `components/${id}.variants/default.desktop.html`,
-          mobile: `components/${id}.variants/default.mobile.html`,
-        },
-        id: "default",
-        props: {},
-        suppliedSlots: [],
-        title: "Default",
-      },
-    ],
-    viewports: ["mobile", "desktop"],
   };
 }

@@ -2,12 +2,10 @@
 
 ## Delivery Status
 
-Delivered mockup scope for Milestone 2 of the
-[Serve rebuild status plan](../../plans/serve-rebuild-status.md). The design
-catalogue depicts the five states below, and this document records the final
-progress placement, dimensions and copy. Milestone 5 implements them in the
-standalone shell of watched Serve with the same geometry and copy. The
-behavioral source is the [rebuild status contract](./mokly-rebuild-status.md).
+Implemented in the design catalogue and the standalone shell of watched Serve.
+The catalogue depicts the five states below, and this document records their
+progress placement, dimensions, and copy. The behavioral source is the
+[rebuild status contract](./mokly-rebuild-status.md).
 
 ## Placement And Ownership
 

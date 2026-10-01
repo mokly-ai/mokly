@@ -10,7 +10,7 @@ export const guestPicker = defineComponent({
   id: "example-guest-picker",
   title: "Guest picker",
   description: "A guest count control for bookings.",
-  route: "components/guest-picker.html",
+  navPath: ["Example", "Components"],
   dependencies: [dependency, implementation],
   ownedDependencies: [dependency, implementation],
   relatedDocs: ["examples/basic/README.md"],
@@ -53,12 +53,12 @@ export const guestPicker = defineComponent({
   ),
   variants: [
     {
-      id: "dinner",
+      id: "example-guest-picker-dinner",
       title: "Dinner for two",
       props: { initialCount: 2, label: "Guests", maximum: 8 },
     },
     {
-      id: "group",
+      id: "example-guest-picker-group",
       title: "Small group",
       props: { initialCount: 5, label: "Guests", maximum: 12 },
     },

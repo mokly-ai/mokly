@@ -1,7 +1,7 @@
 /** The last successfully compiled consumer graph, passed to Serve only in memory. */
 import { randomBytes } from "node:crypto";
 
-import type { ManifestV5 } from "@mokly/viewer/data";
+import type { ManifestV7 } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -19,7 +19,7 @@ export interface ComponentRuntime {
   generation: string;
   interactiveEntries: Readonly<Record<string, boolean>>;
   interactiveSources?: InteractiveSourceCapture;
-  manifest: ManifestV5 | CatalogueIndex;
+  manifest: ManifestV7 | CatalogueIndex;
   outputs: readonly (readonly [string, string])[];
 }
 const runtimes = new WeakMap<Compilation, ComponentRuntime>();

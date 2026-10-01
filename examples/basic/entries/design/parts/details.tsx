@@ -34,9 +34,6 @@ function DetailsBody({
         <MetaRow name="source" label="Source">
           <code className="mbk-code">{metadata.source}</code>
         </MetaRow>
-        <MetaRow name="generated" label="Generated">
-          <code className="mbk-code">{metadata.generated}</code>
-        </MetaRow>
         <MetaRow name="schemes" label="Schemes">
           {metadata.schemes}
         </MetaRow>

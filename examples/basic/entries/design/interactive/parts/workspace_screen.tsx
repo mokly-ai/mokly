@@ -7,6 +7,7 @@ import { ComponentLayout } from "../../components/parts/component_layout.js";
 import { UsedBy } from "../../components/parts/component_usage.js";
 import { VariantPicker } from "../../components/parts/controls.js";
 import { Inspector } from "../../components/parts/inspector.js";
+import { COMPONENT_ENTRIES } from "../../components/parts/metadata.js";
 import {
   ActionExample,
   ComponentCanvas,
@@ -48,8 +49,8 @@ export function WorkspaceModeScreen({
   return (
     <ComponentLayout
       design={design}
+      entry={COMPONENT_ENTRIES.action}
       highlight={{ active: false, unavailable: live ? "live" : undefined }}
-      identity="action"
       rebuild={rebuild}
       viewport={viewport}
       variants={<VariantPicker state="default" current={design} />}
@@ -60,7 +61,7 @@ export function WorkspaceModeScreen({
             {
               id: "info",
               label: "Details",
-              content: <ComponentInfo identity="action" />,
+              content: <ComponentInfo entry={COMPONENT_ENTRIES.action} />,
             },
             {
               id: "props",

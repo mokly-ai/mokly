@@ -2,7 +2,6 @@
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import { prepareLiveRuntime } from "../build/live_runtime.js";
-import { loadConsumerGraph } from "../build/load_graph.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { bindTimings, timeAsync } from "../diagnostics/timings.js";
 
@@ -22,10 +21,11 @@ import type { RunningServe, ServeDependencies, ServeOptions } from "./serve.js";
 import {
   closeWatched,
   createWatchedSupervisor,
+  refreshWatchedSourceInventory,
   watchedInteractiveAddress,
   watcherReadyBeforeShutdown,
 } from "./serve_lifecycle.js";
-import type { ProcessSupervisor } from "./supervisor.js";
+import type { ProcessSupervisor } from "./supervisor_types.js";
 import { type WatchActionDelivery } from "./watch_action_outcome.js";
 import {
   PhasedWatchActionProcessor,
@@ -68,9 +68,7 @@ export async function serveWatched(
   const report = (error: unknown) => reporter.runtimeDiagnostic(error);
   const gate = new NotificationGate<WatchEvent>(report);
   const failures = new NotificationGate<Error>(report);
-  const inventory = await loadConsumerGraph(config, { evaluate: false });
-  config.entryModules = inventory.entrySources;
-  config.sourceFiles = inventory.sourceFiles;
+  await refreshWatchedSourceInventory(config);
   let activeConfig = config;
   let watcher = createSourceWatcher(watcherFactory, config, gate, report);
   const resources = new ResourceWatcher(
@@ -160,11 +158,7 @@ export async function serveWatched(
   ): Promise<WatchActionDelivery | undefined> => {
     const nextConfig =
       candidate ?? (await configLoader.load(activeConfig.configPath));
-    const nextInventory = await loadConsumerGraph(nextConfig, {
-      evaluate: false,
-    });
-    nextConfig.entryModules = nextInventory.entrySources;
-    nextConfig.sourceFiles = nextInventory.sourceFiles;
+    await refreshWatchedSourceInventory(nextConfig);
     const nextGate = new NotificationGate<WatchEvent>(report);
     const replacement = createSourceWatcher(
       watcherFactory,

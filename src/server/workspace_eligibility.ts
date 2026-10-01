@@ -1,4 +1,4 @@
-import type { ManifestEntry } from "@mokly/viewer/data";
+import { entryRoute, type ManifestEntry } from "@mokly/viewer/data";
 import type { ShellContext } from "@mokly/viewer/server";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
@@ -51,7 +51,11 @@ export class ServeWorkspaceEligibility implements WorkspaceEligibilityReporter {
     if (entries.has(entry.id)) return;
     entries.add(entry.id);
     this.onDiagnostic(
-      new WorkspaceEligibilityDiagnostic(entry.id, entry.route, generation),
+      new WorkspaceEligibilityDiagnostic(
+        entry.id,
+        entryRoute(entry.kind, entry.id),
+        generation,
+      ),
     );
   }
 }
@@ -73,7 +77,7 @@ export function resolvedWorkspaceInteractive(
     source.reporter.missing(entry, source.generation);
     return;
   }
-  return { entryId: entry.id, route: entry.route, value };
+  return { entryId: entry.id, entryKind: entry.kind, value };
 }
 
 class WorkspaceEligibilityDiagnostic extends Error {

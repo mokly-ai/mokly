@@ -5,6 +5,6 @@ export function followupFixture() {
   return viewerFixture('colorSchemes: ["light", "dark"],', {
     body: '<div id="example-anchor"><action.Component label="Visible" /></div>',
     paneVariants:
-      '[{ id: "default", title: "Default", props: { children: <strong>First content</strong> } }, { id: "second", title: "Second", props: { children: <strong>Second content</strong> } }]',
+      '[{ id: "pane-default", title: "Default", props: { children: <strong>First content</strong> } }, { id: "pane-second", title: "Second", props: { children: <strong>Second content</strong> } }]',
   });
 }

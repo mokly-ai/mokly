@@ -191,7 +191,6 @@ export const changesScreens = [
     desktop: <ChangesScreen state="current" viewport="desktop" />,
     id: "design-changes-current",
     mobile: <ChangesScreen state="current" viewport="mobile" />,
-    slug: "current",
     title: "Current screen in Changes",
   }),
   screen({
@@ -202,7 +201,6 @@ export const changesScreens = [
     mobile: <ChangesScreen state="overlay" viewport="mobile" />,
     rationale:
       "Both versions share one frame, so the comparison reads as one screen: the current version sits over the previous one at half strength, and links inside it do nothing.",
-    slug: "overlay",
     title: "On-demand overlay",
   }),
   screen({
@@ -213,7 +211,6 @@ export const changesScreens = [
     mobile: <ChangesScreen state="overlay-long" viewport="mobile" />,
     rationale:
       "A long screen scrolls inside the one frame both versions share, so they always sit at the same position: unchanged sections line up exactly and only the reworded section shows both versions, wherever the reader stops.",
-    slug: "overlay-long",
     title: "Overlay on a long screen",
   }),
   screen({
@@ -224,7 +221,6 @@ export const changesScreens = [
     mobile: <ChangesScreen state="overlay-panel" viewport="mobile" />,
     rationale:
       "An app-style screen keeps its page still and scrolls a panel inside it, so the frame has nothing to scroll. With Scroll together on, the panel moves in both versions at once: the top bar and navigation line up exactly and only the reworded section shows both versions.",
-    slug: "overlay-panel",
     title: "Overlay on a scrolling panel",
   }),
   screen({
@@ -235,7 +231,6 @@ export const changesScreens = [
     mobile: <ChangesScreen state="side-by-side-apart" viewport="mobile" />,
     rationale:
       "Turning Scroll together off lets the reader move each version on its own to compare parts that moved, so the two frames can show different places. Nothing moves when it is switched off, and switching it back on brings the other version to the one scrolled last.",
-    slug: "side-by-side-apart",
     title: "Side by side, scrolled apart",
   }),
 ];

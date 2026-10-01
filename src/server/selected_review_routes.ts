@@ -75,7 +75,9 @@ export class SelectedReviewRoutes {
   ): Promise<boolean> {
     const stable =
       url.pathname === "/__mokly/diffs/review.json" &&
-      ["page", "route", "variant"].some((name) => url.searchParams.has(name));
+      ["id", "page", "route", "variant"].some((name) =>
+        url.searchParams.has(name),
+      );
     if (!stable && !url.pathname.startsWith(PREFIX)) return false;
     try {
       if (stable) {

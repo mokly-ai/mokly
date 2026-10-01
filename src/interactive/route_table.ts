@@ -1,14 +1,24 @@
-import type { ColorScheme, Viewport } from "@mokly/viewer";
-import type { ManifestEntry } from "@mokly/viewer/data";
+import type {
+  ColorScheme,
+  ManifestComponentVariant,
+  Viewport,
+} from "@mokly/viewer";
+import {
+  effectiveColorSchemes,
+  entryRoute,
+  isManifestComponentVariant,
+  viewRoute,
+  type ManifestEntry,
+} from "@mokly/viewer/data";
 
-import { portableArtifactHref } from "../build/logical_routes.js";
+import { portableArtifactHref } from "../build/mock_link_routes.js";
 
 import type { InteractiveRouteTable } from "./types.js";
 
 /** Retained-manifest entry accepted by Live document composition. */
-export type InteractiveSourceEntry = ManifestEntry & {
-  interactive?: boolean;
-};
+export type InteractiveSourceEntry<
+  Entry extends ManifestEntry = ManifestEntry,
+> = Entry extends unknown ? Entry & { interactive?: boolean } : never;
 
 export interface InteractiveRouteTableInput {
   catalogueSchemes: readonly ColorScheme[];
@@ -23,9 +33,9 @@ export function buildInteractiveRouteTable(
   input: InteractiveRouteTableInput,
 ): InteractiveRouteTable {
   const byId = new Map(input.entries.map((entry) => [entry.id, entry]));
-  const routed = input.entries
-    .filter((entry) => entry.kind !== "collection")
-    .sort((left, right) => left.id.localeCompare(right.id));
+  const routed = [...input.entries].sort((left, right) =>
+    left.id.localeCompare(right.id),
+  );
   const routes: Record<string, InteractiveRouteTable[string]> = {};
   for (const entry of routed) {
     const artifact = manifestArtifactRoute(
@@ -33,6 +43,8 @@ export function buildInteractiveRouteTable(
       input.viewport,
       input.colorScheme,
       byId,
+      input.entries,
+      input.catalogueSchemes,
     );
     if (!artifact) continue;
     routes[entry.id] = {
@@ -47,14 +59,28 @@ function manifestArtifactRoute(
   viewport: Viewport,
   colorScheme: ColorScheme,
   byId: ReadonlyMap<string, InteractiveSourceEntry>,
+  entries: readonly InteractiveSourceEntry[],
+  catalogueSchemes: readonly ColorScheme[],
 ): string | undefined {
-  if (entry.kind === "page") return entry.route;
+  if (entry.kind === "page") return entryRoute("page", entry.id);
   if (entry.kind === "component") {
-    const variant = entry.variants[0];
+    const variant = isManifestComponentVariant(entry)
+      ? entry
+      : entries.find(
+          (
+            candidate,
+          ): candidate is InteractiveSourceEntry<ManifestComponentVariant> =>
+            candidate.kind === "component" &&
+            isManifestComponentVariant(candidate) &&
+            candidate.variantOf === entry.id,
+        );
     if (!variant) return;
-    return colorScheme === "dark"
-      ? (variant.darkFragments?.[viewport] ?? variant.fragments[viewport])
-      : variant.fragments[viewport];
+    const scheme = effectiveColorSchemes(variant, catalogueSchemes).includes(
+      colorScheme,
+    )
+      ? colorScheme
+      : "light";
+    return viewRoute("component", variant.id, viewport, scheme);
   }
   const screen =
     entry.kind === "screen"
@@ -63,7 +89,10 @@ function manifestArtifactRoute(
         ? byId.get(entry.steps[0].screenId)
         : undefined;
   if (!screen || screen.kind !== "screen") return;
-  return colorScheme === "dark"
-    ? (screen.darkFragments?.[viewport] ?? screen.fragments[viewport])
-    : screen.fragments[viewport];
+  const scheme = effectiveColorSchemes(screen, catalogueSchemes).includes(
+    colorScheme,
+  )
+    ? colorScheme
+    : "light";
+  return viewRoute("screen", screen.id, viewport, scheme);
 }

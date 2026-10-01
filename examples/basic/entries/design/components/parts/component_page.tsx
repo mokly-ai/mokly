@@ -1,3 +1,4 @@
+import { COMPONENT_NAVIGATION } from "../../parts/component_nav_data.js";
 import type { ComparisonMode } from "../../parts/destinations.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 
@@ -10,7 +11,7 @@ import {
 import { ComponentLayout } from "./component_layout.js";
 import { VariantPicker } from "./controls.js";
 import { COMPONENT_PAGES } from "./destinations.js";
-import { COMPONENT_BY_STATE } from "./metadata.js";
+import { COMPONENT_ENTRY_BY_STATE } from "./metadata.js";
 import type { ChangeScenario } from "./navigation.js";
 import {
   ActionExample,
@@ -33,7 +34,8 @@ const COMPARISON_MODES: Partial<
 /** The Changes scenario whose navigation each state's artboard depicts. */
 function changeScenario(state: ComponentPageState): ChangeScenario {
   if (state === "removed" || state === "added") return state;
-  if (COMPONENT_BY_STATE[state] === "checklist") return "checklist";
+  if (COMPONENT_ENTRY_BY_STATE[state].component === "checklist")
+    return "checklist";
   return state === "disabled" || componentComparison(state)
     ? "component"
     : "all";
@@ -48,13 +50,33 @@ export function ComponentPage({
   viewport: ArtboardViewport;
 }) {
   const mode = COMPARISON_MODES[state];
-  const identity = COMPONENT_BY_STATE[state];
+  const entry = COMPONENT_ENTRY_BY_STATE[state];
+  const navigationKey =
+    state === "disabled"
+      ? COMPONENT_NAVIGATION.action.variants[1].id
+      : state === "comparison" ||
+          state === "overlay" ||
+          state === "difference" ||
+          state === "affected"
+        ? COMPONENT_NAVIGATION.action.variants[0].id
+        : state === "removed"
+          ? "example-action-compact"
+          : state === "added"
+            ? COMPONENT_NAVIGATION.badge.variants[0].id
+            : state === "overlay-tall"
+              ? COMPONENT_NAVIGATION.checklist.variants[0].id
+              : undefined;
   return (
     <ComponentLayout
       design={COMPONENT_PAGES[state]}
-      identity={identity}
+      entry={entry}
+      navigationKey={navigationKey}
       mode={mode}
-      status={componentComparison(state)?.status ?? "unmodified"}
+      status={
+        state === "removed"
+          ? "removed"
+          : (componentComparison(state)?.status ?? "unmodified")
+      }
       scenario={changeScenario(state)}
       viewport={viewport}
       variants={<VariantPicker state={state} />}
@@ -69,7 +91,7 @@ export function ComponentPage({
           <ComponentComparison
             mode={mode}
             removed={state === "removed"}
-            subject={identity === "checklist" ? "checklist" : "action"}
+            subject={entry.component === "checklist" ? "checklist" : "action"}
             viewport={previewViewport}
           />
         ) : (

@@ -1,12 +1,10 @@
 import http, { type ServerResponse } from "node:http";
 
-import type { RebuildStatus } from "@mokly/viewer/runtime";
 import { createCatalogue } from "@mokly/viewer/server";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync } from "../diagnostics/timings.js";
-import { MoklyError } from "../errors.js";
 import type { InteractiveServer } from "../interactive/server.js";
 import { parseManifest } from "../registry/manifest.js";
 
@@ -21,18 +19,22 @@ import { ComponentChangeCache } from "./component_changes.js";
 import { ComponentRenderService } from "./controls/service.js";
 import { ForegroundActivity } from "./demand/activity.js";
 import { DocumentService } from "./demand/service.js";
-import { handleComponentHttpRequest } from "./http_components.js";
 import { loadInitialCatalogueSnapshot } from "./http_initial.js";
-import { startInteractiveHttp } from "./http_interactive.js";
-import { handleCatalogueRequest } from "./http_routes.js";
+import {
+  startInteractiveHttp,
+  validateInteractiveSources,
+} from "./http_interactive.js";
+import { catalogueRequestHandler } from "./http_request_handler.js";
 import { closeCatalogueHttp } from "./http_shutdown.js";
 import type { RunningServer, ServerOptions } from "./http_types.js";
 import { publicChangesStatus, publishCatalogueUpdate } from "./http_update.js";
 import { listenOnAvailablePort, listeningPort } from "./ports.js";
 import { LivePublicCatalogue } from "./public_catalogue.js";
 import type { PublicComparison } from "./public_review.js";
-import { VersionedRebuildStatus } from "./rebuild_status_state.js";
-import { send } from "./respond.js";
+import {
+  publishRebuildEvent,
+  VersionedRebuildStatus,
+} from "./rebuild_status_state.js";
 import { ReviewRoutes } from "./review_routes.js";
 import {
   livePublicInput,
@@ -120,19 +122,18 @@ export async function startCatalogueServer(
   let activeCatalogue = componentChanges
     ? catalogueAtBaseline(manifest, componentChanges.baseline)
     : catalogue;
-  let changedRoutes =
-    changes?.changedRoutes ??
-    options.changedRoutes ??
-    componentChanges?.changedRoutes;
+  let changedIds =
+    changes?.changedIds ?? options.changedIds ?? componentChanges?.changedIds;
   let changesStatus: ChangesStatus =
     options.changesStatus ??
-    (changedRoutes || componentChanges ? "ready" : "unavailable");
+    (changedIds || componentChanges ? "ready" : "unavailable");
   let updateVersion = options.updateVersion ?? 1;
   let contentVersion = updateVersion;
   const rebuildStatus = options.rebuildStatus
     ? new VersionedRebuildStatus(options.rebuildStatus, updateVersion)
     : undefined;
   let publicComparison: PublicComparison | undefined;
+  const preserveUnavailable = options.changesStatus === "unavailable";
   const publicInput = (
     comparison: PublicComparison | undefined = publicComparison,
   ) =>
@@ -141,11 +142,12 @@ export async function startCatalogueServer(
       publicChangesStatus(
         options.liveChanges,
         options.review !== undefined,
-        changedRoutes,
+        changedIds,
         componentChanges !== undefined,
         changesStatus,
+        preserveUnavailable,
       ),
-      changedRoutes,
+      changedIds,
       componentChanges,
       comparison,
     );
@@ -154,54 +156,31 @@ export async function startCatalogueServer(
     publicInput(),
     contentVersion,
   );
-  const server = http.createServer((request, response) => {
-    if (
-      handleComponentHttpRequest(
-        request,
-        response,
-        controls,
-        activity,
-        options.onDiagnostic,
-      )
-    )
-      return;
-    const requestedVersion = updateVersion;
-    const requestedChanges = changedRoutes;
-    void handleCatalogueRequest(
-      request.url ?? "/",
-      request.method ?? "GET",
-      response,
-      activeCatalogue,
+  const server = http.createServer(
+    catalogueRequestHandler({
+      activity,
+      activeCatalogue: () => activeCatalogue,
+      assets: { clientModules, fontAssets, navigationModules },
+      changedIds: () => changedIds,
+      changesStatus: () => changesStatus,
+      componentChanges: () => componentChanges,
       config,
-      options.base,
-      () => requestedChanges,
-      streams,
-      { clientModules, fontAssets, navigationModules },
-      () => requestedVersion,
-      reviewRoutes,
-      componentChanges,
-      controls?.capability(),
-      documents,
-      options.liveChanges === false ? undefined : changesStatus,
-      contentVersion,
+      contentVersion: () => contentVersion,
+      controls: () => controls,
+      documents: () => documents,
+      interactive: () => interactiveState.server,
+      options,
       publicCatalogue,
-      interactiveState.server,
-      request.headers,
-      interactiveState.server && componentRuntime
-        ? eligibility.source(componentRuntime)
-        : undefined,
-      () => rebuildStatus?.current(),
-    ).catch(() => {
-      if (!response.destroyed && !response.headersSent)
-        send(
-          response,
-          500,
-          "text/plain",
-          "Could not open this page.",
-          request.method ?? "GET",
-        );
-    });
-  });
+      rebuildStatus: () => rebuildStatus?.current(),
+      reviewRoutes,
+      streams,
+      updateVersion: () => updateVersion,
+      workspaceEligibility: () =>
+        interactiveState.server && componentRuntime
+          ? eligibility.source(componentRuntime)
+          : undefined,
+    }),
+  );
   await timeAsync("server.listen", () =>
     listenOnAvailablePort(server, options.port, options.strictPort ?? false),
   );
@@ -278,7 +257,7 @@ export async function startCatalogueServer(
         {
           catalogue,
           activeCatalogue,
-          changedRoutes,
+          changedIds,
           componentChanges,
           changesStatus,
           updateVersion,
@@ -288,11 +267,12 @@ export async function startCatalogueServer(
         publicCatalogue,
         options.liveChanges,
         options.review !== undefined,
+        preserveUnavailable,
       );
       if (!next) return;
       ({
         activeCatalogue,
-        changedRoutes,
+        changedIds,
         componentChanges,
         changesStatus,
         updateVersion,
@@ -317,27 +297,4 @@ export async function startCatalogueServer(
       : {}),
     url: `http://127.0.0.1:${appPort}`,
   };
-}
-
-function validateInteractiveSources(
-  config: ResolvedConfig,
-  runtime?: ComponentRuntime,
-): void {
-  if (!runtime) return;
-  const captured = runtime.interactiveSources !== undefined;
-  if ((config.interactive === "serve") !== captured)
-    throw new MoklyError(
-      "server-failed",
-      config.interactive === "serve"
-        ? "Live runtime is missing its accepted source capture"
-        : "non-Live runtime must not retain an interactive source capture",
-    );
-}
-
-function publishRebuildEvent(
-  streams: ReadonlySet<ServerResponse>,
-  status: RebuildStatus,
-): void {
-  const payload = `event: rebuild\ndata: ${JSON.stringify(status)}\n\n`;
-  for (const stream of streams) stream.write(payload);
 }

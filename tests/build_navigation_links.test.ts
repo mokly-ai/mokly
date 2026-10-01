@@ -183,9 +183,7 @@ test("logical destinations include use cases and reject non-routed ids", async (
     );
     await assert.rejects(
       async () => compileCatalogue(await loadConfig(fixture.root)),
-      destination === "fixture"
-        ? /collection id: fixture/
-        : /unknown id: missing/,
+      new RegExp(`unknown id: ${destination}`),
     );
   }
 });
@@ -202,11 +200,10 @@ export const mockups = [
 }
 
 function useCaseFragmentSource(): string {
-  return `import { defineCollection, defineScreen, defineUseCase } from "@mokly/mokly";
+  return `import { defineScreen, defineUseCase } from "@mokly/mokly";
 import React from "react";
 const metadata = { dependencies: [], navPath: ["Fixture"], relatedDocs: [] };
 export const mockups = [
-  defineCollection({ ...metadata, childIds: ["home", "details"], description: "Fixture", id: "fixture", title: "Fixture" }),
   defineScreen({ ...metadata, description: "Home", desktop: <main><a href="mock:tour#section">Tour</a></main>, id: "home", mobile: <main><a href="mock:tour#section">Tour</a></main>, route: "screens/home.html", title: "Home", useCaseIds: [] }),
   defineScreen({ ...metadata, colorSchemes: ["light"], description: "Details", desktop: <main id="section">Details</main>, id: "details", mobile: <main id="section">Details</main>, route: "screens/details.html", title: "Details", useCaseIds: ["tour"] }),
   defineUseCase({ ...metadata, description: "Tour", id: "tour", route: "user-flows/tour.html", steps: [{ screenId: "details" }], title: "Tour" })

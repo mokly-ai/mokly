@@ -10,6 +10,7 @@ import { renderReviewArtifact } from "../dist/review/artifact.js";
 import { compareReview } from "../dist/review/compare.js";
 import { CommittedRepository } from "../dist/review/git.js";
 import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
+import { generatedViews } from "../packages/viewer/dist/data.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
@@ -28,7 +29,7 @@ test("Review batches base viewport reads", async (context) => {
     ["mockups/mokly-manifest.json", JSON.stringify(compilation.manifest)],
   ]);
   for (const screen of screens) {
-    for (const fragment of Object.values(screen.fragments)) {
+    for (const fragment of generatedViews(screen).map((view) => view.path)) {
       files.set(`mockups/${fragment}`, compilation.outputs.get(fragment) ?? "");
     }
   }
@@ -103,13 +104,8 @@ test("Review batches dark base fragments through CommittedRepository", async (co
     (entry) => entry.kind === "screen",
   );
   const expected = screens.flatMap((screen) => {
-    assert.ok(screen.darkFragments);
-    return [
-      `mockups/${screen.fragments.mobile}`,
-      `mockups/${screen.darkFragments.mobile}`,
-      `mockups/${screen.fragments.desktop}`,
-      `mockups/${screen.darkFragments.desktop}`,
-    ];
+    assert.ok(screen.colorSchemes.includes("dark"));
+    return generatedViews(screen).map((view) => `mockups/${view.path}`);
   });
   const batchedPathspecs = calls
     .filter((arguments_) => arguments_[0] === "ls-tree")
@@ -277,9 +273,10 @@ test("Git bounds zero-byte blob batches by object count", async () => {
 
 test("Comparison metadata has no per-screen HTML or navigation copies", () => {
   const screens = Array.from({ length: 40 }, (_, index) => ({
+    after: { id: `screen-${index}`, title: `Screen ${index}` },
+    before: { id: `screen-${index}`, title: `Screen ${index}` },
     dependencies: [],
     id: `screen-${index}`,
-    route: `screens/screen-${index}.html`,
     sharedImpact: [],
     state: "changed" as const,
     title: `Screen ${index}`,
@@ -291,15 +288,20 @@ test("Comparison metadata has no per-screen HTML or navigation copies", () => {
         viewport: "mobile" as const,
       },
     ],
-  }));
+  })).sort((left, right) =>
+    left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
+  );
   const result: ReviewResult = {
     baseCommit: "a".repeat(40),
     baseRef: "origin/main",
     changedPaths: [],
     ignoredImpact: [],
-    schemaVersion: 2,
+    schemaVersion: 4,
     screens,
     sharedImpact: [],
+    components: [],
+    changes: [],
+    affectedConsumers: [],
   };
 
   const files = renderReviewArtifact({ files: new Map(), result });

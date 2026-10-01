@@ -9,7 +9,7 @@ import type {
   ObjectPropSchema,
 } from "@mokly/viewer";
 
-import type { RoutedEntryInput } from "../authoring/types.js";
+import type { EntryInput } from "../authoring/types.js";
 
 export interface ComponentRenderContext {
   viewport: Viewport;
@@ -30,8 +30,8 @@ export interface ComponentVariant<P> {
 export interface ComponentInput<
   S extends ObjectPropSchema,
   Slots extends readonly string[],
-> extends RoutedEntryInput {
-  /** Opt this component out of local Live previews. */
+> extends EntryInput {
+  /** Opt this component and its variants out of local Live previews. */
   interactive?: false;
   propSchema: S;
   slots?: Slots;
@@ -53,11 +53,12 @@ export interface ComponentInput<
 }
 
 /** Runtime definition retains the adapter and slots only inside the consumer graph. */
-export interface ComponentDefinition extends RoutedEntryInput {
+export interface ComponentDefinition extends EntryInput {
   readonly __viaDefine: true;
   definedIn?: string;
   kind: "component";
   interactive?: false;
+  navPath: readonly string[];
   propSchema: ObjectPropSchema;
   slots: readonly string[];
   controls: Readonly<Record<string, ComponentControl>>;
@@ -65,17 +66,41 @@ export interface ComponentDefinition extends RoutedEntryInput {
     props: Readonly<Record<string, unknown>>,
     context: ComponentRenderContext,
   ) => ReactNode;
-  variants: readonly ComponentVariant<Readonly<Record<string, unknown>>>[];
   colorSchemes?: readonly ColorScheme[];
   tags?: readonly string[];
   ownedDependencies: readonly string[];
+}
+
+/** One saved component state flattened into the catalogue beside its parent. */
+export interface ComponentVariantDefinition extends EntryInput {
+  readonly __viaDefine: true;
+  definedIn?: string;
+  kind: "component";
+  interactive?: false;
+  navPath: readonly string[];
+  variantOf: string;
+  props: Readonly<Record<string, unknown>>;
+  suppliedSlots: readonly string[];
+  colorSchemes?: readonly ColorScheme[];
+  tags?: readonly string[];
+}
+
+/** A component parent or one of its flattened saved variants. */
+export type ComponentEntryDefinition =
+  ComponentDefinition | ComponentVariantDefinition;
+
+/** Narrow one runtime component entry to its flattened variant shape. */
+export function isComponentVariantDefinition(
+  entry: ComponentEntryDefinition,
+): entry is ComponentVariantDefinition {
+  return "variantOf" in entry && typeof entry.variantOf === "string";
 }
 
 export interface RegisteredComponent<
   S extends ObjectPropSchema,
   Slots extends readonly string[],
 > {
-  entry: ComponentDefinition;
+  entries: readonly [ComponentDefinition, ...ComponentVariantDefinition[]];
   Component: ComponentType<
     ComponentProps<S, Slots> & { moklyInstance?: string }
   >;

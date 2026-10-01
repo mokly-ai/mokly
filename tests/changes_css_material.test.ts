@@ -58,14 +58,13 @@ for (const components of [false, true]) {
     const fixture = await cssAttributionFixture(t, components);
     await fs.writeFile(
       fixture.entryPath,
-      (await fs.readFile(fixture.entryPath, "utf8")).replaceAll(
-        "screens/home.html",
-        "screens/moved.html",
-      ),
+      (await fs.readFile(fixture.entryPath, "utf8"))
+        .replace('id: "home"', 'id: "moved"')
+        .replace('screenId: "home"', 'screenId: "moved"'),
     );
     const { result } = await fixture.compare();
     const views = result.screens
-      .filter((screen) => screen.id === "home")
+      .filter((screen) => screen.id === "home" || screen.id === "moved")
       .flatMap((screen) => screen.views);
     assert.ok(views.some((view) => view.state === "added"));
     assert.ok(views.some((view) => view.state === "removed"));

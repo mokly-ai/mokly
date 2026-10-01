@@ -46,6 +46,7 @@ const REFERENCE_SLUGS = new Set([
   "export-delivery",
   "export-ownership",
   "upload",
+  "upload-exchange",
   "navigation",
   "link-controls",
   "pages",
@@ -162,7 +163,7 @@ test("the initial corpus has no links and future destinations are bounded", () =
   }
   for (const destination of [
     "/docs/authoring/screens/",
-    "/docs/reference/upload/#limits",
+    "/docs/reference/upload-exchange/#export-files-and-limits",
     "/docs/",
     "/changelog/#v0100",
     "https://example.com/docs",
