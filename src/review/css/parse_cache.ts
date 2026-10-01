@@ -1,8 +1,14 @@
 /** Whole-input parsing cache with detached rule material and safe failure snapshots. */
 import { type DetachedCacheValue, flatString } from "./byte_lru.js";
 import { detachParseError } from "./cache_error.js";
-import { cssRuleData, storeCssRuleData } from "./rule_identity.js";
+import {
+  cssRuleData,
+  storeCssRuleData,
+  storedCssRuleData,
+} from "./rule_identity.js";
 import type { CssRule, CssRuleParseResult, CssSegmentRun } from "./types.js";
+
+const detachedRules = new WeakMap<CssRule, number>();
 
 export function detachParseResult(
   result: CssRuleParseResult,
@@ -22,6 +28,12 @@ export function detachParseResult(
     return flatString(text);
   };
   const rules = result.rules.map((rule): CssRule => {
+    const retainedUnits = detachedRules.get(rule);
+    if (retainedUnits !== undefined) {
+      stringUnits += retainedUnits;
+      return rule;
+    }
+    const initialUnits = stringUnits;
     const material = {
       ordinal: rule.ordinal,
       declarations: copyString(rule.declarations),
@@ -49,14 +61,27 @@ export function detachParseResult(
             block: rule.block,
           },
     );
-    const data = cssRuleData(rule);
-    storeCssRuleData(copied, {
-      addressKey: copyString(data.addressKey),
-      identityKey: copyString(data.identityKey),
-      rank: data.rank,
-      canonicalText: copyString(data.canonicalText),
-      references: Object.freeze(data.references.map(copyString)),
-    });
+    const existing = storedCssRuleData(rule);
+    if (existing)
+      storeCssRuleData(copied, {
+        addressKey: copyString(existing.addressKey),
+        identityKey: copyString(existing.identityKey),
+        rank: existing.rank,
+        canonicalText: copyString(existing.canonicalText),
+        references: Object.freeze(existing.references.map(copyString)),
+      });
+    else {
+      const data = cssRuleData(copied);
+      stringUnits +=
+        data.addressKey.length +
+        data.identityKey.length +
+        data.canonicalText.length +
+        data.references.reduce(
+          (total, reference) => total + reference.length,
+          0,
+        );
+    }
+    detachedRules.set(copied, stringUnits - initialUnits);
     return copied;
   });
   return {

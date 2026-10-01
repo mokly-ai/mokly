@@ -73,6 +73,7 @@ function scan(source: string): CssSegmentScan {
       }
       if (
         source.charCodeAt(offset) === 40 &&
+        ![0, 35, 64].includes(source.charCodeAt(wordStart - 1)) &&
         decodeCssIdentifier(source.slice(wordStart, offset)).toLowerCase() ===
           "url"
       ) {

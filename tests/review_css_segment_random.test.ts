@@ -31,6 +31,10 @@ const pool = [
   ".a{color:red]}",
   ".a{background:url(unclosed}",
   ".a{--tone:red;padding:2px}",
+  ".x{--y:#url(/*)}",
+  ".x{--y:@url(/*)}",
+  ".x{--y:\0url(/*)}",
+  "@foo #url(/*);",
 ];
 const trivia = [
   "",

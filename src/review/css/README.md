@@ -14,7 +14,10 @@ are never cached as verified segment runs. Eviction changes only parsing time.
 
 `segments.ts` is a non-throwing UTF-16 boundary scanner. `rules.ts` invokes
 Lightning CSS once per element's distinct misses and verifies every native
-root against its interval. `rule_collector.ts` guards descendants/declaration
+root against its interval and requires one extra root at the fixed appended
+`@mokly-segment-end;` sentinel's exact offset, proving the last terminator was
+consumed even when native CSS accepts an unclosed EOF comment. The sentinel
+is never part of a cached run. `rule_collector.ts` guards descendants/declaration
 runs and preserves the delivered depth-first records. Contextual encoding,
 import and namespace statements always use whole-element parsing.
 
@@ -25,7 +28,9 @@ parsers without a second cache in the production classification wrapper.
 
 `rule_identity.ts` stores address/identity, rank, canonical text and references
 once in a weak rule association; the custom-property flag stays on the record.
-Ordinal copies share that immutable data. `diff.ts`, `material.ts` and
+Data is computed on first use, after copying raw material for cached rules;
+already-detached immutable rules are not copied again. Document ordinal bases
+avoid a second assembly copy. `diff.ts`, `material.ts` and
 `inline_rendering.ts` consume it without rebuilding keys or rendering text.
 Statement/block form belongs in both keys: `@layer a;` versus `@layer a{}` is
 a removed/added, conservatively unresolved change on both paths.

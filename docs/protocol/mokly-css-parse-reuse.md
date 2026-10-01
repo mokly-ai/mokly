@@ -99,23 +99,22 @@ tests must cover `<!--a{color:red}`, `<!---->`, `<!--body{color:red}-->` and
 
 ## Batched Parsing And Verification
 
-Process each style element independently, preserving browser stylesheet
-boundaries. Resolve cache hits first. Batch its distinct missing segment texts
-in first-occurrence order, separated by LF, with a table of batch start/end
-offsets. Duplicate misses within that request reuse the verified run. Invoke
-Lightning CSS once before optimization, with the delivered parser's options.
-No surrounding-element trivia participates in the batch key or retained run.
+Process elements independently, preserving stylesheet boundaries. Resolve hits
+first; batch distinct misses in first-occurrence order separated by LF, record
+start/end offsets, and reuse verified duplicate runs. Append `\n@mokly-segment-end;`;
+require one extra native root at its exact offset (source index zero), proving
+the final terminator was consumed. Never retain the sentinel. Invoke Lightning
+CSS once before optimization with delivered options; surrounding trivia is absent.
 
-Inspect the native top-level source rules, not the number of flattened records:
+Inspect native source roots, excluding the sentinel, not flattened records:
 each segment must have exactly one top-level rule beginning at its recorded
 start, wholly within its interval, and ending at its terminator. Every native
 top-level rule must be assigned to exactly one segment. Flatten that root's
 descendants with the delivered collector; a grouped/nested segment may yield
 several records, in depth-first order. Verify each recovered header, body and
 local location against the segment, with no declaration run crossing its end.
-Cached runs use zero-based local ordinals; assembly copies/rebases them to
-unique monotonic ordinals in element order, then document order. Never mutate
-the cached run.
+Cached runs have local ordinals; assembly accepts the document ordinal base
+and copies each occurrence at most once. Never mutate a cached run.
 
 Fall back for the **entire element**, discarding that batch's unverified data,
 on a scanner anomaly, native parse/serialization failure, missing/extra root,
@@ -137,7 +136,7 @@ partial segment cancellation. Cache reuse may still avoid its parsing cost.
 
 ## Stored Rule Data
 
-Compute these once per parsed rule, for both linked and inline paths:
+Compute once on first use, from detached material for cached rules, on both paths:
 
 - **Address key:** JSON encoding of `[conditions, selectors, atRule ?? null,
 prelude ?? null, block ?? null]`, where each condition is `[kind, prelude]`

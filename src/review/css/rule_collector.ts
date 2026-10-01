@@ -1,14 +1,13 @@
 /** Recover native rules and guard local segment headers, bodies and descendants. */
 import type { Rule } from "lightningcss";
 
-import { cssRuleData } from "./rule_identity.js";
 import {
   serializeBlock,
   serializePrelude,
   serializeRuleHeader,
   serializeSelector,
 } from "./serialization.js";
-import { tokenizeCss, type CssSource } from "./source.js";
+import { tokenizeCss, type CssSource, type CssSourceRule } from "./source.js";
 import { CssRuleParseError } from "./types.js";
 import type { CssRule, CssRuleCondition } from "./types.js";
 
@@ -20,9 +19,13 @@ export class RuleCollector {
     private readonly output: CssRule[],
   ) {}
 
-  segment(rule: Rule, interval: { start: number; end: number }): void {
+  segment(
+    rule: Rule,
+    interval: { start: number; end: number },
+    raw: CssSourceRule,
+  ): void {
     this.interval = interval;
-    this.rule(rule, []);
+    this.rule(rule, [], raw);
   }
 
   stylesheet(rules: readonly Rule[]): void {
@@ -48,7 +51,7 @@ export class RuleCollector {
       }
       const sourceRule = this.source.rule(token.start);
       const rule = byOffset.get(token.start);
-      if (rule) this.rule(rule, []);
+      if (rule) this.rule(rule, [], sourceRule);
       else if (/^@charset\s/i.test(sourceRule.header))
         this.atRule(sourceRule.header, undefined, []);
       else
@@ -60,7 +63,11 @@ export class RuleCollector {
     }
   }
 
-  private rule(rule: Rule, conditions: readonly CssRuleCondition[]): void {
+  private rule(
+    rule: Rule,
+    conditions: readonly CssRuleCondition[],
+    recovered?: CssSourceRule,
+  ): void {
     if (
       rule.type === "ignored" ||
       rule.type === "custom" ||
@@ -73,7 +80,7 @@ export class RuleCollector {
     const start = this.source.offset(rule.value.loc);
     if (this.interval && rule.value.loc.source_index !== 0)
       throw new CssRuleParseError({ kind: "segment-descendant-source" });
-    const raw = this.source.rule(start);
+    const raw = recovered ?? this.source.rule(start);
     this.verify(start, raw.end);
     if (rule.type === "style" && raw.body) {
       const selectors = rule.value.selectors.map((selector) =>
@@ -145,13 +152,14 @@ export class RuleCollector {
         });
         cursor = until;
       } else if ("value" in rule && rule.value) {
+        const location = this.source.offset(rule.value.loc);
+        const raw = this.source.rule(location);
         if (this.interval) {
-          const location = this.source.offset(rule.value.loc);
-          if (location < cursor || this.source.rule(location).end > end)
+          if (location < cursor || raw.end > end)
             throw new CssRuleParseError({ kind: "segment-child-boundary" });
         }
-        this.rule(rule, conditions);
-        cursor = this.source.rule(this.source.offset(rule.value.loc)).end;
+        this.rule(rule, conditions, raw);
+        cursor = raw.end;
       } else
         throw new CssRuleParseError({
           kind: "unsupported-rule",
@@ -181,7 +189,6 @@ export class RuleCollector {
   }
 
   private append(rule: CssRule): void {
-    cssRuleData(rule);
     this.output.push(rule);
   }
 

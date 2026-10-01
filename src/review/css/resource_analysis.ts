@@ -55,7 +55,7 @@ export class CssResourceAnalysis {
     const inline = new CssSegmentAnalysis(whole, cacheBytes);
     this.parser = {
       parse: whole.parse,
-      parseInline: (source) => inline.parse(source),
+      parseInline: (source, ordinalBase) => inline.parse(source, ordinalBase),
     };
   }
 

@@ -27,11 +27,13 @@ export class CssSegmentAnalysis {
     this.cache = new ByteBoundedLru(detachSegmentRun, cacheBytes);
   }
 
-  parse(source: string): CssRuleParseResult {
-    return documentWorkSync("inlineRuleMs", () => this.element(source));
+  parse(source: string, ordinalBase = 0): CssRuleParseResult {
+    return documentWorkSync("inlineRuleMs", () =>
+      this.element(source, ordinalBase),
+    );
   }
 
-  private element(source: string): CssRuleParseResult {
+  private element(source: string, ordinalBase: number): CssRuleParseResult {
     const counts = timingDocumentWork()?.inlineStyles;
     if (counts) counts.elements++;
     const fallback = () => {
@@ -74,7 +76,7 @@ export class CssSegmentAnalysis {
     const rules: CssRule[] = [];
     for (const text of texts)
       for (const rule of resolved.get(text)!.rules)
-        rules.push(rebaseCssRule(rule, rules.length));
+        rules.push(rebaseCssRule(rule, ordinalBase + rules.length));
     return { status: "parsed", rules };
   }
 }

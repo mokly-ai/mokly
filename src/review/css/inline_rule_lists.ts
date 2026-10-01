@@ -22,12 +22,16 @@ export function parseInlineRuleList(
     const parsed = parseCssRules(
       {
         parse: (text) =>
-          parser.parseInline ? parser.parseInline(text) : inline!.parse(text),
+          parser.parseInline
+            ? parser.parseInline(text, rules.length)
+            : inline!.parse(text, rules.length),
       },
       span.text,
     );
     if (parsed.status === "unresolved") return parsed;
-    for (const rule of [...parsed.rules].sort((a, b) => a.ordinal - b.ordinal))
+    for (const rule of [...parsed.rules].sort(
+      (left, right) => left.ordinal - right.ordinal,
+    ))
       rules.push(rebaseCssRule(rule, rules.length));
   }
   return { status: "parsed", rules };

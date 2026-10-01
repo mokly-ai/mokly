@@ -623,6 +623,16 @@ Summary: parse each distinct top-level rule once per classification and
 compute each distinct rule's derived data once, with results identical to
 whole-element parsing.
 
+- [x] Discovered: prove the final native rule ends before a fixed sentinel;
+      test duplicate and cross-element hash/at-keyword/NUL URL lookalikes at
+      default and zero bounds, plus seeded inputs and sentinel mutations.
+- [x] Discovered: remove duplicate boundary recovery and document-ordinal
+      copies; derive cached data from detached material once; rename the
+      disabled-counter test to its actual collector/emission proof.
+- [ ] Discovered: report interleaved cold per-element costs against `b87df3a2`
+      and `e4307a46`; target about 10% of the former, recording any excess
+      and remaining cost for the supervisor's decision.
+
 - [x] Discovered: meet the supervisor's premeasurement checkpoint: targeted
       tests, full unit/Chromium/hydration suites and format/lint/typecheck,
       then commit locally, report and stop. Do not measure or push until approved.
@@ -690,6 +700,10 @@ whole-element parsing.
 Summary: make per-view analysis cost follow the changed segments, pair
 unchanged reference-bearing rules only with matched copies, and compose rule
 lists from stored rule text.
+
+- [ ] Discovered: capture the M4 engine before changing analysis; verify code,
+      targeted/full unit/Chromium/hydration and static checks, commit locally,
+      then report and stop before M5 measurements or its final cargo/push gate.
 
 - [ ] Cancel segments by their cached ordered identity-run keys, earliest
       base occurrence first, before the rule diff; diff only the remaining

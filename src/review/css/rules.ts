@@ -1,5 +1,6 @@
 /** Parse and verify native source roots before any optimizer runs. */
 import { transform } from "./lightning.js";
+import { detachSegmentRun } from "./parse_cache.js";
 import { RuleCollector } from "./rule_collector.js";
 import { cssRuleIdentity } from "./rule_identity.js";
 import { CssSource, normalizeCssSource } from "./source.js";
@@ -43,6 +44,7 @@ export class LightningCssRuleParser implements CssRuleParser {
   parseSegments(
     segments: readonly string[],
   ): readonly CssSegmentRun[] | undefined {
+    if (!segments.length) return [];
     try {
       let offset = 0;
       const intervals = segments.map((text) => {
@@ -50,7 +52,10 @@ export class LightningCssRuleParser implements CssRuleParser {
         offset += text.length + 1;
         return { start, end: offset - 1 };
       });
-      const source = new CssSource(segments.join("\n"));
+      const sentinelStart = offset;
+      const source = new CssSource(
+        `${segments.join("\n")}\n@mokly-segment-end;`,
+      );
       const runs: CssSegmentRun[] = [];
       this.nativeTransform({
         filename: "stylesheet.css",
@@ -58,9 +63,17 @@ export class LightningCssRuleParser implements CssRuleParser {
         errorRecovery: false,
         visitor: {
           StyleSheet(sheet) {
-            if (sheet.rules.length !== intervals.length)
+            if (sheet.rules.length !== intervals.length + 1)
               throw new CssRuleParseError({ kind: "segment-root-count" });
-            for (const [index, root] of sheet.rules.entries()) {
+            const sentinel = sheet.rules.at(-1)!;
+            if (
+              !("value" in sentinel) ||
+              !sentinel.value ||
+              sentinel.value.loc.source_index !== 0 ||
+              source.offset(sentinel.value.loc) !== sentinelStart
+            )
+              throw new CssRuleParseError({ kind: "segment-end-location" });
+            for (const [index, root] of sheet.rules.slice(0, -1).entries()) {
               const interval = intervals[index]!;
               if (
                 !("value" in root) ||
@@ -76,10 +89,16 @@ export class LightningCssRuleParser implements CssRuleParser {
               )
                 throw new CssRuleParseError({ kind: "segment-root-boundary" });
               const rules: CssRule[] = [];
-              new RuleCollector(source, rules).segment(root, interval);
-              runs.push({
+              new RuleCollector(source, rules).segment(root, interval, raw);
+              const detached = detachSegmentRun({
                 rules,
-                identityRunKey: JSON.stringify(rules.map(cssRuleIdentity)),
+                identityRunKey: "",
+              }).value;
+              runs.push({
+                ...detached,
+                identityRunKey: JSON.stringify(
+                  detached.rules.map(cssRuleIdentity),
+                ),
               });
             }
           },

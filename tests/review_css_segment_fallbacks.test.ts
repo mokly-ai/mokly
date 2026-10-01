@@ -165,13 +165,26 @@ const mutations: readonly [string, Mutation][] = [
       ] as unknown as Selector[];
     },
   ],
+  [
+    "sentinel location",
+    (sheet) => {
+      located(sheet.rules.at(-1)!).loc.column++;
+    },
+  ],
+  [
+    "sentinel source",
+    (sheet) => {
+      located(sheet.rules.at(-1)!).loc.source_index = 1;
+    },
+  ],
 ];
 
 for (const [name, mutate] of mutations)
   test(`native ${name} uncertainty falls back for the entire element`, () => {
     const original =
       " /*outside*/ .a{color:red;.nested{color:blue}} .b{} /*outside*/";
-    const batch = ".a{color:red;.nested{color:blue}}\n.b{}";
+    const batch =
+      ".a{color:red;.nested{color:blue}}\n.b{}\n@mokly-segment-end;";
     const native = new LightningCssRuleParser((options) =>
       transform({
         ...options,

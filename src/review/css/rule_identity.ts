@@ -24,6 +24,10 @@ export function storeCssRuleData(rule: CssRule, data: CssRuleData): void {
   stored.set(rule, Object.freeze(data));
 }
 
+export function storedCssRuleData(rule: CssRule): CssRuleData | undefined {
+  return stored.get(rule);
+}
+
 export function cssRuleData(rule: CssRule): CssRuleData {
   const existing = stored.get(rule);
   if (existing) return existing;
@@ -56,9 +60,15 @@ export function cssRuleData(rule: CssRule): CssRuleData {
       condition.kind === "nesting-parent"
         ? `${condition.prelude}{${canonicalText}}`
         : `@${condition.kind}${condition.prelude ? ` ${condition.prelude}` : ""}{${canonicalText}}`;
+  const addressKey = JSON.stringify(address);
   const data = Object.freeze({
-    addressKey: JSON.stringify(address),
-    identityKey: JSON.stringify([...address, rule.declarations]),
+    addressKey,
+    identityKey: [
+      addressKey.slice(0, -1),
+      ",",
+      JSON.stringify(rule.declarations),
+      "]",
+    ].join(""),
     rank,
     canonicalText,
     references: Object.freeze(
@@ -76,6 +86,7 @@ export function cssRuleData(rule: CssRule): CssRuleData {
 }
 
 export function rebaseCssRule(rule: CssRule, ordinal: number): CssRule {
+  if (rule.ordinal === ordinal) return rule;
   const rebased = { ...rule, ordinal };
   storeCssRuleData(rebased, cssRuleData(rule));
   return rebased;

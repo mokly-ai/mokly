@@ -81,7 +81,7 @@ test("failed batches count distinct attempted misses but not their unverified du
   );
 });
 
-test("disabled timings allocate and retain no inline counter state even when parsing and falling back", async () => {
+test("disabled timings give inline parsing no document-work collector and emit no records", async () => {
   const native = new LightningCssRuleParser();
   const events: TimingEvent[] = [];
   await runWithTimings(
