@@ -30,6 +30,15 @@
   the simplest, smallest, or quickest fix when a larger change would materially
   reduce future bugs, review findings, or maintenance risk; explain the tradeoff
   and recommend the scope that best protects the codebase.
+- Write all responses to the user in Simplified Technical English (STE), as
+  defined by ASD-STE100. This rule applies to progress updates, questions,
+  final messages, and review output. Use short sentences: no more than 20
+  words in an instruction and no more than 25 words in a description. Write
+  one instruction or one topic in each sentence. Use the active voice, simple
+  verb tenses, and the imperative for instructions. Use one word for one
+  meaning, and do not use idioms, slang, or filler words. Keep technical names
+  exactly as they are, for example code identifiers, file paths, commands, and
+  error text.
 - Documentation-only or plan-only changes, including initial plan creation, do not require `cargo xtask check`; validate the changed Markdown and review the diff instead
 - This project is not currently in production/live, so breaking changes are
   acceptable when they improve correctness, architecture, or product quality
