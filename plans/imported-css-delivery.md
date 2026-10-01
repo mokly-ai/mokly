@@ -54,7 +54,7 @@ diff, resolving findings 1, 2, 4 and 11 in the
 [Milestone 40 review record](../docs/reviews/imported-css-delivery-milestone-40.md).
 Other findings remain open. Milestone 42 (`beab8560`) merged main's
 release-runner fix at `b4a02a30`; the full gate passed on retry without any
-deletion of main content. Milestone 44 resolves the selected findings in the
+deletion of main content. Milestone 44 (`8729ec16`) resolves the selected findings in the
 [Milestone 43 review record](../docs/reviews/imported-css-delivery-milestone-43.md)
 by reviewing named merge commits and recording path-specific decisions.
 Other previously unselected findings remain out of scope. The plan stays active
@@ -1048,14 +1048,14 @@ release protocol pages.
 - [x] Commit and push the approved work, confirm the remote ref and a clean tree.
 - [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Three new findings (1 Medium, 2 Low) are recorded in the [Milestone 43 review record](../docs/reviews/imported-css-delivery-milestone-43.md) for the user's decision.
 
-## Milestone 44: Review merges by named commit
+## Milestone 44: Review merges by named commit (complete)
 
 Make merge reviews independent of the current `HEAD` and give the PR owner a
 path-complete record of intentional merge decisions.
 
 - [x] Replace the merge-review rule with a named, two-parent commit check, a per-path remerge review, a later-commit diff, and safe amendment guidance; verify the commands with local Git.
 - [x] Classify every remerge-diff path from the branch's three merges in an ignored PR-decision record, with coverage counts.
-- [ ] Make review introductions and active-plan status count-free, and record the selected findings' resolutions without changing other open findings.
+- [x] Make review introductions and active-plan status count-free, and record the selected findings' resolutions without changing other open findings.
 - [x] Validate the changed Markdown, relevant documentation tests, file-length audit, and deletion check.
 
 ## Milestone 45: Commit, push, and review

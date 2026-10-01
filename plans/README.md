@@ -44,7 +44,7 @@
   [Milestone 40 review](../docs/reviews/imported-css-delivery-milestone-40.md)
   were addressed selectively: Milestone 41 (`7f64f8b0`) replaces the custom
   merge check for findings 1, 2, 4 and 11. Milestone 42 (`beab8560`) merges
-  main's release-runner fix at `b4a02a30`. Milestone 44 addresses the selected
+  main's release-runner fix at `b4a02a30`. Milestone 44 (`8729ec16`) addresses the selected
   findings in the
   [Milestone 43 review](../docs/reviews/imported-css-delivery-milestone-43.md).
   Other findings remain outside this work.

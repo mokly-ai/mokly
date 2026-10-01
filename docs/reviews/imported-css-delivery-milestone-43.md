@@ -87,6 +87,7 @@ carry a resolution note; the others remain open for the user's decision.
        bring back custom tooling.
    - Recommended: A. Naming the merge removes the cause: the step no longer
      depends on where `HEAD` happens to be.
+   - Resolved in `8729ec16`: `AGENTS.md` now names and checks a two-parent merge immediately, reviews its remerge diff by path, compares later commits separately, and explains safe amendment and pre-PR justifications.
 2. **Low — the step gives no way to review a large merge, and "justify each
    intentional change" does not match how PR #125 records justifications.**
    - For `d72abaeb`, the remerge diff is about 9,900 lines across 134 paths,
@@ -102,6 +103,7 @@ carry a resolution note; the others remain open for the user's decision.
      each path with `-- <path>`, and justify each decision, naming every
      affected path; B) require a table with one row per path; C) leave as is.
    - Recommended: A. It matches the existing "Merge decisions" practice.
+   - Resolved in `8729ec16`: The review starts with `--stat` and examines each path. The ignored `.context/pr/merge-decisions.md` names every affected path for all three merges, ready for the user to copy into PR #125.
 3. **Low — two bookkeeping statements now contradict the records.** The
    Milestone 40 record still says "All twelve remain open", although four of
    its findings are now marked resolved. `plans/README.md` lists the Milestone
@@ -111,6 +113,7 @@ carry a resolution note; the others remain open for the user's decision.
    6), and split the README sentence; B) change "twelve" to "eight"; C) leave
    both as snapshots. Recommended: A, because wording without a count does
    not go stale each time a finding is resolved.
+   - Resolved in `8729ec16`: Review introductions and the active plan use count-free status wording, and `plans/README.md` separates the release-runner merge from finding resolutions.
 
 ## Addition To Milestone 40 Finding 12
 

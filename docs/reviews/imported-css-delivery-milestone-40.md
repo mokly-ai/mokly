@@ -68,6 +68,7 @@ the user's decision.
    - Recommended: A. The root cause is a catch-all that turns unexpected
      states into "nothing to check".
    - Resolved in `7f64f8b0`: Removed the custom check. Reviewers now use Git's `--remerge-diff`, which compares against Git's own merge without the script's unreadable-result and deleted-file skips.
+   - Corrected in `8729ec16`: the remerge diff is reliable only for a named two-parent merge commit; `AGENTS.md` now records the merge commit explicitly and reviews later commits separately (Milestone 43 finding 1).
 2. **Medium — the merge check does not look where the last merge actually lost
    content.**
    - What happens: the check examines only files changed on both sides, and
@@ -150,6 +151,7 @@ the user's decision.
    Options: A) fix the three statements; B) A, but replace both merge-rule
    descriptions with a link to `verification-ratchets.md` so that one page
    owns the rule. Recommended: B.
+   - Partly resolved in `8729ec16`: part (c) is fixed by count-free record wording (Milestone 43 finding 3); parts (a) and (b) remain open.
 
 7. **Low — three edits re-add or keep text that `main` changed or removed.**
    These are not branch-only rules, so decision 1 did not approve porting them.
@@ -218,6 +220,7 @@ the user's decision.
     unlisted passages. Recommended: A, moving to C if merges from `main` stay
     frequent.
     - Resolved in `7f64f8b0`: `AGENTS.md` directs intentional merge justifications to the PR description, which can change after the merge commit. The removed custom check's limits no longer apply; the user maintains PR #125's description.
+    - Corrected in `8729ec16`: the remerge diff is reliable only for a named two-parent merge commit; `AGENTS.md` now records the merge commit explicitly and reviews later commits separately (Milestone 43 finding 1).
 
 12. **Low — two imported-CSS watcher tests are flaky on CI.** PR #125's CI
     failed once on Node 22.14.0 and passed when only the failed jobs were
