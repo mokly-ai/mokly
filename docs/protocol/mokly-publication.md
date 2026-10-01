@@ -51,7 +51,7 @@ Changes under [baseline compatibility](./mokly-baseline-compatibility.md).
 
 Publish the current home, catalogue routes, resources, metadata, search, tags,
 folder hierarchy, and not-found page. Preserve screen viewport/color selection
-and page rendering.
+and page and doc rendering; docs follow the [docs contract](./mokly-docs.md).
 
 Omit All/Changes controls and counts, screen comparison controls, removed-entry
 rows and previous-version pages, comparison JSON, and baseline
@@ -108,8 +108,8 @@ Copy eligible public file and directory aliases as regular files at their
 logical routes. Every copied target must also stay inside the real `mockupsDir`
 and pass the shared source/internal-metadata policy. Apply generated-artifact
 and staging/destination exclusions to both identities. After copying, validate
-the presence of every current page and light/dark screen fragment named by the
-manifest, independently of the enumerated file list. Validate every exported
+the presence of every current page, doc view, and light/dark screen fragment
+named by the manifest, independently of the enumerated file list. Validate every exported
 HTML/CSS resource reference against confined regular files in
 the staged static tree, including transitive references. An unavailable resource,
 including a reference through a skipped cycle or excluded alias, fails before
@@ -155,10 +155,10 @@ Render those removed screens with their Removed badge and no comparison
 controls. Publication packages their baseline views and advertises the
 descriptor defined by [removed previews](./mokly-removed-previews.md), which the
 shell resolves into the previous version.
-Include page impact and removed registered-page states from the
+Include page and doc impact and removed page and doc states from the
 [shared catalogue snapshot](./mokly-catalogue-changes.md), including flat
-Changes rows after deleting their parents and each removed page's packaged
-preview. Pages have no visual comparisons; screen metadata
+Changes rows after deleting their parents and each removed page's or doc's
+packaged preview. Pages and docs have no visual comparisons; screen metadata
 remains supported.
 
 Resolve the effective base and HEAD once, then pin their merge-base commit for

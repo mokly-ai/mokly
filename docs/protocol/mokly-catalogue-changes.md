@@ -67,7 +67,8 @@ metadata comes from the matching current catalogue; removed display metadata
 comes from `removedEntries`. No removed-use-case support is introduced here.
 
 Visual comparisons use [review result v4](./mokly-changes.md#comparison-engine)
-for every catalogue. Pages add no comparison records. Neither catalogue change detection nor page removal requires snapshot
+for every catalogue. Pages add no comparison records, and neither do docs
+under the approved [docs contract](./mokly-docs.md). Neither catalogue change detection nor page removal requires snapshot
 generation. The publisher must not discover removed pages by reading
 `ReviewResult.screens`; that array remains the source of screen comparisons.
 The shared catalogue snapshot drives its removed-entry pages, shell metadata,
@@ -108,10 +109,10 @@ the [baseline compatibility contract](./mokly-baseline-compatibility.md).
 
 ## Removed-Page Presentation
 
-When Changes is selected, append removed pages as flat root-level leaf rows
-after the filtered current hierarchy, ordered by id. Reuse the existing
-removed-screen row style, page icon, and removed-row identity; the visible
-label is `<title> · Removed`. There is no recreated folder, historical folder,
+When Changes is selected, append removed pages, and removed docs, as flat
+root-level leaf rows after the filtered current hierarchy, ordered by id.
+Reuse the existing removed-screen row style, the page or doc icon, and
+removed-row identity; the visible label is `<title> · Removed`. There is no recreated folder, historical folder,
 extra App root, or expandable Removed group.
 
 A removed row's identity is `removed:<id>`. It is unique because a removed

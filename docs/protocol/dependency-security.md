@@ -33,6 +33,17 @@ fixtures continue to exercise their respective integration contracts without
 duplicating registry requests. Consumers must maintain and audit their own
 lockfiles, including dependencies they bring to their renderer or application.
 
+## Optional Peer Dependencies
+
+The approved [docs contract](./mokly-docs.md) declares `@mdx-js/mdx` and
+`remark-gfm` as optional peer dependencies of `@mokly/mokly`. They are not
+production dependencies, so an ordinary consumer install carries neither
+package nor its advisories; a consumer that configures docs installs them into
+its own lockfile and audits them there. This repository lists both as
+development dependencies for its tests and example, so the workspace audit
+covers them, and the packed-consumer smoke audits one consumer that installs
+them and one that does not.
+
 ## Update Policy
 
 Investigate each advisory's dependency path and patched versions before changing

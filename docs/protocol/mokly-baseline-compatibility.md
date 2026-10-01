@@ -3,7 +3,9 @@
 ## Delivery Status
 
 Implemented as recorded in the
-[id-derived routes plan](../../plans/id-derived-routes.md).
+[id-derived routes plan](../../plans/id-derived-routes.md). The approved
+[docs contract](./mokly-docs.md) raises this gate to v8 on delivery; the rules
+below then apply to v8, with v7 as recognized earlier output.
 
 This contract owns the version gate between a current catalogue and the Git
 comparison base used by Serve, export, and publication. Baseline storage and

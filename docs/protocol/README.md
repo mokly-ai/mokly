@@ -19,6 +19,8 @@ by rejecting the case-insensitive pattern `\bmilestones?\s+\d`.
 
 Manifest v7 carries explicit pages, `navPath`, source inventory, declared
 dependencies, component variants, and per-view usage, but no derivable path.
+The approved [docs contract](./mokly-docs.md) moves the manifest to v8 and the
+read model to v4 when it is delivered.
 Review result v4 addresses entries and views by identity and axes. The public
 read model and static delivery descriptor are v3. Current and baseline manifest
 readers accept only v7; earlier output follows
@@ -38,6 +40,8 @@ readers accept only v7; earlier output follows
 - [Catalogue upload validation v1](./mokly-upload-validation.md) — rejection
   categories, limits, and independent receiver validation.
 - [Package and authoring contract](./mokly-package.md)
+- [Markdown and MDX docs](./mokly-docs.md) — approved target: discovered
+  `.md`/`.mdx` files as `doc` entries rendered through the consumer renderer.
 - [CLI terminal output](./mokly-terminal-output.md) — plain compatibility,
   interactive progress, watched events, and shortcuts.
 - [CLI terminal compatibility and errors](./mokly-terminal-errors.md) — exact

@@ -7,7 +7,7 @@ Screen and Review-ignore behavior remains below.
 The catalogue's All / Changes filter narrows one navigation tree. There is no
 Review tab, report, or `mokly review`; `--out` belongs only to static `export`.
 
-[Pages](./mokly-pages.md) participate in Changes and removed-entry states,
+[Pages](./mokly-pages.md) and approved [docs](./mokly-docs.md) participate in Changes and removed-entry states,
 while comparison controls remain exclusive to changed screens and eligible
 component variants. Each [variant](./mokly-variants.md) is an entry of its
 parent's kind with its own route, row, count, views, and comparison; only its
@@ -23,7 +23,7 @@ baseline admission and pairing/order fixes run in Serve, export, and publish.
 
 ## Changes membership
 
-Changes is a review list of added/removed screens and pages, material document changes,
+Changes is a review list of added/removed screens, pages, and docs, material document changes,
 reviewable entry metadata changes, and user flows that embed those screens.
 A new or edited flow is included independently. Source edits, source moves,
 dependency declaration edits, and shared-impact matches alone do not add
@@ -59,8 +59,8 @@ Unreferenced public files never add entries through a broad shared-impact glob.
 Every reachable existing resource is validated, including images and fonts;
 finding a changed resource does not skip its CSS/HTML references or later graph
 edges. Added screens, newly available views, and existing material fragment
-changes do not bypass resource validation. Whole-document pages use these same
-rules for their single generated document and its rendered resources; they do
+changes do not bypass resource validation. Whole-document pages and docs use
+these same rules for their generated documents and rendered resources; they do
 not gain screen comparison controls or viewport variants.
 For public file and directory aliases, compare changed Git paths against both
 the referenced route and its validated physical path relative to the real

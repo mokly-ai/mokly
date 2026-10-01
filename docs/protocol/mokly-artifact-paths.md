@@ -14,8 +14,8 @@ unknown logical destinations. Authors never supply any of these paths.
 `@mokly/viewer/data` exports the shared pure path functions:
 
 ```ts
-type EntryKind = "component" | "page" | "screen" | "use-case";
-type ViewKind = "component" | "screen";
+type EntryKind = "component" | "doc" | "page" | "screen" | "use-case";
+type ViewKind = "component" | "doc" | "screen";
 type SnapshotSide = "before" | "after";
 
 function entryRoute(kind: EntryKind, id: string): string;
@@ -36,14 +36,17 @@ The results are:
 | Page      | `pages/<id>.html`      | Not applicable                           |
 | Use case  | `user-flows/<id>.html` | Not applicable                           |
 | Component | `components/<id>.html` | `components/<id>.<viewport>[.dark].html` |
+| Doc       | `docs/<id>.html`       | `docs/<id>.desktop[.dark].html`          |
 
 `viewHref` prepends `/view/` to `entryRoute`. The dark infix is present only
 for `colorScheme: "dark"`. Variants use their own kind and global id exactly
 like every other entry. IDs have no `.`, so an entry document cannot collide
-with a view suffix belonging to another id.
+with a view suffix belonging to another id. The `doc` kind is an approved
+target of the [docs contract](./mokly-docs.md): `viewRoute("doc", …)` accepts
+only the desktop viewport and rejects `mobile`.
 
 `parseViewHref(pathname)` is the inverse for canonical `.html` and
-provider-normalized extensionless paths. It accepts only the four literal
+provider-normalized extensionless paths. It accepts only the literal
 prefixes in the table and a portable entry id. Property names inherited from
 JavaScript objects, including `constructor`, `__proto__`, and `toString`, are
 not prefixes. A query or fragment is not part of `pathname` and is rejected if
@@ -65,6 +68,7 @@ function snapshotPagePath(id: string): string;
 function snapshotSidePath(side: SnapshotSide): string;
 function snapshotResourcePath(side: SnapshotSide, route: string): string;
 function pagePreviewMetadataPath(id: string): string;
+function docPreviewMetadataPath(id: string): string;
 ```
 
 `snapshotViewPath` returns
@@ -75,7 +79,9 @@ have no after side. `snapshotSidePath` returns the directory prefix
 appends one nonempty path accepted by `isSafeRepositoryPath` to that prefix;
 it rejects absolute paths, empty or dot segments, backslashes, colons, and NUL.
 `pagePreviewMetadataPath` returns `pages/<id>.json` within the comparison
-generation. Each identity-specific function validates its typed axes and entry
+generation. For the approved `doc` kind, `docPreviewMetadataPath` returns
+`docs/<id>.json` and a removed doc's single historical document is
+`snapshotViewPath("before", "doc", id, "desktop", "light")`. Each identity-specific function validates its typed axes and entry
 id before composing a relative POSIX path.
 
 Review production, selected capture, packaging, export checks, shell comparison

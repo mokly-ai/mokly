@@ -24,7 +24,7 @@ Sections appear in this order:
 | Order | Section id  | Title                  | Summary                                                         |
 | ----- | ----------- | ---------------------- | --------------------------------------------------------------- |
 | 1     | `start`     | Getting started        | Install Mokly, point it at your screens and open the catalogue. |
-| 2     | `authoring` | Authoring              | Describe screens, components, flows and pages in TypeScript.    |
+| 2     | `authoring` | Authoring              | Describe screens, components, flows, pages, and docs.           |
 | 3     | `catalogue` | Catalogue              | Browse, search, compare and export what the build produced.     |
 | 4     | `ci`        | Continuous integration | Publish a catalogue from a workflow on every branch.            |
 | 5     | `cli`       | CLI reference          | Every command, the options it takes and what it writes.         |

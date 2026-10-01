@@ -122,12 +122,12 @@ Serve and exported Browse expose one compact native selector labelled
 top bar. It is the only scheme control in a standalone document: it replaces
 the top-bar and head-band `Light | Dark` preview switch and the component
 workspace's Dark mode button, and it is present even when the catalogue has no
-dark fragments. It remains reachable on home, pages, flows, empty and
+dark fragments. It remains reachable on home, pages, docs, flows, empty and
 unavailable routes, and at narrow widths, and preserves catalogue search and
 menu access.
 
 Choosing a value applies the interface appearance and the effective preview
-scheme together: the document's scheme mark, every screen and flow frame's
+scheme together: the document's scheme mark, every screen, doc, and flow frame's
 light/dark fragment swap, component samples and comparison frames. The existing
 swap rules apply unchanged, including the light-only fallback caption. In-shell
 navigation, Back and Forward keep the current reader choice, even when the
@@ -256,14 +256,14 @@ deriving a light phone's text from dark shell ink. Fixed phone hardware and
 traffic-light artwork retain their intended colors.
 
 One preview stylesheet owns iframe color schemes and the opaque backgrounds
-behind transparent preview content. Screen, page, component, flow, historical
+behind transparent preview content. Screen, page, doc, component, flow, historical
 and comparison canvases use the selected preview's Light or Dark surface;
 layout styles must not override them with an interface surface or a fixed
 color. Switching interface appearance alone must preserve the pixels of a
 transparent preview, including its loading surface and comparison base.
 
 Set each managed iframe's CSS `color-scheme` to its effective preview scheme
-before loading it, including page/component/flow and comparison frames. For
+before loading it, including page/doc/component/flow and comparison frames (docs follow the approved [docs contract](./mokly-docs.md)). For
 documents without a scheme axis, retain the existing Light context. Frame
 wrappers record the selected file's scheme independently of the outer document
 and of fallback captions; iframe context, device-screen styling and comparison

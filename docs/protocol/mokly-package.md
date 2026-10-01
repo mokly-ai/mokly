@@ -21,7 +21,10 @@ the completed
 
 [Whole-document pages](./mokly-pages.md) use the same IDs and hierarchy as
 screens and flows. Current and comparison-base manifests require v7; consumers
-use ordinary page definitions.
+use ordinary page definitions. [Docs](./mokly-docs.md) are an approved target:
+discovered Markdown and MDX files become `doc` entries, with `@mdx-js/mdx` and
+`remark-gfm` as optional peer dependencies installed only by consumers who
+configure docs.
 The co-located layout below, discovered through `entries` globs, was delivered
 by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
 

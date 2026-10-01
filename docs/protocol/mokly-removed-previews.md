@@ -4,19 +4,17 @@
 
 The [removed content previews plan](../../plans/removed-content-previews.md)
 delivered typed capture, the Serve generation lifecycle, consumer export,
-repository preview, upload packaging, and the shared shell and viewer. The
+repository preview, upload packaging, and the shared shell and viewer; the
 [viewer-owned historical previews plan](../../plans/viewer-owned-historical-previews.md)
 defines the host-independent presentation below. Nothing here changes ordinary
-browsing, Added entries, changed-screen comparisons, or removed component
-variants.
+browsing, Added entries, changed-screen comparisons, or removed variants.
 
-The note for a selected viewport with no captured historical view is fixed
-here and depicted by the design catalogue's
-[no-captured-view screen](./mokly-shell-design.md#design-mockups).
+The note for a selected viewport with no captured historical view is fixed here
+and depicted by the design catalogue's [no-captured-view screen](./mokly-shell-design.md#design-mockups).
 
 ## Behavior
 
-Opening a removed screen or registered page shows the version from the pinned
+Opening a removed screen, registered page, or doc shows the version from the pinned
 Changes baseline: the same branch-point commit that produced its Changes row,
 in committed or [derived](./mokly-derived-baselines.md) mode. The heading keeps
 its Removed badge, breadcrumbs keep the textual baseline ancestry, and Details
@@ -24,7 +22,7 @@ keeps its historical metadata. A quiet label above the stage reads “Showing
 previous version.” No Current selector, comparison band, refresh control, Props
 editing, current inspector bindings, or current usage/comment markers appear.
 
-A removed page renders its historical document in the plain document pane. A
+A removed page or doc renders its historical document in the plain pane. A
 removed screen renders its historical mobile and desktop frames; Light and Dark
 choices follow the historical views that exist. A saved scheme without a
 historical view falls back to Light with the existing light-only note. Removed
@@ -82,10 +80,11 @@ cancellation, invalidation, and shutdown follow the
 
 ## Page Previews
 
-Pages have no comparison records, so a removed page adds a page selection to
-the same generation lifecycle. The stable request is
-`/__mokly/diffs/review.json?page=<page id>`, naming the removed page's id,
-optionally with `refresh=1`. `page` is exclusive with `id`;
+Pages and docs have no comparison records, so a removed page or doc adds a
+selection to the same generation lifecycle. The stable request is
+`/__mokly/diffs/review.json?page=<page id>`, or `doc=<doc id>` under the
+approved [docs contract](./mokly-docs.md), optionally with `refresh=1`.
+`page` and `doc` are exclusive with `id` and with each other;
 combining them, repeating it, or naming a page that is not a selected removed
 page fails with the existing malformed-request or missing-selection responses.
 The response redirects to
@@ -107,7 +106,7 @@ below the generation root: the directory of the redirected `preview.json` in
 development, or the directory of `comparisonUrl` in static delivery. Readers
 accept only version 2.
 
-Capture reads the page's single historical document and its transitive local
+Capture reads the page's or doc's single historical document and its local
 closure through the pinned `BaselineReader` with the same Git asset reader,
 regular-file, bounded-batch, source-exclusion, reserved-file, and size rules as
 screen snapshots. Root-absolute, protocol-relative, and unsupported-scheme
@@ -130,7 +129,8 @@ __mokly/diffs/__generations/<generation>/pages/<id>.json
 __mokly/diffs/__generations/<generation>/snapshots/before/pages/<id>.html
 ```
 
-The file at `pagePreviewMetadataPath(id)` contains the same
+The file at `pagePreviewMetadataPath(id)`, or `docPreviewMetadataPath(id)`
+for a doc beside `snapshots/before/docs/<id>.desktop.html`, contains the same
 `RemovedPagePreview` shape. Its files enter the generation content identity,
 ownership inventory, reference validation, deployment hash, finalized ownership
 marker, and content-addressed upload. A preview whose closure is incomplete
@@ -149,7 +149,7 @@ Catalogue v3 carries the optional preview descriptor on each removed entry:
 interface RemovedEntry {
   entry: CatalogueRecord;
   snapshotId?: string;
-  preview?: { kind: "screen" } | { kind: "page" };
+  preview?: { kind: "screen" } | { kind: "page" }; // v4 adds { kind: "doc" }
 }
 ```
 
@@ -160,12 +160,12 @@ key, not an authorization capability, and grants no access to preview bytes.
 
 `preview.kind: "screen"` states that the removed screen's comparison `before`
 views are its preview; the viewer derives them from `comparisonUrl` with
-`snapshotViewPath`. `preview.kind: "page"` states that the page's metadata uses
-`pagePreviewMetadataPath(id)` inside the same generation directory as
-`comparisonUrl`, so the viewer derives that location from the generation and
-the page id. Serve leaves `preview` absent for pages, because live page
-generations are selected through the stable endpoint rather than a
-catalogue-wide pointer, and the local shell keeps its private data.
+`snapshotViewPath`. `preview.kind: "page"` (or `"doc"`) states that the entry's
+metadata uses `pagePreviewMetadataPath(id)` (or `docPreviewMetadataPath(id)`)
+inside the same generation directory as `comparisonUrl`, so the viewer derives
+that location from the generation and the id. Serve leaves `preview` absent for
+pages and docs, because live generations are selected through the stable
+endpoint rather than a catalogue-wide pointer, and the shell keeps private data.
 
 Removed entries have no current files and no route field; their URL derives
 from kind and id, and historical HTML is never disguised as current output. The

@@ -99,6 +99,7 @@ test("every named authoring concept retains its guide", () => {
       "collections-and-tags",
       "use-case-flows",
       "pages",
+      "docs",
       "links",
       "review-ignore",
     ],

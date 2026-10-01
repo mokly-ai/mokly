@@ -9,9 +9,11 @@ helper inputs, derived routes, and authoring-time errors; the
 
 ## Sections And Path Derivation
 
-Every routed screen, page, use case, and component has a `navPath` string array:
-the ordered folder labels from its section root to its parent. Pages
-holds screens, pages, and use cases; Components holds components. Each section
+Every routed screen, page, doc, use case, and component has a `navPath` string
+array: the ordered folder labels from its section root to its parent. Pages
+holds screens, pages, docs, and use cases; Components holds components. A doc
+is an approved target of the [docs contract](./mokly-docs.md) and follows
+every rule here as an ordinary leaf. Each section
 builds an independent tree from shared path prefixes. Byte-identical labels
 under the same parent merge across source modules; the same path in both
 sections creates two independent folders. Flat entries may omit `navPath` or

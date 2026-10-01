@@ -27,6 +27,8 @@ the following contract:
   are entry modules anywhere in the repository, or the `entriesDir` shorthand
   for conventional `.mockup.ts` and `.mockup.tsx` files in one directory;
 - `repoRoot`: repository root, defaulting to the config file's directory;
+- optional `docs` globs or the `docsDir` shorthand for Markdown and MDX docs
+  under the approved [docs contract](./mokly-docs.md);
 - a light-only or light-and-dark catalogue rendering set;
 - optional renderer-module path and declarative route-to-stylesheet rules;
 - optional consumer package roots, aliases, conditions, fields, extensions, and
@@ -46,20 +48,18 @@ module may be nested below `mockupsDir` as protected authored source; generated
 routes are checked separately and cannot collide with it.
 
 Before reading Git, `repoRoot` must resolve through symlinks to the same path
-as `git rev-parse --show-toplevel` run from that directory. A nested root fails
-with `config-invalid`, naming both paths. This validation belongs to config's
-Git boundary, not unconditional config loading: build in either output mode,
-committed Check and publication without comparisons need no Git repository.
-Derived Check requires Git to inspect tracking. Serve's parent, classifier and
-HTTP child, comparison export and preview all validate before their first Git
-read. All remains usable when history is unavailable; an explicit comparison
-request retains the typed configuration error. Missing refs or history keep
-their existing command-specific errors.
+as `git rev-parse --show-toplevel` run from that directory; a nested root fails
+with `config-invalid`, naming both paths. The check belongs to config's Git
+boundary, not unconditional loading: build, committed Check, and publication
+without comparisons need no Git repository; derived Check requires Git to
+inspect tracking; Serve's parent, classifier and HTTP child, comparison export,
+and preview validate before their first Git read. All remains usable without
+history; an explicit comparison request retains the typed configuration error,
+and missing refs or history keep their command-specific errors.
 
 No default may encode `docs/mockups` as a mandatory location, product route
 families, consumer design tokens, email-template paths, or a TypeScript
-workspace layout. A conventional `docs/mockups` layout may be offered by an
-explicit initializer or documented example, not hidden in runtime logic.
+workspace layout; a conventional layout belongs in an initializer or example.
 
 The normative configuration shape is:
 
@@ -84,6 +84,8 @@ interface MoklyConfig {
   colorSchemes?: readonly ColorScheme[]; // ["light"]
   entries?: readonly string[]; // exactly one of entries or entriesDir
   entriesDir?: string; // shorthand for [`${dir}/**/*.mockup.{ts,tsx}`]
+  docs?: readonly string[]; // approved target: at most one of docs or docsDir
+  docsDir?: string; // shorthand for [`${dir}/**/*.{md,mdx}`]
   generatedOutput?: "committed" | "derived"; // "derived"
   mockupsDir: string;
   publicExclude?: readonly string[]; // extends shipped public exclusions
@@ -222,8 +224,6 @@ filename suffix or extension filter, so `entries: ["src/**/*.ts"]` evaluates
 every matched TypeScript file as an entry module. Mokly reads `mockups` or a
 default registry value from each; a matched helper with neither contributes no
 definitions and can produce the normal empty-registry error.
-`.mockup.ts` and `.mockup.tsx` remain the recommended naming convention, and
-the `entriesDir` shorthand preserves it through its generated glob.
 
 Below the deepest matching glob root, walks skip directories named `.git`,
 `node_modules`, `.mokly-cache`, `dist`, `coverage`, `target`, `test-results`,

@@ -12,7 +12,7 @@ authoritative.
 
 An installed consumer can create a complete static Mokly catalogue using
 their existing config, entries, renderer, and assets. The resulting directory
-contains Browse navigation, screens, use cases, whole-document pages, and the existing
+contains Browse navigation, screens, use cases, whole-document pages, approved [docs](./mokly-docs.md), and the existing
 on-demand comparison experience. Hosting it requires no Mokly process,
 consumer source tree, Node.js, or Git on the serving machine.
 
@@ -87,7 +87,7 @@ every catalogue. It retains all existing states, shared/dependency impact,
 ignored regions, both viewports and all effective color schemes; see the
 [supported format matrix](./README.md#supported-formats). Removed screens,
 pages, components and variants retain their baseline context; current and
-removed records never share an id. Pages have no visual comparisons. An id
+removed records never share an id. Pages and docs have no visual comparisons. An id
 absent from a side's manifest follows the
 existing added/removed rules. A declared but
 missing baseline document, invalid manifest, or unavailable resource fails;
@@ -172,7 +172,7 @@ Output confinement and ownership reservations follow the separate
 
 ## Public Files And Package Boundary
 
-Include current manifest-owned fragments and pages and all public
+Include current manifest-owned fragments, doc views, and pages and all public
 regular assets/documents that Browse exposes beneath `mockupsDir`, subject to
 export exclusions below. Retain relative resource and fallback document links
 and verify their transitive HTML/CSS dependencies, including fonts, images,

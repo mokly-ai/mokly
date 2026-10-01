@@ -2,7 +2,7 @@
 title: "Links"
 description: "Link one catalogue entry to another and keep the link portable."
 section: "authoring"
-order: 8
+order: 9
 ---
 
 ## Link by id

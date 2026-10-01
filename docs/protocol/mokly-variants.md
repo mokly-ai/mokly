@@ -105,8 +105,8 @@ Validation rejects, with source attribution:
 - a `variantOf` that names an unknown entry, an entry of another kind, or an
   entry that is itself a variant, so nesting is exactly one level deep;
 - a variant whose `navPath` differs from its parent's;
-- a page or use case carrying `variants` or `variantOf`, including keys whose
-  value is `undefined`;
+- a page, use case, or doc carrying `variants` or `variantOf`, including keys
+  whose value is `undefined` (docs follow the [docs contract](./mokly-docs.md));
 - a component with no variants.
 
 For screen definitions, each forbidden field produces an `invalid-variants`

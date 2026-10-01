@@ -45,13 +45,13 @@ interface CatalogueReadModel {
     components: readonly CatalogueNode[];
   };
   screens: readonly CatalogueScreen[];
-  pages: readonly CataloguePage[];
+  pages: readonly CataloguePage[]; // v4 adds docs: readonly CatalogueDoc[]
   useCases: readonly CatalogueUseCase[];
   components: readonly (CatalogueComponent | CatalogueComponentVariant)[];
   removedEntries: readonly {
     entry: CatalogueRecord;
     snapshotId?: string;
-    preview?: { kind: "screen" } | { kind: "page" };
+    preview?: { kind: "screen" } | { kind: "page" }; // v4 adds { kind: "doc" }
   }[];
 }
 type CatalogueRecord =
@@ -59,7 +59,7 @@ type CatalogueRecord =
   | CataloguePage
   | CatalogueUseCase
   | CatalogueComponent
-  | CatalogueComponentVariant;
+  | CatalogueComponentVariant; // v4 adds CatalogueDoc under the docs contract
 type CatalogueNode =
   | { kind: "folder"; label: string; children: readonly CatalogueNode[] }
   | { kind: "entry"; id: string; children?: readonly CatalogueNode[] };
@@ -159,8 +159,8 @@ Do not spread a manifest, entry, or internal evidence object into public JSON.
   mobile/dark, desktop/light, desktop/dark; light-only fallback stays in the
   viewer. A current entry's comparison state is never `removed`; that state is
   valid only inside `removedEntries`.
-- Pages have no viewport/usage. Use cases keep ordered standalone-screen steps;
-  reused frames add no screen uses or duplicate instance records.
+- Pages and docs have no viewport/usage; docs copy `colorSchemes`. Use cases
+  keep ordered standalone-screen steps; reused frames add no uses or records.
 - Component parents retain schemas, read-only control descriptions, and
   declared slot names. Their variant entries follow them in authored order with
   validated wire props and supplied slot names; the first is the default, and
@@ -255,7 +255,7 @@ and stamps it afterward, alongside shell descriptors. Other catalogue bytes
 participate unchanged. Export revisions are `{ content: 0, evidence: 0 }`.
 
 Readers require `schemaVersion: 3` and reject older and unknown versions; writers
-remain allowlisted. The [path contract](./mokly-nav-paths.md#order-and-keys)
+remain allowlisted, and the approved [docs contract](./mokly-docs.md) moves this to v4. The [path contract](./mokly-nav-paths.md#order-and-keys)
 owns the intentional change from v1's authored tree order. Version 3 removes
 every route and path field, makes component variants entries, and keys removal
 by id. Optional fields are additive; removals, required additions, changed

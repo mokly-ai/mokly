@@ -33,7 +33,7 @@ import type {
 
 interface RenderInput {
   colorScheme: ColorScheme;
-  entry: ScreenDefinition | ComponentVariantDefinition;
+  entry: ScreenDefinition | ComponentVariantDefinition | DocDefinition;
   componentProps?: Readonly<Record<string, unknown>>;
   node: ReactNode;
   stylesheets: readonly string[];
@@ -51,7 +51,10 @@ export default function render(input: RenderInput): string | RenderResult;
 
 For a component variant entry, `entry` is the variant entry itself and
 `componentProps` carries its validated props; the parent component is never
-rendered on its own, and `RenderInput` has no `variantId` field.
+rendered on its own, and `RenderInput` has no `variantId` field. For the
+approved `doc` kind, `node` is the compiled MDX component element, `viewport`
+is always `"desktop"`, and each effective scheme renders once; see the
+[docs contract](./mokly-docs.md).
 
 The string or `html` field must contain a complete `<html>` document. Optional
 style/resource records provide exact component ownership; unclaimed or mixed
@@ -133,8 +136,8 @@ never copied into the npm package.
 
 ## Generated Contract
 
-`mokly build` writes deterministic screen/component views, complete page
-documents, and `mokly-manifest.json` beneath `mockupsDir`. The
+`mokly build` writes deterministic screen/component views, desktop doc views,
+complete page documents, and `mokly-manifest.json` beneath `mockupsDir`. The
 [artifact path contract](./mokly-artifact-paths.md) owns every exact name.
 Component parents have no views, and dark views exist only for entries whose
 effective schemes include dark.
@@ -164,7 +167,8 @@ file.
 
 All catalogues emit [manifest v7](./mokly-component-manifest.md), including
 pages, source inventory, component variant entries and per-view
-invocation/ownership records. Current and baseline readers accept only v7;
+invocation/ownership records; the approved [docs contract](./mokly-docs.md)
+moves this to v8 with a fifth kind on delivery. Current and baseline readers accept only v7;
 earlier output follows [baseline compatibility](./mokly-baseline-compatibility.md).
 Version 7 stores no route, view path, or other value derivable from identity and
 configuration. The common shape is:
@@ -179,7 +183,7 @@ interface ManifestV7 {
 
 interface CommonEntry {
   id: string;
-  kind: "screen" | "use-case" | "page" | "component";
+  kind: "screen" | "use-case" | "page" | "component" | "doc"; // doc: v8
   title: string;
   description: string;
   rationale?: string;
@@ -194,6 +198,7 @@ type ManifestEntry =
   | ManifestComponent // See the component manifest contract for the parent shape.
   | ManifestComponentVariant // The variant entry shape lives there too.
   | (CommonEntry & { kind: "page" })
+  | (CommonEntry & { kind: "doc"; colorSchemes: readonly ColorScheme[] }) // v8
   | (CommonEntry & {
       kind: "screen";
       address?: string;
@@ -212,8 +217,8 @@ type ManifestEntry =
     });
 ```
 
-Entries sort by kind name in UTF-16 order (`component`, `page`, `screen`,
-`use-case`) and then id, with a parent's variants directly after it in authored
+Entries sort by kind name in UTF-16 order (`component`, `doc`, `page`,
+`screen`, `use-case`) and then id, with a parent's variants directly after it in authored
 order; source inputs, dependencies, and generated files sort lexically.
 Optional properties are omitted, not emitted as `null`.
 `navPath` is required on every v7 entry; its derivation and meaning follow

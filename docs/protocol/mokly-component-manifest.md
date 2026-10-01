@@ -38,7 +38,7 @@ type ManifestEntryV7 =
 
 interface ManifestEntryBase {
   id: string;
-  kind: "screen" | "page" | "use-case" | "component";
+  kind: "screen" | "page" | "use-case" | "component"; // v8 adds "doc"
   title: string;
   description: string;
   rationale?: string;
@@ -78,7 +78,8 @@ interface ManifestComponentVariant extends ManifestEntryBase {
 ```
 
 `ManifestPage` adds `kind: "page"`; `ManifestUseCase` adds `kind: "use-case"`
-and `steps`. `variantOf` is present exactly on variant entries of either kind
+and `steps`. The approved [docs contract](./mokly-docs.md) adds `ManifestDoc`
+(`kind: "doc"`, `colorSchemes`, optional `tags`) and moves the schema to v8. `variantOf` is present exactly on variant entries of either kind
 under the [variant contract](./mokly-variants.md); a component parent and a
 component variant share `kind: "component"` and are distinguished by that
 field. A reader derives every path from the

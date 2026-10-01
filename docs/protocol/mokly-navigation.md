@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Implemented by the [in-frame navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
-[Pages](./mokly-pages.md) share the screen/flow link and breadcrumb rules. The
+[Pages](./mokly-pages.md) and approved [docs](./mokly-docs.md) share the screen/flow link and breadcrumb rules. The
 hydrated shell and [frame adapters](./mokly-frame-adapter.md) apply every marker,
 sandbox, target, and outer-navigation rule in Serve, export, and embedded hosts.
 Controlled and uncontrolled unknown-id handling is implemented.
@@ -114,7 +114,7 @@ builder indexes anchors from the final documents and repeats cross-view
 fragment validation for every retained logical-reference record. A transformer
 that removes or renames an anchor in any destination viewport or scheme
 therefore fails the build even when the source link record itself is unchanged.
-The builder also requires every transformed screen fragment and page document
+The builder also requires every transformed screen fragment, doc view, and page document
 to retain a generated ownership header that decodes to its expected source
 path. The versioned header encodes that identity with canonical base64 so no
 source filename can alter HTML comment parsing. Header parsing accepts LF and

@@ -2,7 +2,7 @@
 title: "Review-ignore"
 description: "Keep repeated chrome out of a comparison without hiding it from the reader."
 section: "authoring"
-order: 9
+order: 10
 ---
 
 ## Mark repeated chrome

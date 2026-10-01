@@ -123,51 +123,52 @@ repository test that enforces this applies to the new document.
 Define the complete doc contract before any code changes so later milestones
 need no guesswork.
 
-- [ ] Create `docs/protocol/mokly-docs.md` covering discovery, frontmatter
+- [x] Create `docs/protocol/mokly-docs.md` covering discovery, frontmatter
       grammar, derived id/title/description, `navPath` placement, compile
       formats and the raw-HTML rule, the optional peer loading error,
       rendering input and views, the default reading stylesheet, heading-id
       generation, the manifest v8 doc shape, Changes and removed-preview
       behavior, watch, export, and publication, with an Acceptance section.
-- [ ] Update `docs/protocol/mokly-configuration.md` with `docs` and `docsDir`,
+- [x] Update `docs/protocol/mokly-configuration.md` with `docs` and `docsDir`,
       their validation, and the exactly-one rule mirroring `entries`.
-- [ ] Update `docs/protocol/mokly-authoring.md` for the `doc` kind, the
+- [x] Update `docs/protocol/mokly-authoring.md` for the `doc` kind, the
       exported `DocDefinition` type, and the statement that docs are
       discovered files outside nested trees.
-- [ ] Update `docs/protocol/mokly-artifact-paths.md`: `EntryKind` and
+- [x] Update `docs/protocol/mokly-artifact-paths.md`: `EntryKind` and
       `ViewKind` gain `doc`, the tables gain `docs/<id>.html` and
       `docs/<id>.desktop[.dark].html`, the view-path parser accepts the
       `docs/` prefix, and the removed-doc snapshot path is named.
-- [ ] Update `docs/protocol/mokly-nav-paths.md` for docs in the Pages section
+- [x] Update `docs/protocol/mokly-nav-paths.md` for docs in the Pages section
       as ordinary leaves, and `docs/protocol/mokly-variants.md` for the
       rejected keys.
-- [ ] Update `docs/protocol/mokly-rendering.md`,
+- [x] Update `docs/protocol/mokly-rendering.md`,
       `docs/protocol/mokly-component-manifest.md` (manifest v8 entry shape
       with the fifth kind), and `docs/architecture/build-pipeline.md` for the
       doc render input, the desktop-only viewport, and the MDX compile step in
       the consumer graph.
-- [ ] Update `docs/protocol/mokly-pages.md` to state the page/doc boundary
+- [x] Update `docs/protocol/mokly-pages.md` to state the page/doc boundary
       beside its "no parallel discovery" sentence.
-- [ ] Update `docs/protocol/mokly-catalogue.md` for read model v4 with
-      `CatalogueDoc` and `preview.kind: "doc"`, replace
-      `docs/protocol/fixtures/catalogue-v3.json` with `catalogue-v4.json`,
-      update the `docs/protocol/README.md` supported-formats table, and move
-      the `docs/protocol/mokly-baseline-compatibility.md` gate to v8.
-- [ ] Update `docs/protocol/mokly-changes.md`,
+- [x] Update `docs/protocol/mokly-catalogue.md` for read model v4 with
+      `CatalogueDoc` and `preview.kind: "doc"`, note the v8 and v4 targets in
+      the `docs/protocol/README.md` supported-formats section, and record the
+      v8 gate in `docs/protocol/mokly-baseline-compatibility.md`. Replacing
+      `docs/protocol/fixtures/catalogue-v3.json` with `catalogue-v4.json`
+      moved to Milestone 4, because conformance tests read the fixture bytes.
+- [x] Update `docs/protocol/mokly-changes.md`,
       `docs/protocol/mokly-catalogue-changes.md`,
       `docs/protocol/mokly-removed-previews.md`, and
       `docs/protocol/mokly-removed-preview-acceptance.md` for doc membership
       and the removed doc preview.
-- [ ] Update `docs/protocol/mokly-shell-design.md`: rail rules for the doc
+- [x] Update `docs/protocol/mokly-shell-design.md`: rail rules for the doc
       leaf, the doc stage that follows the effective appearance with
       no viewport switch, the details rows, the home count, and four inventory
       rows `design-doc-view`, `design-doc-details`, `design-doc-navigation`,
       and `design-doc-removed` in the Browse shell › Specification docs
       folder, rendered in both schemes, with their owning-group note.
-- [ ] Update `docs/protocol/mokly-viewer-appearance.md` so doc frames follow
+- [x] Update `docs/protocol/mokly-viewer-appearance.md` so doc frames follow
       the effective preview scheme, receive the managed-frame `color-scheme`,
       and keep the embedded preview control.
-- [ ] Update `docs/protocol/mokly-navigation.md`,
+- [x] Update `docs/protocol/mokly-navigation.md`,
       `docs/protocol/mokly-watch.md`, `docs/protocol/mokly-export.md`,
       `docs/protocol/mokly-export-browser.md`,
       `docs/protocol/mokly-export-safety.md`,
@@ -175,15 +176,19 @@ need no guesswork.
       `docs/protocol/mokly-package.md` for doc view paths in inventories,
       watched doc files, shell documents at `/view/docs/<id>`, and the
       optional peer dependencies; confirm the upload contracts need no change.
-- [ ] Update `docs/protocol/dependency-security.md` with the optional peer
+- [x] Update `docs/protocol/dependency-security.md` with the optional peer
       policy and the packed-consumer audit with and without the peers.
-- [ ] Add `docs/guides/authoring/docs.md` after Pages and renumber the later
+- [x] Add `docs/guides/authoring/docs.md` after Pages and renumber the later
       authoring guides; update `docs/protocol/mokly-guides.md` if the section
-      table needs a docs mention.
-- [ ] Update the root `README.md` authoring table, `packages/viewer/README.md`,
-      `src/build/README.md`, `src/config` documentation, and
-      `examples/basic/README.md`.
-- [ ] Validate the changed Markdown with `npx prettier --check`, run the
+      table needs a docs mention. The guide list tests were extended for the
+      new page. The Config guide's Fields table cannot list `docs` and
+      `docsDir` until `MoklyConfig` declares them (a test pins that table to
+      real fields), so those rows moved to Milestone 3.
+- [x] Update the root `README.md` authoring table. The code READMEs describe
+      shipped behavior, so `src/build/README.md` moved to Milestone 3,
+      `examples/basic/README.md` to Milestone 5, and `packages/viewer/README.md`
+      to Milestone 6.
+- [x] Validate the changed Markdown with `npx prettier --check`, run the
       guides and protocol-history tests, review the diff, commit, and push.
 
 ## Milestone 2: Design mockups
@@ -239,6 +244,8 @@ catalogue effect yet.
       inventory; confirm the compiled output imports the consumer React.
 - [ ] Add `@mdx-js/mdx` and `remark-gfm` as optional peer dependencies and as
       development dependencies; record the audit in the dependency policy.
+- [ ] Add the `docs` and `docsDir` rows to the Config guide's Fields table and
+      update `src/build/README.md` for discovery and the MDX plugin.
 - [ ] Tests: config validation, shorthand expansion, discovery ordering and
       exclusions, frontmatter grammar and errors, a `.md` regression fixture
       containing `{`, `<`, and an `import` line that compiles as Markdown, an
@@ -264,7 +271,9 @@ rules already understand.
       snapshot path; add the case-folded output collision check for doc views.
 - [ ] Write manifest v8 with the doc entry; update the manifest validators,
       the viewer data-layer types and entry reader, read model v4, the
-      baseline compatibility gate, and the protocol fixture bytes.
+      baseline compatibility gate, and the protocol fixture bytes, replacing
+      `docs/protocol/fixtures/catalogue-v3.json` with `catalogue-v4.json` and
+      its link in `docs/protocol/mokly-catalogue.md`.
 - [ ] Tests: derivation, collisions, `navPath` placement and each conflict,
       top-level docs, alphabetical placement among sibling leaves, manifest
       shape and determinism, the v7 base reported as incompatible, and
@@ -301,6 +310,7 @@ Render docs and carry them through every delivery path.
       imports `MockLink`, the `.md` regression fixture, a `docs/**` stylesheet
       rule, and registration of the example notes so the Welcome related-doc
       chip resolves to a doc.
+- [ ] Update `examples/basic/README.md` for the example docs.
 - [ ] Tests: build output and ownership, links both ways with fragments,
       on-demand rendering, watch lifecycle, Changes membership, removed
       preview, export and publish inventories, and the example catalogue.
@@ -326,6 +336,7 @@ Show docs in the shell as specified by the mockups.
       link when the path is a doc source.
 - [ ] Add the docs figure to the home count and the search rows.
 - [ ] Route the removed doc through the previous-version presentation.
+- [ ] Update `packages/viewer/README.md` for the doc kind.
 - [ ] Tests: viewer unit tests for the tree, details, stages, and copy;
       browser tests for navigation, the Appearance control in standalone and
       the preview control when embedded, link following, search, the Changes

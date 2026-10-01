@@ -6,7 +6,7 @@
 mokly.config.ts
         |
         v
-resolve `entries` globs -> matched entry modules + renderer + optional compatibility modules
+resolve `entries` and `docs` globs -> matched entry modules + doc files + renderer + optional compatibility modules
         |
         v
 one esbuild graph, with React resolved from the consumer
@@ -24,7 +24,7 @@ adapt explicit child controls -> resolve mock:id links -> compatibility bridge
 validate markers/links/resources
         |
         v
-mobile/desktop light and optional dark HTML for every screen, screen variant, and component variant entry, whole documents + schema-v7 manifest in memory
+mobile/desktop light and optional dark HTML for every screen, screen variant, and component variant entry, desktop doc views, whole documents + manifest in memory
         |
         +---- check (committed): compare with disk, write nothing
         |
@@ -75,8 +75,10 @@ resolved set travels with the config beside `sourceFiles`.
 ## 2. One Consumer Graph
 
 The resolved entry modules, the configured renderer, imported page
-helpers, and an optional temporary compatibility transformer are imported by a single virtual entry and
-bundled together. The internal bundle is CommonJS so Node-oriented consumer
+helpers, discovered doc files, and an optional temporary compatibility transformer are imported by a single virtual entry and
+bundled together. A Mokly-owned esbuild plugin compiles each `.md` or `.mdx`
+doc to a React component with the consumer-resolved MDX compiler under the
+approved [docs contract](../protocol/mokly-docs.md). The internal bundle is CommonJS so Node-oriented consumer
 dependencies can retain dynamic built-in imports. Esbuild returns this bundle
 in memory; evaluation creates no temporary module file. A private compilation
 association retains the exact bundle, configuration and accepted artifacts for
@@ -129,7 +131,9 @@ names remain private even when no longer imported.
 
 Each page calls its synchronous `render()` exactly once for one complete HTML
 document. It bypasses the screen renderer and variant loop, then uses the same
-ownership, link, resource, and transactional validation.
+ownership, link, resource, and transactional validation. A doc instead renders
+its compiled component through the consumer renderer in the desktop viewport
+once per effective scheme, then uses that same validation.
 
 Each screen owns a mobile and desktop React node. Mokly selects the first
 stylesheet rule matching the screen's catalogue route, applies it to each

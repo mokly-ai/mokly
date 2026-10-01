@@ -10,14 +10,14 @@ by generated output:
 
 - the config file and its transitive authoring imports reload configuration, generated
   output, watch targets, and the child;
-- resolved entry modules, page/renderer/transformer imports, and every other
-  inventoried source rebuild generated output, including imported bytes handled
-  by asset loaders;
+- resolved entry modules, doc files, page/renderer/transformer imports, and every
+  other inventoried source rebuild generated output, including imported bytes
+  handled by asset loaders;
 - a created, renamed, or deleted regular file whose repository-relative path
-  matches an `entries` glob re-runs discovery before that rebuild, so the
-  resolved entry set follows the filesystem; the glob defines the complete
-  entry shape, and the stable prefix of every entry glob is a watched root for
-  this purpose;
+  matches an `entries` or `docs` glob re-runs discovery before that rebuild, so
+  the resolved entry and doc sets follow the filesystem; the glob defines the
+  complete shape, and the stable prefix of every such glob is a watched root
+  ([docs](./mokly-docs.md) is an approved target);
 - an input shared with shell metadata rebuilds before restarting the child;
 - configured stylesheets and referenced local CSS, fonts, images, and other
   resources used only through public URLs reload the browser without rebuilding;

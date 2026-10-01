@@ -185,14 +185,15 @@ Detailed command references:
 Mokly's public API is declarative. Definitions describe what belongs in a
 catalogue; your React tree still owns what each screen looks like.
 
-| Concept          | Use it for                                               | Guide                                                               |
-| ---------------- | -------------------------------------------------------- | ------------------------------------------------------------------- |
-| Screens          | Product states, view renders, and full-screen variants   | [Screens](./docs/guides/authoring/screens.md)                       |
-| Folders and tags | Navigation paths and searchable vocabulary               | [Folders and tags](./docs/guides/authoring/collections-and-tags.md) |
-| Components       | Typed props, variants, controls, and usage inspection    | [Components](./docs/guides/authoring/components.md)                 |
-| Use-case flows   | Ordered journeys composed from existing screens          | [Use-case flows](./docs/guides/authoring/use-case-flows.md)         |
-| Pages            | Existing complete HTML documents without device variants | [Pages](./docs/guides/authoring/pages.md)                           |
-| `MockLink`       | Portable links between catalogue entries                 | [Links](./docs/guides/authoring/links.md)                           |
+| Concept          | Use it for                                                  | Guide                                                               |
+| ---------------- | ----------------------------------------------------------- | ------------------------------------------------------------------- |
+| Screens          | Product states, view renders, and full-screen variants      | [Screens](./docs/guides/authoring/screens.md)                       |
+| Folders and tags | Navigation paths and searchable vocabulary                  | [Folders and tags](./docs/guides/authoring/collections-and-tags.md) |
+| Components       | Typed props, variants, controls, and usage inspection       | [Components](./docs/guides/authoring/components.md)                 |
+| Use-case flows   | Ordered journeys composed from existing screens             | [Use-case flows](./docs/guides/authoring/use-case-flows.md)         |
+| Pages            | Existing complete HTML documents without device variants    | [Pages](./docs/guides/authoring/pages.md)                           |
+| Docs             | Markdown or MDX prose shown beside the screens it describes | [Docs](./docs/guides/authoring/docs.md)                             |
+| `MockLink`       | Portable links between catalogue entries                    | [Links](./docs/guides/authoring/links.md)                           |
 
 A custom renderer is the integration boundary for product providers, themes,
 stylesheets, fonts, and full-document markup. Mokly resolves React from the

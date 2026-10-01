@@ -17,7 +17,11 @@ The root package export supplies typed, documented authoring helpers:
 
 The root also exports the authoring input/definition types, including
 `PageInput`, `PageDefinition`, and `NestedPageInput`, plus configuration,
-renderer, and compatibility-transformer interfaces. `ColorScheme` is exactly
+renderer, and compatibility-transformer interfaces. The approved
+[docs contract](./mokly-docs.md) adds `DocDefinition` for the `doc` kind: a
+Markdown or MDX file discovered from the `docs` globs, carrying the common
+metadata and `navPath` like a flat entry, never defined in TypeScript and
+never a member of a nested tree. `ColorScheme` is exactly
 `"dark" | "light"`; `Viewport` is `"desktop" | "mobile"`.
 
 The [registered component contract](./mokly-components.md) owns the complete
@@ -76,7 +80,8 @@ path derivation, label diagnostics, ordering, and folder keys.
 ## Derived Routes
 
 Authors never write a route. Kind plus id determines every entry, view,
-comparison, and preview path, so folder and title changes cannot move a URL.
+comparison, and preview path, so folder and title changes cannot move a URL;
+a doc's id derives from its file path unless its frontmatter sets one.
 The [identity-derived artifact path contract](./mokly-artifact-paths.md) owns
 the exact tables, shared functions, URL parser, and reserved prefixes. Wire
 formats carry identity and axes rather than those derivable paths.

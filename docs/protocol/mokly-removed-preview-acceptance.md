@@ -10,6 +10,8 @@ and mixed selections, incompatible baselines, coalescing, refresh,
 invalidation, cancellation, shutdown, idle recovery, both frame adapters,
 read-only enforcement, static delivery without renewal traffic, current-only
 delivery with zero historical work, and the strict v3 catalogue reader.
+Removed docs under the approved [docs contract](./mokly-docs.md) repeat the
+removed-page coverage with their single light desktop view.
 Embedded viewer coverage proves both adapters keep plain external and relative
 links inert.
 

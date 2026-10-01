@@ -18,7 +18,9 @@ route derives from its id under the
 Whole-document rendering remains supported independently of navigation.
 
 All pages use `definePage` or nested `page`; there is no parallel discovery or
-source-registration adapter.
+source-registration adapter for pages. Prose documents are the separate
+approved [docs contract](./mokly-docs.md): a doc is compiled Markdown or MDX
+rendered through the consumer renderer, not an authored HTML page.
 
 A page is one complete authored HTML document, such as a printable document
 or an existing multi-state reference page. It does not require invented
