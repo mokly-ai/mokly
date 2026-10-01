@@ -69,7 +69,7 @@ semantics of `tokenizeCss`, not a CSS validator:
 - Quoted strings consume escapes and their closing quote; a backslash escape
   consumes up to six hex digits and its optional following whitespace, or one
   escaped code unit. Escapes cannot introduce a structural bracket.
-- Recognize escaped identifiers and unquoted `url(` as the tokenizer does;
+- Recognize escaped identifiers and unquoted `url(`, not after `#`, `@` or NUL;
   the URL body, including escaped brackets, is opaque until its closing `)`.
   A quoted URL is handled as ordinary parentheses containing a string.
 - Maintain typed nesting for `()`, `[]` and `{}`. Brackets inside strings,

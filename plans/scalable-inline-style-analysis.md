@@ -629,9 +629,14 @@ whole-element parsing.
 - [x] Discovered: remove duplicate boundary recovery and document-ordinal
       copies; derive cached data from detached material once; rename the
       disabled-counter test to its actual collector/emission proof.
-- [ ] Discovered: report interleaved cold per-element costs against `b87df3a2`
+- [x] Discovered: report interleaved cold per-element costs against `b87df3a2`
       and `e4307a46`; target about 10% of the former, recording any excess
       and remaining cost for the supervisor's decision.
+- [ ] Discovered: supervisor decision on remaining cold costs: final/M3
+      ratios are 1.2974 (85 KB RNW), 1.2272 (157 KB RNW) and 1.2491
+      (1,000 Emotion elements), above the requested approximately 1.10.
+      Preserve the measured evidence in
+      [the parse-reuse checkpoint](../docs/dev/large-fixture-parse-reuse.md).
 
 - [x] Discovered: meet the supervisor's premeasurement checkpoint: targeted
       tests, full unit/Chromium/hydration suites and format/lint/typecheck,
@@ -641,7 +646,7 @@ whole-element parsing.
       shared failure snapshots with stack recording disabled/restored in `finally`;
       verify both entry points and every new derived string slot release their pages.
       Failed batches still use whole-element fallback, never unverified segment runs.
-- [ ] Discovered: after approval, smoke-measure cold cumulative `no-changes`
+- [x] Discovered: after approval, smoke-measure cold cumulative `no-changes`
       and `component-style`, including the inline counts record, before the final
       `cargo xtask check` and push. Preserve all outcomes; do not measure early.
 
@@ -686,9 +691,9 @@ whole-element parsing.
 - [x] Run the existing inline, CSS, fast-path and Changes suites, preserving
       assertions outside the Decision 4 form correction; run the full
       unit/Chromium/hydration suites.
-- [ ] Discovered: after the approved smoke measurements, run the complete
+- [x] Discovered: after the approved smoke measurements, run the complete
       `cargo xtask check` before pushing, as the supervisor's checkpoint requires.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
