@@ -1,13 +1,24 @@
 import assert from "node:assert/strict";
 
 import { ByteBoundedLru } from "../../src/review/css/byte_lru.js";
-import { detachParseResult } from "../../src/review/css/parse_cache.js";
+import {
+  detachParseResult,
+  detachSegmentRun,
+} from "../../src/review/css/parse_cache.js";
+import {
+  cssRuleData,
+  storeCssRuleData,
+} from "../../src/review/css/rule_identity.js";
 import { CssRuleParseError } from "../../src/review/css/types.js";
 
 const [slot, mode] = process.argv.slice(2);
 const errorSlot = slot.startsWith("error-");
 const cache =
-  mode === "sliced-control" ? new Map() : new ByteBoundedLru(detachParseResult);
+  mode === "sliced-control"
+    ? new Map()
+    : new ByteBoundedLru(
+        slot === "identity-run" ? detachSegmentRun : detachParseResult,
+      );
 const collect = () => {
   for (let attempt = 0; attempt < 4; attempt++) global.gc();
   return process.memoryUsage().heapUsed;
@@ -32,6 +43,14 @@ if (errorSlot) {
       ? error.cause.payload[0].source
       : error[slot.slice("error-".length)];
   assert.equal(value, units);
+} else if (slot === "identity-run") {
+  assert.equal(result.identityRunKey, units);
+} else if (slot.startsWith("data-")) {
+  const data = cssRuleData(result.rules[0]);
+  assert.equal(
+    slot === "data-reference" ? data.references[0] : data[slot.slice(5)],
+    units,
+  );
 } else if (!slot.startsWith("key")) {
   assert.equal(result.status, "parsed");
   const rule = result.rules[0];
@@ -83,6 +102,14 @@ function populate() {
     rule.block = false;
   }
   let value = { status: "parsed", rules: [rule] };
+  if (slot.startsWith("data-")) {
+    const data = { ...cssRuleData(rule) };
+    if (slot === "data-reference") data.references = [sliced];
+    else data[slot.slice(5)] = sliced;
+    storeCssRuleData(rule, data);
+  }
+  if (slot === "identity-run")
+    value = { rules: [rule], identityRunKey: sliced };
   if (errorSlot) {
     const cause =
       slot === "error-payload" ? { payload: [{ source: sliced }] } : "fixture";

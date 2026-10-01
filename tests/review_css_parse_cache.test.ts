@@ -4,6 +4,7 @@ import test from "node:test";
 import { ByteBoundedLru } from "../src/review/css/byte_lru.js";
 import { detachParseResult } from "../src/review/css/parse_cache.js";
 import { CssResourceAnalysis } from "../src/review/css/resource_analysis.js";
+import { cssRuleData } from "../src/review/css/rule_identity.js";
 import { LightningCssRuleParser } from "../src/review/css/rules.js";
 import { CssRuleParseError } from "../src/review/css/types.js";
 import type { CssRuleParseResult } from "../src/review/css/types.js";
@@ -32,7 +33,18 @@ test("whole-input accounting includes every retained rule string slot", () => {
       },
     ],
   };
-  const units = "parsed".length + shared.length * 2 + 2 * 2 + 5 + 6 + 6 + 11;
+  const derivedUnits = result.rules.reduce((total, rule) => {
+    const data = cssRuleData(rule);
+    return (
+      total +
+      data.addressKey.length +
+      data.identityKey.length +
+      data.canonicalText.length +
+      data.references.reduce((sum, reference) => sum + reference.length, 0)
+    );
+  }, 0);
+  const units =
+    "parsed".length + shared.length * 2 + 2 * 2 + 5 + 6 + 6 + 11 + derivedUnits;
   const cache = new ByteBoundedLru(detachParseResult);
   const retained = cache.set("sheet", result);
   assert.deepEqual(retained, result);

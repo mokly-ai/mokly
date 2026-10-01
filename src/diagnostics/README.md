@@ -18,6 +18,10 @@ sampler is injectable through the timing sink for deterministic tests; path
 counts remain owned by `review/component_comparison_counts.ts`. Resource
 I/O is outside local operation clocks. Counts have no document or path labels.
 
+The same enabled collector owns inline element/segment/hit/parse/fallback
+totals and emits one `review.inline-style-analysis` counts event on completion.
+Batch failures count attempted distinct misses, never unverified duplicate hits.
+
 The normative fields, units, rounding and emission rules live in
 [the timing contract](../../docs/protocol/mokly-timings.md#component-analysis-counts).
 Tests pin exact per-step parse counts and verify disabled collection, exclusive

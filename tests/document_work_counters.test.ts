@@ -112,10 +112,21 @@ test("handled classification failures emit partial counts and discard the collec
   );
   assert.deepEqual(
     events.filter(({ event }) => event === "counts").map(({ stage }) => stage),
-    ["review.compare-screens", "review.document-work"],
+    [
+      "review.compare-screens",
+      "review.document-work",
+      "review.inline-style-analysis",
+    ],
   );
   assert.equal(events[1]!.counts!.htmlParses, 1);
   assert.equal(events[0]!.counts!.views, 0);
   assert.equal(events[0]!.counts!.heapPeakMiB, 0);
+  assert.deepEqual(events[2]!.counts, {
+    elements: 0,
+    segments: 0,
+    segmentHits: 0,
+    segmentParses: 0,
+    fallbacks: 0,
+  });
   assert.equal(timingDocumentWork(), undefined);
 });

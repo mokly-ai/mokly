@@ -582,11 +582,40 @@ stylesheet-file parse cache, without changing any result.
       verify dependencies, build output, Chrome and both setup fixtures survived;
       rerun the complete check from the start under Node 24.19.0.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
+
+### Milestone 3 review findings
+
+Reported by the post-push review of commits `783e1f3d`, `4c2ac767` and
+`b87df3a2`. Recorded for the user's decision.
+
+1. Medium. A cached CSS parse failure keeps its whole HTML page alive outside
+   the 64 MiB bound. The error snapshot in `src/review/css/cache_error.ts` is
+   built with `new Error()`, which also records the call stack in a hidden V8
+   slot that deleting `stack` does not clear; a frame's closure in
+   `parseCssRules` holds the style text, which is a slice of the page. A probe
+   through `parseInlineRuleList` with an invalid style sliced from a 48 MiB page
+   retained 48 MiB after GC (0 MiB with a zero bound or with
+   `Error.stackTraceLimit = 0`), while the repository's GC probe calls the
+   cache directly and cannot see this path. Recommended: build the snapshot
+   error with `Error.stackTraceLimit = 0` (restored in `finally`), add a GC test
+   that enters through the production path with a sliced invalid style,
+   correct the contract and README claims, and require retention tests to use
+   the production path. Status: Milestone 4's segment cache stores failures
+   through the same helper and must meet the same no-document-retention rule,
+   so its production-path retention tests cover this.
+2. Low. A component-aware classification creates two whole-input caches: the
+   page phase (`classifyChangedContent` through `ChangedResourceGraph`) and the
+   component phase each construct their own `CssResourceAnalysis`, contrary to
+   the contract's one cache per classification, and the test-only
+   `cssCacheBytes` reaches only the second. Recommended: create one
+   `CssResourceAnalysis` in `readCatalogueChanges`, pass it to both phases as a
+   required argument, and extend the zero-versus-default-bound test through
+   `readCatalogueChanges`. Related to Milestone 1 finding 1.
 
 ## Milestone 4: Rule Segment Parse Reuse
 
@@ -594,47 +623,61 @@ Summary: parse each distinct top-level rule once per classification and
 compute each distinct rule's derived data once, with results identical to
 whole-element parsing.
 
-- [ ] Add a segment scanner module under `src/review/css/` implementing the
+- [x] Discovered: meet the supervisor's premeasurement checkpoint: targeted
+      tests, full unit/Chromium/hydration suites and format/lint/typecheck,
+      then commit locally, report and stop. Do not measure or push until approved.
+- [x] Discovered: production-path GC probes for valid, invalid, whole-fallback
+      and cached-run style slices expose hidden V8 error-stack retention. Build
+      shared failure snapshots with stack recording disabled/restored in `finally`;
+      verify both entry points and every new derived string slot release their pages.
+      Failed batches still use whole-element fallback, never unverified segment runs.
+- [ ] Discovered: after approval, smoke-measure cold cumulative `no-changes`
+      and `component-style`, including the inline counts record, before the final
+      `cargo xtask check` and push. Preserve all outcomes; do not measure early.
+
+- [x] Add a segment scanner module under `src/review/css/` implementing the
       Caches And Segments semantics over normalized text with code-unit
       comparisons, returning ordered segment ranges or an anomaly.
-- [ ] Add batched segment parsing to the Lightning CSS parser: parse an
+- [x] Add batched segment parsing to the Lightning CSS parser: parse an
       element's missing segments joined by newlines in one call, attribute the
       output rules to segments by top-level rule start, and verify exactly one
       top-level rule per segment starting at its start.
-- [ ] Add the rule-segment cache (byte-bounded LRU, 64 MiB) whose entries hold
+- [x] Add the rule-segment cache (byte-bounded LRU, 64 MiB) whose entries hold
       segment-local rules, derived data and the cached ordered identity-run
       key; assemble element rule lists
       in `parseInlineRuleList` with rebased ordinals; implement every fallback
       condition.
-- [ ] Compute derived data once per parsed rule, for inline and stylesheet-file
+- [x] Compute derived data once per parsed rule, for inline and stylesheet-file
       parses alike: address key with block form, identity key, rank,
       canonical text, references and the custom-property flag. Make `diffCssRules`,
       `diffCssRuleLists`, `cssRuleIdentity` and `renderInlineRules` use it.
-- [ ] Emit the `review.inline-style-analysis` counts record after the
+- [x] Emit the `review.inline-style-analysis` counts record after the
       component-aware loop.
-- [ ] Add scanner unit tests: comments, strings containing braces and quotes,
+- [x] Add scanner unit tests: comments, strings containing braces and quotes,
       escapes, unquoted `url(` containing braces, nested blocks and at-rules,
       CDO and CDC, and each anomaly.
-- [ ] Discovered: include `<!--a{color:red}`, `<!---->`,
+- [x] Discovered: include `<!--a{color:red}`, `<!---->`,
       `<!--body{color:red}-->` and `b{color:blue}<!--a{color:red}` in both scanner
       and assembly differential tests: each is a CDO-word anomaly and whole
       fallback must preserve the delivered unresolved result.
-- [ ] Add a differential test: segment assembly equals whole-element parsing,
+- [x] Add a differential test: segment assembly equals whole-element parsing,
       including ordinals and failures, over every CSS input in the existing
       `review_css_*` tests, React Native Web sheets from the small large
       fixture, Emotion-style per-component elements, and seeded random edits
       (insert, delete and reorder rules; inject comments, strings and
       escapes).
-- [ ] Add tests that a sequence of cumulative sheets parses each distinct
+- [x] Add tests that a sequence of cumulative sheets parses each distinct
       segment once through an injected counting parser, that each fallback
       condition falls back, and that `@layer a;` against `@layer a{}` is a
       diffed, unresolved change on both paths.
-- [ ] Discovered: assert stored references include `theme.css` for string-form
+- [x] Discovered: assert stored references include `theme.css` for string-form
       `@import "theme.css";` through the whole-input/fallback path, using the
       shared reference definition rather than a bare-prelude detector.
-- [ ] Run the existing inline, CSS, fast-path and Changes suites, preserving
-      assertions outside the Decision 4 form correction; run the full suite
-      and `cargo xtask check`.
+- [x] Run the existing inline, CSS, fast-path and Changes suites, preserving
+      assertions outside the Decision 4 form correction; run the full
+      unit/Chromium/hydration suites.
+- [ ] Discovered: after the approved smoke measurements, run the complete
+      `cargo xtask check` before pushing, as the supervisor's checkpoint requires.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)

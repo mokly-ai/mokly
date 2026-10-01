@@ -13,7 +13,7 @@ Approved target of the [scalable analysis plan](../../plans/scalable-inline-styl
 [M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse) stores rule data/forms,
 and [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis) uses original trees.
 Shared forms apply to both CSS paths; page analysis is component-aware only.
-The no-component classifier's routing is unchanged. M4 and M7 remain pending.
+The no-component classifier's routing is unchanged. Only M7 remains pending.
 
 ## Purpose
 

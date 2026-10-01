@@ -12,6 +12,7 @@ import { matchCssRules } from "./match.js";
 import type { CssAnalysisOutcome } from "./match_types.js";
 import { detachParseResult } from "./parse_cache.js";
 import { LightningCssRuleParser } from "./rules.js";
+import { CssSegmentAnalysis } from "./segment_analysis.js";
 import {
   CssRuleParseError,
   type CssRuleParser,
@@ -42,25 +43,36 @@ export class CssResourceAnalysis {
     cacheBytes?: number,
   ) {
     this.parsed = new ByteBoundedLru(detachParseResult, cacheBytes);
-    this.parser = {
-      parse: (source) => {
-        let result = this.parsed.get(source);
-        if (!result) {
-          try {
-            result = documentWorkSync("inlineRuleMs", () =>
-              parser.parse(source),
-            );
-          } catch (cause) {
-            result = {
-              status: "unresolved",
-              error: new CssRuleParseError(cause),
-            };
+    const whole: CssRuleParser = {
+      parse: (source) => this.parseWhole(parser, source),
+      ...(parser.parseSegments
+        ? {
+            parseSegments: (segments: readonly string[]) =>
+              parser.parseSegments!(segments),
           }
-          result = this.parsed.set(source, result);
-        }
-        return result;
-      },
+        : {}),
     };
+    const inline = new CssSegmentAnalysis(whole, cacheBytes);
+    this.parser = {
+      parse: whole.parse,
+      parseInline: (source) => inline.parse(source),
+    };
+  }
+
+  private parseWhole(
+    parser: CssRuleParser,
+    source: string,
+  ): CssRuleParseResult {
+    let result = this.parsed.get(source);
+    if (!result) {
+      try {
+        result = documentWorkSync("inlineRuleMs", () => parser.parse(source));
+      } catch (cause) {
+        result = { status: "unresolved", error: new CssRuleParseError(cause) };
+      }
+      result = this.parsed.set(source, result);
+    }
+    return result;
   }
 
   /** Narrow only the supplied changed, reachable resources; never discover files here. */

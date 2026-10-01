@@ -1,6 +1,5 @@
 /** Detect changes to custom properties and resource references in rule material. */
-import { extractCssReferences } from "../../css_references.js";
-
+import { cssRuleData } from "./rule_identity.js";
 import { CssSource, decodeCssIdentifier } from "./source.js";
 import type { CssRule } from "./types.js";
 
@@ -25,16 +24,7 @@ export function changedReferences(before?: CssRule, after?: CssRule): boolean {
 
 /** Find every resource reference that canonical rendering of one rule emits. */
 export function cssRuleReferences(rule?: CssRule): readonly string[] {
-  if (!rule) return [];
-  return [
-    ...rule.conditions
-      .filter((condition) => condition.kind !== "nesting-parent")
-      .map((condition) => condition.prelude),
-    ...(rule.atRule
-      ? [`@${rule.atRule}${rule.prelude ? ` ${rule.prelude}` : ""};`]
-      : []),
-    rule.declarations,
-  ].flatMap(extractCssReferences);
+  return rule ? cssRuleData(rule).references : [];
 }
 
 function customProperties(rule?: CssRule): readonly string[] {

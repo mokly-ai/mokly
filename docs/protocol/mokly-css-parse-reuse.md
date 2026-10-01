@@ -3,13 +3,13 @@
 ## Delivery Status
 
 Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
-[M3](../../plans/scalable-inline-style-analysis.md#milestone-3-bounded-memory)
-delivers the bounded, detached whole-input cache. Pending:
-[M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse)
-delivers segmentation, its cache and derived rule data;
+the bounded whole-input cache is implemented in
+[M3](../../plans/scalable-inline-style-analysis.md#milestone-3-bounded-memory),
+verified segments, their cache and stored rule data in
+[M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse).
 [M5](../../plans/scalable-inline-style-analysis.md#milestone-5-changed-segment-analysis)
-delivers cancellation, matched-copy reference pairing and composition.
-The delivered whole-element parser and rule diff remain authoritative until then.
+cancellation, matched-copy references and composition remain pending. Whole
+parsing is the assembly oracle; the full rule-list diff stays authoritative until M5.
 
 This document owns parsing reuse and rule identity for linked CSS and
 [component-aware inline analysis](./mokly-inline-styles.md). The latter alone
@@ -45,10 +45,12 @@ functions, custom prototypes and non-native accessors are opaque: use the
 original failure without caching or invoking its accessors. This also applies
 to an injected parser throwing such a payload.
 
+Snapshot errors use `Error.stackTraceLimit = 0`, restored in `finally`, preventing
+hidden V8 frames from retaining sources. Production-path GC tests prove release.
+
 Every retained key and source-derived string is an independent flat copy with
 identical code units, not a slice keeping a larger stylesheet or HTML alive.
-The whole-input cache copies through independent UTF-16LE bytes, preserving
-lone surrogates; child-process GC tests prove parent release for every slot.
+Independent UTF-16LE copying preserves lone surrogates; per-slot GC proves release.
 The cached run never retains a document, element, batch source or absolute
 location. On hit move the entry to most-recent using its stored flat key, never
 the caller's possibly sliced lookup key; on insertion evict least-recent

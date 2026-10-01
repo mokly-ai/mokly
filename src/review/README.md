@@ -164,14 +164,14 @@ absent for added/removed views. An absent stylesheet is passed as an empty strin
 `CssAnalysisOutcome`. The optional fourth argument injects a `CssRuleParser`.
 The optional fifth argument injects `matchCssRules` for boundary tests;
 `CssResourceAnalysis` accepts that matcher as its second constructor argument;
-its optional third byte bound is an internal differential-test seam. Its shared
-whole-input cache uses the [parse-reuse accounting contract](../../docs/protocol/mokly-css-parse-reuse.md#cache-lifetime-and-accounting).
+its optional third byte bound applies independently to both caches for tests.
+Whole-input and verified inline-segment caches use the
+[parse-reuse accounting contract](../../docs/protocol/mokly-css-parse-reuse.md#cache-lifetime-and-accounting).
 `css/byte_lru.ts` owns eviction and detached UTF-16 keys, including on hits;
 `css/parse_cache.ts` copies/freeze-protects rules, and `css/cache_error.ts` copies
-safe failure data without retaining opaque input payloads. Error property names
-are counted without copying; frozen snapshots preserve enumerability. GC probes
-cover source-derived string slots and checkout paths with spaces. Real committed/
-derived tests compare zero/default bounds on rich CSS and the design library.
+safe, stackless failure data. [The CSS module guide](./css/README.md) covers
+detached strings, byte accounting and production-path GC. Committed/derived
+tests compare zero/default bounds on rich CSS and the design library.
 Selectors are the kept rules' original serialized selectors, sorted and unique;
 an unresolved rule takes precedence over matched rules in the reduction.
 

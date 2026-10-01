@@ -7,8 +7,8 @@ Existing spans are implemented. Approved target of the
 [M2](../../plans/scalable-inline-style-analysis.md#milestone-2-deterministic-scale-fixture-and-complete-benchmark-evidence)
 implements heap/document counts and complete sample outcomes;
 [M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse)
-delivers segment counts; [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
-delivers `stylePath`. Segment/style-path counts remain pending; M2 records the reference in the fixture README.
+implements segment counts; [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
+delivers `stylePath`, which remains pending. M2 records the reference in the fixture README.
 
 ## Opt-in timings
 

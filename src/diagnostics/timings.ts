@@ -177,6 +177,9 @@ export async function runWithDocumentWork<T>(
         documentWork.comparisonCounts(),
       );
       timingCounts("review.document-work", () => documentWork.record());
+      timingCounts("review.inline-style-analysis", () => ({
+        ...documentWork.inlineStyles,
+      }));
     }
   });
 }

@@ -21,13 +21,13 @@ presentation.
 
 Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
 [M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse)
-delivers parse reuse; [M5](../../plans/scalable-inline-style-analysis.md#milestone-5-changed-segment-analysis)
+implements verified parse reuse; [M5](../../plans/scalable-inline-style-analysis.md#milestone-5-changed-segment-analysis)
 delivers cancellation and matched-copy pairing;
 [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
 delivers original-page analysis/matching and removes fast-path inline work;
 [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
 delivers the equivalent route; [M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprinted-comparison-materials)
-delivers fingerprinted material. Those rules below are pending, not delivered.
+delivers fingerprinted material. M5/M7/M8/M9 rules below remain pending.
 
 ## Purpose
 

@@ -50,7 +50,7 @@ export function detachParseError(
       throw new TypeError("Opaque error data");
     ancestors.add(value);
     const result = nativeError
-      ? Object.setPrototypeOf(new Error(), prototype)
+      ? stacklessError(prototype)
       : Array.isArray(value)
         ? []
         : Object.create(prototype);
@@ -81,5 +81,15 @@ export function detachParseError(
     return { error: copy(error) as CssRuleParseError, stringUnits };
   } catch {
     return undefined;
+  }
+}
+
+function stacklessError(prototype: object): Error {
+  const limit = Error.stackTraceLimit;
+  try {
+    Error.stackTraceLimit = 0;
+    return Object.setPrototypeOf(new Error(), prototype) as Error;
+  } finally {
+    Error.stackTraceLimit = limit;
   }
 }

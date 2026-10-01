@@ -39,6 +39,13 @@ const fields: readonly DocumentWorkField[] = [
 ];
 
 export class DocumentWork {
+  readonly inlineStyles = {
+    elements: 0,
+    segments: 0,
+    segmentHits: 0,
+    segmentParses: 0,
+    fallbacks: 0,
+  };
   private readonly counts: Record<string, number> = {
     htmlParses: 0,
     htmlParseBytes: 0,

@@ -3,9 +3,8 @@ import { documentWorkSync } from "../../diagnostics/timings.js";
 /** Canonically render inline rules and material replacements for one source side. */
 import type { InlineAttributionResult } from "./inline_attribution.js";
 import type { AttributedInlineRule } from "./inline_rule_matching.js";
-import { cssRuleIdentity } from "./rule_identity.js";
-import { decodeCssIdentifier } from "./source.js";
-import type { CssRule, CssRuleCondition } from "./types.js";
+import { cssRuleData, cssRuleIdentity } from "./rule_identity.js";
+import type { CssRule } from "./types.js";
 
 /** One original-coordinate edit consumed by the comparison replacement pass. */
 export interface InlineMaterialReplacement {
@@ -46,7 +45,10 @@ export function applyInlineMaterial(
 
 /** Render a rule multiset independently of source order and local ordinals. */
 export function renderInlineRules(rules: readonly CssRule[]): string {
-  return [...rules].sort(compareRules).map(renderRule).join("");
+  return [...rules]
+    .sort(compareRules)
+    .map((rule) => cssRuleData(rule).canonicalText)
+    .join("");
 }
 
 /** Remove analyzed elements and append each retained canonical rule set. */
@@ -119,56 +121,9 @@ function unchanged(): InlineMaterialReplacements {
 }
 
 function compareRules(a: CssRule, b: CssRule): number {
-  const rank = leadingRank(a) - leadingRank(b);
+  const rank = cssRuleData(a).rank - cssRuleData(b).rank;
   if (rank) return rank;
-  const left = identity(a);
-  const right = identity(b);
+  const left = cssRuleIdentity(a);
+  const right = cssRuleIdentity(b);
   return left < right ? -1 : left > right ? 1 : 0;
-}
-
-function leadingRank(rule: CssRule): number {
-  if (!isAtRule(rule) || rule.block) return 4;
-  const name = decodeCssIdentifier(rule.atRule).toLowerCase();
-  return name === "charset"
-    ? 0
-    : name === "import"
-      ? 1
-      : name === "namespace"
-        ? 2
-        : name === "layer"
-          ? 3
-          : 4;
-}
-
-function identity(rule: CssRule): string {
-  return cssRuleIdentity(rule);
-}
-
-function renderRule(rule: CssRule): string {
-  let rendered = isAtRule(rule)
-    ? renderAtRule(rule)
-    : `${rule.selectors.join(",")}{${rule.declarations}}`;
-  for (const condition of [...rule.conditions].reverse())
-    rendered = renderCondition(condition, rendered);
-  return rendered;
-}
-
-function renderAtRule(
-  rule: Extract<CssRule, { selectors: readonly [] }>,
-): string {
-  const header = `@${rule.atRule}${rule.prelude ? ` ${rule.prelude}` : ""}`;
-  return rule.block ? `${header}{${rule.declarations}}` : `${header};`;
-}
-
-function isAtRule(
-  rule: CssRule,
-): rule is Extract<CssRule, { selectors: readonly [] }> {
-  return rule.atRule !== undefined;
-}
-
-function renderCondition(condition: CssRuleCondition, content: string): string {
-  if (condition.kind === "nesting-parent")
-    return `${condition.prelude}{${content}}`;
-  const prelude = condition.prelude ? ` ${condition.prelude}` : "";
-  return `@${condition.kind}${prelude}{${content}}`;
 }

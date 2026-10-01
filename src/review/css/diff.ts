@@ -1,6 +1,7 @@
 import { documentWorkSync } from "../../diagnostics/timings.js";
 
 /** Diff ordered CSS rules as multisets while preserving both changed sides. */
+import { cssRuleData } from "./rule_identity.js";
 import { CssRuleParseError } from "./types.js";
 import type {
   CssRule,
@@ -54,13 +55,14 @@ export function diffCssRuleLists(
       const heads = headGroups.get(key) ?? [];
       const exact = new Map<string, CssRule[]>();
       for (const rule of [...bases].reverse()) {
-        const bucket = exact.get(rule.declarations) ?? [];
+        const identity = cssRuleData(rule).identityKey;
+        const bucket = exact.get(identity) ?? [];
         bucket.push(rule);
-        exact.set(rule.declarations, bucket);
+        exact.set(identity, bucket);
       }
       const matched = new Set<CssRule>();
       const remainingHeads = heads.filter((rule) => {
-        const match = exact.get(rule.declarations)?.pop();
+        const match = exact.get(cssRuleData(rule).identityKey)?.pop();
         if (!match) return true;
         matched.add(match);
         return false;
@@ -102,12 +104,7 @@ export function parseCssRules(
 function groupRules(rules: readonly CssRule[]): Map<string, CssRule[]> {
   const groups = new Map<string, CssRule[]>();
   for (const rule of [...rules].sort(byOrdinal)) {
-    const key = JSON.stringify([
-      rule.conditions.map(({ kind, prelude }) => [kind, prelude]),
-      rule.selectors,
-      rule.atRule ?? null,
-      rule.prelude ?? null,
-    ]);
+    const key = cssRuleData(rule).addressKey;
     const bucket = groups.get(key) ?? [];
     bucket.push(rule);
     groups.set(key, bucket);

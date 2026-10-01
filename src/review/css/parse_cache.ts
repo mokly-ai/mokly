@@ -1,7 +1,8 @@
 /** Whole-input parsing cache with detached rule material and safe failure snapshots. */
 import { type DetachedCacheValue, flatString } from "./byte_lru.js";
 import { detachParseError } from "./cache_error.js";
-import type { CssRule, CssRuleParseResult } from "./types.js";
+import { cssRuleData, storeCssRuleData } from "./rule_identity.js";
+import type { CssRule, CssRuleParseResult, CssSegmentRun } from "./types.js";
 
 export function detachParseResult(
   result: CssRuleParseResult,
@@ -34,7 +35,7 @@ export function detachParseResult(
         ),
       ),
     };
-    return Object.freeze(
+    const copied = Object.freeze(
       rule.atRule === undefined
         ? {
             ...material,
@@ -48,10 +49,38 @@ export function detachParseResult(
             block: rule.block,
           },
     );
+    const data = cssRuleData(rule);
+    storeCssRuleData(copied, {
+      addressKey: copyString(data.addressKey),
+      identityKey: copyString(data.identityKey),
+      rank: data.rank,
+      canonicalText: copyString(data.canonicalText),
+      references: Object.freeze(data.references.map(copyString)),
+    });
+    return copied;
   });
   return {
     value: Object.freeze({ status: "parsed", rules: Object.freeze(rules) }),
     ruleCount: rules.length,
     stringUnits,
+  };
+}
+
+export function detachSegmentRun(
+  run: CssSegmentRun,
+): DetachedCacheValue<CssSegmentRun> {
+  const detached = detachParseResult({ status: "parsed", rules: run.rules })!;
+  const parsed = detached.value as Extract<
+    CssRuleParseResult,
+    { status: "parsed" }
+  >;
+  return {
+    value: Object.freeze({
+      rules: parsed.rules,
+      identityRunKey: flatString(run.identityRunKey),
+    }),
+    ruleCount: detached.ruleCount,
+    stringUnits:
+      detached.stringUnits - "parsed".length + run.identityRunKey.length,
   };
 }
