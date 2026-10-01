@@ -287,10 +287,11 @@ records, inclusive durations and process boundaries.
 
 ## Benchmark Contract
 
-Milestone 4's [parse-reuse checkpoint](../../../docs/dev/large-fixture-parse-reuse.md)
-records the cumulative cold/warm smoke matrix, segment counts, and the
-isolated cold-cost comparison. The cold-cost target remains unmet and is
-recorded for the supervisor's decision; no failed sample is omitted.
+The [M4 parse-reuse checkpoint](../../../docs/dev/large-fixture-parse-reuse.md)
+records reuse and the provisionally accepted cold-cost regression.
+The [M5 changed-segment checkpoint](../../../docs/dev/large-fixture-changed-segments.md)
+records both smoke matrices: cumulative style completes cold/warm, but HTML
+and residual inline work still dominate. No failed sample is omitted.
 
 The focused [benchmark contract](./benchmark-contract.md) owns
 [template identity and stable values](./benchmark-contract.md#template-identity-and-stable-values),

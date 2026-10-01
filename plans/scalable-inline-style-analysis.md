@@ -787,6 +787,10 @@ lists from stored rule text.
       `src/review/css/inline_rule_lists.ts` is explicitly supervisor-authorized.
 - [x] Discovered: sort canonical material once per side, derive projected order
       by filtering, and prove the sort count and ordering against real runs.
+- [x] Discovered: the final unused-export ratchet requires the canonical sorter
+      to be private; it has only same-module production callers. Preserve the
+      measurements' `a78b6113` provenance; this visibility-only gate fix changes
+      no parsing, cancellation, composition or fixture input.
 - [x] Discovered: assert explicit changed pairs and final outcomes for
       displaced shared identities across differently shaped grouped/nested
       runs, including the contract's worked example and custom-property/URL
@@ -796,12 +800,15 @@ lists from stored rule text.
       a reference present once before and twice after): the added copy stays
       `unresolved`, the view is `changed` with a `material` reason, and no
       rule object carries two attributions.
-- [ ] Record the no-change and component-style samples of both fixtures.
+- [x] Record the no-change and component-style samples of both fixtures in
+      [the changed-segment checkpoint](../docs/dev/large-fixture-changed-segments.md):
+      all eight outcomes are `ok`; both cumulative style samples complete;
+      HTML parsing and residual inline work still dominate.
 - [x] Update `src/review/README.md` and the contracts' Delivery Status for
       delivered parts.
-- [ ] After the code checkpoint and approved measurements, run the suite and
+- [x] After the code checkpoint and approved measurements, run the suite and
       `cargo xtask check` on the measured result before pushing.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report

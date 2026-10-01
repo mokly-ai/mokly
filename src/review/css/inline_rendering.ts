@@ -44,7 +44,7 @@ export function applyInlineMaterial(
 }
 
 /** Render a rule multiset independently of source order and local ordinals. */
-export function canonicalInlineRules(rules: readonly CssRule[]): CssRule[] {
+function canonicalInlineRules(rules: readonly CssRule[]): CssRule[] {
   return [...rules].sort(compareRules);
 }
 
