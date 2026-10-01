@@ -14,22 +14,22 @@ rename-only verification; M19-2 is partly mitigated, and other findings in the
 [Milestone 17 review record](../docs/reviews/imported-css-delivery-milestone-17.md)
 remain open for the user's decision, as do the other findings in the
 [Milestone 19 review record](../docs/reviews/imported-css-delivery-milestone-19.md)
-and the eight findings in the
+and unresolved findings in the
 [Milestone 21 review record](../docs/reviews/imported-css-delivery-milestone-21.md).
 Milestone 22 (`8a47cc5`) accepts the selector-list behavior from finding 3 of that review;
 its other parts and findings remain open.
-Milestone 24 (`7ba5628`) resolves both M23 findings: it accepts the plugins' compound join
+Milestone 24 (`7ba5628`) resolves the M23 findings: it accepts the plugins' compound join
 without comma whitespace and ignores selector comments while rejecting
 invalid newly created compounds.
-The two findings in the
+The findings in the
 [Milestone 23 review record](../docs/reviews/imported-css-delivery-milestone-23.md)
 are addressed there; other findings remain open for the user's decision, as
-do the earlier unselected findings. Milestone 26 (`266164b`) resolves all four
+do the earlier unselected findings. Milestone 26 (`266164b`) resolves the
 approved findings in the
 [Milestone 25 review record](../docs/reviews/imported-css-delivery-milestone-25.md).
-Milestone 28 (`c482bd0`) resolves the four approved findings in the
+Milestone 28 (`c482bd0`) resolves the approved findings in the
 [Milestone 27 review record](../docs/reviews/imported-css-delivery-milestone-27.md);
-other open findings remain unchanged. Milestone 30 (`5ae34be`) resolves the three
+other open findings remain unchanged. Milestone 30 (`5ae34be`) resolves the
 approved findings in the
 [Milestone 29 review record](../docs/reviews/imported-css-delivery-milestone-29.md).
 Milestone 32 (`6a02190`) resolves only finding 1 in the
@@ -37,14 +37,14 @@ Milestone 32 (`6a02190`) resolves only finding 1 in the
 findings 2–4 remain open for the user's decision. Milestone 34 (`583af0a9`) resolves only
 finding 2 in the
 [Milestone 33 review record](../docs/reviews/imported-css-delivery-milestone-33.md);
-findings 1 and 3 remain open, as do the two findings in the
+findings 1 and 3 remain open, as do findings in the
 [Milestone 35 review record](../docs/reviews/imported-css-delivery-milestone-35.md).
 Milestone 36 (`d72abaeb`) merged `origin/main` at `0c8245f8` before the
 implementation PR. The merged tree retains imported CSS with manifest v7,
 read model v3, aligned comparison panes and delta publishing. Main's removal
 of historical v2 manifest parsing remains in force; `compatibility.transformer`
 remains available. The full gate passed before and after the merge commit,
-and the implementation PR is #125. The user approved all thirteen findings in
+and the implementation PR is #125. The user approved the findings in
 the [Milestone 37 review record](../docs/reviews/imported-css-delivery-milestone-37.md)
 for Milestone 38; the focused reconciliation is committed in `c260b5b2`.
 Milestone 39 merged main's 0.13.0 release at `5d1c37a` in `3a2d90a8`.
@@ -52,12 +52,11 @@ The complete gate passed on the merged tree, with no removal of main content.
 Milestone 41 (`7f64f8b0`) replaced the custom merge check with Git's remerge
 diff, resolving findings 1, 2, 4 and 11 in the
 [Milestone 40 review record](../docs/reviews/imported-css-delivery-milestone-40.md).
-The other eight findings remain open. Milestone 42 (`beab8560`) merged main's
+Other findings remain open. Milestone 42 (`beab8560`) merged main's
 release-runner fix at `b4a02a30`; the full gate passed on retry without any
-deletion of main content. The three findings in the
-[Milestone 43 review record](../docs/reviews/imported-css-delivery-milestone-43.md),
-mainly that the new remerge-diff step can review the wrong commit, remain open
-for the user's decision.
+deletion of main content. Milestone 44 resolves the selected findings in the
+[Milestone 43 review record](../docs/reviews/imported-css-delivery-milestone-43.md)
+by reviewing named merge commits and recording path-specific decisions.
 Other previously unselected findings remain out of scope. The plan stays active
 until the PR merges.
 Imported CSS, CSS Modules, binary assets and
@@ -1048,6 +1047,21 @@ release protocol pages.
 
 - [x] Commit and push the approved work, confirm the remote ref and a clean tree.
 - [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Three new findings (1 Medium, 2 Low) are recorded in the [Milestone 43 review record](../docs/reviews/imported-css-delivery-milestone-43.md) for the user's decision.
+
+## Milestone 44: Review merges by named commit
+
+Make merge reviews independent of the current `HEAD` and give the PR owner a
+path-complete record of intentional merge decisions.
+
+- [x] Replace the merge-review rule with a named, two-parent commit check, a per-path remerge review, a later-commit diff, and safe amendment guidance; verify the commands with local Git.
+- [x] Classify every remerge-diff path from the branch's three merges in an ignored PR-decision record, with coverage counts.
+- [ ] Make review introductions and active-plan status count-free, and record the selected findings' resolutions without changing other open findings.
+- [x] Validate the changed Markdown, relevant documentation tests, file-length audit, and deletion check.
+
+## Milestone 45: Commit, push, and review
+
+- [ ] Commit and push the documentation changes; confirm the remote ref and a clean tree.
+- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review.
 
 ## Post-merge follow-up (non-blocking)
 

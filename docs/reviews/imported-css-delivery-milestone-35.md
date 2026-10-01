@@ -25,7 +25,8 @@ The change fixes the four rejections it targeted and rejects nothing new:
   accurate.
 
 The two findings below were reproduced in scratch copies. The parent session
-confirmed finding 1 in Chrome. Both remain open for the user's decision.
+confirmed finding 1 in Chrome. Findings later resolved carry a resolution
+note; the others remain open for the user's decision.
 
 ## Findings
 

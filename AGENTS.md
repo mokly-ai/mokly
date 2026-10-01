@@ -510,11 +510,27 @@ docs, mockups, plans, migrations, or schema—without explicit user approval.
 
 - Resolve conflicts path-by-path; never bulk-take `--ours` or `--theirs` for a
   tree, directory, or feature. Passing CI does not prove preservation.
-- After committing a merge locally and before pushing, review
-  `git show --remerge-diff HEAD`. It shows every change beyond Git's automatic
-  merge: conflict resolutions, edits to one-sided files, undone changes and
-  deletions. Restore lost content and justify each intentional change in the
-  PR description; a committed merge message cannot be changed later.
+- Immediately after committing each merge, before another commit, name it and
+  confirm it has exactly two parents; merge one branch at a time because Git
+  skips remerge diffs for octopus merges. Stop if the parent check fails.
+  Review every listed path before pushing:
+
+  ```sh
+  merge=$(git rev-parse HEAD)
+  git rev-parse --verify --quiet "$merge^2" >/dev/null &&
+    ! git rev-parse --verify --quiet "$merge^3" >/dev/null # succeeds only for exactly two parents
+  git show --remerge-diff --stat "$merge"
+  git show --remerge-diff "$merge" -- <path> # repeat for every listed path
+  git diff "$merge" HEAD # review commits made after the merge
+  ```
+
+  The remerge diff shows conflict resolutions, edits to one-sided files,
+  undone changes and deletions. Restore lost content before pushing with
+  `git commit --amend`, which keeps both parents; then review the merge again.
+  After pushing, use a follow-up commit.
+  Justify each intentional decision in the PR description, naming every path
+  it affects. If no PR exists yet, record the justifications in the active
+  plan milestone and copy them into the PR description when it opens.
 
 - Before commit and after commit, inspect the diff and deletions against main:
 

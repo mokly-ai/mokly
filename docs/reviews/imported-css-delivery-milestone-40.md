@@ -41,7 +41,8 @@ The reconciliation holds:
   re-run (finding 12).
 
 Most findings concern the new merge-preservation check: it can report success
-while passages are missing. The parent session confirmed findings 1, 3, 6 and 10. All twelve remain open for the user's decision.
+while passages are missing. The parent session confirmed findings 1, 3, 6 and 10. Findings later resolved carry a resolution note; the others remain open for
+the user's decision.
 
 ## Findings
 

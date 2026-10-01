@@ -35,8 +35,9 @@ modules 1.69 → 2.23–2.34 s. Most selectors change, so nearly all of them are
 parsed twice.
 
 The eight findings below were reproduced in scratch copies. The parent session
-found findings 1, 5 and 7 and independently confirmed findings 2 and 3. All
-eight remain open for the user's decision.
+found findings 1, 5 and 7 and independently confirmed findings 2 and 3.
+Findings later resolved carry a resolution note; the others remain open for
+the user's decision.
 
 ## Findings
 

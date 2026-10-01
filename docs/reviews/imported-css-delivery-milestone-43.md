@@ -34,8 +34,8 @@ The changes work as intended:
 - PR #125's CI passed after one hydration job was re-run. That test also
   fails on `main`'s own CI.
 
-The parent session confirmed finding 1 on this branch. All three findings
-remain open for the user's decision.
+The parent session confirmed finding 1 on this branch. Findings later resolved
+carry a resolution note; the others remain open for the user's decision.
 
 ## Findings
 

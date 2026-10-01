@@ -37,8 +37,9 @@ had split several long protocol pages before the merge, and the merge kept
 those old child pages beside `main`'s rewritten ones. The parent session's
 preservation check counted a line as kept if its text appeared anywhere in
 the tree. Old copies therefore satisfied it, and the check let the
-duplicates through. The parent session confirmed findings 1, 2, 4 and 9. All
-thirteen remain open for the user's decision.
+duplicates through. The parent session confirmed findings 1, 2, 4 and 9.
+Findings later resolved carry a resolution note; the others remain open for
+the user's decision.
 
 ## Findings
 
