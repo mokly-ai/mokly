@@ -4,7 +4,7 @@ import { countPhysicalLines } from "./lines.mjs";
 
 export { countPhysicalLines };
 
-export const SOURCE_LIMIT = 300;
+const SOURCE_LIMIT = 300;
 export const PROTOCOL_LIMIT = 250;
 const PROTOCOL_PREFIX = "docs/protocol/";
 
