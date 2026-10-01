@@ -40,8 +40,9 @@
   in the [Milestone 37 review](../docs/reviews/imported-css-delivery-milestone-37.md)
   were reconciled in Milestone 38 (`c260b5b2`). Milestone 39 merged main's
   0.13.0 release (`3a2d90a8`) and passed the complete gate without removing
-  main content. The post-push review in Milestone 40 remains for the user;
-  earlier unselected findings remain outside this work.
+  main content. The twelve findings in the
+  [Milestone 40 review](../docs/reviews/imported-css-delivery-milestone-40.md)
+  remain open; earlier unselected findings remain outside this work.
   Move this plan to Completed when its
   implementation PR merges.
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive

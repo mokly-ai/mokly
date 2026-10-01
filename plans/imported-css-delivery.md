@@ -49,7 +49,9 @@ the [Milestone 37 review record](../docs/reviews/imported-css-delivery-milestone
 for Milestone 38; the focused reconciliation is committed in `c260b5b2`.
 Milestone 39 merged main's 0.13.0 release at `5d1c37a` in `3a2d90a8`.
 The complete gate passed on the merged tree, with no removal of main content.
-Milestone 40's post-push review remains for the user.
+The twelve findings in the
+[Milestone 40 review record](../docs/reviews/imported-css-delivery-milestone-40.md)
+remain open for the user's decision.
 Other previously unselected findings remain out of scope. The plan stays active
 until the PR merges.
 Imported CSS, CSS Modules, binary assets and
@@ -1014,10 +1016,10 @@ the imported CSS work or main's published version and documentation updates.
 - [x] Run the in-progress merge-preservation check and deletion audits; restore or justify every reported passage.
 - [x] Run the complete `cargo xtask check` gate on the final merged tree without editing tracked files during the gate.
 
-## Milestone 40: Commit, push, and review
+## Milestone 40: Commit, push, and review (complete)
 
 - [x] Commit and push the approved fixes and final bookkeeping; confirm the remote ref and a clean tree.
-- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Twelve new findings (3 Medium, 9 Low) are recorded in the [Milestone 40 review record](../docs/reviews/imported-css-delivery-milestone-40.md) for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
