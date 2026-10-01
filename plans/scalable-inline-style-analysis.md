@@ -402,9 +402,14 @@ every outcome and where document work goes, restore linked-stylesheet
 coverage, and measure the baseline that the performance targets use.
 
 Code checkpoint: `46510f43` and `4f8872fa` passed initial verification. The
-supervisor authorized measurements after the feedback fixes and their targeted,
-full unit/browser and committed-code checks. Reference recording and the final
-check/push follow those checks; no new performance reference exists yet.
+supervisor's feedback fixes are committed in `4b09b13e` after 62 targeted,
+2,869 unit and 725 Chromium tests; committed-code format/lint/type checks pass.
+Two default reference matrices and one cumulative baseline are recorded in
+the [fixture README](../tests/fixtures/large/README.md#milestone-2-reference-and-cumulative-baseline)
+from that exact clean commit. All 24 requested samples remain, including both
+cumulative component heap failures and startup-budget failures; no retry or
+discard. The final `cargo xtask check` passes: 11 Rust, 2,869 unit, 725 Chromium
+and 219 hydration tests; no skips or cancellations. Check/push follows recording.
 
 - [x] In `tests/fixtures/large/inline_styles.tsx`, derive each per-view rule's
       value from a stable hash of the view key instead of the global render
@@ -481,12 +486,12 @@ check/push follow those checks; no new performance reference exists yet.
       `npm run typecheck` under Node 24.19.0. Report and stop before regenerating
       either default-size fixture or measuring; resume only on the supervisor's
       approval. No push until the final `cargo xtask check` passes.
-- [ ] Regenerate both fixtures. Run the default fixture's full committed
+- [x] Regenerate both fixtures. Run the default fixture's full committed
       matrix twice and record the per-scenario, per-state mean as the
       Decision 13 reference. Run the cumulative matrix once and record every
       sample, whatever its outcome, as the baseline.
-- [ ] Run the suite and `cargo xtask check` after recording the reference.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] Run the suite and `cargo xtask check` after recording the reference.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report

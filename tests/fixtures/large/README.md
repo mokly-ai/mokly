@@ -15,7 +15,7 @@ the approved target of [scalable analysis](../../../plans/scalable-inline-style-
 Milestone 2 records the reference; Milestone 4 adds segment-reuse diagnostics;
 Milestones 3 to 9 record optimization samples; Milestone 6 records the cost
 checkpoint; Milestone 10 runs the acceptance procedure and removes this target
-schedule. No new reference has been measured yet.
+schedule. The Milestone 2 reference and cumulative baseline are recorded below.
 
 ```bash
 npm run fixture:large
@@ -80,11 +80,98 @@ the area-one Action rule; the correctness test requires exactly that component
 in Changes, its three consuming screens as affected, and a later area-two
 non-consumer absent from both sets.
 
-### Historical measurements
+### Milestone 2 reference and cumulative baseline
 
+Measured the committed code `4b09b13e6b537b1c02278bfbefd75e62b85f8af5`, with
+`moklyDirty: false`, after targeted/full unit/Chromium tests and post-commit
+format, lint and type checks. Both fixtures have 1,590 entries and 5,550
+documents at 30/40/12, four shared sheets and share 0.5. Setup took 73,005 ms
+default and 251,535 ms cumulative. Three superseded fixture roots were removed.
+The shared `templateDigest` is
+`5bd77afc91a1c433d6a1c0eea1ddaca987690c5948ac4165da5e78e3c3c6124e`.
+The default `fixtureCommit` is `8c9bb514f5d6810efa0b8146ef4d03d8e2aa7a22`;
+cumulative is `2f8f5d04961b799ea0bc6ff140981dd28aadf6eb`.
+`renderingDependencies`: React/React DOM 19.2.7, React Native Web 0.21.2,
+Firna 0.14.0, lightningcss 1.33.0, parse5 8.0.1, css-select 7.0.0, css-what 8.0.0.
+
+Default reference: two complete committed matrices, all 16 outcomes `ok`, exact
+membership, and heap peaks 310.51–430.46 MiB. Times are worker milliseconds;
+`B` is the arithmetic mean of the two recorded values, displayed to three decimals.
+
+| Scenario          | State | Run 1    | Run 2    | Reference B |
+| ----------------- | ----- | -------- | -------- | ----------- |
+| no-changes        | cold  | 34096.80 | 32706.55 | 33401.675   |
+| no-changes        | warm  | 33843.50 | 33263.71 | 33553.605   |
+| component-style   | cold  | 38395.24 | 35125.13 | 36760.185   |
+| component-style   | warm  | 36225.34 | 39513.44 | 37869.390   |
+| screen-markup     | cold  | 33135.69 | 36452.67 | 34794.180   |
+| screen-markup     | warm  | 34986.60 | 42551.30 | 38768.950   |
+| linked-stylesheet | cold  | 50488.64 | 49296.69 | 49892.665   |
+| linked-stylesheet | warm  | 49406.31 | 46808.17 | 48107.240   |
+
+Cumulative baseline: one complete committed matrix; six `ok` samples have exact
+membership. Both component-style workers hit the fixed heap ceiling with no
+classification end or counts record. `—` means absent, never zero. `Upper` is
+the completed supervisor wait, not a worker duration; inline lower bounds are
+100,967.51 ms cold and 98,743.44 ms warm. No incomplete share is computed.
+
+| Scenario          | State | Outcome    | Worker ms | Upper ms  | Heap MiB | HTML parses | HTML bytes |
+| ----------------- | ----- | ---------- | --------- | --------- | -------- | ----------- | ---------- |
+| no-changes        | cold  | ok         | 164633.17 | —         | 910.55   | 26520       | 3306455349 |
+| no-changes        | warm  | ok         | 168499.00 | —         | 898.55   | 26520       | 3306455349 |
+| component-style   | cold  | incomplete | —         | 130747.93 | —        | —           | —          |
+| component-style   | warm  | incomplete | —         | 131839.19 | —        | —           | —          |
+| screen-markup     | cold  | ok         | 162489.18 | —         | 896.95   | 26562       | 3307097240 |
+| screen-markup     | warm  | ok         | 165865.80 | —         | 892.23   | 26562       | 3307097240 |
+| linked-stylesheet | cold  | ok         | 234042.41 | —         | 911.92   | 40950       | 5246857089 |
+| linked-stylesheet | warm  | ok         | 238105.78 | —         | 901.51   | 40950       | 5246857089 |
+
+Per-step parse counts are identical across completed samples of each scenario,
+including both fixtures where available. Unlisted steps are zero in their
+completed records; incomplete samples have no document-work record at all.
+
+| Scenario                       | Range | Reference | Style discovery | Inline matching | Stylesheet matching | Total |
+| ------------------------------ | ----- | --------- | --------------- | --------------- | ------------------- | ----- |
+| no-changes                     | 15840 | 10680     | 0               | 0               | 0                   | 26520 |
+| component-style (default only) | 16048 | 11090     | 368             | 368             | 0                   | 27874 |
+| screen-markup                  | 15836 | 10718     | 8               | 0               | 0                   | 26562 |
+| linked-stylesheet              | 15840 | 15510     | 0               | 0               | 9600                | 40950 |
+
+HTML construction dominates exclusive document work. Default per-scenario
+means over both states/runs are 18,936.76 / 20,234.60 / 20,311.40 / 29,420.41 ms
+in table order; cumulative completed-state means are 111,823.15 / absent /
+110,567.73 / 166,775.05 ms. Cumulative normalization adds 17,283.86–17,839.69 ms
+per completed scenario, reference work 8,892.33–14,673.08 ms, and hashes
+3,182.83–5,720.65 ms. Default component inline-rule work averages 563.79 ms;
+cumulative component work cannot be recovered from its absent counters. The
+unused linked edit still incurs 9,600 matching parses despite zero Changes.
+
+Machine: Amazon Linux 2023 x64, Node 24.19.0, Intel Xeon 2.90 GHz, `nproc: 8`,
+16,643 MiB RAM (16.3 GiB), no swap. No other build/test/benchmark ran; tracked
+files stayed unchanged throughout all matrices. Before/after `free -m` and
+`uptime` observations (loads are 1/5/15 minutes):
+
+| Run        | Free MiB      | Available MiB | Uptime        | Load before → after             |
+| ---------- | ------------- | ------------- | ------------- | ------------------------------- |
+| default 1  | 10223 → 10036 | 15101 → 14969 | 15:30 → 15:53 | 0.31/0.90/1.64 → 1.43/1.96/1.96 |
+| default 2  | 10147 → 9942  | 15080 → 14919 | 15:54 → 16:17 | 0.79/1.75/1.88 → 1.72/2.26/2.15 |
+| cumulative | 10115 → 9994  | 15092 → 15016 | 16:18 → 17:36 | 0.88/1.97/2.06 → 1.14/1.71/1.91 |
+
+Every matrix exited 1: usable startup exceeded five seconds in 4/8 default-1,
+7/8 default-2 and 5/8 cumulative samples; cumulative also has the two heap
+failures. Usable ranges were 4,908–5,311, 4,895–5,558 and 4,644–5,519 ms.
+Warm classification was not consistently faster. No sample was retried or
+dropped; this records a reference, not a performance-acceptance pass. Both
+fixtures restored setup renderer/output bytes and only the unused CSS edit.
+
+Logs and full JSON (including every per-step byte/time counter) are under
+`.context/delegation/scalable/`: `m2-reference-default-1.log` / `.json`,
+`m2-reference-default-2.log` / `.json`, `m2-baseline-cumulative.log` / `.json`.
+Each prefix also has `.machine-before.txt`, `.machine-after.txt`,
+`.idle-processes.txt`, `.driver.log` and `.exit`; setup logs are
+`m2-fixture-default-setup.log` and `m2-fixture-cumulative-setup.log`.
 The [September 28 measurements](../../../docs/dev/large-fixture-history.md)
-remain historical evidence, not this plan's template-identified reference.
-Milestone 2 records the new reference and cumulative baseline here.
+remain historical evidence, not this template-identified reference.
 
 ### Derived baselines
 
