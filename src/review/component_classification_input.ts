@@ -15,6 +15,8 @@ export interface ComponentClassificationInput {
   baseCommit: string;
   baseRef: string;
   cssParser?: CssRuleParser;
+  /** Test-only: vary the whole-input cache bound without changing classification. */
+  cssCacheBytes?: number;
   /** Test-only: disable the unchanged-view decision so both paths can be compared. */
   useFastPath?: boolean;
 }

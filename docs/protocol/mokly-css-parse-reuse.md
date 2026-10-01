@@ -2,12 +2,14 @@
 
 ## Delivery Status
 
-Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md),
-not yet implemented: [M3](../../plans/scalable-inline-style-analysis.md#milestone-3-bounded-memory)
-delivers the whole-input cache; [M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse)
-delivers segmentation, its cache and derived rule data; [M5](../../plans/scalable-inline-style-analysis.md#milestone-5-changed-segment-analysis)
+Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
+[M3](../../plans/scalable-inline-style-analysis.md#milestone-3-bounded-memory)
+delivers the bounded, detached whole-input cache. Pending:
+[M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse)
+delivers segmentation, its cache and derived rule data;
+[M5](../../plans/scalable-inline-style-analysis.md#milestone-5-changed-segment-analysis)
 delivers cancellation, matched-copy reference pairing and composition.
-Until then the delivered whole-element parser and rule diff remain authoritative.
+The delivered whole-element parser and rule diff remain authoritative until then.
 
 This document owns parsing reuse and rule identity for linked CSS and
 [component-aware inline analysis](./mokly-inline-styles.md). The latter alone
@@ -30,15 +32,24 @@ Each bound is **64 MiB = 67,108,864 estimated bytes**, not a rule count or
 an actual-heap promise. An entry costs `64 + 96 * ruleCount + 2 * stringUnits`:
 `stringUnits` sums UTF-16 code units in the key and every retained string slot,
 including declarations, selectors, conditions, keys, canonical text, references
-and retained error data. Count repeated slots even if their strings share
-storage; count the key once. The estimate is computed on insertion only;
-entries are immutable. Opaque error payloads that cannot be safely measured
-and detached from input are used for the request without being cached.
+and retained error data (including own property names). Fixed-shape record
+property names are not slots; string-valued tags such as `status` and condition
+`kind` are. Count repeated slots even if their strings share storage; count the
+key once. The estimate is computed on insertion only; entries are immutable.
+Safe error snapshots preserve built-in errors, the typed parse error, arrays,
+plain records, strings, numbers, booleans, null and undefined, including stacks
+and nested causes. Cycles,
+proxies, symbols, functions, custom prototypes and non-native accessors are
+opaque: use the original failure for the request without caching it or invoking
+its accessors. This also applies to an injected parser throwing such a payload.
 
 Every retained key and source-derived string is an independent flat copy with
 identical code units, not a slice keeping a larger stylesheet or HTML alive.
+The whole-input cache copies through independent UTF-16LE bytes, preserving
+lone surrogates; child-process GC tests prove parent release for every slot.
 The cached run never retains a document, element, batch source or absolute
-location. On hit move the entry to most-recent; on insertion evict least-recent
+location. On hit move the entry to most-recent using its stored flat key, never
+the caller's possibly sliced lookup key; on insertion evict least-recent
 entries until the new entry fits. Replace an existing key without double
 accounting. An entry exceeding the bound is used for this request but not
 retained and does not evict useful entries. A zero test bound retains nothing.

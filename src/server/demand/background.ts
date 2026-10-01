@@ -6,6 +6,7 @@ import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { timingArguments } from "../../diagnostics/timings.js";
 import type { CatalogueChangeClassification } from "../classification_result.js";
 
+import { backgroundInputs } from "./background_inputs.js";
 import { BackgroundGitHost } from "./git_host.js";
 
 export class BackgroundCompilation {
@@ -30,18 +31,10 @@ export class BackgroundCompilation {
         new URL("./background_worker.js", import.meta.url),
         {
           workerData: {
-            runtime,
+            ...backgroundInputs(runtime, existing),
             pause: this.pause.buffer,
             debug: timingArguments().length > 0,
             gitPort: port2,
-            ...(existing
-              ? {
-                  existingManifest: existing.manifest,
-                  ...(runtime.config.generatedOutput === "derived"
-                    ? { existingOutputs: existing.outputs }
-                    : {}),
-                }
-              : {}),
           },
           execArgv: [],
           transferList: [port2],

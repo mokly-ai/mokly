@@ -96,7 +96,7 @@ export async function classifyComponentsWithSources(
       afterReader,
       changed,
       prefix,
-      new CssResourceAnalysis(input.cssParser),
+      new CssResourceAnalysis(input.cssParser, undefined, input.cssCacheBytes),
       compareResourceBytes,
     ),
     compareResourceBytes,

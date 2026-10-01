@@ -5,7 +5,7 @@
 On-demand rendering and background classification are implemented. Approved
 target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
 [M3](../../plans/scalable-inline-style-analysis.md#milestone-3-bounded-memory)
-releases committed-mode compilation outputs in the worker after transfer.
+delivers committed-mode output release in the worker after transfer.
 
 ## Startup and completeness
 
@@ -112,6 +112,12 @@ artifacts retain Build's bytes and do not create artificial Changes.
 
 After transferring exhaustive compilation to the parent, the classification
 worker retains `compilation.outputs` only for `generatedOutput: derived`.
+The parent sends a compact runtime with no rendered outputs. An existing
+compilation transfers its output map only in derived mode; worker startup
+consumes and clears that input property so it cannot be an additional root.
+The compiled-message path transfers the complete result for parent adoption,
+then retains only the manifest and mode-selected map, not its compilation
+object or completed callback. Consumer-runtime build caches use weak keys.
 Committed-mode classification continues reading the committed/public sources
 through its existing readers and drops the output-map reference, without
 changing validation, parent adoption or current bytes. Derived mode retains

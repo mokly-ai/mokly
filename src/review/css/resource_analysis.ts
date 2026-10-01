@@ -5,10 +5,12 @@ import { isStylesheetPath } from "@mokly/viewer/data";
 import { documentWorkSync } from "../../diagnostics/timings.js";
 
 import { analyzeStylesheetChange } from "./analyze.js";
+import { ByteBoundedLru } from "./byte_lru.js";
 import { diffCssRules } from "./diff.js";
 import type { CssDocumentPair } from "./document.js";
 import { matchCssRules } from "./match.js";
 import type { CssAnalysisOutcome } from "./match_types.js";
+import { detachParseResult } from "./parse_cache.js";
 import { LightningCssRuleParser } from "./rules.js";
 import {
   CssRuleParseError,
@@ -31,13 +33,15 @@ export interface ResourceEvidence {
 
 /** One parser cache per classification, shared across paths, views and source sides. */
 export class CssResourceAnalysis {
-  private readonly parsed = new Map<string, CssRuleParseResult>();
+  private readonly parsed: ByteBoundedLru<CssRuleParseResult>;
   readonly parser: CssRuleParser;
 
   constructor(
     parser: CssRuleParser = new LightningCssRuleParser(),
     private readonly matcher: typeof matchCssRules = matchCssRules,
+    cacheBytes?: number,
   ) {
+    this.parsed = new ByteBoundedLru(detachParseResult, cacheBytes);
     this.parser = {
       parse: (source) => {
         let result = this.parsed.get(source);
@@ -52,7 +56,7 @@ export class CssResourceAnalysis {
               error: new CssRuleParseError(cause),
             };
           }
-          this.parsed.set(source, result);
+          result = this.parsed.set(source, result);
         }
         return result;
       },

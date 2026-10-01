@@ -163,7 +163,13 @@ absent for added/removed views. An absent stylesheet is passed as an empty strin
 `analyzeStylesheetChange` composes the parser, diff, and match, returning one
 `CssAnalysisOutcome`. The optional fourth argument injects a `CssRuleParser`.
 The optional fifth argument injects `matchCssRules` for boundary tests;
-`CssResourceAnalysis` accepts the same matcher as its second constructor argument.
+`CssResourceAnalysis` accepts that matcher as its second constructor argument;
+its optional third byte bound is an internal differential-test seam. Its shared
+whole-input cache uses the [parse-reuse accounting contract](../../docs/protocol/mokly-css-parse-reuse.md#cache-lifetime-and-accounting).
+`css/byte_lru.ts` owns eviction and detached UTF-16 keys, including on hits;
+`css/parse_cache.ts` copies/freeze-protects rules, and `css/cache_error.ts` copies
+safe failure data without retaining opaque input payloads. GC regressions cover
+every retained string slot; real committed/derived tests compare zero/default bounds.
 Selectors are the kept rules' original serialized selectors, sorted and unique;
 an unresolved rule takes precedence over matched rules in the reduction.
 

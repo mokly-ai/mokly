@@ -10,23 +10,25 @@ import { runWithTimings, timeAsync } from "../../diagnostics/timings.js";
 import { errorMessage } from "../../errors.js";
 import { RepositoryCatalogueChangeClassifier } from "../component_changes.js";
 
+import { classificationOutputs } from "./background_inputs.js";
 import { WorkerGitCommandRunner } from "./git_worker.js";
 
-const { runtime, pause, debug, existingManifest, existingOutputs, gitPort } =
-  workerData as {
-    runtime: ComponentRuntime;
-    pause: SharedArrayBuffer;
-    debug: boolean;
-    existingManifest?: ManifestV7;
-    existingOutputs?: ReadonlyMap<string, string>;
-    gitPort: MessagePort;
-  };
+const inputs = workerData as {
+  runtime: ComponentRuntime;
+  pause: SharedArrayBuffer;
+  debug: boolean;
+  existingManifest?: ManifestV7;
+  existingOutputs?: ReadonlyMap<string, string>;
+  gitPort: MessagePort;
+};
+const { runtime, pause, debug, existingManifest, gitPort } = inputs;
 const classifier = new RepositoryCatalogueChangeClassifier(
   new WorkerGitCommandRunner(gitPort),
 );
 const state = new Int32Array(pause);
 let manifest: ManifestV7 | undefined = existingManifest;
-let outputs = existingOutputs;
+let outputs = classificationOutputs(runtime.config, inputs.existingOutputs);
+delete inputs.existingOutputs;
 const checkpoint = async () => {
   await setImmediate();
   while (Atomics.load(state, 0)) await setTimeout(20);
@@ -36,8 +38,8 @@ if (!existingManifest)
     try {
       const compilation = await compileRuntime(runtime, checkpoint);
       manifest = compilation.manifest;
-      outputs = compilation.outputs;
       parentPort?.postMessage({ type: "compiled", compilation });
+      outputs = classificationOutputs(runtime.config, compilation.outputs);
     } catch (error) {
       parentPort?.postMessage({ type: "failed", error: errorMessage(error) });
     }
