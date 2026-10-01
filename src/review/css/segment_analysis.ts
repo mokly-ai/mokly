@@ -12,6 +12,7 @@ import { scanCssSegments } from "./segments.js";
 import { decodeCssIdentifier } from "./source.js";
 import type {
   CssRule,
+  CssInlineParseResult,
   CssRuleParser,
   CssRuleParseResult,
   CssSegmentRun,
@@ -28,12 +29,22 @@ export class CssSegmentAnalysis {
   }
 
   parse(source: string, ordinalBase = 0): CssRuleParseResult {
-    return documentWorkSync("inlineRuleMs", () =>
-      this.element(source, ordinalBase),
-    );
+    return documentWorkSync("inlineRuleMs", () => {
+      const result = this.parseRuns(source);
+      if (result.status !== "segmented") return result;
+      const rules: CssRule[] = [];
+      for (const run of result.runs)
+        for (const rule of run.rules)
+          rules.push(rebaseCssRule(rule, ordinalBase + rules.length));
+      return { status: "parsed", rules };
+    });
   }
 
-  private element(source: string, ordinalBase: number): CssRuleParseResult {
+  parseRuns(source: string): CssInlineParseResult {
+    return documentWorkSync("inlineRuleMs", () => this.element(source));
+  }
+
+  private element(source: string): CssInlineParseResult {
     const counts = timingDocumentWork()?.inlineStyles;
     if (counts) counts.elements++;
     const fallback = () => {
@@ -73,11 +84,10 @@ export class CssSegmentAnalysis {
         resolved.set(text, this.cache.set(text, runs[index]!));
       if (counts) counts.segmentHits += duplicates;
     }
-    const rules: CssRule[] = [];
-    for (const text of texts)
-      for (const rule of resolved.get(text)!.rules)
-        rules.push(rebaseCssRule(rule, ordinalBase + rules.length));
-    return { status: "parsed", rules };
+    return {
+      status: "segmented",
+      runs: texts.map((text) => resolved.get(text)!),
+    };
   }
 }
 

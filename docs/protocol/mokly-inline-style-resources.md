@@ -6,7 +6,7 @@ Implemented for committed and derived comparison, including unchanged
 reference-bearing rules and resources absent from saved variants.
 Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
 [M5](../../plans/scalable-inline-style-analysis.md#milestone-5-changed-segment-analysis)
-delivers the [matched-occurrence rule](./mokly-css-parse-reuse.md#unchanged-references-and-composition);
+implements the [matched-occurrence rule](./mokly-css-parse-reuse.md#unchanged-references-and-composition);
 [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
 delivers derived reference seeds and fast-path raw proof; [M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprinted-comparison-materials)
 delivers stored references for fingerprints. Propagation rules stay unchanged;

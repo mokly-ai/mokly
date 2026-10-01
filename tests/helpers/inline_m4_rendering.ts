@@ -1,10 +1,13 @@
-import { documentWorkSync } from "../../diagnostics/timings.js";
-
 /** Canonically render inline rules and material replacements for one source side. */
-import type { InlineAttributionResult } from "./inline_attribution.js";
-import type { AttributedInlineRule } from "./inline_rule_matching.js";
-import { cssRuleData, cssRuleIdentity } from "./rule_identity.js";
-import type { CssRule } from "./types.js";
+import { documentWorkSync } from "../../src/diagnostics/timings.js";
+import type { AttributedInlineRule } from "../../src/review/css/inline_rule_matching.js";
+import {
+  cssRuleData,
+  cssRuleIdentity,
+} from "../../src/review/css/rule_identity.js";
+import type { CssRule } from "../../src/review/css/types.js";
+
+import type { InlineAttributionResult } from "./inline_m4_attribution.js";
 
 /** One original-coordinate edit consumed by the comparison replacement pass. */
 export interface InlineMaterialReplacement {
@@ -59,7 +62,7 @@ export function inlineMaterialReplacements(
   return documentWorkSync("inlineRuleMs", () => {
     if (result.status !== "resolved") return unchanged();
     const spans = side === "before" ? result.beforeSpans : result.afterSpans;
-    const runs = side === "before" ? result.beforeRuns : result.afterRuns;
+    const rules = side === "before" ? result.beforeRules : result.afterRules;
     const excluded = selectedRules(result.rules, side, "excluded");
     const owned = selectedRules(result.rules, side, "owned");
     const replacements = spans.map(({ start, end }) => ({
@@ -73,30 +76,46 @@ export function inlineMaterialReplacements(
       replacements,
       appendix: `<style>${renderInlineRules(retained)}</style>`,
     });
-    const actual: CssRule[] = [];
-    const projected: CssRule[] = [];
-    for (const { run, offset } of runs)
-      for (const rule of run.rules) {
-        const ordinal = offset + rule.ordinal;
-        if (excluded.has(ordinal)) continue;
-        actual.push(rule);
-        if (!owned.has(ordinal)) projected.push(rule);
-      }
-    return { actual: projection(actual), projected: projection(projected) };
+    return {
+      actual: projection(rules.filter((rule) => !selected(excluded, rule))),
+      projected: projection(
+        rules.filter(
+          (rule) => !selected(excluded, rule) && !selected(owned, rule),
+        ),
+      ),
+    };
   });
+}
+
+interface SelectedRules {
+  identities: ReadonlySet<string>;
+  rules: ReadonlySet<CssRule>;
 }
 
 function selectedRules(
   rules: readonly AttributedInlineRule[],
   side: "before" | "after",
   kind: "excluded" | "owned",
-): ReadonlySet<number> {
+): SelectedRules {
   const selected = rules.flatMap(({ change, attribution }) => {
     if (attribution.kind !== kind) return [];
     const rule = side === "before" ? change.before : change.after;
-    return rule ? [rule.ordinal] : [];
+    return rule ? [{ change, rule }] : [];
   });
-  return new Set(selected);
+  return {
+    identities: new Set(
+      selected.flatMap(({ change, rule }) =>
+        change.kind === "unchanged" ? [cssRuleIdentity(rule)] : [],
+      ),
+    ),
+    rules: new Set(selected.map(({ rule }) => rule)),
+  };
+}
+
+function selected(selection: SelectedRules, rule: CssRule): boolean {
+  return (
+    selection.rules.has(rule) || selection.identities.has(cssRuleIdentity(rule))
+  );
 }
 
 function unchanged(): InlineMaterialReplacements {

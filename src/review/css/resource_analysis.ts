@@ -56,6 +56,7 @@ export class CssResourceAnalysis {
     this.parser = {
       parse: whole.parse,
       parseInline: (source, ordinalBase) => inline.parse(source, ordinalBase),
+      parseInlineRuns: (source) => inline.parseRuns(source),
     };
   }
 

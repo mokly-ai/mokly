@@ -21,10 +21,19 @@ is never part of a cached run. `rule_collector.ts` guards descendants/declaratio
 runs and preserves the delivered depth-first records. Contextual encoding,
 import and namespace statements always use whole-element parsing.
 
-`segment_analysis.ts` resolves hits, verifies the entire batch before inserting
-anything, and rebases immutable local runs. `inline_rule_lists.ts` rebases again
-in document order; its weak parser association supports standalone injected
-parsers without a second cache in the production classification wrapper.
+`segment_analysis.ts` resolves hits and verifies the entire batch before inserting
+anything. `inline_rule_runs.ts` keeps cached runs plus document ordinal offsets;
+its weak parser association supports standalone injected parsers without a second
+production cache. `inline_rule_lists.ts` assembles only explicit whole-list callers.
+
+`inline_segment_changes.ts` cancels cached identity runs earliest-first, expands
+only surviving rules and reference-bearing matched copies, and runs the ordinary
+diff on survivors. A whole-element fallback disables cancellation for the pair.
+`inline_rule_deltas.ts` pairs remaining exact reference occurrences without
+reusing added/removed/changed copies. `inline_rendering.ts` selects by document
+ordinal, sorts existing rule references by canonical rank/identity and concatenates
+stored text; cancelled runs need no rebased rule objects. Full lists on resolved
+attribution results are lazy compatibility getters, not production material inputs.
 
 `rule_identity.ts` stores address/identity, rank, canonical text and references
 once in a weak rule association; the custom-property flag stays on the record.
@@ -54,9 +63,12 @@ to production parameters or a disabled-session collector.
 After building, run `node --import tsx --test tests/review_css_*.test.ts`.
 Differentials replay the delivered parser corpus, real cumulative React
 Native Web rendering, Emotion-style elements and 1,000 seeded mutations.
-Real committed/derived catalogues compare segment assembly against a whole
-parser oracle. M5 cancellation, page reuse and fingerprints are not implemented
-by these modules yet.
+Real committed/derived catalogues compare against whole-list classification.
+Captured M4 orchestration under `tests/helpers/inline_m4_*.ts` pins flat pairing,
+materials and reference behavior; grouped displacement and the duplicate-copy
+correction have explicit expected results. Seeded flat mutations and real RNW
+views exercise cancellation; a counting diff proves N-to-N+1 sheets analyse one
+rule. Page reuse and fingerprints remain later-milestone work.
 
 See [parse reuse](../../../docs/protocol/mokly-css-parse-reuse.md),
 [inline ownership](../../../docs/protocol/mokly-inline-styles.md),

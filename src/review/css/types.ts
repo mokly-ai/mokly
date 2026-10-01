@@ -50,6 +50,7 @@ export type CssRuleParseResult =
 export interface CssRuleParser {
   parse(stylesheet: string): CssRuleParseResult;
   parseInline?(stylesheet: string, ordinalBase?: number): CssRuleParseResult;
+  parseInlineRuns?(stylesheet: string): CssInlineParseResult;
   parseSegments?(
     segments: readonly string[],
   ): readonly CssSegmentRun[] | undefined;
@@ -59,7 +60,11 @@ export interface CssRuleParser {
 export interface CssSegmentRun {
   rules: readonly CssRule[];
   identityRunKey: string;
+  referenceOrdinals?: readonly number[];
 }
+
+export type CssInlineParseResult =
+  { status: "segmented"; runs: readonly CssSegmentRun[] } | CssRuleParseResult;
 
 /** The same rule address with different declaration material. */
 export interface CssRuleChange {

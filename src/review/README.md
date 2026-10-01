@@ -340,7 +340,10 @@ Key code:
   that retain HTML/SVG/MathML name semantics.
 - `css/inline_*.ts`, `css/element_owners.ts`: inline span discovery,
   attribution, ownership and canonical-material rendering used by complete
-  component-aware comparisons.
+  component-aware comparisons. Identity-run cancellation expands only changed
+  runs and matched reference copies; composition sorts stored rules without
+  rebasing cancelled runs. Whole-element fallbacks retain full-list diffing,
+  and exact occurrence selections fix duplicate-copy reference attribution.
 - `css/nesting.ts`, `css/pseudos.ts`: parent substitution and static match bounds.
 - `css/material.ts`: changed custom-property and URL-reference detection.
 - `css/paths.ts`: shared public stylesheet analysis scope.

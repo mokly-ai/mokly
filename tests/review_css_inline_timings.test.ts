@@ -87,6 +87,33 @@ test("contained inline parser failures end the timing span successfully", () => 
   );
 });
 
+for (const method of ["parseInline", "parseInlineRuns"] as const)
+  test(`throwing injected ${method} remains a contained unresolved parse`, () => {
+    const parser: CssRuleParser = {
+      parse: () => ({ status: "parsed", rules: [] }),
+      [method]: () => {
+        throw new Error("private inline failure");
+      },
+    };
+    const events: TimingEvent[] = [];
+    const result = runWithTimings(
+      true,
+      "test",
+      () =>
+        attributeInlineRules(
+          inlineInput({
+            before: html("", ""),
+            after: html("<style>.a{color:red}</style>", ""),
+            parser,
+          }),
+        ),
+      { write: (event) => events.push(event) },
+    );
+    assert.equal(result.status, "unresolved");
+    assert.equal(events.at(-1)?.status, "ok");
+    assert.doesNotMatch(JSON.stringify(events), /private inline failure/);
+  });
+
 test("identical outer sources still time discovery before skipping", () => {
   const source = html("<style>.same{color:red}</style>", "");
   const events: TimingEvent[] = [];

@@ -113,6 +113,11 @@ export function detachSegmentRun(
     value: Object.freeze({
       rules: parsed.rules,
       identityRunKey,
+      referenceOrdinals: Object.freeze(
+        parsed.rules.flatMap((rule) =>
+          cssRuleData(rule).references.length ? [rule.ordinal] : [],
+        ),
+      ),
     }),
     ruleCount: detached.ruleCount,
     stringUnits: detached.stringUnits - "parsed".length + identityRunKey.length,

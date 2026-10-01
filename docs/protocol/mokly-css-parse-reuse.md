@@ -8,8 +8,9 @@ the bounded whole-input cache is implemented in
 verified segments, their cache and stored rule data in
 [M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse).
 [M5](../../plans/scalable-inline-style-analysis.md#milestone-5-changed-segment-analysis)
-cancellation, matched-copy references and composition remain pending. Whole
-parsing is the assembly oracle; the full rule-list diff stays authoritative until M5.
+implements cancellation, matched-copy references and stored-text composition.
+Whole parsing remains the assembly oracle; captured M4 analysis tests pin
+the equality domains and approved occurrence/displacement differences below.
 
 This document owns parsing reuse and rule identity for linked CSS and
 [component-aware inline analysis](./mokly-inline-styles.md). The latter alone

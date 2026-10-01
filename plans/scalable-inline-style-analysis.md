@@ -632,11 +632,18 @@ whole-element parsing.
 - [x] Discovered: report interleaved cold per-element costs against `b87df3a2`
       and `e4307a46`; target about 10% of the former, recording any excess
       and remaining cost for the supervisor's decision.
-- [ ] Discovered: supervisor decision on remaining cold costs: final/M3
+- [x] Discovered: supervisor decision on remaining cold costs: final/M3
       ratios are 1.2974 (85 KB RNW), 1.2272 (157 KB RNW) and 1.2491
       (1,000 Emotion elements), above the requested approximately 1.10.
       Preserve the measured evidence in
       [the parse-reuse checkpoint](../docs/dev/large-fixture-parse-reuse.md).
+      Accepted for now: inline analysis is about 3.6% of default-fixture
+      classification, so this 23–30% cold regression costs about 1% there;
+      reuse eliminated nearly all cumulative parse work (32.4 million segments,
+      5,698 parses, no fallbacks). Decision 13's default-fixture ratio remains
+      binding. M6 reports cold inline parse cost; a later milestone reduces it
+      if default component-style or screen-markup exceeds the tolerance,
+      for example by making canonical text and references lazy.
 
 - [x] Discovered: meet the supervisor's premeasurement checkpoint: targeted
       tests, full unit/Chromium/hydration suites and format/lint/typecheck,
@@ -694,11 +701,45 @@ whole-element parsing.
 - [x] Discovered: after the approved smoke measurements, run the complete
       `cargo xtask check` before pushing, as the supervisor's checkpoint requires.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
+
+### Milestone 4 review findings
+
+Reported by the post-push review of commits `e4307a46`, `b4597e75`,
+`fefb4f30` and `2c36ff4e`. Recorded for the user's decision.
+
+1. Medium. An inline style element whose batch can never be verified is
+   re-batched every time it appears, so it costs more than before this
+   milestone. The batch runs before the whole-input cache is consulted, and a
+   failed batch is never remembered. Elements containing a rule Lightning CSS
+   rejects but browsers accept (`.clearfix{*zoom:1}`, `color:red !ie`) or a
+   nested at-rule without a trailing semicolon (`.btn{@apply px-4 py-2}`)
+   always fail verification; an 11 KB element seen 50 times ran 50 failed
+   batches plus one whole parse (73 ms against 12 ms), and 150 cumulative
+   sheets containing one such rule ran 300 failed batches on top of 150 whole
+   parses and never cached a segment, so one such rule disables reuse for
+   every later cumulative sheet. Results stay correct. Recommended: when a
+   batch fails, re-parse its unseen segments singly (or by halving), cache
+   those that verify, and store a size-counted "needs whole parsing" marker
+   for each segment that fails alone, so later elements containing it fall
+   back without a batch; optionally check the whole-input cache first; update
+   the contract's fallback section; and replace the tests that pin
+   re-batching with work-bound tests (a counting parser bounded by distinct
+   inputs) for a repeated failing element and for cumulative sheets with one
+   failing rule, in both forms.
+2. Low. The seeded mutation test inserts, deletes and reorders whole rules but
+   never injects strings, escapes or other characters inside rules, although
+   the plan TODO says it does; a character-level fuzz of about 72,000 cases
+   found no mismatch, so this is a coverage gap, not a current bug.
+   Recommended: add a character-level mode to the seeded test (insert tokens
+   at random positions inside rules, share the cache across cases, print the
+   seed, assert minimum successful batches and cache hits), as a shared
+   generator and oracle in `tests/helpers/css_segments.ts` that Milestone 5
+   reuses.
 
 ## Milestone 5: Changed-Segment Analysis
 
@@ -706,41 +747,48 @@ Summary: make per-view analysis cost follow the changed segments, pair
 unchanged reference-bearing rules only with matched copies, and compose rule
 lists from stored rule text.
 
-- [ ] Discovered: capture the M4 engine before changing analysis; verify code,
+- [x] Discovered: capture the M4 engine before changing analysis; verify code,
       targeted/full unit/Chromium/hydration and static checks, commit locally,
       then report and stop before M5 measurements or its final cargo/push gate.
 
-- [ ] Cancel segments by their cached ordered identity-run keys, earliest
+- [x] Cancel segments by their cached ordered identity-run keys, earliest
       base occurrence first, before the rule diff; diff only the remaining
       runs with original document-wide ordinals.
-- [ ] Find unchanged reference-bearing rules from the stored references and
+- [x] Find unchanged reference-bearing rules from the stored references and
       pair each only with a cancelled segment's copy or an exact rule match.
-- [ ] Compose each side's actual and projected rule lists from stored per-rule
+- [x] Compose each side's actual and projected rule lists from stored per-rule
       text for all segments, omitting only analyzed occurrences selected as
       excluded or owned, without allocating per-rule objects for cancelled
       segments.
-- [ ] Add a differential test: for before and after element pairs covering
+- [x] Discovered: a counting diff and lazy-list poison checks prove that
+      N-to-N+1 cumulative sheets with N = 10 and 1,000 send one rule to the
+      diff and attribution, and composition never reads the rebased full lists.
+- [x] Add a differential test: for before and after element pairs covering
       cumulative sequences, duplicates, formatting-only edits, reference
       rules, custom properties, nested and conditional rules and element
       splits, attributions, owned sets, retained selectors, the all-excluded
-      flag and both materials equal the Milestone 4 engine's for every flat
-      sheet (including differently formatted duplicates and React Native Web)
+      flag and both materials equal the Milestone 4 engine's within the
+      contract's flat-sheet equality domain (including differently formatted
+      duplicates and React Native Web), apart from the matched-copy correction
+      explicitly tested below,
       and the contract's agreeing-survivor grouped/nested domain. Compare
       ordered diffs and actual occurrence pairs under those equality domains;
       flat runs require equal ordinals too. No broad duplicate exemption is
       allowed.
-- [ ] Discovered: assert explicit changed pairs and final outcomes for
+- [x] Discovered: assert explicit changed pairs and final outcomes for
       displaced shared identities across differently shaped grouped/nested
       runs, including the contract's worked example and custom-property/URL
       variants. The flat red/blue/green example must agree with full diff.
       Test full-diff fallback when either side cannot segment.
-- [ ] Add a test for the duplicate-copy case (a rule with a custom property and
+- [x] Add a test for the duplicate-copy case (a rule with a custom property and
       a reference present once before and twice after): the added copy stays
       `unresolved`, the view is `changed` with a `material` reason, and no
       rule object carries two attributions.
 - [ ] Record the no-change and component-style samples of both fixtures.
-- [ ] Update `src/review/README.md` and the contracts' Delivery Status for
-      delivered parts; run the suite and `cargo xtask check`.
+- [x] Update `src/review/README.md` and the contracts' Delivery Status for
+      delivered parts.
+- [ ] After the code checkpoint and approved measurements, run the suite and
+      `cargo xtask check` on the measured result before pushing.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
@@ -761,6 +809,10 @@ measured costs. Documentation-only; validated with Prettier and a diff review.
 - [ ] Record per scenario the classification time, `heapPeakMiB`, HTML parses
       and per-step times, and the profiles' top self-time functions, in the
       fixture README beside the Milestone 2 baseline.
+- [ ] Discovered: report cold inline parse cost explicitly in the breakdown
+      and evaluate default component-style and screen-markup against Decision
+      13's tolerance; if exceeded, schedule the cold-cost reduction accepted
+      provisionally in Milestone 4 before final acceptance.
 - [ ] Confirm that Milestones 7 to 9 address the largest measured costs, in
       that order. If the data shows otherwise, reorder or amend those
       not-started milestones and record why in this milestone.
