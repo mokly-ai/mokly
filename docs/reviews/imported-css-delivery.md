@@ -42,9 +42,11 @@ the review of Milestone 34 in the
 the review of the `main` merge in the
 [Milestone 37 review record](./imported-css-delivery-milestone-37.md),
 the review of its fixes and the 0.13.0 release merge in the
-[Milestone 40 review record](./imported-css-delivery-milestone-40.md), and
+[Milestone 40 review record](./imported-css-delivery-milestone-40.md),
 the review of the remerge-diff switch and the release-runner merge in the
-[Milestone 43 review record](./imported-css-delivery-milestone-43.md).
+[Milestone 43 review record](./imported-css-delivery-milestone-43.md), and
+the review of the named-merge review step in the
+[Milestone 45 review record](./imported-css-delivery-milestone-45.md).
 
 ## Findings
 

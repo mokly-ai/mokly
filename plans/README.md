@@ -47,8 +47,9 @@
   main's release-runner fix at `b4a02a30`. Milestone 44 (`8729ec16`) addresses the selected
   findings in the
   [Milestone 43 review](../docs/reviews/imported-css-delivery-milestone-43.md).
-  Other findings remain outside this work. The Milestone 45 post-push review
-  remains with the user.
+  Other findings remain outside this work. Findings in the
+  [Milestone 45 review](../docs/reviews/imported-css-delivery-milestone-45.md)
+  remain open for the user's decision.
   Move this plan to Completed when its
   implementation PR merges.
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive
