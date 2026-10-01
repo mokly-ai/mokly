@@ -46,7 +46,9 @@ of historical v2 manifest parsing remains in force; `compatibility.transformer`
 remains available. The full gate passed before and after the merge commit,
 and the implementation PR is #125. The user approved all thirteen findings in
 the [Milestone 37 review record](../docs/reviews/imported-css-delivery-milestone-37.md)
-for Milestone 38; protocol-page reconciliation and verification are underway.
+for Milestone 38; the focused reconciliation is committed in `c260b5b2`.
+Milestone 39 merges the 0.13.0 release from `main` before the complete gate
+and push.
 Other previously unselected findings remain out of scope. The plan stays active
 until the PR merges.
 Imported CSS, CSS Modules, binary assets and
@@ -1001,7 +1003,17 @@ rules, and guard documentation, merge and length-policy boundaries.
 - [x] Add the output-path guard and derived binary publication regressions, with mutation evidence for the guard.
 - [ ] Run focused suites, example Build/Check, lint, typecheck, Markdown/overlap checks and the full `cargo xtask check` gate.
 
-## Milestone 39: Commit, push, and review
+## Milestone 39: Merge main's 0.13.0 release
+
+Bring the latest release metadata into the reconciled branch without losing
+the imported CSS work or main's published version and documentation updates.
+
+- [ ] Fetch and audit `origin/main` from the source tip; save the release additions under `.context/merge/`.
+- [ ] Merge `origin/main`, resolve `package.json` path-by-path, verify the lockfile with `npm ci`, and review the release guides and changelogs.
+- [ ] Run the in-progress merge-preservation check and deletion audits; restore or justify every reported passage.
+- [ ] Run the complete `cargo xtask check` gate on the final merged tree without editing tracked files during the gate.
+
+## Milestone 40: Commit, push, and review
 
 - [ ] Commit and push the approved fixes and final bookkeeping; confirm the remote ref and a clean tree.
 - [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review.

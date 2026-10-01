@@ -38,8 +38,9 @@
   CSS, the v7 manifest, v3 read model, aligned comparison panes and delta
   publishing. The full gate passes and PR #125 is open. The thirteen findings
   in the [Milestone 37 review](../docs/reviews/imported-css-delivery-milestone-37.md)
-  are approved for Milestone 38 and are being reconciled; earlier unselected
-  findings remain outside this work.
+  were reconciled in Milestone 38 (`c260b5b2`). Milestone 39 merges main's
+  0.13.0 release before the complete gate and push; earlier unselected findings
+  remain outside this work.
   Move this plan to Completed when its
   implementation PR merges.
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive

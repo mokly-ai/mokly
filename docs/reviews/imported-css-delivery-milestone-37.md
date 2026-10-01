@@ -80,6 +80,7 @@ thirteen remain open for the user's decision.
      its parent, duplicate titles and large sentence overlap fail a test, the
      outdated-version check covers every protocol page, and merge audits
      compare each passage with its own file rather than the whole tree.
+   - Resolved in `c260b5b2`: Ported current rules, removed the eleven obsolete branch-only pages, renamed the three current pages, reconciled rendering ownership and links, and added continuation, title and overlap guards. The ignored crosswalk records every old-page sentence.
 2. **Medium — preview capture overrides `main`'s shared HTML-path
    normalizer.**
    - What happens: `main` moved preview capture onto
@@ -98,6 +99,7 @@ thirteen remain open for the user's decision.
      `staticPage` and rely on `artifact.mjs`; C) also forbid hand-written
      `.html`-stripping regexes outside the shared helper.
    - Recommended: A.
+   - Resolved in `c260b5b2`: Capture again uses the shared HTML-path normalizer; output tests retain rejected paths and normalize canonical links.
 3. **Medium — the current comparison contract misstates protocol-relative CSS
    URLs.**
    - What happens: `mokly-changes-serving.md` and `mokly-removed-previews.md`
@@ -110,6 +112,7 @@ thirteen remain open for the user's decision.
      previews, export and imported styles; B) change the code, breaking
      shipped behaviour and tests.
    - Recommended: A.
+   - Resolved in `c260b5b2`: Comparison resource URL classification now has one owner: CSS `//` URLs stay external, while HTML `//` links fail comparison.
 4. **Medium — branch-only edits were reverted where `main` had not touched the
    paragraph.**
    - What happens: where only the branch had changed a paragraph, the merge
@@ -131,6 +134,7 @@ thirteen remain open for the user's decision.
      README.
    - Recommended: A, plus a three-way merge check: where only one side changed
      a passage, the merged text keeps that side's version or records why not.
+   - Resolved in `c260b5b2`: Restored watch, loader and CSS-evidence rules, kept main's legacy paragraph whole, and added a per-path one-sided merge-preservation check with documented moves.
 5. **Low — the merge brought back documentation drift that the branch had
    fixed.** Two pages say "five" clean consumer smokes where six run, and
    `xtask/README.md` says `consumer_cases` owns five. `npm-release.md` again
@@ -138,11 +142,13 @@ thirteen remain open for the user's decision.
    audit. Options: A) count-free wording and restore the two sentences; B)
    replace "five" with "six". Recommended: A, plus a test tying the documented
    scenarios to `package-smoke.mjs`.
+   - Resolved in `c260b5b2`: Replaced fixed smoke counts with count-free wording and restored xtask and repository length-audit wording. This documentation-only correction has no new test, as requested.
 6. **Low — two of `main`'s wording changes were overwritten.** `README.md`
    says "saved variants" where `main` had changed the row to "variants", and
    `docs/reviews/consumer-export-integration.md` rewrites a sentence in
    `main`'s historical review and drops a valid link. Recommended: restore
    `main`'s text.
+   - Resolved in `c260b5b2`: Restored main's “variants” concept row and its historical review sentence and link.
 7. **Low — the merge-aware ratchet change alters `main`'s tooling and fails
    during other merges.** `scripts/verification/ratchets/git.mjs` now compares
    against `MERGE_HEAD` during an uncommitted merge. Normal runs are
@@ -154,6 +160,7 @@ thirteen remain open for the user's decision.
    otherwise, and test each case; B) revert to `main`'s version and run the
    ratchets after committing. Recommended: A if the user approves changing
    `main`'s tooling, otherwise B.
+   - Resolved in `c260b5b2`: Merge mode uses `MERGE_HEAD` only for the target main tip, reports a moved target, and otherwise uses the normal merge base; fixture tests cover all five cases.
 8. **Low — the branch's length audit blocks `main`'s workflow for over-length
    protocol pages.** `main` lets a capped page over 250 lines be edited if its
    cap is lowered. The branch's source-length audit fails any changed
@@ -161,20 +168,24 @@ thirteen remain open for the user's decision.
    the gate. Options: A) make the audit respect `main`'s caps through one
    shared length-policy module; B) keep the strict rule and remove `main`'s
    documented workflow. Recommended: A.
+   - Resolved in `c260b5b2`: A shared length policy honors exact, shrinking protocol caps while keeping uncapped pages at 250 lines and changed TypeScript/JavaScript at 300.
 9. **Low — the imported-styles pages were not updated for the merge.** The
    error catalogue still lists "route must not start with mokly-generated/…",
    whose check the merge removed, and an example uses the pre-v7 path
    `app/home.mobile.html`. Recommended: remove the row, update the example,
    and add a test that every catalogued message exists in `src`.
+   - Resolved in `c260b5b2`: Removed the stale diagnostic, corrected the v7 view path, and added a source-message catalogue guard.
 10. **Low — a `main` test helper no longer fails on a missing fixture.**
     `tests/helpers/component_review_fixture.ts` used to throw
     `Missing fixture: <route>` and now returns `undefined` through
     `textOutput(...)!`. Recommended: use `generatedText(read(route), route)`,
     which keeps both the missing-file error and the binary guard.
+    - Resolved in `c260b5b2`: The fixture reads through `generatedText`, preserving both failures; focused tests cover them.
 11. **Low — `scripts/preview/inputs.d.mts` imports `ManifestV5`, which `main`
     removed.** `skipLibCheck` hides the error and turns the type into `any`.
     Options: A) import `ManifestV7`; B) also type-check hand-written script
     declarations without `skipLibCheck`. Recommended: A plus B.
+    - Resolved in `c260b5b2`: Declarations use `ManifestV7` and the regular typecheck runs a strict script-declaration project.
 12. **Low — one rewritten test no longer tests anything.**
     `tests/config_generated_directory.test.ts` replaces a fixture route string
     that the v7 fixture no longer contains, so its assertion is trivially
@@ -182,9 +193,11 @@ thirteen remain open for the user's decision.
     view and page routes never land under `mokly-generated/` and that the
     output-path check rejects HTML there; B) delete the no-op part.
     Recommended: A.
+    - Resolved in `c260b5b2`: Replaced the inert assertion with derived-route and reserved-output validation tests; removing the guard makes the test fail.
 13. **Low — no test covers derived-mode publishing of generated binary assets
     through the upload receiver, or assets on the comparison snapshot
     sides.** The receiver test is committed-mode only and checks only the
     current side. A scratch test covering both modes and both sides passes.
     Options: A) adopt the scratch test; B) parametrize the existing receiver
     test by output mode. Recommended: A.
+    - Resolved in `c260b5b2`: A regular upload-receiver test checks committed and derived modes, including current and both snapshot copies of invalid-UTF-8 binary assets.
