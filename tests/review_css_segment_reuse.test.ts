@@ -105,9 +105,20 @@ test("segment accounting includes the identity run and every derived string", ()
   const retained = cache.set("key", run);
   assert.equal(cache.estimatedBytes, 64 + 96 + 2 * (3 + units));
   assert.deepEqual(retained, run);
-  assert.notEqual(retained, run);
+  assert.equal(retained, run);
   assert.ok(Object.isFrozen(retained.rules));
   assert.ok(Object.isFrozen(cssRuleData(retained.rules[0]!).references));
+});
+
+test("injected mutable segment runs still detach before retention", () => {
+  const native = new LightningCssRuleParser().parse(".a{color:red}");
+  assert.ok(native.status === "parsed");
+  const run = { rules: [...native.rules], identityRunKey: "injected" };
+  const retained = new ByteBoundedLru(detachSegmentRun).set("key", run);
+  assert.notEqual(retained, run);
+  assert.notEqual(retained.rules[0], run.rules[0]);
+  assert.ok(Object.isFrozen(retained));
+  assert.ok(Object.isFrozen(retained.rules[0]));
 });
 
 test("zero-byte segment caches still reuse duplicates in the current element only", () => {

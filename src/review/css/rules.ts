@@ -2,7 +2,6 @@
 import { transform } from "./lightning.js";
 import { detachSegmentRun } from "./parse_cache.js";
 import { RuleCollector } from "./rule_collector.js";
-import { cssRuleIdentity } from "./rule_identity.js";
 import { CssSource, normalizeCssSource } from "./source.js";
 import { CssRuleParseError } from "./types.js";
 import type {
@@ -90,16 +89,7 @@ export class LightningCssRuleParser implements CssRuleParser {
                 throw new CssRuleParseError({ kind: "segment-root-boundary" });
               const rules: CssRule[] = [];
               new RuleCollector(source, rules).segment(root, interval, raw);
-              const detached = detachSegmentRun({
-                rules,
-                identityRunKey: "",
-              }).value;
-              runs.push({
-                ...detached,
-                identityRunKey: JSON.stringify(
-                  detached.rules.map(cssRuleIdentity),
-                ),
-              });
+              runs.push(detachSegmentRun({ rules, identityRunKey: "" }).value);
             }
           },
         },

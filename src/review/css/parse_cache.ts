@@ -3,12 +3,17 @@ import { type DetachedCacheValue, flatString } from "./byte_lru.js";
 import { detachParseError } from "./cache_error.js";
 import {
   cssRuleData,
+  cssRuleIdentity,
   storeCssRuleData,
   storedCssRuleData,
 } from "./rule_identity.js";
 import type { CssRule, CssRuleParseResult, CssSegmentRun } from "./types.js";
 
 const detachedRules = new WeakMap<CssRule, number>();
+const detachedRuns = new WeakMap<
+  CssSegmentRun,
+  DetachedCacheValue<CssSegmentRun>
+>();
 
 export function detachParseResult(
   result: CssRuleParseResult,
@@ -94,18 +99,24 @@ export function detachParseResult(
 export function detachSegmentRun(
   run: CssSegmentRun,
 ): DetachedCacheValue<CssSegmentRun> {
+  const retained = detachedRuns.get(run);
+  if (retained) return retained;
   const detached = detachParseResult({ status: "parsed", rules: run.rules })!;
   const parsed = detached.value as Extract<
     CssRuleParseResult,
     { status: "parsed" }
   >;
-  return {
+  const identityRunKey = run.identityRunKey
+    ? flatString(run.identityRunKey)
+    : JSON.stringify(parsed.rules.map(cssRuleIdentity));
+  const result = {
     value: Object.freeze({
       rules: parsed.rules,
-      identityRunKey: flatString(run.identityRunKey),
+      identityRunKey,
     }),
     ruleCount: detached.ruleCount,
-    stringUnits:
-      detached.stringUnits - "parsed".length + run.identityRunKey.length,
+    stringUnits: detached.stringUnits - "parsed".length + identityRunKey.length,
   };
+  detachedRuns.set(result.value, result);
+  return result;
 }
