@@ -510,10 +510,11 @@ docs, mockups, plans, migrations, or schema—without explicit user approval.
 
 - Resolve conflicts path-by-path; never bulk-take `--ours` or `--theirs` for a
   tree, directory, or feature. Passing CI does not prove preservation.
-- Run `node scripts/verification/merge-preservation.mjs` before committing a
-  merge, then run it with the merge commit and `--result HEAD` after any
-  follow-up fix. Restore or justify every reported passage in the merge
-  commit body; a passing gate does not replace this check.
+- After committing a merge locally and before pushing, review
+  `git show --remerge-diff HEAD`. It shows every change beyond Git's automatic
+  merge: conflict resolutions, edits to one-sided files, undone changes and
+  deletions. Restore lost content and justify each intentional change in the
+  PR description; a committed merge message cannot be changed later.
 
 - Before commit and after commit, inspect the diff and deletions against main:
 

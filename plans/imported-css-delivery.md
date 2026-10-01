@@ -49,9 +49,11 @@ the [Milestone 37 review record](../docs/reviews/imported-css-delivery-milestone
 for Milestone 38; the focused reconciliation is committed in `c260b5b2`.
 Milestone 39 merged main's 0.13.0 release at `5d1c37a` in `3a2d90a8`.
 The complete gate passed on the merged tree, with no removal of main content.
-The twelve findings in the
-[Milestone 40 review record](../docs/reviews/imported-css-delivery-milestone-40.md)
-remain open for the user's decision.
+Milestone 41 replaces the custom merge check with Git's remerge diff to
+resolve findings 1, 2, 4 and 11 in the
+[Milestone 40 review record](../docs/reviews/imported-css-delivery-milestone-40.md).
+The other eight findings remain open. Milestone 42 will merge main's
+release-runner fix before the final gate and push.
 Other previously unselected findings remain out of scope. The plan stays active
 until the PR merges.
 Imported CSS, CSS Modules, binary assets and
@@ -1020,6 +1022,28 @@ the imported CSS work or main's published version and documentation updates.
 
 - [x] Commit and push the approved fixes and final bookkeeping; confirm the remote ref and a clean tree.
 - [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Twelve new findings (3 Medium, 9 Low) are recorded in the [Milestone 40 review record](../docs/reviews/imported-css-delivery-milestone-40.md) for the user's decision.
+
+## Milestone 41: Replace the custom merge check with Git's remerge diff
+
+Use Git's own three-way merge as the source of truth for reviewing merge
+resolutions and one-sided changes.
+
+- [x] Remove the custom merge-preservation script and its tests; direct agents to review `git show --remerge-diff HEAD` after a local merge commit and justify intentional differences in the PR description.
+- [ ] Record the resolution of Milestone 40 findings 1, 2, 4 and 11 without changing the other findings.
+
+## Milestone 42: Merge main's release-runner fix
+
+Preserve main's GitHub-hosted release-runner change while keeping the split
+release protocol pages.
+
+- [ ] Fetch and audit main's new tip and save the changed-path list under `.context/merge/` before merging.
+- [ ] Merge `origin/main`, resolve the release-protocol conflict path by path, and verify main's workflow and test updates.
+- [ ] Review the committed merge with `git show --remerge-diff HEAD`, inspect deletions against `origin/main`, and run the focused checks and full gate.
+
+## Milestone 43: Commit, push, and review
+
+- [ ] Commit and push the approved work, confirm the remote ref and a clean tree.
+- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review.
 
 ## Post-merge follow-up (non-blocking)
 
