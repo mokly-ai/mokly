@@ -30,6 +30,7 @@ interface WorkflowJob {
   needs?: readonly string[];
   outputs?: Readonly<Record<string, string>>;
   permissions?: Readonly<Record<string, string>>;
+  "runs-on"?: string;
   steps: readonly WorkflowStep[];
   strategy?: {
     "fail-fast"?: boolean;
@@ -103,6 +104,15 @@ test("release workflow selects only releases and isolates OIDC publish", async (
   });
   assert.equal(workflow.concurrency["cancel-in-progress"], false);
   assert.equal(publish.environment, "npm");
+  assert.equal(publish["runs-on"], "ubuntu-24.04");
+  assert.match(
+    String(
+      publish.steps.find(
+        (step) => step.name === "Check out immutable release tag",
+      )?.uses,
+    ),
+    /^actions\/checkout@[a-f0-9]{40}$/,
+  );
   assert.deepEqual(publish.permissions, {
     actions: "read",
     contents: "read",
