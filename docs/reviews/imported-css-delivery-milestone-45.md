@@ -211,3 +211,4 @@ That finding's recommendation still applies. For this test, start Serve
 without the 2-second limit, wait for the rebuild to report the worker exit
 instead of pausing for 300 ms, and keep the limit only on the close that
 follows.
+Resolved with Milestone 40 finding 12 in `77a1f493`.

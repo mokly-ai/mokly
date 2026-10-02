@@ -62,8 +62,9 @@ Other previously unselected findings remain out of scope. Findings in the
 remain open for the user's decision. Milestone 46 addresses only the imported-CSS
 watcher-test flakiness recorded as Milestone 40 finding 12. The final helper
 follows intermediate versions and child restarts; a server-level test pins
-stylesheet availability before content updates. The plan stays active until
-the PR merges.
+stylesheet availability before content updates. Milestone 46 (`77a1f493`)
+passed the full gate and resolves that finding; other review findings remain
+open. The plan stays active until the PR merges.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -1068,7 +1069,7 @@ path-complete record of intentional merge decisions.
 - [x] Commit and push the documentation changes; confirm the remote ref and a clean tree.
 - [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Five new findings (2 Medium, 3 Low) are recorded in the [Milestone 45 review record](../docs/reviews/imported-css-delivery-milestone-45.md) for the user's decision.
 
-## Milestone 46: Stabilize imported-CSS watcher tests
+## Milestone 46: Stabilize imported-CSS watcher tests (complete)
 
 Replace timing guesses with watch reports and accepted-resource evidence while
 preserving the browser-visible event contract.
@@ -1078,7 +1079,7 @@ preserving the browser-visible event contract.
 - [x] Fix the worker-exit close test to wait for its rebuild failure report, and update the real-watcher and PostCSS dependency tests to wait for accepted resource bytes.
 - [x] Audit other branch-added watcher tests for the same patterns and fix affected cases without changing main-owned tests or helpers.
 - [x] Check product ordering with a deterministic server-level test; no product bug or protocol change is needed.
-- [ ] Verify load and serial repetitions, both CI unit shards, the full gate, Markdown, and deletion checks; record the finding's resolution.
+- [x] Verify load and serial repetitions, both CI unit shards, the full gate, Markdown, and deletion checks; record the finding's resolution.
 
 The original six-way load failed 24/24 worker-close runs (including one hung
 cleanup), 2/24 skipped-directory stylesheet runs and 1/24 PostCSS-token runs.

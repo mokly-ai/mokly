@@ -138,3 +138,4 @@ found its cause:
 
 That finding's recommendation still applies: one shared helper that waits for
 the restarted server's ready event, replacing the separate polling loops.
+Resolved with Milestone 40 finding 12 in `77a1f493`.
