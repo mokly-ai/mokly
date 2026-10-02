@@ -22,9 +22,12 @@ The path identity upgrade replaces authored `id` and `navPath` with one path
 per entry derived from the file that defines it, adds Markdown documents,
 detects moves, renames the Pages section to Specs, and changes the generated
 layout to one directory per entry. Consumers adopt manifest v8, catalogue read
-model v4, review result v5, and the `/view/<path>/` URL. Nothing is read from
-earlier output: an earlier comparison base makes Changes unavailable until it
-includes this version.
+model v4, review result v5, and the `/view/<path>/` URL. There is no
+compatibility layer: earlier manifests, read models, review results, and
+stored navigation state are neither read nor translated, former
+`/view/<kind>/<id>.html` URLs are not redirected, former ids are not mapped to
+paths, and former configuration keys fail as unknown fields. An earlier
+comparison base makes Changes unavailable until it includes this version.
 
 Migrate authoring as follows:
 

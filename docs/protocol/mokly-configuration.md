@@ -207,10 +207,12 @@ deduplicated lists, while loader keys are extensions and values are supported
 esbuild loader names. React and React DOM still resolve through Mokly's
 consumer-peer plugin so these options cannot introduce a second React runtime.
 
-The obsolete `legacy`, `entries`, and `entriesDir` config keys are rejected,
-including when their value is `undefined`. Register every complete HTML
-document explicitly with `definePage`; Markdown documents are discovered
-through roots; baseline compatibility never restores old configuration.
+The obsolete `legacy` config key is rejected, including `legacy: undefined`.
+`entries` and `entriesDir` are not configuration fields: a config that sets
+them fails as it would for any unknown key, and Mokly carries no migration
+message or fallback for them. Register every complete HTML document
+explicitly with `definePage`; Markdown documents are discovered through
+roots; baseline compatibility never restores old configuration.
 
 ## Roots
 

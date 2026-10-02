@@ -37,8 +37,9 @@ so its only disclosure is that entry's `variants:<path>` list.
 
 ## Storage And Defaults
 
-Store a JSON object at the `localStorage` key `mokly:nav-disclosure:v3`, mapping
-each current disclosure key to `true` (open) or `false` (closed). Save **every**
+Store a JSON object at the `localStorage` key `mokly:nav-disclosure:v4`, mapping
+each current disclosure key to `true` (open) or `false` (closed). Earlier
+storage keys are never read, translated, or removed. Save **every**
 disclosure in the current navigation, not only user-toggled ones, so a removed
 or renamed folder disappears from the next saved map. Do not write while
 search or the Changes filter constrains the tree. A failed or unavailable
@@ -56,11 +57,10 @@ stored values are preserved.
 
 Restore by enumerating the current navigation's disclosure keys. For each key,
 keep its valid stored boolean value when present; otherwise use the fallback
-below. Ignore stored keys that are absent from the current navigation, including
-obsolete `collection:` (sectioned and pre-section forms), `legacy:`,
-`folder:pages:`, and section-scoped `variants:<section>:<id>` keys, without
-migration. Ignore a stored value that is not a JSON object as a whole; ignore
-invalid keys and non-boolean values individually.
+below. Ignore stored keys that are absent from the current navigation, without
+migration; there is no list of former key forms. Ignore a stored value that
+is not a JSON object as a whole; ignore invalid keys and non-boolean values
+individually.
 
 | Source of values                                                         | Fallback for a current key missing from the map |
 | ------------------------------------------------------------------------ | ----------------------------------------------- |

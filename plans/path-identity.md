@@ -134,15 +134,27 @@ user should reconsider):**
     component library. Co-location of mockups beside product code is the
     documented alternative, configured with a transparent directory. Both
     layouts produce the same paths.
-14. **Formats.** Manifest v8, public read model v4, review result v5. Current
-    and baseline readers accept only the new versions, under the existing
-    pre-1.0 policy of one clean break and no compatibility shim.
+14. **Formats, with no backwards compatibility.** Manifest v8, public read
+    model v4, review result v5, and navigation storage key v4. This is one
+    clean break under the pre-1.0 policy, and the plan builds no logic for
+    earlier versions: no reader, converter, or fallback for v7 manifests, v3
+    read models, v4 review results, or v3 navigation storage; no redirect or
+    alias from `/view/<kind>/<id>.html` URLs to paths; no mapping from former
+    ids to paths; no translation of former disclosure keys; no special
+    handling of former configuration keys, which fail as unknown fields like
+    any other; and no deprecation period or migration tooling. The existing
+    baseline gate keeps its one behaviour, reporting Changes unavailable for
+    a base built by an earlier version, with its accepted version raised to
+    v8. Move detection is content identity within the new model between two
+    builds of this version, not compatibility with earlier output. The
+    example catalogue, fixtures, and tests are rewritten to the new model
+    rather than adapted. Migration guidance lives in the release note only.
 15. **Out of scope.** Mokly Cloud's adoption of paths and `previousPath` for
     comments, a generated overview page for folders without a README, and a
     per-root default leaf of `index` are post-merge follow-ups.
 
-**Artifact layout to confirm in Milestone 1:** every entry document is
-written at `<path>/index.html` and its views at
+**Artifact layout, confirmed in the contract documentation:** every entry
+document is written at `<path>/index.html` and its views at
 `<path>/index.<viewport>[.dark].html`, so a folder page and its children
 coexist on every static host and no child slug can collide with a view file,
 because dots are not valid in segments. Snapshot, preview, and shell paths
