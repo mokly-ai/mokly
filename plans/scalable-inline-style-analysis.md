@@ -809,35 +809,116 @@ lists from stored rule text.
 - [x] After the code checkpoint and approved measurements, run the suite and
       `cargo xtask check` on the measured result before pushing.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
 
+### Milestone 5 review findings
+
+Reported by the post-push review of commits `5ecbb3bc`, `a78b6113` and
+`1887eff6`. Recorded for the user's decision.
+
+1. Medium. Cancellation keys whole top-level blocks (a rule, or a whole
+   `@media` or nested group) rather than single rules, which has two effects.
+   First, the approved displacement exception: when the same rule sits inside
+   differently shaped grouped or nested blocks, the result differs from the
+   ordinary full diff, and the tests show a component-owned rule becoming
+   `unresolved`, the owned set emptying and the projected material changing.
+   Second, one element on either side that cannot be segmented (an
+   `@import`, `@charset` or `@namespace` element, a scanner anomaly or a
+   failed batch) switches cancellation off for the whole page pair; a niced
+   micro-benchmark measured about 22 ms against 1.3–1.5 ms per view at 3,000
+   rules (6,001 rules sent to the diff instead of 1), and no scale sample has
+   a fallback, so the checkpoint cannot show it. The diff's exact-match step
+   pairs each after-copy with the earliest unused identical before-copy, and a
+   rule's identity includes its address, so cancelling per rule by stored
+   identity key, earliest-first in document order, reproduces the full diff's
+   matches, leftovers, ordinals and reference pairs for every input. Block
+   keys save little: every view already looks up every segment and composes
+   and sorts every rule on each side. Naive per-rule cancellation measured
+   about 3 ms more per view at 3,000 rules, mostly identity lookups that
+   per-run identity-key arrays stored with each cached run should avoid (not
+   measured). Recommended: cancel per rule, including the rules of fallback
+   elements; send leftovers to the ordinary diff; pair matched
+   reference-bearing rules as today; store per-run identity-key arrays; drop
+   the `segmented` gate, the displacement exception, the grouped equality
+   domains and the Style-Only Route's displacement conditions; and replace the
+   displacement tests with exact full-diff equality tests for grouped, nested
+   and fallback inputs. This changes Decision 5, so it needs the user's
+   approval, and it should be decided before Milestone 8 because it changes
+   the route contract. Alternatives: keep block keys but feed a fallback
+   element's rules in as single-rule runs (removes only the slowdown), or keep
+   the design and document and measure the slowdown.
+2. Low. The checkpoint says both cumulative component-style samples now
+   complete within the delivery ceiling, but the cold sample delivered Changes
+   at 869,377 ms, about 40 s (4–5%) inside the fixed 900 s inline wait, which
+   is smaller than this session's 59 s cold/warm spread and the 26 s HTML-time
+   drift between the Milestone 4 and 5 warm runs; Milestone 4's warm sample
+   had also completed, at 898,953 ms. Neither the report nor the sample record
+   states `changesReadyMs`, the ceiling or the headroom, so completion reads
+   as a reliable Milestone 5 gain and a slower profiled run could come back
+   `incomplete`. Recommended: record `changesReadyMs`, the effective ceiling
+   and the headroom in each sample's JSON and in the checkpoint tables, make
+   the ceiling a benchmark option for profiled runs with an outcome test, and
+   reword the claim to "completed with about 4% headroom".
+3. Low. The 1,000-case seeded differential compares only with the captured
+   Milestone 4 engine, and its generator has no reference-bearing rule and no
+   component instance, so it never produces an unchanged reference pair or an
+   `owned` rule, the two behaviors Milestone 5 changed; those paths have only
+   a few fixed cases, so a regression in `referenceOrdinals` indexing across
+   element splits and duplicates would escape randomized coverage.
+   Recommended: add a second oracle (the same analysis with cancellation
+   disabled, through a parser without `parseSegments`) that requires exact
+   equality of rules, pairs, ordinals, attributions and both materials; add
+   `url()` rules (duplicates and element splits) and component-owned ranges to
+   the generator; keep the Milestone 4 comparison for the reference-free
+   subset; and share the generator and oracle in a helper that the
+   classification-level differential and Milestone 8's route tests reuse.
+
 ## Milestone 6: Cost Breakdown Checkpoint
 
-Summary: measure where classification time goes once the memory and CSS costs
-are gone, and confirm that the page-work milestones target the largest
-measured costs. Documentation-only; validated with Prettier and a diff review.
+Summary: measure where classification time goes after bounded memory and parse
+reuse, and confirm that the page-work milestones target the largest costs.
+Documentation-only; validated with Prettier, documentation tests and a diff review.
 
-- [ ] Run the full committed matrix once on each fixture with document-work
+- [x] Run the full committed matrix once on each fixture with document-work
       counts, and capture one CPU profile of the background worker's
       classification for the no-change and component-style scenarios on the
       cumulative fixture.
-- [ ] Record per scenario the classification time, `heapPeakMiB`, HTML parses
+- [x] Discovered: preserve the perturbed first default matrix, then use the
+      supervisor-authorized quiet repeat as the default model source. Carry
+      M5/perturbed/quiet spread, never drop a sample or rerun after a disconnect.
+- [x] Discovered: add the requested default style profile. All three profiles
+      cover complete worker classification only; the ignored, off-by-default
+      harness has an explicit uncapped option, leaving matrix ceilings/schema
+      unchanged. Document observed overhead/drift and retained raw profiles.
+- [x] Record per scenario the classification time, `heapPeakMiB`, HTML parses
       and per-step times, and the profiles' top self-time functions, in the
       fixture README beside the Milestone 2 baseline.
-- [ ] Discovered: report cold inline parse cost explicitly in the breakdown
+- [x] Discovered: keep the 300-line fixture README concise by linking the
+      focused [M6 report](../docs/dev/large-fixture-cost-checkpoint.md), with
+      separate [profiles](../docs/dev/large-fixture-cost-profiles.md) and
+      [model/cold-cost](../docs/dev/large-fixture-cost-model.md) sections.
+- [x] Discovered: record every cumulative `changesReadyMs` and the effective
+      deadline/headroom lower bounds. Existing clocks do not retain the exact
+      wait start; report the limitation, not an invented alignment or new field.
+- [x] Discovered: report cold inline parse cost explicitly in the breakdown
       and evaluate default component-style and screen-markup against Decision
       13's tolerance; if exceeded, schedule the cold-cost reduction accepted
       provisionally in Milestone 4 before final acceptance.
-- [ ] Confirm that Milestones 7 to 9 address the largest measured costs, in
+- [x] Confirm that Milestones 7 to 9 address the largest measured costs, in
       that order. If the data shows otherwise, reorder or amend those
       not-started milestones and record why in this milestone.
-- [ ] Validate the changed Markdown with `npx prettier --check` and review the
+- [x] Discovered: retain M7 → M8 → M9; add M8's residual-material equality
+      work-bound proof and M9A's residual sheet/cold-cost checkpoint. Current
+      scanning/lookup/cancellation survives the three planned steps; cumulative
+      style is projected at 130–175 s, still beyond Decision 13. Decisions and
+      contracts remain unchanged; M5 findings are recorded, not implemented.
+- [x] Validate the changed Markdown with `npx prettier --check` and review the
       diff.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
@@ -881,6 +962,10 @@ the original page; give identical texts a single-parse quick check.
       under [ignore pairing](../docs/protocol/mokly-page-analysis.md#contents-and-ignore-pairing).
 - [ ] Assert with document-work counts that a full comparison parses each side
       at most once.
+- [ ] Discovered: report retained HTML bytes and per-step work, including the
+      page pass and resource documents, against M6's roughly 80% identical-view
+      and 83% complete-style byte reductions. Account for source-location and
+      reference-inventory overhead rather than treating byte ratios as timings.
 - [ ] Run the fast-path, comparison-mode and Changes equivalence suites;
       preserve assertions outside the page contract's explicit provenance/
       ignore-eligibility/context cases. Retain the delivered text-material
@@ -916,6 +1001,12 @@ to the full comparison.
 - [ ] Discovered: reuse all unchanged element runs and full-path preparation
       as the route contract requires; never decide from a changed-element-only
       diff.
+- [ ] Discovered: prove actual/projected material equality from residual
+      multisets and equal retention of cancelled occurrences under the existing
+      block-run/matched-reference policies. Eligible comparisons must not sort,
+      copy or concatenate cancelled rules merely to test equality; fall back to
+      ordinary composition when the proof fails. Add counting tests and exact
+      differential checks in every approved grouped/nested equality domain.
 - [ ] Record the no-change and component-style samples of both fixtures.
 - [ ] Update `src/review/README.md` and the contracts' Delivery Status for
       delivered parts; run the suite and `cargo xtask check`.
@@ -944,6 +1035,44 @@ comparison's text work no longer grows with the style sheet.
 - [ ] Record the no-change and component-style samples of both fixtures.
 - [ ] Update `src/review/README.md` and the contracts' Delivery Status for
       delivered parts; run the suite and `cargo xtask check`.
+- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`; report
+      numbered, severity-rated findings with options and recommendations
+      without changing the implementation.
+
+## Milestone 9A: Residual Sheet Cost Checkpoint
+
+Summary: close the measured cost left by M7 to M9 before acceptance. M6's
+[model](../docs/dev/large-fixture-cost-model.md#plan-consequences) leaves
+sheet-proportional scanning, cache/run lookup and cancellation (about 63–72 s
+in the cumulative style envelope), even when full material composition is
+avoided. This is new measured work, not permission to implement the recorded
+M5 review's alternative cancellation design.
+
+- [ ] Reconcile the post-M9 counts/profiles with M6's ranges. Record per-path
+      costs and identify the remaining obstacle to every Decision 13 ratio;
+      if the targets already hold, record that evidence instead of adding work.
+- [ ] If residual sheet work still dominates, design a contract-preserving
+      bound on unchanged-prefix/suffix scanning, lookup and cancellation, or
+      another measured remedy. Preserve current segment equivalence, bounded
+      flat retention, ordinals, grouped displacement and pair-wide fallback.
+      Ask for approval before any new cache semantics or Decision/contract
+      change; the checkpoint does not choose an unapproved algorithm.
+- [ ] Implement an approved remedy only if required; add failing work-bound
+      tests first, plus full-result differentials and production-path GC tests.
+      Prove that unique-sheet/Emotion cold costs do not conceal a default
+      regression; consider lazy derived data only if the breakdown supports it.
+- [ ] Update relevant READMEs and delivered statuses if code changes; finish
+      targeted/full unit/browser/static checks, commit the code checkpoint and
+      stop for supervisor verification before measuring.
+- [ ] Record supervisor-approved no-change/style cold/warm samples on both
+      fixtures and unique-sheet cold-cost evidence, retaining every outcome;
+      confirm which targets now hold and any remaining design decision.
+- [ ] Validate documentation, run the suite and `cargo xtask check` on the
+      measured result if implementation changed; documentation-only conclusions
+      use the repository's Markdown validation exception.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
