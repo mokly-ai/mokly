@@ -152,7 +152,7 @@ actually performs. Phase labels are outcome-oriented: `Loading configuration`,
 Completion summaries are:
 
 ```text
-  ✔ Generated 278 files in examples/basic/mokly-generated (5.9s)
+  ✔ Generated 278 files in examples/basic (5.9s)
   ✔ Mokly output is valid and untracked · 278 files (5.9s)
   ✔ Mokly output is current · 278 files (5.9s)
   ✔ Exported Mokly to .context/mokly-site (8.1s)

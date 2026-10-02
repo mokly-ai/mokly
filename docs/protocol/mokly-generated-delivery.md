@@ -21,8 +21,10 @@ rejects unknown non-literal values. Embedded Serve shell data and the
 SSR/hydration descriptor carry the same field, omitting it for an older
 source. A private v6 manifest or live-index-1 generation sets
 `mokly-generated` in its shell data; a historical v2–v5 manifest omits the field.
-The sole production literal is exported from `@mokly/viewer/data`; the field's
-type derives from that constant. The unreleased dot-directory spelling is not
+The sole production literal is defined in
+`packages/viewer/src/catalogue/delivery_paths.ts` and exported from
+`@mokly/viewer/data`; the field's type derives from that constant. The
+unreleased dot-directory spelling is not
 an accepted prefix or a fallback layout.
 The field is delivery metadata, not a route component or a Git tracking mode.
 Switching layout is a content/source change: remount frame sessions and

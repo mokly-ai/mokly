@@ -23,9 +23,11 @@ Deployable generated content uses the plain, tool-owned directory name
 dot-directories. A leading dot is for Mokly's local-only state, such as
 `.mokly-cache/` and sibling transaction directories; the export ownership
 marker is a separate artifact file, not the generated-content directory.
-Production code defines the directory name once in the viewer data module,
-exports it through `@mokly/viewer/data`, and the CLI imports that constant.
-ESLint rejects the spelled-out directory name in other production literals.
+Production code defines `GENERATED_DIRECTORY` once in
+`packages/viewer/src/catalogue/delivery_paths.ts`, exports it through
+`@mokly/viewer/data`, and the CLI imports that constant directly. ESLint
+rejects the spelled-out directory name in other production string and
+template literals under `src/`, `packages/viewer/src/`, and `scripts/preview/`.
 The former dot-directory name was never released and is not a read alias.
 
 Resolved entries, the renderer, compatibility transformer, module-resolution

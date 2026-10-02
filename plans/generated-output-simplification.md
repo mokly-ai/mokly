@@ -540,15 +540,15 @@ spelled-out name.
       `/static/mokly-generated/`, styled after the background build;
       `npm run example:check` passes; an exported site served by a plain
       static file server shows styled screens.
-- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+- [x] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; commit and push.
 
 ## Milestone 8: Verify and review the rename
 
-- [ ] Re-read every document changed in Milestones 6 and 7 against the
+- [x] Re-read every document changed in Milestones 6 and 7 against the
       shipped behaviour and fix drift.
-- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+- [x] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; `git add -A`; commit with Conventional Commits; push
       the branch.
