@@ -87,7 +87,7 @@ async function acquire(
   const started = Date.now();
   try {
     for (;;) {
-      if (options.signal?.aborted) throw cancelled(file);
+      if (options.signal?.aborted) throw cancelled();
       const token = await publishLock(file);
       if (token) return held(file, token);
       const holder = await readLockHolder(file);
@@ -102,7 +102,7 @@ async function acquire(
           options.signal ? { signal: options.signal } : undefined,
         );
       } catch {
-        throw cancelled(file);
+        throw cancelled();
       }
     }
   } catch (error) {
@@ -128,10 +128,10 @@ function held(file: string, token: string): OutputLock {
   return lock;
 }
 
-function cancelled(file: string): MoklyError {
+function cancelled(): MoklyError {
   return new MoklyError(
     "build-invalid",
-    `cancelled while waiting for the generated-output lock at ${file}`,
+    "Cancelled while waiting for another Mokly command to finish writing generated output.",
     { cancelled: true },
   );
 }

@@ -163,7 +163,7 @@ test(
       waiting,
       (error: Error) =>
         isCancellation(error) &&
-        /cancelled while waiting for the generated-output lock/u.test(
+        /Cancelled while waiting for another Mokly command to finish writing generated output\./u.test(
           error.message,
         ),
     );
@@ -194,4 +194,34 @@ test("watches never observe the lock", async (context) => {
     isPackageOwnedIgnoredWatchPath(path.dirname(file), config),
     true,
   );
+});
+
+test("a lock directory that a concurrent release removes is recreated", async (context) => {
+  const root = await repository(context);
+  const locks = path.dirname(outputLockPath(root));
+  const lstat = fs.lstat.bind(fs);
+  let removed = 0;
+  context.mock.method(fs, "lstat", async (candidate: string) => {
+    if (candidate === locks && removed === 0) {
+      removed += 1;
+      await fs.rm(path.dirname(locks), { force: true, recursive: true });
+    }
+    return lstat(candidate);
+  });
+  const lock = await acquireOutputLock(root, { timeoutMs: 5_000 });
+  assert.equal(removed, 1);
+  assertOutputLockHeld(lock, root);
+  await lock.release();
+});
+
+test("a lock directory replaced by a regular file fails at once", async (context) => {
+  const root = await repository(context);
+  const locks = path.dirname(outputLockPath(root));
+  await fs.mkdir(path.dirname(locks), { recursive: true });
+  await fs.writeFile(locks, "not a directory");
+  await assert.rejects(
+    acquireOutputLock(root, { pollMs: 20, timeoutMs: 5_000 }),
+    /generated-output lock directory must be a real directory/u,
+  );
+  assert.equal(await fs.readFile(locks, "utf8"), "not a directory");
 });

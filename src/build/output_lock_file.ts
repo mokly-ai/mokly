@@ -39,43 +39,55 @@ function parseLockHolder(text: string): LockHolder {
 
 /** Create the lock file exclusively and return its token, or nothing when held. */
 export async function publishLock(file: string): Promise<string | undefined> {
-  const directory = path.dirname(file);
   const token = randomUUID();
   ownTokens.add(token);
   try {
-    for (let attempt = 0; ; attempt += 1) {
-      await fs.mkdir(directory, { recursive: true });
+    const handle = await createExclusively(file);
+    if (!handle) {
+      ownTokens.delete(token);
+      return undefined;
+    }
+    try {
+      await handle.writeFile(
+        `${JSON.stringify({ pid: process.pid, token })}\n`,
+      );
+    } catch (error) {
+      await handle.close().catch(() => {});
+      await fs.rm(file, REMOVE);
+      throw error;
+    }
+    await handle.close();
+    return token;
+  } catch (error) {
+    ownTokens.delete(token);
+    throw error;
+  }
+}
+
+/**
+ * Open the lock file exclusively. Another writer's release can remove `locks/`
+ * and `.mokly-cache/` at any step, so a missing directory is created again.
+ */
+async function createExclusively(
+  file: string,
+): Promise<fs.FileHandle | undefined> {
+  const directory = path.dirname(file);
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      await fs.mkdir(directory, { recursive: true }).catch((error: unknown) => {
+        if (!hasCode(error, "EEXIST")) throw error;
+      });
       if (!(await fs.lstat(directory)).isDirectory())
         throw new MoklyError(
           "build-invalid",
           `generated-output lock directory must be a real directory: ${directory}`,
         );
-      let handle: fs.FileHandle;
-      try {
-        handle = await fs.open(file, "wx");
-      } catch (error) {
-        if (hasCode(error, "EEXIST") || pendingDeletion(error)) {
-          ownTokens.delete(token);
-          return undefined;
-        }
-        if (hasCode(error, "ENOENT") && attempt < 20) continue;
-        throw error;
-      }
-      try {
-        await handle.writeFile(
-          `${JSON.stringify({ pid: process.pid, token })}\n`,
-        );
-      } catch (error) {
-        await handle.close().catch(() => {});
-        await fs.rm(file, REMOVE);
-        throw error;
-      }
-      await handle.close();
-      return token;
+      return await fs.open(file, "wx");
+    } catch (error) {
+      if (hasCode(error, "ENOENT") && attempt < 20) continue;
+      if (hasCode(error, "EEXIST") || pendingDeletion(error)) return undefined;
+      throw error;
     }
-  } catch (error) {
-    ownTokens.delete(token);
-    throw error;
   }
 }
 
@@ -131,7 +143,12 @@ export async function reclaimLock(
   try {
     await fs.link(file, retired);
   } catch (error) {
-    if (hasCode(error, "EEXIST") || hasCode(error, "ENOENT")) return false;
+    if (
+      hasCode(error, "EEXIST") ||
+      hasCode(error, "ENOENT") ||
+      pendingDeletion(error)
+    )
+      return false;
     throw new MoklyError(
       "build-invalid",
       `could not reclaim the generated-output lock left by stopped process ${holder.pid}: ${errorMessage(error)}. Delete ${file} and retry.`,
