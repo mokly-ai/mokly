@@ -1,16 +1,19 @@
 ---
 title: "Browse"
-description: "The catalogue is one place to open every screen your repository describes."
+description: "The catalogue is one place to open every screen and document your repository describes."
 section: "catalogue"
 order: 1
 ---
 
 ## The shell
 
-`mokly serve` opens the catalogue: a navigation column on the left, the screen
+`mokly serve` opens the catalogue: a navigation column on the left, the entry
 in the middle and its details beside it. The navigation column is resizable,
-and Pages and Components are separate collapsible sections with icons for
-folders and for each kind of entry.
+and Specs and Components are separate collapsible sections with icons for
+folders and for each kind of entry. Specs holds your screens, pages, flows
+and Markdown documents; Components holds your registered components. A folder
+that contains both kinds appears in both sections, each showing only its own
+children.
 
 Navigation and local controls are available as soon as the server starts. Each
 preview is rendered when you open it, and the complete build and the
@@ -19,10 +22,20 @@ what you are reading.
 
 ## Find your way
 
-Breadcrumbs above a screen come from its `navPath` labels and end in a
-copyable id chip, so the name to use in a link is always in front of you. A
-link inside a screen opens its destination's canonical page, carries its
-fragment and reveals it in the tree.
+Every entry has the address `/view/<path>/`, so the tree is the directory
+tree of your specs. A folder row only expands or collapses; it never changes
+what you are looking at. An entry row opens the entry. When a folder has a
+page of its own, a README in its directory or an entry named `index`, that
+page is the folder's first row, labelled Overview when its title is the
+folder's title, and the folder's address `/view/<folder>/` opens it. A
+screen or component that is a folder's page takes the folder's place in the
+tree, with the folder's other members listed under it after its variants.
+
+Breadcrumbs above an entry are the titles of its folders and end in a
+copyable path chip, so the name to use in a link is always in front of you. A
+breadcrumb folder opens the folder's page when it has one and otherwise
+expands the folder in the tree. A link inside a screen opens its
+destination's canonical page, carries its fragment and reveals it in the tree.
 
 ## Variants
 
@@ -42,12 +55,14 @@ catalogue has dark documents. A screen is framed in realistic browser chrome
 that expands to an overlay, and the mobile view is framed as a phone whose
 screen reserves the usual status band above your document.
 
-Use-case flows read the same way, one step after another.
+Use-case flows read the same way, one step after another. A page or a
+Markdown document fills the stage as one document, following the Light and
+Dark switch where a dark rendering exists.
 
 ## Details
 
 The details inspector starts collapsed and remembers that choice as you move
-between screens and reload. It holds what the screen is made of, what it
+between entries and reload. It holds what the entry is made of, what it
 depends on and the evidence behind a change.
 
 ## While you work
@@ -55,3 +70,5 @@ depends on and the evidence behind a change.
 A watched server reloads the catalogue when your sources change and restores
 your search, your filter, the folders you opened, the viewport, the drawer
 and your scroll position. Back and Forward return to the position you left.
+Moving a file in a root moves its entry in the tree and in the breadcrumbs
+after the reload.

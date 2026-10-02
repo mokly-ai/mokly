@@ -5,33 +5,45 @@ section: "authoring"
 order: 8
 ---
 
-## Link by id
+## Link by path
 
-Use `MockLink` for a destination inside the catalogue. `to` carries the entry
-id, and the separate `fragment` prop carries a bare HTML id.
+Use `MockLink` for a destination inside the catalogue. `to` names the entry,
+and the separate `fragment` prop carries a bare HTML id.
 
 ```tsx
 import { MockLink } from "@mokly/mokly";
 
-<MockLink fragment="summary" to="account-detail">
-  Details
+<MockLink fragment="summary" to="account/billing/invoice">
+  Invoice
 </MockLink>;
 ```
 
-The string helper is `mockLink(id, fragment?)`, and both produce
-`mock:<id>[#fragment]`.
+`to` accepts three forms:
+
+- the complete path, such as `account/billing/invoice`;
+- a path relative to the linking entry's folder, starting with `./` or
+  `../`, such as `./invoice` from any entry under `account/billing`;
+- the imported definition of another entry module's export, which Mokly
+  resolves to that entry's path when it builds.
 
 ```tsx
-import { mockLink } from "@mokly/mokly";
+import { MockLink, mockLink } from "@mokly/mokly";
+import invoice from "./invoice.mockup.js";
 
-const detailsHref = mockLink("account-detail", "summary");
-// "mock:account-detail#summary"
+<MockLink to={invoice}>Invoice</MockLink>;
+
+const detailsHref = mockLink("../billing/invoice", "summary");
+// "mock:../billing/invoice#summary"
 ```
 
-The id is lowercase kebab-case. Neither helper accepts `id#fragment`,
-percent-encoded syntax or a `mock:` value in the id, and an unknown but
-well-formed id fails later when the catalogue is built. A link may name any
-entry, including a screen or component variant.
+The string helper is `mockLink(to, fragment?)`, and both produce
+`mock:<path>[#fragment]`, which you may also write by hand in an `href` or
+`data-nav-href`. Neither helper accepts `path#fragment`, percent-encoded
+syntax or a `mock:` value in `to`. A link may name any entry, including a
+screen or component variant, a page or a Markdown document; a link to a
+component opens its first variant. Inside a Markdown document, a relative link
+to another `.md` file is a catalogue link too, and `mock:<path>` works there
+as well.
 
 ## Style your own control
 
@@ -39,8 +51,8 @@ To use a styled control as a link, opt into `asChild` with exactly one
 element:
 
 ```tsx
-<MockLink asChild to="account-detail">
-  <button className="primary-action">View account</button>
+<MockLink asChild to="./invoice">
+  <button className="primary-action">View invoice</button>
 </MockLink>
 ```
 
@@ -67,7 +79,13 @@ link must not contain a `base href`. Root-absolute links and links into your
 source tree are rejected as non-portable; use a relative URL for a real static
 asset or a complete document.
 
+A link to a path that names no entry fails the build with the linking entry
+and the path. When that path belonged to an entry that has since moved, the
+message names the new path; links never follow a move on their own, so update
+the link to the path you meant.
+
 ## In the catalogue
 
-An eligible link opens its destination's canonical page, carries the fragment
-and reveals the destination in the navigation tree.
+An eligible link opens its destination's canonical page at
+`/view/<path>/`, carries the fragment and reveals the destination in the
+navigation tree.

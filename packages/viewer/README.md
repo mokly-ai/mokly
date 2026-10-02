@@ -161,12 +161,18 @@ or frame adapter intentionally remounts the viewer and cancels pending work.
 
 ### Selection
 
-`screenId` names one catalogue entry. Screen and component variants use their
-own global entry IDs, just like parents, pages and flows; there is no separate
-variant selection field. The component variant bar navigates between those
-entry IDs, so controlled hosts receive ordinary `screenId` proposals. A
-component variant page keeps the parent component title as its heading while
-the ID chip, status, URL, and Details describe the selected variant entry.
+The released package still exposes the kind-and-id forms, `screenId` and
+`viewHref(kind, id)`, until the path identity plan ships; this section
+describes the approved path-based API that replaces them.
+
+`screenPath` names one catalogue entry by its path, such as
+`checkout/overview`. Screen and component variants use their own paths, the
+parent's path plus their slug, just like parents, pages, documents and flows;
+there is no separate variant selection field. The component variant bar
+navigates between those paths, so controlled hosts receive ordinary
+`screenPath` proposals. A component variant page keeps the parent component
+title as its heading while the path chip, status, URL, and Details describe
+the selected variant entry. The shell URL of every entry is `/view/<path>/`.
 
 Use `defaultSelection` for an uncontrolled viewer:
 
@@ -174,7 +180,7 @@ Use `defaultSelection` for an uncontrolled viewer:
 <MoklyViewer
   viewerId="product-catalogue"
   catalogue={catalogueUrl}
-  defaultSelection={{ screenId: "checkout", viewport: "desktop" }}
+  defaultSelection={{ screenPath: "checkout/overview", viewport: "desktop" }}
 />
 ```
 
@@ -183,7 +189,7 @@ screen and filters:
 
 ```tsx
 const [selection, setSelection] = useState<ViewerSelection>({
-  screenId: null,
+  screenPath: null,
   view: "all",
   viewport: "both",
   colorScheme: "light",
@@ -204,12 +210,13 @@ Do not provide `defaultSelection` in controlled mode, and remount the viewer if
 you need to change modes.
 
 Removed entries advertise an optional opaque `snapshotId`. Supply it with the
-stable `screenId` to select that exact historical record. The viewer carries it
-through controlled proposals, navigation events and axis/filter changes. An
-id-only selection of a removed record normalizes to its published identity;
-stale or unknown snapshots render unavailable. Readers reject a catalogue in
-which current and removed records share an id. Live evidence may update an
-explicit snapshot in place and makes a replaced identity unavailable.
+removed entry's `screenPath` to select that exact historical record. The viewer
+carries it through controlled proposals, navigation events and axis/filter
+changes. A path-only selection of a removed record normalizes to its published
+identity; stale or unknown snapshots render unavailable. Readers reject a
+catalogue in which a current and a removed record share a path. Live evidence
+may update an explicit snapshot in place and makes a replaced identity
+unavailable.
 
 Shell links may name `viewport` and `scheme` independently. Exactly one valid
 value for an axis applies in the same selection proposal; invalid or repeated
@@ -248,9 +255,9 @@ value to reconnect external data such as a review comment. `resolveInstance`
 compares a saved component record with its corresponding current record from a
 newer catalogue without fetching preview evidence.
 
-`InstanceRef.screenId` is the owning entry's id, including for a component
+`InstanceRef.screenPath` is the owning entry's path, including for a component
 variant; the shape has no `variantId`. `onScreenNavigate` reports
-`{ screenId, snapshotId?, fragment?, navigation? }`, with no route or variant
+`{ screenPath, snapshotId?, fragment?, navigation? }`, with no route or variant
 id. Under the [viewer event contract](../../docs/protocol/mokly-viewer.md#package-and-props),
 `snapshotId` is present when the committed historical record publishes an
 opaque identity and is absent when that record has no published identity.
@@ -318,16 +325,19 @@ import `@mokly/viewer/browser` in an application-owned React root; it
 automatically hydrates a matching standalone Mokly document.
 
 `@mokly/viewer/data` also exports the shared path helpers `entryRoute`,
-`viewRoute`, `viewHref`, `snapshotViewPath`, `snapshotPagePath`, and
-`pagePreviewMetadataPath`, plus `snapshotSidePath` and `snapshotResourcePath`
-for snapshot roots and their confined resources. `parseViewHref` reads
-canonical and provider-normalized `/view/` paths back into identity;
-`providerNormalizedHtmlPath` and `unavailableViewHref` own the browser forms.
-The complete naming contract is
-[identity-derived artifact paths](../../docs/protocol/mokly-artifact-paths.md).
-`isEntryId` adds portable Windows filename rules
-to the broader `isCatalogueId` grammar used by tags and logical links;
-`isWindowsDeviceName` exposes that filename check directly.
+`viewRoute`, `documentRoute`, `viewHref`, `parseViewHref`,
+`snapshotViewPath`, `snapshotDocumentPath`, `snapshotSidePath`,
+`snapshotResourcePath`, and `previewMetadataPath`. Each takes an entry path:
+`viewHref` returns the canonical `/view/<path>/` URL and `parseViewHref` reads
+the canonical, extensionless, and `index.html` forms of that URL back into a
+path, while `providerNormalizedHtmlPath` owns the forms a static host serves.
+The released package still exports the `(kind, id)` forms of these helpers,
+plus `snapshotPagePath`, `pagePreviewMetadataPath`, and `unavailableViewHref`,
+until the path identity plan ships. The complete naming contract is
+[path-derived artifact paths](../../docs/protocol/mokly-artifact-paths.md).
+`isCatalogueId` validates the kebab-case grammar used by tags and Review-ignore
+ids, and `isWindowsDeviceName` exposes the device-name check that path
+segments also apply.
 
 ## Server Rendering
 
@@ -343,7 +353,7 @@ export function catalogueHtml(json: unknown, artifactOrigin: string) {
     viewerId: "product-catalogue",
     catalogue: readCatalogue(json),
     baseUrl: artifactOrigin,
-    defaultSelection: { screenId: null },
+    defaultSelection: { screenPath: null },
   });
 }
 ```
@@ -520,6 +530,7 @@ consumers.
 - [Viewer behavior contract](../../docs/protocol/mokly-viewer.md)
 - [Markers and multi-instance highlights](../../docs/protocol/mokly-viewer-markers.md)
 - [Catalogue read model](../../docs/protocol/mokly-catalogue.md)
+- [Paths, roots, and identity](../../docs/protocol/mokly-paths.md)
 - [Frame adapter protocol](../../docs/protocol/mokly-frame-adapter.md)
 - [Component instance identity](../../docs/protocol/mokly-instances.md)
 - [Package ownership boundary](../../docs/architecture/package-boundary.md)
