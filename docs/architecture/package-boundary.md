@@ -13,7 +13,7 @@ paths, and synthetic tests.
 | esbuild discovery and one-graph loading | Product component library        | Renderer/module resolution |
 | Static fragments and manifest schema    | Theme/tokens/providers           | Stylesheet rules           |
 | Generated-file ownership and check      | Product CSS/fonts/images         | Document transformer       |
-| Safe routes and catalogue navigation    | Product route semantics          | Additional watch inputs    |
+| Safe paths and catalogue navigation     | Product route semantics          | Additional watch inputs    |
 | Git comparison and Review-ignore rules  | Comparison policy                | Base, output, impact globs |
 | Complete static catalogue export        | Hosting, credentials, deployment | Export output and Git base |
 
@@ -60,7 +60,7 @@ never imports the CLI, Node built-ins, Git or consumer application code. Its `./
 is explicitly Node-only SSR and is excluded from the browser entry graph.
 
 The public boundary consists of [scoped instances](../protocol/mokly-instances.md),
-the [catalogue v3 projection](../protocol/mokly-catalogue.md), the
+the [catalogue v4 projection](../protocol/mokly-catalogue.md), the
 [React/SSR viewer API](../protocol/mokly-viewer.md) and
 [FrameAdapter](../protocol/mokly-frame-adapter.md). Hosts consume packages and
 documented public artifacts, without private manifest access, deep imports or
@@ -89,12 +89,17 @@ the viewer before the CLI that depends on it.
 
 ## Complete-Document Boundary
 
-Consumers register complete HTML with `definePage` or nested `page`. A callback
-may reuse an existing render helper; consumer policy owns source allowlists and
-document-stage rules. A configured complete-document transformer remains an
-explicit deterministic boundary whose result receives normal validation.
-Current and comparison-base manifests both require v7 under the
+Consumers register complete HTML with `definePage`; a Markdown file matched by a
+configured root is a [document](../protocol/mokly-documents.md) that Mokly
+renders itself. A page callback may reuse an existing render helper; consumer
+policy owns source allowlists and document-stage rules. A configured
+complete-document transformer remains an explicit deterministic boundary whose
+result receives normal validation. Current and comparison-base manifests both
+require v8 under the
 [baseline compatibility contract](../protocol/mokly-baseline-compatibility.md).
+That version, path identity, and `roots` are approved contracts; the current
+implementation still requires v7 and kind-and-id identity until the
+[path identity plan](../../plans/path-identity.md) delivers them.
 
 ## Runtime Boundary
 
@@ -120,7 +125,7 @@ the server's temporary archive lifecycle. Archive roots are explicit
 changed-path exclusions rather than consumer-owned ignore policy, and shutdown
 drains generation work before removing them.
 
-Browse promotes only explicit id-addressed
+Browse promotes only explicit path-addressed
 catalogue links from manifest-owned generated fragments and complete pages
 whose ownership header matches the entry's manifest `sourcePath` into outer
 Browse routes. Adapted public unowned HTML loses reserved-looking metadata and
@@ -138,14 +143,15 @@ link marker, sandbox boundary, and active-tree invariant.
 
 `src/export` orchestrates existing Build, Browse rendering, and comparison
 boundaries. Its only new consumer interface is the CLI: no deep imports or
-hosting SDK is required. Typed shell-owned delivery metadata supplies exact
-static routes and immutable comparison URLs. The exporter owns file selection,
-input consistency, exclusive output reservation, replacement, and rollback;
-`scripts/preview` captures one already-built Browse snapshot with optional Changes
-and adds Pages URL/header metadata and old-preview migration. Both paths share
-artifact validation, deployment identity, and the output transaction, and reuse
-the same shell renderer and comparison engine. Watch ignores inventory-listed
-export files while traversing output directories for new authored files.
+hosting SDK is required. Typed shell-owned delivery metadata supplies each
+page's canonical `/view/<path>/` URL and immutable comparison URLs. The exporter
+owns file selection, input consistency, exclusive output reservation,
+replacement, and rollback; `scripts/preview` captures one already-built Browse
+snapshot with optional Changes and adds Pages URL/header metadata and
+old-preview migration. Both paths share artifact validation, deployment
+identity, and the output transaction, and reuse the same shell renderer and
+comparison engine. Watch ignores inventory-listed export files while traversing
+output directories for new authored files.
 
 The viewer is a separate public rendering API; it does not expose
 the export engine as a JavaScript API or take over deployment/authentication.

@@ -6,7 +6,7 @@
   replace `id` and `navPath` with one file-derived path per entry, add
   Markdown documents, detect moves, rename Pages to Specs, and make folder
   rows browse-only; manifest v8, read model v4, review result v5. Created
-  2026-10-02; no milestone has started.
+  2026-10-02; the contract documentation milestone is complete.
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive
   `mokly publish` upload with the content-addressed plan, blob and complete
   exchange, the schema 2 export ownership marker, v2 fixtures and guides for

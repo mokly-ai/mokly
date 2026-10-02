@@ -84,7 +84,10 @@ its catalogue/build settings. Partial entries are rebuilt under the entry lock.
 `manifest.ts` fully validates v7 during adoption. It retains a lower integer
 version or earlier-name sentinel as completed incompatible output so the
 historical gate can report the expected unavailable outcome without rerunning
-trusted baseline commands. `compatibility.ts` owns that typed outcome and its
+trusted baseline commands. The approved
+[path identity plan](../../plans/path-identity.md) moves this gate to the
+path-keyed manifest v8 under the
+[baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md). `compatibility.ts` owns that typed outcome and its
 single user-facing line. Newer or malformed output is not adopted.
 
 Lock publication uses a fully written temporary file and an exclusive hard link.

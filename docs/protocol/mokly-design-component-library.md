@@ -6,15 +6,19 @@ Delivered inventory for [design component adoption](./mokly-design-components.md
 Source paths below are relative to `examples/basic/entries/design/` and identify
 the original composition points, which now delegate to registered implementations
 in `library/{group}/{slug}.view.tsx`. Saved pages and consuming artboards share
-those implementations.
+those implementations. The path vocabulary below is the approved contract; the
+library still authors ids until the
+[path identity plan](../../plans/path-identity.md) migrates the example, and
+that plan adds the `document` row kind, the browse-only folder row, and the
+`Overview` row to the navigation designs.
 
 ## Components And Saved Examples
 
-Each row defines parent `design-ui-{slug}` and global variant entries under the
-[variant contract](./mokly-variants.md). Paths follow the
-[artifact contract](./mokly-artifact-paths.md); the first listed variant is the
-default shown by the parent page. Variant ids are
-`design-ui-{slug}-{name}`, using the table's kebab-case name.
+Each row defines parent `design-ui-{slug}` and its variant entries under the
+[variant contract](./mokly-variants.md). Each variant's slug is the table's
+kebab-case name, so its path is the parent's path plus that name, and every
+file name follows the [artifact contract](./mokly-artifact-paths.md); the first
+listed variant is the default shown by the parent page.
 
 Group indexes are pure galleries, containing at most five component entries.
 Samples are light-only except the appearance selector and the top bar that
@@ -57,7 +61,7 @@ segmented viewport presentations are removed. Comparison-mode segments remain.
 Use literal object schemas and the existing validator/codec. Lists are typed
 arrays of plain records; optional means omitted, distinct from an empty value.
 Numbers are finite, counts/depth are nonnegative integers and flow numbers start
-at one. Logical destinations are existing catalogue ids from the design-link
+at one. Logical destinations are existing catalogue paths from the design-link
 contract, never raw URLs or guessed labels. Existing resource/prop budgets apply.
 Controls below use text, boolean, number and primitive enum selections only.
 
@@ -74,7 +78,7 @@ Controls below use text, boolean, number and primitive enum selections only.
    Brand/search structure belongs to this component;
    it composes the registered picker, chip and appearance selector. Preserve compact mobile branding.
 2. **Catalogue navigation:** row records with stable key, label, kind
-   `folder/screen/component/flow/page/variant`, depth, optional
+   `folder/screen/component/flow/page/document/variant`, depth, optional
    count/open/destination, changed mark, and variant-list state; a variant row
    requires `variantParentKind: "screen" | "component"`; selected destination,
    All/Changes state, changed count and presentation
@@ -92,7 +96,7 @@ Controls below use text, boolean, number and primitive enum selections only.
    its title. Unavailable keeps the tabs with a dash and one plain message for
    every failure. Counts and rows come from the same fixture scenario. Responsive uses the original desktop
    sidebar/mobile drawer; the drawer variant explicitly depicts the drawer.
-3. **Screen header:** title, breadcrumb records, optional entry-id chip,
+3. **Screen header:** title, breadcrumb records, optional path chip,
    optional `unmodified/added/changed/removed` status, explicit comparison
    eligibility/mode, the Scroll together state and destinations. An `actions`
    slot holds caller controls. Controls: title and optional status. Compose the
@@ -161,7 +165,7 @@ Controls below use text, boolean, number and primitive enum selections only.
 14. **Empty state:** title, body, optional code, action label and destination.
     Controls: title, body and action label. Retain the existing canonical recovery
     links and non-interactive cases rather than adding library-specific navigation.
-15. **Flow step:** positive step number, title, description, owning screen id
+15. **Flow step:** positive step number, title, description, owning screen path
     and `children` slot containing the reused screen preview. Controls: number,
     title and description. References still point to the standalone owning
     screen, and flows never become the original home of screen markup.

@@ -7,8 +7,8 @@ hierarchy, schemas, source inventory and output confinement before listening.
 It does not render every document, write output, classify Git changes or transfer
 generated HTML as a prerequisite for Browse. This applies with and without watch.
 
-The live catalogue index is a distinct internal format, not a schema-v7 manifest.
-It describes available views, not completed rendering or usage evidence. A v7
+The live catalogue index is a distinct internal format, not a schema-v8 manifest.
+It describes available views, not completed rendering or usage evidence. A v8
 manifest still requires every view's validated records. Build, Check and Export
 remain exhaustive and produce the same portable artifacts, committed or
 [derived](./mokly-derived-baselines.md) according to `generatedOutput`.
@@ -21,8 +21,9 @@ reported separately and never repeated during ordinary large-fixture startup.
 
 ## Foreground documents
 
-Generated `/static/` routes render the requested page or screen/component variant,
-viewport and scheme through the retained consumer graph. Rendering runs outside
+Generated `/static/` routes render the requested page, document, or
+screen/component variant, viewport and scheme through the retained consumer
+graph. Rendering runs outside
 the HTTP event loop in a bounded, terminable worker. Concurrent requests for the
 same view share work. Only validated results enter the generation-local bounded
 cache. A renderer failure cannot make unrelated routes or shutdown unavailable.

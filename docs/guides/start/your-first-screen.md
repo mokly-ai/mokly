@@ -7,27 +7,31 @@ order: 3
 
 ## Add an entry module
 
-An entry module is a `.mockup.ts` or `.mockup.tsx` file inside a root, and
-every definition it exports becomes part of the catalogue. Put the file in the
-folder the screen belongs to. With the default `specs` root, the account
-landing screen lives at `specs/account/account-home.mockup.tsx`:
+An entry module is any regular file matched by one of your `entries` globs and
+exports `mockups` or a default registry value. Everything in that registry
+becomes part of the catalogue. Mokly applies no separate suffix rule. With the
+recommended `src/**/*.mockup.{ts,tsx}` convention, the natural place for this
+file is beside the account screen it describes, for example
+`src/account/home.mockup.tsx`. `entriesDir` selects the same convention by
+expanding to `<folder>/**/*.mockup.{ts,tsx}`.
 
 ```tsx
 import { defineScreen } from "@mokly/mokly";
 
-export default defineScreen({
-  title: "Account home",
-  description: "The account landing screen.",
-  mobile: <main>Account</main>,
-  desktop: <main>Account</main>,
-  relatedDocs: ["docs/account.md"],
-  dependencies: ["src/account/home.tsx"],
-});
+export const mockups = [
+  defineScreen({
+    id: "account-home",
+    title: "Account home",
+    description: "The account landing screen.",
+    navPath: ["Account"],
+    mobile: <main>Account</main>,
+    desktop: <main>Account</main>,
+    relatedDocs: ["docs/account.md"],
+    dependencies: ["src/account/home.tsx"],
+    useCaseIds: [],
+  }),
+];
 ```
-
-Export the definition however you like: as the default export, as a named
-export, or inside an exported array. Helper functions and React components in
-the same file are left alone.
 
 ## Use your own components
 
@@ -35,29 +39,19 @@ the same file are left alone.
 components your product ships. Each view is generated as its own standalone
 page, so wrap the content in a landmark such as `main`.
 
-## Where it lives
-
-The screen's path is `account/account-home`: the directories below the root,
-then the file name up to its first dot. The path is the screen's identity,
-the name you use when another entry links to it, and its address in the
-catalogue, `/view/account/account-home/`. The `account` directory is a folder
-in the navigation tree, titled Account until you give it a title of its own.
-
-Mokly never renames a file for you. Each segment of a path uses letters,
-digits, hyphens and underscores, so `Account Home.mockup.tsx` is reported as
-an error rather than quietly rewritten. Set `slug` when the last segment
-should differ from the file name, and name a file `index.mockup.tsx` when the
-screen is the page of its folder.
+The `navPath` creates an Account folder and its breadcrumb; the screen's
+route, `screens/account-home.html`, is derived from its id and stays the same
+even if you rename the folder. Without a `navPath`, the screen appears at the
+top of Pages.
 
 ## Where it is written
 
-Each screen owns one directory under `mockupsDir` named by its path. This one
-is written as `static/account/account-home/index.mobile.html` and
-`static/account/account-home/index.desktop.html`, with `.dark` before `.html`
-once the catalogue renders a dark scheme. Moving the file to another folder
-moves the screen, its files and its address together; Changes then pairs the
-moved screen with its earlier version instead of reporting a removal and an
-addition.
+Mokly derives the route from the id. This screen is written under
+`mockupsDir` as `screens/account-home.mobile.html` and
+`screens/account-home.desktop.html`, and the catalogue addresses it at
+`screens/account-home.html`. Ids are lowercase kebab-case, unique across the
+catalogue, and they are the name you use when one screen links to another; an
+id may not be a Windows device name such as `con` or `nul`.
 
 ## Next
 

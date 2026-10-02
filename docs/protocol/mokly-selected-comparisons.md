@@ -4,14 +4,21 @@ A live comparison reads only the selected screen or component variant and its
 resources. It never compiles the consumer, checks unrelated output, reclassifies
 the catalogue, or snapshots other entries; exhaustive commands remain unchanged.
 
+## Delivery Status
+
+Implemented with entries selected by kind and id; the
+[path identity plan](../../plans/path-identity.md) delivers the path-addressed
+requests and results below.
+
 ## Requests and evidence
 
-The live browser requests `/__mokly/diffs/review.json?id=<entry id>`, where
-the id names the selected screen or component variant entry, adding
-`refresh=1` for an explicit retry or refresh, or `page=<page id>` for a
-removed page's [preview](./mokly-removed-previews.md). Both values use the
-catalogue id grammar; the server derives paths. There is no `variant` parameter
-because a component variant is an entry. Current browsing never requests
+The live browser requests `/__mokly/diffs/review.json?path=<path>`, where the
+path names the selected screen or component variant entry, adding `refresh=1`
+for an explicit retry or refresh, or `page=<path>` for a removed page's or
+document's [preview](./mokly-removed-previews.md). Both values use the
+[path grammar](./mokly-paths.md#segment-grammar); the server derives file
+names. There is no `variant` parameter because a component variant is an
+entry. Current browsing never requests
 snapshots; static delivery uses its packaged comparison URL without parameters.
 Changing viewport or color scheme inside a comparison, or switching between diff
 modes, first renews a loaded live generation with a non-cached HEAD request to its
@@ -44,22 +51,25 @@ different bytes fails instead of combining old evidence with new output. Missing
 or pending evidence produces the existing retryable comparison failure state;
 it never falls back to an exhaustive foreground build.
 
-Project the complete [review result v4](./mokly-changes.md#comparison-engine)
+Project the complete [review result v5](./mokly-changes.md#comparison-engine)
 onto the selected entry: a screen, or a component variant entry addressed by
-its id. Keep its entry sides, view states, ignored regions and direct change
-reasons. Recompute the selected screen ignored-impact aggregate. Catalogue-wide
+its path. Keep its entry sides, `previousPath`, view states, ignored regions
+and direct change reasons. Recompute the selected screen ignored-impact
+aggregate. Catalogue-wide
 affected-consumer evidence remains in the shell inspector; the selected
 response omits those cross-entry records. Screen-only catalogues apply the same
 policy as complete comparisons to the requested screen only. The response
-passes the v4 result validator. Missing entries fail without inventing
+passes the v5 result validator. Missing entries fail without inventing
 comparison records.
 
 ## Capture and lifetime
 
 Capture every available view of the selection and only its transitive resource
-closure. Copy accepted v7 before/after documents byte-for-byte to paths from
+closure. Copy accepted v8 before/after documents byte-for-byte to paths from
 `snapshotViewPath` in the
-[artifact path contract](./mokly-artifact-paths.md). Baseline reads use the pinned
+[artifact path contract](./mokly-artifact-paths.md); the before side of a paired
+moved entry is the paired baseline entry's views, named by `previousPath`.
+Baseline reads use the pinned
 Git commit and bounded batches of regular files. Current reads retain the public
 file and source-confinement rules. Resource hints not read by classification are
 validated and captured on demand. Panes present those documents without script

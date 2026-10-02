@@ -46,6 +46,10 @@ Entry shells are served at canonical `/view/<kind-prefix>/<id>.html` and the
 matching provider-normalized `/view/<kind-prefix>/<id>` path; both return the
 same 200 shell when the identity exists, while generated links stay canonical.
 ID-alias paths receive the ordinary not-found shell and are never redirected.
+The approved [path identity plan](../../plans/path-identity.md) moves these
+routes to `/view/<path>/` under the
+[artifact path contract](../../docs/protocol/mokly-artifact-paths.md); the
+current implementation is described here.
 
 Shell pages render through `@mokly/viewer/server` with CLI-owned live context.
 `public_catalogue_model.ts` validates each serialized public revision once and

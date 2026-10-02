@@ -8,13 +8,14 @@ order: 3
 ## Register a component
 
 `defineComponent` returns the component to render and the parent-plus-variant
-entries that join the catalogue when the object is exported.
+entries to export.
 Data belongs in `propSchema`; React content belongs in declared `slots`.
 
 ```tsx
 import { defineComponent } from "@mokly/mokly";
 
 export const action = defineComponent({
+  id: "action",
   title: "Action",
   description: "A shared action.",
   dependencies: [],
@@ -26,69 +27,70 @@ export const action = defineComponent({
   controls: { label: { kind: "text", label: "Label", maxLength: 80 } },
   render: (props) => <button>{props.label}</button>,
   variants: [
-    { slug: "default", title: "Default", props: { label: "Continue" } },
+    { id: "action-default", title: "Default", props: { label: "Continue" } },
   ],
 });
+
+export const mockups = [...action.entries];
 ```
 
 Render it in a screen with `action.Component`, and give repeated siblings
-distinct `moklyInstance` values so their identity survives an edit; the
-default value is the component's slug.
+distinct `moklyInstance` values so their identity survives an edit.
 
 ## Keep the registration beside the component
 
-A root over your component library puts every registration beside the code it
-describes. With `roots: [{ dir: "packages/ui/src", path: "components" }]`,
-a `packages/ui/src/button` directory holds the product component, its
-registration, and the entry module that exports it, and Mokly records the
-registration file as the component's source.
+A registration can live next to the component it describes. With an
+`entries` glob such as `src/**/*.mockup.{ts,tsx}`, a `src/components/button`
+folder holds the product component, its registration, and the entry module
+that exports it, and Mokly records the registration file as the component's
+source. That example glob selects the recommended `.mockup.tsx` convention;
+the configured glob itself, not a built-in suffix rule, decides which files
+are entry modules.
 
 ```tsx
-// packages/ui/src/button/button.mokly.tsx
+// src/components/button/button.mokly.tsx
 import { defineComponent } from "@mokly/mokly";
 
 import { Button } from "./button.js";
 
 export const button = defineComponent({
+  id: "button",
   title: "Button",
   description: "The product button.",
-  dependencies: ["packages/ui/src/button/button.tsx"],
-  ownedDependencies: ["packages/ui/src/button/button.tsx"],
+  dependencies: ["src/components/button/button.tsx"],
+  ownedDependencies: ["src/components/button/button.tsx"],
   relatedDocs: [],
   propSchema: {
     kind: "object",
     properties: { label: { schema: { kind: "string" } } },
   },
   render: (props) => <Button>{props.label}</Button>,
-  variants: [{ slug: "default", title: "Default", props: { label: "Save" } }],
+  variants: [
+    { id: "button-default", title: "Default", props: { label: "Save" } },
+  ],
 });
 ```
 
 ```tsx
-// packages/ui/src/button/index.mockup.tsx
-export { button } from "./button.mokly.js";
+// src/components/button/button.mockup.tsx
+import { button } from "./button.mokly.js";
+
+export const mockups = [...button.entries];
 ```
 
-The entry module is named `index.mockup.tsx`, so the component takes its
-directory's path: `components/button`, with the variant at
-`components/button/default`. Screens anywhere in the repository import
-`button` from the registration and render `button.Component`; an edit to
-`button.tsx` is then attributed to the component, with those screens listed as
-affected. A component's path derives like every other entry's, so the
-`components` prefix is a convention set by the root, not a rule, and a
-component and a screen can never share one path.
+Screens anywhere in the repository import `button` from the registration and
+render `button.Component`; an edit to `button.tsx` is then attributed to the
+component, with those screens listed as affected.
 
 ## Variants
 
-Variants are explicit named examples, never inferred. Each variant declares a
-`slug` and is its own catalogue entry at the parent's path plus that slug: it
-is grouped beneath the component in navigation, has its own page at
-`/view/components/button/default/`, its own Changes row, and can be the
-target of a link. Every variant is built for both viewports and every
-configured scheme. A link to the component's path opens its first variant; a
-link to a variant's path opens that variant. A variant inherits the parent's
-color schemes, dependencies, related docs and tags, and copies the parent's
-description unless it declares its own.
+Variants are explicit named examples, never inferred. Each variant is its own
+catalogue entry with a global kebab-case id such as `action-disabled`: it is
+grouped beneath the component in navigation, has its own page at
+`components/<id>.html`, its own Changes row, and can be the target of a link.
+Every variant is built for both viewports and every configured scheme. A link
+to the component id opens its first variant; a link to a variant id opens that
+variant.
 
 ## Controls
 

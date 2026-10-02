@@ -2,19 +2,25 @@
 
 The implemented [component attribution extension](./mokly-component-changes.md)
 keeps affected-only consumers out of Changes and links them from the component.
-Screen and Review-ignore behavior remains below.
+Screen and Review-ignore behavior remains below. Pairing by path, moved
+entries, and documents are approved contract; the current implementation
+still pairs by kind and id until the
+[path identity plan](../../plans/path-identity.md) delivers them.
 
 The catalogue's All / Changes filter narrows one navigation tree. There is no
 Review tab, report, or `mokly review`; `--out` belongs only to static `export`.
 
-[Pages](./mokly-pages.md) participate in Changes and removed-entry states,
-while comparison controls remain exclusive to changed screens and eligible
-component variants. Each [variant](./mokly-variants.md) is an entry of its
-parent's kind with its own route, row, count, views, and comparison; only its
-navigation placement under the parent is variant-specific. The
+[Pages](./mokly-pages.md) and [documents](./mokly-documents.md) participate in
+Changes and removed-entry states, while comparison controls remain exclusive
+to changed screens and eligible component variants. Each
+[variant](./mokly-variants.md) is an entry of its parent's kind with its own
+path, row, count, views, and comparison; only its navigation placement under
+the parent is variant-specific. The
 [shared catalogue snapshot](./mokly-catalogue-changes.md) supplies metadata
-independently of screen results; removed pages are flat Changes-only rows with
-baseline ancestry. Review reads follow the [source policy](./mokly-source-protection.md).
+independently of screen results; removed pages and documents are flat
+Changes-only rows with baseline folder titles, and an entry the
+[move contract](./mokly-moves.md) pairs with its baseline keeps one row
+labelled Moved. Review reads follow the [source policy](./mokly-source-protection.md).
 
 Opt into [Published Changes](./mokly-publication.md) with
 `npm run preview:build -- --include-changes`; default publication omits Changes,
@@ -23,8 +29,9 @@ baseline admission and pairing/order fixes run in Serve, export, and publish.
 
 ## Changes membership
 
-Changes is a review list of added/removed screens and pages, material document changes,
-reviewable entry metadata changes, and user flows that embed those screens.
+Changes is a review list of added, removed, and moved screens, pages, and
+documents, material document changes, reviewable entry metadata changes, and
+user flows that embed those screens.
 A new or edited flow is included independently. Source edits, source moves,
 dependency declaration edits, and shared-impact matches alone do not add
 otherwise unchanged entries. Dependency and shared-impact evidence remains in
@@ -32,11 +39,12 @@ comparison details, accessible for every screen from All. Component-owned and
 exact declared paths follow [component attribution](./mokly-component-changes.md#dependencies-and-styles).
 
 Each variant of either kind is projected independently. Its metadata projection
-contains `variantOf`, its parent's `{ id, title }`, and its copied `navPath`.
-Changing `variantOf`, its `navPath`, or the parent title therefore marks the
-variant changed, while a material or metadata change confined to the variant
-never adds the parent. A flow is propagated only when its `screenId` step names
-the exact changed screen, including a variant.
+contains `variantOf` and its parent's title. Changing the parent title
+therefore marks the variant changed, while a material or metadata change
+confined to the variant never adds the parent; a parent that moves carries its
+variants with it under the [move contract](./mokly-moves.md). A flow is
+propagated only when its `screenPath` step names the exact changed screen,
+including a variant.
 
 Before marking an existing fragment, compare its branch-point and working-tree
 documents with the same paired ignore normalization and material-key rules as
@@ -44,8 +52,8 @@ the comparison engine. Ignored-only changes are excluded from Changes; real
 content changes, material-key changes, and one-sided ignored-region adoption
 with changed content remain eligible. Both viewports and every available color
 scheme participate. Metadata includes address, titles, descriptions,
-rationale, tags, related-doc links, flow steps and memberships, view structure,
-and `navPath`; it excludes source locations and dependencies.
+rationale, tags, related-doc links, flow steps and memberships, and view
+structure; it excludes folder titles, source locations, and dependencies.
 Valid generated ownership headers are excluded from document comparison, so a
 source move alone stays unchanged. Stored snapshots retain the original headers.
 
@@ -59,9 +67,9 @@ Unreferenced public files never add entries through a broad shared-impact glob.
 Every reachable existing resource is validated, including images and fonts;
 finding a changed resource does not skip its CSS/HTML references or later graph
 edges. Added screens, newly available views, and existing material fragment
-changes do not bypass resource validation. Whole-document pages use these same
-rules for their single generated document and its rendered resources; they do
-not gain screen comparison controls or viewport variants.
+changes do not bypass resource validation. Pages and documents use these same
+rules for their generated documents and rendered resources; they do not gain
+screen comparison controls or viewport variants.
 For public file and directory aliases, compare changed Git paths against both
 the referenced route and its validated physical path relative to the real
 `mockupsDir`. Editing a target marks its consumers even when the alias itself
@@ -99,8 +107,8 @@ kept or excluded resource evidence.
 The shell receives this per-view resource evidence for screen-only catalogues
 as well as component catalogues, including in Current before snapshots exist.
 Live screen-only classification retains its analysis as `screenEvidence`, keyed
-by entry id; the workspace selects its `resourceEvidence` slice without a
-second analysis pass. Static exports select that slice from their packaged v4
+by entry path; the workspace selects its `resourceEvidence` slice without a
+second analysis pass. Static exports select that slice from their packaged v5
 comparison. Details merge the loaded comparison's evidence
 with classification evidence, preserving retained stylesheet selectors,
 exclusions, shared-impact, and ignored-content details without duplicate cards.
@@ -230,43 +238,9 @@ copying, ignored-region rules, and light/dark classifications remain in force.
 The existing `review` configuration and authoring helpers are retained; the
 configuration selects the Git base, internal snapshot directory, and shared
 impact patterns. `serve --base` and `export --base` override the configured base.
-
-The [consumer static export](./mokly-export.md) reuses this engine
-and schema. Its [static delivery contract](./mokly-export-delivery.md)
-defines direct generation URLs without requiring a hosting-provider redirect;
-the server and repository adapter retain their stable redirect for compatibility.
-
-The development shell requests `/__mokly/diffs/review.json` for the selected
-entry on demand, following the
-[selected comparison contract](./mokly-selected-comparisons.md). The response
-redirects to an immutable generation; snapshot URLs resolve relative to that
-response URL. No standalone HTML report or navigation payload is generated.
-Only comparison JSON and snapshot files are served through this private route.
-Before changing an open comparison's view or diff mode, the browser renews its
-generation with HEAD. A missing or replaced generation is reacquired for the
-same selection before new panes load; retained results reuse their loaded JSON.
-Development responses disable caching. Refresh requests and watched invalidation reuse
-the generation queue, retaining superseded snapshots briefly for in-flight
-requests and draining active work before shutdown.
-
-Published catalogues retain the same All / Changes navigation and screen controls.
-Publishing generates one validated Git comparison in a private staging directory,
-then packages its JSON and complete before/after snapshot trees under the resolved
-generation path. Static shell metadata addresses that generation directly; the
-repository adapter also retains the stable JSON redirect. The same client
-resolves relative snapshot and resource URLs without a live server.
-Snapshot HTTP responses disable caching and MIME sniffing. Diagnostic summaries
-and internal ownership markers are not published.
-
-No comparison data or snapshot document is requested until a user selects a diff
-or opens a removed entry. Refresh and retry fetch the currently published
-comparison; only publishing a new
-artifact updates the underlying snapshots. Removed screens retain their Changes
-rows and previous-version pages. Comparison failure aborts publishing
-transactionally and preserves the previous artifact, except that recognized
-earlier baseline output completes with Changes unavailable under the
-compatibility contract. Publishing never
-writes to a running development server's configured comparison directory.
+On-demand generation in development and packaged comparisons in published
+catalogues follow the
+[comparison serving contract](./mokly-comparison-serving.md).
 
 ## Design references
 
@@ -299,15 +273,18 @@ set is one logical batch request; transitively referenced assets are grouped by
 dependency depth. File modes are still checked before any blob is accepted, so
 batching does not weaken symlink or non-regular-file rejection.
 
-Before pairing, discard a baseline entry whose id belongs to a current entry of
-another kind; the current entry is then added, and no removed record with that
-id is emitted. Remaining entries pair by kind and id. Views pair by id,
-viewport, and color scheme from the union of baseline and current v7 entries.
-Each side's view set is its
-entry's effective `colorSchemes`: a dark view present only in head is `added`,
-and one present only in base is `removed`. Mobile and desktop still classify
-separately from their own documents. The compatibility gate runs before
-pairing, so both sides use manifest v7. Configured
+Entries pair by kind and path. The [move contract](./mokly-moves.md) then
+pairs the remaining baseline and current entries of one kind and records
+`previousPath`; a paired entry's before side is the paired baseline entry. A
+baseline entry whose path now belongs to a current entry of another kind is an
+ordinary move candidate, but when it pairs with nothing it is discarded rather
+than removed: the current entry is added, and no removed record with that path
+is emitted. Views pair by viewport and color scheme within each paired entry.
+Each side's view set is its entry's effective `colorSchemes`: a dark view
+present only in head is `added`, and one present only in base is `removed`.
+Mobile and desktop still classify separately from their own documents. The
+compatibility gate runs before pairing, so both sides use manifest v8.
+Configured
 shared-impact globs and manifest dependencies
 identify changes that can affect many screens. A dependency is a repository file
 or directory root: its own change or any descendant change is recorded as
@@ -319,8 +296,10 @@ Complete comparison output contains `review.json`, `summary.md`, an ownership ma
 and the isolated snapshots. No HTML report or navigation payload is written.
 The summary's `output changes` count includes only screens classified as added,
 removed, or changed, counting each screen once across all viewports and color
-schemes. Changed views include retained rendering-resource evidence as well as
-material document changes. Ignored-only screens remain a separate diagnostic count.
+schemes. A separate `moved` count lists the entries the move contract paired;
+a pure move adds nothing to `output changes`. Changed views include retained
+rendering-resource evidence as well as material document changes. Ignored-only
+screens remain a separate diagnostic count.
 `impact evidence` independently counts screens with shared-impact or dependency
 evidence, including screens with output changes; `impact-only` is the subset
 without output changes and can overlap ignored-only. Neither evidence nor
@@ -348,19 +327,20 @@ memory.
 
 ```ts
 interface ReviewResult {
-  schemaVersion: 4;
+  schemaVersion: 5;
   baseRef: string;
   baseCommit: string; // merge base shared by HEAD and baseRef
-  changedPaths: readonly string[];
+  changedPaths: readonly string[]; // changed repository files
   sharedImpact: readonly string[];
   ignoredImpact: readonly {
-    id: string;
+    id: string; // Review-ignore region id
     viewport: "mobile" | "desktop";
     colorScheme: "light" | "dark";
     count: number;
   }[];
   screens: readonly {
-    id: string;
+    path: string;
+    previousPath?: string;
     title: string;
     state: "added" | "removed" | "changed" | "ignored-only" | "unchanged";
     dependencies: readonly string[];
@@ -388,16 +368,20 @@ interface ReviewResult {
 }
 ```
 
-Version 4 addresses screens, components, variants, and views by entry id and
-view axes and stores no route or artifact path. Snapshot paths come from
-`snapshotViewPath`; a side the
-view's state lacks (`added` has no `before`, `removed` has no `after`) has no
-document. Component catalogues add component, variant, use-case, and
-affected-consumer records addressed by entry id, defined by the
-[component comparison schema](./mokly-component-review.md). Readers accept
-only version 4.
+Version 5 is version 4 with every entry and view addressed by path and view
+axes instead of kind and id, `screenPath` wherever a step names a screen,
+optional `previousPath` on an entry the [move contract](./mokly-moves.md)
+paired, and documents classified like pages: neither kind has a record here,
+and the [catalogue change snapshot](./mokly-catalogue-changes.md) classifies
+both. The result stores no route or artifact path. Snapshot paths come from
+`snapshotViewPath`, using `previousPath` for the before side of a paired
+entry; a side the view's state lacks (`added` has no `before`, `removed` has
+no `after`) has no document. Component catalogues add component, variant,
+use-case, and affected-consumer records addressed by entry path, defined by
+the [component comparison schema](./mokly-component-review.md). Readers accept
+only version 5.
 
-Every catalogue emits the complete `ReviewResultV4` shape defined by the
+Every catalogue emits the complete `ReviewResultV5` shape defined by the
 [component comparison schema](./mokly-component-review.md), which extends the
 screen fields above with `components`, `changes`, and `affectedConsumers`; a
 catalogue without registered components emits those arrays empty rather than
@@ -418,7 +402,7 @@ when ignore normalization changes classification.
 
 `ReviewIgnore` marks repeated shell chrome with paired inert boundaries and no
 layout wrapper. Its stable id uses plain lowercase kebab-case and may equal a
-Windows device name; only entry ids apply the filename restriction. The id is
+Windows device name; only path segments apply that restriction. The id is
 unique per generated document. Review
 normalizes a region only when both sides contain one valid matching boundary.
 One-sided adoption removes marker syntax but compares the real children.

@@ -1,15 +1,39 @@
 # Navigation Disclosure Persistence
 
-This contract owns navigation disclosure storage, defaults, restoration, and
-reconciliation. The [navigation path contract](./mokly-nav-paths.md#order-and-keys)
-owns disclosure key formats and prefix-only parsing. The [runtime](./mokly-runtime.md)
-owns Browse interaction; the [watch contract](./mokly-watch.md) owns the reload
-lifecycle.
+This contract owns navigation disclosure keys, storage, defaults, restoration,
+and reconciliation. Tree structure, folder rows, and sibling order come from
+the [folder contract](./mokly-folders.md#order). The
+[runtime](./mokly-runtime.md) owns Browse interaction; the
+[watch contract](./mokly-watch.md) owns the reload lifecycle.
 
 ## Delivery Status
 
 The v3 storage format, early activation capture, active-route reveal,
-filtered-recovery fallback, and in-place reconciliation are implemented.
+filtered-recovery fallback, and in-place reconciliation are implemented. The
+path-keyed disclosure keys below are the approved contract; the current
+implementation still keys folders and variant lists by section and id until
+the [path identity plan](../../plans/path-identity.md) delivers them.
+
+## Keys
+
+Every disclosure in the current navigation has exactly one key:
+
+| Disclosure                | Key                       |
+| ------------------------- | ------------------------- |
+| The Specs section         | `section:specs`           |
+| The Components section    | `section:components`      |
+| A folder row in a section | `folder:<section>:<path>` |
+| An entry's variant list   | `variants:<path>`         |
+
+`<section>` is `specs` or `components`. A folder that holds both kinds appears
+in both sections with its own children in each, so its two rows have distinct
+keys and independent state. An entry belongs to exactly one section, so its
+variant list key carries none. `<path>` is the folder's or entry's path under
+the [path contract](./mokly-paths.md); it may contain `_`, uppercase letters,
+and digits but never `:`, so a key is parsed by its fixed prefix and the rest
+is the path. A folder whose own page is a screen or component renders as that
+entry's row under the [folder row rules](./mokly-folders.md#rows-and-clicks),
+so its only disclosure is that entry's `variants:<path>` list.
 
 ## Storage And Defaults
 
@@ -33,9 +57,10 @@ stored values are preserved.
 Restore by enumerating the current navigation's disclosure keys. For each key,
 keep its valid stored boolean value when present; otherwise use the fallback
 below. Ignore stored keys that are absent from the current navigation, including
-obsolete `collection:` (sectioned and pre-section forms) and `legacy:` keys,
-without migration. Ignore a stored value that is not a JSON object as a whole;
-ignore invalid keys and non-boolean values individually.
+obsolete `collection:` (sectioned and pre-section forms), `legacy:`,
+`folder:pages:`, and section-scoped `variants:<section>:<id>` keys, without
+migration. Ignore a stored value that is not a JSON object as a whole; ignore
+invalid keys and non-boolean values individually.
 
 | Source of values                                                         | Fallback for a current key missing from the map |
 | ------------------------------------------------------------------------ | ----------------------------------------------- |
@@ -72,6 +97,7 @@ baseline without active filtering is invalid. The recovery parser remains
 strict for its other fields as defined by the [watch contract](./mokly-watch.md).
 
 Never read or migrate the v2 closed-list key `mokly:nav-disclosure:v2`; delete
-it on the first v3 write. Any change to the persisted disclosure key format or
-value shape requires a new storage version. Ignore older versions rather than
-partially interpreting them.
+it on the first v3 write. Any change to the persisted value shape or storage
+key requires a new storage version; a disclosure key form that no longer occurs
+in the current navigation is ignored on restore as above and needs none. Ignore
+older versions rather than partially interpreting them.

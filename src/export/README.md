@@ -10,7 +10,12 @@ independent `BaselineReader`, runs the normal build, captures public inputs,
 compares them through the existing review engine, and verifies inputs again
 before installation. `site.ts` uses the existing shell and Browse adapter to
 assemble one shell page per entry at `view/<route>`, package assets, and
-immutable comparisons.
+immutable comparisons. The approved
+[path identity plan](../../plans/path-identity.md) writes those shell pages at
+`view/<path>/index.html` and derives every snapshot and preview name from the
+entry path under the
+[artifact path contract](../../docs/protocol/mokly-artifact-paths.md); the
+id-derived names below are the current implementation.
 Publish's `--no-changes` uses this same engine with baseline reads, removed
 entries and comparisons omitted. Current-only assembly retains the normal
 input consistency checks and a null delivery comparison URL. A capture callback

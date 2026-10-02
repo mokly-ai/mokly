@@ -4,6 +4,12 @@ Use `defineComponent` to give a shared React component its own catalogue page,
 variants, controls, and recorded usage in screens or other components.
 Callers render the returned `Component` and export its `entries` in `mockups`.
 Mokly renders that wrapper in the consumer's existing React/provider graph.
+The approved [path identity plan](../../plans/path-identity.md) replaces the
+authored `id`, variant ids, and `components/<id>.html` routes below with a
+file-derived path and variant `slug`s under the
+[component contract](../../docs/protocol/mokly-components.md) and
+[entry module contract](../../docs/protocol/mokly-entry-modules.md); this
+README describes the current release.
 
 ```tsx
 import { defineComponent } from "@mokly/mokly";

@@ -4,12 +4,12 @@
 
 Rule parsing, diffing, document matching, and classification are implemented
 for screen-only and component catalogues, live Serve, watched updates, and
-publication. The inspector receives retained and excluded stylesheet evidence
-for component catalogues and screen-only catalogues, including before a
-comparison is loaded. Screen-only delivery reuses the screen-only
-classification; it does not run component classification or an additional
-resource analysis. See
-[CSS Change Attribution](../../plans/css-change-attribution.md).
+publication, as the [plan](../../plans/css-change-attribution.md) records. The
+inspector receives retained and excluded stylesheet evidence for component and
+screen-only catalogues, including before a comparison is loaded. Screen-only
+delivery reuses the screen-only classification without component
+classification or a second resource analysis. The result version follows the
+[Changes contract](./mokly-changes.md#comparison-engine), whose v5 is approved.
 
 ## Purpose
 
@@ -251,7 +251,7 @@ interface ViewReview {
 }
 ```
 
-Every [review result v4](./mokly-changes.md#comparison-engine) view record
+Every [review result v5](./mokly-changes.md#comparison-engine) view record
 carries these fields. Results without them remain valid and mean the analysis
 did not run.
 

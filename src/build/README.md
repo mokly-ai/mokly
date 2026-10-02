@@ -7,6 +7,14 @@ export and local prop controls reuse the same consumer graph and validators.
 
 ## Consumer Graph
 
+The approved [path identity plan](../../plans/path-identity.md) replaces the
+`entries` discovery, authored ids, and id-derived routes described in this
+section with configured roots and file-derived paths under the
+[path contract](../../docs/protocol/mokly-paths.md),
+[entry module contract](../../docs/protocol/mokly-entry-modules.md), and
+[artifact path contract](../../docs/protocol/mokly-artifact-paths.md); the
+rest of this README describes the current implementation.
+
 `config/entry_discovery.ts` resolves the configured `entries` globs, or the
 `entriesDir` shorthand, into one sorted set of matched modules when the
 configuration loads and again here at the start of each compilation. The glob

@@ -19,13 +19,18 @@ saved variant's two versions in one bordered frame whose viewport scrolls both
 as one. Their comparison bands also depict the implemented Scroll together
 switch of the
 [Scroll together contract](./mokly-comparison-scroll-together.md#reader-control).
+The path-derived files, the Specs section, and the component paths in details
+below are the approved contract; the
+[path identity plan](../../plans/path-identity.md) adds the kind-filtered
+Components section and component-path details to these designs and migrates
+the catalogue, which still authors ids, to paths.
 
 ## Owning Catalogue
 
 Source lives under `examples/basic/entries/design/components/`; generated
-artboards live under `examples/basic/generated/screens/` at their derived
-`screens/<id>.<viewport>.html` paths. The existing
-Pages → Design → Mokly design → Component explorer folder reaches every
+artboards live under `examples/basic/generated/<path>/` as their path-derived
+`index.<viewport>.html` views. The existing
+Specs → Design → Mokly design → Component explorer folder reaches every
 screen.
 The canonical `overview` screen shows a component page, followed by links to the
 owning child pages outside the artboard. The original Pages, Inspection, and States child folders are gallery
@@ -37,7 +42,7 @@ Published galleries with four, four, and two screens. The linked inspector and
 controls contracts own their additional entry inventories. Every screen has a separate
 mobile component and desktop component; there are no new user-flow pages.
 
-| Entry id                                    | State                                                     |
+| Entry                                       | State                                                     |
 | ------------------------------------------- | --------------------------------------------------------- |
 | `design-component-overview`                 | Action page, default variant, props, and Used by          |
 | `design-component-variants`                 | Disabled saved variant                                    |
@@ -63,16 +68,16 @@ mobile component and desktop component; there are no new user-flow pages.
 | `design-component-added`                    | Added Badge current preview without comparison controls   |
 | `design-component-shared-impact`            | Unmodified Action with shared-file evidence in Details    |
 
-Each entry's route is `screens/<id>.html` under the
-[derived route rule](./mokly-authoring.md#derived-routes); its standalone views
-insert `.mobile` or `.desktop` before `.html`, and gallery membership is the
-entry's `navPath`. All thirty-six component
+Each entry's files derive from its path under the
+[artifact path contract](./mokly-artifact-paths.md): its standalone views are
+`<path>/index.mobile.html` and `<path>/index.desktop.html`, and gallery
+membership is the entry's folder. All thirty-six component
 screens opt into light documents, matching the existing shell mockups. Their
 depicted preview caption names the artboard's own scheme, and the toolbar has
 no scheme switch: the catalogue's one Appearance control, drawn in their top
 bar like every other artboard's, sets it. Links use
-the existing logical-id navigation contract so they work both directly from
-disk and in Browse. State links demonstrate navigation between mockups; static
+the path-addressed [link contract](./mokly-authoring.md#links) so they work
+both directly from disk and in Browse. State links demonstrate navigation between mockups; static
 depictions of shell controls do not implement the separate runtime inspector.
 
 The shared shell retains the [existing design navigation](./mokly-design-links.md)
@@ -199,8 +204,8 @@ small gap above an intact rounded outline, shared by all three region layouts.
 ## Verification And Maintenance
 
 Use the real generator; never hand-edit generated HTML. Six shared component
-stylesheets are hand-authored public inputs, scoped to the
-`screens/design-component-*.html` documents.
+stylesheets are hand-authored public inputs, scoped to the component design
+entries' generated documents.
 Route-scoped stylesheet matching links them only from the thirty-six component design routes;
 Changes follows those rendered resource references. The folder
 marker supplies inherited dependencies to its leaves for comparison evidence.

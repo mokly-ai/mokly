@@ -7,6 +7,9 @@ replacement for the crowded Details disclosure. Runtime and mockups share the
 layout; non-component artboards retain the shell. Removed
 consumer stages retain this inspector around the previous version delivered by
 the [removed content previews plan](../../plans/removed-content-previews.md).
+Entry files derive from paths under the approved contract below; the design
+catalogue still authors ids until the
+[path identity plan](../../plans/path-identity.md) migrates it.
 
 ## One Inspector
 
@@ -63,8 +66,9 @@ Artboards contain no navigation footer for browsing mockup states. The existing
 Design catalogue hierarchy links every owning page and its child galleries.
 Saved-variant, usage, component, and instance links remain inside the depicted
 product where they belong. Every `aria-current="page"` link must point to the
-rendered artboard id, even when multiple states share a component/screen title.
-Selection within a component or tree can use non-page current-item semantics.
+rendered artboard's path, even when multiple states share a component/screen
+title. Selection within a component or tree can use non-page current-item
+semantics.
 
 Use stable fixture identities for catalogue selection. Display labels never
 identify the current destination or synthesize a filename. Component fixtures
@@ -75,10 +79,10 @@ render the same metadata in Details and source references.
 
 The existing component and inspection artboards cover open panels. A separate
 bounded Inspector gallery adds closed-panel states, each with its own mobile and
-desktop screen component. Each entry's route is `screens/<id>.html` under the
-[derived route rule](./mokly-authoring.md#derived-routes):
+desktop screen component. Each entry's files derive from its path under the
+[artifact path contract](./mokly-artifact-paths.md):
 
-| Entry id                                   | State                                      |
+| Entry                                      | State                                      |
 | ------------------------------------------ | ------------------------------------------ |
 | `design-component-inspector-closed`        | Component with all inspector panels closed |
 | `design-component-screen-inspector-closed` | Screen with all inspector panels closed    |

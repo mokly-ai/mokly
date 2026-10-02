@@ -75,6 +75,10 @@ The current maintenance choices are:
   adds Node 24. Native binaries must remain installed; the Node package does not
   automatically fall back to WASM. See the
   [release platform contract](./npm-release.md#continuous-integration).
+- A CommonMark/GFM Markdown parser and a front matter parser are production
+  dependencies selected by the [path identity plan](../../plans/path-identity.md)
+  for Markdown documents. They participate in the workspace and
+  packed-consumer audits like every other runtime dependency.
 
 ## Required Evidence
 

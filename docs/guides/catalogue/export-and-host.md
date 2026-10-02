@@ -12,10 +12,9 @@ npx mokly export --out .context/mokly-site
 ```
 
 Export builds first, then packages the complete catalogue: one shell page per
-entry at `view/<path>/index.html`, the generated views and documents under
-`static/`, assets and Git comparisons. `--out` is required and is resolved
-beside the config, not beside your working directory; an absolute path must
-stay inside the repository root.
+entry, the generated views, assets and Git comparisons. `--out` is required
+and is resolved beside the config, not beside your working directory; an
+absolute path must stay inside the repository root.
 
 `--base` overrides the configured base ref for that run. The branch point must
 be present in the checkout, with the authored assets and either the committed
@@ -27,11 +26,9 @@ and never silently omits comparisons.
 
 Serve the directory's contents at the root of an HTTP(S) origin, with correct
 MIME types and directory indexes. No Mokly process, Git checkout, source tree
-or rewrite rule is needed there: a host that serves `view/<path>/index.html`
-for `/view/<path>/` serves every entry, and hosts that drop `index.html` or
-the trailing slash still open the same page. Give the catalogue an origin of
-its own: it resolves every address from that root, so keep it off a path
-prefix and reach it over HTTP(S) rather than from a local folder.
+or rewrite rule is needed there. Give the catalogue an origin of its own: it
+resolves every address from that root, so keep it off a path prefix and reach
+it over HTTP(S) rather than from a local folder.
 
 Configure revalidation for the shell and mutable assets, serve comparison
 files with `Cache-Control: no-store` and `X-Content-Type-Options: nosniff`,
@@ -41,10 +38,9 @@ artifact includes a `404.html` your host can use as its error document.
 ## What a reader gets
 
 The whole catalogue: navigation, search, tags, viewport and scheme controls,
-use-case flows, whole-document pages and Markdown documents, the details
-inspector and the comparisons. Comparisons load only once a reader selects
-one. A refresh reads the same exported generation; deploy a new export to
-publish new results.
+use-case flows, whole-document pages, the details inspector and the
+comparisons. Comparisons load only once a reader selects one. A refresh reads
+the same exported generation; deploy a new export to publish new results.
 
 ## Re-exporting
 

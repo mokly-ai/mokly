@@ -5,7 +5,10 @@
 The repository preview builder publishes current content by default; an option
 adds a pinned comparison. [Optional Published Changes](../../plans/optional-published-changes.md)
 records verification, and [removed previews](./mokly-removed-previews.md) owns
-packaged history. The npm CLI is unchanged.
+packaged history. The npm CLI is unchanged. Shell and preview file names follow
+the path-derived layout of the
+[path identity plan](../../plans/path-identity.md); the current builder derives
+them from kind and id.
 
 ## Publication Option
 
@@ -91,7 +94,7 @@ Only the repository adapter may migrate the prior preview ownership marker.
 Migration retains valid public routes beneath build-directory names such as
 `target` and `node_modules`, while private/source names remain disallowed.
 Its owned reservation namespace remains after cleanup, with no active locks.
-Each entry's shell is written once at its derived `view/<route>`; current-only
+Each entry's shell is written once at `view/<path>/index.html`; current-only
 shell metadata explicitly sets `comparisonUrl: null` and never requests a
 development comparison endpoint.
 
@@ -108,8 +111,9 @@ Copy eligible public file and directory aliases as regular files at their
 logical routes. Every copied target must also stay inside the real `mockupsDir`
 and pass the shared source/internal-metadata policy. Apply generated-artifact
 and staging/destination exclusions to both identities. After copying, validate
-the presence of every current page and light/dark screen fragment named by the
-manifest, independently of the enumerated file list. Validate every exported
+the presence of every current page, document, and light/dark screen view
+derived from the manifest's paths, independently of the enumerated file list.
+Validate every exported
 HTML/CSS resource reference against confined regular files in
 the staged static tree, including transitive references. An unavailable resource,
 including a reference through a skipped cycle or excluded alias, fails before
@@ -150,16 +154,17 @@ Git.
 With `--include-changes`, publish the existing All/Changes navigation and screen
 comparison controls, including a zero changed count. Retain removed-screen
 metadata, previous-version pages, and comparisons. Current and removed entries
-never share an id.
+never share a path; an entry the [move contract](./mokly-moves.md) pairs stays
+current, labelled Moved, with no removed row.
 Render those removed screens with their Removed badge and no comparison
 controls. Publication packages their baseline views and advertises the
 descriptor defined by [removed previews](./mokly-removed-previews.md), which the
 shell resolves into the previous version.
-Include page impact and removed registered-page states from the
+Include page and document impact and removed page and document states from the
 [shared catalogue snapshot](./mokly-catalogue-changes.md), including flat
-Changes rows after deleting their parents and each removed page's packaged
-preview. Pages have no visual comparisons; screen metadata
-remains supported.
+Changes rows after deleting their parents and each removed page's or
+document's packaged preview. Pages and documents have no visual comparisons;
+screen metadata remains supported.
 
 Resolve the effective base and HEAD once, then pin their merge-base commit for
 both entry impact and screen comparisons. Capture the current catalogue,
@@ -178,7 +183,7 @@ exporter's typed removed-preview descriptor builder and adds each descriptor to
 the matching captured static shell. This artifact-only step does not advertise
 page paths from the development server used during capture.
 
-Missing history, an invalid v7 baseline, capture inconsistency, or comparison
+Missing history, an invalid v8 baseline, capture inconsistency, or comparison
 failure aborts publication and preserves previous output. Recognized earlier
 output instead completes with Changes unavailable under the
 [baseline compatibility contract](./mokly-baseline-compatibility.md). Preserve

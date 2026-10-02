@@ -5,7 +5,8 @@
 Implemented in the 63 Browse/Changes design screens and two example screens with
 `MockLink`/`MockLink asChild`. Those 63 Browse/Changes designs retain canonical
 links; [components](./mokly-component-design.md) and
-[removed previews](./mokly-removed-previews.md) extend the contract.
+[removed previews](./mokly-removed-previews.md) extend the contract. The
+[path identity plan](../../plans/path-identity.md) migrates them from ids to paths.
 
 ## Scope And Ownership
 
@@ -30,8 +31,8 @@ the appearance screens (the `design-appearance-*` entries), the canonical
 `design-browse-screen` and `design-browse-details-screen`, their two retained
 Welcome appearance variants, and the Welcome comparison family. These render
 in both schemes so the outer Appearance control switches the depicted
-catalogue. Link targets use design entry ids independently of the example ids printed in the
-depicted shell's metadata. Existing ids, screens, and text links remain
+catalogue. Link targets name design entry paths, not the example paths printed in
+the depicted shell's metadata. Existing entries, screens, and text links remain
 available. `example-farewell` remains an intentionally absent product entry.
 This depicted dark set is representative; the runtime's single Appearance
 preference, rather than per-screen dark renders, keeps a whole session dark.
@@ -39,8 +40,8 @@ preference, rather than per-screen dark renders, keeps a whole session dark.
 ## Authoring And Shared Components
 
 - Define typed destination constants and control mappings near the design
-  components. Separate catalogue destination ids from labels, depicted product
-  ids, and CSS classes; never derive destinations by matching visible text.
+  components. Separate catalogue destinations from labels, depicted product
+  paths, and CSS classes; never derive destinations by matching visible text.
 - Use ordinary `MockLink` for text links and `MockLink asChild` for styled
   buttons, chips, and rows. Provide one eligible root with no interactive
   descendants. Whole rows must not wrap disclosure buttons or child rows.
@@ -65,16 +66,16 @@ preference, rather than per-screen dark renders, keeps a whole session dark.
 
 ## Canonical Destination Inventory
 
-Existing destinations and their stable ids are listed in the
+Existing destinations and their stable names are listed in the
 [canonical design inventory](./mokly-shell-design.md#design-mockups),
-including the Current and Overlay screens. They retain those ids; every route
-derives from its id as `screens/<id>.html`.
+including the Current and Overlay screens. They retain those names; every file
+name derives from the entry's path ([artifact paths](./mokly-artifact-paths.md)).
 
 The five additions below now render independently in both viewport variants
 and are included in the canonical inventory. Their owning components were
 completed before link adoption.
 
-| Added entry id                        | Depicted state                                                    |
+| Added entry                           | Depicted state                                                    |
 | ------------------------------------- | ----------------------------------------------------------------- |
 | `design-browse-details-screen`        | Normal Details screen, light selected, inspector closed           |
 | `design-browse-tag-picker`            | Welcome, empty query, unfiltered catalogue, picker open           |
@@ -86,14 +87,13 @@ completed before link adoption.
 reachable from its catalogue entry. Opening/closing the Details icon stays on
 the current screen and retains its query. It does not substitute for the
 normal Details view.
-`design-browse-tag-filter` retains its existing id and depicts the forms
+`design-browse-tag-filter` retains its existing name and depicts the forms
 filter with the picker open. The four listed tag states plus
-`design-browse-dark-scheme` and `design-browse-light-only` retain their ids and
-are variants of `design-browse-screen`, each routed at `screens/<id>.html` like
-any entry. Those six entries leave all their former folder membership. The
+`design-browse-dark-scheme` and `design-browse-light-only` retain their names
+and are variants of `design-browse-screen`, each at its own path below the
+parent's like any variant. Those six entries leave their former folder; the
 `design-browse-tags` (Tag states) folder has no descendants and is absent from
-the path-based navigation; the variants remain under Welcome. No unrelated
-entry moves.
+navigation, while the variants remain under Welcome. No unrelated entry moves.
 
 ## Navigation Controls
 
@@ -118,11 +118,11 @@ entry moves.
 | Empty Changes All filter                        | `design-browse-screen`                                                                                         |
 | Removed consumer return, component explorer     | `design-component-removed`, from the desktop Action row and the narrow Changes shortcut, never from the stage  |
 
-Folder headings and folder-only breadcrumbs are not catalogue-link
-targets: folders have no id or route. Leave grouping labels as text,
-or use native disclosure markup for a group that actually contains children.
-Any added home crumb has a distinct label and the home destination above.
-Keep the design tree's existing groups and make screen leaves use explicit ids.
+Folder rows and folder-only crumbs are not link targets: a folder row only
+expands or collapses, and a folder crumb opens the folder's own page only when
+one exists ([folder rules](./mokly-folders.md#rows-and-clicks)). Keep the design
+tree's existing groups as text or native disclosure markup, give leaves explicit
+paths, and give any added home crumb a distinct label and the home destination.
 
 The home drawer depicts the canonical home state; closing it returns home.
 The separately authored document drawer retains its document as described below.
@@ -205,7 +205,7 @@ between those two generated views of the same entry. A link out of a dark
 fragment resolves to the target's dark fragment wherever one exists, and every
 member of a comparison family publishes the same schemes, so no comparison
 control strands a reader in a light document. The existing
-`design-browse-dark-scheme` and `design-browse-light-only` ids remain Welcome
+`design-browse-dark-scheme` and `design-browse-light-only` entries remain Welcome
 variants for stable catalogue links. Their artboards now render in both schemes
 and follow the single Appearance selector in the top bar; they have no scheme
 control in the header. The old `design-review-dark-scheme` depiction is removed
@@ -290,7 +290,7 @@ secondary button into `Return to welcome` targeting `example-welcome`.
 Retain the existing text links and renderer-required `onPress={noop}` props;
 navigation comes from the generated anchor. These labels promise navigation,
 not workspace creation or a synthetic business operation. Exercise both
-viewports and light/dark generation without changing fixture ids.
+viewports and light/dark generation without changing fixture paths.
 
 All design and example links must retain portable relative hrefs on disk and
 authenticated markers in served/deployed Browse. Standalone activation opens
@@ -308,7 +308,7 @@ normal enhanced navigation. Do not equate these two contexts.
   subjects, self-links masquerading as transitions, folder/absent destinations,
   duplicate/nested focus targets, and inactive controls becoming links.
 - Check the canonical existing-design inventory against the complete manifest
-  design-screen set, including exact ids. Keep unimplemented planned
+  design-screen set, including exact paths. Keep unimplemented planned
   destinations separate from that inventory so omissions and drift are visible.
 - Prove each new state is reachable from its owning screen/flow and has the
   specified return destination. Test tag query/picker agreement and both-scheme

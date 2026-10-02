@@ -7,17 +7,15 @@ order: 4
 
 ## Open the inspector
 
-The details inspector sits beside the entry. It starts collapsed and keeps
+The details inspector sits beside the screen. It starts collapsed and keeps
 that choice across routes and reloads, so the catalogue opens the way you left
 it.
 
 ## What it holds
 
-- The entry's path, title and description, and for a moved entry the path it
-  had before.
+- The entry's id, title and description.
 - The tags it carries, as chips you can search from.
-- The dependencies it declares, the related documents it names and the source
-  file it comes from; for a Markdown document, the images it uses.
+- The dependencies it declares and the related documents it names.
 - Its components, and for a component page the screens that use it.
 - The changed paths behind its status, including comparison evidence for an
   unchanged screen opened from All.

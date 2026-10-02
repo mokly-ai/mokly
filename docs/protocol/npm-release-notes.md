@@ -16,6 +16,58 @@ commit returned by
 - `52ca8548 feat(publish)!: upload catalogue content deltas` — the delta
   publishing note.
 
+## Breaking Path Identity Release Note
+
+The path identity upgrade replaces authored `id` and `navPath` with one path
+per entry derived from the file that defines it, adds Markdown documents,
+detects moves, renames the Pages section to Specs, and changes the generated
+layout to one directory per entry. Consumers adopt manifest v8, catalogue read
+model v4, review result v5, and the `/view/<path>/` URL. Nothing is read from
+earlier output: an earlier comparison base makes Changes unavailable until it
+includes this version.
+
+Migrate authoring as follows:
+
+- Replace `entries` and `entriesDir` with `roots`; omit it for the default
+  `specs` root, or list `{ dir, files?, path?, transparent? }` objects.
+- Remove `id` and `navPath` from every definition. Move each file to the
+  directory that should be its folder, or declare `path`. Rename the file, or
+  declare `slug`, when the leaf should differ from the file name; declare
+  `slug: "index"` or name the file `index.mockup.tsx` for a folder's own page.
+- Replace `defineRoot`, `folder`, nested `screen`, and nested `page` with
+  directories and `defineFolder` records or `_folder.json` files for titles
+  and order.
+- Give every variant a `slug` instead of an `id`; `variantOf` is derived.
+- Replace `useCaseIds` with `useCasePaths` and step `screenId` with
+  `screenPath`, using complete or relative paths.
+- Export definitions from any export, default or named; `mockups` is no
+  longer required.
+- Replace `mockLink("<id>")` and `to="<id>"` with a complete path, a relative
+  path, or an imported definition. Raw `mock:<id>` becomes `mock:<path>`.
+- Declare `movedFrom` on an entry whose path changed together with its
+  content so Changes pairs it with its baseline.
+
+Migrate the released `@mokly/viewer/data` exports as follows: `entryRoute`,
+`viewRoute`, `viewHref`, `snapshotViewPath`, and `snapshotResourcePath` take a
+path instead of `(kind, id)`; `snapshotPagePath` becomes
+`snapshotDocumentPath(side, path, colorScheme)`; `pagePreviewMetadataPath`
+becomes `previewMetadataPath(path)`; `documentRoute` is new; and
+`unavailableViewHref` is removed because `viewHref` of an unknown path opens
+the missing view. `parseViewHref` returns a path rather than a kind and id.
+Replace `ManifestV7` with `ManifestV8`, `ReviewResultV4` with
+`ReviewResultV5`, and `ScreenReviewV4` with `ScreenReviewV5`. Replace
+`isEntryId` and `isCatalogueId` with `isPathSegment` and `isEntryPath`;
+`isWindowsDeviceName` is unchanged.
+
+Migrate the released `@mokly/viewer` root types as follows: `CatalogueRecord`
+and every node carry `path` instead of `id`, `useCasePaths` replaces
+`useCaseIds`, `screenPath` replaces `screenId` in steps and in `InstanceRef`,
+`CatalogueDocument` is a new record kind, `CatalogueReadModel.tree` is one
+tree whose folder nodes carry `title` and optional `index`, removed entries
+carry `folderTitles`, and paired entries carry `previousPath`. Viewer hosts
+replace `ViewerSelection.screenId` and `ScreenNavigateEvent.screenId` with
+`screenPath`.
+
 ## Breaking Navigation Path Upgrade Release Note
 
 The navigation-path upgrade removes `defineCollection`, `collection`, and their

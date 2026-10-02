@@ -1,7 +1,8 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. No milestone has started. This plan supersedes
+discussion in this workspace. Milestone 1 is complete; Milestone 2 has not
+started. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -155,60 +156,72 @@ rules only and never record milestone numbers, which
 `tests/protocol_doc_sizes.test.ts` bounds each document's length, so split new
 contracts rather than growing one.
 
-- [ ] Add `docs/protocol/mokly-paths.md`: identity, derivation, segment
+- [x] Add `docs/protocol/mokly-paths.md`: identity, derivation, segment
       grammar, `index`, roots and transparent directories, `path` overrides,
       duplicate-path errors with their exact text,
       and the `/view/<path>` URL grammar. Delete `mokly-nav-paths.md` and
       `mokly-nested-authoring.md` and repoint every link.
-- [ ] Add `docs/protocol/mokly-folders.md`: the folder record, both carriers,
+- [x] Add `docs/protocol/mokly-folders.md`: the folder record, both carriers,
       the `_folder.json` schema, title resolution, order and `...`, `hidden`,
       `exclude`, and the exact error texts.
-- [ ] Add `docs/protocol/mokly-documents.md`: discovery, front matter, title
+- [x] Add `docs/protocol/mokly-documents.md`: discovery, front matter, title
       fallback, Mokly-owned rendering, link and image resolution, generated
       resources, Changes materiality, and the dependency boundary for the
       Markdown parser.
-- [ ] Add `docs/protocol/mokly-moves.md`: pairing signals in order, uniqueness,
+- [x] Add `docs/protocol/mokly-moves.md`: pairing signals in order, uniqueness,
       the ambiguity diagnostic, `movedFrom` validation, link normalisation
       through the move map, the similarity metric for documents and pages,
       `previousPath`, and removed-preview suppression.
-- [ ] Add `docs/protocol/mokly-entry-modules.md`: export collection, the
+- [x] Add `docs/protocol/mokly-entry-modules.md`: export collection, the
       definition brand, ignored exports, the empty-module error, slug defaults,
       and `index`.
-- [ ] Update `mokly-authoring.md`, `mokly-variants.md`, `mokly-pages.md`,
+- [x] Update `mokly-authoring.md`, `mokly-variants.md`, `mokly-pages.md`,
       `mokly-components.md`, `mokly-link-controls.md`, and
       `mokly-instances.md` for `slug`, `path`, `movedFrom`, `defineFolder`,
       path-addressed links and flow steps, derived variant relationships, and
       the removal of `id`, `navPath`, `defineRoot`, `folder`, and nested
       `screen` and `page`.
-- [ ] Update `mokly-configuration.md`: `roots`, defaults, validation, the
+- [x] Update `mokly-configuration.md`: `roots`, defaults, validation, the
       recommended spec-tree layout, and the co-located alternative.
-- [ ] Update `mokly-artifact-paths.md` with the confirmed layout above, the
+- [x] Update `mokly-artifact-paths.md` with the confirmed layout above, the
       shared path functions, the URL parser, and provider-normalised paths.
-- [ ] Update `mokly-component-manifest.md` to v8 and `mokly-catalogue.md` to
+- [x] Update `mokly-component-manifest.md` to v8 and `mokly-catalogue.md` to
       read model v4: `path`, `previousPath`, kind `document`, folder nodes
       with an optional index, derived variant relationships, and one tree.
-- [ ] Update `mokly-changes.md`, `mokly-catalogue-changes.md`,
+- [x] Update `mokly-changes.md`, `mokly-catalogue-changes.md`,
       `mokly-component-changes.md`, `mokly-removed-previews.md`, and
       `mokly-baseline-compatibility.md` for pairing by kind and path, review
       result v5, moves, and the v8-only gate.
-- [ ] Update `mokly-navigation.md`, `mokly-viewer.md`, `mokly-shell-design.md`,
+- [x] Update `mokly-navigation.md`, `mokly-viewer.md`, `mokly-shell-design.md`,
       `mokly-component-explorer.md`, `mokly-variant-navigation.md`, and
       `mokly-disclosure-persistence.md`: the Specs section, browse-only folder
       rows, Overview rows, breadcrumb behaviour, path-keyed disclosure keys,
       and search over path segments.
-- [ ] Update `mokly-rendering.md`, `mokly-runtime.md`, `mokly-export.md` and
+- [x] Update `mokly-rendering.md`, `mokly-runtime.md`, `mokly-export.md` and
       its siblings, `mokly-publication.md`, and `npm-release-notes.md` for the
       new output shape and the breaking change.
-- [ ] Update `docs/protocol/README.md`: the supported-formats table and the
-      contract list. Update `docs/protocol/fixtures` where fixtures carry ids.
-- [ ] Update the guides under `docs/guides/start`, `docs/guides/authoring`,
-      and `docs/guides/catalogue`, the root `README.md`,
-      `packages/viewer/README.md`, and the `src/*/README.md` files whose
-      sections describe ids, nav paths, or entry globs.
-- [ ] Validate the changed Markdown with Prettier, run the protocol document
+- [x] Update `docs/protocol/README.md`: the supported-formats table and the
+      contract list. Add the `catalogue-v4.json` fixture beside
+      `catalogue-v3.json`, which the current reader tests still consume until
+      the read model changes.
+- [x] Add pointer sentences to the root `README.md`,
+      `packages/viewer/README.md`, `examples/basic/README.md`, and the
+      `src/*/README.md` files whose sections describe ids, nav paths, or entry
+      globs, naming this plan and the relevant contract while keeping their
+      descriptions of the released behaviour. The guides and the README quick
+      start are rewritten in the milestones that implement the behaviour,
+      because the [guides contract](../docs/protocol/mokly-guides.md) requires
+      guides to document implemented behaviour and `tests/guides_authoring`
+      couples the config guide to `MoklyConfig`. Drafts of the rewritten guides,
+      root README, and viewer README are preserved in commit `d65417d` on this
+      branch for those milestones to re-apply.
+- [x] Validate the changed Markdown with Prettier, run the protocol document
       tests and link tests under `tests/`, run `git diff --check`, and review
-      the diff.
-- [ ] Commit and push.
+      the diff. Size caps in `tests/protocol_doc_sizes.test.ts` were lowered to
+      the new line counts, and the oversized changes, removed-previews,
+      comparison-panes, navigation, viewer, and shell-design contracts were
+      split into focused companion documents.
+- [x] Commit and push.
 
 ## Milestone 2: Shell design mockups
 
@@ -299,6 +312,11 @@ wait for Milestone 6.
       directories per area, slugs, and `_folder.json` where titles need
       characters outside the grammar; migrate `scripts/large`; regenerate and
       run `npm run example:check`.
+- [ ] Re-apply the drafted guides from commit `d65417d` for `docs/guides/start`,
+      `docs/guides/authoring`, and `docs/guides/cli`, the root `README.md`
+      quick start and authoring table, and `packages/viewer/README.md`, then
+      reconcile them with the implemented API so `tests/guides_*` pass,
+      including the config-field and export-coverage checks.
 - [ ] Add unit tests for derivation, grammar, collisions, folder records,
       export collection, variants, manifest v8, artifact paths, the route
       parser, and read model v4; update the existing suites and fixtures;
@@ -385,6 +403,9 @@ Bring the shell to the Milestone 2 mockups.
 - [ ] Update and add browser tests under `tests/browser` for browsing,
       disclosures, variants, and navigation, and the viewer unit tests under
       `packages/viewer/tests`; verify parity with the Milestone 2 screens.
+- [ ] Re-apply the drafted `docs/guides/catalogue/browse.md`,
+      `search-and-filters.md`, and `details.md` from commit `d65417d` and
+      reconcile them with the implemented shell.
 - [ ] Run `cargo xtask check`, then commit and push.
 
 ## Milestone 7: Viewer Changes and document presentation
@@ -401,6 +422,9 @@ Tags: ui
       document entries.
 - [ ] Add browser tests for moved rows, moved comparisons, and document pages;
       verify parity with the Milestone 2 screens.
+- [ ] Re-apply the drafted `docs/guides/catalogue/changes.md` and
+      `export-and-host.md` from commit `d65417d` and reconcile them with the
+      implemented Changes view.
 - [ ] Run `cargo xtask check`, then commit and push.
 
 ## Milestone 8: Guides, verification, close-out, and review

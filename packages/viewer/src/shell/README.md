@@ -31,7 +31,7 @@ its validation so renamed keys never override current server defaults. The
 first v3 write removes the obsolete v2 closed list.
 `routes.ts` resolves URL paths to current or retained manifest entries;
 `target.ts` wraps a found entry as a route target without an extra routing
-filter. The [path contract](../../../../docs/protocol/mokly-nav-paths.md)
+filter. The [folder contract](../../../../docs/protocol/mokly-folders.md)
 owns the shared folder ordering and identity used by this shell.
 `nav_changed.ts` names the changed mark's class, attribute and wording, so the
 server row and each React store update use the same presentation contract;
@@ -188,7 +188,7 @@ defines route loading, revision fencing and export omission.
 Before standalone hydration, stored disclosure and split-width preferences are
 applied to the server DOM. Disclosure helpers treat native `<details>` groups
 and the button-controlled entry-variant lists as the same persisted state.
-Folder identities follow the [navigation path contract](../../../../docs/protocol/mokly-nav-paths.md#order-and-keys),
+Folder identities follow the [folder contract](../../../../docs/protocol/mokly-folders.md#order),
 and persisted values and watched-reload recovery follow the
 [disclosure persistence contract](../../../../docs/protocol/mokly-disclosure-persistence.md).
 A newer native disclosure activation then wins over that stored value. The

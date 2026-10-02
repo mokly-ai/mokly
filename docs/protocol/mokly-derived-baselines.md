@@ -4,7 +4,9 @@
 
 The completed [derived baselines plan](../../plans/derived-baselines.md) shipped
 separate readers, caching, command preparation, `preparing`, watched lifecycle,
-timings, and the scale fixture.
+timings, and the scale fixture. The manifest version the baseline gate accepts
+follows [baseline compatibility](./mokly-baseline-compatibility.md), whose v8
+target the [path identity plan](../../plans/path-identity.md) delivers.
 
 ## Purpose
 
@@ -84,7 +86,7 @@ including hand-written HTML without an ownership header, stay tracked and are
 never reported. Derived `check` does not require the on-disk generated files to
 exist or to match; the working tree copy is a local artifact.
 Retired output is recognized only by an exact ownership header on the first
-line naming a source below this catalogue's entries root. Header-like text
+line naming a source below one of this catalogue's roots. Header-like text
 inside authored documents does not establish ownership. Git grep scans the
 index without requiring working-tree files; only its no-match exit status is
 accepted as empty evidence. Other Git failures remain `build-invalid`.
@@ -132,7 +134,7 @@ and 48 MiB per-batch budgets as committed reads, including metadata overhead.
 Source protection applies the accepted baseline's own manifest inventory,
 entry sources, and reserved basenames. After a rebuild succeeds, the
 [baseline compatibility gate](./mokly-baseline-compatibility.md) accepts only
-valid v7 output; earlier output is not translated.
+valid v8 output; earlier output is not translated.
 
 ## Serve And Watch
 

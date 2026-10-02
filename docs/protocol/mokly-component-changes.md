@@ -3,8 +3,11 @@
 ## Delivery Status
 
 The classifier, Browse/watch cache, comparison artifacts, and static exporter
-share this attribution policy. The [component explorer plan](../../plans/component-explorer.md)
-records delivery. Unregistered catalogues retain their ordinary behavior.
+share this attribution policy, keyed today by kind and id; the
+[path identity plan](../../plans/path-identity.md) delivers the path-keyed
+result and changed-entry set named below. The
+[component explorer plan](../../plans/component-explorer.md) records delivery.
+Unregistered catalogues retain their ordinary behavior.
 
 ## Changes Membership
 
@@ -35,8 +38,8 @@ evidence attributed to the component itself. A parent whose only change is a
 changed variant carries the navigation aggregate mark defined by the
 [variant navigation contract](./mokly-variant-navigation.md#changes-rows) and is
 not a Changes row.
-Affected-consumer evidence keys on the parent component id, which instance
-records reference.
+Affected-consumer evidence keys on the parent component's path, which instance
+records reference as `componentId`.
 
 A component page has Used by links for all known consumers. A changed component
 also has Affected screens, built from the union of baseline and current usage,
@@ -57,12 +60,14 @@ Browse, watched Changes updates, comparison JSON, and published catalogues use
 one materiality policy. A raw generated HTML path appearing in Git is candidate
 evidence, not sufficient reason to classify a registered consumer as changed.
 Component catalogues use the same ownership-aware classifier for Browse and
-detailed comparisons; unregistered catalogues retain their id-keyed
+detailed comparisons; unregistered catalogues retain their path-keyed
 changed-entry set.
 
-That set is `changedIds`: the ids of every current entry whose
-material, resources, or reviewable metadata differ from the baseline, plus the
-flows that step through a changed screen.
+That set is `changedEntries` in the
+[catalogue change snapshot](./mokly-catalogue-changes.md): the paths of every
+current entry whose material, resources, or reviewable metadata differ from its
+baseline or paired baseline entry, plus the flows that step through a changed
+screen.
 
 Lightweight Browse classification reads the current compiled manifest and usage
 metadata together with the baseline manifest and required fragment material.
@@ -76,9 +81,9 @@ that affect its inputs. No-watch Serve and publication instead reuse their
 validated startup snapshot, including ownership evidence and unavailable-history
 state, for the lifetime of that capture.
 
-The comparison artifact is the schema v4 result with component/variant records
-and explicit affected-consumer evidence; readers accept only v4, and every
-record addresses its entry by id. Screen entries retain their actual view
+The comparison artifact is the schema v5 result with component/variant records
+and explicit affected-consumer evidence; readers accept only v5, and every
+record addresses its entry by path. Screen entries retain their actual view
 results, with affected-only evidence separate from direct Changes membership.
 All comparisons keep accepted before/after bytes and isolated assets.
 The [comparison schema](./mokly-component-review.md) defines the exact result,
@@ -90,9 +95,9 @@ They retain the full catalogue's affected-consumer evidence in the shell inspect
 
 ## Normalization And Input Ownership
 
-Match component occurrences by owner, scoped instance id, component id, viewport,
-and scheme; a component variant entry's own comparison is keyed by that entry's
-id. At a consuming
+Match component occurrences by owner, scoped instance id, `componentId`,
+viewport, and scheme; a component variant entry's own comparison is keyed by
+that entry's path. At a consuming
 boundary, replace only a paired component's implementation output with its
 stable identity token. Keep the caller's input material and occurrence order in
 the caller's comparison. This suppresses internal rendering changes while
@@ -188,15 +193,15 @@ consumer document to make a component-only example pass.
 
 ## Baselines
 
-Baseline and current documents come from validated manifest-v7 output and
+Baseline and current documents come from validated manifest-v8 output and
 retain their original bytes. Style offsets and component ranges share each
 document's UTF-16 coordinate space. Earlier output never reaches attribution;
 it follows the [baseline compatibility contract](./mokly-baseline-compatibility.md).
 
 Use the existing merge base with `origin/main` or the configured base; staged,
-unstaged, and untracked current edits still participate. Cross-kind id reuse
-follows the [comparison pairing rule](./mokly-changes.md#comparison-engine);
-title edits remain metadata changes.
+unstaged, and untracked current edits still participate. Cross-kind path reuse
+and moves follow the [comparison pairing rule](./mokly-changes.md#comparison-engine)
+and the [move contract](./mokly-moves.md); title edits remain metadata changes.
 
 New/removed components and variants retain explicit missing comparison sides.
 Union baseline/current usage so removing a component does not erase its former

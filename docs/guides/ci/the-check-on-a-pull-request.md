@@ -26,8 +26,8 @@ from you.
 
 Give the job the full history and a base ref, and the published catalogue
 carries the comparison between the branch and the point it shares with that
-base: the screens that changed, the ones that were added, the ones that
-moved to a new path and the ones that were removed.
+base: the screens that changed, the ones that were added and the ones that
+were removed.
 
 ## Forks
 

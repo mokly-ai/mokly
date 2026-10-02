@@ -39,6 +39,13 @@ See the [library authoring guide](./entries/design/library/README.md),
 [library inventory](../../docs/protocol/mokly-design-component-library.md)
 and [plans index](../../plans/README.md).
 
+Until this example migrates to the path identity layout in a later milestone
+of the [path identity plan](../../plans/path-identity.md), its entries still
+author `id` and `navPath` and its configuration still lists `entries` globs.
+The target layout, a `specs` root whose file paths are the entry paths, is
+described in the
+[configuration contract](../../docs/protocol/mokly-configuration.md#roots).
+
 The entry definitions use `navPath` as their only navigation hierarchy.
 `Example` groups Screens, the example tour, and Getting started; `Design`
 groups the Mokly design tree. Matching path labels merge within Pages or

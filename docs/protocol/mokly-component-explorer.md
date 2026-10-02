@@ -4,7 +4,11 @@
 
 The shared component and screen workspace is implemented in Serve and static
 exports: saved variants, usage, comparison evidence, highlighting, and a resizable
-icon inspector. Local Serve additionally provides editable controls. See the
+icon inspector. Local Serve additionally provides editable controls. The
+path-based identity below, the path chip, `/view/<path>/` links, and the
+kind-filtered sections, is the approved contract; the current implementation
+still uses kind-and-id identity until the
+[path identity plan](../../plans/path-identity.md) delivers it. See the
 [component contract](./mokly-components.md), [attribution contract](./mokly-component-changes.md),
 and [component design catalogue](./mokly-component-design.md). Removed
 consumers open their historical screen through the behavior implemented by the
@@ -14,19 +18,23 @@ consumers open their historical screen through the behavior implemented by the
 
 Components are a distinct entry kind in a dedicated collapsible Components
 section, with a component icon and the same All/Changes filter, count, search,
-tags, breadcrumbs, id chip, and responsive navigation. Screens, whole-document
-pages, and use cases stay in the sibling Pages section. Section-scoped `navPath`
-folders remain the hierarchy within both projections; a separate explorer application
-or automatically invented Components folder is not required. The example
-catalogue still provides its authored Components group.
+tags, breadcrumbs, path chip, and responsive navigation. Screens, whole-document
+pages, documents, and use cases stay in the sibling Specs section. Both sections
+are views of the one path-derived [catalogue tree](./mokly-catalogue.md#tree)
+filtered by kind, so a folder holding both kinds appears in each with its own
+children, and folder rows only expand or collapse under the
+[folder row rules](./mokly-folders.md#rows-and-clicks). A separate explorer
+application or automatically invented Components folder is not required; a
+component library is conventionally a root with `path: "components"` under the
+[configuration contract](./mokly-configuration.md).
 
 A component page contains its title, description, a variant bar linking its
 variant entries, preview canvas, grouped view controls, eligible comparison
 controls, and an icon inspector.
 The heading uses the parent component's title on the parent page and on every
-variant entry page, while the variant bar marks the shown entry. The id chip,
+variant entry page, while the variant bar marks the shown entry. The path chip,
 status beside the heading, Details, and URL describe that shown entry. The
-parent page shows its first variant on the stage but keeps the parent id and
+parent page shows its first variant on the stage but keeps the parent path and
 parent entry details. Screen variants have no variant bar and keep their own
 title as the heading.
 The canvas uses the consumer renderer and gives a small component suitable
@@ -50,7 +58,7 @@ size changes; gesture handling belongs to the runtime.
 
 Each component variant is an entry, nav/search/Changes row, and `mock:` target
 under the [variant contract](./mokly-variants.md). The variant bar navigates by
-global id in authored order, so URLs and Back/Forward need no query parameter;
+path in authored order, so URLs and Back/Forward need no query parameter;
 the parent page shows the first variant.
 
 Comparison modes apply to the shown variant and view axes. Sibling-mode
@@ -72,12 +80,12 @@ consumers can remain eligible without entering Changes; temporary control edits
 never establish comparison eligibility. Do not eagerly generate screenshots to
 decide whether the mode row is available.
 
-`MockLink` can target a component parent or any of its variant entries by id
-using the existing logical-id contract. A generated standalone link to the
-parent resolves to its first variant entry's viewport/theme view; a link to a
-variant entry resolves to that entry's own view. Variant bar and Used by links
-are shell-owned `/view/<route>` URLs; do not overload the existing logical
-fragment grammar with component prop JSON or variant suffixes.
+`MockLink` can target a component parent or any of its variant entries by path
+under the [link contract](./mokly-authoring.md#links). A generated standalone
+link to the parent resolves to its first variant entry's viewport/theme view; a
+link to a variant entry resolves to that entry's own view. Variant bar and Used
+by links are shell-owned `/view/<path>/` URLs; do not overload the existing
+logical fragment grammar with component prop JSON or variant suffixes.
 Affected-consumer links carry explicit comparison eligibility. A removed screen
 link opens its Removed state, showing its
 [previous version](./mokly-removed-previews.md) without a

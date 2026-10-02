@@ -21,15 +21,15 @@ npx mokly check
 ## What it validates
 
 Check compiles the catalogue and calculates the same bytes `build` would
-write, without writing them. It validates your entries and documents, the
-paths they derive, the links between them and the resources they reference.
+write, without writing them. It validates your entries, the links between
+them and the resources they reference.
 
 With committed output it then compares those bytes with the files in the
 repository. It groups generated files that are missing, stale, or no longer
 part of the catalogue, plus unclaimed HTML that has a valid Mokly ownership
-header whose source is outside every configured root and the current source
-inventory. Run `build` for missing, stale, and orphan files. Delete an
-unclaimed file or restore its source under a configured root;
+header whose source is outside every configured entry-glob prefix and the
+current source inventory. Run `build` for missing, stale, and orphan files.
+Delete an unclaimed file or restore its source under a configured entry glob;
 Build deliberately leaves it untouched. Consumer-authored HTML without a Mokly
 header is not reported.
 

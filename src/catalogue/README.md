@@ -2,7 +2,11 @@
 
 This module projects accepted catalogue and Changes evidence into the public
 `schemaVersion: 3` read model at `__mokly/catalogue.json`. Serve, consumer export,
-and repository preview use the same projection. The local shell keeps its embedded private data; Serve
+and repository preview use the same projection. The approved
+[path identity plan](../../plans/path-identity.md) delivers read model v4,
+keyed by path with one tree, documents, and `previousPath`, under the
+[catalogue contract](../../docs/protocol/mokly-catalogue.md); this README
+describes the current v3 projection. The local shell keeps its embedded private data; Serve
 evidence updates also adopt the validated public snapshot in place.
 
 `projection_input.ts` is the typed input boundary. It accepts validated manifest

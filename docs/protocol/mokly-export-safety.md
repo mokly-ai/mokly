@@ -18,8 +18,8 @@ satisfies all core repository/source protections; the transaction pins the real
 output location so retargeting cannot redirect installation.
 
 Output must neither contain nor be contained by `mockupsDir` or
-`review.outDir`, and must not contain any resolved entry module or the
-directory holding one. It must not contain inventoried authoring inputs, the
+`review.outDir`, and must not contain any resolved entry module or document,
+or the directory holding one. It must not contain inventoried authoring inputs, the
 config, renderer module, or a consumer package's `package.json`. Reject
 repository root, Git metadata, dependency directories, and package runtime
 directories as targets. These checks also apply when the requested directory

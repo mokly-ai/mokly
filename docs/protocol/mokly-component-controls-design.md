@@ -4,7 +4,9 @@
 
 The completed [component explorer plan](../../plans/component-explorer.md) and
 [inspector revision](./mokly-component-inspector-design.md) shipped these states
-through registered components and local controls.
+through registered components and local controls. Entry files derive from paths
+under the approved contract below; the design catalogue still authors ids until
+the [path identity plan](../../plans/path-identity.md) migrates it.
 
 ## Controls Panel
 
@@ -60,10 +62,11 @@ The Controls page is the canonical parent representation. Editing, States, and P
 are bounded child galleries with four, four, and two owning screens respectively.
 Every screen has distinct mobile and desktop components. The catalogue provides
 state navigation without adding a footer to the rendered product artboard.
-Each entry uses an [id-derived path](./mokly-artifact-paths.md); `navPath` owns
-gallery membership.
+Each entry's files derive from its path under the
+[artifact path contract](./mokly-artifact-paths.md); its folder owns gallery
+membership.
 
-| Entry id                                     | State                                           |
+| Entry                                        | State                                           |
 | -------------------------------------------- | ----------------------------------------------- |
 | `design-component-controls`                  | Default saved variant with all control types    |
 | `design-component-controls-edited`           | Edited values and matching preview              |

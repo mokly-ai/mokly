@@ -30,7 +30,7 @@ scroll on every axis the source scrolls on. Otherwise apply:
 
 1. **Authored name.** If the source has a valid `data-mokly-scroll` value,
    select the one region with the exact same value in the other document. The
-   value grammar is `^[a-z0-9]+(?:-[a-z0-9]+)*$`, the public id grammar, with
+   value grammar is `^[a-z0-9]+(?:-[a-z0-9]+)*$`, the kebab-case grammar, with
    `off` reserved as above. Matching is case-sensitive. Whitespace, an empty
    value, or any other malformed value acts as no name. If either document has
    more than one region with that name, the name is ambiguous and this rule is

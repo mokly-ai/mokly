@@ -8,10 +8,8 @@ order: 4
 ## Two viewports
 
 Every screen owns one mobile node and one desktop node, and the build writes a
-document for each, `index.mobile.html` and `index.desktop.html` inside the
-screen's directory. The catalogue's viewport control switches between them,
-and a link keeps the viewport you are in. Pages and Markdown documents have no
-viewport: each is one document.
+document for each. The catalogue's viewport control switches between them, and
+a link keeps the viewport you are in.
 
 ## Turn on dark
 
@@ -21,10 +19,15 @@ your own theme from the color scheme in your renderer.
 ```ts
 export default defineConfig({
   colorSchemes: ["light", "dark"],
-  mockupsDir: "specs/generated",
-  renderer: "specs/renderer.tsx",
+  entries: ["src/**/*.mockup.{ts,tsx}"],
+  mockupsDir: "docs/mockups/generated",
+  renderer: "docs/mockups/renderer.tsx",
 });
 ```
+
+This `entries` glob selects the recommended `.mockup.ts` and `.mockup.tsx`
+names. The glob itself defines the entry shape, while `entriesDir` is shorthand
+for the same suffixed pattern beneath one folder.
 
 ```tsx
 export default function render(input: RenderInput): string {
@@ -34,11 +37,8 @@ export default function render(input: RenderInput): string {
 ```
 
 Mokly re-renders the same mobile and desktop nodes for dark output, so a
-screen is never written twice, and the dark views sit beside the light ones as
-`index.mobile.dark.html` and `index.desktop.dark.html`. A Markdown document
-gets a dark rendering too, `index.dark.html`, with Mokly's own dark palette.
-The catalogue shows a Light and Dark switch once the catalogue has dark
-documents.
+screen is never written twice. The catalogue shows a Light and Dark switch
+once the catalogue has dark documents.
 
 ## One screen that stays light
 
@@ -53,8 +53,8 @@ defineScreen({
 });
 ```
 
-A variant inherits the parent's list unless it declares its own, which then
-replaces it.
+A nested `screen` marker takes the same field, and it is never inherited from
+a folder or the root of a tree.
 
 ## Stylesheets per scheme
 

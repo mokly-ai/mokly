@@ -4,12 +4,13 @@ This document owns the acceptance coverage for
 [Removed Content Previews](./mokly-removed-previews.md).
 
 Regressions cover removed screens through selected and complete comparison
-paths in both output modes, removed pages with deleted assets and changed
-baseline CSS, path traversal and symlinks, current same-path files, malformed
+paths in both output modes, removed pages and documents with deleted assets
+and changed baseline CSS, paired moved entries that produce no preview, path
+traversal and symlinks, current same-path files, malformed
 and mixed selections, incompatible baselines, coalescing, refresh,
 invalidation, cancellation, shutdown, idle recovery, both frame adapters,
 read-only enforcement, static delivery without renewal traffic, current-only
-delivery with zero historical work, and the strict v3 catalogue reader.
+delivery with zero historical work, and the strict v4 catalogue reader.
 Embedded viewer coverage proves both adapters keep plain external and relative
 links inert.
 

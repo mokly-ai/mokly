@@ -20,8 +20,8 @@ import { ReviewIgnore } from "@mokly/mokly";
 ```
 
 The id is lowercase kebab-case and unique within a generated document. It is
-not a filename, so values such as `aux` and `con` are valid here even though a
-path segment rejects Windows device names.
+not a filename, so values such as `aux` and `con` are valid here even though
+entry ids reject Windows device names.
 Ignoring changes only how a difference is classified: the stored documents and
 both sides of a comparison keep the real content. Ignored-only changes are
 grouped by id, viewport and color scheme instead of listing every screen that
@@ -44,7 +44,7 @@ import { ReviewIgnore, reviewMaterialKey } from "@mokly/mokly";
 
 `reviewMaterialKey` hashes plain structured data into a deterministic key.
 Malformed, duplicate, nested, overlapping or mismatched signals fail the build
-with the entry that caused them.
+with the route that caused them.
 
 ## Turn markers off for a subtree
 

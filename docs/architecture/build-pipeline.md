@@ -6,25 +6,25 @@
 mokly.config.ts
         |
         v
-resolve `entries` globs -> matched entry modules + renderer + optional compatibility modules
+walk `roots` -> entry modules, Markdown documents, `_folder.json` records + renderer + optional compatibility modules
         |
         v
 one esbuild graph, with React resolved from the consumer
         |
         v
-validate definitions and cross-references in memory
+derive paths, collect exports, validate definitions and cross-references in memory
         |
         v
 renderer({ node, entry, viewport, colorScheme, stylesheets })
         |
         v
-adapt explicit child controls -> resolve mock:id links -> compatibility bridge
+adapt explicit child controls -> resolve mock:<path> links -> compatibility bridge
         |
         v
 validate markers/links/resources
         |
         v
-mobile/desktop light and optional dark HTML for every screen, screen variant, and component variant entry, whole documents + schema-v7 manifest in memory
+mobile/desktop light and optional dark HTML for every screen, screen variant, and component variant entry, whole documents, Mokly-rendered Markdown documents + schema-v8 manifest in memory
         |
         +---- check (committed): compare with disk, write nothing
         |
@@ -33,50 +33,65 @@ mobile/desktop light and optional dark HTML for every screen, screen variant, an
         `---- build: stage, back up owned files, rename, roll back on failure
 ```
 
+Path identity, `roots`, Markdown documents, manifest v8, and review result v5
+are approved contracts under the
+[path identity plan](../../plans/path-identity.md); the current implementation
+still resolves `entries` globs and derives routes from kind and id until that
+plan delivers them.
+
 ## 1. Config Loading
 
 Mokly searches upward from the process working directory, or loads the path
 given by `--config`. Config code is bundled to a temporary ESM module so `.ts`,
 `.mts`, `.js`, and `.mjs` work from a local install or npx cache. Every path is
-then resolved from the config file and confined to `repoRoot`. The `entries`
-globs, or the `entriesDir` shorthand, are resolved once into a sorted set of
-matched modules. The glob defines the entry shape without another suffix
-filter; `entriesDir` preserves the recommended `.mockup.ts` and `.mockup.tsx`
-convention by expanding to a suffixed glob.
+then resolved from the config file and confined to `repoRoot`. The configured
+`roots`, defaulting to `[{ dir: "specs" }]`, are walked once into a sorted set
+of matched files. Each root's `files` globs define the file shape without
+another suffix filter; the default `**/*.mockup.{ts,tsx}` and `**/*.md`
+patterns select the recommended `.mockup.ts` and `.mockup.tsx` convention and
+Markdown documents. A matched `.md` file is a document, every other matched
+file is an entry module, and a `_folder.json` file is a folder record whose
+`exclude` globs remove files from its directory before derivation. Every
+matched file derives one path from the root prefix, the directories between
+the root and the file minus transparent names, and its leaf, under the
+[path contract](../protocol/mokly-paths.md); duplicate and case-colliding
+paths fail before bundling.
 
-Before any walk, discovery projects the repository and every distinct glob root
+Before any walk, discovery projects the repository and every distinct root
 once for the pass; Review projection alone falls back to its lexical path. A
-non-benign root failure, including one for a later glob, therefore precedes all
-per-glob module validation. Walks and module validation then run in declared
-glob order. An earlier denial precedes a later zero-match failure, and reversing
-the globs reverses that diagnostic precedence. Accepted and vanished candidates
-are validated once per pass; accepted candidates still count for every
-overlapping glob. Every glob must retain a module so another glob cannot hide a
-typo or omission.
+non-benign root failure, including one for a later root, therefore precedes all
+per-root file validation. Walks and file validation then run in declared root
+order. An earlier denial precedes a later empty-root failure, and reversing the
+roots reverses that diagnostic precedence. Accepted and vanished candidates are
+validated once per pass. Every root must retain a file so another root cannot
+hide a typo or omission; a file matched by two roots derives two paths and
+fails as a duplicate path.
 
 Walks skip `review.outDir` and denied directories. Directories that vanish or
 are replaced mid-walk (`ENOENT` or `ENOTDIR`) are skipped and listed with denied
-paths in the zero-match message. Other read or projection errors fail with
+paths in the empty-root message. Other read or projection errors fail with
 `config-invalid`, naming the repository-relative path and error code (`unknown`
-if absent). A matched module that is deleted, or replaced by something other
+if absent). A matched file that is deleted, or replaced by something other
 than a regular file, between the directory listing and validation is dropped
-and listed under `not searched` when its glob is then empty. A projection or
+and listed under `not searched` when its root is then empty. A projection or
 lstat failure with any code other than `ENOENT` fails with `config-invalid`.
 
-Config validation rejects private-cache glob roots before discovery. Direct
+Config validation rejects private-cache roots before discovery. Direct
 discovery retains a defense for surviving `.mokly-cache/` candidates, while a
 candidate that vanishes during its preceding existence check is dropped. Each
-module is classified by the shared source policy so none lies inside Review
-output, the baseline cache, or a denied directory below its deepest glob root.
-An entry may be nested below `mockupsDir`; it joins `sourceFiles`, stays private
-through lexical and realpath aliases, and cannot overlap a generated route. The
+file is classified by the shared source policy so none lies inside Review
+output, the baseline cache, or a denied directory below its root. A matched
+file may be nested below `mockupsDir`; it joins `sourceFiles`, stays private
+through lexical and realpath aliases, and cannot overlap a generated path. The
 resolved set travels with the config beside `sourceFiles`.
 
 ## 2. One Consumer Graph
 
 The resolved entry modules, the configured renderer, imported page
 helpers, and an optional temporary compatibility transformer are imported by a single virtual entry and
-bundled together. The internal bundle is CommonJS so Node-oriented consumer
+bundled together; Markdown documents are not bundled, because Mokly reads and
+renders them itself under the [document contract](../protocol/mokly-documents.md).
+The internal bundle is CommonJS so Node-oriented consumer
 dependencies can retain dynamic built-in imports. Esbuild returns this bundle
 in memory; evaluation creates no temporary module file. A private compilation
 association retains the exact bundle, configuration and accepted artifacts for
@@ -113,12 +128,14 @@ without sticky process-global state or an absolute checkout path. Installed
 packages import the plain API and cannot self-attribute. Registry validation
 accepts an attributed source only when it is a resolved entry module or an
 inventoried source file. Generated and Git-tracked ownership additionally trust
-a repository-relative owner that matches a configured entry glob with dotfile
-matching enabled, preserving cleanup after a matched source is renamed or
-deleted. A repository-root glob trusts every matching owner path and no other
-path through this branch. Export and Review confinement remain limited to
-directories that hold resolved entry modules; a repository-root glob does not
-protect the whole repository as an export source root.
+a repository-relative owner below a configured root that matches one of its
+`files` globs with dotfile matching enabled, preserving cleanup, and the
+[move pairing](../protocol/mokly-moves.md) that depends on it, after a matched
+source is renamed, moved, or deleted. A root at the repository root trusts
+every matching owner path and no other path through this branch. Export and
+Review confinement remain limited to directories that hold resolved entry
+modules and documents; a repository-root root does not protect the whole
+repository as an export source root.
 
 Both config and consumer bundle metafiles supply the complete source inventory,
 including tree-shaken repository inputs. Serving and publication resolve these
@@ -129,13 +146,17 @@ names remain private even when no longer imported.
 
 Each page calls its synchronous `render()` exactly once for one complete HTML
 document. It bypasses the screen renderer and variant loop, then uses the same
-ownership, link, resource, and transactional validation.
+ownership, link, resource, and transactional validation. Each Markdown
+document is rendered by Mokly's own CommonMark renderer into one light document
+and, when the catalogue enables dark, one dark document; the consumer renderer
+never sees it, and its relative links and image resources are resolved under
+the [document contract](../protocol/mokly-documents.md).
 
 Each screen owns a mobile and desktop React node. Mokly selects the first
-stylesheet rule matching the screen's catalogue route, applies it to each
-effective viewport/color-scheme view, and resolves each emitted URL relative to
-that view's generated fragment route. It then calls the configured renderer, or
-its neutral default. The renderer receives:
+stylesheet rule matching the screen's logical route (`<path>/index.html`),
+applies it to each effective viewport/color-scheme view, and resolves each
+emitted URL relative to that view's generated file. It then calls the configured
+renderer, or its neutral default. The renderer receives:
 
 ```ts
 interface RenderInput {
@@ -159,10 +180,10 @@ see the [component manifest](../protocol/mokly-component-manifest.md).
 Each component variant entry renders in every configured context through the
 same consumer graph. Wrappers record actual invocations, data, caller-owned
 slots, and layout-neutral ranges. The variant's root render is not its own
-instance. All catalogues emit manifest v7 with the complete source inventory.
+instance. All catalogues emit manifest v8 with the complete source inventory.
 Registered components add variant entries and complete per-view
 invocation/ownership records; explicit page callbacks still emit exactly one
-complete document. Current and Git-baseline readers require v7; earlier output
+complete document. Current and Git-baseline readers require v8; earlier output
 makes Changes unavailable under
 [baseline compatibility](../protocol/mokly-baseline-compatibility.md).
 
@@ -178,7 +199,7 @@ reserved names at both boundaries, including inert template contents, without
 mistaking ordinary text for metadata. Unmarked document bytes stay unchanged.
 
 The [catalogue navigation contract](../protocol/mokly-navigation.md) retains
-the stable id and optional fragment in a reserved `data-mokly-link`
+the target path and optional fragment in a reserved `data-mokly-link`
 marker when an HTML `<a>`/`<area>` or SVG `<a>` has a logical `href`. A
 `data-nav-href`-only reference remains validated portable metadata and does not
 gain Browse interaction. The builder rejects logical `href` on every non-link
@@ -219,7 +240,7 @@ the completed HTML string.
 
 ## 4. Validation And Commit
 
-Registry ids, relationships, files, output collisions, stylesheets,
+Registry paths, relationships, files, output collisions, stylesheets,
 ordinary and `data-nav-href` links, anchors, local HTML resource attributes,
 `srcset`, inline/style-block CSS, transitive CSS imports/URLs,
 Review-ignore/material markers, protected source inventory, and manifest data are
@@ -227,8 +248,8 @@ validated before output changes. All expected bytes are held in memory.
 In committed mode, `check` compares those bytes with disk and reports grouped
 missing, stale, proven-orphan, and unclaimed paths. Unclaimed paths are HTML
 files with a valid Mokly ownership header whose owner is neither a resolved
-entry, an inventoried source, nor matched by a configured entry glob; ordinary
-authored HTML is not reported.
+file, an inventoried source, nor a path below a configured root matching its
+`files` globs; ordinary authored HTML is not reported.
 In derived mode, Check does not add this filesystem diagnostic and instead
 rejects Git-tracked generated routes, the manifest and cache contents; local
 generated files may be absent or stale. Authored public assets remain tracked
@@ -258,10 +279,13 @@ comment-safe, newline-portable ownership proof when pruning or presenting
 generated HTML. Public HTML without the header remains a consumer-owned static
 input and may be classified by an explicit watch rule.
 
-Catalogue routes derive from each entry's kind and id (`screens/<id>.html`,
-`pages/<id>.html`, `user-flows/<id>.html`, and `components/<id>.html`), so
-their segments are portable ASCII letters, digits, and `-` ending in `.html`;
-an id that is a Windows device filename stem is rejected. Framework-generated
+Every generated file name derives from the entry's path under the
+[artifact path contract](../protocol/mokly-artifact-paths.md): the entry
+document is `<path>/index.html`, each view is
+`<path>/index.<viewport>[.dark].html`, and each shell is
+`view/<path>/index.html`. Path segments are portable ASCII letters, digits,
+`-`, and `_` with case preserved; a segment that is a Windows device name is
+rejected, and two paths that differ only by case collide. Framework-generated
 links and redirects still percent-encode every path segment defensively; static
 asset paths may therefore contain characters such as spaces without corrupting
 HTML attributes or URL query/fragment boundaries.
@@ -310,4 +334,4 @@ Shared catalogue validation uses synchronous browser-safe SHA-256, checked again
 Node digests; source inventory excludes the resolved viewer runtime even when
 npm installs it as a workspace symlink. Browser
 packaging fails if a client imports Node-only code. Comparison JSON is decoded
-with the same strict review-result v4 validator used by its producer.
+with the same strict review-result v5 validator used by its producer.
