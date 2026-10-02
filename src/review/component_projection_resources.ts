@@ -13,6 +13,7 @@ import {
 import { parseHtml } from "../diagnostics/html_parse.js";
 
 import type { ComponentViewContext } from "./component_view.js";
+import type { CssDocument } from "./css/document.js";
 import {
   attributeInlineRules,
   type InlineAttributionResult,
@@ -23,6 +24,11 @@ import {
 } from "./css/inline_rendering.js";
 import { sameInlineOuterSources } from "./css/inline_styles.js";
 import { normalizeReviewPair } from "./ignore.js";
+import { PageAnalysisPair } from "./page_pair.js";
+import {
+  projectAnalyzedPair,
+  type ProjectedReferences,
+} from "./page_projection.js";
 
 export interface PreparedInlineStyleEvidence {
   allExcluded: boolean;
@@ -38,7 +44,8 @@ export interface PreparedComponentComparison {
   headRanges?: readonly RenderedRange[];
   projected: ComponentProjection;
   excluded: (path: string) => boolean;
-  matching: { before: string; after: string };
+  matching: { before: string | CssDocument; after: string | CssDocument };
+  references?: ProjectedReferences;
   ownedComponentIds: ReadonlySet<string>;
   inlineAnalysis?: InlineAttributionResult;
   inlineEvidence?: PreparedInlineStyleEvidence;
@@ -57,14 +64,23 @@ export function prepareComponentProjection(
   head: string,
   root?: string,
   options: ProjectionPreparationOptions = {},
+  pages?: PageAnalysisPair,
 ): PreparedComponentComparison {
-  const baseRanges = before.usage
-    ? validateComponentRanges(base, before.usage.ranges)
+  pages ??= context.componentAware
+    ? new PageAnalysisPair(before, after, base, head)
     : undefined;
-  const headRanges = after.usage
-    ? validateComponentRanges(head, after.usage.ranges)
-    : undefined;
+  const baseRanges = pages
+    ? pages.beforeAnalysis.ranges
+    : before.usage
+      ? validateComponentRanges(base, before.usage.ranges)
+      : undefined;
+  const headRanges = pages
+    ? pages.afterAnalysis.ranges
+    : after.usage
+      ? validateComponentRanges(head, after.usage.ranges)
+      : undefined;
   const matching = normalizeReviewPair(base, head, after.path);
+  const paired = pages?.pairedIgnoreIds ?? matching.pairedIgnoreIds;
   const analysis =
     options.analyzeInline !== false &&
     before.usage &&
@@ -76,54 +92,73 @@ export function prepareComponentProjection(
             source: base,
             sourceRanges: baseRanges,
             usage: before.usage,
+            ...(pages
+              ? { spans: pages.beforeAnalysis.inlineStyles(paired) }
+              : {}),
           },
           after: {
             source: head,
             sourceRanges: headRanges,
             usage: after.usage,
+            ...(pages
+              ? { spans: pages.afterAnalysis.inlineStyles(paired) }
+              : {}),
           },
-          pairedIgnoreIds: matching.pairedIgnoreIds,
+          pairedIgnoreIds: paired,
           ...(root ? { rootComponentId: root } : {}),
           parser: context.resources.css.parser,
           prepare: () => ({
             before: {
-              document: parseHtml("inlineMatching", matching.base, {
-                sourceCodeLocationInfo: true,
-              }),
-              ranges: validateComponentRanges(
-                matching.base,
-                before.usage!.ranges,
-              ),
+              document:
+                pages?.beforeAnalysis.matching(paired) ??
+                parseHtml("inlineMatching", matching.base, {
+                  sourceCodeLocationInfo: true,
+                }),
+              ranges:
+                pages?.beforeAnalysis.ranges ??
+                validateComponentRanges(matching.base, before.usage!.ranges),
             },
             after: {
-              document: parseHtml("inlineMatching", matching.head, {
-                sourceCodeLocationInfo: true,
-              }),
-              ranges: validateComponentRanges(
-                matching.head,
-                after.usage!.ranges,
-              ),
+              document:
+                pages?.afterAnalysis.matching(paired) ??
+                parseHtml("inlineMatching", matching.head, {
+                  sourceCodeLocationInfo: true,
+                }),
+              ranges:
+                pages?.afterAnalysis.ranges ??
+                validateComponentRanges(matching.head, after.usage!.ranges),
             },
           }),
         })
       : undefined;
   const inline = inlineMaterials(analysis);
-  const projected = projectComponentPair(
-    base,
-    head,
-    before.usage,
-    after.usage,
-    after.path,
-    root,
-    inline,
-    baseRanges,
-    headRanges,
-  );
+  const analyzedProjection = pages
+    ? projectAnalyzedPair(pages, inline)
+    : undefined;
+  const projected =
+    analyzedProjection?.projected ??
+    projectComponentPair(
+      base,
+      head,
+      before.usage,
+      after.usage,
+      after.path,
+      root,
+      inline,
+      baseRanges,
+      headRanges,
+    );
   return {
     ...(baseRanges ? { baseRanges } : {}),
     ...(headRanges ? { headRanges } : {}),
     projected,
-    matching: { before: matching.base, after: matching.head },
+    matching: {
+      before: pages?.beforeAnalysis.matching(paired) ?? matching.base,
+      after: pages?.afterAnalysis.matching(paired) ?? matching.head,
+    },
+    ...(analyzedProjection
+      ? { references: analyzedProjection.references }
+      : {}),
     ownedComponentIds:
       analysis?.status === "resolved" ? analysis.ownedComponentIds : new Set(),
     ...(analysis ? { inlineAnalysis: analysis } : {}),

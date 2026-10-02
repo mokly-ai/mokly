@@ -2,13 +2,12 @@
 
 ## Delivery Status
 
-The fast path and its strict-v7 baseline boundary are implemented. The delivered
-decision prepares inline analysis for possible references. Approved target of
+The fast path and its strict-v7 baseline boundary are implemented. Approved target of
 the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
 [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
-delivers the analysis-backed quick check below with no inline work;
+implements the analysis-backed quick check below with no inline work;
 [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
-adds the equivalent style-only attempt before complete fall-through.
+adds the equivalent style-only attempt before complete fall-through; M8 remains pending.
 
 This contract owns the unchanged-view decision used by component-aware Changes
 classification. Input ownership and materiality remain defined by
@@ -73,7 +72,7 @@ the complete path. Nested input, topology, or ownership changes require full
 projection and implementation analysis. Entry-level metadata, added/removed,
 and dependency reasons are computed outside the per-view comparison.
 
-On failed quick-check proof, try the [style-only route](./mokly-style-only-route.md)
+After M8, on failed quick-check proof, try the [style-only route](./mokly-style-only-route.md)
 with its exact conditions; otherwise run the complete comparison. It is not a
 weaker fast-path resource decision. One-sided views run neither paired route.
 
@@ -90,11 +89,12 @@ membership and bytes; equal unions are not proof of equality.
 Projected resources need not be a subset of actual resources: copying caller
 content out of an inert template can expose recorded references. Parser-discarded
 tokens remain absent under the page contract's provenance rule, even if reparsing
-rewritten HTML would expose them. The delivered decision requires independent
-actual and projected proof for views with instances, entry-owned slots or
-possible inline references. [M7 page reuse](./mokly-page-analysis.md#identical-text-quick-check)
-limits projection to ownership text edits; other views retain actual-only proof.
-Reuse preparation on fall-through.
+rewritten HTML would expose them. The identical-text check shares conservative
+original/caller-copy seeds and needs no projection. Non-identical attempts
+retain actual/projected proof where ownership edits require it, without inline
+analysis. Reuse analyses and discovery on fall-through; any unattributed
+fast-path material is rebuilt for complete attribution as the
+[page contract](./mokly-page-analysis.md#identical-text-quick-check) requires.
 
 Resource discovery is reused by the complete path. Cache discovery by side,
 route, derived-reference identity and exclusion policy, without retaining

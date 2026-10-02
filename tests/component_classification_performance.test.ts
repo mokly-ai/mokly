@@ -80,6 +80,7 @@ test("component views validate each retained document range index once", async (
 
   await compareComponentView(
     {
+      componentAware: true,
       beforeReader: reader,
       afterReader: reader,
       dependencies: new ComponentDependencyPolicy(

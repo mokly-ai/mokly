@@ -40,6 +40,7 @@ export async function assertComparisonPaths(
   );
   const compareResourceBytes = fixture.config.generatedOutput === "derived";
   const context = {
+    componentAware: true,
     beforeReader,
     afterReader,
     dependencies,
@@ -53,6 +54,7 @@ export async function assertComparisonPaths(
       prefix,
       new CssResourceAnalysis(),
       compareResourceBytes,
+      true,
     ),
   };
   let comparedViews = 0;

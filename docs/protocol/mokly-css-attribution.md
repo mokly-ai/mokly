@@ -11,9 +11,9 @@ reference-bearing rules follow inferred owners with validated evidence.
 Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
 [M3](../../plans/scalable-inline-style-analysis.md#milestone-3-bounded-memory) delivers the bounded parser cache;
 [M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse) stores rule data/forms,
-and [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis) uses original trees.
+and [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis) implements original trees.
 Shared forms apply to both CSS paths; page analysis is component-aware only.
-The no-component classifier's routing is unchanged. Only M7 remains pending.
+The no-component classifier and separate page path retain their delivered routing/matching.
 
 ## Purpose
 

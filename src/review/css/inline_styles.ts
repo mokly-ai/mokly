@@ -4,7 +4,7 @@ import { html, type DefaultTreeAdapterMap } from "parse5";
 import type { RenderedRange } from "../../components/ranges.js";
 import { parseHtml } from "../../diagnostics/html_parse.js";
 import { documentWorkSync } from "../../diagnostics/timings.js";
-import { REVIEW_IGNORE_MARKER } from "../ignore.js";
+import { reviewIgnoreRegions } from "../ignore.js";
 
 type Node = DefaultTreeAdapterMap["node"];
 type Element = DefaultTreeAdapterMap["element"];
@@ -15,6 +15,8 @@ export interface InlineStyleSpan {
   end: number;
   source: string;
   text: string;
+  contentStart?: number;
+  contentEnd?: number;
 }
 
 /** Whether both documents expose the same ordered style-element source bytes. */
@@ -33,9 +35,11 @@ export function findUnownedInlineStyles(
   source: string,
   ranges: readonly RenderedRange[],
   pairedIgnoreIds: ReadonlySet<string>,
+  document?: DefaultTreeAdapterMap["document"],
+  regions = reviewIgnoreRegions(source, "$document"),
 ): InlineStyleSpan[] {
   return documentWorkSync("styleDiscoveryMs", () =>
-    findStyles(source, ranges, pairedIgnoreIds),
+    findStyles(source, ranges, pairedIgnoreIds, document, regions),
   );
 }
 
@@ -43,17 +47,20 @@ function findStyles(
   source: string,
   ranges: readonly RenderedRange[],
   pairedIgnoreIds: ReadonlySet<string>,
+  parsed?: DefaultTreeAdapterMap["document"],
+  regions = reviewIgnoreRegions(source, "$document"),
 ): InlineStyleSpan[] {
-  const document = parseHtml("styleDiscovery", source, {
-    sourceCodeLocationInfo: true,
-  });
-  const ignored = pairedIgnoreRegions(document, pairedIgnoreIds);
+  const document =
+    parsed ??
+    parseHtml("styleDiscovery", source, {
+      sourceCodeLocationInfo: true,
+    });
+  const ignored = regions.filter(({ id }) => pairedIgnoreIds.has(id));
   const spans: InlineStyleSpan[] = [];
   visit(document, (node) => {
-    if (!isEligibleStyle(node)) return;
-    const location = node.sourceCodeLocation;
-    if (!location?.startTag || !location.endTag) return;
-    const start = location.startTag.startOffset;
+    const span = inlineStyleSpan(source, node);
+    if (!span) return;
+    const { start } = span;
     if (
       ignored.some((region) => region.start <= start && start < region.end) ||
       ranges.some(
@@ -61,39 +68,31 @@ function findStyles(
       )
     )
       return;
-    const end = location.endTag.endOffset;
-    spans.push({
-      start,
-      end,
-      source: source.slice(start, end),
-      text: source.slice(
-        location.startTag.endOffset,
-        location.endTag.startOffset,
-      ),
-    });
+    spans.push(span);
   });
   return spans.sort((a, b) => a.start - b.start);
 }
 
-function pairedIgnoreRegions(
-  document: Node,
-  pairedIgnoreIds: ReadonlySet<string>,
-): { start: number; end: number }[] {
-  const regions = new Map<string, { start?: number; end?: number }>();
-  visitAll(document, (node) => {
-    if (node.nodeName !== "#comment" || !("data" in node)) return;
-    const marker = REVIEW_IGNORE_MARKER.exec(node.data);
-    const location = node.sourceCodeLocation;
-    const id = marker?.[2];
-    if (!id || !location || !pairedIgnoreIds.has(id)) return;
-    const region = regions.get(id) ?? {};
-    if (marker[1] === "start") region.start = location.endOffset;
-    else region.end = location.startOffset;
-    regions.set(id, region);
-  });
-  return [...regions.values()].flatMap(({ start, end }) =>
-    start === undefined || end === undefined ? [] : [{ start, end }],
-  );
+export function inlineStyleSpan(
+  source: string,
+  node: Node,
+): InlineStyleSpan | undefined {
+  if (!isEligibleStyle(node)) return;
+  const location = node.sourceCodeLocation;
+  if (!location?.startTag || !location.endTag) return;
+  const start = location.startTag.startOffset;
+  const end = location.endTag.endOffset;
+  return {
+    start,
+    end,
+    contentStart: location.startTag.endOffset,
+    contentEnd: location.endTag.startOffset,
+    source: source.slice(start, end),
+    text: source.slice(
+      location.startTag.endOffset,
+      location.endTag.startOffset,
+    ),
+  };
 }
 
 function isEligibleStyle(node: Node): node is Element {
@@ -118,11 +117,4 @@ function visit(node: Node, callback: (node: Node) => void): void {
   callback(node);
   if ("childNodes" in node)
     for (const child of node.childNodes) visit(child, callback);
-}
-
-function visitAll(node: Node, callback: (node: Node) => void): void {
-  callback(node);
-  if ("childNodes" in node)
-    for (const child of node.childNodes) visitAll(child, callback);
-  if ("content" in node) visitAll(node.content, callback);
 }

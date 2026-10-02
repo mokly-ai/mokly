@@ -71,7 +71,7 @@ export async function classifyComponentsWithSources(
   const after = input.after;
   const beforeVariantEntries = componentVariantEntries(before.entries);
   const afterVariantEntries = componentVariantEntries(after.entries);
-  const componentAware = [...before.entries, ...after.entries].some(
+  const componentAware = [...input.before.entries, ...after.entries].some(
     (entry) => entry.kind === "component" && !isManifestComponentVariant(entry),
   );
   const { changedPaths, config } = input;
@@ -86,6 +86,7 @@ export async function classifyComponentsWithSources(
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const compareResourceBytes = config.generatedOutput === "derived";
   const context: ComponentViewContext = {
+    componentAware,
     beforeReader,
     afterReader,
     dependencies,
@@ -98,6 +99,7 @@ export async function classifyComponentsWithSources(
       prefix,
       new CssResourceAnalysis(input.cssParser, undefined, input.cssCacheBytes),
       compareResourceBytes,
+      componentAware,
     ),
     compareResourceBytes,
     ...(input.useFastPath === undefined

@@ -24,14 +24,15 @@ import {
 } from "./inline_styles.js";
 import type { CssRuleDiffResult, CssRuleParser } from "./types.js";
 
-/** One source side plus its separately validated normalized matching tree. */
+/** One original source side with ranges and optional shared eligible spans. */
 export interface InlineAttributionSide {
   source: string;
   sourceRanges: readonly RenderedRange[];
   usage: ComponentViewRecord;
+  spans?: readonly InlineStyleSpan[];
 }
 
-/** Lazily prepared normalized document and ranges for selector ownership. */
+/** Lazily prepared original or legacy-normalized tree and its ownership ranges. */
 export interface InlineAttributionMatchingSide {
   document: CssDocument;
   ranges: readonly RenderedRange[];
@@ -94,16 +95,20 @@ export function attributeInlineRules(
 function analyze(input: InlineAttributionInput): InlineAttributionResult {
   return documentWorkSync("inlineRuleMs", () => {
     const paired = new Set(input.pairedIgnoreIds);
-    const beforeSpans = findUnownedInlineStyles(
-      input.before.source,
-      input.before.sourceRanges,
-      paired,
-    );
-    const afterSpans = findUnownedInlineStyles(
-      input.after.source,
-      input.after.sourceRanges,
-      paired,
-    );
+    const beforeSpans =
+      input.before.spans ??
+      findUnownedInlineStyles(
+        input.before.source,
+        input.before.sourceRanges,
+        paired,
+      );
+    const afterSpans =
+      input.after.spans ??
+      findUnownedInlineStyles(
+        input.after.source,
+        input.after.sourceRanges,
+        paired,
+      );
     const common = { beforeSpans, afterSpans };
     const outerSourcesEqual = sameInlineOuterSources(beforeSpans, afterSpans);
     if (

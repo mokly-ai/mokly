@@ -19,6 +19,8 @@ interface RegionSegment {
   content: string;
   id: string;
   kind: "region";
+  start: number;
+  end: number;
 }
 
 type Segment = RegionSegment | TextSegment;
@@ -93,8 +95,8 @@ export function normalizeSingleDocument(html: string, route: string): string {
 }
 
 function parseDocument(content: string, route: string): ParsedDocument {
-  if (generatedSource(content))
-    content = content.slice(content.indexOf("\n") + 1);
+  const offset = generatedSource(content) ? content.indexOf("\n") + 1 : 0;
+  content = content.slice(offset);
   const materials = parseMaterials(content, route);
   const matches = [...content.matchAll(MARKER_SCAN)];
   if (content.replace(MARKER_SCAN, "").includes("<!--mokly-review-ignore:")) {
@@ -132,6 +134,8 @@ function parseDocument(content: string, route: string): ParsedDocument {
         content: content.slice(open.contentStart, match.index),
         id,
         kind: "region",
+        start: offset + open.contentStart,
+        end: offset + match.index,
       };
       regions.set(id, region);
       segments.push(region);
@@ -154,6 +158,20 @@ function parseDocument(content: string, route: string): ParsedDocument {
     }
   }
   return { materials, regions, segments };
+}
+
+export interface ReviewIgnoreRegion {
+  id: string;
+  content: string;
+  start: number;
+  end: number;
+}
+
+export function reviewIgnoreRegions(
+  source: string,
+  route: string,
+): readonly ReviewIgnoreRegion[] {
+  return [...parseDocument(source, route).regions.values()];
 }
 
 function parseMaterials(

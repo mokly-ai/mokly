@@ -36,6 +36,8 @@ ordinal, sorts existing rule references once per side by canonical rank/identity
 and filters that order for projected material before concatenating stored text.
 Exact selected-copy counts preserve duplicate multiplicity without copying rules;
 resolved results retain runs, not full-list compatibility getters.
+Canonical appendix references live in a weak material association, leaving the
+delivered projection shape and every byte-equality assertion unchanged.
 
 `rule_identity.ts` stores address/identity, rank, canonical text and references
 once in a weak rule association; the custom-property flag stays on the record.
@@ -71,8 +73,13 @@ materials and reference behavior; grouped displacement and the duplicate-copy
 correction have explicit expected results. Seeded flat mutations and real RNW
 views exercise cancellation; a counting diff proves N-to-N+1 sheets analyse one
 rule. Cached-rule Proxies reject copying during composition, and mixed-element
-fallback tests reject partial cancellation. Page reuse and fingerprints remain
-later-milestone work.
+fallback tests reject partial cancellation. Component-aware matching now shares
+the original view/resource trees: `document_subjects.ts` suppresses final ignored
+subjects only, leaving combinators and structural predicates unchanged. Eligible
+style spans use the flat validated ignore regions and original UTF-16 offsets;
+no normalized page is parsed for matching. Component-free and separate page
+classification retain their delivered normalized-tree behavior. Fingerprints
+remain later-milestone work.
 
 See [parse reuse](../../../docs/protocol/mokly-css-parse-reuse.md),
 [inline ownership](../../../docs/protocol/mokly-inline-styles.md),

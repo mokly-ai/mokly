@@ -27,6 +27,11 @@ The normative fields, units, rounding and emission rules live in
 Tests pin exact per-step parse counts and verify disabled collection, exclusive
 durations, UTF-8 byte accounting and shared classification lifetime. Real Serve
 tests pin the preceding page pass; real-view tests pin each heap sample and peak.
+`pageAnalysis` counts the component-aware loop's single source-located original
+view tree, shared by validation, discovery and selector matching. Resource
+HTML is counted separately and retains its reader's own trees; the separate
+page pass keeps its legacy steps and parse cache. Parse5 interception tests
+reject uncounted, repeated or rewritten-page parses, including owned references.
 
 Run `npm run build`, then:
 

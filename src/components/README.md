@@ -98,12 +98,13 @@ references retain entry evidence. The renderer returns a complete document
 string. Compatible v7 baselines retain their original bytes; historical
 readers discard retired ownership arrays without relaxing instance validation.
 
-Comparison projection can expose caller-owned slot material that HTML parsing
-discarded from contexts such as `template` or `select`. Removing component
-implementation text can likewise expose a sibling hidden by its unclosed HTML. The review shortcut
-therefore proves both actual and ownership-projected resource closures for
-views with instances, entry-owned slots or possible inline references, using the
-same root-specific ownership and resource exclusion policy as the complete comparison.
+Component-aware comparison shares one original page tree per used view side.
+Material strings remain unchanged, but resource discovery follows source
+provenance: caller copies can expose recorded inert-template references, never
+parser-discarded `select` tokens or newly exposed malformed-HTML siblings.
+The identical-text shortcut uses head analysis and conservative caller-copy
+seeds without projection or inline analysis. Non-identical attempts retain
+ownership-projected proof; failed proofs reuse analyses and resource discovery.
 
 ## Development
 
@@ -132,6 +133,8 @@ node --import tsx --test tests/component_*.test.ts
   excluding source metadata.
 - [`comparison_projection.ts`](./comparison_projection.ts): caller versus
   implementation material.
+- [`material_recipe.ts`](./material_recipe.ts): source/copy/producer provenance
+  for the same plain-string materials, consumed by shared page analysis.
 - [`../server/controls`](../server/controls): supervised local rendering and
   transient storage.
 - Viewer [`workspace.tsx`](../../packages/viewer/src/shell/workspace.tsx),

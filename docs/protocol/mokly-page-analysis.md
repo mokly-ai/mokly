@@ -3,19 +3,25 @@
 ## Delivery Status
 
 Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md),
-not yet implemented: [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
-delivers analysis, derived references, original-page matching and the quick
+implemented in [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis):
+analysis, derived references, original-page matching and the quick
 check; [M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprinted-comparison-materials)
 delivers fingerprints. [M2](../../plans/scalable-inline-style-analysis.md#milestone-2-deterministic-scale-fixture-and-complete-benchmark-evidence)
-first instruments the delivered parse sites; counters are owned by
+implements parse-site instrumentation; counters are owned by
 [timings](./mokly-timings.md#component-analysis-counts).
 
 ## Scope And Lifetime
 
-These rules apply only to component-aware classification, including views
-with empty usage in a catalogue registering components. Page analysis,
+Component-aware means the shared per-view comparison loop when **either**
+manifest registers components, including views with empty usage. Pass that
+scope through the view context and resource comparison. Page analysis,
 fingerprints and the [style-only route](./mokly-style-only-route.md) do not
-change the classifier for catalogues without registered components.
+change the classifier for catalogues without registered components. Their
+shared loop retains its delivered matching and parsing. The separate
+`classifyChangedContent` page path, including pages in component catalogues,
+also retains ignore-normalized matching and its existing parse/cache policy;
+it does not share the view analyses or their CSS cache. Duplicate page/resource
+parses from that separate path are counted, not removed by extending scope.
 Baseline admission is manifest **v7 only**, under
 [baseline compatibility](./mokly-baseline-compatibility.md): all ownership and
 review markers use the current `mokly-` syntax. No retired `mokabook-` dialect
@@ -29,6 +35,9 @@ projection, inline analysis, implementation comparison and linked-CSS matching
 share it; none parses rewritten/normalized page HTML. An identical-text quick
 check may use the head analysis alone. Embedded HTML resources still use the
 existing resource reader's own document parsing, separately from view analysis.
+Their discovery keeps delivered paired normalization; when it changes resource
+text, the reader may parse it separately from its original matching tree.
+Neither resource tree is a reparsed view-side material.
 
 All source spans are half-open **UTF-16** offsets into that side's original
 text, before header removal, marker stripping, ignores, replacements or copies.
@@ -175,7 +184,9 @@ the [resource proof](./mokly-component-review-fast-path.md#resource-and-one-side
 committed mode traverses only the head reader's closure and rejects a changed
 Git path in it; derived mode traverses both readers independently and requires
 equal closure membership/bytes as well. Resource proof failure falls through
-with the prepared analysis. Equal original bytes need no canonical CSS parse
+with the prepared analysis and discovery. A non-identical fast-path attempt's
+unattributed projection is not a complete inline-analysis result: fall-through
+builds the attributed materials from the same original analyses. Equal original bytes need no canonical CSS parse
 to settle content.
 On success state is `unchanged`, `ignoredIds` is empty, `material`/inline/
 resource evidence and owned sets are absent/empty. Preserve usage `inputs`

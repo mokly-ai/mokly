@@ -7,6 +7,7 @@ import { classifyComponents } from "../dist/review/component_classification.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { assertParserRecoveryDifference } from "./helpers/page_visibility.js";
 
 const hiddenResourceCases = [
   {
@@ -98,15 +99,19 @@ for (const resourceCase of hiddenResourceCases)
         classify(false),
       ]);
       assert.deepEqual(optimized, complete);
-      assert.ok(
-        optimized.changes.some((change) =>
-          change.reasons.some((reason) =>
-            generatedOutput === "committed"
-              ? reason.kind === "dependency" &&
-                reason.path === `mockups/${resourceCase.changed}`
-              : reason.kind === "material",
-          ),
-        ),
+      assert.deepEqual(
+        optimized.changes,
+        [],
+        "M6 exposed select-discarded resource tokens by reparsing; M7 keeps original visibility",
+      );
+      await assertParserRecoveryDifference(
+        compilation,
+        { ...config, generatedOutput },
+        { ...resourceCase.files, [resourceCase.changed]: resourceCase.before },
+        { ...resourceCase.files, [resourceCase.changed]: resourceCase.after },
+        generatedOutput === "committed"
+          ? [`mockups/${resourceCase.changed}`]
+          : [],
       );
     });
 
@@ -155,13 +160,21 @@ for (const direction of ["added", "removed"] as const)
       classify(false),
     ]);
     assert.deepEqual(optimized, complete);
-    assert.ok(
-      optimized.changes.some(
-        (change) =>
-          change.kind === "screen" &&
-          change.after?.id === "home" &&
-          change.reasons.some((reason) => reason.kind === "material"),
-      ),
+    assert.deepEqual(
+      optimized.changes,
+      [],
+      "M7 cannot invent the discarded select link, unlike the M6 material parse",
+    );
+    const sheets = (hasImport: boolean) => ({
+      "main.css": hasImport ? '@import "./nested.css";' : "",
+      ...(hasImport ? { "nested.css": "body { color: purple; }" } : {}),
+    });
+    await assertParserRecoveryDifference(
+      compilation,
+      { ...config, generatedOutput: "derived" },
+      sheets(direction === "removed"),
+      sheets(direction === "added"),
+      [],
     );
   });
 
@@ -205,17 +218,16 @@ for (const context of ["select", "template"] as const)
         classify(false),
       ]);
       assert.deepEqual(optimized, complete);
-      assert.ok(
-        optimized.changes.some(
-          (change) =>
-            change.kind === "screen" &&
-            change.after?.id === "home" &&
-            change.reasons.some((reason) =>
-              generatedOutput === "committed"
-                ? reason.kind === "dependency" &&
-                  reason.path === "mockups/image.svg"
-                : reason.kind === "material",
-            ),
-        ),
+      assert.deepEqual(
+        optimized.changes,
+        [],
+        "M6 reparsing exposed a parser-discarded/inert sibling after implementation removal; M7 preserves the original visibility",
+      );
+      await assertParserRecoveryDifference(
+        compilation,
+        { ...config, generatedOutput },
+        { "image.svg": "base image" },
+        { "image.svg": "head image" },
+        generatedOutput === "committed" ? ["mockups/image.svg"] : [],
       );
     });

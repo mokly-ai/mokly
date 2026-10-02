@@ -2,13 +2,13 @@
 
 ## Delivery Status
 
-Existing spans are implemented. Approved target of the
-[scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
+Existing spans are implemented. Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
 [M2](../../plans/scalable-inline-style-analysis.md#milestone-2-deterministic-scale-fixture-and-complete-benchmark-evidence)
 implements heap/document counts and complete sample outcomes;
 [M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse)
-implements segment counts; [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
-delivers `stylePath`, which remains pending. M2 records the reference in the fixture README.
+implements segment counts; [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
+implements shared `pageAnalysis` parses; [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
+delivers `stylePath`, still pending; M2 records the reference in the fixture README.
 
 ## Opt-in timings
 
@@ -81,10 +81,9 @@ Review phases use the same session, role and parent context as their caller:
   inventory keeps its own stages.
   Fast-path-eligible views in a component-aware classification where no view
   differs emit at most **one actual occurrence per paired view in committed
-  mode, two in derived mode**. Delivered views with instances, entry-owned
-  slots or possible inline references may add one committed or two derived
-  projected occurrences. Page reuse limits projection to ownership text edits;
-  its identical-text check needs only actual proof. The
+  mode, two in derived mode**. Non-identical attempts with ownership text edits
+  may add one committed or two derived projected occurrences; identical-text
+  checks use one conservative seed set without projection. The
   [resource rule](./mokly-component-review-fast-path.md#resource-and-one-sided-rules)
   keeps committed traversal head-only and derived closures independent.
   One-sided views add one occurrence. Repeated discovery for the same side,
@@ -127,8 +126,8 @@ For aggregate stage time, take the union of each stage's
 Include every completed interval regardless of `ok`/`error` status.
 For a scale-fixture share, clip each union to the background worker's
 `changes.classify` interval and divide by its duration, separately for cold/warm.
-This applies to `review.inline-style-analysis` and `review.css-analysis`. Never
-use supervisor wait, whole startup time or sums across sessions.
+This applies to `review.inline-style-analysis` and `review.css-analysis`, never
+supervisor wait, whole startup time or sums across sessions.
 
 ## Historical baseline phases
 
@@ -185,14 +184,15 @@ Component-free/live loops emit no new records; build parses do not count.
 - `review.document-work`: integer `htmlParses` and `htmlParseBytes`, plus
   `htmlParseMs`, `rangeMs`, `styleDiscoveryMs`, `referenceMs`, `matchingMs`,
   `normalizationMs`, `projectionMs`, `implementationMs`, `inlineRuleMs`, `hashMs`.
-  Count every HTML tree-parse attempt during classification, including embedded
-  resources and, before page reuse, normalized/material parses. Bytes are
-  UTF-8 input byte length, not string length or retained heap.
+  Count every classification HTML tree-parse attempt, including embedded resources
+  and separate-page normalized parses. Bytes are UTF-8 input length, not retained heap.
   Nonzero per-step totals use `htmlParses.<step>`/`htmlParseBytes.<step>`:
-  `range`, `styleDiscovery`, `reference`, `inlineMatching`, `stylesheetMatching`,
-  `resourceReference`, `resourceMatching`, `legacyStylesheetMatching`,
+  `pageAnalysis`, `range`, `styleDiscovery`, `reference`, `inlineMatching`,
+  `stylesheetMatching`, `resourceReference`, `resourceMatching`, `legacyStylesheetMatching`,
   `legacyResourceMatching`. Legacy steps belong to the preceding page pass;
-  resource steps count referenced HTML separately. Their sums equal the totals.
+  resource steps count referenced HTML separately. `pageAnalysis` counts shared
+  original view trees, never rewritten materials; the separate page path keeps
+  legacy steps/caches even in component catalogues. Their sums equal the totals.
 
 Document-work times sum exclusive local operation durations, rounded once to
 two decimals in milliseconds, with zero fields retained. Charge HTML tree

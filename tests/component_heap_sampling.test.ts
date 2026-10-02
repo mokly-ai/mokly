@@ -45,6 +45,7 @@ test("each completed real view samples heap once; a rejecting view never samples
   });
   const changed = new Set<string>();
   const context = {
+    componentAware: true,
     beforeReader,
     afterReader,
     changed,

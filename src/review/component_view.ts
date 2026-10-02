@@ -1,19 +1,13 @@
 import type {
   GeneratedComponentView,
   EntryChangeReason,
-  InlineStyleEvidence,
   ViewReview,
 } from "@mokly/viewer/data";
 
-import { stripMarkers } from "../components/comparison_material.js";
 import { changedComponentImplementations } from "../components/comparison_projection.js";
-import { validateComponentRanges } from "../components/ranges.js";
 import { MoklyError } from "../errors.js";
 
-import {
-  discoverInlineResourceOwners,
-  type InlineResourceOwners,
-} from "./component_inline_resources.js";
+import { discoverInlineResourceOwners } from "./component_inline_resources.js";
 import type { ComponentDependencyPolicy } from "./component_metadata.js";
 import {
   prepareComponentProjection,
@@ -28,7 +22,11 @@ import {
 import { changedResourceBytes } from "./component_resource_changes.js";
 import type { ComponentMaterialReader } from "./component_resources.js";
 import { compareUnchangedComponentView } from "./component_view_fast_path.js";
-import { normalizeSingleDocument } from "./ignore.js";
+import {
+  deliveredInlineStyles,
+  compareOneSidedComponentView,
+} from "./component_view_material.js";
+import { PageAnalysisPair } from "./page_pair.js";
 import type { ResourceComparison } from "./resource_comparison.js";
 
 export interface ComparedComponentView {
@@ -40,6 +38,7 @@ export interface ComparedComponentView {
   inlineEvidence?: PreparedInlineStyleEvidence;
 }
 export interface ComponentViewContext {
+  componentAware: boolean;
   beforeReader: ComponentMaterialReader;
   afterReader: ComponentMaterialReader;
   dependencies: ComponentDependencyPolicy;
@@ -49,7 +48,6 @@ export interface ComponentViewContext {
   compareResourceBytes?: boolean;
   useFastPath?: boolean;
 }
-const EMPTY_INLINE_OWNERS: InlineResourceOwners = new Map();
 
 /** Compare material and declared inputs without altering the retained view documents. */
 export async function compareComponentView(
@@ -74,31 +72,19 @@ export async function compareComponentView(
     ignoredIds: [],
     state: before ? "removed" : "added",
   };
-  if (base === undefined || head === undefined) {
-    const normalized =
-      base !== undefined
-        ? normalizeOneSidedView(base, before!)
-        : normalizeOneSidedView(head!, after!);
-    const evidence = await context.resources.compare(
-      before ? { path: before.path, html: normalized } : undefined,
-      after ? { path: after.path, html: normalized } : undefined,
+  if (base === undefined || head === undefined)
+    return compareOneSidedComponentView(
+      context,
+      before,
+      after,
+      base ?? head!,
+      view,
+      root,
     );
-    return {
-      comparisonPath: "complete",
-      view: { ...view, ...evidence, material: true },
-      reasons: [{ kind: "material" }, ...(evidence.reasons ?? [])],
-      changedImplementations: new Set(),
-      ownedResources: ownedResourceReasons(
-        evidence.reasons ?? [],
-        context.dependencies,
-        EMPTY_INLINE_OWNERS,
-        before?.usage,
-        after?.usage,
-        root,
-      ),
-    };
-  }
   let prepared: PreparedComponentComparison | undefined;
+  const pages = context.componentAware
+    ? new PageAnalysisPair(before!, after!, base, head)
+    : undefined;
   if (context.useFastPath !== false) {
     const attempt = await compareUnchangedComponentView(
       context,
@@ -108,6 +94,7 @@ export async function compareComponentView(
       base,
       head,
       root,
+      pages,
     );
     if (attempt.comparison) return attempt.comparison;
     prepared = attempt.prepared;
@@ -119,6 +106,8 @@ export async function compareComponentView(
     base,
     head,
     root,
+    {},
+    pages,
   );
   const {
     baseRanges,
@@ -129,6 +118,7 @@ export async function compareComponentView(
     ownedComponentIds,
     inlineAnalysis,
     inlineEvidence,
+    references,
   } = prepared;
   const reasons: EntryChangeReason[] = [];
   if (projected.before !== projected.after) reasons.push({ kind: "material" });
@@ -138,15 +128,31 @@ export async function compareComponentView(
   const repoPath = (path: string) =>
     context.prefix ? `${context.prefix}/${path}` : path;
   const evidence = await context.resources.compare(
-    { path: before!.path, html: projected.before },
-    { path: after!.path, html: projected.after },
+    {
+      path: before!.path,
+      html: projected.before,
+      ...(references ? { references: references.before } : {}),
+    },
+    {
+      path: after!.path,
+      html: projected.after,
+      ...(references ? { references: references.after } : {}),
+    },
     excluded,
     matching,
   );
   reasons.push(...(evidence.reasons ?? []));
   const actualEvidence = await context.resources.compare(
-    { path: before!.path, html: actual.base },
-    { path: after!.path, html: actual.head },
+    {
+      path: before!.path,
+      html: actual.base,
+      ...(references ? { references: references.actualBefore } : {}),
+    },
+    {
+      path: after!.path,
+      html: actual.head,
+      ...(references ? { references: references.actualAfter } : {}),
+    },
     undefined,
     matching,
   );
@@ -155,6 +161,7 @@ export async function compareComponentView(
     { path: before!.path, reader: context.beforeReader },
     { path: after!.path, reader: context.afterReader },
     context.prefix,
+    context.componentAware,
   );
   const byteChanges = context.compareResourceBytes
     ? await changedResourceBytes(
@@ -162,11 +169,13 @@ export async function compareComponentView(
           before!.path,
           projected.before,
           excluded,
+          references?.before,
         ),
         await context.afterReader.resources(
           after!.path,
           projected.after,
           excluded,
+          references?.after,
         ),
         context.beforeReader,
         context.afterReader,
@@ -176,8 +185,18 @@ export async function compareComponentView(
     reasons.push({ kind: "material" });
   const actualByteChanges = context.compareResourceBytes
     ? await changedResourceBytes(
-        await context.beforeReader.resources(before!.path, actual.base),
-        await context.afterReader.resources(after!.path, actual.head),
+        await context.beforeReader.resources(
+          before!.path,
+          actual.base,
+          undefined,
+          references?.actualBefore,
+        ),
+        await context.afterReader.resources(
+          after!.path,
+          actual.head,
+          undefined,
+          references?.actualAfter,
+        ),
         context.beforeReader,
         context.afterReader,
       )
@@ -238,33 +257,4 @@ export async function compareComponentView(
     },
     reasons,
   };
-}
-
-function deliveredInlineStyles(
-  evidence: PreparedInlineStyleEvidence | undefined,
-  view: ViewReview,
-  reasons: readonly EntryChangeReason[],
-): { inlineStyles?: InlineStyleEvidence } {
-  if (evidence?.retainedSelectors && view.state === "changed" && view.material)
-    return { inlineStyles: evidence.retainedSelectors };
-  if (
-    evidence?.allExcluded &&
-    reasons.length === 0 &&
-    view.state === "unchanged" &&
-    !view.material &&
-    !view.reasons
-  )
-    return { inlineStyles: { status: "excluded" } };
-  return {};
-}
-
-function normalizeOneSidedView(
-  html: string,
-  view: GeneratedComponentView,
-): string {
-  const ranges = view.usage
-    ? validateComponentRanges(html, view.usage.ranges)
-    : undefined;
-  const material = stripMarkers(html, view.usage, ranges);
-  return normalizeSingleDocument(material, view.path);
 }

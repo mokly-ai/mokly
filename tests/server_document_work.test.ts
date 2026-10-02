@@ -70,8 +70,8 @@ mockups.push(definePage({ id: "guide", title: "Guide", description: "Guide", dep
   for (const step of [
     "legacyStylesheetMatching",
     "legacyResourceMatching",
-    "range",
-    "reference",
+    "pageAnalysis",
+    "resourceReference",
   ])
     assert.ok(document[0]!.counts![`htmlParses.${step}`]! > 0, step);
 });

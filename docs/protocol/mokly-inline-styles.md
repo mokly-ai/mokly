@@ -3,12 +3,12 @@
 ## Delivery Status
 
 Implemented across comparison, classification, result delivery and shell
-presentation. The delivered engine runs on complete paired views and on
-reference-bearing fast-path views until the approved replacement below. The renderer is
+presentation. The delivered engine runs on complete paired views; fast-path
+views prove references conservatively without inline analysis. The renderer is
 string-only, current manifests contain no head-style or public-resource
 assertions, and historical readers discard the retired arrays. References
 inside inferred-owned rules follow their owners through the ordinary resource
-graph, including on the fast path. Component-aware results carry validated
+graph after fast-path fall-through. Component-aware results carry validated
 `inlineStyles` evidence and the shell presents each outcome. This document owns
 the analysis, attribution, comparison material and membership rules for
 style material that a renderer places outside component markup. The
@@ -24,10 +24,10 @@ Approved target of the [scalable analysis plan](../../plans/scalable-inline-styl
 implements verified parse reuse; [M5](../../plans/scalable-inline-style-analysis.md#milestone-5-changed-segment-analysis)
 implements cancellation, matched-copy pairing and stored-text composition;
 [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
-delivers original-page analysis/matching and removes fast-path inline work;
+implements original-page analysis/matching and removes fast-path inline work;
 [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
 delivers the equivalent route; [M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprinted-comparison-materials)
-delivers fingerprinted material. M7/M8/M9 rules below remain pending.
+delivers fingerprinted material. M8/M9 rules below remain pending.
 
 ## Purpose
 

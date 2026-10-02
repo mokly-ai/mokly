@@ -6,6 +6,7 @@ import { html } from "parse5";
 
 import { cssDocumentOptions } from "./document.js";
 import type { CssDocument, CssElement } from "./document.js";
+import { documentSubjectAllowed } from "./document_subjects.js";
 import { CssSelectorError } from "./match_types.js";
 import { nthSelectors, staticSelectors } from "./pseudos.js";
 
@@ -74,7 +75,11 @@ function queryDocument<T>(
       );
     const selectors = rewrite(staticSelectors(query));
     const predicate = compile(selectors, { ...options, pseudos });
-    return select(predicate, options);
+    return select(
+      (element) =>
+        documentSubjectAllowed(document, element) && predicate(element),
+      options,
+    );
   } catch (cause) {
     throw new CssSelectorError("selector-parse-failed", cause);
   }

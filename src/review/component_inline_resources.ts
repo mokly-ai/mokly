@@ -1,8 +1,11 @@
 /** Discover transitive resource ownership from inferred inline rule groups. */
+import { documentWorkSync } from "../diagnostics/timings.js";
+
 import type { ComponentMaterialReader } from "./component_resources.js";
 import type { InlineAttributionResult } from "./css/inline_attribution.js";
 import { inlineOwnedRuleGroups } from "./css/inline_owned_rules.js";
 import { renderInlineRules } from "./css/inline_rendering.js";
+import { cssRuleReferences } from "./css/material.js";
 
 /** Repository-relative resource paths mapped to every inferred component owner. */
 export type InlineResourceOwners = ReadonlyMap<string, ReadonlySet<string>>;
@@ -13,6 +16,7 @@ export async function discoverInlineResourceOwners(
   before: { path: string; reader: ComponentMaterialReader },
   after: { path: string; reader: ComponentMaterialReader },
   prefix: string,
+  storedReferences = false,
 ): Promise<InlineResourceOwners> {
   const discoveries = await Promise.all(
     (
@@ -25,7 +29,15 @@ export async function discoverInlineResourceOwners(
         componentIds: group.componentIds,
         resources: await source.reader.resources(
           source.path,
-          `<style>${renderInlineRules(group.rules)}</style>`,
+          storedReferences
+            ? ""
+            : `<style>${renderInlineRules(group.rules)}</style>`,
+          undefined,
+          storedReferences
+            ? documentWorkSync("referenceMs", () =>
+                group.rules.flatMap(cssRuleReferences),
+              )
+            : undefined,
         ),
       })),
     ),

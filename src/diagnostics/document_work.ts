@@ -15,6 +15,7 @@ export type DocumentWorkField =
   | "inlineRuleMs"
   | "hashMs";
 export type HtmlParseStep =
+  | "pageAnalysis"
   | "range"
   | "styleDiscovery"
   | "reference"

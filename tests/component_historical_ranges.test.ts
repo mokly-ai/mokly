@@ -121,6 +121,7 @@ function viewContext(
   const beforeReader = reader();
   const afterReader = reader();
   return {
+    componentAware: true,
     beforeReader,
     afterReader,
     dependencies: new ComponentDependencyPolicy(manifest, manifest, []),

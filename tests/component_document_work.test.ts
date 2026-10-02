@@ -90,6 +90,7 @@ for (const full of [false, true])
     const afterReader = reader(files(fixture.after, "blue"));
     const changed = new Set(full ? ["mockups/sheet.css"] : []);
     const context = {
+      componentAware: true,
       beforeReader,
       afterReader,
       dependencies: new ComponentDependencyPolicy(
@@ -104,6 +105,9 @@ for (const full of [false, true])
         afterReader,
         changed,
         "mockups",
+        undefined,
+        false,
+        true,
       ),
     };
     const view = (side: typeof fixture.before) =>
@@ -137,15 +141,10 @@ for (const full of [false, true])
       steps,
       full
         ? {
-            "htmlParses.range": 4,
-            "htmlParses.styleDiscovery": 2,
-            "htmlParses.inlineMatching": 2,
-            "htmlParses.reference": 4,
+            "htmlParses.pageAnalysis": 2,
             "htmlParses.resourceReference": 2,
-            "htmlParses.stylesheetMatching": 4,
-            "htmlParses.resourceMatching": 4,
           }
-        : { "htmlParses.range": 3, "htmlParses.reference": 2 },
+        : { "htmlParses.pageAnalysis": 1 },
     );
     assert.equal(
       work.htmlParses,

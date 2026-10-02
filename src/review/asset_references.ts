@@ -31,6 +31,15 @@ export function referencedRoutes(
       extension === ".css"
         ? extractCssReferences(text)
         : (html?.resources ?? []);
+    return referenceRoutes(sourceRoute, references);
+  });
+}
+
+export function referenceRoutes(
+  sourceRoute: string,
+  references: readonly string[],
+): string[] {
+  return documentWorkSync("referenceMs", () => {
     return [
       ...new Set(
         references.flatMap((reference) => {

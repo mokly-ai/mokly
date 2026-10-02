@@ -19,6 +19,17 @@ export interface InlineMaterialProjection {
   appendix: string;
 }
 
+const producerReferences = new WeakMap<
+  InlineMaterialProjection,
+  readonly string[]
+>();
+
+export function inlineMaterialReferences(
+  projection: InlineMaterialProjection,
+): readonly string[] {
+  return producerReferences.get(projection) ?? [];
+}
+
 /** Actual and entry-projected material for one side of a paired view. */
 export interface InlineMaterialReplacements {
   actual: InlineMaterialProjection;
@@ -72,10 +83,19 @@ export function inlineMaterialReplacements(
     }));
     const projection = (
       retained: readonly CssRule[],
-    ): InlineMaterialProjection => ({
-      replacements,
-      appendix: `<style>${retained.map((rule) => cssRuleData(rule).canonicalText).join("")}</style>`,
-    });
+    ): InlineMaterialProjection => {
+      const material = {
+        replacements,
+        appendix: `<style>${retained.map((rule) => cssRuleData(rule).canonicalText).join("")}</style>`,
+      };
+      producerReferences.set(
+        material,
+        documentWorkSync("referenceMs", () =>
+          retained.flatMap((rule) => cssRuleData(rule).references),
+        ),
+      );
+      return material;
+    };
     const actual: CssRule[] = [];
     const ownedCopies = new Map<CssRule, number>();
     for (const { run, offset } of runs)

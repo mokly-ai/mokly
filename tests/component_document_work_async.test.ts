@@ -22,6 +22,7 @@ test("disabled view instrumentation creates no promises beyond the delivered com
     const afterReader = reader(fixture.after.outputs);
     const changed = new Set<string>();
     return {
+      componentAware: true,
       beforeReader,
       afterReader,
       dependencies: new ComponentDependencyPolicy(

@@ -43,6 +43,7 @@ test("parse failure selectors remain prepared for later evidence delivery", asyn
   );
   const comparison = await compareComponentView(
     {
+      componentAware: true,
       beforeReader,
       afterReader,
       dependencies: new ComponentDependencyPolicy(
@@ -91,6 +92,7 @@ test("all-excluded status remains prepared for later evidence delivery", async (
   const afterReader = reader(head);
   const comparison = await compareComponentView(
     {
+      componentAware: true,
       beforeReader,
       afterReader,
       dependencies: new ComponentDependencyPolicy(
@@ -145,6 +147,7 @@ test("unchanged reference analysis prepares no future inline evidence", async (t
   const afterReader = reader();
   const comparison = await compareComponentView(
     {
+      componentAware: true,
       beforeReader,
       afterReader,
       dependencies: new ComponentDependencyPolicy(

@@ -208,7 +208,9 @@ and shell presentation in
 [`mokly-css-evidence-presentation.md`](../docs/protocol/mokly-css-evidence-presentation.md).
 Usage/evidence wire shapes and presentation do not change. Page analysis,
 fingerprints and the route apply only to component-aware classification;
-catalogues without registered components keep their existing classifier.
+the [scope contract](../docs/protocol/mokly-page-analysis.md#scope-and-lifetime)
+defines the shared loop's either-manifest flag. Component-free catalogues and
+the separate page path keep their existing classifier/matching/cache policy.
 
 ### Caches And Segments
 
@@ -919,11 +921,80 @@ Documentation-only; validated with Prettier, documentation tests and a diff revi
 - [x] Validate the changed Markdown with `npx prettier --check` and review the
       diff.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
+
+### Milestone 6 review findings
+
+Reported by the post-push review of commit `e5025e64`. Recorded for the
+user's decision.
+
+1. Medium. The cost model keeps every operation it does not model unchanged
+   through all milestones, including the unmeasured remainder ("Rest": 33.3/34.0
+   s for cumulative style, 24.0/26.4 s for cumulative no-change, about 37% of the
+   no-change projection), so by its own numbers Milestone 9A cannot close the
+   cumulative component-style gap: removing all of M9A's 63–72 s from the
+   projected 130–175 s still leaves about 58–112 s (recomputed per saved sample,
+   65–96 s cold and 61–82 s warm, mostly above the 73.5/75.7 s ceilings). The
+   remainder is about 25 s of head-page parsing, reference and resource
+   discovery, and the 33 s Rest, none broken down or assigned to a milestone,
+   although M9A's summary says it will "close the measured cost left by M7 to
+   M9". The model also omits work the identical-text quick check removes by
+   contract (hashing, projection, implementation comparison: 5.5–7.1 s on
+   cumulative no-change), which moves that cell's cold upper bound from 72.4 to
+   about 66.9 s against a 66.8 s ceiling. Recommended: extend the model
+   (documentation only) to break down Rest and the other retained costs from
+   the saved profiles, credit each milestone with everything its contract
+   removes, add a post-M9A projection with partial and full removal of the sheet
+   work for every Decision 13 cell, and then widen M9A or add a milestone for
+   the largest remaining non-sheet cost, or ask the user whether the
+   cumulative-style target should change; also add a plan rule that checkpoint
+   projections account for every part of the measured total and show the
+   post-plan result for each Decision 13 cell.
+2. Medium. The new Milestone 8 TODO (residual-multiset material equality, a
+   ban on sorting, copying or joining cancelled rules, a fallback to ordinary
+   composition, and counting and differential tests) adds behavior and tests
+   that the route contract does not contain, although that contract says its
+   proof section owns all of Milestone 8's test obligations, the existing M8
+   TODO calls it the sole test list, and the contract's Result section says to
+   compose and compare the retained multisets; the 130–175 s projection relies
+   on that saving (14.261% of the profiled time). The TODO and M9A also fix the
+   current block-level cancellation in place, while the recorded Milestone 5
+   finding 1 proposes replacing it before Milestone 8, and no TODO makes
+   Milestone 8 wait for that decision. Recommended: draft the route-contract
+   change (Result and proof sections) for the user's approval, make the M8 TODO
+   "after approval, update the contract, then implement", add a first M8 TODO
+   to obtain the user's decision on Milestone 5 finding 1, and add a plan rule
+   that any amendment adding behavior or tests goes through the owning
+   contract, with approval while contracts are frozen.
+3. Low. "Warm cumulative markup looks reachable across its range" is not
+   supported: Milestone 5 measured only no-change and component-style, so the
+   cumulative screen-markup and linked-stylesheet cells come from a single run
+   with no measured variation, and the same catalogue's same-code warm
+   no-change varied by 25.7%, which would take that cell's 66.72 s upper bound
+   to about 83.9 s, above its 77.538 s ceiling. Recommended: mark single-run
+   cells "variation not measured", widen them by the largest same-code
+   variation seen on that catalogue (or record a second run next time),
+   reclassify warm cumulative markup as noise-dependent, and state the
+   single-run rule in the method paragraph.
+4. Low. Nearly every number matches the saved evidence, but the Inclusive
+   Paths table shows "—" (defined as no sampled stack) for two non-zero values
+   (`compareUnchangedComponentView` 0.38% in the cumulative-style profile and
+   the `inline_attribution.js:10` callback 3.10% in the default-style profile);
+   five range upper bounds are one second above what the stated formula gives
+   after rounding outward (default no-change warm 24.45 against 26, default
+   style cold 23.55 against 25, cumulative style cold 310.29 against 312 and
+   warm 276.89 against 278, cumulative linked cold 112.93 against 114); no
+   model script or output is saved; and the profile step categories behind
+   every share the plan relies on are ordered regular expressions in an
+   ignored file, undocumented in the report. Recommended: fix the cells and
+   define "—", save the model script and output beside the evidence and
+   regenerate the range table, document the category order, and add a TODO to
+   commit the off-by-default profiling option and summarizer under
+   `scripts/large/` with tests, generating report tables from saved summaries.
 
 ## Milestone 7: Shared Page Analysis
 
@@ -931,42 +1002,64 @@ Summary: parse each page file side once and share the result across the quick
 check, the full comparison and linked-stylesheet matching; match selectors on
 the original page; give identical texts a single-parse quick check.
 
-- [ ] Add a page analysis module under `src/review/` that parses one side on
+- [x] Add a page analysis module under `src/review/` that parses one side on
       first use with source locations and exposes validated ranges, unowned
       style spans, paired ignored regions, the element tree with its ignore
       rule, and reference records with source spans. Let
       `validateComponentRanges`, `findUnownedInlineStyles` and HTML reference
       extraction accept a parsed document, keeping their string entry points
       for other callers.
-- [ ] Derive comparison-material references from the page analysis and use
+- [x] Derive comparison-material references from the page analysis and use
       them for resource discovery. Add a differential test that the derived
       resource seeds and transitive closures equal discovery from old text
       materials for every view of the design catalogue, small large fixtures
       and inline test catalogues in the contract's visibility-preserving
       domain. Assert explicit provenance-derived sets for partial spans,
       template/caller copies and parser-recovery visibility differences.
-- [ ] Match inline and linked-stylesheet selectors on the original trees with
+- [x] Match inline and linked-stylesheet selectors on the original trees with
       the ignore rule, resolve owners on the original ranges, and remove the
-      normalized parses. Add original-context tests for a sibling combinator,
+      normalized parses in the component-aware shared loop only. Add original-context tests for a sibling combinator,
       `:nth-child`, `:has()` and `:empty` next to/containing ignored content on
       both paths; every other existing CSS and inline test stays unchanged.
-- [ ] Add the identical-text quick check and remove inline analysis from the
+- [x] Add the identical-text quick check and remove inline analysis from the
       fast path. Test in committed and derived modes that a zero-change
       classification emits no `review.inline-style-analysis` span and parses
       each view once.
-- [ ] Discovered: preserve the mode-specific resource-graph bounds in the
+- [x] Discovered: preserve the mode-specific resource-graph bounds in the
       timing contract; prove committed quick checks never traverse the base
       reader and derived quick checks compare both closures independently.
-- [ ] Discovered: test flat ignore markers inside raw text, including the
+- [x] Discovered: test flat ignore markers inside raw text, including the
       textarea-bounded style case and its paired/one-sided expected results
       under [ignore pairing](../docs/protocol/mokly-page-analysis.md#contents-and-ignore-pairing).
-- [ ] Assert with document-work counts that a full comparison parses each side
+- [x] Assert with document-work counts that a full comparison parses each side
       at most once.
+- [x] Discovered: clarify the contract's existing component-aware scope, pass
+      the either-manifest flag through view/resource contexts, and retain
+      component-free and separate page matching/cache behavior. Regression
+      tests cover both output modes; embedded HTML stays in its reader cache.
+- [x] Discovered: failed non-identical quick checks must not reuse their
+      unattributed projection as a complete inline result. A failing M6-oracle
+      test pins owned unchanged references after ignored edits; full attribution
+      reuses analyses/discovery. Owned reference traversal uses stored values,
+      not synthetic `<style>` HTML; parse5 interception covers that path.
+- [x] Discovered: preserve embedded-resource reference discovery after paired
+      normalization, independently of original-tree matching. A failing
+      committed/derived oracle case pins parser-recovery reachability; those
+      resource-only parses remain separately counted. Keep producer references
+      in a weak association so every existing M4/M5 material assertion is unchanged.
+- [x] Discovered: split material delivery and closure caching from orchestration,
+      and move the root-specific resource test into a focused file. Use a real
+      template copy for that ownership test; parser-discarded select references
+      have separate explicit old/new oracle cases.
+- [x] Discovered: code checkpoint before measurements: finish targeted and full
+      unit/browser/hydration suites, format/lint/typecheck and docs validation,
+      commit locally, report and stop for the supervisor. Measurements, the
+      retained-byte report, `cargo xtask check` and push follow approval.
 - [ ] Discovered: report retained HTML bytes and per-step work, including the
       page pass and resource documents, against M6's roughly 80% identical-view
       and 83% complete-style byte reductions. Account for source-location and
       reference-inventory overhead rather than treating byte ratios as timings.
-- [ ] Run the fast-path, comparison-mode and Changes equivalence suites;
+- [x] Run the fast-path, comparison-mode and Changes equivalence suites;
       preserve assertions outside the page contract's explicit provenance/
       ignore-eligibility/context cases. Retain the delivered text-material
       oracle and record old

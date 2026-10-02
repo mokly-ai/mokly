@@ -157,7 +157,7 @@ const outcome = analyzeStylesheetChange(
 // { kind: "kept", status: "matched", selectors: [".button"] }
 ```
 
-Pass the already-normalized before/after parse5 documents; either side may be
+Pass the prepared before/after parse5 documents; either side may be
 absent for added/removed views. An absent stylesheet is passed as an empty string.
 `matchCssRules(diff, documents)` retains a decision for each diffed rule;
 `analyzeStylesheetChange` composes the parser, diff, and match, returning one
@@ -208,7 +208,8 @@ references before incomplete syntax; strict rule parsing still reports it unreso
 `ResourceComparison.compare(before?, after?, excluded?, matching?)` reads and
 validates resource closures before passing changed resources to
 `CssResourceAnalysis.analyze(resources, documents)`. Component ownership controls
-reachability independently of matching against actual normalized markup. Embedded
+reachability independently of matching against actual markup. Component-aware
+loops reuse original trees; component-free/page paths keep normalized matching. Embedded
 documents also supply matching trees. Base resource reads are batched by graph
 depth; optional counterpart CSS reads distinguish missing files from invalid
 ones. Per-side readers cache bytes, and the injected parser caches identical CSS
@@ -260,11 +261,11 @@ and child spans. See the [timing contract](../../docs/protocol/mokly-timings.md)
 
 The pure inline-style engine discovers eligible unowned HTML CSS elements in
 original coordinates, parses each element independently, attributes diffed
-rules through normalized component ranges and renders canonical actual and
+rules through original component ranges and renders canonical actual and
 projected material. Complete paired component-aware comparisons call it with
 the classification-scoped cached parser, including zero-instance usage records.
-Reference-bearing rules additionally run on the fast path behind the shared
-cheap CSS-reference prefilter. Rules grouped by each inferred owner set traverse
+Fast-path views use conservative source references without inline analysis;
+fall-through performs full attribution. Rules grouped by each inferred owner set traverse
 the ordinary cached resource graph, preserving relative and transitive paths;
 unchanged owned or excluded reference rules are removed symmetrically without
 creating inline evidence. Diffed retained/excluded rules emit validated
@@ -318,12 +319,16 @@ Key code:
   internal `useFastPath` classification input and trailing `compareReview`
   options object exist only for differential tests and default to enabled. The decision rule lives in the
   [component change attribution contract](../../docs/protocol/mokly-component-review-fast-path.md).
-  Views with instances, entry-owned slots or possible inline references additionally run the same ownership projection
-  and excluded-resource discovery as the complete comparison. This proves
-  resources that HTML parsing may discard in contexts such as `template` or
-  `select`, including siblings exposed when component implementation text is
-  removed. Views without ownership text edits or possible inline references use actual-document evidence
-  alone.
+  Identical source/path/topology shares head analysis and conservative original/
+  caller-copy seeds, with no projection, inline analysis or hashing. Committed
+  mode proves only the head closure; derived mode compares both independently.
+  Non-identical attempts retain ownership-projected proof. Fall-through reuses
+  trees/discovery and rebuilds any unattributed material for full attribution.
+- `page_analysis.ts`, `page_pair.ts`: lazy view-local source-located trees,
+  validated UTF-16 ranges, flat ignore spans, styles and reference inventory.
+- `page_projection.ts`, `page_reference_records.ts`: delivered string materials
+  with auxiliary kept/copy/producer recipes, never a reparsed material tree.
+  Copies expose recorded template references, not parser-discarded tokens.
 - `component_resource_attribution.ts`: actual-invocation declared/inferred
   resource ownership and entry evidence without invented variant entries.
 - `component_inline_resources.ts`: inferred owner-set traversal, including
@@ -353,10 +358,13 @@ Key code:
   and the classification-scoped parser cache.
 - `../../packages/viewer/src/review/result_resources.ts`: browser-safe
   validation of retained/excluded evidence shared with readers.
-- `resource_documents.ts`: one paired normalization for embedded-document
-  discovery and matching; normalized ignore tokens are never parsed a second time.
+- `resource_documents.ts`, `resource_document_analysis.ts`: paired embedded
+  resource normalization and original reader trees for component-aware matching;
+  `view_resources.ts` caches resolved seed closures without retaining page HTML.
 - `artifact_resources.ts`: validation of evidence against retained snapshot resources.
 
 See the [Changes contract](../../docs/protocol/mokly-changes.md),
 [component attribution contract](../../docs/protocol/mokly-component-changes.md),
 and [component result schema](../../docs/protocol/mokly-component-review.md).
+The [shared-page checkpoint](../../docs/dev/shared-page-analysis-checkpoint.md)
+records the captured oracle, exact parse bounds and intentional changed outcomes.

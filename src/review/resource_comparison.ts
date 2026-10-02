@@ -3,7 +3,7 @@ import { isStylesheetPath } from "@mokly/viewer/data";
 import { parseHtml } from "../diagnostics/html_parse.js";
 
 import type { ComponentMaterialReader } from "./component_resources.js";
-import type { CssDocumentPair } from "./css/document.js";
+import type { CssDocument, CssDocumentPair } from "./css/document.js";
 import {
   CssResourceAnalysis,
   type ChangedResource,
@@ -18,6 +18,7 @@ import {
 export interface ResourceDocument {
   path: string;
   html: string;
+  references?: readonly string[];
 }
 
 /** Shared resource discovery and rule attribution for both result versions. */
@@ -29,28 +30,46 @@ export class ResourceComparison {
     readonly prefix: string,
     readonly css: CssResourceAnalysis = new CssResourceAnalysis(),
     readonly compareBytes = false,
+    readonly componentAware = false,
   ) {
     before.pairWith(after, "before");
     after.pairWith(before, "after");
     after.allowMissingResources(
       (route) => this.compareBytes || this.changed.has(this.path(route)),
     );
+    if (componentAware) {
+      before.useOriginalDocuments();
+      after.useOriginalDocuments();
+    }
   }
 
   async compare(
     before: ResourceDocument | undefined,
     after: ResourceDocument | undefined,
     excluded?: (path: string) => boolean,
-    matching: { before?: string | undefined; after?: string | undefined } = {
+    matching: {
+      before?: string | CssDocument | undefined;
+      after?: string | CssDocument | undefined;
+    } = {
       before: before?.html,
       after: after?.html,
     },
   ): Promise<ResourceEvidence> {
     const bases = before
-      ? await this.before.resources(before.path, before.html, excluded)
+      ? await this.before.resources(
+          before.path,
+          before.html,
+          excluded,
+          before.references,
+        )
       : new Set<string>();
     const heads = after
-      ? await this.after.resources(after.path, after.html, excluded)
+      ? await this.after.resources(
+          after.path,
+          after.html,
+          excluded,
+          after.references,
+        )
       : new Set<string>();
     const resources: ChangedResource[] = [];
     const discovered = [...new Set([...bases, ...heads])];
@@ -86,10 +105,20 @@ export class ResourceComparison {
           {
             ...(matching.before === undefined
               ? {}
-              : { before: parseHtml("stylesheetMatching", matching.before) }),
+              : {
+                  before:
+                    typeof matching.before === "string"
+                      ? parseHtml("stylesheetMatching", matching.before)
+                      : matching.before,
+                }),
             ...(matching.after === undefined
               ? {}
-              : { after: parseHtml("stylesheetMatching", matching.after) }),
+              : {
+                  after:
+                    typeof matching.after === "string"
+                      ? parseHtml("stylesheetMatching", matching.after)
+                      : matching.after,
+                }),
           },
         ]
       : [];
@@ -121,10 +150,10 @@ export class ResourceComparison {
         documents.push({
           ...(baseDocument === undefined
             ? {}
-            : { before: parseHtml("resourceMatching", baseDocument) }),
+            : { before: await this.before.resourceDocument(route) }),
           ...(headDocument === undefined
             ? {}
-            : { after: parseHtml("resourceMatching", headDocument) }),
+            : { after: await this.after.resourceDocument(route) }),
         });
       }
     }

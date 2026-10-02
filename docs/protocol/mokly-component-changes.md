@@ -4,9 +4,9 @@
 
 Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
 [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
-delivers [page analysis](./mokly-page-analysis.md);
+implements [page analysis](./mokly-page-analysis.md);
 [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
-delivers the [equivalent route](./mokly-style-only-route.md). Both are pending;
+delivers the [equivalent route](./mokly-style-only-route.md), which remains pending;
 [fast-path](./mokly-component-review-fast-path.md) owns decision ordering.
 
 The classifier, Browse/watch cache, artifacts and static exporter share this

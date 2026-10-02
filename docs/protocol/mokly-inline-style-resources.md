@@ -8,8 +8,9 @@ Approved target of the [scalable analysis plan](../../plans/scalable-inline-styl
 [M5](../../plans/scalable-inline-style-analysis.md#milestone-5-changed-segment-analysis)
 implements the [matched-occurrence rule](./mokly-css-parse-reuse.md#unchanged-references-and-composition);
 [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
-delivers derived reference seeds and fast-path raw proof; [M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprinted-comparison-materials)
-delivers stored references for fingerprints. Propagation rules stay unchanged;
+implements derived reference seeds, stored owner-group references and fast-path
+raw proof; [M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprinted-comparison-materials)
+delivers stored references for fingerprints and remains pending. Propagation rules stay unchanged;
 the page contract owns the precise provenance-reference equality domain.
 
 This contract owns resource propagation for the attributions and canonical

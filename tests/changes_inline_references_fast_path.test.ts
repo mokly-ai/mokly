@@ -109,7 +109,7 @@ for (const mode of ["committed", "derived"] as const)
       fixture.compilation.manifest.entries
         .filter((entry) => entry.id !== "home")
         .map((entry) => entry.id),
-      1,
+      0,
     );
     const events: TimingEvent[] = [];
     const result = await runWithTimings(
@@ -136,7 +136,6 @@ for (const mode of ["committed", "derived"] as const)
     );
     assert.deepEqual(Object.fromEntries(parseCounts), {
       '.actual-only{background:url("../image.svg")}': 1,
-      '.actual-only{background:url("../other.svg")}': 1,
     });
     assert.deepEqual(result, await assertComparisonModesEquivalent(input));
     assert.deepEqual(
@@ -153,7 +152,7 @@ for (const mode of ["committed", "derived"] as const)
           event.stage === "review.inline-style-analysis" &&
           event.event === "start",
       ).length,
-      views,
+      2,
     );
     const counts = events.find(
       (event) =>
