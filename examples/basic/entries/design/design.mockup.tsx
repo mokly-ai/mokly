@@ -1,6 +1,7 @@
 import { folder, defineRoot } from "@mokly/mokly";
 
 import { appearanceDesign } from "./browse/appearance/index.js";
+import { docScreens } from "./browse/docs/screens.js";
 import { removedPageScreens } from "./browse/pages/previous-version/screens.js";
 import { variantScreens } from "./browse/variants/screens.js";
 import { detailsScreen } from "./browse/views/details-screen.js";
@@ -48,6 +49,15 @@ const designMockups = defineRoot({
             }),
           ],
           title: "Document pages",
+        }),
+        folder({
+          children: docScreens,
+          dependencies: [
+            ...DESIGN_DEPENDENCIES,
+            "examples/basic/generated/design-doc.css",
+          ],
+          relatedDocs: ["docs/protocol/mokly-docs.md"],
+          title: "Specification docs",
         }),
         folder({
           children: publicationScreens,

@@ -200,6 +200,19 @@ export function PageIcon({ size }: IconProps) {
   );
 }
 
+/**
+ * A Markdown doc: a sheet of prose drawn as lines of text, without the folded
+ * corner that marks a complete page.
+ */
+export function DocIcon({ size }: IconProps) {
+  return (
+    <IconSvg size={size ?? 13}>
+      <rect height={18} rx={2} width={14} x={5} y={3} />
+      <path d="M9 8h6M9 12h6M9 16h3" />
+    </IconSvg>
+  );
+}
+
 /** A use case: connected steps through canonical screens. */
 export function FlowIcon({ size }: IconProps) {
   return (

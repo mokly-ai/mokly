@@ -53,6 +53,13 @@ muted. The changed mark is a trailing dot and never an edge or rail. Row renderi
 view. Selected rows use the same appearance-aware contrast token for their
 labels, variant disclosures and changed marks.
 
+A row of kind `doc` is a Markdown doc: an ordinary leaf drawn with the doc icon,
+a sheet of text lines without the folded corner that marks a page, and muted
+like page and screen rows. The shared fixture holds one, the Welcome
+specification, as the last Example leaf after Example tour, because leaves sort
+by title; the doc designs select it, and a removed doc keeps the same icon on
+its flat Changes row.
+
 Comparison toolbar draws the **Scroll together** switch in every diff mode,
 between the mode group and Refresh: a native checkbox with switch semantics
 inside a label whose text is its name, over a drawn track and knob. Every mode

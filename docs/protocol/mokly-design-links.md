@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-Implemented in the 63 Browse/Changes design screens and two example screens with
-`MockLink`/`MockLink asChild`. Those 63 Browse/Changes designs retain canonical
+Implemented in the 67 Browse/Changes design screens and two example screens with
+`MockLink`/`MockLink asChild`. Those 67 Browse/Changes designs retain canonical
 links; [components](./mokly-component-design.md) and
 [removed previews](./mokly-removed-previews.md) extend the contract.
 

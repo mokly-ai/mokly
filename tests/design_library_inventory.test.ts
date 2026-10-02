@@ -30,6 +30,30 @@ test("catalogue navigation's All example matches its in-screen navigation", () =
   assert.deepEqual(all.props.rows, NAV_TREE);
 });
 
+test("catalogue navigation accepts doc rows and the shared tree holds one doc leaf", async () => {
+  const { manifest } = await designCatalogue;
+  const parent = componentParent(manifest, "design-ui-catalogue-navigation");
+  const rows = parent.propSchema.properties["rows"]?.schema;
+  assert.ok(rows?.kind === "array" && rows.items.kind === "object");
+  const kind = rows.items.properties["kind"]?.schema;
+  assert.ok(kind?.kind === "enum");
+  assert.ok(kind.values.includes("doc"));
+  const index = NAV_TREE.findIndex((row) => row.kind === "doc");
+  assert.deepEqual(
+    NAV_TREE.filter((row) => row.kind === "doc").map((row) => [
+      row.label,
+      row.depth,
+      row.to,
+    ]),
+    [["Welcome specification", 1, "design-doc-view"]],
+  );
+  assert.equal(
+    NAV_TREE[index - 1]?.label,
+    "Example tour",
+    "a doc sorts by title after the other Example leaves",
+  );
+});
+
 /**
  * `screens.json` is a frozen record proving the shared-library refactor never
  * dropped a screen or changed a route, so an entry may only be removed from it

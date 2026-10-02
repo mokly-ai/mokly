@@ -2,16 +2,22 @@ import type { DesignDestination } from "./destinations.js";
 import { DESTINATIONS } from "./destinations.js";
 import { ExampleWorkspace } from "./example_workspace.js";
 import { NavTree, type NavNode } from "./nav.js";
+import { SPECIFICATION_ROW } from "./nav_data.js";
 import { WelcomeHead } from "./screen_heads.js";
 import { Shell, type ArtboardViewport } from "./shell.js";
 import type { CatalogueTag } from "./tags.js";
 
+/**
+ * The tree a tag query keeps. Welcome declares both tags and Details declares
+ * `forms`; the Welcome specification declares `onboarding`, so that query keeps
+ * the doc beside Welcome.
+ */
 function taggedTree(tag: CatalogueTag): readonly NavNode[] {
-  const count = tag === "forms" ? 2 : 1;
+  const forms = tag === "forms";
   return [
     {
       key: "example",
-      count,
+      count: forms ? 1 : 2,
       depth: 0,
       kind: "folder",
       label: "Example",
@@ -19,7 +25,7 @@ function taggedTree(tag: CatalogueTag): readonly NavNode[] {
     },
     {
       key: "screens",
-      count,
+      count: forms ? 2 : 1,
       depth: 1,
       kind: "folder",
       label: "Screens",
@@ -32,17 +38,15 @@ function taggedTree(tag: CatalogueTag): readonly NavNode[] {
       label: "Welcome",
       to: DESTINATIONS.welcome,
     },
-    ...(tag === "forms"
-      ? [
-          {
-            key: "details",
-            depth: 2,
-            kind: "screen" as const,
-            label: "Details",
-            to: DESTINATIONS.details,
-          },
-        ]
-      : []),
+    forms
+      ? {
+          key: "details",
+          depth: 2,
+          kind: "screen",
+          label: "Details",
+          to: DESTINATIONS.details,
+        }
+      : SPECIFICATION_ROW,
   ];
 }
 

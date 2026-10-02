@@ -98,6 +98,13 @@ export default defineConfig({
       ),
     },
     {
+      match: "screens/design-doc-*.html",
+      stylesheets: withLibraryStyles(
+        ["design.css", "design-stage.css", "design-doc.css"],
+        workspaceLayoutStyles,
+      ),
+    },
+    {
       match: "screens/design-*.html",
       stylesheets: withLibraryStyles(
         ["design.css", "design-stage.css"],
@@ -127,6 +134,7 @@ export default defineConfig({
           "examples/basic/generated/design-component-view.css",
           "examples/basic/generated/design-review.css",
           "examples/basic/generated/design-review-scroll.css",
+          "examples/basic/generated/design-doc.css",
           "examples/basic/generated/design-stage.css",
           "examples/basic/generated/design.css",
           "examples/basic/generated/styles.css",

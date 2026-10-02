@@ -31,6 +31,7 @@ const propSchema = {
                   "component",
                   "flow",
                   "page",
+                  "doc",
                   "variant",
                 ],
               },
