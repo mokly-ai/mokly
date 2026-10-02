@@ -2,7 +2,8 @@
 
 ## Status
 
-Active until the implementation PR merges. Created 2026-09-24 from the
+Complete: implementation PR #125 merged as `ff376d7` on 2026-10-02.
+Created 2026-09-24 from the
 CSS-in-JS investigation on this branch. Milestones 13, 15 and 16 resolve the
 authorized review findings; finding 3 was resolved in the separate `922c1ec`
 merge. M12-4, M12-6, M12-7 and M14-1 remain open by user direction in the
@@ -67,7 +68,8 @@ running the watched child. Milestone 46 (`77a1f493`)
 passed the full gate and resolves that finding; other review findings remain
 open. Findings in the
 [Milestone 47 review record](../docs/reviews/imported-css-delivery-milestone-47.md)
-remain open for the user's decision; the plan stays active until the PR merges.
+were resolved after the merge in `ec04332`; other review findings remain open
+for the user's decision.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -1103,6 +1105,9 @@ the user.
 
 - Watch the first derived comparison on a consumer catalogue that adopts this
   version and confirm the documented one-time jump settles on the next commit.
+- Done in `ec04332`: resolve the Milestone 47 review findings with a
+  cross-process imported-CSS order test, direct helper tests for open streams
+  and startup retries, and an exact 3,000-file watcher test name.
 
 ## Follow-up plans (not part of this change)
 
