@@ -43,11 +43,10 @@ export function deliveredInlineStyles(
 function normalizeOneSidedView(
   html: string,
   view: GeneratedComponentView,
-  analysis?: PageAnalysis,
 ): string {
-  const ranges =
-    analysis?.ranges ??
-    (view.usage ? validateComponentRanges(html, view.usage.ranges) : undefined);
+  const ranges = view.usage
+    ? validateComponentRanges(html, view.usage.ranges)
+    : undefined;
   const material = stripMarkers(html, view.usage, ranges);
   return normalizeSingleDocument(material, view.path);
 }
@@ -64,7 +63,7 @@ export async function compareOneSidedComponentView(
   const analysis = context.componentAware
     ? new PageAnalysis(source, selected.path, selected.usage)
     : undefined;
-  const normalized = normalizeOneSidedView(source, selected, analysis);
+  const material = analysis ? source : normalizeOneSidedView(source, selected);
   const references = analysis?.materialReferences(
     materialRecipe(analysis.source, { replacements: [], appendix: "" }),
     [],
@@ -73,14 +72,14 @@ export async function compareOneSidedComponentView(
     before
       ? {
           path: before.path,
-          html: normalized,
+          html: material,
           ...(references ? { references } : {}),
         }
       : undefined,
     after
       ? {
           path: after.path,
-          html: normalized,
+          html: material,
           ...(references ? { references } : {}),
         }
       : undefined,

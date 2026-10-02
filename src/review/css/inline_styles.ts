@@ -35,11 +35,9 @@ export function findUnownedInlineStyles(
   source: string,
   ranges: readonly RenderedRange[],
   pairedIgnoreIds: ReadonlySet<string>,
-  document?: DefaultTreeAdapterMap["document"],
-  regions = reviewIgnoreRegions(source, "$document"),
 ): InlineStyleSpan[] {
   return documentWorkSync("styleDiscoveryMs", () =>
-    findStyles(source, ranges, pairedIgnoreIds, document, regions),
+    findStyles(source, ranges, pairedIgnoreIds),
   );
 }
 
@@ -47,15 +45,13 @@ function findStyles(
   source: string,
   ranges: readonly RenderedRange[],
   pairedIgnoreIds: ReadonlySet<string>,
-  parsed?: DefaultTreeAdapterMap["document"],
-  regions = reviewIgnoreRegions(source, "$document"),
 ): InlineStyleSpan[] {
-  const document =
-    parsed ??
-    parseHtml("styleDiscovery", source, {
-      sourceCodeLocationInfo: true,
-    });
-  const ignored = regions.filter(({ id }) => pairedIgnoreIds.has(id));
+  const document = parseHtml("styleDiscovery", source, {
+    sourceCodeLocationInfo: true,
+  });
+  const ignored = reviewIgnoreRegions(source, "$document").filter(({ id }) =>
+    pairedIgnoreIds.has(id),
+  );
   const spans: InlineStyleSpan[] = [];
   visit(document, (node) => {
     const span = inlineStyleSpan(source, node);

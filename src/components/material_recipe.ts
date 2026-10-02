@@ -15,7 +15,12 @@ export interface SourceSpan {
 }
 export type MaterialPiece =
   | (SourceSpan & { kind: "source"; copy?: SourceSpan })
-  | { kind: "insert"; text: string; references: readonly string[] };
+  | {
+      kind: "insert";
+      text: string;
+      references: readonly string[];
+      verbatim?: boolean;
+    };
 export type MaterialRecipe = readonly MaterialPiece[];
 
 export function materialRecipe(
@@ -68,6 +73,7 @@ export function materialRecipe(
         kind: "insert",
         text: `<mokly-caller-slot data-key="${slot.key}" data-rendered="${Boolean(range)}">`,
         references: [],
+        verbatim: true,
       });
       if (range)
         render(range.contentStart, range.contentEnd, {
@@ -78,12 +84,14 @@ export function materialRecipe(
         kind: "insert",
         text: "</mokly-caller-slot>",
         references: [],
+        verbatim: true,
       });
     }
   recipe.push({
     kind: "insert",
     text: inline.appendix,
     references: inlineMaterialReferences(inline),
+    verbatim: Boolean(pairs && usage),
   });
   return recipe;
 }
@@ -119,13 +127,22 @@ export function renderMaterialRecipe(
   source: string,
   recipe: MaterialRecipe,
 ): string {
-  return stripComponentMarkers(
-    recipe
-      .map((piece) =>
+  const result: string[] = [];
+  let rendered: string[] = [];
+  const flush = () => {
+    result.push(stripComponentMarkers(rendered.join("")));
+    rendered = [];
+  };
+  for (const piece of recipe)
+    if (piece.kind === "insert" && piece.verbatim) {
+      flush();
+      result.push(piece.text);
+    } else
+      rendered.push(
         piece.kind === "source"
           ? source.slice(piece.start, piece.end)
           : piece.text,
-      )
-      .join(""),
-  );
+      );
+  flush();
+  return result.join("");
 }

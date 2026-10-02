@@ -26,6 +26,8 @@ import {
   pageReferenceRecords,
   type PageReferenceRecord,
 } from "./page_reference_records.js";
+import { pageTreeAdapter } from "./page_source_locations.js";
+import { pageSubjectFilter } from "./page_subjects.js";
 
 export class PageAnalysis {
   readonly regions: readonly ReviewIgnoreRegion[];
@@ -43,6 +45,7 @@ export class PageAnalysis {
     this.regions = reviewIgnoreRegions(source, route);
     this.document = parseHtml("pageAnalysis", source, {
       sourceCodeLocationInfo: true,
+      treeAdapter: pageTreeAdapter(),
     });
     this.ranges = usage
       ? validateComponentRanges(source, usage.ranges, this.document)
@@ -104,13 +107,7 @@ export class PageAnalysis {
 
   matching(paired: readonly string[]): DefaultTreeAdapterMap["document"] {
     const ignored = this.ignored(paired);
-    setDocumentSubjectFilter(this.document, (element) => {
-      const offset = element.sourceCodeLocation?.startOffset;
-      return (
-        offset === undefined ||
-        !ignored.some(({ start, end }) => start <= offset && offset < end)
-      );
-    });
+    setDocumentSubjectFilter(this.document, pageSubjectFilter(ignored));
     return this.document;
   }
 

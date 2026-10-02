@@ -1055,6 +1055,34 @@ the original page; give identical texts a single-parse quick check.
       unit/browser/hydration suites, format/lint/typecheck and docs validation,
       commit locally, report and stop for the supervisor. Measurements, the
       retained-byte report, `cargo xtask check` and push follow approval.
+- [x] Discovered: style discovery shares the reference inventory traversal;
+      the standalone finder does not consume a parsed document, regions or an
+      alternate source. Remove those dead parameters instead of retaining a
+      misleading parsed-document interface from the original TODO.
+- [x] Discovered: supervisor regressions clarify existing source provenance,
+      implied/clone subject status, ownership-only projection, stable discovery,
+      marker stripping and flat ignore enclosure. Cache raw pair normalization;
+      skip unused one-sided normalization and embedded material derivation.
+      Pin adopted root attributes, split style spans, reader independence and
+      exact UTF-16 offsets, and record well-formed table/SVG receiver differences
+      against M6. These are documentation-gap clarifications, not new Decisions.
+- [x] Discovered: supervisor-fix checkpoint: prove regressions fail first,
+      rerun targeted/full unit/Chromium/hydration/static/docs checks, add new
+      Conventional Commits without amending, report and stop before measuring.
+- [x] Discovered: investigate the post-reboot browser gate using clean pre-M7
+      `e5025e64`, not M7 `ee4ead64`. Run the six failed specs cold and directly
+      time fresh ordinary-preview exports on M6, delivered M7 and the fixed
+      tree. Record the pre-reboot preparation/freshness evidence and all failed
+      runs in [the browser-gate report](../docs/dev/shared-page-browser-gate.md).
+      M6 reproduces the wait/setup failures; all three direct exports complete
+      with zero classification work. The supervisor's slower-host diagnosis
+      supersedes the initial commit hold; record that decision without UI/test edits.
+- [x] Discovered: finish pinned hydration (219/219 pass) and record the
+      supervisor-approved local commit exception for the six host-timing browser
+      specs. Their complete green gate moves to M10, not to a timeout change.
+      Final `cargo xtask check` uses explicit `PLAYWRIGHT_CHANNEL=chromium`;
+      record that setting. Scale benchmarks keep default system Chrome; stop
+      and report interactive failure, never silently change the channel.
 - [ ] Discovered: report retained HTML bytes and per-step work, including the
       page pass and resource documents, against M6's roughly 80% identical-view
       and 83% complete-style byte reductions. Account for source-location and
@@ -1066,6 +1094,13 @@ the original page; give identical texts a single-parse quick check.
       and new expectations for every intentionally adapted test, including
       select/template and malformed-HTML projected-resource fixtures.
 - [ ] Record the no-change and component-style samples of both fixtures.
+      Discovered: after the supervisor's code check, prepare clean M6
+      `e5025e64` separately (same analysis code as measured `1887eff6`) on this
+      host. Interleave M6, M7, M7, M6 per fixture, each with cold/warm no-change
+      and component-style scenarios in one session. Report same-host ratios
+      and spread; label M2–M6 cross-host numbers as historical context. Record
+      `machine.cpu`, `/proc/cpuinfo` model/MHz and CPU steal time per snapshot.
+      Do not change Decision 13's machine requirement or its contract.
 - [ ] Update `src/review/README.md` and the contracts' Delivery Status for
       delivered parts; run the suite and `cargo xtask check`.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
@@ -1185,6 +1220,15 @@ dominates, and leave every document aligned.
       without bulk side-taking, preserve delivered features and record the
       reconciliations/deletion audits in the merge commit. Leave PR #122 and
       later main commits unmerged until this step; do not rebase or force-push.
+- [ ] Discovered: before final acceptance, the complete browser and hydration
+      suites, including `component_design_navigation`, `design_library_runtime`,
+      `design_links`, `preview_design_links`, `preview_navigation` and
+      `standalone_appearance_history`, must pass in CI with pinned Chromium or
+      on a host whose `machine.cpu` matches the M2 reference (2.90GHz Xeon).
+      The reboot moved M7 to a 2.50GHz host; the six specs fail fixed waits on
+      M6 too, with median per-test slowdown 1.46×. The M7 checkpoint exception
+      is not final acceptance. Keep benchmark machine-contract decisions pending
+      the user's resolution; this TODO changes no Decision 13 condition.
 - [ ] Regenerate both fixtures. Run the full committed matrix twice on each,
       and the derived-mode cold component-style sample on the cumulative
       fixture.

@@ -6,6 +6,7 @@ import {
   stripComponentMarkers,
   stripMarkers,
 } from "../components/comparison_material.js";
+import { materialRecipe } from "../components/material_recipe.js";
 import { mayContainCssReferences } from "../css_references.js";
 
 import {
@@ -46,7 +47,8 @@ export async function compareUnchangedComponentView(
     const comparison = await identicalPageQuickCheck(context, pages, view);
     return comparison ? { comparison } : {};
   }
-  const retained = normalizeReviewPair(base, head, after.path);
+  const retained =
+    pages?.normalization ?? normalizeReviewPair(base, head, after.path);
   if (retained.base !== retained.head) return {};
   if (!componentUsageTopologyEqual(before.usage, after.usage)) return {};
 
@@ -56,7 +58,9 @@ export async function compareUnchangedComponentView(
     pages?.beforeAnalysis.ranges,
   );
   const strippedHead = stripComponentMarkers(head);
-  const actual = normalizeReviewPair(strippedBase, strippedHead, after.path);
+  const actual =
+    pages?.normalize(strippedBase, strippedHead) ??
+    normalizeReviewPair(strippedBase, strippedHead, after.path);
   if (actual.base !== actual.head) return {};
 
   const hasOwnershipEdits = [before.usage, after.usage].some(
@@ -66,23 +70,37 @@ export async function compareUnchangedComponentView(
         usage.slots.some((slot) => slot.owner.kind === "entry")),
   );
   const hasInlineReferences = [base, head].some(mayContainCssReferences);
-  const prepared =
-    pages || hasOwnershipEdits || hasInlineReferences
-      ? prepareComponentProjection(
-          context,
-          before,
-          after,
-          base,
-          head,
-          root,
-          {
-            analyzeInline: pages ? false : hasInlineReferences,
-          },
-          pages,
-        )
-      : undefined;
+  const prepared = (
+    pages ? hasOwnershipEdits : hasOwnershipEdits || hasInlineReferences
+  )
+    ? prepareComponentProjection(
+        context,
+        before,
+        after,
+        base,
+        head,
+        root,
+        {
+          analyzeInline: pages ? false : hasInlineReferences,
+        },
+        pages,
+      )
+    : undefined;
   const projected = prepared?.projected;
   const excluded = prepared?.excluded;
+  const empty = { replacements: [], appendix: "" };
+  const actualBefore =
+    prepared?.references?.actualBefore ??
+    pages?.beforeAnalysis.materialReferences(
+      materialRecipe(base, empty),
+      pages.pairedIgnoreIds,
+    );
+  const actualAfter =
+    prepared?.references?.actualAfter ??
+    pages?.afterAnalysis.materialReferences(
+      materialRecipe(head, empty),
+      pages.pairedIgnoreIds,
+    );
   const fallback = (): UnchangedComponentAttempt =>
     prepared && !pages ? { prepared } : {};
   if (projected && projected.before !== projected.after) return fallback();
@@ -91,14 +109,14 @@ export async function compareUnchangedComponentView(
     after.path,
     actual.head,
     undefined,
-    prepared?.references?.actualAfter,
+    actualAfter,
   );
   const beforeResources = context.compareResourceBytes
     ? await context.beforeReader.resources(
         before.path,
         actual.base,
         undefined,
-        prepared?.references?.actualBefore,
+        actualBefore,
       )
     : afterResources;
   const projectedAfterResources =

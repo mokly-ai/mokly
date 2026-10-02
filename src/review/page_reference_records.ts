@@ -1,6 +1,8 @@
 /** Original-source reference occurrences, including inert records available to copies. */
 import type { DefaultTreeAdapterMap } from "parse5";
 
+import { invalidData } from "@mokly/viewer/data";
+
 import type {
   MaterialRecipe,
   SourceSpan,
@@ -14,6 +16,11 @@ import type {
   HtmlReferenceOptions,
   HtmlReferences,
 } from "../html_references.js";
+
+import {
+  pageAttributeLocation,
+  recoverPageSourceLocations,
+} from "./page_source_locations.js";
 
 export interface PageReferenceRecord extends SourceSpan, HtmlReferenceValue {
   inertAncestors: readonly SourceSpan[];
@@ -30,6 +37,7 @@ export function pageReferenceRecords(
   ) => void,
 ) {
   return documentWorkSync("referenceMs", () => {
+    recoverPageSourceLocations(source, document);
     const result: PageReferenceRecord[] = [];
     const visit = (
       node: DefaultTreeAdapterMap["node"],
@@ -48,20 +56,23 @@ export function pageReferenceRecords(
                 (attribute) => attribute.name === reference.attribute,
               )
             : undefined;
-        const name = attribute?.prefix
-          ? `${attribute.prefix}:${attribute.name}`
-          : reference.attribute;
         const span = reference.attribute
-          ? location?.attrs?.[name!]
+          ? attribute && "tagName" in node
+            ? pageAttributeLocation(node, attribute)
+            : undefined
           : textLocation;
-        if (span)
-          result.push({
-            ...reference,
-            start: span.startOffset,
-            end: span.endOffset,
-            spelling: source.slice(span.startOffset, span.endOffset),
-            inertAncestors,
-          });
+        if (!span)
+          invalidData(
+            "$document",
+            "reference has no original source provenance",
+          );
+        result.push({
+          ...reference,
+          start: span.startOffset,
+          end: span.endOffset,
+          spelling: source.slice(span.startOffset, span.endOffset),
+          inertAncestors,
+        });
       }
       if ("childNodes" in node)
         for (const child of node.childNodes) visit(child, inertAncestors);

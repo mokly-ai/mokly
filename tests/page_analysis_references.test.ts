@@ -26,6 +26,12 @@ const inputs = [
   "<style>.a{background:url(unfinished.svg)",
   "<svg><style>.a{background:url(foreign.svg)}<!--comment--> .b{background:url(second.svg)}</style></svg>",
   '<noscript><img src="inert.svg"></noscript><script>"<img src=not-a-reference>"</script><!--<img src="comment.svg">-->',
+  '<html><body><p>first</p><body style="background:url(second.png)" srcset="one.png 1x, two.png 2x">',
+  '<p>implied</p><body style="background:url(implied.png)">',
+  '<html><body><p>first</p><html style="background:url(root.png)" data-nav-href="next.html">',
+  '<b style="background:url(cloned.png)"><p>inside</b>outside</p>',
+  'before<body style="background:url(merged.png)">after',
+  '<p>text</p><script>"<body style=\'background:url(actual.png)\'>"</script><select><body style="background:url(actual.png)"></select><body style="background:url(actual.png)">',
   ...cssReferenceInputs.map(([source]) => `<style>${source}</style>`),
 ];
 

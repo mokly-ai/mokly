@@ -8,6 +8,8 @@ the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
 implements the analysis-backed quick check below with no inline work;
 [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
 adds the equivalent style-only attempt before complete fall-through; M8 remains pending.
+M7's ownership-only projection and stable discovery policy clarify existing
+rules, closing documentation gaps rather than introducing new behavior.
 
 This contract owns the unchanged-view decision used by component-aware Changes
 classification. Input ownership and materiality remain defined by
@@ -46,6 +48,8 @@ Apply these steps in order:
    Discover resources from the page analyses' derived records under the
    [resource proof](#resource-and-one-sided-rules), preserving its mode-specific
    reader and closure bounds.
+   Without ownership text edits, derive actual seeds directly from the analyses:
+   do not prepare a projection merely because inline references may exist.
 4. When either usage record has instances or entry-owned slots,
    compute the complete comparison's ownership projection, including v7 range
    validation and root-specific ownership, but no inline analysis. Retain
@@ -53,6 +57,8 @@ Apply these steps in order:
    projected material and use provenance-derived resources plus conservative
    raw inline references; potential changed owned/excluded references take
    fall-through instead of requiring attribution in the quick check.
+   Keep the exclusion predicate stable per view; fall-through reuses discovery
+   for the same side, route, reference identity and exclusion policy.
 5. If an actual or projected resource is a changed Git path, take the complete
    fall-through; ownership, exclusion, and rule analysis are decided there.
 6. In derived mode, compare baseline/current closure membership and bytes

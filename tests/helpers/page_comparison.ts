@@ -57,8 +57,9 @@ export async function comparePageFixture(
 export async function comparePageViews(
   fixture: FastPathFixture,
   oracle = false,
+  useFastPath = true,
 ) {
-  const context = pageContext(fixture, !oracle);
+  const context = { ...pageContext(fixture, !oracle), useFastPath };
   const compare = oracle ? delivered : compareComponentView;
   const results = [];
   for (const entry of fixture.after.entries) {

@@ -135,6 +135,8 @@ node --import tsx --test tests/component_*.test.ts
   implementation material.
 - [`material_recipe.ts`](./material_recipe.ts): source/copy/producer provenance
   for the same plain-string materials, consumed by shared page analysis.
+  Projected caller wrappers/canonical appendices remain verbatim; rendered
+  source and caller copies strip component markers before appending them.
 - [`../server/controls`](../server/controls): supervised local rendering and
   transient storage.
 - Viewer [`workspace.tsx`](../../packages/viewer/src/shell/workspace.tsx),

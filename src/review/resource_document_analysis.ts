@@ -6,9 +6,11 @@ import type { CssDocument } from "./css/document.js";
 import { setDocumentSubjectFilter } from "./css/document_subjects.js";
 import { normalizeReviewPair, reviewIgnoreRegions } from "./ignore.js";
 import {
-  deriveMaterialReferences,
+  originalPageReferences,
   pageReferenceRecords,
 } from "./page_reference_records.js";
+import { pageTreeAdapter } from "./page_source_locations.js";
+import { pageSubjectFilter } from "./page_subjects.js";
 
 export interface ResourceDocumentAnalysis {
   document: CssDocument;
@@ -27,29 +29,16 @@ export function analyzeResourceDocument(
       ? []
       : normalizeReviewPair(source, counterpart, route).pairedIgnoreIds;
   const ignored = regions.filter(({ id }) => paired.includes(id));
-  const document = parseHtml(step, source, { sourceCodeLocationInfo: true });
-  setDocumentSubjectFilter(document, (element) => {
-    const offset = element.sourceCodeLocation?.startOffset;
-    return (
-      offset === undefined ||
-      !ignored.some(({ start, end }) => start <= offset && offset < end)
-    );
+  const document = parseHtml(step, source, {
+    sourceCodeLocationInfo: true,
+    treeAdapter: pageTreeAdapter(),
   });
+  setDocumentSubjectFilter(document, pageSubjectFilter(ignored));
   const records = pageReferenceRecords(source, document, {
     resourceHints: false,
   });
-  const removed = [
-    ...source.matchAll(/<!--mokly-review-ignore:[\s\S]*?-->/g),
-  ].map((match) => ({
-    start: match.index,
-    end: match.index + match[0].length,
-  }));
   return {
     document,
-    references: deriveMaterialReferences(
-      records,
-      [{ kind: "source", start: 0, end: source.length }],
-      [...ignored, ...removed],
-    ),
+    references: originalPageReferences(records).resources,
   };
 }

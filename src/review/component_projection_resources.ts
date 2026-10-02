@@ -79,7 +79,8 @@ export function prepareComponentProjection(
     : after.usage
       ? validateComponentRanges(head, after.usage.ranges)
       : undefined;
-  const matching = normalizeReviewPair(base, head, after.path);
+  const matching =
+    pages?.normalization ?? normalizeReviewPair(base, head, after.path);
   const paired = pages?.pairedIgnoreIds ?? matching.pairedIgnoreIds;
   const analysis =
     options.analyzeInline !== false &&
@@ -163,13 +164,11 @@ export function prepareComponentProjection(
       analysis?.status === "resolved" ? analysis.ownedComponentIds : new Set(),
     ...(analysis ? { inlineAnalysis: analysis } : {}),
     ...inlineEvidence(analysis),
-    excluded: projectedResourceExclusion(
-      context,
-      before,
-      after,
-      projected.pairedComponentIds,
-      root,
-    ),
+    excluded:
+      pages?.resourceExclusion(() =>
+        projectedResourceExclusion(context, projected.pairedComponentIds, root),
+      ) ??
+      projectedResourceExclusion(context, projected.pairedComponentIds, root),
   };
 }
 
@@ -224,8 +223,6 @@ function inlineEvidence(analysis: InlineAttributionResult | undefined): {
 /** Build the exact projected-resource exclusion used by complete comparison. */
 function projectedResourceExclusion(
   context: ComponentViewContext,
-  before: GeneratedComponentView,
-  after: GeneratedComponentView,
   pairedComponentIds: ReadonlySet<string>,
   root: string | undefined,
 ): (path: string) => boolean {

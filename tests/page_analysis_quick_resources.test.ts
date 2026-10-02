@@ -8,6 +8,8 @@ import {
 } from "../dist/diagnostics/timings.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
+import { PageAnalysisPair } from "../dist/review/page_pair.js";
+import { identicalPageQuickCheck } from "../dist/review/page_quick_check.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
@@ -103,14 +105,14 @@ for (const mode of ["committed", "derived"] as const)
           ? [view.path]
           : [view.path, "root.css", "leaf.css"].sort(),
       );
+      assert.equal(
+        events.filter(
+          ({ stage, event }) =>
+            stage === "review.resource-graph" && event === "start",
+        ).length,
+        changed ? 4 : compareResourceBytes ? 2 : 1,
+      );
       if (!changed) {
-        assert.equal(
-          events.filter(
-            ({ stage, event }) =>
-              stage === "review.resource-graph" && event === "start",
-          ).length,
-          compareResourceBytes ? 2 : 1,
-        );
         assert.ok(
           !events.some(
             ({ stage, event }) =>
@@ -147,7 +149,59 @@ test("derived quick check traverses differing memberships independently, without
     config: { ...fixture.config, generatedOutput: "derived" as const },
     changedPaths: [],
   };
-  const comparison = await compareComponentView(pageContext(input), view, view);
+  const reads = { before: [] as string[], after: [] as string[] };
+  const reader = (side: keyof typeof reads) => {
+    const files = side === "before" ? input.beforeFiles : input.afterFiles;
+    const read = (route: string) => {
+      const content = files.get(route);
+      if (content !== undefined) reads[side].push(route);
+      return content === undefined
+        ? undefined
+        : typeof content === "string"
+          ? Buffer.from(content)
+          : Buffer.from(content);
+    };
+    return new ComponentMaterialReader({
+      read: async (route) => {
+        const content = read(route);
+        assert.ok(content);
+        return content;
+      },
+      readIfExists: async (route) => read(route),
+    });
+  };
+  const beforeReader = reader("before");
+  const afterReader = reader("after");
+  const contextForView = {
+    ...pageContext(input),
+    beforeReader,
+    afterReader,
+    resources: new ResourceComparison(
+      beforeReader,
+      afterReader,
+      new Set(),
+      "mockups",
+      undefined,
+      true,
+      true,
+    ),
+  };
+  const quick = await identicalPageQuickCheck(
+    contextForView,
+    new PageAnalysisPair(view, view, html, html),
+    {
+      viewport: view.viewport,
+      colorScheme: view.colorScheme,
+      state: "unchanged",
+      ignoredIds: [],
+    },
+  );
+  assert.equal(quick, undefined, "unequal reader closures must fall through");
+  assert.ok(reads.before.includes("before.css"));
+  assert.ok(!reads.before.includes("after.css"));
+  assert.ok(reads.after.includes("after.css"));
+  assert.ok(!reads.after.includes("before.css"));
+  const comparison = await compareComponentView(contextForView, view, view);
   assert.equal(comparison.comparisonPath, "complete");
   assert.equal(comparison.view.state, "changed");
   assert.deepEqual(comparison.reasons, [{ kind: "material" }]);

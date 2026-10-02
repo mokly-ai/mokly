@@ -322,10 +322,15 @@ Key code:
   Identical source/path/topology shares head analysis and conservative original/
   caller-copy seeds, with no projection, inline analysis or hashing. Committed
   mode proves only the head closure; derived mode compares both independently.
-  Non-identical attempts retain ownership-projected proof. Fall-through reuses
+  Non-identical attempts project only for ownership text edits. Fall-through reuses
   trees/discovery and rebuilds any unattributed material for full attribution.
 - `page_analysis.ts`, `page_pair.ts`: lazy view-local source-located trees,
   validated UTF-16 ranges, flat ignore spans, styles and reference inventory.
+  The pair caches raw normalization and one stable projected exclusion policy.
+- `page_source_locations.ts`, `page_root_attributes.ts`, `page_subjects.ts`:
+  adopted root-attribute spans, formatting-clone provenance and final subject
+  status of implied containers. Rare missing root spans use targeted original
+  tokenization, never a second HTML tree. Style discovery shares the inventory.
 - `page_projection.ts`, `page_reference_records.ts`: delivered string materials
   with auxiliary kept/copy/producer recipes, never a reparsed material tree.
   Copies expose recorded template references, not parser-discarded tokens.

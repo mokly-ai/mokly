@@ -9,6 +9,7 @@ implements heap/document counts and complete sample outcomes;
 implements segment counts; [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
 implements shared `pageAnalysis` parses; [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
 delivers `stylePath`, still pending; M2 records the reference in the fixture README.
+M7 supervisor fixes clarify existing discovery rules, not new behavior.
 
 ## Opt-in timings
 
@@ -84,8 +85,7 @@ Review phases use the same session, role and parent context as their caller:
   mode, two in derived mode**. Non-identical attempts with ownership text edits
   may add one committed or two derived projected occurrences; identical-text
   checks use one conservative seed set without projection. The
-  [resource rule](./mokly-component-review-fast-path.md#resource-and-one-sided-rules)
-  keeps committed traversal head-only and derived closures independent.
+  [resource rule](./mokly-component-review-fast-path.md#resource-and-one-sided-rules) defines per-mode reader bounds.
   One-sided views add one occurrence. Repeated discovery for the same side,
   route, reference identity and exclusion policy is a defect.
 - `review.css-analysis` measures the synchronous parse/diff/match/reduce pass

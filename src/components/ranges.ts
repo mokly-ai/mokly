@@ -127,8 +127,10 @@ function validateRanges(
         invalidData("$document", "reserved component attributes remain");
       if (node.nodeName !== "#comment" || !("data" in node)) return;
       const data = node.data;
-      if (data.startsWith("mokly-review-ignore:start:")) ignored = true;
-      if (data.startsWith("mokly-review-ignore:end:")) ignored = false;
+      if (!document && data.startsWith("mokly-review-ignore:start:"))
+        ignored = true;
+      if (!document && data.startsWith("mokly-review-ignore:end:"))
+        ignored = false;
       if (!data.startsWith(prefix)) return;
       if (ignored)
         invalidData(

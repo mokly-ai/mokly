@@ -10,7 +10,7 @@ import {
 } from "../components/material_recipe.js";
 import { documentWorkSync } from "../diagnostics/timings.js";
 
-import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
+import { normalizeSingleDocument } from "./ignore.js";
 import type { PageAnalysisPair } from "./page_pair.js";
 
 export interface ProjectedReferences {
@@ -54,11 +54,10 @@ export function projectAnalyzedPair(
     );
     const left = renderMaterialRecipe(before.source, actualBefore);
     const right = renderMaterialRecipe(after.source, actualAfter);
-    const actual = normalizeReviewPair(left, right, after.route);
-    const projected = normalizeReviewPair(
+    const actual = pages.normalize(left, right);
+    const projected = pages.normalize(
       renderMaterialRecipe(before.source, projectedBefore),
       renderMaterialRecipe(after.source, projectedAfter),
-      after.route,
     );
     const paired = pages.pairedIgnoreIds;
     return {

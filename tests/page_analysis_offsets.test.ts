@@ -49,7 +49,35 @@ test("ranges, style content, reference spans and ignore spans use original UTF-1
   const ignored = analysis.regions[0]!;
   assert.equal(source.slice(ignored.start, ignored.end), "😀\r\n<i></i>");
   assert.equal(ignored.start, source.indexOf("😀\r\n<i>"));
+  const reference = analysis.references.find(
+    ({ value }) => value === "inside.svg",
+  )!;
+  assert.equal(reference.start, source.indexOf('src="inside.svg"'));
+  assert.equal(reference.end, reference.start + 'src="inside.svg"'.length);
 });
+
+for (const enclosed of [false, true])
+  test(`mixed DOM/raw-text ignore end uses only flat boundary enclosure, enclosed=${enclosed}`, () => {
+    const component = instance(1, "action");
+    const usage = view({
+      instances: [component],
+      ranges: [range(0, { kind: "instance", instanceKey: component.key })],
+    });
+    const start = "<!--mokly-review-ignore:start:mixed--><i>clock</i>";
+    const end = "<textarea><!--mokly-review-ignore:end:mixed--></textarea>";
+    const owned = markedRange(0, "<button>Owned</button>");
+    const source = html("", start + (enclosed ? owned + end : end + owned));
+    if (enclosed)
+      assert.throws(
+        () => new PageAnalysis(source, "mixed.html", usage),
+        /ReviewIgnore cannot enclose component or caller-slot boundaries/,
+      );
+    else
+      assert.equal(
+        new PageAnalysis(source, "mixed.html", usage).ranges.length,
+        1,
+      );
+  });
 
 for (const markers of [
   "<!--mokly-review-ignore:start:open-->",

@@ -42,18 +42,19 @@ It compares string materials, resolved seeds, transitive closures and public
 per-view results against that oracle. Separate cases name the intentional
 provenance/context differences instead of allowing unrelated mismatches.
 
-| Case and test                                                                                                      | M6 expectation                                               | M7 expectation and reason                                                                                                                                 |
-| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `component_fast_path_template.test.ts`, select-discarded caller image                                              | Home has dependency/material reason                          | No Home change: copying source text cannot invent an absent parser record. Actual template-copy cases are unchanged.                                      |
-| `component_fast_path_projected_resources.test.ts`, select-hidden srcset/style/HTML/import and import membership    | Home changes from rewritten discovery                        | No change: source visibility, not recovery after rewriting, owns reachability.                                                                            |
-| Same file, malformed select/template implementation exposing a sibling                                             | Home changes                                                 | No change: removing implementation text does not expose previously discarded/inert sibling records.                                                       |
-| `page_analysis_context.test.ts`, sibling, `:nth-child`, `:has()` next to ignored content                           | Excluded                                                     | Matched on both CSS paths: ignored nodes remain context.                                                                                                  |
-| Same file, surrounding `:empty` subject                                                                            | Matched                                                      | Excluded: the original ignored child still makes it nonempty. Ignored subjects and inert template descendants remain excluded.                            |
-| `page_analysis_embedded_context.test.ts`, linked CSS in referenced HTML                                            | Excluded/unchanged                                           | Matched/changed: embedded reader trees retain the same original sibling context.                                                                          |
-| `page_analysis_raw_ignores.test.ts`, paired textarea-bounded region containing a style                             | Changed because DOM-comment discovery missed the flat region | `ignored-only`, id `raw`, no material/inline evidence; the one-sided region still analyzes the style.                                                     |
-| `page_analysis_references.test.ts`, partial attribute/style replacements                                           | Reparse may recover surviving URL characters                 | Drop the complete source record whenever any of its span is removed.                                                                                      |
-| `changes_inline_references_fast_path.test.ts`, mixed reference fixture                                             | 8 fast/2 complete; every view runs inline analysis           | Same per-view paths/results; only the 2 Home views analyze inline rules and their distinct sheet parses once.                                             |
-| `component_material_reader.test.ts` root-specific projection case, moved to `page_analysis_root_resources.test.ts` | Used a parser-discarded select image                         | Uses a real inert-template copy and forces complete comparison; ownership-before-read assertions remain, while select recovery has explicit oracle cases. |
+| Case and test                                                                                                      | M6 expectation                                                                                  | M7 expectation and reason                                                                                                                                                                                            |
+| ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `component_fast_path_template.test.ts`, select-discarded caller image                                              | Home has dependency/material reason                                                             | No Home change: copying source text cannot invent an absent parser record. Actual template-copy cases are unchanged.                                                                                                 |
+| `component_fast_path_projected_resources.test.ts`, select-hidden srcset/style/HTML/import and import membership    | Home changes from rewritten discovery                                                           | No change: source visibility, not recovery after rewriting, owns reachability.                                                                                                                                       |
+| Same file, malformed select/template implementation exposing a sibling                                             | Home changes                                                                                    | No change: removing implementation text does not expose previously discarded/inert sibling records.                                                                                                                  |
+| `page_analysis_context.test.ts`, sibling, `:nth-child`, `:has()` next to ignored content                           | Excluded                                                                                        | Matched on both CSS paths: ignored nodes remain context.                                                                                                                                                             |
+| Same file, surrounding `:empty` subject                                                                            | Matched                                                                                         | Excluded: the original ignored child still makes it nonempty. Ignored subjects and inert template descendants remain excluded.                                                                                       |
+| `page_analysis_embedded_context.test.ts`, linked CSS in referenced HTML                                            | Excluded/unchanged                                                                              | Matched/changed: embedded reader trees retain the same original sibling context.                                                                                                                                     |
+| `page_analysis_raw_ignores.test.ts`, paired textarea-bounded region containing a style                             | Changed because DOM-comment discovery missed the flat region                                    | `ignored-only`, id `raw`, no material/inline evidence; the one-sided region still analyzes the style.                                                                                                                |
+| `page_analysis_references.test.ts`, partial attribute/style replacements                                           | Reparse may recover surviving URL characters                                                    | Drop the complete source record whenever any of its span is removed.                                                                                                                                                 |
+| `changes_inline_references_fast_path.test.ts`, mixed reference fixture                                             | 8 fast/2 complete; every view runs inline analysis                                              | Same per-view paths/results; only the 2 Home views analyze inline rules and their distinct sheet parses once.                                                                                                        |
+| `component_material_reader.test.ts` root-specific projection case, moved to `page_analysis_root_resources.test.ts` | Used a parser-discarded select image                                                            | Uses a real inert-template copy and forces complete comparison; ownership-before-read assertions remain, while select recovery has explicit oracle cases.                                                            |
+| `page_analysis_context_receivers.test.ts`, table and SVG caller-slot receivers                                     | No Home entry reason: body-context copies lose table `td` style and SVG `image href` references | Home receives dependency (committed) or material (derived) evidence from the original receiving context. Actual resource evidence already makes the M6 per-view state `changed`; the difference is the entry reason. |
 
 ## Parse And Reader Bounds
 
@@ -72,6 +73,10 @@ child process, rejects non-original inputs and missing source locations, and
 checks exactly one parse per used side. It also covers inferred-owner resource
 traversal. `page_analysis_quick_resources.test.ts` observes each reader's real
 transitive CSS reads, independent derived memberships and prepared fall-through.
+`page_analysis_work_bounds.test.ts` pins non-identical attempts: without
+ownership edits, 1 committed/2 derived graph starts; owned fall-through with a
+changed linked sheet, 4 starts in either mode. The pair shares one raw
+normalization, and component-aware one-sided views perform none.
 `server_document_work.test.ts` retains nonzero legacy page/resource steps beside
 the component steps in one session. Separate scope tests cover both output modes.
 
@@ -97,6 +102,34 @@ the component steps in one session. Separate scope tests cover both output modes
   component registration when its ids became screens. A real generation test
   fails unless the flag uses the two input manifests.
 
+## Supervisor Fixes Before Measurement
+
+These close implementation/documentation gaps in existing rules, not new
+Decisions or matching domains. New tests were run against `ee4ead64` before
+fixing production code; logs `m7-supervisor-before.log` and
+`m7-supervisor-before-refined.log` preserve the failures.
+
+- Adopted second/implied body and second html attributes retain the supplying
+  tag's source spans; formatting clones inherit original provenance. Extractor
+  and M6 page/embedded-resource differentials cover both modes and both paths.
+  A further failing donor-span test prevents raw-text/comment/attribute/select/
+  template/foreign-CDATA lookalikes from supplying provenance, including text-span edges.
+  `m7-supervisor-cdata-before.log` records the additional CDATA regression first;
+  the initial unit run was stopped, and complete verification restarted after the fix.
+- Implied table containers inside paired ignored content stay excluded; mixed
+  rows and implied body remain subjects. Clones inherit original subject status.
+  Inline/linked page and embedded cases compare directly with the M6 oracle.
+- Ownership-free attempts no longer project. Owned fall-through uses a stable
+  exclusion predicate and cached discovery. Normalization is shared; unused
+  style-finder parameters, one-sided normalization and embedded material
+  derivation are removed.
+- Projected appendices/wrappers remain verbatim after source/copy stripping;
+  actual stripping stays byte-identical to M6, including marker lookalikes.
+  Flat spans alone decide boundary enclosure for mixed DOM/raw-text markers.
+- Stronger offset, split-style, discovery-cache and independent-reader
+  assertions reject deliberate mutations (`m7-supervisor-mutants.log` and the
+  isolated `m7-supervisor-split-span-mutant.log`); all mutations were restored.
+
 ## Verification And Deferred Evidence
 
 All Node commands use 24.19.0. The checkpoint runs targeted page/CSS/fast-path/
@@ -105,10 +138,20 @@ Chromium and hydration suites, and format/lint/typecheck. Documentation tests
 and a relative-link/anchor audit cover every edited Markdown file. Logs and
 verification JSON are under `.context/delegation/scalable/`.
 
-Passed: 704 targeted tests, 3,257 complete unit tests, 725 Chromium tests and
-219 hydration tests, with no failures, skips or cancellations. Format, lint,
-typecheck and repository ratchets pass; the link audit covers 13 edited/new
-Markdown files, 220 local links and 84 anchors with no failures.
+The initial pre-reboot checkpoint passed 704 targeted tests, 3,257 unit tests,
+725 browser tests and 219 hydration tests using system Chrome, without failures,
+skips or cancellations. Its preparation and fresh publication are recorded in
+the [post-reboot investigation](./shared-page-browser-gate.md).
+
+After the supervisor fixes and reboot, 724 page/CSS/fast-path tests, 222 further
+equivalence/documentation tests and 3,316 full unit tests pass. Format, lint,
+typecheck and ratchets pass. Pinned hydration passes all 219 tests. The supervisor
+accepts the six pinned-browser host-timing specs for the local code commit:
+the VM moved from a 2.90GHz to a 2.50GHz Xeon host, and cold pre-M7 M6 reproduces
+the same failures. The linked investigation retains the duration ratios,
+every failed/interrupted run and three cold direct-export timings. No UI code,
+browser assertions or timeouts change. M10 requires the complete green suites
+in CI or on a reference-CPU host before final acceptance.
 
 After supervisor approval, record both fixtures' no-change/component-style
 cold/warm samples, inline delivery headroom and retained HTML-byte/per-step

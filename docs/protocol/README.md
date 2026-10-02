@@ -118,6 +118,8 @@ readers accept only v7; earlier output follows
   segments, rule data and changed-segment policy (approved target)
 - [Component-aware page analysis](./mokly-page-analysis.md) — provenance,
   matching, quick checks and fingerprints (approved target)
+- [Page source provenance](./mokly-page-source-provenance.md) — extractor
+  inventory, adopted attributes and formatting clones
 - [Component-aware style-only route](./mokly-style-only-route.md) — conditions,
   equivalent results and fallback (approved target)
 - [CSS change attribution](./mokly-css-attribution.md)

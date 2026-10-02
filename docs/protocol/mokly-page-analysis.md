@@ -9,6 +9,8 @@ check; [M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprin
 delivers fingerprints. [M2](../../plans/scalable-inline-style-analysis.md#milestone-2-deterministic-scale-fixture-and-complete-benchmark-evidence)
 implements parse-site instrumentation; counters are owned by
 [timings](./mokly-timings.md#component-analysis-counts).
+The M7 supervisor fixes clarify existing provenance, ignore-subject and
+material rules below; they are documentation-gap clarifications, not new behavior.
 
 ## Scope And Lifetime
 
@@ -38,6 +40,9 @@ existing resource reader's own document parsing, separately from view analysis.
 Their discovery keeps delivered paired normalization; when it changes resource
 text, the reader may parse it separately from its original matching tree.
 Neither resource tree is a reparsed view-side material.
+Original embedded-reference inventories contain visible records only, without
+material derivation; the reader consumes them only when normalization leaves
+text unchanged. One-sided component-aware views need no normalized HTML material.
 
 All source spans are half-open **UTF-16** offsets into that side's original
 text, before header removal, marker stripping, ignores, replacements or copies.
@@ -66,6 +71,9 @@ of its end marker. `pairedIgnoreIds` are sorted; `ignoredIds` are only paired
 ids whose content differs, sorted, as in the delivered normalizer. Selection
 and normalization use these same spans/ids, not a second marker parser on
 already inserted ignore tokens.
+Cache the original pair's normalization once for retained/matching material
+and paired ids. Boundary enclosure uses flat regions exclusively, even when
+one marker is a DOM comment and the other is inside raw text.
 
 These are flat source spans, not DOM comment-node spans. Markers inside raw
 text, including `<textarea>`, still delimit regions. The M7 expected case
@@ -78,34 +86,10 @@ region does not exclude the intervening style element.
 
 ## Reference Records
 
-Records retain the extractor's decoded raw value **before route resolution**,
-its kind, and the complete source span of the containing attribute or style
-text. Also retain the containing node's original extraction visibility; inert
-template descendants are inventoried for copies but do not seed the original
-document. One attribute/text may supply several records sharing its span.
-Keep source spelling separately where needed to map decoded values; do not
-mistake a resolved path or an HTML-entity spelling for the raw extracted value.
-
-Cover everything `extractHtmlReferences` reads:
-
-- `id` anchors on any element; navigation `href` unless it is a resource
-  source attribute; `data-nav-href` on any element.
-- Resource attributes: `src` on audio, embed, iframe, img, input, script,
-  source and track; `href`/`xlink:href` on any element named `image` or `use`,
-  regardless of namespace; link `href`; object `data`; video `poster` and `src`.
-- `srcset` on any element, one raw URL per candidate, using the delivered
-  comma/descriptor tokenizer (including trailing-comma removal).
-- `style` attributes, one record per tokenized CSS reference.
-- Style-element text, including non-eligible style elements that ordinary
-  discovery reads, one record per tokenized URL or import reference. When
-  text is split across nodes, its source span covers the contributing text.
-
-Preserve the existing `resourceHints` policy: preload, modulepreload, prefetch,
-preconnect and dns-prefetch link references can be disabled unless the link
-also has `stylesheet`. Preserve traversal/namespaces and inert-template policy;
-the inventory may not fabricate references from arbitrary strings resembling
-attributes. URL/import lexing and route-relative/transitive resolution remain
-with the existing CSS detector and resource readers.
+The [source-provenance contract](./mokly-page-source-provenance.md) owns the
+complete extractor inventory, decoded values, source spans, adopted root
+attributes, formatting clones, resource hints and inert-template policy.
+Never discard a visible extracted value because parse5 omitted its location.
 
 ## Derived Material References
 
@@ -114,6 +98,11 @@ original spans, replacement text and copies appended/inserted for caller slots.
 This recipe is auxiliary metadata, not a different material value. Apply the
 same replacement precedence as material text (outer instance replacements
 suppress contained edits); coalesce adjacent unchanged original spans first.
+Preserve delivered stripping boundaries: projected rendered source and each
+caller copy strip component markers before appending the caller wrapper and
+canonical style appendix, which remain verbatim. Actual materials strip the
+joined source and appendix as before; authored marker lookalikes stay ordinary
+canonical text in the projected appendix.
 Keep a reference only when its **entire source
 span** survives in one kept span; drop a record touching a removed/replaced
 span or paired ignored content, even when its URL characters alone survive.
@@ -138,8 +127,11 @@ transitive closure with discovery from the old text materials, for actual
 and projected sides of every real fixture (slots, templates, ignores and
 insertions included). Equality requires source-record spans to survive whole
 and the rewrite/copy to preserve extraction visibility; whole-node edits alone
-are not sufficient for malformed HTML whose parser recovery changes after
-removal or copying. For example, parse5 discards an `img` inside `select`;
+are not sufficient for malformed HTML or well-formed content whose meaning
+depends on its receiving context. A table receiver's caller `td` style and an
+SVG receiver's `image href` retain their original records; reparsing their
+copies in body context formerly lost those references. For example, parse5
+discards an `img` inside `select`;
 copying that raw slot text into an appendix does not fabricate its missing
 reference, unlike reparsing the appendix. In those parser-context cases,
 source records keep their original visibility (with the copy exposure rule
@@ -156,6 +148,12 @@ Evaluate inline and linked-CSS selectors on each side's **original tree**.
 An element whose start offset is in paired ignored content is never a matching
 subject. It remains context: do not remove it or disable it inside combinators,
 `:has()` or static structural predicates, including `:nth-child` and `:empty`.
+An adoption-agency formatting clone takes its original element's subject
+status. Implied `html`, `head` and `body` are always subjects. Other elements
+without a location are suppressed only if they have at least one located
+descendant element and every located descendant starts in paired ignored
+content. A first ignored child alone never suppresses an implied body or a
+container with visible descendants. This rule also applies in embedded HTML.
 Ignored text/comment nodes also remain their ordinary structural context.
 The predicate suppresses only final selected subjects; it is not a filter on
 the tree adapter's children/parent/sibling operations. Template contents remain
@@ -195,8 +193,13 @@ per-view decision remain independent.
 
 For non-identical sources keep the delivered marker-retaining/topology,
 actual/projected equality and resource proof, using analyses and derived
-references rather than parsing materials. The fast path **never runs inline
-analysis**, including for reference-bearing rules: a changed possibly reachable
+references rather than parsing materials.
+Only ownership text edits require projection/projected-resource proof; without
+them actual seeds come directly from the analyses. The projected exclusion
+predicate is stable for the view, so equal discovery identities on fall-through
+reuse the quick attempt's closure rather than traversing it again.
+The fast path **never runs inline analysis**, including for reference-bearing
+rules: a changed possibly reachable
 reference takes fall-through; otherwise raw reference proof is conservative
 and sufficient. Prepared analyses and discoveries are reused on fall-through.
 
