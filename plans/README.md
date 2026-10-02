@@ -120,8 +120,10 @@
   PostCSS ship through Build, Check, Serve, export, publication and Changes.
   The plan Status lists each review round. The
   [Milestone 47 review](../docs/reviews/imported-css-delivery-milestone-47.md)
-  findings were resolved after the merge in `ec04332`; other unselected
-  findings remain open in their review records for the user's decision.
+  findings were resolved after the merge in `ec04332`, and a generated-output
+  writer race found while testing them is fixed in `01d5924` and `da916c0`;
+  other unselected findings remain open in their review records for the
+  user's decision.
 - [Screen Variants](./screen-variants.md) — PR #101's delivered scope is
   complete: authoring, navigation, Changes, per-view evidence, and the approved
   review fixes. Unfinished work is owned by

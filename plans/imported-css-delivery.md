@@ -1108,6 +1108,10 @@ the user.
 - Done in `ec04332`: resolve the Milestone 47 review findings with a
   cross-process imported-CSS order test, direct helper tests for open streams
   and startup retries, and an exact 3,000-file watcher test name.
+- Done in `01d5924` and `da916c0`: serialize generated-output writers with a
+  repository writer lock. Load tests for the Milestone 47 fixes showed that
+  watched Serve's background write and an export in the same process could
+  interleave their renames and fail with `ENOENT`.
 
 ## Follow-up plans (not part of this change)
 
