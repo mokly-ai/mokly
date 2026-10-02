@@ -1094,6 +1094,16 @@ the original page; give identical texts a single-parse quick check.
       server CPU. Fixed/M6 mean ratios 0.5102 / 0.9693 / 0.9092 meet the stated
       decision rule; record Browse as an additional host-timing exception and
       commit locally. This is not large-fixture or Decision 13 acceptance.
+- [x] Discovered: third supervisor round: document ignored-tag root attribute
+      adoption and precedence as existing original-tree context; pin both orders
+      on inline, linked and embedded paths in both modes against M6. Validate
+      creating-token/clone provenance once during analysis construction, outside
+      selector error containment. Strengthen the corpus with producer spellings,
+      every source-less offset and clone originals; correct the distinct clone-
+      identity claim and conditional subject wording. Remove the dead attribute
+      guard. Prove tests fail first, then targeted/full unit/pinned hydration/
+      static/docs checks, commit locally and stop; no measurement or full browser
+      retry is required at this checkpoint.
 - [x] Discovered: investigate the post-reboot browser gate using clean pre-M7
       `e5025e64`, not M7 `ee4ead64`. Run the six failed specs cold and directly
       time fresh ordinary-preview exports on M6, delivered M7 and the fixed
@@ -1121,8 +1131,14 @@ the original page; give identical texts a single-parse quick check.
 - [ ] Record the no-change and component-style samples of both fixtures.
       Discovered: after the supervisor's code check, prepare clean M6
       `e5025e64` separately (same analysis code as measured `1887eff6`) on this
-      host. Interleave M6, M7, M7, M6 per fixture, each with cold/warm no-change
-      and component-style scenarios in one session. Report same-host ratios
+      host, using identical commands for cold/warm no-change and component-style
+      in one session: default fixture ABBA (M6, M7, M7, M6); cumulative once
+      each, M6 then M7. Keep incomplete fixed-wait samples on either tree; for
+      each affected cell also use M6's off-by-default uncapped classification-only
+      harness, unprofiled, on both trees (M6 then M7), retaining both results.
+      Report M7 `changesReadyMs`/inline ceiling headroom, retained HTML bytes and
+      per-step work against M6's roughly 80% identical/83% complete-style byte
+      reductions, alongside every run's document-work counts. Report same-host ratios
       and spread; label M2–M6 cross-host numbers as historical context. Record
       `machine.cpu`, `/proc/cpuinfo` model/MHz and CPU steal time per snapshot.
       Do not change Decision 13's machine requirement or its contract.

@@ -12,6 +12,7 @@ type Element = DefaultTreeAdapterMap["element"];
 type Attribute = Element["attrs"][number];
 type Span = { startOffset: number; endOffset: number };
 const documents = new WeakSet<DefaultTreeAdapterMap["document"]>();
+const validated = new WeakSet<DefaultTreeAdapterMap["document"]>();
 const originals = new WeakMap<Element, Element>();
 const positions = new WeakMap<Element, number>();
 const attributes = new WeakMap<Attribute, Span>();
@@ -73,7 +74,7 @@ export class PageSourceLocations {
   }
 }
 
-export function requirePageSourceLocations(
+function requirePageSourceLocations(
   document: DefaultTreeAdapterMap["document"],
 ): void {
   if (!documents.has(document))
@@ -81,6 +82,27 @@ export function requirePageSourceLocations(
       "review-invalid",
       "unregistered page source provenance",
     );
+}
+
+export function withPageSourceValidation<Result>(
+  document: DefaultTreeAdapterMap["document"],
+  analyze: (validate: ((element: Element) => void) | undefined) => Result,
+): Result {
+  requirePageSourceLocations(document);
+  const validate = validated.has(document)
+    ? undefined
+    : (element: Element) => {
+        if (!element.sourceCodeLocation) pageCreationOffset(element);
+        const original = originalPageElement(element);
+        if (original !== element && !original.sourceCodeLocation)
+          throw new MoklyError(
+            "review-invalid",
+            "formatting clone has no located original provenance",
+          );
+      };
+  const result = analyze(validate);
+  validated.add(document);
+  return result;
 }
 
 export function originalPageElement(element: Element): Element {

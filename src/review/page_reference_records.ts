@@ -18,7 +18,7 @@ import type {
 
 import {
   pageAttributeLocation,
-  requirePageSourceLocations,
+  withPageSourceValidation,
 } from "./page_source_locations.js";
 
 export interface PageReferenceRecord extends SourceSpan, HtmlReferenceValue {
@@ -35,60 +35,63 @@ export function pageReferenceRecords(
     inert: readonly SourceSpan[],
   ) => void,
 ) {
-  return documentWorkSync("referenceMs", () => {
-    requirePageSourceLocations(document);
-    const result: PageReferenceRecord[] = [];
-    const visit = (
-      node: DefaultTreeAdapterMap["node"],
-      inertAncestors: readonly SourceSpan[],
-    ) => {
-      observe?.(node, inertAncestors);
-      const location = "tagName" in node ? node.sourceCodeLocation : undefined;
-      const textLocation =
-        "tagName" in node && node.tagName === "style"
-          ? styleTextLocation(node)
-          : undefined;
-      for (const reference of htmlReferenceValues(node, options)) {
-        const attribute =
-          reference.attribute && "attrs" in node
-            ? node.attrs.findLast(
-                (attribute) => attribute.name === reference.attribute,
-              )
+  return documentWorkSync("referenceMs", () =>
+    withPageSourceValidation(document, (validate) => {
+      const result: PageReferenceRecord[] = [];
+      const visit = (
+        node: DefaultTreeAdapterMap["node"],
+        inertAncestors: readonly SourceSpan[],
+      ) => {
+        if ("tagName" in node) validate?.(node);
+        observe?.(node, inertAncestors);
+        const location =
+          "tagName" in node ? node.sourceCodeLocation : undefined;
+        const textLocation =
+          "tagName" in node && node.tagName === "style"
+            ? styleTextLocation(node)
             : undefined;
-        const span = reference.attribute
-          ? attribute && "tagName" in node
-            ? pageAttributeLocation(attribute)
-            : undefined
-          : textLocation;
-        if (!span)
-          throw new MoklyError(
-            "review-invalid",
-            "reference has no parser token provenance",
+        for (const reference of htmlReferenceValues(node, options)) {
+          const attribute =
+            reference.attribute && "attrs" in node
+              ? node.attrs.findLast(
+                  (attribute) => attribute.name === reference.attribute,
+                )
+              : undefined;
+          const span = reference.attribute
+            ? attribute
+              ? pageAttributeLocation(attribute)
+              : undefined
+            : textLocation;
+          if (!span)
+            throw new MoklyError(
+              "review-invalid",
+              "reference has no parser token provenance",
+            );
+          result.push({
+            ...reference,
+            start: span.startOffset,
+            end: span.endOffset,
+            spelling: source.slice(span.startOffset, span.endOffset),
+            inertAncestors,
+          });
+        }
+        if ("childNodes" in node)
+          for (const child of node.childNodes) visit(child, inertAncestors);
+        if ("content" in node)
+          visit(
+            node.content,
+            location
+              ? [
+                  ...inertAncestors,
+                  { start: location.startOffset, end: location.endOffset },
+                ]
+              : inertAncestors,
           );
-        result.push({
-          ...reference,
-          start: span.startOffset,
-          end: span.endOffset,
-          spelling: source.slice(span.startOffset, span.endOffset),
-          inertAncestors,
-        });
-      }
-      if ("childNodes" in node)
-        for (const child of node.childNodes) visit(child, inertAncestors);
-      if ("content" in node)
-        visit(
-          node.content,
-          location
-            ? [
-                ...inertAncestors,
-                { start: location.startOffset, end: location.endOffset },
-              ]
-            : inertAncestors,
-        );
-    };
-    visit(document, []);
-    return result;
-  });
+      };
+      visit(document, []);
+      return result;
+    }),
+  );
 }
 
 function styleTextLocation(

@@ -62,7 +62,8 @@ parse; do not infer a clone's origin from its first descendant. Clones use the
 original element's subject status under
 [original-page matching](./mokly-page-analysis.md#original-page-matching).
 Elements created without a start token record the creating token's start offset,
-including fake `p` from `</p>` and `br` from `</br>`; that rule owns their status.
+including fake `p` from `</p>` and `br` from `</br>`;
+[original-page matching](./mokly-page-analysis.md#original-page-matching) owns their status.
 Apply these rules to page analyses and original embedded-resource reader trees.
 
 Trees without provenance registration fail with a typed internal review
@@ -71,5 +72,13 @@ uses parse5 8.0.1's exported, internal `Parser` subclass/token callbacks and the
 default adapter; it does not patch the tokenizer or change recovery behavior.
 Guard parser upgrades with the whole extractor-equivalence corpus through this
 production boundary, requiring exact provenance for every visible value,
-adopted attribute, clone and parser-created subject. The single-parse counting
+adopted attribute and parser-created subject. The corpus checks each record's
+attribute name/decoded producer value or full contributing style-text spelling,
+every source-less element's creation offset, and located originals for shared-
+token clones. A separate clone-identity case pins the exact original object.
+Validate source-less creation and clone provenance once per registered document
+in the existing reference traversal during analysis construction, before any
+selector query: failures raise typed diagnostics and cannot become unresolved
+matching results. Successful repeat inventories reuse that validation.
+The single-parse counting
 test intercepts both parse5 `parse` and `Parser.parse` entrypoints.

@@ -11,8 +11,14 @@ import {
 
 import { cssReferenceInputs } from "./helpers/html_reference_inputs.js";
 import { extractHtmlReferences as delivered } from "./helpers/page_m6/html_references.js";
+import { assertPageProvenance } from "./helpers/page_provenance.js";
 
 const inputs = [
+  "",
+  "<!doctype html>",
+  " \r\n",
+  "</br>",
+  "<p>Home</p><!--mokly-review-ignore:start:clock--></p><!--mokly-review-ignore:end:clock-->",
   '<a id="a&amp;b" href="screen.html#one" data-nav-href="other.html">a</a><img src="a&amp;b.svg" srcset="one.svg 1x, two.svg 2x, three.svg,">',
   '<audio src="a"></audio><embed src="b"><iframe src="c"></iframe><input src="d"><script src="e"></script><source src="f"><track src="g"><object data="h"></object><video poster="i" src="j"></video>',
   '<image href="one.svg" xlink:href="two.svg"></image><use href="three.svg" xlink:href="four.svg"></use><svg><image xlink:href="five.svg"/><use href="six.svg"/></svg>',
@@ -54,14 +60,13 @@ for (const resourceHints of [false, true])
       const document = new PageAnalysis(source, "inventory.html").document;
       const options = { resourceHints };
       const expected = delivered(source, options);
+      const records = pageReferenceRecords(source, document, options);
+      assertPageProvenance(source, document, records, options);
       assert.deepEqual(
         extractHtmlReferences(source, options, document),
         expected,
       );
-      assert.deepEqual(
-        originalPageReferences(pageReferenceRecords(source, document, options)),
-        expected,
-      );
+      assert.deepEqual(originalPageReferences(records), expected);
     });
 
 test("records retain decoded values, complete UTF-16 spans, spelling and inert ancestors", () => {

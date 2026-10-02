@@ -331,8 +331,11 @@ Key code:
   default-tree parse captures adopted attribute/clone provenance from parse5's
   own tokens. Empty parser-created elements use their creating token's offset
   for ignore status; located descendants retain the all-ignored rule. No regex
-  recovery or second tokenizer/tree runs. Production corpus and entrypoint-count
-  tests guard the internal Parser hook on upgrades. Styles share the inventory.
+  recovery or second tokenizer/tree runs. The corpus checks producer spellings,
+  all source-less offsets and shared-token clone originals; a separate test pins
+  clone object identity. Construction validates provenance once during the shared
+  style/reference traversal, outside the matcher catch boundary. Entrypoint-count
+  tests still prove one parse; these assertions guard the internal Parser hook.
 - `page_projection.ts`, `page_reference_records.ts`: delivered string materials
   with auxiliary kept/copy/producer recipes, never a reparsed material tree.
   Copies expose recorded template references, not parser-discarded tokens.

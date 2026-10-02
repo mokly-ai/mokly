@@ -149,23 +149,24 @@ An element whose start offset is in paired ignored content is never a matching
 subject. It remains context: do not remove it or disable it inside combinators,
 `:has()` or static structural predicates, including `:nth-child` and `:empty`.
 An adoption-agency formatting clone takes its original element's subject
-status. Implied `html`, `head` and `body` are always subjects. Other elements
-without a location are suppressed only if they have at least one located
-descendant element and every located descendant starts in paired ignored
-content. With no located descendants, use the source start offset of the token
-whose processing created it; an empty fake `p` or `br` inside paired ignored
-content is not a subject. A first ignored child alone never suppresses an
-implied root or a container with visible descendants. Apply this in embedded HTML.
+status. Implied `html`, `head` and `body` are always subjects.
+Other elements without a location: with located descendant elements, they are
+suppressed exactly when every located descendant starts in paired ignored
+content; otherwise they take the ignore status of the start offset of the token
+whose processing created them. Apply this in embedded HTML too.
+The adopted root attributes remain original context, including those supplied
+by a start tag inside paired ignored content: an earlier ignored class still
+shadows a later visible class. References drop by span; this is the existing
+original-tree context difference, not a new rule.
 Ignored text/comment nodes also remain their ordinary structural context.
 The predicate suppresses only final selected subjects; it is not a filter on
 the tree adapter's children/parent/sibling operations. Template contents remain
 inert matcher boundaries. Resolve owners against original validated ranges
 with the existing input-owner/slot/root rules, never normalized offsets.
 
-This intentionally replaces ignore-normalized matching: removing ignored
-children formerly changed surrounding subjects' combinator/structural matches.
-Only outcomes affected by that lost context change. Differential examples must
-assert the real original-tree outcome, not require the old false exclusion.
+This replaces ignore-normalized matching: removing regions formerly changed
+surrounding subjects' combinator/structural matches or root adoption. Only these
+original-context matching outcomes change; differentials assert actual-tree results.
 
 ## Identical-text Quick Check
 

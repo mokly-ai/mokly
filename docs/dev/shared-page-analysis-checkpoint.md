@@ -55,6 +55,8 @@ provenance/context differences instead of allowing unrelated mismatches.
 | `changes_inline_references_fast_path.test.ts`, mixed reference fixture                                             | 8 fast/2 complete; every view runs inline analysis                                              | Same per-view paths/results; only the 2 Home views analyze inline rules and their distinct sheet parses once.                                                                                                        |
 | `component_material_reader.test.ts` root-specific projection case, moved to `page_analysis_root_resources.test.ts` | Used a parser-discarded select image                                                            | Uses a real inert-template copy and forces complete comparison; ownership-before-read assertions remain, while select recovery has explicit oracle cases.                                                            |
 | `page_analysis_context_receivers.test.ts`, table and SVG caller-slot receivers                                     | No Home entry reason: body-context copies lose table `td` style and SVG `image href` references | Home receives dependency (committed) or material (derived) evidence from the original receiving context. Actual resource evidence already makes the M6 per-view state `changed`; the difference is the entry reason. |
+| `page_analysis_adopted_context.test.ts`, ignored root `.page` before visible `.visible`                            | Unchanged: removing the ignored tag loses `.page`                                               | Changed: the browser's adopted `.page` stays on the original root. References supplied by the ignored tag still drop by span.                                                                                        |
+| `page_analysis_adopted_context.test.ts`, ignored root `.hidden` shadows visible `.visible`                         | Changed: removing `.hidden` makes `.visible` adoptable                                          | Unchanged: the original root retains the first `.hidden` class, so `.visible` does not match. Reversed source order retains visible-first precedence on both engines.                                                |
 
 ## Parse And Reader Bounds
 
@@ -132,6 +134,33 @@ fixing production code; logs `m7-supervisor-before.log` and
 
 ## Verification And Deferred Evidence
 
+The third round clarifies root attributes supplied by ignored start tags as
+original-tree context, not a new rule. Both `html` and `body` adoption orders
+are pinned against M6 on inline/linked/embedded paths in both modes; the
+difference table names ignored `.page` adoption and `.hidden` shadowing.
+Ignored-tag URL records still drop by span. Construction now validates every
+source-less creation offset and each registered clone's located original once,
+in the shared reference/style traversal, before selector-error containment.
+Successful re-inventory does not repeat validation; no new HTML parse or tree
+walk is added. The attribute lookup uses only attribute identity.
+
+`m7-round3-before.log` and `m7-round3-invariant-before.log` retain failing tests
+for the previously masked diagnostic, once-only validation, dead guard and
+contradictory contract wording. The corpus now checks every producer spelling
+(attribute name/decoded value or contributing style-text span), walks every
+element for missing creation offsets and shared-token clone originals, and
+keeps the separate exact clone-identity test distinct. The +1 attribute-span,
+missing-offset and broken-clone mutations are rejected in
+`m7-round3-span-mutant.log`, `m7-round3-creation-mutant.log` and
+`m7-round3-clone-mutant.log`; all generated-code mutations are restored.
+Round-three verification uses `m7-round3-*` logs/reports. Full browser retries
+and measurements are explicitly deferred at this supervisor checkpoint.
+Passed: 890 targeted tests, 290 further equivalence/docs tests, all 3,482 unit
+tests and all 219 pinned-Chromium hydration tests, without failures, skips or
+cancellations. Format, lint, typecheck and repository ratchets pass. No browser
+gate exception is needed for these requested suites; prior browser evidence
+remains retained in the linked report. Measurement stays pending review.
+
 The second supervisor round replaces first-round donor recovery entirely:
 `page_parser.ts` subclasses parse5 8.0.1's exported `Parser`, capturing original
 start-token attributes and token-array identities before tree construction.
@@ -148,7 +177,7 @@ M6, with both fast-path settings for parser-created subjects and donor ignores.
 Lookalikes in ignored/end/adopted tag attributes and doctypes cannot supply
 spans. SVG/MathML template/select integration points and HTML-select root
 adoption are covered. The entire extractor corpus now uses the production
-adapter, including an original/clone identity assertion. Parse counting
+adapter; the separate token-provenance test pins exact original/clone identity. Parse counting
 intercepts both `parse` and inherited `Parser.parse`, preserving one tree.
 
 Regression-first evidence is in `m7-round2-before.log` and
