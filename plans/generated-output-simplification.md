@@ -469,6 +469,86 @@ breaking-change notice; and that the new link normalization in comparisons
 can crash Changes or report false differences. Each finding is awaiting the
 user's decision.
 
+## Milestone 6: Define the `mokly-generated` directory contract
+
+Documentation only. After the review, the user chose to rename the
+Mokly-owned output directory from `.generated/` to `mokly-generated/` (review
+finding 11). The new name says which tool owns the folder, and a name without
+a leading dot works on static hosts and deploy tools that skip or block
+dot-directories: GitHub Pages' Jekyll build, Firebase Hosting's default ignore
+rules, the `gh-pages` npm tool, and server rules that deny dot-paths. The
+`.generated` name was never released, so no compatibility alias is kept.
+
+- [ ] Replace `.generated` with `mokly-generated` as the directory name in
+      every protocol document, guide, architecture document, README (root,
+      `src/**`, `packages/viewer`, `examples/basic`), and `AGENTS.md`:
+      disk paths, Serve URLs (`/static/mokly-generated/<route>`), export and
+      publication layouts (`static/mokly-generated/<route>`), the baseline
+      cache layout, ignore-rule guidance, and the viewer's
+      `generatedPathPrefix` value `"mokly-generated"`. Keep identifiers such
+      as `generatedPathPrefix`, `generatedFiles`, and the `generated-v6`
+      layout id unchanged.
+- [ ] Add the naming rule to the generated-output contract: a leading dot is
+      reserved for Mokly state that never leaves the machine (`.mokly-cache/`
+      and transaction directories), and deployable output uses the plain name
+      `mokly-generated/`, with the hosting reason. State that production code
+      defines the name once, as an exported constant in `@mokly/viewer/data`
+      that the CLI imports, and that lint rejects the spelled-out name
+      elsewhere.
+- [ ] Update this plan's summary, decisions, and post-merge follow-up to the
+      new name (completed milestones stay as historical records), and update
+      the plan's entry in `plans/README.md`.
+- [ ] Run `npm run format:check`, review the diff, commit, and push.
+
+## Milestone 7: Rename the directory to `mokly-generated`
+
+Backend. First make a single definition the only source of the directory
+name, then change its value, so later code cannot drift back to a
+spelled-out name.
+
+- [ ] Define the directory name once as an exported constant in
+      `@mokly/viewer/data`, derive the viewer's `GeneratedPathPrefix` type
+      from it, and import it directly wherever the name is used: replace the
+      CLI's `GENERATED_DIRECTORY` and every string or template literal in
+      `src/` and `packages/viewer/src/` that spells the name, including path
+      strings such as `.generated/` and error messages. Do not rename
+      identifiers that only contain the word, such as `metadata.generated`,
+      `this.generated`, `generatedDir`, `generatedFiles`, or
+      `generatedPathPrefix`.
+- [ ] Add an ESLint rule that rejects the directory name in string and
+      template literals in production code outside the defining module, and
+      prove that it reports a reintroduced literal.
+- [ ] Change the constant's value to `mokly-generated`; the viewer's
+      catalogue decoder accepts only an absent prefix (the legacy layout) or
+      `"mokly-generated"`.
+- [ ] Update tests, fixtures, scripts, the example's ignore entries
+      (`.gitignore`, `.prettierignore`, `eslint.config.js`), and every other
+      remaining reference.
+- [ ] Add a regression test that an exported site and a publication archive
+      contain no dot-prefixed path segment, except the export ownership
+      marker, which the site does not need.
+- [ ] Smoke test: `npm run example:build` writes only
+      `examples/basic/mokly-generated/`; a generated document opened from
+      disk is styled; `npm run dev` serves screens under
+      `/static/mokly-generated/`, styled after the background build;
+      `npm run example:check` passes; an exported site served by a plain
+      static file server shows styled screens.
+- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+      `npm test`, `npm run test:browser`, `npm run example:check`, and
+      `cargo xtask check`; commit and push.
+
+## Milestone 8: Verify and review the rename
+
+- [ ] Re-read every document changed in Milestones 6 and 7 against the
+      shipped behaviour and fix drift.
+- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+      `npm test`, `npm run test:browser`, `npm run example:check`, and
+      `cargo xtask check`; `git add -A`; commit with Conventional Commits; push
+      the branch.
+- [ ] After the push, review the complete local diff against `origin/main`
+      using `docs/implementation-review-prompt.md`; report numbered findings
+      with severities and recommendations without changing the implementation.
+
 ## Post-merge follow-up (non-blocking)
 
 - Parked: replace archive extraction with Git worktrees in a cache outside
