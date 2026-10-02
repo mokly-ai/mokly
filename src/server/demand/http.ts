@@ -1,10 +1,10 @@
 /** Generated views are rendered in memory; ordinary public files retain the static policy. */
 import type { ServerResponse } from "node:http";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../../browse/document_adapter.js";
-import { GENERATED_DIRECTORY } from "../../config/paths.js";
 import { errorMessage } from "../../errors.js";
 import { safeDecodePath, send } from "../respond.js";
 

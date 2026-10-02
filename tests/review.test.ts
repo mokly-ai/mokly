@@ -452,7 +452,7 @@ async function git(cwd: string, arguments_: readonly string[]): Promise<void> {
 
 function fakeGit(files: ReadonlyMap<string, string>): ReadOnlyReviewRepository {
   const commit = "a".repeat(40);
-  const generated = files.has("mockups/.generated/mokly-manifest.json");
+  const generated = files.has("mockups/mokly-generated/mokly-manifest.json");
   const descriptor = generated
     ? baselineCatalogue(commit, "mockups", "generated-v6")
     : undefined;
@@ -488,11 +488,14 @@ function filesForCompilation(
   compilation: Compilation,
 ): Map<string, string> {
   const files = new Map<string, string>([
-    ["mockups/.generated/mokly-manifest.json", `${JSON.stringify(manifest)}\n`],
+    [
+      "mockups/mokly-generated/mokly-manifest.json",
+      `${JSON.stringify(manifest)}\n`,
+    ],
   ]);
   for (const [route, content] of compilation.outputs) {
     if (route === "mokly-manifest.json") continue;
-    files.set(`mockups/.generated/${route}`, content);
+    files.set(`mockups/mokly-generated/${route}`, content);
   }
   return files;
 }

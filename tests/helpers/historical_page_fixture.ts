@@ -49,10 +49,13 @@ export const mockups = [
   const manifest = readManifest(fixture.config);
   const manifestPath = path.join(
     fixture.mockupsDir,
-    ".generated/mokly-manifest.json",
+    "mokly-generated/mokly-manifest.json",
   );
   const currentManifest = await fs.readFile(manifestPath);
-  const currentPath = path.join(fixture.mockupsDir, ".generated/handbook.html");
+  const currentPath = path.join(
+    fixture.mockupsDir,
+    "mokly-generated/handbook.html",
+  );
   const currentDocument = await fs.readFile(currentPath, "utf8");
   const route = options.route ?? "handbook.html";
   const sourcePath =
@@ -73,7 +76,9 @@ export const mockups = [
     version === 2
       ? path.join(fixture.mockupsDir, "mockbook-manifest.json")
       : path.join(fixture.mockupsDir, "mokly-manifest.json");
-  await fs.rm(path.join(fixture.mockupsDir, ".generated"), { recursive: true });
+  await fs.rm(path.join(fixture.mockupsDir, "mokly-generated"), {
+    recursive: true,
+  });
   await fs.writeFile(historicalPath, JSON.stringify(historical));
   const artifact = path.join(fixture.mockupsDir, route);
   await fs.mkdir(path.dirname(artifact), { recursive: true });

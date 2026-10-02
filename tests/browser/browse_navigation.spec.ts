@@ -228,7 +228,7 @@ test("logical activation stays host-owned during a frame source handoff", async 
     releaseRequest = resolve;
   });
   await page.route(
-    "**/static/.generated/screens/home.mobile.dark.html",
+    "**/static/mokly-generated/screens/home.mobile.dark.html",
     async (route) => {
       reportRequest();
       await requestReleased;

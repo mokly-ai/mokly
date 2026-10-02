@@ -28,17 +28,23 @@ test("export builds a complete consumer catalogue with an isolated comparison", 
   );
   const result = await exportCatalogue(fixture.config, { outDir: "site" });
   const files = await directoryFiles(fixture.output);
+  assert.deepEqual(
+    [...files.keys()]
+      .filter((name) => name.split("/").some((part) => part.startsWith(".")))
+      .sort(),
+    [".mokly-export-artifact"],
+  );
   for (const name of [
     "index.html",
     "404.html",
     "view/screens/home.html",
     "id/home/index.html",
     "view/user-flows/tour.html",
-    "static/.generated/screens/home.mobile.html",
+    "static/mokly-generated/screens/home.mobile.html",
   ])
     assert.ok(files.has(name), name);
   assert.match(
-    files.get("static/.generated/screens/home.mobile.html")!.toString(),
+    files.get("static/mokly-generated/screens/home.mobile.html")!.toString(),
     /data-mokly-link="details"[^>]*data-mokly-inspector-link="0"/,
   );
   assert.ok(result.comparisonUrl);

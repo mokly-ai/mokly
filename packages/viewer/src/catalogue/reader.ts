@@ -1,5 +1,6 @@
 import { exactKeys, invalidData } from "../components/data.js";
 
+import { GENERATED_DIRECTORY } from "./delivery_paths.js";
 import { CHANGE_STATUSES, readCollection, readEntry } from "./entry_reader.js";
 import { assertPublicCatalogue } from "./privacy.js";
 import { validateCatalogueReferences } from "./references.js";
@@ -40,8 +41,8 @@ export function readCatalogue(value: unknown): CatalogueReadModel {
     schemaVersion: 1,
     ...(input.generatedPathPrefix === undefined
       ? {}
-      : input.generatedPathPrefix === ".generated"
-        ? { generatedPathPrefix: ".generated" as const }
+      : input.generatedPathPrefix === GENERATED_DIRECTORY
+        ? { generatedPathPrefix: GENERATED_DIRECTORY }
         : invalidData("$catalogue", "unsupported generatedPathPrefix")),
     identity: { id: hash(identity.id), title: text(identity.title) },
     deploymentId: hash(input.deploymentId),

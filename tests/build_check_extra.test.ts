@@ -34,7 +34,7 @@ test("check treats every unexpected path as extra, regardless of its contents", 
     (error: Error) => {
       assert.match(
         error.message,
-        /extra generated files:\n {2}- \.generated\/legacy\.html\n {2}- \.generated\/plain\.txt/,
+        /extra generated files:\n {2}- mokly-generated\/legacy\.html\n {2}- mokly-generated\/plain\.txt/,
       );
       assert.doesNotMatch(error.message, /authored\.html/);
       return true;
@@ -55,7 +55,7 @@ test("check never follows an unexpected symlink", async (context) => {
   );
   assert.throws(
     () => checkCompilation(compilation, config),
-    /extra generated files:\n {2}- \.generated\/external/,
+    /extra generated files:\n {2}- mokly-generated\/external/,
   );
 });
 
@@ -71,6 +71,6 @@ test("check reports unexpected empty directories in the generated tree", async (
 
   assert.throws(
     () => checkCompilation(compilation, config),
-    /extra generated files:\n {2}- \.generated\/extra\/empty/,
+    /extra generated files:\n {2}- mokly-generated\/extra\/empty/,
   );
 });

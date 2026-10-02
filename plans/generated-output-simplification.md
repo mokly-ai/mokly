@@ -511,7 +511,7 @@ Backend. First make a single definition the only source of the directory
 name, then change its value, so later code cannot drift back to a
 spelled-out name.
 
-- [ ] Define the directory name once as an exported constant in
+- [x] Define the directory name once as an exported constant in
       `@mokly/viewer/data`, derive the viewer's `GeneratedPathPrefix` type
       from it, and import it directly wherever the name is used: replace the
       CLI's `GENERATED_DIRECTORY` and every string or template literal in
@@ -520,19 +520,21 @@ spelled-out name.
       identifiers that only contain the word, such as `metadata.generated`,
       `this.generated`, `generatedDir`, `generatedFiles`, or
       `generatedPathPrefix`.
-- [ ] Add an ESLint rule that rejects the directory name in string and
+- [x] Add an ESLint rule that rejects the directory name in string and
       template literals in production code outside the defining module, and
       prove that it reports a reintroduced literal.
-- [ ] Change the constant's value to `mokly-generated`; the viewer's
+- [x] Change the constant's value to `mokly-generated`; the viewer's
       catalogue decoder accepts only an absent prefix (the legacy layout) or
       `"mokly-generated"`.
-- [ ] Update tests, fixtures, scripts, the example's ignore entries
+- [x] Update tests, fixtures, scripts, the example's ignore entries
       (`.gitignore`, `.prettierignore`, `eslint.config.js`), and every other
       remaining reference.
-- [ ] Add a regression test that an exported site and a publication archive
+- [x] Add a regression test that an exported site and a publication archive
       contain no dot-prefixed path segment, except the export ownership
       marker, which the site does not need.
-- [ ] Smoke test: `npm run example:build` writes only
+- [x] Give cold full-example browser fixtures enough time to rebuild the
+      renamed historical baseline on this VM, without changing runtime code.
+- [x] Smoke test: `npm run example:build` writes only
       `examples/basic/mokly-generated/`; a generated document opened from
       disk is styled; `npm run dev` serves screens under
       `/static/mokly-generated/`, styled after the background build;

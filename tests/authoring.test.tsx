@@ -39,7 +39,7 @@ const validationConfig: ResolvedConfig = {
   entriesDir: path.join(repositoryRoot, "tests"),
   entryGlobs: ["tests/**/*.mockup.{ts,tsx}"],
   mockupsDir: path.join(repositoryRoot, "mockups"),
-  generatedDir: path.join(repositoryRoot, "mockups/.generated"),
+  generatedDir: path.join(repositoryRoot, "mockups/mokly-generated"),
   moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
   repoRoot: repositoryRoot,
   review: { base: "main", outDir: ".review", sharedImpact: [] },

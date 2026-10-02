@@ -38,20 +38,20 @@ for (const [source, expected] of [
 test("local references resolve from the generated document's actual directory", () => {
   assert.deepEqual(
     resolveLocalReferencePath(
-      ".generated/screens/home.mobile.html",
+      "mokly-generated/screens/home.mobile.html",
       "../../styles.css?theme=dark#header",
     ),
     { kind: "resolved", path: "styles.css" },
   );
   assert.deepEqual(
     resolveLocalReferencePath(
-      ".generated/screens/home.html",
+      "mokly-generated/screens/home.html",
       "../../../secret.css",
     ),
     { kind: "escape" },
   );
   assert.deepEqual(
-    resolveLocalReferencePath(".generated/home.html", "%2Fprivate.css"),
+    resolveLocalReferencePath("mokly-generated/home.html", "%2Fprivate.css"),
     { kind: "root-absolute" },
   );
   assert.deepEqual(resolveLocalReferencePath("index.html", "/", true), {

@@ -7,6 +7,7 @@ import type {
   RemovedEntryPreview,
 } from "@mokly/viewer";
 import type { ManifestEntry } from "@mokly/viewer/data";
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import {
   invalidData,
   readControls,
@@ -36,7 +37,7 @@ export function projectCatalogue(
   const generatedPathPrefix =
     catalogue.manifest.schemaVersion === 6 ||
     catalogue.manifest.schemaVersion === "live-index-1"
-      ? (".generated" as const)
+      ? GENERATED_DIRECTORY
       : undefined;
   const comparisonUrl = comparisonPath(input.comparisonUrl);
   const retainedComponents = new Set(

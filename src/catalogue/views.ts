@@ -1,5 +1,6 @@
 import type { ManifestComponentVariant, CatalogueView } from "@mokly/viewer";
 import type { ManifestEntry, ManifestScreen } from "@mokly/viewer/data";
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import {
   fragmentViews,
   currentDocumentPath,
@@ -67,7 +68,7 @@ export function projectViews(
               view.path,
               input.catalogue.manifest.schemaVersion === 6 ||
                 input.catalogue.manifest.schemaVersion === "live-index-1"
-                ? ".generated"
+                ? GENERATED_DIRECTORY
                 : undefined,
             ),
           ),

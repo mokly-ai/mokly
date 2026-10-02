@@ -1,12 +1,13 @@
 import { reviewInvalid } from "@mokly/viewer/data";
+import type { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import type { ReviewArtifact, ViewReview } from "@mokly/viewer/data";
 
 import { referencedRoutes } from "./asset_references.js";
 import { normalizeHistoricalDocument, normalizeReviewPair } from "./ignore.js";
 
 export interface ArtifactLayouts {
-  readonly before: ".generated" | "";
-  readonly after: ".generated" | "";
+  readonly before: typeof GENERATED_DIRECTORY | "";
+  readonly after: typeof GENERATED_DIRECTORY | "";
 }
 
 /** Check graph-backed evidence against the actual retained snapshots before publication. */

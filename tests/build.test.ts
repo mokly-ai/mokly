@@ -134,7 +134,7 @@ test("check groups missing, stale, and extra output", async (context) => {
   );
   assert.throws(
     () => checkCompilation(compilation, config),
-    /missing generated files:[\s\S]*\.generated\/screens\/home\.mobile\.html[\s\S]*stale generated files:[\s\S]*extra generated files:[\s\S]*\.generated\/extra\.html[\s\S]*Run mokly build and commit/,
+    /missing generated files:[\s\S]*mokly-generated\/screens\/home\.mobile\.html[\s\S]*stale generated files:[\s\S]*extra generated files:[\s\S]*mokly-generated\/extra\.html[\s\S]*Run mokly build and commit/,
   );
 });
 

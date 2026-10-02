@@ -1,3 +1,4 @@
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import { isSafeCatalogueRoute, isSafeRepositoryPath } from "@mokly/viewer/data";
 import type { ManifestV5 } from "@mokly/viewer/data";
 
@@ -188,7 +189,7 @@ export function parseChildUpdateMessage(
           (route: unknown) =>
             typeof route === "string" &&
             isSafeRepositoryPath(route) &&
-            !route.startsWith(".generated/"),
+            !route.startsWith(`${GENERATED_DIRECTORY}/`),
         ))) ||
     !Number.isSafeInteger(candidate.version) ||
     (candidate.version as number) <= 0 ||

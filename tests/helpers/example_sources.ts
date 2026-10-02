@@ -14,7 +14,7 @@ export async function copyExampleSources(root: string): Promise<void> {
           ".mokly-cache",
           "node_modules",
           ".git",
-          ".generated",
+          "mokly-generated",
           "generated",
         ].includes(path.basename(source)),
     });

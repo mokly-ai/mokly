@@ -29,7 +29,7 @@ test("the derived large fixture archives install/build inputs and ignores only g
     (await fs.readFile(path.join(root, ".gitignore"), "utf8"))
       .trim()
       .split("\n"),
-    [".review/", ".mokly-cache/", "node_modules/", "mockups/.generated/"],
+    [".review/", ".mokly-cache/", "node_modules/", "mockups/mokly-generated/"],
   );
   const lock = JSON.parse(
     await fs.readFile(path.join(repositoryRoot, "package-lock.json"), "utf8"),

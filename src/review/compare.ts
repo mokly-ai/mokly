@@ -2,6 +2,7 @@ import path from "node:path";
 
 import { minimatch } from "minimatch";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import type {
   ManifestScreen,
   Manifest,
@@ -112,13 +113,13 @@ export async function compareReview(
   const screens: ScreenReview[] = [];
   const resources = new ResourceComparison(
     new ComponentMaterialReader(baseAssetReader, {
-      prefix: baseManifest.schemaVersion === 6 ? ".generated" : "",
+      prefix: baseManifest.schemaVersion === 6 ? GENERATED_DIRECTORY : "",
       routes: generatedManifestRoutes(baseManifest),
     }),
     new ComponentMaterialReader(
       new CompilationAssetReader(compilation.outputs, assetReader),
       {
-        prefix: ".generated",
+        prefix: GENERATED_DIRECTORY,
         routes: generatedManifestRoutes(compilation.manifest),
       },
     ),
@@ -153,7 +154,7 @@ export async function compareReview(
     (route) => baseAssetReader.read(route),
     (routes) => baseAssetReader.readMany(routes),
     {
-      prefix: baseManifest.schemaVersion === 6 ? ".generated" : "",
+      prefix: baseManifest.schemaVersion === 6 ? GENERATED_DIRECTORY : "",
       routes: generatedManifestRoutes(baseManifest),
     },
   );
@@ -167,7 +168,7 @@ export async function compareReview(
     },
     undefined,
     {
-      prefix: ".generated",
+      prefix: GENERATED_DIRECTORY,
       routes: generatedManifestRoutes(compilation.manifest),
     },
   );

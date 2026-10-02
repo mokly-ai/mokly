@@ -10,6 +10,8 @@ import type {
 } from "../components/prop_types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 
+import type { GeneratedPathPrefix } from "./delivery_paths.js";
+
 export type ChangesStatus =
   "preparing" | "pending" | "ready" | "unavailable" | "disabled";
 export type ChangeKind = "added" | "changed" | "removed" | "unmodified";
@@ -20,7 +22,7 @@ export type RemovedEntryPreview =
 /** Public v1 contract, independent of private build and comparison inventories. */
 export interface CatalogueReadModel {
   schemaVersion: 1;
-  generatedPathPrefix?: ".generated";
+  generatedPathPrefix?: GeneratedPathPrefix;
   identity: { id: string; title: string };
   deploymentId: string;
   revision: { content: number; evidence: number };

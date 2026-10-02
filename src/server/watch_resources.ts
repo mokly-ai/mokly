@@ -2,6 +2,7 @@
 
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import type { Compilation } from "../build/compile.js";
@@ -41,7 +42,7 @@ export async function discoverWatchResources(
   );
   const configured = new Set(stylesheets);
   const generated = {
-    prefix: ".generated",
+    prefix: GENERATED_DIRECTORY,
     routes: new Set(compilation.outputs.keys()),
   };
   const graph = new ResourceGraph({

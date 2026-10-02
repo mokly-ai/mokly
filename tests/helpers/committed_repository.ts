@@ -22,8 +22,8 @@ export function committedReviewRepository(
     toPosixPath(path.relative(config.repoRoot, config.mockupsDir)) || ".";
   const generatedManifest =
     root === "."
-      ? ".generated/mokly-manifest.json"
-      : `${root}/.generated/mokly-manifest.json`;
+      ? "mokly-generated/mokly-manifest.json"
+      : `${root}/mokly-generated/mokly-manifest.json`;
   const lookup = spawnSync(
     "git",
     ["-C", config.repoRoot, "cat-file", "-e", `${commit}:${generatedManifest}`],

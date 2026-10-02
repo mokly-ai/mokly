@@ -25,14 +25,14 @@ test("served Browse adapts current HTML without mutating portable files", async 
   const fixture = await navigationFixture(context);
   const diskPath = path.join(
     fixture.mockupsDir,
-    ".generated/screens/home.mobile.html",
+    "mokly-generated/screens/home.mobile.html",
   );
   const disk = await fs.promises.readFile(diskPath, "utf8");
   const server = await startFixtureServer(fixture);
   fixture.beforeRemove(() => server.close());
 
   const response = await fetch(
-    `${server.url}/static/.generated/screens/home.mobile.html`,
+    `${server.url}/static/mokly-generated/screens/home.mobile.html`,
   );
   const served = await response.text();
   assert.equal(response.status, 200);
@@ -56,7 +56,7 @@ test("served Browse adapts current HTML without mutating portable files", async 
   assert.equal(htm.status, 404);
 
   const head = await fetch(
-    `${server.url}/static/.generated/screens/home.mobile.html`,
+    `${server.url}/static/mokly-generated/screens/home.mobile.html`,
     {
       method: "HEAD",
     },
@@ -67,8 +67,8 @@ test("served Browse adapts current HTML without mutating portable files", async 
   assert.equal(await head.text(), "");
 
   for (const encodedPath of [
-    "/static/.generated/screens%2Fhome.mobile.html",
-    "/static/.generated/screens%5Chome.mobile.html",
+    "/static/mokly-generated/screens%2Fhome.mobile.html",
+    "/static/mokly-generated/screens%5Chome.mobile.html",
   ]) {
     assert.equal((await fetch(`${server.url}${encodedPath}`)).status, 400);
   }
@@ -92,15 +92,15 @@ test("served fragment queries validate once and reach every applicable frame", a
   ).text();
   assert.match(
     screen,
-    /src="\/static\/\.generated\/screens\/details\.mobile\.html#section"/,
+    /src="\/static\/mokly-generated\/screens\/details\.mobile\.html#section"/,
   );
   assert.match(
     screen,
-    /data-fragment-dark="\/static\/\.generated\/screens\/details\.mobile\.dark\.html#section"/,
+    /data-fragment-dark="\/static\/mokly-generated\/screens\/details\.mobile\.dark\.html#section"/,
   );
   assert.match(
     screen,
-    /src="\/static\/\.generated\/screens\/details\.desktop\.html#section"/,
+    /src="\/static\/mokly-generated\/screens\/details\.desktop\.html#section"/,
   );
   assert.equal(fragmentFrames(screen).length, 2);
 
@@ -197,7 +197,7 @@ test("served Browse fails closed on post-build trusted tampering", async (contex
   fixture.beforeRemove(() => server.close());
   const target = path.join(
     fixture.mockupsDir,
-    ".generated/screens/home.mobile.html",
+    "mokly-generated/screens/home.mobile.html",
   );
   const original = await fs.promises.readFile(target, "utf8");
   await fs.promises.writeFile(
@@ -206,8 +206,11 @@ test("served Browse fails closed on post-build trusted tampering", async (contex
   );
 
   assert.equal(
-    (await fetch(`${server.url}/static/.generated/screens/home.mobile.html`))
-      .status,
+    (
+      await fetch(
+        `${server.url}/static/mokly-generated/screens/home.mobile.html`,
+      )
+    ).status,
     200,
   );
 });

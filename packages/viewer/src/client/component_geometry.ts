@@ -1,4 +1,5 @@
 /** Read-only DOM range authentication and clipped geometry in immediate frames. */
+import { GENERATED_DIRECTORY } from "../catalogue/delivery_paths.js";
 import { currentDocumentRoute } from "../catalogue/delivery_paths.js";
 import type { ComponentViewRecord } from "../components/manifest_types.js";
 import { clipNode } from "../inspector/clipping.js";
@@ -36,8 +37,8 @@ export function authenticateRanges(
     )
       return;
     const prefix =
-      frame.dataset["moklyGeneratedPrefix"] === ".generated"
-        ? ".generated"
+      frame.dataset["moklyGeneratedPrefix"] === GENERATED_DIRECTORY
+        ? GENERATED_DIRECTORY
         : undefined;
     const actual = path.startsWith("/__mokly/components/renders/")
       ? decodeURIComponent(location.pathname)

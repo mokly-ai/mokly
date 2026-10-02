@@ -79,7 +79,7 @@ test("an unowned exact-resource document stays frame-owned during replacement", 
     releaseRequest = resolve;
   });
   await page.route(
-    "**/static/.generated/screens/home.mobile.dark.html",
+    "**/static/mokly-generated/screens/home.mobile.dark.html",
     async (route) => {
       matchingRequests++;
       if (matchingRequests === 1) {
@@ -99,7 +99,7 @@ test("an unowned exact-resource document stays frame-owned during replacement", 
         .locator(".mbk-frame-mobile iframe")
         .evaluate((element: HTMLIFrameElement) =>
           element.contentDocument?.URL.endsWith(
-            "/static/.generated/screens/home.mobile.dark.html",
+            "/static/mokly-generated/screens/home.mobile.dark.html",
           ),
         ),
     )

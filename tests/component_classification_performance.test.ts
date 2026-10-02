@@ -175,7 +175,9 @@ for (const baseline of ["screens", "components"] as const)
       expected,
     );
     const paths = fixture.before.manifest.entries.flatMap((entry) =>
-      generatedViews(entry).map((view) => `mockups/.generated/${view.path}`),
+      generatedViews(entry).map(
+        (view) => `mockups/mokly-generated/${view.path}`,
+      ),
     );
     assert.ok(paths.length >= 8);
     assert.equal(

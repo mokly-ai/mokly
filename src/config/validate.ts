@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import { MoklyError } from "../errors.js";
 
 import { isBaselineCachePath } from "./cache_paths.js";
@@ -15,7 +17,6 @@ import {
   validateSourceRoots,
 } from "./path_validation.js";
 import {
-  GENERATED_DIRECTORY,
   isInside,
   projectRealPath,
   resolveInside,
@@ -126,7 +127,7 @@ export function resolveConfig(
       if (!isInside(mockupsDir, candidate))
         throw new MoklyError(
           "config-invalid",
-          `stylesheets[${index}] must stay outside .generated and inside mockupsDir: ${stylesheet}`,
+          `stylesheets[${index}] must stay outside ${GENERATED_DIRECTORY} and inside mockupsDir: ${stylesheet}`,
         );
       rejectGeneratedInput(candidate, generatedDir, `stylesheets[${index}]`);
     }
@@ -221,6 +222,6 @@ function rejectGeneratedInput(
   if (inside)
     throw new MoklyError(
       "config-invalid",
-      `${label} must not be inside .generated: ${candidate}`,
+      `${label} must not be inside ${GENERATED_DIRECTORY}: ${candidate}`,
     );
 }

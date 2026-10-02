@@ -35,7 +35,7 @@ for (const includeChanges of [false, true]) {
       ])
         assert.equal(
           fs.existsSync(
-            path.join(output, "static/.generated", directory, document),
+            path.join(output, "static/mokly-generated", directory, document),
           ),
           true,
           document,
@@ -59,7 +59,7 @@ for (const includeChanges of [false, true]) {
       const output = path.join(fixture.root, ".context/published");
       await buildPreview(fixture.config, output, options);
       const before = await fs.promises.readFile(
-        path.join(output, "static/.generated", route),
+        path.join(output, "static/mokly-generated", route),
       );
       const original = fs.promises.readdir;
       const omitted = path.join(fixture.config.generatedDir, route);
@@ -78,12 +78,12 @@ for (const includeChanges of [false, true]) {
       await buildPreview(fixture.config, output, options);
       assert.deepEqual(
         await fs.promises.readFile(
-          path.join(output, "static/.generated", route),
+          path.join(output, "static/mokly-generated", route),
         ),
         before,
       );
       assert.equal(
-        fs.existsSync(path.join(output, "static/.generated", route)),
+        fs.existsSync(path.join(output, "static/mokly-generated", route)),
         true,
       );
     });

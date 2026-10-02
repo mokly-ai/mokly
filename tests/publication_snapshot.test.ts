@@ -81,7 +81,7 @@ for (const includeChanges of [false, true]) {
       ]);
     }
     const originalManifest = await fs.promises.readFile(
-      path.join(fixture.mockupsDir, ".generated/mokly-manifest.json"),
+      path.join(fixture.mockupsDir, "mokly-generated/mokly-manifest.json"),
     );
     await fs.promises.appendFile(
       fixture.entryPath,
@@ -95,13 +95,13 @@ for (const includeChanges of [false, true]) {
     );
     assert.deepEqual(
       await fs.promises.readFile(
-        path.join(fixture.mockupsDir, ".generated/mokly-manifest.json"),
+        path.join(fixture.mockupsDir, "mokly-generated/mokly-manifest.json"),
       ),
       originalManifest,
     );
     assert.equal(
       fs.existsSync(
-        path.join(fixture.mockupsDir, ".generated/publication-added.html"),
+        path.join(fixture.mockupsDir, "mokly-generated/publication-added.html"),
       ),
       false,
     );
@@ -113,7 +113,7 @@ for (const includeChanges of [false, true]) {
       /Added during publication/,
     );
     assert.match(
-      await read("static/.generated/publication-added.html"),
+      await read("static/mokly-generated/publication-added.html"),
       /Added document/,
     );
     assert.match(

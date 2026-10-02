@@ -29,7 +29,7 @@ for (const variant of ["complete", "missing", "stale", "extra"] as const) {
         path.join(fixture.config.generatedDir, "extra.html"),
         "unexpected",
       );
-    await fixture.git("add", "-f", "mockups/.generated");
+    await fixture.git("add", "-f", "mockups/mokly-generated");
     await fixture.git("commit", "-qm", `test: ${variant} generated output`);
 
     const runner = new NodeGitCommandRunner(fixture.root);
@@ -46,7 +46,7 @@ for (const variant of ["complete", "missing", "stale", "extra"] as const) {
     });
     assert.equal(treeReads, 1);
     assert.equal(selected.descriptor.layout, "generated-v6");
-    assert.equal(selected.descriptor.generatedRoot, "mockups/.generated");
+    assert.equal(selected.descriptor.generatedRoot, "mockups/mokly-generated");
     assert.equal(
       selected.selection,
       variant === "complete" ? "blobs" : "rebuild",
@@ -65,7 +65,7 @@ for (const variant of ["complete", "missing", "stale", "extra"] as const) {
       assert.equal(
         await selected.reader.readFile(
           selected.commit,
-          `mockups/.generated/${route}`,
+          `mockups/mokly-generated/${route}`,
         ),
         fixture.baseline.outputs.get(route),
       );
@@ -83,7 +83,7 @@ test("a malformed committed manifest fails rather than triggering a rebuild", as
     path.join(fixture.config.generatedDir, "mokly-manifest.json"),
     "{",
   );
-  await fixture.git("add", "-f", "mockups/.generated");
+  await fixture.git("add", "-f", "mockups/mokly-generated");
   await fixture.git("commit", "-qm", "test: malformed generated manifest");
   await assert.rejects(prepareReviewRepository(fixture.config, "HEAD"), {
     code: "manifest-invalid",
@@ -95,7 +95,7 @@ test("a repository-root catalogue rebuild discovers and reads its moved historic
   const config = {
     ...fixture.config,
     mockupsDir: fixture.root,
-    generatedDir: path.join(fixture.root, ".generated"),
+    generatedDir: path.join(fixture.root, "mokly-generated"),
   };
   const selected = await prepareReviewRepository(config, "HEAD");
   const route = [...fixture.baseline.outputs.keys()].find((name) =>
@@ -104,7 +104,7 @@ test("a repository-root catalogue rebuild discovers and reads its moved historic
   assert.ok(route);
   assert.equal(selected.selection, "rebuild");
   assert.equal(selected.descriptor.catalogueRoot, "mockups");
-  assert.equal(selected.descriptor.generatedRoot, "mockups/.generated");
+  assert.equal(selected.descriptor.generatedRoot, "mockups/mokly-generated");
   assert.equal(
     await fs.readFile(
       path.join(
@@ -120,7 +120,7 @@ test("a repository-root catalogue rebuild discovers and reads its moved historic
   assert.equal(
     await selected.reader.readFile(
       fixture.commit,
-      `mockups/.generated/${route}`,
+      `mockups/mokly-generated/${route}`,
     ),
     fixture.baseline.outputs.get(route),
   );

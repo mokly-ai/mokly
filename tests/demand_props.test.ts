@@ -59,10 +59,10 @@ test("Props renders only its view and freezes resources without copying linked p
   );
   const html = Buffer.from(bundle.files.get(bundle.route)!.bytes).toString();
   assert.match(html, /Edited/);
-  assert.match(html, /href="\/static\/\.generated\/broken.html"/);
+  assert.match(html, /href="\/static\/mokly-generated\/broken.html"/);
   assert.match(
     html,
-    /href="\/static\/\.generated\/screens\/home.desktop.html"/,
+    /href="\/static\/mokly-generated\/screens\/home.desktop.html"/,
   );
   await fs.writeFile(asset, '<svg width="24"/>');
   assert.equal(

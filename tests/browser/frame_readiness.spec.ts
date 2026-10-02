@@ -46,11 +46,11 @@ for (const cross of [false, true]) {
             document.querySelector<HTMLIFrameElement>("#frame")!,
             {
               url: new URL(
-                "/static/.generated/screens/home.mobile.html",
+                "/static/mokly-generated/screens/home.mobile.html",
                 cross ? origin : location.origin,
               ),
               route: "screens/home.mobile.html",
-              generatedPathPrefix: ".generated",
+              generatedPathPrefix: "mokly-generated",
               usage: { status },
             },
           )) as ReadinessWindow["mounted"];

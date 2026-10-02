@@ -55,7 +55,7 @@ test("projection exposes real usage and attribution without private evidence", a
   );
   assert.equal(
     home.views[0]?.fragmentPath,
-    "static/.generated/screens/home.mobile.html",
+    "static/mokly-generated/screens/home.mobile.html",
   );
   const json = serializeCatalogue(model);
   for (const privateField of [

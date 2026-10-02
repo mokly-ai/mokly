@@ -28,14 +28,14 @@ test("Review batches base viewport reads", async (context) => {
   );
   const files = new Map<string, string>([
     [
-      "mockups/.generated/mokly-manifest.json",
+      "mockups/mokly-generated/mokly-manifest.json",
       JSON.stringify(compilation.manifest),
     ],
   ]);
   for (const screen of screens) {
     for (const fragment of Object.values(screen.fragments)) {
       files.set(
-        `mockups/.generated/${fragment}`,
+        `mockups/mokly-generated/${fragment}`,
         compilation.outputs.get(fragment) ?? "",
       );
     }
@@ -115,10 +115,10 @@ test("Review batches dark base fragments through CommittedRepository", async (co
   const expected = screens.flatMap((screen) => {
     assert.ok(screen.darkFragments);
     return [
-      `mockups/.generated/${screen.fragments.mobile}`,
-      `mockups/.generated/${screen.darkFragments.mobile}`,
-      `mockups/.generated/${screen.fragments.desktop}`,
-      `mockups/.generated/${screen.darkFragments.desktop}`,
+      `mockups/mokly-generated/${screen.fragments.mobile}`,
+      `mockups/mokly-generated/${screen.darkFragments.mobile}`,
+      `mockups/mokly-generated/${screen.fragments.desktop}`,
+      `mockups/mokly-generated/${screen.darkFragments.desktop}`,
     ];
   });
   const batchedPathspecs = calls

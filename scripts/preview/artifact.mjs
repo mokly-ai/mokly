@@ -1,7 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { catalogueViewHref, parseStaticDelivery } from "@mokly/viewer/data";
+import {
+  GENERATED_DIRECTORY,
+  catalogueViewHref,
+  parseStaticDelivery,
+} from "@mokly/viewer/data";
 
 import { ownedEntries } from "../../dist/export/ownership.js";
 import { isExportPublicName } from "../../dist/export/resource_policy.js";
@@ -20,7 +24,7 @@ const previewMarker = {
   contents: "schemaVersion=1\n",
 };
 
-/** Validate legacy preview names using the active config and historical path policy. */
+/** Validate preview names using the active config and historical path policy. */
 export const previewOwnership = (config) => ({
   ...previewMarker,
   accepts: (name) =>
@@ -28,7 +32,9 @@ export const previewOwnership = (config) => ({
     (name.startsWith("view/") && name.endsWith(".html")) ||
     (name.startsWith("static/") &&
       isExportPublicName(
-        name.startsWith("static/.generated/") ? name.slice(18) : name.slice(7),
+        name.startsWith(`static/${GENERATED_DIRECTORY}/`)
+          ? name.slice(`static/${GENERATED_DIRECTORY}/`.length)
+          : name.slice(7),
         config,
         {
           allowBuildDirectories: true,

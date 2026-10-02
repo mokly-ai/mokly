@@ -66,14 +66,14 @@ for (const resource of ["image.svg", "unused.css", "shared.css"])
     );
     const documents = reads.filter((route) => route.endsWith(".html"));
     assert.deepEqual(documents.sort(), [
-      "mockups/.generated/screens/details.desktop.dark.html",
-      "mockups/.generated/screens/details.desktop.html",
-      "mockups/.generated/screens/details.mobile.dark.html",
-      "mockups/.generated/screens/details.mobile.html",
-      "mockups/.generated/screens/home.desktop.dark.html",
-      "mockups/.generated/screens/home.desktop.html",
-      "mockups/.generated/screens/home.mobile.dark.html",
-      "mockups/.generated/screens/home.mobile.html",
+      "mockups/mokly-generated/screens/details.desktop.dark.html",
+      "mockups/mokly-generated/screens/details.desktop.html",
+      "mockups/mokly-generated/screens/details.mobile.dark.html",
+      "mockups/mokly-generated/screens/details.mobile.html",
+      "mockups/mokly-generated/screens/home.desktop.dark.html",
+      "mockups/mokly-generated/screens/home.desktop.html",
+      "mockups/mokly-generated/screens/home.mobile.dark.html",
+      "mockups/mokly-generated/screens/home.mobile.html",
     ]);
     assert.deepEqual(
       [...new Set(reads.filter((route) => !route.endsWith(".html")))].sort(),
@@ -98,8 +98,14 @@ test("non-CSS evidence does not traverse a supplied base resource graph", async 
     new Map(),
     undefined,
     false,
-    { prefix: ".generated", routes: new Set(["screens/home.mobile.html"]) },
-    { prefix: ".generated", routes: new Set(["screens/home.mobile.html"]) },
+    {
+      prefix: "mokly-generated",
+      routes: new Set(["screens/home.mobile.html"]),
+    },
+    {
+      prefix: "mokly-generated",
+      routes: new Set(["screens/home.mobile.html"]),
+    },
   );
   assert.deepEqual(
     await graph.compare("screens/home.mobile.html", document, {
@@ -128,7 +134,9 @@ test("deleted stylesheet resources still retain their consumers", async (t) => {
     new CompiledReviewAssetReader(fixture.config, accepted.outputs),
   );
   assert.ok(
-    result.changedPaths.includes("mockups/.generated/screens/home.mobile.html"),
+    result.changedPaths.includes(
+      "mockups/mokly-generated/screens/home.mobile.html",
+    ),
   );
   assert.equal(
     result.screens[0]?.views[0]?.reasons?.[0]?.analysis?.status,
@@ -176,7 +184,7 @@ test("changed documents retain a removed image without any stylesheet in the dif
   for (const viewport of ["mobile", "desktop"])
     assert.ok(
       result.changedPaths.includes(
-        `mockups/.generated/screens/home.${viewport}.html`,
+        `mockups/mokly-generated/screens/home.${viewport}.html`,
       ),
     );
   const consumer = result.screens.find(

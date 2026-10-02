@@ -1,11 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../browse/document_adapter.js";
 import { locatePath } from "../config/file_locations.js";
-import { GENERATED_DIRECTORY } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { capturePublicFiles } from "../export/public_files.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";

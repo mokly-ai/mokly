@@ -38,7 +38,7 @@ test("the example fixture rebuilds an untracked baseline from its own source and
     JSON.parse(
       await prepared.reader.readFile(
         prepared.commit,
-        "examples/basic/.generated/mokly-manifest.json",
+        "examples/basic/mokly-generated/mokly-manifest.json",
       ),
     ),
   );

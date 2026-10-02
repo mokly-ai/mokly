@@ -60,7 +60,10 @@ test("derived export rebuilds and pins a baseline, captures compiled head bytes 
   assert.doesNotMatch(before, /Current compiled screen/);
   assert.match(after, /Current compiled screen/);
   const home = await fs.readFile(
-    path.join(exported.outDir, "static/.generated/screens/home.mobile.html"),
+    path.join(
+      exported.outDir,
+      "static/mokly-generated/screens/home.mobile.html",
+    ),
     "utf8",
   );
   assert.match(home, /Current compiled screen/);

@@ -145,7 +145,7 @@ export async function initializeGit(root) {
 export async function initializeDerivedGit(root, catalogueRoot) {
   await fs.promises.appendFile(
     path.join(root, ".gitignore"),
-    `.mokly-cache/\n${catalogueRoot}/.generated/\n`,
+    `.mokly-cache/\n${catalogueRoot}/mokly-generated/\n`,
   );
   await initializeGit(root);
 }

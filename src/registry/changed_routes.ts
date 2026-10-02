@@ -2,6 +2,7 @@
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import { analyzeHierarchy, type CatalogueHierarchy } from "@mokly/viewer/data";
 import type { Manifest, ManifestEntry } from "@mokly/viewer/data";
 
@@ -130,7 +131,7 @@ function changedPathCandidates(
     [entry, true],
     [baseEntry, baseGenerated],
   ] as const) {
-    const outputRoot = `${prefix}${generated ? ".generated/" : ""}`;
+    const outputRoot = `${prefix}${generated ? `${GENERATED_DIRECTORY}/` : ""}`;
     if (candidate?.kind === "page")
       candidates.push(`${outputRoot}${candidate.route}`);
     if (candidate?.kind !== "screen") continue;

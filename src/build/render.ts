@@ -4,6 +4,7 @@ import { minimatch } from "minimatch";
 
 import type { ColorScheme, ComponentViewRecord } from "@mokly/viewer";
 import type { ArtifactView } from "@mokly/viewer/data";
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import {
   componentFragmentRoute,
   encodeUrlPath,
@@ -189,7 +190,7 @@ export function stylesheetsFor(
       );
     }
     const relative = path.posix.relative(
-      path.posix.dirname(path.posix.join(".generated", fragmentRoute)),
+      path.posix.dirname(path.posix.join(GENERATED_DIRECTORY, fragmentRoute)),
       stylesheet,
     );
     const encoded = encodeUrlPath(relative);

@@ -127,7 +127,7 @@ test("renamed screens keep both routes but only the current id alias", async (co
 test("missing baseline documents and absent history fail before installing output", async (context) => {
   const fixture = await createExportFixture();
   context.after(() => fixture.close());
-  await fixture.git("rm", "mockups/.generated/screens/home.mobile.html");
+  await fixture.git("rm", "mockups/mokly-generated/screens/home.mobile.html");
   await fixture.git("commit", "-qm", "test: missing baseline document");
   const config = {
     ...fixture.config,

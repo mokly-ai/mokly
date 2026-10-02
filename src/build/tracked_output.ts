@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import { MOKLY_CACHE } from "../config/cache_paths.js";
 import { requireGitTopLevel } from "../config/git.js";
 import { projectRealPath, toPosixPath } from "../config/paths.js";
@@ -82,7 +84,7 @@ export class GitTrackedGeneratedOutput implements TrackedGeneratedOutput {
         .map((route) => pathForRoute(prefixes[0]!, route))
         .sort();
       if (!missing.length) return "tracked";
-      const root = prefixes[0] || ".generated";
+      const root = prefixes[0] || GENERATED_DIRECTORY;
       throw new MoklyError(
         "build-invalid",
         `generated output is partly tracked by Git:\ntracked:\n${tracked

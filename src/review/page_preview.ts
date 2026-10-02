@@ -1,6 +1,7 @@
 /** Capture one removed page and its transitive historical resource closure. */
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import { canonicalJson, parseRemovedPagePreview } from "@mokly/viewer/data";
 import type {
   RemovedPagePreviewArtifact,
@@ -75,7 +76,7 @@ export class RepositoryRemovedPagePreview implements RemovedPagePreviewProvider 
       (route) => reader.read(route),
       (routes) => reader.readMany(routes),
       {
-        prefix: source.baseline.schemaVersion === 6 ? ".generated" : "",
+        prefix: source.baseline.schemaVersion === 6 ? GENERATED_DIRECTORY : "",
         routes: generatedManifestRoutes(source.baseline),
       },
     );

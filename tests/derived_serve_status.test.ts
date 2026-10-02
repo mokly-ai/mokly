@@ -266,7 +266,7 @@ test(
       await waitFor(async () => {
         const document = await (
           await fetch(
-            `${running.url}/static/.generated/screens/home.mobile.html`,
+            `${running.url}/static/mokly-generated/screens/home.mobile.html`,
           )
         ).text();
         return document.includes("Freshly edited preview")

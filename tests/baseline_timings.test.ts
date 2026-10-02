@@ -113,13 +113,13 @@ test("resolution timings capture pinned commits and missing history without priv
   const config = await loadConfig(fixture.root);
   const manifest = (await compileCatalogue(config)).manifest;
   const commit = "a".repeat(40);
-  const manifestPath = "mockups/.generated/mokly-manifest.json";
+  const manifestPath = "mockups/mokly-generated/mokly-manifest.json";
   const manifestHash = "b".repeat(40);
   const tree = [
     `100644 blob ${manifestHash}\t${manifestPath}\0`,
     ...manifest.generatedFiles.map(
       ({ path, blobHash }) =>
-        `100644 blob ${blobHash}\tmockups/.generated/${path}\0`,
+        `100644 blob ${blobHash}\tmockups/mokly-generated/${path}\0`,
     ),
   ].join("");
   const events: TimingEvent[] = [];

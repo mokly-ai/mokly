@@ -1,6 +1,8 @@
 import crypto from "node:crypto";
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import {
   publicationFiles,
   publicationInput,
@@ -61,7 +63,7 @@ export async function capturePublicationInputs(
   for (const [route, content] of [...compilation.outputs].sort(
     ([left], [right]) => left.localeCompare(right),
   )) {
-    hash.update(`.generated/${route}\0${content}\0`);
+    hash.update(`${GENERATED_DIRECTORY}/${route}\0${content}\0`);
   }
   return { fingerprint: hash.digest("hex"), manifest };
 }

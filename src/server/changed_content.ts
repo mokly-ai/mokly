@@ -2,6 +2,7 @@
 
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import type {
   Manifest,
   ScreenResourceEvidence,
@@ -10,7 +11,6 @@ import type {
 
 import { isAuthoringSource } from "../build/source_inventory.js";
 import { isInside, toPosixPath } from "../config/paths.js";
-import { GENERATED_DIRECTORY } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";

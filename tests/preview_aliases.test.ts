@@ -93,7 +93,7 @@ test("preview captures compiled output without restoring local generated files",
   assert.deepEqual(await directoryFiles(fixture.mockupsDir), before);
   assert.match(
     await fs.promises.readFile(
-      path.join(output, "static/.generated/screens/home.mobile.html"),
+      path.join(output, "static/mokly-generated/screens/home.mobile.html"),
       "utf8",
     ),
     /id="home-mobile"/,
@@ -113,7 +113,7 @@ test("preview serves compiled bytes instead of stale local generated output", as
   await preview(fixture.root, output);
   assert.deepEqual(await directoryFiles(fixture.mockupsDir), before);
   const published = await fs.promises.readFile(
-    path.join(output, "static/.generated", route),
+    path.join(output, "static/mokly-generated", route),
     "utf8",
   );
   assert.match(published, /id="home-mobile"/);

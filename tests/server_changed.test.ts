@@ -44,7 +44,7 @@ test("changed routes select fragment edits rather than source or dependency edit
   );
   assert.deepEqual(
     changedManifestRoutes(compilation.manifest, compilation.manifest, config, [
-      "mockups/.generated/screens/home.mobile.html",
+      "mockups/mokly-generated/screens/home.mobile.html",
     ]),
     ["screens/home.html", "user-flows/tour.html"],
   );
@@ -69,7 +69,7 @@ test("manifest entry changes are attributed to their route", async (context) => 
   assert.deepEqual(
     changedManifestRoutes(manifest, baseManifest, config, [
       "entries/fixture.mockup.tsx",
-      "mockups/.generated/mokly-manifest.json",
+      "mockups/mokly-generated/mokly-manifest.json",
     ]),
     ["screens/home.html", "user-flows/tour.html"],
   );
@@ -140,7 +140,7 @@ test("changed screens propagate to use cases authored separately", async (contex
 
   assert.deepEqual(
     changedManifestRoutes(manifest, manifest, config, [
-      `mockups/.generated/${home.fragments.mobile}`,
+      `mockups/mokly-generated/${home.fragments.mobile}`,
     ]),
     ["screens/home.html", "user-flows/tour.html"],
   );
@@ -157,7 +157,7 @@ test("shared entry changes do not mark unchanged sibling screens", async (contex
   assert.deepEqual(
     changedManifestRoutes(manifest, manifest, config, [
       home.sourcePath,
-      `mockups/.generated/${home.fragments.mobile}`,
+      `mockups/mokly-generated/${home.fragments.mobile}`,
     ]),
     ["screens/home.html", "user-flows/tour.html"],
   );
@@ -280,8 +280,9 @@ test("changed-route detection degrades to undefined when Git fails", async (cont
       readFileBytes: (_commit, file) =>
         Promise.resolve(
           Buffer.from(
-            compilation.outputs.get(file.slice("mockups/.generated/".length)) ??
-              "",
+            compilation.outputs.get(
+              file.slice("mockups/mokly-generated/".length),
+            ) ?? "",
           ),
         ),
     },

@@ -20,41 +20,44 @@ test("new and previously published catalogues retain their own static layout", (
   const newCatalogue = readCatalogue(
     JSON.parse(
       fixture
-        .replaceAll('"static/', '"static/.generated/')
+        .replaceAll('"static/', '"static/mokly-generated/')
         .replace(
           '"changesStatus": "ready",',
-          '"changesStatus": "ready", "generatedPathPrefix": ".generated",',
+          '"changesStatus": "ready", "generatedPathPrefix": "mokly-generated",',
         ),
     ),
   );
-  assert.equal(newCatalogue.generatedPathPrefix, ".generated");
+  assert.equal(newCatalogue.generatedPathPrefix, "mokly-generated");
   const route = "screens/home.mobile.html";
   assert.equal(currentDocumentPath(route), `static/${route}`);
   assert.equal(
     currentDocumentPath(route, newCatalogue.generatedPathPrefix),
-    `static/.generated/${route}`,
+    `static/mokly-generated/${route}`,
   );
   assert.equal(currentDocumentRoute(`/static/${route}`), route);
   assert.equal(
-    currentDocumentRoute(`/static/.generated/${route}`, ".generated"),
+    currentDocumentRoute(`/static/mokly-generated/${route}`, "mokly-generated"),
     route,
   );
   assert.equal(
-    currentDocumentRoute(`/static/${route}`, ".generated"),
+    currentDocumentRoute(`/static/${route}`, "mokly-generated"),
     undefined,
   );
-  assert.equal(currentDocumentRoute(`/static/.generated/${route}`), undefined);
+  assert.equal(
+    currentDocumentRoute(`/static/mokly-generated/${route}`),
+    undefined,
+  );
   assert.equal(
     currentDocumentRoute(
-      "/static/.generated/../screens/home.mobile.html",
-      ".generated",
+      "/static/mokly-generated/../screens/home.mobile.html",
+      "mokly-generated",
     ),
     undefined,
   );
   assert.equal(
     currentDocumentRoute(
-      "/static/.generated/screens%2Fhome.mobile.html",
-      ".generated",
+      "/static/mokly-generated/screens%2Fhome.mobile.html",
+      "mokly-generated",
     ),
     undefined,
   );
@@ -63,11 +66,15 @@ test("new and previously published catalogues retain their own static layout", (
 test("catalogue validation rejects paths from the other layout", () => {
   const legacy = JSON.parse(fixture);
   assert.throws(
-    () => readCatalogue({ ...legacy, generatedPathPrefix: ".generated" }),
+    () => readCatalogue({ ...legacy, generatedPathPrefix: "mokly-generated" }),
     /path must match current fragment|path must match current route/,
   );
   assert.throws(
     () => readCatalogue({ ...legacy, generatedPathPrefix: "generated" }),
+    /generatedPathPrefix/,
+  );
+  assert.throws(
+    () => readCatalogue({ ...legacy, generatedPathPrefix: ".generated" }),
     /generatedPathPrefix/,
   );
 });

@@ -4,10 +4,10 @@ import fs from "node:fs";
 import type { ServerResponse } from "node:http";
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../browse/document_adapter.js";
-import { GENERATED_DIRECTORY } from "../config/paths.js";
 import { publicFileLocation } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { errorMessage } from "../errors.js";

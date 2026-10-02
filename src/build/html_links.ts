@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { GENERATED_DIRECTORY } from "../config/paths.js";
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import {
   isPublicStaticFile,
   privateStaticPathReason,

@@ -1,5 +1,6 @@
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import { MOKLY_CACHE } from "./cache_paths.js";
-import { GENERATED_DIRECTORY } from "./paths.js";
 
 /** Directory names excluded from consumer source discovery and broad watches. */
 export const DENIED_SOURCE_DIRECTORY_NAMES: ReadonlySet<string> = new Set([

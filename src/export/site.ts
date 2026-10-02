@@ -4,6 +4,7 @@ import type { Manifest, ReviewArtifact } from "@mokly/viewer/data";
 import {
   canonicalJson,
   catalogueViewHref,
+  GENERATED_DIRECTORY,
   parseStaticDelivery,
   type StaticDelivery,
   parseReviewResult,
@@ -18,7 +19,7 @@ import {
   CATALOGUE_PATH,
   serializeCatalogue,
 } from "../catalogue/serialization.js";
-import { GENERATED_DIRECTORY, toPosixPath } from "../config/paths.js";
+import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { staticRemovedPreviews } from "../publication/removed_previews.js";
 import { changedManifestRoutes } from "../registry/changed_routes.js";

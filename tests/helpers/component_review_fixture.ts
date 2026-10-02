@@ -27,7 +27,7 @@ export async function componentReviewFixture(
     "entries/fixture.mockup.tsx",
     ...[...after.outputs]
       .filter(([route, html]) => before.outputs.get(route) !== html)
-      .map(([route]) => `mockups/.generated/${route}`),
+      .map(([route]) => `mockups/mokly-generated/${route}`),
   ];
   return {
     ...fixture,
@@ -59,7 +59,7 @@ export function componentGit(
   );
   const files = new Map(
     [...compilation.outputs].map(([route, html]) => [
-      `mockups/${generated && !assetClosure.includes(route) ? ".generated/" : ""}${route}`,
+      `mockups/${generated && !assetClosure.includes(route) ? "mokly-generated/" : ""}${route}`,
       html,
     ]),
   );

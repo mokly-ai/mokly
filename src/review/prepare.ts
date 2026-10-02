@@ -1,6 +1,8 @@
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import { completedBaseline } from "../baseline/cache.js";
 import { cacheLayout } from "../baseline/cache_layout.js";
 import type { CompletionMarker } from "../baseline/cache_layout.js";
@@ -113,7 +115,7 @@ export async function prepareReviewRepository(
   let descriptor = baselineCatalogue(commit, prefix, "generated-v6");
   const tree = await readCommitTree(runner, commit);
   for (const filename of [
-    `.generated/${MANIFEST_NAME}`,
+    `${GENERATED_DIRECTORY}/${MANIFEST_NAME}`,
     MANIFEST_NAME,
     FORMER_MANIFEST_NAME,
     ...(config.compatibility.readManifestV2 ? [LEGACY_MANIFEST_NAME] : []),
@@ -131,7 +133,7 @@ export async function prepareReviewRepository(
         JSON.parse(await blobReader.readFile(commit, candidate)),
         filename === LEGACY_MANIFEST_NAME,
       );
-      const layout = filename.startsWith(".generated/")
+      const layout = filename.startsWith(`${GENERATED_DIRECTORY}/`)
         ? "generated-v6"
         : "legacy";
       if (layout === "generated-v6" && manifest.schemaVersion !== 6)

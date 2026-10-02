@@ -83,7 +83,7 @@ export async function designLibraryFixture(t: {
       ),
       ...[...before.outputs].map(
         ([file, contents]) =>
-          [`examples/basic/.generated/${file}`, contents] as const,
+          [`examples/basic/mokly-generated/${file}`, contents] as const,
       ),
     ]);
     const read = async (_commit: string, file: string) => {

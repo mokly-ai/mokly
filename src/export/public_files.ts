@@ -1,9 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import { GENERATED_DIRECTORY, isSafeRepositoryPath } from "@mokly/viewer/data";
 
-import { GENERATED_DIRECTORY } from "../config/paths.js";
 import { isPublicStaticFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";

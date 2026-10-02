@@ -1,5 +1,6 @@
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import { generatedViews } from "@mokly/viewer/data";
 
 import { toPosixPath } from "../config/paths.js";
@@ -27,11 +28,11 @@ export async function prepareComponentComparison(
     config.review.sharedImpact,
   );
   const beforeReader = new ComponentMaterialReader(input.beforeReader, {
-    prefix: before.schemaVersion === 6 ? ".generated" : "",
+    prefix: before.schemaVersion === 6 ? GENERATED_DIRECTORY : "",
     routes: generatedManifestRoutes(before),
   });
   const afterReader = new ComponentMaterialReader(input.afterReader, {
-    prefix: after.schemaVersion === 6 ? ".generated" : "",
+    prefix: after.schemaVersion === 6 ? GENERATED_DIRECTORY : "",
     routes: generatedManifestRoutes(after),
   });
   const changed = new Set(changedPaths);

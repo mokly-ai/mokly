@@ -47,11 +47,17 @@ for (const watch of [false, true]) {
           parseReviewResult(await unselected.json()).baseCommit,
           fixture.commit,
         );
-        await fs.mkdir(path.join(fixture.mockupsDir, ".generated/screens"), {
-          recursive: true,
-        });
+        await fs.mkdir(
+          path.join(fixture.mockupsDir, "mokly-generated/screens"),
+          {
+            recursive: true,
+          },
+        );
         await fs.writeFile(
-          path.join(fixture.mockupsDir, ".generated/screens/home.mobile.html"),
+          path.join(
+            fixture.mockupsDir,
+            "mokly-generated/screens/home.mobile.html",
+          ),
           "wrong local bytes",
         );
         const response = await fetch(
@@ -97,7 +103,7 @@ for (const watch of [false, true]) {
       try {
         const file = path.join(
           fixture.mockupsDir,
-          ".generated/screens/home.mobile.html",
+          "mokly-generated/screens/home.mobile.html",
         );
         await waitFor(async () =>
           fs.readFile(file, "utf8").catch(() => undefined),

@@ -1,3 +1,4 @@
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import { generatedViews } from "@mokly/viewer/data";
 import type {
   Manifest,
@@ -88,7 +89,7 @@ export async function compareComponentCatalogue(
     (route) => beforeReader.read(route),
     (routes) => baseReader.readMany(routes),
     {
-      prefix: baseline.schemaVersion === 6 ? ".generated" : "",
+      prefix: baseline.schemaVersion === 6 ? GENERATED_DIRECTORY : "",
       routes: generatedManifestRoutes(baseline),
     },
   );
@@ -99,7 +100,7 @@ export async function compareComponentCatalogue(
     (route) => afterReader.read(route),
     undefined,
     {
-      prefix: ".generated",
+      prefix: GENERATED_DIRECTORY,
       routes: generatedManifestRoutes(compilation.manifest),
     },
   );

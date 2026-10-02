@@ -2,7 +2,7 @@ AGENTS.md
 dist
 node_modules
 target
-examples/basic/generated
+examples/basic/mokly-generated
 package-lock.json
 test-results
 playwright-report

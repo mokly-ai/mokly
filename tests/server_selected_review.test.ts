@@ -83,7 +83,7 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
   assert.equal(await fs.readFile(renderLog, "utf8"), "");
   assert.ok(
     reads.every((route) =>
-      route.startsWith("mockups/.generated/screens/home."),
+      route.startsWith("mockups/mokly-generated/screens/home."),
     ),
   );
   const desktop = result.screens[0]!.views.find(

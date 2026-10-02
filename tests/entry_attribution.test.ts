@@ -204,7 +204,7 @@ test("runtime startup rejects a message without entry globs", async () => {
       configPath: "/repo/mokly.config.ts",
       entryGlobs: ["src/**/*.mockup.{ts,tsx}"],
       mockupsDir: "/repo/generated",
-      generatedDir: "/repo/generated/.generated",
+      generatedDir: "/repo/generated/mokly-generated",
       repoRoot: "/repo",
     },
     manifest: { entries: [], schemaVersion: 5, sourceFiles: [] },

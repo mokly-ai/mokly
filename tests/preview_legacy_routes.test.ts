@@ -28,7 +28,12 @@ for (const directory of ["target", "node_modules"])
     for (const directory of ["target", "node_modules"])
       assert.match(
         await fs.readFile(
-          path.join(output, "static/.generated", directory, "handbook.html"),
+          path.join(
+            output,
+            "static/mokly-generated",
+            directory,
+            "handbook.html",
+          ),
           "utf8",
         ),
         /Handbook/,

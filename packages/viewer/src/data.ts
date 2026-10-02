@@ -144,6 +144,7 @@ export type {
 } from "./registry/types.js";
 export { reviewMaterialKey } from "./data/material_key.js";
 export {
+  GENERATED_DIRECTORY,
   currentDocumentPath,
   currentDocumentRoute,
 } from "./catalogue/delivery_paths.js";

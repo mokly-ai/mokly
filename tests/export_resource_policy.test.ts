@@ -43,7 +43,7 @@ test("nested package payloads are excluded but ancestor package roots remain usa
     compilation.outputs,
     compilation.manifest.assetClosure,
   );
-  assert.ok(files.has(".generated/screens/home.mobile.html"));
+  assert.ok(files.has("mokly-generated/screens/home.mobile.html"));
   assert.ok(
     ![...files.keys()].some((name) => name.startsWith("consumer-package/")),
   );
@@ -111,7 +111,7 @@ test("export captures only referenced resources and generated documents", async 
     compilation.outputs,
     compilation.manifest.assetClosure,
   );
-  assert.ok(files.has(".generated/screens/home.mobile.html"));
+  assert.ok(files.has("mokly-generated/screens/home.mobile.html"));
   assert.equal(files.has("internal/private.json"), false);
 });
 

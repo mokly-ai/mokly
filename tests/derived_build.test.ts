@@ -49,8 +49,8 @@ test("check guards indexed cache paths and reports mixed generated paths", async
     "cache",
   );
   const tracked = [
-    "mockups/.generated/screens/home.mobile.html",
-    `mockups/.generated/${MANIFEST_NAME}`,
+    "mockups/mokly-generated/screens/home.mobile.html",
+    `mockups/mokly-generated/${MANIFEST_NAME}`,
     ".mokly-cache/forced.txt",
   ];
   await fixture.git("add", "-f", "--", ...tracked);
@@ -81,7 +81,7 @@ test("check rejects indexed stray output but ignores indexed authored files", as
   const fixture = await derivedFixture(t);
   const store = new FileSystemGeneratedOutputStore();
   await store.write(fixture.baseline, fixture.config);
-  const retired = "mockups/.generated/screens/retired.mobile.html";
+  const retired = "mockups/mokly-generated/screens/retired.mobile.html";
   await fs.rename(
     path.join(fixture.config.generatedDir, "screens/home.mobile.html"),
     path.join(fixture.root, retired),

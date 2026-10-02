@@ -91,7 +91,7 @@ test("unavailable startup Changes leaves a complete current catalogue without re
 test("HTTP startup rejects invalid current metadata before querying history", async (context) => {
   const fixture = await changedFixture(context);
   await fs.writeFile(
-    path.join(fixture.mockupsDir, ".generated/mokly-manifest.json"),
+    path.join(fixture.mockupsDir, "mokly-generated/mokly-manifest.json"),
     "{}",
   );
   let calls = 0;

@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import type { ComponentViewRecord, ComponentWireProps } from "@mokly/viewer";
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import { ComponentRenderError, generatedViews } from "@mokly/viewer/data";
 import { createCatalogue } from "@mokly/viewer/server";
 
@@ -44,7 +45,7 @@ export function captureRenderBundle(
       ...generatedViews(entry).map((view) => view.path),
     ]),
   );
-  const layout = { prefix: ".generated", routes: generatedRoutes };
+  const layout = { prefix: GENERATED_DIRECTORY, routes: generatedRoutes };
   const files = new Map<string, RenderFile>();
   const pending = [route];
   let size = 0;
@@ -79,11 +80,11 @@ export function captureRenderBundle(
           : rebaseGeneratedSnapshotUrls(
               rebaseTransientNavigation(
                 adaptBrowseDocument(bytes.toString(), current, catalogue),
-                `.generated/${current}`,
+                `${GENERATED_DIRECTORY}/${current}`,
                 generatedRoutes,
               ),
               current,
-              ".generated",
+              GENERATED_DIRECTORY,
               generatedRoutes,
             ),
       );

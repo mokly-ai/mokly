@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 import type { HistoricalManifest } from "@mokly/viewer/data";
 
@@ -116,8 +117,8 @@ export class GitReviewAssetReader implements ReviewAssetReader {
         config.repoRoot,
         this.generatedLayout === "generated-v6"
           ? (git.catalogue?.generatedRoot ??
-              joinCataloguePath(catalogueRoot, ".generated"))
-          : joinCataloguePath(catalogueRoot, ".generated"),
+              joinCataloguePath(catalogueRoot, GENERATED_DIRECTORY))
+          : joinCataloguePath(catalogueRoot, GENERATED_DIRECTORY),
       ),
     };
   }
@@ -132,7 +133,7 @@ export class GitReviewAssetReader implements ReviewAssetReader {
       generated
         ? (this.git.catalogue?.generatedRoot ??
             (this.generatedLayout === "generated-v6"
-              ? joinCataloguePath(this.mockupsPrefix, ".generated")
+              ? joinCataloguePath(this.mockupsPrefix, GENERATED_DIRECTORY)
               : this.mockupsPrefix))
         : (this.git.catalogue?.catalogueRoot ?? this.mockupsPrefix),
       route,

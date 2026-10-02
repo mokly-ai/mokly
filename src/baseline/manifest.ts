@@ -1,5 +1,6 @@
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import type { HistoricalManifest } from "@mokly/viewer/data";
 
 import {
@@ -40,7 +41,7 @@ export async function historicalCatalogueAt(
     BaselineCatalogue["layout"],
     boolean,
   ])[] = [
-    [`.generated/${MANIFEST_NAME}`, "generated-v6", false],
+    [`${GENERATED_DIRECTORY}/${MANIFEST_NAME}`, "generated-v6", false],
     [MANIFEST_NAME, "legacy", false],
     [FORMER_MANIFEST_NAME, "legacy", false],
     ...(allowV2 ? [[LEGACY_MANIFEST_NAME, "legacy", true] as const] : []),
@@ -58,7 +59,9 @@ export async function historicalCatalogueAt(
     );
     const manifest = parseHistoricalManifest(value, versionTwo);
     if (layout === "generated-v6" && manifest.schemaVersion !== 6)
-      throw new Error(`Historical .generated manifest must be v6: ${repoPath}`);
+      throw new Error(
+        `Historical ${GENERATED_DIRECTORY} manifest must be v6: ${repoPath}`,
+      );
     return {
       descriptor: baselineCatalogue(commit, relative, layout),
       manifest,

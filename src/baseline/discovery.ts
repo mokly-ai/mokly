@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import { gitBlobHash } from "../registry/blob_hash.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
 import { MAX_BATCH_OUTPUT_BYTES } from "../review/git_batch.js";
@@ -40,7 +42,7 @@ export async function discoverHistoricalCatalogue(
     if (
       directory !== requested &&
       !(
-        path.basename(directory) === ".generated" &&
+        path.basename(directory) === GENERATED_DIRECTORY &&
         (await fs.stat(path.join(directory, MANIFEST_NAME)))?.kind === "regular"
       )
     ) {

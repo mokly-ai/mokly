@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { ServerResponse } from "node:http";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import { generatedViews, parseReviewResult } from "@mokly/viewer/data";
 import type { ReviewResult } from "@mokly/viewer/data";
 
@@ -63,7 +64,7 @@ export class PublicReviewAliases {
           rebaseGeneratedSnapshotUrls(
             raw,
             route,
-            ".generated",
+            GENERATED_DIRECTORY,
             generatedRoutes,
           ),
         )

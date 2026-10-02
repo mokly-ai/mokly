@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { minimatch } from "minimatch";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import { parseReviewResult } from "@mokly/viewer/data";
 import type {
   ManifestScreen,
@@ -108,7 +109,7 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
             (side === "before"
               ? source.before.schemaVersion
               : source.after.schemaVersion) === 6
-              ? ".generated"
+              ? GENERATED_DIRECTORY
               : "",
           routes: generatedManifestRoutes(
             side === "before" ? source.before : source.after,
@@ -165,11 +166,11 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
       new Set(),
       new ResourceComparison(
         new ComponentMaterialReader(beforeReader, {
-          prefix: source.before.schemaVersion === 6 ? ".generated" : "",
+          prefix: source.before.schemaVersion === 6 ? GENERATED_DIRECTORY : "",
           routes: generatedManifestRoutes(source.before),
         }),
         new ComponentMaterialReader(afterReader, {
-          prefix: ".generated",
+          prefix: GENERATED_DIRECTORY,
           routes: generatedManifestRoutes(source.after),
         }),
         new Set(source.changedPaths),

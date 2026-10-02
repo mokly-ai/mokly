@@ -9,7 +9,7 @@ export default tseslint.config(
       "**/.context/**",
       "**/.wrangler/**",
       "**/dist/**",
-      "examples/basic/.generated/**",
+      "examples/basic/mokly-generated/**",
       "node_modules/**",
       "target/**",
     ],
@@ -51,6 +51,29 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": [
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
+    },
+  },
+  {
+    files: [
+      "src/**/*.{ts,tsx}",
+      "packages/viewer/src/**/*.{ts,tsx}",
+      "scripts/preview/**/*.mjs",
+    ],
+    ignores: ["packages/viewer/src/catalogue/delivery_paths.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Literal[value=/mokly-generated/]",
+          message:
+            "Import GENERATED_DIRECTORY instead of spelling the output directory.",
+        },
+        {
+          selector: "TemplateElement[value.raw=/mokly-generated/]",
+          message:
+            "Import GENERATED_DIRECTORY instead of spelling the output directory.",
+        },
       ],
     },
   },

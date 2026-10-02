@@ -1,5 +1,6 @@
 /** Screen and use-case stages rendered from the manifest-backed catalogue. */
 
+import { GENERATED_DIRECTORY } from "../catalogue/delivery_paths.js";
 import {
   currentDocumentPath,
   type GeneratedPathPrefix,
@@ -213,7 +214,7 @@ export function UseCaseFlowStage(props: {
                 <FlowScreen
                   {...(props.catalogue.manifest.schemaVersion === 6 ||
                   props.catalogue.manifest.schemaVersion === "live-index-1"
-                    ? { prefix: ".generated" as const }
+                    ? { prefix: GENERATED_DIRECTORY }
                     : {})}
                   {...(index === 0 && props.fragment
                     ? { fragment: props.fragment }

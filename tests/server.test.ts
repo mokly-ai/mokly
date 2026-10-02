@@ -51,12 +51,16 @@ test("server validates before bind and supports safe no-watch routes on port zer
     200,
   );
   assert.equal(
-    (await fetch(`${server.url}/static/.generated/screens/home.mobile.html`))
-      .status,
+    (
+      await fetch(
+        `${server.url}/static/mokly-generated/screens/home.mobile.html`,
+      )
+    ).status,
     200,
   );
   assert.equal(
-    (await fetch(`${server.url}/static/.generated/mokly-manifest.json`)).status,
+    (await fetch(`${server.url}/static/mokly-generated/mokly-manifest.json`))
+      .status,
     404,
   );
   assert.equal(
@@ -127,7 +131,7 @@ test("malformed manifest routes fail before server readiness", async (context) =
   await writeCompilation(await compileCatalogue(config), config);
   const manifestPath = path.join(
     fixture.mockupsDir,
-    ".generated/mokly-manifest.json",
+    "mokly-generated/mokly-manifest.json",
   );
   const manifest = JSON.parse(
     await fs.promises.readFile(manifestPath, "utf8"),
@@ -150,7 +154,7 @@ test("manifest relationships retain their required entry kinds", async (context)
   await writeCompilation(await compileCatalogue(config), config);
   const manifestPath = path.join(
     fixture.mockupsDir,
-    ".generated/mokly-manifest.json",
+    "mokly-generated/mokly-manifest.json",
   );
   const manifest = JSON.parse(
     await fs.promises.readFile(manifestPath, "utf8"),
@@ -198,13 +202,13 @@ test("CLI no-watch lifecycle becomes ready and exits cleanly on SIGTERM", async 
   assert.equal((await fetch(url)).status, 200);
   assert.match(
     await (
-      await fetch(`${url}/static/.generated/screens/home.desktop.html`)
+      await fetch(`${url}/static/mokly-generated/screens/home.desktop.html`)
     ).text(),
     /id="home"/,
   );
   assert.equal(
     fs.existsSync(
-      path.join(fixture.mockupsDir, ".generated/mokly-manifest.json"),
+      path.join(fixture.mockupsDir, "mokly-generated/mokly-manifest.json"),
     ),
     false,
   );
@@ -215,7 +219,7 @@ test("CLI no-watch lifecycle becomes ready and exits cleanly on SIGTERM", async 
   assert.equal(code, 0);
   assert.equal(
     fs.existsSync(
-      path.join(fixture.mockupsDir, ".generated/mokly-manifest.json"),
+      path.join(fixture.mockupsDir, "mokly-generated/mokly-manifest.json"),
     ),
     false,
   );
@@ -255,7 +259,7 @@ test(
     );
     let generated = path.join(
       fixture.mockupsDir,
-      ".generated/screens/home.desktop.html",
+      "mokly-generated/screens/home.desktop.html",
     );
     await waitFor(async () =>
       (await fs.promises.readFile(generated, "utf8")).includes(
@@ -267,7 +271,7 @@ test(
     await waitFor(async () =>
       (
         await (
-          await fetch(`${url}/static/.generated/screens/home.desktop.html`)
+          await fetch(`${url}/static/mokly-generated/screens/home.desktop.html`)
         ).text()
       ).includes('data-mokly-link="home"'),
     );
@@ -277,7 +281,7 @@ test(
     );
     generated = path.join(
       fixture.mockupsDir,
-      ".generated/screens/start.desktop.html",
+      "mokly-generated/screens/start.desktop.html",
     );
     await waitFor(async () =>
       (await fs.promises.readFile(generated, "utf8")).includes("Watched Home"),
@@ -292,7 +296,7 @@ test(
     );
     assert.match(
       await (
-        await fetch(`${url}/static/.generated/screens/start.desktop.html`)
+        await fetch(`${url}/static/mokly-generated/screens/start.desktop.html`)
       ).text(),
       /data-mokly-link="details"/,
     );
@@ -312,7 +316,7 @@ test(
     );
     generated = path.join(
       fixture.mockupsDir,
-      ".generated/screens/home.desktop.html",
+      "mokly-generated/screens/home.desktop.html",
     );
     await waitFor(async () =>
       (await fs.promises.readFile(generated, "utf8")).includes(

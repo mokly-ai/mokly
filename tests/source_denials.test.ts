@@ -40,7 +40,7 @@ test("source policy identifies entries, reserved names, listed inputs and genera
     ["source-alias/page.html", { kind: "entries" }],
     ["page.source.html", { kind: "reserved" }],
     ["helper.html", { kind: "listed" }],
-    [".generated/screens/home.html", { kind: "generated" }],
+    ["mokly-generated/screens/home.html", { kind: "generated" }],
   ] as const) {
     assert.deepEqual(
       isAuthoringSource(path.join(config.mockupsDir, name), config),
@@ -80,10 +80,10 @@ test("generated routes stay confined while authored names remain independent", a
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   await fs.writeFile(path.join(fixture.mockupsDir, "helper.html"), "Source");
-  await fs.mkdir(path.join(fixture.mockupsDir, ".generated"));
+  await fs.mkdir(path.join(fixture.mockupsDir, "mokly-generated"));
   await fs.symlink(
     "../../entries",
-    path.join(fixture.mockupsDir, ".generated/source-alias"),
+    path.join(fixture.mockupsDir, "mokly-generated/source-alias"),
   );
   await fs.writeFile(
     path.join(fixture.mockupsDir, "mokly-manifest.json"),
@@ -91,7 +91,7 @@ test("generated routes stay confined while authored names remain independent", a
   );
   await fs.symlink(
     "../mokly-manifest.json",
-    path.join(fixture.mockupsDir, ".generated/metadata.html"),
+    path.join(fixture.mockupsDir, "mokly-generated/metadata.html"),
   );
   const config = {
     ...(await loadConfig(fixture.root)),

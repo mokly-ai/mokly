@@ -1,5 +1,6 @@
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { BaselineError } from "./errors.js";
@@ -29,7 +30,7 @@ export function baselineCatalogue(
     generatedRoot:
       layout === "legacy"
         ? catalogueRoot
-        : joinCataloguePath(catalogueRoot, ".generated"),
+        : joinCataloguePath(catalogueRoot, GENERATED_DIRECTORY),
   };
 }
 

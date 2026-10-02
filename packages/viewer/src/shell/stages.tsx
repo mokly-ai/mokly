@@ -5,6 +5,7 @@
 
 import type { ReactNode } from "react";
 
+import { GENERATED_DIRECTORY } from "../catalogue/delivery_paths.js";
 import {
   currentDocumentPath,
   type GeneratedPathPrefix,
@@ -68,7 +69,7 @@ export function TargetStage(props: {
   const prefix =
     props.catalogue.manifest.schemaVersion === 6 ||
     props.catalogue.manifest.schemaVersion === "live-index-1"
-      ? (".generated" as const)
+      ? GENERATED_DIRECTORY
       : undefined;
   const model = props.catalogue.publicModel;
   if (model) {

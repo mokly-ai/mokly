@@ -20,7 +20,7 @@ test("Comparison snapshot output cannot overlap generated or authored roots", as
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
 
-  for (const out of ["mockups/.generated/review", "entries/review"]) {
+  for (const out of ["mockups/mokly-generated/review", "entries/review"]) {
     await assert.rejects(
       () =>
         runReview(

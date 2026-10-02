@@ -106,7 +106,7 @@ test("both graphs retain raw and tree-shaken inputs while public resources stay 
   for (const route of [
     "public.svg",
     "public.css",
-    ".generated/screens/home.desktop.html",
+    "mokly-generated/screens/home.desktop.html",
   ])
     assert.equal(
       (await fetch(`${server.url}/static/${route}`)).status,

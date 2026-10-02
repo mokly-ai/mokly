@@ -79,7 +79,7 @@ test("legacy and v6 resource href depth does not change screens; changed CSS doe
     "main { color: blue; }",
   );
   assert.deepEqual((await classify()).changedPaths, [
-    "mockups/.generated/screens/home.desktop.html",
-    "mockups/.generated/screens/home.mobile.html",
+    "mockups/mokly-generated/screens/home.desktop.html",
+    "mockups/mokly-generated/screens/home.mobile.html",
   ]);
 });

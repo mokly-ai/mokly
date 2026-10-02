@@ -1,3 +1,4 @@
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import { isCatalogueId } from "@mokly/viewer/data";
 import type { HistoricalManifest } from "@mokly/viewer/data";
 
@@ -165,7 +166,10 @@ function validateGeneratedInventory(manifest: Record<string, unknown>): void {
     );
   for (const route of closure) {
     validateRepoPath(route, "assetClosure");
-    if (route === ".generated" || route.startsWith(".generated/"))
+    if (
+      route === GENERATED_DIRECTORY ||
+      route.startsWith(`${GENERATED_DIRECTORY}/`)
+    )
       throw new MoklyError(
         "manifest-invalid",
         "assetClosure contains generated output",

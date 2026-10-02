@@ -49,7 +49,7 @@ export async function smokeEsmConsumer(context) {
   await runBin(root, ["build"], { cwd: nested });
   await runBin(root, ["check"]);
   const fragment = await fs.promises.readFile(
-    path.join(root, "mockups/.generated/screens/home.desktop.html"),
+    path.join(root, "mockups/mokly-generated/screens/home.desktop.html"),
     "utf8",
   );
   assert.match(fragment, /data-fixture="esm-desktop"/);
@@ -58,13 +58,13 @@ export async function smokeEsmConsumer(context) {
     /href="\.\/detail\.desktop\.html#packed-section"[^>]+data-mokly-link="packed-detail#packed-section"/,
   );
   const coLocated = await fs.promises.readFile(
-    path.join(root, "mockups/.generated/screens/card.desktop.html"),
+    path.join(root, "mockups/mokly-generated/screens/card.desktop.html"),
     "utf8",
   );
   assert.match(coLocated, /data-packed-card=""/);
   const packedManifest = JSON.parse(
     await fs.promises.readFile(
-      path.join(root, "mockups/.generated/mokly-manifest.json"),
+      path.join(root, "mockups/mokly-generated/mokly-manifest.json"),
       "utf8",
     ),
   );
@@ -172,7 +172,9 @@ export async function smokeCleanCacheExecution(context) {
   await runCommand("npm", [...npx, "build"], { cwd: root });
   await runCommand("npm", [...npx, "check"], { cwd: root });
   assert.equal(
-    fs.existsSync(path.join(root, "mockups/.generated/mokly-manifest.json")),
+    fs.existsSync(
+      path.join(root, "mockups/mokly-generated/mokly-manifest.json"),
+    ),
     true,
   );
   await fs.promises.rename(
@@ -221,11 +223,14 @@ export async function smokeThemedConsumer(context) {
   await runBin(root, ["build"]);
   await runBin(root, ["check"]);
   const appFragment = await fs.promises.readFile(
-    path.join(root, "docs/mockups/.generated/app/dashboard.desktop.html"),
+    path.join(root, "docs/mockups/mokly-generated/app/dashboard.desktop.html"),
     "utf8",
   );
   const campaignFragment = await fs.promises.readFile(
-    path.join(root, "docs/mockups/.generated/marketing/campaign.desktop.html"),
+    path.join(
+      root,
+      "docs/mockups/mokly-generated/marketing/campaign.desktop.html",
+    ),
     "utf8",
   );
   assert.match(appFragment, /data-themed-renderer="desktop"/);
@@ -239,13 +244,16 @@ export async function smokeThemedConsumer(context) {
   assert.match(campaignFragment, /href="\.\.\/\.\.\/marketing\.css"/);
   assert.equal(
     fs.existsSync(
-      path.join(root, "docs/mockups/.generated/archive/legacy-notice.html"),
+      path.join(
+        root,
+        "docs/mockups/mokly-generated/archive/legacy-notice.html",
+      ),
     ),
     true,
   );
   const pageManifest = JSON.parse(
     await fs.promises.readFile(
-      path.join(root, "docs/mockups/.generated/mokly-manifest.json"),
+      path.join(root, "docs/mockups/mokly-generated/mokly-manifest.json"),
       "utf8",
     ),
   );
@@ -280,7 +288,7 @@ export async function smokeThemedConsumer(context) {
   await runBin(root, ["export", "--out", "published"]);
   await inspectConsumerExport(root, "published", "HEAD", [
     "view/archive/legacy-notice.html",
-    "static/.generated/app/dashboard.desktop.html",
+    "static/mokly-generated/app/dashboard.desktop.html",
   ]);
   await smokeRegisteredComponents(context, root, true);
 }
@@ -298,7 +306,10 @@ export async function smokeJunoFixture(context) {
   await runBin(root, ["build", ...config]);
   await runBin(root, ["check", ...config]);
   const fragment = await fs.promises.readFile(
-    path.join(root, "site/mockups/.generated/workspace/overview.mobile.html"),
+    path.join(
+      root,
+      "site/mockups/mokly-generated/workspace/overview.mobile.html",
+    ),
     "utf8",
   );
   assert.match(fragment, /data-juno-layout="compact"/);

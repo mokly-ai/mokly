@@ -90,6 +90,9 @@ test("publish bundles rebuilt derived comparisons and can replace them with curr
     /Published derived screen/,
   );
   assert.equal(uploaded.length, 1);
+  assert.ok(
+    uploaded[0]!.has("static/mokly-generated/screens/home.mobile.html"),
+  );
   assert.deepEqual(uploaded[0], await directoryFiles(output));
   await fixture.git("update-ref", "-d", "refs/remotes/origin/main");
   await publishCatalogue(
@@ -112,4 +115,11 @@ test("publish bundles rebuilt derived comparisons and can replace them with curr
     false,
   );
   assert.deepEqual(uploaded[1], await directoryFiles(output));
+  for (const archive of uploaded)
+    assert.deepEqual(
+      [...archive.keys()]
+        .filter((name) => name.split("/").some((part) => part.startsWith(".")))
+        .sort(),
+      [".mokly-export-artifact"],
+    );
 });

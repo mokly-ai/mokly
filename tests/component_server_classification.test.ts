@@ -79,7 +79,7 @@ test("ordinary Browse serves cached component evidence without generating or wri
   for (const route of [
     "/",
     "/view/screens/home.html",
-    "/static/.generated/screens/home.mobile.html",
+    "/static/mokly-generated/screens/home.mobile.html",
     "/view/screens/home.html",
   ])
     assert.equal((await fetch(server.url + route)).status, 200);
@@ -100,7 +100,7 @@ test("ordinary Browse serves cached component evidence without generating or wri
   for (const [route, html] of fixture.after.outputs)
     assert.equal(
       await fs.readFile(
-        path.join(fixture.mockupsDir, ".generated", route),
+        path.join(fixture.mockupsDir, "mokly-generated", route),
         "utf8",
       ),
       html,

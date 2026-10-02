@@ -1,6 +1,8 @@
 import { isSafeCatalogueRoute } from "../data/paths.js";
 
-export type GeneratedPathPrefix = ".generated" | undefined;
+/** Public output directory shared by the viewer and CLI. */
+export const GENERATED_DIRECTORY = "mokly-generated" as const;
+export type GeneratedPathPrefix = typeof GENERATED_DIRECTORY | undefined;
 
 /** Map a logical document route to the selected publication's static path. */
 export function currentDocumentPath(
@@ -25,5 +27,6 @@ export function currentDocumentRoute(
   const root = `/${currentDocumentPath("", prefix)}`;
   if (!decoded.startsWith(root)) return;
   const route = decoded.slice(root.length);
+  if (!prefix && route.startsWith(`${GENERATED_DIRECTORY}/`)) return;
   return isSafeCatalogueRoute(route) ? route : undefined;
 }

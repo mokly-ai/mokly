@@ -127,7 +127,9 @@ test("watched serve rebuilds and reloads after an authored change", async ({
       try {
         return (
           await (
-            await fetch(`${url}/static/.generated/screens/home.mobile.html`)
+            await fetch(
+              `${url}/static/mokly-generated/screens/home.mobile.html`,
+            )
           ).text()
         ).includes('data-watch-version="2"');
       } catch {

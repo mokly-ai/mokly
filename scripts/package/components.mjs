@@ -27,7 +27,7 @@ export async function smokeRegisteredComponents(
   await runBin(root, ["check"]);
   const manifest = JSON.parse(
     await fs.readFile(
-      path.join(root, output, ".generated/mokly-manifest.json"),
+      path.join(root, output, "mokly-generated/mokly-manifest.json"),
       "utf8",
     ),
   );
@@ -50,7 +50,7 @@ export async function smokeRegisteredComponents(
     }
   }
   const before = await fs.readFile(
-    path.join(root, output, ".generated/mokly-manifest.json"),
+    path.join(root, output, "mokly-generated/mokly-manifest.json"),
     "utf8",
   );
   await smokeServer(root, ["--base", "HEAD"], async (url) => {
@@ -88,7 +88,7 @@ export async function smokeRegisteredComponents(
   });
   assert.equal(
     await fs.readFile(
-      path.join(root, output, ".generated/mokly-manifest.json"),
+      path.join(root, output, "mokly-generated/mokly-manifest.json"),
       "utf8",
     ),
     before,

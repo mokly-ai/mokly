@@ -52,11 +52,11 @@ test(
     });
     const manifest = path.join(
       fixture.mockupsDir,
-      ".generated/mokly-manifest.json",
+      "mokly-generated/mokly-manifest.json",
     );
     const home = path.join(
       fixture.mockupsDir,
-      ".generated/screens/home.mobile.html",
+      "mokly-generated/screens/home.mobile.html",
     );
     const output = () => `${stdout}\n${stderr}`;
     try {

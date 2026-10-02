@@ -199,7 +199,7 @@ test("an unowned frame document stays frame-owned during shell replacement", asy
     releaseRequest = resolve;
   });
   await page.route(
-    "**/static/.generated/screens/home.mobile.dark.html",
+    "**/static/mokly-generated/screens/home.mobile.dark.html",
     async (route) => {
       reportRequest();
       await requestReleased;

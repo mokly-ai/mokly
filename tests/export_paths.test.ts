@@ -35,7 +35,9 @@ test("export confines output before any write and resolves against config", asyn
     fixture.mockupsDir,
     path.join(fixture.root, "alias"),
   );
-  assert.throws(() => resolveExportOutput(config, "alias/.generated/nested"));
+  assert.throws(() =>
+    resolveExportOutput(config, "alias/mokly-generated/nested"),
+  );
   await fs.promises.symlink(
     path.dirname(fixture.root),
     path.join(fixture.root, "outside"),

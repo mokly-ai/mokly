@@ -79,7 +79,9 @@ test("a pending manifest is not a public resource on the first build", async (co
     /mokly-manifest.json.*(?:targets generated output|internal catalogue metadata)/,
   );
   assert.equal(
-    fs.existsSync(path.join(fixture.mockupsDir, ".generated", MANIFEST_NAME)),
+    fs.existsSync(
+      path.join(fixture.mockupsDir, "mokly-generated", MANIFEST_NAME),
+    ),
     false,
   );
 });
@@ -121,7 +123,7 @@ test("HTTP and current Review deny internal manifests and aliases but allow publ
     path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
   );
   await fs.promises.symlink(
-    `.generated/${MANIFEST_NAME}`,
+    `mokly-generated/${MANIFEST_NAME}`,
     path.join(fixture.mockupsDir, "metadata.json"),
   );
   const server = await startCatalogueServer(config, { base: "HEAD", port: 0 });
@@ -162,7 +164,7 @@ for (const route of metadataRoutes) {
       path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
     );
     await fs.promises.symlink(
-      `.generated/${MANIFEST_NAME}`,
+      `mokly-generated/${MANIFEST_NAME}`,
       path.join(fixture.mockupsDir, "metadata.json"),
     );
     for (const body of [
@@ -203,7 +205,7 @@ for (const includeChanges of [false, true]) {
       path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
     );
     await fs.promises.symlink(
-      `.generated/${MANIFEST_NAME}`,
+      `mokly-generated/${MANIFEST_NAME}`,
       path.join(fixture.mockupsDir, "metadata.json"),
     );
     if (includeChanges) {

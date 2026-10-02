@@ -98,7 +98,7 @@ test("a crashed build backup cannot be overwritten when the output tree is missi
   const compilation = await compileCatalogue(config);
   const leftover = path.join(
     config.mockupsDir,
-    ".mokly-write-.generated-crashed",
+    ".mokly-write-mokly-generated-crashed",
   );
   await fs.promises.mkdir(path.join(leftover, "backup"), { recursive: true });
   await fs.promises.writeFile(
@@ -126,7 +126,7 @@ test("a crashed stage without a backup does not block the next build", async (co
   const compilation = await compileCatalogue(config);
   const leftover = path.join(
     config.mockupsDir,
-    ".mokly-write-.generated-staged",
+    ".mokly-write-mokly-generated-staged",
   );
   await fs.promises.mkdir(path.join(leftover, "stage"), { recursive: true });
   await fs.promises.writeFile(
@@ -154,7 +154,10 @@ test("a live generated tree ignores and preserves a leftover backup", async (con
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   await writeCompilation(compilation, config);
-  const leftover = path.join(config.mockupsDir, ".mokly-write-.generated-old");
+  const leftover = path.join(
+    config.mockupsDir,
+    ".mokly-write-mokly-generated-old",
+  );
   await fs.promises.mkdir(path.join(leftover, "backup"), { recursive: true });
   await fs.promises.writeFile(
     path.join(leftover, "backup", "old.html"),

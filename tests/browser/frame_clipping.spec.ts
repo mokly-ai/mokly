@@ -38,15 +38,15 @@ for (const transport of ["same-origin", "postMessage"] as const) {
             `${location.origin}/__mokly/client/same_origin_adapter.js`
           )) as typeof LocalAdapter;
           const frame = document.querySelector<HTMLIFrameElement>("#frame")!;
-          frame.dataset["moklyGeneratedPrefix"] = ".generated";
+          frame.dataset["moklyGeneratedPrefix"] = "mokly-generated";
           (window as unknown as FrameTestWindow).mounted =
             await sameOriginAdapter().mount(frame, {
               url: new URL(
-                "/static/.generated/screens/home.mobile.html",
+                "/static/mokly-generated/screens/home.mobile.html",
                 location.origin,
               ),
               route: "screens/home.mobile.html",
-              generatedPathPrefix: ".generated",
+              generatedPathPrefix: "mokly-generated",
               usage: { status: "ready", ...usage },
             });
         }, JSON.stringify(fixture.usage));
@@ -54,7 +54,9 @@ for (const transport of ["same-origin", "postMessage"] as const) {
       const child = page
         .frames()
         .find((frame) =>
-          frame.url().includes("/static/.generated/screens/home.mobile.html"),
+          frame
+            .url()
+            .includes("/static/mokly-generated/screens/home.mobile.html"),
         )!;
       const expected = await child.evaluate((layout) => {
         const outer = document.querySelector<HTMLElement>("#outer")!;

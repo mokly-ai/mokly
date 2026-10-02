@@ -44,9 +44,9 @@ export default defineConfig({
     path.join(fixture.root, "baseline.mjs"),
     `import fs from "node:fs/promises";
 import path from "node:path";
-await fs.rm("mockups/.generated", { recursive: true, force: true });
+await fs.rm("mockups/mokly-generated", { recursive: true, force: true });
 for (const [route, content] of JSON.parse(await fs.readFile("baseline-output.json", "utf8"))) {
-  const target = path.join("mockups", ".generated", route);
+  const target = path.join("mockups", "mokly-generated", route);
   await fs.mkdir(path.dirname(target), { recursive: true });
   await fs.writeFile(target, content);
 }
@@ -54,7 +54,7 @@ for (const [route, content] of JSON.parse(await fs.readFile("baseline-output.jso
   );
   await fs.writeFile(
     path.join(fixture.root, ".gitignore"),
-    "mockups/.generated/\n.mokly-cache/\n",
+    "mockups/mokly-generated/\n.mokly-cache/\n",
   );
   const git = (...args: string[]) =>
     execute("git", args, { cwd: fixture.root });

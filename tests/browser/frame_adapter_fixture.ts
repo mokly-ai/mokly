@@ -60,7 +60,7 @@ export async function crossOriginFixture(
     if (name.endsWith(".html")) {
       const adapted = adaptBrowseDocument(bytes, name, catalogue);
       files.set(
-        `static/.generated/${name}`,
+        `static/mokly-generated/${name}`,
         name.startsWith("screens/home.")
           ? adapted.replace(
               "</body>",
@@ -89,7 +89,7 @@ export async function crossOriginFixture(
   const temporaryFile = path.join(root, temporaryPath.slice(1));
   await fs.mkdir(path.dirname(temporaryFile), { recursive: true });
   await fs.copyFile(
-    path.join(root, "static/.generated", home.fragments.mobile),
+    path.join(root, "static/mokly-generated", home.fragments.mobile),
     temporaryFile,
   );
   const usage = home.componentViews![0]!;
@@ -116,7 +116,7 @@ export async function crossOriginFixture(
 export async function mountCrossFrame(
   page: Page,
   fixture: Awaited<ReturnType<typeof crossOriginFixture>>,
-  path = "/static/.generated/screens/home.mobile.html",
+  path = "/static/mokly-generated/screens/home.mobile.html",
 ) {
   await page.goto(fixture.host.url);
   await page.evaluate(
@@ -140,7 +140,7 @@ export async function mountCrossFrame(
         {
           url: new URL(path, origin),
           route: "screens/home.mobile.html",
-          generatedPathPrefix: ".generated",
+          generatedPathPrefix: "mokly-generated",
           usage: { status: "ready", ...usage },
         },
       );

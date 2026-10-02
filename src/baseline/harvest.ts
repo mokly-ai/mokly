@@ -1,5 +1,6 @@
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { MAX_BATCH_OUTPUT_BYTES } from "../review/git_batch.js";
@@ -39,7 +40,10 @@ export async function harvestHistoricalCatalogue(
   await ensureBaselineDirectory(fs, output, path.dirname(destination), signal);
   await fs.rename(path.join(extraction, descriptor.generatedRoot), destination);
   for (const route of manifest.assetClosure) {
-    if (!isSafeRepositoryPath(route) || route.startsWith(".generated/"))
+    if (
+      !isSafeRepositoryPath(route) ||
+      route.startsWith(`${GENERATED_DIRECTORY}/`)
+    )
       throw new BaselineError(
         "baseline-output-invalid",
         `Invalid closure file: ${route}`,

@@ -49,11 +49,11 @@ test("demand links reject an unknown generated route even when a local file exis
     validEntrySource({ body: '<a href="../old.html">Old</a>' }),
   );
   t.after(() => removeFixture(fixture));
-  await fs.mkdir(path.join(fixture.mockupsDir, ".generated"), {
+  await fs.mkdir(path.join(fixture.mockupsDir, "mokly-generated"), {
     recursive: true,
   });
   await fs.writeFile(
-    path.join(fixture.mockupsDir, ".generated/old.html"),
+    path.join(fixture.mockupsDir, "mokly-generated/old.html"),
     GENERATED_MARKER + "<html><body>Old</body></html>\n",
   );
   const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));

@@ -51,12 +51,12 @@ test("relocated views use the complete in-memory path", async (t) => {
     normalizeDocumentUrls(
       fixture.before.outputs.get(beforePath)!,
       beforePath,
-      ".generated",
+      "mokly-generated",
     ),
     normalizeDocumentUrls(
       fixture.after.outputs.get(afterPath)!,
       afterPath,
-      ".generated",
+      "mokly-generated",
     ),
   );
   const changedPaths = ["entries/fixture.mockup.tsx"];
@@ -129,7 +129,7 @@ function withRootStylesheet(
     [...compilationFiles(compilation, resources)].map(([route, value]) => [
       route,
       route.endsWith(".html")
-        ? `${Buffer.from(value).toString("utf8")}<link rel="stylesheet" href="${path.posix.relative(path.posix.dirname(path.posix.join(".generated", route)), "main.css")}">`
+        ? `${Buffer.from(value).toString("utf8")}<link rel="stylesheet" href="${path.posix.relative(path.posix.dirname(path.posix.join("mokly-generated", route)), "main.css")}">`
         : value,
     ]),
   );

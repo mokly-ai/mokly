@@ -84,7 +84,7 @@ for (const editComponent of [false, true]) {
       /data-changed="true"[^>]*data-route="screens\/home.html"/,
     );
     const document = String(site.inventory.files.get("view/handbook.html"));
-    assert.match(document, /src="\/static\/\.generated\/handbook.html"/);
+    assert.match(document, /src="\/static\/mokly-generated\/handbook.html"/);
     assert.doesNotMatch(document, /data-workspace-data|data-diff-screen/);
   });
 }

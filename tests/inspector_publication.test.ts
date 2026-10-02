@@ -148,7 +148,7 @@ test("export includes the inspector while generated and comparison bytes stay un
   for (const [name, bytes] of snapshotFiles) {
     assert.doesNotMatch(bytes.toString(), /inspector.js|data-mokly-inspector/);
     const relative = name.replace(/^.*\/snapshots\/[^/]+\//, "");
-    assert.deepEqual(bytes, before.get(`.generated/${relative}`), name);
+    assert.deepEqual(bytes, before.get(`mokly-generated/${relative}`), name);
   }
   const inventory = JSON.parse(
     await fs.readFile(
@@ -169,7 +169,9 @@ test("repository preview adds its inspector after validating portable consumer r
   const published = await directoryFiles(output);
   assert.ok(published.has("__mokly/client/inspector.js"));
   assert.match(
-    published.get("static/.generated/screens/home.mobile.html")!.toString(),
+    published
+      .get("static/mokly-generated/screens/home.mobile.html")!
+      .toString(),
     /data-mokly-inspector/,
   );
   assert.deepEqual(await directoryFiles(fixture.config.mockupsDir), original);

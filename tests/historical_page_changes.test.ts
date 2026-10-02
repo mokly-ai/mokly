@@ -34,7 +34,7 @@ for (const version of [2, 3] as const) {
             }
           : {},
       );
-      const paths = ["mockups/.generated/handbook.html"];
+      const paths = ["mockups/mokly-generated/handbook.html"];
       let headDocument = fixture.currentDocument;
       if (change === "resource") {
         await fs.writeFile(
@@ -64,7 +64,7 @@ for (const version of [2, 3] as const) {
         ),
         change === "identical" || change === "ignored"
           ? []
-          : ["mockups/.generated/handbook.html"],
+          : ["mockups/mokly-generated/handbook.html"],
       );
     });
   }
@@ -105,7 +105,7 @@ for (const failure of ["symlink", "private", "invalid-ignore"] as const) {
         fixture.config,
         fixture.client.reader,
         fixture.commit,
-        ["mockups/.generated/handbook.html"],
+        ["mockups/mokly-generated/handbook.html"],
         await fixture.headReader(),
       ),
       failure === "symlink"

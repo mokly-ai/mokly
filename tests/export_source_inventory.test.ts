@@ -28,7 +28,7 @@ test("consumer export omits unused reserved templates without treating them as p
   const files = await directoryFiles(result.outDir);
   assert.equal(files.has("static/unused.source.html"), false);
   assert.equal(files.has("static/mokly-manifest.json"), false);
-  assert.equal(files.has("static/.generated/mokly-manifest.json"), false);
+  assert.equal(files.has("static/mokly-generated/mokly-manifest.json"), false);
   assert.equal(files.has("view/screens/home.html"), true);
 });
 
@@ -57,7 +57,7 @@ mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Guida
   const files = await directoryFiles(result.outDir);
   assert.equal(files.has("static/private-template.html"), false);
   assert.match(
-    files.get("static/.generated/handbook.html")!.toString(),
+    files.get("static/mokly-generated/handbook.html")!.toString(),
     /<h1>Handbook<\/h1>/,
   );
 });

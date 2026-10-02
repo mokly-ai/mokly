@@ -32,14 +32,14 @@ for (const [name, cause] of [
   ["private/theme.css", /resolved entry module.*entries/],
   ["theme.source.html", /reserved source basename/],
   ["helper.css", /authoring input.*sourceFiles/],
-  [".generated/README.css", /generated output/],
+  ["mokly-generated/README.css", /generated output/],
 ] as const) {
   test(`resource validation and Review retain the protection cause for ${name}`, async (t) => {
     const fixture = await createFixture();
     t.after(() => removeFixture(fixture));
     const entriesDir = path.join(fixture.mockupsDir, "private");
     await fs.mkdir(entriesDir);
-    await fs.mkdir(path.join(fixture.mockupsDir, ".generated"));
+    await fs.mkdir(path.join(fixture.mockupsDir, "mokly-generated"));
     await fs.writeFile(path.join(fixture.mockupsDir, name), "private");
     const config = {
       ...(await loadConfig(fixture.root)),

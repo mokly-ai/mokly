@@ -1,5 +1,6 @@
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import { generatedViews } from "@mokly/viewer/data";
 import type { Manifest, ViewReview } from "@mokly/viewer/data";
 
@@ -60,8 +61,8 @@ export function screenViewChanges(
                   ? ("added" as const)
                   : changed.has(
                         prefix
-                          ? `${prefix}/.generated/${after.path}`
-                          : `.generated/${after.path}`,
+                          ? `${prefix}/${GENERATED_DIRECTORY}/${after.path}`
+                          : `${GENERATED_DIRECTORY}/${after.path}`,
                       )
                     ? ("changed" as const)
                     : ("unchanged" as const),

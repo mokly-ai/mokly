@@ -146,7 +146,7 @@ test("material Changes can use captured documents without reading current file b
   const manifest = readManifest(fixture.config);
   const captured = await directoryFiles(fixture.mockupsDir);
   const fragment = "screens/home.mobile.html";
-  const generatedFragment = `.generated/${fragment}`;
+  const generatedFragment = `mokly-generated/${fragment}`;
   captured.set(
     generatedFragment,
     Buffer.from(
@@ -168,12 +168,12 @@ test("material Changes can use captured documents without reading current file b
       read: async (route) => {
         reads.push(route);
         const bytes =
-          captured.get(`.generated/${route}`) ?? captured.get(route);
+          captured.get(`mokly-generated/${route}`) ?? captured.get(route);
         assert.ok(bytes);
         return bytes;
       },
       readIfExists: async (route) =>
-        captured.get(`.generated/${route}`) ?? captured.get(route),
+        captured.get(`mokly-generated/${route}`) ?? captured.get(route),
     },
   );
   assert.deepEqual(result, [`mockups/${generatedFragment}`]);

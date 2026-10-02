@@ -57,7 +57,7 @@ test("historical discovery prefers the requested root and otherwise requires one
 test("an invalid v6 manifest is not rediscovered as a legacy child", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
-  const directory = path.join(fixture.root, "old/.generated");
+  const directory = path.join(fixture.root, "old/mokly-generated");
   await fs.mkdir(directory, { recursive: true });
   await fs.writeFile(
     path.join(directory, "mokly-manifest.json"),

@@ -171,7 +171,7 @@ test("loading the published script directly never starts inspection or navigatio
   page,
 }) => {
   await page.goto(
-    `${fixture.frames.url}/static/.generated/screens/home.mobile.html`,
+    `${fixture.frames.url}/static/mokly-generated/screens/home.mobile.html`,
   );
   const facts = await page.evaluate(() => ({
     maps: document.querySelectorAll("template[data-mokly-inspector]").length,
@@ -183,6 +183,6 @@ test("loading the published script directly never starts inspection or navigatio
     page.getByRole("button", { name: "Continue", exact: true }),
   ).toBeVisible();
   await expect(page).toHaveURL(
-    /\/static\/\.generated\/components\/action\.variants\/default\.mobile\.html$/,
+    /\/static\/mokly-generated\/components\/action\.variants\/default\.mobile\.html$/,
   );
 });

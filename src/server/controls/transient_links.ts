@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { parse } from "parse5";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import {
   currentDocumentPath,
   encodeUrlPath,
@@ -42,12 +43,12 @@ export function rebaseTransientNavigation(
         );
         if (!isSafeRepositoryPath(target))
           throw new Error("Preview navigation escapes its catalogue");
-        const generatedRoute = target.startsWith(".generated/")
-          ? target.slice(".generated/".length)
+        const generatedRoute = target.startsWith(`${GENERATED_DIRECTORY}/`)
+          ? target.slice(`${GENERATED_DIRECTORY}/`.length)
           : undefined;
         const staticPath =
           generatedRoute && generatedRoutes.has(generatedRoute)
-            ? currentDocumentPath(generatedRoute, ".generated")
+            ? currentDocumentPath(generatedRoute, GENERATED_DIRECTORY)
             : `static/${target}`;
         const value = `/${encodeUrlPath(staticPath)}${href.slice(pathname!.length)}`;
         replacements.push({
