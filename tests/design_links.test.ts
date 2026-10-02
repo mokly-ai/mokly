@@ -121,7 +121,7 @@ test("every design link resolves to a real same-viewport design artifact without
   const componentDesigns = designs.filter((entry) =>
     entry.id.startsWith("design-component-"),
   );
-  assert.equal(componentDesigns.length, 36);
+  assert.equal(componentDesigns.length, 39);
   assert.equal(designs.length - componentDesigns.length, 63);
   for (const entry of designs) {
     for (const viewport of ["mobile", "desktop"] as const) {

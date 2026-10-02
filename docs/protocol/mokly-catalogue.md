@@ -2,10 +2,10 @@
 
 ## Delivery Status
 
-Serve, export, repository preview, and the viewer share read model v3 and reject
-current/removed id collisions. The manifest stays private. Removed records
-follow [removed previews](./mokly-removed-previews.md), carry identity only, and
-derive every route and view path from kind and id.
+Serve, export, repository preview, and the viewer share complete read model v3;
+live pages separately embed an entry-scoped shell projection. The private
+manifest rejects current/removed id collisions. [Removed previews](./mokly-removed-previews.md)
+carry identity only and derive every route and view path from kind and id.
 
 ## Location And Types
 
@@ -282,7 +282,7 @@ Unknown fields follow the existing reader policy for public JSON.
 ## Serve And Fetch Rules
 
 Serve uses `Cache-Control: no-store` and live-index metadata, with pending usage
-until real view/background records arrive. GET never triggers Git or rendering.
+until real records arrive. GET returns the complete model without Git or rendering.
 Revisions are nonnegative safe integers: content
 advances on accepted content, evidence on accepted usage/Changes updates. Each
 response is one atomic snapshot; failed candidates retain the last good content.

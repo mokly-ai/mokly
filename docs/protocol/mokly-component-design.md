@@ -19,6 +19,8 @@ saved variant's two versions in one bordered frame whose viewport scrolls both
 as one. Their comparison bands also depict the implemented Scroll together
 switch of the
 [Scroll together contract](./mokly-comparison-scroll-together.md#reader-control).
+The Loading and recovery child gallery depicts entry-scoped Usage loading,
+inspection waiting, and retryable delivery failure.
 
 ## Owning Catalogue
 
@@ -62,11 +64,15 @@ mobile component and desktop component; there are no new user-flow pages.
 | `design-component-removed-consumer`         | Former consumer's previous version behind a Removed badge |
 | `design-component-added`                    | Added Badge current preview without comparison controls   |
 | `design-component-shared-impact`            | Unmodified Action with shared-file evidence in Details    |
+| `design-component-usage-loading`            | Component Usage waiting for private entry evidence        |
+| `design-component-inspection-loading`       | Screen inspection waiting for displayed-view usage        |
+| `design-component-usage-failed`             | Usage read failure with a Try again action                |
 
 Each entry's route is `screens/<id>.html` under the
 [derived route rule](./mokly-authoring.md#derived-routes); its standalone views
 insert `.mobile` or `.desktop` before `.html`, and gallery membership is the
-entry's `navPath`. All thirty-six component
+entry's `navPath`. The Loading and recovery folder sits below Empty and change
+states and contains exactly the three states above. All thirty-nine component
 screens opt into light documents, matching the existing shell mockups. Their
 depicted preview caption names the artboard's own scheme, and the toolbar has
 no scheme switch: the catalogue's one Appearance control, drawn in their top
@@ -160,6 +166,11 @@ beside its title. In the removed scenario Compact is its own Removed entry
 beneath Action and reads Removed when selected; Farewell is Removed.
 States links an Additions child gallery with one new Badge example and one Changes
 entry, preserving the five-screen limit in its parent and the existing unused state.
+It also links the Loading and recovery child gallery. That gallery shows
+`Loading usage…` without counts or lists, screen inspection with
+`Waiting for the component preview.`, and `Usage couldn’t be loaded.` with a
+`Try again` button. Loading and failed states never reuse validated-empty or
+unavailable-metadata copy.
 Its Shared impact child gallery shows an unchanged Action component opened from
 All, with a changed-file list in Details and no comparison band or Changes entry.
 Comparison evidence appears only in the Details panel. Its typed fixture records
@@ -201,7 +212,7 @@ small gap above an intact rounded outline, shared by all three region layouts.
 Use the real generator; never hand-edit generated HTML. Six shared component
 stylesheets are hand-authored public inputs, scoped to the
 `screens/design-component-*.html` documents.
-Route-scoped stylesheet matching links them only from the thirty-six component design routes;
+Route-scoped stylesheet matching links them only from the thirty-nine component design routes;
 Changes follows those rendered resource references. The folder
 marker supplies inherited dependencies to its leaves for comparison evidence.
 The controls stylesheet is scoped further to its eleven owning entries, with a

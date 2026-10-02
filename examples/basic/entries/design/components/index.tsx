@@ -10,6 +10,7 @@ import { ComponentPage } from "./parts/component_page.js";
 import { componentDesignDocs } from "./parts/fixtures.js";
 import { componentStyleDependencies } from "./parts/styles.js";
 import { additionDesigns } from "./states/additions/screens.js";
+import { loadingStateDesigns } from "./states/loading/screens.js";
 import { stateScreens } from "./states/screens.js";
 import { sharedImpactDesigns } from "./states/shared-impact/screens.js";
 
@@ -56,7 +57,12 @@ export const componentDesign = folder({
     }),
     folder({
       title: "Empty and change states",
-      children: [...stateScreens, additionDesigns, sharedImpactDesigns],
+      children: [
+        ...stateScreens,
+        additionDesigns,
+        loadingStateDesigns,
+        sharedImpactDesigns,
+      ],
     }),
   ],
 });

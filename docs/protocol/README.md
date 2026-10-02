@@ -64,6 +64,8 @@ readers accept only v7; earlier output follows
   inventory beside the private manifest.
 - [Navigation paths and folders](./mokly-nav-paths.md) — section trees, path
   diagnostics, sibling order, and folder keys.
+- [Standalone shell bootstrap](./mokly-shell-bootstrap.md) — entry-scoped Serve
+  hydration, strict reading, evidence adoption, and static capture.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
   shared hydrated shell.
 - [Live viewer capabilities](./mokly-live-capabilities.md) — private Serve

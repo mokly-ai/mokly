@@ -42,7 +42,7 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 99 design screens now use 16 registered shared components, including
+Mokly's 102 design screens now use 16 registered shared components, including
 the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
 Inspector and Preview galleries with 67 component variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
@@ -132,7 +132,7 @@ The `Design` navigation group is the owning design catalogue for Mokly's
 Browse and Changes views. Its sixty-three Browse, page, publication, appearance and Changes
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
 scrolling, stylesheet evidence, the preparing and unavailable comparison states,
-and the previous-version states of removed documents and screens. Thirty-six
+and the previous-version states of removed documents and screens. Thirty-nine
 component explorer screens add component pages, saved variants, stacked
 comparisons, affected screens,
 repeated/nested inspection, highlighting, and empty or removed states. The shared icon inspector and complete controls
@@ -171,6 +171,8 @@ shared files in Details and no comparison band.
 The Pages → Stacked comparisons gallery holds Action's Overlay and Difference in
 one bordered frame, reached from its comparison mode control, and a Checklist
 taller than that frame, drawn part-way down it.
+States → Loading and recovery shows Usage loading, inspection waiting, and a
+failed Usage read with its Try again action.
 Removed screens show their status and previous version without comparison
 controls; the removed component variant retains its baseline comparison.
 Comparison facts live in Details, using shared fixture values for prop differences
@@ -190,7 +192,7 @@ galleries; `inspector` shows both closed-panel layouts.
 Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
-Seventy-five design screens use `colorSchemes: ["light"]` and draw only the light
+Seventy-eight design screens use `colorSchemes: ["light"]` and draw only the light
 Mokly shell. Twenty-four screens instead inherit the catalogue's light/dark
 settings: thirteen Appearance screens, seven Changes designs, two product
 screens, and two retained Welcome appearance variants. `mokly build` writes a
@@ -211,8 +213,8 @@ A shared implementation edit appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. This is tested against fully registered baseline snapshots.
 
-The shared inspector/workspace sheets cover all 99 design screens and standalone
-library hosts. Other mixed component-design sheets remain scoped to the 36
+The shared inspector/workspace sheets cover all 102 design screens and standalone
+library hosts. Other mixed component-design sheets remain scoped to the 39
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. `review.sharedImpact` is fallback
 impact evidence for files the rendered resource graph cannot see, such as source

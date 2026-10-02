@@ -136,19 +136,36 @@ supplies its private live capabilities through typed server context.
 record for Details; `workspace_evidence.tsx` combines its shared-impact paths
 with retained dependency paths while keeping stylesheet exclusions separate.
 
+A live entry-scoped fallback never derives cross-entry Usage from `omitted`
+views: `use_workspace_data.ts` exposes loading until matching private evidence
+is adopted and failed after a current read failure or rejection, rather than
+publishing a partial or false-empty list.
+
 Standalone full-document composition lives in `src/standalone`:
 [`../standalone/bootstrap_types.ts`](../standalone/bootstrap_types.ts) owns the
 wire shape and
 [`../standalone/bootstrap_validation.ts`](../standalone/bootstrap_validation.ts)
-validates
-it before selection. The bootstrap contains the validated public catalogue and
-shell delivery state for Serve. Static pages
+validates it before selection. Serve's bootstrap contains the validated
+entry-scoped public catalogue and shell delivery state. Static pages
 carry a compact identity/revision reference and resolve the shared finalized
-catalogue before `src/browser.tsx` hydrates that exact server tree. Live Serve places private
-route evidence in a separate descriptor; the capability store adopts the
-fetched page's public bootstrap, source and private workspace as one monotonic
-revision. `use_workspace_data.ts` keeps one route-owned workspace object so
+complete catalogue before `src/browser.tsx` hydrates that exact server tree.
+The document receives pre-serialized script text; server rendering serializes
+it once and later client renders preserve it verbatim. Live Serve places
+complete private route evidence in a separate descriptor; the capability store
+replaces the fetched page's scoped public bootstrap, source and optional private
+workspace as one monotonic revision instead of accumulating per-route usage.
+`use_workspace_data.ts` keeps one entry-owned workspace object so
 matching evidence refreshes retain already loaded usage and local editor state.
+In a live shell it trusts only the store's workspace bound to the current
+request; the page-lifetime initial workspace seeds that first binding but is
+never reused after navigation, so returning to the first entry shows Loading or
+Failed until its own evidence is adopted.
+The runtime-only scoped catalogue model, projection and strict reader back
+browser hydration and entry/live evidence through one exact-scope boundary.
+Complete live models, missing entry-owned usage and leaked out-of-scope usage
+are rejected. Static external references retain their separate complete-model
+resolution path. Capture validates each live page with the same strict reader
+before replacing its scoped model with that external reference.
 Evidence commits rebuild navigation sections and reconcile the current
 disclosures and pre-filter baseline to exactly their new keys; initial restore
 uses the same `disclosure_storage.ts` reconciliation with an explicit fallback.
@@ -184,6 +201,8 @@ navigation and the inspector outside an overlay's bounds. Browser transport
 remains behind `useViewerCapabilities`. The
 [live capability contract](../../../../docs/protocol/mokly-live-capabilities.md)
 defines route loading, revision fencing and export omission.
+The [standalone bootstrap contract](../../../../docs/protocol/mokly-shell-bootstrap.md)
+defines usage scope, strict readers, serialization and capture invariants.
 
 Before standalone hydration, stored disclosure and split-width preferences are
 applied to the server DOM. Disclosure helpers treat native `<details>` groups

@@ -16,7 +16,6 @@ import { readShellDelivery } from "./shell/delivery.js";
 import { catalogueNavSections, disclosurePath } from "./shell/nav_model.js";
 import { refreshStandaloneAppearance } from "./standalone/appearance_host.js";
 import {
-  readShellBootstrapState,
   resolveShellBootstrap,
   shellBootstrapProps,
   shellBootstrapWithDelivery,
@@ -27,10 +26,24 @@ import {
 import { isExternalCatalogueReference } from "./standalone/catalogue_reference.js";
 import { StandaloneShellDocument } from "./standalone/document.js";
 import { prepareHydrationState } from "./standalone/preferences.js";
+import {
+  readLiveShellBootstrapState,
+  type LiveShellBootstrap,
+  type LiveShellBootstrapState,
+} from "./standalone/scoped_bootstrap.js";
 import { staticWorkspaceEvidence } from "./standalone/static_workspace_evidence.js";
 
 const hydratedDocuments = new WeakSet<Document>();
 const pendingDocuments = new WeakSet<Document>();
+
+interface EmbeddedCapabilityDescriptor {
+  descriptor?: ViewerCapabilityDescriptor;
+  json?: string;
+}
+
+type ResolvedHydrationInput =
+  | { kind: "live"; bootstrap: LiveShellBootstrap }
+  | { kind: "static"; bootstrap: ShellBootstrap };
 
 /** Hydrate one complete standalone shell with optional live host capabilities. */
 export function hydrateMoklyShell(
@@ -43,19 +56,22 @@ export function hydrateMoklyShell(
     "script[data-mokly-shell-bootstrap]",
   );
   if (!state?.textContent) return;
-  const bootstrapState = readShellBootstrapState(JSON.parse(state.textContent));
-  const capabilityDescriptor = readCapabilityDescriptor(doc, capabilities);
+  const bootstrapJson = state.textContent;
+  const bootstrapState = readLiveShellBootstrapState(JSON.parse(bootstrapJson));
+  const embeddedCapability = readCapabilityDescriptor(doc, capabilities);
   if (!isExternalShellBootstrap(bootstrapState)) {
-    const bootstrap = resolveShellBootstrap(
-      bootstrapState,
-      bootstrapState.catalogue,
-    );
+    const bootstrap = bootstrapState;
     hydrateResolvedShell(
       doc,
-      bootstrapState,
-      delivery ? shellBootstrapWithDelivery(bootstrap, delivery) : bootstrap,
+      bootstrapJson,
+      {
+        kind: "live",
+        bootstrap: delivery
+          ? shellBootstrapWithDelivery(bootstrap, delivery)
+          : bootstrap,
+      },
       capabilities,
-      capabilityDescriptor,
+      embeddedCapability,
     );
     return;
   }
@@ -70,10 +86,10 @@ export function hydrateMoklyShell(
       if (!bootstrap || controller.signal.aborted) return;
       hydrateResolvedShell(
         doc,
-        bootstrapState,
-        bootstrap,
+        bootstrapJson,
+        { kind: "static", bootstrap },
         capabilities,
-        capabilityDescriptor,
+        embeddedCapability,
       );
     })
     .finally(() => {
@@ -85,37 +101,40 @@ export function hydrateMoklyShell(
 function readCapabilityDescriptor(
   doc: Document,
   capabilities: ViewerHostCapabilities | undefined,
-): ViewerCapabilityDescriptor | undefined {
+): EmbeddedCapabilityDescriptor {
   const capabilityState = doc.querySelector<HTMLScriptElement>(
     "script[data-mokly-host-capability-state]",
   );
-  const capabilityDescriptor = capabilityState?.textContent
-    ? readViewerCapabilityDescriptor(JSON.parse(capabilityState.textContent))
+  const json = capabilityState?.textContent || undefined;
+  const descriptor = json
+    ? readViewerCapabilityDescriptor(JSON.parse(json))
     : undefined;
   if (
-    (capabilities === undefined) !== (capabilityDescriptor === undefined) ||
+    (capabilities === undefined) !== (descriptor === undefined) ||
     (capabilities &&
-      capabilityDescriptor &&
-      !viewerCapabilitySourceEquals(
-        capabilityDescriptor.source,
-        capabilities.source,
-      ))
+      descriptor &&
+      !viewerCapabilitySourceEquals(descriptor.source, capabilities.source))
   )
     throw new Error("Live viewer capabilities do not match this document.");
-  return capabilityDescriptor;
+  return {
+    ...(descriptor ? { descriptor } : {}),
+    ...(json ? { json } : {}),
+  };
 }
 
 function hydrateResolvedShell(
   doc: Document,
-  bootstrapState: ShellBootstrapState,
-  bootstrap: ShellBootstrap,
+  bootstrapJson: string,
+  input: ResolvedHydrationInput,
   capabilities: ViewerHostCapabilities | undefined,
-  capabilityDescriptor: ViewerCapabilityDescriptor | undefined,
+  embeddedCapability: EmbeddedCapabilityDescriptor,
 ): void {
   if (hydratedDocuments.has(doc)) return;
   refreshStandaloneAppearance(doc);
+  const bootstrap = input.bootstrap;
   const props = shellBootstrapProps(bootstrap);
-  const delivery = bootstrap.context.delivery;
+  const staticBootstrap = input.kind === "static" ? input.bootstrap : undefined;
+  const delivery = staticBootstrap?.context.delivery;
   const workspaceState =
     delivery === undefined
       ? undefined
@@ -124,8 +143,8 @@ function hydrateResolvedShell(
     ? readViewerWorkspace(JSON.parse(workspaceState.textContent), props.context)
     : undefined;
   const staticEvidence =
-    delivery && doc.defaultView
-      ? staticWorkspaceEvidence(doc.defaultView, bootstrap)
+    delivery && doc.defaultView && staticBootstrap
+      ? staticWorkspaceEvidence(doc.defaultView, staticBootstrap)
       : undefined;
   const activeDisclosures =
     props.view.kind === "target"
@@ -145,9 +164,14 @@ function hydrateResolvedShell(
     doc,
     <StandaloneShellDocument
       {...props}
-      bootstrap={bootstrapState}
+      bootstrapJson={bootstrapJson}
       {...(capabilities ? { capabilities } : {})}
-      {...(capabilityDescriptor ? { capabilityDescriptor } : {})}
+      {...(embeddedCapability.descriptor
+        ? { capabilityDescriptor: embeddedCapability.descriptor }
+        : {})}
+      {...(embeddedCapability.json
+        ? { capabilityDescriptorJson: embeddedCapability.json }
+        : {})}
       initialState={prepareHydrationState(doc, activeDisclosures)}
       {...(initialWorkspace ? { initialWorkspace } : {})}
       {...(recovery ? { recovery } : {})}
@@ -189,7 +213,7 @@ async function loadExternalBootstrap(
 }
 
 function isExternalShellBootstrap(
-  state: ShellBootstrapState,
+  state: LiveShellBootstrapState,
 ): state is ExternalShellBootstrap {
   return isExternalCatalogueReference(state.catalogue);
 }

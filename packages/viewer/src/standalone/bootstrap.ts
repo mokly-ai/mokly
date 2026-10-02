@@ -1,6 +1,7 @@
 /** Serializable state shared by standalone shell SSR and browser hydration. */
 
 import { resolveCatalogueEntry } from "../catalogue/entry_selection.js";
+import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import { canonicalJson } from "../components/data.js";
 import type { StaticDelivery } from "../navigation/delivery.js";
@@ -16,13 +17,14 @@ import { viewerCatalogue, viewerContext } from "../viewer/projection.js";
 import { defaultSelection } from "../viewer/selection.js";
 import { normalizeTheme } from "../viewer/theme.js";
 
+import type { ShellBootstrapEnvelope } from "./bootstrap_envelope.js";
 import type {
   ExternalShellBootstrap,
   ShellBootstrap,
-  ShellBootstrapState,
 } from "./bootstrap_types.js";
 import { externalCatalogueReference } from "./catalogue_reference.js";
 
+export type { BootstrapView as ShellBootstrapView } from "./bootstrap_envelope.js";
 export type {
   ExternalShellBootstrap,
   ShellBootstrap,
@@ -86,13 +88,15 @@ export function externalShellBootstrap(
 
 /** Encode hydration state with stable lexical object-key ordering. */
 export function serializeShellBootstrap(
-  bootstrap: ShellBootstrapState,
+  bootstrap: ShellBootstrapEnvelope<unknown>,
 ): string {
   return canonicalJson(bootstrap).replaceAll("<", "\\u003c");
 }
 
 /** Recreate the exact component inputs used by standalone SSR. */
-export function shellBootstrapProps(bootstrap: ShellBootstrap) {
+export function shellBootstrapProps(
+  bootstrap: ShellBootstrapEnvelope<ShellCatalogueReadModel>,
+) {
   const catalogue = viewerCatalogue(bootstrap.catalogue);
   const selected =
     bootstrap.view.kind === "target"
@@ -155,13 +159,18 @@ export function shellBootstrapProps(bootstrap: ShellBootstrap) {
 }
 
 /** Adopt the finalized authenticated descriptor over static staging values. */
-export function shellBootstrapWithDelivery(
-  bootstrap: ShellBootstrap,
+export function shellBootstrapWithDelivery<
+  Catalogue extends ShellCatalogueReadModel,
+>(
+  bootstrap: ShellBootstrapEnvelope<Catalogue>,
   delivery: StaticDelivery,
-): ShellBootstrap {
+): ShellBootstrapEnvelope<Catalogue> {
   return {
     ...bootstrap,
-    catalogue: { ...bootstrap.catalogue, deploymentId: delivery.deploymentId },
+    catalogue: {
+      ...bootstrap.catalogue,
+      deploymentId: delivery.deploymentId,
+    } as Catalogue,
     context: { ...bootstrap.context, delivery },
   };
 }

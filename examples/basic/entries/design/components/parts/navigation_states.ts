@@ -42,6 +42,8 @@ export const COMPONENT_NAVIGATION_STATES = {
   [COMPONENT_PAGES.unused]: {},
   [COMPONENT_PAGES.added]: {},
   [COMPONENT_PAGES.removed]: {},
+  [COMPONENT_PAGES["usage-loading"]]: {},
+  [COMPONENT_PAGES["usage-failed"]]: {},
   [COMPONENT_PAGES["shared-impact"]]: {},
   [INSPECTION_PAGES.details]: {},
   [INSPECTION_PAGES.highlight]: {},
@@ -52,5 +54,6 @@ export const COMPONENT_NAVIGATION_STATES = {
   [INSPECTION_PAGES["help-selection"]]: {},
   [INSPECTION_PAGES.empty]: {},
   [INSPECTION_PAGES.unavailable]: {},
+  [INSPECTION_PAGES["inspection-loading"]]: {},
   [INSPECTION_PAGES["removed-consumer"]]: {},
 } satisfies Record<ComponentDesignDestination, NavigationState>;
