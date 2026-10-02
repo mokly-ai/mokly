@@ -7,6 +7,7 @@ import {
   ChevronIcon,
   ComponentIcon,
   ComponentVariantIcon,
+  DocIcon,
   FlowIcon,
   FolderIcon,
   FolderOpenIcon,
@@ -51,6 +52,7 @@ function navRowStyle(depth: number): CSSProperties {
 function RowIcon({ node }: { node: NavigationRow }) {
   if (node.kind === "component") return <ComponentIcon />;
   if (node.kind === "page") return <PageIcon />;
+  if (node.kind === "doc") return <DocIcon />;
   if (node.kind === "flow") return <FlowIcon />;
   if (node.kind === "variant")
     return node.variantParentKind === "component" ? (

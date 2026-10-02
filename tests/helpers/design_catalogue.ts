@@ -46,9 +46,11 @@ export function byClass(node: Node, className: string): Element[] {
   );
 }
 
+/** One design view, light unless the scheme names a dark render. */
 export async function designDocument(
   id: string,
   viewport: "mobile" | "desktop",
+  scheme: "light" | "dark" = "light",
 ): Promise<{
   document: DefaultTreeAdapterMap["document"];
   entry: ManifestScreen;
@@ -58,8 +60,8 @@ export async function designDocument(
   const compilation = await designCatalogue;
   const entry = compilation.manifest.entries.find((entry) => entry.id === id);
   assert.ok(entry?.kind === "screen", `Missing screen ${id}`);
-  const route = viewRoute("screen", entry.id, viewport, "light");
+  const route = viewRoute("screen", entry.id, viewport, scheme);
   const html = compilation.outputs.get(route);
-  assert.ok(html, `Missing ${viewport} output for ${id}`);
+  assert.ok(html, `Missing ${viewport} ${scheme} output for ${id}`);
   return { document: parse(html), entry, html, route };
 }

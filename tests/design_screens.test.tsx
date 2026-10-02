@@ -77,6 +77,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     const components = textContent(sections[1] ?? document);
     assert.match(pages, /Welcome/);
     assert.match(pages, /Example tour/);
+    assert.match(pages, /Welcome specification/);
     assert.doesNotMatch(pages, /Action|Toolbar/);
     assert.match(components, /Action/);
     assert.match(components, /Toolbar/);
@@ -125,6 +126,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
         );
         assert.ok(rows.includes("Welcome"), id);
         assert.equal(rows.includes("Details"), tag === "forms", id);
+        assert.equal(
+          rows.includes("Welcome specification"),
+          tag === "onboarding",
+          id,
+        );
         assert.ok(!rows.includes("Example tour"), id);
       }
     }

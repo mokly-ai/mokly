@@ -199,25 +199,25 @@ Add the doc screens to the design catalogue under `examples/basic` before any
 viewer change, reusing the existing shell, navigation, details, and stage
 parts.
 
-- [ ] Extend the `catalogue-navigation` library component's row kind enum and
+- [x] Extend the `catalogue-navigation` library component's row kind enum and
       the shared navigation fixture with a `doc` row and icon, keeping every
       existing depicted tree unchanged except for the added row.
-- [ ] Add `design-doc-view`: a doc in its folder at reading width with no
+- [x] Add `design-doc-view`: a doc in its folder at reading width with no
       viewport switch, the shared top bar with its one Appearance selector,
       rendered in both schemes, mobile and desktop variants, one screen
       component.
-- [ ] Add `design-doc-details`: Generated views, Schemes, Tags, a linked
+- [x] Add `design-doc-details`: Generated views, Schemes, Tags, a linked
       related-doc chip, and Dependencies rows.
-- [ ] Add `design-doc-navigation`: the narrow drawer open on a doc row.
-- [ ] Add `design-doc-removed`: a removed doc's previous version with its
+- [x] Add `design-doc-navigation`: the narrow drawer open on a doc row.
+- [x] Add `design-doc-removed`: a removed doc's previous version with its
       baseline folder labels.
 - [ ] Update the existing home mockup count line with a docs figure.
-- [ ] Register the screens with `navPath` under the design root so each is
+- [x] Register the screens with `navPath` under the design root so each is
       reachable from the Browse shell folders, update the inventory agreement
       test, then run `npm run build`, `npm run example:build`,
       `npm run example:check`, the design catalogue tests, and smoke-test the
       screens through `npm run dev`.
-- [ ] Commit and push.
+- [x] Commit and push.
 
 ## Milestone 3: Configuration, discovery, and the MDX toolchain
 

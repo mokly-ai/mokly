@@ -32,7 +32,7 @@ function markedFillTokens(tokens: Map<string, string>): string[] {
 
 /** Selectors naming a control primitive, whose boundary is a control edge. */
 const CONTROL_SELECTOR =
-  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.ce-action|\.ce-button|\.ce-icon-control|\.mbk-seg|\.mbk-appearance|\.ce-sheet-expand|\.mbk-chip:is\(a\)/u;
+  /\bbutton\b|\binput\b|\bselect\b|\bsummary\b|\btextarea\b|\.ce-action|\.ce-button|\.ce-icon-control|\.mbk-seg|\.mbk-appearance|\.ce-sheet-expand|\.mbk-chip:is\(a\)|\.mbk-code:is\(a\)/u;
 
 /** Tokens the palette contract reserves for decoration between surfaces. */
 const HAIRLINE_TOKENS = new Set([
@@ -91,7 +91,7 @@ const AUDITED_BOUNDARIES = [
   "design-library/inspector/inspector.css .ce-design .mbk-shell--mobile .ce-inspector:has(> details[open])",
   "design-library/inspector/inspector.css .ce-inspector > details[open] > summary",
   "design-library/inspector/inspector.css .ce-sheet-expand:focus-visible",
-  "design-stage.css .mbk-chip:is(a):focus-visible",
+  "design-stage.css .mbk-chip:is(a):focus-visible, .mbk-code:is(a):focus-visible",
 ];
 
 function isExemptSurface(file: string, selector: string): boolean {

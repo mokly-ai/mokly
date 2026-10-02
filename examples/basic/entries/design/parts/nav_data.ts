@@ -6,6 +6,7 @@ import {
   componentVariantRows,
 } from "./component_nav_data.js";
 import { DESTINATIONS, type DesignDestination } from "./destinations.js";
+import { WELCOME_SPECIFICATION } from "./docs.js";
 
 /** One screen this branch removed, with the preview state it opens in. */
 interface RemovedScreen {
@@ -58,6 +59,18 @@ export const REMOVED_SCREEN_ROWS = Object.values(REMOVED_SCREENS);
 export const CHANGED_COUNT = 2 + REMOVED_SCREEN_ROWS.length;
 
 type NavigationRows = CatalogueNavigationProps["rows"];
+
+/**
+ * The specification doc's row in its Example folder. A doc is an ordinary
+ * leaf, so it follows the folders and sorts by title among its sibling leaves.
+ */
+export const SPECIFICATION_ROW = {
+  key: WELCOME_SPECIFICATION.id,
+  depth: 1,
+  kind: "doc",
+  label: WELCOME_SPECIFICATION.title,
+  to: DESTINATIONS.doc,
+} as const satisfies NavigationRows[number];
 
 /**
  * Welcome's depicted variants. `Empty workspace` owns a catalogue destination;
@@ -122,6 +135,7 @@ function catalogueTree(variants: "closed" | "open"): NavigationRows {
       label: "Example tour",
       to: DESTINATIONS.tour,
     },
+    SPECIFICATION_ROW,
     {
       key: "example-components",
       count: 2,

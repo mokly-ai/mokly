@@ -64,6 +64,9 @@ test("documented design-screen counts match the compiled catalogue", async () =>
     entry.navPath.includes("Catalogue views"),
   );
   const variants = dualBrowse.filter((entry) => entry.variantOf !== undefined);
+  const dualDocs = dual.filter((entry) =>
+    entry.navPath.includes("Specification docs"),
+  );
   const shell = designs.length - components.length;
   const readme = "examples/basic/README.md";
   const word = "([A-Za-z]+(?:-[a-z]+)?)";
@@ -73,7 +76,7 @@ test("documented design-screen counts match the compiled catalogue", async () =>
     [
       readme,
       new RegExp(
-        `Its ${word} Browse, page, publication, appearance and Changes screens`,
+        `Its ${word} Browse, page, doc, publication, appearance and Changes screens`,
         "gu",
       ),
       [shell],
@@ -101,7 +104,8 @@ test("documented design-screen counts match the compiled catalogue", async () =>
       new RegExp(
         `${word} screens instead inherit the catalogue's light/dark settings: ` +
           `${word} Appearance screens, ${word} Changes designs, ${word} product ` +
-          `screens, and ${word} retained Welcome appearance variants`,
+          `screens, ${word} retained Welcome appearance variants, and ${word} ` +
+          `specification doc screens`,
         "gu",
       ),
       [
@@ -110,6 +114,7 @@ test("documented design-screen counts match the compiled catalogue", async () =>
         dual.filter((entry) => entry.navPath.includes("Changes")).length,
         dualBrowse.length - variants.length,
         variants.length,
+        dualDocs.length,
       ],
     ],
     [
@@ -142,7 +147,8 @@ test("documented design-screen counts match the compiled catalogue", async () =>
     dual.length,
     dual.filter((entry) => entry.navPath.includes("Appearance")).length +
       dual.filter((entry) => entry.navPath.includes("Changes")).length +
-      dualBrowse.length,
+      dualBrowse.length +
+      dualDocs.length,
     "every light/dark design belongs to one documented group",
   );
 });

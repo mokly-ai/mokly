@@ -3,10 +3,23 @@ import { EmptyState } from "./stage_content.js";
 
 /**
  * The quiet label that sits between the head band and a stage holding content
- * from before the entry was removed.
+ * from before the entry was removed. A previous version captured only in its
+ * light view says so while the catalogue is dark, with the same light-only
+ * note a frame caption carries.
  */
-export function PreviousVersionLabel() {
-  return <p className="mbk-previous">Showing previous version</p>;
+export function PreviousVersionLabel({
+  lightOnly = false,
+}: {
+  lightOnly?: boolean;
+}) {
+  return (
+    <p className="mbk-previous">
+      Showing previous version
+      {lightOnly ? (
+        <span className="mbk-previous-scheme-note"> — Light only</span>
+      ) : null}
+    </p>
+  );
 }
 
 /** The stage while the previous version is still being retrieved. */

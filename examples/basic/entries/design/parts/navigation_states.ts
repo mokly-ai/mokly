@@ -66,6 +66,22 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.pageRemovedLong]: { all: D.home },
   [D.pageRemovedLoading]: { all: D.home },
   [D.pageRemovedUnavailable]: { all: D.home },
+  [D.doc]: {
+    inspector: D.docDetails,
+    drawer: { open: false, to: D.docNavigation },
+    changes: D.docRemoved,
+  },
+  [D.docDetails]: {
+    inspector: D.doc,
+    drawer: { open: false, to: D.docNavigation },
+    changes: D.docRemoved,
+  },
+  [D.docNavigation]: {
+    inspector: D.docDetails,
+    drawer: { open: true, to: D.doc },
+    changes: D.docRemoved,
+  },
+  [D.docRemoved]: { all: D.home },
   [D.publication]: {},
   [D.publicationChanges]: {
     all: D.publicationChanges,

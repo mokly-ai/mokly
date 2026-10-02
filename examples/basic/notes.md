@@ -70,13 +70,15 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
 - The `forms` and `onboarding` tags are synthetic fixture labels that carry no
   product meaning: the Welcome entry declares both and the Details entry
   declares `forms` in their authored metadata, which is why the `tag:forms`
-  tree keeps both screen rows.
+  tree keeps both screen rows. The depicted Welcome specification doc declares
+  `onboarding`, so the `tag:onboarding` tree keeps it beside Welcome.
 - Welcome's light tag chips and search control link to the corresponding
   filtered or open-picker artboards. An inactive chip selects its tag and closes
   the picker; the active chip clears the query. Opening or closing the picker
   preserves the depicted query. Forms retains Welcome and Details; onboarding
-  retains only Welcome. Other subjects and comparison states show tag controls
-  without links until an equivalent destination is authored.
+  retains Welcome and the Welcome specification doc. Other subjects and
+  comparison states show tag controls without links until an equivalent
+  destination is authored.
 - The tag control remains visible in every search field. The unfiltered,
   forms, and onboarding picker screens show the same catalogue-wide tag list,
   with selection, query, and filtered rows kept consistent. Search typing is
@@ -144,6 +146,23 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
 - The tall-component artboard shows a synthetic Checklist taller than its
   frame, part-way down, with one step reworded. Its rows keep fixed heights and
   never wrap, so the drawn offset and scrollbar never depend on text layout.
+- The Specification docs artboards depict the approved
+  [docs contract](../../docs/protocol/mokly-docs.md) before the example
+  configures any doc. The Welcome specification sits in the Example folder as
+  an ordinary leaf with the doc icon, after Example tour because leaves sort by
+  title. Its stage is the plain document pane with no device frame and no
+  viewport control, and the doc view inside it uses the preview tokens of the
+  scheme the artboard was rendered for, so both schemes are real views rather
+  than one view under a tinted shell.
+- The doc Details list Source, Schemes, Tags, Related docs and Dependencies. The
+  related doc, `notes.md`, is a current doc's source file, so its chip is a
+  link. The catalogue draws one current doc at reading width, so that chip
+  opens the canonical doc artboard rather than an artboard of the notes doc.
+- The doc artboards' Changes filter opens the removed doc, the only change in
+  their scenario; the removed doc's All filter returns to catalogue home, as
+  every removed page and screen does. Only the removed doc's light view was
+  captured, so its Dark artboard keeps that light view and appends the
+  light-only note to the previous-version label.
 - The approved tokens, consumer-tunable accent properties, and responsive
   breakpoints are recorded in `docs/protocol/mokly-shell-design.md`.
 

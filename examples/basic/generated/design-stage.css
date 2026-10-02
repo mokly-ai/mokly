@@ -324,6 +324,20 @@
   word-break: break-all;
 }
 
+/* A path chip naming a current doc's source file opens that doc. */
+.mbk-code:is(a) {
+  align-items: center;
+  border-color: var(--chrome-control-edge);
+  display: inline-flex;
+  gap: 5px;
+  text-decoration: none;
+}
+
+.mbk-code:is(a) svg {
+  color: var(--chrome-muted);
+  flex-shrink: 0;
+}
+
 .mbk-chips {
   display: flex;
   flex-wrap: wrap;
@@ -376,7 +390,8 @@
 .mbk-chip:is(a) {
   text-decoration: none;
 }
-.mbk-chip:is(a):focus-visible {
+.mbk-chip:is(a):focus-visible,
+.mbk-code:is(a):focus-visible {
   outline: 2px solid var(--mbk-sage-deep);
   outline-offset: 3px;
 }
