@@ -64,7 +64,8 @@ watcher-test flakiness recorded as Milestone 40 finding 12. The final helper
 follows intermediate versions and child restarts; a server-level test pins
 stylesheet availability before content updates. Milestone 46 (`77a1f493`)
 passed the full gate and resolves that finding; other review findings remain
-open. The plan stays active until the PR merges.
+open. Milestone 47's post-push review remains for the user, and the plan stays
+active until the PR merges.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -1093,7 +1094,7 @@ and update versions, resource status and value excerpt on timeout.
 Deliver the approved watcher-test fix while leaving its post-push review to
 the user.
 
-- [ ] Commit and push the fix; confirm the remote ref and a clean tree.
+- [x] Commit and push the fix; confirm the remote ref and a clean tree.
 - [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review.
 
 ## Post-merge follow-up (non-blocking)
