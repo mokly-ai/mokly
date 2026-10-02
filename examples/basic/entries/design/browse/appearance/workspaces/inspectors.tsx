@@ -5,6 +5,7 @@ import { useDesignInstance } from "../../../library/composition.js";
 import { inspector } from "../../../library/inspector/inspector.js";
 import { propField } from "../../../library/inspector/prop-field.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
+import { ENTRY_PATHS } from "../../../parts/entry_paths.js";
 import { MetaRow } from "../../../parts/metadata_row.js";
 import type { ArtboardViewport } from "../../../parts/shell.js";
 import {
@@ -70,7 +71,7 @@ function PropsValidation({ viewport }: { viewport: ArtboardViewport }) {
       viewport={viewport}
     >
       <AppearanceHead
-        idChip="example-welcome"
+        path={ENTRY_PATHS.welcome}
         title="Welcome"
         viewport={viewport}
       />
@@ -122,7 +123,7 @@ function SelectedInstance({ viewport }: { viewport: ArtboardViewport }) {
       viewport={viewport}
     >
       <AppearanceHead
-        idChip="example-welcome"
+        path={ENTRY_PATHS.welcome}
         title="Welcome"
         viewport={viewport}
       />

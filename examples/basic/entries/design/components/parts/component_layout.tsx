@@ -2,12 +2,14 @@ import type { ReactNode } from "react";
 
 import { COMPONENT_NAVIGATION } from "../../parts/component_nav_data.js";
 import type { ComparisonMode } from "../../parts/destinations.js";
+import { EXAMPLE_CRUMB } from "../../parts/entry_paths.js";
 import { ScreenHead, type ArtboardViewport } from "../../parts/shell.js";
 
 import type { ChangeStatus } from "./comparison_fixtures.js";
 import type { ComponentDesignDestination } from "./destinations.js";
 import { COMPONENTS, type ComponentEntryMetadata } from "./metadata.js";
-import { ExplorerShell, type ChangeScenario } from "./navigation.js";
+import { ExplorerShell } from "./navigation.js";
+import type { ChangeScenario } from "./navigation_tree.js";
 import { ViewControls } from "./view_controls.js";
 import { PreviewWorkspace } from "./workspace.js";
 
@@ -48,8 +50,8 @@ export function ComponentLayout({
       <ScreenHead
         accessibleControls
         title={component.title}
-        crumbs={["Example", "Components"]}
-        idChip={entry.id}
+        crumbs={[scenario === "all" ? EXAMPLE_CRUMB : "Example", "Components"]}
+        path={entry.path}
         action={<ViewControls viewport={viewport} />}
         comparisons={status === "changed" || status === "removed"}
         status={status}

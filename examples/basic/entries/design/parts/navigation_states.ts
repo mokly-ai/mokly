@@ -50,6 +50,8 @@ export const appearanceModes = {
 export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   ...COMPONENT_NAVIGATION_STATES,
   [D.home]: {},
+  [D.exampleOverview]: {},
+  [D.document]: {},
   [D.page]: {
     inspector: D.pageDetails,
     drawer: { open: false, to: D.pageNavigation },
@@ -137,6 +139,7 @@ export const NAVIGATION_STATES: Record<DesignDestination, NavigationState> = {
   [D.sideBySideApart]: { ...welcomeFilters, comparison: welcomeModes },
   [D.changed]: { ...welcomeFilters, comparison: welcomeModes },
   [D.difference]: { ...welcomeFilters, comparison: welcomeModes },
+  [D.moved]: {},
   [D.added]: { ...detailsFilters },
   [D.removed]: { all: D.home },
   [D.removedLong]: { all: D.home },

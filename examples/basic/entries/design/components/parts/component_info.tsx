@@ -2,12 +2,19 @@ import { MetaRow } from "../../parts/metadata_row.js";
 
 import { COMPONENTS, type ComponentEntryMetadata } from "./metadata.js";
 
+/**
+ * The shown entry's Details: its description, then its path and source as
+ * secondary lines, with references behind a native disclosure.
+ */
 export function ComponentInfo({ entry }: { entry: ComponentEntryMetadata }) {
   const component = COMPONENTS[entry.component];
   return (
     <section>
       <h3>About {entry.title}</h3>
       <p>{component.description}</p>
+      <p className="ce-muted">
+        Path <code>{entry.path}</code>
+      </p>
       <p className="ce-muted">
         Source <code>{component.source}</code>
       </p>

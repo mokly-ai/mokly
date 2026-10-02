@@ -12,7 +12,7 @@ import { ComponentLayout } from "./component_layout.js";
 import { VariantPicker } from "./controls.js";
 import { COMPONENT_PAGES } from "./destinations.js";
 import { COMPONENT_ENTRY_BY_STATE } from "./metadata.js";
-import type { ChangeScenario } from "./navigation.js";
+import type { ChangeScenario } from "./navigation_tree.js";
 import {
   ActionExample,
   ComponentCanvas,

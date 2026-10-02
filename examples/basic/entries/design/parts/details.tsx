@@ -34,6 +34,11 @@ function DetailsBody({
         <MetaRow name="source" label="Source">
           <code className="mbk-code">{metadata.source}</code>
         </MetaRow>
+        {metadata.previousPath ? (
+          <MetaRow name="moved-from" label="Moved from">
+            <code className="mbk-code">{metadata.previousPath}</code>
+          </MetaRow>
+        ) : null}
         <MetaRow name="schemes" label="Schemes">
           {metadata.schemes}
         </MetaRow>
@@ -47,7 +52,16 @@ function DetailsBody({
             <TagChips activeTag={activeTag} tags={metadata.tags} />
           </MetaRow>
         ) : null}
-        {metadata.relatedDocs ? (
+        {metadata.relatedDocument ? (
+          <MetaRow name="related-docs" label="Related docs">
+            <MockLink
+              to={metadata.relatedDocument.to}
+              className="mbk-meta-link"
+            >
+              {metadata.relatedDocument.title}
+            </MockLink>
+          </MetaRow>
+        ) : metadata.relatedDocs ? (
           <MetaRow name="related-docs" label="Related docs">
             <span className="mbk-meta-link">Example notes</span>
           </MetaRow>

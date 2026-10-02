@@ -29,7 +29,7 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 99 design screens now use 16 registered shared components, including
+Mokly's 102 design screens now use 16 registered shared components, including
 the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
 Inspector and Preview galleries with 67 component variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
@@ -45,6 +45,18 @@ author `id` and `navPath` and its configuration still lists `entries` globs.
 The target layout, a `specs` root whose file paths are the entry paths, is
 described in the
 [configuration contract](../../docs/protocol/mokly-configuration.md#roots).
+
+The design screens already depict that model while authored with today's API.
+Their shell shows the Specs and Components sections of one tree, browse-only
+folder rows, the Example folder's README as its first `Overview` row, path
+chips such as `example/screens/welcome`, and an Account › Billing & Payments
+area. `design-browse-folder-overview` opens that README,
+`design-browse-document` shows the Payment terms Markdown document in the
+shell's own typography, and `design-changes-moved` shows `billing` moved under
+`account`: one Changes row per entry labelled `Moved`, the previous path in
+Details, and the Overlay comparison. The
+[depicted catalogue](../../docs/protocol/mokly-shell-design-inventory.md#depicted-catalogue)
+lists its folders, paths, and transitions.
 
 The entry definitions use `navPath` as their only navigation hierarchy.
 `Example` groups Screens, the example tour, and Getting started; `Design`
@@ -78,7 +90,7 @@ matching the derived-route shell contract. Copy, refresh, collapse-all and
 unsupported combinations remain visual depictions.
 The actual outer shell provides its normal runtime controls. See the
 [design mockup links contract](../../docs/protocol/mokly-design-links.md)
-and the [complete design inventory](../../docs/protocol/mokly-shell-design.md#design-mockups).
+and the [complete design inventory](../../docs/protocol/mokly-shell-design-inventory.md).
 Shared destinations live in [destinations.ts](./entries/design/parts/destinations.ts);
 [navigation_states.ts](./entries/design/parts/navigation_states.ts) explicitly
 selects which transitions each artboard supports. Add an owning screen and its
@@ -123,7 +135,7 @@ render plain React DOM need none of this and can keep a plain
 `renderToStaticMarkup` adapter.
 
 The `Design` navigation group is the owning design catalogue for Mokly's
-Browse and Changes views. Its sixty-three Browse, page, publication, appearance and Changes
+Browse and Changes views. Its sixty-six Browse, page, publication, appearance and Changes
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
 scrolling, stylesheet evidence, the preparing and unavailable comparison states,
 and the previous-version states of removed documents and screens. Thirty-six
@@ -184,7 +196,7 @@ galleries; `inspector` shows both closed-panel layouts.
 Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
-Seventy-five design screens use `colorSchemes: ["light"]` and draw only the light
+Seventy-eight design screens use `colorSchemes: ["light"]` and draw only the light
 Mokly shell. Twenty-four screens instead inherit the catalogue's light/dark
 settings: thirteen Appearance screens, seven Changes designs, two product
 screens, and two retained Welcome appearance variants. `mokly build` writes a
@@ -205,7 +217,7 @@ A shared implementation edit appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. This is tested against fully registered baseline snapshots.
 
-The shared inspector/workspace sheets cover all 99 design screens and standalone
+The shared inspector/workspace sheets cover all 102 design screens and standalone
 library hosts. Other mixed component-design sheets remain scoped to the 36
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. `review.sharedImpact` is fallback
@@ -340,8 +352,8 @@ embedded viewer keeps its host-supplied theme alongside its own preview
 controls.
 
 The shell designs now include the Document pages folder (document, details,
-removal, and the nested Previous document versions states) and the Published
-catalogue folder (current catalogue and Changes).
+removal, Markdown document, and the nested Previous document versions states)
+and the Published catalogue folder (current catalogue and Changes).
 Each state has its own mobile and desktop component and reuses the shell,
 navigation, and stage primitives. The synthetic handbook in `entries/document.tsx`
 is shared by these designs and the first-class page example; its read-only copy
@@ -351,8 +363,8 @@ previous version, does nothing.
 The `example-handbook` page imports the shared example document and belongs to
 the Example folder alongside Screens and Example tour. Its derived
 `pages/example-handbook.html` route, `next-steps` anchor, and incoming Welcome
-link exercise the public page API. The design catalogue has seven responsive
-page states and two publication states.
+link exercise the public page API. The design catalogue has eight responsive
+document and page states and two publication states.
 
 Every design uses the shared `Search catalogue…` wording. Home guidance and the
 `Item not found` state cover screens, documents, and flows; the runtime shell

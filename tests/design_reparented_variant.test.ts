@@ -160,11 +160,11 @@ test("component mockup rows and glyph match the runtime Components branch", asyn
   const runtimeLabels = byClass(runtimeSection, "mbk-nav-row")
     .filter(
       (row) =>
-        rowLabel(row) === "Components" ||
+        ["Example", "Components"].includes(rowLabel(row)) ||
         ids.has(attribute(row, "data-entry-id") ?? ""),
     )
     .map(rowLabel);
-  assert.deepEqual(runtimeLabels, rowLabels(mockupSection).slice(0, 7));
+  assert.deepEqual(runtimeLabels, rowLabels(mockupSection).slice(0, 8));
 
   const runtimeVariant = byClass(runtimeSection, "mbk-nav-row").find(
     (row) => attribute(row, "data-entry-id") === "example-action-default",

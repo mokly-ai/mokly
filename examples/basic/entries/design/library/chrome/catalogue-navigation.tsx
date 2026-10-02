@@ -1,11 +1,8 @@
 import { defineComponent, type ComponentProps } from "@mokly/mokly";
 
 import { DESTINATIONS } from "../../parts/destinations.js";
-import {
-  CHANGED_VARIANT_ROWS,
-  NAV_TREE,
-  NAV_TREE_VARIANTS_OPEN,
-} from "../../parts/nav_data.js";
+import { NAV_TREE, NAV_TREE_VARIANTS_OPEN } from "../../parts/nav_data.js";
+import { CHANGED_VARIANT_ROWS } from "../../parts/variant_nav_data.js";
 import { libraryMetadata } from "../metadata.js";
 import { destination, flag, optionalText, text } from "../schemas.js";
 
@@ -31,6 +28,7 @@ const propSchema = {
                   "component",
                   "flow",
                   "page",
+                  "document",
                   "variant",
                 ],
               },
@@ -41,6 +39,7 @@ const propSchema = {
               optional: true,
             },
             changed: { ...flag, optional: true },
+            moved: { ...flag, optional: true },
             open: { ...flag, optional: true },
             variants: {
               schema: { kind: "enum", values: ["open", "closed"] },

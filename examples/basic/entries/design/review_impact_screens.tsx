@@ -77,7 +77,7 @@ function EmptyChanges({ viewport }: { viewport: ReviewViewport }) {
         ) : null
       }
     >
-      <WelcomeHead active={viewport} />
+      <WelcomeHead active={viewport} changes />
       <PreviewWorkspace
         viewport={viewport}
         inspector={<DetailsPanel subject="welcome" />}

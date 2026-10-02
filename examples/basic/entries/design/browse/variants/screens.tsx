@@ -3,15 +3,10 @@ import { MockLink, screen } from "@mokly/mokly";
 import { PreviewWorkspace } from "../../components/parts/workspace.js";
 import { DESTINATIONS } from "../../parts/destinations.js";
 import { DetailsPanel } from "../../parts/details.js";
+import { ENTRY_PATHS, EXAMPLE_CRUMB } from "../../parts/entry_paths.js";
 import { ExampleWorkspace } from "../../parts/example_workspace.js";
 import { NavTree } from "../../parts/nav.js";
-import {
-  CHANGED_VARIANT_ROWS,
-  CHANGED_VIEW_ROWS,
-  NAV_TREE_VARIANTS_OPEN,
-  REPARENTED_REMOVED_VARIANT_ROWS,
-  REMOVED_VARIANT_ROWS,
-} from "../../parts/nav_data.js";
+import { NAV_TREE_VARIANTS_OPEN } from "../../parts/nav_data.js";
 import { PreviousVersionLabel } from "../../parts/removed_preview.js";
 import { RemovedView } from "../../parts/removed_screen.js";
 import { MiniSaveFailed } from "../../parts/removed_shots.js";
@@ -23,6 +18,12 @@ import {
   type ChangedView,
   type Crumb,
 } from "../../parts/shell.js";
+import {
+  CHANGED_VARIANT_ROWS,
+  CHANGED_VIEW_ROWS,
+  REPARENTED_REMOVED_VARIANT_ROWS,
+  REMOVED_VARIANT_ROWS,
+} from "../../parts/variant_nav_data.js";
 
 /** Only Welcome's dark renders changed, in both viewports. */
 const DARK_VIEWS: readonly ChangedView[] = [
@@ -30,7 +31,10 @@ const DARK_VIEWS: readonly ChangedView[] = [
   { viewport: "desktop", scheme: "dark" },
 ];
 
-/** A variant keeps its parent's breadcrumbs and ends in the parent's title. */
+/**
+ * A variant keeps its parent's breadcrumbs and ends in the parent's title.
+ * These Changes and removed states keep every crumb as text.
+ */
 const VARIANT_CRUMBS: readonly Crumb[] = ["Example", "Screens", "Welcome"];
 
 function SelectedVariant({ viewport }: { viewport: ArtboardViewport }) {
@@ -52,11 +56,11 @@ function SelectedVariant({ viewport }: { viewport: ArtboardViewport }) {
           <ViewSwitch active={viewport === "mobile" ? "mobile" : "both"} />
         }
         crumbs={[
-          "Example",
+          EXAMPLE_CRUMB,
           "Screens",
           { label: "Welcome", to: DESTINATIONS.welcome },
         ]}
-        idChip="example-welcome-empty"
+        path={ENTRY_PATHS.welcomeEmpty}
         title="Empty workspace"
       />
       <ExampleWorkspace empty subject="welcome" viewport={viewport} />
@@ -85,7 +89,7 @@ function ChangedVariant({ viewport }: { viewport: ArtboardViewport }) {
         action={<ViewSwitch active={viewport} />}
         comparisonMode="current"
         crumbs={VARIANT_CRUMBS}
-        idChip="example-welcome-error"
+        path={ENTRY_PATHS.welcomeError}
         status="changed"
         title="Save failed"
       />
@@ -113,7 +117,7 @@ function RemovedVariant({ viewport }: { viewport: ArtboardViewport }) {
       <ScreenHead
         action={<ViewSwitch active={viewport} />}
         crumbs={VARIANT_CRUMBS}
-        idChip="example-welcome-error"
+        path={ENTRY_PATHS.welcomeError}
         status="removed"
         title="Save failed"
       />
@@ -160,7 +164,7 @@ function ReparentedRemovedVariant({
       <ScreenHead
         action={<ViewSwitch active={viewport} />}
         crumbs={VARIANT_CRUMBS}
-        idChip="example-welcome-error"
+        path={ENTRY_PATHS.welcomeError}
         status="removed"
         title="Save failed"
       />
@@ -208,7 +212,7 @@ function ChangedViews({ viewport }: { viewport: ArtboardViewport }) {
       <ScreenHead
         action={<ViewSwitch active={viewport} changedViews={DARK_VIEWS} />}
         crumbs={["Example", "Screens"]}
-        idChip="example-welcome"
+        path={ENTRY_PATHS.welcome}
         status="unmodified"
         title="Welcome"
       />

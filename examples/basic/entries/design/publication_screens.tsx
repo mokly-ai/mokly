@@ -2,6 +2,7 @@ import { screen } from "@mokly/mokly";
 
 import { DESTINATIONS } from "./parts/destinations.js";
 import { DetailsPanel } from "./parts/details.js";
+import { ENTRY_PATHS, SCREEN_CRUMBS } from "./parts/entry_paths.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
 import { NavTree } from "./parts/nav.js";
 import {
@@ -29,8 +30,8 @@ function CatalogueView({
     >
       <ScreenHead
         comparisons={changes}
-        crumbs={["Example", "Screens"]}
-        idChip="example-welcome"
+        crumbs={SCREEN_CRUMBS}
+        path={ENTRY_PATHS.welcome}
         title="Welcome"
         action={
           <>

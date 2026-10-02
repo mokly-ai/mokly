@@ -7,7 +7,7 @@ import { ComparisonStage } from "./compare.js";
 import type { DesignDestination } from "./destinations.js";
 import { DetailsPanel } from "./details.js";
 import { ReviewNav, type ReviewState } from "./review.js";
-import { ScreenHead, Shell, ViewSwitch } from "./shell.js";
+import { ScreenHead, Shell, ViewSwitch, type Crumb } from "./shell.js";
 import { BrowserFrame, PhoneFrame } from "./stage.js";
 import type { ScreenSubject } from "./subjects.js";
 
@@ -17,6 +17,8 @@ interface ComparePageProps {
   design: DesignDestination;
   subject: ScreenSubject;
   activeTitle?: string | undefined;
+  /** Folder crumbs of a Changes state, text by default. */
+  crumbs?: readonly Crumb[] | undefined;
   /** Draws the depicted Appearance selector holding this setting. */
   appearanceChoice?: AppearanceChoice | undefined;
   /** Secondary comparison evidence; the branch-point line alone when omitted. */
@@ -24,7 +26,8 @@ interface ComparePageProps {
   /** Desktop navigation column; the Changes catalogue when omitted. */
   nav?: ReactNode;
   render: (viewport: CompareViewport) => ReactNode;
-  idChip: string;
+  /** The compared entry's path, shown in the path chip. */
+  path: string;
   mode?: "difference" | "overlay" | "side-by-side";
   state: ReviewState;
   title: string;
@@ -35,11 +38,12 @@ export function ComparePage({
   design,
   activeTitle,
   appearanceChoice,
+  crumbs,
   evidence,
   nav,
   subject,
   render,
-  idChip,
+  path,
   mode,
   state,
   title,
@@ -60,8 +64,8 @@ export function ComparePage({
         comparisons
         action={<ViewSwitch active={viewport} />}
         comparisonMode={mode ?? "side-by-side"}
-        crumbs={["Example", "Screens"]}
-        idChip={idChip}
+        crumbs={crumbs ?? ["Example", "Screens"]}
+        path={path}
         title={title}
       />
       <PreviewWorkspace

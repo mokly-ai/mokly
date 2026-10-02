@@ -13,7 +13,8 @@ import { DocumentPane, Stage } from "./stage.js";
 interface RemovedDocument {
   description: string;
   design: DesignDestination;
-  id: string;
+  /** The path the document had at the branch point. */
+  path: string;
   title: string;
 }
 
@@ -25,25 +26,25 @@ export const REMOVED_DOCUMENTS = {
   handbook: {
     description: "A handbook to accompany the example screens.",
     design: DESTINATIONS.pageRemoved,
-    id: "example-handbook",
+    path: "example/handbook/getting-started",
     title: "Getting started",
   },
   fieldGuide: {
     description: "The long companion to the handbook, read section by section.",
     design: DESTINATIONS.pageRemovedLong,
-    id: "example-field-guide",
+    path: "example/handbook/field-guide",
     title: "Field guide",
   },
   printingTips: {
     description: "Notes on printing the example catalogue.",
     design: DESTINATIONS.pageRemovedLoading,
-    id: "example-printing-tips",
+    path: "example/handbook/printing-tips",
     title: "Printing tips",
   },
   styleNotes: {
     description: "House style for the example writing.",
     design: DESTINATIONS.pageRemovedUnavailable,
-    id: "example-style-notes",
+    path: "example/handbook/style-notes",
     title: "Style notes",
   },
 } as const satisfies Record<string, RemovedDocument>;
@@ -116,7 +117,7 @@ export function RemovedPageScreen({
       <ScreenHead
         comparisons={false}
         crumbs={["Example", "Handbook"]}
-        idChip={entry.id}
+        path={entry.path}
         status="removed"
         title={entry.title}
       />

@@ -53,53 +53,66 @@ export type ComponentId = keyof typeof COMPONENTS;
 /** Identity shown by one parent or component-variant page mockup. */
 export interface ComponentEntryMetadata {
   component: ComponentId;
-  id: string;
+  /** The entry's path: its folders, the component's slug, then any variant. */
+  path: string;
   title: string;
   variantOf?: ComponentId;
 }
 
 /** Parent and variant identities used across component-page design states. */
 export const COMPONENT_ENTRIES = {
-  action: { component: "action", id: "action", title: "Action" },
+  action: {
+    component: "action",
+    path: "example/components/action",
+    title: "Action",
+  },
   actionDefault: {
     component: "action",
-    id: "action-default",
+    path: "example/components/action/default",
     title: "Default",
     variantOf: "action",
   },
   actionDisabled: {
     component: "action",
-    id: "action-disabled",
+    path: "example/components/action/disabled",
     title: "Disabled",
     variantOf: "action",
   },
   actionCompact: {
     component: "action",
-    id: "action-compact",
+    path: "example/components/action/compact",
     title: "Compact",
     variantOf: "action",
   },
-  toolbar: { component: "toolbar", id: "toolbar", title: "Toolbar" },
+  toolbar: {
+    component: "toolbar",
+    path: "example/components/toolbar",
+    title: "Toolbar",
+  },
   helpHint: {
     component: "help-hint",
-    id: "help-hint",
+    path: "example/components/help-hint",
     title: "Help hint",
   },
-  badge: { component: "badge", id: "badge", title: "Badge" },
+  badge: {
+    component: "badge",
+    path: "example/components/badge",
+    title: "Badge",
+  },
   badgeDefault: {
     component: "badge",
-    id: "badge-default",
+    path: "example/components/badge/default",
     title: "Default",
     variantOf: "badge",
   },
   checklist: {
     component: "checklist",
-    id: "checklist",
+    path: "example/components/checklist",
     title: "Checklist",
   },
   checklistDefault: {
     component: "checklist",
-    id: "checklist-default",
+    path: "example/components/checklist/default",
     title: "Default",
     variantOf: "checklist",
   },
@@ -124,25 +137,25 @@ export const COMPONENT_ENTRY_BY_STATE = {
 
 export const SCREENS = {
   welcome: {
-    id: "example-welcome",
+    path: "example/screens/welcome",
     title: "Welcome",
     source: "screens/Welcome.tsx",
     description: "A starting point with a clear next action.",
   },
   details: {
-    id: "example-details",
+    path: "example/screens/details",
     title: "Details",
     source: "screens/Details.tsx",
     description: "Everything needed for the next step.",
   },
   "reading-room": {
-    id: "example-reading-room",
+    path: "example/screens/reading-room",
     title: "Reading room",
     source: "screens/ReadingRoom.tsx",
     description: "A quiet place to pick up where you left off.",
   },
   farewell: {
-    id: "example-farewell",
+    path: "example/screens/farewell",
     title: "Farewell",
     source: "screens/Farewell.tsx",
     description: "A former screen that is no longer in the catalogue.",

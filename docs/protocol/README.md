@@ -153,7 +153,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   [logical link transformer validation](./mokly-link-transform-validation.md).
 - [Styled catalogue link controls](./mokly-link-controls.md)
 - [Shell design contract](./mokly-shell-design.md), with
-  [device chrome and preview scheme](./mokly-shell-device-chrome.md).
+  [device chrome and preview scheme](./mokly-shell-device-chrome.md) and the
+  [design screen inventory](./mokly-shell-design-inventory.md).
 - [Design mockup links](./mokly-design-links.md)
 - [Registered components in Mokly's design catalogue](./mokly-design-components.md)
   — implemented shared design components and ownership rules, with the

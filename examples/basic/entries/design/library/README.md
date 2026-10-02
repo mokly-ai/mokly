@@ -51,7 +51,11 @@ component variants use equivalent overlapping component outlines. Both stay
 muted. The changed mark is a trailing dot and never an edge or rail. Row rendering lives in
 `chrome/catalogue-navigation-row.view.tsx`, which the component owns beside its main
 view. Selected rows use the same appearance-aware contrast token for their
-labels, variant disclosures and changed marks.
+labels, variant disclosures and changed marks. The navigation splits one tree
+into **Specs** and **Components** by kind, so a folder holding both appears in
+each. A folder row is a span that only browses; a folder's README is its first
+row, a `document` row with the document icon. A `moved` row appends `· Moved`
+to its label and, like a Removed row, takes no changed mark.
 
 Comparison toolbar draws the **Scroll together** switch in every diff mode,
 between the mode group and Refresh: a native checkbox with switch semantics
@@ -82,7 +86,10 @@ calling a component; missing destinations stay non-links. Top-bar Appearance own
 header view controls own the viewport. Use ordinary `MockLink` anchors for inspector-body
 links and tag chips so they can live inside native `details` panels.
 `../parts/nav_data.ts` is the canonical catalogue-navigation fixture for both the
-saved All example and in-screen artboards, so those two views stay aligned.
+saved All example and in-screen artboards, so those two views stay aligned;
+`../parts/account_nav_data.ts` adds its Account area and moved Changes rows, and
+`../parts/variant_nav_data.ts` holds Welcome's Changes-filtered variant rows.
+`../parts/entry_paths.ts` owns the depicted paths that path chips show.
 `../parts/component_nav_data.ts` owns component parent and variant identities;
 the shared fixture and component-explorer scenarios compose its rows instead of
 copying titles or authored order.

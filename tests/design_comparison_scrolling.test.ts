@@ -135,6 +135,7 @@ test("Side by side scrolled apart leaves each version at its own place", async (
 const DIFF_MODE_DESIGNS = [
   "design-appearance-difference",
   "design-appearance-side-by-side",
+  "design-changes-moved",
   "design-changes-overlay",
   "design-changes-overlay-long",
   "design-changes-overlay-panel",

@@ -1,3 +1,4 @@
+import { EXAMPLE_CRUMB } from "../../parts/entry_paths.js";
 import { PreviousVersionLabel } from "../../parts/removed_preview.js";
 import { ScreenHead, type ArtboardViewport } from "../../parts/shell.js";
 
@@ -23,24 +24,27 @@ export function ScreenPage({
   viewport: ArtboardViewport;
 }) {
   const removed = state === "removed-consumer";
+  const scenario = removed
+    ? "removed"
+    : state === "direct-change"
+      ? "screen"
+      : "all";
   const comparison = screenComparison(state);
   const identity = screenIdentity(state);
-  const { title, id } = SCREENS[identity];
+  const { title, path } = SCREENS[identity];
   const highlighting = state === "highlight" || state === "nested";
   return (
     <ExplorerShell
       design={INSPECTION_PAGES[state]}
       active={identity}
-      scenario={
-        removed ? "removed" : state === "direct-change" ? "screen" : "all"
-      }
+      scenario={scenario}
       viewport={viewport}
     >
       <ScreenHead
         accessibleControls
         title={title}
-        crumbs={["Example", "Screens"]}
-        idChip={id}
+        crumbs={[scenario === "all" ? EXAMPLE_CRUMB : "Example", "Screens"]}
+        path={path}
         comparisonMode="current"
         comparisons={comparison?.status === "changed"}
         status={comparison?.status ?? "unmodified"}

@@ -35,7 +35,7 @@ function componentSection(
 interface ComponentHeaderExpectation {
   detailsTitle: string;
   heading: string;
-  id: string;
+  path: string;
   parent?: string;
   status: "Added" | "Changed" | "Removed" | "Unmodified";
 }
@@ -48,7 +48,7 @@ function assertComponentHeader(
   assert.equal(headTitle(document), expected.heading, id);
   assert.equal(
     textContent(byClass(document, "mbk-idchip")[0]!).trim(),
-    `#${expected.id}`,
+    expected.path,
     id,
   );
   assert.equal(
@@ -60,16 +60,18 @@ function assertComponentHeader(
   assert.ok(inspector, `${id}: missing inspector`);
   const details = textContent(inspector);
   assert.ok(details.includes(`About ${expected.detailsTitle}`), id);
+  assert.ok(details.includes(`Path ${expected.path}`), id);
   if (expected.parent === undefined) assert.doesNotMatch(details, /Variant of/);
   else assert.ok(details.includes(`Variant of${expected.parent}`), id);
 }
 
+/** Each page: design, heading, path below `example/components`, status, Details title, parent. */
 const componentPageHeaders = [
   [COMPONENT_PAGES.default, "Action", "action", "Unmodified", "Action"],
   [
     COMPONENT_PAGES.disabled,
     "Action",
-    "action-disabled",
+    "action/disabled",
     "Unmodified",
     "Disabled",
     "Action",
@@ -77,7 +79,7 @@ const componentPageHeaders = [
   [
     COMPONENT_PAGES.comparison,
     "Action",
-    "action-default",
+    "action/default",
     "Changed",
     "Default",
     "Action",
@@ -85,7 +87,7 @@ const componentPageHeaders = [
   [
     COMPONENT_PAGES.overlay,
     "Action",
-    "action-default",
+    "action/default",
     "Changed",
     "Default",
     "Action",
@@ -93,7 +95,7 @@ const componentPageHeaders = [
   [
     COMPONENT_PAGES.difference,
     "Action",
-    "action-default",
+    "action/default",
     "Changed",
     "Default",
     "Action",
@@ -101,7 +103,7 @@ const componentPageHeaders = [
   [
     COMPONENT_PAGES["overlay-tall"],
     "Checklist",
-    "checklist-default",
+    "checklist/default",
     "Changed",
     "Default",
     "Checklist",
@@ -109,7 +111,7 @@ const componentPageHeaders = [
   [
     COMPONENT_PAGES.affected,
     "Action",
-    "action-default",
+    "action/default",
     "Changed",
     "Default",
     "Action",
@@ -120,7 +122,7 @@ const componentPageHeaders = [
   [
     COMPONENT_PAGES.added,
     "Badge",
-    "badge-default",
+    "badge/default",
     "Added",
     "Default",
     "Badge",
@@ -128,7 +130,7 @@ const componentPageHeaders = [
   [
     COMPONENT_PAGES.removed,
     "Action",
-    "action-compact",
+    "action/compact",
     "Removed",
     "Compact",
     "Action",
@@ -148,7 +150,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     for (const [
       id,
       heading,
-      entryId,
+      entryPath,
       status,
       detailsTitle,
       parent,
@@ -159,7 +161,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
         {
           detailsTitle,
           heading,
-          id: entryId,
+          path: `example/components/${entryPath}`,
           ...(parent === undefined ? {} : { parent }),
           status,
         },
@@ -177,7 +179,9 @@ for (const viewport of ["mobile", "desktop"] as const) {
         {
           detailsTitle: disabled ? "Disabled" : "Default",
           heading: "Action",
-          id: disabled ? "action-disabled" : "action-default",
+          path: disabled
+            ? "example/components/action/disabled"
+            : "example/components/action/default",
           parent: "Action",
           status: state === "comparison" ? "Changed" : "Unmodified",
         },
@@ -265,6 +269,7 @@ test("component explorer and Changes mockups disclose the relevant variants", as
     [
       "design-component-overview",
       [
+        "Example",
         "Components",
         "Action",
         "Default",
@@ -278,8 +283,14 @@ test("component explorer and Changes mockups disclose the relevant variants", as
         "Default",
       ],
     ],
-    ["design-component-affected", ["Components", "Action", "Default"]],
-    ["design-component-removed", ["Components", "Action", "Compact · Removed"]],
+    [
+      "design-component-affected",
+      ["Example", "Components", "Action", "Default"],
+    ],
+    [
+      "design-component-removed",
+      ["Example", "Components", "Action", "Compact · Removed"],
+    ],
   ] as const) {
     const { document } = await designDocument(id, "desktop");
     assert.deepEqual(rowLabels(componentSection(document)), labels, id);

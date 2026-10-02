@@ -10,7 +10,7 @@ import type { ScreenHeaderProps } from "./screen-header.js";
 export function ScreenHeaderView({
   title,
   crumbs,
-  idChip,
+  path,
   status,
   comparisons,
   mode,
@@ -36,9 +36,9 @@ export function ScreenHeaderView({
           </nav>
           <div className="mbk-title-row">
             <h2>{title}</h2>
-            {idChip ? (
-              <span aria-label={`ID ${idChip}`} className="mbk-idchip">
-                #{idChip}
+            {path ? (
+              <span aria-label={`Path ${path}`} className="mbk-idchip">
+                {path}
               </span>
             ) : null}
             {status ? <changeStatusBadge.Component status={status} /> : null}
@@ -46,7 +46,7 @@ export function ScreenHeaderView({
         </div>
         {actions}
       </div>
-      {idChip && comparisons ? (
+      {path && comparisons ? (
         <comparisonToolbar.Component
           mode={mode}
           scrollTogether={scrollTogether}

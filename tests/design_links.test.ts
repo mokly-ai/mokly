@@ -95,9 +95,12 @@ for (const viewport of ["mobile", "desktop"] as const) {
         attribute(node, "data-mokly-link"),
       ]),
       [
+        ["Overview", "design-browse-folder-overview"],
         ["Welcome", "design-browse-screen"],
         ["Details", "design-browse-details-screen"],
         ["Example tour", "design-browse-use-case"],
+        ["Getting started", "design-page-view"],
+        ["Payment terms", "design-browse-document"],
         ["Action", "design-component-overview"],
         ["Default", "design-component-overview"],
         ["Disabled", "design-component-variants"],
@@ -135,7 +138,7 @@ test("every design link resolves to a real same-viewport design artifact without
     entry.id.startsWith("design-component-"),
   );
   assert.equal(componentDesigns.length, 36);
-  assert.equal(designs.length - componentDesigns.length, 63);
+  assert.equal(designs.length - componentDesigns.length, 66);
   for (const entry of designs) {
     for (const viewport of ["mobile", "desktop"] as const) {
       const { document, route } = await designDocument(entry.id, viewport);
@@ -216,7 +219,7 @@ test("the canonical documented inventory exactly matches the complete design ids
   const spec = (
     await Promise.all(
       [
-        "docs/protocol/mokly-shell-design.md",
+        "docs/protocol/mokly-shell-design-inventory.md",
         "docs/protocol/mokly-component-design.md",
         "docs/protocol/mokly-component-inspector-design.md",
         "docs/protocol/mokly-component-controls-design.md",

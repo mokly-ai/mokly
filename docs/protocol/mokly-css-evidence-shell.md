@@ -17,7 +17,7 @@ resources never produce Changes rows.
 
 The approved design is the stylesheet-evidence group of the design catalogue,
 recorded in the
-[shell design inventory](./mokly-shell-design.md#design-mockups) as
+[shell design inventory](./mokly-shell-design-inventory.md) as
 `design-review-style-matched`, `design-review-style-unresolved`,
 `design-review-style-unnamed`, and `design-review-style-excluded`. It fixes
 these presentation rules:

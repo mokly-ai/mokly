@@ -26,7 +26,7 @@ const propSchema = {
         },
       },
     },
-    idChip: optionalText,
+    path: optionalText,
     status: { ...changeStatus, optional: true },
     comparisons: flag,
     mode: comparisonMode,
@@ -37,14 +37,27 @@ const propSchema = {
 } as const;
 const slots = ["actions"] as const;
 export type ScreenHeaderProps = ComponentProps<typeof propSchema, typeof slots>;
+const home = {
+  key: "home",
+  label: "Catalogue home",
+  destination: "design-browse-home",
+} as const;
+/** The Example folder has its own page, so its crumb opens that page. */
+const example = {
+  key: "example",
+  label: "Example",
+  destination: "design-browse-folder-overview",
+} as const;
+/** Changes and removed entries keep their folder crumbs as text. */
+const textCrumbs = [
+  home,
+  { key: "example", label: "Example" },
+  { key: "screens", label: "Screens" },
+] as const;
 const sample = {
   title: "Welcome",
-  crumbs: [
-    { key: "home", label: "Catalogue home", destination: "design-browse-home" },
-    { key: "example", label: "Example" },
-    { key: "screens", label: "Screens" },
-  ],
-  idChip: "welcome",
+  crumbs: [home, example, { key: "screens", label: "Screens" }],
+  path: "example/screens/welcome",
   comparisons: false,
   mode: "current",
   scrollTogether: true,
@@ -56,7 +69,7 @@ export const screenHeader = defineComponent({
     "chrome",
     "screen-header",
     "Screen header",
-    "Catalogue location, title, identity and change status.",
+    "Catalogue location, title, path and change status.",
   ),
   propSchema,
   slots,
@@ -79,23 +92,30 @@ export const screenHeader = defineComponent({
       title: "Component",
       props: {
         ...sample,
+        crumbs: [home, example, { key: "components", label: "Components" }],
         title: "Action",
-        idChip: "action",
+        path: "example/components/action",
         status: "unmodified",
       },
     },
     {
       id: "design-ui-screen-header-changed",
       title: "Changed",
-      props: { ...sample, status: "changed", comparisons: true },
+      props: {
+        ...sample,
+        crumbs: textCrumbs,
+        status: "changed",
+        comparisons: true,
+      },
     },
     {
       id: "design-ui-screen-header-removed",
       title: "Removed",
       props: {
         ...sample,
+        crumbs: textCrumbs,
         title: "Farewell",
-        idChip: "farewell",
+        path: "example/screens/farewell",
         status: "removed",
         comparisons: true,
       },

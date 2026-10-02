@@ -12,6 +12,7 @@ import {
   type DesignDestination,
 } from "./parts/destinations.js";
 import { DetailsPanel } from "./parts/details.js";
+import { ENTRY_PATHS } from "./parts/entry_paths.js";
 import { MiniWelcomeApp } from "./parts/mini_app_shell.js";
 import { MiniWelcome, MiniWelcomePage } from "./parts/mini_screens.js";
 import { ReviewNav } from "./parts/review.js";
@@ -152,7 +153,7 @@ function ChangesScreen({
         scrollTogether={state !== "side-by-side-apart"}
         action={<ViewSwitch active={viewport} />}
         crumbs={["Example", "Screens"]}
-        idChip="example-welcome"
+        path={ENTRY_PATHS.welcome}
         title="Welcome"
       />
       <PreviewWorkspace

@@ -1,15 +1,18 @@
 import { folder, defineRoot } from "@mokly/mokly";
 
 import { appearanceDesign } from "./browse/appearance/index.js";
+import { documentScreen } from "./browse/pages/document-screen.js";
 import { removedPageScreens } from "./browse/pages/previous-version/screens.js";
 import { variantScreens } from "./browse/variants/screens.js";
 import { detailsScreen } from "./browse/views/details-screen.js";
+import { folderOverviewScreen } from "./browse/views/folder-overview.js";
 import { browseStateScreens, browseViewScreens } from "./browse_screens.js";
 import { browseTagScreens } from "./browse_tag_screens.js";
 import { changesScreens } from "./changes_screens.js";
 import { componentDesign } from "./components/index.js";
 import { pageScreens } from "./page_screens.js";
 import { publicationScreens } from "./publication_screens.js";
+import { movedScreen } from "./review/outcomes/moved.js";
 import { removedOutcomeScreens } from "./review/outcomes/previous-version/screens.js";
 import { reviewAvailabilityScreens } from "./review_availability_screens.js";
 import { reviewImpactScreens } from "./review_impact_screens.js";
@@ -28,7 +31,7 @@ const designMockups = defineRoot({
     folder({
       children: [
         folder({
-          children: [...browseViewScreens, detailsScreen],
+          children: [...browseViewScreens, detailsScreen, folderOverviewScreen],
           title: "Catalogue views",
         }),
         folder({
@@ -42,6 +45,7 @@ const designMockups = defineRoot({
         folder({
           children: [
             ...pageScreens,
+            documentScreen,
             folder({
               children: removedPageScreens,
               title: "Previous document versions",
@@ -66,6 +70,7 @@ const designMockups = defineRoot({
         folder({
           children: [
             ...reviewOutcomeScreens,
+            movedScreen,
             folder({
               children: removedOutcomeScreens,
               title: "Previous screen versions",

@@ -1,8 +1,8 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestone 1 is complete; Milestone 2 has not
-started. This plan supersedes
+discussion in this workspace. Milestones 1 and 2 are complete. This plan
+supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -244,28 +244,45 @@ Mokly's shell mockups are the design screens under
 presentation before implementation. Author them with the current API; the
 example migrates to the new API in Milestone 3.
 
-- [ ] Update the browse screens (`design-browse-home`,
+- [x] Update the browse screens (`design-browse-home`,
       `design-browse-navigation`, `design-browse-screen`,
       `design-browse-details`) and the page screens (`design-page-navigation`,
       `design-page-view`): the Specs section header, browse-only folder rows,
       an Overview row under a folder with a README, unchanged variant rows,
       and breadcrumbs that end in a folder page.
-- [ ] Add `design-browse-folder-overview`: a folder's README open in the
+- [x] Add `design-browse-folder-overview`: a folder's README open in the
       content area with its Overview row current.
-- [ ] Add `design-browse-document`: a Markdown document rendered with the
+- [x] Add `design-browse-document`: a Markdown document rendered with the
       shell typography, breadcrumbs, and the details panel.
-- [ ] Add `design-changes-moved`: Changes rows labelled "Moved", with the
+- [x] Add `design-changes-moved`: Changes rows labelled "Moved", with the
       previous path in the details panel, and the Overlay view for a moved
       screen.
-- [ ] Update the component design screens under
+- [x] Update the component design screens under
       `examples/basic/entries/design/components` so the Components section is
       the kind-filtered tree and details show component paths.
-- [ ] Give every new screen a mobile and a desktop variant, keep it reachable
+- [x] Give every new screen a mobile and a desktop variant, keep it reachable
       from the existing design flows and folders, and keep annotations outside
       the screen area.
-- [ ] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+- [x] Replace the id chip with the path chip in every design screen header,
+      using one depicted path per entry, so no artboard keeps the `#id` form.
+- [x] Give the depicted catalogue one fixture tree in the path model: the
+      Example README as its Overview row, the Getting started page, an
+      Account › Billing & Payments area, the Example folder in both sections,
+      and a branch that moves `billing` under `account`.
+- [x] Move the shell design screen inventory into
+      `docs/protocol/mokly-shell-design-inventory.md`, lower the
+      `mokly-shell-design.md` cap, and record the depicted catalogue, its
+      transitions, the Moved row, the document icon, and the new Details rows
+      in the shell, design-link, component-design, and library contracts.
+- [x] Remove the stale `oversizedCaps` entries for `mokly-comparison-panes.md`
+      and `mokly-removed-previews.md`, which the contract split left at or
+      below 250 lines and which stopped the repository ratchet from running.
+- [x] Update the design unit tests that pin the changed content: section ids,
+      path chips, row lists, breadcrumbs, Changes rows and counts, the diff-mode
+      inventory, and the documented screen counts.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
       and smoke-test the changed pages through `npm run dev`.
-- [ ] Commit and push.
+- [x] Commit and push.
 
 ## Milestone 3: Identity core
 

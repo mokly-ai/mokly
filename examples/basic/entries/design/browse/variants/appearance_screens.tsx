@@ -1,6 +1,7 @@
 import type { ScreenVariantInput } from "@mokly/mokly";
 
 import { DESTINATIONS } from "../../parts/destinations.js";
+import { ENTRY_PATHS } from "../../parts/entry_paths.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 import {
   AppearanceHead,
@@ -29,7 +30,7 @@ function SchemeVariant({
       viewport={viewport}
     >
       <AppearanceHead
-        idChip={details ? "example-details" : "example-welcome"}
+        path={details ? ENTRY_PATHS.details : ENTRY_PATHS.welcome}
         title={details ? "Details" : "Welcome"}
         viewport={viewport}
       />

@@ -58,13 +58,13 @@ for (const viewport of ["mobile", "desktop"] as const) {
     assert.equal(headTitle(document), "Empty workspace");
     assert.deepEqual(headCrumbs(document), [
       ["Catalogue home", "design-browse-home"],
-      ["Example", undefined],
+      ["Example", "design-browse-folder-overview"],
       ["Screens", undefined],
       ["Welcome", "design-browse-screen"],
     ]);
     assert.equal(
       textContent(byClass(document, "mbk-idchip")[0]!).trim(),
-      "#example-welcome-empty",
+      "example/screens/welcome/empty",
     );
     const shot = byClass(document, "mbk-shot")[0];
     assert.ok(shot);
@@ -179,8 +179,9 @@ test("a selected variant discloses its parent's variant rows", async () => {
   assert.ok(leaf);
   assert.equal(byClass(leaf, "mbk-nav-row").length, 1);
   const rows = byClass(document, "mbk-nav-row");
-  assert.deepEqual(rows.map(rowLabel).slice(0, 5), [
+  assert.deepEqual(rows.map(rowLabel).slice(0, 6), [
     "Example",
+    "Overview",
     "Screens",
     "Welcome",
     "Empty workspace",

@@ -1,3 +1,5 @@
+import { DESTINATIONS, type DesignDestination } from "./destinations.js";
+import { PREVIOUS_PATHS } from "./entry_paths.js";
 import type { CatalogueTag } from "./tags.js";
 
 /** Product subjects depicted by the design catalogue, independent of link ids. */
@@ -10,11 +12,16 @@ export type ScreenSubject =
   | "archive"
   | "timeline"
   | "welcomeError"
-  | "welcomeErrorReparented";
+  | "welcomeErrorReparented"
+  | "invoice";
 
 interface SubjectMetadata {
   description: string;
+  /** The path a moved entry had at the branch point. */
+  previousPath?: string;
   rationale: string;
+  /** A related document that is itself a catalogue entry, opened by its row. */
+  relatedDocument?: { title: string; to: DesignDestination };
   /** Whether the entry names a document a reader can still open. */
   relatedDocs: boolean;
   schemes: string;
@@ -91,6 +98,19 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
     schemes: "light, dark",
     source: "Previous version",
     tags: ["forms"],
+    tour: false,
+  },
+  invoice: {
+    description:
+      "An invoice with its line items, the amount due, and a way to pay.",
+    previousPath: PREVIOUS_PATHS.invoice,
+    rationale:
+      "Customers open an invoice to see what they owe and pay it, so the amount due and the payment action come first.",
+    relatedDocument: { title: "Payment terms", to: DESTINATIONS.document },
+    relatedDocs: false,
+    schemes: "light",
+    source: "specs/account/billing/invoice.mockup.tsx",
+    tags: [],
     tour: false,
   },
   welcomeErrorReparented: {

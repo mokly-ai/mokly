@@ -1,6 +1,7 @@
 import { screen } from "@mokly/mokly";
 
 import { DESTINATIONS } from "../../../parts/destinations.js";
+import { ENTRY_PATHS } from "../../../parts/entry_paths.js";
 import type { ArtboardViewport } from "../../../parts/shell.js";
 import {
   AppearanceHead,
@@ -16,7 +17,7 @@ function LightOnlyScreen({ viewport }: { viewport: ArtboardViewport }) {
       viewport={viewport}
     >
       <AppearanceHead
-        idChip="example-details"
+        path={ENTRY_PATHS.details}
         title="Details"
         viewport={viewport}
       />
@@ -34,7 +35,7 @@ function AutoAppearance({ viewport }: { viewport: ArtboardViewport }) {
       viewport={viewport}
     >
       <AppearanceHead
-        idChip="example-welcome"
+        path={ENTRY_PATHS.welcome}
         title="Welcome"
         viewport={viewport}
       />

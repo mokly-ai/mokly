@@ -7,6 +7,7 @@ import { CompareGrid, Pane } from "./parts/compare.js";
 import { ComparePage, FramedShot } from "./parts/compare_page.js";
 import { DESTINATIONS, type DesignDestination } from "./parts/destinations.js";
 import { DetailsPanel } from "./parts/details.js";
+import { ENTRY_PATHS } from "./parts/entry_paths.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
 import { NavTree } from "./parts/nav.js";
 import {
@@ -34,7 +35,7 @@ function StyleComparison({
     <ComparePage
       design={design}
       evidence={evidence}
-      idChip="example-welcome"
+      path={ENTRY_PATHS.welcome}
       nav={<StyleReviewNav welcome={design} />}
       state="styles-changed"
       subject="welcome"

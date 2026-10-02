@@ -9,6 +9,7 @@ import {
 } from "./parts/compare_page.js";
 import { ComparisonStack, deviceChrome } from "./parts/compare_stack.js";
 import { DESTINATIONS } from "./parts/destinations.js";
+import { ENTRY_PATHS } from "./parts/entry_paths.js";
 import { ExampleWorkspace } from "./parts/example_workspace.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
 import { REMOVED_SCREENS } from "./parts/nav_data.js";
@@ -24,7 +25,7 @@ function ChangedCompare({ viewport }: { viewport: CompareViewport }) {
       design={DESTINATIONS.changed}
       activeTitle="Welcome"
       subject="welcome"
-      idChip="example-welcome"
+      path={ENTRY_PATHS.welcome}
       state="changed"
       title="Welcome"
       viewport={viewport}
@@ -68,7 +69,7 @@ function AddedCurrent({ viewport }: { viewport: CompareViewport }) {
       <ScreenHead
         action={<ViewSwitch active={viewport} />}
         crumbs={["Example", "Screens"]}
-        idChip="example-details"
+        path={ENTRY_PATHS.details}
         status="added"
         title="Details"
       />
@@ -107,7 +108,7 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
       design={DESTINATIONS.difference}
       activeTitle="Welcome"
       subject="welcome"
-      idChip="example-welcome"
+      path={ENTRY_PATHS.welcome}
       mode="difference"
       state="changed"
       title="Welcome"

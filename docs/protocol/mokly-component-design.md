@@ -19,11 +19,10 @@ saved variant's two versions in one bordered frame whose viewport scrolls both
 as one. Their comparison bands also depict the implemented Scroll together
 switch of the
 [Scroll together contract](./mokly-comparison-scroll-together.md#reader-control).
-The path-derived files, the Specs section, and the component paths in details
-below are the approved contract; the
-[path identity plan](../../plans/path-identity.md) adds the kind-filtered
-Components section and component-path details to these designs and migrates
-the catalogue, which still authors ids, to paths.
+The path-derived files, the Specs section, and the component paths in Details
+below are the approved contract. These designs depict the kind-filtered
+sections and component paths; the catalogue still authors ids until the
+[path identity plan](../../plans/path-identity.md) migrates it to paths.
 
 ## Owning Catalogue
 
@@ -100,7 +99,12 @@ spans for unsupported controls.
 
 Reuse the existing top bar, split navigation tree, screen heading, comparison band,
 stage, and comparison controls, adding the shared icon inspector and compact view toolbar. Components use a small cube
-icon in the Components section and its authored Components folder. Desktop keeps the resizable navigation;
+icon in the Components section. Both sections are views of one tree, so the
+`Example` folder appears above `Screens` in Specs and above its `Components`
+library in Components, and component crumbs read `Example › Components`. The
+path chip and Details show the shown entry's path, such as
+`example/components/action/default`, with Details listing it above the source.
+Desktop keeps the resizable navigation;
 mobile keeps the compact header and adds short Screen/Components/Changes links
 above the heading so the relevant destinations and change count remain visible.
 

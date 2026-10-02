@@ -5,43 +5,12 @@ import { ExampleDocument } from "../document.js";
 import { useDesignNavigation } from "./parts/design_navigation.js";
 import { DESTINATIONS } from "./parts/destinations.js";
 import { DetailsPanel } from "./parts/details.js";
+import { ENTRY_PATHS, EXAMPLE_CRUMB } from "./parts/entry_paths.js";
 import { MetaRow } from "./parts/metadata_row.js";
-import { NavDrawer, NavTree, type NavNode } from "./parts/nav.js";
+import { NavDrawer, NavTree } from "./parts/nav.js";
 import { REMOVED_DOCUMENTS, RemovedPageScreen } from "./parts/removed_page.js";
 import { ScreenHead, Shell, type ArtboardViewport } from "./parts/shell.js";
 import { DocumentPane, Stage } from "./parts/stage.js";
-
-const nodes: readonly NavNode[] = [
-  {
-    key: "example",
-    kind: "folder",
-    label: "Example",
-    count: 3,
-    depth: 0,
-    open: true,
-  },
-  {
-    key: "welcome",
-    kind: "screen",
-    label: "Welcome",
-    depth: 1,
-    to: DESTINATIONS.welcome,
-  },
-  {
-    key: "tour",
-    kind: "flow",
-    label: "Example tour",
-    depth: 1,
-    to: DESTINATIONS.tour,
-  },
-  {
-    key: "handbook",
-    kind: "page",
-    label: "Getting started",
-    depth: 1,
-    to: DESTINATIONS.page,
-  },
-];
 
 function PageDetails({ open = false }: { open?: boolean }) {
   const navigation = useDesignNavigation();
@@ -78,9 +47,7 @@ function PageView({
   details?: boolean;
   drawer?: boolean;
 }) {
-  const nav = (
-    <NavTree activeLabel="Getting started" changedCount={1} nodes={nodes} />
-  );
+  const nav = <NavTree activeDestination={DESTINATIONS.page} />;
   return (
     <Shell
       design={
@@ -94,18 +61,14 @@ function PageView({
       nav={nav}
       aside={
         viewport === "mobile" && drawer ? (
-          <NavDrawer
-            activeLabel="Getting started"
-            changedCount={1}
-            nodes={nodes}
-          />
+          <NavDrawer activeDestination={DESTINATIONS.page} />
         ) : null
       }
     >
       <ScreenHead
         comparisons={false}
-        crumbs={["Example"]}
-        idChip="example-handbook"
+        crumbs={[EXAMPLE_CRUMB]}
+        path={ENTRY_PATHS.gettingStarted}
         title="Getting started"
       />
       <Stage>

@@ -18,7 +18,8 @@ type RemovedViewport = "desktop" | "mobile";
 
 interface RemovedScreenEntry {
   design: DesignDestination;
-  id: string;
+  /** The path the screen had at the branch point. */
+  path: string;
   title: string;
 }
 
@@ -68,7 +69,7 @@ export function RemovedScreen({
       <ScreenHead
         action={<ViewSwitch active={selection ?? viewport} />}
         crumbs={["Example", "Screens"]}
-        idChip={entry.id}
+        path={entry.path}
         status="removed"
         title={entry.title}
       />

@@ -5,6 +5,7 @@ import {
   type AppearanceChoice,
 } from "../../../parts/appearance.js";
 import type { DesignDestination } from "../../../parts/destinations.js";
+import { SCREEN_CRUMBS } from "../../../parts/entry_paths.js";
 import { SchemeWorkspace } from "../../../parts/example_workspace.js";
 import { MiniWelcome } from "../../../parts/mini_screens.js";
 import { NavTree } from "../../../parts/nav.js";
@@ -13,6 +14,7 @@ import {
   Shell,
   ViewSwitch,
   type ArtboardViewport,
+  type Crumb,
 } from "../../../parts/shell.js";
 import { BrowserFrame, PhoneFrame } from "../../../parts/stage.js";
 
@@ -76,8 +78,10 @@ export function WelcomeShot({ viewport }: { viewport: ArtboardViewport }) {
 export const AppearanceWorkspace = SchemeWorkspace;
 
 interface AppearanceHeadProps {
-  crumbs?: readonly string[];
-  idChip: string;
+  /** Folder crumbs; a current screen's crumbs from All by default. */
+  crumbs?: readonly Crumb[];
+  /** The depicted entry's path, shown in the path chip. */
+  path: string;
   /** Selected preview; omit the control on a route with no device previews. */
   preview?: "both" | "desktop" | "mobile" | "none";
   title: string;
@@ -90,7 +94,7 @@ interface AppearanceHeadProps {
  */
 export function AppearanceHead({
   crumbs,
-  idChip,
+  path,
   preview,
   title,
   viewport,
@@ -103,8 +107,8 @@ export function AppearanceHead({
       {...(selection === "none"
         ? {}
         : { action: <ViewSwitch active={selection} /> })}
-      crumbs={crumbs ?? ["Example", "Screens"]}
-      idChip={idChip}
+      crumbs={crumbs ?? SCREEN_CRUMBS}
+      path={path}
       title={title}
     />
   );

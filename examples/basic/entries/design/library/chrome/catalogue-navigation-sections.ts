@@ -1,7 +1,7 @@
 import type { CatalogueNavigationProps } from "./catalogue-navigation.js";
 
 export type NavigationRow = CatalogueNavigationProps["rows"][number];
-type NavigationSectionId = "components" | "pages";
+type NavigationSectionId = "components" | "specs";
 
 interface NavigationBranch {
   children: NavigationBranch[];
@@ -51,8 +51,8 @@ function projectBranch(
     const projected = projectBranch(child, section);
     return projected ? [projected] : [];
   });
-  const emptyPageFolder = section === "pages" && branch.children.length === 0;
-  if (children.length === 0 && !emptyPageFolder) return undefined;
+  const emptySpecsFolder = section === "specs" && branch.children.length === 0;
+  if (children.length === 0 && !emptySpecsFolder) return undefined;
   const { count: _count, ...row } = branch.row;
   return {
     children,
@@ -69,9 +69,15 @@ function flattenBranches(
   ]);
 }
 
+/**
+ * Split the one depicted tree by kind: Components holds component entries and
+ * the folders that contain them, and Specs holds every other kind. A folder
+ * holding both kinds appears in each section with only that section's
+ * children, so both sections stay views of the same folders.
+ */
 export function navigationSections(rows: readonly NavigationRow[]) {
   const forest = navigationForest(rows);
-  return (["pages", "components"] as const).flatMap((id) => {
+  return (["specs", "components"] as const).flatMap((id) => {
     const projected = forest.flatMap((branch) => {
       const section = projectBranch(branch, id);
       return section ? [section] : [];
@@ -81,7 +87,7 @@ export function navigationSections(rows: readonly NavigationRow[]) {
       ? [
           {
             id,
-            label: id === "pages" ? "Pages" : "Components",
+            label: id === "specs" ? "Specs" : "Components",
             rows: sectionRows,
           },
         ]

@@ -7,6 +7,7 @@ import {
   type DesignDestination,
 } from "../../../parts/destinations.js";
 import { DetailsPanel } from "../../../parts/details.js";
+import { ENTRY_PATHS, EXAMPLE_CRUMB } from "../../../parts/entry_paths.js";
 import { MiniDetails, MiniWelcome } from "../../../parts/mini_screens.js";
 import type { ChangesStatus } from "../../../parts/nav.js";
 import { AvailabilityNav } from "../../../parts/review.js";
@@ -54,7 +55,7 @@ function ErrorAndRetry({ viewport }: { viewport: ArtboardViewport }) {
       viewport={viewport}
     >
       <AppearanceHead
-        idChip="example-welcome"
+        path={ENTRY_PATHS.welcome}
         preview={viewport}
         title="Welcome"
         viewport={viewport}
@@ -96,7 +97,8 @@ function AvailabilityScreen({
       viewport={viewport}
     >
       <AppearanceHead
-        idChip="example-welcome"
+        crumbs={["Example", "Screens"]}
+        path={ENTRY_PATHS.welcome}
         title="Welcome"
         viewport={viewport}
       />
@@ -117,8 +119,8 @@ function UseCaseFlow({ viewport }: { viewport: ArtboardViewport }) {
       viewport={viewport}
     >
       <AppearanceHead
-        crumbs={["Example"]}
-        idChip="example-tour"
+        crumbs={[EXAMPLE_CRUMB]}
+        path={ENTRY_PATHS.tour}
         preview="none"
         title="Example tour"
         viewport={viewport}

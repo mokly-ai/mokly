@@ -79,7 +79,7 @@ Controls below use text, boolean, number and primitive enum selections only.
    it composes the registered picker, chip and appearance selector. Preserve compact mobile branding.
 2. **Catalogue navigation:** row records with stable key, label, kind
    `folder/screen/component/flow/page/document/variant`, depth, optional
-   count/open/destination, changed mark, and variant-list state; a variant row
+   count/open/destination, changed mark, moved flag, and variant-list state; a variant row
    requires `variantParentKind: "screen" | "component"`; selected destination,
    All/Changes state, changed count and presentation
    `responsive/drawer`, and optional Changes availability
@@ -90,7 +90,9 @@ Controls below use text, boolean, number and primitive enum selections only.
    screen and component variants remain distinct and muted. A parent carrying a variant list adds a trailing 16px
    chevron disclosure button with its own expanded state and accessible name;
    the row link is unchanged. The changed mark is a trailing dot, never an edge or
-   rail. Pending and preparing
+   rail. A moved row's label ends in `· Moved` and, like a Removed row, it takes
+   no changed mark; its disclosure keeps the entry's own title as its name. The
+   sections are `Specs` and `Components`, one tree filtered by kind. Pending and preparing
    both reserve the count slot with a spinner and replace selected Changes rows
    with their own message; only preparing adds a secondary detail line beneath
    its title. Unavailable keeps the tabs with a dash and one plain message for

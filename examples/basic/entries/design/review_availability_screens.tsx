@@ -3,6 +3,7 @@ import { screen } from "@mokly/mokly";
 import { PreviewWorkspace } from "./components/parts/workspace.js";
 import { DESTINATIONS, type DesignDestination } from "./parts/destinations.js";
 import { DetailsPanel } from "./parts/details.js";
+import { ENTRY_PATHS } from "./parts/entry_paths.js";
 import { MiniWelcome } from "./parts/mini_screens.js";
 import type { ChangesStatus } from "./parts/nav.js";
 import { AvailabilityNav } from "./parts/review.js";
@@ -53,7 +54,7 @@ function AvailabilityScreen({
       <ScreenHead
         action={<ViewSwitch active={viewport} />}
         crumbs={["Example", "Screens"]}
-        idChip="example-welcome"
+        path={ENTRY_PATHS.welcome}
         title="Welcome"
       />
       <PreviewWorkspace

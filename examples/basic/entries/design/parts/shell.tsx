@@ -95,7 +95,8 @@ interface ScreenHeadProps {
   accessibleControls?: boolean;
   action?: ReactNode;
   crumbs: readonly Crumb[];
-  idChip?: string;
+  /** The depicted entry's path, shown in the path chip. */
+  path?: string;
   comparisonMode?: "current" | "difference" | "overlay" | "side-by-side";
   comparisons?: boolean;
   /** The Scroll together switch a diff mode draws; on unless set otherwise. */
@@ -104,12 +105,12 @@ interface ScreenHeadProps {
   title: string;
 }
 
-/** The white head band: breadcrumbs, title, id chip, and status. */
+/** The white head band: breadcrumbs, title, path chip, and status. */
 export function ScreenHead({
   accessibleControls,
   action,
   crumbs,
-  idChip,
+  path,
   comparisonMode,
   comparisons = false,
   scrollTogether = true,
@@ -138,7 +139,7 @@ export function ScreenHead({
       scrollTogether={scrollTogether}
       accessible={accessibleControls ?? false}
       destinations={navigation.comparison ?? {}}
-      {...optional("idChip", idChip)}
+      {...optional("path", path)}
       {...optional("status", status)}
       actions={action}
     />

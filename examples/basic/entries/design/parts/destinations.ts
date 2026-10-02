@@ -3,6 +3,8 @@ import type { ComponentDesignDestination } from "../components/parts/destination
 /** Stable catalogue destinations, independent of the depicted product ids. */
 export const DESTINATIONS = {
   home: "design-browse-home",
+  exampleOverview: "design-browse-folder-overview",
+  document: "design-browse-document",
   page: "design-page-view",
   pageDetails: "design-page-details",
   pageNavigation: "design-page-navigation",
@@ -49,6 +51,7 @@ export const DESTINATIONS = {
   overlayPanel: "design-changes-overlay-panel",
   sideBySideApart: "design-changes-side-by-side-apart",
   changed: "design-review-changed",
+  moved: "design-changes-moved",
   added: "design-review-added",
   removed: "design-review-removed",
   removedLong: "design-review-removed-long",

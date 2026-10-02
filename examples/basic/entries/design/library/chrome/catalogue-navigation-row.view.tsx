@@ -7,6 +7,7 @@ import {
   ChevronIcon,
   ComponentIcon,
   ComponentVariantIcon,
+  DocumentIcon,
   FlowIcon,
   FolderIcon,
   FolderOpenIcon,
@@ -51,6 +52,7 @@ function navRowStyle(depth: number): CSSProperties {
 function RowIcon({ node }: { node: NavigationRow }) {
   if (node.kind === "component") return <ComponentIcon />;
   if (node.kind === "page") return <PageIcon />;
+  if (node.kind === "document") return <DocumentIcon />;
   if (node.kind === "flow") return <FlowIcon />;
   if (node.kind === "variant")
     return node.variantParentKind === "component" ? (
@@ -86,6 +88,12 @@ function VariantsToggle({ label, open }: { label: string; open: boolean }) {
   );
 }
 
+/**
+ * One catalogue row. A folder row is a span that only browses; an entry row
+ * links to its destination when it has one. A moved entry's label ends in
+ * `· Moved` and, like a Removed row, carries no changed mark, while its variant
+ * disclosure keeps the entry's own title as its accessible name.
+ */
 export function NavRow({
   activeDestination,
   activeKey,
@@ -105,12 +113,13 @@ export function NavRow({
         ? node.to === activeDestination
         : activeLabel !== undefined && node.label === activeLabel);
   const className = isActive ? "mbk-nav-row active" : "mbk-nav-row";
-  const mark = node.changed ? (
-    <>
-      <span className="mbk-nav-changed" aria-hidden="true" />
-      <span className="mbk-nav-changed-text">Changed</span>
-    </>
-  ) : null;
+  const mark =
+    node.changed && !node.moved ? (
+      <>
+        <span className="mbk-nav-changed" aria-hidden="true" />
+        <span className="mbk-nav-changed-text">Changed</span>
+      </>
+    ) : null;
   if (node.kind === "folder") {
     return (
       <span className={className} style={navRowStyle(node.depth)}>
@@ -129,7 +138,7 @@ export function NavRow({
       <span className={iconClassName(node.kind)} aria-hidden="true">
         <RowIcon node={node} />
       </span>
-      {node.label}
+      {node.moved ? `${node.label} · Moved` : node.label}
       {mark}
     </>
   );

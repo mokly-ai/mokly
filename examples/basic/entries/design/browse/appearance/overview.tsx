@@ -1,6 +1,7 @@
 import { screen } from "@mokly/mokly";
 
 import { DESTINATIONS } from "../../parts/destinations.js";
+import { ENTRY_PATHS } from "../../parts/entry_paths.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
 
 import {
@@ -18,7 +19,7 @@ function AppearanceOverview({ viewport }: { viewport: ArtboardViewport }) {
       viewport={viewport}
     >
       <AppearanceHead
-        idChip="example-welcome"
+        path={ENTRY_PATHS.welcome}
         title="Welcome"
         viewport={viewport}
       />

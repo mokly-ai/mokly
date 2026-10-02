@@ -1,6 +1,7 @@
 import { screen } from "@mokly/mokly";
 
 import { DESTINATIONS } from "../../parts/destinations.js";
+import { ENTRY_PATHS, EXAMPLE_CRUMB } from "../../parts/entry_paths.js";
 import { MiniDetails, MiniWelcome } from "../../parts/mini_screens.js";
 import { NavTree } from "../../parts/nav.js";
 import { ScreenHead, Shell } from "../../parts/shell.js";
@@ -54,8 +55,8 @@ function UseCaseHead() {
   return (
     <ScreenHead
       comparisons={false}
-      crumbs={["Example"]}
-      idChip="example-tour"
+      crumbs={[EXAMPLE_CRUMB]}
+      path={ENTRY_PATHS.tour}
       title="Example tour"
     />
   );

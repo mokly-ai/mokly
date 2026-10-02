@@ -13,6 +13,7 @@ import {
 import { ComparisonStack, deviceChrome } from "../../../parts/compare_stack.js";
 import { DesignNavigation } from "../../../parts/design_navigation.js";
 import { DESTINATIONS } from "../../../parts/destinations.js";
+import { ENTRY_PATHS } from "../../../parts/entry_paths.js";
 import { MiniWelcome } from "../../../parts/mini_screens.js";
 import { NavDrawer } from "../../../parts/nav.js";
 import { ReviewNav } from "../../../parts/review.js";
@@ -114,7 +115,7 @@ function SideBySideCompare({ viewport }: { viewport: CompareViewport }) {
     <ComparePage
       activeTitle="Welcome"
       design={DESTINATIONS.appearanceSideBySide}
-      idChip="example-welcome"
+      path={ENTRY_PATHS.welcome}
       nav={<ReviewNav activeTitle="Welcome" />}
       render={(previewViewport) => (
         <CompareGrid>
@@ -134,7 +135,7 @@ function DifferenceCompare({ viewport }: { viewport: CompareViewport }) {
     <ComparePage
       activeTitle="Welcome"
       design={DESTINATIONS.appearanceDifference}
-      idChip="example-welcome"
+      path={ENTRY_PATHS.welcome}
       mode="difference"
       nav={<ReviewNav activeTitle="Welcome" />}
       render={(previewViewport) => <WelcomeStack viewport={previewViewport} />}

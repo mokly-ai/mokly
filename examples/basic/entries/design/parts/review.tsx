@@ -1,3 +1,4 @@
+import { MOVED_ROWS } from "./account_nav_data.js";
 import { DESTINATIONS, type DesignDestination } from "./destinations.js";
 import { MiniWelcome } from "./mini_screens.js";
 import { NavDrawer, NavTree, type ChangesStatus, type NavNode } from "./nav.js";
@@ -36,6 +37,7 @@ const CHANGED_NODES: readonly NavNode[] = [
     label: "Details",
     to: DESTINATIONS.added,
   },
+  ...MOVED_ROWS,
   ...REMOVED_SCREEN_ROWS.map((entry) => ({
     key: entry.key,
     depth: 0,

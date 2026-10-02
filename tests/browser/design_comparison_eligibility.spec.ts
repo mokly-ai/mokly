@@ -19,6 +19,7 @@ const manifest = JSON.parse(
 const changedDesigns = new Set([
   "design-browse-variant-changes",
   "design-changes-current",
+  "design-changes-moved",
   "design-changes-overlay",
   "design-changes-overlay-long",
   "design-changes-overlay-panel",

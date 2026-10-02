@@ -62,7 +62,7 @@ test("the Welcome conversion keeps the approved screens as variants, not folder 
 });
 
 for (const viewport of ["mobile", "desktop"] as const) {
-  test(`${viewport}: catalogue navigation separates pages and components`, async () => {
+  test(`${viewport}: catalogue navigation separates specs and components`, async () => {
     const { document } = await designDocument(
       viewport === "mobile" ? "design-browse-navigation" : "design-browse-home",
       viewport,
@@ -70,14 +70,21 @@ for (const viewport of ["mobile", "desktop"] as const) {
     const sections = byClass(document, "mbk-nav-section");
     assert.deepEqual(
       sections.map((section) => attribute(section, "data-nav-section")),
-      ["pages", "components"],
+      ["specs", "components"],
     );
     assert.ok(sections.every((section) => attribute(section, "open") === ""));
-    const pages = textContent(sections[0] ?? document);
+    assert.deepEqual(
+      sections.map((section) =>
+        textContent(byClass(section, "mbk-nav-section-head")[0]!).trim(),
+      ),
+      ["Specs", "Components"],
+    );
+    const specs = textContent(sections[0] ?? document);
     const components = textContent(sections[1] ?? document);
-    assert.match(pages, /Welcome/);
-    assert.match(pages, /Example tour/);
-    assert.doesNotMatch(pages, /Action|Toolbar/);
+    assert.match(specs, /Welcome/);
+    assert.match(specs, /Example tour/);
+    assert.match(specs, /Overview/);
+    assert.doesNotMatch(specs, /Action|Toolbar/);
     assert.match(components, /Action/);
     assert.match(components, /Toolbar/);
     assert.doesNotMatch(components, /Welcome|Example tour/);

@@ -15,7 +15,7 @@ variants.
 
 The note for a selected viewport with no captured historical view is fixed
 here and depicted by the design catalogue's
-[no-captured-view screen](./mokly-shell-design.md#design-mockups).
+[no-captured-view screen](./mokly-shell-design-inventory.md).
 
 ## Behavior
 

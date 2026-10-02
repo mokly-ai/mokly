@@ -175,6 +175,7 @@ test("Changes leaves and All escapes retain their subject", async () => {
         : [
             ["Welcome", "design-changes-current"],
             ["Details", "design-review-added"],
+            ["Invoice · Moved", "design-changes-moved"],
             ["Farewell · Removed", "design-review-removed"],
             ["Survey · Removed", "design-review-removed-long"],
             ["Invite · Removed", "design-review-removed-loading"],
@@ -189,7 +190,7 @@ test("Changes leaves and All escapes retain their subject", async () => {
   ] as const) {
     const { document } = await designDocument(source, "desktop");
     assert.deepEqual(destinations(byClass(document, "mbk-nav-filter-opt")), [
-      ["Changes7", changes],
+      ["Changes10", changes],
     ]);
   }
 });

@@ -334,7 +334,7 @@ carry no navigation footer. Each screen has its own mobile and desktop
 component and reuses the registered shared components. Do not inline duplicate
 screen markup. Keep no more than five owning screen definitions per page. The
 exact entries are listed in the
-[shell design inventory](./mokly-shell-design.md#design-mockups). The
+[shell design inventory](./mokly-shell-design-inventory.md). The
 branch-only `light-preview` and `dark-preview` scenarios are removed by the
 single-control correction. `design-review-dark-scheme` is removed;
 `design-review-changed` renders in both schemes and subsumes its comparison

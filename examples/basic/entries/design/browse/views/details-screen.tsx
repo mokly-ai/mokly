@@ -1,6 +1,7 @@
 import { screen } from "@mokly/mokly";
 
 import { DESTINATIONS } from "../../parts/destinations.js";
+import { ENTRY_PATHS, SCREEN_CRUMBS } from "../../parts/entry_paths.js";
 import { SchemeWorkspace } from "../../parts/example_workspace.js";
 import { NavTree } from "../../parts/nav.js";
 import { ScreenHead, Shell, ViewSwitch } from "../../parts/shell.js";
@@ -9,8 +10,8 @@ function DetailsHead({ mobile = false }: { mobile?: boolean }) {
   return (
     <ScreenHead
       action={<ViewSwitch active={mobile ? "mobile" : "both"} />}
-      crumbs={["Example", "Screens"]}
-      idChip="example-details"
+      crumbs={SCREEN_CRUMBS}
+      path={ENTRY_PATHS.details}
       title="Details"
     />
   );
