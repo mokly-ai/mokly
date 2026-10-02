@@ -5,7 +5,8 @@
 Status: implemented, verified, merged with `origin/main` (#115 and #119), pushed
 and reviewed twice. Milestones 9 to 11 fixed the review findings that the user
 chose on 2026-09-25, and Milestones 12 to 15 implemented the user's 2026-09-26
-decisions. The second review's findings await the user's decision.
+decisions. Milestones 16 to 21 merge main 0.13.0 and fix second-review
+finding 1; findings 2 to 11 await the user's decision.
 The binding Decisions And Scope remove all three inputs and adopt
 component-declared stylesheets in place of the stylesheet role of
 `ownedDependencies`. The user approved both the removals and the component
@@ -726,3 +727,92 @@ imported by a declared component stylesheet can leave Changes empty. The
 Medium findings are repeated warnings after a watched rebuild, the lost
 excluded-only stylesheet mockup, tests that do not protect several fixes, and
 a docs guard test that misses stale lines.
+
+On 2026-10-02 the user chose option B for second-review finding 1 and agreed to
+merge `origin/main` first. `main` had moved by five commits, released as
+0.13.0: #123 replaced collections with `navPath` and `folder()` and moved the
+formats to manifest v7, catalogue read model v3 and one comparison result v4;
+#122 made `mokly publish` upload content deltas; #121 aligned comparison pane
+scrolling. Second-review findings 2 to 11 still await the user's decision.
+
+Finding 1, option B: for every CSS file that reaches a page through a
+component, either declared in `stylesheets` or imported by a declared file,
+Mokly checks which elements a changed rule matches:
+
+- Only elements inside the owning component's output: the component gets the
+  Changes row, and the screen is under Affected screens.
+- Any element outside the owning component: the screen gets its own row.
+- Mokly cannot decide (custom properties, global selectors, unreadable
+  selectors): the screen gets its own row.
+
+Files that no component brings in keep today's screen-row behavior. The
+screen's comparison details name the component file and the selectors that
+matched outside the component.
+
+## Milestone 16: Integrate `main` 0.13.0
+
+- [ ] Merge `origin/main` into the branch. Audit main's additions first and
+      resolve each conflict path by path, keeping every #121, #122 and #123
+      feature.
+- [ ] Move the formats above main's released versions: manifest v8 (main's v7
+      without `dependencies`, `declaredDependencies` and `ownedDependencies`),
+      catalogue read model v4 (main's v3 without `details.dependencies`) and
+      one comparison result v5 (main's v4 without result `sharedImpact` and
+      entry `dependencies` and `sharedImpact`). Historical readers accept
+      manifest v3 to v7 and strip the removed fields; readers reject older
+      public formats.
+- [ ] Apply this plan's rules to main's authoring surface: removed-field
+      warnings on `folder()` markers and root path metadata as well as on
+      entries, and the TypeScript `never` fields on main's input types.
+- [ ] Port rendered-only evidence, component stylesheet provenance, graceful
+      handling and build warnings onto main's single comparison classifier.
+- [ ] Merge the design mockup changes from both sides, and keep the design
+      reachability test passing.
+- [ ] Update the protocol docs, guides, fixtures and READMEs to the merged
+      contract and versions.
+- [ ] Run `cargo xtask check` at 100%, inspect the deletions against
+      `origin/main`, commit the merge and push.
+
+## Milestone 17: Document the finding 1 rule
+
+- [ ] Define the finding 1 rule in the stylesheet ownership, component changes
+      and CSS attribution contracts, including the evidence text.
+- [ ] Validate the changed Markdown and run the docs tests.
+
+## Milestone 18: Depict the outside-component evidence
+
+Tags: mockup
+
+- [ ] Add the outside-component stylesheet evidence to the stylesheet evidence
+      design screens, at mobile and desktop widths.
+- [ ] Build and check the example, run the design tests and smoke-test the
+      changed screens.
+
+## Milestone 19: Classify CSS by where its rules match
+
+- [ ] Failure-first tests: a rule in an imported file that styles a screen
+      element puts the screen in Changes; a rule in the declared file that
+      styles a screen element does the same; a rule in either file that styles
+      only the component puts the component in Changes with the screen under
+      Affected screens; an unresolved rule puts the screen in Changes.
+- [ ] Record which elements each changed rule matches, use the component output
+      markers to decide inside or outside, and attribute the change by the
+      finding 1 rule. Keep the complete and fast comparison paths equal.
+- [ ] Run the focused tests and the complete unit suite at 100%.
+
+## Milestone 20: Show the outside-component evidence
+
+Tags: ui
+
+- [ ] Show the evidence from Milestone 19 in the comparison details, as the
+      Milestone 18 mockups depict it.
+- [ ] Run the viewer and browser tests and smoke-test both widths.
+
+## Milestone 21: Verify, deliver and review
+
+- [ ] Run `cargo xtask check` at 100%, inspect the diff and deletions against
+      `origin/main`, commit and push.
+- [ ] After the push, review the complete diff against `origin/main` using
+      `docs/implementation-review-prompt.md`. Report numbered findings with
+      severity, impact, lettered options and a recommendation, without
+      changing the implementation.
