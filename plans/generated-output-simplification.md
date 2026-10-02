@@ -552,9 +552,22 @@ spelled-out name.
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; `git add -A`; commit with Conventional Commits; push
       the branch.
-- [ ] After the push, review the complete local diff against `origin/main`
+- [x] After the push, review the complete local diff against `origin/main`
       using `docs/implementation-review-prompt.md`; report numbered findings
       with severities and recommendations without changing the implementation.
+
+Review outcome: the rename was verified with build, Serve, and export smoke
+tests (only `.mokly-export-artifact` remains dot-prefixed in an export), and
+seven new findings were reported to the user without changes (1 high, 2
+medium, 4 low). The high finding is that `origin/main` has meanwhile adopted
+`<mockupsDir>/mokly-generated/` for generated CSS and copied assets (#125),
+with pages and the manifest at the catalogue root, so merging `main` needs an
+agreed single layout first. The medium findings are that this branch's ESLint
+guard and `main`'s `localeCompare` ban share the `no-restricted-syntax` rule
+and silently replace each other on merge, and that exports still contain
+`__mokly/`, which GitHub Pages' Jekyll build drops, so the hosting rationale
+is overstated. The 26 earlier findings remain open; each finding awaits the
+user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
