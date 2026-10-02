@@ -1,6 +1,5 @@
-/* The Mokly design stage: device chromes on the dotted stage, the Markdown
-   documents Mokly renders, the mini screen sketches, the details inspector,
-   and the use-case flow track. */
+/* The Mokly design stage: device chromes on the dotted stage, the mini
+   screen sketches, the details inspector, and the use-case flow track. */
 
 /* Preview tokens describe what a device screen shows. They are deliberately
    separate from the interface palette in design.css, so a light phone keeps its
@@ -72,99 +71,6 @@
   border-radius: 12px;
   overflow: auto;
   width: 100%;
-}
-
-/* ---- Markdown documents ----------------------------------------------- */
-
-/* Mokly renders a Markdown document itself, so it reads in the shell's own
-   typography and palette rather than a consumer stylesheet. */
-.mbk-markdown {
-  background: var(--chrome-surface);
-  color: var(--chrome-ink);
-  font-family: var(--sans);
-  font-size: 14.5px;
-  line-height: 1.65;
-  min-height: 100%;
-  padding: 36px 44px 44px;
-}
-
-.mbk-markdown > * {
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 720px;
-}
-
-.mbk-markdown h1 {
-  font-size: 26px;
-  letter-spacing: -0.015em;
-  line-height: 1.25;
-  margin-bottom: 12px;
-  margin-top: 0;
-}
-
-.mbk-markdown h2 {
-  font-size: 17px;
-  letter-spacing: -0.01em;
-  line-height: 1.35;
-  margin-bottom: 8px;
-  margin-top: 28px;
-}
-
-.mbk-markdown :is(p, ul, table) {
-  margin-bottom: 14px;
-  margin-top: 0;
-}
-
-.mbk-markdown ul {
-  padding-left: 22px;
-}
-
-.mbk-markdown li + li {
-  margin-top: 4px;
-}
-
-.mbk-markdown .mbk-markdown-link {
-  color: var(--chrome-accent);
-  font-weight: 600;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
-}
-
-.mbk-markdown code {
-  background: var(--chrome-bg);
-  border: 1px solid var(--chrome-border);
-  border-radius: 5px;
-  font-family: var(--mono);
-  font-size: 12.5px;
-  padding: 1px 5px;
-}
-
-.mbk-markdown table {
-  border-collapse: collapse;
-  font-size: 13.5px;
-  width: 100%;
-}
-
-.mbk-markdown :is(th, td) {
-  border: 1px solid var(--chrome-border);
-  padding: 7px 12px;
-  text-align: left;
-  vertical-align: top;
-}
-
-.mbk-markdown th {
-  background: var(--chrome-bg);
-  font-weight: 650;
-}
-
-.mbk-shell--mobile .mbk-markdown {
-  font-size: 14px;
-  padding: 22px 18px 28px;
-}
-
-.mbk-shell--mobile .mbk-markdown h1 {
-  font-size: 22px;
 }
 
 /* ---- Previous versions of removed entries ------------------------------ */
@@ -343,34 +249,6 @@
   margin-bottom: 12px;
   padding: 7px 12px;
   width: fit-content;
-}
-
-/* An invoice's lines keep one row each, so both versions align in Overlay. */
-.mbk-shot-lines {
-  border-bottom: 1px solid var(--mbk-screen-border);
-  border-top: 1px solid var(--mbk-screen-border);
-  display: flex;
-  flex-direction: column;
-  font-size: 12.5px;
-  gap: 6px;
-  margin: 0 0 14px;
-  padding: 10px 0;
-}
-
-.mbk-shot-lines > div {
-  display: flex;
-  gap: 16px;
-  justify-content: space-between;
-}
-
-.mbk-shot-lines dt {
-  color: var(--mbk-screen-ink-2);
-}
-
-.mbk-shot-lines dd {
-  color: var(--mbk-screen-ink);
-  font-variant-numeric: tabular-nums;
-  margin: 0;
 }
 
 .mbk-shot--restyled .mbk-shot-nav {

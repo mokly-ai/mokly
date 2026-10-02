@@ -7,13 +7,17 @@ import { DocumentPane, Stage } from "./stage.js";
 /**
  * A Markdown document as Mokly renders it. The catalogue owns the template,
  * so a written spec reads in the shell's own typography and palette inside the
- * same bordered pane as a page, with no device or comparison controls.
+ * same bordered pane as a page, with no device or comparison controls. The
+ * body element keeps the reading measure, so no style needs a universal
+ * selector that would tie every view linking the sheet to its edits.
  */
 export function MarkdownStage({ children }: { children: ReactNode }) {
   return (
     <Stage>
       <DocumentPane>
-        <article className="mbk-markdown">{children}</article>
+        <div className="mbk-markdown">
+          <article className="mbk-markdown-body">{children}</article>
+        </div>
       </DocumentPane>
     </Stage>
   );

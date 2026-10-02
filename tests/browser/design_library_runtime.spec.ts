@@ -30,9 +30,14 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ),
       );
     const before = await contents();
-    await page.goto("/view/components/design-ui-top-bar.html");
+    // The Search variant's saved status, read before any temporary edit. The
+    // parent page's badge describes the parent, which can differ from its
+    // variants when only their views changed.
+    await page.goto("/view/components/design-ui-top-bar-search.html");
     await chooseViewport(page, viewport);
     const status = await page.locator("[data-workspace-status]").textContent();
+    await page.goto("/view/components/design-ui-top-bar.html");
+    await chooseViewport(page, viewport);
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     if (viewport === "mobile")
       await page

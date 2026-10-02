@@ -84,6 +84,7 @@ export default defineConfig({
         [
           "design.css",
           "design-stage.css",
+          "design-documents.css",
           "design-review.css",
           "design-review-scroll.css",
         ],
@@ -100,7 +101,7 @@ export default defineConfig({
     {
       match: "screens/design-*.html",
       stylesheets: withLibraryStyles(
-        ["design.css", "design-stage.css"],
+        ["design.css", "design-stage.css", "design-documents.css"],
         workspaceLayoutStyles,
       ),
     },
@@ -127,6 +128,7 @@ export default defineConfig({
           "examples/basic/generated/design-component-view.css",
           "examples/basic/generated/design-review.css",
           "examples/basic/generated/design-review-scroll.css",
+          "examples/basic/generated/design-documents.css",
           "examples/basic/generated/design-stage.css",
           "examples/basic/generated/design.css",
           "examples/basic/generated/styles.css",

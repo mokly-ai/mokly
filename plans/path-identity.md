@@ -280,6 +280,15 @@ example migrates to the new API in Milestone 3.
 - [x] Update the design unit tests that pin the changed content: section ids,
       path chips, row lists, breadcrumbs, Changes rows and counts, the diff-mode
       inventory, and the documented screen counts.
+- [x] Keep the Markdown document and invoice mockup styles in their own
+      `design-documents.css`, registered in the example configuration's
+      stylesheet and watch lists, so `design-stage.css` keeps its size.
+- [x] Replace the document styles' universal child selector with a body
+      element, because CSS attribution keeps any edited universal rule as
+      evidence for every view that links its sheet.
+- [x] Make the design library runtime browser test compare the Search
+      variant's status with its own saved status instead of the parent's,
+      which differs when only the variants' views changed.
 - [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
       and smoke-test the changed pages through `npm run dev`.
 - [x] Commit and push.
@@ -427,8 +436,9 @@ Bring the shell to the Milestone 2 mockups.
 - [ ] Route `/view/<path>` through the store and history
       (`store_browser_routes.ts`, `store_browser_urls.ts`) and keep the
       missing view for unknown paths.
-- [ ] Add the document icon and the folder-page row icon; show the component
-      path in component details.
+- [ ] Add the document icon; an Overview row uses its index page's own icon,
+      with no dedicated folder-page icon. Show the component path in component
+      details.
 - [ ] Update and add browser tests under `tests/browser` for browsing,
       disclosures, variants, and navigation, and the viewer unit tests under
       `packages/viewer/tests`; verify parity with the Milestone 2 screens.
