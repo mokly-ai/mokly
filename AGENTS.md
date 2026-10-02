@@ -30,6 +30,9 @@
   the simplest, smallest, or quickest fix when a larger change would materially
   reduce future bugs, review findings, or maintenance risk; explain the tradeoff
   and recommend the scope that best protects the codebase.
+- Write agent responses to the user, including summaries, plans, and review
+  output, in Simplified Technical English (STE, ASD-STE100): short sentences,
+  one instruction per sentence, active voice, and simple, consistent words
 - Documentation-only or plan-only changes, including initial plan creation, do not require `cargo xtask check`; validate the changed Markdown and review the diff instead
 - This project is not currently in production/live, so breaking changes are
   acceptable when they improve correctness, architecture, or product quality
