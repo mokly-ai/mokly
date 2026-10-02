@@ -51,8 +51,8 @@
   [Milestone 45 review](../docs/reviews/imported-css-delivery-milestone-45.md)
   remain open for the user's decision. Milestone 46 addresses only the imported-CSS
   watcher-test flakiness recorded as Milestone 40 finding 12 (`77a1f493`),
-  with an event-driven resource wait and a server-level content-order
-  regression. Findings in the
+  with an event-driven resource wait and an in-process server content-order
+  check. Findings in the
   [Milestone 47 review](../docs/reviews/imported-css-delivery-milestone-47.md)
   remain open for the user's decision, as do other review findings.
   Move this plan to Completed when its

@@ -232,10 +232,17 @@ Imported-CSS watcher tests use `tests/helpers/watched_events.ts` to attach to th
 event stream before editing and wait for the expected resource bytes after a
 higher update version. Evidence-only updates and intermediate content versions
 do not prove that the final CSS is served; the wait reports the last version,
-status and resource excerpt if the expected bytes never arrive. A server-level
-test checks that an accepted stylesheet is installed before its content update
-is announced. Worker-exit tests wait for the watch failure report before
-checking shutdown; Serve startup is not subject to the worker-request timeout.
+status and resource excerpt if the expected bytes never arrive. Its direct tests
+(`tests/watched_resource_wait*.test.ts`) cover reconnects, the startup retry,
+the deadline on an open stream and repeated updates on one stream. Tests that
+use the real file watcher accept in-between states on purpose, so ordering
+guarantees need deterministic tests.
+`tests/watched_content_resource_order.test.ts` checks that an accepted
+stylesheet is installed before its content update is announced in two layers:
+one in-process server, and watched Serve's parent and real child, where a
+watcher that the test controls reports one CSS edit that rebuilds in place.
+Worker-exit tests wait for the watch failure report before checking shutdown;
+Serve startup is not subject to the worker-request timeout.
 
 See [review boundaries](../review/README.md), [baseline building](../baseline/README.md),
 and the [derived baseline protocol](../../docs/protocol/mokly-derived-baselines.md).

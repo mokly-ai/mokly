@@ -61,8 +61,9 @@ Other previously unselected findings remain out of scope. Findings in the
 [Milestone 45 review record](../docs/reviews/imported-css-delivery-milestone-45.md)
 remain open for the user's decision. Milestone 46 addresses only the imported-CSS
 watcher-test flakiness recorded as Milestone 40 finding 12. The final helper
-follows intermediate versions and child restarts; a server-level test pins
-stylesheet availability before content updates. Milestone 46 (`77a1f493`)
+follows intermediate versions and child restarts; an in-process server test
+checks that stylesheet installation precedes the content update, without
+running the watched child. Milestone 46 (`77a1f493`)
 passed the full gate and resolves that finding; other review findings remain
 open. Findings in the
 [Milestone 47 review record](../docs/reviews/imported-css-delivery-milestone-47.md)
@@ -1080,7 +1081,7 @@ preserving the browser-visible event contract.
 - [x] Add a shared branch-owned resource wait that follows ready/update events across child restarts, retries only restart transport errors, and has direct retry/rethrow tests.
 - [x] Fix the worker-exit close test to wait for its rebuild failure report, and update the real-watcher and PostCSS dependency tests to wait for accepted resource bytes.
 - [x] Audit other branch-added watcher tests for the same patterns and fix affected cases without changing main-owned tests or helpers.
-- [x] Check product ordering with a deterministic server-level test; no product bug or protocol change is needed.
+- [x] Check the in-process server's install-then-announce order with a deterministic test; no product bug or protocol change is needed. This test does not run the watched child; Milestone 47 finding 1 records that gap.
 - [x] Verify load and serial repetitions, both CI unit shards, the full gate, Markdown, and deletion checks; record the finding's resolution.
 
 The original six-way load failed 24/24 worker-close runs (including one hung

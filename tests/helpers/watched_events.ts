@@ -12,6 +12,12 @@ interface WatchedResourceOptions<Value> {
   readonly fetcher?: typeof fetch;
 }
 
+/** One complete event from a watched catalogue's `/__mokly/events` stream. */
+export interface WatchedStreamEvent {
+  readonly kind: string | undefined;
+  readonly version: number;
+}
+
 const restartErrors = new Set([
   "ECONNREFUSED",
   "ECONNRESET",
@@ -35,7 +41,8 @@ function restartError(error: unknown): boolean {
   return false;
 }
 
-function contentVersion(html: string): number {
+/** Read the content version that decides whether a browser reloads a shell. */
+export function contentVersion(html: string): number {
   const match = /data-mokly-content-version="(\d+)"/.exec(html);
   assert.ok(match, "watched shell has a content version");
   return Number(match[1]);
@@ -48,6 +55,41 @@ function excerpt(value: unknown): string {
   return String(value).slice(0, 80);
 }
 
+/** Yield each complete event of one stream response, cancelling it on exit. */
+export async function* watchedEvents(
+  response: Response,
+): AsyncGenerator<WatchedStreamEvent> {
+  assert.equal(response.status, 200);
+  assert.ok(response.body);
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffered = "";
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) return;
+      buffered += decoder.decode(value, { stream: true });
+      let end = buffered.indexOf("\n\n");
+      while (end !== -1) {
+        const event = buffered.slice(0, end);
+        buffered = buffered.slice(end + 2);
+        yield {
+          kind: /^event: (\w+)/m.exec(event)?.[1],
+          version: Number(/^data: (\d+)/m.exec(event)?.[1]),
+        };
+        end = buffered.indexOf("\n\n");
+      }
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+  }
+}
+
+/**
+ * Edit after the first ready event, then wait until a higher ready or update
+ * version serves an accepted resource. Intermediate versions are tolerated, so
+ * this wait never proves ordering between a resource and its announcement.
+ */
 export async function waitForWatchedResource<Value>(
   options: WatchedResourceOptions<Value>,
 ): Promise<Value> {
@@ -89,59 +131,39 @@ export async function waitForWatchedResource<Value>(
         const response = await fetcher(`${options.origin}/__mokly/events`, {
           signal: controller.signal,
         });
-        assert.equal(response.status, 200);
-        assert.ok(response.body);
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffered = "";
-        try {
-          for (;;) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffered += decoder.decode(value, { stream: true });
-            let end = buffered.indexOf("\n\n");
-            while (end !== -1) {
-              const event = buffered.slice(0, end);
-              buffered = buffered.slice(end + 2);
-              const kind = /^event: (\w+)/m.exec(event)?.[1];
-              const version = Number(/^data: (\d+)/m.exec(event)?.[1]);
-              if (!edited && kind === "ready") {
-                edited = true;
-                await options.edit();
-              }
-              if (
-                edited &&
-                Number.isSafeInteger(version) &&
-                version > options.previous &&
-                (kind === "ready" || kind === "update")
-              ) {
-                lastVersion = version;
-                const shell = await fetcher(options.origin, {
-                  signal: controller.signal,
-                });
-                assert.equal(shell.status, 200);
-                lastContentVersion = contentVersion(await shell.text());
-                let resource: Response;
-                try {
-                  resource = await fetcher(options.resource, {
-                    signal: controller.signal,
-                  });
-                } catch (error) {
-                  lastResourceStatus = "transport failure";
-                  throw error;
-                }
-                lastResourceStatus = String(resource.status);
-                if (resource.status === 200) {
-                  const result = await options.read(resource);
-                  lastResourceValue = excerpt(result);
-                  if (options.accept(result)) return result;
-                } else lastResourceValue = excerpt(await resource.text());
-              }
-              end = buffered.indexOf("\n\n");
-            }
+        for await (const { kind, version } of watchedEvents(response)) {
+          if (!edited && kind === "ready") {
+            edited = true;
+            await options.edit();
           }
-        } finally {
-          await reader.cancel().catch(() => {});
+          if (
+            !edited ||
+            !Number.isSafeInteger(version) ||
+            version <= options.previous ||
+            (kind !== "ready" && kind !== "update")
+          )
+            continue;
+          lastVersion = version;
+          const shell = await fetcher(options.origin, {
+            signal: controller.signal,
+          });
+          assert.equal(shell.status, 200);
+          lastContentVersion = contentVersion(await shell.text());
+          let resource: Response;
+          try {
+            resource = await fetcher(options.resource, {
+              signal: controller.signal,
+            });
+          } catch (error) {
+            lastResourceStatus = "transport failure";
+            throw error;
+          }
+          lastResourceStatus = String(resource.status);
+          if (resource.status === 200) {
+            const result = await options.read(resource);
+            lastResourceValue = excerpt(result);
+            if (options.accept(result)) return result;
+          } else lastResourceValue = excerpt(await resource.text());
         }
         await delay(30, undefined, { signal: controller.signal });
       } catch (error) {
@@ -178,33 +200,17 @@ export async function waitForBrowserReload(
       const response = await fetch(`${url}/__mokly/events`, {
         signal: controller.signal,
       });
-      assert.equal(response.status, 200);
-      assert.ok(response.body);
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffered = "";
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffered += decoder.decode(value, { stream: true });
-        let end = buffered.indexOf("\n\n");
-        while (end !== -1) {
-          const event = buffered.slice(0, end);
-          buffered = buffered.slice(end + 2);
-          const kind = /^event: (\w+)/m.exec(event)?.[1];
-          const version = Number(/^data: (\d+)/m.exec(event)?.[1]);
-          if (!edited && kind === "ready") {
-            edited = true;
-            await edit();
-          }
-          if (
-            edited &&
-            version > previous &&
-            (kind === "update" || kind === "ready")
-          )
-            return version;
-          end = buffered.indexOf("\n\n");
+      for await (const { kind, version } of watchedEvents(response)) {
+        if (!edited && kind === "ready") {
+          edited = true;
+          await edit();
         }
+        if (
+          edited &&
+          version > previous &&
+          (kind === "update" || kind === "ready")
+        )
+          return version;
       }
     }
     throw new Error("watched server closed without a browser reload");
