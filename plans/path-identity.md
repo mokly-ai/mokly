@@ -29,14 +29,13 @@ scans, with an optional file pattern, an optional path prefix, and optional
 transparent directory names. An entry's path is the root prefix, then the
 directories between the root and the file, then a leaf. A Markdown file's
 leaf is its file name; a TypeScript entry's leaf is its declared `slug`, which
-defaults to the file name. `index` collapses onto the directory path. Every
-component path begins with the reserved folder `components`. Folder titles,
-order, and exclusions come from a folder record carried by a `defineFolder`
-export or a `_folder.json` file. The manifest becomes v8, the public read model
-v4, and the review result v5; all three key entries by kind and path and carry
-`previousPath` for detected moves. The viewer renders one tree, splits it into
-the Specs and Components sections on the reserved folder, and never navigates
-from a folder row.
+defaults to the file name. `index` collapses onto the directory path. No rule
+depends on an entry's kind. Folder titles, order, and exclusions come from a
+folder record carried by a `defineFolder` export or a `_folder.json` file. The
+manifest becomes v8, the public read model v4, and the review result v5; all
+three key entries by kind and path and carry `previousPath` for detected
+moves. The viewer renders one tree, shows component entries in the Components
+section and every other kind in Specs, and never navigates from a folder row.
 
 **Decisions locked by the design discussion (raise before implementing if the
 user should reconsider):**
@@ -61,20 +60,23 @@ user should reconsider):**
    grammar is a build error that names the file and the fix; there is no
    slugify and no URL-encoding of spaces. An opt-in `slugify` per root may be
    added later and can never be removed, so it is not the default.
-5. **Reserved `components` folder.** Mokly prefixes every component path with
-   `components/`. Authors never type it for a derived path and always include
-   it in a written path. A component whose written path lacks it, or any
-   other kind whose path begins with it, is a build error. A root prefix
-   comes after it. The name is fixed and not configurable.
-6. **Sections and rows.** The viewer renders one tree. **Specs** shows every
-   top-level folder except `components`; **Components** shows that folder
-   with its own name hidden behind the section header. A folder row only
-   expands or collapses; it never changes the content area. An entry row
-   navigates. An entry with variants keeps today's row: a link beside a
-   separate disclosure button. A folder's own page is its first child row,
-   labelled with the page title, or "Overview" when that equals the folder
-   title. A breadcrumb folder segment opens the folder page when one exists
-   and otherwise expands the folder.
+5. **No kind-specific paths.** There is no reserved folder and no automatic
+   prefix for components. A component's path derives like every other path,
+   and a component and a screen with one path are an ordinary duplicate-path
+   error. The documented convention for a component library is a root with
+   `path: "components"`, which a team may rename or omit.
+6. **Sections and rows.** The viewer renders one tree and splits it by kind.
+   **Components** shows the entries of kind `component` and the folders that
+   contain them; **Specs** shows every other kind. A folder that holds both
+   kinds appears in both sections, each showing its own children, and its
+   disclosure state stays section-scoped as today. A folder row only expands
+   or collapses; it never changes the content area. An entry row navigates. An
+   entry with variants keeps today's row: a link beside a separate disclosure
+   button. A folder's own page is its first child row in Specs, labelled with
+   the page title, or "Overview" when that equals the folder title. A
+   breadcrumb folder segment opens the folder page when one exists and
+   otherwise expands the folder. Splitting other kinds into sections, or
+   removing the split, is a later option and not part of this plan.
 7. **Variants.** Declared inside the parent as today, with `slug` instead of
    `id`; the path is the parent's path plus the slug. The relationship is
    derived from the declaration and recorded in the manifest and read model;
@@ -154,8 +156,8 @@ rules only and never record milestone numbers, which
 contracts rather than growing one.
 
 - [ ] Add `docs/protocol/mokly-paths.md`: identity, derivation, segment
-      grammar, `index`, the reserved `components` folder, roots and transparent
-      directories, `path` overrides, collision errors with their exact text,
+      grammar, `index`, roots and transparent directories, `path` overrides,
+      duplicate-path errors with their exact text,
       and the `/view/<path>` URL grammar. Delete `mokly-nav-paths.md` and
       `mokly-nested-authoring.md` and repoint every link.
 - [ ] Add `docs/protocol/mokly-folders.md`: the folder record, both carriers,
@@ -231,8 +233,8 @@ example migrates to the new API in Milestone 3.
       previous path in the details panel, and the Overlay view for a moved
       screen.
 - [ ] Update the component design screens under
-      `examples/basic/entries/design/components` so details show paths under
-      `components/`.
+      `examples/basic/entries/design/components` so the Components section is
+      the kind-filtered tree and details show component paths.
 - [ ] Give every new screen a mobile and a desktop variant, keep it reachable
       from the existing design flows and folders, and keep annotations outside
       the screen area.
@@ -264,8 +266,8 @@ wait for Milestone 6.
       `src/registry/prepare.ts`): default and named exports, arrays, brand
       detection, ignored exports, and the empty-module error.
 - [ ] Path derivation and grammar as a pure module under `src/registry`:
-      prefix, directory, leaf, transparent directories, `index`, the reserved
-      `components` folder, case-folded uniqueness, and attributed errors.
+      prefix, directory, leaf, transparent directories, `index`, case-folded
+      uniqueness, and attributed errors.
 - [ ] Folder records: the `_folder.json` loader with schema validation, the
       `defineFolder` definition, merging, title resolution, `order`, `hidden`,
       and the duplicate, unused-path, and unknown-child errors.
@@ -288,8 +290,8 @@ wait for Milestone 6.
       path.
 - [ ] Read model v4 emission (`src/catalogue`) and the viewer data layer
       (`packages/viewer/src/catalogue`, `packages/viewer/src/navigation`,
-      `packages/viewer/src/shell/disclosure_keys.ts`): one tree split on
-      `components`, path-keyed disclosure keys, and unchanged presentation.
+      `packages/viewer/src/shell/disclosure_keys.ts`): one tree split by
+      kind, path-keyed disclosure keys, and unchanged presentation.
 - [ ] Review pairing by kind and path without move detection, review result v5
       with `previousPath` absent, and the v8-only baseline gate
       (`src/review`, `src/baseline`).
@@ -361,8 +363,9 @@ Tags: ui
 Bring the shell to the Milestone 2 mockups.
 
 - [ ] Rename the Pages section to Specs across `packages/viewer/src/shell`
-      (`nav.tsx`, `nav_model.ts`, `nav_tree.ts`, `entry_wording.ts`) and show
-      the Components section from the reserved folder with its name hidden.
+      (`nav.tsx`, `nav_model.ts`, `nav_tree.ts`, `entry_wording.ts`) and
+      build the Components section from entries of kind `component` and the
+      Specs section from every other kind.
 - [ ] Make folder rows browse-only, add the Overview first-child row with the
       title fallback, and keep the entry-with-variants row
       (`nav_rows.tsx`, `nav_leaf_rows.tsx`, `css_nav_rows.ts`,
@@ -377,8 +380,8 @@ Bring the shell to the Milestone 2 mockups.
 - [ ] Route `/view/<path>` through the store and history
       (`store_browser_routes.ts`, `store_browser_urls.ts`) and keep the
       missing view for unknown paths.
-- [ ] Add the document icon and the folder-page row icon; show paths under
-      `components/` in component details.
+- [ ] Add the document icon and the folder-page row icon; show the component
+      path in component details.
 - [ ] Update and add browser tests under `tests/browser` for browsing,
       disclosures, variants, and navigation, and the viewer unit tests under
       `packages/viewer/tests`; verify parity with the Milestone 2 screens.
@@ -427,5 +430,7 @@ Tags: ui
 - Optional per-root default leaf of `index` for one-directory-per-component
   libraries.
 - A generated overview page for folders without a README.
+- Configurable sections: splitting other kinds into their own section, or
+  removing the Specs and Components split.
 - Smoke-test the published package against a consumer repository that uses
   the co-located layout.
