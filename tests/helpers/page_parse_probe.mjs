@@ -11,16 +11,26 @@ const originals = new Set([
   ...input.afterFiles.values(),
 ]);
 let parses = 0;
+function observe(source, options) {
+  assert.ok(
+    originals.has(source),
+    "classification parsed rewritten or normalized page HTML",
+  );
+  assert.equal(options?.sourceCodeLocationInfo, true);
+  parses++;
+}
+class CountedParser extends real.Parser {
+  static parse(source, options) {
+    observe(source, options);
+    return super.parse(source, options);
+  }
+}
 mock.module("parse5", {
   namedExports: {
     ...real,
+    Parser: CountedParser,
     parse(source, options) {
-      assert.ok(
-        originals.has(source),
-        "classification parsed rewritten or normalized page HTML",
-      );
-      assert.equal(options?.sourceCodeLocationInfo, true);
-      parses++;
+      observe(source, options);
       return real.parse(source, options);
     },
   },

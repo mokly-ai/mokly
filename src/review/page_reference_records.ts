@@ -1,13 +1,12 @@
 /** Original-source reference occurrences, including inert records available to copies. */
 import type { DefaultTreeAdapterMap } from "parse5";
 
-import { invalidData } from "@mokly/viewer/data";
-
 import type {
   MaterialRecipe,
   SourceSpan,
 } from "../components/material_recipe.js";
 import { documentWorkSync } from "../diagnostics/timings.js";
+import { MoklyError } from "../errors.js";
 import {
   htmlReferenceValues,
   type HtmlReferenceValue,
@@ -19,7 +18,7 @@ import type {
 
 import {
   pageAttributeLocation,
-  recoverPageSourceLocations,
+  requirePageSourceLocations,
 } from "./page_source_locations.js";
 
 export interface PageReferenceRecord extends SourceSpan, HtmlReferenceValue {
@@ -37,7 +36,7 @@ export function pageReferenceRecords(
   ) => void,
 ) {
   return documentWorkSync("referenceMs", () => {
-    recoverPageSourceLocations(source, document);
+    requirePageSourceLocations(document);
     const result: PageReferenceRecord[] = [];
     const visit = (
       node: DefaultTreeAdapterMap["node"],
@@ -58,13 +57,13 @@ export function pageReferenceRecords(
             : undefined;
         const span = reference.attribute
           ? attribute && "tagName" in node
-            ? pageAttributeLocation(node, attribute)
+            ? pageAttributeLocation(attribute)
             : undefined
           : textLocation;
         if (!span)
-          invalidData(
-            "$document",
-            "reference has no original source provenance",
+          throw new MoklyError(
+            "review-invalid",
+            "reference has no parser token provenance",
           );
         result.push({
           ...reference,

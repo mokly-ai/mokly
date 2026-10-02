@@ -78,6 +78,118 @@ non-accepting interruption. The supervisor-authorized hydration run subsequently
 passes **219/219**, with zero failures/skips/cancellations, using pinned Chromium;
 `m7-supervisor-approved-hydration.log`/`.json` retain the completed result.
 
+## Second-round Verification And Additional Waits
+
+The token-provenance follow-up reruns all required checks without changing UI
+code or timeouts. `m7-round2-unit.json` passes **3,417/3,417**;
+`m7-round2-hydration.json` passes **219/219** using pinned Chromium. Both have
+zero failures/skips/cancellations. Targeted suites pass 825 and 280 tests;
+format, lint, typecheck and repository ratchets pass.
+
+The complete pinned run (`m7-round2-browser.log`/`.json`) observes all 725 tests:
+703 pass, 6 fail, 4 time out and 12 skip after the two known publication-fixture
+setup timeouts. The established six specs retain their wait/setup signatures.
+Two additional tests require the supervisor's further classification:
+
+- `browse.spec.ts`: the light-only screen's frame remains `about:blank` at its
+  unchanged 5 s source wait.
+- `component_example.spec.ts`: desktop highlight activation reaches its 60 s
+  click limit because the preview session reports “could not be loaded”.
+
+The supervisor requests both complete specs with `--repeat-each=3`, alone and
+with pinned Chromium, first on the fixed tree and then on clean, separately
+prepared pre-M7 `e5025e64`. Evidence is `m7-round2-extra-fixed.log`/`.json`,
+`m7-round2-extra-control.log`/`.json`, and `m7-round2-control-prepare.log`.
+Both repetition runs observe all 105 assigned tests without skips/cancellations:
+
+| Target                     | Fixed Tree                       | Pre-M7 M6 |
+| -------------------------- | -------------------------------- | --------- |
+| Browse light-only wait     | 2 pass / 1 identical 5 s failure | 3 pass    |
+| Desktop component preview  | 3 pass                           | 3 pass    |
+| Entire two-spec repetition | 104 pass / 1 fail                | 105 pass  |
+
+Neither additional failure is deterministic on the fixed tree. The short M6
+control does **not** reproduce either, so it is not claimed as a reproduced
+control failure. Full-run and repeat artifacts are preserved in
+`m7-round2-full-failure-artifacts/` and `m7-round2-extra-*-artifacts/`. Both repeat
+logs include `DEBUG=pw:webserver` diagnostics. The failing full-run component
+trace shows successful HTTP 200 responses for the toolbar documents and view
+endpoint (desktop document response: 4,653 ms), no failed resource responses,
+and no page/render error beyond expected sandbox script blocking. The adapter
+has an existing 5 s mount deadline; timeout is plausible, but that generic UI
+message alone is not proof of its error code. The extracted trace facts are in
+`m7-round2-preview-trace-summary.txt`.
+
+The supervisor resolves that hold with the bounded startup experiment below.
+No full-suite retries, UI/timeout fixes, pushes or scale-fixture measurements
+follow the diagnostic. The completed M6 repeat control is cleaned up; evidence
+remains in the original worktree.
+
+## Bounded Cold Serve Experiment
+
+Run alone on the 2.50GHz host, ABBA twice: M6/fixed/fixed/M6, repeated. Both
+isolated trees have their own `npm run prepare:verification`, identical example
+inputs/dependencies and baseline merge-base `b4314fec`. M6 is clean `e5025e64`;
+fixed code is detached snapshot `048fe802` of the pending sources, parent
+`b9e1256d`. That scratch snapshot does not commit or move the production branch.
+Clear only each scratch tree's `.mokly-cache` before every new process; all
+eight baseline completions report `cacheHit: false`. Prepared output stays as
+Playwright prepares it. These are process/baseline-cold runs, not OS-cache flushes.
+
+Each invocation is exactly `node dist/cli/bin.js serve --config
+examples/basic/mokly.config.ts --port <free> --no-watch --debug-timings`, with no
+browser traffic, CPU profiling, other suite/build/benchmark or tracked edits
+while measuring. Classification is its recorded completed background span.
+Idle starts at the first observed post-classification window with at most two
+process CPU ticks over at least two seconds (100 Hz ticks, 250 ms sampling).
+Confirmation is recorded separately; no worker/supervisor completion is invented.
+CPU is the server process's `/proc/<pid>/stat` user+system time, including worker
+threads, excluding external baseline-command children. Idle wall time includes
+those baseline commands. This measures startup contention, not frame latency.
+
+| Run | Tree  | Classification (ms) | Start To Idle (ms) | Server CPU (ms) |
+| --- | ----- | ------------------: | -----------------: | --------------: |
+| 1   | M6    |            6,973.42 |          71,017.53 |          39,690 |
+| 2   | Fixed |            3,416.70 |          70,253.21 |          38,420 |
+| 3   | Fixed |            3,445.54 |          69,250.29 |          35,510 |
+| 4   | M6    |            6,685.65 |          68,239.31 |          38,720 |
+| 5   | M6    |            6,388.30 |          70,771.94 |          40,660 |
+| 6   | Fixed |            3,366.35 |          66,489.21 |          36,210 |
+| 7   | Fixed |            3,422.04 |          64,237.72 |          34,170 |
+| 8   | M6    |            6,710.42 |          68,764.33 |          39,660 |
+
+Means: classification M6 **6,689.45** versus fixed **3,412.66 ms** (ratio
+**0.5102**); idle **69,698.28** versus **67,557.61 ms** (**0.9693**); server CPU
+**39,682.50** versus **36,077.50 ms** (**0.9092**). Every fixed classification
+and CPU value is below M6's minimum. Fixed idle values overlap M6's
+68,239–71,018 ms spread or are faster; fixed is not consistently slower.
+
+Every run compares 428 views (426 fast, 2 complete) and emits exactly one
+document-work and inline counts record. Work is identical within each tree:
+M6 **2,520 HTML parses / 51,366,664 bytes**: 1,460 reference, 1,032 range and
+28 style-discovery parses. Fixed **430 / 8,953,277 bytes**: 428 page-analysis
+parses plus 2 reference parses. Recorded HTML parse time spans M6
+3,030.14–3,329.25 ms versus fixed 959.95–992.75 ms. All inline fields are zero
+(elements, segments, hits, parses, fallbacks); there is no inline parse work
+hidden in this comparison. Complete document-work fields are retained per run.
+
+Evidence directory: `.context/delegation/scalable/m7-startup-experiment/`:
+`run.mjs`, `run.log`, `samples.json`, `summary.json`, `source-snapshot.json`, and
+each `01-m6` through `08-m6` run's `*-sample.json`, `*-timings.json`, stdout/
+stderr logs and before/after machine JSON. Snapshots include CPU model/MHz,
+steal ticks, `nproc`, `free -m`, `uptime` and `ps`. The first detached launcher
+exited before any start/sample; its empty log is retained. The corrected owned
+launcher completes all eight runs without retries, dropped samples or deadlines.
+
+**Decision:** the supervisor's stated rule is met. Record Browse's intermittent
+5 s wait as an additional host-timing exception and commit the verified fixes.
+The component-preview wait is not deterministic either: 3/3 passes on both
+trees, HTTP 200 trace responses and no observed render/server error. Preserve
+that transient full-run failure rather than claiming it reproduced on M6.
+No cost-profile/remedy is warranted by this experiment. This is evidence about
+the real example startup only, **not** Decision 13 acceptance or proof for the
+large fixtures; their approved same-host comparison still waits for code review.
+
 ## Cold Ordinary-preview Export
 
 `m7-export-probe.mjs` loads each tree's own `createCommittedExampleBaseline`
@@ -136,9 +248,10 @@ The supervisor-fix targeted suites pass 724 and 222 tests; the complete unit
 suite passes 3,316 tests without failures/skips/cancellations. Format, lint,
 typecheck and repository ratchets pass. Failed browser evidence remains visible.
 
-The supervisor's host diagnosis supersedes the earlier stop/commit hold. Commit
-the verified fixes locally, stating that this host's browser gate fails only
-the six host-timing specs; then stop for the supervisor's code check. Do not
+The supervisor's host diagnosis and positive bounded startup experiment resolve
+the earlier commit holds. Commit locally, retaining the six established timing
+specs, the additional Browse exception and the transient component wait's
+3/3 fixed and M6 repeat passes; then stop for the supervisor's code check. Do not
 push, retry full suites, edit unrelated UI/tests, or take scale measurements.
 
 When authorized to run the final `cargo xtask check` before pushing, explicitly

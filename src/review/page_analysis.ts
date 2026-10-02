@@ -15,18 +15,17 @@ import {
   validateComponentRanges,
   type RenderedRange,
 } from "../components/ranges.js";
-import { parseHtml } from "../diagnostics/html_parse.js";
 import { documentWorkSync } from "../diagnostics/timings.js";
 
 import { setDocumentSubjectFilter } from "./css/document_subjects.js";
 import { inlineStyleSpan, type InlineStyleSpan } from "./css/inline_styles.js";
 import { reviewIgnoreRegions, type ReviewIgnoreRegion } from "./ignore.js";
+import { parsePageDocument } from "./page_parser.js";
 import {
   deriveMaterialReferences,
   pageReferenceRecords,
   type PageReferenceRecord,
 } from "./page_reference_records.js";
-import { pageTreeAdapter } from "./page_source_locations.js";
 import { pageSubjectFilter } from "./page_subjects.js";
 
 export class PageAnalysis {
@@ -43,10 +42,7 @@ export class PageAnalysis {
     readonly usage?: ComponentViewRecord,
   ) {
     this.regions = reviewIgnoreRegions(source, route);
-    this.document = parseHtml("pageAnalysis", source, {
-      sourceCodeLocationInfo: true,
-      treeAdapter: pageTreeAdapter(),
-    });
+    this.document = parsePageDocument("pageAnalysis", source);
     this.ranges = usage
       ? validateComponentRanges(source, usage.ranges, this.document)
       : [];

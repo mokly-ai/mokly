@@ -3,7 +3,10 @@ import type { DefaultTreeAdapterMap } from "parse5";
 
 import type { SourceSpan } from "../components/material_recipe.js";
 
-import { originalPageElement } from "./page_source_locations.js";
+import {
+  originalPageElement,
+  pageCreationOffset,
+} from "./page_source_locations.js";
 
 type Element = DefaultTreeAdapterMap["element"];
 
@@ -31,6 +34,6 @@ export function pageSubjectFilter(
         for (const child of node.childNodes) visit(child);
     };
     for (const child of original.childNodes) visit(child);
-    return !located || visible;
+    return located ? visible : !inside(pageCreationOffset(original));
   };
 }

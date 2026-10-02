@@ -152,8 +152,10 @@ An adoption-agency formatting clone takes its original element's subject
 status. Implied `html`, `head` and `body` are always subjects. Other elements
 without a location are suppressed only if they have at least one located
 descendant element and every located descendant starts in paired ignored
-content. A first ignored child alone never suppresses an implied body or a
-container with visible descendants. This rule also applies in embedded HTML.
+content. With no located descendants, use the source start offset of the token
+whose processing created it; an empty fake `p` or `br` inside paired ignored
+content is not a subject. A first ignored child alone never suppresses an
+implied root or a container with visible descendants. Apply this in embedded HTML.
 Ignored text/comment nodes also remain their ordinary structural context.
 The predicate suppresses only final selected subjects; it is not a filter on
 the tree adapter's children/parent/sibling operations. Template contents remain
@@ -164,8 +166,6 @@ This intentionally replaces ignore-normalized matching: removing ignored
 children formerly changed surrounding subjects' combinator/structural matches.
 Only outcomes affected by that lost context change. Differential examples must
 assert the real original-tree outcome, not require the old false exclusion.
-Embedded linked-HTML documents follow the same subject/context policy within
-their own reader trees, without becoming view-side page analyses.
 
 ## Identical-text Quick Check
 

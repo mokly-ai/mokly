@@ -15,7 +15,6 @@ const cases = [
     true,
   ],
   ["tr", `<table>${start}<td>clock</td>${end}</table>`, false],
-  ["body", `${start}<i>clock</i>${end}<main>visible</main>`, true],
   ["p > b", `${start}<b><p>clock</b>${end}visible</p>`, false],
 ] as const;
 

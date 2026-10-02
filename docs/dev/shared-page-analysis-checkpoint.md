@@ -132,6 +132,53 @@ fixing production code; logs `m7-supervisor-before.log` and
 
 ## Verification And Deferred Evidence
 
+The second supervisor round replaces first-round donor recovery entirely:
+`page_parser.ts` subclasses parse5 8.0.1's exported `Parser`, capturing original
+start-token attributes and token-array identities before tree construction.
+The default adapter uses those identities for adoption/clones and records the
+creating token's UTF-16 offset for source-less elements. No regex recovery,
+secondary tokenizer or unregistered-tree fallback remains; missing registration
+is a typed internal review failure. This clarifies existing provenance rules.
+
+Empty parser-created `p`/`br` subjects inside paired regions now stay excluded.
+Located descendants retain the all-ignored rule, and implied roots remain
+subjects. New `.page` and `head` tests replace ineffective global `body` tests.
+Committed/derived inline, linked and embedded cases compare real results with
+M6, with both fast-path settings for parser-created subjects and donor ignores.
+Lookalikes in ignored/end/adopted tag attributes and doctypes cannot supply
+spans. SVG/MathML template/select integration points and HTML-select root
+adoption are covered. The entire extractor corpus now uses the production
+adapter, including an original/clone identity assertion. Parse counting
+intercepts both `parse` and inherited `Parser.parse`, preserving one tree.
+
+Regression-first evidence is in `m7-round2-before.log` and
+`m7-round2-before-extra.log`; `m7-round2-roots-positive.log` and
+`m7-round2-roots-mutant.log` prove the replacement non-global tests catch loss
+of root-subject status. The corrected derived fixtures keep the changed CSS
+Git paths so the M6 oracle actually exercises stylesheet matching, rather
+than unrelated byte-only material evidence. `m7-round2-reversion-mutants.log`
+checks creation/root/clone reversions; all temporary generated-code mutations
+are restored before verification. Final round-two evidence uses `m7-round2-*`
+names, retaining the first round's history and browser host exception.
+The final root fixture suppresses the host page's explicit head so an embedded
+`head` rule cannot accidentally match the host instead of the implied reader
+head. Its positive/mutated runs (`m7-round2-final-roots-*`) prove all 12
+inline/linked/embedded, committed/derived root tests detect loss of the rule.
+
+Round two passes 825 targeted tests, 280 further equivalence/docs tests, all
+3,417 unit tests, and all 219 pinned-Chromium hydration tests. Static checks and
+ratchets pass. The full pinned browser run retains the known six host-timing
+specs and two additional waits; the requested two-spec, three-repeat diagnostic
+passes 104/105 on the fixed tree and 105/105 on clean M6. Neither additional
+failure is deterministic; M6 did not reproduce either in that short control.
+The [browser report](./shared-page-browser-gate.md#second-round-verification-and-additional-waits)
+retains every result and trace. The supervisor's bounded ABBA startup experiment
+resolves the hold: fixed/M6 mean ratios are 0.5102 classification, 0.9693 idle
+and 0.9092 server CPU. All fixed classification/CPU samples are faster; idle
+samples overlap M6's spread or are faster. The Browse wait is therefore an
+additional host-timing exception under the supervisor's decision rule, allowing
+the local commit. No UI/timeout change or large-fixture measurement occurs.
+
 All Node commands use 24.19.0. The checkpoint runs targeted page/CSS/fast-path/
 Changes suites, `npm run prepare:verification`, the complete prepared unit,
 Chromium and hydration suites, and format/lint/typecheck. Documentation tests

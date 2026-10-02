@@ -34,12 +34,6 @@ const cases = [
     matched: false,
   },
   {
-    name: "implied body with ignored first child",
-    selector: "body",
-    body: `${start}<i>clock</i>${end}<main>visible</main>`,
-    matched: true,
-  },
-  {
     name: "adoption clone",
     selector: "p > b",
     body: `${start}<b><p>clock</b>${end}visible</p>`,

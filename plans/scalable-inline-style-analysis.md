@@ -1069,6 +1069,31 @@ the original page; give identical texts a single-parse quick check.
 - [x] Discovered: supervisor-fix checkpoint: prove regressions fail first,
       rerun targeted/full unit/Chromium/hydration/static/docs checks, add new
       Conventional Commits without amending, report and stop before measuring.
+- [x] Discovered: second supervisor round: capture provenance during the one
+      parse with parse5's exported Parser and default adapter. Remove regex
+      donor recovery and its dead unregistered-tree fallback; enforce typed
+      registration errors. Record creating-token offsets for empty implied
+      subjects, preserve all-descendant/root/clone policies and test both modes
+      against M6 on inline, linked and embedded paths. Run the entire extractor
+      corpus through the production parser, with lookalike/integration-point/
+      clone/HTML-select cases; replace the global-body tests with real `.page`
+      and `head` matches. Prove regressions fail first, then complete targeted,
+      unit, pinned hydration/browser and static/docs checks. Commit locally and
+      stop. Retain the six known host-timing signatures and the supervisor's
+      subsequently authorized Browse startup exception, with all raw failures.
+- [x] Discovered: classify additional Browse light-only and desktop component
+      preview waits from the full round-two browser run. Run both specs alone
+      with pinned Chromium and three repetitions on the fixed tree and clean,
+      prepared M6. Retain server logs/traces: fixed 104/105, M6 105/105, with
+      neither extra failure deterministic. The short control does not reproduce
+      them. The supervisor's bounded ABBA startup comparison resolves the hold,
+      without UI or timeout changes or more full-suite retries.
+- [x] Discovered: run the bounded cold Serve experiment alone on clean prepared
+      M6 and detached fixed-source snapshots, ABBA twice, retaining all eight
+      runs' completed classification, document/inline counts, observed idle and
+      server CPU. Fixed/M6 mean ratios 0.5102 / 0.9693 / 0.9092 meet the stated
+      decision rule; record Browse as an additional host-timing exception and
+      commit locally. This is not large-fixture or Decision 13 acceptance.
 - [x] Discovered: investigate the post-reboot browser gate using clean pre-M7
       `e5025e64`, not M7 `ee4ead64`. Run the six failed specs cold and directly
       time fresh ordinary-preview exports on M6, delivered M7 and the fixed
@@ -1225,6 +1250,9 @@ dominates, and leave every document aligned.
       `design_links`, `preview_design_links`, `preview_navigation` and
       `standalone_appearance_history`, must pass in CI with pinned Chromium or
       on a host whose `machine.cpu` matches the M2 reference (2.90GHz Xeon).
+      Include the additional Browse light-only and desktop component-preview
+      waits retained by the second-round gate investigation; no skipped or
+      excepted tests satisfy this final complete-suite gate.
       The reboot moved M7 to a 2.50GHz host; the six specs fail fixed waits on
       M6 too, with median per-test slowdown 1.46×. The M7 checkpoint exception
       is not final acceptance. Keep benchmark machine-contract decisions pending

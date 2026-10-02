@@ -327,10 +327,12 @@ Key code:
 - `page_analysis.ts`, `page_pair.ts`: lazy view-local source-located trees,
   validated UTF-16 ranges, flat ignore spans, styles and reference inventory.
   The pair caches raw normalization and one stable projected exclusion policy.
-- `page_source_locations.ts`, `page_root_attributes.ts`, `page_subjects.ts`:
-  adopted root-attribute spans, formatting-clone provenance and final subject
-  status of implied containers. Rare missing root spans use targeted original
-  tokenization, never a second HTML tree. Style discovery shares the inventory.
+- `page_parser.ts`, `page_source_locations.ts`, `page_subjects.ts`: the one
+  default-tree parse captures adopted attribute/clone provenance from parse5's
+  own tokens. Empty parser-created elements use their creating token's offset
+  for ignore status; located descendants retain the all-ignored rule. No regex
+  recovery or second tokenizer/tree runs. Production corpus and entrypoint-count
+  tests guard the internal Parser hook on upgrades. Styles share the inventory.
 - `page_projection.ts`, `page_reference_records.ts`: delivered string materials
   with auxiliary kept/copy/producer recipes, never a reparsed material tree.
   Copies expose recorded template references, not parser-discarded tokens.

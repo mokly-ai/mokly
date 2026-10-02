@@ -32,6 +32,9 @@ view tree, shared by validation, discovery and selector matching. Resource
 HTML is counted separately and retains its reader's own trees; the separate
 page pass keeps its legacy steps and parse cache. Parse5 interception tests
 reject uncounted, repeated or rewritten-page parses, including owned references.
+`review/page_parser.ts` counts its single `Parser.parse` at the same owning
+step; parser-token provenance adds no second parse. Interception covers both
+parse5 entrypoints so the subclass cannot evade the count.
 
 Run `npm run build`, then:
 

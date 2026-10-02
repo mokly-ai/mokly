@@ -5,7 +5,8 @@
 Implemented by [M7 page analysis](./mokly-page-analysis.md). Adopted attributes
 and formatting-clone rules clarify its existing complete-inventory requirement;
 they are documentation-gap clarifications, not new behavior or permission to
-parse rewritten view materials.
+parse rewritten view materials. The second supervisor round clarifies direct
+token capture and creation offsets under the same rules, not new behavior.
 
 ## Reference Inventory
 
@@ -43,16 +44,32 @@ Never drop an extracted visible value because its element/attribute lacks a
 parse5 location. A later `html` or `body` start tag may supply attributes adopted
 onto an existing explicit or implied root. Those attribute records use the
 complete source attribute span of the supplying start tag, not the root's old
-tag or a lookalike in a comment, attribute, inert template, ignored body token
-inside `select`, raw/RCDATA text, or foreign CDATA. Detect missing provenance first; rare
-targeted location-aware tokenization of candidate original start tags is
-allowed. It creates no second tree or rewritten-material parse and leaves
-native attribute spans unchanged.
+tag or a lookalike in an end-tag/ignored-start-tag/adopted-tag attribute, doctype,
+comment, inert HTML template, raw/RCDATA text or foreign CDATA. HTML `select`
+discards `body` tags but may adopt `html` attributes. SVG/MathML elements named
+`template` or `select` do not block real tags at HTML integration points.
+
+Capture provenance from the parser's own tokens during its one parse. Record
+each start token's attribute-array identity, start offset and complete decoded
+attribute spans before the tree builder processes it. The adapter's attribute
+adoption uses that supplying token's own array; no text search or subsequent
+tokenization may guess a donor. Store only positions/identities, not token text.
 
 Adoption-agency/reconstructed formatting clones inherit the original element's
 attribute records and source provenance, even when the original node leaves
 the final tree. Record token/original identity during the one default-tree
-parse; do not infer a clone's origin from its first descendant. They also use
-the original element's subject status under
+parse; do not infer a clone's origin from its first descendant. Clones use the
+original element's subject status under
 [original-page matching](./mokly-page-analysis.md#original-page-matching).
+Elements created without a start token record the creating token's start offset,
+including fake `p` from `</p>` and `br` from `</br>`; that rule owns their status.
 Apply these rules to page analyses and original embedded-resource reader trees.
+
+Trees without provenance registration fail with a typed internal review
+diagnostic, never a guessed span or silent reference drop. The implementation
+uses parse5 8.0.1's exported, internal `Parser` subclass/token callbacks and the
+default adapter; it does not patch the tokenizer or change recovery behavior.
+Guard parser upgrades with the whole extractor-equivalence corpus through this
+production boundary, requiring exact provenance for every visible value,
+adopted attribute, clone and parser-created subject. The single-parse counting
+test intercepts both parse5 `parse` and `Parser.parse` entrypoints.

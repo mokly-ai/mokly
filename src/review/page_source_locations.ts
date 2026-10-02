@@ -1,139 +1,102 @@
-/** Default-tree nodes retain the provenance of adopted attributes and formatting clones. */
+/** Capture source origins directly from the tokens used by the default tree builder. */
 import {
   defaultTreeAdapter,
-  html,
   type DefaultTreeAdapterMap,
+  type Token,
   type TreeAdapter,
 } from "parse5";
 
-import { rootAttributeLocations } from "./page_root_attributes.js";
+import { MoklyError } from "../errors.js";
 
 type Element = DefaultTreeAdapterMap["element"];
 type Attribute = Element["attrs"][number];
-type Location = { startOffset: number; endOffset: number };
-const formatting = new Set([
-  "a",
-  "b",
-  "big",
-  "code",
-  "em",
-  "font",
-  "i",
-  "nobr",
-  "s",
-  "small",
-  "strike",
-  "strong",
-  "tt",
-  "u",
-]);
+type Span = { startOffset: number; endOffset: number };
+const documents = new WeakSet<DefaultTreeAdapterMap["document"]>();
 const originals = new WeakMap<Element, Element>();
-const attributes = new WeakMap<Attribute, Location>();
-const adopted = new WeakMap<DefaultTreeAdapterMap["document"], Element[]>();
+const positions = new WeakMap<Element, number>();
+const attributes = new WeakMap<Attribute, Span>();
+
+export class PageSourceLocations {
+  private readonly tokens = new WeakMap<
+    Element["attrs"],
+    { startOffset: number; original?: Element }
+  >();
+  private currentOffset: number | undefined;
+  readonly adapter: TreeAdapter<DefaultTreeAdapterMap> = {
+    ...defaultTreeAdapter,
+    createDocument: () => {
+      const document = defaultTreeAdapter.createDocument();
+      documents.add(document);
+      return document;
+    },
+    createElement: (tag, namespace, attrs) => {
+      const element = defaultTreeAdapter.createElement(tag, namespace, attrs);
+      const token = this.tokens.get(attrs);
+      const offset = token?.startOffset ?? this.currentOffset;
+      if (offset !== undefined) positions.set(element, offset);
+      if (token) {
+        if (token.original) originals.set(element, token.original);
+        else token.original = element;
+      }
+      return element;
+    },
+    adoptAttributes: (recipient, attrs) => {
+      if (!this.tokens.has(attrs))
+        throw new MoklyError(
+          "review-invalid",
+          "adopted attributes have no parser token provenance",
+        );
+      defaultTreeAdapter.adoptAttributes(recipient, attrs);
+    },
+  };
+
+  processing(token: Token.Token): void {
+    this.currentOffset = token.location?.startOffset;
+  }
+
+  startTag(token: Token.TagToken): void {
+    this.processing(token);
+    if (!token.location) return;
+    if (!this.tokens.has(token.attrs))
+      this.tokens.set(token.attrs, { startOffset: token.location.startOffset });
+    for (const attribute of token.attrs) {
+      const name = attribute.prefix
+        ? `${attribute.prefix}:${attribute.name}`
+        : attribute.name;
+      const span = token.location.attrs?.[name];
+      if (span && !attributes.has(attribute))
+        attributes.set(attribute, {
+          startOffset: span.startOffset,
+          endOffset: span.endOffset,
+        });
+    }
+  }
+}
+
+export function requirePageSourceLocations(
+  document: DefaultTreeAdapterMap["document"],
+): void {
+  if (!documents.has(document))
+    throw new MoklyError(
+      "review-invalid",
+      "unregistered page source provenance",
+    );
+}
 
 export function originalPageElement(element: Element): Element {
   return originals.get(element) ?? element;
 }
 
-export function pageTreeAdapter(): TreeAdapter<DefaultTreeAdapterMap> {
-  const tokens = new WeakMap<Element["attrs"], Element>();
-  const recipients: Element[] = [];
-  return {
-    ...defaultTreeAdapter,
-    createDocument() {
-      const document = defaultTreeAdapter.createDocument();
-      adopted.set(document, recipients);
-      return document;
-    },
-    createElement(tag, namespace, attrs) {
-      const element = defaultTreeAdapter.createElement(tag, namespace, attrs);
-      if (namespace === html.NS.HTML && formatting.has(tag)) {
-        const original = tokens.get(attrs);
-        if (original) originals.set(element, original);
-        else tokens.set(attrs, element);
-      }
-      return element;
-    },
-    setNodeSourceCodeLocation(node, location) {
-      defaultTreeAdapter.setNodeSourceCodeLocation(node, location);
-      if ("tagName" in node && location && "attrs" in location)
-        for (const attribute of node.attrs) {
-          const span =
-            location.attrs?.[
-              attribute.prefix
-                ? `${attribute.prefix}:${attribute.name}`
-                : attribute.name
-            ];
-          if (span && !attributes.has(attribute))
-            attributes.set(attribute, span);
-        }
-    },
-    adoptAttributes(recipient, attrs) {
-      const names = new Set(recipient.attrs.map(({ name }) => name));
-      if (attrs.some(({ name }) => !names.has(name)))
-        recipients.push(recipient);
-      defaultTreeAdapter.adoptAttributes(recipient, attrs);
-    },
-  };
+export function pageCreationOffset(element: Element): number {
+  const offset = positions.get(originalPageElement(element));
+  if (offset === undefined)
+    throw new MoklyError(
+      "review-invalid",
+      "element has no creating token provenance",
+    );
+  return offset;
 }
 
-export function pageAttributeLocation(
-  element: Element,
-  attribute: Attribute,
-): Location | undefined {
-  const original = originalPageElement(element);
-  const name = attribute.prefix
-    ? `${attribute.prefix}:${attribute.name}`
-    : attribute.name;
-  return (
-    attributes.get(attribute) ?? original.sourceCodeLocation?.attrs?.[name]
-  );
-}
-
-export function recoverPageSourceLocations(
-  source: string,
-  document: DefaultTreeAdapterMap["document"],
-): void {
-  let recipients = adopted.get(document);
-  if (!recipients) {
-    recipients = [];
-    const tokens = new WeakMap<Element["attrs"], Element>();
-    const visit = (node: DefaultTreeAdapterMap["node"]) => {
-      if ("tagName" in node) {
-        if (node.sourceCodeLocation && formatting.has(node.tagName))
-          tokens.set(node.attrs, node);
-        if (
-          node.tagName === "html" ||
-          node.tagName === "body" ||
-          formatting.has(node.tagName)
-        )
-          recipients!.push(node);
-      }
-      if ("childNodes" in node)
-        for (const child of node.childNodes) visit(child);
-      if ("content" in node) visit(node.content);
-    };
-    visit(document);
-    for (const node of recipients) {
-      const original = tokens.get(node.attrs);
-      if (!node.sourceCodeLocation && original) originals.set(node, original);
-    }
-  }
-  const missing = [...new Set(recipients)].filter((node) =>
-    node.attrs.some((attribute) => !pageAttributeLocation(node, attribute)),
-  );
-  if (!missing.length) return;
-  for (const { attribute, location } of rootAttributeLocations(
-    source,
-    document,
-    missing,
-  ))
-    if (
-      !missing.some(
-        (node) =>
-          node.attrs.includes(attribute) &&
-          pageAttributeLocation(node, attribute),
-      )
-    )
-      attributes.set(attribute, location);
+export function pageAttributeLocation(attribute: Attribute): Span | undefined {
+  return attributes.get(attribute);
 }

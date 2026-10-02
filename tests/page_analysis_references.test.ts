@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parse } from "parse5";
-
 import { htmlReferenceValues } from "../dist/html_reference_values.js";
 import { extractHtmlReferences } from "../dist/html_references.js";
 import { PageAnalysis } from "../dist/review/page_analysis.js";
@@ -32,13 +30,28 @@ const inputs = [
   '<b style="background:url(cloned.png)"><p>inside</b>outside</p>',
   'before<body style="background:url(merged.png)">after',
   '<p>text</p><script>"<body style=\'background:url(actual.png)\'>"</script><select><body style="background:url(actual.png)"></select><body style="background:url(actual.png)">',
+  ...["body", "html"].flatMap((tag) => {
+    const actual = `<${tag} style="background:url(token.svg)">`;
+    return [
+      `<p>a</p></div title='${actual}'>${actual}`,
+      `<p>a</p><tr title='${actual}'>${actual}`,
+      `<p>a</p><body title='${actual}'>${actual}`,
+      `<!DOCTYPE html PUBLIC '${actual}'><p>a</p>${actual}`,
+      ...["template", "select"].flatMap((container) => [
+        `<p>a</p><svg><${container}><foreignObject>${actual}</foreignObject></${container}></svg>`,
+        `<p>a</p><math><${container}><annotation-xml encoding="text/html">${actual}</annotation-xml></${container}></math>`,
+        `<p>a</p><math><${container}><mi>${actual}</mi></${container}></math>`,
+      ]),
+    ];
+  }),
+  '<p>a</p><select><html style="background:url(select-root.svg)"><body style="background:url(discarded.svg)"></select>',
   ...cssReferenceInputs.map(([source]) => `<style>${source}</style>`),
 ];
 
 for (const resourceHints of [false, true])
   for (const [index, source] of inputs.entries())
     test(`source inventory equals the delivered extractor ${index}, hints=${resourceHints}`, () => {
-      const document = parse(source, { sourceCodeLocationInfo: true });
+      const document = new PageAnalysis(source, "inventory.html").document;
       const options = { resourceHints };
       const expected = delivered(source, options);
       assert.deepEqual(
