@@ -74,7 +74,7 @@ Controls below use text, boolean, number and primitive enum selections only.
    Brand/search structure belongs to this component;
    it composes the registered picker, chip and appearance selector. Preserve compact mobile branding.
 2. **Catalogue navigation:** row records with stable key, label, kind
-   `folder/screen/component/flow/page/variant`, depth, optional
+   `folder/screen/component/flow/page/doc/variant`, depth, optional
    count/open/destination, changed mark, and variant-list state; a variant row
    requires `variantParentKind: "screen" | "component"`; selected destination,
    All/Changes state, changed count and presentation

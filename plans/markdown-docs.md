@@ -206,12 +206,18 @@ parts.
       viewport switch, the shared top bar with its one Appearance selector,
       rendered in both schemes, mobile and desktop variants, one screen
       component.
-- [x] Add `design-doc-details`: Generated views, Schemes, Tags, a linked
-      related-doc chip, and Dependencies rows.
+- [x] Add `design-doc-details`: Source, Schemes, Tags, a linked related-doc
+      chip, and Dependencies rows. Details has no Generated row because every
+      path derives from kind and id. The depicted catalogue draws one current
+      doc, so the related-doc chip opens the doc design itself; the example
+      notes record that simplification.
 - [x] Add `design-doc-navigation`: the narrow drawer open on a doc row.
 - [x] Add `design-doc-removed`: a removed doc's previous version with its
       baseline folder labels.
-- [ ] Update the existing home mockup count line with a docs figure.
+- [x] Update the existing home mockup count line with a docs figure. Not
+      applicable: no home mockup draws a count line (the depicted home shows
+      guidance only), so the docs figure belongs to the viewer's home copy in
+      Milestone 6.
 - [x] Register the screens with `navPath` under the design root so each is
       reachable from the Browse shell folders, update the inventory agreement
       test, then run `npm run build`, `npm run example:build`,
@@ -332,10 +338,12 @@ Show docs in the shell as specified by the mockups.
       embedded preview scheme control, sets the managed frame `color-scheme`,
       hides the viewport switch, and keeps fragment restoration and
       Back/Forward behavior.
-- [ ] Add details rows: Generated views, Schemes, and the related-doc chip
-      link when the path is a doc source.
+- [ ] Add details rows: Schemes and the related-doc chip link when the path
+      is a doc source; Source and the other rows already apply.
 - [ ] Add the docs figure to the home count and the search rows.
-- [ ] Route the removed doc through the previous-version presentation.
+- [ ] Route the removed doc through the previous-version presentation, with
+      the label reading `Showing previous version — Light only` under a dark
+      appearance, as `design-doc-removed` depicts.
 - [ ] Update `packages/viewer/README.md` for the doc kind.
 - [ ] Tests: viewer unit tests for the tree, details, stages, and copy;
       browser tests for navigation, the Appearance control in standalone and

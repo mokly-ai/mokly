@@ -224,7 +224,7 @@ Its previous version is its light desktop view, captured through the page
 preview lifecycle in [removed previews](./mokly-removed-previews.md) with
 `doc=<id>` in place of `page=<id>`, metadata at `docs/<id>.json`, and the
 document at `snapshots/before/docs/<id>.desktop.html`; under a dark
-appearance it keeps that light view with the existing light-only note.
+appearance it keeps that light view and its label adds ` — Light only`.
 
 Watch treats every doc file as an inventoried input: an edit, including a
 frontmatter-only edit, rebuilds; a created, renamed, or deleted file that

@@ -143,7 +143,7 @@ Additional owning groups keep each new page at no more than five screens:
   deleted-parent behavior.
 - `design-doc-view`, `design-doc-details`, `design-doc-navigation`, and
   `design-doc-removed` specify a doc at reading width, its metadata with a
-  linked related doc, the drawer, and its previous version, all in both schemes under [docs](./mokly-docs.md).
+  linked related doc, the drawer, and its previous version, whose label reads `Showing previous version — Light only` under Dark, all in both schemes under [docs](./mokly-docs.md).
 - The `Previous document versions` and `Previous screen versions` folders hold
   the removed-preview child pages (loading, unavailable with retry,
   long-document scrolling, and, for screens, a viewport with no captured

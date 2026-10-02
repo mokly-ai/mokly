@@ -28,7 +28,7 @@ Every design screen has mobile and desktop views. They are light-only
 generated documents, including artboards depicting a dark product screen, except
 the appearance screens (the `design-appearance-*` entries), the canonical
 `design-browse-screen` and `design-browse-details-screen`, their two retained
-Welcome appearance variants, and the Welcome comparison family. These render
+Welcome appearance variants, the four `design-doc-*` screens, and the Welcome comparison family. These render
 in both schemes so the outer Appearance control switches the depicted
 catalogue. Link targets use design entry ids independently of the example ids printed in the
 depicted shell's metadata. Existing ids, screens, and text links remain
@@ -136,14 +136,14 @@ target or live-use-case link; their inspector records the previous version's
 provenance. Related-doc labels without a portable public
 document remain plain text; this change adds no document publishing pipeline.
 
-The page designs extend this contract with explicit document destinations.
-`design-page-view` and `design-page-details` pair the closed/open inspector;
-`design-page-navigation` opens the document's drawer and closes back to its view.
-Its page row targets `design-page-view`; Welcome and Example tour retain their
-existing design destinations. The shared synthetic document takes an explicit
-Welcome destination so its design variant stays inside the design catalogue,
-while the real document continues to link to `example-welcome`. The removed-page
-state keeps a flat row and returns to catalogue home without inventing parents.
+The page and doc designs extend this contract with explicit destinations.
+`design-page-view`/`design-page-details` and `design-doc-view`/`design-doc-details`
+pair the closed/open inspector; `design-page-navigation` and `design-doc-navigation`
+open the drawer and close back to the view. The page row targets `design-page-view`,
+the doc row and its related-doc chip target `design-doc-view`, and the doc artboards'
+Changes filter opens `design-doc-removed`. The shared synthetic document takes an
+explicit Welcome destination inside the design catalogue while the real document
+links to `example-welcome`. Removed page and doc states keep a flat row and return home.
 
 `design-publication-catalogue` omits filter and comparison controls.
 `design-publication-changes` offers the existing Welcome comparison destinations;
