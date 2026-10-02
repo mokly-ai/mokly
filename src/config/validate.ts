@@ -18,7 +18,12 @@ import {
   validateSourceRoots,
 } from "./path_validation.js";
 import { resolveInside, validateRelativeRoute } from "./paths.js";
+import { validatePostcssPath } from "./postcss.js";
 import { resolvePublicExclude } from "./public_exclusions.js";
+import {
+  isReservedConfiguredPath,
+  validateStylesheetAliases,
+} from "./reserved_paths.js";
 import {
   requireString,
   validateColorSchemes,
@@ -59,7 +64,12 @@ export function resolveConfig(
     repoRoot,
     configPath,
   );
-  const entryGlobs = resolveEntryGlobs(input, repoRoot, configDir);
+  const entryGlobs = resolveEntryGlobs(
+    input,
+    repoRoot,
+    configDir,
+    path.resolve(configDir, input.mockupsDir),
+  );
   const entriesDir = entryGlobs.entriesDir;
   const mockupsDir = resolveInside(
     repoRoot,
@@ -86,6 +96,7 @@ export function resolveConfig(
     input.renderer,
     "renderer",
   );
+  const postcss = validatePostcssPath(input.postcss, repoRoot, configDir);
   const compatibilityTransformer = optionalModule(
     repoRoot,
     configDir,
@@ -100,6 +111,7 @@ export function resolveConfig(
   validateSourceRoots(repoRoot, entriesDir, mockupsDir);
   const colorSchemes = validateColorSchemes(input.colorSchemes);
   const stylesheets = validateStylesheets(input.stylesheets ?? []);
+  validateStylesheetAliases(stylesheets, mockupsDir);
   const watchRules = validateWatchRules(input.watch?.rules ?? []);
   if (input.review?.base !== undefined)
     requireString(input.review.base, "review.base");
@@ -109,6 +121,11 @@ export function resolveConfig(
     input.review?.outDir ?? ".context/mokly-review",
     "review.outDir",
   );
+  if (isReservedConfiguredPath(reviewOut, mockupsDir))
+    throw new MoklyError(
+      "config-invalid",
+      "review.outDir must not be at or inside mokly-generated/; choose a separate artifact directory",
+    );
   validateReviewOut(reviewOut, {
     entryRoots: entriesDir ? [entriesDir] : [],
     mockupsDir,
@@ -129,6 +146,7 @@ export function resolveConfig(
     mockupsDir,
     moduleResolution,
     ...(renderer ? { renderer } : {}),
+    ...(postcss ? { postcss } : {}),
     repoRoot,
     review: {
       ...(baselineBuild ? { baselineBuild } : {}),

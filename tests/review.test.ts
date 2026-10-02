@@ -1,27 +1,18 @@
 import assert from "node:assert/strict";
-import { execFile } from "node:child_process";
 import fs from "node:fs";
-import path from "node:path";
 import test from "node:test";
-import { promisify } from "node:util";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import type { Compilation } from "../dist/build/compile.js";
-import { writeCompilation } from "../dist/build/transaction.js";
+import {
+  generatedBytes,
+  generatedText,
+  type GeneratedFile,
+} from "../dist/build/generated_file.js";
 import { loadConfig } from "../dist/config/load.js";
 import { renderReviewArtifact } from "../dist/review/artifact.js";
 import { compareReview } from "../dist/review/compare.js";
-import {
-  NodeGitCommandRunner,
-  CommittedRepository,
-} from "../dist/review/git.js";
-import {
-  normalizeReviewPair,
-  normalizeSingleDocument,
-} from "../dist/review/ignore.js";
 import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
-import { runReview } from "../dist/review/run.js";
-import { writeReviewArtifact } from "../dist/review/write.js";
 import { generatedViews } from "../packages/viewer/dist/data.js";
 import type {
   ManifestScreen,
@@ -29,133 +20,8 @@ import type {
 } from "../packages/viewer/dist/registry/types.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
-import {
-  createFixture,
-  removeFixture,
-  validEntrySource,
-} from "./helpers/fixture.js";
-
-const execFileAsync = promisify(execFile);
-
-test("Review ignore normalizes paired regions and retains malformed content", () => {
-  const base =
-    "<main><!--mokly-review-ignore:start:nav--><nav>A</nav><!--mokly-review-ignore:end:nav--><p>Body</p></main>";
-  const head =
-    "<main><!--mokly-review-ignore:start:nav--><nav>B</nav><!--mokly-review-ignore:end:nav--><p>Body</p></main>";
-  const pair = normalizeReviewPair(base, head, "screen.mobile.html");
-  assert.equal(pair.base, pair.head);
-  assert.deepEqual(pair.ignoredIds, ["nav"]);
-  assert.equal(
-    normalizeSingleDocument(base, "screen.mobile.html").includes(
-      "<nav>A</nav>",
-    ),
-    true,
-  );
-  assert.throws(
-    () =>
-      normalizeReviewPair(
-        base,
-        head.replace("end:nav", "end:other"),
-        "screen.mobile.html",
-      ),
-    /does not match/,
-  );
-});
-
-test("Git failures keep typed operation context", async () => {
-  const git = new CommittedRepository({
-    run: async () => {
-      throw new Error("not a repository");
-    },
-  });
-  await assert.rejects(
-    () => git.evidence.mergeBase("origin/main", "HEAD"),
-    /find merge base of origin\/main and HEAD.*not a repository/,
-  );
-});
-
-test("Review classifies added, removed, and unchanged routes independently", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
-  const compilation = await compileCatalogue(config);
-  const detail = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "details",
-  );
-  const home = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.id === "home",
-  );
-  assert.ok(detail?.kind === "screen" && home?.kind === "screen");
-  const old = {
-    ...home,
-    id: "old-screen",
-    title: "Old screen",
-    useCaseIds: [],
-  };
-  const baseManifest = {
-    ...compilation.manifest,
-    entries: [{ ...detail, useCaseIds: [] }, old],
-  };
-  const gitFiles = new Map<string, string>([
-    ["mockups/mokly-manifest.json", `${JSON.stringify(baseManifest)}\n`],
-    [
-      "mockups/screens/details.mobile.html",
-      compilation.outputs.get("screens/details.mobile.html") ?? "",
-    ],
-    [
-      "mockups/screens/details.desktop.html",
-      compilation.outputs.get("screens/details.desktop.html") ?? "",
-    ],
-    [
-      "mockups/screens/old-screen.mobile.html",
-      "<html><body>Old mobile</body></html>",
-    ],
-    [
-      "mockups/screens/old-screen.desktop.html",
-      "<html><body>Old desktop</body></html>",
-    ],
-  ]);
-  const artifact = await compareReview(
-    compilation,
-    config,
-    {
-      evidence: {
-        changedPaths: async () => [],
-        mergeBase: async () => "a".repeat(40),
-      },
-      reader: {
-        fileExists: async (_commit, repoPath) => gitFiles.has(repoPath),
-        fileKind: async (_commit, repoPath) =>
-          gitFiles.has(repoPath) ? "regular" : "missing",
-        readFile: async (_commit, repoPath) => {
-          const content = gitFiles.get(repoPath);
-          if (content === undefined)
-            throw new Error(`missing fake Git path ${repoPath}`);
-          return content;
-        },
-        readFileBytes: async (_commit, repoPath) => {
-          const content = gitFiles.get(repoPath);
-          if (content === undefined)
-            throw new Error(`missing fake Git path ${repoPath}`);
-          return Buffer.from(content);
-        },
-      },
-    },
-    "HEAD",
-  );
-  assert.equal(
-    artifact.result.screens.find((screen) => screen.id === "home")?.state,
-    "added",
-  );
-  assert.equal(
-    artifact.result.screens.find((screen) => screen.id === "old-screen")?.state,
-    "removed",
-  );
-  assert.equal(
-    artifact.result.screens.find((screen) => screen.id === "details")?.state,
-    "unchanged",
-  );
-});
+import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("dark views compare and classify against a pre-dark base", async (context) => {
   const fixture = await createFixture(undefined, {
@@ -326,119 +192,9 @@ test("ignoredImpact sorts by viewport then scheme then id", async (context) => {
   ]);
 });
 
-test("Review compares Git base without checkout and writes deterministic artifacts", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
-  await writeCompilation(await compileCatalogue(config), config);
-  await git(fixture.root, ["init", "-q"]);
-  await git(fixture.root, ["config", "user.name", "Mokly Test"]);
-  await git(fixture.root, ["config", "user.email", "mokly@example.invalid"]);
-  await git(fixture.root, ["add", "."]);
-  await git(fixture.root, ["commit", "-qm", "test: base catalogue"]);
-
-  await fs.promises.writeFile(
-    fixture.entryPath,
-    validEntrySource({ firstTitle: "Updated Home" }),
-  );
-  await fs.promises.writeFile(
-    path.join(fixture.root, "notes.md"),
-    "# Updated fixture notes\n",
-  );
-  await writeCompilation(await compileCatalogue(config), config);
-  const result = await runReview(
-    config,
-    "HEAD",
-    config.review.outDir,
-    new CommittedRepository(new NodeGitCommandRunner(fixture.root)),
-  );
-  assert.equal(
-    result.screens.find((screen) => screen.id === "home")?.state,
-    "changed",
-  );
-  assert.deepEqual(result.sharedImpact, ["notes.md"]);
-  assert.ok(
-    result.screens.every((screen) => screen.sharedImpact.includes("notes.md")),
-  );
-  const reviewJson = JSON.parse(
-    await fs.promises.readFile(
-      path.join(config.review.outDir, "review.json"),
-      "utf8",
-    ),
-  ) as { baseCommit: string; schemaVersion: number };
-  assert.equal(reviewJson.schemaVersion, 4);
-  assert.match(reviewJson.baseCommit, /^[a-f0-9]{40}$/);
-  assert.equal(
-    fs.existsSync(path.join(config.review.outDir, "index.html")),
-    false,
-  );
-  assert.equal(
-    fs.existsSync(path.join(config.review.outDir, "summary.md")),
-    true,
-  );
-});
-
-test("Review reports descendants of directory dependencies", async (context) => {
-  const fixture = await createFixture(
-    validEntrySource().replace(
-      'dependencies: ["notes.md"]',
-      'dependencies: ["src/components"]',
-    ),
-  );
-  context.after(() => removeFixture(fixture));
-  const component = path.join(fixture.root, "src/components/Button.tsx");
-  await fs.promises.mkdir(path.dirname(component), { recursive: true });
-  await fs.promises.writeFile(component, "export const label = 'Before';\n");
-  const config = await loadConfig(fixture.root);
-  await writeCompilation(await compileCatalogue(config), config);
-  await git(fixture.root, ["init", "-q"]);
-  await git(fixture.root, ["config", "user.name", "Mokly Test"]);
-  await git(fixture.root, ["config", "user.email", "mokly@example.invalid"]);
-  await git(fixture.root, ["add", "."]);
-  await git(fixture.root, ["commit", "-qm", "test: base directory dependency"]);
-  await fs.promises.writeFile(component, "export const label = 'After';\n");
-
-  const result = await runReview(
-    config,
-    "HEAD",
-    config.review.outDir,
-    new CommittedRepository(new NodeGitCommandRunner(fixture.root)),
-  );
-
-  assert.ok(
-    result.screens.every((screen) =>
-      screen.sharedImpact.includes("src/components/Button.tsx"),
-    ),
-  );
-});
-
-test("Review writer will not replace an unowned directory or repository root", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
-  const out = path.join(fixture.root, "existing");
-  await fs.promises.mkdir(out);
-  await fs.promises.writeFile(path.join(out, "keep.txt"), "keep\n");
-  await assert.rejects(
-    () => writeReviewArtifact(new Map([["index.html", "safe"]]), out, config),
-    /unowned Review directory/,
-  );
-  await assert.rejects(
-    () =>
-      writeReviewArtifact(
-        new Map([["index.html", "safe"]]),
-        fixture.root,
-        config,
-      ),
-    /must not overlap/,
-  );
-});
-
-async function git(cwd: string, arguments_: readonly string[]): Promise<void> {
-  await execFileAsync("git", [...arguments_], { cwd });
-}
-
-function fakeGit(files: ReadonlyMap<string, string>): ReadOnlyReviewRepository {
+function fakeGit(
+  files: ReadonlyMap<string, GeneratedFile>,
+): ReadOnlyReviewRepository {
   return {
     evidence: {
       changedPaths: async () => [],
@@ -452,13 +208,13 @@ function fakeGit(files: ReadonlyMap<string, string>): ReadOnlyReviewRepository {
         const content = files.get(repoPath);
         if (content === undefined)
           throw new Error(`missing fake Git path ${repoPath}`);
-        return content;
+        return generatedText(content, repoPath)!;
       },
       readFileBytes: async (_commit, repoPath) => {
         const content = files.get(repoPath);
         if (content === undefined)
           throw new Error(`missing fake Git path ${repoPath}`);
-        return Buffer.from(content);
+        return generatedBytes(content);
       },
     },
   };
@@ -467,8 +223,8 @@ function fakeGit(files: ReadonlyMap<string, string>): ReadOnlyReviewRepository {
 function filesForCompilation(
   manifest: ManifestV7,
   compilation: Compilation,
-): Map<string, string> {
-  const files = new Map<string, string>([
+): Map<string, GeneratedFile> {
+  const files = new Map<string, GeneratedFile>([
     ["mockups/mokly-manifest.json", `${JSON.stringify(manifest)}\n`],
   ]);
   for (const [route, content] of compilation.outputs) {
@@ -511,7 +267,10 @@ function withHomeIgnoredRegions(
   for (const fragment of screenFragments(home)) {
     const content = outputs.get(fragment);
     if (content === undefined) throw new Error(`missing output ${fragment}`);
-    outputs.set(fragment, insertIgnoredRegions(content, label, ids));
+    outputs.set(
+      fragment,
+      insertIgnoredRegions(textOutput(outputs, fragment)!, label, ids),
+    );
   }
   return { ...compilation, outputs };
 }

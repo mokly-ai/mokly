@@ -39,15 +39,15 @@ hydration suite fail before any subprocess starts.
 
 ## Gate Ownership
 
-| Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                                                                |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Repository       | Live dependency audit first; Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                                                                                                              |
-| Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; all five clean consumer smokes using that pair. Real `prepack` builds remain part of packing. |
-| Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most two files active. A shard runs its whole-file partition.                                                                                                                                                                                                                                |
-| Browser          | One ordinary package/example preparation followed by every non-hydration Playwright spec, with `fullyParallel: false`, one worker, existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                                                                              |
-| Hydration        | One ordinary package/example preparation followed by every Playwright spec whose filename contains `hydration`, using the same browser settings without sharding.                                                                                                                                                                                                                          |
-| Native platforms | On macOS and Windows, build once and run export transaction and destination-race tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                                                            |
-| Required CI      | Evaluate the result and evidence from the repository job, every package runtime selected for this event, all selected unit, browser, and hydration runtime combinations, and both native platforms.                                                                                                                                                                                        |
+| Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                                                            |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repository       | Live dependency audit first; Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                                                                                                          |
+| Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; every clean consumer smoke using that pair. Real `prepack` builds remain part of packing. |
+| Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most two files active. A shard runs its whole-file partition.                                                                                                                                                                                                                            |
+| Browser          | One ordinary package/example preparation followed by every non-hydration Playwright spec, with `fullyParallel: false`, one worker, existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                                                                          |
+| Hydration        | One ordinary package/example preparation followed by every Playwright spec whose filename contains `hydration`, using the same browser settings without sharding.                                                                                                                                                                                                                      |
+| Native platforms | On macOS and Windows, build once and run export transaction and destination-race tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                                                        |
+| Required CI      | Evaluate the result and evidence from the repository job, every package runtime selected for this event, all selected unit, browser, and hydration runtime combinations, and both native platforms.                                                                                                                                                                                    |
 
 Complete and selected suites share gate definitions; adding a suite command adds
 it to the complete gate. In-process auditors fail like subprocesses.
@@ -58,6 +58,15 @@ uses the newest matching release tags reachable from `HEAD`. The
 [owning contract](./verification-ratchets.md) defines the module extensions,
 shrink-only baselines, and recursive `docs/protocol/**` scan excluding
 `fixtures/`.
+
+The repository prerequisite also runs the workspace-root source/protocol
+length audit. It covers changed repository TypeScript/JavaScript and protocol
+Markdown plus non-ignored untracked files. Protocol pages over 250 lines use
+only the exact reviewed caps in `tests/protocol_doc_sizes.test.ts`; `cargo xtask
+source-file-length-lint --all` audits every scoped file. This remains in
+addition to main's repository ratchets.
+The full scope and failure semantics are in
+[Repository Gate And Length Audits](./ci-verification-repository.md).
 
 ESLint derives global ignores from `.gitignore` before adding its broader
 ESLint-only ignores. Ignored build, cache, report, and tool scratch paths,
@@ -230,22 +239,4 @@ profile cannot skip the complete publish gate. Reports are retained for 14 days,
 which bounds their release reuse; missing or expired evidence falls back to the
 complete gate.
 
-## Dependency Cache And Security
-
-CI caches npm's download cache only. `actions/setup-node` keys it from the
-committed `package-lock.json`. `npm ci` always runs, including after a cache
-hit, and every platform's optional native package remains available. A cache
-miss is an ordinary cold install and never permits a skipped command.
-
-The live workspace audit runs first in the repository prerequisite and does not
-depend on cache state. The complete local and release commands retain the same
-audit-first ordering. Every selected package-runtime job also preserves the
-separate production audit of the freshly resolved ESM consumer, which is outside
-the workspace lockfile and overrides; the release profile proves it on both
-runtimes. Intentionally isolated clean-cache consumer tests keep private empty
-npm caches. Release publishing retains its uncached, OIDC-scoped boundary and
-exact-artifact checks.
-
-Fixture ownership, failure cleanup, browser shard balance, and acceptance
-measurement follow the separate
-[suite evidence contract](./ci-suite-evidence.md).
+The cache and audit continuation is [Dependency Cache And Security](./ci-verification-security.md).

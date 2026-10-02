@@ -33,6 +33,15 @@ export function validatePublicExclude(value: unknown): readonly string[] {
       throw invalid(item);
     }
     if (!alternatives.every(safeGlob)) throw invalid(item);
+    if (
+      alternatives.some(
+        (alternative) => alternative.split("/")[0] === "mokly-generated",
+      )
+    )
+      throw new MoklyError(
+        "config-invalid",
+        `publicExclude must not start with mokly-generated/: ${item}; narrow the exclusion to consumer-owned paths`,
+      );
   }
   return Object.freeze([...value]);
 }

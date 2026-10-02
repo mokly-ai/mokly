@@ -5,6 +5,7 @@ import { isSafeRepositoryPath } from "@mokly/viewer/data";
 import type { Manifest } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../build/compile.js";
+import { generatedBytes, type GeneratedFile } from "../build/generated_file.js";
 import { isInside, projectRealPath } from "../config/paths.js";
 import { privateStaticPathReason } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -19,7 +20,7 @@ import {
 export class CompiledReviewAssetReader extends FileSystemReviewAssetReader {
   constructor(
     private readonly headConfig: ResolvedConfig,
-    private readonly outputs?: ReadonlyMap<string, string>,
+    private readonly outputs?: ReadonlyMap<string, GeneratedFile>,
   ) {
     super(headConfig);
   }
@@ -43,7 +44,7 @@ export class CompiledReviewAssetReader extends FileSystemReviewAssetReader {
         `Generated comparison resource is not public: ${route} (${denial})`,
       );
     return {
-      content: Buffer.from(content),
+      content: generatedBytes(content),
       location: {
         logicalPath,
         physicalPath: path.resolve(
@@ -61,8 +62,8 @@ export class CompiledReviewAssetReader extends FileSystemReviewAssetReader {
 export async function derivedHeadOutputs(
   config: ResolvedConfig,
   manifest: Manifest,
-  outputs?: ReadonlyMap<string, string>,
-): Promise<ReadonlyMap<string, string> | undefined> {
+  outputs?: ReadonlyMap<string, GeneratedFile>,
+): Promise<ReadonlyMap<string, GeneratedFile> | undefined> {
   if (config.generatedOutput !== "derived") return;
   if (outputs) return outputs;
   const compilation = await compileCatalogue(config);

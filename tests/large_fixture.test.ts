@@ -15,6 +15,7 @@ import { viewRoute } from "../packages/viewer/dist/data.js";
 
 import { generateLargeFixture, largeSize } from "./fixtures/large/generate.js";
 import { repositoryRoot } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("large fixture validates dimensions and defaults to high-scale routes", () => {
   assert.deepEqual(largeSize({}), {
@@ -107,7 +108,8 @@ test("scaled consumer exercises the same render, hierarchy, resource and compone
       (view) => view.instances.length >= 4 && view.slots.length > 0,
     ),
   );
-  const html = compilation.outputs.get(
+  const html = textOutput(
+    compilation.outputs,
     viewRoute("screen", screen.id, "desktop", "light"),
   )!;
   assert.match(html, /react-native-stylesheet/);

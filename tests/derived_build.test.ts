@@ -11,6 +11,7 @@ import { MANIFEST_NAME } from "../dist/registry/manifest.js";
 import { GitProcessError } from "../dist/review/git_process.js";
 
 import { derivedFixture } from "./helpers/derived_fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("derived check accepts missing or stale local output and tracked authored public files", async (t) => {
   const fixture = await derivedFixture(t, undefined, {
@@ -88,7 +89,7 @@ test("derived check rejects retired generated routes from the index even when th
   const guide = "mockups/guide.html";
   await fs.writeFile(
     path.join(fixture.root, guide),
-    `<!doctype html>\n${fixture.baseline.outputs.get("screens/home.mobile.html")}`,
+    `<!doctype html>\n${textOutput(fixture.baseline.outputs, "screens/home.mobile.html")}`,
   );
   await fixture.git("add", "-f", "--", guide);
   await fs.rm(path.join(fixture.root, guide));
@@ -130,7 +131,7 @@ test("derived build creates an absent nested directory transactionally and prese
   await store.write(compilation, config);
   assert.equal(
     await fs.readFile(path.join(config.mockupsDir, MANIFEST_NAME), "utf8"),
-    compilation.outputs.get(MANIFEST_NAME),
+    textOutput(compilation.outputs, MANIFEST_NAME),
   );
   const rename = fs.rename;
   let failed = false;

@@ -7,7 +7,8 @@ The separate `mokly publish` command uploads through the
 
 `run.ts` pins one merge-base commit through `RepositoryEvidence`, retains the
 independent `BaselineReader`, runs the normal build, captures public inputs,
-compares them through the existing review engine, and verifies inputs again
+constructs one typed authored-plus-generated `ChangeEvidence` shared by Review
+and material Changes classification, and verifies inputs again
 before installation. `site.ts` uses the existing shell and Browse adapter to
 assemble one shell page per entry at `view/<route>`, package assets, and
 immutable comparisons.
@@ -39,7 +40,8 @@ with repository preview packaging. Repository capture therefore cannot publish
 a page path that consumer export would reject, while Serve itself continues to
 omit live page descriptors.
 The shared `server/changed_content.ts` calculation receives the same captured
-asset reader as comparisons, preserving Serve's material-output/resource Changes
+asset reader and merged evidence as comparisons, preserving Serve's
+material-output/resource Changes
 membership without reading a different current-file snapshot.
 For screen-only catalogues, `site.ts` projects per-view resource evidence from
 the unified v4 comparison into shell workspace data. Details can show matched,
@@ -62,6 +64,11 @@ and input-change checks. The completion marker is revalidated for the pinned
 commit before installation. Missing, replaced, or invalid baseline markers
 abort export while preserving the previous artifact. Cache trees and aliases
 cannot be exported or selected as a destination.
+`public_files.ts` never enumerates the reserved tree on disk in derived mode;
+its only CSS/assets come from the accepted compilation. Committed exports
+capture checked disk bytes. `resource_policy.ts` admits portable generated
+CSS/asset routes even when they contain `dist`, `target` or
+`node_modules/@scope`; authored dependency trees and CSS inputs stay private.
 
 `stage.ts` shares ownership assembly, alias/reference validation, and staged
 file writes between consumer export and repository preview capture.
@@ -81,6 +88,10 @@ provider transformation, that declaration and non-marker assembly.
 `content_id.ts` uses deterministic file
 hashes and alias edges; `shell_metadata.ts` normalizes and stamps only known
 shell roots while preserving other bytes and rejecting adapter metadata drift.
+The final export input-stability check compares authored configuration,
+compilation and public bytes. It excludes generation-scoped PostCSS directory
+watch roots from configuration equality; matching source files and transformed
+outputs remain covered by the compilation comparison.
 The ownership marker and adapter-declared publication metadata are excluded
 from the identity hash; both remain in the ownership inventory, and the marker
 is added last from every finalized file.

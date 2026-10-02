@@ -79,7 +79,7 @@ export async function assertInputsUnchanged(
         )
       : [];
   if (
-    !isDeepStrictEqual(config, freshConfig) ||
+    !isDeepStrictEqual(materialConfig(config), materialConfig(freshConfig)) ||
     !isDeepStrictEqual(compilation, fresh) ||
     !isDeepStrictEqual(publicFiles, publicNow) ||
     !isDeepStrictEqual(changed, changedNow)
@@ -88,4 +88,10 @@ export async function assertInputsUnchanged(
       "Export inputs changed during generation; retry the export.",
     );
   await prepared?.assertUnchanged();
+}
+
+function materialConfig(config: ResolvedConfig): ResolvedConfig {
+  const comparable = { ...config };
+  delete comparable.postcssWatchDirectories;
+  return comparable;
 }

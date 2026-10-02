@@ -153,9 +153,10 @@ test("packed package contains only the declared public surface", async () => {
   assert.ok(files.has("docs/protocol/fixtures/export-ownership-v2.json"));
   assert.ok(files.has("docs/protocol/fixtures/upload-plan-v1.json"));
   for (const guidePath of GUIDE_PATHS) assert.ok(files.has(guidePath));
+  assert.ok(files.has("docs/guides/authoring/styles.md"));
   assert.equal(
     [...files].filter((file) => file.startsWith("docs/guides/")).length,
-    30,
+    31,
   );
   assert.ok(files.has("README.md"));
   for (const excluded of ["examples/", "plans/", "site/", "tests/"])

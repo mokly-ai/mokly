@@ -12,6 +12,9 @@ resolve `entries` globs -> matched entry modules + renderer + optional compatibi
 one esbuild graph, with React resolved from the consumer
         |
         v
+collect imported CSS, run optional PostCSS, bundle per-root CSS and assets
+        |
+        v
 validate definitions and cross-references in memory
         |
         v
@@ -24,7 +27,7 @@ adapt explicit child controls -> resolve mock:id links -> compatibility bridge
 validate markers/links/resources
         |
         v
-mobile/desktop light and optional dark HTML for every screen, screen variant, and component variant entry, whole documents + schema-v7 manifest in memory
+mobile/desktop light and optional dark HTML for every screen, screen variant, and component variant entry, whole documents + schema-v7 manifest + CSS and binary asset outputs in memory
         |
         +---- check (committed): compare with disk, write nothing
         |
@@ -73,6 +76,24 @@ through lexical and realpath aliases, and cannot overlap a generated route. The
 resolved set travels with the config beside `sourceFiles`.
 
 ## 2. One Consumer Graph
+
+The additional stylesheet step follows
+[imported stylesheet delivery](../protocol/mokly-imported-styles.md). After
+the JavaScript graph, derive renderer and entry
+import order, compute the full renderer CSS closure, and prune its files
+at any depth of entry imports _before_ PostCSS can inline them. PostCSS runs
+per effective stylesheet input; lazy CSS Modules plugins rename local
+classes, IDs and keyframes using a repo-relative path hash without rewriting
+other authored CSS. A second esbuild pass produces one CSS file per
+configured renderer/entry root and path-mirrored local assets. The
+compatibility transformer is a graph source, not a CSS delivery root;
+its CSS tree is inventoried without publishing a stylesheet. The union of
+both passes and plugin dependencies is used even by inventory-only freshness
+checks. Generated text and binary bytes share the same ownership, check,
+transaction and export boundaries without changing manifest v7.
+Imported CSS does not add a separate
+manifest schema. Routes derive from entry kind and id, while navigation uses
+authored `navPath`.
 
 The resolved entry modules, the configured renderer, imported page
 helpers, and an optional temporary compatibility transformer are imported by a single virtual entry and

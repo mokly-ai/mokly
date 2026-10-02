@@ -8,6 +8,7 @@ import {
   componentVariants,
 } from "./helpers/component_views.js";
 import { designCatalogue } from "./helpers/design_catalogue.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("standalone variants emit only the exclusive child styles they actually render", async () => {
   const { manifest, outputs } = await designCatalogue;
@@ -20,10 +21,12 @@ test("standalone variants emit only the exclusive child styles they actually ren
     const openedVariant = variants.find(
       (variant) => variant.id === "design-ui-top-bar-tag-picker",
     )!;
-    const closed = outputs.get(
+    const closed = textOutput(
+      outputs,
       viewRoute("component", closedVariant.id, viewport, "light"),
     )!;
-    const opened = outputs.get(
+    const opened = textOutput(
+      outputs,
       viewRoute("component", openedVariant.id, viewport, "light"),
     )!;
     assert.match(closed, /href="[^"]*design-library\/chrome\/top-bar\.css"/);
@@ -43,7 +46,7 @@ test("standalone variants emit only the exclusive child styles they actually ren
   )!;
   for (const route of generatedViews(empty).map((view) => view.path))
     assert.doesNotMatch(
-      outputs.get(route)!,
+      textOutput(outputs, route)!,
       /href="[^"]*design-library\/controls\/tag-chip\.css"/,
     );
 });

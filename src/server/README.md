@@ -6,6 +6,9 @@ owns watchers, background work and the supervised HTTP child. `http.ts` and
 `child.ts` serve accepted inputs and never prepare historical baselines.
 `http_request_handler.ts` isolates per-request routing from the server's
 mutable catalogue and evidence lifecycle.
+`component_change_cache.ts` coalesces accepted classification reads across
+the server's content generations.
+`watch_inventory.ts` refreshes exact watch inputs before watcher attachment.
 `http_shutdown.ts` stops HTTP admission, ends live-update streams, and disconnects
 open clients before draining every owned service. Incomplete request headers or
 unfinished responses cannot keep shutdown waiting for the browser.
@@ -16,13 +19,31 @@ descendants. Discovery and watching share one denied-directory policy below the
 relevant glob root: traversal uses the deepest containing root, and entry-file
 classification uses the deepest matching root. The glob itself defines every
 entry-file shape that can trigger rediscovery. Traversal also skips
-`review.outDir`. A denied leaf's directory status comes from watcher stats,
-else from its event kind, else from one stat that treats any error as a file.
+`review.outDir`. Generated output, Review and cache outrank exact required
+inputs; denied directory names only prune broad discovery and directory scans.
+Logical and physical aliases share these distinct reasons. A denied leaf's
+directory status comes from watcher stats, else its event kind, else one stat
+that treats any error as a file.
+`watch_index.ts` caches the exact required inputs and their ancestors once per
+accepted config. `watchTargets` drops individually covered files when an entry
+glob, PostCSS directory or watch-rule root already watches them, except
+required files below a skipped directory segment. Those remain explicit
+targets and their arrival replaces the watcher; ordinary covered files do not.
+Physical event paths
+under a symlinked repository root map back to configured logical paths.
 `addDir` and `unlinkDir` identify directories; `add`, `change`, and `unlink`
 identify files. Supplied stats avoid that stat, but traversal still reads export
 markers and ownership headers. Deleted matched files rebuild even when named
 `target`; existing and removed denied directories outrank user watch rules.
 Resource notifications coalesce by path with the latest descriptor.
+PostCSS directory-dependency roots join the package-owned watch targets after
+graph inventory. Matching file additions and any new non-ignored subdirectory
+below a reported directory rebuild, while deletions do not; absent globs
+default to `**/*`. Edits to already inventoried files rebuild, and local PostCSS
+configuration imports reconfigure before rebuilding. Ignored generated output
+and denied directories do not trigger a rebuild through directory globs.
+All CSS asset extensions use the MIME types in `build/styles/routes.ts` on
+static, on-demand and transient delivery; opaque bytes are never decoded.
 Discovery skips `review.outDir`, denied directories, and directories that vanish
 or are replaced mid-walk (`ENOENT` or `ENOTDIR`). Zero-match messages list denied
 and vanished paths together, including modules dropped during validation. Other
@@ -136,6 +157,23 @@ does not change the live selected-page boundary.
 `update_messages.ts` validates IPC envelopes. `supervisor.ts` orders delivery and
 owns child shutdown. HTTP readiness precedes exhaustive compilation and baseline
 preparation, so All remains usable while Changes is pending or preparing.
+`controls/runtime_ipc.ts` encodes generated binary files as tagged base64 over
+the watched child's JSON IPC channel and validates them in linear time before
+a controls preview
+serves raw bytes; text documents remain strings. It also carries the accepted
+per-root stylesheet routes and CSS/asset outputs so child and background
+recompilation reuse the original bytes instead of silently dropping them.
+`demand/http.ts` answers on-demand `/static/` stylesheet and image/font
+requests from the accepted generation's CSS or opaque bytes (including HEAD),
+before ordinary public-file serving can see an older reserved file on disk.
+Committed Serve without a runtime derives the exact output route set from the
+inventory-only graph and snapshots only those disk bytes; syntactically valid
+strays in the reserved tree remain 404 even before startup. Derived Serve and
+watched children use retained runtime bytes, never reserved disk fallbacks.
+`DocumentCompiler` validates the same pending resources before any HTML view
+is delivered; superseded generations never become resource fallbacks.
+The classification worker uses
+structured-clone byte transfer instead of JSON.
 The CLI injects the terminal reporter's server-facing subset into both Serve
 compositions. Plain mode emits only the historical readiness and diagnostic
 bytes. Rich mode presents accepted catalogue, baseline, Changes, reference, and
@@ -175,6 +213,14 @@ Run the server tests with `npm test` and the navigation/comparison smoke tests
 with `npm run test:browser`. `tests/derived_child_repository.test.ts` covers revocation,
 reader replacement and the transitive child-module boundary; `derived_serve`
 tests exercise both parent compositions.
+Imported-CSS watcher tests use `tests/helpers/watched_events.ts` to attach to the
+event stream before editing and wait for the expected resource bytes after a
+higher update version. Evidence-only updates and intermediate content versions
+do not prove that the final CSS is served; the wait reports the last version,
+status and resource excerpt if the expected bytes never arrive. A server-level
+test checks that an accepted stylesheet is installed before its content update
+is announced. Worker-exit tests wait for the watch failure report before
+checking shutdown; Serve startup is not subject to the worker-request timeout.
 
 See [review boundaries](../review/README.md), [baseline building](../baseline/README.md),
 and the [derived baseline protocol](../../docs/protocol/mokly-derived-baselines.md).
