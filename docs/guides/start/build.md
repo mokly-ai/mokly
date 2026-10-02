@@ -12,16 +12,16 @@ npx mokly build
 ```
 
 Build validates your entries, renders every screen and writes the result
-under `<mockupsDir>/.generated/`: one document per viewport and color scheme, plus
+under `<mockupsDir>/mokly-generated/`: one document per viewport and color scheme, plus
 `mokly-manifest.json`. Writes are transactional, so a failed build leaves the
 previous output in place.
 
 ## Ignore the output, or commit it
 
 Choose with Git, not a config option. To keep generated output local, add
-`/docs/mockups/.generated/` and `/.mokly-cache/` to `.gitignore`; Check
+`/docs/mockups/mokly-generated/` and `/.mokly-cache/` to `.gitignore`; Check
 validates sources but ignores local generated files. To commit output, track
-every file under `.generated/` and commit them after Build. Check then
+every file under `mokly-generated/` and commit them after Build. Check then
 compares the entire tree, reporting missing, stale or extra files. Partial
 tracking is an error **to Check only**; Build succeeds when you add a new
 entry, then Check lists its new route under `untracked:` until staged. Baseline

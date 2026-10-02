@@ -24,7 +24,7 @@ Check compiles the catalogue and calculates the same bytes `build` would
 write, without writing them. It validates your entries, the links between
 them and the resources they reference.
 
-When Git indexes the complete `<mockupsDir>/.generated/` tree, Check reports
+When Git indexes the complete `<mockupsDir>/mokly-generated/` tree, Check reports
 missing, stale and extra local files. Run `mokly build` and commit the full
 tree, or untrack and ignore the directory. When none of it is in the index,
 Check ignores local output completely: it can be absent or stale. A mixture

@@ -26,11 +26,11 @@ validate markers/links/resources
         v
 mobile/desktop light and optional dark HTML for every screen and variant screen, saved component variants, whole documents + schema-v6 manifest in memory
         |
-        +---- check (tracked): compare entire .generated/ tree, write nothing
+        +---- check (tracked): compare entire mokly-generated/ tree, write nothing
         |
         +---- check (untracked): validate compilation, ignore local output
         |
-        `---- build: stage and replace .generated/ tree, roll back on failure
+        `---- build: stage and replace mokly-generated/ tree, roll back on failure
 ```
 
 ## 1. Config Loading
@@ -115,7 +115,7 @@ without sticky process-global state or an absolute checkout path. Installed
 packages import the plain API and cannot self-attribute. Registry validation
 accepts an attributed source only when it is a resolved entry module or an
 inventoried source file. Generated output needs no header ownership proof:
-`.generated/` is entirely replaceable. Export and Review confinement remain limited to
+`mokly-generated/` is entirely replaceable. Export and Review confinement remain limited to
 directories that hold resolved entry modules; a repository-root glob does not
 protect the whole repository as an export source root.
 
@@ -216,13 +216,13 @@ ordinary and `data-nav-href` links, anchors, local HTML resource attributes,
 `srcset`, inline/style-block CSS, transitive CSS imports/URLs,
 Review-ignore/material markers, protected source inventory, and manifest data are
 validated before output changes. All expected bytes are held in memory.
-`check` compares expected bytes with every file under `.generated/` when
+`check` compares expected bytes with every file under `mokly-generated/` when
 the Git index tracks complete output; it reports missing, stale and extra
 paths. When no generated output is indexed it validates compilation without
 reading local output. Mixed index state fails with both recovery options.
 Authored closure assets may be tracked independently of generated output.
 
-This repository's example ignores `.generated/`. Both test entrypoints build the
+This repository's example ignores `mokly-generated/`. Both test entrypoints build the
 package and example before tests read generated files, so the verification order
 (`npm test` before `example:check`) works on a fresh clone. Comparisons rebuild
 the baseline commit with `npm ci`, `npm run build`, then `npm run example:build`
@@ -249,7 +249,7 @@ still percent-encode every path segment defensively; static asset paths may
 therefore contain characters such as spaces without corrupting HTML attributes
 or URL query/fragment boundaries.
 
-`build` stages the whole `.generated/` tree on the same filesystem, moves
+`build` stages the whole `mokly-generated/` tree on the same filesystem, moves
 the previous tree aside, installs the staged tree by rename, and restores
 the previous tree on failure. It never replaces the catalogue's authored
 asset/source paths. Serve, export and publication capture in-memory generated

@@ -27,7 +27,7 @@ module at discovery, as defined by the
 [configuration contract](./mokly-configuration.md#entry-discovery). An entry
 may be nested below `mockupsDir`, including a `docs/mockups/src` layout, but it
 remains an inventoried protected input: public reads and exports deny both its
-lexical path and realpath aliases. No authored input may sit inside `.generated/`.
+lexical path and realpath aliases. No authored input may sit inside `mokly-generated/`.
 An entry cannot sit inside Review output, the baseline cache, or a
 package-owned private directory. The supported nesting and its output and alias
 protections are exercised by
@@ -35,7 +35,7 @@ protections are exercised by
 [`output_safety.test.ts`](../../tests/output_safety.test.ts), and
 [`server_safety.test.ts`](../../tests/server_safety.test.ts).
 
-The canonical `mokly-manifest.json` under `.generated/`, and former
+The canonical `mokly-manifest.json` under `mokly-generated/`, and former
 `mokabook-manifest.json` and v2 `mockbook-manifest.json` in historical
 single-directory layouts, are internal metadata. Deny their paths and
 realpath aliases at every public-resource
@@ -203,7 +203,7 @@ after dependency changes and prove default publication validation uses no Git.
 Cover internal manifests, their symlink aliases, generated links/resources,
 ordinary public JSON, and continued internal current/v2/v3/both-v4 manifest reads.
 Cover unreferenced files at root and nested paths, aliases in either direction,
-missing and protected closure references, and `.generated/` escapes. Prove
+missing and protected closure references, and `mokly-generated/` escapes. Prove
 unreferenced README edits create no public content evidence, real imported
 inputs still rebuild, and referenced CSS and images remain public when no
 source-protection rule denies them.

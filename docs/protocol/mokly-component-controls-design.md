@@ -79,8 +79,8 @@ state navigation without adding a footer to the rendered product artboard.
 ## Verification
 
 Use the real generator and build/check every matching generated artboard. In the
-untracked layout, keep `.generated/` ignored and commit the authored changes;
-if the repository tracks output, commit the entire matching `.generated/`
+untracked layout, keep `mokly-generated/` ignored and commit the authored changes;
+if the repository tracks output, commit the entire matching `mokly-generated/`
 tree. Test all input labels/types, current variant identity, full reset
 values, optional/unset states, pending/error preservation, validation errors,
 disabled comparison inputs, read-only guidance, and links between owning states.

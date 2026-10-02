@@ -101,7 +101,7 @@ normal validation. Historical v2/v3 support belongs only to Git comparisons.
 Browse serves only the configured mockups root and rejects protected authoring inputs, traversal, and symlink escapes. Watch targets come from resolved config and the complete source inventory; package-owned dependency/build/test/output trees are
 pruned before broad consumer rules, while explicit source modules and
 referenced stylesheets retain their required action. Generated output under
-`.generated/` is pruned by path, without parsing its plain marker; referenced
+`mokly-generated/` is pruned by path, without parsing its plain marker; referenced
 authored closure files remain watched. A child closes
 on either an orderly message/signal or loss of its parent IPC channel, and
 supervisor shutdown waits for confirmed exit while escalating from IPC to

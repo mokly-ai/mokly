@@ -21,7 +21,7 @@ entry-file shape that can trigger rediscovery. Traversal also skips
 else from its event kind, else from one stat that treats any error as a file.
 `addDir` and `unlinkDir` identify directories; `add`, `change`, and `unlink`
 identify files. Supplied stats avoid that stat, but traversal still reads export
-markers; the watcher ignores `.generated/` by prefix. Deleted matched
+markers; the watcher ignores `mokly-generated/` by prefix. Deleted matched
 files rebuild even when named `target`; existing and removed denied
 directories outrank user watch rules.
 Resource notifications coalesce by path with the latest descriptor.
@@ -140,7 +140,7 @@ without IPC retains direct diagnostic output.
 
 The [referenced asset closure](../../docs/protocol/mokly-generated-output.md#closure-urls-and-publication)
 is the only authored public surface: generated routes live
-under `.generated/`, referenced assets remain catalogue-relative, and unreferenced
+under `mokly-generated/`, referenced assets remain catalogue-relative, and unreferenced
 requests return 404. Manifest/cache privacy, realpath confinement and authoring
 inputs remain protected now.
 

@@ -22,8 +22,8 @@ successful complete compilation regardless of tracking. The head side of
 every comparison is the in-memory compilation, so the requirement that the
 working tree equal the compilation goes away.
 
-**Change B: generated content lives alone in `.generated`.** `mockupsDir`
-names the catalogue directory; Mokly owns exactly `<mockupsDir>/.generated/`
+**Change B: generated content lives alone in `mokly-generated`.** `mockupsDir`
+names the catalogue directory; Mokly owns exactly `<mockupsDir>/mokly-generated/`
 and replaces it wholesale on every build. Authored assets stay in the
 catalogue directory and generated documents reference them in place with
 relative hrefs. The public surface is the referenced asset closure: stylesheet
@@ -31,18 +31,18 @@ rules, renderer resource records, and every local URL reachable from generated
 documents and their CSS. For the example:
 
 ```
-examples/basic/.generated/         all generated files, replaced on every build
+examples/basic/mokly-generated/         all generated files, replaced on every build
 examples/basic/styles.css …        authored, tracked (13 stylesheets)
 examples/basic/design-library/**   authored, tracked (15 stylesheets)
 ```
 
-**Change C: the ownership machinery goes.** With `.generated/` disposable,
+**Change C: the ownership machinery goes.** With `mokly-generated/` disposable,
 ownership headers, overwrite refusal, orphan and unclaimed detection, and the
 ownership grep in the tracked-output check have no job left.
 
 Decisions:
 
-- Only `check` reads the Git index for `.generated/` and `.mokly-cache/`,
+- Only `check` reads the Git index for `mokly-generated/` and `.mokly-cache/`,
   never `.gitignore`. It compares the complete compiled set: all expected
   paths tracked means tracked, none means untracked, and a mixture is a
   `build-invalid` error naming paths and both remedies. Without Git, `check`
@@ -54,7 +54,7 @@ Decisions:
   blob hash, so the completeness of committed output can be judged at any
   commit from Git alone.
 - The baseline reader is chosen per merge-base commit from Git alone. No
-  manifest blob at `<mockupsDir>/.generated/mokly-manifest.json` means
+  manifest blob at `<mockupsDir>/mokly-generated/mokly-manifest.json` means
   the commit is rebuilt. A manifest whose inventory paths all
   exist in `git ls-tree` with matching hashes means complete, so blobs are
   read. Missing or mismatched paths mean incomplete or stale output, so the
@@ -68,26 +68,31 @@ Decisions:
 - `check` on tracked output fails on missing, stale, or extra files with
   guidance to run `mokly build` and commit, or to untrack the directory.
   `check` on untracked output ignores local files entirely.
-- Serve, export, and publish never write under `.generated/`. `build` writes
+- Serve, export, and publish never write under `mokly-generated/`. `build` writes
   transactionally. `build --watch` reuses the consumer watcher and rewrites
   after each successful complete compilation. `serve --build` does the same
   inside watched Serve, writing at the point where committed mode used to
   write; with `--no-watch` it writes once after the initial compilation.
 - Generated documents reference authored assets in place. Serve's URL layout
-  mirrors disk: generated documents sit under a `.generated/` prefix and
+  mirrors disk: generated documents sit under a `mokly-generated/` prefix and
   closure files at their catalogue-relative paths. Export produces the same
   layout. Committed baselines read closure files from Git blobs; rebuilt
   baselines copy the closure files from the extraction into the cache entry
-  beside `.generated/`, so the cache stays self-contained. Both copies are
+  beside `mokly-generated/`, so the cache stays self-contained. Both copies are
   internal to `.mokly-cache/`.
 - The manifest lists the referenced closure so the harvest and the readers
   know exactly which files belong to the catalogue. Historical manifests and
   the old single-directory layout remain readable for baselines.
 - `mockupsDir` keeps its name. The generated child is the fixed name
-  `.generated`, like `.mokly-cache`. `publicExclude`, hand-written public HTML
+  `mokly-generated`; unlike local-only `.mokly-cache`, deployable output has
+  no leading dot because some static hosts and deploy tools skip dot-paths.
+  `publicExclude`, hand-written public HTML
   under `mockupsDir`, and the directory-based public policy are removed.
+- The directory name is defined once in `@mokly/viewer/data`, used directly by
+  the CLI and viewer, and guarded against other production literals by lint.
+  The unreleased dot-directory spelling has no compatibility alias.
 - Closure files must be regular files under `mockupsDir`, outside
-  `.generated`, and not protected source. Assets outside the catalogue
+  `mokly-generated`, and not protected source. Assets outside the catalogue
   directory, including CSS imported from React components, are a follow-up.
 - Moving the example's 28 tracked stylesheets out of `examples/basic/generated/`
   is authorized by the user's request for this layout.
@@ -479,7 +484,7 @@ dot-directories: GitHub Pages' Jekyll build, Firebase Hosting's default ignore
 rules, the `gh-pages` npm tool, and server rules that deny dot-paths. The
 `.generated` name was never released, so no compatibility alias is kept.
 
-- [ ] Replace `.generated` with `mokly-generated` as the directory name in
+- [x] Replace `.generated` with `mokly-generated` as the directory name in
       every protocol document, guide, architecture document, README (root,
       `src/**`, `packages/viewer`, `examples/basic`), and `AGENTS.md`:
       disk paths, Serve URLs (`/static/mokly-generated/<route>`), export and
@@ -488,17 +493,17 @@ rules, the `gh-pages` npm tool, and server rules that deny dot-paths. The
       `generatedPathPrefix` value `"mokly-generated"`. Keep identifiers such
       as `generatedPathPrefix`, `generatedFiles`, and the `generated-v6`
       layout id unchanged.
-- [ ] Add the naming rule to the generated-output contract: a leading dot is
+- [x] Add the naming rule to the generated-output contract: a leading dot is
       reserved for Mokly state that never leaves the machine (`.mokly-cache/`
       and transaction directories), and deployable output uses the plain name
       `mokly-generated/`, with the hosting reason. State that production code
       defines the name once, as an exported constant in `@mokly/viewer/data`
       that the CLI imports, and that lint rejects the spelled-out name
       elsewhere.
-- [ ] Update this plan's summary, decisions, and post-merge follow-up to the
+- [x] Update this plan's summary, decisions, and post-merge follow-up to the
       new name (completed milestones stay as historical records), and update
       the plan's entry in `plans/README.md`.
-- [ ] Run `npm run format:check`, review the diff, commit, and push.
+- [x] Run `npm run format:check`, review the diff, commit, and push.
 
 ## Milestone 7: Rename the directory to `mokly-generated`
 
@@ -557,8 +562,8 @@ spelled-out name.
   `.mokly-cache` special case, at the cost of worktree metadata management,
   a documented cache location, and deleting `node_modules` after each build.
 - Bring assets outside the catalogue directory into the closure, including
-  CSS imported from React components, by mapping them into `.generated/`.
+  CSS imported from React components, by mapping them into `mokly-generated/`.
 - Smoke-test a fresh consumer with the next published package: `npx mokly`
-  and `npx mokly export` produce nothing under `.generated/`, `npx mokly
+  and `npx mokly export` produce nothing under `mokly-generated/`, `npx mokly
 build` produces it, `check` passes with the directory ignored, and a
   comparison against `origin/main` rebuilds its baseline.

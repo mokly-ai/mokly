@@ -37,8 +37,8 @@ and is not converted to a baseline history error.
    [baseline addressing](./mokly-baseline-addressing.md#discovery-after-a-rebuild).
    Zero or several valid candidates fail `baseline-output-invalid` with
    sorted candidates. The base and head may use different `mockupsDir` paths.
-6. For v6, move `<source>/<historical mockupsDir>/.generated/` into
-   `output/<historical mockupsDir>/.generated/`, then copy exactly the
+6. For v6, move `<source>/<historical mockupsDir>/mokly-generated/` into
+   `output/<historical mockupsDir>/mokly-generated/`, then copy exactly the
    manifest's `assetClosure` from the source to
    `output/<historical mockupsDir>/<closure path>`. Validate each file as a
    confined regular file and reject symlink aliases, missing or protected
@@ -77,7 +77,7 @@ ignore file; only `check` runs the index guard, failing if Git tracks anything u
 .mokly-cache/baselines/<commit>/
   lock            # holder pid and start time, created exclusively
   source/         # extraction, removed after adoption
-  output/         # v6: repo-relative .generated plus closure; legacy: flat catalogue contents
+  output/         # v6: repo-relative mokly-generated plus closure; legacy: flat catalogue contents
   complete.json   # completion marker
   inputs.json     # JSON string containing requested/current repo-relative mockupsDir ("." at repo root)
 ```

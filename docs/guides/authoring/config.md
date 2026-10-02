@@ -34,19 +34,19 @@ Globs are relative to `repoRoot`.
 
 ## Fields
 
-| Field              | Meaning                                                                 |
-| ------------------ | ----------------------------------------------------------------------- |
-| `entries`          | Globs whose matched regular files are entry modules                     |
-| `entriesDir`       | Shorthand for `<folder>/**/*.mockup.{ts,tsx}`                           |
-| `mockupsDir`       | Catalogue root; generated files live only under its `.generated/` child |
-| `colorSchemes`     | Schemes rendered for every screen; defaults to `["light"]`              |
-| `repoRoot`         | The root every path is confined to; defaults to the config directory    |
-| `renderer`         | Your module that wraps a screen in your theme and returns a document    |
-| `stylesheets`      | Ordered route-to-stylesheet rules                                       |
-| `moduleResolution` | Aliases, conditions, fields, extensions and loaders for your sources    |
-| `review`           | The Git base, the artifact directory and shared-impact globs            |
-| `watch`            | Extra inputs the watched server reacts to                               |
-| `compatibility`    | Temporary bridges while a repository moves to the current output        |
+| Field              | Meaning                                                                      |
+| ------------------ | ---------------------------------------------------------------------------- |
+| `entries`          | Globs whose matched regular files are entry modules                          |
+| `entriesDir`       | Shorthand for `<folder>/**/*.mockup.{ts,tsx}`                                |
+| `mockupsDir`       | Catalogue root; generated files live only under its `mokly-generated/` child |
+| `colorSchemes`     | Schemes rendered for every screen; defaults to `["light"]`                   |
+| `repoRoot`         | The root every path is confined to; defaults to the config directory         |
+| `renderer`         | Your module that wraps a screen in your theme and returns a document         |
+| `stylesheets`      | Ordered route-to-stylesheet rules                                            |
+| `moduleResolution` | Aliases, conditions, fields, extensions and loaders for your sources         |
+| `review`           | The Git base, the artifact directory and shared-impact globs                 |
+| `watch`            | Extra inputs the watched server reacts to                                    |
+| `compatibility`    | Temporary bridges while a repository moves to the current output             |
 
 ## Entries
 
@@ -144,8 +144,8 @@ one React runtime even when the executable came from an npx cache.
 Only authored regular files referenced by a rendered document, a stylesheet
 rule or a renderer resource record are public; nested HTML and CSS URLs are
 followed transitively. Keep these files under `mockupsDir` and outside
-`.generated/`; source files, symlinks and unreferenced files stay private.
-Stylesheet hrefs are relative to each generated document inside `.generated/`.
+`mokly-generated/`; source files, symlinks and unreferenced files stay private.
+Stylesheet hrefs are relative to each generated document inside `mokly-generated/`.
 
 ## Exported types
 

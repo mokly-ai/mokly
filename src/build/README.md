@@ -71,9 +71,9 @@ importer of `@mokly/mokly` receives the attributed facade; installed packages
 under `node_modules` and Mokly's own runtime receive the plain API. Registry
 validation accepts an attributed definition source only when it is a resolved
 entry module or an inventoried source file. Build writes manifest v6 and
-generated documents under the dedicated `.generated/` tree; authored assets
+generated documents under the dedicated `mokly-generated/` tree; authored assets
 remain in place. Check uses the Git index to compare compiled output only
-when tracked. Builds replace the entire `.generated/` tree through a staged
+when tracked. Builds replace the entire `mokly-generated/` tree through a staged
 sibling transaction; an install failure restores the old tree. Generated
 documents use a source-independent first-line notice, never an ownership proof.
 Export and Review boundaries continue to use directories that hold resolved
@@ -91,7 +91,7 @@ cargo xtask check
 ```
 
 The example ignores generated HTML and the manifest under
-`examples/basic/.generated/`; authored CSS at the catalogue root remains tracked.
+`examples/basic/mokly-generated/`; authored CSS at the catalogue root remains tracked.
 Historical commits with a complete, matching manifest inventory use Git
 blobs; missing or stale output is rebuilt. Export and plain Serve compile in
 memory without writing local output; `build --watch` and `serve --build` write

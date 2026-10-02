@@ -135,8 +135,8 @@ changes. Disabled highlighting explains its specific reason, and outline labels
 use separate rounded chips with a gap above the highlighted region.
 
 Open `design/components/overview.html` in Browse, or open
-`.generated/design/components/overview.desktop.html` and
-`.generated/design/components/overview.mobile.html`
+`mokly-generated/design/components/overview.desktop.html` and
+`mokly-generated/design/components/overview.mobile.html`
 directly from disk after `npm run build && npm run example:build`.
 The catalogue hierarchy links all owning design pages;
 there is no navigation footer inside an artboard. Product links connect
@@ -230,8 +230,8 @@ npm run preview:build
 ```
 
 This example uses `mockupsDir: "."`; its schema-v6 manifest and HTML under
-`.generated/` are ignored local artifacts, absent in a fresh clone.
-`example:build` replaces the entire disposable `.generated/` tree as one
+`mokly-generated/` are ignored local artifacts, absent in a fresh clone.
+`example:build` replaces the entire disposable `mokly-generated/` tree as one
 transaction; unexpected files inside it are removed without touching authored CSS.
 `example:check` validates the current compilation without requiring output on
 disk. Tracked output checks and historical manifest compatibility use isolated fixtures.

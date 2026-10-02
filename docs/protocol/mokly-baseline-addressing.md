@@ -17,7 +17,7 @@ interface BaselineCatalogue {
   commit: string; // pinned merge-base commit
   layout: "generated-v6" | "legacy";
   catalogueRoot: string; // repository-relative POSIX historical mockupsDir
-  generatedRoot: string; // `${catalogueRoot}/.generated` for v6, else catalogueRoot
+  generatedRoot: string; // `${catalogueRoot}/mokly-generated` for v6, else catalogueRoot
 }
 ```
 
@@ -25,10 +25,10 @@ Normalize a repository-root catalogue to `.`; join paths without writing
 `./` into Git requests. All roots must be confined, regular directories,
 without symlink aliases. The descriptor describes the **base**, never today's
 config. The head descriptor is always the current `mockupsDir` with
-`generatedRoot = <mockupsDir>/.generated` and the v6 layout.
+`generatedRoot = <mockupsDir>/mokly-generated` and the v6 layout.
 
 For a commit with a manifest at the current root, prefer
-`<current mockupsDir>/.generated/mokly-manifest.json` as v6, then the
+`<current mockupsDir>/mokly-generated/mokly-manifest.json` as v6, then the
 historical single-directory canonical manifest, then its former name and
 opt-in v2 name. Malformed or non-regular selected manifests fail; never use
 an older filename to hide an invalid preferred manifest. A missing manifest
@@ -42,7 +42,7 @@ After all historical build commands succeed, discover the generated root
 inside the extracted commit, before harvesting or writing the cache marker:
 
 1. If the current requested catalogue root contains
-   `.generated/mokly-manifest.json`, validate it as v6 and select that root.
+   `mokly-generated/mokly-manifest.json`, validate it as v6 and select that root.
    Existence with invalid bytes, type, or symlink fails
    `baseline-output-invalid`, not fallback.
 2. Otherwise try a direct legacy manifest at the current root in canonical,
@@ -53,8 +53,8 @@ inside the extracted commit, before harvesting or writing the cache marker:
    `.mokly-cache`, and `node_modules` directory at any depth; never follow
    symlinks. Use confined `lstat`, the existing bounded manifest reader, and
    at most the 65,536-entry extraction traversal bound. For each directory,
-   inspect the first existing eligible manifest in order: v6 `.generated/`
-   child, then direct canonical, former and opted-in v2 names. A `.generated/`
+   inspect the first existing eligible manifest in order: v6 `mokly-generated/`
+   child, then direct canonical, former and opted-in v2 names. A `mokly-generated/`
    directory holding its parent's v6 manifest is not a second legacy root.
    If that preferred manifest is malformed, skip the directory entirely;
    do not use an older filename to hide it. Only directories with a valid
@@ -90,7 +90,7 @@ Validate these fields and the corresponding harvested manifest on reuse;
 derive `generatedRoot` from them, never rerun discovery on a warm cache hit.
 
 New v6 cache entries store generated files beneath
-`output/<historicalCatalogueRoot>/.generated/` and the manifest's authored
+`output/<historicalCatalogueRoot>/mokly-generated/` and the manifest's authored
 closure beneath `output/<historicalCatalogueRoot>/`. Legacy entries retain
 the existing flat `output/<route>` tree. Both readers accept `(commit,
 repositoryRelativePath)`, verify that the path is under the descriptor's
@@ -112,8 +112,8 @@ is incomplete and rebuilt under the lock.
 
 Never pair documents by repository-relative filename. Identify each side's
 generated document by its manifest **route relative to that side's
-`generatedRoot`**: head `<currentRoot>/.generated/<route>` pairs with base
-`<baseRoot>/.generated/<route>` for v6 or `<legacyRoot>/<route>` for legacy.
+`generatedRoot`**: head `<currentRoot>/mokly-generated/<route>` pairs with base
+`<baseRoot>/mokly-generated/<route>` for v6 or `<legacyRoot>/<route>` for legacy.
 Resolve each local HTML/CSS URL against the referring document or CSS file in
 that side's actual layout, then key the authored resource by its path relative
 to that side's `catalogueRoot`; thus head `../styles.css` and legacy base

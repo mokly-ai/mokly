@@ -124,10 +124,10 @@ Keep generated output local by ignoring its dedicated directory and cache:
 
 ```gitignore
 .mokly-cache/
-/docs/mockups/.generated/
+/docs/mockups/mokly-generated/
 ```
 
-`build` writes only under `docs/mockups/.generated/`; referenced authored
+`build` writes only under `docs/mockups/mokly-generated/`; referenced authored
 assets stay under `docs/mockups/` and are served and exported in place. To
 commit generated output instead, commit every generated file. `check`
 compares compiled output only when the generated tree is indexed; a partial

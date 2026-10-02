@@ -23,7 +23,7 @@ globs operate on repo-relative POSIX paths. `defineConfig` validates and types
 the following contract:
 
 - `mockupsDir`: catalogue root, such as `docs/mockups`, with generated output
-  confined to its `.generated/` child;
+  confined to its `mokly-generated/` child;
 - `entries`: repository-relative POSIX globs that define which regular files
   are entry modules anywhere in the repository, or the `entriesDir` shorthand
   for conventional `.mockup.ts` and `.mockup.tsx` files in one directory;
@@ -44,7 +44,7 @@ validation rejects path traversal, output outside the repository (including
 through symlinks), entry modules inside internal or package-owned private roots,
 duplicate rules, and a watch path that cannot be classified safely. An entry
 module may be nested below `mockupsDir` as protected authored source, but not
-inside `.generated/`, including through aliases. Configured entries, renderer,
+inside `mokly-generated/`, including through aliases. Configured entries, renderer,
 transformer, and package roots in that child fail `config-invalid` with the
 setting and path; imported authoring sources fail with their path. See
 [generated output](./mokly-generated-output.md).
@@ -143,7 +143,7 @@ per-commit selection follow [baseline selection](./mokly-derived-baselines.md).
 The removed keys fail `config-invalid` with their exact guidance:
 `generatedOutput was removed; use Git tracking for check and run mokly build to write output`
 and `publicExclude was removed; remove it; only referenced authored assets are public`.
-Only Check, after compilation, uses index paths under `<mockupsDir>/.generated/` to classify
+Only Check, after compilation, uses index paths under `<mockupsDir>/mokly-generated/` to classify
 tracked, untracked or mixed output; mixed output fails `build-invalid` with
 both remedies as specified in [generated output](./mokly-generated-output.md).
 Tracked Check compares the entire tree with disk; untracked Check ignores
@@ -155,7 +155,7 @@ globs, while stylesheet `match` matches catalogue routes. `repoRoot` defaults to
 matches and watch paths are invalid. Additional watch rules cannot override
 configured source/module rebuilds, reloads for configured stylesheets and
 referenced resources, or package-owned ignores for dependency, build, test,
-Review, `.generated/`, and transaction paths. Hand-written public HTML under
+Review, `mokly-generated/`, and transaction paths. Hand-written public HTML under
 `mockupsDir` is not a supported publication surface.
 The repository's `.mokly-cache/` and its physical aliases are always private
 and ignored before source exceptions or broad globs, and cannot be configured
@@ -173,8 +173,8 @@ runtime suffix rule. Both layouts are examples, not runtime defaults.
 Authored source directories and entry modules may sit below `mockupsDir` for a
 `docs/mockups/src` layout. They remain inventoried protected inputs rather than
 public assets. When `entriesDir` supplies the entry set, its root may equal
-`mockupsDir`, but may not be inside `.generated/`; glob-matched modules may
-sit directly below `mockupsDir`. Generated routes are confined to `.generated/`.
+`mockupsDir`, but may not be inside `mokly-generated/`; glob-matched modules may
+sit directly below `mockupsDir`. Generated routes are confined to `mokly-generated/`.
 Review output must not overlap an entry
 module's directory or `mockupsDir` in either direction. Those boundaries are
 covered by the nested discovery, output collision, and public alias tests in
@@ -294,7 +294,7 @@ each compilation so watched Serve observes created, renamed, or deleted entry
 modules as defined by the [watch contract](./mokly-watch.md). The set is
 retained beside `sourceFiles` across build, check, watched Serve, publication,
 and the component runtime; later stages consume it and never repeat the glob
-walk within one compilation. Builds replace the entire `.generated/` tree;
+walk within one compilation. Builds replace the entire `mokly-generated/` tree;
 no ownership header, glob-based owner check or retired-file exception is
 needed. Registry attribution still accepts only a resolved entry module or
 inventoried source.

@@ -10,18 +10,28 @@ See
 ## Roots And Paths
 
 `mockupsDir` is the catalogue directory. Its fixed, Mokly-owned child
-`<mockupsDir>/.generated/` contains **only** generated documents/fragments and
+`<mockupsDir>/mokly-generated/` contains **only** generated documents/fragments and
 `mokly-manifest.json`. No authored file belongs in this child. Route paths
 inside it are relative POSIX paths; an HTML route `design/a.html` is stored at
-`<mockupsDir>/.generated/design/a.html`. Authored assets stay at their original
+`<mockupsDir>/mokly-generated/design/a.html`. Authored assets stay at their original
 paths below `mockupsDir`, including stylesheet-rule paths, which remain relative
 to `mockupsDir`. Output, cache, and authored input paths must remain confined
 under the configured repository root through both lexical and real paths.
 
+Deployable generated content uses the plain, tool-owned directory name
+`mokly-generated/`: some static hosts and deployment tools skip or deny
+dot-directories. A leading dot is for Mokly's local-only state, such as
+`.mokly-cache/` and sibling transaction directories; the export ownership
+marker is a separate artifact file, not the generated-content directory.
+Production code defines the directory name once in the viewer data module,
+exports it through `@mokly/viewer/data`, and the CLI imports that constant.
+ESLint rejects the spelled-out directory name in other production literals.
+The former dot-directory name was never released and is not a read alias.
+
 Resolved entries, the renderer, compatibility transformer, module-resolution
 package roots, and imported authoring sources may be under `mockupsDir`, but
-not under `.generated/` (including through aliases). Explicit configured
-inputs under `.generated/` fail `config-invalid` naming the setting and path;
+not under `mokly-generated/` (including through aliases). Explicit configured
+inputs under `mokly-generated/` fail `config-invalid` naming the setting and path;
 discovered/imported ones fail `config-invalid` naming the source. A route or
 closure reference that hits a protected source, symlink, directory, missing
 file, or path outside the catalogue fails `build-invalid` with its referring
@@ -31,9 +41,9 @@ route. Never use `.gitignore` as evidence of tracked state.
 
 Only `check`, after a successful, complete compilation, enumerates index paths with
 `git ls-files --cached --full-name -z` under the literal repository-relative
-`.generated/` prefix (checking lexical and resolved aliases); exclude neither
+`mokly-generated/` prefix (checking lexical and resolved aliases); exclude neither
 ignored nor staged-for-removal paths by consulting `.gitignore`. Let `E` be
-all compiled paths under `.generated/`, including the manifest, and `I` all
+all compiled paths under `mokly-generated/`, including the manifest, and `I` all
 indexed paths under that prefix. If `I` is empty, output is **untracked**;
 if `E` is a subset of `I`, it is **tracked** (extra indexed files are checked
 as extra output); otherwise it is **mixed**. If no expected path is indexed
@@ -54,19 +64,19 @@ tracked:
   - <indexed path>
 untracked:
   - <expected path not in index>
-Run mokly build and commit every file under <mockupsDir>/.generated/, or run git rm -r --cached -- <mockupsDir>/.generated/ and add /<mockupsDir>/.generated/ to .gitignore.
+Run mokly build and commit every file under <mockupsDir>/mokly-generated/, or run git rm -r --cached -- <mockupsDir>/mokly-generated/ and add /<mockupsDir>/mokly-generated/ to .gitignore.
 ```
 
-`tracked` lists every indexed `.generated/` path (including extras); omit
+`tracked` lists every indexed `mokly-generated/` path (including extras); omit
 `tracked:` if empty. `untracked` lists `E - I`; it cannot be empty in mixed
 state. Render the whole generated root repository-relative without `./`:
-`mockupsDir: "."` gives `.generated/`, not `./.generated/`.
+`mockupsDir: "."` gives `mokly-generated/`, not `./mokly-generated/`.
 `check` computes the state once, after compilation, and compares disk only in
 tracked state. `build`, `build --watch`, `serve`, `serve --build`, export and
 publication do **not** compute tracking or run the cache index guard; no
 watched generation refreshes it and no Serve child receives it. A comparison
 still needs Git and a valid base independently of head tracking. For example,
-adding an entry to a repository that commits `.generated/` must allow `build`
+adding an entry to a repository that commits `mokly-generated/` must allow `build`
 to write the new route; `check` then lists that route under `untracked:` until
 it is staged (and then committed as part of the tracked-output workflow).
 `build` cannot be blocked by its own remedy.
@@ -77,7 +87,7 @@ debounce and reload/rebuild/ignore classifications; a reload or config change
 that affects compilation produces a new complete compilation. It writes only
 after each **successful, fully validated** compilation and reports each
 accepted build; a failure reports the error, retains the last successful tree,
-and keeps watching. The watcher ignores `.generated/` and transactional
+and keeps watching. The watcher ignores `mokly-generated/` and transactional
 paths, so its writes never recursively trigger work. A failed initial compile
 does not write and continues watching when a watcher can be established.
 `serve --build` follows the same write-after-success rule in watched Serve:
@@ -90,7 +100,7 @@ never write. Do not finalize files during on-demand HTTP classification,
 baseline preparation, export, or publication. See
 [watched development](./mokly-watch.md) for event cancellation and shutdown.
 
-For tracked `check`, compare **every regular file** under `.generated/` with
+For tracked `check`, compare **every regular file** under `mokly-generated/` with
 the in-memory expected map by path and exact bytes. A missing tree makes all
 expected files missing; an unexpected path, including a symlink or an empty
 directory, is extra. If any mismatch exists, fail `build-invalid` with this exact text:
@@ -103,11 +113,11 @@ stale generated files:
   - <path>
 extra generated files:
   - <path>
-Run mokly build and commit every file under <mockupsDir>/.generated/, or run git rm -r --cached -- <mockupsDir>/.generated/ and add /<mockupsDir>/.generated/ to .gitignore.
+Run mokly build and commit every file under <mockupsDir>/mokly-generated/, or run git rm -r --cached -- <mockupsDir>/mokly-generated/ and add /<mockupsDir>/mokly-generated/ to .gitignore.
 ```
 
 Print only nonempty groups in that order with catalogue-relative POSIX paths
-sorted within each group (prefixed `.generated/`); never print placeholders.
+sorted within each group (prefixed `mokly-generated/`); never print placeholders.
 On success the plain summary is `Mokly output is current (<n> files).` for
 tracked and `Mokly output is valid and untracked (<n> files).` for untracked,
 where `<n>` includes the manifest. `build` prints `Generated <n> Mokly files.`
@@ -128,7 +138,7 @@ blobHashAlgorithm: "sha1" | "sha256";
 `generatedFiles` inventories **every generated file except the manifest
 itself**; a manifest cannot contain its own Git blob hash without a circular
 dependency. The manifest's presence and schema are checked separately. Each
-`path` is relative to `.generated/`, never a closure file; generated HTML and
+`path` is relative to `mokly-generated/`, never a closure file; generated HTML and
 fragments are included. `blobHash` is the lowercase hex digest of
 `<algorithm>(UTF8("blob " + byteLength) || 0x00 || exact UTF-8 file bytes)`;
 choose the repository's Git object format (`git rev-parse --show-object-format`),
@@ -141,7 +151,7 @@ both disjoint v4 forms, and v5 continue to work for historical comparisons;
 current live output requires v6.
 
 For **each pinned merge-base commit**, inspect its tree once with `git ls-tree`
-and look first for `<current repo-relative mockupsDir>/.generated/mokly-manifest.json`,
+and look first for `<current repo-relative mockupsDir>/mokly-generated/mokly-manifest.json`,
 then for `<current repo-relative mockupsDir>/mokly-manifest.json`. When the
 canonical path is absent, historical `mokabook-manifest.json` and the opt-in
 v2 `mockbook-manifest.json` fallback remain at the legacy root; never override
@@ -196,36 +206,36 @@ schemes according to the existing link contract. Do not collect unrelated
 public files merely because they share a directory. Assets outside
 `mockupsDir`, including CSS imported directly from React components, are not
 supported by this contract. A configured stylesheet pointing outside or into
-`.generated/` is `config-invalid`; an emitted reference to an unavailable,
+`mokly-generated/` is `config-invalid`; an emitted reference to an unavailable,
 unsafe, symlinked, non-regular, or protected target is `build-invalid` naming
 the referring generated or authored document. Preserve normal source and
 realpath protection even for files listed in the manifest.
 
 Compute local hrefs from the **document's actual directory under**
-`.generated/` to the authored file under `mockupsDir`, using POSIX relative
+`mokly-generated/` to the authored file under `mockupsDir`, using POSIX relative
 paths, `/` separators, and URL-encoding per segment, preserving query and
-fragment; for example `.generated/design/a.html` to `styles.css` uses
+fragment; for example `mokly-generated/design/a.html` to `styles.css` uses
 `../../styles.css`. Resolve CSS references relative to the CSS file, not the
 generated document. A generated-to-generated link resolves inside
-`.generated/`; no root-absolute catalogue hrefs. Disk-opened HTML and HTTP
+`mokly-generated/`; no root-absolute catalogue hrefs. Disk-opened HTML and HTTP
 URLs must resolve identically.
 
-Serve maps `/static/.generated/<route>` to the accepted in-memory compilation
+Serve maps `/static/mokly-generated/<route>` to the accepted in-memory compilation
 except the private manifest (404), and `/static/<catalogue-relative closure path>`
 to the live authored regular file;
 unreferenced paths return not found. No filesystem fallback for generated
-routes. Export ships those same compiled bytes under `.generated/` plus only
+routes. Export ships those same compiled bytes under `mokly-generated/` plus only
 the closure files at their catalogue-relative paths; static hosting mirrors
 the disk URL layout. The public viewer's optional prefix signal and old
 publication compatibility are in [generated delivery](./mokly-generated-delivery.md).
 The export destination may neither contain nor be
-contained by `.generated/`, including resolved aliases, and must preserve
+contained by `mokly-generated/`, including resolved aliases, and must preserve
 the existing source/cache/export transactional confinement rules.
 
 ## Replacement And Legacy Storage
 
-Stage the **entire** `.generated/` tree in an ignored sibling
-`.mokly-write-.generated-<random>/stage` directory on the same filesystem;
+Stage the **entire** `mokly-generated/` tree in an ignored sibling
+`.mokly-write-mokly-generated-<random>/stage` directory on the same filesystem;
 validate before moving the old tree to that transaction's `backup`, install
 by renaming `stage`, and restore `backup` on an install failure. Reject
 symlinks at or inside the old tree before moving it, and inside the stage;
@@ -235,13 +245,13 @@ no live tree but a sibling transaction with `backup`, the next build fails
 `build-invalid` with `previous generated tree may be in <backup>; restore the backup or remove the leftover transaction before building`;
 stage-only leftovers are ignored. If a live tree exists, old transaction
 leftovers are ignored and left for manual cleanup, not adopted or removed.
-Builds replace nothing outside `.generated/` except their own sibling
+Builds replace nothing outside `mokly-generated/` except their own sibling
 transaction. There is no per-file refusal or orphan/unclaimed scan. Generated
 HTML starts with `<!-- Generated by Mokly. Do not edit. -->` as one line;
 comparison and Browse strip this or a historical ownership first line without
 using either as authority. Git index tracking is a prefix check, never a grep.
 
-For v6 baseline cache entries, harvest `.generated/` and the manifest closure
+For v6 baseline cache entries, harvest `mokly-generated/` and the manifest closure
 under their repository-relative catalogue path; for legacy entries, keep the
 flat `output/` layout. The precise discovery, recorded root, reader mapping,
 and pre-v6 cache compatibility are in [baseline addressing](./mokly-baseline-addressing.md).

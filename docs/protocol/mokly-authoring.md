@@ -178,7 +178,7 @@ build. The complete API and rendering rules are in
 Local resource URLs in HTML source attributes, `srcset`, inline/style-block
 CSS, and transitively referenced HTML/CSS must likewise resolve to public
 regular, unprotected files in the referenced closure beneath `mockupsDir`.
-Generated links must target the new in-memory `.generated/` tree, not a
+Generated links must target the new in-memory `mokly-generated/` tree, not a
 previous build's on-disk files. Closure collection and href computation are
 specified in [generated output](./mokly-generated-output.md).
 

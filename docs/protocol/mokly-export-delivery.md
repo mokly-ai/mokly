@@ -36,7 +36,7 @@ provider adapters may emit the host's metadata files for them. Correctness must
 not depend on a generic static server interpreting `_headers` or `_redirects`.
 
 For cross-origin catalogue and viewer consumers, public fetch paths are
-`__mokly/catalogue.json`, `static/.generated/<route>`,
+`__mokly/catalogue.json`, `static/mokly-generated/<route>`,
 `static/<referenced closure path>` (legacy publications use `static/<route>`),
 `__mokly/client/**`, `__mokly/shell.css`,
 `__mokly/fonts/**` and `__mokly/diffs/__generations/**`. Send correct MIME types,
@@ -67,18 +67,18 @@ Comparison panes keep their existing sandbox and direct snapshot URLs.
 Paths below are relative to the export directory. URL path segments use the
 existing validated route grammar and are encoded once when written into URLs.
 
-| Path                          | Meaning                                                                   |
-| ----------------------------- | ------------------------------------------------------------------------- |
-| `index.html`                  | Full catalogue home                                                       |
-| `view/<route>`                | Full shell for current routed entries and removed screens/pages           |
-| `id/<id>/index.html`          | Static alias showing the same shell as the canonical route                |
-| `static/.generated/<route>`   | Current v6 documents, not the private manifest (legacy: `static/<route>`) |
-| `static/<closure path>`       | Only referenced authored resources, at catalogue-relative paths           |
-| `__mokly/`                    | Required shell CSS, fonts, browser modules, and comparison generation     |
-| `__mokly/catalogue.json`      | Public catalogue read model v1                                            |
-| `__mokly/client/inspector.js` | Inert cross-origin frame inspector                                        |
-| `404.html`                    | Existing catalogue not-found view                                         |
-| `.mokly-export-artifact`      | Public-safe versioned ownership inventory                                 |
+| Path                             | Meaning                                                                   |
+| -------------------------------- | ------------------------------------------------------------------------- |
+| `index.html`                     | Full catalogue home                                                       |
+| `view/<route>`                   | Full shell for current routed entries and removed screens/pages           |
+| `id/<id>/index.html`             | Static alias showing the same shell as the canonical route                |
+| `static/mokly-generated/<route>` | Current v6 documents, not the private manifest (legacy: `static/<route>`) |
+| `static/<closure path>`          | Only referenced authored resources, at catalogue-relative paths           |
+| `__mokly/`                       | Required shell CSS, fonts, browser modules, and comparison generation     |
+| `__mokly/catalogue.json`         | Public catalogue read model v1                                            |
+| `__mokly/client/inspector.js`    | Inert cross-origin frame inspector                                        |
+| `404.html`                       | Existing catalogue not-found view                                         |
+| `.mokly-export-artifact`         | Public-safe versioned ownership inventory                                 |
 
 Catalogue routes retain their validated `.html` suffixes; additional public
 `.htm` documents retain their filenames too. Do not

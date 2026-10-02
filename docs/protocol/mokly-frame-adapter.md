@@ -31,8 +31,8 @@ interface InstanceBoundary {
 }
 interface FrameMount {
   url: URL;
-  route: string; // Logical document/fragment route, without static/ or .generated/.
-  generatedPathPrefix?: ".generated"; // Absent for an existing legacy catalogue.
+  route: string; // Logical document/fragment route, without static/ or mokly-generated/.
+  generatedPathPrefix?: "mokly-generated"; // Absent for an existing legacy catalogue.
   usage: CatalogueUsage;
   signal?: AbortSignal;
   onEvent?: (event: FrameEvent) => void;
@@ -84,7 +84,7 @@ declare function postMessageAdapter(options: {
 
 Each mount owns one immediate viewer-created frame and its current URL/usage.
 The host supplies the selected catalogue view URL and layout signal; the
-adapter confines it to the exact `/static/.generated/<route>` v6 or
+adapter confines it to the exact `/static/mokly-generated/<route>` v6 or
 `/static/<route>` legacy HTML path and configured origin, with a valid logical
 hash. The prefix is taken from the active catalogue, never guessed from the
 URL. Loaded URLs are mapped back to the active logical route only after origin,

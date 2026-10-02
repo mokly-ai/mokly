@@ -48,18 +48,18 @@ its ID from the intended collection. Import its existing `source()` callback
 where possible, with the source in its declared dependencies. Remove `legacy`
 configuration and replace consumer rules that depend on its discovery model.
 
-Generated pages now live under `<mockupsDir>/.generated/`. Archive old generated
+Generated pages now live under `<mockupsDir>/mokly-generated/`. Archive old generated
 pages and the old manifest first if those bytes are needed for review. Do not
-migrate a hand-written page into `.generated/`: register it with `definePage`
+migrate a hand-written page into `mokly-generated/`: register it with `definePage`
 or nested `page`. Remove historical output only after verifying it is
-generated; a new build replaces **only** `.generated/`, never authored source
+generated; a new build replaces **only** `mokly-generated/`, never authored source
 or closure assets. No source-path header, owner proof, orphan discovery, or
 overwrite refusal is part of the new writer. Its plain marker is not an
 ownership claim.
 
 On failure, restore the previous dependency/config, authoring tree, and artifacts;
 do not commit a half-migrated catalogue. On success, compare old and new route,
-anchor, resource, and rendered-content inventories. Ignore `.generated/` if
+anchor, resource, and rendered-content inventories. Ignore `mokly-generated/` if
 generated output is local-only; if Git tracks it, commit the entire regenerated
 v6 tree with the authored migration. A missing document is a migration failure even
 when the remaining catalogue builds successfully.
@@ -136,6 +136,6 @@ workflow. Do not publish a release that implies unchanged consumer compatibility
 Actual npm publication and durable consumer adoption remain coordinated
 follow-ups after an available package version is selected. Deliver consumer
 changes through that repository's commit/push/review workflow, including
-generated output only when the consumer tracks the entire `.generated/` tree. Package
+generated output only when the consumer tracks the entire `mokly-generated/` tree. Package
 completion and a disposable rehearsal do not prove that an existing consumer
 catalogue has been updated.

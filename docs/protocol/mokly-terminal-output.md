@@ -152,7 +152,7 @@ actually performs. Phase labels are outcome-oriented: `Loading configuration`,
 Completion summaries are:
 
 ```text
-  ✔ Generated 278 files in examples/basic/.generated (5.9s)
+  ✔ Generated 278 files in examples/basic/mokly-generated (5.9s)
   ✔ Mokly output is valid and untracked · 278 files (5.9s)
   ✔ Mokly output is current · 278 files (5.9s)
   ✔ Exported Mokly to .context/mokly-site (8.1s)
@@ -188,7 +188,7 @@ same stdout and writes only its documented JSON lines plus existing failures.
 `Mokly output is valid and untracked (<n> files).` The rich variants above
 use the same conditions. Missing, stale or extra tracked output is
 `build-invalid`, with each sorted path in its own group, followed by:
-`Run mokly build and commit every file under <mockupsDir>/.generated/, or run git rm -r --cached -- <mockupsDir>/.generated/ and add /<mockupsDir>/.generated/ to .gitignore.`
+`Run mokly build and commit every file under <mockupsDir>/mokly-generated/, or run git rm -r --cached -- <mockupsDir>/mokly-generated/ and add /<mockupsDir>/mokly-generated/ to .gitignore.`
 Mixed index state uses the exact groups and message in
 [generated output](./mokly-generated-output.md#tracked-state-and-commands).
 Only `check` computes that state and prints this error; a new route first

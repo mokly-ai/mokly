@@ -37,7 +37,7 @@ type PublicPath = string;
 
 interface CatalogueReadModel {
   schemaVersion: 1;
-  generatedPathPrefix?: ".generated"; // Absent for legacy publications.
+  generatedPathPrefix?: "mokly-generated"; // Absent for legacy publications.
   identity: { id: string; title: string };
   deploymentId: string;
   revision: { content: number; evidence: number };
@@ -147,7 +147,7 @@ interface CatalogueVariant {
 slash, origin, query or hash; resolve it against the source's origin root, not
 the JSON directory or host app URL. Encode validated path segments once for a
 request. Routes retain their existing grammar and `.html` suffix. Current
-fragment/document paths are `static/.generated/<manifest route>` for v6 and
+fragment/document paths are `static/mokly-generated/<manifest route>` for v6 and
 `static/<manifest route>` for existing prefixless publications; validate each
 against its catalogue's `generatedPathPrefix`, not a global viewer default.
 See [generated delivery](./mokly-generated-delivery.md) for the exact projection,
@@ -274,7 +274,7 @@ Alias bookkeeping never renews a generation's idle retention window; only an
 actual retained-generation read renews it. Unused generations expire even when
 complete captures continue.
 
-Public paths are `__mokly/catalogue.json`, v6 `static/.generated/<route>`
+Public paths are `__mokly/catalogue.json`, v6 `static/mokly-generated/<route>`
 and `static/<referenced closure path>` (legacy `static/<public path>`),
 `__mokly/client/**`, `__mokly/shell.css`, `__mokly/fonts/**`, and immutable
 comparison generations under `__mokly/diffs/__generations/**`. These retain

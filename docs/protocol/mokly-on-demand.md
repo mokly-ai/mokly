@@ -22,7 +22,7 @@ reported separately and never repeated during ordinary large-fixture startup.
 
 ## Foreground documents
 
-Generated `/static/.generated/` routes render the requested page or screen/component variant,
+Generated `/static/mokly-generated/` routes render the requested page or screen/component variant,
 viewport and scheme through the retained consumer graph. Rendering runs outside
 the HTTP event loop in a bounded, terminable worker. Concurrent requests for the
 same view share work. Only validated results enter the generation-local bounded
@@ -106,7 +106,7 @@ artifacts retain Build's bytes and do not create artificial Changes.
 
 Full generated output stays in memory unless the parent is running
 `serve --build`; only after a complete successful compilation and ready
-resource watches does the parent transactionally replace `.generated/`.
+resource watches does the parent transactionally replace `mokly-generated/`.
 The child and HTTP requests never write. Complete output never substitutes
 for demand rendering of the current generation. Git-only baseline changes
 and per-commit baseline rebuilds are observed off the HTTP request path. Ref observation

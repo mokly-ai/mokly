@@ -11,9 +11,9 @@ captures the referenced closure,
 compares them through the existing review engine, and verifies inputs again
 before installation. `site.ts` uses the existing shell and Browse adapter to
 assemble real id aliases, package assets, and immutable comparisons. It passes
-the logical route, not the `.generated/` delivery path, to the adapter so
+the logical route, not the `mokly-generated/` delivery path, to the adapter so
 trusted navigation and inspector metadata survive export. Current static
-documents live under `.generated/`, while referenced authored assets stay at
+documents live under `mokly-generated/`, while referenced authored assets stay at
 catalogue-relative paths.
 Publish's `--no-changes` uses this same engine with baseline reads, removed
 entries and comparisons omitted. Current-only assembly retains the normal
@@ -138,14 +138,14 @@ owned `.mokly-export-reservations` namespace, retaining only its metadata
 after cleanup. Case and symlink aliases cannot bypass an active lock. Legacy
 hashed reservations require explicit recovery before another export.
 `resource_policy.ts` applies the same package/source boundary to current and
-historical copies. Export captures only compiled `.generated/` documents and the manifest v6
+historical copies. Export captures only compiled `mokly-generated/` documents and the manifest v6
 `assetClosure`; reference validation, Review and public content-change
 classification then use the same confined closure. Directory-based public
 scans and consumer exclusion globs no longer decide publication. Manifest/cache
 privacy is unconditional, and protected closure references fail with their
 referring route. Unreferenced HTTP paths return 404. Build and export share
 HTML anchor validation through `html_link_validation.ts`. After the migration,
-Watch ignores `.generated/` by prefix while observing referenced authored
+Watch ignores `mokly-generated/` by prefix while observing referenced authored
 assets in place.
 
 `backup.ts` revalidates captured output and centralizes safe restoration and

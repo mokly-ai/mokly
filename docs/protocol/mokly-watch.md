@@ -21,7 +21,7 @@ by generated output:
 - an input shared with shell metadata rebuilds before restarting the child;
 - configured stylesheets and referenced local CSS, fonts, images, and other
   resources used only through public URLs reload the browser without rebuilding;
-- `.generated/` output plus `.git`, `.context`, `node_modules`,
+- `mokly-generated/` output plus `.git`, `.context`, `node_modules`,
   `dist`, `target`, coverage, browser-test output, comparison output, and Mokly
   transaction trees are pruned from broad watches and classify as ignored;
 - additional inputs use the explicit action declared in config.
@@ -36,7 +36,7 @@ remains ordinary. The denied names are `.git`, `node_modules`, `.mokly-cache`, `
 `coverage`, `target`,
 `test-results`, `playwright-report`, `.context`, and segments beginning with
 `.mokly-review-` or `.mokly-write-`. Baseline-cache, `review.outDir`,
-`.generated/` generated-output, and export-output rules still apply. Thus an
+`mokly-generated/` generated-output, and export-output rules still apply. Thus an
 explicit `dist/entries/**` root remains reachable, while `src/dist` and
 `src/node_modules` are pruned beneath a `src/**` root, and repository-root globs
 still prune top-level `.git` and `node_modules`. The discovery walk and broad
@@ -49,7 +49,7 @@ watcher stats, else from the event kind: `addDir` and `unlinkDir` are directorie
 `add`, `change`, and `unlink` are files. Only a `raw` rename fallback or a direct
 call without stats or event evidence needs a directory lookup: each denied-leaf
 check uses one `statSync`, treating any failure as a file. Supplied stats avoid that
-lookup. Traversal still consults export markers; `.generated/` is ignored by path.
+lookup. Traversal still consults export markers; `mokly-generated/` is ignored by path.
 Thus existing and removed denied directories stay ignored ahead of user rules,
 while deleting a matched regular file named `target` rebuilds just like deleting
 any other matched file. Watch notifications retain path, kind, and optional
@@ -68,7 +68,7 @@ classifies like any other unrelated file. Package source under `node_modules` or
 an npx cache is never treated as consumer source. Development of Mokly itself
 uses repository tooling rather than a hidden consumer-specific self-reload path.
 
-All files under `.generated/` are generated output and ignored by watch,
+All files under `mokly-generated/` are generated output and ignored by watch,
 including removed and newly added paths. `build --watch` reuses these
 classification and debounce rules; it rewrites the entire generated tree only
 after a successful, fully validated compilation, never after a reload-only

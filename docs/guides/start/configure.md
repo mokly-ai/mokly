@@ -9,7 +9,7 @@ order: 2
 
 Create `mokly.config.ts` at the root of the repository and export the result
 of `defineConfig`. Two things are required: where your entry modules live, and
-`mockupsDir`, the catalogue folder whose `.generated/` child receives only
+`mockupsDir`, the catalogue folder whose `mokly-generated/` child receives only
 generated pages and the manifest.
 
 Entry modules can sit beside the components and screens they describe. List
@@ -62,7 +62,7 @@ export default defineConfig({
 ```
 
 Keep referenced assets such as `app.css` inside `mockupsDir` but outside
-`.generated/` so the catalogue can serve them. Unreferenced files stay
+`mokly-generated/` so the catalogue can serve them. Unreferenced files stay
 private. Entry modules and the helpers they import are never served, even
 when a glob reaches into a folder below `mockupsDir`.
 

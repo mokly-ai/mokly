@@ -4,7 +4,7 @@
 
 Implemented by [Generated Output Simplification](../../plans/generated-output-simplification.md).
 The cached rebuild infrastructure, `preparing` state, per-commit reader
-selection, v6 inventory verification and dedicated `.generated/` layout are
+selection, v6 inventory verification and dedicated `mokly-generated/` layout are
 shipped. Only `check` inspects head Git index tracking.
 
 ## Purpose And Configuration
@@ -42,19 +42,19 @@ once after its complete compilation; without Git, `check` treats it as
 untracked. The precise mixed-state error and prefix rules are in
 [generated output](./mokly-generated-output.md#tracked-state-and-commands).
 
-| Command                | Behavior                                                            |
-| ---------------------- | ------------------------------------------------------------------- |
-| `build`                | Transactionally replace `.generated/` without inspecting head index |
-| `check`                | Validate; compare disk only if all expected output is indexed       |
-| `serve`                | In-memory head; select base reader per commit, not head index       |
-| `export` / publication | In-memory head; select base reader per commit, not head index       |
+| Command                | Behavior                                                                 |
+| ---------------------- | ------------------------------------------------------------------------ |
+| `build`                | Transactionally replace `mokly-generated/` without inspecting head index |
+| `check`                | Validate; compare disk only if all expected output is indexed            |
+| `serve`                | In-memory head; select base reader per commit, not head index            |
+| `export` / publication | In-memory head; select base reader per commit, not head index            |
 
 `check` reports `build-invalid` for sorted missing expected paths, stale
-expected bytes, and extra files under `.generated/`, including an absent
+expected bytes, and extra files under `mokly-generated/`, including an absent
 directory, with both remedies: `mokly build` and commit the complete directory,
-or `git rm -r --cached -- <mockupsDir>/.generated/` and ignore it. Unexpected
+or `git rm -r --cached -- <mockupsDir>/mokly-generated/` and ignore it. Unexpected
 empty directories count as extra paths. Untracked `check` only
-validates compilation and never reads local `.generated/` contents to judge
+validates compilation and never reads local `mokly-generated/` contents to judge
 freshness. Indexed `.mokly-cache/` files remain invalid regardless of head
 state. Only `check` rejects partly tracked output; `build` writes regardless
 of tracking. Adding a new entry to a committed catalogue therefore builds
@@ -73,7 +73,7 @@ for debounce, one-shot and child/parent behavior.
 
 Resolve the merge base of `HEAD` and `review.base` (or explicit `--base`) once
 and pin it. Look up the canonical manifest in that commit under
-`<mockupsDir>/.generated/` first and the historical single `mockupsDir`
+`<mockupsDir>/mokly-generated/` first and the historical single `mockupsDir`
 second; preserve former names and the opt-in v2 fallback only at the legacy
 path. If none exists, rebuild the commit. For a v6 manifest, verify that the
 listed generated paths and blob hashes match the full tree exactly, apart from

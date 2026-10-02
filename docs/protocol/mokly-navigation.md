@@ -128,7 +128,7 @@ prevents Mokly from taking over product or asset navigation accidentally.
 
 ## Portable And Comparison Output
 
-Generated documents under `.generated/` keep relative artifact `href` values
+Generated documents under `mokly-generated/` keep relative artifact `href` values
 to other generated documents and authored closure files. They must remain
 navigable when opened directly or copied with the matching closure without the
 Browse shell. Comparison snapshot trees copy the same portable documents and do
@@ -138,7 +138,7 @@ comparison pane retains the existing sandbox behavior.
 ## Browse Presentation
 
 When an eligible marked native link from a manifest-owned generated document is
-presented beneath `/static/.generated/` in served Browse or in the deployed Browse preview,
+presented beneath `/static/mokly-generated/` in served Browse or in the deployed Browse preview,
 Mokly authenticates its marker for trusted parent enhancement while retaining
 the portable `href` and live `target`. The trusted-document set is exactly every
 current manifest screen fragment, including dark fragments, plus every

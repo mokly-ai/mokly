@@ -23,7 +23,7 @@ npx mokly export --out .context/mokly-site
 ## What it produces
 
 Export compiles without writing generated files to your catalogue, then
-packages every screen and page under `.generated/`, the referenced authored
+packages every screen and page under `mokly-generated/`, the referenced authored
 assets at their catalogue-relative paths, real id aliases and Git comparisons.
 It does not copy unrelated files or upload anything.
 
@@ -35,7 +35,7 @@ requirements are on the Catalogue page for export and hosting.
 `--out` resolves beside the loaded config rather than your working directory,
 and an absolute path must stay inside the repository root. Choose a directory
 that is missing or empty and neither contains nor is contained by
-`.generated/`; it must also stay outside source, dependency and
+`mokly-generated/`; it must also stay outside source, dependency and
 comparison roots, and keep unrelated files out of it.
 
 A re-export replaces only the output it owns, and restores the previous site

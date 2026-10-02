@@ -31,7 +31,7 @@ used by Serve. The `./browser` entry owns standalone hydration.
 These are package entry points, not aliases for CLI modules. `./server` also
 exports typed standalone context and `viewerAssetUrl` for package assets.
 The independently published viewer reads the optional public
-`generatedPathPrefix` layout signal: `.generated` for new v6 sources and absent
+`generatedPathPrefix` layout signal: `mokly-generated` for new v6 sources and absent
 for existing published catalogues. Public paths already include `static/`;
 private manifest/live-index stages derive that prefix from their shell data.
 The same layout drives frame mounts, reverse route mapping, SSR and hydration;

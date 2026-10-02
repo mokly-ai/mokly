@@ -113,7 +113,7 @@ Two layouts are recommended. Sibling source and output directories use
 `entriesDir: "docs/mockups/entries"`, `mockupsDir: "docs/mockups"`,
 and `renderer: "docs/mockups/renderer.tsx"` for a repository-root config, with
 referenced authored assets in the catalogue and generated pages only in
-`.generated/`. Co-located entries use `entries: ["src/**/*.mockup.{ts,tsx}"]` so
+`mokly-generated/`. Co-located entries use `entries: ["src/**/*.mockup.{ts,tsx}"]` so
 each entry module sits beside the product component or screen it describes,
 with the same output and renderer locations. Nested `docs/mockups/src` layouts
 remain supported; source protection applies to every layout. These are
@@ -151,7 +151,7 @@ comment components, source allowlists, and stage policy into consumer code.
 The [migration contract](./mokly-page-migration.md) specifies safe archival
 of verified old artifacts without weakening source protection.
 
-Current reads accept only canonical `.generated/mokly-manifest.json` schema v6 with a
+Current reads accept only canonical `mokly-generated/mokly-manifest.json` schema v6 with a
 `mokly` generator identity and validate the
 [resolved source inventory](./mokly-source-protection.md). Git comparisons
 prefer that filename, then accept the former `mokabook-manifest.json` and

@@ -98,7 +98,7 @@ throws, and incomplete HTML fail with the page ID and source location before
 any output changes. Callbacks must be deterministic and return complete HTML;
 they must not write output themselves.
 
-A page generates exactly one file at `<mockupsDir>/.generated/<route>`. Its route is both
+A page generates exactly one file at `<mockupsDir>/mokly-generated/<route>`. Its route is both
 its logical catalogue destination and its artifact path. The screen renderer
 does not wrap it, inject stylesheets, or generate extra variants. The consumer
 continues to own the document's styles, responsive markup, and render context.
@@ -113,7 +113,7 @@ document, rendered resources, and reviewable metadata remain unchanged.
 The complete output passes the shared child-control adapter, logical-link and
 fragment validation, compatibility transformer, final metadata checks,
 HTML/CSS/resource validation, and Review-ignore validation. The existing
-transaction protects the entire `.generated/` tree with rollback and path
+transaction protects the entire `mokly-generated/` tree with rollback and path
 confinement; authored files outside it remain untouched. Page routes cannot collide
 with any other logical route or generated fragment. One owner may use its own
 page route as its output; this is not treated as a self-collision.
@@ -125,7 +125,7 @@ paths never imply collection ancestry.
 
 ## Manifest And Runtime Model
 
-New builds write schema v6 at `.generated/mokly-manifest.json`:
+New builds write schema v6 at `mokly-generated/mokly-manifest.json`:
 
 ```ts
 interface ManifestPage extends ManifestEntryBase {
@@ -182,7 +182,7 @@ viewport variants, page color variants, or page comparisons; remember the
 user's screen choices when navigating back to a screen. Mobile drawer and
 desktop navigation show the same collection ownership.
 
-`/view/<route>`, `/id/<id>`, and `/static/.generated/<route>` resolve a page with the
+`/view/<route>`, `/id/<id>`, and `/static/mokly-generated/<route>` resolve a page with the
 existing GET/HEAD behavior. `MockLink` and `mockLink` accept its ID. Their
 portable target is its single generated file with the validated optional
 anchor; Browse opens the canonical page and reveals its collection ancestors.

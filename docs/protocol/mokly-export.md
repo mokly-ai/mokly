@@ -111,7 +111,7 @@ broad rules, without ignoring unrelated authored files with similar names.
 2. Resolve the comparison baseline without changing the checkout; complete
    a cached rebuild if the pinned commit has no complete generated inventory.
    Compile and validate the current catalogue entirely in memory. Never write
-   the head `.generated/` tree.
+   the head `mokly-generated/` tree.
 3. Capture the current manifest, documents, required assets, and changed-path
    evidence into one export input snapshot. Build the comparison against the
    pinned baseline using those inputs; validate any source/public input reads
@@ -159,7 +159,7 @@ in the repo. A symlinked root is supported only when its resolved location still
 satisfies all core repository/source protections; the transaction pins the real
 output location so retargeting cannot redirect installation.
 
-Output must neither contain nor be contained by `.generated/` or
+Output must neither contain nor be contained by `mokly-generated/` or
 `mockupsDir` (lexically or through aliases) or
 `review.outDir`, and must not contain any resolved entry module or the
 directory holding one. It must not contain inventoried authoring inputs, the
@@ -202,7 +202,7 @@ malformed markers and unrelated contents still fail.
 
 ## Public Files And Package Boundary
 
-Include compiled fragments and pages under `.generated/` and **only** the
+Include compiled fragments and pages under `mokly-generated/` and **only** the
 manifest v6 `assetClosure` at catalogue-relative paths; do not scan and copy
 unreferenced files or expose hand-written HTML as independent routes. Referenced
 authored HTML is a closure asset. Retain relative resource and fallback document links
@@ -223,7 +223,7 @@ and data resources retain the existing resource policy and are not downloaded;
 an export referencing remote resources is not guaranteed to work offline.
 
 One export resource policy applies to current copies and comparison snapshots.
-Configured consumer package roots cannot live inside `.generated/`; a package
+Configured consumer package roots cannot live inside `mokly-generated/`; a package
 root equal to `mockupsDir` remains supported when it does not expose protected
 files. Ancestor roots such as `packageRoots: ["."]` remain supported.
 

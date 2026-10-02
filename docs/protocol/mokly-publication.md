@@ -9,8 +9,8 @@ implementation verification. Changes-enabled previews package removed pages and
 screens as implemented by the
 [removed content previews plan](../../plans/removed-content-previews.md). This
 does not change the npm CLI.
-New publications advertise `.generated` in the public catalogue and capture
-v6 documents under `static/.generated/<route>` with referenced authored assets
+New publications advertise `mokly-generated` in the public catalogue and capture
+v6 documents under `static/mokly-generated/<route>` with referenced authored assets
 under `static/<catalogue-relative path>`. Existing prefixless publications
 remain readable by the viewer; the snapshot and upload rules are in
 [generated delivery](./mokly-generated-delivery.md).
@@ -113,10 +113,10 @@ confined regular files before their bytes are read. Directory walks terminate
 when a target repeats in the current ancestor chain; independent aliases to
 the same directory still contribute their own logical fingerprint paths.
 
-Copy compiled current documents under `static/.generated/` and exactly the
+Copy compiled current documents under `static/mokly-generated/` and exactly the
 manifest's referenced authored closure under `static/` as regular files;
 never publish a directory merely because it is under `mockupsDir`. Each
-selected closure file must be a confined regular file outside `.generated/`,
+selected closure file must be a confined regular file outside `mokly-generated/`,
 not a symlink or protected input; apply staging/destination exclusions to
 both logical and resolved identities. Validate the presence of every current
 page and light/dark screen fragment named by the manifest. Validate every

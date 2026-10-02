@@ -153,7 +153,7 @@
 - Mockup screens must not contain implementation hints, engineering notes, or
   explanatory annotations inside the rendered screen area. Put implementation
   hints below the screen or in a separate non-screen section.
-- Mokly's example catalogue under `examples/basic/.generated/` is generated from
+- Mokly's example catalogue under `examples/basic/mokly-generated/` is generated from
   the structured definitions under `examples/basic/entries/` using
   `examples/basic/mokly.config.ts`. Canonical entry modules end in `.mockup.ts`
   or `.mockup.tsx`; shared TSX components and page-render helpers live alongside
@@ -163,7 +163,7 @@
   run `npm run build`, run `npm run example:build`, run
   `npm run example:check`, and visually smoke-test the changed pages through
   `npm run dev`. Generated HTML and `mokly-manifest.json` under
-  `examples/basic/.generated/` are ignored local artifacts validated by
+  `examples/basic/mokly-generated/` are ignored local artifacts validated by
   `npm run example:check`. Commit only the tracked authored CSS under
   `examples/basic/` and `examples/basic/design-library/`; never force-add
   ignored generated output.

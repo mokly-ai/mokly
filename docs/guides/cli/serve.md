@@ -17,16 +17,16 @@ that URL in your default browser as soon as the server is ready.
 
 ## Options
 
-| Option            | Meaning                                                        |
-| ----------------- | -------------------------------------------------------------- |
-| `--config <path>` | Use an explicit `mokly.config` file                            |
-| `--port <port>`   | Starting port; advances if occupied, `0` selects any free port |
-| `--base <ref>`    | Git base ref used to find the branch point                     |
-| `--watch`         | Watch your inputs; this is the default                         |
-| `--no-watch`      | Serve one deterministic snapshot                               |
-| `--build`         | Write `.generated/` after each successful complete compilation |
-| `--open`          | Open the served URL in your default browser                    |
-| `--debug-timings` | Report phase timings and catalogue counts on standard error    |
+| Option            | Meaning                                                             |
+| ----------------- | ------------------------------------------------------------------- |
+| `--config <path>` | Use an explicit `mokly.config` file                                 |
+| `--port <port>`   | Starting port; advances if occupied, `0` selects any free port      |
+| `--base <ref>`    | Git base ref used to find the branch point                          |
+| `--watch`         | Watch your inputs; this is the default                              |
+| `--no-watch`      | Serve one deterministic snapshot                                    |
+| `--build`         | Write `mokly-generated/` after each successful complete compilation |
+| `--open`          | Open the served URL in your default browser                         |
+| `--debug-timings` | Report phase timings and catalogue counts on standard error         |
 
 ## The port
 
@@ -42,9 +42,9 @@ rendered and validated when you ask for it. The complete generated output and
 the Git comparison finish in the background while you read, and previews and
 prop edits take priority over that work.
 
-Generated pages appear under `/static/.generated/` in the served URL; only
+Generated pages appear under `/static/mokly-generated/` in the served URL; only
 their referenced authored assets are served at `/static/<catalogue path>`.
-Serve normally writes nothing to `.generated/`, even after background work.
+Serve normally writes nothing to `mokly-generated/`, even after background work.
 Pass `--build` to write after each successful complete compilation. With
 `--build --no-watch`, Serve writes once after the initial compilation.
 Failures preserve the last-good output and browsing; the parent process,

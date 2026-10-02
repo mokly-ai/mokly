@@ -158,7 +158,7 @@ zero-count/share cases and the separate complete-export measurement.
 `dev:large` and `benchmark:large` reuse that fixture without compiling the package.
 Rebuild Mokly explicitly after package-source edits. A fixture whose generated
 output is tracked reuses complete Git blobs. To benchmark rebuilding, configure
-the fixture with `.generated/` ignored and commit only source, authored
+the fixture with `mokly-generated/` ignored and commit only source, authored
 resources and tooling. Its setup archives a packaged Mokly version and a
 consumer lockfile and installs the head dependencies. Serve rebuilds the archived
 commit through its `baselineBuild` recipe; no cached or committed HTML stands in
