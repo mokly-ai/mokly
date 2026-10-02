@@ -117,6 +117,10 @@ Each reference-observer session reuses a validated Git runner, avoiding a
 redundant top-level lookup on every poll.
 Shutdown cancels the current generation before draining preparation, preventing
 an in-flight Git resolution from launching a replacement during the drain.
+`demand/generation.ts` passes each generation's cancellation signal to its
+output write, so a superseded generation or a closing Serve stops waiting for
+the [generated-output writer lock](../../docs/protocol/mokly-rendering-generated.md#concurrent-writers)
+that a concurrent Build or export holds.
 
 Watched Serve sends that commit as `baselineCommit` on the existing versioned
 `update` IPC envelope. Omission retains the reader; null revokes it. The child

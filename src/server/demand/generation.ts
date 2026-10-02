@@ -101,7 +101,12 @@ export class BackgroundGeneration {
           existing !== undefined,
         );
         if (!current()) return;
-        if (!existing) await this.store.write(compilation, runtime.config);
+        if (!existing)
+          await this.store.write(
+            compilation,
+            runtime.config,
+            controller.signal,
+          );
         if (!current()) return;
         prepared?.adopt();
         this.completed(compilation, runtime);
