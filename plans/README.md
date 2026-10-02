@@ -52,8 +52,9 @@
   remain open for the user's decision. Milestone 46 addresses only the imported-CSS
   watcher-test flakiness recorded as Milestone 40 finding 12 (`77a1f493`),
   with an event-driven resource wait and a server-level content-order
-  regression. Milestone 47's post-push review remains for the user; other
-  review findings remain open.
+  regression. Findings in the
+  [Milestone 47 review](../docs/reviews/imported-css-delivery-milestone-47.md)
+  remain open for the user's decision, as do other review findings.
   Move this plan to Completed when its
   implementation PR merges.
 - [Delta Publishing](./delta-publishing.md) — replace the single-archive

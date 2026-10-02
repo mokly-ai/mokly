@@ -64,8 +64,9 @@ watcher-test flakiness recorded as Milestone 40 finding 12. The final helper
 follows intermediate versions and child restarts; a server-level test pins
 stylesheet availability before content updates. Milestone 46 (`77a1f493`)
 passed the full gate and resolves that finding; other review findings remain
-open. Milestone 47's post-push review remains for the user, and the plan stays
-active until the PR merges.
+open. Findings in the
+[Milestone 47 review record](../docs/reviews/imported-css-delivery-milestone-47.md)
+remain open for the user's decision; the plan stays active until the PR merges.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -1089,13 +1090,13 @@ PostCSS test showed no baseline failures, but used the same unsafe waits. The
 final helper waits through intermediate versions and reports the last content
 and update versions, resource status and value excerpt on timeout.
 
-## Milestone 47: Commit, push, and review
+## Milestone 47: Commit, push, and review (complete)
 
 Deliver the approved watcher-test fix while leaving its post-push review to
 the user.
 
 - [x] Commit and push the fix; confirm the remote ref and a clean tree.
-- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Three new findings (1 Medium, 2 Low) are recorded in the [Milestone 47 review record](../docs/reviews/imported-css-delivery-milestone-47.md) for the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
