@@ -20,8 +20,7 @@ import {
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { version } from "./helpers/watched_catalogue.js";
-import { waitForUpdate } from "./helpers/watched_catalogue.js";
-import { waitForBrowserReload } from "./helpers/watched_events.js";
+import { waitForWatchedResource } from "./helpers/watched_events.js";
 
 test(
   "real chokidar watcher sees an inventoried source below dist",
@@ -113,20 +112,18 @@ test(
     const before = version(
       await fetch(running.url).then((response) => response.text()),
     );
-    await waitForBrowserReload(running.url, before, () =>
-      fs.writeFile(
-        path.join(fixture.entriesDir, "fixture.css"),
-        ".italic{color:blue}",
-      ),
-    );
-    await waitForUpdate(running.url, before);
-    let next = "";
-    const deadline = Date.now() + 20_000;
-    while (Date.now() < deadline) {
-      next = await fetch(stylesheet).then((response) => response.text());
-      if (next.includes(".italic")) break;
-      await new Promise((resolve) => setTimeout(resolve, 80));
-    }
+    const next = await waitForWatchedResource({
+      origin: running.url,
+      previous: before,
+      resource: stylesheet,
+      edit: () =>
+        fs.writeFile(
+          path.join(fixture.entriesDir, "fixture.css"),
+          ".italic{color:blue}",
+        ),
+      read: (response) => response.text(),
+      accept: (value) => value.includes(".italic"),
+    });
     assert.match(next, /\.italic/);
     assert.doesNotMatch(next, /\.underline/);
   },

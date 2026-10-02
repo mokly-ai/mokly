@@ -12,8 +12,8 @@ import type { CatalogueReadModel } from "../packages/viewer/dist/catalogue/types
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createExportFixture } from "./helpers/export_fixture.js";
-import { version, waitForUpdate } from "./helpers/watched_catalogue.js";
-import { waitForBrowserReload } from "./helpers/watched_events.js";
+import { version } from "./helpers/watched_catalogue.js";
+import { waitForWatchedResource } from "./helpers/watched_events.js";
 
 test(
   "watched PostCSS dependency directories rebuild on a new matching file",
@@ -55,22 +55,15 @@ test(
       await fetch(stylesheet).then((response) => response.text()),
       /\.added/,
     );
-    await waitForBrowserReload(running.url, version(initial), () =>
-      fs.writeFile(path.join(fixture.root, "sources/new.txt"), "blue"),
-    );
-    await waitForUpdate(running.url, version(initial));
-    let changed = "";
-    const deadline = Date.now() + 20_000;
-    while (Date.now() < deadline) {
-      try {
-        changed = await fetch(stylesheet).then((response) => response.text());
-      } catch (error) {
-        const code = (error as { cause?: NodeJS.ErrnoException }).cause?.code;
-        if (code !== "ECONNREFUSED" && code !== "ECONNRESET") throw error;
-      }
-      if (/\.added/.test(changed)) break;
-      await setTimeout(80);
-    }
+    const changed = await waitForWatchedResource({
+      origin: running.url,
+      previous: version(initial),
+      resource: stylesheet,
+      edit: () =>
+        fs.writeFile(path.join(fixture.root, "sources/new.txt"), "blue"),
+      read: (response) => response.text(),
+      accept: (value) => /\.added/.test(value),
+    });
     assert.match(changed, /\.added/);
   },
 );
@@ -105,39 +98,38 @@ test(
     const running = await serve(fixture.config, { port: 0, watch: true });
     fixture.beforeRemove(() => running.close());
     const stylesheet = `${running.url}/static/mokly-generated/styles/entries/fixture.mockup.tsx.css`;
-    const waitForStyle = async (pattern: RegExp): Promise<void> => {
-      const deadline = Date.now() + 20_000;
-      let css = "";
-      while (Date.now() < deadline) {
-        try {
-          css = await fetch(stylesheet).then((response) => response.text());
-        } catch (error) {
-          const code = (error as { cause?: NodeJS.ErrnoException }).cause?.code;
-          if (code !== "ECONNREFUSED" && code !== "ECONNRESET") throw error;
-        }
-        if (pattern.test(css)) return;
-        await setTimeout(80);
-      }
-      assert.match(css, pattern);
-    };
-    await waitForStyle(/margin: red/);
+    assert.match(
+      await fetch(stylesheet).then((response) => response.text()),
+      /margin: red/,
+    );
     let previous = version(
       await fetch(running.url).then((response) => response.text()),
     );
-    await waitForBrowserReload(running.url, previous, () =>
-      fs.writeFile(path.join(fixture.root, "sources/color.txt"), "blue"),
-    );
-    await waitForStyle(/margin: blue/);
+    await waitForWatchedResource({
+      origin: running.url,
+      previous,
+      resource: stylesheet,
+      edit: () =>
+        fs.writeFile(path.join(fixture.root, "sources/color.txt"), "blue"),
+      read: (response) => response.text(),
+      accept: (value) => /margin: blue/.test(value),
+    });
     previous = version(
       await fetch(running.url).then((response) => response.text()),
     );
-    await waitForBrowserReload(running.url, previous, () =>
-      fs.writeFile(
-        path.join(fixture.root, "postcss.config.mjs"),
-        postcssWatchPlugin("padding"),
-      ),
-    );
-    await waitForStyle(/padding: blue/);
+    const css = await waitForWatchedResource({
+      origin: running.url,
+      previous,
+      resource: stylesheet,
+      edit: () =>
+        fs.writeFile(
+          path.join(fixture.root, "postcss.config.mjs"),
+          postcssWatchPlugin("padding"),
+        ),
+      read: (response) => response.text(),
+      accept: (value) => /padding: blue/.test(value),
+    });
+    assert.match(css, /padding: blue/);
   },
 );
 

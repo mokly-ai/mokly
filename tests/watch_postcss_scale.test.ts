@@ -28,6 +28,26 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { version } from "./helpers/watched_catalogue.js";
 import { waitForBrowserReload } from "./helpers/watched_events.js";
 
+async function within<Value>(
+  promise: Promise<Value>,
+  label: string,
+): Promise<Value> {
+  let timeout: NodeJS.Timeout | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(
+          () => reject(new Error(`${label} timed out`)),
+          15_000,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 test("Tailwind-shaped inventory uses one directory watch target and indexed required paths", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
@@ -89,7 +109,11 @@ test(
       ),
       postcssWatchDirectories: [{ directory: root, glob: "*.tsx" }],
     };
-    let observed = 0;
+    let observedCount = 0;
+    let observe!: () => void;
+    const observed = new Promise<void>((resolve) => {
+      observe = resolve;
+    });
     const gate = new NotificationGate<WatchEvent>((error) => {
       throw error;
     });
@@ -97,8 +121,10 @@ test(
       if (
         event.path === path.join(root, "new.tsx") &&
         classifyWatchPath(event, config) === "rebuild"
-      )
-        observed += 1;
+      ) {
+        observedCount += 1;
+        observe();
+      }
     });
     const watcher = createSourceWatcher(
       new ChokidarWatcherFactory(),
@@ -114,10 +140,8 @@ test(
       `watcher readiness took ${readiness.toFixed(1)} ms`,
     );
     await fs.writeFile(path.join(root, "new.tsx"), "export default null");
-    const deadline = Date.now() + 5_000;
-    while (observed === 0 && Date.now() < deadline)
-      await new Promise((resolve) => setTimeout(resolve, 25));
-    assert.equal(observed, 1);
+    await within(observed, "watch event");
+    assert.equal(observedCount, 1);
   },
 );
 
@@ -162,11 +186,16 @@ export default { plugins: [{ postcssPlugin: "shape", Once(_root, { result }) {
     );
     const config = await loadConfig(fixture.root);
     const actions: string[] = [];
+    let completed!: () => void;
+    const rebuild = new Promise<void>((resolve) => {
+      completed = resolve;
+    });
     let sourceWatcherCreates = 0;
     const watcherFactory = new ChokidarWatcherFactory();
     class CountingReporter extends PlainServeReporter {
       override watchFinished(report: WatchReport): void {
         actions.push(report.action);
+        if (report.action === "rebuild") completed();
       }
     }
     const started = performance.now();
@@ -199,12 +228,7 @@ export default { plugins: [{ postcssPlugin: "shape", Once(_root, { result }) {
         "export default null",
       ),
     );
-    const deadline = Date.now() + 5_000;
-    while (
-      actions.filter((action) => action === "rebuild").length < 1 &&
-      Date.now() < deadline
-    )
-      await new Promise((resolve) => setTimeout(resolve, 30));
+    await within(rebuild, "rebuild report");
     assert.deepEqual(
       actions.filter((action) => action !== "evidence"),
       ["rebuild"],

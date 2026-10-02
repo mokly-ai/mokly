@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { setTimeout } from "node:timers/promises";
 
 import { loadConfig } from "../dist/config/load.js";
 import { serve } from "../dist/server/serve.js";
@@ -11,7 +10,7 @@ import { watchTargets } from "../dist/server/watch_paths.js";
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { version } from "./helpers/watched_catalogue.js";
-import { waitForBrowserReload } from "./helpers/watched_events.js";
+import { waitForWatchedResource } from "./helpers/watched_events.js";
 
 for (const rootKind of ["entry", "postcss", "watch-rule"] as const)
   test(`required files under skipped folders stay explicit beneath ${rootKind} roots`, async (context) => {
@@ -69,17 +68,20 @@ test(
     const before = version(
       await fetch(running.url).then((response) => response.text()),
     );
-    await waitForBrowserReload(running.url, before, () =>
-      fs.writeFile(
-        path.join(fixture.entriesDir, "vendor/dist/theme.css"),
-        ".theme{color:blue}",
-      ),
-    );
     const stylesheet = `${running.url}/static/mokly-generated/styles/entries/fixture.mockup.tsx.css`;
-    assert.match(
-      await fetch(stylesheet).then((response) => response.text()),
-      /color: blue/,
-    );
+    const css = await waitForWatchedResource({
+      origin: running.url,
+      previous: before,
+      resource: stylesheet,
+      edit: () =>
+        fs.writeFile(
+          path.join(fixture.entriesDir, "vendor/dist/theme.css"),
+          ".theme{color:blue}",
+        ),
+      read: (response) => response.text(),
+      accept: (value) => /color: blue/.test(value),
+    });
+    assert.match(css, /color: blue/);
   },
 );
 
@@ -125,28 +127,30 @@ test(
     let previous = version(
       await fetch(running.url).then((response) => response.text()),
     );
-    previous = await waitForBrowserReload(running.url, previous, () =>
-      fs.writeFile(
-        path.join(fixture.entriesDir, "fixture.css"),
-        ".x{color:green}",
-      ),
-    );
-    await waitForBrowserReload(running.url, previous, () =>
-      fs.writeFile(token, "purple"),
-    );
     const stylesheet = `${running.url}/static/mokly-generated/styles/entries/fixture.mockup.tsx.css`;
-    let css = "";
-    const deadline = Date.now() + 15_000;
-    while (Date.now() < deadline) {
-      try {
-        css = await fetch(stylesheet).then((response) => response.text());
-      } catch (error) {
-        const code = (error as { cause?: NodeJS.ErrnoException }).cause?.code;
-        if (code !== "ECONNREFUSED" && code !== "ECONNRESET") throw error;
-      }
-      if (/color: purple/.test(css)) break;
-      await setTimeout(50);
-    }
+    await waitForWatchedResource({
+      origin: running.url,
+      previous,
+      resource: stylesheet,
+      edit: () =>
+        fs.writeFile(
+          path.join(fixture.entriesDir, "fixture.css"),
+          ".x{color:green}",
+        ),
+      read: (response) => response.text(),
+      accept: (value) => /color: blue/.test(value),
+    });
+    previous = version(
+      await fetch(running.url).then((response) => response.text()),
+    );
+    const css = await waitForWatchedResource({
+      origin: running.url,
+      previous,
+      resource: stylesheet,
+      edit: () => fs.writeFile(token, "purple"),
+      read: (response) => response.text(),
+      accept: (value) => /color: purple/.test(value),
+    });
     assert.match(css, /color: purple/);
   },
 );

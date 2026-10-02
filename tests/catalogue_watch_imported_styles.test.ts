@@ -7,8 +7,8 @@ import { setTimeout } from "node:timers/promises";
 import { serve } from "../dist/server/serve.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
-import { version, waitForUpdate } from "./helpers/watched_catalogue.js";
-import { waitForBrowserReload } from "./helpers/watched_events.js";
+import { version } from "./helpers/watched_catalogue.js";
+import { waitForWatchedResource } from "./helpers/watched_events.js";
 
 for (const kind of ["plain", "module", "nested", "asset", "font"] as const) {
   test(
@@ -60,40 +60,32 @@ for (const kind of ["plain", "module", "nested", "asset", "font"] as const) {
           : kind === "module"
             ? "fixture.module.css"
             : "fixture.css";
-      const event = await waitForBrowserReload(running.url, initial, () =>
-        kind === "asset" || kind === "font"
-          ? fs.writeFile(
-              path.join(
-                fixture.entriesDir,
-                kind === "font" ? "font.woff2" : "icon.png",
+      await waitForWatchedResource<string | Buffer>({
+        origin: running.url,
+        previous: initial,
+        resource: `${running.url}/static/${kind === "asset" || kind === "font" ? `mokly-generated/assets/entries/${kind === "font" ? "font.woff2" : "icon.png"}` : route}`,
+        edit: () =>
+          kind === "asset" || kind === "font"
+            ? fs.writeFile(
+                path.join(
+                  fixture.entriesDir,
+                  kind === "font" ? "font.woff2" : "icon.png",
+                ),
+                Buffer.from([0, 255]),
+              )
+            : fs.writeFile(
+                path.join(fixture.entriesDir, relative),
+                ".entry { color: blue; }",
               ),
-              Buffer.from([0, 255]),
-            )
-          : fs.writeFile(
-              path.join(fixture.entriesDir, relative),
-              ".entry { color: blue; }",
-            ),
-      );
-      assert.ok(event > initial);
-      await waitForUpdate(running.url, initial);
-      const deadline = Date.now() + 15_000;
-      let accepted = false;
-      while (!accepted && Date.now() < deadline) {
-        const response = await fetch(
-          `${running.url}/static/${kind === "asset" || kind === "font" ? `mokly-generated/assets/entries/${kind === "font" ? "font.woff2" : "icon.png"}` : route}`,
-        );
-        if (kind === "asset" || kind === "font")
-          accepted = Buffer.from(await response.arrayBuffer()).equals(
-            Buffer.from([0, 255]),
-          );
-        else accepted = /blue|#00f/i.test(await response.text());
-        if (!accepted) await setTimeout(80);
-      }
-      assert.equal(
-        accepted,
-        true,
-        "accepted generation did not contain the edited input",
-      );
+        read: async (response) =>
+          kind === "asset" || kind === "font"
+            ? Buffer.from(await response.arrayBuffer())
+            : await response.text(),
+        accept: (value) =>
+          typeof value === "string"
+            ? /blue|#00f/i.test(value)
+            : value.equals(Buffer.from([0, 255])),
+      });
       const content = (html: string) => {
         const revision = /data-mokly-content-version="(\d+)"/.exec(html)?.[1];
         assert.ok(revision);

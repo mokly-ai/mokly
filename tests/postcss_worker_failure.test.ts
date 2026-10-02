@@ -9,6 +9,10 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { IsolatedPostcssProcessor } from "../dist/build/styles/isolated_postcss.js";
 import { WorkerRequests } from "../dist/build/styles/worker_requests.js";
 import { loadConfig } from "../dist/config/load.js";
+import {
+  PlainServeReporter,
+  type WatchReport,
+} from "../dist/server/reporter.js";
 import { serve } from "../dist/server/serve.js";
 
 import { removeFixture } from "./helpers/fixture.js";
@@ -30,12 +34,20 @@ async function pluginFixture(
 }
 
 async function bounded<T>(work: Promise<T>): Promise<T> {
-  return Promise.race([
-    work,
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("worker request hung")), 2_000),
-    ),
-  ]);
+  let timeout: NodeJS.Timeout | undefined;
+  try {
+    return await Promise.race([
+      work,
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(
+          () => reject(new Error("worker request hung")),
+          2_000,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 test("synchronous PostCSS plugin errors return the plugin diagnostic", async (context) => {
@@ -57,7 +69,7 @@ test("synchronous PostCSS plugin errors return the plugin diagnostic", async (co
 for (const [name, body, expected] of [
   [
     "late exception",
-    'setTimeout(() => { throw new Error("late boom") }, 10)',
+    'if (root.toString().includes(".first")) setTimeout(() => { throw new Error("late boom") }, 10); else return new Promise(() => {})',
     /PostCSS worker for postcss.config.mjs stopped unexpectedly \(error: late boom\)/,
   ],
   [
@@ -72,10 +84,8 @@ for (const [name, body, expected] of [
     context.after(() => processor.close());
     await processor.start();
     const source = path.join(fixture.entriesDir, "fixture.css");
-    if (name === "late exception") {
+    if (name === "late exception")
       await bounded(processor.process(source, ".first{}"));
-      await new Promise((resolve) => setTimeout(resolve, 80));
-    }
     await assert.rejects(
       bounded(processor.process(source, ".second{}")),
       expected,
@@ -95,15 +105,37 @@ test(
       context,
       'if (root.toString().includes(".crash")) process.exit(0)',
     );
-    const running = await bounded(serve(config, { port: 0, watch: true }));
+    let reportFailure!: (failure: {
+      report: WatchReport;
+      error: unknown;
+    }) => void;
+    const failed = new Promise<{ report: WatchReport; error: unknown }>(
+      (resolve) => {
+        reportFailure = resolve;
+      },
+    );
+    class FailureReporter extends PlainServeReporter {
+      override watchFailed(report: WatchReport, error: unknown): void {
+        reportFailure({ report, error });
+      }
+    }
+    const running = await serve(
+      config,
+      { port: 0, watch: true },
+      { reporter: new FailureReporter(() => {}) },
+    );
     context.after(() => running.close());
     await fs.writeFile(
       path.join(fixture.entriesDir, "fixture.css"),
       ".crash{color:red}",
     );
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    const failure = await failed;
+    assert.equal(failure.report.action, "rebuild");
+    assert.match(
+      String(failure.error),
+      /PostCSS worker for postcss\.config\.mjs stopped unexpectedly \(exit code 0\)/,
+    );
     await bounded(running.close());
-    assert.ok(true);
   },
 );
 

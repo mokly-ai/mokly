@@ -59,7 +59,11 @@ deletion of main content. Milestone 44 (`8729ec16`) resolves the selected findin
 by reviewing named merge commits and recording path-specific decisions.
 Other previously unselected findings remain out of scope. Findings in the
 [Milestone 45 review record](../docs/reviews/imported-css-delivery-milestone-45.md)
-remain open for the user's decision; the plan stays active until the PR merges.
+remain open for the user's decision. Milestone 46 addresses only the imported-CSS
+watcher-test flakiness recorded as Milestone 40 finding 12. The final helper
+follows intermediate versions and child restarts; a server-level test pins
+stylesheet availability before content updates. The plan stays active until
+the PR merges.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
@@ -1063,6 +1067,33 @@ path-complete record of intentional merge decisions.
 
 - [x] Commit and push the documentation changes; confirm the remote ref and a clean tree.
 - [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Five new findings (2 Medium, 3 Low) are recorded in the [Milestone 45 review record](../docs/reviews/imported-css-delivery-milestone-45.md) for the user's decision.
+
+## Milestone 46: Stabilize imported-CSS watcher tests
+
+Replace timing guesses with watch reports and accepted-resource evidence while
+preserving the browser-visible event contract.
+
+- [x] Reproduce each affected test under 24-run, six-at-once load and identify whether its failure is test synchronization or product behavior.
+- [x] Add a shared branch-owned resource wait that follows ready/update events across child restarts, retries only restart transport errors, and has direct retry/rethrow tests.
+- [x] Fix the worker-exit close test to wait for its rebuild failure report, and update the real-watcher and PostCSS dependency tests to wait for accepted resource bytes.
+- [x] Audit other branch-added watcher tests for the same patterns and fix affected cases without changing main-owned tests or helpers.
+- [x] Check product ordering with a deterministic server-level test; no product bug or protocol change is needed.
+- [ ] Verify load and serial repetitions, both CI unit shards, the full gate, Markdown, and deletion checks; record the finding's resolution.
+
+The original six-way load failed 24/24 worker-close runs (including one hung
+cleanup), 2/24 skipped-directory stylesheet runs and 1/24 PostCSS-token runs.
+The two catalogue PostCSS tests, the imported-CSS matrix and the stateful
+PostCSS test showed no baseline failures, but used the same unsafe waits. The
+final helper waits through intermediate versions and reports the last content
+and update versions, resource status and value excerpt on timeout.
+
+## Milestone 47: Commit, push, and review
+
+Deliver the approved watcher-test fix while leaving its post-push review to
+the user.
+
+- [ ] Commit and push the fix; confirm the remote ref and a clean tree.
+- [ ] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review.
 
 ## Post-merge follow-up (non-blocking)
 

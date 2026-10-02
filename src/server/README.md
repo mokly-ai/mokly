@@ -213,6 +213,14 @@ Run the server tests with `npm test` and the navigation/comparison smoke tests
 with `npm run test:browser`. `tests/derived_child_repository.test.ts` covers revocation,
 reader replacement and the transitive child-module boundary; `derived_serve`
 tests exercise both parent compositions.
+Imported-CSS watcher tests use `tests/helpers/watched_events.ts` to attach to the
+event stream before editing and wait for the expected resource bytes after a
+higher update version. Evidence-only updates and intermediate content versions
+do not prove that the final CSS is served; the wait reports the last version,
+status and resource excerpt if the expected bytes never arrive. A server-level
+test checks that an accepted stylesheet is installed before its content update
+is announced. Worker-exit tests wait for the watch failure report before
+checking shutdown; Serve startup is not subject to the worker-request timeout.
 
 See [review boundaries](../review/README.md), [baseline building](../baseline/README.md),
 and the [derived baseline protocol](../../docs/protocol/mokly-derived-baselines.md).
