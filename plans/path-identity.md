@@ -890,7 +890,7 @@ only the 28 known files.
       browser run passed 761 of 763; after the two crumb test updates, the
       complete browser suite passed 763 of 763, the cold-server test
       included.
-- [ ] Commit and push.
+- [x] Commit and push (`13faa1e6`, `a341bbb1`).
 
 Merge decisions (no file is deleted):
 
@@ -928,7 +928,7 @@ Status: Complete, verified by the Milestone 6C full gate.
       documents README.
 - [x] Run the full gate and, after `git fetch origin main`,
       `node scripts/verification/source-file-length.mjs`.
-- [ ] Commit and push.
+- [x] Commit and push (`a341bbb1`).
 
 ## Milestone 7: Viewer Changes and document presentation
 
