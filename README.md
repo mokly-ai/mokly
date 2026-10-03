@@ -337,6 +337,14 @@ functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
 
+`npm run dependencies:check` audits every workspace dependency category against
+the live registry. It fails on Low-or-higher advisories unless an active reviewed
+exception covers the exact dev-only path. Exceptions expire on an inclusive UTC
+date and cannot extend more than 31 days from the current date. The packed ESM
+consumer's production audit stays strict and has no exceptions. See
+[dependency security](./docs/protocol/dependency-security.md) for the data file,
+review rules, and the temporary Braces exception.
+
 ### Key code
 
 - [`src/index.ts`](./src/index.ts) — supported public authoring exports.
