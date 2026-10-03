@@ -750,6 +750,65 @@ or raised. The source length gate also requires moving the unchanged identity
 comparison and disposal helpers from the 304-line frame hook to
 `frame_session_lifecycle.ts`. The separate product commit records the existing-main diagnosis.
 
+#### Merge 3: main's frame and generated-output fixes
+
+Merge 3 (`08c990be95a579e151c4a88a9949a88830516fcd`) integrates main
+`800fe9f88a0173429b25baa1bcf41ed9e59b2256` (#129) from source tip
+`e8950d84238fa13b705992054d94449db80df8b0`. The source-tip audit lists 40
+incoming changed paths. The merge has exactly two parents. All 12 listed
+remerge diffs are complete and were reviewed before this record commit.
+There is no transient-blob error or parent-diff fallback in this review.
+
+| Conflicted path                                 | Resolution                                                                                                                                                                                                                                                                                                                           |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `packages/viewer/src/shell/frame_mount_hook.ts` | Use main's exact 191-line hook and its `frame_session_usage.ts` owner. Main's final revision check and readiness callback form one synchronous handoff.                                                                                                                                                                              |
+| `plans/README.md`                               | Use main's Imported CSS Delivery wording in Completed. Keep Interactive Views and Serve Rebuild Status in Active. The immediate review finds main's old Route-Scoped Shell Bootstrap entry in Active; this follow-up retains the branch's correct Completed state because PR #120 has merged. Each of these four plans appears once. |
+| `plans/imported-css-delivery.md`                | Use main's complete Status, PR #125 completion and resolved Milestone 47 findings. The file matches main exactly.                                                                                                                                                                                                                    |
+
+Main's fix covers the same handoff as `e8950d84`, so that branch-specific
+one-line fix is superseded. The branch's initialization test and main's mount
+race test each pass ten times on the merged code (20/20). Both schedule usage
+adoption at the final mount-completion microtask boundary. The different usage
+values and triggers do not introduce a distinct order. Main's regression test
+remains; remove the duplicate branch spec and its helper under the user's
+explicit instruction. Main's hook is below 300 lines, so the lifecycle extraction
+is unnecessary. Its identity and disposal behavior remains in main's hook.
+
+| Other remerge path                                     | Reason                                                                                                                                                                                                                                     |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `docs/protocol/mokly-frame-adapter.md`                 | Point to the synchronous readiness rule in the focused adoption contract. Keep the exact 362-line cap.                                                                                                                                     |
+| `docs/protocol/mokly-frame-usage-adoption.md`          | State main's initial-loop/final-callback rule and later ordered adoption once. Preserve the existing update, inspection and cancellation paragraphs.                                                                                       |
+| `packages/viewer/src/client/README.md`                 | Replace the removed lifecycle helper reference with main's usage owner and link the shared handoff contract.                                                                                                                               |
+| `packages/viewer/src/shell/README.md`                  | Keep main's new hook/usage ownership and readiness wording. Link the focused contract and keep the branch's Live and rebuild-status sections.                                                                                              |
+| `packages/viewer/src/shell/frame_session_lifecycle.ts` | Remove this branch-only extraction. Main's shorter hook retains the same comparison and disposal operations.                                                                                                                               |
+| `src/interactive/README.md`                            | State that a generated-output writer cannot change accepted Live source or resource bytes. Runtime adoption is the replacement boundary.                                                                                                   |
+| `tests/browser/frame_initialization.spec.ts`           | Remove the duplicate branch handoff test after its ten passing runs against main's fix. Keep main's race test.                                                                                                                             |
+| `tests/helpers/frame_initialization.tsx`               | Remove the helper used only by that duplicate test.                                                                                                                                                                                        |
+| `tests/interactive_output_lock.test.ts`                | Add derived and committed integration cases: a queued writer cannot block or change accepted Live CSS/assets or source replay; a completed disk write still does not adopt a runtime; explicit runtime replacement supplies the new bytes. |
+
+All three removed files are branch-only and their removal is explicitly
+authorized by the merge brief. No main file, test or feature is removed.
+The precommit, cached and postcommit main deletion audits are empty. Of the
+40 incoming paths, 35 match main exactly. The other five retain branch docs
+or plan entries: `docs/protocol/mokly-timings.md`,
+`packages/viewer/src/shell/README.md`, `src/build/README.md`,
+`src/server/README.md`, and `plans/README.md`. Main's `output.lock` timing, lock ownership,
+cancellation and watched-resource contract text remains in those combinations.
+
+Keep main's generated-output writer lock, export write/capture and input
+recheck holds, Serve cancellation of lock waits, baseline cache walk retries,
+native CI tests and deterministic watched-child resource ordering tests.
+The Live bundle and accepted resource origin use in-memory generation bytes.
+The new integration tests and doc size/link checks pass 6/6. Type checking,
+formatting, lint, source length and all repository ratchets pass; a missing
+explicit `Response` type in the new test is corrected before the passing rerun.
+No protocol cap is added or raised. Existing completed milestones stay complete.
+
+After this record, install the merged dependencies and run the focused frame,
+component, output-lock, watched-resource, Live and imported-style tests.
+Then run one complete `cargo xtask check` without concurrent edits, audit main
+deletions again and push once. The user owns the independent post-push review.
+
 ## Post-merge follow-up (non-blocking)
 
 - Live inspection: measure boundaries in the mounted DOM and re-enable
