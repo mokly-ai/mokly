@@ -17,46 +17,40 @@ import {
   removedPagePreviewFixture,
 } from "./helpers/removed_page_preview_fixture.js";
 
-for (const version of [4, 5] as const) {
-  test(`removed page captures its complete historical closure from manifest v${version}`, async (t) => {
-    const fixture = await removedPagePreviewFixture(t, version);
-    const artifact = await new RepositoryRemovedPagePreview(
-      fixture.config,
-      fixture.reader,
-    ).generate(
-      fixture.source,
-      { kind: "page", route: PAGE_ROUTE },
-      new AbortController().signal,
-    );
-    const files = renderRemovedPagePreviewArtifact(artifact);
+test("removed page captures its complete historical closure from normalized manifest v8", async (t) => {
+  const fixture = await removedPagePreviewFixture(t);
+  const artifact = await new RepositoryRemovedPagePreview(
+    fixture.config,
+    fixture.reader,
+  ).generate(
+    fixture.source,
+    { kind: "page", id: "guide" },
+    new AbortController().signal,
+  );
+  const files = renderRemovedPagePreviewArtifact(artifact);
 
-    assert.deepEqual(artifact.preview, {
-      schemaVersion: 1,
-      baseRef: "main",
-      baseCommit: PAGE_COMMIT,
-      route: PAGE_ROUTE,
-      documentPath: `snapshots/before/${PAGE_ROUTE}`,
-    });
-    assert.deepEqual(
-      parseRemovedPagePreview(JSON.parse(String(files.get("preview.json")))),
-      artifact.preview,
-    );
-    assert.equal(files.size, fixture.files.size + 1);
-    for (const [repoPath, value] of fixture.files) {
-      assert.deepEqual(
-        Buffer.from(
-          files.get(`snapshots/before/${repoPath.slice("mockups/".length)}`)!,
-        ),
-        Buffer.from(value.bytes!),
-        repoPath,
-      );
-    }
-    assert.deepEqual(
-      fixture.batches.map((batch) => batch.length),
-      [1, 3, 4, 1],
-    );
+  assert.deepEqual(artifact.preview, {
+    schemaVersion: 2,
+    baseRef: "main",
+    baseCommit: PAGE_COMMIT,
+    id: "guide",
   });
-}
+  assert.deepEqual(
+    parseRemovedPagePreview(JSON.parse(String(files.get("preview.json")))),
+    artifact.preview,
+  );
+  assert.equal(files.size, fixture.files.size + 1);
+  for (const [repoPath, value] of fixture.files) {
+    const captured = Buffer.from(
+      files.get(`snapshots/before/${repoPath.slice("mockups/".length)}`)!,
+    );
+    assert.deepEqual(captured, Buffer.from(value.bytes!), repoPath);
+  }
+  assert.deepEqual(
+    fixture.batches.map((batch) => batch.length),
+    [1, 3, 4, 1],
+  );
+});
 
 test("removed page capture rejects missing documents and every missing dependency", async (t) => {
   const fixture = await removedPagePreviewFixture(t);
@@ -79,7 +73,7 @@ test("removed page capture rejects missing documents and every missing dependenc
         baselineReader(files),
       ).generate(
         fixture.source,
-        { kind: "page", route: PAGE_ROUTE },
+        { kind: "page", id: "guide" },
         new AbortController().signal,
       ),
       /Snapshot file is missing/,
@@ -93,7 +87,7 @@ test("removed page capture rejects a selection outside the accepted removal snap
   await assert.rejects(
     new RepositoryRemovedPagePreview(fixture.config, fixture.reader).generate(
       fixture.source,
-      { kind: "page", route: "archive/missing.html" },
+      { kind: "page", id: "missing" },
       new AbortController().signal,
     ),
     /selected view has no comparison/,
@@ -104,7 +98,7 @@ test("removed page capture rejects a selection outside the accepted removal snap
         ...fixture.source,
         baseline: { ...fixture.baseline, entries: [] } as HistoricalManifest,
       },
-      { kind: "page", route: PAGE_ROUTE },
+      { kind: "page", id: "guide" },
       new AbortController().signal,
     ),
     /removed page does not match the pinned baseline/,
@@ -126,7 +120,7 @@ for (const [name, reference, message] of [
     await assert.rejects(
       new RepositoryRemovedPagePreview(fixture.config, fixture.reader).generate(
         fixture.source,
-        { kind: "page", route: PAGE_ROUTE },
+        { kind: "page", id: "guide" },
         new AbortController().signal,
       ),
       message,
@@ -134,27 +128,8 @@ for (const [name, reference, message] of [
   });
 }
 
-test("removed page capture denies traversal, symlinks, metadata, and authored sources", async (t) => {
+test("removed page capture denies symlinks, metadata, and authored sources", async (t) => {
   const fixture = await removedPagePreviewFixture(t);
-  const unsafeSource = {
-    ...fixture.source,
-    baseline: {
-      ...fixture.baseline,
-      entries: [{ ...fixture.page, route: "../guide.html" }],
-    } as HistoricalManifest,
-    removedEntries: [
-      { entry: { ...fixture.page, route: "../guide.html" }, ancestors: [] },
-    ],
-  };
-  await assert.rejects(
-    new RepositoryRemovedPagePreview(fixture.config, fixture.reader).generate(
-      unsafeSource,
-      { kind: "page", route: "../guide.html" },
-      new AbortController().signal,
-    ),
-    /unsafe path/,
-  );
-
   for (const [reference, denied] of [
     ["../assets/linked.css", /not a regular Git file \(symlink\)/],
     ["../mokly-manifest.json", /internal catalogue metadata/],
@@ -186,7 +161,7 @@ test("removed page capture denies traversal, symlinks, metadata, and authored so
         baselineReader(files),
       ).generate(
         { ...fixture.source, baseline },
-        { kind: "page", route: PAGE_ROUTE },
+        { kind: "page", id: "guide" },
         new AbortController().signal,
       ),
       denied,
@@ -204,7 +179,7 @@ test("removed page capture applies the selected artifact byte limit", async (t) 
   await assert.rejects(
     new RepositoryRemovedPagePreview(fixture.config, fixture.reader).generate(
       fixture.source,
-      { kind: "page", route: PAGE_ROUTE },
+      { kind: "page", id: "guide" },
       new AbortController().signal,
     ),
     /exceeds 64 MiB/,
@@ -213,19 +188,16 @@ test("removed page capture applies the selected artifact byte limit", async (t) 
 
 test("preview reader strictly validates metadata and document identity", () => {
   const valid = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     baseRef: "main",
     baseCommit: PAGE_COMMIT,
-    route: PAGE_ROUTE,
-    documentPath: `snapshots/before/${PAGE_ROUTE}`,
+    id: "guide",
   };
   assert.deepEqual(parseRemovedPagePreview(valid), valid);
   for (const value of [
-    { ...valid, schemaVersion: 2 },
+    { ...valid, schemaVersion: 1 },
     { ...valid, baseCommit: "invalid" },
-    { ...valid, route: "../guide.html" },
-    { ...valid, documentPath: "snapshots/after/archive/guide.html" },
-    { ...valid, documentPath: "snapshots/before/archive/other.html" },
+    { ...valid, id: "../guide" },
     { ...valid, extra: path.resolve("private") },
   ])
     assert.throws(() => parseRemovedPagePreview(value));

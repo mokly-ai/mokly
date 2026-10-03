@@ -7,6 +7,10 @@ and reviewed twice. Milestones 9 to 11 fixed the review findings that the user
 chose on 2026-09-25, and Milestones 12 to 15 implemented the user's 2026-09-26
 decisions. Milestones 16 to 21 merge main 0.13.0 and fix second-review
 finding 1; findings 2 to 11 await the user's decision.
+Milestone 16 is implemented, verified and committed locally. The reviewer owns
+the push. The merge includes main through `b2c82c15`,
+including imported CSS (#125), route-scoped bootstraps (#120), and the STE
+instructions (#128), in addition to the five originally listed commits.
 The binding Decisions And Scope remove all three inputs and adopt
 component-declared stylesheets in place of the stylesheet role of
 `ownedDependencies`. The user approved both the removals and the component
@@ -16,8 +20,8 @@ completion boundary; keep this plan active until then.
 Remove the three author-maintained inputs that link mockups to repository paths:
 
 - `dependencies` on every entry: `defineScreen`, `definePage`, `defineUseCase`,
-  `defineCollection`, `defineComponent`, nested `screen`/`page`/`collection`
-  markers, `defineRoot` collection metadata, and screen variants.
+  `defineComponent`, nested `screen`/`page`/`folder` markers, `defineRoot`
+  path metadata, and screen and component variants.
 - `ownedDependencies` on `defineComponent`.
 - `review.sharedImpact` in the configuration.
 
@@ -26,13 +30,13 @@ stylesheet into every document that renders the component and records that
 component as the stylesheet's owner.
 
 Afterwards Changes and comparison evidence come only from generated output, the
-rendered resources a view references, reviewable metadata, collection ancestry
+rendered resources a view references, reviewable metadata, navigation paths
 and component usage attribution, in every catalogue.
 
-Today the removed inputs follow two rules. In a catalogue without registered
-components they are comparison evidence only. In a catalogue with registered
-components a match adds screens, flows and components to Changes. Most docs
-describe only the first rule. Pull request #47 removed path-only matches from
+Before this plan, the removed inputs followed two rules. In a catalogue without registered
+components they were comparison evidence only. In a catalogue with registered
+components a match added screens, flows and components to Changes. The former docs
+described only the first rule. Pull request #47 removed path-only matches from
 Changes (292 to 141 entries on the Accounting catalogue); #48 brought them back
 for catalogues with registered components.
 
@@ -79,8 +83,9 @@ milestone.
   - Mokly inserts links next to the nearest present configured `<link>` in
     configured order, taking the first occurrence of a repeated renderer link.
     If none is present, insert at the end of head content. Missing, repeated
-    or reordered configured links do not fail placement. `RenderInput` does
-    not change.
+    or reordered configured links do not fail placement. `RenderInput.stylesheets`
+    contains configured and generated imported links; declared component links
+    are added internally, and `input.entry` omits `stylesheets`.
   - Mokly records a `resources` ownership record for each linked declared
     stylesheet, owned by the rendered components that declare it. A configured
     link to that file is reused, not duplicated, and still gets those owners.
@@ -98,7 +103,8 @@ milestone.
     dependency declaration" and the example's per-render style collector.
     Renderer `styles` and `resources` records remain for all other material.
 - Removed inputs are ignored with a warning: `dependencies` on an entry,
-  nested marker or variant, `ownedDependencies` on a component, and
+  nested marker, root path metadata or variant, `ownedDependencies` on a
+  component or saved component variant, and
   `review.sharedImpact` in configuration. They add no evidence or ownership;
   TypeScript input types still reject the authoring fields.
 - [Graceful handling](../docs/protocol/README.md#graceful-handling) governs
@@ -107,20 +113,29 @@ milestone.
   across configuration, registry and render stages, including Serve children.
   Warnings do not affect exit codes; plain and rich CLI reporting follows the
   [warning contract](../docs/protocol/mokly-build-warnings.md).
-- Versions: private manifest v5 becomes v6. The public catalogue read model v1
-  becomes v2 without `details.dependencies`. Comparison results v2 (catalogues
-  without registered components) become v4, and v3 (with registered
-  components) become v5, without result `sharedImpact` or entry `dependencies`
-  and `sharedImpact`. Build and Review keep parsing historical v3 to v5
-  manifests and strip the removed fields before comparison. The viewer reads
-  only catalogue v2 and comparison v4/v5, so older exports must be regenerated.
-  The live index stays process-local and adopts the v6 entry shape.
+- Versions after the 0.13.0 integration: manifest v8 is main's v7 without
+  `dependencies`, `declaredDependencies` or `ownedDependencies`, and retains
+  declared-stylesheet provenance. Historical readers accept manifest v3 to v7,
+  drop collection records, flatten earlier component variants, and strip the
+  removed fields before v8 validation and comparison. Catalogue read model v4
+  is main's v3 without `details.dependencies`. Unified comparison result v5 is
+  main's v4 without result `sharedImpact` or entry `dependencies` and
+  `sharedImpact`. All catalogues use that one classifier and format. Public
+  readers reject catalogue v1 to v3 and comparison v4 and earlier; regenerate
+  older exports. The process-local live index adopts the v8 entry shape.
+  Keep main's fixed pane paths and unchanged snapshot bytes. Historical v3–v6
+  metadata with an older entry or view layout makes Changes unavailable, with
+  the existing earlier-baseline message; do not add historical-origin handling.
 - Rendered-resource reasons keep the wire kind `dependency`, because they name
   resources a view depends on. Renaming them is out of scope.
 - The Shared impact design screen is deleted because the state no longer
   exists. Comparison details keep rendered-resource, ignored-region,
   excluded-stylesheet and component evidence.
-- Nested trees and screen variants keep inheriting `address` and `relatedDocs`.
+- Collections and collection APIs no longer exist. Entries use `navPath`,
+  nested trees use `folder()`, and `defineRoot` holds root path metadata.
+  Nested trees and screen variants retain the inheritance defined by main's
+  authoring contract, including `address` and `relatedDocs`, but never the
+  removed fields.
 - Out of scope: a future "code changed but the mockup did not" feature. Leave
   historical plans, `docs/reviews/**` and `CHANGELOG.md` unchanged.
 
@@ -196,11 +211,13 @@ Where the work lands:
 
 ## Post-merge follow-up (non-blocking)
 
-- Upgrade `@mokly/viewer` in mokly-cloud to catalogue v2 and comparison v4/v5,
+- Consider an opt-in check that warns when a changed or existing component
+  stylesheet rule matches elements outside its component.
+- Upgrade `@mokly/viewer` in mokly-cloud to catalogue v4 and comparison v5,
   then re-export and re-publish stored catalogues.
 - Migrate consumer catalogues such as Accounting: delete the three inputs,
   declare component CSS with `stylesheets` instead of `ownedDependencies` and
-  route rules, and rebuild committed output once for manifest v6.
+  route rules, and rebuild committed output once for manifest v8.
 
 ## Milestone 1: Define the contract
 
@@ -751,27 +768,162 @@ matched outside the component.
 
 ## Milestone 16: Integrate `main` 0.13.0
 
-- [ ] Merge `origin/main` into the branch. Audit main's additions first and
+- [x] Record source tip `b2928191`, merge base `3699c566`, and fetched main
+      tip `b2c82c15` before merging. Store the main additions and the 317
+      conflict paths under `.context/m16-*.txt`. Main also includes #125,
+      #120 and #128; retain those additions with the originally listed work.
+- [x] Merge `origin/main` into the branch. Audit main's additions first and
       resolve each conflict path by path, keeping every #121, #122 and #123
       feature.
-- [ ] Move the formats above main's released versions: manifest v8 (main's v7
+- [x] Move the formats above main's released versions: manifest v8 (main's v7
       without `dependencies`, `declaredDependencies` and `ownedDependencies`),
       catalogue read model v4 (main's v3 without `details.dependencies`) and
       one comparison result v5 (main's v4 without result `sharedImpact` and
       entry `dependencies` and `sharedImpact`). Historical readers accept
       manifest v3 to v7 and strip the removed fields; readers reject older
       public formats.
-- [ ] Apply this plan's rules to main's authoring surface: removed-field
+- [x] Apply this plan's rules to main's authoring surface: removed-field
       warnings on `folder()` markers and root path metadata as well as on
       entries, and the TypeScript `never` fields on main's input types.
-- [ ] Port rendered-only evidence, component stylesheet provenance, graceful
+- [x] Port rendered-only evidence, component stylesheet provenance, graceful
       handling and build warnings onto main's single comparison classifier.
-- [ ] Merge the design mockup changes from both sides, and keep the design
+- [x] Merge the design mockup changes from both sides, and keep the design
       reachability test passing.
-- [ ] Update the protocol docs, guides, fixtures and READMEs to the merged
+- [x] Update the protocol docs, guides, fixtures and READMEs to the merged
       contract and versions.
-- [ ] Run `cargo xtask check` at 100%, inspect the deletions against
-      `origin/main`, commit the merge and push.
+- [x] Resolve the historical-layout contract: earlier manifests can retain
+      nested artifact paths, while main's panes require identity-derived paths
+      and unchanged snapshot bytes. The user chose to keep main's pane contract
+      and make Changes unavailable for older layouts. Add failure-first tests,
+      apply the typed availability guard, and preserve derived cache reuse.
+- [x] Migrate additional imported-CSS and route-scoped-bootstrap fixtures and
+      packed consumer checks to v8/v4/v5 and rendered-only evidence.
+- [x] Preserve dropped collection-only source modules in inferred historical
+      inventories, and retain required inventories for historical v5 to v7.
+      Add failure-first tests for both normalization boundaries.
+- [x] Keep changed TypeScript files within 300 lines. Split long integration
+      suites without losing their cases, and lower protocol size caps to match
+      the shortened contracts.
+- [x] Smoke-test the merged designs through `npm run dev` at 390 px and
+      1440 px, and store screenshots under `.context/screenshots/m16/`.
+- [x] Fix the publish compilation cancellation test proxy, as the user
+      requested. Clear its binary override before starting the real compiler,
+      so npm's JavaScript launcher cannot start the proxy recursively. Keep
+      the cancellation, output preservation and diagnostic stack assertions.
+- [x] Isolate the design-library runtime browser tests from branch history
+      with a current-format committed example fixture. Keep their Unmodified
+      status, temporary props, styling and source-preservation assertions.
+- [x] Run all required checks, including the complete unit suite and
+      `cargo xtask check`, at 100%.
+- [x] Inspect and record approved deletions against `origin/main`, commit the
+      merge, confirm its two parents, and inspect every remerge-diff path.
+- [x] Audit all 335 files in `.context/m16-main-lines-absent.txt`. Classify
+      intended migrations, equivalent moves or wording, and lost content.
+      Record each path and its reason in the supporting preservation audit.
+- [x] Add failure-first checks for the lost contracts. Restore them with the
+      branch's approved rules. Split any protocol that exceeds its size limit;
+      do not remove contract content or raise a cap.
+- [x] Complete the release-note migration from main's released `ManifestV7`,
+      `ReviewResultV4` and `ScreenReviewV4` exports to the new types. The first
+      complete unit run exposed the missing names after the merge made
+      `viewer-v0.4.0` reachable. Keep `CHANGELOG.md` unchanged.
+- [x] Run changed-file Prettier, the four requested docs suites, and the
+      complete unit suite at 100%. For non-Markdown changes, also run build,
+      typecheck, lint and every `cargo xtask check` step after the unit suite.
+- [x] Record the dependency-audit blocker. `npm audit` reports
+      GHSA-vfj7-8cjw-p6xm for `braces` through the development-only path
+      `@firna/ui`, `react-native`, `metro`, `micromatch`. No patched `braces`
+      release exists, and `main` fails the same way with the same lockfile.
+      This branch does not change dependencies or the audit. The reviewer
+      accepted every other `cargo xtask check` step at 100% for the amend;
+      remediation belongs to a separate change.
+- [x] Amend the local merge with the restorations and audit. Confirm exactly
+      two parents and review every amended remerge-diff path. Keep Milestone
+      17 and second-review findings 2 to 11 unchanged.
+- [x] Push the merge after the reviewer checks it.
+
+Integration evidence:
+
+- Preservation verification: the complete unit command passes 3,689 tests
+  with no failures, skips or cancellations. Build, typecheck, lint,
+  formatting, documentation checks, size limits, repository ratchets, 15 Rust
+  tests and all six packed-consumer scenarios also pass. The reviewer ran
+  `cargo xtask check --suite browser` (742 pass) and `--suite hydration`
+  (222 pass). `cargo xtask check` stops only at the dependency audit: 13
+  high-severity findings through `braces` for `GHSA-vfj7-8cjw-p6xm`, with no
+  patched release. `main` fails the same way; `package.json` and
+  `package-lock.json` are unchanged. Logs are under
+  `.context/m16-preservation/`.
+- Preservation correction: the [complete path audit](./remove-source-path-evidence-audit/README.md)
+  classifies the 335 supplied files as 307 intended migrations/removals,
+  16 equivalent moves or wording changes, and 12 losses now restored. It also
+  checks 134 other changed mainline paths and maps all 970 main-added test
+  declarations. The earlier remerge audit did not detect these document losses;
+  its no-loss claim below is superseded by this correction.
+- Intended reductions follow the binding decisions. The audit tables name
+  every affected path and reason, including these groups:
+  - Formats: `packages/viewer/src/registry/types.ts`, catalogue/review readers,
+    `src/registry/manifest*.ts`, public fixtures and their tests move to
+    v8/v4/v5. Fixture hashes and package checks move with them.
+  - Path evidence: `src/review/component_*.ts`, authoring/registry inputs,
+    viewer Details/evidence, guides and fixtures lose only the retired fields,
+    their matching logic and their obsolete assertions. Rendered-resource
+    and actual-invocation checks remain.
+  - CSS declarations: `examples/basic/mokly.config.ts`, design library
+    metadata/views and their tests use `stylesheets` instead of the collector
+    and source ownership. Mixed/global configured CSS remains.
+  - Design states: `examples/basic/entries/design/review_impact_screens.tsx`,
+    component `parts/comparison_*` and `states/shared-impact/screens.tsx`,
+    their inventory/tests and design docs remove the approved Shared impact
+    state or replace its component evidence with Excluded styles. Counts
+    become 101 total and 62 Browse/Changes screens. Deferred findings stay open.
+  - History: `src/baseline/manifest.ts`, `src/review/base_manifest.ts`,
+    manifest normalization and compatibility tests accept supported older
+    metadata but keep older stored layouts unavailable, as the user decided.
+    Range tests retain original document offsets and snapshot bytes.
+  - Splits: source/test helpers keep the same operations and assertions at
+    the destinations named in the audit. The catalogue protocol now splits
+    into `mokly-catalogue.md` and `mokly-catalogue-delivery.md`; all content and
+    former anchors remain available. Its old size exception is removed.
+- Restored contracts cover watch invalidation and precedence, generated-byte
+  Review evidence, source metadata privacy, identity-based export and component
+  rules, actual-invocation variant evidence, and design authority boundaries.
+  All 14 targeted preservation checks failed before restoration and now pass.
+- All 317 conflict paths are resolved. The local merge has exactly two parents:
+  source tip `b2928191` and fetched main `b2c82c15`. Its 492 remerge-diff paths
+  were inspected individually, including one-sided migrations and test splits.
+  The user chose main's pane contract for older layouts. Every conflict path
+  and its resolution is listed in the merge commit body. The path audit is
+  saved under `.context/m16-remerge-by-path/`. The preservation correction
+  above replaces its earlier conclusion about document completeness.
+- The older-layout guard passes 26 focused tests. Coverage includes all entry
+  kinds, both viewports and schemes, component variants, unsafe data, no resource
+  reads before rejection, derived cache reuse, both Serve modes, export and
+  delta publication. Recognized older layouts keep All and current-only output
+  usable and print the existing availability message once.
+- The publish cancellation proxy now clears its binary override when it
+  starts the real compiler. This fixes recursion through npm's JavaScript
+  launcher on both this branch and unchanged main. The existing assertions
+  pass without changing product cancellation behavior or test timeouts.
+- Browser fixtures use the merged v8/v4/v5 formats, identity-derived example
+  routes and main's readiness container. Design runtime checks use an isolated
+  current-format baseline, so temporary edits retain their Unmodified status
+  assertion without depending on the checkout's earlier layout.
+- The packed smoke test passes all six consumer scenarios. Visual smoke saves
+  15 screenshots under `.context/screenshots/m16/`, with no browser page errors.
+- `cargo xtask check` passes: 3,675 unit, 742 browser, 222 hydration and 15
+  Rust tests, with zero failures, skips or cancellations. Its 661 unit files
+  exactly match the requested complete-suite globs. The initial parallel run
+  exceeded one scale-test wall-clock bound; the unchanged bound passes in the
+  final sequential gate. Build, typecheck, lint, formatting, both example
+  commands and package smoke also pass. Logs: `/tmp/m16-final-*.log` and
+  `.context/verification-reports/`.
+- Four deletions and one fixture rename against main are approved:
+  - `docs/protocol/fixtures/catalogue-v3.json` → `catalogue-v4.json`: retain one current fixture.
+  - `examples/basic/entries/design/library/style_context.tsx`: replace the style collector with declarations.
+  - `src/components/dependency_validation.ts`: retire declared path validation.
+  - `src/registry/dependency_paths.ts`: retire source-path matching.
+  - `tests/design_library_style_collector.test.tsx`: retain its unique checks in the declaration tests.
 
 ## Milestone 17: Document the finding 1 rule
 

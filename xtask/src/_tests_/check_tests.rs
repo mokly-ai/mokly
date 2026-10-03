@@ -1,6 +1,6 @@
 //! Verification ordering, selection, and fail-closed subprocess coverage.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -30,6 +30,8 @@ fn complete_gate_is_the_ordered_union_of_every_suite() {
             "npm run dependencies:check",
             "npm run format:check",
             "npm run lint",
+            "node scripts/verification/source-file-length.mjs",
+            "node scripts/verification/repository-ratchets.mjs",
             "cargo fmt --all -- --check",
             "cargo clippy --workspace --all-targets -- -D warnings",
             "cargo test --workspace",
@@ -43,6 +45,8 @@ fn complete_gate_is_the_ordered_union_of_every_suite() {
             "npm run test:prepared",
             "npm run prepare:verification",
             "npm run test:browser:prepared",
+            "npm run prepare:verification",
+            "npm run test:hydration:prepared",
         ]
     );
 }
@@ -51,11 +55,11 @@ fn complete_gate_is_the_ordered_union_of_every_suite() {
 fn selected_unit_shard_prepares_then_propagates_the_shard() {
     let command_runner = Arc::new(Unimock::new((
         CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "npm run prepare:verification"))
+            .next_call(matching!((command) if command.display() == "npm run prepare:verification" && command.working_directory() == Some(Path::new("/workspace"))))
             .returns(Ok(())),
         CommandRunnerRunMock
             .next_call(
-                matching!((command) if command.display() == "npm run test:prepared -- --shard 2/4"),
+                matching!((command) if command.display() == "npm run test:prepared -- --shard 2/4" && command.working_directory() == Some(Path::new("/workspace"))),
             )
             .returns(Ok(())),
     )));
@@ -71,6 +75,20 @@ fn selected_unit_shard_prepares_then_propagates_the_shard() {
 }
 
 #[test]
+fn selected_hydration_suite_prepares_then_runs_its_project() {
+    assert_eq!(
+        commands_for(VerificationSuite::Hydration, None)
+            .iter()
+            .map(|command| command.display())
+            .collect::<Vec<_>>(),
+        [
+            "npm run prepare:verification",
+            "npm run test:hydration:prepared",
+        ]
+    );
+}
+
+#[test]
 fn repository_suite_runs_audit_first_and_includes_file_length() {
     let command_runner = Arc::new(Unimock::new((
         CommandRunnerRunMock
@@ -81,6 +99,12 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
             .returns(Ok(())),
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "npm run lint"))
+            .returns(Ok(())),
+        CommandRunnerRunMock
+            .next_call(matching!((command) if command.display() == "node scripts/verification/source-file-length.mjs" && command.working_directory() == Some(Path::new("/workspace"))))
+            .returns(Ok(())),
+        CommandRunnerRunMock
+            .next_call(matching!((command) if command.display() == "node scripts/verification/repository-ratchets.mjs"))
             .returns(Ok(())),
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "cargo fmt --all -- --check"))
@@ -102,6 +126,25 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
         .expect("repository request is valid");
 
     runner.run(request).expect("repository suite succeeds");
+}
+
+#[test]
+fn source_length_audit_supports_changed_and_all_modes() {
+    let command_runner = Arc::new(Unimock::new((
+        CommandRunnerRunMock
+            .next_call(matching!((command) if command.display() == "node scripts/verification/source-file-length.mjs"))
+            .returns(Ok(())),
+        CommandRunnerRunMock
+            .next_call(matching!((command) if command.display() == "node scripts/verification/source-file-length.mjs --all"))
+            .returns(Ok(())),
+    )));
+    let runner = DefaultCheckRunner::new(command_runner, Arc::new(Unimock::new(())), workspace());
+    runner
+        .source_file_length(false)
+        .expect("changed-file audit succeeds");
+    runner
+        .source_file_length(true)
+        .expect("all-file audit succeeds");
 }
 
 #[test]
@@ -178,6 +221,7 @@ fn shard_requires_a_supported_selected_suite() {
     for suite in [
         Some(VerificationSuite::Repository),
         Some(VerificationSuite::Package),
+        Some(VerificationSuite::Hydration),
     ] {
         assert!(matches!(
             CheckRequest::new(suite, Some(shard)),

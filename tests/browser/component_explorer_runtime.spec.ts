@@ -1,66 +1,19 @@
-import path from "node:path";
-
 import { expect, test } from "@playwright/test";
 
-import { renderReviewArtifact } from "../../dist/review/artifact.js";
-import { compareReview } from "../../dist/review/compare.js";
-import { writeReviewArtifact } from "../../dist/review/write.js";
-import { startCatalogueServer } from "../../dist/server/http.js";
 import type { RunningServer } from "../../dist/server/http_types.js";
-import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 
 import { loadComparison } from "./comparison_actions.js";
+import { createExplorerFixture } from "./component_explorer_fixture.js";
+import { chooseVariant } from "./workspace_actions.js";
 
 let server: RunningServer;
-const cleanup: (() => Promise<void>)[] = [];
+let close: () => Promise<void>;
 test.beforeAll(async () => {
-  const fixture = await componentReviewFixture(
-    {
-      after: (fn) => {
-        cleanup.push(fn);
-      },
-    },
-    (source) =>
-      source
-        .replace(
-          "<button data-viewport=",
-          '<button className="revised" data-viewport=',
-        )
-        .replace(
-          '{ id: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }]',
-          '{ id: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }, { id: "new", title: "New", props: { label: "New" } }]',
-        ),
-  );
-  const compared = await compareReview(
-    fixture.after,
-    fixture.config,
-    fixture.git,
-    "main",
-  );
-  if (compared.result.schemaVersion !== 5)
-    throw new Error("Expected component result");
-  const result = compared.result;
-  server = await startCatalogueServer(fixture.config, {
-    base: "main",
-    port: 0,
-    componentChanges: { baseline: fixture.before.manifest, result },
-    review: {
-      base: "main",
-      outDir: path.join(fixture.root, ".review"),
-      generate: async () => {
-        await writeReviewArtifact(
-          renderReviewArtifact(compared),
-          path.join(fixture.root, ".review"),
-          fixture.config,
-        );
-      },
-    },
-  });
-  fixture.beforeRemove(() => server.close());
+  const fixture = await createExplorerFixture();
+  server = fixture.server;
+  close = fixture.close;
 });
-test.afterAll(async () => {
-  for (const dispose of cleanup.reverse()) await dispose();
-});
+test.afterAll(async () => close());
 
 test("saved variants, actual contexts, inspector tabs, and history work in the real shell", async ({
   page,
@@ -72,6 +25,16 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
     page.getByRole("heading", { name: "Action", exact: true }),
   ).toBeVisible();
   await expect(
+    page.locator(
+      '[data-nav-disclosure="variants:components:action"] [data-route="components/action-default.html"]',
+    ),
+  ).toBeVisible();
+  await expect(
+    page.locator(
+      '[data-nav-disclosure="variants:components:action"] [data-route="components/action-disabled.html"]',
+    ),
+  ).toBeVisible();
+  await expect(
     page.getByRole("tab", { name: "Nested components" }),
   ).toHaveCount(0);
   await expect(
@@ -81,10 +44,28 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
   await expect(
     mobile.getByRole("button", { name: "Continue" }),
   ).toHaveAttribute("data-viewport", "mobile");
-  await page
-    .getByLabel("Saved variant", { exact: true })
-    .selectOption("disabled");
-  await expect(page).toHaveURL(/variant=disabled/);
+  const variants = page.getByRole("navigation", { name: "Saved variants" });
+  await expect(
+    variants.getByRole("link", { name: "Default", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await variants.getByRole("link", { name: "Disabled", exact: true }).click();
+  await expect(page).toHaveURL(/\/view\/components\/action-disabled\.html$/);
+  await expect(
+    page.getByRole("heading", { name: "Action", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Copy ID action-disabled" }),
+  ).toHaveText("#action-disabled");
+  await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
+  await expect(
+    page.getByLabel("Catalogue location").getByRole("link"),
+  ).toHaveText("Action");
+  await expect(page.locator('[data-inspector-panel="details"]')).toContainText(
+    "Variant ofAction",
+  );
+  await expect(page.locator('[data-inspector-panel="details"]')).toContainText(
+    "The saved action is unavailable.",
+  );
   await expect(mobile.getByRole("button", { name: "Continue" })).toBeDisabled();
   await page.getByRole("tab", { name: "Props", exact: true }).click();
   await expect(page.locator('[data-prop-control="disabled"]')).toBeChecked();
@@ -94,264 +75,100 @@ test("saved variants, actual contexts, inspector tabs, and history work in the r
     0,
   );
   await page.goBack();
-  await expect(page.getByLabel("Saved variant", { exact: true })).toHaveValue(
-    "default",
-  );
-  await expect(mobile.getByRole("button", { name: "Continue" })).toBeEnabled();
-  await page.goto(`${server.url}/view/components/action.html?variant=missing`);
+  await expect(page).toHaveURL(/\/view\/components\/action\.html$/);
   await expect(
-    page.getByRole("status").filter({ hasText: "This saved variant" }),
-  ).toBeVisible();
-  await page
-    .getByLabel("Saved variant", { exact: true })
-    .selectOption("default");
-  await expect(mobile.getByRole("button", { name: "Continue" })).toBeVisible();
+    variants.getByRole("link", { name: "Default", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(mobile.getByRole("button", { name: "Continue" })).toBeEnabled();
+  await page.goForward();
+  await expect(page).toHaveURL(/\/view\/components\/action-disabled\.html$/);
+  await expect(
+    variants.getByRole("link", { name: "Disabled", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
   expect(errors).toEqual([]);
 });
 
-test("screen inspection records real nested, repeated and hidden instances without listing the screen in Changes", async ({
+test("Changes lists changed component variants beneath their parent", async ({
   page,
 }) => {
   await page.goto(`${server.url}/view/screens/home.html`);
-  await expect(page.locator("[data-workspace-status]")).toHaveText("Changed");
+  await page.click('[data-filter="changed"]');
+
+  const parent = page.locator(
+    'a[data-nav-row][data-route="components/action.html"]',
+  );
+  await expect(parent).toHaveAttribute("data-changed-variants", "true");
   await expect(
-    page.locator('[data-nav-row][data-route="screens/home.html"]'),
-  ).not.toHaveAttribute("data-changed", "true");
-  await page.getByRole("tab", { name: "Components", exact: true }).click();
-  await expect(
-    page.getByRole("tabpanel", { name: "Components", exact: true }),
-  ).toContainText("5 instances");
-  const highlight = page.getByRole("button", {
-    name: "Highlight components",
-    exact: true,
-  });
-  await expect(highlight).toBeEnabled();
-  await highlight.click();
-  await expect(
-    page.locator('.mbk-highlight-layer[data-highlight-viewport="desktop"]'),
+    page.locator(
+      '[data-nav-disclosure="variants:components:action"] [data-route="components/action-default.html"]',
+    ),
   ).toBeVisible();
   await expect(
-    page.locator(".mbk-highlight-label").filter({ hasText: "hidden" }),
-  ).toHaveCount(0);
+    page.locator(
+      '[data-nav-disclosure="variants:components:action"] [data-route="components/action-disabled.html"]',
+    ),
+  ).toBeVisible();
+});
+
+test("a generated MockLink opens a component variant entry", async ({
+  page,
+}) => {
+  await page.goto(`${server.url}/view/screens/home.html`);
   await page
-    .locator(".mbk-highlight-label")
-    .filter({ hasText: "footer" })
-    .first()
+    .frameLocator('[data-workspace-frame="mobile"]')
+    .getByRole("link", { name: "Open Disabled Action", exact: true })
     .click();
-  await expect(
-    page.getByRole("tabpanel", { name: "Props", exact: true }),
-  ).toContainText("Finish");
-  await page.keyboard.press("Escape");
-  await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
-  await expect(highlight).toBeFocused();
-  await page.getByRole("link", { name: "Open component", exact: true }).click();
+
+  await expect(page).toHaveURL(/\/view\/components\/action-disabled\.html$/);
   await expect(
     page.getByRole("heading", { name: "Action", exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
-});
-
-test("desktop divider stays centered while resizing and mobile sheet keeps the page bounded", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto(`${server.url}/view/components/pane.html`);
-  const divider = page.getByRole("separator", { name: "Resize inspector" });
-  await expect(divider).toBeVisible();
-  const before = await page.locator("[data-workspace-inspector]").boundingBox();
-  const handle = await divider.boundingBox();
-  expect(
-    Math.abs(handle!.y + handle!.height / 2 - before!.y),
-  ).toBeLessThanOrEqual(1);
-  await divider.focus();
-  await page.keyboard.press("ArrowUp");
-  const after = await page.locator("[data-workspace-inspector]").boundingBox();
-  expect(after!.height).toBeGreaterThan(before!.height);
-  await page.setViewportSize({ width: 390, height: 844 });
-  await expect(divider).toBeHidden();
-  const sheet = page.getByRole("button", {
-    name: "Expand inspector",
-    exact: true,
-  });
-  await expect(sheet).toBeVisible();
-  const compact = await page
-    .locator("[data-workspace-inspector]")
-    .boundingBox();
-  await sheet.click();
-  const expanded = await page
-    .locator("[data-workspace-inspector]")
-    .boundingBox();
-  expect(expanded!.height).toBeGreaterThan(compact!.height);
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollHeight <= innerHeight,
-    ),
-  ).toBe(true);
-});
-
-test("the inspector divider lights up like the navigation divider", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto(`${server.url}/view/components/pane.html`);
-  await page.addStyleTag({
-    content: "*, *::after { transition: none !important; }",
-  });
-  const grip = (node: Element) => {
-    const style = getComputedStyle(node, "::after");
-    return {
-      background: style.backgroundColor,
-      shadow: style.boxShadow,
-      line: [style.width, style.height].sort().join(" "),
-    };
-  };
-  const dividers = {
-    navigation: page.getByRole("separator", {
-      name: "Resize navigation panel",
-    }),
-    inspector: page.getByRole("separator", { name: "Resize inspector" }),
-  };
-  await expect(dividers.inspector).toBeVisible();
-  const resting = await dividers.inspector.evaluate(grip);
-  expect(resting).toEqual(await dividers.navigation.evaluate(grip));
-
-  const box = (await dividers.inspector.boundingBox())!;
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  const hovered = await dividers.inspector.evaluate(grip);
-  expect(hovered).not.toEqual(resting);
-  await dividers.navigation.hover();
-  expect(await dividers.navigation.evaluate(grip)).toEqual(hovered);
-
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(box.x + box.width / 2, box.y - 60, { steps: 8 });
-  await expect(page.locator("[data-mokly-shell]")).toHaveClass(
-    /mbk-inspector-resizing/,
-  );
-  await page.mouse.up();
-  await expect(page.locator("[data-mokly-shell]")).not.toHaveClass(
-    /mbk-inspector-resizing/,
-  );
-});
-
-test("component comparisons follow changed variants while added variants stay current", async ({
-  page,
-}) => {
-  await page.goto(`${server.url}/view/components/action.html`);
-  await page.getByLabel("Viewport", { exact: true }).selectOption("mobile");
-  await loadComparison(page, "Overlay");
-  await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(2);
-  await expect(
-    page.locator("[data-diff-stage] [data-workspace-evidence]"),
-  ).toHaveCount(0);
-  await expect(
-    page.locator("[data-diff-stage] .mbk-comparison-evidence"),
-  ).toHaveCount(0);
-  await expect(page.locator("[data-workspace-evidence]")).toHaveCount(1);
-  await expect(page.locator(".mbk-comparison-evidence")).toHaveCount(1);
-  await expect(
-    page.locator(
-      '[data-inspector-panel="details"] [data-workspace-evidence].mbk-comparison-evidence',
-    ),
-  ).toHaveCount(1);
-  await expect(page.locator('[data-inspector-panel="details"]')).toContainText(
-    "Rendered content changed.",
-  );
-  await expect(
-    page.getByRole("button", { name: "Highlight components", exact: true }),
-  ).toBeDisabled();
-  await page
-    .getByLabel("Saved variant", { exact: true })
-    .selectOption("disabled");
-  await expect(page.locator("[data-diff-stage] iframe").last()).toHaveAttribute(
-    "src",
-    /disabled\.mobile\.html$/,
-  );
-  await page.getByRole("button", { name: "Current", exact: true }).click();
   await expect(
     page
       .frameLocator('[data-workspace-frame="mobile"]')
       .getByRole("button", { name: "Continue" }),
   ).toBeDisabled();
-  await page.getByLabel("Saved variant", { exact: true }).selectOption("new");
-  await expect(page.locator("[data-workspace-variant-status]")).toHaveText(
-    "New · Added",
-  );
-  await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
-  await expect(
-    page
-      .frameLocator('[data-workspace-frame="mobile"]')
-      .getByRole("button", { name: "New", exact: true }),
-  ).toBeVisible();
 });
 
-test("Used by links select a real screen instance and clear stale selection on navigation", async ({
-  page,
-}) => {
-  await page.goto(`${server.url}/view/components/action.html`);
-  await page.getByRole("tab", { name: "Usage", exact: true }).click();
-  await page
-    .getByRole("tabpanel", { name: "Usage", exact: true })
-    .getByRole("link", { name: "Home", exact: true })
-    .first()
-    .click();
-  await expect(page).toHaveURL(
-    /screens\/home\.html\?viewport=mobile&scheme=light&instance=[a-f0-9]{64}/,
-  );
-  await expect(
-    page.getByRole("tab", { name: "Props", exact: true }),
-  ).toHaveAttribute("aria-selected", "true");
-  await expect(
-    page.getByRole("tabpanel", { name: "Props", exact: true }),
-  ).toContainText("Action");
-  await expect(
-    page.getByRole("tabpanel", { name: "Props", exact: true }),
-  ).toContainText("Slot action");
-  const selected = page.locator(
-    '[data-inspector-panel="components"] [aria-pressed="true"][data-instance-key]',
-  );
-  await expect(selected).toHaveCount(1);
-  await page.getByRole("tab", { name: "Details", exact: true }).click();
-  await expect(
-    page.getByRole("tab", { name: "Details", exact: true }),
-  ).toHaveAttribute("aria-selected", "true");
-  await expect(selected).toHaveCount(1);
-  await page.getByRole("button", { name: "Close inspector" }).click();
-  await expect(page.locator('[role="tab"][aria-selected="true"]')).toHaveCount(
-    0,
-  );
-  await expect(selected).toHaveCount(1);
-  await expect(page.getByLabel("Viewport", { exact: true })).toHaveValue(
-    "mobile",
-  );
-});
-
-test("nested selection and frame Escape preserve focus and consumer markup", async ({
+test("a standalone frame miss keeps navigation available for a later route", async ({
   page,
 }) => {
   await page.goto(`${server.url}/view/screens/home.html`);
-  await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
+  const link = page
+    .frameLocator('[data-workspace-frame="mobile"]')
+    .getByRole("link", { name: "Open Disabled Action", exact: true });
+  await link.evaluate((element) =>
+    element.setAttribute("data-mokly-link", "missing-entry"),
+  );
+  await link.click();
+  await expect(page).toHaveURL(/\/view\/missing-entry$/);
   await expect(
-    page.getByRole("button", { name: "Highlight components", exact: true }),
-  ).toBeEnabled();
-  const frame = page.frameLocator('[data-workspace-frame="desktop"]');
-  const html = await frame.locator("body").innerHTML();
-  await page.getByRole("tab", { name: "Components", exact: true }).click();
-  await page.getByText("1 nested instances", { exact: true }).click();
+    page.getByRole("heading", { name: "Item not found", exact: true }),
+  ).toBeVisible();
+
+  await page.getByRole("link", { name: "Home", exact: true }).click();
+  await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
   await expect(
-    page.getByRole("button", { name: "Highlight components", exact: true }),
+    page.getByRole("heading", { name: "Home", exact: true }),
+  ).toBeVisible();
+});
+
+test("Side by side stays authoritative while switching sibling variants", async ({
+  page,
+}) => {
+  await page.goto(`${server.url}/view/components/action-default.html`);
+  await page.getByLabel("Viewport", { exact: true }).selectOption("mobile");
+  await loadComparison(page, "Side by side");
+
+  await chooseVariant(page, "Disabled");
+  await expect(
+    page.getByRole("button", { name: "Side by side" }),
   ).toHaveAttribute("aria-pressed", "true");
-  await expect(
-    page.locator(
-      '[data-inspector-panel="components"] [aria-pressed="true"][data-instance-key]',
-    ),
-  ).toHaveCount(1);
-  await expect(page.locator(".mbk-highlight-label")).toHaveCount(1);
-  await frame.getByRole("button", { name: "Inside", exact: true }).focus();
-  await page.keyboard.press("Escape");
-  await expect(page.locator(".mbk-highlight-layer")).toHaveCount(0);
+  await page.getByRole("tab", { name: "Props", exact: true }).click();
+  await expect(page.locator("[data-controls-status]")).toHaveText(
+    "Comparisons show the saved variant. Return to Current to edit props.",
+  );
   await expect(
     page.getByRole("button", { name: "Highlight components", exact: true }),
-  ).toBeFocused();
-  expect(await frame.locator("body").innerHTML()).toBe(html);
+  ).toBeDisabled();
 });

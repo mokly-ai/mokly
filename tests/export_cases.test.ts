@@ -62,7 +62,7 @@ test("ignored-only and unrendered source edits do not fill exported Changes", as
   const source = (value: string) =>
     validEntrySource({
       body: `<ReviewIgnore id="counter"><span>${value}</span></ReviewIgnore>`,
-    }).replace("defineCollection,", "ReviewIgnore, defineCollection,");
+    }).replace("defineScreen,", "ReviewIgnore, defineScreen,");
   const fixture = await createExportFixture(source("before"));
   context.after(() => fixture.close());
   await fs.promises.writeFile(fixture.entryPath, source("after"));
@@ -94,34 +94,22 @@ test("ignored-only and unrendered source edits do not fill exported Changes", as
   assert.doesNotMatch(html, /data-changed="true"/);
 });
 
-test("renamed screens keep both routes but only the current id alias", async (context) => {
+test("renamed screens keep one derived route without an alias", async (context) => {
   const fixture = await createExportFixture();
   context.after(() => fixture.close());
   const source = await fs.promises.readFile(fixture.entryPath, "utf8");
   await fs.promises.writeFile(
     fixture.entryPath,
-    source.replace(
-      'route: "screens/home.html"',
-      'route: "screens/renamed.html"',
-    ),
+    source.replace('title: "Home"', 'title: "Renamed home"'),
   );
-  const result = await exportCatalogue(fixture.config, { outDir: "site" });
-  assert.equal(result.idRoutes["home"], "/view/screens/renamed.html");
-  assert.match(
-    documentText(
-      await fs.promises.readFile(
-        path.join(fixture.output, "view/screens/home.html"),
-        "utf8",
-      ),
-    ),
-    /Showing previous version/,
-  );
-  const alias = await fs.promises.readFile(
-    path.join(fixture.output, "id/home/index.html"),
+  await exportCatalogue(fixture.config, { outDir: "site" });
+  const current = await fs.promises.readFile(
+    path.join(fixture.output, "view/screens/home.html"),
     "utf8",
   );
-  assert.doesNotMatch(documentText(alias), /Showing previous version/);
-  assert.match(alias, /screens\/renamed.html/);
+  assert.match(documentText(current), /Renamed home/);
+  assert.doesNotMatch(documentText(current), /Showing previous version/);
+  assert.equal(fs.existsSync(path.join(fixture.output, "id")), false);
 });
 
 test("missing baseline documents and absent history fail before installing output", async (context) => {

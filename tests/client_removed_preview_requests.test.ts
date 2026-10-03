@@ -1,89 +1,19 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import test from "node:test";
 
+import { requestPreview } from "../packages/viewer/dist/previews/request.js";
+import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
+
 import {
-  renewPreview,
-  requestPreview,
-} from "../packages/viewer/dist/previews/request.js";
-import type { ReviewResultV4 } from "../packages/viewer/dist/review/types.js";
-import type { RemovedPreviewData } from "../packages/viewer/dist/shell/previews.js";
-
-const GENERATION = "b".repeat(64);
-const COMPARISON = `/__mokly/diffs/__generations/${GENERATION}/review.json`;
-
-const removedPage: RemovedPreviewData = {
-  id: "removed-page",
-  kind: "page",
-  route: "archive/removed.html",
-  title: "Removed page",
-};
-
-const removedScreen: RemovedPreviewData = {
-  id: "removed-screen",
-  kind: "screen",
-  route: "screens/removed.html",
-  title: "Removed screen",
-};
-
-const pagePath = `__mokly/diffs/__generations/${GENERATION}/pages/archive/removed.html.json`;
-
-function review(
-  views: ReviewResultV4["screens"][number]["views"],
-  baseCommit = "a".repeat(40),
-) {
-  return {
-    schemaVersion: 4,
-    baseRef: "origin/main",
-    baseCommit,
-    changedPaths: [],
-    ignoredImpact: [],
-    screens: [
-      {
-        id: "removed-screen",
-        route: "screens/removed.html",
-        title: "Removed screen",
-        state: "removed",
-        views,
-      },
-    ],
-  } satisfies ReviewResultV4;
-}
-
-function snapshotId(
-  sourceKind: "baseline" | "generation",
-  sourceIdentity: string,
-  data: RemovedPreviewData,
-): string {
-  return createHash("sha256")
-    .update(
-      JSON.stringify([
-        "mokly-historical-snapshot-v1",
-        "c".repeat(64),
-        sourceKind,
-        sourceIdentity,
-        data.kind,
-        data.id,
-        data.route,
-      ]),
-    )
-    .digest("hex");
-}
-
-function respond(payload: unknown, url: string, ok = true) {
-  const win = {
-    fetch: async (input: string, init?: RequestInit) => {
-      calls.push({ url: input, method: init?.method ?? "GET" });
-      return {
-        ok,
-        url,
-        json: async () => payload,
-      } as unknown as Response;
-    },
-  } as unknown as Window & typeof globalThis;
-  const calls: { url: string; method: string }[] = [];
-  return { calls, win };
-}
+  COMPARISON,
+  GENERATION,
+  pagePath,
+  removedPage,
+  removedScreen,
+  respond,
+  review,
+  snapshotId,
+} from "./client_removed_preview_requests_fixture.js";
 
 test("a screen preview renders only its captured previous views", async () => {
   const generation = `https://catalogue.test${COMPARISON}`;
@@ -94,14 +24,12 @@ test("a screen preview renders only its captured previous views", async () => {
         colorScheme: "light",
         state: "removed",
         ignoredIds: [],
-        beforePath: "snapshots/before/screens/removed.mobile.html",
       },
       {
         viewport: "desktop",
         colorScheme: "light",
         state: "removed",
         ignoredIds: [],
-        beforePath: "snapshots/before/screens/removed.desktop.html",
       },
     ]),
     generation,
@@ -123,12 +51,12 @@ test("a screen preview renders only its captured previous views", async () => {
       {
         colorScheme: "light",
         viewport: "mobile",
-        url: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/snapshots/before/screens/removed.mobile.html`,
+        url: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/snapshots/before/screens/removed-screen.mobile.html`,
       },
       {
         colorScheme: "light",
         viewport: "desktop",
-        url: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/snapshots/before/screens/removed.desktop.html`,
+        url: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/snapshots/before/screens/removed-screen.desktop.html`,
       },
     ],
   });
@@ -143,8 +71,6 @@ test("a reused or stale generation is treated as unavailable", async () => {
         colorScheme: "light",
         state: "changed",
         ignoredIds: [],
-        beforePath: "snapshots/before/screens/removed.mobile.html",
-        afterPath: "snapshots/after/screens/removed.mobile.html",
       },
     ]),
     generation,
@@ -165,14 +91,13 @@ test("a reused or stale generation is treated as unavailable", async () => {
         colorScheme: "light",
         state: "removed",
         ignoredIds: [],
-        beforePath: "snapshots/before/screens/removed.mobile.html",
       },
     ]),
     generation,
   );
   await assert.rejects(
     requestPreview(
-      { ...removedScreen, route: "screens/other.html" },
+      { ...removedScreen, id: "other" },
       { endpoint: new URL(generation) },
       missing.win,
       AbortSignal.timeout(5_000),
@@ -188,13 +113,12 @@ test("a historical response must belong to the selected baseline", async () => {
     catalogueIdentity: "c".repeat(64),
     snapshotId: snapshotId("baseline", "a".repeat(40), removedScreen),
   };
-  const views: ReviewResultV4["screens"][number]["views"] = [
+  const views: ReviewResultV5["screens"][number]["views"] = [
     {
       viewport: "mobile",
       colorScheme: "light",
       state: "removed",
       ignoredIds: [],
-      beforePath: "snapshots/before/screens/removed.mobile.html",
     },
   ];
 
@@ -224,13 +148,12 @@ test("a generation-backed selection accepts only its immutable generation", asyn
     catalogueIdentity: "c".repeat(64),
     snapshotId: snapshotId("generation", GENERATION, removedScreen),
   };
-  const views: ReviewResultV4["screens"][number]["views"] = [
+  const views: ReviewResultV5["screens"][number]["views"] = [
     {
       viewport: "mobile",
       colorScheme: "light",
       state: "removed",
       ignoredIds: [],
-      beforePath: "snapshots/before/screens/removed.mobile.html",
     },
   ];
   const wrongGeneration = "d".repeat(64);
@@ -255,11 +178,10 @@ test("a page response cannot replace its selected baseline or generation", async
     snapshotId: snapshotId("baseline", "a".repeat(40), removedPage),
   };
   const payload = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     baseRef: "origin/main",
     baseCommit: "d".repeat(40),
-    route: removedPage.route,
-    documentPath: `snapshots/before/${removedPage.route}`,
+    id: removedPage.id,
   };
   const endpoint = new URL(`https://catalogue.test/${pagePath}`);
   const generation = new URL(`https://catalogue.test${COMPARISON}`);
@@ -289,67 +211,5 @@ test("a page response cannot replace its selected baseline or generation", async
       AbortSignal.timeout(5_000),
     ),
     /previous version is unavailable/,
-  );
-});
-
-test("a page preview must describe the entry that asked for it", async () => {
-  const url = `https://catalogue.test/${pagePath}`;
-  const payload = {
-    schemaVersion: 1,
-    baseRef: "origin/main",
-    baseCommit: "a".repeat(40),
-    route: "archive/removed.html",
-    documentPath: "snapshots/before/archive/removed.html",
-  };
-  const matching = respond(payload, url);
-  const request = {
-    endpoint: new URL(url),
-    generation: new URL(`https://catalogue.test${COMPARISON}`),
-  };
-  const loaded = await requestPreview(
-    removedPage,
-    request,
-    matching.win,
-    AbortSignal.timeout(5_000),
-  );
-  assert.deepEqual(loaded.content, {
-    kind: "page",
-    url: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/snapshots/before/archive/removed.html`,
-  });
-  const other = respond(
-    {
-      ...payload,
-      route: "archive/other.html",
-      documentPath: "snapshots/before/archive/other.html",
-    },
-    url,
-  );
-  await assert.rejects(
-    requestPreview(removedPage, request, other.win, AbortSignal.timeout(5_000)),
-    /previous version is unavailable/,
-  );
-});
-
-test("a generation that resolved elsewhere is not reused", async () => {
-  const loaded = {
-    content: { kind: "page", url: "https://catalogue.test/old.html" },
-    generation: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/`,
-    url: `https://catalogue.test${COMPARISON}`,
-  } as const;
-  const same = respond(null, loaded.url);
-  assert.equal(
-    await renewPreview(loaded, same.win, AbortSignal.timeout(5_000)),
-    true,
-  );
-  assert.deepEqual(same.calls, [{ url: loaded.url, method: "HEAD" }]);
-  const moved = respond(null, "https://catalogue.test/elsewhere.json");
-  assert.equal(
-    await renewPreview(loaded, moved.win, AbortSignal.timeout(5_000)),
-    false,
-  );
-  const failed = respond(null, loaded.url, false);
-  assert.equal(
-    await renewPreview(loaded, failed.win, AbortSignal.timeout(5_000)),
-    false,
   );
 });

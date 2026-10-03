@@ -92,11 +92,18 @@ test("source policy matches both aliases and projects missing children relative 
     );
 });
 
-for (const route of ["README.html", "internal/page.html"]) {
+for (const [kind, route, exclusion] of [
+  ["page", "pages/page.html", "pages/**"],
+  ["screen", "screens/page.desktop.html", "screens/**"],
+] as const) {
   test(`build rejects excluded generated route ${route} before writing`, async (t) => {
+    const definition =
+      kind === "page"
+        ? 'definePage({ id: "page", title: "Page", description: "Page", relatedDocs: [], render: () => "<!doctype html><html><body><p>Page</p></body></html>" })'
+        : 'defineScreen({ id: "page", title: "Page", description: "Page", relatedDocs: [], mobile: "Mobile", desktop: "Desktop" })';
     const fixture = await createFixture(
-      `import { definePage } from "@mokly/mokly"; export const mockups = [definePage({ id: "page", title: "Page", description: "Page", relatedDocs: [], route: "${route}", render: () => "<!doctype html><html><body><p>Page</p></body></html>" })];`,
-      { extraConfig: 'publicExclude: ["internal/**"],' },
+      `import { definePage, defineScreen } from "@mokly/mokly"; export const mockups = [${definition}];`,
+      { extraConfig: `publicExclude: [${JSON.stringify(exclusion)}],` },
     );
     t.after(() => removeFixture(fixture));
     await assert.rejects(
@@ -104,11 +111,7 @@ for (const route of ["README.html", "internal/page.html"]) {
       (error: Error) => {
         assert.match(error.message, /matches public exclusion.*publicExclude/);
         assert.ok(error.message.includes(route));
-        assert.ok(
-          error.message.includes(
-            route === "README.html" ? "**/README.*" : "internal/**",
-          ),
-        );
+        assert.ok(error.message.includes(exclusion));
         return true;
       },
     );
@@ -142,7 +145,7 @@ test("build rejects an excluded public resource with its referring route", async
 
 test("an excluded imported JSON file remains an authoring input and rebuilds", async (t) => {
   const fixture = await createFixture(
-    `${validEntrySource()}\nimport settings from "../mockups/tsconfig.fixture.json"; mockups[1].title = settings.title;`,
+    `${validEntrySource()}\nimport settings from "../mockups/tsconfig.fixture.json"; mockups[0].title = settings.title;`,
   );
   t.after(() => removeFixture(fixture));
   const settings = path.join(fixture.mockupsDir, "tsconfig.fixture.json");

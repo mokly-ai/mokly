@@ -2,23 +2,15 @@
 
 ## Delivery Status
 
-Implemented in the basic consumer. Every existing design screen retains its
-mobile/desktop fragments and now records shared component instances, and the
-registered components and their saved variants live under
-Components → Design → Shared components, alongside the separate Example Action
-and Toolbar. The manifest `npm run example:build` generates at
-`examples/basic/generated/mokly-manifest.json` is the source of the screen,
-fragment, component and variant counts; this contract does not restate them.
+The basic consumer records shared instances without changing existing design
+screens. Registered entries live under Components → Design → Shared components,
+beside Example Action and Toolbar. The generated manifest owns all counts.
+
+This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 
 This contract and the [library inventory](./mokly-design-component-library.md)
-define the delivered behavior tracked by the [adoption plan](../../plans/mokabook-design-components.md).
-The existing [shell design](./mokly-shell-design.md),
-[design links](./mokly-design-links.md), and component design contracts retain
-their current screen behavior and navigation authority.
-Component stylesheet adoption and removal of the style collector were planned
-by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestone 3; source-path evidence was removed in Milestone 4 and
-authoring fields in Milestone 6. The example now follows this guidance.
+define delivery; [shell design](./mokly-shell-design.md) and
+[design links](./mokly-design-links.md) retain presentation/navigation authority.
 
 ## Outcome And Scope
 
@@ -36,7 +28,7 @@ Example Action/Toolbar components, miniature subject screens and pictured usage
 fixtures keep their separate roles. New usage in the outer inspector comes from
 the real generated manifest, not from those pictured fixtures.
 
-All existing design ids, routes, relationships, mobile/desktop artboards, copy,
+All existing design ids, relationships, mobile/desktop artboards, copy,
 links and supported native controls remain. The requested normalization replaces
 the legacy Details disclosure and segmented viewport/theme controls throughout
 the catalogue with the shared icon inspector and view toolbar. The legacy footer
@@ -46,31 +38,36 @@ samples contain no implementation notes, environment badges or extra footers.
 
 ## Catalogue And Source Ownership
 
-Add `Components → Design → Shared components` from the same authored root that
-places `Pages → Design → Mokly design` in the Pages projection. Keep the
+Add `Components → Design → Shared components` by reusing the `Design` label
+from `Pages → Design → Mokly design`; this forms an independent folder in the
+Components section, not a shared root entity. Keep the
 existing Component explorer design section and Components → Example → Components group.
-The new pure gallery collections are `design-library` and
-`design-library-{chrome,controls,inspector,preview}`. They contain the 15 routed
-components in the inventory, with no duplicate screen entries for variants.
+The gallery folders are `Design → Shared components` and its
+`Chrome`, `Controls`, `Inspector`, and `Preview` children. They contain the 15
+component parents in the inventory; each parent's variant entries nest beneath
+its row under the [variant contract](./mokly-variants.md) rather than adding
+folder members.
 
-Use flat `defineComponent`/`defineCollection` exports from
-`entries/design/library/library.mockup.ts`, adding `design-library` to the
-existing `design-root.childIds`. The current nested `collection` marker accepts
-screens and collections, not component entries; this adoption must not cast
-components into that marker or require a new package API.
+Use flat `defineComponent` exports from
+`entries/design/library/library.mockup.ts`, authoring a `navPath` on each
+component. Nested `folder()` groups screens and pages only; components stay
+flat-authored. Reuse the `Design` label in both sections without sharing
+folder identity across sections.
 
 For inventory group `G` and slug `S`:
 
-- Component id: `design-ui-S`; route: `design/library/G/S.html`.
+- Component id: `design-ui-S`; the [artifact contract](./mokly-artifact-paths.md)
+  derives its path and `navPath` places it in gallery `G`.
 - Registration/schema/variants: `entries/design/library/G/S.tsx`, split into
   short metadata siblings if needed. Render logic: `G/S.view.tsx` and its
   exclusive implementation helpers. Source and visible hierarchy must agree.
 - Public stylesheet: `generated/design-library/G/S.css` when styles are owned
   exclusively by that component. It is authored CSS, not generated HTML.
-- Saved variant ids and exposed props are defined by the inventory. A single
-  selected variant renders at a time, in both actual viewport contexts.
+- Variant entry ids and exposed props are defined by the inventory. Each
+  variant entry renders in both actual viewport contexts; the parent's page
+  shows its first variant entry.
 
-Gallery-only collection indexes need no additional canonical artboard. Any
+Gallery-only folder indexes need no additional canonical artboard. Any
 later screen-spec sub-page must retain the canonical-screen and five-screen
 limits; variants must not become an unbounded screenshot gallery.
 
@@ -208,15 +205,15 @@ class proximity is not proof of exclusive ownership.
 
 Acceptance after a registered baseline exists:
 
-| Edit                                                           | Direct Changes                   | Secondary evidence                        |
-| -------------------------------------------------------------- | -------------------------------- | ----------------------------------------- |
-| Top bar implementation or its exclusive CSS                    | Top bar                          | Consuming design screens                  |
-| Nested Tag chip implementation                                 | Tag chip                         | Picker/Top bar and their screen consumers |
-| A screen changes query, title, target, status or a field value | That screen                      | Actual usage updates                      |
-| A screen changes supplied slot content or instance order       | That screen                      | Actual usage updates                      |
-| A saved variant's props change                                 | That component                   | No automatic consumer change              |
-| Global tokens or screen layout change                          | Existing conservative membership | Existing dependency evidence              |
-| Temporary local prop edit or Reset                             | None                             | Preview only                              |
+| Edit                                                           | Direct Changes                                                                                                    | Secondary evidence                        |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| Top bar implementation or its exclusive CSS                    | Top bar                                                                                                           | Consuming design screens                  |
+| Nested Tag chip implementation                                 | Tag chip                                                                                                          | Picker/Top bar and their screen consumers |
+| A screen changes query, title, target, status or a field value | That screen                                                                                                       | Actual usage updates                      |
+| A screen changes supplied slot content or instance order       | That screen                                                                                                       | Actual usage updates                      |
+| A variant entry's props change                                 | That variant entry                                                                                                | No automatic consumer change              |
+| Global tokens or screen layout change                          | Rendered screens when output changes; see [path rule](./mokly-component-changes.md#rendered-resources-and-styles) | Shared-file evidence                      |
+| Temporary local prop edit or Reset                             | None                                                                                                              | Preview only                              |
 
 The initial registration migration may create legitimate one-time structural
 changes against an unregistered baseline. Do not add blanket Review ignores to
@@ -227,7 +224,7 @@ owned styles, not the old raw changed-path helper.
 
 ## Verification And Completion
 
-Freeze the existing id/route inventory before migration and assert it remains a
+Freeze the existing id inventory before migration and assert it remains a
 subset of the finished catalogue. Every existing design screen must record its
 actual shared components in both views. Every inventory component must have a
 page, the specified saved variants, and real screen consumers (directly or through

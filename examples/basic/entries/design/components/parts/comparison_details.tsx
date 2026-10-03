@@ -22,7 +22,12 @@ export function ComparisonDetails({
   comparison?: ComparisonFixture | undefined;
 }) {
   if (!comparison) return null;
-  const prop = comparison.propChange;
+  const detail = comparison.status === "unmodified" ? undefined : comparison;
+  const excludedStylesheets =
+    comparison.status === "unmodified"
+      ? comparison.excludedStylesheets
+      : undefined;
+  const prop = detail?.propChange;
   const reasons = {
     output: "Rendered output changed",
     inputs: "Supplied props changed",
@@ -34,25 +39,45 @@ export function ComparisonDetails({
     <section className="ce-comparison-evidence" aria-label="Comparison details">
       <h3>Comparison details</h3>
       <p className="ce-muted">Compared with the branch point on origin/main.</p>
-      <dl className="ce-props">
-        <MetaRow name="change" label="Change" presentation="props">
-          {reasons[comparison.reason]}
-        </MetaRow>
-        {comparison.variant ? (
-          <MetaRow
-            name="saved-variant"
-            label="Saved variant"
-            presentation="props"
-          >
-            {comparison.variant}
+      {detail ? (
+        <dl className="ce-props">
+          <MetaRow name="change" label="Change" presentation="props">
+            {reasons[detail.reason]}
           </MetaRow>
-        ) : null}
-        {comparison.savedPropsUnchanged ? (
-          <MetaRow name="saved-props" label="Saved props" presentation="props">
-            Unchanged
-          </MetaRow>
-        ) : null}
-      </dl>
+          {detail.variant ? (
+            <MetaRow
+              name="saved-variant"
+              label="Saved variant"
+              presentation="props"
+            >
+              {detail.variant}
+            </MetaRow>
+          ) : null}
+          {detail.savedPropsUnchanged ? (
+            <MetaRow
+              name="saved-props"
+              label="Saved props"
+              presentation="props"
+            >
+              Unchanged
+            </MetaRow>
+          ) : null}
+        </dl>
+      ) : null}
+      {excludedStylesheets ? (
+        <>
+          <h4>Examined and excluded</h4>
+          <p>
+            This stylesheet changed, but none of the changed styles apply to
+            this variant.
+          </p>
+          <ul className="ce-comparison-paths">
+            {excludedStylesheets.map((path) => (
+              <li key={path}>{path}</li>
+            ))}
+          </ul>
+        </>
+      ) : null}
       {prop ? (
         <>
           <h4>{prop.instance}</h4>
@@ -80,11 +105,11 @@ export function ComparisonDetails({
           </table>
         </>
       ) : null}
-      {comparison.changedComponents?.length ? (
+      {detail?.changedComponents?.length ? (
         <>
           <h4>Changed components used here</h4>
           <ul className="ce-usage-list">
-            {comparison.changedComponents.map((component) => (
+            {detail.changedComponents.map((component) => (
               <li key={component.to}>
                 <MockLink to={component.to}>{component.title}</MockLink>
               </li>
@@ -92,6 +117,7 @@ export function ComparisonDetails({
           </ul>
         </>
       ) : null}
+      {excludedStylesheets ? <p>No changes to this saved view.</p> : null}
     </section>
   );
 }

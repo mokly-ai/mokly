@@ -20,9 +20,7 @@ export default defineConfig({
   mockupsDir: "docs/mockups/generated",
   renderer: "docs/mockups/renderer.tsx",
   repoRoot: ".",
-  stylesheets: [
-    { match: "app/**/*.html", stylesheets: ["app.css", componentStylesheets] },
-  ],
+  stylesheets: [{ match: "screens/*.html", stylesheets: ["app.css"] }],
   review: {
     base: "origin/main",
     outDir: ".context/mokly-review",
@@ -45,6 +43,7 @@ Globs are relative to `repoRoot`.
 | `repoRoot`         | The root every path is confined to; defaults to the config directory              |
 | `renderer`         | Your module that wraps a screen in your theme and returns a document              |
 | `stylesheets`      | Ordered route-to-stylesheet rules                                                 |
+| `postcss`          | Your config-relative PostCSS module for imported CSS                              |
 | `publicExclude`    | Extra globs under `mockupsDir` that stay private                                  |
 | `moduleResolution` | Aliases, conditions, fields, extensions and loaders for your sources              |
 | `review`           | The Git base, the artifact directory and derived-baseline build recipe            |
@@ -82,8 +81,9 @@ file as its source, wherever the entry module that exports it lives.
 
 ## Stylesheets
 
-Rules are evaluated in declaration order. A rule matches a screen route with a
-POSIX glob and lists stylesheets relative to `mockupsDir`, or absolute HTTP(S)
+Rules are evaluated in declaration order. A rule matches a screen's derived
+route, such as `screens/account-home.html`, with a POSIX glob and lists
+stylesheets relative to `mockupsDir`, or absolute HTTP(S)
 URLs. A rule may append `lightStylesheets` or `darkStylesheets` after its
 shared list for the matching output.
 Use the `componentStylesheets` symbol once in the shared list to place the
@@ -94,10 +94,22 @@ existing public `mockupsDir`-relative CSS, not HTTP(S) links. If a file is both
 configured and component-declared, Mokly keeps the configured link and gives
 the rendered declaring components ownership of it.
 
+Imported CSS delivery appends the
+configured renderer stylesheet and then the entry stylesheet after those
+links, even if no rule matches. Complete page callbacks receive no automatic
+links. `<mockupsDir>/mokly-generated/` is reserved for CSS and asset
+output; keep authored public stylesheets elsewhere.
+In authored public or imported CSS, write local `image-set()` sources as
+`url()` values (`image-set(url("./photo.png") 1x)`) so Mokly validates the
+reference. Imported CSS also copies the asset into `mokly-generated/`;
+authored public CSS keeps its existing public asset path. Quoted remote
+HTTP(S), protocol-relative and `data:` sources remain
+external and unchanged.
+
 ```ts
 stylesheets: [
   {
-    match: "app/**/*.html",
+    match: "screens/account-*.html",
     stylesheets: ["app.css"],
     darkStylesheets: ["dark.css"],
   },

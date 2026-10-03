@@ -6,6 +6,7 @@ import { test } from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { exportCatalogue } from "../dist/export/run.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
@@ -52,15 +53,21 @@ test("static export keeps component Changes, affected screens, saved variants an
   );
   const home = workspace(files.get("view/screens/home.html")!.toString());
   assert.equal(action.variants.length, 2);
-  assert.ok(action.affected.some((item) => item.route === "screens/home.html"));
+  assert.ok(action.affected.some((item) => item.entryId === "home"));
   assert.equal(home.change, undefined);
   assert.equal(home.status, "Changed");
   assert.deepEqual(
     home.relatedComponents.map((item) => item.title),
     ["Action"],
   );
-  assert.ok(files.has("id/action/index.html"));
-  assert.equal(exported.idRoutes["action"], "/view/components/action.html");
+  assert.ok(files.has("view/components/action.html"));
+  assert.ok(files.has("view/components/action-default.html"));
+  assert.equal(
+    [...files.keys()].some(
+      (name) => name.startsWith("id/") || name.includes(".variants/"),
+    ),
+    false,
+  );
   for (const view of action.views) assert.ok(files.has(`static/${view.path}`));
   assert.ok(files.has("__mokly/client/component_geometry.js"));
   assert.ok(!files.has("__mokly/client/browser.js"));
@@ -77,7 +84,7 @@ test("static export retains removed saved variants and baseline component consum
   const fixture = await createExportFixture(source);
   t.after(fixture.close);
   const changed = source.replace(
-    ', { id: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+    ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
     "",
   );
   assert.notEqual(changed, source);
@@ -91,8 +98,8 @@ test("static export retains removed saved variants and baseline component consum
   assert.deepEqual(
     action.variants.map((item) => [item.value.id, item.removed]),
     [
-      ["default", false],
-      ["disabled", true],
+      ["action-default", false],
+      ["action-disabled", true],
     ],
   );
   const result = parseReviewResult(
@@ -101,12 +108,12 @@ test("static export retains removed saved variants and baseline component consum
   if (result.schemaVersion !== 5) assert.fail("Expected component result");
   const removed = result.components
     .find((item) => item.id === "action")!
-    .variants.find((item) => item.id === "disabled")!;
+    .variants.find((item) => item.id === "action-disabled")!;
   assert.equal(removed.state, "removed");
   for (const view of removed.views)
     assert.ok(
       files.has(
-        `${path.posix.dirname(exported.comparisonUrl.slice(1))}/${view.beforePath!}`,
+        `${path.posix.dirname(exported.comparisonUrl.slice(1))}/snapshots/before/${viewRoute("component", removed.id, view.viewport, view.colorScheme)}`,
       ),
     );
 });
@@ -141,9 +148,7 @@ test("preview capture retains route-scoped workspace evidence after removing liv
   assert.match(actionPage, /data-mokly-static=""/);
   assert.match(actionPage, /react-shell\.js/);
   assert.ok(
-    workspace(actionPage).affected.some(
-      (item) => item.route === "screens/home.html",
-    ),
+    workspace(actionPage).affected.some((item) => item.entryId === "home"),
   );
   assert.deepEqual(
     workspace(homePage).relatedComponents.map((item) => item.title),

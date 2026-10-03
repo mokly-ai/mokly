@@ -13,6 +13,7 @@ export function ScreenHeaderView({
   status,
   comparisons,
   mode,
+  scrollTogether,
   accessible,
   destinations,
   actions,
@@ -46,6 +47,7 @@ export function ScreenHeaderView({
       {idChip && comparisons ? (
         <comparisonToolbar.Component
           mode={mode}
+          scrollTogether={scrollTogether}
           eligible
           accessible={accessible}
           destinations={destinations}

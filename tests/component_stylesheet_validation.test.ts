@@ -6,12 +6,14 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 import { componentStylesheets } from "../dist/index.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 
 import {
   declared,
   fixtureWithSheets,
 } from "./helpers/component_stylesheet_fixture.js";
 import { removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("a marker from a separately bundled config places links and retains its singleton identity", async (t) => {
   const fixture = await fixtureWithSheets(
@@ -41,7 +43,10 @@ test("a marker from a separately bundled config places links and retains its sin
   const screen = manifest.entries.find((entry) => entry.id === "home")!;
   assert.equal(screen.kind, "screen");
   if (screen.kind !== "screen") return;
-  const html = outputs.get(screen.fragments.mobile)!;
+  const html = textOutput(
+    outputs,
+    viewRoute(screen.kind, screen.id, "mobile", "light"),
+  )!;
   assert.deepEqual(
     [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(
       (match) => match[1],
@@ -68,9 +73,10 @@ test("realpath aliases deduplicate declarations and reuse configured links", asy
   assert.ok(first?.kind === "screen");
   assert.equal(
     (
-      deduplicated.outputs
-        .get(first.fragments.mobile)!
-        .match(/href="\.\.\/action\.css"/g) ?? []
+      textOutput(
+        deduplicated.outputs,
+        viewRoute(first.kind, first.id, "mobile", "light"),
+      )!.match(/href="\.\.\/action\.css"/g) ?? []
     ).length,
     1,
   );
@@ -87,9 +93,10 @@ test("realpath aliases deduplicate declarations and reuse configured links", asy
   assert.ok(screen?.kind === "screen");
   assert.equal(
     (
-      reused.outputs
-        .get(screen.fragments.mobile)!
-        .match(/href="\.\.\/alias\.css"/g) ?? []
+      textOutput(
+        reused.outputs,
+        viewRoute(screen.kind, screen.id, "mobile", "light"),
+      )!.match(/href="\.\.\/alias\.css"/g) ?? []
     ).length,
     1,
   );

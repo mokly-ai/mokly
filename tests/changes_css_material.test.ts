@@ -5,7 +5,7 @@ import test from "node:test";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
 for (const components of [false, true]) {
-  test(`v${components ? 5 : 4} omits material for paired ignored edits alongside matched CSS`, async (t) => {
+  test(`v5 (components=${components}) omits material for paired ignored edits alongside matched CSS`, async (t) => {
     const fixture = await cssAttributionFixture(t, components, {
       body: '<ReviewIgnore id="notice"><p>Before notice</p></ReviewIgnore><button className="auth">Sign in</button>',
       prepare: async ({ entryPath }) => {
@@ -35,7 +35,7 @@ for (const components of [false, true]) {
       assert.deepEqual(view.ignoredIds, ["notice"]);
     }
   });
-  test(`v${components ? 5 : 4} distinguishes material changes from stylesheet evidence`, async (t) => {
+  test(`v5 (components=${components}) distinguishes material changes from stylesheet evidence`, async (t) => {
     const fixture = await cssAttributionFixture(t, components);
     await fs.writeFile(
       fixture.entryPath,
@@ -54,18 +54,17 @@ for (const components of [false, true]) {
       }
   });
 
-  test(`v${components ? 5 : 4} marks added and removed views as material`, async (t) => {
+  test(`v5 (components=${components}) marks added and removed views as material`, async (t) => {
     const fixture = await cssAttributionFixture(t, components);
     await fs.writeFile(
       fixture.entryPath,
-      (await fs.readFile(fixture.entryPath, "utf8")).replaceAll(
-        "screens/home.html",
-        "screens/moved.html",
-      ),
+      (await fs.readFile(fixture.entryPath, "utf8"))
+        .replace('id: "home"', 'id: "moved"')
+        .replace('screenId: "home"', 'screenId: "moved"'),
     );
     const { result } = await fixture.compare();
     const views = result.screens
-      .filter((screen) => screen.id === "home")
+      .filter((screen) => screen.id === "home" || screen.id === "moved")
       .flatMap((screen) => screen.views);
     assert.ok(views.some((view) => view.state === "added"));
     assert.ok(views.some((view) => view.state === "removed"));

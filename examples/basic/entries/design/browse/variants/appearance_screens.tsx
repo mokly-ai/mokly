@@ -48,7 +48,6 @@ export const browseSchemeVariants = [
     mobile: <SchemeVariant subject="welcome" viewport="mobile" />,
     rationale:
       "This established variant route retains its identity while the shared Appearance selector changes the whole catalogue and the Welcome preview together. The header only selects the viewport.",
-    slug: "dark-scheme",
     title: "Welcome appearance",
   },
   {
@@ -59,7 +58,6 @@ export const browseSchemeVariants = [
     mobile: <SchemeVariant subject="details" viewport="mobile" />,
     rationale:
       "This established variant route follows the shared Appearance selector. Details has no dark render, so its device frame stays light and names the fallback when the catalogue is Dark.",
-    slug: "light-only",
     title: "Details light-only fallback",
   },
 ] satisfies readonly ScreenVariantInput[];

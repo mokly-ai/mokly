@@ -11,14 +11,14 @@ const CHANGED_NODES: readonly NavNode[] = [
   {
     key: "example",
     depth: 0,
-    kind: "collection",
+    kind: "folder",
     label: "Example",
     open: true,
   },
   {
     key: "screens",
     depth: 1,
-    kind: "collection",
+    kind: "folder",
     label: "Screens",
     open: true,
   },
@@ -79,14 +79,14 @@ export function StyleReviewNav({ welcome }: { welcome: DesignDestination }) {
         {
           key: "example",
           depth: 0,
-          kind: "collection",
+          kind: "folder",
           label: "Example",
           open: true,
         },
         {
           key: "screens",
           depth: 1,
-          kind: "collection",
+          kind: "folder",
           label: "Screens",
           open: true,
         },

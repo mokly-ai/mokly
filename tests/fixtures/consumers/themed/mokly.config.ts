@@ -27,8 +27,8 @@ export default defineConfig({
     outDir: ".context/mokly-review",
   },
   stylesheets: [
-    { match: "app/**/*.html", stylesheets: ["app.css"] },
-    { match: "marketing/**/*.html", stylesheets: ["marketing.css"] },
+    { match: "screens/themed-dashboard.html", stylesheets: ["app.css"] },
+    { match: "screens/themed-campaign.html", stylesheets: ["marketing.css"] },
   ],
   watch: {
     debounceMs: 20,

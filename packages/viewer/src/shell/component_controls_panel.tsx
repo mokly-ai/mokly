@@ -22,7 +22,7 @@ export function ComponentControlsPanel({
   status,
   variant,
 }: {
-  component: Extract<WorkspaceData["entry"], { kind: "component" }> | undefined;
+  component: WorkspaceData["component"];
   data: WorkspaceData;
   disabled: boolean;
   onChange(key: string, field: ControlDraftField, immediate: boolean): void;
@@ -33,12 +33,14 @@ export function ComponentControlsPanel({
   variant?: WorkspaceVariant | undefined;
 }) {
   const values = variant ? decodeProps(state.props) : {};
-  const uncontrolled = component
-    ? Object.fromEntries(
-        Object.entries(values).filter(
-          ([name]) => !Object.hasOwn(component.controls, name),
-        ),
-      )
+  const uncontrolled = variant
+    ? component
+      ? Object.fromEntries(
+          Object.entries(values).filter(
+            ([name]) => !Object.hasOwn(component.controls, name),
+          ),
+        )
+      : values
     : {};
   return (
     <div className="mbk-component-controls">

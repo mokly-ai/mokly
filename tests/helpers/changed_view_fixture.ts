@@ -2,13 +2,13 @@ import type { ReviewResultV5 } from "../../packages/viewer/dist/review/component
 import type { ViewReview } from "../../packages/viewer/dist/review/types.js";
 import type { ScreenViewChanges } from "../../packages/viewer/dist/shell/metadata.js";
 
-const HOME = "screens/home.html";
+const HOME = "home";
 
 /** Only Home's dark renders differ; every light view stays unchanged. */
 export function darkOnlyScreenViews(): readonly ScreenViewChanges[] {
   return [
     {
-      route: HOME,
+      id: HOME,
       views: [
         { viewport: "mobile", colorScheme: "light", state: "unchanged" },
         { viewport: "mobile", colorScheme: "dark", state: "changed" },
@@ -17,7 +17,7 @@ export function darkOnlyScreenViews(): readonly ScreenViewChanges[] {
       ],
     },
     {
-      route: "screens/details.html",
+      id: "details",
       views: [
         { viewport: "mobile", colorScheme: "light", state: "unchanged" },
         { viewport: "mobile", colorScheme: "dark", state: "unchanged" },
@@ -49,19 +49,44 @@ export function secondVariantDarkOnlyResult(): ReviewResultV5 {
     changes: [],
     components: [
       {
+        after: { id: "action", title: "Action" },
+        before: { id: "action", title: "Action" },
         id: "action",
-        route: "components/action.html",
         state: "changed",
         title: "Action",
         variants: [
           {
-            id: "default",
+            after: {
+              id: "action-default",
+              title: "Default",
+              props: {},
+              suppliedSlots: [],
+            },
+            before: {
+              id: "action-default",
+              title: "Default",
+              props: {},
+              suppliedSlots: [],
+            },
+            id: "action-default",
             state: "unchanged",
             title: "Default",
             views: variantViews(false),
           },
           {
-            id: "disabled",
+            after: {
+              id: "action-disabled",
+              title: "Disabled",
+              props: {},
+              suppliedSlots: [],
+            },
+            before: {
+              id: "action-disabled",
+              title: "Disabled",
+              props: {},
+              suppliedSlots: [],
+            },
+            id: "action-disabled",
             state: "changed",
             title: "Disabled",
             views: variantViews(true),

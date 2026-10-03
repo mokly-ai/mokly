@@ -9,13 +9,16 @@ import { insertComponentStylesheets } from "../dist/components/stylesheet_links.
 import { loadConfig } from "../dist/config/load.js";
 import { classifyWatchPath } from "../dist/server/watch_events.js";
 import { watchTargets } from "../dist/server/watch_paths.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import {
   declared,
   fixtureWithSheets,
 } from "./helpers/component_stylesheet_fixture.js";
+import { componentVariants } from "./helpers/component_views.js";
 import { removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("rendered components link their files in first-render order and own only their linked files", async (t) => {
   const fixture = await fixtureWithSheets();
@@ -26,7 +29,10 @@ test("rendered components link their files in first-render order and own only th
   const screen = manifest.entries.find((entry) => entry.id === "home")!;
   assert.equal(screen.kind, "screen");
   if (screen.kind !== "screen") return;
-  const html = outputs.get(screen.fragments.mobile)!;
+  const html = textOutput(
+    outputs,
+    viewRoute(screen.kind, screen.id, "mobile", "light"),
+  )!;
   assert.deepEqual(
     [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(
       (match) => match[1],
@@ -37,13 +43,16 @@ test("rendered components link their files in first-render order and own only th
     { path: "action.css", componentIds: ["action"] },
     { path: "pane.css", componentIds: ["pane"] },
   ]);
-  const action = manifest.entries.find((entry) => entry.id === "action")!;
+  const action = componentVariants(manifest, "action")[0]!;
   assert.equal(action.kind, "component");
   if (action.kind !== "component") return;
-  const actionHtml = outputs.get(action.variants[0]!.fragments.mobile)!;
+  const actionHtml = textOutput(
+    outputs,
+    viewRoute(action.kind, action.id, "mobile", "light"),
+  )!;
   assert.match(actionHtml, /action\.css/);
   assert.doesNotMatch(actionHtml, /pane\.css/);
-  assert.deepEqual(action.variants[0]!.componentViews[0]!.resources, [
+  assert.deepEqual(action.componentViews[0]!.resources, [
     { path: "action.css", componentIds: ["action"] },
   ]);
   const runtimeConfig = componentRuntime(compilation).config;
@@ -71,22 +80,26 @@ test("null markup still links the declared root stylesheet without configured li
   );
   t.after(() => removeFixture(fixture));
   const result = await compileCatalogue(await loadConfig(fixture.root));
-  const action = result.manifest.entries.find(
-    (entry) => entry.id === "action",
-  )!;
+  const action = componentVariants(result.manifest, "action")[0]!;
   assert.equal(action.kind, "component");
   if (action.kind !== "component") return;
-  const html = result.outputs.get(action.variants[0]!.fragments.mobile)!;
+  const html = textOutput(
+    result.outputs,
+    viewRoute(action.kind, action.id, "mobile", "light"),
+  )!;
   assert.match(
     html,
-    /<link rel="stylesheet" href="\.\.\/\.\.\/action\.css"><\/head>/,
+    /<link rel="stylesheet" href="\.\.\/action\.css"><\/head>/,
   );
-  assert.deepEqual(action.variants[0]!.componentViews[0]!.resources, [
+  assert.deepEqual(action.componentViews[0]!.resources, [
     { path: "action.css", componentIds: ["action"] },
   ]);
   const screen = result.manifest.entries.find((entry) => entry.id === "home");
   assert.ok(screen?.kind === "screen");
-  const screenHtml = result.outputs.get(screen.fragments.mobile)!;
+  const screenHtml = textOutput(
+    result.outputs,
+    viewRoute(screen.kind, screen.id, "mobile", "light"),
+  )!;
   assert.match(screenHtml, /href="\.\.\/action\.css"/);
   assert.doesNotMatch(screenHtml, /<button/);
 });
@@ -104,7 +117,10 @@ test("shared declarations merge owners and encode public hrefs without doubling 
   );
   const screen = manifest.entries.find((entry) => entry.id === "home");
   assert.ok(screen?.kind === "screen");
-  const html = outputs.get(screen.fragments.mobile)!;
+  const html = textOutput(
+    outputs,
+    viewRoute(screen.kind, screen.id, "mobile", "light"),
+  )!;
   assert.equal(
     [...html.matchAll(/href="\.\.\/shared%20%26%20encoded\.css"/g)].length,
     1,
@@ -130,7 +146,10 @@ export default (input) => { const css = '.action{border-radius:12px}'; const htm
   );
   const screen = manifest.entries.find((entry) => entry.id === "home");
   assert.ok(screen?.kind === "screen");
-  const html = outputs.get(screen.fragments.mobile)!;
+  const html = textOutput(
+    outputs,
+    viewRoute(screen.kind, screen.id, "mobile", "light"),
+  )!;
   const { startOffset, endOffset } = screen.componentViews![0]!.styles[0]!;
   assert.equal(
     html.slice(startOffset, endOffset),
@@ -216,7 +235,10 @@ test("missing configured link places component links at the end of the head", as
   const result = await compileCatalogue(await loadConfig(fixture.root));
   const screen = result.manifest.entries.find((entry) => entry.id === "home");
   assert.ok(screen?.kind === "screen");
-  const html = result.outputs.get(screen.fragments.mobile)!;
+  const html = textOutput(
+    result.outputs,
+    viewRoute(screen.kind, screen.id, "mobile", "light"),
+  )!;
   assert.doesNotMatch(html, /href="\.\.\/base\.css"/);
   assert.match(html, /pane\.css/);
   assert.match(html, /action\.css/);
@@ -267,7 +289,10 @@ for (const [name, head] of [
     const result = await compileCatalogue(await loadConfig(fixture.root));
     const screen = result.manifest.entries.find((entry) => entry.id === "home");
     assert.ok(screen?.kind === "screen");
-    const html = result.outputs.get(screen.fragments.mobile)!;
+    const html = textOutput(
+      result.outputs,
+      viewRoute(screen.kind, screen.id, "mobile", "light"),
+    )!;
     assert.match(html, /href="\.\.\/pane\.css"/);
     assert.match(html, /href="\.\.\/action\.css"/);
     assert.match(html, /href="\.\.\/base\.css"/);

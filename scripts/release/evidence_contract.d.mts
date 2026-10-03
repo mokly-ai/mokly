@@ -37,6 +37,7 @@ export interface VerificationReport {
   commit?: string;
   suite?: string;
   fullFiles?: string[];
+  playwrightFiles?: string[];
   [key: string]: unknown;
 }
 
@@ -48,7 +49,6 @@ export interface EvidenceResult {
   reports?: VerificationArtifact[];
 }
 
-export const CI_WORKFLOW_PATH: string;
 export const REQUIRED_CI_JOB_NAME: string;
 export const VERIFICATION_ARTIFACT_PATTERN: RegExp;
 export const VERIFICATION_REPORT_COUNT: number;
@@ -89,6 +89,7 @@ export function classifyEvidence(
     taggedTree: string;
     evidenceTree: string;
     liveUnitFiles: readonly string[];
+    liveBrowserFiles: readonly string[];
   },
   validateReports: (
     reports: readonly unknown[],

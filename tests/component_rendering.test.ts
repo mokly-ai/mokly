@@ -9,9 +9,11 @@ import { writeCompilation } from "../dist/build/transaction.js";
 import { validateComponentRanges } from "../dist/components/ranges.js";
 import { loadConfig } from "../dist/config/load.js";
 import { decodeProps } from "../packages/viewer/dist/components/codec.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const renderer = `import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -37,7 +39,8 @@ test("component style ownership rebases through generated headers while preservi
     (entry) => entry.kind === "screen",
   )!;
   const view = screen.componentViews![0]!;
-  const html = result.outputs.get(screen.fragments.mobile)!;
+  const mobileView = viewRoute("screen", screen.id, "mobile", "light");
+  const html = textOutput(result.outputs, mobileView)!;
   assert.equal(
     html.slice(view.styles[0]!.startOffset, view.styles[0]!.endOffset),
     ".action{border-radius:12px}",
@@ -53,18 +56,15 @@ test("component style ownership rebases through generated headers while preservi
   );
   await assert.rejects(compileCatalogue(config), /owners must render/);
   assert.equal(
-    await fs.readFile(
-      path.join(fixture.mockupsDir, screen.fragments.mobile),
-      "utf8",
-    ),
+    await fs.readFile(path.join(fixture.mockupsDir, mobileView), "utf8"),
     html,
   );
 });
 
 test("slot forwarding preserves its original caller and scope through an intermediate component", async (t) => {
   const source = componentEntrySource({
-    extra: `const forward = defineComponent({ ...metadata, id: "forward", title: "Forward", description: "Forwarded content", route: "components/forward.html", propSchema: { kind: "object", properties: {} }, slots: ["children"], render: (props) => <pane.Component>{props.children}</pane.Component>, variants: [{ id: "default", title: "Default", props: { children: <strong>Saved</strong> } }] });`,
-    exports: "action.entry, pane.entry, forward.entry,",
+    extra: `const forward = defineComponent({ ...metadata, id: "forward", title: "Forward", description: "Forwarded content", route: "components/forward.html", propSchema: { kind: "object", properties: {} }, slots: ["children"], render: (props) => <pane.Component>{props.children}</pane.Component>, variants: [{ id: "forward-default", title: "Default", props: { children: <strong>Saved</strong> } }] });`,
+    exports: "action.entries, pane.entries, forward.entries,",
     body: '<forward.Component><action.Component label="Screen slot" /></forward.Component>',
   });
   const fixture = await createFixture(source);
@@ -95,7 +95,10 @@ test("component boundaries support multi-root text and reject removed or physica
     (entry) => entry.kind === "screen",
   )!;
   const view = screen.componentViews![0]!;
-  const html = result.outputs.get(screen.fragments.mobile)!;
+  const html = textOutput(
+    result.outputs,
+    viewRoute("screen", screen.id, "mobile", "light"),
+  )!;
   const ranges = validateComponentRanges(html, view.ranges);
   assert.ok(
     ranges.some((range) =>
@@ -130,10 +133,12 @@ test("renderer mutations cannot change captured props or the next saved render",
   const second = await compileCatalogue(config);
   assert.deepEqual(first, second);
   const action = first.manifest.entries.find(
-    (entry) => entry.kind === "component" && entry.id === "action",
+    (entry) => entry.kind === "component" && entry.id === "action-default",
   )!;
-  assert.ok(action.kind === "component");
-  assert.deepEqual(decodeProps(action.variants[0]!.props), {
+  assert.ok(action.kind === "component" && "variantOf" in action);
+  if (action.kind !== "component" || !("variantOf" in action))
+    throw new Error("Missing action variant");
+  assert.deepEqual(decodeProps(action.props), {
     label: "Continue",
   });
   const screen = first.manifest.entries.find(

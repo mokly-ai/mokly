@@ -1,51 +1,62 @@
 import path from "node:path";
 
 import {
-  FORMER_MANIFEST_NAME,
+  EARLIER_MANIFEST_NAMES,
   MANIFEST_NAME,
   parseHistoricalManifest,
-  selectManifestInput,
 } from "../registry/manifest.js";
 import { MAX_BATCH_OUTPUT_BYTES } from "../review/git_batch.js";
 
+import { isIncompatibleEarlierBaseline } from "./compatibility.js";
 import { confinedBaselineStat } from "./confinement.js";
 import type { BaselineFileSystem } from "./types.js";
 
-/** Validate the historical schema while retaining its original on-disk version. */
+/** Inspect rebuilt output while deferring the compatibility outcome to readers. */
 export async function baselineManifestVersion(
   fs: BaselineFileSystem,
   root: string,
   directory: string,
-  allowV2 = false,
   signal?: AbortSignal,
-): Promise<2 | 3 | 4 | 5 | 6> {
+): Promise<number> {
   const prefix = path.relative(root, directory).split(path.sep).join("/");
-  const canonical = await confinedBaselineStat(
-    fs,
-    root,
-    `${prefix}/${MANIFEST_NAME}`,
-    signal,
-  );
-  const former = await confinedBaselineStat(
-    fs,
-    root,
-    `${prefix}/${FORMER_MANIFEST_NAME}`,
-    signal,
-  );
-  const selection = selectManifestInput(
-    canonical !== undefined,
-    former !== undefined,
-    allowV2,
-  );
-  const relative = `${prefix}/${selection.filename}`;
-  const stat = await confinedBaselineStat(fs, root, relative, signal);
-  if (stat?.kind !== "regular")
+  let relative = join(prefix, MANIFEST_NAME);
+  let canonical = await confinedBaselineStat(fs, root, relative, signal);
+  if (canonical === undefined) {
+    for (const name of EARLIER_MANIFEST_NAMES) {
+      const earlier = await confinedBaselineStat(
+        fs,
+        root,
+        join(prefix, name),
+        signal,
+      );
+      if (earlier !== undefined) {
+        relative = join(prefix, name);
+        canonical = earlier;
+        break;
+      }
+    }
+  }
+  if (canonical?.kind !== "regular")
     throw new Error("Historical manifest is missing or is not a regular file");
   const value: unknown = JSON.parse(
     Buffer.from(
       await fs.read(path.join(root, relative), MAX_BATCH_OUTPUT_BYTES),
     ).toString("utf8"),
   );
-  parseHistoricalManifest(value, selection.allowV2);
-  return (value as { schemaVersion: 2 | 3 | 4 | 5 | 6 }).schemaVersion;
+  const version =
+    value && typeof value === "object" && "schemaVersion" in value
+      ? (value as { schemaVersion?: unknown }).schemaVersion
+      : undefined;
+  if (Number.isInteger(version) && (version as number) < 3)
+    return version as number;
+  try {
+    parseHistoricalManifest(value);
+  } catch (error) {
+    if (!isIncompatibleEarlierBaseline(error)) throw error;
+  }
+  return version as number;
+}
+
+function join(prefix: string, name: string): string {
+  return prefix ? `${prefix}/${name}` : name;
 }

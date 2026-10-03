@@ -46,6 +46,5 @@ export const detailsScreen = screen({
   desktop: <DetailsScreenDesktop />,
   id: "design-browse-details-screen",
   mobile: <DetailsScreenMobile />,
-  slug: "details-screen",
   title: "Details screen",
 });

@@ -8,7 +8,7 @@ import { writeCompilation } from "../dist/build/transaction.js";
 import { structureSignals } from "../dist/components/comparison_material.js";
 import { loadConfig } from "../dist/config/load.js";
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import {
@@ -17,6 +17,7 @@ import {
 } from "./helpers/component_review_fixture.js";
 import { componentViews, screenView } from "./helpers/component_views.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("Changes structure projections exclude invocation source for every input owner", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
@@ -64,7 +65,7 @@ test("line and column shifts alone preserve bytes, keys and all Changes results"
   assert.deepEqual(withoutSource(before), withoutSource(after));
   for (const [route, html] of fixture.before.outputs)
     if (route.endsWith(".html"))
-      assert.equal(fixture.after.outputs.get(route), html, route);
+      assert.equal(textOutput(fixture.after.outputs, route), html, route);
   const { result } = await compareReview(
     fixture.after,
     fixture.config,
@@ -76,7 +77,7 @@ test("line and column shifts alone preserve bytes, keys and all Changes results"
   assert.deepEqual(result.changes, []);
   assert.deepEqual(result.affectedConsumers, []);
   assert.deepEqual(
-    await computeChangedRoutes(fixture.config, "main", fixture.git),
+    await computeChangedIds(fixture.config, "main", fixture.git),
     [],
   );
 });
@@ -117,5 +118,5 @@ test("moving an invocation source file alone does not create material Changes", 
   if (result.schemaVersion !== 5) return;
   assert.deepEqual(result.changes, []);
   assert.deepEqual(result.affectedConsumers, []);
-  assert.deepEqual(await computeChangedRoutes(config, "main", git), []);
+  assert.deepEqual(await computeChangedIds(config, "main", git), []);
 });

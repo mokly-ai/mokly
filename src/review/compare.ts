@@ -1,40 +1,28 @@
 import path from "node:path";
 
-import type {
-  ManifestScreen,
-  ManifestEntry,
-  Manifest,
-  ReviewArtifact,
-  ReviewArtifactContent,
-  ReviewResult,
-  ScreenReview,
-} from "@mokly/viewer/data";
+import type { ReviewArtifact } from "@mokly/viewer/data";
 
 import type { Compilation } from "../build/compile.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { timeAsync } from "../diagnostics/timings.js";
-import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
 
 import {
-  copySnapshotDependencies,
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
   type ReviewAssetReader,
 } from "./assets.js";
 import { baselineResourceConfig, readBaseManifest } from "./base_manifest.js";
+import type { ChangeEvidence } from "./change_evidence.js";
 import { reviewChangedPaths } from "./changed_paths.js";
-import { CompilationAssetReader } from "./compilation_assets.js";
 import { compareComponentCatalogue } from "./component_compare.js";
-import { ComponentMaterialReader } from "./component_resources.js";
+import { importedChangedPaths } from "./imported_changes.js";
 import type { ReadOnlyReviewRepository } from "./repository.js";
-import { ResourceComparison } from "./resource_comparison.js";
-import { compareScreen } from "./screen_compare.js";
-import { aggregateIgnored, fragmentRoutes } from "./screen_views.js";
 
 export interface CompareReviewOptions {
   /** Disable the unchanged-view optimization for differential tests. */
   useFastPath?: boolean;
+  /** Reuse the exact merged evidence already constructed for export/publication. */
+  changeEvidence?: ChangeEvidence;
 }
 
 /** Compare checked head output to its Git branch point and retain pane artifacts. */
@@ -50,13 +38,15 @@ export async function compareReview(
 ): Promise<ReviewArtifact> {
   const baseCommit = await git.evidence.mergeBase(baseRef, "HEAD");
   const baseManifest = await readBaseManifest(git.reader, baseCommit, config);
-  const changedPaths = await reviewChangedPaths(
-    git.evidence,
-    baseCommit,
-    config,
-    outDir,
-    changedPathExclusions,
-  );
+  const authoredPaths = options.changeEvidence
+    ? undefined
+    : await reviewChangedPaths(
+        git.evidence,
+        baseCommit,
+        config,
+        outDir,
+        changedPathExclusions,
+      );
   const mockupsPrefix = toPosixPath(
     path.relative(config.repoRoot, config.mockupsDir),
   );
@@ -66,89 +56,25 @@ export async function compareReview(
     baseCommit,
     mockupsPrefix,
   );
-  if (
-    hasRegisteredComponents(baseManifest) ||
-    hasRegisteredComponents(compilation.manifest)
-  )
-    return compareComponentCatalogue(
-      compilation,
-      baseManifest,
+  const changedPaths =
+    options.changeEvidence ??
+    (await importedChangedPaths(
       config,
       baseAssetReader,
       assetReader,
-      changedPaths,
-      baseCommit,
-      baseRef,
-      options.useFastPath,
-    );
-  const files = new Map<string, ReviewArtifactContent>();
-  const baseSeeds = new Set<string>();
-  const headSeeds = new Set<string>();
-  const baseByRoute = screenMap(baseManifest);
-  const headByRoute = screenMap(compilation.manifest);
-  const baseDocuments = await timeAsync("review.base-documents", () =>
-    baseAssetReader.readMany(
-      [...baseByRoute.values()].flatMap((screen) => fragmentRoutes(screen)),
-    ),
-  );
-  const routes = [
-    ...new Set([...baseByRoute.keys(), ...headByRoute.keys()]),
-  ].sort();
-  const screens: ScreenReview[] = [];
-  const resources = new ResourceComparison(
-    new ComponentMaterialReader(baseAssetReader),
-    new ComponentMaterialReader(
-      new CompilationAssetReader(compilation.outputs, assetReader),
-    ),
-    new Set(changedPaths),
-    mockupsPrefix,
-  );
-  await timeAsync("review.compare-screens", async () => {
-    for (const route of routes) {
-      const base = baseByRoute.get(route);
-      const head = headByRoute.get(route);
-      screens.push(
-        await compareScreen(
-          base,
-          head,
-          baseDocuments,
-          compilation,
-          files,
-          baseSeeds,
-          headSeeds,
-          resources,
-          config,
-        ),
-      );
-    }
-  });
-  await copySnapshotDependencies(
-    files,
-    "before",
-    baseSeeds,
-    (route) => baseAssetReader.read(route),
-    (routes) => baseAssetReader.readMany(routes),
-  );
-  await copySnapshotDependencies(files, "after", headSeeds, async (route) => {
-    const generated = compilation.outputs.get(route);
-    return generated ?? assetReader.read(route);
-  });
-  const result: ReviewResult = {
+      authoredPaths!,
+      compilation.outputs,
+      compilation.deliveredStyleSources,
+    ));
+  return compareComponentCatalogue(
+    compilation,
+    baseManifest,
+    config,
+    baseAssetReader,
+    assetReader,
+    changedPaths,
     baseCommit,
     baseRef,
-    changedPaths,
-    ignoredImpact: aggregateIgnored(screens),
-    schemaVersion: 4,
-    screens,
-  };
-  return { files, result };
-}
-
-function screenMap(manifest: Manifest): Map<string, ManifestScreen> {
-  const entries: readonly ManifestEntry[] = manifest.entries;
-  return new Map(
-    entries
-      .filter((entry): entry is ManifestScreen => entry.kind === "screen")
-      .map((entry) => [entry.route, entry]),
+    options.useFastPath,
   );
 }

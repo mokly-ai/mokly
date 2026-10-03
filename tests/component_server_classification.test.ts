@@ -34,8 +34,8 @@ test("Browse responds before separately computed component evidence arrives", as
   assert.match(initial, /data-changes-status="pending"/);
 
   server.publishUpdate({
-    changedRoutes: result.changes.map(
-      (entry) => (entry.after ?? entry.before)!.route,
+    changedIds: result.changes.map(
+      (entry) => (entry.after ?? entry.before)!.id,
     ),
     componentChanges: { baseline: fixture.before.manifest, result },
     version: 2,
@@ -84,7 +84,7 @@ test("ordinary Browse serves cached component evidence without generating or wri
     assert.equal((await fetch(server.url + route)).status, 200);
   assert.equal(comparisons, 0);
   server.publishUpdate({
-    changedRoutes: ["components/action.html"],
+    changedIds: ["action"],
     componentChanges: { baseline: fixture.before.manifest, result },
     version: 2,
   });

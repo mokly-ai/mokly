@@ -6,7 +6,11 @@ import { expect, test } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
-import { loadComparison } from "./comparison_actions.js";
+import {
+  expectPresentedPane,
+  loadComparison,
+  PANE_SOURCE,
+} from "./comparison_actions.js";
 import { comparisonFixture } from "./diffs_fixture.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
@@ -175,24 +179,31 @@ test("a failed comparison stays in the screen and retries explicitly", async ({
   const oldSource = await page
     .locator("[data-diff-stage] iframe")
     .first()
-    .getAttribute("src");
+    .getAttribute(PANE_SOURCE);
+  expect(oldSource).toMatch(/\/snapshots\/before\//);
   await loadComparison(page, "Refresh comparison");
   await expect(
     page.locator("[data-diff-stage] iframe").first(),
-  ).not.toHaveAttribute("src", oldSource ?? "");
+  ).not.toHaveAttribute(PANE_SOURCE, oldSource ?? "");
 });
 
-test("snapshot panes keep marked links inside their sandbox", async ({
-  page,
-}) => {
+test("snapshot panes keep marked links inert", async ({ page }) => {
   await page.goto(`${fixture.url}/view/screens/home.html`);
   await loadComparison(page, "Side by side");
   const iframe = page.locator("[data-diff-stage] iframe").first();
-  await expect(iframe).toHaveAttribute("sandbox", "");
+  await expectPresentedPane(iframe);
+  const source = await iframe.getAttribute(PANE_SOURCE);
   const beforeUrl = page.url();
   await iframe.contentFrame().locator("#snapshot-link").click();
   await expect(page).toHaveURL(beforeUrl);
   await expect(page.locator("h2")).toHaveText("Home");
+  await expect(iframe.contentFrame().locator("h1")).toHaveText("Previous home");
+  await expect(iframe).toHaveAttribute(PANE_SOURCE, source!);
+  expect(
+    await iframe.evaluate(
+      (frame: HTMLIFrameElement) => frame.contentDocument?.URL,
+    ),
+  ).toBe("about:srcdoc");
 });
 
 test("narrow diffs fit the shell and retain the catalogue drawer", async ({
@@ -215,11 +226,17 @@ test("narrow diffs fit the shell and retain the catalogue drawer", async ({
 });
 
 test("approved changes mockups render directly from disk", async ({ page }) => {
-  for (const mode of ["current", "overlay"]) {
+  for (const mode of [
+    "current",
+    "overlay",
+    "overlay-long",
+    "overlay-panel",
+    "side-by-side-apart",
+  ]) {
     for (const viewport of ["desktop", "mobile"]) {
       const file = path.join(
         repositoryRoot,
-        `examples/basic/generated/design/review/controls/${mode}.${viewport}.html`,
+        `examples/basic/generated/screens/design-changes-${mode}.${viewport}.html`,
       );
       expect(fs.existsSync(file)).toBe(true);
       await page.goto(pathToFileURL(file).href);

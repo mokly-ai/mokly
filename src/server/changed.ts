@@ -1,5 +1,5 @@
 /** Optional changed-route detection powering the Browse changed/all filter. */
-import type { ManifestV6 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../build/compile.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -9,6 +9,11 @@ import {
   type CatalogueChangeSnapshot,
 } from "../registry/changes.js";
 import { readManifest } from "../registry/manifest.js";
+import {
+  acceptedGenerationFromCompilation,
+  type AcceptedGeneration,
+} from "../review/accepted_generation.js";
+import type { ChangeEvidence } from "../review/change_evidence.js";
 import type { ReadOnlyReviewRepository } from "../review/repository.js";
 
 import {
@@ -22,13 +27,13 @@ export interface ResolvedCatalogueChanges extends CatalogueChangeSnapshot {
 }
 
 /** Compute routes affected since the base branch point, if available. */
-export async function computeChangedRoutes(
+export async function computeChangedIds(
   config: ResolvedConfig,
   base: string,
   git: ReadOnlyReviewRepository,
 ): Promise<readonly string[] | undefined> {
   try {
-    return (await computeCatalogueChanges(config, base, git)).changedRoutes;
+    return (await computeCatalogueChanges(config, base, git)).changedIds;
   } catch (error) {
     if (error instanceof MoklyError && error.code === "config-invalid")
       throw error;
@@ -41,7 +46,9 @@ export async function computeCatalogueChanges(
   config: ResolvedConfig,
   base: string,
   git: ReadOnlyReviewRepository,
-  manifest?: ManifestV6,
+  manifest?: ManifestV8,
+  acceptedEvidence?: ChangeEvidence,
+  accepted?: AcceptedGeneration,
 ): Promise<ResolvedCatalogueChanges> {
   const compilation =
     config.generatedOutput === "derived" && !manifest
@@ -55,9 +62,13 @@ export async function computeCatalogueChanges(
     base,
     git,
     commit,
-    compilation?.outputs,
+    accepted ??
+      (compilation
+        ? acceptedGenerationFromCompilation(compilation)
+        : undefined),
+    acceptedEvidence,
   );
-  const { baseline, changedRoutes } = componentChanges;
+  const { baseline, changedIds } = componentChanges;
   const removedEntries = removedManifestEntries(manifest, baseline);
   return {
     schemaVersion: 1,
@@ -65,10 +76,10 @@ export async function computeCatalogueChanges(
     baseRef: base,
     baseCommit: commit,
     removedEntries,
-    changedRoutes: [
+    changedIds: [
       ...new Set([
-        ...(changedRoutes ?? []),
-        ...removedEntries.map(({ entry }) => entry.route),
+        ...(changedIds ?? []),
+        ...removedEntries.map(({ entry }) => entry.id),
       ]),
     ].sort(),
   };

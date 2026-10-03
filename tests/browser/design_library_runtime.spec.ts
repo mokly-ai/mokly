@@ -3,9 +3,29 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
+import { serve } from "../../dist/server/serve.js";
+import { createCommittedExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
+import { FULL_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.js";
+import { waitForInitialChanges } from "../helpers/watched_catalogue.js";
 
-import { chooseViewport } from "./workspace_actions.js";
+import { chooseVariant, chooseViewport } from "./workspace_actions.js";
+
+let running: Awaited<ReturnType<typeof serve>>;
+let root: string;
+test.beforeAll(async () => {
+  test.setTimeout(FULL_CATALOGUE_SETUP_TIMEOUT_MS);
+  root = await fs.mkdtemp(
+    path.join(repositoryRoot, ".context/design-runtime-"),
+  );
+  const config = await createCommittedExampleBaseline(root, "design-library");
+  running = await serve(config, { base: "HEAD", port: 0, watch: false });
+  await waitForInitialChanges(running.url);
+});
+test.afterAll(async () => {
+  await running?.close();
+  if (root) await fs.rm(root, { recursive: true, force: true });
+});
 
 for (const viewport of ["desktop", "mobile"] as const) {
   test(`${viewport}: design props are temporary, support unset/reset, and load newly visible nested styles`, async ({
@@ -23,16 +43,14 @@ for (const viewport of ["desktop", "mobile"] as const) {
     const contents = () =>
       Promise.all(
         paths.map((file) =>
-          fs.readFile(
-            path.join(repositoryRoot, "examples/basic", file),
-            "utf8",
-          ),
+          fs.readFile(path.join(root, "examples/basic", file), "utf8"),
         ),
       );
     const before = await contents();
-    await page.goto("/view/design/library/chrome/top-bar.html");
+    await page.goto(`${running.url}/view/components/design-ui-top-bar.html`);
     await chooseViewport(page, viewport);
-    const status = await page.locator("[data-workspace-status]").textContent();
+    const status = page.locator("[data-workspace-status]");
+    await expect(status).toHaveText("Unmodified");
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     if (viewport === "mobile")
       await page
@@ -52,11 +70,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await expect(frame.locator(".mbk-search-value")).toHaveCount(0);
     await page.getByRole("button", { name: "Reset", exact: true }).click();
     await expect(frame.locator(".mbk-tag-picker")).toHaveCount(0);
-    await page
-      .getByLabel("Saved variant", { exact: true })
-      .selectOption("search");
+    await expect(status).toHaveText("Unmodified");
+    await chooseVariant(page, "Search");
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
-    await expect(page.locator("[data-workspace-status]")).toHaveText(status!);
+    await expect(status).toHaveText("Unmodified");
     expect(await contents()).toEqual(before);
   });
 
@@ -68,7 +85,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ? { width: 390, height: 844 }
         : { width: 1280, height: 900 },
     );
-    await page.goto("/view/design/browse/views/screen.variants/picker.html");
+    await page.goto(
+      `${running.url}/view/screens/design-browse-tag-picker.html`,
+    );
     await chooseViewport(page, viewport);
     await page.getByRole("tab", { name: "Components", exact: true }).click();
     if (viewport === "mobile")
@@ -111,9 +130,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await page
       .getByRole("link", { name: "Open component", exact: true })
       .click();
-    await expect(page).toHaveURL(
-      /\/view\/design\/library\/controls\/tag-chip.html/,
-    );
+    await expect(page).toHaveURL(/\/view\/components\/design-ui-tag-chip.html/);
     await page.getByRole("tab", { name: "Usage", exact: true }).click();
     const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
     await usage
@@ -121,15 +138,13 @@ for (const viewport of ["desktop", "mobile"] as const) {
       .first()
       .click();
     await expect(page).toHaveURL(
-      /\/view\/design\/browse\/views\/screen\.variants\/picker.html/,
+      /\/view\/screens\/design-browse-tag-picker.html/,
     );
     await page.goBack();
-    await expect(page).toHaveURL(
-      /\/view\/design\/library\/controls\/tag-chip.html/,
-    );
+    await expect(page).toHaveURL(/\/view\/components\/design-ui-tag-chip.html/);
     await page.goForward();
     await expect(page).toHaveURL(
-      /\/view\/design\/browse\/views\/screen\.variants\/picker.html/,
+      /\/view\/screens\/design-browse-tag-picker.html/,
     );
   });
 }

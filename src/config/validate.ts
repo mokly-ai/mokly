@@ -19,14 +19,19 @@ import {
   validateSourceRoots,
 } from "./path_validation.js";
 import { resolveInside } from "./paths.js";
+import { validatePostcssPath } from "./postcss.js";
 import { resolvePublicExclude } from "./public_exclusions.js";
+import {
+  isReservedConfiguredPath,
+  validateStylesheetAliases,
+} from "./reserved_paths.js";
 import {
   requireString,
   validateColorSchemes,
   validateDebounce,
-  validateStylesheets,
   validateWatchRules,
 } from "./rules.js";
+import { validateStylesheets } from "./stylesheet_rules.js";
 import type { MoklyConfig, ResolvedConfig } from "./types.js";
 
 /** Validate an imported config and resolve every filesystem path. */
@@ -65,7 +70,12 @@ export function resolveConfig(
     repoRoot,
     configPath,
   );
-  const entryGlobs = resolveEntryGlobs(input, repoRoot, configDir);
+  const entryGlobs = resolveEntryGlobs(
+    input,
+    repoRoot,
+    configDir,
+    path.resolve(configDir, input.mockupsDir),
+  );
   const entriesDir = entryGlobs.entriesDir;
   const mockupsDir = resolveInside(
     repoRoot,
@@ -92,6 +102,7 @@ export function resolveConfig(
     input.renderer,
     "renderer",
   );
+  const postcss = validatePostcssPath(input.postcss, repoRoot, configDir);
   const compatibilityTransformer = optionalModule(
     repoRoot,
     configDir,
@@ -106,24 +117,21 @@ export function resolveConfig(
   validateSourceRoots(repoRoot, entriesDir, mockupsDir);
   const colorSchemes = validateColorSchemes(input.colorSchemes);
   const stylesheets = validateStylesheets(input.stylesheets ?? []);
+  validateStylesheetAliases(stylesheets, mockupsDir);
   const watchRules = validateWatchRules(input.watch?.rules ?? []);
   if (input.review?.base !== undefined)
     requireString(input.review.base, "review.base");
-  if (
-    input.compatibility?.readManifestV2 !== undefined &&
-    typeof input.compatibility.readManifestV2 !== "boolean"
-  ) {
-    throw new MoklyError(
-      "config-invalid",
-      "compatibility.readManifestV2 must be boolean",
-    );
-  }
   const reviewOut = resolveInside(
     repoRoot,
     configDir,
     input.review?.outDir ?? ".context/mokly-review",
     "review.outDir",
   );
+  if (isReservedConfiguredPath(reviewOut, mockupsDir))
+    throw new MoklyError(
+      "config-invalid",
+      "review.outDir must not be at or inside mokly-generated/; choose a separate artifact directory",
+    );
   validateReviewOut(reviewOut, {
     entryRoots: entriesDir ? [entriesDir] : [],
     mockupsDir,
@@ -135,7 +143,6 @@ export function resolveConfig(
     generatedOutput,
     colorSchemes,
     compatibility: {
-      readManifestV2: input.compatibility?.readManifestV2 ?? false,
       ...(compatibilityTransformer
         ? { transformer: compatibilityTransformer }
         : {}),
@@ -146,6 +153,7 @@ export function resolveConfig(
     mockupsDir,
     moduleResolution,
     ...(renderer ? { renderer } : {}),
+    ...(postcss ? { postcss } : {}),
     repoRoot,
     review: {
       ...(baselineBuild ? { baselineBuild } : {}),

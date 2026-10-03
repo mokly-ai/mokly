@@ -54,11 +54,16 @@ for (const viewport of ["desktop", "mobile"] as const) {
           viewport === "desktop" ? ".mbk-nav-filter-count" : ".ce-change-count",
         ),
       ).toHaveText("2");
-      if (viewport === "desktop")
-        await expect(page.locator(".mbk-nav-scroll a")).toHaveText([
+      if (viewport === "desktop") {
+        await expect(page.locator(".mbk-nav-scroll a")).toContainText([
           "Farewell",
           "Action",
+          "Compact · Removed",
         ]);
+        await expect(
+          page.locator(".mbk-nav-scroll .mbk-nav-changed"),
+        ).toHaveCount(1);
+      }
     }
   });
 }

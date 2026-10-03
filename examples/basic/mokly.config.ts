@@ -13,6 +13,7 @@ export default defineConfig({
     "examples/basic/src/components/**/*.mockup.{ts,tsx}",
   ],
   mockupsDir: "generated",
+  postcss: "postcss.config.mjs",
   moduleResolution: {
     aliases: { "react-native": "react-native-web" },
     conditions: ["react-native", "import", "module", "default"],
@@ -41,7 +42,7 @@ export default defineConfig({
   },
   stylesheets: [
     {
-      match: "design/library/**",
+      match: "components/design-ui-*.html",
       stylesheets: [
         ...designBaseStyles,
         componentStylesheets,
@@ -51,7 +52,7 @@ export default defineConfig({
       ],
     },
     {
-      match: "design/components/controls/**",
+      match: "screens/design-component-controls*.html",
       stylesheets: [
         ...designBaseStyles,
         componentStylesheets,
@@ -60,7 +61,7 @@ export default defineConfig({
       ],
     },
     {
-      match: "design/components/**",
+      match: "screens/design-component-*.html",
       stylesheets: [
         ...designBaseStyles,
         componentStylesheets,
@@ -68,7 +69,7 @@ export default defineConfig({
       ],
     },
     {
-      match: "design/browse/appearance/**",
+      match: "screens/design-appearance-*.html",
       stylesheets: [
         "design.css",
         "design-stage.css",
@@ -78,7 +79,18 @@ export default defineConfig({
       ],
     },
     {
-      match: "design/review/**",
+      match: "screens/design-changes-*.html",
+      stylesheets: [
+        "design.css",
+        "design-stage.css",
+        "design-review.css",
+        "design-review-scroll.css",
+        componentStylesheets,
+        ...workspaceLayoutStyles,
+      ],
+    },
+    {
+      match: "screens/design-review-*.html",
       stylesheets: [
         "design.css",
         "design-stage.css",
@@ -88,7 +100,7 @@ export default defineConfig({
       ],
     },
     {
-      match: "design/**",
+      match: "screens/design-*.html",
       stylesheets: [
         "design.css",
         "design-stage.css",
@@ -96,10 +108,7 @@ export default defineConfig({
         ...workspaceLayoutStyles,
       ],
     },
-    {
-      match: "**/*.html",
-      stylesheets: ["styles.css"],
-    },
+    { match: "**/*.html", stylesheets: ["styles.css"] },
   ],
   watch: {
     rules: [
@@ -115,6 +124,7 @@ export default defineConfig({
           "examples/basic/generated/design-component-workspace.css",
           "examples/basic/generated/design-component-view.css",
           "examples/basic/generated/design-review.css",
+          "examples/basic/generated/design-review-scroll.css",
           "examples/basic/generated/design-stage.css",
           "examples/basic/generated/design.css",
           "examples/basic/generated/styles.css",

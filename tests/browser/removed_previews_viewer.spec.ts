@@ -36,7 +36,9 @@ for (const adapter of ["same-origin", "cross"]) {
     await expect(page.frameLocator(`${stage} iframe`).locator("h1")).toHaveText(
       "Previous page",
     );
-    await page.locator('#viewer a[data-route="screens/removed.html"]').click();
+    await page
+      .locator('#viewer a[data-route="screens/removed-screen.html"]')
+      .click();
     await expect(
       page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
     ).toHaveText("Previous desktop screen");
@@ -49,6 +51,39 @@ for (const adapter of ["same-origin", "cross"]) {
         () => (window as unknown as { frameMessages: string[] }).frameMessages,
       ),
     ).toEqual([]);
+    const snapshotId = await page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            fixture: {
+              catalogue: {
+                removedEntries: {
+                  entry: { id: string };
+                  snapshotId?: string;
+                }[];
+              };
+            };
+          }
+        ).fixture.catalogue.removedEntries.find(
+          ({ entry }) => entry.id === "removed-screen",
+        )?.snapshotId,
+    );
+    expect(snapshotId).toBeDefined();
+    expect(
+      await page.evaluate(
+        () =>
+          (
+            window as unknown as {
+              viewerNavigations: Record<string, unknown>[];
+            }
+          ).viewerNavigations,
+      ),
+    ).toEqual([
+      {
+        screenId: "removed-screen",
+        snapshotId,
+      },
+    ]);
   });
 }
 
@@ -157,15 +192,14 @@ test("a viewer selection change fences the previous request", async ({
     release = resolve;
   });
   let handled = false;
-  await page.route("**/pages/archive/removed.html.json", async (route) => {
+  await page.route("**/pages/removed-page.json", async (route) => {
     await held;
     await route.continue().catch(() => undefined);
     handled = true;
   });
   let settled = false;
   const settle = (request: { url(): string }): void => {
-    if (request.url().includes("/pages/archive/removed.html.json"))
-      settled = true;
+    if (request.url().includes("/pages/removed-page.json")) settled = true;
   };
   page.on("requestfinished", settle);
   page.on("requestfailed", settle);
@@ -173,7 +207,9 @@ test("a viewer selection change fences the previous request", async ({
   await expect(page.locator(".mbk-preview-status")).toHaveText(
     "Loading previous version…",
   );
-  await page.locator('#viewer a[data-route="screens/removed.html"]').click();
+  await page
+    .locator('#viewer a[data-route="screens/removed-screen.html"]')
+    .click();
   await expect(
     page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
   ).toHaveText("Previous desktop screen");

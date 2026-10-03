@@ -44,7 +44,6 @@ export async function completedBaseline(
       fs,
       request.repoRoot,
       layout.output,
-      request.allowManifestV2,
       request.signal,
     );
     if (version !== marker.manifestVersion) return;

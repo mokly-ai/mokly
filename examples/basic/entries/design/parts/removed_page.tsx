@@ -13,41 +13,36 @@ import { DocumentPane, Stage } from "./stage.js";
 interface RemovedDocument {
   description: string;
   design: DesignDestination;
-  generated: string;
   id: string;
   title: string;
 }
 
 /**
- * The deleted Handbook collection. Changes lists its documents flat, because
- * the collection that held them is no longer in the catalogue.
+ * The deleted Handbook folder. Changes lists its documents flat, because
+ * the folder that held them is no longer in the catalogue.
  */
 export const REMOVED_DOCUMENTS = {
   handbook: {
     description: "A handbook to accompany the example screens.",
     design: DESTINATIONS.pageRemoved,
-    generated: "handbook.html",
     id: "example-handbook",
     title: "Getting started",
   },
   fieldGuide: {
     description: "The long companion to the handbook, read section by section.",
     design: DESTINATIONS.pageRemovedLong,
-    generated: "field-guide.html",
     id: "example-field-guide",
     title: "Field guide",
   },
   printingTips: {
     description: "Notes on printing the example catalogue.",
     design: DESTINATIONS.pageRemovedLoading,
-    generated: "printing-tips.html",
     id: "example-printing-tips",
     title: "Printing tips",
   },
   styleNotes: {
     description: "House style for the example writing.",
     design: DESTINATIONS.pageRemovedUnavailable,
-    generated: "style-notes.html",
     id: "example-style-notes",
     title: "Style notes",
   },
@@ -76,9 +71,6 @@ function RemovedDetails({ entry }: { entry: RemovedDocument }) {
           <MetaRow name="source" label="Source">
             Previous version
           </MetaRow>
-          <MetaRow name="generated" label="Generated">
-            <code className="mbk-code">{entry.generated}</code>
-          </MetaRow>
           <MetaRow name="tags" label="Tags">
             documents
           </MetaRow>
@@ -93,7 +85,7 @@ function RemovedDetails({ entry }: { entry: RemovedDocument }) {
 
 /**
  * A removed document keeps its flat Changes row, its Removed badge, and the
- * baseline ancestry of the collection that was deleted with it. `document`
+ * baseline path of the folder that was deleted with it. `document`
  * holds the previous version; a state stage replaces it while the previous
  * version is unavailable.
  */

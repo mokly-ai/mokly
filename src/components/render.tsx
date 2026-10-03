@@ -6,7 +6,6 @@ import type { ReactNode } from "react";
 import type { ComponentViewRecord } from "@mokly/viewer";
 import { invalidData, validateResourcePath } from "@mokly/viewer/data";
 
-import type { ScreenDefinition } from "../authoring/types.js";
 import type { BuildWarning } from "../build/warnings.js";
 import { ignoredDeclaredResourceOwner } from "../build/warnings.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
@@ -22,7 +21,10 @@ import {
   insertComponentStylesheets,
 } from "./stylesheet_links.js";
 import { rendererStylesheetPaths } from "./stylesheet_reuse.js";
-import type { ComponentDefinition } from "./types.js";
+import type {
+  ComponentDefinition,
+  ComponentVariantDefinition,
+} from "./types.js";
 
 export interface ComponentRenderOutput {
   html: string;
@@ -30,9 +32,7 @@ export interface ComponentRenderOutput {
   warnings?: readonly BuildWarning[];
 }
 export type ComponentGraphRenderer = (
-  input: Omit<RenderInput, "entry"> & {
-    entry: ScreenDefinition | ComponentDefinition;
-  },
+  input: RenderInput,
   renderer: Renderer,
   definitions: readonly ComponentDefinition[],
   placement: {
@@ -53,24 +53,26 @@ export const renderWithComponents: ComponentGraphRenderer = (
   const collector = new ComponentCollector(
     new Map(definitions.map((entry) => [entry.id, entry])),
     input,
-    `${input.entry.id} / ${input.variantId ?? "screen"} / ${input.viewport} / ${input.colorScheme}`,
+    `${input.entry.id} / ${input.viewport} / ${input.colorScheme}`,
   );
   const node = (
     <ComponentContext
       value={{ collector, owner: { kind: "entry" }, placement: 0 }}
     >
       {input.entry.kind === "component" ? (
-        <ComponentRoot definition={input.entry} input={input} />
+        <ComponentRoot
+          definition={definitions.find(
+            (definition) => definition.id === input.entry.variantOf,
+          )}
+          entry={input.entry}
+          input={input}
+        />
       ) : (
         input.node
       )}
     </ComponentContext>
   );
-  const rendererEntry =
-    input.entry.kind === "component"
-      ? (({ stylesheets: _stylesheets, ...entry }) => entry)(input.entry)
-      : input.entry;
-  const result = renderer({ ...input, entry: rendererEntry, node });
+  const result = renderer({ ...input, node });
   const rendered: RenderResult =
     typeof result === "string" ? { html: result } : result;
   if (
@@ -89,7 +91,9 @@ export const renderWithComponents: ComponentGraphRenderer = (
   );
   const owners = new Map<string, { file: string; ids: Set<string> }>();
   const renderedDefinitions = [
-    ...(input.entry.kind === "component" ? [input.entry] : []),
+    ...(input.entry.kind === "component"
+      ? [definitions.find((entry) => entry.id === input.entry.variantOf)!]
+      : []),
     ...[...collector.instances.values()].map((instance) =>
       collector.definitions.get(instance.componentId)!,
     ),
@@ -182,21 +186,21 @@ export const renderWithComponents: ComponentGraphRenderer = (
 
 function ComponentRoot({
   definition,
+  entry,
   input,
 }: {
-  definition: ComponentDefinition;
-  input: Omit<RenderInput, "entry"> & {
-    entry: ScreenDefinition | ComponentDefinition;
-  };
+  definition: ComponentDefinition | undefined;
+  entry: ComponentVariantDefinition;
+  input: RenderInput;
 }): ReactNode {
-  const variant = definition.variants.find(
-    (variant) => variant.id === input.variantId,
-  );
-  if (!variant) invalidData(definition.id, "unknown saved variant");
+  if (!definition) invalidData(entry.id, "unknown component parent");
   const { data, slots } = componentInputs(
     definition,
-    input.componentProps ?? variant.props,
-    `${definition.id} / ${variant.id}`,
+    entry.props,
+    `${definition.id} / ${entry.id}`,
   );
-  return definition.render({ ...data, ...slots }, input);
+  return definition.render(
+    { ...(input.componentProps ?? data), ...slots },
+    input,
+  );
 }

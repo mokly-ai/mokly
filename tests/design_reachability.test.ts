@@ -3,6 +3,8 @@ import { test } from "node:test";
 
 import { parse } from "parse5";
 
+import { viewRoute } from "../packages/viewer/dist/data.js";
+
 import {
   attribute,
   byClass,
@@ -11,6 +13,7 @@ import {
   elements,
   textContent,
 } from "./helpers/design_catalogue.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const treeOnly = [
   "design-appearance-auto",
@@ -29,8 +32,10 @@ const treeOnly = [
   "design-browse-missing-route",
   "design-browse-variant-removed",
   "design-browse-variant-reparented",
+  "design-changes-overlay-long",
+  "design-changes-overlay-panel",
+  "design-changes-side-by-side-apart",
   "design-component-added",
-  "design-component-comparison",
   "design-component-controls-comparison",
   "design-component-controls-edited",
   "design-component-controls-error",
@@ -38,9 +43,14 @@ const treeOnly = [
   "design-component-controls-unset",
   "design-component-empty",
   "design-component-inspection-direct-change",
+  "design-component-inspection-loading",
   "design-component-inspector-closed",
+  "design-component-overlay-tall",
   "design-component-screen-inspector-closed",
+  "design-component-shared-impact",
   "design-component-unavailable",
+  "design-component-usage-failed",
+  "design-component-usage-loading",
   "design-publication-catalogue",
   "design-publication-changes",
   "design-review-preparing",
@@ -58,7 +68,10 @@ test("every design screen has an inbound design link or opens only from the cata
   const inbound = new Set<string>();
   for (const source of screens)
     for (const viewport of ["mobile", "desktop"] as const) {
-      const html = outputs.get(source.fragments[viewport]);
+      const html = textOutput(
+        outputs,
+        viewRoute(source.kind, source.id, viewport, "light"),
+      );
       assert.ok(html, `${source.id}/${viewport}`);
       for (const link of elements(
         parse(html),

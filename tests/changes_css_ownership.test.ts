@@ -59,8 +59,8 @@ export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' +
         "main",
         committedReviewRepository(fixture.config),
       );
-      const expected = matches ? ["components/action.html"] : [];
-      assert.deepEqual(live.changedRoutes, expected);
+      const expected = matches ? ["action"] : [];
+      assert.deepEqual(live.changedIds, expected);
       const artifact = await compareReview(
         await compileCatalogue(fixture.config),
         fixture.config,
@@ -125,7 +125,7 @@ test("unreferenced public assets do not create file-level evidence", async (t) =
     "main",
     committedReviewRepository(fixture.config),
   );
-  assert.deepEqual(live.changedRoutes, []);
+  assert.deepEqual(live.changedIds, []);
   const result = live.componentChanges?.result;
   assert.equal(result?.schemaVersion, 5);
   if (result?.schemaVersion !== 5) return;

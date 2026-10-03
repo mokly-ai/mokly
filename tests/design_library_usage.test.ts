@@ -9,11 +9,11 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 test("every owning artboard records its shared chrome and real component consumers", async () => {
   const { manifest } = await designCatalogue;
-  assert.ok(manifest.schemaVersion === 6);
+  assert.ok(manifest.schemaVersion === 8);
   const screens = manifest.entries.flatMap((entry) =>
-    entry.kind === "screen" && entry.route.startsWith("design/") ? [entry] : [],
+    entry.kind === "screen" && entry.id.startsWith("design-") ? [entry] : [],
   );
-  assert.equal(screens.length, 91);
+  assert.equal(screens.length, 101);
   for (const entry of screens) {
     assert.ok(entry.componentViews);
     for (const view of entry.componentViews) {
@@ -33,7 +33,7 @@ test("every owning artboard records its shared chrome and real component consume
         ]).has(entry.id)
       )
         assert.ok(ids.has("design-ui-screen-header"), entry.id);
-      if (entry.route.startsWith("design/components/"))
+      if (entry.id.startsWith("design-component-"))
         for (const slug of [
           "screen-header",
           "view-controls",
@@ -67,7 +67,7 @@ test("every owning artboard records its shared chrome and real component consume
 
 test("nested chips and caller-owned frame slots retain their actual owner chains", async () => {
   const { manifest } = await designCatalogue;
-  assert.ok(manifest.schemaVersion === 6);
+  assert.ok(manifest.schemaVersion === 8);
   const picker = manifest.entries.find(
     (entry) => entry.id === "design-browse-tag-picker",
   );

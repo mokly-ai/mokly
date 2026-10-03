@@ -3,26 +3,42 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { ManifestV6 } from "../packages/viewer/dist/registry/types.js";
+import {
+  generatedViews,
+  isManifestComponentVariant,
+} from "../packages/viewer/dist/data.js";
+import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const generated = path.join(repositoryRoot, "examples/basic/generated");
 const manifest = JSON.parse(
   await fs.readFile(path.join(generated, "mokly-manifest.json"), "utf8"),
-) as ManifestV6;
+) as ManifestV8;
 
 function component(id: string) {
   const entry = manifest.entries.find((entry) => entry.id === id);
-  if (entry?.kind !== "component") throw new Error(`Missing ${id}`);
+  if (entry?.kind !== "component" || isManifestComponentVariant(entry))
+    throw new Error(`Missing ${id}`);
   return entry;
 }
 
 test("the shared footer exposes only the icon panel and its current variants", () => {
   const footer = component("design-ui-inspector");
   assert.deepEqual(
-    footer.variants.map((variant) => variant.id),
-    ["details", "props", "closed"],
+    manifest.entries
+      .filter(
+        (entry) =>
+          entry.kind === "component" &&
+          isManifestComponentVariant(entry) &&
+          entry.variantOf === footer.id,
+      )
+      .map((variant) => variant.id),
+    [
+      "design-ui-inspector-details",
+      "design-ui-inspector-props",
+      "design-ui-inspector-closed",
+    ],
   );
   if (footer.propSchema.kind !== "object")
     throw new Error("Invalid footer schema");
@@ -64,14 +80,11 @@ test("view options have one icon presentation and no view-controls scheme contro
 test("every owning design and shared sample omits legacy footer and view markup", async () => {
   for (const entry of manifest.entries) {
     if (!entry.id.startsWith("design-")) continue;
-    const views =
-      entry.kind === "screen"
-        ? [entry.fragments]
-        : entry.kind === "component"
-          ? entry.variants.map((variant) => variant.fragments)
-          : [];
-    for (const view of views)
-      for (const file of Object.values(view)) {
+    if (
+      entry.kind === "screen" ||
+      (entry.kind === "component" && isManifestComponentVariant(entry))
+    )
+      for (const file of generatedViews(entry).map((view) => view.path)) {
         const html = await fs.readFile(path.join(generated, file), "utf8");
         assert.doesNotMatch(html, /class="mbk-details(?:-bar|-hint)?"/, file);
         assert.doesNotMatch(

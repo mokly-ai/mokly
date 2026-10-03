@@ -2,24 +2,14 @@
 
 ## Delivery Status
 
-Rule parsing, diffing, document matching, and classification are implemented in
-both result versions, live Serve, watched updates, and publication. The
-inspector receives retained and excluded stylesheet evidence for component
-catalogues and screen-only catalogues, including before a comparison is loaded.
-Current screen-only delivery reuses v4 classification; it does not run
-component classification or an additional resource analysis. See
-[CSS Change Attribution](../../plans/css-change-attribution.md).
-Removing source-path evidence and applying CSS rule analysis to linked
-component-declared stylesheets was planned by
-[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestones 3 and 4. Those attribution rules are now live;
-comparison-format changes were implemented in Milestone 7.
-Retained non-CSS resource reasons already follow actual-invocation component
-ownership under the Milestone 4 classifier.
-Leaving Mokly-inserted links out of consumer page-comparison material while
-retaining final-document CSS analysis was implemented by
-[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-Milestone 13.
+This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+
+Rule parsing, diffing, document matching, and classification apply to
+screen-only and component catalogues, live Serve, watched updates, and
+publication. The inspector receives retained and excluded stylesheet evidence
+for both catalogue kinds, including before a comparison is loaded. Screen-only
+delivery reuses accepted classification without a second resource analysis.
+See [CSS Change Attribution](../../plans/css-change-attribution.md).
 
 ## Purpose
 
@@ -36,6 +26,14 @@ visible effect, and it does not try to. Browser-verified refinement is a
 separate future contract.
 
 ## Inputs
+
+Imported CSS is delivered as generated public stylesheets under
+`mokly-generated/styles/`; those emitted routes, not the private `.css` or
+`.module.css` sources, enter rule analysis. Compare accepted stylesheet and
+binary asset bytes against the pinned baseline even in derived mode, then
+merge changed generated routes with Git-authored changes. A source can reach
+multiple root bundles; analyze each linked route. Details and precedence are
+in [imported stylesheet delivery](./mokly-imported-styles.md).
 
 The analysis runs only for a CSS resource that is already in `changedPaths`
 and already reachable from a view's document through the existing resource
@@ -63,6 +61,37 @@ stylesheet outside that scope, such as a source or token module, is never
 analysed and creates no comparison evidence on its own. One shared predicate
 answers "is this stylesheet in analysis scope" for every classification path;
 only rendered public stylesheets can produce CSS analysis records.
+
+Generated linked stylesheets inside `mokly-generated/styles/` meet this
+public-file predicate. Rule-level analysis compares their emitted bytes and
+matches changed rules against each before/after view, including CSS Modules
+selectors. Their original `.css` and `.module.css` files and plugin
+dependencies remain private `sourceFiles`: they trigger rebuilds but are not
+additional public CSS analyzed as if linked. One imported source can
+contribute to multiple root bundles; analyze each reachable generated route.
+A baseline built before generated CSS links produces a one-time Changes jump
+for the linked views.
+
+Git does not report ignored generated routes in derived mode. Compare the
+baseline builder's captured generated CSS and asset bytes with the accepted
+generation's bytes before rule analysis; add changed routes to the same
+`changedPaths` evidence set used by classification and comparisons. Retain Git's authored
+paths except reserved generated routes, which use byte comparisons. A missing
+baseline route versus a present head route is a change. In committed mode the
+same check covers outputs not yet recorded by Git; never infer a changed route
+only from a source edit when emitted bytes are identical. Construct this merged
+evidence once per classification or export and pass its typed value to Review
+and Changes; neither may accept the Git-only authored path list in its place.
+Export and Changes-enabled publication use the same evidence for
+comparison panes and catalogue membership as live Serve in both output modes.
+
+Retain each delivered root's CSS-pass and asset inputs separately from the wider private inventory. Those source paths never provide file-level evidence. A source edit that leaves rendered output and delivered bytes unchanged adds nothing. Document changes, including CSS Modules class maps, changed rules and referenced generated assets provide comparison material. A changed generated asset keeps every view whose
+resource closure references it, without decoding it. Each accepted build
+supplies a typed generation with route index, optional generated bytes and
+delivered-source paths; committed classification reuses it rather than
+reloading the graph or rerunning PostCSS, so a newer edit cannot add a route
+to an older accepted generation's evidence. A direct caller without an accepted
+build may load inventory once without evaluating consumer JavaScript.
 
 Per-view evidence records are emitted only for views with at least one reason
 or excluded resource. Views and screens with neither carry no record in the
@@ -195,148 +224,4 @@ The outcome is `{ kind: "kept", status: "matched" | "unresolved", selectors }`
 or `{ kind: "excluded" }`. No match means excluded, including a resolved empty
 diff. Callers remain responsible for reachability and `changedPaths` eligibility.
 
-## Membership Rule
-
-A CSS dependency reason keeps a view in Changes only when its analysis status
-is `matched` or `unresolved`. A view whose only CSS dependency evidence is
-excluded resources is not in Changes for that evidence. Every other Changes
-signal is unchanged: added or removed views, material document changes,
-metadata, caller inputs, structure, non-CSS resources, component ownership, and
-use-case screen reasons. Both viewports and every color scheme are analysed
-separately against their own documents.
-
-A formatting-only stylesheet edit therefore leaves every consumer out of
-Changes. That is intended: the resource is still listed in the comparison
-details as examined and excluded, and the comparison snapshots still contain
-the real bytes.
-
-## Evidence Schema
-
-A dependency reason gains an optional `analysis` record. Absent `analysis`
-means the analysis did not run for that path, which is the case for non-CSS
-resources and for historical results.
-
-```ts
-interface DependencyAnalysis {
-  status: "matched" | "unresolved";
-  selectors: readonly string[];
-}
-
-type DependencyReason = {
-  kind: "dependency";
-  path: string;
-  analysis?: DependencyAnalysis;
-};
-```
-
-`selectors` lists every selector of each kept rule in its original serialized
-form (including `&` for nested rules, before query-only substitution), sorted
-lexically by UTF-16 code units and duplicate-free. For `unresolved` reasons it
-lists the selectors that could be serialized and may be empty when the kept
-construct has no selector.
-
-A view also records whether its own normalized documents differ:
-
-```ts
-interface ViewReview {
-  // existing fields unchanged
-  material?: true;
-}
-```
-
-`material` is present exactly when the paired ignore-normalized before and
-after documents differ, in both result versions. It is omitted otherwise and
-never carries `false`. Historical results without it remain valid: the style
-label additionally requires an `analysis`-bearing reason, which only producers
-that also emit `material` ever write, so an absent flag on a historical view can
-never select the style label.
-
-Examined-and-excluded resources are recorded on the view, not as reasons:
-
-```ts
-interface ExcludedResource {
-  path: string;
-  reason: "no-matching-rule";
-}
-
-interface ViewReview {
-  // existing fields unchanged
-  reasons?: readonly DependencyReason[];
-  excludedResources?: readonly ExcludedResource[];
-}
-```
-
-Both schema-v4 `ReviewResultV4` and schema-v5 `ReviewResultV5` carry
-these fields. Results without them remain valid
-and mean the analysis did not run.
-
-`reasons` holds the view's retained resource evidence in both versions; it is
-omitted when empty. View evidence describes the complete retained render;
-v5 entry reasons still apply component ownership separately. Match selectors
-against the actual paired-ignore-normalized documents, including component
-markup; ownership projections determine resource eligibility, not selector
-matchability. Embedded documents contribute their own normalized trees; pair
-their original bytes once before both reference discovery and matching. Never
-feed normalized ignore tokens back into the marker parser.
-
-Entry rendered-resource reasons merge by path across views, unioning selectors
-and giving `unresolved` precedence. Derived declared or renderer-proven ownership
-also attributes retained actual-invocation CSS evidence to its component owner,
-even when every saved variant excludes the stylesheet. Saved view states and
-exclusions remain unchanged; no synthetic variant is created. A screen can
-independently retain evidence only when its actual view keeps the stylesheet.
-A broad public stylesheet glob cannot bypass rule exclusion. A non-CSS rendered
-resource retains file-level matching, but a retained reason routes to each
-rendered component named in that view's `resources` ownership record, even
-without a matching saved variant. Unowned resources remain view-level evidence;
-non-public implementation source alone supplies no evidence. Resource evidence
-makes a paired view `changed`; exclusions alone do not. Diagnostic summary
-counts use those states and, for v5, the resulting `changes` membership.
-
-Baseline CSS uses the bounded Git batch reader, including optional counterpart
-reads for added/removed files. The head uses compilation outputs or the confined
-public reader. Resource bytes are cached per side/path within a classification;
-the injected parser cache additionally shares identical source text across
-paths and sides. Parsing a shared stylesheet therefore does not repeat per view.
-
-## Validation
-
-- An `excludedResources` path must be in `changedPaths` and must be a
-  stylesheet reachable from that view's document on at least one side.
-  Producers validate resource confinement during discovery; artifact rendering
-  additionally checks retained/excluded evidence against the snapshot closure.
-  The browser decoder validates the structural contract without fetching panes.
-- A path may not appear both as a dependency reason and as an excluded
-  resource on the same view.
-- `analysis.selectors` must be sorted and duplicate-free.
-- A `matched` analysis has at least one selector; `unresolved` may have none.
-- View reasons and exclusions sort uniquely by path. Entry analysis is the
-  union of its eligible saved-view and actual-invocation analyses; a view's
-  exclusion does not conflict with another view retaining the same path.
-- `analysis` may appear only on stylesheet paths. Producers guarantee analysis
-  scope during discovery through the shared `analysisOwnsStylesheet` predicate
-  and assert, before emitting a result, that every analysed reason path
-  satisfies it, failing with `review-invalid` otherwise. The shared decoder
-  validates stylesheet identity only, because scope needs the resolved
-  configuration. A path outside scope cannot appear as an analysed reason or
-  an excluded resource; there is no fallback source-path evidence field.
-- `material` is absent or `true`; a view with `material` has state `changed`,
-  `added`, or `removed`.
-- Optional fields are omitted when empty, matching the existing canonical
-  output rules.
-- Browse's lightweight classification, complete comparison generation,
-  publishing, and the selected live endpoint use one analysis implementation
-  and produce identical membership and evidence.
-
-## Shell Presentation
-
-The inspector and comparison-stage presentation of this evidence is specified
-in [CSS evidence in the shell](./mokly-css-evidence-shell.md).
-
-## Non-goals
-
-- Evaluating media, container, or supports conditions.
-- Specificity, cascade order, or override detection.
-- Inheritance beyond the custom-property keep rule.
-- Pixel or screenshot comparison.
-- Inferring ownership from CSS Modules, CSS-in-JS, or bundled output.
+Membership and presentation continue in [CSS Attribution Membership](./mokly-css-attribution-membership.md).

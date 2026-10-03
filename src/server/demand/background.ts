@@ -5,7 +5,7 @@ import type { Compilation } from "../../build/compile.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import type { BuildWarning } from "../../build/warnings.js";
 import { timingArguments } from "../../diagnostics/timings.js";
-import type { ComponentChangeSnapshot } from "../component_changes.js";
+import type { CatalogueChangeClassification } from "../classification_result.js";
 
 import { BackgroundGitHost } from "./git_host.js";
 
@@ -19,7 +19,7 @@ export class BackgroundCompilation {
   private rejectCompilation: (error: unknown) => void = () => {};
   private classification:
     | {
-        resolve(value: ComponentChangeSnapshot | undefined): void;
+        resolve(value: CatalogueChangeClassification): void;
         reject(error: unknown): void;
       }
     | undefined;
@@ -66,7 +66,7 @@ export class BackgroundCompilation {
         (message: {
           type: string;
           compilation: Compilation;
-          snapshot?: ComponentChangeSnapshot;
+          snapshot?: CatalogueChangeClassification;
           error?: string;
           warning?: BuildWarning;
         }) => {
@@ -100,7 +100,7 @@ export class BackgroundCompilation {
   classify(
     base: string,
     commit?: string,
-  ): Promise<ComponentChangeSnapshot | undefined> {
+  ): Promise<CatalogueChangeClassification> {
     if (this.closed) return Promise.resolve(undefined);
     return new Promise((resolve, reject) => {
       this.classification = { resolve, reject };

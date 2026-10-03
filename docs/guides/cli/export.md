@@ -22,9 +22,9 @@ npx mokly export --out .context/mokly-site
 
 ## What it produces
 
-Export builds first, then packages the catalogue: every screen and page, the
-real id aliases, the assets and the Git comparisons. The result is a directory
-of static files. Export never uploads anything.
+Export builds first, then packages the catalogue: one shell page per entry,
+the generated views, assets and Git comparisons. The result is a directory of
+static files. Export never uploads anything.
 
 Deploy the directory's contents at the root of an HTTP(S) origin. Hosting
 requirements are on the Catalogue page for export and hosting.
@@ -40,6 +40,13 @@ A re-export replaces only the output it owns, and restores the previous site
 if installation fails and recovery is safe. If something else recreates the
 destination while an export is running, both it and the captured backup are
 kept for you to recover by hand.
+
+Every exported path must be portable: relative slash-separated Unicode with no
+control character, backslash, colon, empty segment, `.` or `..`, and at most
+1,024 UTF-8 bytes. When a path is refused, Mokly prints it with invisible
+characters escaped so you can rename the file or folder. If the destination
+holds an export from an earlier Mokly release, move any files you added before
+deleting that folder and exporting again.
 
 ## History
 

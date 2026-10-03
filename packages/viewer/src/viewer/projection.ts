@@ -1,17 +1,17 @@
 /** Convert validated public data to the existing shell's display records. */
+
 import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type {
-  CatalogueEntry,
-  CatalogueReadModel,
-  CatalogueRoutedEntry,
-  CatalogueView,
-} from "../catalogue/types.js";
+  ShellCatalogueReadModel,
+  ShellCatalogueRoutedEntry,
+  ShellCatalogueView,
+} from "../catalogue/scoped_types.js";
+import type { CatalogueEntry } from "../catalogue/types.js";
 import type {
   ComponentViewRecord,
   ManifestComponentVariant,
 } from "../components/manifest_types.js";
-import { componentFragmentRoute } from "../components/paths.js";
-import type { ManifestEntry, ManifestV6 } from "../registry/types.js";
+import type { ManifestEntry, ManifestV8 } from "../registry/types.js";
 import { catalogueRouteEntry, createCatalogue } from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
 import { toRouteTarget } from "../shell/target.js";
@@ -20,18 +20,16 @@ import type { ShellView } from "../shell/views.js";
 import type { ViewerSelection } from "./types.js";
 
 function metadata(entry: CatalogueEntry) {
-  const details = entry.details;
   return {
     id: entry.id,
     title: entry.title,
     tags: entry.tags,
-    ...details,
-    navPath: [],
+    ...entry.details,
+    navPath: entry.navPath,
   };
 }
-export function usageView(
-  view: CatalogueView,
-): ComponentViewRecord | undefined {
+
+function usageView(view: ShellCatalogueView): ComponentViewRecord | undefined {
   if (view.usage.status !== "ready") return;
   return {
     viewport: view.viewport,
@@ -43,32 +41,9 @@ export function usageView(
     resources: [],
   };
 }
-function fragments(
-  views: readonly CatalogueView[],
-  fallback: (axis: "mobile" | "desktop", scheme: "light" | "dark") => string,
-) {
-  const paths = (scheme: "light" | "dark") =>
-    Object.fromEntries(
-      ["mobile", "desktop"].map((axis) => [
-        axis,
-        views
-          .find((v) => v.viewport === axis && v.colorScheme === scheme)
-          ?.fragmentPath?.slice(7) ??
-          fallback(axis as "mobile" | "desktop", scheme),
-      ]),
-    ) as Record<"mobile" | "desktop", string>;
-  return {
-    fragments: paths("light"),
-    ...(views.some((v) => v.colorScheme === "dark")
-      ? { darkFragments: paths("dark") }
-      : {}),
-    componentViews: views.flatMap((view) => usageView(view) ?? []),
-  };
-}
-export function displayEntry(
-  entry: CatalogueRoutedEntry,
-): Exclude<ManifestEntry, { kind: "collection" }> {
-  const base = { ...metadata(entry), route: entry.route };
+
+export function displayEntry(entry: ShellCatalogueRoutedEntry): ManifestEntry {
+  const base = { ...metadata(entry) };
   switch (entry.kind) {
     case "page":
       return { ...base, kind: "page" };
@@ -77,54 +52,43 @@ export function displayEntry(
     case "screen":
       return {
         ...base,
+        colorSchemes: entry.colorSchemes,
         kind: "screen",
-        viewports: entry.viewports,
+        componentViews: entry.views.flatMap((view) => usageView(view) ?? []),
         useCaseIds: entry.useCaseIds,
         ...(entry.address ? { address: entry.address } : {}),
         ...(entry.variantOf !== undefined
           ? { variantOf: entry.variantOf }
           : {}),
-        ...fragments(entry.views, (axis, scheme) =>
-          entry.route.replace(
-            /\.html$/,
-            `.${axis}${scheme === "dark" ? ".dark" : ""}.html`,
-          ),
-        ),
       };
     case "component":
+      if ("variantOf" in entry)
+        return {
+          ...base,
+          colorSchemes: entry.colorSchemes,
+          componentViews: entry.views.flatMap((view) => usageView(view) ?? []),
+          kind: "component",
+          variantOf: entry.variantOf,
+          props: entry.props,
+          suppliedSlots: entry.suppliedSlots,
+        } as ManifestComponentVariant;
       return {
         ...base,
+        colorSchemes: entry.colorSchemes,
         kind: "component",
-        viewports: ["mobile", "desktop"],
         propSchema: entry.propSchema,
         slots: entry.slots,
         controls: entry.controls,
-        variants: entry.variants.map((variant): ManifestComponentVariant => ({
-          id: variant.id,
-          title: variant.title,
-          ...(variant.description !== undefined
-            ? { description: variant.description }
-            : {}),
-          props: variant.props,
-          suppliedSlots: variant.suppliedSlots,
-          ...fragments(variant.views, (axis, scheme) =>
-            componentFragmentRoute(entry.route, variant.id, axis, scheme),
-          ),
-        })),
       };
   }
 }
-export function viewerCatalogue(model: CatalogueReadModel) {
-  const manifest: ManifestV6 = {
-    schemaVersion: 6,
+
+export function viewerCatalogue(model: ShellCatalogueReadModel) {
+  const manifest: ManifestV8 = {
+    schemaVersion: 8,
     generatedBy: "mokly",
     sourceFiles: [],
     entries: [
-      ...model.collections.map((entry) => ({
-        ...metadata(entry),
-        kind: "collection" as const,
-        childIds: entry.childIds,
-      })),
       ...[
         ...model.screens,
         ...model.pages,
@@ -136,17 +100,17 @@ export function viewerCatalogue(model: CatalogueReadModel) {
   return {
     ...createCatalogue(
       manifest,
-      model.removedEntries.map(({ entry, ancestors, snapshotId }) => ({
+      model.removedEntries.map(({ entry, snapshotId }) => ({
         entry: displayEntry(entry),
-        ancestors,
         ...(snapshotId ? { snapshotId } : {}),
       })),
     ),
     publicModel: model,
   };
 }
+
 export function viewerContext(
-  model: CatalogueReadModel,
+  model: ShellCatalogueReadModel,
   selection: ViewerSelection,
 ): ShellContext {
   const resolved =
@@ -166,11 +130,11 @@ export function viewerContext(
     ...(model.changesStatus === "disabled"
       ? {}
       : { changesStatus: model.changesStatus }),
-    ...(selected ? { activeRoute: selected.route } : {}),
+    ...(selected ? { activeId: selected.id } : {}),
     ...(resolved?.snapshotId ? { snapshotId: resolved.snapshotId } : {}),
     ...(model.changesStatus === "ready"
       ? {
-          changedRoutes: [
+          changedIds: [
             ...model.screens,
             ...model.pages,
             ...model.useCases,
@@ -181,11 +145,12 @@ export function viewerContext(
               (entry) =>
                 entry.changes.status === "ready" && entry.changes.included,
             )
-            .map((entry) => entry.route),
+            .map((entry) => entry.id),
         }
       : {}),
   };
 }
+
 export function viewerView(
   catalogue: ReturnType<typeof viewerCatalogue>,
   selection: ViewerSelection,
@@ -200,7 +165,7 @@ export function viewerView(
     : undefined;
   const entry = catalogue.publicModel
     ? selected
-      ? catalogueRouteEntry(catalogue, selected.entry.route)
+      ? catalogueRouteEntry(catalogue, selected.entry.id, selected.entry.kind)
       : undefined
     : selection.snapshotId === undefined
       ? catalogue.byId.get(selection.screenId)

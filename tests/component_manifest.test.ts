@@ -4,39 +4,48 @@ import { test } from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 import {
-  parseHistoricalManifest,
   parseManifest,
+  parseHistoricalManifest,
 } from "../dist/registry/manifest.js";
-import type { ManifestComponent } from "../packages/viewer/dist/components/manifest_types.js";
 import type {
-  ManifestV6,
-  ManifestScreenV4,
+  ManifestComponent,
+  ManifestComponentVariant,
+  ComponentViewRecord,
+} from "../packages/viewer/dist/components/manifest_types.js";
+import type {
+  ManifestV8,
+  ManifestScreen,
 } from "../packages/viewer/dist/registry/types.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
+type ComponentManifestScreen = ManifestScreen & {
+  componentViews: readonly ComponentViewRecord[];
+};
+
 async function example(t: {
   after: (fn: () => Promise<void>) => void;
-}): Promise<ManifestV6> {
+}): Promise<ManifestV8> {
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const result = await compileCatalogue(await loadConfig(fixture.root));
-  assert.equal(result.manifest.schemaVersion, 6);
-  return result.manifest as ManifestV6;
+  assert.equal(result.manifest.schemaVersion, 8);
+  return result.manifest;
 }
 
-test("manifest v6 rejects removed fields, broken identities, ownership references and props", async (t) => {
+test("manifest v8 rejects broken identities, ownership references and props before readers can suppress changes", async (t) => {
   const original = await example(t);
   const edits: readonly [
     string,
     (
-      value: ManifestV6,
-      screen: ManifestScreenV4,
+      value: ManifestV8,
+      screen: ComponentManifestScreen,
       component: ManifestComponent,
+      variant: ManifestComponentVariant,
     ) => void,
   ][] = [
-    ["unknown schema", (value) => Object.assign(value, { schemaVersion: 7 })],
+    ["unknown schema", (value) => Object.assign(value, { schemaVersion: 9 })],
     [
       "removed dependency field",
       (_v, screen) => Object.assign(screen, { dependencies: [] }),
@@ -134,23 +143,21 @@ test("manifest v6 rejects removed fields, broken identities, ownership reference
       },
     ],
     [
-      "unsafe fragment",
-      (_v, _s, component) =>
-        Object.assign(component.variants[0]!.fragments, {
-          mobile: "../source.html",
+      "stored variant fragments",
+      (_v, _s, _component, variant) =>
+        Object.assign(variant, {
+          fragments: { mobile: "../source.html", desktop: "source.html" },
         }),
     ],
     [
-      "noncanonical variant fragment",
-      (_v, _s, component) =>
-        Object.assign(component.variants[0]!.fragments, {
-          mobile: "components/action.mobile.html",
-        }),
+      "invalid variant schemes",
+      (_v, _s, _component, variant) =>
+        Object.assign(variant, { colorSchemes: ["dark"] }),
     ],
     [
       "bad saved props",
-      (_v, _s, component) =>
-        Object.assign(component.variants[0]!, {
+      (_v, _s, _component, variant) =>
+        Object.assign(variant, {
           props: { label: ["number", "2"] },
         }),
     ],
@@ -174,17 +181,23 @@ test("manifest v6 rejects removed fields, broken identities, ownership reference
   for (const [name, edit] of edits) {
     const value = structuredClone(original);
     const screen = value.entries.find(
-      (entry): entry is ManifestScreenV4 => entry.kind === "screen",
+      (entry): entry is ComponentManifestScreen =>
+        entry.kind === "screen" && entry.componentViews !== undefined,
     )!;
     const component = value.entries.find(
-      (entry): entry is ManifestComponent => entry.kind === "component",
+      (entry): entry is ManifestComponent =>
+        entry.kind === "component" && !("variantOf" in entry),
     )!;
-    edit(value, screen, component);
+    const variant = value.entries.find(
+      (entry): entry is ManifestComponentVariant =>
+        entry.kind === "component" && "variantOf" in entry,
+    )!;
+    edit(value, screen, component, variant);
     assert.throws(() => parseManifest(value), Error, name);
   }
 });
 
-test("historical reader still rejects removed fields on v6 manifests", async (context) => {
+test("historical reader still rejects removed fields on current v8 manifests", async (context) => {
   const original = await example(context);
   for (const field of [
     "dependencies",

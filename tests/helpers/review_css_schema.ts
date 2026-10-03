@@ -11,21 +11,21 @@ export function cssSchemaFiles(): Map<string, string> {
         [
           [`snapshots/${side}/shared.css`, ".auth { color: red; }"],
           [
-            `snapshots/${side}/mobile.html`,
-            `<!doctype html><link rel="stylesheet" href="shared.css"><button class="auth">${side === "before" ? "Sign in" : "Continue"}</button>`,
+            `snapshots/${side}/screens/auth.mobile.html`,
+            `<!doctype html><link rel="stylesheet" href="../shared.css"><button class="auth">${side === "before" ? "Sign in" : "Continue"}</button>`,
           ],
           [
-            `snapshots/${side}/desktop.html`,
-            '<!doctype html><link rel="stylesheet" href="shared.css"><p>Guide</p>',
+            `snapshots/${side}/screens/auth.desktop.html`,
+            '<!doctype html><link rel="stylesheet" href="../shared.css"><p>Guide</p>',
           ],
         ] as [string, string][],
     ),
   );
 }
 
-/** Shared server/browser fixtures cover both current comparison versions. */
-export function cssSchemaFixture(version: 4 | 5): ReviewResult {
-  const address = { id: "auth", route: "screens/auth.html", title: "Sign in" };
+/** Shared server/browser schema fixture uses the identity-only v5 result. */
+export function cssSchemaFixture(): ReviewResult {
+  const address = { id: "auth", title: "Sign in" };
   const views: ViewReview[] = [
     {
       viewport: "mobile",
@@ -33,8 +33,6 @@ export function cssSchemaFixture(version: 4 | 5): ReviewResult {
       state: "changed",
       material: true,
       ignoredIds: [],
-      beforePath: "snapshots/before/mobile.html",
-      afterPath: "snapshots/after/mobile.html",
       reasons: [
         {
           kind: "dependency",
@@ -48,8 +46,6 @@ export function cssSchemaFixture(version: 4 | 5): ReviewResult {
       colorScheme: "light",
       state: "unchanged",
       ignoredIds: [],
-      beforePath: "snapshots/before/desktop.html",
-      afterPath: "snapshots/after/desktop.html",
       excludedResources: [
         { path: "mockups/shared.css", reason: "no-matching-rule" },
       ],
@@ -66,21 +62,19 @@ export function cssSchemaFixture(version: 4 | 5): ReviewResult {
     state: "changed" as const,
     views,
   };
-  return version === 4
-    ? { ...common, schemaVersion: 4, screens: [screen] }
-    : {
-        ...common,
-        schemaVersion: 5,
-        screens: [{ ...screen, before: address, after: address }],
-        components: [],
-        affectedConsumers: [],
-        changes: [
-          {
-            kind: "screen",
-            before: address,
-            after: address,
-            reasons: views[0]!.reasons!,
-          },
-        ],
-      };
+  return {
+    ...common,
+    schemaVersion: 5,
+    screens: [{ ...screen, before: address, after: address }],
+    components: [],
+    affectedConsumers: [],
+    changes: [
+      {
+        kind: "screen",
+        before: address,
+        after: address,
+        reasons: views[0]!.reasons!,
+      },
+    ],
+  };
 }

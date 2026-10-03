@@ -1,10 +1,20 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import type { Compilation } from "../dist/build/compile.js";
+import type { ResolvedConfig } from "../dist/config/types.js";
 import { compareReview } from "../dist/review/compare.js";
 import { validateComponentReviewSources } from "../dist/review/component_result_sources.js";
-import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
+import { parseReviewResult } from "../packages/viewer/dist/data.js";
 
+import {
+  classifyFixtureWithSources,
+  compilationFiles,
+} from "./helpers/component_fast_path.js";
+import {
+  pathCatalogueSource,
+  pathEvidenceFixture,
+} from "./helpers/component_path_evidence_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
 test("component comparison schemas reject invalid membership, sides, references and unknown fields", async (t) => {
@@ -26,11 +36,18 @@ test("component comparison schemas reject invalid membership, sides, references 
     parseReviewResult(JSON.parse(JSON.stringify(result))),
     result,
   );
+  const classified = await recordedSources(
+    fixture.before,
+    fixture.after,
+    fixture.config,
+    fixture.changedPaths,
+  );
   validateComponentReviewSources(
     result,
     fixture.before.manifest,
     fixture.after.manifest,
-    new Set(["action"]),
+    classified.implementationImpact,
+    classified.sources,
   );
   for (const tamper of [
     (value: typeof result) =>
@@ -72,7 +89,8 @@ test("component comparison schemas reject invalid membership, sides, references 
         invalidSource,
         fixture.before.manifest,
         fixture.after.manifest,
-        new Set(["action"]),
+        classified.implementationImpact,
+        classified.sources,
       ),
     /review/i,
   );
@@ -83,11 +101,113 @@ test("component comparison schemas reject invalid membership, sides, references 
           { ...result, affectedConsumers: retained },
           fixture.before.manifest,
           fixture.after.manifest,
-          new Set(["action"]),
+          classified.implementationImpact,
+          classified.sources,
         ),
       /review/i,
     );
   }
+});
+
+test("review readers keep plain kebab-case ignore ids such as device names", async (t) => {
+  const fixture = await componentReviewFixture(t, (source) => source);
+  const { result } = await compareReview(
+    fixture.after,
+    fixture.config,
+    fixture.git,
+    "main",
+  );
+  const value = structuredClone(result);
+  const view = value.screens[0]!.views[0]!;
+  view.ignoredIds = ["aux"];
+  value.ignoredImpact = [
+    {
+      id: "aux",
+      count: 1,
+      viewport: view.viewport,
+      colorScheme: view.colorScheme,
+    },
+  ];
+  assert.doesNotThrow(() => parseReviewResult(value));
+});
+
+test("source validation rejects a changed path supported only by a shared-impact glob", async (t) => {
+  const fixture = await pathEvidenceFixture(t, {
+    beforeSource: pathCatalogueSource(),
+    changedPaths: [],
+    sharedGlobs: ["src/tokens/**"],
+  });
+  const screen = fixture.result.screens.find((entry) => entry.id === "home")!;
+  const tampered = {
+    ...fixture.result,
+    changedPaths: ["src/tokens/theme.ts"],
+    changes: [
+      {
+        kind: "screen" as const,
+        before: screen.before!,
+        after: screen.after!,
+        reasons: [{ kind: "dependency" as const, path: "src/tokens/theme.ts" }],
+      },
+    ],
+  };
+
+  const classified = await recordedSources(
+    fixture.before,
+    fixture.after,
+    fixture.config,
+    fixture.result.changedPaths,
+  );
+  assert.doesNotThrow(() => parseReviewResult(tampered));
+  assert.throws(
+    () =>
+      validateComponentReviewSources(
+        tampered,
+        fixture.before.manifest,
+        fixture.after.manifest,
+        classified.implementationImpact,
+        classified.sources,
+      ),
+    /review/i,
+  );
+});
+
+test("source validation rejects a forged entry reason repeated on its view", async (t) => {
+  const changed = "src/tokens/theme.ts";
+  const fixture = await pathEvidenceFixture(t, {
+    beforeSource: pathCatalogueSource(),
+    changedPaths: [changed],
+    sharedGlobs: ["src/tokens/**"],
+  });
+  assert.deepEqual(fixture.result.changes, []);
+  const tampered = structuredClone(fixture.result);
+  const screen = tampered.screens.find((entry) => entry.id === "home")!;
+  screen.views[0]!.reasons = [{ kind: "dependency", path: changed }];
+  tampered.changes = [
+    {
+      kind: "screen",
+      before: screen.before!,
+      after: screen.after!,
+      reasons: [{ kind: "dependency", path: changed }],
+    },
+  ];
+  const classified = await recordedSources(
+    fixture.before,
+    fixture.after,
+    fixture.config,
+    fixture.result.changedPaths,
+  );
+  assert.doesNotThrow(() => parseReviewResult(tampered));
+  assert.throws(
+    () =>
+      validateComponentReviewSources(
+        tampered,
+        fixture.before.manifest,
+        fixture.after.manifest,
+        classified.implementationImpact,
+        classified.sources,
+      ),
+    /dependency reason has no source evidence/,
+  );
 });
 
 for (const [name, change] of [
@@ -110,10 +230,34 @@ for (const [name, change] of [
     if (result.schemaVersion !== 5) return;
     assert.equal(result.changes.length, 1);
     assert.deepEqual(result.affectedConsumers, []);
+    const classified = await recordedSources(
+      fixture.before,
+      fixture.after,
+      fixture.config,
+      fixture.changedPaths,
+    );
     validateComponentReviewSources(
       result,
       fixture.before.manifest,
       fixture.after.manifest,
-      new Set(),
+      classified.implementationImpact,
+      classified.sources,
     );
   });
+
+/** Re-run the real classifier to inspect its sources independently of tampered output. */
+function recordedSources(
+  before: Compilation,
+  after: Compilation,
+  config: ResolvedConfig,
+  changedPaths: readonly string[],
+) {
+  return classifyFixtureWithSources({
+    before: before.manifest,
+    after: after.manifest,
+    beforeFiles: compilationFiles(before),
+    afterFiles: compilationFiles(after),
+    config,
+    changedPaths,
+  });
+}

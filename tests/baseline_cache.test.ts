@@ -12,7 +12,55 @@ import {
   baselineManifest,
 } from "./helpers/baseline_fixture.js";
 
-test("a former Mokabook manifest remains valid rebuilt history", async () => {
+test("older nested layouts are adopted once and retain their original cache version", async () => {
+  const fixture = baselineFixture();
+  const run = fixture.runner.run;
+  fixture.runner.run = async (command) => {
+    const result = await run(command);
+    if (command.argv[0] !== "git") {
+      await fixture.fs.remove(
+        path.join(command.cwd, "mockups/mokly-manifest.json"),
+      );
+      await fixture.fs.write(
+        path.join(command.cwd, "mockups/mokly-manifest.json"),
+        Buffer.from(
+          JSON.stringify({
+            schemaVersion: 6,
+            generatedBy: "mokly",
+            sourceFiles: ["entries/home.mockup.tsx"],
+            entries: [
+              {
+                id: "home",
+                kind: "screen",
+                title: "Home",
+                description: "Home screen",
+                sourcePath: "entries/home.mockup.tsx",
+                navPath: [],
+                relatedDocs: [],
+                useCaseIds: [],
+                route: "legacy/nested/home.html",
+                fragments: {
+                  mobile: "legacy/nested/home.mobile.html",
+                  desktop: "legacy/nested/home.desktop.html",
+                },
+              },
+            ],
+          }),
+        ),
+      );
+    }
+    return result;
+  };
+  const first = await fixture.builder.build(fixture.request);
+  assert.equal(first.marker.manifestVersion, 6);
+  const count = fixture.calls.length;
+  const reused = await fixture.builder.build(fixture.request);
+  assert.equal(reused.cacheHit, true);
+  assert.equal(reused.marker.manifestVersion, 6);
+  assert.equal(fixture.calls.length, count);
+});
+
+test("an earlier manifest sentinel is retained for the compatibility gate", async () => {
   const fixture = baselineFixture();
   const run = fixture.runner.run;
   fixture.runner.run = async (command) => {
@@ -24,17 +72,21 @@ test("a former Mokabook manifest remains valid rebuilt history", async () => {
       await fixture.fs.write(
         path.join(command.cwd, "mockups/mokabook-manifest.json"),
         Buffer.from(
-          JSON.stringify({ ...baselineManifest, generatedBy: "mokabook" }),
+          JSON.stringify({
+            ...baselineManifest,
+            schemaVersion: 7,
+            generatedBy: "mokabook",
+          }),
         ),
       );
     }
     return result;
   };
   const result = await fixture.builder.build(fixture.request);
-  assert.equal(result.marker.manifestVersion, 5);
+  assert.equal(result.marker.manifestVersion, 7);
 });
 
-test("current v6 baselines remain reusable after marker validation", async () => {
+test("current v8 baselines remain reusable after marker validation", async () => {
   const fixture = baselineFixture();
   const run = fixture.runner.run;
   fixture.runner.run = async (command) => {
@@ -45,19 +97,19 @@ test("current v6 baselines remain reusable after marker validation", async () =>
       );
       await fixture.fs.write(
         path.join(command.cwd, "mockups/mokly-manifest.json"),
-        Buffer.from(JSON.stringify({ ...baselineManifest, schemaVersion: 6 })),
+        Buffer.from(JSON.stringify({ ...baselineManifest, schemaVersion: 8 })),
       );
     }
     return result;
   };
   const first = await fixture.builder.build(fixture.request);
-  assert.equal(first.marker.manifestVersion, 6);
+  assert.equal(first.marker.manifestVersion, 8);
   const second = await fixture.builder.build(fixture.request);
   assert.equal(second.cacheHit, true);
   assert.deepEqual(second.marker, first.marker);
 });
 
-test("legacy rebuilt manifests retain version 2 and require explicit compatibility", async () => {
+test("the oldest manifest sentinel is cached without parsing its contents", async () => {
   const fixture = baselineFixture();
   const run = fixture.runner.run;
   fixture.runner.run = async (command) => {
@@ -73,21 +125,15 @@ test("legacy rebuilt manifests retain version 2 and require explicit compatibili
             schemaVersion: 2,
             generatedBy: "mockbook",
             entries: [],
-            legacyPages: [],
           }),
         ),
       );
     }
     return result;
   };
-  const request = { ...fixture.request, allowManifestV2: true };
-  const result = await fixture.builder.build(request);
+  const result = await fixture.builder.build(fixture.request);
   assert.equal(result.marker.manifestVersion, 2);
-  assert.equal((await fixture.builder.build(request)).cacheHit, true);
-  await assert.rejects(
-    fixture.builder.build({ ...fixture.request, commit: "b".repeat(40) }),
-    { code: "baseline-output-invalid" },
-  );
+  assert.equal((await fixture.builder.build(fixture.request)).cacheHit, true);
 });
 
 test("invalid cache markers are partial entries and cannot hide corrupt manifests", async () => {

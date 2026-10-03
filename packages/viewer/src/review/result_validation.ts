@@ -1,11 +1,11 @@
 import { canonicalJson } from "../components/data.js";
 
 import type { ReviewResultV5 } from "./component_types.js";
+import { affectedConsumerOrderKey } from "./order.js";
 import {
   requireEqual,
   requireOrdered,
   reviewArray,
-  reviewId,
   reviewInvalid,
   reviewObject,
   reviewPath,
@@ -19,7 +19,7 @@ import {
 } from "./result_records.js";
 import type { ReviewResult } from "./types.js";
 
-/** Shared browser/server decoder preserves material flags and validates each view's evidence. */
+/** Decode the identity-only v4 result shared by every catalogue. */
 export function parseReviewResult(value: unknown): ReviewResult {
   try {
     return validateResult(value);
@@ -29,15 +29,15 @@ export function parseReviewResult(value: unknown): ReviewResult {
     );
   }
 }
+
 function validateResult(value: unknown): ReviewResult {
   if (
     !value ||
     typeof value !== "object" ||
     !("schemaVersion" in value) ||
-    (value.schemaVersion !== 4 && value.schemaVersion !== 5)
+    value.schemaVersion !== 5
   )
-    reviewInvalid("unsupported result version");
-  const version = value.schemaVersion;
+    reviewInvalid("unsupported schemaVersion");
   const result = reviewObject(value, [
     "schemaVersion",
     "baseCommit",
@@ -45,25 +45,88 @@ function validateResult(value: unknown): ReviewResult {
     "changedPaths",
     "ignoredImpact",
     "screens",
-    ...(version === 5 ? ["components", "changes", "affectedConsumers"] : []),
+    "components",
+    "changes",
+    "affectedConsumers",
   ]);
   if (!/^[a-f0-9]{40,64}$/.test(reviewString(result.baseCommit)))
     reviewInvalid("invalid base commit");
   reviewString(result.baseRef);
   const changed = reviewStrings(result.changedPaths, reviewPath);
   const screens = reviewArray(result.screens).map((screen) =>
-    validateReviewScreen(screen, version, false, changed),
+    validateReviewScreen(screen, false, changed),
   );
-  requireOrdered(screens, (screen) => String(screen.route));
+  requireOrdered(screens, (screen) => String(screen.id));
+  const components = reviewArray(result.components).map((component) =>
+    validateReviewScreen(component, true, changed),
+  );
+  requireOrdered(components, (component) => String(component.id));
+  const changes = reviewArray(result.changes).map((entry) =>
+    validateChangedEntry(entry, changed),
+  );
+  requireOrdered(changes, (change) => {
+    const preferred = (change.after ?? change.before) as Record<
+      string,
+      unknown
+    >;
+    return `${String(change.kind)}\u0000${String(preferred.id)}`;
+  });
+  const changeIds = new Set<string>();
+  for (const change of changes) {
+    const preferred = (change.after ?? change.before) as Record<
+      string,
+      unknown
+    >;
+    const id = String(preferred.id);
+    if (changeIds.has(id)) reviewInvalid("duplicate Changes entry id");
+    changeIds.add(id);
+    if (change.kind === "use-case") continue;
+    const record =
+      change.kind === "screen"
+        ? screens.find((screen) => screen.id === id)
+        : components.find((component) => component.id === id);
+    const variant =
+      change.kind === "component" && !record
+        ? components
+            .flatMap(
+              (component) => component.variants as Record<string, unknown>[],
+            )
+            .find((candidate) => candidate.id === id)
+        : undefined;
+    if (!record && !variant)
+      reviewInvalid("changed entry has no result record");
+    if (record)
+      requireEqual(
+        { before: record.before, after: record.after },
+        { before: change.before, after: change.after },
+      );
+    if (variant && (variant.title !== preferred.title || variant.id !== id))
+      reviewInvalid("changed variant address differs from its result");
+  }
+  const affected = reviewArray(result.affectedConsumers).map(validateAffected);
+  requireOrdered(affected, (item) =>
+    affectedConsumerOrderKey(
+      item as unknown as ReviewResultV5["affectedConsumers"][number],
+    ),
+  );
+  validateIgnoredImpact(result.ignoredImpact, screens);
+  validateResultReferences(value as ReviewResultV5);
+  return value as ReviewResult;
+}
+
+function validateIgnoredImpact(
+  value: unknown,
+  screens: readonly Record<string, unknown>[],
+): void {
   const ignoredKeys: string[] = [];
-  for (const raw of reviewArray(result.ignoredImpact)) {
+  for (const raw of reviewArray(value)) {
     const impact = reviewObject(raw, [
       "viewport",
       "colorScheme",
       "id",
       "count",
     ]);
-    reviewId(impact.id);
+    reviewString(impact.id);
     if (
       !["mobile", "desktop"].includes(String(impact.viewport)) ||
       !["light", "dark"].includes(String(impact.colorScheme)) ||
@@ -72,56 +135,31 @@ function validateResult(value: unknown): ReviewResult {
     )
       reviewInvalid("invalid ignored impact");
     ignoredKeys.push(
-      `${impact.viewport === "mobile" ? 0 : 1}:${impact.colorScheme === "light" ? 0 : 1}:${impact.id}`,
+      `${impact.viewport === "mobile" ? 0 : 1}\u0000${impact.colorScheme === "light" ? 0 : 1}\u0000${impact.id}`,
     );
   }
   requireOrdered(ignoredKeys, (key) => key);
-  if (version === 5) {
-    const components = reviewArray(result.components).map((component) =>
-      validateReviewScreen(component, 5, true, changed),
-    );
-    requireOrdered(components, (component) => String(component.id));
-    const changes = reviewArray(result.changes).map((entry) =>
-      validateChangedEntry(entry, changed),
-    );
-    requireOrdered(changes, (entry) => {
-      const preferred = (entry.after ?? entry.before) as Record<
-        string,
-        unknown
-      >;
-      return `${preferred.route}:${entry.kind}:${preferred.id}`;
-    });
-    const routes = new Set<string>();
-    for (const change of changes) {
-      const preferred = (change.after ?? change.before) as Record<
-        string,
-        unknown
-      >;
-      if (routes.has(String(preferred.route)))
-        reviewInvalid("duplicate routed Changes entry");
-      routes.add(String(preferred.route));
-      if (change.kind === "use-case") continue;
-      const record =
-        change.kind === "screen"
-          ? screens.find((screen) => screen.route === preferred.route)
-          : components.find((component) => component.id === preferred.id);
-      if (!record) reviewInvalid("changed entry has no result record");
-      requireEqual(
-        { before: record.before, after: record.after },
-        { before: change.before, after: change.after },
+  const ignored = new Map<string, number>();
+  for (const screen of screens)
+    for (const view of screen.views as Record<string, unknown>[])
+      for (const id of view.ignoredIds as string[]) {
+        const key = canonicalJson([view.viewport, view.colorScheme, id]);
+        ignored.set(key, (ignored.get(key) ?? 0) + 1);
+      }
+  if (
+    reviewArray(value).length !== ignored.size ||
+    reviewArray(value).some((raw) => {
+      const item = raw as Record<string, unknown>;
+      return (
+        ignored.get(
+          canonicalJson([item.viewport, item.colorScheme, item.id]),
+        ) !== item.count
       );
-    }
-    const affected = reviewArray(result.affectedConsumers).map(
-      validateAffected,
-    );
-    requireOrdered(affected, (item) => {
-      const consumer = item.consumer as Record<string, unknown>;
-      return `${item.changedComponentId}:${consumer.kind}:${consumer.route ?? consumer.id}`;
-    });
-    validateResultReferences(value as ReviewResultV5);
-  }
-  return value as ReviewResult;
+    })
+  )
+    reviewInvalid("ignored impact does not match view evidence");
 }
+
 function validateResultReferences(result: ReviewResultV5): void {
   const changed = new Set(
     result.changes
@@ -135,9 +173,7 @@ function validateResultReferences(result: ReviewResultV5): void {
       const context = evidence.context;
       const owner =
         context.kind === "screen"
-          ? result.screens.find(
-              (screen) => screen.route === context.entry.route,
-            )
+          ? result.screens.find((screen) => screen.id === context.entry.id)
           : result.components.find(
               (component) => component.id === context.entry.id,
             );
@@ -156,7 +192,8 @@ function validateResultReferences(result: ReviewResultV5): void {
           (view) =>
             view.viewport === context.viewport &&
             view.colorScheme === context.colorScheme &&
-            view[`${evidence.side}Path`],
+            (view.state !== "added" || evidence.side === "after") &&
+            (view.state !== "removed" || evidence.side === "before"),
         )
       )
         reviewInvalid("affected context view is missing");
@@ -172,16 +209,12 @@ function validateResultReferences(result: ReviewResultV5): void {
       if (
         affected.consumer.kind === "screen"
           ? context.kind !== "screen" ||
-            affected.consumer.route !== context.entry.route
+            affected.consumer.id !== context.entry.id
           : affected.consumer.id === affected.changedComponentId ||
             (affected.consumer.id !== context.entry.id &&
               !evidence.via
                 .slice(0, -1)
-                .some(
-                  (edge) =>
-                    edge.componentId ===
-                    (affected.consumer as { id: string }).id,
-                ))
+                .some((edge) => edge.componentId === affected.consumer.id))
       )
         reviewInvalid("affected consumer does not own this chain");
     }
@@ -193,25 +226,8 @@ function validateResultReferences(result: ReviewResultV5): void {
         !result.changes.some(
           (screen) =>
             screen.kind === "screen" &&
-            [screen.before?.route, screen.after?.route].includes(reason.route),
+            [screen.before?.id, screen.after?.id].includes(reason.id),
         )
       )
         reviewInvalid("use-case reason names a screen without a direct change");
-  const ignored = new Map<string, number>();
-  for (const screen of result.screens)
-    for (const view of screen.views)
-      for (const id of view.ignoredIds) {
-        const key = canonicalJson([view.viewport, view.colorScheme, id]);
-        ignored.set(key, (ignored.get(key) ?? 0) + 1);
-      }
-  if (
-    result.ignoredImpact.length !== ignored.size ||
-    result.ignoredImpact.some(
-      (item) =>
-        ignored.get(
-          canonicalJson([item.viewport, item.colorScheme, item.id]),
-        ) !== item.count,
-    )
-  )
-    reviewInvalid("ignored impact does not match view evidence");
 }

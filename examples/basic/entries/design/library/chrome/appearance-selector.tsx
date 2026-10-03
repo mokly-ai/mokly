@@ -37,11 +37,23 @@ export const appearanceSelector = defineComponent({
   },
   render: AppearanceSelectorView,
   variants: [
-    { id: "auto", title: "Auto", props: { value: "auto", compact: false } },
-    { id: "light", title: "Light", props: { value: "light", compact: false } },
-    { id: "dark", title: "Dark", props: { value: "dark", compact: false } },
     {
-      id: "compact",
+      id: "design-ui-appearance-selector-auto",
+      title: "Auto",
+      props: { value: "auto", compact: false },
+    },
+    {
+      id: "design-ui-appearance-selector-light",
+      title: "Light",
+      props: { value: "light", compact: false },
+    },
+    {
+      id: "design-ui-appearance-selector-dark",
+      title: "Dark",
+      props: { value: "dark", compact: false },
+    },
+    {
+      id: "design-ui-appearance-selector-compact",
       title: "Compact",
       props: { value: "dark", compact: true },
     },

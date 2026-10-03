@@ -2,15 +2,12 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
-import {
-  resolveCatalogueRoute,
-  resolveCatalogueSelection,
-} from "../packages/viewer/src/catalogue/entry_selection.js";
+import { resolveCatalogueEntry } from "../packages/viewer/src/catalogue/entry_selection.js";
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import type { CatalogueReadModel } from "../packages/viewer/src/catalogue/types.js";
 import type {
   ManifestScreen,
-  ManifestV6,
+  ManifestV8,
 } from "../packages/viewer/src/registry/types.js";
 import type { ReviewResultV5 } from "../packages/viewer/src/review/component_types.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
@@ -28,14 +25,14 @@ type CurrentManifestScreen = ManifestScreen;
 const BASELINE_A = "a".repeat(40);
 const BASELINE_B = "b".repeat(40);
 const GENERATION = "c".repeat(64);
-const oldScreen = screen("shared-screen", "Old screen", "screens/old.html");
+const oldScreen = screen("removed-screen", "Old screen", "screens/old.html");
 const currentScreen = screen(
-  "shared-screen",
+  "current-screen",
   "Current screen",
-  "screens/current.html",
+  "screens/current-screen.html",
 );
 const baseline = manifest([oldScreen]);
-const current = manifest([currentScreen]);
+const current = { ...manifest([currentScreen]), schemaVersion: 8 as const };
 
 test("projection publishes stable per-record identity before comparison generation", () => {
   const live = project(BASELINE_A);
@@ -91,7 +88,13 @@ test("reader safely derives older generation-backed identities", () => {
   value.comparisonUrl = null;
   const identityLess = readCatalogue(value);
   assert.equal(identityLess.removedEntries[0]?.snapshotId, undefined);
-  assert.equal(resolveCatalogueRoute(identityLess, oldScreen.route), undefined);
+  assert.equal(
+    resolveCatalogueEntry(identityLess, {
+      id: oldScreen.id,
+      kind: oldScreen.kind,
+    })?.entry.id,
+    oldScreen.id,
+  );
 });
 
 test("reader rejects malformed and duplicate published identities", () => {
@@ -104,46 +107,31 @@ test("reader rejects malformed and duplicate published identities", () => {
     ...structuredClone(duplicated.removedEntries[0]),
     entry: {
       ...structuredClone(duplicated.removedEntries[0].entry),
-      route: "screens/another-old.html",
+      id: "another-old",
     },
   });
   assert.throws(() => readCatalogue(duplicated), /duplicate/i);
 });
 
-test("exact selection resolves every routed kind independently of stable id", () => {
+test("reader rejects current and removed records sharing an id", () => {
   const fixture = readCatalogue(
-    JSON.parse(requireFixture("../docs/protocol/fixtures/catalogue-v2.json")),
+    JSON.parse(requireFixture("../docs/protocol/fixtures/catalogue-v4.json")),
   );
-  const current = [
-    fixture.screens[0]!,
-    fixture.pages[0]!,
-    fixture.useCases[0]!,
-    fixture.components[0]!,
-  ];
-  const removedEntries = current.map((entry, index) => ({
-    ancestors: [],
+  const current = fixture.screens[0]!;
+  const removed = {
     entry: {
-      ...structuredClone(entry),
-      route: `history/${entry.kind}-${index}.html`,
+      ...structuredClone(current),
+      title: `Historical ${current.title}`,
     },
-    snapshotId: String(index + 1).repeat(64),
-  }));
-  const model = { ...fixture, removedEntries };
-
-  for (const record of removedEntries) {
-    assert.equal(
-      resolveCatalogueSelection(model, record.entry.id)?.entry.route,
-      current.find(({ id }) => id === record.entry.id)?.route,
-    );
-    assert.equal(
-      resolveCatalogueSelection(model, record.entry.id, record.snapshotId)
-        ?.entry.route,
-      record.entry.route,
-    );
-  }
+    snapshotId: "f".repeat(64),
+  };
+  assert.throws(
+    () => readCatalogue({ ...fixture, removedEntries: [removed] }),
+    /current|removed|same-id/i,
+  );
 });
 
-test("historical workspace resolution owns the old route and Removed status", () => {
+test("historical workspace resolution owns the old identity and Removed status", () => {
   const model = project(BASELINE_A);
   const catalogue = viewerCatalogue(model);
   const historical = model.removedEntries[0]!;
@@ -154,9 +142,9 @@ test("historical workspace resolution owns the old route and Removed status", ()
   const workspace = publicWorkspace(model, displayed);
 
   const selected = catalogue.byId.get(currentScreen.id);
-  assert.ok(selected && selected.kind !== "collection");
-  assert.equal(selected.route, currentScreen.route);
-  assert.equal(workspace.entry.route, oldScreen.route);
+  assert.ok(selected);
+  assert.equal(selected.id, currentScreen.id);
+  assert.equal(workspace.entry.id, oldScreen.id);
   assert.equal(workspace.entry.title, oldScreen.title);
   assert.equal(workspace.removed, true);
   assert.equal(workspace.status, "Removed");
@@ -182,7 +170,7 @@ function projectionInput(commit: string | undefined) {
   return {
     catalogue: createCatalogue(current, removedEntries),
     changesStatus: "ready" as const,
-    changedRoutes: removedEntries.map(({ entry }) => entry.route),
+    changedIds: removedEntries.map(({ entry }) => entry.id),
     configPath: "mokly.config.ts",
     comparisonUrl: null,
     ...(commit
@@ -220,11 +208,11 @@ function review(baseCommit: string): ReviewResultV5 {
   };
 }
 
-function manifest(entries: readonly CurrentManifestScreen[]): ManifestV6 {
+function manifest(entries: readonly CurrentManifestScreen[]): ManifestV8 {
   return {
     entries,
     generatedBy: "mokly",
-    schemaVersion: 6,
+    schemaVersion: 8,
     sourceFiles: [
       ...new Set(entries.map(({ sourcePath }) => sourcePath)),
     ].sort(),
@@ -234,24 +222,18 @@ function manifest(entries: readonly CurrentManifestScreen[]): ManifestV6 {
 function screen(
   id: string,
   title: string,
-  route: string,
+  _route: string,
 ): CurrentManifestScreen {
-  const stem = route.slice(0, -5);
   return {
+    colorSchemes: ["light"],
     description: `${title} description`,
-    fragments: {
-      desktop: `${stem}.desktop.html`,
-      mobile: `${stem}.mobile.html`,
-    },
     id,
     kind: "screen",
     navPath: [],
     relatedDocs: [],
-    route,
     sourcePath: `entries/${id}.mockup.tsx`,
     title,
     useCaseIds: [],
-    viewports: ["mobile", "desktop"],
   };
 }
 

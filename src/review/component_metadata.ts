@@ -1,76 +1,75 @@
-import {
-  canonicalJson,
-  analyzeHierarchy,
-  type CatalogueHierarchy,
-} from "@mokly/viewer/data";
+import { canonicalJson, isManifestComponentVariant } from "@mokly/viewer/data";
 import type {
   Manifest,
   ManifestEntry,
+  HistoricalManifestEntry,
   EntryChangeReason,
   ReviewEntryAddress,
 } from "@mokly/viewer/data";
 
-export type RoutedEntry = Exclude<
-  ManifestEntry,
-  { kind: "collection" | "page" }
+export type ReviewEntry = Exclude<
+  ManifestEntry | HistoricalManifestEntry,
+  { kind: "page" }
 >;
-export const address = (entry: RoutedEntry): ReviewEntryAddress => ({
+export const address = (entry: ReviewEntry): ReviewEntryAddress => ({
   id: entry.id,
-  route: entry.route,
   title: entry.title,
 });
+/** Pair every reviewable entry by its globally stable id. */
+export function entryPairKey(entry: ReviewEntry): string {
+  return `${entry.kind}:${entry.id}`;
+}
 export const lexical = (a: string, b: string): number =>
   a < b ? -1 : a > b ? 1 : 0;
+/** Drop baseline identities that the current catalogue reuses for another kind. */
+export function baselineForCurrentIdentities(
+  before: Manifest,
+  after: Manifest,
+): Manifest {
+  const currentKinds = new Map(
+    after.entries.map((entry) => [entry.id, entry.kind] as const),
+  );
+  const entries = before.entries.filter((entry) => {
+    const currentKind = currentKinds.get(entry.id);
+    return currentKind === undefined || currentKind === entry.kind;
+  });
+  return entries.length === before.entries.length
+    ? before
+    : { ...before, entries };
+}
 export function entryPairs(
   before: Manifest,
   after: Manifest,
-): { before: RoutedEntry | undefined; after: RoutedEntry | undefined }[] {
-  const key = (entry: RoutedEntry) =>
-    `${entry.kind}:${entry.kind === "component" ? entry.id : entry.route}`;
+): { before: ReviewEntry | undefined; after: ReviewEntry | undefined }[] {
   const bases = new Map(
     before.entries.flatMap((entry) =>
-      entry.kind === "collection" || entry.kind === "page"
+      entry.kind === "page" ||
+      (entry.kind === "component" && isManifestComponentVariant(entry))
         ? []
-        : [[key(entry), entry] as const],
+        : [[entryPairKey(entry), entry] as const],
     ),
   );
   const heads = new Map(
     after.entries.flatMap((entry) =>
-      entry.kind === "collection" || entry.kind === "page"
+      entry.kind === "page" ||
+      (entry.kind === "component" && isManifestComponentVariant(entry))
         ? []
-        : [[key(entry), entry] as const],
+        : [[entryPairKey(entry), entry] as const],
     ),
   );
   return [...new Set([...bases.keys(), ...heads.keys()])]
     .sort()
     .map((id) => ({ before: bases.get(id), after: heads.get(id) }));
 }
-export function metadata(
-  entry: RoutedEntry,
-  manifest: Manifest,
-  hierarchy: CatalogueHierarchy<ManifestEntry> = analyzeHierarchy<ManifestEntry>(
-    manifest.entries,
-  ).hierarchy,
-): string {
-  const ancestors = hierarchy.ancestorsById
-    .get(entry.id)
-    ?.map(({ id, title }) => ({ id, title }));
-  const { sourcePath: _source, navPath: _navPath, ...common } = entry;
+export function metadata(entry: ReviewEntry): string {
+  const navPath = entry.navPath;
+  const common = { ...entry } as Record<string, unknown>;
+  for (const field of ["componentViews", "navPath", "sourcePath"])
+    Reflect.deleteProperty(common, field);
   if (entry.kind === "component") {
-    const { variants: _variants, ...component } = common as typeof entry;
-    return canonicalJson({
-      ...component,
-      ancestors,
-      variants: entry.variants.map(
-        ({ componentViews: _views, ...variant }) => variant,
-      ),
-    });
+    return canonicalJson({ ...common, navPath });
   }
-  if (entry.kind === "screen") {
-    const { componentViews: _views, ...screen } = common as typeof entry;
-    return canonicalJson({ ...screen, ancestors });
-  }
-  return canonicalJson({ ...common, ancestors });
+  return canonicalJson({ ...common, navPath });
 }
 
 export function uniqueReasons(
@@ -78,7 +77,7 @@ export function uniqueReasons(
 ): EntryChangeReason[] {
   const merged = new Map<string, EntryChangeReason>();
   for (const reason of reasons) {
-    const key = `${reason.kind}:${"path" in reason ? reason.path : "route" in reason ? reason.route : ""}`;
+    const key = `${reason.kind}:${"path" in reason ? reason.path : "id" in reason ? reason.id : ""}`;
     const previous = merged.get(key);
     if (reason.kind === "dependency" && previous?.kind === "dependency") {
       const analyses = [previous.analysis, reason.analysis].filter(
@@ -107,8 +106,8 @@ export function uniqueReasons(
     (a, b) =>
       lexical(a.kind, b.kind) ||
       lexical(
-        "path" in a ? a.path : "route" in a ? a.route : "",
-        "path" in b ? b.path : "route" in b ? b.route : "",
+        "path" in a ? a.path : "id" in a ? a.id : "",
+        "path" in b ? b.path : "id" in b ? b.id : "",
       ),
   );
 }

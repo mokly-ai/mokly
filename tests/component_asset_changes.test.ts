@@ -7,7 +7,7 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentGit } from "./helpers/component_review_fixture.js";
@@ -31,10 +31,10 @@ test("unrendered source files do not affect component Changes", async (t) => {
   if (result.schemaVersion !== 5) return;
   const expected: string[] = [];
   assert.deepEqual(
-    result.changes.map((entry) => entry.after!.route),
+    result.changes.map((entry) => entry.after!.id),
     expected,
   );
-  assert.deepEqual(await computeChangedRoutes(config, "main", git), expected);
+  assert.deepEqual(await computeChangedIds(config, "main", git), expected);
   assert.deepEqual(result.affectedConsumers, []);
   assert.equal(Object.hasOwn(result, "sharedImpact"), false);
 });
@@ -91,17 +91,16 @@ for (const ownership of ["renderer", "declared", "unowned"] as const)
     if (artifact.result.schemaVersion !== 5) return;
     const expected =
       ownership === "unowned"
-        ? [
-            "components/action.html",
-            "components/pane.html",
-            "screens/home.html",
-          ]
-        : ["components/action.html"];
+        ? ["action-default", "action-disabled", "pane-default", "home"]
+        : ["action"];
     assert.deepEqual(
-      artifact.result.changes.map((entry) => entry.after!.route),
+      artifact.result.changes.map((entry) => entry.after!.id),
       expected,
     );
-    assert.deepEqual(await computeChangedRoutes(config, "main", git), expected);
+    assert.deepEqual(
+      await computeChangedIds(config, "main", git),
+      [...expected].sort(),
+    );
     assert.equal(
       Buffer.from(
         artifact.files.get("snapshots/before/action.css")!,
@@ -139,13 +138,7 @@ for (const owned of [false, true])
     assert.equal(result.schemaVersion, 5);
     if (result.schemaVersion !== 5) return;
     assert.deepEqual(
-      result.changes.map((entry) => entry.after!.route),
-      owned
-        ? ["components/action.html"]
-        : [
-            "components/action.html",
-            "components/pane.html",
-            "screens/home.html",
-          ],
+      result.changes.map((entry) => entry.after!.id),
+      owned ? ["action"] : ["action", "pane", "home"],
     );
   });

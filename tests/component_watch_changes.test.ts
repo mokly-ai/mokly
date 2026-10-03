@@ -62,7 +62,7 @@ test(
     assert.equal((await workspace("screens/home.html")).change, undefined);
     assert.ok(
       (await workspace("components/action.html")).affected.some(
-        (item) => item.route === "screens/home.html",
+        (item) => item.entryId === "home",
       ),
     );
     await fs.writeFile(

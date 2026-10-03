@@ -22,7 +22,6 @@ const component = defineComponent({
   id: "typed-component",
   title: "Typed component",
   description: "Packed declaration inference.",
-  route: "components/typed.html",
   relatedDocs: [],
   propSchema: schema,
   slots: ["children"],
@@ -36,7 +35,7 @@ const component = defineComponent({
   ),
   variants: [
     {
-      id: "default",
+      id: "typed-component-default",
       title: "Default",
       props: { label: "Continue", children: <strong>Slot</strong> },
     },

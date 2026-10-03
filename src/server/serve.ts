@@ -112,11 +112,11 @@ export async function serve(
       (snapshot) => {
         const duration = Date.now() - changesStartedAt;
         if (snapshot)
-          reporter.changesReady(snapshot.changedRoutes?.length ?? 0, duration);
+          reporter.changesReady(snapshot.changedIds?.length ?? 0, duration);
         else reporter.changesUnavailable(duration);
         server.publishUpdate({
           kind: "evidence",
-          changedRoutes: snapshot?.changedRoutes ?? null,
+          changedIds: snapshot?.changedIds ?? null,
           componentChanges: snapshot ?? null,
           changesStatus: snapshot ? "ready" : "unavailable",
         });
@@ -145,6 +145,7 @@ export async function serve(
             );
         },
         diagnostic: (error) => reporter.runtimeDiagnostic(error),
+        incompatibleBaseline: (commit) => reporter.incompatibleBaseline(commit),
         ...(dependencies.baselineBuilder
           ? { builder: dependencies.baselineBuilder }
           : {}),

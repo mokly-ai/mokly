@@ -8,6 +8,7 @@ import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
 } from "../dist/review/assets.js";
+import { asChangeEvidence } from "../dist/review/change_evidence.js";
 import { CommittedBaselineReader } from "../dist/review/committed.js";
 import {
   NodeGitCommandRunner,
@@ -53,7 +54,7 @@ for (const resource of ["image.svg", "unused.css", "shared.css"])
       fixture.config,
       git.reader,
       await git.evidence.mergeBase("main", "HEAD"),
-      [`mockups/${resource}`],
+      asChangeEvidence([`mockups/${resource}`]),
     );
     const documents = reads.filter((route) => route.endsWith(".html"));
     assert.deepEqual(
@@ -108,7 +109,7 @@ test("deleted stylesheet resources still retain their consumers", async (t) => {
     fixture.config,
     git.reader,
     await git.evidence.mergeBase("main", "HEAD"),
-    ["mockups/shared.css"],
+    asChangeEvidence(["mockups/shared.css"]),
   );
   assert.ok(result.changedPaths.includes("mockups/screens/home.mobile.html"));
   assert.equal(
@@ -148,15 +149,13 @@ test("changed documents retain a removed image without any stylesheet in the dif
     fixture.config,
     git.reader,
     commit,
-    changedPaths,
+    asChangeEvidence(changedPaths),
   );
   for (const viewport of ["mobile", "desktop"])
     assert.ok(
       result.changedPaths.includes(`mockups/screens/home.${viewport}.html`),
     );
-  const consumer = result.screens.find(
-    (screen) => screen.route === "screens/home.html",
-  );
+  const consumer = result.screens.find((screen) => screen.id === "home");
   assert.equal(consumer?.views.length, 2);
   for (const view of consumer!.views)
     assert.deepEqual(view.reasons, [

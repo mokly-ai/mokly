@@ -6,7 +6,7 @@ import { promisify } from "node:util";
 import { expect, test } from "@playwright/test";
 
 import { exportCatalogue } from "../../dist/export/run.js";
-import { createExampleBaseline } from "../helpers/example_baseline.js";
+import { createCommittedExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import {
   FULL_CATALOGUE_SETUP_TIMEOUT_MS,
@@ -16,7 +16,7 @@ import {
 import { serveStaticFiles } from "../helpers/static_server.js";
 
 import { assertServedShellMarker } from "./export_shell.js";
-import { chooseViewport } from "./workspace_actions.js";
+import { chooseVariant, chooseViewport } from "./workspace_actions.js";
 
 let site: Awaited<ReturnType<typeof serveStaticFiles>>;
 let root: string;
@@ -28,15 +28,15 @@ test.beforeAll(async () => {
     "design-library-export",
     "baseline-fixture",
     false,
-    () => createExampleBaseline(root),
+    () => createCommittedExampleBaseline(root, "design-library"),
   );
   const git = (...args: string[]) =>
     promisify(execFile)("git", args, { cwd: root });
-  const tracked = (await git("ls-files", "examples/basic/generated")).stdout
-    .trim()
-    .split("\n");
-  expect(tracked).toHaveLength(29);
-  expect(tracked.every((file) => file.endsWith(".css"))).toBe(true);
+  const baselineManifest = JSON.parse(
+    (await git("show", "HEAD:examples/basic/generated/mokly-manifest.json"))
+      .stdout,
+  );
+  expect(baselineManifest.schemaVersion).toBe(8);
   const file = path.join(
     root,
     "examples/basic/entries/design/library/controls/tag-chip.view.tsx",
@@ -51,7 +51,7 @@ test.beforeAll(async () => {
   site = await serveStaticFiles(output);
   await assertServedShellMarker(
     site.url,
-    "/view/design/library/chrome/top-bar.html?variant=search",
+    "/view/components/design-ui-top-bar-search.html",
   );
 });
 test.afterAll(async () => {
@@ -74,27 +74,25 @@ for (const viewport of ["desktop", "mobile"] as const)
       if (response.status() >= 400) failures.push(response.url());
     });
     await page.goto(
-      `${site.url}/view/design/library/chrome/top-bar.html?variant=search`,
+      `${site.url}/view/components/design-ui-top-bar-search.html`,
     );
     await chooseViewport(page, viewport);
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     await expect(page.getByLabel("Query", { exact: true })).toBeDisabled();
     const frame = page.frameLocator(`[data-workspace-frame="${viewport}"]`);
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
-    await page
-      .getByLabel("Saved variant", { exact: true })
-      .selectOption("tag-picker");
+    await chooseVariant(page, "Tag picker");
     await expect(frame.locator(".mbk-tag-picker")).toBeVisible();
     await expect(frame.locator(".mbk-chip").first()).toContainText("revised");
-    await page.goto(`${site.url}/view/design/library/controls/tag-chip.html`);
+    await page.goto(`${site.url}/view/components/design-ui-tag-chip.html`);
     await expect(
       page.locator(
-        '[data-nav-row][data-route="design/library/controls/tag-chip.html"]',
+        '[data-nav-row][data-route="components/design-ui-tag-chip.html"]',
       ),
     ).toHaveAttribute("data-changed", "true");
     await expect(
       page.locator(
-        '[data-nav-row][data-route="design/browse/views/screen.variants/picker.html"]',
+        '[data-nav-row][data-route="screens/design-browse-tag-picker.html"]',
       ),
     ).not.toHaveAttribute("data-changed", "true");
     await page.getByRole("tab", { name: "Usage", exact: true }).click();

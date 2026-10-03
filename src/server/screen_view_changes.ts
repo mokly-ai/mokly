@@ -1,20 +1,25 @@
 import path from "node:path";
 
 import { generatedViews } from "@mokly/viewer/data";
-import type { Manifest, ManifestEntry, ViewReview } from "@mokly/viewer/data";
+import type {
+  HistoricalManifest,
+  ManifestEntry,
+  ManifestV8,
+  ViewReview,
+} from "@mokly/viewer/data";
 
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 export interface ScreenViewChanges {
-  route: string;
+  id: string;
   views: readonly Pick<ViewReview, "viewport" | "colorScheme" | "state">[];
 }
 
 /** Retain the completed material pass's per-view decisions without generating comparisons. */
 export function screenViewChanges(
-  current: Manifest,
-  baseline: Manifest,
+  current: ManifestV8,
+  baseline: HistoricalManifest,
   config: ResolvedConfig,
   materialPaths: readonly string[],
 ): ScreenViewChanges[] {
@@ -25,48 +30,46 @@ export function screenViewChanges(
   const before = new Map(
     beforeEntries
       .filter((entry) => entry.kind === "screen")
-      .map((entry) => [entry.route, entry]),
+      .map((entry) => [entry.id, entry]),
   );
   const after = new Map(
     afterEntries
       .filter((entry) => entry.kind === "screen")
-      .map((entry) => [entry.route, entry]),
+      .map((entry) => [entry.id, entry]),
   );
-  return [...new Set([...before.keys(), ...after.keys()])]
-    .sort()
-    .map((route) => {
-      const previous = before.get(route),
-        current = after.get(route);
-      const left = previous ? generatedViews(previous) : [];
-      const right = current ? generatedViews(current) : [];
-      const views: ScreenViewChanges["views"] = (
-        ["mobile", "desktop"] as const
-      ).flatMap((viewport) =>
-        (["light", "dark"] as const).flatMap((colorScheme) => {
-          const before = left.find(
-            (view) =>
-              view.viewport === viewport && view.colorScheme === colorScheme,
-          );
-          const after = right.find(
-            (view) =>
-              view.viewport === viewport && view.colorScheme === colorScheme,
-          );
-          if (!before && !after) return [];
-          return [
-            {
-              viewport,
-              colorScheme,
-              state: !after
-                ? ("removed" as const)
-                : !before
-                  ? ("added" as const)
-                  : changed.has(prefix ? `${prefix}/${after.path}` : after.path)
-                    ? ("changed" as const)
-                    : ("unchanged" as const),
-            },
-          ];
-        }),
-      );
-      return { route, views };
-    });
+  return [...new Set([...before.keys(), ...after.keys()])].sort().map((id) => {
+    const previous = before.get(id),
+      current = after.get(id);
+    const left = previous ? generatedViews(previous) : [];
+    const right = current ? generatedViews(current) : [];
+    const views: ScreenViewChanges["views"] = (
+      ["mobile", "desktop"] as const
+    ).flatMap((viewport) =>
+      (["light", "dark"] as const).flatMap((colorScheme) => {
+        const before = left.find(
+          (view) =>
+            view.viewport === viewport && view.colorScheme === colorScheme,
+        );
+        const after = right.find(
+          (view) =>
+            view.viewport === viewport && view.colorScheme === colorScheme,
+        );
+        if (!before && !after) return [];
+        return [
+          {
+            viewport,
+            colorScheme,
+            state: !after
+              ? ("removed" as const)
+              : !before
+                ? ("added" as const)
+                : changed.has(prefix ? `${prefix}/${after.path}` : after.path)
+                  ? ("changed" as const)
+                  : ("unchanged" as const),
+          },
+        ];
+      }),
+    );
+    return { id, views };
+  });
 }

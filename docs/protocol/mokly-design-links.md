@@ -2,33 +2,18 @@
 
 ## Delivery Status
 
-Implemented in the 59 Browse/Changes design screens and two real example
-screens using `MockLink` and `MockLink asChild`. Verification and delivery are tracked by the
-[implementation plan](../../plans/mokabook-design-mocklinks.md).
+Implemented in the 62 Browse/Changes design screens and two example screens with
+`MockLink`/`MockLink asChild`. Those 62 Browse/Changes designs retain canonical
+links; [components](./mokly-component-design.md) and
+[removed previews](./mokly-removed-previews.md) extend the contract.
 
-The [component design inventory](./mokly-component-design.md) extend the
-catalogue with their own state contract and native component/control depictions.
-Those 59 Browse/Changes designs retain the canonical links below, including the
-removed previous-version family added by
-[removed previews](./mokly-removed-previews.md).
-They now share native icon inspector tabs and working viewport dropdowns with
-the component designs; the legacy disclosure links and segmented view controls
-are removed. Catalogue-wide link and inventory checks cover
-both families; component keyboard-control checks live in the component suites.
-
-The Shared impact state and its links were removed by Milestone 2 of
-[remove-source-path-evidence](../../plans/remove-source-path-evidence.md);
-Milestone 5 removed legacy runtime comparison details. The links below match the
-current example pages and inspector.
-Milestone 10 of the same plan connects Excluded styles to Matched styles while
-keeping the zero-change review screens paired by their filters.
+This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 
 ## Scope And Ownership
 
-Make the catalogue under `examples/basic/entries/design/` a navigable prototype
-using the existing [catalogue navigation](./mokly-navigation.md) and
-[styled control](./mokly-link-controls.md) contracts. Include the basic
-example's two prominent buttons as clear navigation examples. The package API,
+The catalogue under `examples/basic/entries/design/` is a navigable prototype
+under the [navigation](./mokly-navigation.md) and
+[control](./mokly-link-controls.md) contracts. The package API,
 server, trusted frame adapter, sandbox, and actual shell behavior stay governed
 by their existing contracts; this adoption requires no new runtime capability.
 
@@ -41,14 +26,14 @@ are not transported implicitly. Only the explicitly paired states below
 promise to retain their named subject or comparison mode. The actual Appearance
 setting stays with the outer viewer.
 
-Every design screen has mobile and desktop variants. They are light-only
+Every design screen has mobile and desktop views. They are light-only
 generated documents, including artboards depicting a dark product screen, except
-the appearance screens under `design/browse/appearance/`, the canonical
+the appearance screens (the `design-appearance-*` entries), the canonical
 `design-browse-screen` and `design-browse-details-screen`, their two retained
 Welcome appearance variants, and the Welcome comparison family. These render
 in both schemes so the outer Appearance control switches the depicted
 catalogue. Link targets use design entry ids independently of the example ids printed in the
-depicted shell's metadata. Existing ids, routes, screens, and text links remain
+depicted shell's metadata. Existing ids, screens, and text links remain
 available. `example-farewell` remains an intentionally absent product entry.
 This depicted dark set is representative; the runtime's single Appearance
 preference, rather than per-screen dark renders, keeps a whole session dark.
@@ -64,8 +49,8 @@ preference, rather than per-screen dark renders, keeps a whole session dark.
 - Put styles, labels, ids, and accessibility attributes on an adapted child.
   Active navigation is a native anchor with normal Tab/Enter behavior and a
   visible focus outline. Do not carry button-only ARIA semantics onto links.
-- Apply the existing marker/portable-link pipeline. Do not author `/view/`,
-  `/id/`, raw generated-file destinations, reserved metadata, event-driven
+- Apply the existing marker/portable-link pipeline. Do not author `/view/`
+  URLs, raw generated-file destinations, reserved metadata, event-driven
   routing, or consumer scripts as substitutes for `MockLink`.
 - A control without a destination has no `href`, no mock-link marker, and no
   misleading keyboard stop. Keep the selected state visibly identified.
@@ -82,33 +67,35 @@ preference, rather than per-screen dark renders, keeps a whole session dark.
 
 ## Canonical Destination Inventory
 
-Existing destinations and their stable id/route mappings are listed in the
+Existing destinations and their stable ids are listed in the
 [canonical design inventory](./mokly-shell-design.md#design-mockups),
-including the Current and Overlay screens. They retain those ids and routes.
+including the Current and Overlay screens. They retain those ids; every route
+derives from its id as `screens/<id>.html`.
 
 The five additions below now render independently in both viewport variants
 and are included in the canonical inventory. Their owning components were
 completed before link adoption.
 
-| Added entry id                        | Route                                                        | Depicted state                                                    |
-| ------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------- |
-| `design-browse-details-screen`        | `design/browse/views/details-screen.html`                    | Normal Details screen, light selected, inspector closed           |
-| `design-browse-tag-picker`            | `design/browse/views/screen.variants/picker.html`            | Welcome, empty query, unfiltered catalogue, picker open           |
-| `design-browse-tag-forms`             | `design/browse/views/screen.variants/forms.html`             | Welcome, `tag:forms`, Welcome and Details retained, picker closed |
-| `design-browse-tag-onboarding`        | `design/browse/views/screen.variants/onboarding.html`        | Welcome, `tag:onboarding`, Welcome retained, picker closed        |
-| `design-browse-tag-onboarding-picker` | `design/browse/views/screen.variants/onboarding-picker.html` | The same onboarding filter with the picker open                   |
+| Added entry id                        | Depicted state                                                    |
+| ------------------------------------- | ----------------------------------------------------------------- |
+| `design-browse-details-screen`        | Normal Details screen, light selected, inspector closed           |
+| `design-browse-tag-picker`            | Welcome, empty query, unfiltered catalogue, picker open           |
+| `design-browse-tag-forms`             | Welcome, `tag:forms`, Welcome and Details retained, picker closed |
+| `design-browse-tag-onboarding`        | Welcome, `tag:onboarding`, Welcome retained, picker closed        |
+| `design-browse-tag-onboarding-picker` | The same onboarding filter with the picker open                   |
 
 `design-browse-details` continues to mean Welcome's expanded inspector and remains
 reachable from its catalogue entry. Opening/closing the Details icon stays on
 the current screen and retains its query. It does not substitute for the
 normal Details view.
-`design-browse-tag-filter` retains its existing route and depicts the forms
+`design-browse-tag-filter` retains its existing id and depicts the forms
 filter with the picker open. The four listed tag states plus
-`design-browse-dark-scheme` and `design-browse-light-only` retain their ids but
-move beneath `design-browse-screen` as variants, at
-`design/browse/views/screen.variants/<slug>.html`. Those six entries leave all
-collection `childIds`. The now-empty `design-browse-tags` collection retains its
-stable id and points readers to Welcome; no unrelated route or membership moves.
+`design-browse-dark-scheme` and `design-browse-light-only` retain their ids and
+are variants of `design-browse-screen`, each routed at `screens/<id>.html` like
+any entry. Those six entries leave all their former folder membership. The
+`design-browse-tags` (Tag states) folder has no descendants and is absent from
+the path-based navigation; the variants remain under Welcome. No unrelated
+entry moves.
 
 ## Navigation Controls
 
@@ -133,8 +120,8 @@ stable id and points readers to Welcome; no unrelated route or membership moves.
 | Empty Changes All filter                        | `design-review-ignored-only`, the same zero-change catalogue with Welcome selected                             |
 | Removed consumer return, component explorer     | `design-component-removed`, from the desktop Action row and the narrow Changes shortcut, never from the stage  |
 
-Collection headings and collection-only breadcrumbs are not catalogue-link
-targets: the public API rejects collection ids. Leave grouping labels as text,
+Folder headings and folder-only breadcrumbs are not catalogue-link
+targets: folders have no id or route. Leave grouping labels as text,
 or use native disclosure markup for a group that actually contains children.
 Any added home crumb has a distinct label and the home destination above.
 Keep the design tree's existing groups and make screen leaves use explicit ids.
@@ -168,7 +155,8 @@ none borrows another subject's inspector or drawer identity.
 
 ## Screen Variants
 
-The five variant states under `design/browse/variants/` depict a screen's
+The five variant states, `design-browse-variant-selected`, `-changes`,
+`-removed`, `-reparented`, and `design-browse-changed-views`, depict a screen's
 variants as ordinary catalogue entries grouped under their parent. The
 disclosure beside a parent row is a depiction with no destination, because the
 served shell toggles the list in place; the parent row itself keeps its own
@@ -193,11 +181,13 @@ removed state the parent row is a depiction too: the deletion is a later state
 of the same group, so it must not open the earlier changed-variant scenario.
 The removed variant has no live product destination and no comparison modes;
 its stage shows the variant's inert previous version.
-In the reparented state, only the removed child's route is changed. The Changes
+In the reparented state, only the removed child is a Changes row: it is a
+removed entry whose former parent now names a variant. The Changes
 filter therefore hides the unmodified current parent and its variant (the
 former parent), and shows the removed child as one flat screen row outside
-their collection hierarchy. The historical breadcrumb remains visible on the
-screen itself, but the Changes rail contains no parent or nested variant list.
+their former folder hierarchy. The historical breadcrumb remains visible on the
+screen itself with the former parent's title as plain text, but the Changes rail
+contains no parent or nested variant list.
 The depicted All control links to the canonical catalogue home artboard; the
 reparented hierarchy is the context for this Changes-state example.
 The changed-views state shows no comparison band. Its marks on Appearance
@@ -207,15 +197,13 @@ its generated scheme. The depicted Appearance selector has no authored transitio
 
 ## Scheme, Comparison, And Tag States
 
-The catalogue authors no scheme pairs and no artboard depicts a scheme control
-in its screen header, which carries the viewport control alone. Standalone
-Browse holds one Appearance setting, so every artboard that draws a top bar
-draws the depicted Appearance selector in it, which has no authored
-transitions. `design-browse-screen`, `design-browse-details-screen`, the Welcome comparison
-family (`design-changes-current`, `design-changes-overlay`,
-`design-review-changed`, `design-review-difference`) and the appearance entries
+No screen header depicts a scheme control; standalone Browse owns one
+Appearance selector in the top bar. `design-browse-screen`,
+`design-browse-details-screen`, the Welcome comparison
+family (`design-changes-*`, `design-review-changed`, and
+`design-review-difference`) and the appearance entries
 render in Light and in Dark instead, and the outer Appearance control moves
-between those two generated files at the same route. A link out of a dark
+between those two generated views of the same entry. A link out of a dark
 fragment resolves to the target's dark fragment wherever one exists, and every
 member of a comparison family publishes the same schemes, so no comparison
 control strands a reader in a light document. The existing
@@ -237,6 +225,8 @@ Welcome states; Browse and tag-picker states omit them. Each comparison destinat
 its Current action returns to `design-changes-current`. Current is already
 selected in `design-changes-current`, so it has no
 transition there. Returning to All uses the navigation table above.
+The scrolling `design-changes-*` examples keep those destinations; their
+controls navigate nowhere and pane links are inert.
 
 Added Details shows its Current preview without comparison modes. Removed
 Farewell, Survey, Invite, Archive, and Timeline show their previous version,
@@ -249,16 +239,7 @@ modes; factual evidence lives in Details. Their existing routes and All escape
 remain available. A future interactive mode needs its own contract and owning
 screen first.
 
-The stylesheet-evidence states keep the same preview and inspector treatment.
-Excluded styles depicts All with Welcome selected and one changed screen: one
-stylesheet is excluded for Welcome, while a second changed stylesheet matches.
-The Welcome title shows Changed, its All row carries the changed mark, and its
-comparison controls appear below the heading with Current selected, just as a
-changed screen does in the viewer.
-Its Changes filter opens Matched styles for that same Welcome. Matched styles'
-All filter returns to the Excluded styles view. Ignored only and No changes
-depict a separate zero-change catalogue; their filters pair its All and Changes
-views. Unresolved and Unnamed styles remain standalone tree-opened examples.
+Excluded styles shows All with one changed Welcome: one changed sheet matches and another is excluded. The title and row show Changed; comparison controls start in Current. Changes opens Matched styles, whose All filter returns to Excluded. Ignored only and No changes pair a separate zero-change catalogue. Unresolved and Unnamed styles open from the tree.
 
 | Control/context                   | Destination                                                  |
 | --------------------------------- | ------------------------------------------------------------ |
@@ -267,10 +248,7 @@ views. Unresolved and Unnamed styles remain standalone tree-opened examples.
 | Matched evidence: All filter      | Excluded stylesheet evidence, `design-review-style-excluded` |
 | Unresolved evidence: All filter   | Canonical All Welcome, `design-browse-screen`                |
 
-Matched and unresolved depict Changes holding only the screen their evidence
-keeps; Excluded depicts All with one changed Welcome. Excluded shows the
-Current-selected comparison modes, but the unrepresented mode destinations
-remain depictions; no stylesheet state adds tag transitions.
+Matched and unresolved show only their changed screen in Changes. Mode destinations without an owning mockup remain depictions, and these states add no tag transitions.
 
 Tag interactions are restricted to the canonical Welcome states:
 
@@ -298,6 +276,7 @@ grips, and collapse-all are not catalogue destinations in this change. Keep
 their existing visual depictions and document their non-interactive status
 outside the rendered artboard; do not add fake hrefs, clipboard-success copy,
 or scripts. Existing native `details` disclosures may keep working locally.
+The Scroll together checkbox toggles in place and opens no destination.
 The real outer shell continues to provide its implemented runtime controls.
 
 ## Basic Example And Portability
@@ -309,12 +288,12 @@ secondary button into `Return to welcome` targeting `example-welcome`.
 Retain the existing text links and renderer-required `onPress={noop}` props;
 navigation comes from the generated anchor. These labels promise navigation,
 not workspace creation or a synthetic business operation. Exercise both
-viewports and light/dark generation without changing fixture ids or routes.
+viewports and light/dark generation without changing fixture ids.
 
 All design and example links must retain portable relative hrefs on disk and
 authenticated markers in served/deployed Browse. Standalone activation opens
 the matching generated viewport with the existing scheme fallback. Real
-comparison snapshots retain their existing portable, frame-owned link behavior;
+comparison snapshots keep portable links that the pane guard cancels;
 design artboards depicting comparisons are ordinary Browse screens and use
 normal enhanced navigation. Do not equate these two contexts.
 
@@ -324,13 +303,13 @@ normal enhanced navigation. Do not equate these two contexts.
   navigation, miniature-screen, flow-reference, and example-button links.
 - Verify expected control destinations against the built real example manifest
   in both viewports, plus every light/dark example-button output. Detect wrong
-  subjects, self-links masquerading as transitions, collection/absent ids,
+  subjects, self-links masquerading as transitions, folder/absent destinations,
   duplicate/nested focus targets, and inactive controls becoming links.
 - Check the canonical existing-design inventory against the complete manifest
-  design-screen set, including exact id/route pairs. Keep unimplemented planned
+  design-screen set, including exact ids. Keep unimplemented planned
   destinations separate from that inventory so omissions and drift are visible.
 - Prove each new state is reachable from its owning screen/flow and has the
-  specified return route. Test tag query/picker agreement and both-scheme
+  specified return destination. Test tag query/picker agreement and both-scheme
   renders of the dual-scheme screens.
 - In Browse, exercise pointer and Tab/Enter activation from mobile and desktop
   design frames, history Back/Forward, canonical outer URLs, active catalogue

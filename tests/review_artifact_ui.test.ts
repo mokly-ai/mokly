@@ -15,11 +15,13 @@ const result: ReviewResult = {
   baseRef: "origin/main",
   changedPaths: [],
   ignoredImpact: [],
-  schemaVersion: 4,
+  schemaVersion: 5,
+
   screens: [
     {
+      after: { id: "home", title: "Home" },
+      before: { id: "home", title: "Home" },
       id: "home",
-      route: "screens/home.html",
       title: "Home",
       state: "unchanged",
       views: [
@@ -28,12 +30,13 @@ const result: ReviewResult = {
           viewport: "mobile",
           state: "unchanged",
           ignoredIds: [],
-          beforePath: "snapshots/base/home.html",
-          afterPath: "snapshots/head/home.html",
         },
       ],
     },
   ],
+  components: [],
+  changes: [],
+  affectedConsumers: [],
 };
 
 test("component summary titles are literal single-line Markdown", () => {
@@ -43,12 +46,12 @@ test("component summary titles are literal single-line Markdown", () => {
     screens: [],
     components: [],
     affectedConsumers: [],
+
     changes: [
       {
         kind: "component",
         after: {
           id: "action",
-          route: "components/action.html",
           title:
             "Action\r\n## Approved [link](https://example.com) <b> &amp; `code` *bold*",
         },
@@ -70,37 +73,30 @@ test("component summary titles are literal single-line Markdown", () => {
 
 test("comparison artifacts contain data and snapshots without a separate UI", () => {
   const snapshots = new Map([
-    ["snapshots/base/home.html", "<main>Before</main>"],
-    ["snapshots/head/home.html", "<main>After</main>"],
+    ["snapshots/before/screens/home.mobile.html", "<main>Before</main>"],
+    ["snapshots/after/screens/home.mobile.html", "<main>After</main>"],
   ]);
   const files = renderReviewArtifact({ files: snapshots, result });
   assert.deepEqual(JSON.parse(String(files.get("review.json"))), result);
   assert.equal(
-    files.get("snapshots/base/home.html"),
-    snapshots.get("snapshots/base/home.html"),
+    files.get("snapshots/before/screens/home.mobile.html"),
+    snapshots.get("snapshots/before/screens/home.mobile.html"),
   );
   assert.deepEqual([...files.keys()].sort(), [
     ".mokly-review-artifact",
     "review.json",
-    "snapshots/base/home.html",
-    "snapshots/head/home.html",
+    "snapshots/after/screens/home.mobile.html",
+    "snapshots/before/screens/home.mobile.html",
     "summary.md",
   ]);
-  assert.match(
-    String(files.get("summary.md")),
-    /Screens: 1; output changes: 0;/,
-  );
-  assert.doesNotMatch(
-    String(files.get("summary.md")),
-    /Shared-impact paths|impact-only/,
-  );
+  assert.match(String(files.get("summary.md")), /Changes: 0/);
 });
 
 test("empty comparisons still return a valid result", () => {
   const empty = { ...result, screens: [] };
   const files = renderReviewArtifact({ files: new Map(), result: empty });
   assert.deepEqual(JSON.parse(String(files.get("review.json"))), empty);
-  assert.match(String(files.get("summary.md")), /Screens: 0/);
+  assert.match(String(files.get("summary.md")), /Changes: 0/);
 });
 
 for (const [state, outputChanges] of [

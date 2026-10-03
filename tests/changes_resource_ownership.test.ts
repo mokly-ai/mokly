@@ -61,7 +61,7 @@ export default (input) => {
         "main",
         committedReviewRepository(fixture.config),
       )
-    ).changedRoutes,
-    ["components/action.html"],
+    ).changedIds,
+    ["action"],
   );
 });

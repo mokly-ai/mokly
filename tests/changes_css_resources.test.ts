@@ -9,7 +9,7 @@ import { computeCatalogueChanges } from "../dist/server/changed.js";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
 for (const components of [false, true]) {
-  test(`v${components ? 5 : 4} paired ignored content in embedded documents cannot keep CSS`, async (t) => {
+  test(`v5 (components=${components}) paired ignored content in embedded documents cannot keep CSS`, async (t) => {
     const fixture = await cssAttributionFixture(t, components, {
       body: '<iframe src="../embedded.html" title="Guide" />',
       prepare: ({ mockupsDir }) =>
@@ -24,13 +24,13 @@ for (const components of [false, true]) {
       "main",
       committedReviewRepository(fixture.config),
     );
-    assert.ok(!live.changedRoutes?.includes("screens/home.html"));
+    assert.ok(!live.changedIds?.includes("home"));
     const { result } = await fixture.compare();
     for (const view of result.screens.find((screen) => screen.id === "home")!
       .views)
       assert.equal(view.state, "unchanged");
   });
-  test(`v${components ? 5 : 4} matches styles inside embedded documents`, async (t) => {
+  test(`v5 (components=${components}) matches styles inside embedded documents`, async (t) => {
     const fixture = await cssAttributionFixture(t, components, {
       body: '<iframe src="../embedded.html" title="Guide" />',
       prepare: ({ mockupsDir }) =>
@@ -45,7 +45,7 @@ for (const components of [false, true]) {
       "main",
       committedReviewRepository(fixture.config),
     );
-    assert.ok(live.changedRoutes?.includes("screens/home.html"));
+    assert.ok(live.changedIds?.includes("home"));
     const { result } = await fixture.compare();
     for (const view of result.screens.find((screen) => screen.id === "home")!
       .views) {
@@ -59,7 +59,7 @@ for (const components of [false, true]) {
       assert.deepEqual(live.componentChanges?.result, result);
   });
 
-  test(`v${components ? 5 : 4} analyses transitive CSS with batched counterpart reads`, async (t) => {
+  test(`v5 (components=${components}) analyses transitive CSS with batched counterpart reads`, async (t) => {
     const fixture = await cssAttributionFixture(t, components, {
       prepare: async ({ mockupsDir }) => {
         await fs.appendFile(
@@ -78,7 +78,7 @@ for (const components of [false, true]) {
       "main",
       committedReviewRepository(fixture.config),
     );
-    assert.ok(!live.changedRoutes?.includes("screens/home.html"));
+    assert.ok(!live.changedIds?.includes("home"));
     const { result } = await fixture.compare();
     for (const view of result.screens.find((screen) => screen.id === "home")!
       .views)
@@ -89,7 +89,7 @@ for (const components of [false, true]) {
       assert.deepEqual(live.componentChanges?.result, result);
   });
 
-  test(`v${components ? 5 : 4} validates resources even when CSS rules are excluded`, async (t) => {
+  test(`v5 (components=${components}) validates resources even when CSS rules are excluded`, async (t) => {
     const fixture = await cssAttributionFixture(t, components);
     await fixture.append(".guide { padding: 2px; }");
     await fs.rm(path.join(fixture.mockupsDir, "image.svg"));

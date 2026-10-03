@@ -2,10 +2,9 @@
 // two-column body with prose on the left and metadata rows on the right —
 // populated from the manifest entry for the selected route.
 
-import type { ColorScheme } from "../data/axes.js";
 import type { ManifestScreen } from "../registry/types.js";
 
-import type { Catalogue } from "./catalogue.js";
+import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
 import {
   ChangedViewsRow,
   MetaRow,
@@ -17,30 +16,18 @@ import {
 } from "./details_rows.js";
 import { ChevronIcon } from "./icons.js";
 import { useOptionalShellStore } from "./store_context.js";
-import type { RoutedEntry, RouteTarget } from "./target.js";
+import type { RouteTarget } from "./target.js";
 import type { ChangedView } from "./view_marks.js";
-
-/** Generated fragment routes for a screen, dark renders after the light ones. */
-function generatedPaths(screen: ManifestScreen): string[] {
-  const paths = [screen.fragments.mobile, screen.fragments.desktop];
-  if (screen.darkFragments) {
-    paths.push(screen.darkFragments.mobile, screen.darkFragments.desktop);
-  }
-  return paths;
-}
 
 /** The schemes a screen renders in, named for the reader. */
 function schemeNames(screen: ManifestScreen): string {
-  const schemes: readonly ColorScheme[] = screen.darkFragments
-    ? ["light", "dark"]
-    : ["light"];
-  return schemes.join(", ");
+  return screen.colorSchemes.join(", ");
 }
 
 export function EntryDetailsBody(props: {
   catalogue: Catalogue;
   changedViews?: readonly ChangedView[];
-  entry: RoutedEntry;
+  entry: CatalogueManifestEntry;
 }) {
   const entry = props.entry;
   return (
@@ -60,16 +47,6 @@ export function EntryDetailsBody(props: {
         <MetaRow label="Source">
           <code className="mbk-code">{entry.sourcePath}</code>
         </MetaRow>
-        {entry.kind === "screen" ? (
-          <MetaRow label="Generated">
-            <PathChips values={generatedPaths(entry)} />
-          </MetaRow>
-        ) : null}
-        {entry.kind === "page" ? (
-          <MetaRow label="Generated">
-            <PathChips values={[entry.route]} />
-          </MetaRow>
-        ) : null}
         {entry.kind === "screen" && props.catalogue.hasDarkFragments ? (
           <MetaRow label="Schemes">{schemeNames(entry)}</MetaRow>
         ) : null}
@@ -77,13 +54,12 @@ export function EntryDetailsBody(props: {
           <ChangedViewsRow views={props.changedViews ?? []} />
         ) : null}
         {props.catalogue.removedEntries.find(
-          (removed) => removed.entry.route === entry.route,
+          (removed) => removed.entry.id === entry.id,
         ) ? (
           <MetaRow label="Location">
             {props.catalogue.removedEntries
-              .find((removed) => removed.entry.route === entry.route)
-              ?.ancestors.map(({ title }) => title)
-              .join(" › ")}
+              .find((removed) => removed.entry.id === entry.id)
+              ?.entry.navPath.join(" › ")}
           </MetaRow>
         ) : null}
         <VariantOfChip catalogue={props.catalogue} entry={entry} />

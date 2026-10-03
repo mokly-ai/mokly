@@ -12,6 +12,7 @@ import {
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
+import { isComponentVariantDefinition } from "./types.js";
 /** Resolve every declaration once, including rules not selected by this render. */
 export function validateDeclaredStylesheets(
   entries: readonly ResolvedRegistryEntry[],
@@ -20,7 +21,8 @@ export function validateDeclaredStylesheets(
 ): void {
   const declaredPaths = new Set<string>();
   for (const entry of entries) {
-    if (entry.kind !== "component") continue;
+    if (entry.kind !== "component" || isComponentVariantDefinition(entry))
+      continue;
     const firstPaths = new Map<string, string>();
     for (const file of entry.stylesheets) {
       const candidate = path.resolve(config.mockupsDir, file);

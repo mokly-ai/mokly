@@ -1,14 +1,13 @@
 import type {
-  CatalogueCollection,
   CatalogueEntry,
   CatalogueReadModel,
-  CatalogueRoutedEntry,
-  CatalogueVariant,
+  CatalogueRecord,
   RemovedEntryPreview,
 } from "@mokly/viewer";
 import type { ManifestEntry } from "@mokly/viewer/data";
 import {
   invalidData,
+  isManifestComponentVariant,
   readControls,
   readProps,
   readSchema,
@@ -16,8 +15,6 @@ import {
   comparisonPath,
   comparisonGeneration,
   historicalSnapshotId,
-  publicPath,
-  pagePreviewPath,
   relatedDoc,
   repositoryPath,
 } from "@mokly/viewer/data";
@@ -44,21 +41,25 @@ export function projectCatalogue(
         ? catalogue.removedEntries.map(({ entry }) => entry)
         : []),
     ]
-      .filter((entry) => entry.kind === "component")
+      .filter(
+        (entry) =>
+          entry.kind === "component" && !isManifestComponentVariant(entry),
+      )
       .map((entry) => entry.id),
   );
   if (
-    catalogue.manifest.schemaVersion !== 6 &&
+    catalogue.manifest.schemaVersion !== 8 &&
     catalogue.manifest.schemaVersion !== "live-index-1"
   )
     invalidData(
       "$catalogue",
-      "current projection requires manifest v6 or live metadata",
+      "current projection requires manifest v8 or live metadata",
     );
   const common = (entry: ManifestEntry, removed: boolean): CatalogueEntry => ({
     id: entry.id,
     title: entry.title,
-    tags: entry.kind === "collection" ? [] : [...(entry.tags ?? [])],
+    tags: [...(entry.tags ?? [])],
+    navPath: [...entry.navPath],
     details: {
       description: entry.description,
       sourcePath: repositoryPath(entry.sourcePath),
@@ -67,23 +68,17 @@ export function projectCatalogue(
     },
     changes: entryChanges(entry, input, removed),
   });
-  const routed = (
-    entry: Exclude<ManifestEntry, { kind: "collection" }>,
-    removed: boolean,
-  ): CatalogueRoutedEntry => {
+  const record = (entry: ManifestEntry, removed: boolean): CatalogueRecord => {
     const base = common(entry, removed);
     if (entry.kind === "page")
       return {
         ...base,
         kind: "page",
-        route: entry.route,
-        documentPath: removed ? null : publicPath(`static/${entry.route}`),
       };
     if (entry.kind === "use-case")
       return {
         ...base,
         kind: "use-case",
-        route: entry.route,
         steps: entry.steps.map((step) => ({
           screenId: step.screenId,
           ...(step.title !== undefined ? { title: step.title } : {}),
@@ -96,103 +91,68 @@ export function projectCatalogue(
       return {
         ...base,
         kind: "screen",
-        route: entry.route,
-        viewports: [...entry.viewports],
-        colorSchemes: entry.darkFragments ? ["light", "dark"] : ["light"],
-        views: projectViews(input, retainedComponents, entry, entry, removed),
+        colorSchemes: [...entry.colorSchemes],
+        views: projectViews(input, retainedComponents, entry, removed),
         useCaseIds: [...entry.useCaseIds],
         ...(entry.address !== undefined ? { address: entry.address } : {}),
         ...(entry.variantOf !== undefined
           ? { variantOf: entry.variantOf }
           : {}),
       };
+    if (isManifestComponentVariant(entry)) {
+      const review = (input.comparison ?? input.evidence?.result)?.components
+        .find((item) => item.id === entry.variantOf)
+        ?.variants.find((item) => item.id === entry.id);
+      return {
+        ...base,
+        kind: "component",
+        colorSchemes: [...entry.colorSchemes],
+        variantOf: entry.variantOf,
+        props: readProps(entry.props),
+        suppliedSlots: [...entry.suppliedSlots],
+        views: projectViews(input, retainedComponents, entry, removed),
+        comparison: comparisonSelection(
+          input,
+          removed ? "removed" : review?.state,
+          true,
+        ),
+      };
+    }
     const schema = readSchema(entry.propSchema);
     if (schema.kind !== "object")
       invalidData("$catalogue", "expected object schema");
-    const previous = input.evidence?.baseline.entries.find(
-      (item) => item.kind === "component" && item.id === entry.id,
-    );
-    const oldVariants =
-      previous?.kind === "component"
-        ? previous.variants.filter(
-            (item) => !entry.variants.some((current) => current.id === item.id),
-          )
-        : [];
-    const variants: CatalogueVariant[] = [
-      ...entry.variants,
-      ...oldVariants,
-    ].map((variant) => {
-      const missing = removed || oldVariants.includes(variant);
-      const review = (
-        input.comparison?.schemaVersion === 5
-          ? input.comparison
-          : input.evidence?.result
-      )?.components
-        .find((item) => item.id === entry.id)
-        ?.variants.find((item) => item.id === variant.id);
-      return {
-        id: variant.id,
-        title: variant.title,
-        props: readProps(variant.props),
-        suppliedSlots: [...variant.suppliedSlots],
-        views: projectViews(
-          input,
-          retainedComponents,
-          entry,
-          variant,
-          missing,
-          variant.id,
-        ),
-        comparison: comparisonSelection(
-          input,
-          missing ? "removed" : review?.state,
-          true,
-        ),
-        ...(variant.description !== undefined
-          ? { description: variant.description }
-          : {}),
-      };
-    });
     return {
       ...base,
       kind: "component",
-      route: entry.route,
-      viewports: [...entry.viewports],
-      colorSchemes: entry.variants[0]?.darkFragments
-        ? ["light", "dark"]
-        : ["light"],
+      colorSchemes: [...entry.colorSchemes],
       propSchema: schema,
       slots: [...entry.slots],
       controls: readControls(entry.controls, schema),
-      variants,
     };
   };
-  const collections: CatalogueCollection[] = [];
-  const entries: CatalogueRoutedEntry[] = [];
-  for (const entry of orderEntriesWithVariants(
+  const entries: CatalogueRecord[] = orderEntriesWithVariants(
     catalogue.manifest.entries,
     (value) => value,
-  )) {
-    if (entry.kind === "collection")
-      collections.push({
-        ...common(entry, false),
-        kind: "collection",
-        childIds: [...entry.childIds],
-      });
-    else entries.push(routed(entry, false));
-  }
+  ).map((entry) => record(entry, false));
   const removedSnapshots =
     input.changesStatus === "ready"
-      ? orderEntriesWithVariants(catalogue.removedEntries, ({ entry }) => entry)
+      ? orderEntriesWithVariants(
+          [
+            ...catalogue.manifest.entries.map((entry) => ({ entry })),
+            ...catalogue.removedEntries.map((snapshot) => ({
+              ...snapshot,
+              removed: true as const,
+            })),
+          ],
+          ({ entry }) => entry,
+        ).flatMap((item) => ("removed" in item ? [item] : []))
       : [];
-  const removedRoutes = new Set(
-    removedSnapshots.map(({ entry }) => entry.route),
-  );
-  for (const route of input.removedPreviews?.keys() ?? [])
-    if (!removedRoutes.has(route))
-      invalidData("$catalogue", "preview route is not a removed entry");
+  const removedIds = new Set(removedSnapshots.map(({ entry }) => entry.id));
+  for (const id of input.removedPreviews?.keys() ?? [])
+    if (!removedIds.has(id))
+      invalidData("$catalogue", "preview id is not a removed entry");
   return {
-    schemaVersion: 2,
+    schemaVersion: 4,
     identity,
     deploymentId: ZERO_DEPLOYMENT_ID,
     revision: {
@@ -201,18 +161,13 @@ export function projectCatalogue(
     },
     changesStatus: input.changesStatus,
     comparisonUrl,
-    collections,
     tree: projectTree(catalogue.hierarchy),
     screens: entries.filter((entry) => entry.kind === "screen"),
     pages: entries.filter((entry) => entry.kind === "page"),
     useCases: entries.filter((entry) => entry.kind === "use-case"),
     components: entries.filter((entry) => entry.kind === "component"),
-    removedEntries: removedSnapshots.map(({ entry, ancestors }) => ({
-      entry: routed(entry, true),
-      ancestors: ancestors.map((ancestor) => ({
-        id: ancestor.id,
-        title: ancestor.title,
-      })),
+    removedEntries: removedSnapshots.map(({ entry }) => ({
+      entry: record(entry, true),
       ...(snapshotSource
         ? {
             snapshotId: historicalSnapshotId(
@@ -224,7 +179,7 @@ export function projectCatalogue(
         : {}),
       ...projectPreview(
         entry,
-        input.removedPreviews?.get(entry.route),
+        input.removedPreviews?.get(entry.id),
         comparisonUrl,
       ),
     })),
@@ -253,7 +208,7 @@ function historicalSource(
 }
 
 function projectPreview(
-  entry: Exclude<ManifestEntry, { kind: "collection" }>,
+  entry: ManifestEntry,
   preview: RemovedEntryPreview | undefined,
   comparisonUrl: string | null,
 ): { preview?: RemovedEntryPreview } {
@@ -267,12 +222,5 @@ function projectPreview(
   }
   if (entry.kind !== "page")
     invalidData("$catalogue", "page preview requires a removed page");
-  const previewPath = pagePreviewPath(preview.path);
-  const generation = comparisonUrl.slice(0, -"review.json".length);
-  if (previewPath !== `${generation}pages/${entry.route}.json`)
-    invalidData(
-      "$catalogue",
-      "page preview must match comparison generation and route",
-    );
-  return { preview: { kind: "page", path: previewPath } };
+  return { preview: { kind: "page" } };
 }

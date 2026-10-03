@@ -6,7 +6,7 @@ import { readPublicCatalogue } from "../src/server/public_catalogue_model.js";
 
 test("shell requests reuse only an unchanged validated public revision", () => {
   let bytes = fs.readFileSync(
-    "docs/protocol/fixtures/catalogue-v2.json",
+    "docs/protocol/fixtures/catalogue-v4.json",
     "utf8",
   );
   const source = { read: () => bytes };

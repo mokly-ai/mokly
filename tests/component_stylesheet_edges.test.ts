@@ -9,6 +9,7 @@ import { insertComponentStylesheets } from "../dist/components/stylesheet_links.
 import { rendererStylesheetPaths } from "../dist/components/stylesheet_reuse.js";
 import { loadConfig } from "../dist/config/load.js";
 import { compareReview } from "../dist/review/compare.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 
 import { componentGit } from "./helpers/component_review_fixture.js";
 import {
@@ -16,6 +17,7 @@ import {
   fixtureWithSheets,
 } from "./helpers/component_stylesheet_fixture.js";
 import { removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("realpath aliases share one first-declaration link and both rendered owners", async (context) => {
   const source = declared("action.css", "alias.css")
@@ -34,7 +36,10 @@ test("realpath aliases share one first-declaration link and both rendered owners
   const before = await compileCatalogue(config);
   const screen = before.manifest.entries.find((entry) => entry.id === "home");
   assert.ok(screen?.kind === "screen");
-  const html = before.outputs.get(screen.fragments.mobile)!;
+  const html = textOutput(
+    before.outputs,
+    viewRoute(screen.kind, screen.id, "mobile", "light"),
+  )!;
   assert.equal((html.match(/href="\.\.\/action\.css"/g) ?? []).length, 1);
   assert.doesNotMatch(html, /href="\.\.\/alias\.css"/);
   assert.deepEqual(screen.componentViews![0]!.resources, [
@@ -89,12 +94,15 @@ test("renderer-authored aliases stay in place and select the first link's public
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
     `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => { const prefix = input.entry.kind === "component" ? "../../" : "../"; return '<html><head><meta name="first"><link rel="alternate stylesheet" href="' + prefix + 'alias.css"><link rel="stylesheet" href="' + prefix + 'action.css"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; };`,
+export default (input) => { const prefix = "../"; return '<html><head><meta name="first"><link rel="alternate stylesheet" href="' + prefix + 'alias.css"><link rel="stylesheet" href="' + prefix + 'action.css"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; };`,
   );
   const result = await compileCatalogue(await loadConfig(fixture.root));
   const screen = result.manifest.entries.find((entry) => entry.id === "home");
   assert.ok(screen?.kind === "screen");
-  const html = result.outputs.get(screen.fragments.mobile)!;
+  const html = textOutput(
+    result.outputs,
+    viewRoute(screen.kind, screen.id, "mobile", "light"),
+  )!;
   assert.equal((html.match(/href="\.\.\/alias\.css"/g) ?? []).length, 1);
   assert.equal((html.match(/href="\.\.\/action\.css"/g) ?? []).length, 1);
   assert.ok(html.indexOf('name="first"') < html.indexOf("alias.css"));
@@ -152,6 +160,7 @@ export default (input) => '<html><head><link rel="stylesheet" href="' + input.st
   const result = await compileCatalogue(await loadConfig(fixture.root));
   for (const [route, html] of result.outputs) {
     if (!route.endsWith(".html")) continue;
+    assert.ok(typeof html === "string");
     assert.match(html, /data-entry-stylesheets="false"/, route);
     assert.match(html, /href="[^"]*base\.css"/, route);
   }

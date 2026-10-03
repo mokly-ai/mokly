@@ -13,6 +13,7 @@ import { runReview } from "../dist/review/run.js";
 import type { ReviewArtifact } from "../packages/viewer/dist/review/types.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("Comparison snapshot output cannot overlap generated or authored roots", async (context) => {
   const fixture = await createFixture();
@@ -42,8 +43,8 @@ test("Review artifact paths are collision-free for distinct valid routes", async
   const baseManifest = JSON.stringify({
     entries: [],
     generatedBy: "mokly",
+    schemaVersion: 8,
     sourceFiles: [],
-    schemaVersion: 6,
   });
   const artifact = await compareReview(
     compilation,
@@ -72,8 +73,8 @@ test("Review artifact paths are collision-free for distinct valid routes", async
     },
     "HEAD",
   );
-  const afterPaths = artifact.result.screens.flatMap((screen) =>
-    screen.views.flatMap((view) => view.afterPath ?? []),
+  const afterPaths = [...artifact.files.keys()].filter((name) =>
+    name.startsWith("snapshots/after/screens/"),
   );
 
   assert.equal(afterPaths.length, 4);
@@ -103,25 +104,24 @@ test("different material keys remain part of Review classification", () => {
 test("Comparison artifacts retain snapshots without standalone UI", () => {
   const artifact: ReviewArtifact = {
     files: new Map([
-      ["screens/screens/home/mobile/before.html", "<html></html>"],
-      ["screens/screens/home/mobile/after.html", "<html></html>"],
+      ["snapshots/before/screens/home.mobile.html", "<html></html>"],
+      ["snapshots/after/screens/home.mobile.html", "<html></html>"],
     ]),
     result: {
       baseCommit: "a".repeat(40),
       baseRef: "HEAD",
       changedPaths: [],
       ignoredImpact: [],
-      schemaVersion: 4,
+      schemaVersion: 5,
       screens: [
         {
+          after: { id: "home", title: "Home" },
+          before: { id: "home", title: "Home" },
           id: "home",
-          route: "screens/home.html",
           state: "changed",
           title: "Home",
           views: [
             {
-              afterPath: "screens/screens/home/mobile/after.html",
-              beforePath: "screens/screens/home/mobile/before.html",
               colorScheme: "light",
               ignoredIds: [],
               state: "changed",
@@ -130,13 +130,16 @@ test("Comparison artifacts retain snapshots without standalone UI", () => {
           ],
         },
       ],
+      components: [],
+      changes: [],
+      affectedConsumers: [],
     },
   };
   const files = renderReviewArtifact(artifact);
   assert.equal(files.has("index.html"), false);
   assert.equal(files.has("review-navigation.js"), false);
   assert.equal(
-    files.get("screens/screens/home/mobile/before.html"),
+    files.get("snapshots/before/screens/home.mobile.html"),
     "<html></html>",
   );
 });
@@ -149,8 +152,8 @@ test("Review retains marker-bearing pane bytes as portable output", async (conte
   const baseManifest = JSON.stringify({
     entries: [],
     generatedBy: "mokly",
+    schemaVersion: 8,
     sourceFiles: [],
-    schemaVersion: 6,
   });
   const artifact = await compareReview(
     compilation,
@@ -172,13 +175,17 @@ test("Review retains marker-bearing pane bytes as portable output", async (conte
     "HEAD",
   );
   const home = artifact.result.screens.find((screen) => screen.id === "home");
-  const afterPath = home?.views.find(
+  const view = home?.views.find(
     (view) => view.viewport === "mobile" && view.colorScheme === "light",
-  )?.afterPath;
-  assert.ok(afterPath);
+  );
+  assert.ok(view);
+  const afterPath = "snapshots/after/screens/home.mobile.html";
   const pane = String(artifact.files.get(afterPath));
 
-  assert.equal(pane, compilation.outputs.get("screens/home.mobile.html"));
+  assert.equal(
+    pane,
+    textOutput(compilation.outputs, "screens/home.mobile.html"),
+  );
   assert.match(pane, /href="\.\/details\.mobile\.html"/);
   assert.match(pane, /data-mokly-link="details"/);
   assert.doesNotMatch(pane, /data-mokly-target/);

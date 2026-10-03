@@ -6,12 +6,14 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
+import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import {
   createFixture,
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("id-link rewriting changes only complete href attributes", async (context) => {
   const fixture = await createFixture(
@@ -23,7 +25,8 @@ test("id-link rewriting changes only complete href attributes", async (context) 
   const config = await loadConfig(fixture.root);
 
   const compilation = await compileCatalogue(config);
-  const mobile = compilation.outputs.get("screens/home.mobile.html") ?? "";
+  const mobile =
+    textOutput(compilation.outputs, "screens/home.mobile.html") ?? "";
 
   assert.match(mobile, /Literal mock:missing-screen and mock:details/);
   assert.match(mobile, /data-route="mock:details"/);
@@ -48,7 +51,8 @@ test("id-link rewriting uses parsed encoded href values", async (context) => {
   const config = await loadConfig(fixture.root);
 
   const compilation = await compileCatalogue(config);
-  const mobile = compilation.outputs.get("screens/home.mobile.html") ?? "";
+  const mobile =
+    textOutput(compilation.outputs, "screens/home.mobile.html") ?? "";
 
   assert.match(mobile, /href="\.\/details\.mobile\.html"/);
   assert.doesNotMatch(mobile, /mock&#58;details/);
@@ -95,7 +99,8 @@ test("id-link rewriting resolves both navigation attributes", async (context) =>
     );
 
     const compilation = await compileCatalogue(config);
-    const mobile = compilation.outputs.get("screens/home.mobile.html") ?? "";
+    const mobile =
+      textOutput(compilation.outputs, "screens/home.mobile.html") ?? "";
 
     assert.doesNotMatch(mobile, /mock:details/);
     assert.match(mobile, /href="\.\/details\.mobile\.html"/);
@@ -148,7 +153,7 @@ test("link validation rejects generated targets pending orphan removal", async (
   await assert.rejects(() => compileCatalogue(config), /missing target/);
 });
 
-test("catalogue routes reject URL and HTML attribute delimiters", async () => {
+test("legacy authored routes cannot change derived documents", async () => {
   for (const route of [
     'screens/details.mobile.html" onclick="alert.html',
     "screens/CON.html",
@@ -159,7 +164,17 @@ test("catalogue routes reject URL and HTML attribute delimiters", async () => {
     const fixture = await createFixture(routeSource(route));
     try {
       const config = await loadConfig(fixture.root);
-      await assert.rejects(() => compileCatalogue(config), /invalid-route/);
+      const compilation = await compileCatalogue(config);
+      assert.ok(compilation.outputs.has("screens/unsafe-target.mobile.html"));
+      const entry = compilation.manifest.entries.find(
+        ({ id }) => id === "unsafe-target",
+      );
+      assert.ok(entry);
+      assert.equal(
+        entryRoute(entry.kind, entry.id),
+        "screens/unsafe-target.html",
+      );
+      assert.equal("route" in entry, false);
     } finally {
       await removeFixture(fixture);
     }
@@ -186,7 +201,8 @@ test("framework-emitted stylesheet URLs encode path segments", async (context) =
   const config = await loadConfig(fixture.root);
 
   const compilation = await compileCatalogue(config);
-  const mobile = compilation.outputs.get("screens/home.mobile.html") ?? "";
+  const mobile =
+    textOutput(compilation.outputs, "screens/home.mobile.html") ?? "";
 
   assert.match(mobile, /href="\.\.\/theme%20%231\.css"/);
 });
@@ -213,9 +229,10 @@ test("stylesheet rules match catalogue routes for every viewport", async (contex
   const compilation = await compileCatalogue(config);
 
   for (const viewport of ["mobile", "desktop"]) {
-    const home = compilation.outputs.get(`screens/home.${viewport}.html`) ?? "";
+    const home =
+      textOutput(compilation.outputs, `screens/home.${viewport}.html`) ?? "";
     const details =
-      compilation.outputs.get(`screens/details.${viewport}.html`) ?? "";
+      textOutput(compilation.outputs, `screens/details.${viewport}.html`) ?? "";
     assert.match(home, /href="\.\.\/home\.css"/);
     assert.doesNotMatch(details, /home\.css/);
   }
@@ -229,7 +246,7 @@ test("dark fragments link within dark and fall back to light-only", async (conte
 
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
   const mobileDark =
-    compilation.outputs.get("screens/a.mobile.dark.html") ?? "";
+    textOutput(compilation.outputs, "screens/a.mobile.dark.html") ?? "";
 
   assert.match(mobileDark, /href="\.\/b\.mobile\.dark\.html"/);
   assert.match(mobileDark, /href="\.\/c\.mobile\.html"/);

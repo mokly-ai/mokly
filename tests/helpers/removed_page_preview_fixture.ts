@@ -4,8 +4,7 @@ import type { TestContext } from "node:test";
 
 import type {
   HistoricalManifest,
-  ManifestPage,
-  ManifestV6,
+  HistoricalManifestPage,
 } from "@mokly/viewer/data";
 
 import { loadConfig } from "../../dist/config/load.js";
@@ -18,27 +17,23 @@ import type {
 import { createFixture, removeFixture } from "./fixture.js";
 
 export const PAGE_COMMIT = "b".repeat(40);
-export const PAGE_ROUTE = "archive/guide.html";
+export const PAGE_ROUTE = "pages/guide.html";
 
 interface BaselineFile {
   bytes?: Uint8Array;
   kind: GitFileKind;
 }
 
-export async function removedPagePreviewFixture(
-  t: TestContext,
-  schemaVersion: 4 | 5 = 4,
-) {
+export async function removedPagePreviewFixture(t: TestContext) {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
-  const page: ManifestPage = {
+  const page: HistoricalManifestPage = {
     description: "Historical guide",
     id: "guide",
     kind: "page",
     navPath: ["Archive"],
     relatedDocs: ["docs/guide.md"],
-    route: PAGE_ROUTE,
     sourcePath: "entries/guide.mockup.tsx",
     tags: ["guide"],
     title: "Guide",
@@ -46,7 +41,7 @@ export async function removedPagePreviewFixture(
   const baseline = {
     entries: [page],
     generatedBy: "mokly",
-    schemaVersion,
+    schemaVersion: 8,
     sourceFiles: ["entries/guide.mockup.tsx"],
   } as HistoricalManifest;
   const files = new Map<string, BaselineFile>();
@@ -83,8 +78,8 @@ export async function removedPagePreviewFixture(
     baseline,
     baseCommit: PAGE_COMMIT,
     baseRef: "main",
-    changedRoutes: [PAGE_ROUTE],
-    removedEntries: [{ entry: page, ancestors: [] }],
+    changedIds: [page.id],
+    removedEntries: [{ entry: page }],
     schemaVersion: 1 as const,
   };
   return { ...fixture, batches, baseline, config, files, page, reader, source };
@@ -118,9 +113,4 @@ export function baselineReader(
       );
     },
   };
-}
-
-export function v5Baseline(baseline: HistoricalManifest): ManifestV6 {
-  if (!("sourceFiles" in baseline)) throw new Error("Expected source files");
-  return { ...baseline, schemaVersion: 6 } as ManifestV6;
 }

@@ -7,5 +7,7 @@ export default defineConfig({
   review: {
     outDir: "../.context/review",
   },
-  stylesheets: [{ match: "workspace/**/*.html", stylesheets: ["juno.css"] }],
+  stylesheets: [
+    { match: "screens/workspace-overview.html", stylesheets: ["juno.css"] },
+  ],
 });

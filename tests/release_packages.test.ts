@@ -120,6 +120,20 @@ test("the CLI archive requires every guide and rejects repository-only paths", a
   }
 });
 
+test("the CLI archive requires the URL-loaded PostCSS worker", async () => {
+  const { validatePackageReport } = await archiveModule();
+  const original = packageReport();
+  validatePackageReport(original);
+  const changed = structuredClone(original);
+  changed.files = changed.files.filter(
+    ({ path: filename }) => filename !== "dist/build/styles/postcss_worker.js",
+  );
+  assert.throws(
+    () => validatePackageReport(changed),
+    /package is missing dist\/build\/styles\/postcss_worker\.js/,
+  );
+});
+
 test("runtime license inspection resolves production workspace links", async (t) => {
   const { inspectRuntimeLicenses } = await archiveModule();
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-licenses-"));

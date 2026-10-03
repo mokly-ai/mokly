@@ -6,7 +6,7 @@ import test from "node:test";
 import { exportCatalogue } from "../dist/export/run.js";
 import { viewPage } from "../dist/server/pages.js";
 import { readPreviewDescriptor } from "../packages/viewer/dist/previews/descriptor.js";
-import type { ManifestV6 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { RemovedEntrySnapshot } from "../packages/viewer/dist/shell/metadata.js";
 
@@ -28,7 +28,6 @@ const page: RemovedEntry = {
   kind: "page",
   id: "handbook",
   title: "Getting started",
-  route: "docs/handbook.html",
 };
 
 const screen: RemovedEntry = {
@@ -36,14 +35,9 @@ const screen: RemovedEntry = {
   kind: "screen",
   id: "farewell",
   title: "Farewell",
-  route: "screens/farewell.html",
+  colorSchemes: ["light"],
   address: "example.test/farewell",
   useCaseIds: [],
-  viewports: ["mobile", "desktop"],
-  fragments: {
-    mobile: "screens/farewell.mobile.html",
-    desktop: "screens/farewell.desktop.html",
-  },
 };
 
 const component: RemovedEntry = {
@@ -51,24 +45,22 @@ const component: RemovedEntry = {
   kind: "component",
   id: "chip",
   title: "Chip",
-  route: "components/chip.html",
-  viewports: ["mobile", "desktop"],
+  colorSchemes: ["light"],
   propSchema: { kind: "object", properties: {} },
   slots: [],
   controls: {},
-  variants: [
-    {
-      id: "default",
-      title: "Default",
-      props: {},
-      suppliedSlots: [],
-      componentViews: [],
-      fragments: {
-        mobile: "components/chip.default.mobile.html",
-        desktop: "components/chip.default.desktop.html",
-      },
-    },
-  ],
+};
+
+const componentVariant: RemovedEntry = {
+  ...metadata,
+  kind: "component",
+  id: "chip-default",
+  title: "Default",
+  colorSchemes: ["light"],
+  variantOf: "chip",
+  props: {},
+  suppliedSlots: [],
+  componentViews: [],
 };
 
 const flow: RemovedEntry = {
@@ -76,19 +68,24 @@ const flow: RemovedEntry = {
   kind: "use-case",
   id: "tour",
   title: "Tour",
-  route: "flows/tour.html",
   steps: [],
 };
 
-function removedShell(entry: RemovedEntry): string {
-  const manifest: ManifestV6 = {
-    schemaVersion: 6,
+function removedShell(
+  entry: RemovedEntry,
+  related: readonly RemovedEntry[] = [],
+): string {
+  const manifest: ManifestV8 = {
+    schemaVersion: 8,
     generatedBy: "mokly",
     sourceFiles: [],
     entries: [],
   };
   const removed: RemovedEntrySnapshot[] = [
-    { entry, ancestors: [{ id: "example", title: "Example" }] },
+    { entry: { ...entry, navPath: ["Example"] } },
+    ...related.map((candidate) => ({
+      entry: { ...candidate, navPath: ["Example"] },
+    })),
   ];
   const catalogue = createCatalogue(manifest, removed);
   return viewPage(
@@ -97,7 +94,7 @@ function removedShell(entry: RemovedEntry): string {
     publicShellContext(catalogue, {
       base: "origin/main",
       comparisons: true,
-      changedRoutes: [entry.route],
+      changedIds: [entry.id],
       updateVersion: 1,
     }),
   );
@@ -128,7 +125,6 @@ test("a removed document opens its previous version instead of an empty state", 
   assert.deepEqual(descriptor(html), {
     id: "handbook",
     kind: "page",
-    route: "docs/handbook.html",
     title: "Getting started",
   });
 });
@@ -149,7 +145,6 @@ test("a removed screen opens historical frames without comparison controls", () 
     address: "example.test/farewell",
     id: "farewell",
     kind: "screen",
-    route: "screens/farewell.html",
     title: "Farewell",
   });
 });
@@ -165,7 +160,7 @@ test("a served stage claims no request until its client can make one", () => {
 });
 
 test("removed components and flows keep the behavior the contract leaves alone", () => {
-  const chip = removedShell(component);
+  const chip = removedShell(component, [componentVariant]);
   assert.match(documentText(chip), /This component was removed/);
   assert.match(
     documentText(chip),
@@ -187,14 +182,11 @@ test("exported shells advertise only the packaged previous versions", async (t) 
   });
   const read = (route: string) =>
     fs.readFile(path.join(fixture.output, "view", route), "utf8");
-  const document = descriptor(await read("archive/removed.html"));
+  const document = descriptor(await read("pages/removed-page.html"));
   assert.equal(document?.kind, "page");
   assert.equal(document?.published?.kind, "page");
-  assert.match(
-    document?.published?.kind === "page" ? document.published.path : "",
-    /^__mokly\/diffs\/__generations\/[a-f0-9]{64}\/pages\/archive\/removed\.html\.json$/,
-  );
-  const removedScreen = descriptor(await read("screens/removed.html"));
+  assert.deepEqual(document?.published, { kind: "page" });
+  const removedScreen = descriptor(await read("screens/removed-screen.html"));
   assert.deepEqual(removedScreen?.published, { kind: "screen" });
   const current = await read("screens/current.html");
   assert.doesNotMatch(current, /data-mokly-preview=/);

@@ -6,12 +6,14 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { insertComponentStylesheets } from "../dist/components/stylesheet_links.js";
 import { loadConfig } from "../dist/config/load.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 
 import {
   declared,
   fixtureWithSheets,
 } from "./helpers/component_stylesheet_fixture.js";
 import { removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const route = "screens/home.html";
 const link = (href: string) => `<link rel="stylesheet" href="${href}">`;
@@ -126,7 +128,12 @@ for (const [name, shared, expected] of [
     const screen = result.manifest.entries.find((entry) => entry.id === "home");
     assert.ok(screen?.kind === "screen");
     assert.deepEqual(
-      hrefs(result.outputs.get(screen.fragments.mobile)!),
+      hrefs(
+        textOutput(
+          result.outputs,
+          viewRoute(screen.kind, screen.id, "mobile", "light"),
+        )!,
+      ),
       expected,
     );
   });
@@ -144,7 +151,10 @@ for (const duplicate of ["action.css", "alias.css"])
     const result = await compileCatalogue(await loadConfig(fixture.root));
     const screen = result.manifest.entries.find((entry) => entry.id === "home");
     assert.ok(screen?.kind === "screen");
-    const html = result.outputs.get(screen.fragments.mobile)!;
+    const html = textOutput(
+      result.outputs,
+      viewRoute(screen.kind, screen.id, "mobile", "light"),
+    )!;
     assert.equal((html.match(/href="\.\.\/action\.css"/g) ?? []).length, 1);
     assert.deepEqual(
       screen.componentViews![0]!.resources.find(
@@ -163,7 +173,10 @@ test("configured and declared real file keeps the configured link and rendered o
   const result = await compileCatalogue(await loadConfig(fixture.root));
   const screen = result.manifest.entries.find((entry) => entry.id === "home");
   assert.ok(screen?.kind === "screen");
-  const html = result.outputs.get(screen.fragments.mobile)!;
+  const html = textOutput(
+    result.outputs,
+    viewRoute(screen.kind, screen.id, "mobile", "light"),
+  )!;
   assert.equal((html.match(/href="\.\.\/action\.css"/g) ?? []).length, 1);
   assert.deepEqual(
     screen.componentViews![0]!.resources.find(

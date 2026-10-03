@@ -10,7 +10,7 @@ import { compareReview } from "../dist/review/compare.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
 for (const mode of ["committed", "derived"] as const) {
-  test(`v5 author dependencies do not produce Changes against v6 in ${mode} mode`, async (context) => {
+  test(`v5 author dependencies do not produce Changes against v8 in ${mode} mode`, async (context) => {
     const fixture = await componentReviewFixture(context, (source) => source);
     const v5 = {
       ...fixture.before.manifest,
@@ -24,8 +24,8 @@ for (const mode of ["committed", "derived"] as const) {
           : {}),
       })),
     };
-    assert.equal(fixture.after.manifest.schemaVersion, 6);
-    assert.throws(() => parseManifest(v5), /schema version 6/);
+    assert.equal(fixture.after.manifest.schemaVersion, 8);
+    assert.throws(() => parseManifest(v5), /schema version 8/);
     const normalized = parseHistoricalManifest(v5);
     for (const entry of normalized.entries) {
       assert.equal("dependencies" in entry, false);

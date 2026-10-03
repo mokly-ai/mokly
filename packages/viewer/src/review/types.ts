@@ -28,10 +28,8 @@ export interface ExcludedResource {
   reason: "no-matching-rule";
 }
 
-/** One view comparison and its retained artifact paths. */
+/** One view comparison, addressed only by its axes. */
 export interface ViewReview {
-  afterPath?: string;
-  beforePath?: string;
   colorScheme: ColorScheme;
   ignoredIds: readonly string[];
   /** Present exactly when the paired ignore-normalized documents differ. */
@@ -48,36 +46,18 @@ export type ViewResourceEvidence = Pick<
   "viewport" | "colorScheme" | "reasons" | "excludedResources"
 >;
 
-/** Screen-only resource evidence retained by the existing live classification. */
+/** Screen-only resource evidence retained by live classification. */
 export interface ScreenResourceEvidence {
-  route: string;
+  id: string;
   views: readonly ViewResourceEvidence[];
 }
 
-/** One stable screen route comparison. */
+/** One stable screen identity comparison. */
 export interface ScreenReview {
   id: string;
-  route: string;
   state: ReviewState;
   title: string;
   views: readonly ViewReview[];
-}
-
-/** Deterministic machine-readable Review result. */
-export interface ReviewResultV4 {
-  /** Common ancestor shared by HEAD and the configured base ref. */
-  baseCommit: string;
-  /** Configured ref used to resolve the comparison branch point. */
-  baseRef: string;
-  changedPaths: readonly string[];
-  ignoredImpact: readonly {
-    colorScheme: ColorScheme;
-    count: number;
-    id: string;
-    viewport: Viewport;
-  }[];
-  screens: readonly ScreenReview[];
-  schemaVersion: 4;
 }
 
 /** Complete artifact file map plus summary model. */
@@ -86,5 +66,5 @@ export interface ReviewArtifact {
   result: ReviewResult;
 }
 
-/** Versioned comparison payload; only v4 and v5 are supported. */
-export type ReviewResult = ReviewResultV4 | ReviewResultV5;
+/** The only accepted comparison payload. */
+export type ReviewResult = ReviewResultV5;

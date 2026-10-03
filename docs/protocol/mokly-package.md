@@ -19,17 +19,7 @@ The catalogue-link implementation and its verification history are recorded in
 the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
 
-[Whole-document pages](./mokly-pages.md) use the same IDs and hierarchy as
-screens and flows. Current manifests require v6. The
-[breaking migration](./mokly-page-migration.md) removes legacy configuration,
-discovery, and rendering adapters; consumers use ordinary page definitions.
-The co-located layout below, discovered through `entries` globs, was delivered
-by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
-Manifest v6 and the public component stylesheet marker were planned by
-[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestones 6 and 3. Historical v3–v5 baselines remain readable.
-Build warning delivery across public commands and Serve was implemented by
-the same plan's Milestone 14.
+This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 
 ## Package Identity
 
@@ -113,7 +103,7 @@ The [configuration contract](./mokly-configuration.md) defines the complete type
 shape, path validation, source/output boundaries, and individual field behavior.
 
 `publicExclude` defaults and validation follow the
-[configuration contract](./mokly-configuration.md#public-exclusion-configuration),
+[configuration contract](./mokly-configuration-discovery.md#public-exclusion-configuration),
 with matching and public access defined by the
 [source-protection contract](./mokly-source-protection.md#public-exclusions).
 
@@ -129,12 +119,12 @@ examples, not mandatory runtime locations. An explicit `entries` glob defines
 the complete entry shape with no additional suffix filter. The `.mockup.ts` and
 `.mockup.tsx` convention remains recommended, and `entriesDir` selects it by
 expanding to `<dir>/**/*.mockup.{ts,tsx}`. See
-[entry discovery](./mokly-configuration.md#entry-discovery).
+[entry discovery](./mokly-configuration-discovery.md#entry-discovery).
 
 ## Public Authoring API
 
 The [authoring contract](./mokly-authoring.md) defines exported helpers and
-input types, hierarchy, routes, and catalogue links.
+input types, hierarchy, derived routes, and catalogue links.
 
 ## Rendering Boundary
 
@@ -149,30 +139,22 @@ defines the consumer cutover adapter and its ownership constraints.
 ## Generated Contract
 
 The [generated-output contract](./mokly-rendering.md#generated-contract) defines
-fragments, manifest v6, deterministic ordering, and generated-file ownership.
+fragments, manifest v8, deterministic ordering, and generated-file ownership;
+the [imported-styles contract](./mokly-imported-styles.md) defines binary CSS
+assets and per-root stylesheet routes in that output.
 
-## Page Migration And Historical Comparisons
+## Pages And Baseline Comparisons
 
-`legacy` configuration is rejected, including an explicitly undefined value.
-Register complete synchronous HTML with `definePage` or nested `page`; move
-comment components, source allowlists, and stage policy into consumer code.
-The [migration contract](./mokly-page-migration.md) specifies safe archival
-of verified old artifacts without weakening generated-file ownership.
-
-Current reads accept only canonical `mokly-manifest.json` schema v6 with a
-`mokly` generator identity and validate the
-[resolved source inventory](./mokly-source-protection.md). Git comparisons
-prefer that filename, then accept the former `mokabook-manifest.json` and
-normalize its `mokabook` generator identity. They accept historical v5, v3, and
-both disjoint historical v4 formats. A v2 `mockbook-manifest.json` is considered
-only when both newer historical filenames are absent and
-`compatibility.readManifestV2` is enabled. Invalid higher-precedence history
-never falls back. Historical readers never execute consumer code.
-Before comparison, normalize historical v3–v5 entries by dropping removed
-source-path fields; only rendered output and resources provide file evidence.
+Register complete synchronous HTML with `definePage` or nested `page`. Current
+reads require canonical manifest v8 and validate the
+[resolved source inventory](./mokly-source-protection.md). Git comparisons use
+the same version boundary; the
+[baseline compatibility contract](./mokly-baseline-compatibility.md) defines
+how earlier output makes Changes unavailable without failing current output.
+Baseline readers never execute consumer code through the current package.
 
 The [page contract](./mokly-pages.md) defines the public page inputs,
-rendering pipeline, exact routes, inheritance, and schema validation.
+rendering pipeline, derived routes, inheritance, and schema validation.
 
 ## Packaged Documentation
 
@@ -196,6 +178,7 @@ literals, and package boundary.
 
 ## Related Docs
 
+- [Generated output and manifest v8](./mokly-rendering-generated.md#generated-contract)
 - [Build, Browse, and Review runtime](./mokly-runtime.md)
 - [Packaged CLI guides](./mokly-guides.md)
 - [CI and npm release](./npm-release.md)

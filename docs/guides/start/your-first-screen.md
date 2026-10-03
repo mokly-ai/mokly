@@ -16,21 +16,14 @@ file is beside the account screen it describes, for example
 expanding to `<folder>/**/*.mockup.{ts,tsx}`.
 
 ```tsx
-import { defineCollection, defineScreen } from "@mokly/mokly";
+import { defineScreen } from "@mokly/mokly";
 
 export const mockups = [
-  defineCollection({
-    id: "account",
-    title: "Account",
-    description: "Account product screens.",
-    childIds: ["account-home"],
-    relatedDocs: ["docs/account.md"],
-  }),
   defineScreen({
     id: "account-home",
     title: "Account home",
     description: "The account landing screen.",
-    route: "account/home.html",
+    navPath: ["Account"],
     mobile: <main>Account</main>,
     desktop: <main>Account</main>,
     relatedDocs: ["docs/account.md"],
@@ -45,15 +38,19 @@ export const mockups = [
 components your product ships. Each view is generated as its own standalone
 page, so wrap the content in a landmark such as `main`.
 
-The collection is also the navigation hierarchy. Because `account-home` is a
-child of `account`, the catalogue shows it under Account and builds its
-breadcrumb from that relationship.
+The `navPath` creates an Account folder and its breadcrumb; the screen's
+route, `screens/account-home.html`, is derived from its id and stays the same
+even if you rename the folder. Without a `navPath`, the screen appears at the
+top of Pages.
 
-## Give it a route
+## Where it is written
 
-`route` is where the screen is written under `mockupsDir` and how the
-catalogue addresses it. Ids are lowercase and kebab-case, and they are the
-name you use when one screen links to another.
+Mokly derives the route from the id. This screen is written under
+`mockupsDir` as `screens/account-home.mobile.html` and
+`screens/account-home.desktop.html`, and the catalogue addresses it at
+`screens/account-home.html`. Ids are lowercase kebab-case, unique across the
+catalogue, and they are the name you use when one screen links to another; an
+id may not be a Windows device name such as `con` or `nul`.
 
 ## Next
 

@@ -3,8 +3,6 @@ import test from "node:test";
 
 import { loadConfig } from "../dist/config/load.js";
 import {
-  collection,
-  defineCollection,
   defineComponent,
   definePage,
   defineRoot,
@@ -30,11 +28,11 @@ function component(input: Record<string, unknown> = {}) {
   return defineComponent({
     ...common,
     ...input,
-    route: "components/example.html",
+
     propSchema: { kind: "object", properties: {} },
     render: () => "Component",
     variants: [{ id: "default", title: "Default", props: {} }],
-  }).entry;
+  }).entries;
 }
 
 test("every authoring boundary warns once for removed dependencies", async (context) => {
@@ -49,7 +47,6 @@ test("every authoring boundary warns once for removed dependencies", async (cont
           ...common,
           ...views,
           ...removed,
-          route: "screens/example.html",
         }),
     ],
     [
@@ -58,7 +55,7 @@ test("every authoring boundary warns once for removed dependencies", async (cont
         definePage({
           ...common,
           ...removed,
-          route: "pages/example.html",
+
           render: () => "<html></html>",
         }),
     ],
@@ -68,85 +65,55 @@ test("every authoring boundary warns once for removed dependencies", async (cont
         defineUseCase({
           ...common,
           ...removed,
-          route: "user-flows/example.html",
+
           steps: [{ screenId: "other" }],
         }),
         defineScreen({
           ...common,
           ...views,
           id: "other",
-          route: "screens/other.html",
+
           useCaseIds: ["example"],
         }),
       ],
     ],
-    [
-      "defineCollection",
-      () => defineCollection({ ...common, ...removed, childIds: [] }),
-    ],
+
     ["defineComponent", () => component(removed)],
     [
       "screen",
       () =>
         defineRoot({
-          path: "screens",
-          children: [
-            screen({ ...common, ...views, ...removed, slug: "example" }),
-          ],
+          children: [screen({ ...common, ...views, ...removed })],
         }),
     ],
     [
       "page",
       () =>
         defineRoot({
-          path: "pages",
           children: [
             page({
               ...common,
               ...removed,
-              slug: "example",
+
               render: () => "<html></html>",
             }),
           ],
         }),
     ],
-    [
-      "collection",
-      () =>
-        defineRoot({
-          path: "screens",
-          children: [
-            collection({
-              ...common,
-              ...removed,
-              segment: "example",
-              children: [],
-            }),
-          ],
-        }),
-    ],
-    [
-      "root collection",
-      () =>
-        defineRoot({
-          path: "screens",
-          collection: { ...common, ...removed },
-          children: [],
-        }),
-    ],
+
     [
       "screen variant",
       () =>
         defineScreen({
           ...common,
           ...views,
-          route: "screens/example.html",
+
           variants: [
             {
               ...common,
               ...views,
               ...removed,
-              slug: "variant",
+
               id: "example-variant",
             },
           ],
@@ -175,12 +142,10 @@ test("component ownedDependencies warns without entering the registry", async (c
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const prepared = prepareRegistry(
-    [
-      {
-        ...component({ ownedDependencies: undefined }),
-        definedIn: "entries/fixture.mockup.tsx",
-      },
-    ],
+    component({ ownedDependencies: undefined }).map((entry) => ({
+      ...entry,
+      definedIn: "entries/fixture.mockup.tsx",
+    })),
     config,
   );
   assert.deepEqual(
@@ -190,7 +155,7 @@ test("component ownedDependencies warns without entering the registry", async (c
   assert.equal(Object.hasOwn(prepared.entries[0]!, "ownedDependencies"), false);
 });
 
-test("removed fields on a variant parent or root collection warn once without inheritance", async (context) => {
+test("removed fields on a variant parent warn once without inheritance", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -199,13 +164,8 @@ test("removed fields on a variant parent or root collection warn once without in
       ...common,
       ...views,
       ...removed,
-      route: "screens/example.html",
-      variants: [{ ...common, ...views, id: "child", slug: "child" }],
-    }),
-    defineRoot({
-      collection: { ...common, ...removed },
-      children: [screen({ ...common, ...views, id: "child", slug: "child" })],
-      path: "screens",
+
+      variants: [{ ...common, ...views, id: "child" }],
     }),
   ];
   for (const definitions of cases) {

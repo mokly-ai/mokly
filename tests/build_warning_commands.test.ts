@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
-import http from "node:http";
 import path from "node:path";
 import test from "node:test";
 
@@ -13,6 +12,7 @@ import {
   fixtureWithSheets,
 } from "./helpers/component_stylesheet_fixture.js";
 import { createExportFixture } from "./helpers/export_fixture.js";
+import { startFakeReceiver } from "./helpers/fake_receiver.js";
 import {
   createFixture,
   removeFixture,
@@ -142,25 +142,14 @@ test("publish collects warnings through export and still uploads successfully", 
   context.after(() => fixture.close());
   await fs.writeFile(fixture.entryPath, sourceWithRemovedField());
   await addRemovedConfigField(fixture.configPath);
-  let uploads = 0;
-  const receiver = http.createServer((_request, response) => {
-    uploads += 1;
-    response.writeHead(204).end();
-  });
-  await new Promise<void>((resolve) =>
-    receiver.listen(0, "127.0.0.1", resolve),
-  );
-  context.after(
-    () => new Promise<void>((resolve) => receiver.close(() => resolve())),
-  );
-  const port = (receiver.address() as { port: number }).port;
+  const receiver = await startFakeReceiver(context);
   const result = await execute(fixture.root, fixture.configPath, [
     "publish",
     "--no-changes",
     "--out",
     "site",
     "--endpoint",
-    `http://127.0.0.1:${port}/upload`,
+    receiver.endpoint,
     "--token",
     "fixture-token",
     "--repository",
@@ -169,7 +158,9 @@ test("publish collects warnings through export and still uploads successfully", 
   assert.equal(result.code, 0);
   assert.match(result.stdout, /Published Mokly catalogue/);
   assert.equal(result.stderr, expectedWarnings);
-  assert.equal(uploads, 1);
+  assert.equal(receiver.plans.length, 1);
+  assert.ok(receiver.puts.length > 0);
+  assert.equal(receiver.publications.size, 1);
 });
 
 test("one build reports duplicate declarations, missing anchors and ignored owners once per identity", async (context) => {

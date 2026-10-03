@@ -10,6 +10,7 @@ import type { BuildWarning } from "../build/warnings.js";
 import { MoklyError, errorMessage } from "../errors.js";
 
 import { componentStylesheetsKey } from "./component_stylesheets.js";
+import { FileSystemPostcssConfigLoader } from "./postcss_loader.js";
 import type { ResolvedConfig } from "./types.js";
 import { resolveConfig } from "./validate.js";
 
@@ -110,7 +111,16 @@ export async function loadConfig(
       result.metafile,
       path.dirname(configPath),
       config.repoRoot,
+      config.mockupsDir,
     );
+    if (config.postcss) {
+      const postcssFiles = await new FileSystemPostcssConfigLoader().analyze(
+        config,
+      );
+      config.configSourceFiles = [
+        ...new Set([...config.configSourceFiles, ...postcssFiles]),
+      ].sort();
+    }
     return config;
   } catch (error) {
     if (error instanceof MoklyError) throw error;

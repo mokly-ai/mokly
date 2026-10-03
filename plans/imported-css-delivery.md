@@ -1,0 +1,1120 @@
+# Imported CSS Delivery
+
+## Status
+
+Active until the implementation PR merges. Created 2026-09-24 from the
+CSS-in-JS investigation on this branch. Milestones 13, 15 and 16 resolve the
+authorized review findings; finding 3 was resolved in the separate `922c1ec`
+merge. M12-4, M12-6, M12-7 and M14-1 remain open by user direction in the
+[final review record](../docs/reviews/imported-css-delivery.md#milestone-12-review)
+and [Milestone 14 review record](../docs/reviews/imported-css-delivery-milestone-14.md).
+Milestone 18 (`3aa7d67`) resolves M17-2 and makes M17-3, M17-8 and M17-9
+obsolete. Milestone 20 (`9bab3d7`) resolves M19-1 with Mokly-owned `@scope` scoping and
+rename-only verification; M19-2 is partly mitigated, and other findings in the
+[Milestone 17 review record](../docs/reviews/imported-css-delivery-milestone-17.md)
+remain open for the user's decision, as do the other findings in the
+[Milestone 19 review record](../docs/reviews/imported-css-delivery-milestone-19.md)
+and unresolved findings in the
+[Milestone 21 review record](../docs/reviews/imported-css-delivery-milestone-21.md).
+Milestone 22 (`8a47cc5`) accepts the selector-list behavior from finding 3 of that review;
+its other parts and findings remain open.
+Milestone 24 (`7ba5628`) resolves the M23 findings: it accepts the plugins' compound join
+without comma whitespace and ignores selector comments while rejecting
+invalid newly created compounds.
+The findings in the
+[Milestone 23 review record](../docs/reviews/imported-css-delivery-milestone-23.md)
+are addressed there; other findings remain open for the user's decision, as
+do the earlier unselected findings. Milestone 26 (`266164b`) resolves the
+approved findings in the
+[Milestone 25 review record](../docs/reviews/imported-css-delivery-milestone-25.md).
+Milestone 28 (`c482bd0`) resolves the approved findings in the
+[Milestone 27 review record](../docs/reviews/imported-css-delivery-milestone-27.md);
+other open findings remain unchanged. Milestone 30 (`5ae34be`) resolves the
+approved findings in the
+[Milestone 29 review record](../docs/reviews/imported-css-delivery-milestone-29.md).
+Milestone 32 (`6a02190`) resolves only finding 1 in the
+[Milestone 31 review record](../docs/reviews/imported-css-delivery-milestone-31.md);
+findings 2–4 remain open for the user's decision. Milestone 34 (`583af0a9`) resolves only
+finding 2 in the
+[Milestone 33 review record](../docs/reviews/imported-css-delivery-milestone-33.md);
+findings 1 and 3 remain open, as do findings in the
+[Milestone 35 review record](../docs/reviews/imported-css-delivery-milestone-35.md).
+Milestone 36 (`d72abaeb`) merged `origin/main` at `0c8245f8` before the
+implementation PR. The merged tree retains imported CSS with manifest v7,
+read model v3, aligned comparison panes and delta publishing. Main's removal
+of historical v2 manifest parsing remains in force; `compatibility.transformer`
+remains available. The full gate passed before and after the merge commit,
+and the implementation PR is #125. The user approved the findings in
+the [Milestone 37 review record](../docs/reviews/imported-css-delivery-milestone-37.md)
+for Milestone 38; the focused reconciliation is committed in `c260b5b2`.
+Milestone 39 merged main's 0.13.0 release at `5d1c37a` in `3a2d90a8`.
+The complete gate passed on the merged tree, with no removal of main content.
+Milestone 41 (`7f64f8b0`) replaced the custom merge check with Git's remerge
+diff, resolving findings 1, 2, 4 and 11 in the
+[Milestone 40 review record](../docs/reviews/imported-css-delivery-milestone-40.md).
+Other findings remain open. Milestone 42 (`beab8560`) merged main's
+release-runner fix at `b4a02a30`; the full gate passed on retry without any
+deletion of main content. Milestone 44 (`8729ec16`) resolves the selected findings in the
+[Milestone 43 review record](../docs/reviews/imported-css-delivery-milestone-43.md)
+by reviewing named merge commits and recording path-specific decisions.
+Other previously unselected findings remain out of scope. Findings in the
+[Milestone 45 review record](../docs/reviews/imported-css-delivery-milestone-45.md)
+remain open for the user's decision. Milestone 46 addresses only the imported-CSS
+watcher-test flakiness recorded as Milestone 40 finding 12. The final helper
+follows intermediate versions and child restarts; a server-level test pins
+stylesheet availability before content updates. Milestone 46 (`77a1f493`)
+passed the full gate and resolves that finding; other review findings remain
+open. Findings in the
+[Milestone 47 review record](../docs/reviews/imported-css-delivery-milestone-47.md)
+remain open for the user's decision; the plan stays active until the PR merges.
+Imported CSS, CSS Modules, binary assets and
+optional consumer PostCSS ship through Build, Check, Serve, export,
+publication and Changes. Esbuild remains the only bundler; the optional Vite
+compatibility package is a follow-up plan.
+
+## Problem
+
+Before this work, the build accepted consumer CSS imports, but their CSS never
+reached a rendered view:
+
+- `import "./button.css"` and `import styles from "./card.module.css"` bundle
+  with exit code 0. esbuild emits the CSS as a sibling `.mokly-consumer.css`
+  output, and `src/build/load_graph.ts` keeps only the `.cjs` output. The
+  generated HTML links nothing.
+- CSS Modules are the worst case: markup carries `class="card_card"` while the
+  rule that styles it is discarded, so screens render unstyled without any
+  diagnostic.
+- Imported CSS files are already inventoried in the manifest's `sourceFiles`,
+  so they are watched and kept private, yet none of their content is public.
+- A `url()` inside imported CSS fails the build with "No loader is configured
+  for .woff2". A consumer-configured `file` loader silences the error but its
+  copied files are discarded too, so the URLs point nowhere.
+- The only supported route is consumer-authored public CSS under `mockupsDir`
+  linked through `stylesheets` rules. Product CSS that lives beside components
+  in `src/` must be copied or built there first.
+
+Runtime CSS-in-JS libraries such as Emotion and styled-components already work
+through the consumer renderer and are unaffected.
+
+## Goal
+
+Deliver every stylesheet the consumer graph imports as generated public output,
+link it into every view that can use it, and keep every Mokly guarantee that
+applies to generated HTML: complete source inventory, deterministic bytes,
+stable routes for Changes, transactional writes, committed and derived Check,
+on-demand Serve, export, and publication. Run the consumer's PostCSS
+configuration over every imported stylesheet so Tailwind v4 and autoprefixer
+work without a separate build step, with plugin-reported dependencies joining
+the same inventory.
+
+## Decisions
+
+1. **Reserved generated directory.** All output from this feature lives under
+   `<mockupsDir>/mokly-generated/`. Mokly owns every file below it. The
+   directory is package-owned in the same way the manifest file is: configured
+   entry-glob static prefixes, `entriesDir`, `stylesheets` paths,
+   `review.outDir`, inventoried sources, and consumer-authored public files
+   must not be inside it; discovery skips it for broad entry globs. Reject
+   `publicExclude` only when a brace-expanded alternative starts with literal
+   `mokly-generated`; Build rejects generated routes matched by any exclusion
+   (including defaults), naming the glob. Build replaces its contents
+   transactionally and removes files that the compilation no longer produces.
+   Graph loading (including derived Check's prerequisite graph) and committed
+   Check reject any symlink or non-regular entry in the reserved tree before
+   walking it, without following the entry. Successful
+   Builds prune only empty directories below the reserved root. Catalogue HTML
+   routes may not begin with `mokly-generated/`; only portable generated CSS
+   and asset routes with supported extensions are admitted there.
+   Committed Check reports any unexpected file there as an orphan; derived
+   Check rejects Git-tracked files there with the existing `.gitignore`
+   guidance plus one directory rule.
+2. **One stylesheet per root module, never one global bundle.** The roots are
+   the configured renderer module first (not the built-in renderer), followed
+   by every resolved entry module sorted by repository-relative path.
+   Transformer-only CSS is inventoried, including nested imports and assets,
+   but never delivered. Each root whose import graph reaches at least one stylesheet gets
+   `mokly-generated/styles/<repository-relative module path>.css`, for example
+   `mokly-generated/styles/src/screens/home.mockup.tsx.css`. Keeping the full
+   module path including its extension avoids collisions between `x.ts` and
+   `x.tsx`. A root that reaches no CSS produces no file.
+3. **Link order.** `RenderInput.stylesheets` lists the matched `stylesheets`
+   rule as today, then the renderer's generated stylesheet, then the entry's
+   generated stylesheet. Links are relative to the fragment route and encoded
+   exactly like configured links, so custom renderers that already emit
+   `<link>` tags from `stylesheets` need no change. Page callbacks
+   (`render: () => string`) receive no input today, so pages are not linked
+   automatically; their reachable CSS is still bundled so a page can link it
+   by relative path.
+4. **Stylesheet order inside a root's bundle.** Stylesheets are collected in
+   first-reachability depth-first order over the root's JavaScript import
+   graph, following imports in source order and including each stylesheet
+   once. Verified against esbuild: CSS reached through JavaScript is ordered by
+   first import, while a stylesheet repeated through `@import` inside CSS keeps
+   CSS semantics and moves to its last position. The bundle is produced by a
+   second esbuild pass over a synthetic per-root stylesheet that `@import`s the
+   collected files in that order; nested `@import` chains resolve there. Remote
+   HTTP(S) `@import`s stay external, un-fetched and un-inventoried; valid
+   prelude imports precede bundled local rules. The
+   renderer's complete CSS closure (direct and nested imports) is excluded at
+   every depth of the entry's CSS tree before PostCSS can inline it. Separate
+   entries do not exclude each other's CSS. Strip only esbuild's source-path
+   comments after configured transforms and URL rewriting.
+5. **CSS Modules are named by Mokly, not by esbuild.** esbuild names classes
+   `<file>_<class>` and appends suffixes on clashes, so adding an unrelated file
+   can rename classes and create false Changes. Instead, a Mokly esbuild plugin
+   transforms every `*.module.css` with Lightning CSS using a name pattern
+   derived from the repository-relative file path and the local name, never
+   from content or bundle-wide clash order. The plugin returns the class map as
+   JavaScript to the graph pass and the transformed CSS to the stylesheet pass,
+   so both agree by construction. Scope only classes, IDs and keyframes;
+   preserve global custom properties, grid areas and container names. Use
+   `customIdents: true` so keyframe declarations and animation references
+   scope together; this also scopes counter-style and view-transition names.
+   Provide a default class map and valid-identifier named exports. Cross-file `composes` is rejected;
+   same-file and `global` composition work.
+   Milestone 18 supersedes the Lightning CSS scoping mechanism: PostCSS CSS
+   Modules plugins rename only classes, IDs and keyframes in the authored
+   stylesheet. Mokly's SHA-256 path hash remains independent of content and
+   bundle order; neither Browserslist targets nor whole-stylesheet re-printing
+   participates in module delivery.
+   Milestone 20 adds Mokly-owned `@scope` prelude localization and verifies
+   every transform changes only documented local names. Any other rewrite
+   fails Build instead of publishing broken CSS.
+6. **Assets referenced by CSS are copied.** `url()` targets that resolve to
+   repository files are emitted to `mokly-generated/assets/<repository-relative
+path>` through esbuild's `file` loader with a path-mirroring asset name, and
+   the stylesheet references them relatively. One asset referenced by several
+   stylesheets is emitted once. The originals stay private inventoried inputs.
+   Leave `data:`, remote, protocol-relative and fragment URLs unchanged;
+   reject root-absolute URLs and unknown local asset extensions. Preserve
+   query/fragment suffixes, including for in-repository `node_modules` assets;
+   accept scoped npm package segments (`@scope`) immediately after
+   `node_modules`, encoded as `%40scope` in links.
+   Reject an asset inside `mockupsDir` unless it is already a graph source,
+   rather than silently privatizing an existing public route.
+   A route whose segments are not portable, for example a path with a space,
+   fails the build naming the file and the rule.
+7. **Generated outputs may be binary.** `Compilation.outputs` currently maps
+   routes to strings. It becomes a map of routes to text or bytes, and every
+   consumer of that map compares, writes, serves, captures, and exports bytes.
+   This is a prerequisite refactor with no behavior change.
+8. **Inventory is the union of both passes.** The stylesheet pass and
+   transformer-only CSS traversal add `@import`ed stylesheets and `url()`
+   assets to `sourceFiles`, so they are private, watched, and part of freshness
+   checks. Serve/publish's inventory-only load must also collect CSS and
+   report PostCSS dependencies.
+9. **Loud failure for undelivered graph outputs.** After this change the graph
+   pass must produce exactly one JavaScript output. A consumer `file` loader on
+   a JavaScript-imported asset fails the build with guidance to use `dataurl`
+   or `binary`, because such imports have no stable relative URL across views.
+   `moduleResolution.loaders` may only map `.css` and `.module.css` to `empty`:
+   `.css` opts out of plain and module CSS for the catalogue, while
+   `.module.css` opts out only of modules. Other values fail config validation.
+10. **No manifest schema change.** Ownership comes from the reserved directory,
+    and per-view linkage is visible in the documents themselves, so manifest v5
+    is unchanged. Changes attribution already follows linked stylesheets from
+    documents and applies rule-level analysis to any stylesheet inside
+    `mockupsDir`.
+11. **One-time Changes jump.** Derived baselines are built with the base
+    commit's own tooling. The first comparison after adopting this version
+    shows every view that links a generated stylesheet as changed. This is
+    documented, not worked around.
+12. **PostCSS is explicit and runs before Mokly's own transforms.** A new
+    top-level `postcss` config key names a config-relative PostCSS
+    configuration module inside `repoRoot`; absent means PostCSS never runs.
+    Mokly bundles local imports using esbuild so they join `configSourceFiles`,
+    are watched, and stay private. Bare package imports resolve from each
+    importer using Node ESM `import` conditions and stay external as absolute
+    `file:` URLs; plugins run unbundled from consumer `node_modules`. Leave
+    `mokly.config` loading unchanged. The module must default-export an object whose
+    `plugins` is an array of plugin instances or an object mapping package
+    names to options; package names resolve from the PostCSS module's
+    directory, which keeps Tailwind, autoprefixer, and every other plugin a
+    consumer dependency. `map` is accepted and ignored because Mokly emits no
+    source maps; `parser`, `syntax`, `stringifier`, and any other key fail
+    validation. Mokly runs the plugins on the renderer-pruned tree with `from`
+    set to the source path, before CSS Modules naming and bundling. Cache by
+    source path plus effective pruned-import set per compilation so both passes
+    share a result; a different root-specific set requires reprocessing. Tailwind v4
+    through `@tailwindcss/postcss` and autoprefixer are the tested plugins.
+    `ResolvedConfig` stays JSON-serializable: config loading only analyzes the
+    PostCSS module's local inputs, and graph loading evaluates and instantiates
+    plugins once per load. Rewrite `import.meta.url`, `.dirname`, and `.filename`
+    in each bundled local module to the original file's values. A plugin that
+    reports a renderer-excluded file through a kept nested `@import` fails
+    rather than duplicating it; plugins that do not inline leave nested pruning
+    to esbuild. Recommend an explicit Tailwind `base`, `optimize: false`, and
+    `@reference` for context-only imports.
+13. **Plugin-reported dependencies join the inventory.** A `dependency`
+    message adds its repository file to `sourceFiles`. A `dir-dependency`
+    message is expanded with the discovery walker and reported glob (default
+    `**/*`), skipping denied paths and watching its allowed directory for
+    additions. Never inventory generated output, paths outside `repoRoot`, or
+    `node_modules`. An explicit generated-output dependency fails in both
+    modes; a matching directory dependency fails in committed mode and skips
+    generated files in derived mode. A reported file under `mockupsDir` that
+    is not already a graph-inventoried source fails in either mode, avoiding
+    silent privatization of public files. Errors name the plugin, stylesheet,
+    file and Tailwind `@source not` guidance. Mokly pins no plugin versions.
+
+## Non-goals
+
+- Sass, Less, Stylus, and build-time CSS-in-JS tools that are not PostCSS
+  plugins.
+- PostCSS custom syntaxes, source maps, and PostCSS configuration discovery
+  outside the configured module.
+- JavaScript asset imports that return a URL.
+- Vite configuration reuse or Vite plugin compatibility.
+- A `define` setting for `import.meta.env`.
+- Rebuilding only the stylesheet pass when nothing but CSS changed.
+- Generating CSS from compatibility-transformer-only imports, or automatically
+  injecting stylesheet links into complete page callbacks.
+
+## Milestone 1: Documentation and protocol contract (complete)
+
+Define the complete contract before any code changes so later milestones need
+no guesswork.
+
+- [x] Add `docs/protocol/mokly-imported-styles.md` (under 250 lines) and a linked
+      `docs/protocol/mokly-imported-styles-errors.md` for exact diagnostics, covering:
+      scope, the reserved directory and its validation rules, root modules and
+      stylesheet routes, collection order and duplicate semantics, CSS Modules
+      naming and the `composes` limitation, asset routes and URL rewriting,
+      link order in `RenderInput.stylesheets`, page callbacks, inventory union,
+      determinism, committed and derived Check behavior, Serve delivery, export
+      and publication inclusion, watch classification, Changes attribution and
+      the one-time jump, the `file` loader error, the `.css` `empty` opt-out,
+      the `postcss` key with its module shape and plugin resolution, PostCSS
+      run order and memoization, dependency and directory-dependency inventory,
+      the committed-mode generated-output rule, the determinism caveat, and
+      every error message class with its guidance.
+- [x] Register the new contract in `docs/protocol/README.md`.
+- [x] Align `docs/protocol/mokly-guides.md` with the explicitly labeled
+      unimplemented Styles guide and current field-table validation.
+- [x] Update `docs/protocol/mokly-configuration.md`: package-owned `.css`
+      handling in `moduleResolution.loaders`, the reserved directory rejection
+      for entry globs, `stylesheets` paths, `publicExclude`, and `review.outDir`,
+      and the new `postcss` key with its validation rules.
+- [x] Update `docs/protocol/mokly-rendering.md`: stylesheet link order and the
+      reserved directory entries in the Generated Contract list.
+- [x] Update `docs/protocol/mokly-source-protection.md` for the reserved
+      directory, the union inventory, and plugin-reported dependencies, and
+      `docs/protocol/mokly-watch.md` for stylesheet-pass inputs and PostCSS
+      directory dependencies as rebuild inputs.
+- [x] Update `docs/protocol/mokly-on-demand.md`, `mokly-export.md`,
+      `mokly-publication.md`, and `mokly-derived-baselines.md` for reserved
+      routes served from the live compilation, binary generated bytes in
+      derived captures, and the directory `.gitignore` rule.
+- [x] Update `docs/protocol/mokly-css-attribution.md` to state that generated
+      stylesheets are in analysis scope and how their source files relate.
+- [x] Update `docs/architecture/build-pipeline.md` and
+      `docs/architecture/package-boundary.md` for the second pass, binary
+      outputs, and the new ownership row.
+- [x] Add `docs/guides/authoring/styles.md` (section `authoring`, order 10)
+      covering plain CSS imports, CSS Modules, assets, runtime CSS-in-JS through
+      the renderer including the `mainFields` note for styled-components in
+      `"type": "module"` repositories, a Tailwind v4 and autoprefixer
+      walkthrough with `@source` scoping, and the unsupported list. Update
+      `docs/guides/authoring/config.md` where it describes `stylesheets` and
+      add the `postcss` key to its field table.
+- [x] Update `src/build/README.md` and the README's Authoring and Key code
+      sections.
+- [x] Run `npx prettier --check` on every changed Markdown file and review the
+      diff for internal consistency across the protocol set.
+
+## Milestone 1A: Contract review refinements (complete)
+
+Resolve review findings without reopening Milestone 1 or changing product code.
+
+- [x] Limit Lightning CSS Modules to classes, IDs and keyframes; verify every
+      option and exported name with the workspace version, and clarify global
+      tokens/grid/container values in the protocol, plan and Styles guide.
+- [x] Define the literal-first-segment, brace-expanded `publicExclude` check
+      and Build-time exclusion collision against all generated routes (including
+      defaults); give both cases exact diagnostics.
+- [x] Make entry-glob prefix, broad discovery skip, co-located `entriesDir`,
+      and equal-to/inside `review.outDir` rules unambiguous.
+- [x] Allow an npm `@scope` asset segment after `node_modules`; confirm
+      esbuild's CSS URL, URL encoding, Serve decode and export resolution.
+- [x] Keep bare PostCSS package imports external as absolute ESM file URLs
+      after importer-relative resolution; verify real Tailwind/autoprefixer
+      instance and object configurations without altering `mokly.config`.
+- [x] Define external remote CSS `@import` ordering and inventory behavior;
+      verify esbuild's placement in the root stylesheet.
+- [x] Validate changed Markdown, run documentation/guide tests, review the
+      diff, then commit with a heredoc/file message body and push without
+      rewriting the Milestone 1 commit.
+
+## Milestone 2: Binary-safe generated outputs (complete)
+
+A refactor with no behavior change that lets later milestones emit fonts and
+images as generated files.
+
+- [x] Change `Compilation.outputs` in `src/build/compile.ts` to map routes to
+      `string | Uint8Array` behind one typed `GeneratedFile` helper for reads,
+      byte comparison, and byte length.
+- [x] Write a failing synthetic binary corruption test first; audit every
+      `Compilation.outputs` and `compileCatalogue` consumer, not only the
+      initial file list, while retaining text semantics for HTML/manifest.
+- [x] Update `src/build/transaction.ts`, `src/build/check.ts`,
+      `src/build/tracked_output.ts`, `src/build/component_runtime.ts`,
+      `src/cli/run.ts`, `src/export/run.ts`, `src/export/inputs.ts`,
+      `src/review/compilation_assets.ts`, `src/review/head_assets.ts`,
+      `src/review/screen_compare.ts`, and `src/review/component_compare.ts`:
+      convert byte readers and comparisons, and confirm route/size-only or
+      forwarding consumers need no text decoding.
+- [x] Add `tests/build_binary_outputs.test.ts` proving a synthetic binary
+      output is written, checked, staged, rolled back, captured for derived
+      export, and served without corruption.
+- [x] Synchronize the archive's required-guide list with the Styles guide
+      added in Milestone 1; its existing release test catches missing guides.
+- [x] Run `npm run build`, focused tests, `npm run example:build`,
+      `npm run example:check`, `npm run lint`, `npm run typecheck`, and
+      `cargo xtask check` with 100% pass rate; commit with a file/heredoc body
+      and push the branch.
+
+## Milestone 3: Reserved generated directory (complete)
+
+Establish `mokly-generated/` as package-owned output before anything writes to
+it.
+
+- [x] Add `src/build/styles/routes.ts` with the reserved directory constant,
+      the stylesheet and asset route derivations, and portable-segment
+      validation with the documented npm-scope exception and error text.
+- [x] Define and reject reserved-directory symlinks and non-regular entries
+      before Build/committed Check ownership walks, without following them;
+      test root symlinks, nested symlinks, and non-regular entries.
+- [x] Report the first invalid reserved entry in full path sort order, even
+      when a sibling file sorts before a nested entry in an earlier directory.
+- [x] Reject catalogue routes starting with `mokly-generated/`, and admit only
+      portable stylesheet/asset routes of the documented shapes and extensions
+      within it; test rejected shapes and valid synthetic outputs.
+- [x] Prune empty directories below the reserved root only on successful
+      Build, without changing failed-write rollback; test nested cleanup.
+- [x] Enforce literal-first-segment brace-expanded consumer public exclusions
+      and Build-time collisions against all exclusions, including defaults,
+      with the catalogued diagnostic and tests.
+- [x] Clarify co-located `entries` globs versus the existing rejection of
+      `entriesDir === mockupsDir`; keep other protocol and README references
+      consistent with the implemented boundary.
+- [x] Reject reserved `stylesheets` paths in `src/config/rules.ts`, static
+      `entries` prefixes in `src/config/entry_globs.ts`, an equal-or-inside
+      `entriesDir`/`review.outDir`, and brace-expanded first-segment
+      `publicExclude` in `src/config/public_exclusions.ts`. Skip the reserved
+      directory during broad entry discovery; check generated stylesheet/asset
+      routes against **all** public exclusions (including defaults) in
+      `src/build/output_paths.ts`, and reject inventoried sources inside it.
+- [x] Extend `src/build/ownership.ts` so `generatedOwnershipDenial`,
+      `pendingGeneratedOrphanRoutes`, and `unclaimedGeneratedRoutes` treat every
+      regular file inside the reserved directory as owned generated output.
+- [x] Extend derived Check in `src/build/tracked_output.ts` to add the
+      directory rule to its `.gitignore` guidance when a tracked file is inside
+      the reserved directory.
+- [x] Add `tests/build_generated_directory.test.ts` and
+      `tests/config_generated_directory.test.ts` covering validation rejections,
+      including broad entry globs and `publicExclude` route collisions; orphan
+      cleanup on Build, committed Check orphan reporting, derived Check rejection
+      with the directory rule, and consumer public files elsewhere under
+      `mockupsDir` remaining untouched.
+- [x] Run the build, relevant tests, and `cargo xtask check`.
+
+## Milestone 4: Collect and bundle imported CSS (complete)
+
+Produce deterministic per-root stylesheets and assets inside the compilation.
+
+- [x] Add `src/build/styles/collect.ts`: an esbuild plugin for the graph pass
+      that loads plain `.css` as an empty side-effect module, transforms
+      `*.module.css` with Lightning CSS into a class map plus retained CSS,
+      records every stylesheet input, rejects cross-file `composes`, and fails
+      on `file` loader outputs with the documented guidance. Honor a consumer
+      `.css` `empty` loader as the opt-out.
+- [x] Add `src/build/styles/order.ts`: derive each root's first-reachability
+      depth-first stylesheet order from the graph metafile in
+      `src/build/load_graph.ts`, keyed by the renderer path and each entry
+      module; resolve the full renderer `@import` closure and prune its files
+      at every depth of entry imports before PostCSS can inline them.
+- [x] Add `src/build/styles/bundle.ts`: the second esbuild pass over synthetic
+      per-root entries with the same resolution settings and Mokly plugins,
+      `write: false`, `metafile: true`, the `file` loader for asset extensions
+      with path-mirroring asset names under the reserved directory, relative
+      URL rewriting, and source-path comment stripping. Inventory transformer-only
+      CSS closures without emitting a route; skip bundling when no delivery
+      root reaches CSS.
+- [x] Union the stylesheet pass inputs into `sourceFiles` through
+      `src/build/source_inventory.ts` and expose the per-root stylesheet and
+      asset outputs on `LoadedGraph` for `compileCatalogue`.
+- [x] Add `tests/build_imported_styles.test.ts` covering: a plain import
+      produces the root stylesheet; two entries importing different CSS get
+      separate files; shared CSS appears in both; the renderer's CSS gets its
+      own file; the documented order rules including a repeated `@import`;
+      CSS Modules names are stable when an unrelated module with the same
+      basename is added and identical across two compilations; the class map
+      matches the emitted rule; the opt-out loader; the `file` loader error;
+      renderer/entry duplicates including nested `@import` and two entries
+      sharing CSS; transformer-only CSS inventoried but undelivered; and
+      unchanged behavior for a catalogue without CSS.
+- [x] Add `tests/build_imported_styles_assets.test.ts` covering font and image
+      `url()` copies, one copy for a shared asset, relative URL rewriting, a
+      missing asset error, a non-portable route error, unchanged URL classes,
+      root-absolute/unsupported-extension errors, `node_modules` assets
+      including `@fontsource` scopes and remote CSS `@import`s,
+      query/hash suffixes, public mockups asset rejection, and inventory of
+      `@import`ed files and assets.
+- [x] Cover the `style` export condition/main field under default and custom
+      consumer resolution, prelude tokenization, transformer-only inventory,
+      byte-safe Build/Check, deterministic CSS across processes, and precise
+      failures in focused tests. Split the generated-directory test below 300
+      lines and reuse the viewer's portable path rule for ordinary segments.
+- [x] Add an analysis-only stylesheet resolver for transformer-only CSS so
+      it joins the inventory without running the CSS bundler, and type the
+      preprocessing result for future PostCSS dependency reporting.
+- [x] Preserve CSS/asset outputs and stylesheet routes in retained Serve
+      runtimes, accepted-graph recompilation, and watched-child IPC; test
+      binary-safe transfer and derived Serve's background rebuild.
+- [x] Load native Lightning CSS only for stylesheet processing so importing
+      the CLI does not eagerly resolve a CommonJS dependency; align the older
+      JavaScript `file` loader inventory test with the documented Build error.
+- [x] Run the build, relevant tests, and `cargo xtask check`.
+
+## Milestone 4A: Stylesheet pass follow-ups (complete)
+
+Resolve stylesheet pass performance and deterministic-byte findings before linking.
+
+- [x] Bundle the renderer alone and all entry roots in one multi-entry esbuild
+      pass, preserving per-root prelude closure, metafile inventories, output
+      routes, deterministic first-root errors, and shared-asset byte checks.
+      Benchmark the same 60-entry catalogue before and after.
+- [x] Memoize stylesheet preprocessing by the _effective_ pruned-import set;
+      prove graph and stylesheet passes reuse unaffected text with a counting
+      processor test.
+- [x] Strip separator blank lines from esbuild input comments and finish CSS
+      with exactly one newline; cover the resulting bytes.
+- [x] Update the build README and protocol; run build, focused tests,
+      example Build/Check, lint, typecheck, then `cargo xtask check`.
+- [x] Commit and push independently; run post-push review using
+      `docs/implementation-review-prompt.md` against `origin/main`.
+
+## Milestone 5: Link generated stylesheets into every view (complete)
+
+Make the delivered CSS reach rendered documents and pass validation.
+
+- [x] Add `src/build/styles/links.ts` and extend `stylesheetsFor` in
+      `src/build/render.ts` to append the renderer and entry stylesheet links
+      after the configured rule, resolved and encoded like configured links.
+- [x] Teach the public-file checks used by `stylesheetsFor` and the resource
+      validators to accept pending generated routes from the current
+      compilation, so Build validates links before files exist on disk.
+- [x] Record the exporting resolved entry module for each definition,
+      including helper-defined, re-exported and nested definitions, without
+      changing the manifest or authored-source attribution.
+- [x] Introduce one typed pending-generated-files view (HTML/CSS/opaque bytes)
+      across full and on-demand render, link/resource validation and
+      compatibility route discovery; CSS `url()` assets are pending targets,
+      and reserved routes must never fall back to disk during compilation.
+- [x] Serve accepted stylesheet and asset bytes from the on-demand generation
+      at `/static/` routes, leaving remaining on-demand work to Milestone 7.
+- [x] Write failing tests for entry ownership, generated CSS/asset validation
+      against missing or stale on-disk output, and on-demand byte delivery.
+- [x] Extend `tests/build_imported_styles.test.ts` with the link order, link
+      resolution from nested fragment routes and dark fragments, saved variant
+      and component views receiving the same links, and page callbacks
+      receiving none while their entry stylesheet is still emitted.
+- [x] Keep full compilation's transitive public HTML resource validation;
+      update the protocol, guide, and READMEs for shipped link behavior.
+- [x] Preserve internal-manifest privacy before the first Build: pending
+      public resources never expose it, and retain its existing link error.
+- [x] Run `npm run example:build` and `npm run example:check` to confirm the
+      example catalogue, which imports no CSS yet, is byte-identical.
+- [x] Run the build, relevant tests, and `cargo xtask check`.
+- [x] Commit and push Milestone 5 independently; run the post-push review
+      using `docs/implementation-review-prompt.md` against `origin/main`.
+
+## Milestone 5A: Cache on-demand validation per generation (complete)
+
+Remove the per-request output-tree walk and CSS reparse introduced with
+generation-local pending styles while keeping the same resource diagnostics.
+
+- [x] Document one orphan scan and one parse per generated stylesheet per
+      accepted generation; keep view HTML and temporary props request-specific.
+- [x] Write a failing counting-seam test that renders several views and proves
+      one orphan scan and one CSS parse, with the same validation outcome.
+- [x] Cache the pending orphan index and parsed generated CSS in the on-demand
+      generation without changing full-compilation behavior or disk safety.
+- [x] Update the build README; run build, focused tests, example Build/Check,
+      lint, typecheck and `cargo xtask check` before committing.
+- [x] Commit and push this milestone independently, then review the complete
+      diff against `origin/main` using `docs/implementation-review-prompt.md`.
+
+## Milestone 6: PostCSS pipeline (complete)
+
+Run the consumer's PostCSS configuration over every imported stylesheet so
+Tailwind v4 and autoprefixer work, with complete inventory and watch coverage.
+
+- [x] Add `postcss` with `npm install postcss` and confirm
+      `npm run dependencies:check` still passes.
+- [x] Add the `postcss` config key to `src/config/types.ts` and a new
+      `src/config/postcss.ts` that validates the config-relative path, requires
+      a regular file inside `repoRoot`, analyzes it at config load and loads it
+      through a dedicated esbuild-based loader with bare imports resolved
+      via Node ESM `import` conditions from each importer and externalized as
+      absolute `file:` URLs (without changing `mokly.config` loading), adds its metafile inputs
+      to `configSourceFiles`, and normalizes the exported shape with the
+      documented errors for missing `plugins`, unknown keys, and unresolvable
+      package names.
+- [x] Add `src/build/styles/postcss.ts`: run the plugins per stylesheet with
+      `from` set to the source path and `map: false`, collect `dependency` and
+      `dir-dependency` messages, expand directories through the discovery
+      walker using the reported glob (default `**/*`), apply explicit and
+      directory generated-output plus public-file rules for both modes,
+      and memoize by source and effective import-pruning set per compilation.
+- [x] Wire the runner into the load hook in `src/build/styles/collect.ts`
+      ahead of CSS Modules naming for both passes, union dependency files into
+      `sourceFiles`, and register directory dependencies as package-owned watch
+      inputs.
+- [x] Add `tests/build_postcss.test.ts` using synthetic plugins with no new
+      dev dependencies: a transform applies to imported and `@import`ed
+      stylesheets; a transform inside a CSS Module runs before naming; an
+      identical stylesheet/pruning input is processed once per compilation;
+      `dependency` files join inventory and are private through `/static`;
+      `dir-dependency` expansion honors the glob and skips denied directories;
+      committed/derived generated-output and otherwise-public mockups-file
+      errors and their guidance; a parent `docs/` glob still reaching mockups
+      after `@source not "docs/mockups"` but `source(none)` avoiding that scan;
+      inventory-only freshness; a plugin error
+      names the plugin and file; package-name resolution from the PostCSS
+      module's directory; `map` ignored and other keys rejected; a missing or
+      escaping path rejected; and byte-identical output across two
+      compilations.
+- [x] Test the nested renderer-import bypass, local `import.meta` rewriting,
+      real Serve IPC and deterministic output across separate processes;
+      cover default globs, private `/static` sources, and in-repository
+      symlink aliases without exposing generated or public mockups files.
+- [x] Keep export input-stability checks independent of generation-scoped
+      PostCSS watch-directory metadata; add an export regression test using an
+      accepted PostCSS generation and rerun existing CSS/route export tests.
+- [x] Add a `tests/catalogue_watch.test.ts` case where editing the PostCSS
+      module, a reported dependency, or a file added under a directory
+      dependency rebuilds and reloads.
+- [x] Run the build, focused and doc tests, example Build/Check, dependency
+      audit, lint, typecheck, and `cargo xtask check`.
+- [x] Commit and push Milestone 6 separately, then review the complete diff
+      against `origin/main` using `docs/implementation-review-prompt.md`.
+
+## Milestone 6A: Package-owned aliases and PostCSS plugin forms (complete)
+
+Close the path-alias and plugin-normalization gaps before widening delivery.
+
+- [x] Specify one logical-and-physical package-owned path classification for
+      dependency walking, inventory, discovery and watch classification;
+      document PostCSS 8 plugin forms and their invalid-element diagnostic.
+- [x] Write failing regression tests for a symlinked scan root into Review
+      output, an alias to generated output in derived mode and a watch event
+      through the alias; verify the exact generated-output precedence.
+- [x] Let PostCSS normalize instance, uncalled creator, plain function and
+      `{ postcss: fn }` array plugins, including real Tailwind + autoprefixer;
+      test invalid plugin errors and preserve object-form package resolution.
+- [x] Update nearby READMEs and run the build, tests, example Build/Check,
+      lint, typecheck and `cargo xtask check`.
+- [x] Commit and push this milestone separately, then review the diff against
+      `origin/main` using `docs/implementation-review-prompt.md`.
+
+## Milestone 7: Serve, watch, export, publication, and Changes (complete)
+
+Carry the new outputs through every delivery path.
+
+- [x] Serve reserved-directory routes from the live compilation in
+      `src/server/static_routes.ts` and on-demand route dispatch, and the
+      controls preview path in `src/server/controls/transient_assets.ts`,
+      never from a stale disk copy; test GET/HEAD, MIME, `%40` and stale disk
+      in each path and both output modes, including transient HTTP.
+- [x] Align the existing synthetic reserved-output ownership test with Serve's
+      accepted-route rule: written but unbundled reserved assets remain 404.
+- [x] Confirm watched edits to imported CSS, `@import`ed CSS, and referenced
+      assets rebuild the graph and reload the browser; add plain/module,
+      nested import, font/image, PostCSS configuration/dependency/directory
+      cases to `tests/catalogue_watch.test.ts` and
+      `tests/catalogue_watch_imported_styles.test.ts`. Generated edits never loop.
+- [x] Include reserved-directory files in export and publication captures from
+      compilation bytes in derived mode and from disk in committed mode; add
+      cases to `tests/export_imported_styles.test.ts` and
+      `tests/publication_imported_styles.test.ts`; verify
+      `scripts/preview/build.mjs`, private exclusion and scoped links.
+- [x] Keep derived publication's input fingerprint stable when freshness
+      hydrates `config.sourceFiles`: classify generated ownership against the
+      pinned manifest inventory, and regress helper-defined views.
+- [x] Keep the preview orchestrator short by extracting the existing static
+      shell and asset capture helpers without changing their output.
+- [x] Add a Changes case to `tests/changes_imported_styles.test.ts` proving a
+      CSS Modules and a plain-CSS edit keep only views whose documents match
+      the changed rule in both modes even with shared-impact source globs;
+      cover a changed linked font asset (including asset-only direct Changes)
+      and a baseline predating generated CSS.
+- [x] Measure example Build wall time and the complete unit suite duration
+      before and after this milestone; neither regresses noticeably. Example
+      Build: 8.561 s before, 8.396 s after; unit suite: 814.559 s before,
+      829.405 s after (2,514 passing tests).
+- [x] Run the build, relevant tests, and `cargo xtask check`.
+- [x] Commit and push Milestone 7 separately, then review the complete diff
+      against `origin/main` using `docs/implementation-review-prompt.md`.
+
+## Milestone 8: Example, guides, and smoke tests (complete)
+
+Exercise the feature end to end in the tracked example.
+
+- [x] Add one component under `examples/basic/src/components` styled with a
+      CSS Module and a plain stylesheet that references a small font or image,
+      and use it from an existing entry so `npm run example:build` and
+      `npm run example:check` cover generated stylesheets and assets.
+- [x] Add `tailwindcss`, `@tailwindcss/postcss`, and `autoprefixer` as root
+      devDependencies for the example, add `examples/basic/postcss.config.mjs`
+      and `postcss: "postcss.config.mjs"` to `examples/basic/mokly.config.ts`,
+      and style one example component with Tailwind utilities scoped by
+      `@source` to `examples/basic/src` plus one declaration autoprefixer
+      expands for the configured browserslist. Confirm
+      `npm run dependencies:check` passes with the new dev dependencies.
+- [x] Verify the guide added in Milestone 1 matches the shipped behavior and
+      that `tests/package.test.ts` includes it in the packaged guides.
+- [x] Smoke test: run `npm run dev`, open the styled screen in mobile and
+      desktop views and both color schemes, edit the CSS Module and then a
+      Tailwind utility while serving, confirm each reload and that Changes
+      lists only the affected screen, then run an export and open the exported
+      screen from disk.
+- [x] Ignore derived output under `generated/mokly-generated/`; verify an
+      example build leaves no generated files in Git status and emits identical
+      CSS/asset bytes from a different working directory.
+- [x] Sweep READMEs, guides, architecture and protocol docs for unshipped CSS
+      labels; document TypeScript CSS shims and conservative shared-impact
+      evidence when generated CSS bytes are unchanged.
+- [x] Keep example-source test fixtures isolated from generated outputs and
+      provide the package stylesheet within each fixture's repoRoot; preserve
+      binary asset bytes in snapshot readers.
+- [x] Run the complete `npm test`, `npm run typecheck`, `npm run lint`,
+      `npm run preview:build`, relevant guide/package tests, and
+      `cargo xtask check`.
+
+## Milestone 8A: Supervision review fixes (High and Medium) (complete)
+
+Repair delivery and lifecycle regressions found in independent review.
+
+- [x] Preserve exact required watch inputs under denied directory names, and test all four source layouts and a real watcher.
+- [x] Isolate stateful PostCSS plugins per graph load; prove in-process and watched determinism and measure real Tailwind overhead.
+- [x] Support CommonJS and TypeScript PostCSS modules, helpers and require/import semantics across accepted formats.
+- [x] Transfer large generated assets safely over Serve IPC and test a >4 MiB round-trip and watched Serve.
+- [x] Capture controls Props previews from pending generated CSS/assets through ComponentRenderService.
+- [x] Keep valid generated routes with denied-name segments public in Serve, comparison, export and publication.
+- [x] Classify protocol-relative CSS URLs consistently across Build, Serve, export, Review and watch.
+- [x] Normalize esbuild metafile keys through physical working directories, including symlinked repo roots.
+- [x] Reject private inventory of authored public CSS/assets through logical or physical aliases.
+- [x] Inventory transformer-only CSS permissively without rejecting legacy syntax or external package CSS.
+- [x] Update protocol docs and README files, add red-first tests, run the full verification gate, commit and push Milestone 8A.
+
+## Milestone 8B: Supervision review fixes (Low) (complete)
+
+Close the remaining edge cases without changing successful delivery bytes.
+
+- [x] Limit directory-dependency file events to additions and rebuild on newly created nested directories.
+- [x] Precompile reported dependency glob matchers and avoid redundant explicit-dependency work; test large walks.
+- [x] Preserve catalogued diagnostics for dangling PostCSS and generated-directory symlinks and plugin-less syntax errors.
+- [x] Serve every allowed image/font extension with a specific content type on every delivery path.
+- [x] Avoid redundant per-file ignore guidance for tracked reserved output.
+- [x] Update derived-mode ignore guidance and Build deletion documentation.
+- [x] Reject CSS Module class-map divergence between graph and stylesheet passes.
+- [x] Reject unvalidated string URLs inside image-set() with actionable guidance.
+- [x] Name the importing module in the error for direct CSS imports outside repoRoot.
+- [x] Keep the first failure within each stylesheet when several resolutions fail.
+- [x] Diagnose late CSS @import at its authored file rather than a generated route.
+- [x] Allow scoped npm-package segments in generated stylesheet routes.
+- [x] Reject a consumer CSS loader for every extension during config validation.
+- [x] Sort paths/diagnostics by plain code-unit comparison and prevent localeCompare regressions where practical.
+- [x] Update protocol docs and README files, add red-first tests, run the full verification gate, commit and push Milestone 8B.
+
+## Milestone 9: Commit, push, and review (complete)
+
+- [x] Run `git add -A`, commit using Conventional Commits, and push the branch.
+- [x] Review the complete local diff against `origin/main` using
+      `docs/implementation-review-prompt.md` after the push. Report findings
+      with severity, context, impact, lettered options, and a recommendation;
+      do not change the implementation. Twenty findings (1 High, 6 Medium,
+      13 Low) are recorded in the
+      [review record](../docs/reviews/imported-css-delivery.md) for the
+      user's decision.
+
+## Milestone 10: Final review fixes (High and Medium) (complete)
+
+Repair scale, evidence, CSS delivery and worker/source confinement from review
+findings 1, 2, 4, 5, 6 and 7. Finding 3 was resolved by the separate
+`922c1ec` merge and is not part of this milestone.
+
+- [x] Index required watch paths and ancestors once, deduplicate covered watch targets, compare watch-root sets, and measure 1,000/4,000-file readiness and a 3,000-file addition.
+- [x] Construct typed merged Changes evidence once per export/publish and require it at every classification boundary; match live membership for plain CSS, CSS Modules and assets in both output modes.
+- [x] Preserve `image-set(url(...))` asset semantics through CSS Modules, validate transformed CSS, and prove unrelated on-demand views remain available.
+- [x] Fail every pending and later PostCSS worker request promptly and consistently after unexpected error, messageerror or exit, including exit zero.
+- [x] Apply one exact-required-input rule to explicit PostCSS dependencies, discovery, watching and freshness while keeping broad scans pruned.
+- [x] Map physical esbuild, PostCSS and watch paths back to a symlinked configured root, retaining both identities and guard precedence.
+- [x] Update contracts and READMEs, add red-first regressions, run the full verification gate, commit and push Milestone 10.
+
+## Milestone 11: Final review fixes (Low) (complete)
+
+Close review findings 8–20 without changing the accepted-generation model.
+
+- [x] Recognize an EOF CSS `@import` and cross-check import-prelude parsing with esbuild edges.
+- [x] Reject only local quoted `image-set()` strings. Relative to `origin/main`, authored public CSS with a quoted local source now fails Build, while public CSS `//` URLs are accepted; external quoted sources remain unchanged.
+- [x] Use one alias-aware package-code predicate throughout graph, CSS, transformer and PostCSS inventory.
+- [x] Validate every root's direct CSS imports after graph build, including extensionless, `require()` and dynamic imports.
+- [x] Pass typed accepted-generation Changes inputs and avoid committed graph reloads and edit races.
+- [x] Collect 20,000 Tailwind-shaped dependencies within a generous bound using cached roots and one sort.
+- [x] Apply public-mockups dependency diagnostics before regular-file diagnostics.
+- [x] Align and test global delivered-source shared-impact stripping.
+- [x] Remove repository-only packaged Styles guide text and test the guide copy.
+- [x] Correct protocol drift, stale status text, and the Milestone 7 test names.
+- [x] Split oversized server modules and protocol pages; add a changed-file TypeScript/JavaScript and protocol-Markdown length lint to `xtask` and document it.
+- [x] Exercise CSS Modules, assets and local PostCSS in packed-consumer smoke and require the runtime worker artifact.
+- [x] Update contracts, guides and READMEs; add red-first regressions, run the full verification gate, commit and push Milestone 11. Record exact review-resolution commit references in the review record.
+
+## Milestone 12: Commit, push, and review (complete)
+
+- [x] Commit and push final bookkeeping, with exact resolution references in the review record and a clean intended diff.
+- [x] Review the complete local diff against `origin/main` using
+      `docs/implementation-review-prompt.md` after the push. Report findings
+      without changing the implementation; the parent session owns this review.
+      Sixteen findings (1 High, 2 Medium, 13 Low) are recorded in the
+      [review record](../docs/reviews/imported-css-delivery.md#milestone-12-review)
+      for the user's decision.
+
+## Milestone 13: CSS Module import and custom-property regression (complete)
+
+Restore plain-CSS-equivalent delivery for CSS Module imports and local URLs,
+without changing any other Milestone 12 review finding.
+
+- [x] Add failing tests for local, remote and conditional CSS Module `@import` delivery and source inventory, plus custom-property `url()` assets.
+- [x] Add tokenizer-based unit tests for restoring local image-set option strings after Lightning CSS, including escapes, comments, nested functions, `type()`, gradients, uppercase spelling, and external strings.
+- [x] Add table-driven plain-vs-module equivalence tests for asset routes/bytes, resolved URL targets, imports and source inventory across documented CSS contexts.
+- [x] Disable module dependency analysis, restore only local first-option image strings as `url(<original string token>)`, and use a separately catalogued post-Lightning guard.
+- [x] Update the imported CSS protocol, error catalogue, Build README, review finding 1 and plan status; leave the other 15 findings open. Record the exact resolution commit in Milestone 14.
+- [x] Verify Build, focused imported/module suites, byte-identical example CSS, example Build/Check, lint, typecheck and `cargo xtask check`; commit and push.
+
+## Milestone 14: Commit, push, and review (complete)
+
+- [x] Commit and push final resolution-reference bookkeeping with a clean tree.
+- [x] Review the complete local diff against `origin/main` using
+      `docs/implementation-review-prompt.md` after the push. Report findings
+      without changing the implementation; the parent session owns this review.
+      Three new findings (2 Medium, 1 Low) are recorded in the
+      [Milestone 14 review record](../docs/reviews/imported-css-delivery-milestone-14.md)
+      for the user's decision.
+
+## Milestone 15: Committed output, watch and CSS Module targets (complete)
+
+Fix authorized committed-output and watch regressions, then make CSS Module
+normalization respect consumer browser targets without weakening import tests.
+
+- [x] Add failing Git-repository tests for ignored generated routes, nested ignore rules, negations, tracked files and ignored mockups ancestors; document and enforce committed Build/Check diagnostics through the injectable Git runner (M12-2).
+- [x] Add failing real-watcher tests for required entry and PostCSS files beneath denied-name directories; retain their explicit targets and document watch-root precedence (M12-3).
+- [x] Add failing CSS Module fallback tests, consumer Browserslist resolution tests and missing-package/default tests; document and implement per-stylesheet targets and align the example (M14-2).
+- [x] Strengthen plain/module equivalence with shared target-aware normalization and explicit import condition/order assertions (M14-3).
+- [x] Run Build, focused suites, example Build/Check, Chrome Welcome smoke, lint, typecheck and `cargo xtask check`; commit and push this milestone.
+
+## Milestone 16: Diagnostics, length gate, docs and release notes (complete)
+
+Resolve the authorized low-severity findings without changing the four
+findings left for a later user decision.
+
+- [x] Remove per-edge physical projections from successful graph loads, share one metafile path mapper, add a timed inventory test and report before/after `graph.load` (M12-5).
+- [x] Defer missing directory-dependency errors behind generated/public/regular-file errors; add a combined diagnostic test (M12-8).
+- [x] Replace virtual CSS importers with delivery roots in every diagnostic; add a virtual-name regression test (M12-9).
+- [x] Audit changed behavior against `origin/main`, correct the review/plan note, prepare the ignored PR draft and include an accurate `BREAKING CHANGE:` commit footer (M12-10).
+- [x] Make every xtask subprocess run from the workspace root; add unimock parse/dispatch tests and Rust verification (M12-11).
+- [x] Cover all repository TypeScript/JavaScript and protocol Markdown in the length gate, document exclusions, and split newly oversized files (M12-12).
+- [x] Test committed, staged, exact-limit and `--all` length-gate cases across new directories/extensions (M12-13).
+- [x] Repair protocol links, check repository Markdown links and anchors, and include split-page families in stale-text tests (M12-14).
+- [x] Correct CI, packed-consumer, Lightning scope and Config guide wording without brittle counts (M12-15).
+- [x] Complete historical Milestone 9 bookkeeping and point Milestones 11/12 to the review record (M12-16).
+- [x] Run Build, focused suites, example Build/Check, lint, typecheck, applicable preview verification and `cargo xtask check`; commit and push this milestone.
+
+## Milestone 17: Commit, push, and review (complete)
+
+- [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Fifteen new findings (3 Medium, 12 Low) are recorded in the [Milestone 17 review record](../docs/reviews/imported-css-delivery-milestone-17.md) for the user's decision.
+
+## Milestone 18: Rename-only CSS Modules (complete)
+
+Replace whole-stylesheet Lightning CSS module transformation with scoped-name
+rewrites that retain authored values, rules, comments and browser semantics.
+
+- [x] Add failing byte-equivalence tests for plain/module CSS across fallbacks, logical styles, conditional imports, assets and modern syntax; add a Chrome computed-style parity regression that fails against Lightning CSS.
+- [x] Specify deterministic path-only naming, plugin-compatible export order and composition, authored ICSS/`@value` handling, and exact errors in the protocol before implementation.
+- [x] Add PostCSS CSS Modules plugins through `npm install`; lazily load them in the main process after consumer PostCSS and renderer pruning, retaining memoization and divergence checks.
+- [x] Keep class-map, keyframe, ID, global/local, composition, collision, import, asset and example coverage; test forward references, authored ICSS, `@value` and product-language locations.
+- [x] Remove browser-target and post-Lightning image-set machinery and tests; update guides, READMEs, security/release docs, and the ignored PR draft.
+- [x] Demonstrate an old whole-stylesheet re-print mutation fails exact parity; smoke-test Welcome in Chrome across both schemes and viewports.
+- [x] Run Build, focused tests, example Build/Check, lint, typecheck, dependency and package checks, relevant browser specs, then `cargo xtask check`; commit and push this milestone.
+
+## Milestone 19: Commit, push, and review (complete)
+
+- [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Nine new findings (2 Medium, 7 Low) are recorded in the [Milestone 19 review record](../docs/reviews/imported-css-delivery-milestone-19.md) for the user's decision.
+
+## Milestone 20: Mokly-owned `@scope` scoping and rename-only verification (complete)
+
+Preserve valid `@scope` selectors independently of the current CSS Modules
+plugins and reject any change beyond documented local-name rewrites.
+
+- [x] Define the prelude grammar, selector/export/composition semantics, structural verification and exact messages in the protocol and guide before implementation.
+- [x] Add failing scanner, `scopeModule`, plain/module byte-parity, Build and Chrome computed-style regressions, including classes containing `to` and malformed preludes.
+- [x] Hide scope-suffixed at-rules from the plugins, localize real scope groups with sourced temporary rules, and restore names/params without changing other prelude bytes.
+- [x] Compare input and output PostCSS trees after documented composition removals; allow only local-name changes in selectors, keyframes and value tokens, then fail with the first authored location otherwise.
+- [x] Pin the two animation outcomes that now fail and the `animation-name: ease` limit that remains; test comparator accept/reject cases and collision/composition scope behavior.
+- [x] Add direct selector/value parser dependencies with `npm install`, update security/release docs, and sweep the example, equivalence cases and installed CSS for false positives.
+- [x] Report failing-first, mutation, performance and Chrome fixture evidence; run Build, focused suites, example Build/Check, lint, typecheck, dependency/package checks and `cargo xtask check`; commit and push.
+
+## Milestone 21: Commit, push, and review (complete)
+
+- [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Eight new findings (all Low) are recorded in the [Milestone 21 review record](../docs/reviews/imported-css-delivery-milestone-21.md) for the user's decision.
+
+## Milestone 22: Accept CSS Modules selector lists in `:global()` and `:local()` (complete)
+
+Permit the CSS Modules plugins' established list flattening without weakening
+the rename-only check for any other selector rewrite.
+
+- [x] Confirm every reviewed plugin output and probe scope groups, nesting and bare modes before relying on the flattening rule.
+- [x] Add failing verifier and Build regressions for all accepted list forms, plus reordered, missing and non-descendant join rejections.
+- [x] Normalize wrapped lists into ordered descendant chains in the input selector tree, including compound attachment, nested pseudos and `@scope` groups.
+- [x] Update the imported-CSS contract and Styles guide; keep other finding-3 concerns and all other open findings untouched.
+- [x] Run Build, focused suites, example Build/Check and unchanged digest, lint, typecheck, Chrome parity, CLI fixture smoke and `cargo xtask check`; commit and push.
+
+## Milestone 23: Commit, push, and review (complete)
+
+- [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Two new findings (1 Medium, 1 Low) are recorded in the [Milestone 23 review record](../docs/reviews/imported-css-delivery-milestone-23.md) for the user's decision.
+
+## Milestone 24: Follow the plugins' list join and ignore selector comments (complete)
+
+Accept the CSS Modules plugins' comma-boundary spacing and empty-item behavior
+without accepting fused identifiers or invalid newly created compounds.
+
+- [x] Probe every reviewed plugin output and additional empty, local, attached, nested and `@scope` forms; document any differing behavior.
+- [x] Add failing generated differential and Build tests for the plugin join, empty items and selector comments, plus explicit invalid-compound and mutation regressions.
+- [x] Normalize wrapped list items using only whitespace touching comma boundaries; drop empty items and selector comments from both trees while preserving meaningful combinators.
+- [x] Reject fused names and type/universal placement created by a join or wrapper removal, without judging identical authored compounds elsewhere.
+- [x] Update the protocol, Styles guide, review records, plan and ignored PR draft for the exact accepted behavior.
+- [x] Run Build, focused and Chrome tests, example Build/Check with unchanged digest, CLI smoke, lint, typecheck and `cargo xtask check`; commit and push.
+
+## Milestone 25: Commit, push, and review (complete)
+
+- [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Four new findings (1 Medium, 3 Low) are recorded in the [Milestone 25 review record](../docs/reviews/imported-css-delivery-milestone-25.md) for the user's decision.
+
+## Milestone 26: Wrapper-only moved whitespace, empty wrappers, a browser oracle and exact join docs (complete)
+
+Trust authored comma-boundary whitespace, allow only wrapper-owned trailing
+whitespace to move, reject all-empty wrappers, and verify browser semantics.
+
+- [x] Add failing regressions for moved whitespace across wrapper and non-wrapper pseudos, nested rules and `@scope`; probe trailing whitespace origin at selector boundaries.
+- [x] Reject all-empty `:global()`/`:local()` in every selector context before plugins run, with a catalogued location; remove empty-wrapper normalization branches.
+- [x] Add a seeded Chrome oracle independent of the plugins for plain and wrapped selectors, plus table-driven Build cases for every public example.
+- [x] Split the CSS Modules protocol into a linked indexed page, update guide/error catalogue/PR draft, and retitle the plugin matrix as no-false-rejection evidence.
+- [x] Run the four mutation checks without committing them; run Build, focused/browser tests, example Build/Check, CLI smoke, lint, typecheck and `cargo xtask check`; commit and push.
+
+## Milestone 27: Commit, push, and review (complete)
+
+- [x] Commit and push final resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Four new findings (1 Medium, 3 Low) are recorded in the [Milestone 27 review record](../docs/reviews/imported-css-delivery-milestone-27.md) for the user's decision.
+
+## Milestone 28: CSS whitespace, escape guards, wrapper empty tails and a stricter oracle (complete)
+
+Use one CSS text scanner for selector spacing, reject unsafe escape spellings,
+follow plugin-owned empty tails, and compare only real Chrome-parsed selectors.
+
+- [x] Write failing scanner, Build and browser regressions for the four approved findings and the escape-plus-comment case; capture the baseline CSS corpus.
+- [x] Define CSS whitespace and escape limits in the protocol, error catalogue, Styles guide and PR draft before or with the implementation.
+- [x] Share one forward CSS scanner across selector checking and `@scope`, add the early escape diagnostic, and handle wrapper empty tails and kept comments.
+- [x] Tighten the Chrome oracle to parseable rows with family minimums and documented strict rejections; add the documented fix to Build tests.
+- [x] Run corpus and mutation checks; verify Build, module suites, example Build/Check, lint, typecheck, browser specs and `cargo xtask check`; smoke-test the CLI.
+
+## Milestone 29: Commit, push, and review (complete)
+
+- [x] Commit and push the approved fixes and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Three new findings (1 Medium, 2 Low) are recorded in the [Milestone 29 review record](../docs/reviews/imported-css-delivery-milestone-29.md) for the user's decision.
+
+## Milestone 30: Browser-accurate escape combinators, meaning-preserving escape advice and missing tests (complete)
+
+Verify combinators from CSS text on both sides of scoping, give escape edits
+that preserve selector meaning, and cover the missing scanner boundaries.
+Milestone 32 follows up on "keep current valid output building": re-parsing
+the scoped CSS had hidden comments that ship and rejected those valid rules.
+
+- [x] Add failing regressions for wrapper-created escaped combinators, advice edits, escaped quotes, U+00A0 and the exact comment boundary; record corpus baseline.
+- [x] Update the CSS Modules protocol, error catalogue, Styles guide, build README and ignored PR draft for browser-accurate combinators and meaning-preserving advice.
+- [x] Use the shared scanner for every parser-produced and inserted combinator; remove dead authored-whitespace checks and keep current valid output building.
+- [x] Extend the Chrome oracle and add a deterministic seeded wrapper/escape fuzz oracle with direct plugin reference output.
+- [x] Run mutation and corpus checks, Build, every CSS Modules suite, example Build/Check, lint, typecheck, focused browsers, CLI smoke and `cargo xtask check`.
+
+## Milestone 31: Commit, push, and review (complete)
+
+- [x] Commit and push the approved fixes and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Four new findings (all Low) are recorded in the [Milestone 31 review record](../docs/reviews/imported-css-delivery-milestone-31.md) for the user's decision.
+
+## Milestone 32: Compare the scoped text that ships (complete)
+
+Read shipped selectors and `@scope` preludes on the output side, while
+modelling the cleaned input the CSS Modules plugins processed.
+
+- [x] Add failing Node and Chrome regressions for every approved reproduction, unchanged and changed `@scope` comments, and preserved prior rejections; record the CSS corpus baseline.
+- [x] Update the CSS Modules protocol, build README and ignored PR draft for the cleaned-input/shipped-output distinction and comment-insensitive `@scope` outside text.
+- [x] Compare raw shipped output selectors and `@scope` groups when PostCSS's raw value matches; strip comments only outside `@scope` groups with the shared scanner.
+- [x] Merge comment-separated whitespace combinators narrowly on both sides; keep explicit and non-comment-adjacent combinators distinct, with Node, Chrome and mutation regressions.
+- [x] Patch the transitive `brace-expansion` advisory that blocks the dependency gate (5.0.9 to 5.0.12) in `fa43083`.
+- [x] Run three mutation checks, corpus comparison, Build, every CSS Modules suite, example Build/Check, lint, typecheck, focused browsers, CLI smoke and `cargo xtask check`.
+
+## Milestone 33: Commit, push, and review (complete)
+
+- [x] Commit and push the approved fix and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Three new findings (all Low) are recorded in the [Milestone 33 review record](../docs/reviews/imported-css-delivery-milestone-33.md) for the user's decision.
+
+## Milestone 34: Accept byte-identical shipped selectors (complete)
+
+Accept an authored rule selector or `@scope` prelude unchanged in the CSS
+that ships, while retaining every changed-text verification and rejection.
+
+- [x] Add failing regressions for the reviewed unchanged non-hex escapes, the one-byte difference and existing rejections; capture the CSS corpus baseline.
+- [x] Update the CSS Modules protocol and ignored PR draft for byte-identical acceptance, the hex-only early guard and the known changed-selector limit.
+- [x] Apply one raw-text helper to authored and shipped rule selectors and `@scope` preludes, accepting only byte-identical text before normal comparison.
+- [x] Run mutation and corpus checks, Build, every CSS Modules suite, example Build/Check, lint, typecheck, focused browsers and `cargo xtask check`.
+
+## Milestone 35: Commit, push, and review (complete)
+
+- [x] Commit and push the approved fix and resolution-reference bookkeeping; confirm the remote ref and a clean tree.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Two new findings (both Low) are recorded in the [Milestone 35 review record](../docs/reviews/imported-css-delivery-milestone-35.md) for the user's decision.
+
+## Milestone 36: Merge latest main (complete)
+
+Preserve the imported CSS delivery contract while integrating main's viewer,
+navigation, publication and manifest changes.
+
+- [x] Fetch and audit main from the pre-merge source tip; save main additions under `.context/merge/`.
+- [x] Merge `origin/main` path-by-path; accept main's three reviewed deletions and port their binary-safe and Changes adaptations to the owning replacements.
+- [x] Review every clean overlapping auto-merge for semantic preservation, not just conflicts.
+- [x] Integrate manifest v7 and read model v3 with stylesheet metadata, navigation paths and CSS attribution.
+- [x] Integrate generated CSS and binary assets with export ownership schema 2, delta publication and aligned `srcdoc` comparison panes; add missing publication and browser coverage.
+- [x] Keep the example and fixtures reachable through `navPath`/`folder()`, reconcile documentation and split over-limit merged files.
+      Milestone 38 completed the protocol-page reconciliation after the merge review.
+- [x] Prove no unapproved deletion or feature-wide reduction against `origin/main`; run Build, focused and browser tests, example Chrome smoke and the complete `cargo xtask check` gate.
+
+## Milestone 37: Commit, push, and review (complete)
+
+- [x] Commit and push the merge and final bookkeeping; confirm the remote ref and a clean tree.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the parent session owns this review. Thirteen new findings (1 High, 3 Medium, 9 Low) are recorded in the [Milestone 37 review record](../docs/reviews/imported-css-delivery-milestone-37.md) for the user's decision.
+
+## Milestone 38: Reconcile merged protocol pages and restore main's tooling (complete)
+
+Make main's protocol pages authoritative, port still-current imported CSS
+rules, and guard documentation, merge and length-policy boundaries.
+
+- [x] Write failing protocol-structure, error-catalogue and preview-capture regressions; record the baseline evidence.
+- [x] Triage every sentence in the old-page report, port current rules, remove superseded pages, rename current pages and reconcile generated rendering; record the ignored crosswalk.
+- [x] Restore URL, watcher, configuration, CSS attribution, verification and release wording, with links and index tests aligned to current owners.
+- [x] Restore preview normalization, the narrowed merge-aware ratchet, the shared length policy, the fixture helper and script declaration checking.
+- [x] Add the merge-preservation command and its Git fixtures; run it against the merged result and justify every intentional move or removal.
+- [x] Add the output-path guard and derived binary publication regressions, with mutation evidence for the guard.
+- [x] Run focused suites, example Build/Check, lint, typecheck, Markdown/overlap checks and the full `cargo xtask check` gate.
+
+## Milestone 39: Merge main's 0.13.0 release (complete)
+
+Bring the latest release metadata into the reconciled branch without losing
+the imported CSS work or main's published version and documentation updates.
+
+- [x] Fetch and audit `origin/main` from the source tip; save the release additions under `.context/merge/`.
+- [x] Merge `origin/main`, resolve `package.json` path-by-path, verify the lockfile with `npm ci`, and review the release guides and changelogs.
+- [x] Run the in-progress merge-preservation check and deletion audits; restore or justify every reported passage.
+- [x] Run the complete `cargo xtask check` gate on the final merged tree without editing tracked files during the gate.
+
+## Milestone 40: Commit, push, and review (complete)
+
+- [x] Commit and push the approved fixes and final bookkeeping; confirm the remote ref and a clean tree.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Twelve new findings (3 Medium, 9 Low) are recorded in the [Milestone 40 review record](../docs/reviews/imported-css-delivery-milestone-40.md) for the user's decision.
+
+## Milestone 41: Replace the custom merge check with Git's remerge diff (complete)
+
+Use Git's own three-way merge as the source of truth for reviewing merge
+resolutions and one-sided changes.
+
+- [x] Remove the custom merge-preservation script and its tests; direct agents to review `git show --remerge-diff HEAD` after a local merge commit and justify intentional differences in the PR description.
+- [x] Record the resolution of Milestone 40 findings 1, 2, 4 and 11 without changing the other findings.
+
+## Milestone 42: Merge main's release-runner fix (complete)
+
+Preserve main's GitHub-hosted release-runner change while keeping the split
+release protocol pages.
+
+- [x] Fetch and audit main's new tip and save the changed-path list under `.context/merge/` before merging.
+- [x] Merge `origin/main`, resolve the release-protocol conflict path by path, and verify main's workflow and test updates.
+- [x] Review the committed merge with `git show --remerge-diff HEAD`, inspect deletions against `origin/main`, and run the focused checks and full gate.
+
+## Milestone 43: Commit, push, and review (complete)
+
+- [x] Commit and push the approved work, confirm the remote ref and a clean tree.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Three new findings (1 Medium, 2 Low) are recorded in the [Milestone 43 review record](../docs/reviews/imported-css-delivery-milestone-43.md) for the user's decision.
+
+## Milestone 44: Review merges by named commit (complete)
+
+Make merge reviews independent of the current `HEAD` and give the PR owner a
+path-complete record of intentional merge decisions.
+
+- [x] Replace the merge-review rule with a named, two-parent commit check, a per-path remerge review, a later-commit diff, and safe amendment guidance; verify the commands with local Git.
+- [x] Classify every remerge-diff path from the branch's three merges in an ignored PR-decision record, with coverage counts.
+- [x] Make review introductions and active-plan status count-free, and record the selected findings' resolutions without changing other open findings.
+- [x] Validate the changed Markdown, relevant documentation tests, file-length audit, and deletion check.
+
+## Milestone 45: Commit, push, and review (complete)
+
+- [x] Commit and push the documentation changes; confirm the remote ref and a clean tree.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Five new findings (2 Medium, 3 Low) are recorded in the [Milestone 45 review record](../docs/reviews/imported-css-delivery-milestone-45.md) for the user's decision.
+
+## Milestone 46: Stabilize imported-CSS watcher tests (complete)
+
+Replace timing guesses with watch reports and accepted-resource evidence while
+preserving the browser-visible event contract.
+
+- [x] Reproduce each affected test under 24-run, six-at-once load and identify whether its failure is test synchronization or product behavior.
+- [x] Add a shared branch-owned resource wait that follows ready/update events across child restarts, retries only restart transport errors, and has direct retry/rethrow tests.
+- [x] Fix the worker-exit close test to wait for its rebuild failure report, and update the real-watcher and PostCSS dependency tests to wait for accepted resource bytes.
+- [x] Audit other branch-added watcher tests for the same patterns and fix affected cases without changing main-owned tests or helpers.
+- [x] Check product ordering with a deterministic server-level test; no product bug or protocol change is needed.
+- [x] Verify load and serial repetitions, both CI unit shards, the full gate, Markdown, and deletion checks; record the finding's resolution.
+
+The original six-way load failed 24/24 worker-close runs (including one hung
+cleanup), 2/24 skipped-directory stylesheet runs and 1/24 PostCSS-token runs.
+The two catalogue PostCSS tests, the imported-CSS matrix and the stateful
+PostCSS test showed no baseline failures, but used the same unsafe waits. The
+final helper waits through intermediate versions and reports the last content
+and update versions, resource status and value excerpt on timeout.
+
+## Milestone 47: Commit, push, and review (complete)
+
+Deliver the approved watcher-test fix while leaving its post-push review to
+the user.
+
+- [x] Commit and push the fix; confirm the remote ref and a clean tree.
+- [x] Review the complete local diff against `origin/main` using `docs/implementation-review-prompt.md` after the push. Report findings without changing implementation; the user runs this review. Three new findings (1 Medium, 2 Low) are recorded in the [Milestone 47 review record](../docs/reviews/imported-css-delivery-milestone-47.md) for the user's decision.
+
+## Post-merge follow-up (non-blocking)
+
+- Watch the first derived comparison on a consumer catalogue that adopts this
+  version and confirm the documented one-time jump settles on the next commit.
+
+## Follow-up plans (not part of this change)
+
+- Remove Mokly-owned `@scope` handling after fixed releases of
+  [local-by-default #90](https://github.com/css-modules/postcss-modules-local-by-default/issues/90)
+  ([PR #91](https://github.com/css-modules/postcss-modules-local-by-default/pull/91))
+  and [scope #68](https://github.com/css-modules/postcss-modules-scope/issues/68)
+  ([PR #69](https://github.com/css-modules/postcss-modules-scope/pull/69)) land.
+- `define` support for `import.meta.env` style constants.
+- Page render input carrying resolved stylesheet links.
+- Rebuilding only the stylesheet pass when only CSS inputs changed, and a
+  cross-compilation PostCSS cache for Serve.
+- Optional `@mokly/vite` compatibility package that runs Vite's plugin
+  container as the transform stage while esbuild keeps bundling.
+- Ownership inference and bundle mapping listed under
+  [CSS Change Attribution](./css-change-attribution.md).

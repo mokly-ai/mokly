@@ -1,13 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import {
-  smokeThemedConsumer,
-  smokeCleanCacheExecution,
-  smokeEsmConsumer,
-  smokeJunoFixture,
-  smokeNodeNextConsumer,
-} from "./package/consumer_cases.mjs";
+import { smokeCleanCacheExecution } from "./package/consumer_cases/clean_cache.mjs";
+import { smokeEsmConsumer } from "./package/consumer_cases/esm.mjs";
+import { smokeJunoFixture } from "./package/consumer_cases/juno.mjs";
+import { smokeNodeNextConsumer } from "./package/consumer_cases/nodenext.mjs";
+import { smokeThemedConsumer } from "./package/consumer_cases/themed.mjs";
+import { smokeImportedStylesConsumer } from "./package/imported_styles.mjs";
 import {
   inspectPackagePair,
   packPackagePair,
@@ -42,6 +41,7 @@ try {
     viewerArchivePath: pair.viewer.archivePath,
     fixturesRoot,
     packageVersion: pair.cli.report.version,
+    repositoryRoot,
     viewerVersion: pair.viewer.report.version,
     versions: {
       esbuild: packageJson.dependencies.esbuild,
@@ -58,8 +58,9 @@ try {
   await smokeCleanCacheExecution(context);
   await smokeThemedConsumer(context);
   await smokeJunoFixture(context);
+  await smokeImportedStylesConsumer(context);
   process.stdout.write(
-    "Both packed packages passed all five consumer scenarios.\n",
+    "Both packed packages passed all six consumer scenarios.\n",
   );
 } finally {
   await fs.promises.rm(workingRoot, { force: true, recursive: true });

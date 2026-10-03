@@ -8,15 +8,7 @@ public exclusions.
 
 ## Delivery Status
 
-The component stylesheet injection and manifest-v6 shape below are defined by
-[remove-source-path-evidence](../../plans/remove-source-path-evidence.md):
-Milestone 3 implemented injection and Milestone 6 implemented manifest v6.
-Both are in current generated output.
-Milestone 11 of the same plan removed component `stylesheets` from the
-renderer-facing `input.entry` at runtime and in its public type.
-The transient inserted-link provenance and relaxed configured-link placement
-below were implemented by Milestone 13; Milestone 14 implemented the warning
-channel.
+This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 
 ## Rendering Boundary
 
@@ -37,7 +29,7 @@ import type { ReactNode } from "react";
 import type {
   ColorScheme,
   ScreenDefinition,
-  ComponentDefinition,
+  ComponentVariantDefinition,
   ComponentStyleOwnership,
   ComponentResourceOwnership,
   Viewport,
@@ -45,8 +37,7 @@ import type {
 
 interface RenderInput {
   colorScheme: ColorScheme;
-  entry: ScreenDefinition | Omit<ComponentDefinition, "stylesheets">;
-  variantId?: string;
+  entry: ScreenDefinition | ComponentVariantDefinition;
   componentProps?: Readonly<Record<string, unknown>>;
   node: ReactNode;
   stylesheets: readonly string[];
@@ -61,6 +52,10 @@ interface RenderResult {
 
 export default function render(input: RenderInput): string | RenderResult;
 ```
+
+For a component variant entry, `entry` is the variant entry itself and
+`componentProps` carries its validated props; the parent component is never
+rendered on its own, and `RenderInput` has no `variantId` field.
 
 The string or `html` field must contain a complete `<html>` document. Optional
 style/resource records provide exact component ownership; unclaimed or mixed
@@ -114,8 +109,8 @@ type CompatibilityTransformer = (input: CompatibilityTransformInput) => string;
 
 `availableRoutes` contains the complete pending output plus retained existing
 public static files; generated files scheduled for orphan removal are excluded.
-`logicalRoutes` maps screen/use-case catalogue routes to concrete artifacts for
-the current viewport and color scheme. A dark document targets dark fragments
+`logicalRoutes` maps screen/use-case catalogue routes, derived from kind and
+id, to concrete artifacts for the current viewport and color scheme. A dark document targets dark fragments
 when the destination supports them and otherwise falls back to the light
 fragment. `outputPath` is repository-relative; no absolute checkout path is
 exposed. Mokly applies the transformer after id links resolve and before
@@ -131,8 +126,9 @@ and cannot weaken final validation. New catalogues should author portable links
 directly and leave this option unset.
 
 Stylesheet rules are ordered, declarative consumer configuration. Their globs
-match the catalogue route before viewport fragments are derived, so one exact
-screen-route rule applies to both viewports and every enabled scheme. Shared
+match the entry's catalogue route (`<prefix>/<id>.html`) before viewport
+fragments are derived, so one exact screen-route rule applies to both viewports
+and every enabled scheme. Shared
 stylesheets come first, followed by the matching scheme-specific list.
 Generated fragment links are relative to the fragment route and URL-encoded by
 segment.
@@ -149,110 +145,14 @@ its transient provenance token, which Mokly removes before writing HTML.
 Shell and device-frame CSS is package-owned and self-contained; product CSS is
 never copied into the npm package.
 
+With [imported CSS](./mokly-imported-styles.md), the configured renderer
+stylesheet follows configured links, then the entry stylesheet. The built-in
+renderer adds none; a custom renderer emits the supplied links. Complete page
+callbacks receive no injected links and must link their generated entry CSS
+explicitly.
+
 ## Generated Contract
 
-`mokly build` writes deterministic output under `mockupsDir`:
-
-- `<screen>.mobile.html` and `<screen>.desktop.html` fragments for each screen,
-  including each variant screen at its derived
-  `<parent>.variants/<slug>.html` route (approved target in the
-  [screen variants contract](./mokly-screen-variants.md));
-- `<screen>.mobile.dark.html` and `<screen>.desktop.dark.html` when that screen's
-  effective schemes include dark;
-- one complete HTML document at each page route;
-- `mokly-manifest.json` using schema version 6.
-
-Screen and use-case routes are durable identifiers and do not imply a composed
-HTML file. A screen's fragments are bare product renders with required head
-content but without Mokly shell chrome. Collections generate no page.
-Light fragments remain canonical and unsuffixed. Turning dark off makes the
-previous dark documents proven generated orphans: `check` reports them and
-`build` removes them through the normal ownership-safe lifecycle.
-
-Manifest source and output paths are repository-relative; routes are relative
-to `mockupsDir`. The manifest includes every entry, fragment, source input,
-relationship and related doc needed by Browse and Review. It is
-stable across operating systems and independent of absolute checkout paths.
-Repository paths are canonical POSIX paths with no empty, dot, parent, drive,
-or backslash segments; generated manifests are self-validated before writing.
-
-Generated documents carry a generic generated-file header. After compatibility
-transformation, every pending document must retain the expected source path in
-that header. The same parser accepts LF and CRLF and lets Build remove only
-files proven to have been generated by the configured catalogue: an HTML
-header's source must belong to the current entries root even when
-that source was just deleted. It never deletes an unknown or foreign-catalogue
-file.
-
-All catalogues emit [manifest v6](./mokly-component-manifest.md), including
-pages, source inventory, saved component variants and per-view invocation/ownership
-records. Historical readers accept v3–v5, including both disjoint v4 formats,
-and opt-in v2 only for a missing primary manifest.
-The common current shape is:
-
-```ts
-interface ManifestV6 {
-  schemaVersion: 6;
-  generatedBy: "mokly";
-  entries: readonly ManifestEntry[];
-  sourceFiles: readonly string[];
-}
-
-interface CommonEntry {
-  id: string;
-  kind: "screen" | "collection" | "use-case" | "page" | "component";
-  title: string;
-  description: string;
-  rationale?: string;
-  navPath: readonly string[];
-  sourcePath: string;
-  relatedDocs: readonly string[];
-}
-
-type ManifestEntry =
-  | ManifestComponent // See the component manifest contract for the complete shape.
-  | (CommonEntry & { kind: "page"; route: string; tags?: readonly string[] })
-  | (CommonEntry & {
-      kind: "screen";
-      route: string;
-      address?: string;
-      tags?: readonly string[];
-      componentViews?: readonly ComponentViewRecord[];
-      darkFragments?: { mobile: string; desktop: string };
-      fragments: { mobile: string; desktop: string };
-      variantOf?: string; // Approved target: present exactly on variant screens.
-      viewports: readonly ["mobile", "desktop"];
-      useCaseIds: readonly string[];
-    })
-  | (CommonEntry & {
-      kind: "collection";
-      childIds: readonly string[];
-    })
-  | (CommonEntry & {
-      kind: "use-case";
-      route: string;
-      tags?: readonly string[];
-      steps: readonly {
-        screenId: string;
-        title?: string;
-        description?: string;
-      }[];
-    });
-```
-
-Entries sort by route then id; source inputs and generated files
-sort lexically. Optional properties are omitted, not emitted as `null`.
-`navPath` is derived output derived from collection ancestry;
-it contains the ordered ancestor collection titles and is empty for catalogue
-roots. It is not an authoring input and it is not a second source of hierarchy.
-`darkFragments` is present exactly when the screen's effective schemes include
-dark. Its routes use the `.mobile.dark.html` and `.desktop.dark.html` names and
-participate in the same safe-route and collision validation as light fragments.
-Light-only manifests omit the field.
-`tags` carries the authored classification list, in authored order and never
-sorted, and is written only for a page, screen, or use case that declares a non-empty
-one; an absent or empty declaration is omitted, so an untagged catalogue
-serializes exactly as it did before the field existed.
-`sourcePath` and related docs use repo-relative POSIX paths. Current manifest
-entries do not carry authored repository-path declarations or inherited path
-matches; only actual rendered resources establish file-change evidence.
+The deterministic generated views, manifest v8 shape, CSS/assets and ownership
+rules are defined in the linked [Generated Rendering Contract](./mokly-rendering-generated.md).
+Exact identity-derived routes follow [Artifact Paths](./mokly-artifact-paths.md).

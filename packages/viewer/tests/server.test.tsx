@@ -1,22 +1,11 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import { test } from "node:test";
 
-import { readCatalogue } from "../src/catalogue/reader.js";
+import { catalogueComponentVariants } from "../src/catalogue/entry_selection.js";
 import { renderViewer } from "../src/viewer/server.js";
 import { catalogueUrl, readObjectSource } from "../src/viewer/source.js";
 
-const fixture = readCatalogue(
-  JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v2.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  ),
-);
+import { fixture, htmlIds, htmlReferences } from "./server_fixture.js";
 
 test("SSR renders the public fixture, default state and every host slot", () => {
   const html = renderViewer({
@@ -47,6 +36,7 @@ test("SSR renders the public fixture, default state and every host slot", () => 
   assert.match(html, /pointer-events:none/);
   assert.doesNotMatch(html, /<script|Pick components/);
 });
+
 for (const screenId of [
   null,
   ...fixture.screens.map((entry) => entry.id),
@@ -136,7 +126,8 @@ test("independent SSR viewers keep IDs and references root-local", () => {
 test("distinct valid viewer IDs cannot absorb dynamic control IDs", () => {
   const model = structuredClone(fixture);
   const component = model.components[0]!;
-  const variant = component.variants[0]!;
+  if ("variantOf" in component) throw new Error("Missing component parent");
+  const variant = catalogueComponentVariants(model, component.id)[0]!;
   component.controls = {
     ...component.controls,
     "mb-main": component.controls.label!,
@@ -195,118 +186,3 @@ test("server and React viewer IDs share one validation contract", async () => {
     renderViewer({ ...props, viewerId: "v".repeat(64) }),
   );
 });
-
-test("SSR selects a requested saved variant in its control and preview", () => {
-  const model = structuredClone(fixture);
-  const component = model.components[0]!;
-  const original = component.variants[0]!;
-  component.variants = [
-    original,
-    {
-      ...structuredClone(original),
-      id: "second",
-      title: "Second",
-      views: original.views.map((view) => ({
-        ...structuredClone(view),
-        fragmentPath: view.fragmentPath?.replace("default", "second") ?? null,
-      })),
-    },
-  ];
-  const html = renderViewer({
-    viewerId: "fixture",
-    catalogue: model,
-    baseUrl: "https://catalogue.example",
-    defaultSelection: { screenId: component.id, variantId: "second" },
-  });
-  assert.match(html, /<option value="second" selected="">Second<\/option>/);
-  assert.match(html, /action\.variants\/second\.(?:mobile|desktop)\.html/);
-});
-
-test("SSR resolves light fallback evidence across status, marks and comparison", () => {
-  const model = structuredClone(fixture);
-  const screen = model.screens.find((entry) => entry.id === "home");
-  const component = model.components.find((entry) => entry.id === "action");
-  if (!screen || !component) throw new Error("Missing mixed-view fixture");
-  screen.changes = { status: "ready", kind: "changed", included: true };
-  screen.views = screen.views.map((view) => ({
-    ...view,
-    comparison: {
-      status: "ready",
-      kind: view.viewport === "mobile" ? "unmodified" : "changed",
-      eligible: view.viewport !== "mobile",
-    },
-  }));
-  component.colorSchemes = ["light", "dark"];
-  component.variants = component.variants.map((variant) => ({
-    ...variant,
-    views: variant.views.flatMap((view) => [
-      view,
-      {
-        ...structuredClone(view),
-        colorScheme: "dark" as const,
-        fragmentPath: view.fragmentPath?.replace(".html", ".dark.html") ?? null,
-      },
-    ]),
-  }));
-
-  const html = renderViewer({
-    viewerId: "mixed",
-    catalogue: model,
-    baseUrl: "https://catalogue.example",
-    defaultSelection: {
-      screenId: screen.id,
-      viewport: "mobile",
-      colorScheme: "dark",
-    },
-  });
-
-  assert.match(html, /data-workspace-status="">Unmodified</);
-  assert.match(html, /class="mbk-diff-toolbar" hidden=""/);
-  assert.match(html, /data-view-changed="scheme" hidden=""/);
-  assert.doesNotMatch(html, /data-view-changed="viewport" hidden=""/);
-});
-
-test("SSR preserves comparison ineligibility while view evidence is unknown", () => {
-  const model = structuredClone(fixture);
-  const component = model.components.find((entry) => entry.id === "action");
-  if (!component) throw new Error("Missing component fixture");
-  component.changes = { status: "ready", kind: "changed", included: true };
-
-  const html = renderViewer({
-    viewerId: "unknown-evidence",
-    catalogue: model,
-    baseUrl: "https://catalogue.example",
-    defaultSelection: { screenId: component.id },
-  });
-
-  assert.match(html, /data-workspace-status="">Changed</);
-  assert.match(html, /class="mbk-diff-toolbar" hidden=""/);
-});
-
-test("invalid current paths are rejected instead of replaced with guessed URLs", () => {
-  const model = structuredClone(fixture);
-  const screen = model.screens[0]!;
-  for (const view of screen.views) view.fragmentPath = null;
-  assert.throws(() =>
-    renderViewer({
-      viewerId: "fixture",
-      catalogue: model,
-      baseUrl: "https://catalogue.example",
-      defaultSelection: { screenId: screen.id },
-    }),
-  );
-});
-
-function htmlIds(html: string): Set<string> {
-  return new Set(
-    [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]!),
-  );
-}
-
-function htmlReferences(html: string): string[] {
-  return [
-    ...html.matchAll(
-      /\s(?:aria-controls|aria-describedby|aria-labelledby|for)="([^"]+)"|\shref="#([^"]+)"/g,
-    ),
-  ].flatMap((match) => (match[1] ?? match[2]!).split(" "));
-}

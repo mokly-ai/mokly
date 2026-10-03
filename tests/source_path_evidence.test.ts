@@ -5,7 +5,7 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentGit } from "./helpers/component_review_fixture.js";
@@ -22,7 +22,7 @@ for (const components of [false, true])
     await writeCompilation(compilation, config);
     const git = componentGit(compilation, ["notes.md"]);
     const { result } = await compareReview(compilation, config, git, "main");
-    assert.equal(result.schemaVersion, components ? 5 : 4);
+    assert.equal(result.schemaVersion, 5);
     assert.equal(Object.hasOwn(result, "sharedImpact"), false);
     assert.ok(
       result.screens.every((screen) => !Object.hasOwn(screen, "sharedImpact")),
@@ -40,5 +40,5 @@ for (const components of [false, true])
         ),
       );
     }
-    assert.deepEqual(await computeChangedRoutes(config, "main", git), []);
+    assert.deepEqual(await computeChangedIds(config, "main", git), []);
   });

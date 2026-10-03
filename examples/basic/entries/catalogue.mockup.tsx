@@ -2,7 +2,6 @@ import { Badge } from "@firna/ui/badge";
 import { Input } from "@firna/ui/input";
 
 import {
-  defineCollection,
   defineScreen,
   definePage,
   defineUseCase,
@@ -13,6 +12,7 @@ import {
 
 import { action } from "../src/components/action/action.mokly.js";
 import { toolbar } from "../src/components/toolbar/toolbar.mokly.js";
+import { WorkspaceNote } from "../src/components/workspace-note/workspace-note.js";
 
 import { renderExampleDocument } from "./document.js";
 
@@ -45,6 +45,7 @@ function Welcome({ compact }: { compact: boolean }) {
         placeholder="Name this workspace"
         value=""
       />
+      <WorkspaceNote />
       <action.Component
         moklyInstance="details"
         label="View details"
@@ -122,40 +123,14 @@ function Details({ compact }: { compact: boolean }) {
 }
 
 export const mockups = [
-  defineCollection({
-    ...metadata,
-    id: "example-components",
-    title: "Components",
-    description: "Shared actions and composition.",
-    childIds: ["example-action", "example-toolbar"],
-  }),
-  defineCollection({
-    ...metadata,
-    childIds: [
-      "example-screens",
-      "example-tour",
-      "example-components",
-      "example-handbook",
-    ],
-    description: "Synthetic examples for the reusable Mokly package.",
-    id: "example",
-    title: "Example",
-  }),
-  defineCollection({
-    ...metadata,
-    childIds: ["example-welcome", "example-details"],
-    description: "Synthetic screens used to exercise the reusable framework.",
-    id: "example-screens",
-    title: "Screens",
-  }),
   defineScreen({
     ...metadata,
+    navPath: ["Example", "Screens"],
     address: "example.test/welcome",
     description: "A linked landing screen for the neutral fixture.",
     desktop: <Welcome compact={false} />,
     id: "example-welcome",
     mobile: <Welcome compact />,
-    route: "screens/welcome.html",
     tags: ["forms", "onboarding"],
     title: "Welcome",
     useCaseIds: ["example-tour"],
@@ -165,37 +140,36 @@ export const mockups = [
         desktop: <EmptyWorkspace compact={false} />,
         id: "example-welcome-empty",
         mobile: <EmptyWorkspace compact />,
-        slug: "empty",
         title: "Welcome, empty workspace",
       },
     ],
   }),
   defineScreen({
     ...metadata,
+    navPath: ["Example", "Screens"],
     address: "example.test/details",
     description: "A second synthetic screen proving cross-screen links.",
     desktop: <Details compact={false} />,
     id: "example-details",
     mobile: <Details compact />,
-    route: "screens/details.html",
     tags: ["forms"],
     title: "Details",
     useCaseIds: ["example-tour"],
   }),
   definePage({
     ...metadata,
+    navPath: ["Example"],
     id: "example-handbook",
     title: "Getting started",
     description: "A handbook to accompany the example screens.",
-    route: "handbook.html",
     tags: ["documents"],
     render: renderExampleDocument,
   }),
   defineUseCase({
     ...metadata,
+    navPath: ["Example"],
     description: "An ordered journey that reuses both canonical screens.",
     id: "example-tour",
-    route: "user-flows/example-tour.html",
     steps: [{ screenId: "example-welcome" }, { screenId: "example-details" }],
     title: "Example tour",
   }),

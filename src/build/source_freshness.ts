@@ -1,11 +1,13 @@
 import { isDeepStrictEqual } from "node:util";
 
+import { entryRoute, generatedViews } from "@mokly/viewer/data";
+
 import { loadConfig } from "../config/load.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
 import type { ComponentRuntime } from "./component_runtime.js";
-import { loadConsumerGraph } from "./load_graph.js";
+import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
 import { normalizeSourceFiles } from "./source_inventory.js";
 
@@ -13,13 +15,17 @@ import { normalizeSourceFiles } from "./source_inventory.js";
 export async function assertFreshSourceInventory(
   config: ResolvedConfig,
   manifest: ComponentRuntime["manifest"],
-): Promise<void> {
+): Promise<LoadedGraph> {
   const current = await loadConfig(config.repoRoot, config.configPath);
   const graph = await loadConsumerGraph(current, false);
   if (
     !isDeepStrictEqual(graph.sourceFiles, manifest.sourceFiles) ||
     !isDeepStrictEqual(
-      normalizeSourceFiles(manifest.sourceFiles, config.repoRoot),
+      normalizeSourceFiles(
+        manifest.sourceFiles,
+        config.repoRoot,
+        config.mockupsDir,
+      ),
       manifest.sourceFiles,
     )
   )
@@ -28,18 +34,14 @@ export async function assertFreshSourceInventory(
       "source inventory is stale; run mokly build before serving or publishing",
     );
   config.sourceFiles = graph.sourceFiles;
+  config.postcssWatchDirectories = graph.postcssWatchDirectories ?? [];
   config.configSourceFiles = current.configSourceFiles ?? [];
   validateGeneratedOutputPaths(
-    manifest.entries.flatMap((entry) =>
-      entry.kind === "collection"
-        ? []
-        : entry.kind === "screen"
-          ? [
-              ...Object.values(entry.fragments),
-              ...Object.values(entry.darkFragments ?? {}),
-            ]
-          : [entry.route],
-    ),
+    manifest.entries.flatMap((entry) => {
+      if (entry.kind === "page") return [entryRoute("page", entry.id)];
+      return generatedViews(entry).map((view) => view.path);
+    }),
     config,
   );
+  return graph;
 }

@@ -2,20 +2,9 @@
 
 ## Delivery Status
 
-This implemented contract was planned by
-[remove-source-path-evidence](../../plans/remove-source-path-evidence.md).
-Milestone 3 delivered declaration, validation, linking, ownership, Serve and
-public delivery. Milestone 4 removed legacy source-path attribution and
-Milestone 6 removed the old authoring inputs.
-Milestone 11 of the same plan implemented the optional-never authoring types,
-startup/reconfiguration watching, real-file alias deduplication, stylesheet
-`rel` token and omitted-tag handling, and renderer-link reuse described below;
-these refinements are now in Build, Check, Serve, export and publication.
-Milestone 13 implemented graceful handling of duplicate declarations,
-configured links and overlaps. The linked
-[ownership and comparison contract](./mokly-component-stylesheet-ownership.md)
-covers its provenance and post-transform rules. Milestone 14 implemented
-their warnings.
+This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+
+The [ownership and comparison contract](./mokly-component-stylesheet-ownership.md) defines final link provenance and evidence.
 
 ## Declaration And Public Files
 
@@ -32,15 +21,14 @@ interface ComponentInput {
   ownedDependencies?: never;
 }
 
-const { Component, entry } = defineComponent({
+const { Component, entries } = defineComponent({
   id: "example-action",
   title: "Example action",
   description: "An action shared across screens.",
-  route: "components/example-action.html",
   relatedDocs: [],
   propSchema: { kind: "object", properties: {} },
   render: () => null,
-  variants: [{ id: "default", title: "Default", props: {} }],
+  variants: [{ id: "example-action-default", title: "Default", props: {} }],
   stylesheets: ["design/components/action.css"],
 });
 ```

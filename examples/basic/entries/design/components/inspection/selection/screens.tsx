@@ -18,7 +18,6 @@ export function HelpSelectionMobile() {
 export const selectionScreens = [
   screen({
     id: "design-component-inspection-toolbar",
-    slug: "toolbar",
     title: "Select a container instance",
     colorSchemes: ["light"],
     description:
@@ -28,7 +27,6 @@ export const selectionScreens = [
   }),
   screen({
     id: "design-component-inspection-help",
-    slug: "help",
     title: "Select an invisible instance",
     colorSchemes: ["light"],
     description:

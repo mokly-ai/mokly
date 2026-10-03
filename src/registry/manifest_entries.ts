@@ -1,256 +1,125 @@
 import { isCatalogueId } from "@mokly/viewer/data";
 
-import { validateManifestComponent } from "../components/manifest_validation.js";
+import { validateManifestComponent } from "../components/manifest_entry_validation.js";
 import { MoklyError } from "../errors.js";
 
 import {
   nonEmptyString,
   record,
   stringArray,
+  validateColorSchemes,
   validateRepoPath,
-  validateRoute,
 } from "./manifest_values.js";
 
-/** Validate the public fields for one historical or current entry. */
-export function validateEntry(
+const COMMON_FIELDS = [
+  "description",
+  "id",
+  "kind",
+  "navPath",
+  "rationale",
+  "relatedDocs",
+  "sourcePath",
+  "title",
+] as const;
+
+/** Validate the public fields for one identity-only v8 entry. */
+export function validateManifestEntry(
   entry: Record<string, unknown>,
-  components = false,
-  historical = false,
+  components: boolean,
 ): void {
   const kind = entry.kind;
   if (
-    kind !== "collection" &&
     kind !== "screen" &&
     kind !== "page" &&
     kind !== "use-case" &&
-    !(components && kind === "component")
-  ) {
-    throw new MoklyError(
-      "manifest-invalid",
-      `invalid manifest kind for ${String(entry.id)}`,
-    );
-  }
-  for (const field of ["title", "description", "sourcePath"] as const) {
-    if (typeof entry[field] !== "string" || entry[field].length === 0) {
-      throw new MoklyError(
-        "manifest-invalid",
-        `${String(entry.id)} is missing ${field}`,
-      );
-    }
-  }
+    kind !== "component"
+  )
+    failure(`invalid manifest kind for ${String(entry.id)}`);
+  for (const field of ["title", "description", "sourcePath"] as const)
+    if (typeof entry[field] !== "string" || entry[field].length === 0)
+      failure(`${String(entry.id)} is missing ${field}`);
   validateRepoPath(
     entry.sourcePath as string,
     `${String(entry.id)} sourcePath`,
   );
-  if (entry.rationale !== undefined && !nonEmptyString(entry.rationale)) {
-    throw new MoklyError(
-      "manifest-invalid",
-      `${String(entry.id)} has invalid rationale`,
-    );
-  }
-  for (const field of ["navPath", "relatedDocs"] as const) {
-    if (!stringArray(entry[field])) {
-      throw new MoklyError(
-        "manifest-invalid",
-        `${String(entry.id)} has invalid ${field}`,
-      );
-    }
-  }
-  for (const field of ["relatedDocs"] as const) {
-    for (const value of entry[field] as string[]) {
+  if (entry.rationale !== undefined && !nonEmptyString(entry.rationale))
+    failure(`${String(entry.id)} has invalid rationale`);
+  for (const field of ["navPath", "relatedDocs"] as const)
+    if (!stringArray(entry[field]))
+      failure(`${String(entry.id)} has invalid ${field}`);
+  for (const field of ["relatedDocs"] as const)
+    for (const value of entry[field] as string[])
       validateRepoPath(value, `${String(entry.id)} ${field}`);
-    }
-  }
-  if (historical && entry.dependencies !== undefined) {
-    if (!stringArray(entry.dependencies))
-      throw new MoklyError(
-        "manifest-invalid",
-        `${String(entry.id)} has invalid dependencies`,
-      );
-    for (const value of entry.dependencies)
-      validateRepoPath(value, `${String(entry.id)} dependencies`);
-  }
-  if (kind === "collection") {
-    if (!stringArray(entry.childIds)) {
-      throw new MoklyError(
-        "manifest-invalid",
-        `${String(entry.id)} has invalid childIds`,
-      );
-    }
-    return;
-  }
-  if (typeof entry.route !== "string") {
-    throw new MoklyError(
-      "manifest-invalid",
-      `${String(entry.id)} has no route`,
-    );
-  }
-  validateRoute(entry.route, String(entry.id));
-  if (entry.tags !== undefined && !stringArray(entry.tags)) {
-    throw new MoklyError(
-      "manifest-invalid",
-      `${String(entry.id)} has invalid tags`,
-    );
-  }
-  if (kind === "component") validateManifestComponent(entry, historical);
-  else if (kind === "screen") validateScreen(entry);
+  validateTags(entry);
+  if (kind === "component") validateManifestComponent(entry);
+  else if (kind === "screen") validateScreen(entry, components);
   else if (kind === "use-case") validateUseCase(entry);
+  validateKnownFields(entry, components);
 }
 
-function validateScreen(entry: Record<string, unknown>): void {
-  if (!record(entry.fragments)) {
-    throw new MoklyError(
-      "manifest-invalid",
-      `${String(entry.id)} has no fragments`,
-    );
-  }
-  for (const viewport of ["mobile", "desktop"] as const) {
-    const fragment = entry.fragments[viewport];
-    if (typeof fragment !== "string") {
-      throw new MoklyError(
-        "manifest-invalid",
-        `${String(entry.id)} has no ${viewport} fragment`,
-      );
-    }
-    validateRoute(fragment, `${String(entry.id)} ${viewport} fragment`);
-  }
-  if (entry.darkFragments !== undefined) {
-    if (!record(entry.darkFragments)) {
-      throw new MoklyError(
-        "manifest-invalid",
-        `${String(entry.id)} has invalid darkFragments`,
-      );
-    }
-    for (const viewport of ["mobile", "desktop"] as const) {
-      const fragment = entry.darkFragments[viewport];
-      if (typeof fragment !== "string") {
-        throw new MoklyError(
-          "manifest-invalid",
-          `${String(entry.id)} has no ${viewport} dark fragment`,
-        );
-      }
-      validateRoute(fragment, `${String(entry.id)} ${viewport} dark fragment`);
-    }
-  }
-  if (!stringArray(entry.useCaseIds)) {
-    throw new MoklyError(
-      "manifest-invalid",
-      `${String(entry.id)} has invalid useCaseIds`,
-    );
-  }
-  if (
-    !Array.isArray(entry.viewports) ||
-    entry.viewports.length !== 2 ||
-    entry.viewports[0] !== "mobile" ||
-    entry.viewports[1] !== "desktop"
-  ) {
-    throw new MoklyError(
-      "manifest-invalid",
-      `${String(entry.id)} has invalid viewports`,
-    );
-  }
-  if (entry.address !== undefined && !nonEmptyString(entry.address)) {
-    throw new MoklyError(
-      "manifest-invalid",
-      `${String(entry.id)} has invalid address`,
-    );
-  }
+function validateScreen(
+  entry: Record<string, unknown>,
+  components: boolean,
+): void {
+  validateColorSchemes(entry.colorSchemes, String(entry.id));
+  if (!stringArray(entry.useCaseIds))
+    failure(`${String(entry.id)} has invalid useCaseIds`);
+  if (entry.address !== undefined && !nonEmptyString(entry.address))
+    failure(`${String(entry.id)} has invalid address`);
   if (
     "variantOf" in entry &&
     (typeof entry.variantOf !== "string" || !isCatalogueId(entry.variantOf))
-  ) {
-    throw new MoklyError(
-      "manifest-invalid",
-      `${String(entry.id)} has invalid variantOf`,
-    );
-  }
+  )
+    failure(`${String(entry.id)} has invalid variantOf`);
+  if (!components && entry.componentViews !== undefined)
+    failure(`${String(entry.id)} has component usage without components`);
 }
 
 function validateUseCase(entry: Record<string, unknown>): void {
-  if (!Array.isArray(entry.steps) || entry.steps.length === 0) {
-    throw new MoklyError(
-      "manifest-invalid",
-      `${String(entry.id)} has invalid steps`,
-    );
-  }
+  if (!Array.isArray(entry.steps) || entry.steps.length === 0)
+    failure(`${String(entry.id)} has invalid steps`);
   for (const [index, step] of entry.steps.entries()) {
-    if (!record(step) || !nonEmptyString(step.screenId)) {
-      throw new MoklyError(
-        "manifest-invalid",
-        `${String(entry.id)} step #${index + 1} has invalid screenId`,
-      );
-    }
-    for (const field of ["title", "description"] as const) {
-      if (step[field] !== undefined && !nonEmptyString(step[field])) {
-        throw new MoklyError(
-          "manifest-invalid",
-          `${String(entry.id)} step #${index + 1} has invalid ${field}`,
-        );
-      }
-    }
+    if (!record(step) || !nonEmptyString(step.screenId))
+      failure(`${String(entry.id)} step #${index + 1} has invalid screenId`);
+    for (const field of ["title", "description"] as const)
+      if (step[field] !== undefined && !nonEmptyString(step[field]))
+        failure(`${String(entry.id)} step #${index + 1} has invalid ${field}`);
   }
 }
 
-/** Reject fields outside the source-inventoried entry contract. */
-export function validateCurrentFields(
+function validateKnownFields(
   entry: Record<string, unknown>,
-  components = false,
-  historical = false,
+  components: boolean,
 ): void {
-  const common = [
-    "description",
-    "id",
-    "kind",
-    "navPath",
-    "rationale",
-    "relatedDocs",
-    "sourcePath",
-    "title",
-    ...(historical ? ["dependencies", "declaredDependencies"] : []),
-  ];
+  if (entry.kind === "component") return;
   const specific =
-    entry.kind === "collection"
-      ? ["childIds"]
-      : entry.kind === "page"
-        ? ["route", "tags"]
-        : entry.kind === "component" && components
-          ? [
-              "route",
-              "tags",
-              "viewports",
-              "propSchema",
-              "slots",
-              "controls",
-              ...(historical ? ["ownedDependencies"] : []),
-              "variants",
-            ]
-          : entry.kind === "screen"
-            ? [
-                "route",
-                "tags",
-                "address",
-                "darkFragments",
-                "fragments",
-                "useCaseIds",
-                "variantOf",
-                "viewports",
-                ...(components ? ["componentViews"] : []),
-              ]
-            : ["route", "tags", "steps"];
+    entry.kind === "page"
+      ? ["tags"]
+      : entry.kind === "screen"
+        ? [
+            "tags",
+            "address",
+            "colorSchemes",
+            "useCaseIds",
+            "variantOf",
+            ...(components ? ["componentViews"] : []),
+          ]
+        : ["tags", "steps"];
   for (const field of Object.keys(entry))
-    if (![...common, ...specific].includes(field))
-      throw new MoklyError(
-        "manifest-invalid",
-        `${String(entry.id)} has unsupported ${field}`,
-      );
+    if (![...COMMON_FIELDS, ...specific].includes(field as never))
+      failure(`${String(entry.id)} has unsupported ${field}`);
+}
+
+function validateTags(entry: Record<string, unknown>): void {
   if (
     entry.tags !== undefined &&
     (!Array.isArray(entry.tags) ||
       !entry.tags.every(isCatalogueId) ||
       new Set(entry.tags).size !== entry.tags.length)
   )
-    throw new MoklyError(
-      "manifest-invalid",
-      `${String(entry.id)} has invalid tags`,
-    );
+    failure(`${String(entry.id)} has invalid tags`);
+}
+
+function failure(message: string): never {
+  throw new MoklyError("manifest-invalid", message);
 }

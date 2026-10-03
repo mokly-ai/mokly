@@ -12,7 +12,7 @@ import { repositoryRoot, validEntrySource } from "./helpers/fixture.js";
 const read = (file: string) =>
   fs.readFile(path.join(repositoryRoot, file), "utf8");
 
-test("documented catalogue formats match compilation and both comparison sides", async (t) => {
+test("manifest v8 and unified comparison v5 ship together", async (t) => {
   const index = await read("docs/protocol/README.md");
   const plain = validEntrySource();
   const components = componentEntrySource();
@@ -29,25 +29,33 @@ test("documented catalogue formats match compilation and both comparison sides",
       fixture.git,
       "main",
     );
-    const componentComparison = before === components || after === components;
-    assert.equal(fixture.after.manifest.schemaVersion, 6);
-    assert.equal(result.schemaVersion, componentComparison ? 5 : 4);
+    assert.equal(fixture.after.manifest.schemaVersion, 8);
+    assert.equal(result.schemaVersion, 5);
     assert.match(
       index,
       after === components
-        ? /With registered components\s*\|\s*6\s*\|\s*5/
-        : /Without registered components\s*\|\s*6\s*\|\s*4/,
+        ? /With registered components\s*\|\s*8\s*\|\s*5/
+        : /Without registered components\s*\|\s*8\s*\|\s*5/,
     );
   }
 });
 
 test("delivered component contracts do not retain superseded status or version instructions", async () => {
-  for (const file of [
-    "mokly-components.md",
-    "mokly-changes.md",
-    "mokly-component-props.md",
-    "mokly-component-changes.md",
-  ]) {
+  const families = [
+    "mokly-components",
+    "mokly-changes",
+    "mokly-component-props",
+    "mokly-component-changes",
+  ];
+  const files = (
+    await fs.readdir(path.join(repositoryRoot, "docs/protocol"))
+  ).filter(
+    (file) =>
+      file.endsWith(".md") &&
+      families.some((family) => file.startsWith(family)),
+  );
+  assert.ok(files.length > families.length);
+  for (const file of files) {
     const text = await read(`docs/protocol/${file}`);
     assert.doesNotMatch(
       text,
@@ -55,9 +63,13 @@ test("delivered component contracts do not retain superseded status or version i
       file,
     );
   }
-  assert.doesNotMatch(
-    await read("docs/protocol/mokly-export.md"),
-    /Keep `ReviewResult\.schemaVersion` at 2/,
-  );
-  assert.match(await read("README.md"), /current output requires manifest v6/);
+  for (const file of (
+    await fs.readdir(path.join(repositoryRoot, "docs/protocol"))
+  ).filter((file) => file.startsWith("mokly-export") && file.endsWith(".md")))
+    assert.doesNotMatch(
+      await read(`docs/protocol/${file}`),
+      /Keep `ReviewResult\.schemaVersion` at 2/,
+      file,
+    );
+  assert.match(await read("README.md"), /Current output requires manifest v8/);
 });

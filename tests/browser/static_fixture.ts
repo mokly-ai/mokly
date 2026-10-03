@@ -19,14 +19,14 @@ interface StaticFixtureOptions {
 
 function historicalEntrySource(
   includeRemoved: boolean,
-  renamedRoute: string,
+  renamedId: string,
 ): string {
-  const page = (id: string, route: string, title: string) =>
-    `definePage({ description: ${JSON.stringify(`${title} guidance`)}, id: ${JSON.stringify(id)}, relatedDocs: [], render: () => ${JSON.stringify(`<!doctype html><html><body><h1>${title}</h1></body></html>`)}, route: ${JSON.stringify(route)}, title: ${JSON.stringify(title)} })`;
+  const page = (id: string, title: string) =>
+    `definePage({ description: ${JSON.stringify(`${title} guidance`)}, id: ${JSON.stringify(id)}, relatedDocs: [], render: () => ${JSON.stringify(`<!doctype html><html><body><h1>${title}</h1></body></html>`)}, title: ${JSON.stringify(title)} })`;
   return `import { definePage } from "@mokly/mokly";
 export const mockups = [
-  ${includeRemoved ? `${page("removed", "removed.html", "Removed")},` : ""}
-  ${page("renamed", renamedRoute, "Renamed")}
+  ${includeRemoved ? `${page("removed", "Removed")},` : ""}
+  ${page(renamedId, "Renamed")}
 ];
 `;
 }
@@ -88,7 +88,7 @@ export async function startStaticFixture({
 /** Finalized export containing both removed and renamed historical routes. */
 export async function startHistoricalStaticFixture() {
   const fixture = await createExportFixture(
-    historicalEntrySource(true, "guides/original.html"),
+    historicalEntrySource(true, "renamed-old"),
   );
   const isolated = await fs.promises.mkdtemp(
     path.join(repositoryRoot, ".context/mokly-static-history-"),
@@ -96,7 +96,7 @@ export async function startHistoricalStaticFixture() {
   try {
     await fs.promises.writeFile(
       fixture.entryPath,
-      historicalEntrySource(false, "guides/renamed.html"),
+      historicalEntrySource(false, "renamed"),
     );
     await exportCatalogue(fixture.config, {
       outDir: "site",
@@ -105,7 +105,7 @@ export async function startHistoricalStaticFixture() {
     await fixture.close();
     const server = await serveStaticFiles(isolated);
     try {
-      await assertServedShellMarker(server.url, "/view/removed.html");
+      await assertServedShellMarker(server.url, "/view/pages/removed.html");
     } catch (error) {
       await server.close();
       throw error;

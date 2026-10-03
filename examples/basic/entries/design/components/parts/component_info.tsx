@@ -1,12 +1,12 @@
 import { MetaRow } from "../../parts/metadata_row.js";
 
-import { COMPONENTS, type ComponentId } from "./metadata.js";
+import { COMPONENTS, type ComponentEntryMetadata } from "./metadata.js";
 
-export function ComponentInfo({ identity }: { identity: ComponentId }) {
-  const component = COMPONENTS[identity];
+export function ComponentInfo({ entry }: { entry: ComponentEntryMetadata }) {
+  const component = COMPONENTS[entry.component];
   return (
     <section>
-      <h3>About {component.title}</h3>
+      <h3>About {entry.title}</h3>
       <p>{component.description}</p>
       <p className="ce-muted">
         Source <code>{component.source}</code>
@@ -14,6 +14,11 @@ export function ComponentInfo({ identity }: { identity: ComponentId }) {
       <details className="ce-slot-details">
         <summary>Source and references</summary>
         <dl className="ce-props">
+          {entry.variantOf ? (
+            <MetaRow name="variant-of" label="Variant of" presentation="props">
+              {COMPONENTS[entry.variantOf].title}
+            </MetaRow>
+          ) : null}
           <MetaRow name="schemes" label="Schemes" presentation="props">
             Light, Dark
           </MetaRow>

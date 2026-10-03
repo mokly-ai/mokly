@@ -75,14 +75,6 @@ test("served fragment queries validate once and reach every applicable frame", a
   const server = await startFixtureServer(fixture);
   fixture.beforeRemove(() => server.close());
 
-  const redirect = await fetch(`${server.url}/id/details?fragment=section`, {
-    redirect: "manual",
-  });
-  assert.equal(redirect.status, 302);
-  assert.equal(
-    redirect.headers.get("location"),
-    "/view/screens/details.html?fragment=section",
-  );
   const screen = await (
     await fetch(`${server.url}/view/screens/details.html?fragment=section`)
   ).text();
@@ -150,7 +142,7 @@ function fragmentFrames(html: string): HtmlElement[] {
   );
 }
 
-test("HEAD id errors omit bodies on a reused connection", async (context) => {
+test("HEAD requests to removed id routes return not found without bodies", async (context) => {
   const fixture = await navigationFixture(context);
   const server = await startFixtureServer(fixture);
   fixture.beforeRemove(() => server.close());
@@ -159,7 +151,7 @@ test("HEAD id errors omit bodies on a reused connection", async (context) => {
 
   for (const [route, status] of [
     ["/id/missing", 404],
-    ["/id/details?fragment=bad", 400],
+    ["/id/details?fragment=bad", 404],
   ] as const) {
     const head = await nodeRequest(`${server.url}${route}`, "HEAD", agent);
     assert.equal(head.status, status);

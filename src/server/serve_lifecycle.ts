@@ -8,12 +8,11 @@ import type { BuildWarning } from "../build/warnings.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timingArguments } from "../diagnostics/timings.js";
 
-import type { RunningServer } from "./http_types.js";
 import type {
   PreparedResourceWatch,
   ResourceWatcher,
 } from "./resource_watcher.js";
-import type { RunningServe, ServeOptions } from "./serve.js";
+import type { ServeOptions } from "./serve.js";
 import type {
   ProcessSupervisor,
   ProcessSupervisorFactory,
@@ -22,7 +21,7 @@ import type { NotificationGate, WatchActionQueue } from "./watch_events.js";
 import type { ConsumerWatcher } from "./watcher.js";
 
 /** Keep CLI child configuration, including diagnostic opt-in, stable across restarts. */
-export function createWatchedSupervisor(
+function createWatchedSupervisor(
   config: ResolvedConfig,
   options: ServeOptions,
   factory: ProcessSupervisorFactory,
@@ -66,11 +65,6 @@ export async function startWatchedSupervisor(
     ]);
     throw error;
   }
-}
-
-/** Present a deterministic child server through the public Serve lifecycle. */
-export function serverLifecycle(server: RunningServer): RunningServe {
-  return { close: () => server.close(), port: server.port, url: server.url };
 }
 
 /** Stop waiting for a candidate watcher as soon as watched shutdown begins. */

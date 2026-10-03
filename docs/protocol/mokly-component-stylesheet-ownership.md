@@ -2,11 +2,9 @@
 
 ## Delivery Status
 
-The provenance, final-link ownership and comparison rules below were planned
-by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
-and implemented in Milestone 13. The structured warnings were implemented in
-Milestone 14. Declaration, validation and placement
-remain in [component stylesheets](./mokly-component-stylesheets.md).
+This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+
+The [declaration and linking contract](./mokly-component-stylesheets.md) defines the stylesheet inputs and placement.
 
 ## Provenance And Comparison Material
 
@@ -23,7 +21,7 @@ may survive exactly once, on a stylesheet link to its original real file;
 duplicates or reassignment fail `build-invalid`. After transformation, scan
 the final document, resolve marked links to declared real files, remove the
 transient attribute, and store their full-link UTF-16 spans, public paths and
-rendered declaring component ids in the private v6 view's
+rendered declaring component ids in the private v8 view's
 `insertedStylesheets` record. Final HTML has no token or wrapper, so the
 rendered page is unchanged. Offsets refer to final HTML including its generated
 header. Validate spans against those bytes and rebase range/style offsets
@@ -82,7 +80,7 @@ links recognized by normal resource discovery, by real file. Keep one derived
 owner record only for a declared file still directly linked in the final page;
 remove it if all its links disappeared. If an inserted link was removed but
 another final authored link to the same file remains, keep the owners and use
-that link's decoded public path. Derived records are private to manifest v6,
+that link's decoded public path. Derived records are private to manifest v8,
 not a public catalogue field.
 
 ## Changes

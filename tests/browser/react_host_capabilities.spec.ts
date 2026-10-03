@@ -18,7 +18,9 @@ test("live host waits for explicit capabilities and repeated bootstrap stays sin
   const errors = captureErrors(page);
   await countHydrations(page);
   const gate = await delayHost(page);
-  await page.goto("/view/screens/welcome.html", { waitUntil: "commit" });
+  await page.goto("/view/screens/example-welcome.html", {
+    waitUntil: "commit",
+  });
   await gate.requested;
 
   await page.evaluate(

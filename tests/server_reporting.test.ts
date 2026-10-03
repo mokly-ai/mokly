@@ -1,19 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ManifestV6 } from "@mokly/viewer/data";
-
 import { FileSystemGeneratedOutputStore } from "../dist/build/output_store.js";
 import { FileSystemConfigLoader, loadConfig } from "../dist/config/load.js";
-import type { ChildHandle } from "../dist/server/child_process.js";
 import { NodeCatalogueServerFactory } from "../dist/server/factory.js";
-import type { ServeReporter, WatchReport } from "../dist/server/reporter.js";
 import { serve } from "../dist/server/serve.js";
 import {
   NodeProcessSupervisorFactory,
   ReadyProcessSupervisor,
 } from "../dist/server/supervisor.js";
-import type { ChildCommand } from "../dist/server/update_messages.js";
 import {
   parseChildDiagnosticMessage,
   parseChildWarningMessage,
@@ -21,13 +16,17 @@ import {
 import {
   WatchActionQueue,
   WatchDebouncer,
-  type DebounceClock,
 } from "../dist/server/watch_events.js";
 import { ChokidarWatcherFactory } from "../dist/server/watcher.js";
 
 import { nodeBaselineBuilder } from "./helpers/baseline_builders.js";
 import { derivedFixture } from "./helpers/derived_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import {
+  FakeClock,
+  RecordingReporter,
+  ReportingChild,
+} from "./server_reporting_fixture.js";
 
 test("debounced and queued watch work retains every candidate path", async () => {
   const clock = new FakeClock();
@@ -179,6 +178,33 @@ test(
   },
 );
 
+test("screen-only Serve logs classifier failures and reports Changes unavailable", async (t) => {
+  const fixture = await createFixture();
+  t.after(() => removeFixture(fixture));
+  const reporter = new RecordingReporter();
+  const running = await serve(
+    await loadConfig(fixture.root),
+    { port: 0, watch: false },
+    {
+      changeClassifier: {
+        async read() {
+          throw new Error("screen classifier failed");
+        },
+      },
+      reporter,
+    },
+  );
+  fixture.beforeRemove(() => running.close());
+  await reporter.complete;
+
+  assert.ok(
+    reporter.events.some((event) =>
+      event.includes("diagnostic:screen classifier failed"),
+    ),
+  );
+  assert.ok(reporter.events.includes("changes-unavailable"));
+});
+
 test("the watched RunningServe rebuild hook uses the serialized queue", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
@@ -197,90 +223,3 @@ test("the watched RunningServe rebuild hook uses the serialized queue", async (t
   }
   assert.fail(`Manual rebuild did not settle: ${reporter.events.join(", ")}`);
 });
-
-class FakeClock implements DebounceClock {
-  private callback: (() => void) | undefined;
-  private readonly handle = {} as ReturnType<typeof setTimeout>;
-  clear(_handle: ReturnType<typeof setTimeout>): void {
-    this.callback = undefined;
-  }
-  schedule(
-    callback: () => void,
-    _milliseconds: number,
-  ): ReturnType<typeof setTimeout> {
-    this.callback = callback;
-    return this.handle;
-  }
-  flush(): void {
-    const callback = this.callback;
-    this.callback = undefined;
-    callback?.();
-  }
-}
-
-class RecordingReporter implements ServeReporter {
-  readonly events: string[] = [];
-  readonly complete: Promise<void>;
-  private resolve: () => void = () => undefined;
-
-  constructor() {
-    this.complete = new Promise((resolve) => {
-      this.resolve = resolve;
-    });
-  }
-
-  baselinePreparing(base: string): void {
-    this.events.push(`baseline-preparing:${base}`);
-  }
-  baselineReady(commit: string, cacheHit: boolean): void {
-    this.events.push(
-      `baseline-ready:${commit}:${cacheHit ? "reused" : "rebuilt"}`,
-    );
-  }
-  catalogueReady(manifest: ManifestV6): void {
-    const screens = manifest.entries.filter(
-      (entry) => entry.kind === "screen",
-    ).length;
-    this.events.push(`catalogue:screen=${screens}`);
-  }
-  changesReady(changed: number): void {
-    this.events.push(`changes-ready:${changed}`);
-    this.resolve();
-  }
-  changesUnavailable(): void {
-    this.events.push("changes-unavailable");
-    this.resolve();
-  }
-  gitReferenceRefresh(_base: string): void {}
-  runtimeDiagnostic(_error: unknown): void {}
-  serveReady(): void {}
-  watchFailed(_report: WatchReport, _error: unknown): void {}
-  watchFinished(report: WatchReport): void {
-    this.events.push(`watch-finished:${report.action}`);
-  }
-  watchStarted(report: WatchReport): void {
-    this.events.push(`watch-started:${report.action}`);
-  }
-}
-
-class ReportingChild implements ChildHandle {
-  readonly listeners: Array<(value: unknown) => void> = [];
-  readonly exits: Array<(code: number | null) => void> = [];
-  forceKill(): void {}
-  onDisconnect(): void {}
-  onError(): void {}
-  onExit(callback: (code: number | null) => void): void {
-    this.exits.push(callback);
-  }
-  onMessage(callback: (value: unknown) => void): void {
-    this.listeners.push(callback);
-  }
-  send(_message: ChildCommand): void {}
-  terminate(): void {}
-  emit(value: unknown): void {
-    for (const listener of this.listeners) listener(value);
-  }
-  exit(): void {
-    for (const listener of this.exits.splice(0)) listener(0);
-  }
-}

@@ -2,12 +2,13 @@
 import type { EventEmitter } from "node:events";
 import { Worker } from "node:worker_threads";
 
-import { generatedViews } from "@mokly/viewer/data";
+import { entryRoute, generatedViews } from "@mokly/viewer/data";
 
 import { compactRuntime } from "../../build/compact_runtime.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { DocumentCache } from "../../build/document_cache.js";
-import type { CompiledDocument } from "../../build/document_compiler.js";
+import type { CompiledDocument } from "../../build/document_types.js";
+import type { GeneratedFile } from "../../build/generated_file.js";
 import { timeAsync } from "../../diagnostics/timings.js";
 import { MoklyError } from "../../errors.js";
 
@@ -24,9 +25,22 @@ export interface DocumentServiceOptions {
   maxQueued?: number;
   onDocument?: (document: CompiledDocument) => void;
 }
+
+/** Admit foreground rendering only for an accepted lightweight generation. */
+export function liveDocumentService(
+  runtime: ComponentRuntime,
+  busy: (active: boolean) => void,
+  onDocument: (document: CompiledDocument) => void,
+): DocumentService | undefined {
+  return runtime.manifest.schemaVersion === "live-index-1"
+    ? new DocumentService(runtime, busy, { onDocument })
+    : undefined;
+}
+
 export class DocumentService {
   readonly generation: string;
   readonly routes: ReadonlySet<string>;
+  readonly styles: ReadonlyMap<string, GeneratedFile>;
   private readonly cache = new DocumentCache<CompiledDocument>(
     64 * 1024 * 1024,
     (value) => Buffer.byteLength(JSON.stringify(value)),
@@ -48,10 +62,11 @@ export class DocumentService {
   ) {
     this.runtime = compactRuntime(runtime);
     this.generation = runtime.generation;
+    this.styles = new Map(runtime.styleOutputs);
     this.routes = new Set(
       runtime.manifest.entries.flatMap((entry) =>
         entry.kind === "page"
-          ? [entry.route]
+          ? [entryRoute("page", entry.id)]
           : generatedViews(entry).map((view) => view.path),
       ),
     );

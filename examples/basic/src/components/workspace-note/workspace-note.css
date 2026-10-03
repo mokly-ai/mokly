@@ -1,0 +1,7 @@
+.example-workspace-note-mark {
+  flex: none;
+  width: 1.6rem;
+  height: 1.6rem;
+  background: url("./signal.png") center / contain no-repeat;
+  user-select: none;
+}

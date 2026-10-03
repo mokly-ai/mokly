@@ -41,7 +41,7 @@ for (const watch of [false, true]) {
           assert.match(pending, /data-filter="changed"/);
           finish(
             outcome === "ready"
-              ? { baseline: compilation.manifest, changedRoutes: [] }
+              ? { baseline: compilation.manifest, changedIds: [] }
               : undefined,
           );
           const status = outcome === "ready" ? "ready" : "unavailable";

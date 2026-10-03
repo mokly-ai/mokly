@@ -4,14 +4,11 @@ import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { sourceDenialMessage } from "../build/source_denial.js";
 import { isAuthoringSource } from "../build/source_inventory.js";
+import { isPublicGeneratedRoute } from "../build/styles/routes.js";
 import { entryModuleRoots } from "../config/entry_membership.js";
 import { isInside, projectRealPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
-import {
-  FORMER_MANIFEST_NAME,
-  LEGACY_MANIFEST_NAME,
-  MANIFEST_NAME,
-} from "../registry/manifest.js";
+import { EARLIER_MANIFEST_NAMES, MANIFEST_NAME } from "../registry/manifest.js";
 
 import { exportError } from "./error.js";
 
@@ -46,10 +43,9 @@ function exportPublicNameDenial(
     options.resolveAliases === false ? "none" : "all",
   );
   if (denial) return sourceDenialMessage(denial);
-  if (
-    [MANIFEST_NAME, FORMER_MANIFEST_NAME, LEGACY_MANIFEST_NAME].includes(name)
-  )
+  if ([MANIFEST_NAME, ...EARLIER_MANIFEST_NAMES].includes(name as never))
     return "targets internal catalogue metadata";
+  if (isPublicGeneratedRoute(name)) return;
   for (const part of name.split("/")) {
     if (part.startsWith(".")) return "contains a hidden path segment";
     if (!options.allowBuildDirectories && PRIVATE_DIRECTORIES.has(part))

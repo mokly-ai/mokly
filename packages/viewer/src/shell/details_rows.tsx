@@ -5,14 +5,18 @@
 
 import type { ReactNode } from "react";
 
-import { catalogueViewHref } from "../navigation/delivery.js";
-import type { ManifestEntry, ManifestUseCase } from "../registry/types.js";
+import { viewHref } from "../navigation/routes.js";
+import type { ManifestUseCase } from "../registry/types.js";
 
-import type { Catalogue } from "./catalogue.js";
+import {
+  catalogueVariantParent,
+  type Catalogue,
+  type CatalogueManifestEntry,
+} from "./catalogue.js";
 import { FlowIcon, ScreenIcon, VariantIcon } from "./icons.js";
 import { TagChip } from "./tags.js";
-import type { RoutedEntry } from "./target.js";
 import { changedViewsLabel, type ChangedView } from "./view_marks.js";
+import { WorkspaceIcon } from "./workspace_icons.js";
 
 /** One label/value pair in the inspector's metadata column. */
 export function MetaRow(props: { children: ReactNode; label: string }) {
@@ -98,7 +102,7 @@ export function UsedByChips(props: {
         {useCases.map((useCase) => (
           <a
             className="mbk-chip flow"
-            href={catalogueViewHref(useCase.route)}
+            href={viewHref(useCase.kind, useCase.id)}
             key={useCase.id}
           >
             <FlowIcon size={11} />
@@ -110,27 +114,26 @@ export function UsedByChips(props: {
   );
 }
 
-/** The variants a screen declares, in manifest order. */
+/** The variants a screen or component declares, in manifest order. */
 export function VariantChips(props: {
   catalogue: Catalogue;
-  entry: RoutedEntry;
+  entry: CatalogueManifestEntry;
 }) {
-  if (props.entry.kind !== "screen") {
+  if (props.entry.kind !== "screen" && props.entry.kind !== "component") {
     return null;
   }
   const historical = props.catalogue.removedEntries.some(
-    ({ entry }) => entry.route === props.entry.route,
+    ({ entry }) => entry.id === props.entry.id,
   );
   const variants = historical
     ? props.catalogue.removedEntries.flatMap(({ entry }) =>
-        entry.kind === "screen" && entry.variantOf === props.entry.id
+        (entry.kind === "screen" || entry.kind === "component") &&
+        "variantOf" in entry &&
+        entry.variantOf === props.entry.id
           ? [entry]
           : [],
       )
-    : (props.catalogue.hierarchy.variantsById.get(props.entry.id) ?? []).filter(
-        (variant): variant is Exclude<ManifestEntry, { kind: "collection" }> =>
-          variant.kind !== "collection",
-      );
+    : (props.catalogue.hierarchy.variantsById.get(props.entry.id) ?? []);
   if (variants.length === 0) {
     return null;
   }
@@ -152,25 +155,20 @@ export function VariantChips(props: {
   );
 }
 
-/** The screen a variant belongs to, resolved for current and removed entries. */
+/** The parent a variant belongs to, resolved for current and removed entries. */
 export function VariantOfChip(props: {
   catalogue: Catalogue;
-  entry: RoutedEntry;
+  entry: CatalogueManifestEntry;
 }) {
-  if (props.entry.kind !== "screen" || props.entry.variantOf === undefined) {
+  if (
+    (props.entry.kind !== "screen" && props.entry.kind !== "component") ||
+    !("variantOf" in props.entry) ||
+    props.entry.variantOf === undefined
+  ) {
     return null;
   }
-  const variantOf = props.entry.variantOf;
-  const historical = props.catalogue.removedEntries.some(
-    ({ entry }) => entry.route === props.entry.route,
-  );
-  const parent = historical
-    ? (props.catalogue.removedEntries.find(
-        ({ entry }) => entry.id === variantOf,
-      )?.entry ?? props.catalogue.byId.get(variantOf))
-    : (props.catalogue.hierarchy.variantParentById.get(props.entry.id) ??
-      props.catalogue.byId.get(variantOf));
-  if (parent === undefined || parent.kind === "collection") {
+  const parent = catalogueVariantParent(props.catalogue, props.entry);
+  if (parent === undefined) {
     return null;
   }
   return (
@@ -180,7 +178,11 @@ export function VariantOfChip(props: {
           className="mbk-chip screen"
           href={entryHref(props.catalogue, parent)}
         >
-          <ScreenIcon size={11} />
+          {parent.kind === "component" ? (
+            <WorkspaceIcon name="components" size={11} />
+          ) : (
+            <ScreenIcon size={11} />
+          )}
           {parent.title}
         </a>
       </span>
@@ -188,11 +190,14 @@ export function VariantOfChip(props: {
   );
 }
 
-function entryHref(catalogue: Catalogue, entry: RoutedEntry): string {
+function entryHref(
+  catalogue: Catalogue,
+  entry: CatalogueManifestEntry,
+): string {
   const snapshotId = catalogue.removedEntries.find(
-    ({ entry: candidate }) => candidate.route === entry.route,
+    ({ entry: candidate }) => candidate.id === entry.id,
   )?.snapshotId;
-  return `${catalogueViewHref(entry.route)}${
+  return `${viewHref(entry.kind, entry.id)}${
     snapshotId ? `?snapshot=${snapshotId}` : ""
   }`;
 }

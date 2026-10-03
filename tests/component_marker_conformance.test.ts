@@ -6,9 +6,11 @@ import { parse, type DefaultTreeAdapterMap } from "parse5";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 import type { ComponentViewRecord } from "../packages/viewer/dist/components/manifest_types.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 function assertMarkers(html: string, view: ComponentViewRecord): void {
   const starts: string[] = [];
@@ -96,15 +98,18 @@ test("each recorded range in every screen/variant view has exactly one matched p
     const targets =
       entry.kind === "screen"
         ? [entry]
-        : entry.kind === "component"
-          ? entry.variants
+        : entry.kind === "component" && "variantOf" in entry
+          ? [entry]
           : [];
     for (const target of targets)
       for (const view of target.componentViews ?? []) {
-        const route = (
-          view.colorScheme === "dark" ? target.darkFragments! : target.fragments
-        )[view.viewport];
-        assertMarkers(compilation.outputs.get(route)!, view);
+        const route = viewRoute(
+          target.kind,
+          target.id,
+          view.viewport,
+          view.colorScheme,
+        );
+        assertMarkers(textOutput(compilation.outputs, route)!, view);
         count++;
       }
   }

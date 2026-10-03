@@ -98,7 +98,9 @@ export function inspectionAvailability(
   )
     return {
       available: false,
-      reason: "Component inspection is unavailable for this view.",
+      reason: input.data.viewUsagePending
+        ? WAITING_REASON
+        : "Component inspection is unavailable for this view.",
     };
   if (
     !sessions.some(

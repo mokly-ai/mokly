@@ -9,6 +9,7 @@ import { prepareRegistry } from "../registry/prepare.js";
 
 import { watcherReadyBeforeShutdown } from "./serve_lifecycle.js";
 import type { NotificationGate, WatchEvent } from "./watch_events.js";
+import { hydrateWatchInventory } from "./watch_inventory.js";
 import { watchTargets } from "./watch_paths.js";
 import {
   createSourceWatcher,
@@ -66,9 +67,7 @@ export async function prepareWatchedSource(
   onWarning?: (warning: BuildWarning) => void,
 ): Promise<PreparedWatchedSource | undefined> {
   config.warnings?.forEach(onWarning ?? (() => undefined));
-  const inventory = await loadConsumerGraph(config, false);
-  config.entryModules = inventory.entrySources;
-  config.sourceFiles = inventory.sourceFiles;
+  await hydrateWatchInventory(config);
   const initialTargets = watchTargets(config);
   let watcher = createSourceWatcher(factory, config, gate, report);
   let retained = false;
@@ -81,6 +80,7 @@ export async function prepareWatchedSource(
     if (isClosed()) return;
     config.entryModules = graph.entrySources;
     config.sourceFiles = graph.sourceFiles;
+    config.postcssWatchDirectories = graph.postcssWatchDirectories ?? [];
     const registry = prepareRegistry(graph.definitions, config, onWarning);
     if (isClosed()) return;
     if (

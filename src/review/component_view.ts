@@ -26,7 +26,6 @@ import { changedResourceBytes } from "./component_resource_changes.js";
 import type { ComponentMaterialReader } from "./component_resources.js";
 import { compareUnchangedComponentView } from "./component_view_fast_path.js";
 import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
-import { snapshotPath } from "./paths.js";
 import type { ResourceComparison } from "./resource_comparison.js";
 
 export interface ComparedComponentView {
@@ -66,8 +65,6 @@ export async function compareComponentView(
     viewport: selected.viewport,
     colorScheme: selected.colorScheme,
     ignoredIds: [],
-    ...(before ? { beforePath: snapshotPath("before", before.path) } : {}),
-    ...(after ? { afterPath: snapshotPath("after", after.path) } : {}),
     state: before ? "removed" : "added",
   };
   if (base === undefined || head === undefined) {

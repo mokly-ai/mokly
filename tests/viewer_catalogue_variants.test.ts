@@ -15,24 +15,24 @@ test("viewer rebuilds current and removed screen variant relationships", () => {
   const parent = screen("welcome", "screens/welcome.html");
   const current = screen(
     "welcome-empty",
-    "screens/welcome.variants/empty.html",
+    "screens/welcome-empty.html",
     parent.id,
   );
   const removed = screen(
     "welcome-error",
-    "screens/welcome.variants/error.html",
+    "screens/welcome-error.html",
     parent.id,
   );
   const manifest = {
     entries: [parent, current],
     generatedBy: "mokly" as const,
-    schemaVersion: 6 as const,
+    schemaVersion: 8 as const,
     sourceFiles: [parent.sourcePath, current.sourcePath].sort(),
   };
   const model = projectCatalogue({
-    catalogue: createCatalogue(manifest, [{ entry: removed, ancestors: [] }]),
+    catalogue: createCatalogue(manifest, [{ entry: removed }]),
     changesStatus: "ready",
-    changedRoutes: [current.route],
+    changedIds: [current.id],
     comparisonUrl: null,
     configPath: "mokly.config.ts",
     revision: { content: 0, evidence: 1 },
@@ -57,10 +57,9 @@ test("viewer rebuilds current and removed screen variant relationships", () => {
     ({ entry }): NavLeafNode => ({
       entryId: entry.id,
       entryKind: entry.kind,
-      key: `removed:${entry.route}`,
+      key: `removed:${entry.id}`,
       kind: "leaf",
       label: `${entry.title} · Removed`,
-      route: entry.route,
       ...(entry.kind === "screen" && entry.variantOf !== undefined
         ? { variantOf: entry.variantOf }
         : {}),
@@ -84,24 +83,22 @@ test("viewer rebuilds current and removed screen variant relationships", () => {
   );
 });
 
-function screen(id: string, route: string, variantOf?: string): ManifestScreen {
-  const stem = route.slice(0, -".html".length);
+function screen(
+  id: string,
+  _route: string,
+  variantOf?: string,
+): ManifestScreen {
   return {
+    colorSchemes: ["light"],
     description: `${id} screen`,
-    fragments: {
-      desktop: `${stem}.desktop.html`,
-      mobile: `${stem}.mobile.html`,
-    },
     id,
     kind: "screen",
     navPath: [],
     relatedDocs: [],
-    route,
     sourcePath: `entries/${id}.mockup.tsx`,
     title: id,
     useCaseIds: [],
     ...(variantOf === undefined ? {} : { variantOf }),
-    viewports: ["mobile", "desktop"],
   };
 }
 

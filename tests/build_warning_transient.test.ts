@@ -23,7 +23,7 @@ test("temporary component renders forward ignored-owner warnings without exposin
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
     `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => { const html = '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return input.entry.id === "action" ? { html, resources: [{ path: "action.css", componentIds: ["action"] }] } : { html }; };`,
+export default (input) => { const html = '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return input.entry.id === "action-default" ? { html, resources: [{ path: "action.css", componentIds: ["action"] }] } : { html }; };`,
   );
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
   const runtime = componentRuntime(compilation);
@@ -35,7 +35,7 @@ export default (input) => { const html = '<html><head></head><body>' + renderToS
   const result = await service.render(
     {
       componentId: "action",
-      variantId: "default",
+      variantId: "action-default",
       generation: runtime.generation,
       viewport: "mobile",
       colorScheme: "light",

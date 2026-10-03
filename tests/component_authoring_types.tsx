@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 
 import { defineComponent } from "../dist/components/definition.js";
+import type { RenderInput } from "../dist/renderer/types.js";
 
 const metadata = {
   id: "test",
@@ -38,7 +39,7 @@ const definition = defineComponent({
   },
   variants: [
     {
-      id: "default",
+      id: "test-default",
       title: "Default",
       props: { label: "Hello", intent: "primary", nested: { enabled: true } },
     },
@@ -54,6 +55,18 @@ const definition = defineComponent({
     },
   },
 });
+
+declare const renderInput: RenderInput;
+if (renderInput.entry.kind === "component") {
+  const parentId: string = renderInput.entry.variantOf;
+  const props: Readonly<Record<string, unknown>> | undefined =
+    renderInput.componentProps;
+  // @ts-expect-error Component renders carry their variant through entry.
+  void renderInput.variantId;
+  void [parentId, props];
+}
+// @ts-expect-error The component parent does not retain a nested variants list.
+void definition.entries[0].variants;
 
 export const valid = (
   <definition.Component
@@ -102,8 +115,16 @@ export const invalidVariant = defineComponent({
     properties: { enabled: { schema: { kind: "boolean" } } },
   },
   render: (props) => String(props.enabled),
-  // @ts-expect-error Saved variants use the schema, not inference from example values.
-  variants: [{ id: "default", title: "Default", props: { enabled: "yes" } }],
+  variants: [
+    {
+      id: "invalid-default",
+      title: "Default",
+      props: {
+        // @ts-expect-error Saved variants use the schema, not inference from example values.
+        enabled: "yes",
+      },
+    },
+  ],
 });
 export const invalidControl = defineComponent({
   ...metadata,
@@ -112,7 +133,9 @@ export const invalidControl = defineComponent({
     properties: { enabled: { schema: { kind: "boolean" } } },
   },
   render: (props) => String(props.enabled),
-  variants: [{ id: "default", title: "Default", props: { enabled: true } }],
+  variants: [
+    { id: "invalid-default", title: "Default", props: { enabled: true } },
+  ],
   // @ts-expect-error Controls must match the schema's primitive type.
   controls: { enabled: { kind: "number" } },
 });

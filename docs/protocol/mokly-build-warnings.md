@@ -2,10 +2,7 @@
 
 ## Delivery Status
 
-The structured warning channel and warnings below were implemented by
-[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-Milestone 14. Existing browser-opening warnings are unchanged.
-[CLI terminal output](./mokly-terminal-output.md) owns their presentation.
+This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 
 ## Warning Boundary
 
@@ -53,7 +50,7 @@ the terminal width rules at the presentation boundary.
 
 Placeholders `<id>`, `<path>`, `<href>` and `<route>` below are substituted as
 JSON-quoted strings (including their quotes and escaping). An entry id is the
-id of the direct entry, nested marker, root collection, or variant that wrote
+id of the direct entry, nested marker, root path, or variant that wrote
 the field. A stylesheet `<path>` is the authored, `mockupsDir`-relative public
 path; `<href>` is the configured href on that route; `<route>` is the generated
 document route. The message has no `[mokly/...]` prefix; the reporter supplies
@@ -69,6 +66,16 @@ that framing.
 | `ignored-declared-resource-owner`    | Route and real file        | `renderer resources for declared stylesheet <path> on <route> are ignored; Mokly derives owners from rendered components.` |
 
 For a duplicate declaration, `<path>` is its first authored public path. For
+removed root or folder metadata, the `removed-dependencies` code uses context
+`["root path:" + JSON.stringify(navPath)]` or
+`["folder:" + JSON.stringify(navPath)]`. Paths include the root labels and every
+ancestor folder title. The messages are exactly
+`dependencies has been removed; ignoring it on root path <path>. Delete the field.`
+and `dependencies has been removed; ignoring it on folder <path>. Delete the field.`,
+where `<path>` is the JSON-quoted path joined with `/`. A component variant
+that supplies a removed field uses its own global id, never its parent's id.
+
+For
 an ignored renderer record, `<path>` is the first renderer-record public path
 for that real file in authored record order. A renderer record for a declared
 file warns even on a page

@@ -16,6 +16,7 @@ export type ChangesStatus = NonNullable<
 interface NavTreeProps {
   changes?: boolean | undefined;
   activeDestination?: DesignDestination | undefined;
+  activeKey?: string | undefined;
   activeLabel?: string | undefined;
   changedCount?: number | undefined;
   changedOnly?: boolean | undefined;
@@ -25,6 +26,7 @@ interface NavTreeProps {
 
 function CatalogueNavigation({
   activeDestination,
+  activeKey,
   changes = true,
   activeLabel,
   changedCount,
@@ -44,6 +46,7 @@ function CatalogueNavigation({
       presentation={drawer ? "drawer" : "responsive"}
       {...optional("changesStatus", changesStatus)}
       {...optional("activeDestination", activeDestination)}
+      {...optional("activeKey", activeKey)}
       {...optional("activeLabel", activeLabel)}
       {...optional("allDestination", navigation.all)}
       {...optional("changesDestination", navigation.changes)}

@@ -34,3 +34,39 @@ export interface UploadOptions {
   endpoint: string;
   token: string;
 }
+
+/** Validated response from the upload plan request. */
+export interface PlanResponse {
+  schemaVersion: 1;
+  upload: {
+    id: string;
+    expiresAt: string;
+  };
+  missing: string[];
+  blobUrl: string;
+  completeUrl: string;
+}
+
+/** Optional command-presentation observer around publication work. */
+export interface PublishProgress {
+  run<Result>(
+    phase: "export" | "prepare" | "upload",
+    action: () => Promise<Result>,
+  ): Promise<Result>;
+  update?(progress: PublishUploadProgress): void;
+}
+
+/** One Plan round's marker-entry progress and distinct-content byte size. */
+export interface PublishUploadProgress {
+  completed: number;
+  total: number;
+  totalBytes: number;
+}
+
+/** Completed publication counts and optional receiver destination. */
+export interface PublishResult {
+  outcome: "published" | "already-published";
+  uploaded: number;
+  unchanged: number;
+  viewerUrl: string | null;
+}

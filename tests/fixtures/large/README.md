@@ -34,7 +34,7 @@ can select an existing fixture. `dev:large` serves until Ctrl-C.
 `benchmark:large` launches Chrome, starts a fresh server and measures command start
 to searchable navigation with a real selected preview visible. It verifies record
 count, both viewports/themes, a successful Action label Props edit and a whole page.
-Then it waits for complete Changes and verifies zero changed routes for the
+Then it waits for complete Changes and verifies zero changed ids for the
 unrelated stylesheet rule. It repeats with a new server and browser context for
 a warm restart. Zero stylesheets or a zero share also yield zero Changes.
 JSON records separate listening, usable startup, Props, cached delivery and Changes
@@ -75,7 +75,7 @@ no five-second budget. To smoke-test faster, add matching
 Defaults are 30 areas, 40 screens per area, and 12 records per screen. Each area
 adds two registered components with three saved variants, a page and one flow
 per ten screens. The default therefore has 1,410 routed entries and 5,550
-documents plus the manifest. Collections are additional non-routed entries.
+documents plus the manifest. Folder paths group entries without additional records.
 Each screen and component variant renders in mobile/desktop and light/dark.
 Flows reuse the canonical screens rather than adding documents. Shared panels
 contain nested actions and caller-owned slots; screens also invoke repeated
@@ -128,8 +128,10 @@ five-second interactive target.
 
 Key files: `generate.ts` produces consumer sources; `area.tsx`, `components.tsx`
 and `screens.tsx` define the catalogue; `renderer.tsx` collects native styles;
-`scripts/large/setup.mjs` owns baseline setup, `toolchain.mjs` archives the derived
-tooling, `baseline.mjs` resets the pinned cache safely, and `benchmark.mjs` owns browser
+`scripts/large/setup.mjs` owns baseline setup,
+`scripts/large/toolchain.mjs` archives the derived tooling,
+`scripts/large/baseline.mjs` resets the pinned cache safely, and
+`scripts/large/benchmark.mjs` owns browser
 acceptance. The
 [diagnostic contract](../../../docs/protocol/mokly-timings.md) describes timing
 records, inclusive durations and process boundaries.

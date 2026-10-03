@@ -4,12 +4,15 @@ import { test } from "node:test";
 
 import { parse } from "parse5";
 
+import { viewRoute } from "../packages/viewer/dist/data.js";
+
 import {
   attribute,
   designCatalogue,
   elements,
   textContent,
 } from "./helpers/design_catalogue.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 for (const viewport of ["mobile", "desktop"] as const) {
   for (const scheme of ["light", "dark"] as const) {
@@ -24,14 +27,14 @@ for (const viewport of ["mobile", "desktop"] as const) {
           (entry) => entry.id === target,
         );
         assert.ok(entry?.kind === "screen" && destination?.kind === "screen");
-        const route = (
-          scheme === "dark" ? entry.darkFragments : entry.fragments
-        )?.[viewport];
-        const targetRoute = (
-          scheme === "dark" ? destination.darkFragments : destination.fragments
-        )?.[viewport];
+        const route = entry.colorSchemes.includes(scheme)
+          ? viewRoute("screen", entry.id, viewport, scheme)
+          : undefined;
+        const targetRoute = destination.colorSchemes.includes(scheme)
+          ? viewRoute("screen", destination.id, viewport, scheme)
+          : undefined;
         assert.ok(route && targetRoute);
-        const document = parse(outputs.get(route) ?? "");
+        const document = parse(textOutput(outputs, route) ?? "");
         const link = elements(
           document,
           (node) =>
@@ -73,7 +76,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
         if (fragment)
           assert.ok(
             elements(
-              parse(outputs.get(targetRoute) ?? ""),
+              parse(textOutput(outputs, targetRoute) ?? ""),
               (node) => attribute(node, "id") === fragment,
             ).length,
           );

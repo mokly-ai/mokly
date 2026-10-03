@@ -14,7 +14,6 @@ export type ScreenSubject =
 
 interface SubjectMetadata {
   description: string;
-  generated: string;
   rationale: string;
   /** Whether the entry names a document a reader can still open. */
   relatedDocs: boolean;
@@ -25,7 +24,6 @@ interface SubjectMetadata {
 }
 
 const removed = {
-  generated: "No current screen",
   relatedDocs: false,
   schemes: "light",
   source: "Previous version",
@@ -37,7 +35,6 @@ const removed = {
 export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
   welcome: {
     description: "A linked landing screen for the neutral fixture.",
-    generated: "screens/welcome.html",
     rationale:
       "The landing screen anchors the example catalogue, so every cross-screen link starts from a known state.",
     relatedDocs: true,
@@ -48,7 +45,6 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
   },
   details: {
     description: "Additional context for the example catalogue.",
-    generated: "screens/details.html",
     rationale:
       "The Details screen completes the example tour and provides a return to Welcome.",
     relatedDocs: true,
@@ -89,7 +85,6 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
   },
   welcomeError: {
     description: "Welcome after saving failed was removed from the catalogue.",
-    generated: "No current screen",
     rationale:
       "A deleted state keeps its recorded details under the screen it belonged to, so the group stays readable after the removal.",
     relatedDocs: false,
@@ -100,7 +95,6 @@ export const SUBJECTS: Record<ScreenSubject, SubjectMetadata> = {
   },
   welcomeErrorReparented: {
     description: "Welcome after saving failed was removed from the catalogue.",
-    generated: "No current screen",
     rationale:
       "Welcome is now another screen's variant, so this removed state stays as one flat Changes row instead of nesting a second variant level.",
     relatedDocs: false,

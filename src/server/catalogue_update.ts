@@ -7,7 +7,7 @@ import type { CatalogueUpdate, ChangesStatus } from "./update_messages.js";
 export interface CatalogueUpdateState {
   catalogue: Catalogue;
   activeCatalogue: Catalogue;
-  changedRoutes: readonly string[] | undefined;
+  changedIds: readonly string[] | undefined;
   componentChanges: ComponentChangeSnapshot | undefined;
   changesStatus: ChangesStatus;
   updateVersion: number;
@@ -28,8 +28,8 @@ export function advanceCatalogueState(
     contentVersion:
       update.kind === "evidence" ? current.contentVersion : version,
   };
-  if (Object.hasOwn(update, "changedRoutes"))
-    next.changedRoutes = update.changedRoutes ?? undefined;
+  if (Object.hasOwn(update, "changedIds"))
+    next.changedIds = update.changedIds ?? undefined;
   if (Object.hasOwn(update, "componentChanges")) {
     next.componentChanges = update.componentChanges ?? undefined;
     next.activeCatalogue = next.componentChanges
@@ -40,14 +40,14 @@ export function advanceCatalogueState(
       : current.catalogue;
   }
   if (
-    Object.hasOwn(update, "changedRoutes") ||
+    Object.hasOwn(update, "changedIds") ||
     Object.hasOwn(update, "componentChanges")
   )
     next.changesStatus =
-      next.changedRoutes || next.componentChanges ? "ready" : "unavailable";
+      next.changedIds || next.componentChanges ? "ready" : "unavailable";
   next.changesStatus = update.changesStatus ?? next.changesStatus;
   if (next.changesStatus !== "ready") {
-    next.changedRoutes = undefined;
+    next.changedIds = undefined;
     next.componentChanges = undefined;
     next.activeCatalogue = current.catalogue;
   }

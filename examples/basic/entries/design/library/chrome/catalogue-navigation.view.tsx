@@ -44,6 +44,7 @@ function ChangesStatusBody({ message }: { message: ChangesMessage }) {
 
 export function CatalogueNavigationView({
   activeDestination,
+  activeKey,
   activeLabel,
   changedCount,
   changedOnly,
@@ -123,6 +124,7 @@ export function CatalogueNavigationView({
                 <NavRow
                   key={node.key}
                   activeDestination={activeDestination}
+                  activeKey={activeKey}
                   activeLabel={activeLabel}
                   node={node}
                 />

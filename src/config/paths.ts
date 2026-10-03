@@ -1,8 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { isSafeCatalogueRoute } from "@mokly/viewer/data";
-
 import { MoklyError } from "../errors.js";
 
 /** Convert a platform path to stable POSIX separators. */
@@ -50,18 +48,6 @@ export function validateRelativeRoute(value: string, label: string): string {
     );
   }
   return normalized.replace(/^\.\//, "");
-}
-
-/** Normalize and require a portable static catalogue `.html` route. */
-export function validateCatalogueRoute(value: string, label: string): string {
-  const normalized = validateRelativeRoute(value, label);
-  if (!isSafeCatalogueRoute(normalized)) {
-    throw new MoklyError(
-      "config-invalid",
-      `${label} must use portable URL-safe path segments and end in .html`,
-    );
-  }
-  return normalized;
 }
 
 /** Return whether a candidate path is contained by a configured root. */

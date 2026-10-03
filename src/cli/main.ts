@@ -1,5 +1,5 @@
 /** Run the CLI after the minimal Node compatibility bootstrap succeeds. */
-import { errorMessage } from "../errors.js";
+import { errorMessage, isCancellation } from "../errors.js";
 
 import {
   processTerminalEnvironment,
@@ -22,7 +22,13 @@ try {
       type: "diagnostic",
       message: redact(errorMessage(error)),
     });
-  else reporter.renderError(error, redact);
+  else {
+    const displayError =
+      argv[0] === "publish" && isCancellation(error)
+        ? (await import("../publish/errors.js")).publishCancelled()
+        : error;
+    reporter.renderError(displayError, redact);
+  }
   if (
     environment.env.MOKLY_DIAGNOSTIC === "1" &&
     error instanceof Error &&

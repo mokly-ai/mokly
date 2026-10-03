@@ -1,6 +1,9 @@
 /** Live routing metadata is deliberately not a publishable manifest. */
 import type { ColorScheme } from "@mokly/viewer";
-import type { Manifest, ManifestV6 } from "@mokly/viewer/data";
+import {
+  isManifestComponentVariant,
+  type ManifestV8,
+} from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { MoklyError } from "../errors.js";
@@ -12,10 +15,10 @@ export interface CatalogueIndex {
   schemaVersion: "live-index-1";
   generatedBy: "mokly";
   sourceFiles: readonly string[];
-  entries: ManifestV6["entries"];
+  entries: ManifestV8["entries"];
 }
 
-export type CatalogueMetadata = Manifest | CatalogueIndex;
+export type CatalogueMetadata = ManifestV8 | CatalogueIndex;
 
 export function createCatalogueIndex(
   entries: readonly ResolvedRegistryEntry[],
@@ -39,17 +42,15 @@ export function parseCatalogueIndex(value: unknown): CatalogueIndex {
     throw new MoklyError("manifest-invalid", "expected a live catalogue index");
   const metadata = validateManifestMetadata({
     ...value,
-    schemaVersion: 6,
-  }) as ManifestV6;
+    schemaVersion: 8,
+  }) as ManifestV8;
   for (const entry of metadata.entries) {
     if (
       (entry.kind === "screen" && entry.componentViews !== undefined) ||
       (entry.kind === "component" &&
-        entry.variants.some(
-          (variant) =>
-            !Array.isArray(variant.componentViews) ||
-            variant.componentViews.length > 0,
-        ))
+        isManifestComponentVariant(entry) &&
+        (!Array.isArray(entry.componentViews) ||
+          entry.componentViews.length > 0))
     )
       throw new MoklyError(
         "manifest-invalid",

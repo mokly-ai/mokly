@@ -6,15 +6,13 @@ import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import {
-  FORMER_MANIFEST_NAME,
+  EARLIER_MANIFEST_NAMES,
   MANIFEST_NAME,
   parseHistoricalManifest,
-  selectManifestInput,
 } from "../registry/manifest.js";
 
 import type { BaselineReader } from "./git.js";
 
-/** Read the canonical base manifest, falling back only when it is absent. */
 export async function readBaseManifest(
   git: BaselineReader,
   commit: string,
@@ -31,15 +29,16 @@ async function readMeasured(
   config: ResolvedConfig,
 ): Promise<HistoricalManifest> {
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
-  const canonicalPath = joinGit(prefix, MANIFEST_NAME);
-  const selection = selectManifestInput(
-    await git.fileExists(commit, canonicalPath),
-    await git.fileExists(commit, joinGit(prefix, FORMER_MANIFEST_NAME)),
-    config.compatibility.readManifestV2,
-  );
+  let canonicalPath = joinGit(prefix, MANIFEST_NAME);
+  if (!(await git.fileExists(commit, canonicalPath))) {
+    for (const name of EARLIER_MANIFEST_NAMES)
+      if (await git.fileExists(commit, joinGit(prefix, name))) {
+        canonicalPath = joinGit(prefix, name);
+        break;
+      }
+  }
   return parseHistoricalManifest(
-    JSON.parse(await git.readFile(commit, joinGit(prefix, selection.filename))),
-    selection.allowV2,
+    JSON.parse(await git.readFile(commit, canonicalPath)),
   );
 }
 
@@ -50,13 +49,7 @@ export function baselineResourceConfig(
 ): ResolvedConfig {
   return {
     ...config,
-    sourceFiles:
-      "sourceFiles" in manifest
-        ? manifest.sourceFiles
-        : [
-            ...manifest.entries.map((entry) => entry.sourcePath),
-            ...manifest.legacyPages.map((page) => page.sourcePath),
-          ],
+    sourceFiles: manifest.sourceFiles,
   };
 }
 

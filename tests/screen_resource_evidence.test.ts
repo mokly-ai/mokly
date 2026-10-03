@@ -33,7 +33,7 @@ for (const [name, edit, resource] of [
   ["formatting-only changes", "\n", "shared.css"],
   ["non-CSS resources", "\n", "image.svg"],
 ] as const) {
-  test(`screen-only classification delivers ${name} without component results`, async (t) => {
+  test(`screen-only classification delivers ${name} in unified v5 results`, async (t) => {
     const fixture = await cssAttributionFixture(t, false);
     await fixture.append(edit, resource);
     const changes = await computeCatalogueChanges(
@@ -43,19 +43,19 @@ for (const [name, edit, resource] of [
     );
     const snapshot = changes.componentChanges;
     assert.ok(snapshot);
-    assert.equal(snapshot.result, undefined);
     const artifact = await fixture.compare();
-    assert.equal(artifact.result.schemaVersion, 4);
+    assert.equal(artifact.result.schemaVersion, 5);
+    assert.deepEqual(snapshot.result, artifact.result);
     assert.deepEqual(
       snapshot.screenEvidence,
       artifact.result.screens.map((screen) => ({
-        route: screen.route,
+        id: screen.id,
         views: resourceViews(screen),
       })),
     );
     const message = childUpdateMessage(
       2,
-      changes.changedRoutes,
+      changes.changedIds,
       snapshot,
       "ready",
       "evidence",
@@ -74,14 +74,19 @@ for (const [name, edit, resource] of [
           base: "main",
           updateVersion: 2,
           comparisons: true,
-          changedRoutes: changes.changedRoutes,
+          changedIds: changes.changedIds,
           componentChanges: snapshot,
         },
         entry,
       );
       assert.deepEqual(data.resourceEvidence, resourceViews(screen));
-      assert.equal(data.change, undefined);
-      assert.equal(data.comparison, undefined);
+      assert.deepEqual(data.comparison, screen);
+      assert.deepEqual(
+        data.change,
+        artifact.result.changes.find(
+          (change) => (change.after ?? change.before)?.id === screen.id,
+        ),
+      );
       const markup = renderEvidence(data);
       if (name === "matched and excluded rules") {
         assert.match(
@@ -94,6 +99,8 @@ for (const [name, edit, resource] of [
       const pending = { ...data };
       delete pending.resourceEvidence;
       delete pending.status;
+      delete pending.change;
+      delete pending.comparison;
       mergeWorkspaceEvidence(data, pending);
       assert.equal(data.resourceEvidence, undefined);
       assert.match(renderEvidence(data), / hidden=""/);
@@ -105,7 +112,7 @@ function renderEvidence(data: WorkspaceData): string {
   return renderToStaticMarkup(createElement(WorkspaceEvidence, { data }));
 }
 
-test("static screen-only shells project evidence from the existing v2 comparison", async (t) => {
+test("static screen-only shells project evidence from the unified v5 comparison", async (t) => {
   const fixture = await cssAttributionFixture(t, false);
   await fixture.append(".auth { padding: 2px; }");
   const changes = await computeCatalogueChanges(
@@ -123,15 +130,22 @@ test("static screen-only shells project evidence from the existing v2 comparison
     [],
   );
   for (const screen of comparison.result.screens) {
-    const html = String(site.inventory.files.get(`view/${screen.route}`));
+    const html = String(
+      site.inventory.files.get(`view/screens/${screen.id}.html`),
+    );
     const json = /<script[^>]*data-workspace-data[^>]*>(.*?)<\/script>/s.exec(
       html,
     )?.[1];
     assert.ok(json);
     const data = JSON.parse(json) as WorkspaceData;
     assert.deepEqual(data.resourceEvidence, resourceViews(screen));
-    assert.equal(data.comparison, undefined);
-    assert.equal(data.change, undefined);
+    assert.deepEqual(data.comparison, screen);
+    assert.deepEqual(
+      data.change,
+      comparison.result.changes.find(
+        (change) => (change.after ?? change.before)?.id === screen.id,
+      ),
+    );
   }
 });
 

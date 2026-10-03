@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { ManifestV6 } from "../src/registry/types.js";
+import type { ManifestV8 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { EntryDetailsBody } from "../src/shell/details.js";
 
@@ -14,49 +14,43 @@ const common = {
   sourcePath: "entries/fixture.mockup.tsx",
   title: "Example",
 };
-const manifest: ManifestV6 = {
+const manifest: ManifestV8 = {
   entries: [
-    { ...common, id: "page", kind: "page", route: "page.html" },
+    { ...common, id: "page", kind: "page" },
     {
       ...common,
-      fragments: {
-        mobile: "screen.mobile.html",
-        desktop: "screen.desktop.html",
-      },
+
       id: "screen",
       kind: "screen",
-      route: "screen.html",
+      colorSchemes: ["light"],
       useCaseIds: [],
-      viewports: ["mobile", "desktop"],
     },
     {
       ...common,
       id: "flow",
       kind: "use-case",
-      route: "flow.html",
+
       steps: [{ screenId: "screen" }],
     },
     {
       ...common,
       controls: {},
+      colorSchemes: ["light"],
       id: "component",
       kind: "component",
       propSchema: { kind: "object", properties: {} },
-      route: "component.html",
+
       slots: [],
-      variants: [],
-      viewports: ["mobile", "desktop"],
     },
   ],
   generatedBy: "mokly",
-  schemaVersion: 6,
+  schemaVersion: 8,
   sourceFiles: [common.sourcePath],
 };
 
 test("details omit authoring dependencies for every routed entry kind", () => {
   const catalogue = createCatalogue(manifest);
   for (const entry of manifest.entries) {
-    if (entry.kind === "collection") continue;
     const legacyEntry = {
       ...entry,
       dependencies: ["legacy/source-only.ts"],

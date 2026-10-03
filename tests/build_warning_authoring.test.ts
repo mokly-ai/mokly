@@ -3,8 +3,6 @@ import test from "node:test";
 
 import { loadConfig } from "../dist/config/load.js";
 import {
-  collection,
-  defineCollection,
   defineComponent,
   definePage,
   defineRoot,
@@ -30,11 +28,11 @@ function component(extra: Record<string, unknown> = {}) {
   return defineComponent({
     ...common,
     ...extra,
-    route: "components/example.html",
+
     propSchema: { kind: "object", properties: {} },
     render: () => "Component",
     variants: [{ id: "default", title: "Default", props: {} }],
-  }).entry;
+  }).entries;
 }
 
 test("each removed authoring field emits one entry-scoped warning and no registry input", async (context) => {
@@ -47,68 +45,45 @@ test("each removed authoring field emits one entry-scoped warning and no registr
         ...common,
         ...views,
         ...removed,
-        route: "screens/example.html",
       }),
     () =>
       definePage({
         ...common,
         ...removed,
-        route: "pages/example.html",
+
         render: () => "<html></html>",
       }),
     () => [
       defineUseCase({
         ...common,
         ...removed,
-        route: "user-flows/example.html",
+
         steps: [{ screenId: "other" }],
       }),
       defineScreen({
         ...common,
         ...views,
         id: "other",
-        route: "screens/other.html",
+
         useCaseIds: ["example"],
       }),
     ],
-    () => defineCollection({ ...common, ...removed, childIds: [] }),
+
     () => component(removed),
     () =>
       defineRoot({
-        path: "screens",
-        children: [
-          screen({ ...common, ...views, ...removed, slug: "example" }),
-        ],
+        children: [screen({ ...common, ...views, ...removed })],
       }),
     () =>
       defineRoot({
-        path: "pages",
         children: [
           page({
             ...common,
             ...removed,
-            slug: "example",
+
             render: () => "<html></html>",
           }),
         ],
-      }),
-    () =>
-      defineRoot({
-        path: "screens",
-        children: [
-          collection({
-            ...common,
-            ...removed,
-            segment: "example",
-            children: [],
-          }),
-        ],
-      }),
-    () =>
-      defineRoot({
-        path: "screens",
-        collection: { ...common, ...removed },
-        children: [],
       }),
   ];
   for (const create of cases) {
@@ -138,12 +113,10 @@ test("component ownedDependencies warns without granting ownership", async (cont
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const prepared = prepareRegistry(
-    [
-      {
-        ...component({ ownedDependencies: undefined }),
-        definedIn: "entries/fixture.mockup.tsx",
-      },
-    ],
+    component({ ownedDependencies: undefined }).map((entry) => ({
+      ...entry,
+      definedIn: "entries/fixture.mockup.tsx",
+    })),
     config,
   );
   assert.deepEqual(prepared.warnings, [
@@ -161,7 +134,7 @@ test("component ownedDependencies warns without granting ownership", async (cont
   );
 });
 
-test("root and variant parent warnings do not inherit into their children", async (context) => {
+test("variant parent warnings do not inherit into their children", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -170,13 +143,8 @@ test("root and variant parent warnings do not inherit into their children", asyn
       ...common,
       ...views,
       ...removed,
-      route: "screens/example.html",
-      variants: [{ ...common, ...views, id: "child", slug: "child" }],
-    }),
-    defineRoot({
-      collection: { ...common, ...removed },
-      children: [screen({ ...common, ...views, id: "child", slug: "child" })],
-      path: "screens",
+
+      variants: [{ ...common, ...views, id: "child" }],
     }),
   ]) {
     const prepared = prepareRegistry(
@@ -203,8 +171,8 @@ test("a screen variant's own removed field warns under its own id", async (conte
   const definitions = defineScreen({
     ...common,
     ...views,
-    route: "screens/example.html",
-    variants: [{ ...common, ...views, ...removed, id: "child", slug: "child" }],
+
+    variants: [{ ...common, ...views, ...removed, id: "child" }],
   });
   const prepared = prepareRegistry(
     [definitions]

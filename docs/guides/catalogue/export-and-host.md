@@ -11,10 +11,10 @@ order: 5
 npx mokly export --out .context/mokly-site
 ```
 
-Export builds first, then packages the complete catalogue: every screen, the
-id aliases, the assets and the Git comparisons. `--out` is required and is
-resolved beside the config, not beside your working directory; an absolute
-path must stay inside the repository root.
+Export builds first, then packages the complete catalogue: one shell page per
+entry, the generated views, assets and Git comparisons. `--out` is required
+and is resolved beside the config, not beside your working directory; an
+absolute path must stay inside the repository root.
 
 `--base` overrides the configured base ref for that run. The branch point must
 be present in the checkout, with the authored assets and either the committed
@@ -50,3 +50,9 @@ replaces only the output it owns and restores the previous site if installing
 the new one fails and recovery is safe. Choose a destination that is missing
 or empty and outside your source, generated, dependency and comparison
 directories.
+
+Exported paths are relative, slash-separated, well-formed Unicode without
+control characters, backslashes, colons, empty segments, `.` or `..`, and at
+most 1,024 UTF-8 bytes. A refusal prints the escaped path so invisible
+characters can be found. Before deleting a destination created by an earlier
+Mokly release, move out any files you added yourself.

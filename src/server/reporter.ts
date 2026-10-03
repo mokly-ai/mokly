@@ -1,5 +1,6 @@
-import type { ManifestV6 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 
+import { EARLIER_BASELINE_MESSAGE } from "../baseline/compatibility.js";
 import type { BuildWarning } from "../build/warnings.js";
 import { errorMessage } from "../errors.js";
 
@@ -28,10 +29,11 @@ export interface ServeReporter {
   buildWarning?(warning: BuildWarning): void;
   baselinePreparing(base: string): void;
   baselineReady(commit: string, cacheHit: boolean, durationMs: number): void;
-  catalogueReady(manifest: ManifestV6, durationMs: number): void;
+  catalogueReady(manifest: ManifestV8, durationMs: number): void;
   changesReady(changed: number, durationMs: number): void;
   changesUnavailable(durationMs: number): void;
   gitReferenceRefresh(base: string): void;
+  incompatibleBaseline(commit: string): void;
   runtimeDiagnostic(error: unknown): void;
   serveReady(report: ServeReadyReport): void;
   watchFailed(report: WatchReport, error: unknown): void;
@@ -41,6 +43,7 @@ export interface ServeReporter {
 
 /** Default server reporter: lifecycle events stay silent and errors keep old bytes. */
 export class PlainServeReporter implements ServeReporter {
+  private readonly incompatible = new Set<string>();
   constructor(
     private readonly write: (value: string) => void = (value) =>
       process.stderr.write(value),
@@ -52,13 +55,18 @@ export class PlainServeReporter implements ServeReporter {
     _cacheHit: boolean,
     _durationMs: number,
   ): void {}
-  catalogueReady(_manifest: ManifestV6, _durationMs: number): void {}
+  catalogueReady(_manifest: ManifestV8, _durationMs: number): void {}
   changesReady(_changed: number, _durationMs: number): void {}
   changesUnavailable(_durationMs: number): void {}
   buildWarning(warning: BuildWarning): void {
     this.write(`[mokly/warning] ${warning.message}\n`);
   }
   gitReferenceRefresh(_base: string): void {}
+  incompatibleBaseline(commit: string): void {
+    if (this.incompatible.has(commit)) return;
+    this.incompatible.add(commit);
+    this.write(`${EARLIER_BASELINE_MESSAGE}\n`);
+  }
   runtimeDiagnostic(error: unknown): void {
     this.write(`${errorMessage(error)}\n`);
   }

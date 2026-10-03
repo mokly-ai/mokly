@@ -1,9 +1,7 @@
 import type { ReactNode } from "react";
 
 import {
-  collection,
-  defineCollection,
-  defineComponent,
+  folder,
   defineConfig,
   defineRoot,
   definePage,
@@ -16,8 +14,8 @@ import {
   ReviewIgnoreScope,
   reviewMaterialKey,
   screen,
-  type CollectionDefinition,
-  type CollectionInput,
+  type NestedFolderMarker,
+  type NestedFolderInput,
   type CompatibilityConfig,
   type CompatibilityTransformer,
   type CompatibilityTransformInput,
@@ -33,7 +31,6 @@ import {
   type RenderInput,
   type ReviewConfig,
   type RootInput,
-  type RoutedEntryInput,
   type ScreenDefinition,
   type ScreenInput,
   type ScreenVariantInput,
@@ -47,6 +44,7 @@ import {
   type WatchRule,
 } from "@mokly/mokly";
 
+import "./removed_fields.js";
 const config: MoklyConfig = defineConfig({
   entriesDir: "entries",
   mockupsDir: "mockups",
@@ -79,14 +77,12 @@ const documentPage: PageInput = {
   title: "Page",
   description: "Page",
   relatedDocs: [],
-  route: "page.html",
   render: () => "<html><body>Page</body></html>",
 };
 const nestedPage: NestedPageInput = {
   id: "nested-page",
   title: "Page",
   description: "Page",
-  slug: "page",
   render: documentPage.render,
 };
 const typedVariant: ScreenVariantInput = {
@@ -94,7 +90,6 @@ const typedVariant: ScreenVariantInput = {
   desktop: <main>Empty</main>,
   id: "typed-screen-empty",
   mobile: <main>Empty</main>,
-  slug: "empty",
   title: "Typed screen, empty",
 };
 const screenInputBase = {
@@ -103,7 +98,6 @@ const screenInputBase = {
   id: "typed-return-boundary",
   mobile: node,
   relatedDocs: [],
-  route: "typed/return-boundary.html",
   title: "Typed return boundary",
 } as const;
 const singleDefinition: ScreenDefinition = defineScreen(screenInputBase);
@@ -183,7 +177,6 @@ const variantDefinitions: readonly ScreenDefinition[] = defineScreen({
   id: "typed-variant-parent",
   mobile: node,
   relatedDocs: [],
-  route: "typed/variant-parent.html",
   title: "Typed variant parent",
   variants: [typedVariant],
 });
@@ -195,7 +188,6 @@ const definitions: RegistryDefinition[] = [
     id: "typed-screen",
     mobile: <ReviewIgnore id="typed-ignore">{node}</ReviewIgnore>,
     relatedDocs: [],
-    route: "typed/screen.html",
     title: "Typed screen",
     useCaseIds: [],
   }),
@@ -204,8 +196,7 @@ const definitions: RegistryDefinition[] = [
 
 void [
   page(nestedPage),
-  collection,
-  defineCollection,
+  folder,
   defineRoot,
   defineUseCase,
   mockLink,
@@ -242,8 +233,8 @@ void [
 ];
 
 type PublicTypes =
-  | CollectionDefinition
-  | CollectionInput
+  | NestedFolderMarker
+  | NestedFolderInput
   | CompatibilityConfig
   | CompatibilityTransformInput
   | EntryInput
@@ -256,7 +247,6 @@ type PublicTypes =
   | RenderInput
   | ReviewConfig
   | RootInput
-  | RoutedEntryInput
   | ScreenDefinition
   | ScreenInput
   | ScreenVariantInput
@@ -293,96 +283,3 @@ const asynchronousPage: PageInput = {
   render: async () => "<html/>",
 };
 void [unsupportedPage, obsoleteConfig, asynchronousPage];
-
-// @ts-expect-error A direct screen cannot declare removed dependencies.
-defineScreen({ ...screenInputBase, dependencies: [] });
-defineScreen({
-  ...screenInputBase,
-  // @ts-expect-error Variants do not restore the removed parent field.
-  dependencies: [],
-  variants: [typedVariant],
-});
-defineScreen({
-  ...screenInputBase,
-  variants: [
-    {
-      ...typedVariant,
-      // @ts-expect-error A screen variant cannot declare removed dependencies.
-      dependencies: [],
-    },
-  ],
-});
-// @ts-expect-error Pages cannot declare removed dependencies.
-definePage({ ...documentPage, dependencies: [] });
-defineCollection({
-  childIds: [],
-  description: "Collection",
-  id: "collection",
-  relatedDocs: [],
-  title: "Collection",
-  // @ts-expect-error Collections cannot declare removed dependencies.
-  dependencies: [],
-});
-defineUseCase({
-  description: "Flow",
-  id: "flow",
-  relatedDocs: [],
-  route: "flow.html",
-  steps: [],
-  title: "Flow",
-  // @ts-expect-error Use cases cannot declare removed dependencies.
-  dependencies: [],
-});
-screen({
-  description: "Nested",
-  desktop: node,
-  id: "nested",
-  mobile: node,
-  slug: "nested",
-  title: "Nested",
-  // @ts-expect-error Nested screens cannot declare removed dependencies.
-  dependencies: [],
-});
-page({
-  description: "Nested",
-  id: "nested-page",
-  render: documentPage.render,
-  slug: "nested-page",
-  title: "Nested",
-  // @ts-expect-error Nested pages cannot declare removed dependencies.
-  dependencies: [],
-});
-collection({
-  children: [],
-  description: "Nested",
-  id: "nested-group",
-  segment: "nested-group",
-  title: "Nested",
-  // @ts-expect-error Nested collections cannot declare removed dependencies.
-  dependencies: [],
-});
-defineRoot({
-  path: "nested",
-  children: [],
-  collection: {
-    description: "Root",
-    id: "root",
-    title: "Root",
-    // @ts-expect-error Root collection metadata cannot declare removed dependencies.
-    dependencies: [],
-  },
-});
-const componentInput = {
-  id: "typed-component",
-  title: "Typed component",
-  description: "Component",
-  route: "components/typed.html",
-  relatedDocs: [],
-  propSchema: { kind: "object" as const, properties: {} },
-  render: () => null,
-  variants: [{ id: "default", title: "Default", props: {} }],
-};
-// @ts-expect-error Components cannot declare removed dependencies.
-defineComponent({ ...componentInput, dependencies: [] });
-// @ts-expect-error Components cannot declare removed ownership paths.
-defineComponent({ ...componentInput, ownedDependencies: [] });

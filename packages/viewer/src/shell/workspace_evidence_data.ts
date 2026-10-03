@@ -1,5 +1,6 @@
 /** Merge route classification with evidence loaded for one comparison. */
 
+import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type {
   ComponentReview,
   EntryChangeReason,
@@ -27,36 +28,36 @@ export function workspaceComparisonEvidence(
   variantId?: string,
   loaded?: ReviewResult,
 ): WorkspaceComparisonEvidence {
-  const selected =
-    data.entry.kind === "component" && loaded?.schemaVersion === 5
-      ? loaded.components.find((item) => item.id === data.entry.id)
-      : loaded?.screens.find((item) => item.route === data.entry.route);
-  const change =
-    loaded?.schemaVersion === 5
-      ? loaded.changes.find(
-          (item) =>
-            item.kind === data.entry.kind &&
-            (item.after ?? item.before)?.route === data.entry.route,
-        )
-      : undefined;
+  const componentId =
+    data.component?.id ??
+    (data.entry.kind === "component" && isManifestComponentVariant(data.entry)
+      ? data.entry.variantOf
+      : undefined);
+  const selected = componentId
+    ? loaded?.components.find((item) => item.id === componentId)
+    : loaded?.screens.find((item) => item.id === data.entry.id);
+  const change = loaded?.changes.find(
+    (item) =>
+      item.kind === data.entry.kind &&
+      (item.after ?? item.before)?.id === data.entry.id,
+  );
   const views = [
     ...comparisonViews(data.comparison, variantId),
     ...comparisonViews(selected, variantId),
   ];
   const resources = data.resourceEvidence ?? [];
+  const comparison = data.comparison ?? selected;
   return {
-    comparison: data.comparison ?? selected,
+    comparison,
     views,
     resourceViews: [...resources, ...views],
     reasons: mergeReasons([
       ...(data.change?.reasons ?? []),
       ...(change?.reasons ?? []),
       ...resources.flatMap((view) => view.reasons ?? []),
-      ...(loaded?.schemaVersion === 4
-        ? comparisonViews(selected, variantId).flatMap(
-            (view) => view.reasons ?? [],
-          )
-        : []),
+      ...comparisonViews(selected, variantId).flatMap(
+        (view) => view.reasons ?? [],
+      ),
     ]),
   };
 }
@@ -79,7 +80,7 @@ function mergeReasons(
       reason.kind === "dependency"
         ? reason.path
         : reason.kind === "screen"
-          ? reason.route
+          ? reason.id
           : ""
     }`;
     const previous = merged.get(key);

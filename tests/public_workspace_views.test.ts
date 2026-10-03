@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { projectCatalogue } from "../dist/catalogue/projection.js";
-import type { ManifestV6 } from "../packages/viewer/dist/registry/types.js";
+import { removedManifestEntries } from "../dist/registry/changes.js";
+import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
 import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { workspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
@@ -18,7 +19,10 @@ import {
 test("public workspace keeps each saved variant's changed views", () => {
   const result = componentVariantResult();
   const model = projectCatalogue({
-    catalogue: createCatalogue(componentManifest),
+    catalogue: createCatalogue(
+      componentManifest,
+      removedManifestEntries(componentManifest, componentBaseline),
+    ),
     changesStatus: "ready",
     comparison: result,
     comparisonUrl: null,
@@ -29,51 +33,52 @@ test("public workspace keeps each saved variant's changed views", () => {
   const catalogue = viewerCatalogue(model);
   const entry = catalogue.byId.get(component.id);
   assert.equal(entry?.kind, "component");
-  assert.ok(entry?.kind === "component");
+  assert.ok(entry?.kind === "component" && !("variantOf" in entry));
+  if (entry?.kind !== "component" || "variantOf" in entry)
+    throw new Error("Missing component parent");
 
   const data = workspaceData(catalogue, { base: "", updateVersion: 1 }, entry);
-  assert.deepEqual(data.changedViews.default, []);
-  assert.deepEqual(data.changedViews.second, [
+  assert.deepEqual(data.changedViews["badge-default"], []);
+  assert.deepEqual(data.changedViews["badge-second"], [
     { viewport: "mobile", colorScheme: "dark" },
     { viewport: "desktop", colorScheme: "dark" },
   ]);
-  assert.deepEqual(data.changedViews.removed, [
+  assert.deepEqual(data.changedViews["badge-removed"], [
     { viewport: "mobile", colorScheme: "light" },
     { viewport: "mobile", colorScheme: "dark" },
     { viewport: "desktop", colorScheme: "light" },
     { viewport: "desktop", colorScheme: "dark" },
   ]);
   assert.ok(
-    data.viewStates.default?.every(({ state }) => state === "unchanged"),
+    data.viewStates["badge-default"]?.every(
+      ({ state }) => state === "unchanged",
+    ),
   );
   assert.deepEqual(
-    data.viewStates.second?.map(({ state }) => state),
+    data.viewStates["badge-second"]?.map(({ state }) => state),
     ["unchanged", "changed", "unchanged", "changed"],
   );
-  assert.ok(data.viewStates.removed?.every(({ state }) => state === "removed"));
+  assert.ok(
+    data.viewStates["badge-removed"]?.every(({ state }) => state === "removed"),
+  );
 });
 
 test("public workspace derives a screen's ready per-view states", () => {
   const screen = {
+    colorSchemes: ["light"] as const,
     description: "Welcome screen",
-    fragments: {
-      desktop: "screens/welcome.desktop.html",
-      mobile: "screens/welcome.mobile.html",
-    },
     id: "welcome",
     kind: "screen" as const,
     navPath: [],
     relatedDocs: [],
-    route: "screens/welcome.html",
     sourcePath: "entries/welcome.mockup.tsx",
     title: "Welcome",
     useCaseIds: [],
-    viewports: ["mobile", "desktop"] as const,
   };
-  const manifest: ManifestV6 = {
+  const manifest: ManifestV8 = {
     entries: [screen],
     generatedBy: "mokly",
-    schemaVersion: 6,
+    schemaVersion: 8,
     sourceFiles: [screen.sourcePath],
   };
   const result: ReviewResultV5 = {
@@ -87,8 +92,9 @@ test("public workspace derives a screen's ready per-view states", () => {
     schemaVersion: 5,
     screens: [
       {
+        after: { id: screen.id, title: screen.title },
+        before: { id: screen.id, title: screen.title },
         id: screen.id,
-        route: screen.route,
         state: "changed",
         title: screen.title,
         views: [

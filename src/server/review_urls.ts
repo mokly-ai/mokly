@@ -1,4 +1,6 @@
-import { encodeUrlPath } from "@mokly/viewer/data";
+import path from "node:path";
+
+import { encodeUrlPath, snapshotSidePath } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 
@@ -7,6 +9,7 @@ import type { ReviewGeneration } from "./review_generations.js";
 
 export const DIFF_ROUTE = "/__mokly/diffs/";
 export const GENERATION_ROUTE = `${DIFF_ROUTE}__generations/`;
+const SNAPSHOT_ROOT = `${path.posix.dirname(snapshotSidePath("before"))}/`;
 
 export function generationPath(
   pathname: string,
@@ -26,7 +29,7 @@ export function isReviewDocument(relative: string): boolean {
 }
 
 export function isSnapshot(relative: string): boolean {
-  return relative.startsWith("snapshots/");
+  return relative.startsWith(SNAPSHOT_ROOT);
 }
 
 export function generationUrl(

@@ -1,4 +1,4 @@
-import type { StaticDelivery, ReviewArtifactContent } from "@mokly/viewer/data";
+import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import type { BuildWarning } from "../build/warnings.js";
 
@@ -8,7 +8,6 @@ import type { LegacyExportOwnership } from "./ownership.js";
 export interface ExportRoutes {
   readonly outDir: string;
   readonly comparisonUrl: string | null;
-  readonly idRoutes: StaticDelivery["idRoutes"];
 }
 
 /** Final identity and paths produced by one completed static export. */
@@ -21,6 +20,8 @@ export interface ExportAdapter {
   /** Optional stricter config-relative root, pinned for this operation. */
   outputRoot?: string;
   legacyOwnership?: LegacyExportOwnership;
+  /** Root files added by transform that describe publication, not content. */
+  publicationMetadata?: readonly string[];
   transform(
     files: Map<string, ReviewArtifactContent>,
     result: ExportRoutes,
@@ -37,6 +38,8 @@ export interface ExportOptions {
   /** Route non-fatal baseline cleanup diagnostics through the CLI reporter. */
   diagnostic?: (message: string) => void;
   onWarning?: (warning: BuildWarning) => void;
+  /** Report the expected earlier-version baseline outcome once. */
+  incompatibleBaseline?: (commit: string) => void;
   /** Omit baseline reads and comparison artifacts; publish uses this capability. */
   noChanges?: boolean;
   /** Consume finalized bytes before installation, while the output is reserved. */

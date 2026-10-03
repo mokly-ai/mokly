@@ -84,7 +84,7 @@ export async function generateLargeFixture(
     ...(sharedStylesheets.length && linkedScreens
       ? [
           {
-            match: `area-*/screens/activity-@(${Array.from({ length: linkedScreens }, (_, index) => index + 1).join("|")}).html`,
+            match: `screens/area-*-screen-@(${Array.from({ length: linkedScreens }, (_, index) => index + 1).join("|")}).html`,
             stylesheets: ["assets/catalogue.css", ...sharedStylesheets],
           },
         ]
@@ -124,8 +124,7 @@ export default defineConfig({
   );
   await fs.writeFile(
     path.join(entries, "catalogue.mockup.tsx"),
-    `import { defineCollection } from "@mokly/mokly";
-export const mockups = [defineCollection({ id: "large", title: "Large catalogue", description: "Synthetic product areas", relatedDocs: ["notes.md"], childIds: ${JSON.stringify(areas)} })];\n`,
+    `export const mockups = [];\n`,
   );
   for (const id of areas) {
     const directory = path.join(entries, id);
@@ -142,7 +141,7 @@ export const mockups = createArea(${JSON.stringify(id)}, ${size.screens}, ${size
     generatedOutput,
     configPath: path.join(root, "mokly.config.ts"),
     size,
-    routes: size.areas * (size.screens + 2 + flows + 1),
+    routes: size.areas * (size.screens + 8 + flows + 1),
     documents: size.areas * (size.screens * 4 + 2 * 3 * 4 + 1),
   };
 }

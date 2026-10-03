@@ -51,7 +51,7 @@ ${metadata}
 export const button = defineComponent({ ...metadata, id: "button", title: "Button", description: "A co-located button", route: "components/button.html",
   propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } },
   render: (props) => <Button label={props.label} />,
-  variants: [{ id: "default", title: "Default", props: { label: "Continue" } }] });
+  variants: [{ id: "button-default", title: "Default", props: { label: "Continue" } }] });
 `,
   );
   await write(
@@ -61,7 +61,7 @@ export const button = defineComponent({ ...metadata, id: "button", title: "Butto
 import { defineScreen } from "@mokly/mokly";
 import { button } from "./button.mokly.js";
 ${metadata}
-export const mockups = [button.entry, defineScreen({ ...metadata, useCaseIds: [], id: "button-demo", title: "Button demo", description: "Uses the button", route: "screens/button-demo.html", mobile: <main><button.Component label="Go" /></main>, desktop: <main><button.Component label="Go" /></main> })];
+export const mockups = [button.entries, defineScreen({ ...metadata, useCaseIds: [], id: "button-demo", title: "Button demo", description: "Uses the button", route: "screens/button-demo.html", mobile: <main><button.Component label="Go" /></main>, desktop: <main><button.Component label="Go" /></main> })];
 `,
   );
   await fs.promises.writeFile(
@@ -257,7 +257,7 @@ test("runtime startup rejects a message without entry globs", async () => {
       repoRoot: "/repo",
       publicExclude: resolvePublicExclude([]),
     },
-    manifest: { entries: [], schemaVersion: 6, sourceFiles: [] },
+    manifest: { entries: [], schemaVersion: 8, sourceFiles: [] },
   };
   process.emit("message", {
     ...valid,

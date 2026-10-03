@@ -30,6 +30,7 @@ interface WorkflowJob {
   needs?: readonly string[];
   outputs?: Readonly<Record<string, string>>;
   permissions?: Readonly<Record<string, string>>;
+  "runs-on"?: string;
   steps: readonly WorkflowStep[];
   strategy?: {
     "fail-fast"?: boolean;
@@ -60,12 +61,15 @@ interface WorkflowDispatch {
 
 interface ReleaseContextModule {
   remoteTagCommit(output: string, ref: string): string;
-  resolvePublishRef(input: {
+  resolvePublishRefs(input: {
     eventName: string;
     manualRef: string;
+    manualViewerRef: string;
     releaseCreated: string;
     releaseTag: string;
-  }): string | undefined;
+    viewerReleaseCreated: string;
+    viewerReleaseTag: string;
+  }): { cli: string; viewer: string } | undefined;
   validateTagVersion(ref: string, version: string): void;
 }
 
@@ -100,6 +104,15 @@ test("release workflow selects only releases and isolates OIDC publish", async (
   });
   assert.equal(workflow.concurrency["cancel-in-progress"], false);
   assert.equal(publish.environment, "npm");
+  assert.equal(publish["runs-on"], "ubuntu-24.04");
+  assert.match(
+    String(
+      publish.steps.find(
+        (step) => step.name === "Check out immutable release tag",
+      )?.uses,
+    ),
+    /^actions\/checkout@[a-f0-9]{40}$/,
+  );
   assert.deepEqual(publish.permissions, {
     actions: "read",
     contents: "read",
@@ -202,8 +215,14 @@ test("release workflow selects only releases and isolates OIDC publish", async (
 
 test("release selection handles ordinary pushes, releases, and manual retries", async () => {
   const context = await releaseContext();
+  const shared = {
+    manualViewerRef: "",
+    viewerReleaseCreated: "false",
+    viewerReleaseTag: "",
+  };
   assert.equal(
-    context.resolvePublishRef({
+    context.resolvePublishRefs({
+      ...shared,
       eventName: "push",
       manualRef: "",
       releaseCreated: "false",
@@ -211,23 +230,28 @@ test("release selection handles ordinary pushes, releases, and manual retries", 
     }),
     undefined,
   );
-  assert.equal(
-    context.resolvePublishRef({
+  assert.deepEqual(
+    context.resolvePublishRefs({
+      ...shared,
       eventName: "push",
       manualRef: "",
       releaseCreated: "true",
       releaseTag: "v0.1.0",
+      viewerReleaseCreated: "true",
+      viewerReleaseTag: "viewer-v0.2.0",
     }),
-    "v0.1.0",
+    { cli: "v0.1.0", viewer: "viewer-v0.2.0" },
   );
-  assert.equal(
-    context.resolvePublishRef({
+  assert.deepEqual(
+    context.resolvePublishRefs({
+      ...shared,
       eventName: "workflow_dispatch",
       manualRef: "v1.2.3",
+      manualViewerRef: "viewer-v2.3.4",
       releaseCreated: "",
       releaseTag: "",
     }),
-    "v1.2.3",
+    { cli: "v1.2.3", viewer: "viewer-v2.3.4" },
   );
   assert.throws(
     () => context.validateTagVersion("v1.2.4", "1.2.3"),

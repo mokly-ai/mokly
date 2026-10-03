@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
@@ -17,7 +17,7 @@ for (const kind of ["screen", "page"]) {
         kind === "screen"
           ? validEntrySource({ body: `<img src="../${route}" alt="Logo" />` })
           : validEntrySource() +
-            `\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Document", route: "handbook.html", relatedDocs: [], render: () => '<html><body><img src="${route}" alt="Logo"/></body></html>' }));`;
+            `\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Document", relatedDocs: [], render: () => '<html><body><img src="../${route}" alt="Logo"/></body></html>' }));`;
       const fixture = await changedFixture(
         context,
         source,
@@ -39,14 +39,12 @@ for (const kind of ["screen", "page"]) {
         '<svg width="96"/>',
       );
       assert.deepEqual(
-        await computeChangedRoutes(
+        await computeChangedIds(
           fixture.config,
           "HEAD",
           committedReviewRepository(fixture.config),
         ),
-        kind === "screen"
-          ? ["screens/home.html", "user-flows/tour.html"]
-          : ["handbook.html"],
+        kind === "screen" ? ["home", "tour"] : ["handbook"],
       );
     });
   }
@@ -55,10 +53,7 @@ for (const kind of ["screen", "page"]) {
 test("ignored alias resources remain outside Changes after target edits", async (context) => {
   const source = validEntrySource({
     body: '<ReviewIgnore id="nav"><img src="../image.svg" alt="Logo" /></ReviewIgnore><p>Content</p>',
-  }).replace(
-    "import { defineCollection",
-    "import { ReviewIgnore, defineCollection",
-  );
+  }).replace("import { defineScreen", "import { ReviewIgnore, defineScreen");
   const fixture = await changedFixture(
     context,
     source,
@@ -73,7 +68,7 @@ test("ignored alias resources remain outside Changes after target edits", async 
     '<svg width="96"/>',
   );
   assert.deepEqual(
-    await computeChangedRoutes(
+    await computeChangedIds(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),

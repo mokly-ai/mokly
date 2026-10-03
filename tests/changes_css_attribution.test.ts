@@ -15,7 +15,7 @@ for (const components of [false, true]) {
     ["custom property", ".guide { --tone: red; }", true, "unresolved"],
     ["formatting only", "\n", false, undefined],
   ] as const) {
-    test(`CSS attribution v${components ? 5 : 4}: ${name} agrees across all views and live membership`, async (t) => {
+    test(`CSS attribution v5 (components=${components}): ${name} agrees across all views and live membership`, async (t) => {
       const fixture = await cssAttributionFixture(t, components);
       await fixture.append(css);
       const live = await computeCatalogueChanges(
@@ -23,7 +23,7 @@ for (const components of [false, true]) {
         "main",
         committedReviewRepository(fixture.config),
       );
-      assert.equal(live.changedRoutes?.includes("screens/home.html"), included);
+      assert.equal(live.changedIds?.includes("home"), included);
       const artifact = await fixture.compare();
       const screen = artifact.result.screens.find(
         (entry) => entry.id === "home",
@@ -95,7 +95,7 @@ for (const components of [false, true]) {
   }
 
   for (const resource of ["image.svg", "font.woff2"]) {
-    test(`CSS attribution v${components ? 5 : 4} preserves ${resource} impact`, async (t) => {
+    test(`CSS attribution v5 (components=${components}) preserves ${resource} impact`, async (t) => {
       const fixture = await cssAttributionFixture(t, components);
       await fixture.append("\n", resource);
       const live = await computeCatalogueChanges(
@@ -103,7 +103,7 @@ for (const components of [false, true]) {
         "main",
         committedReviewRepository(fixture.config),
       );
-      assert.ok(live.changedRoutes?.includes("screens/home.html"));
+      assert.ok(live.changedIds?.includes("home"));
       const artifact = await fixture.compare();
       for (const view of artifact.result.screens.find(
         (entry) => entry.id === "home",

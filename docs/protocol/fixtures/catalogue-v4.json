@@ -1,0 +1,410 @@
+{
+  "changesStatus": "ready",
+  "comparisonUrl": "__mokly/diffs/__generations/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc/review.json",
+  "components": [
+    {
+      "changes": {
+        "included": false,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "controls": {
+        "label": {
+          "kind": "text"
+        }
+      },
+      "details": {
+        "description": "Action",
+        "relatedDocs": [],
+        "sourcePath": "entries/fixture.mockup.tsx"
+      },
+      "id": "action",
+      "kind": "component",
+      "navPath": [
+        "Product"
+      ],
+      "propSchema": {
+        "kind": "object",
+        "properties": {
+          "label": {
+            "schema": {
+              "kind": "string"
+            }
+          }
+        }
+      },
+      "slots": [],
+      "tags": [],
+      "title": "Action"
+    },
+    {
+      "changes": {
+        "included": false,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "comparison": {
+        "status": "unavailable"
+      },
+      "details": {
+        "description": "Action",
+        "relatedDocs": [],
+        "sourcePath": "entries/fixture.mockup.tsx"
+      },
+      "id": "action-default",
+      "kind": "component",
+      "navPath": [
+        "Product"
+      ],
+      "props": {
+        "label": [
+          "string",
+          "Continue"
+        ]
+      },
+      "suppliedSlots": [],
+      "tags": [],
+      "title": "Default",
+      "variantOf": "action",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "deploymentId": "0000000000000000000000000000000000000000000000000000000000000000",
+  "identity": {
+    "id": "05a4e44bb289d272f72d0b0b11816b9e756912791b577bcd97a2d90479b8e484",
+    "title": "Mokly"
+  },
+  "pages": [
+    {
+      "changes": {
+        "included": false,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "details": {
+        "description": "Guide",
+        "relatedDocs": [],
+        "sourcePath": "entries/fixture.mockup.tsx"
+      },
+      "id": "guide",
+      "kind": "page",
+      "navPath": [],
+      "tags": [],
+      "title": "Guide"
+    }
+  ],
+  "removedEntries": [
+    {
+      "entry": {
+        "changes": {
+          "included": true,
+          "kind": "removed",
+          "status": "ready"
+        },
+        "details": {
+          "description": "Guide",
+          "relatedDocs": [],
+          "sourcePath": "entries/fixture.mockup.tsx"
+        },
+        "id": "removed-page",
+        "kind": "page",
+        "navPath": [
+          "Product"
+        ],
+        "tags": [],
+        "title": "Removed page"
+      },
+      "preview": {
+        "kind": "page"
+      },
+      "snapshotId": "ae7c43c42ac411cb914b0029a816886b912351c7f54ab79c6bb77f2122a1530c"
+    },
+    {
+      "entry": {
+        "changes": {
+          "included": true,
+          "kind": "removed",
+          "status": "ready"
+        },
+        "colorSchemes": [
+          "light"
+        ],
+        "details": {
+          "description": "Home",
+          "relatedDocs": [],
+          "sourcePath": "entries/fixture.mockup.tsx"
+        },
+        "id": "removed-screen",
+        "kind": "screen",
+        "navPath": [
+          "Product"
+        ],
+        "tags": [],
+        "title": "Removed screen",
+        "useCaseIds": [],
+        "views": [
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": false,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "usage": {
+              "instances": [],
+              "ranges": [],
+              "slots": [],
+              "status": "ready"
+            },
+            "viewport": "mobile"
+          },
+          {
+            "colorScheme": "light",
+            "comparison": {
+              "eligible": false,
+              "kind": "removed",
+              "status": "ready"
+            },
+            "usage": {
+              "instances": [],
+              "ranges": [],
+              "slots": [],
+              "status": "ready"
+            },
+            "viewport": "desktop"
+          }
+        ]
+      },
+      "preview": {
+        "kind": "screen"
+      },
+      "snapshotId": "0db7db71cd6f82ff3ec1dfd949c09032585520da8361bbf8d3aa718cf7442312"
+    }
+  ],
+  "revision": {
+    "content": 0,
+    "evidence": 0
+  },
+  "schemaVersion": 4,
+  "screens": [
+    {
+      "changes": {
+        "included": false,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "details": {
+        "description": "Home",
+        "relatedDocs": [],
+        "sourcePath": "entries/fixture.mockup.tsx"
+      },
+      "id": "home",
+      "kind": "screen",
+      "navPath": [
+        "Product",
+        "Browse"
+      ],
+      "tags": [],
+      "title": "Home",
+      "useCaseIds": [
+        "tour"
+      ],
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "desktop"
+        }
+      ]
+    },
+    {
+      "changes": {
+        "included": false,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "colorSchemes": [
+        "light"
+      ],
+      "details": {
+        "description": "Home",
+        "relatedDocs": [],
+        "sourcePath": "entries/fixture.mockup.tsx"
+      },
+      "id": "home-empty",
+      "kind": "screen",
+      "navPath": [
+        "Product",
+        "Browse"
+      ],
+      "tags": [],
+      "title": "Home, empty",
+      "useCaseIds": [],
+      "variantOf": "home",
+      "views": [
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "comparison": {
+            "status": "unavailable"
+          },
+          "usage": {
+            "instances": [],
+            "ranges": [],
+            "slots": [],
+            "status": "ready"
+          },
+          "viewport": "desktop"
+        }
+      ]
+    }
+  ],
+  "tree": {
+    "components": [
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "id": "action-default",
+                "kind": "entry"
+              }
+            ],
+            "id": "action",
+            "kind": "entry"
+          }
+        ],
+        "kind": "folder",
+        "label": "Product"
+      }
+    ],
+    "pages": [
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "id": "home-empty",
+                    "kind": "entry"
+                  }
+                ],
+                "id": "home",
+                "kind": "entry"
+              }
+            ],
+            "kind": "folder",
+            "label": "Browse"
+          },
+          {
+            "id": "tour",
+            "kind": "entry"
+          }
+        ],
+        "kind": "folder",
+        "label": "Product"
+      },
+      {
+        "id": "guide",
+        "kind": "entry"
+      }
+    ]
+  },
+  "useCases": [
+    {
+      "changes": {
+        "included": false,
+        "kind": "unmodified",
+        "status": "ready"
+      },
+      "details": {
+        "description": "Tour",
+        "relatedDocs": [],
+        "sourcePath": "entries/fixture.mockup.tsx"
+      },
+      "id": "tour",
+      "kind": "use-case",
+      "navPath": [
+        "Product"
+      ],
+      "steps": [
+        {
+          "screenId": "home",
+          "title": "Open home"
+        }
+      ],
+      "tags": [],
+      "title": "Tour"
+    }
+  ]
+}

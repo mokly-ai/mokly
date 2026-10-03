@@ -2,34 +2,34 @@ import type {
   ManifestComponent,
   ManifestComponentVariant,
 } from "../../packages/viewer/dist/components/manifest_types.js";
-import type { ManifestV6 } from "../../packages/viewer/dist/registry/types.js";
+import type { ManifestV8 } from "../../packages/viewer/dist/registry/types.js";
 import type { ReviewResultV5 } from "../../packages/viewer/dist/review/component_types.js";
 import type { ViewReview } from "../../packages/viewer/dist/review/types.js";
 
 function variant(id: string, title: string): ManifestComponentVariant {
-  const stem = `components/badge.variants/${id}`;
   return {
+    colorSchemes: ["light", "dark"],
     componentViews: [],
-    darkFragments: {
-      desktop: `${stem}.desktop.dark.html`,
-      mobile: `${stem}.mobile.dark.html`,
-    },
-    fragments: {
-      desktop: `${stem}.desktop.html`,
-      mobile: `${stem}.mobile.html`,
-    },
+
+    description: `${title} badge`,
     id,
+    kind: "component",
+    navPath: [],
     props: {},
+    relatedDocs: [],
+    sourcePath: "entries/badge.mockup.tsx",
     suppliedSlots: [],
     title,
+    variantOf: "badge",
   };
 }
 
-export const DEFAULT_VARIANT = variant("default", "Default");
-export const SECOND_VARIANT = variant("second", "Second");
-export const REMOVED_VARIANT = variant("removed", "Removed");
+export const DEFAULT_VARIANT = variant("badge-default", "Default");
+export const SECOND_VARIANT = variant("badge-second", "Second");
+export const REMOVED_VARIANT = variant("badge-removed", "Removed");
 
 export const component: ManifestComponent = {
+  colorSchemes: ["light", "dark"],
   controls: {},
   description: "Badge component",
   id: "badge",
@@ -37,56 +37,39 @@ export const component: ManifestComponent = {
   navPath: [],
   propSchema: { kind: "object", properties: {} },
   relatedDocs: [],
-  route: "components/badge.html",
   slots: [],
   sourcePath: "entries/badge.mockup.tsx",
   title: "Badge",
-  variants: [DEFAULT_VARIANT, SECOND_VARIANT],
-  viewports: ["mobile", "desktop"],
 };
 
-export const componentManifest: ManifestV6 = {
-  entries: [component],
+export const componentManifest: ManifestV8 = {
+  entries: [component, DEFAULT_VARIANT, SECOND_VARIANT],
   generatedBy: "mokly",
-  schemaVersion: 6,
+  schemaVersion: 8,
   sourceFiles: [component.sourcePath],
 };
 
-export const componentBaseline: ManifestV6 = {
+export const componentBaseline: ManifestV8 = {
   ...componentManifest,
-  entries: [
-    {
-      ...component,
-      variants: [DEFAULT_VARIANT, SECOND_VARIANT, REMOVED_VARIANT],
-    },
-  ],
+  entries: [component, DEFAULT_VARIANT, SECOND_VARIANT, REMOVED_VARIANT],
 };
 
 export const screen = {
-  darkFragments: {
-    desktop: "screens/welcome.desktop.dark.html",
-    mobile: "screens/welcome.mobile.dark.html",
-  },
+  colorSchemes: ["light", "dark"],
   description: "Landing screen",
-  fragments: {
-    desktop: "screens/welcome.desktop.html",
-    mobile: "screens/welcome.mobile.html",
-  },
   id: "welcome",
   kind: "screen",
   navPath: [],
   relatedDocs: [],
-  route: "screens/welcome.html",
   sourcePath: "entries/fixture.mockup.tsx",
   title: "Welcome",
   useCaseIds: [],
-  viewports: ["mobile", "desktop"],
 } as const;
 
-export const screenManifest: ManifestV6 = {
+export const screenManifest: ManifestV8 = {
   entries: [screen],
   generatedBy: "mokly",
-  schemaVersion: 6,
+  schemaVersion: 8,
   sourceFiles: [screen.sourcePath],
 };
 
@@ -103,8 +86,9 @@ export function darkOnlyResult(state: "changed" | "unchanged"): ReviewResultV5 {
     schemaVersion: 5,
     screens: [
       {
+        after: { id: screen.id, title: screen.title },
+        before: { id: screen.id, title: screen.title },
         id: screen.id,
-        route: screen.route,
         state,
         title: screen.title,
         views: views("changed"),
@@ -142,24 +126,30 @@ export function componentVariantResult(): ReviewResultV5 {
     changes: [],
     components: [
       {
+        after: { id: component.id, title: component.title },
+        before: { id: component.id, title: component.title },
         id: component.id,
-        route: component.route,
         state: "changed",
         title: component.title,
         variants: [
           {
+            after: variantAddress(DEFAULT_VARIANT),
+            before: variantAddress(DEFAULT_VARIANT),
             id: DEFAULT_VARIANT.id,
             state: "unchanged",
             title: DEFAULT_VARIANT.title,
             views: views("unchanged"),
           },
           {
+            after: variantAddress(SECOND_VARIANT),
+            before: variantAddress(SECOND_VARIANT),
             id: SECOND_VARIANT.id,
             state: "changed",
             title: SECOND_VARIANT.title,
             views: views("changed"),
           },
           {
+            before: variantAddress(REMOVED_VARIANT),
             id: REMOVED_VARIANT.id,
             state: "removed",
             title: REMOVED_VARIANT.title,
@@ -171,5 +161,14 @@ export function componentVariantResult(): ReviewResultV5 {
     ignoredImpact: [],
     schemaVersion: 5,
     screens: [],
+  };
+}
+
+function variantAddress(variant: ManifestComponentVariant) {
+  return {
+    id: variant.id,
+    title: variant.title,
+    props: variant.props,
+    suppliedSlots: variant.suppliedSlots,
   };
 }

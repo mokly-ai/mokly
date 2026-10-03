@@ -3,6 +3,7 @@ import fs from "node:fs";
 import { test } from "node:test";
 
 import { readCatalogue } from "../src/catalogue/reader.js";
+import { viewHref } from "../src/navigation/routes.js";
 import {
   catalogueNavSections,
   disclosurePath,
@@ -22,7 +23,7 @@ const model = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v2.json",
+        "../../../docs/protocol/fixtures/catalogue-v4.json",
         import.meta.url,
       ),
       "utf8",
@@ -36,10 +37,10 @@ const route = routeFromUrl(
 );
 const context = {
   ...viewerContext(model, defaultSelection),
-  activeRoute: "screens/home.html",
+  activeId: "home",
 };
 const sections = catalogueNavSections(catalogue);
-const activePath = disclosurePath(sections, "screens/home.html");
+const activePath = disclosurePath(sections, "home");
 const defaults = createInitialShellState(
   catalogue,
   context,
@@ -133,7 +134,7 @@ test("reload recovery keeps route and snapshot identity synchronized", () => {
   const historicalRoute = routeFromUrl(
     catalogue,
     new URL(
-      `https://example.test/view/${historical.entry.route}?snapshot=${historical.snapshotId}`,
+      `https://example.test${viewHref(historical.entry.kind, historical.entry.id)}?snapshot=${historical.snapshotId}`,
     ),
   );
   const historicalSelection = selectionForRoute(
@@ -154,7 +155,7 @@ test("runtime context projects only the route's active snapshot", () => {
   const historicalRoute = routeFromUrl(
     catalogue,
     new URL(
-      `https://example.test/view/${historical.entry.route}?snapshot=${historical.snapshotId}`,
+      `https://example.test${viewHref(historical.entry.kind, historical.entry.id)}?snapshot=${historical.snapshotId}`,
     ),
   );
   const state = recoveredState();
@@ -171,11 +172,15 @@ test("runtime context projects only the route's active snapshot", () => {
 
 function recoveredState(initial: Omit<ShellInitialState, "recovery"> = {}) {
   const recovery: ShellRecoverySnapshot = {
-    closedCollectionIds: [...activePath, unrelated],
+    disclosures: Object.fromEntries(
+      [...activePath, unrelated].map((key) => [key, false]),
+    ),
     colorScheme: "light",
     detailsOpen: false,
     drawerOpen: true,
-    filterBaselineClosedCollectionIds: [...activePath, unrelated],
+    filterBaselineDisclosures: Object.fromEntries(
+      [...activePath, unrelated].map((key) => [key, false]),
+    ),
     navScroll: 87,
     query: "home",
     regionScrolls: { stage: 41 },

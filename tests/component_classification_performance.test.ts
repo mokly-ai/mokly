@@ -2,52 +2,26 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { classifyComponents } from "../dist/review/component_classification.js";
-import {
-  metadata,
-  type RoutedEntry,
-} from "../dist/review/component_metadata.js";
+import { metadata } from "../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
 import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
-import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
-import type { Manifest } from "../packages/viewer/dist/registry/types.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
-test("component metadata reuses a precomputed catalogue hierarchy", async (t) => {
+test("component metadata reflects authored paths without a hierarchy projection", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const manifest = fixture.after.manifest;
-  assert.equal(manifest.schemaVersion, 6);
-  let traversals = 0;
-  const entries = new Proxy(manifest.entries, {
-    get(target, property, receiver) {
-      if (property !== Symbol.iterator)
-        return Reflect.get(target, property, receiver);
-      return function* () {
-        traversals += 1;
-        yield* target;
-      };
-    },
-  });
-  const tracked = { ...manifest, entries };
-  const hierarchy = analyzeHierarchy(manifest.entries).hierarchy;
-  const project = metadata as unknown as (
-    entry: RoutedEntry,
-    manifest: Manifest,
-    hierarchy: ReturnType<typeof analyzeHierarchy>["hierarchy"],
-  ) => string;
-
-  for (const entry of manifest.entries) {
-    if (entry.kind !== "collection" && entry.kind !== "page")
-      project(entry, tracked, hierarchy);
-  }
-
-  assert.equal(traversals, 0);
+  assert.equal(manifest.schemaVersion, 8);
+  const entry = manifest.entries.find((item) => item.kind === "screen");
+  assert.ok(entry);
+  assert.notEqual(metadata(entry), metadata({ ...entry, navPath: ["Moved"] }));
 });
 
 test("component views validate each retained document range index once", async (t) => {
@@ -67,7 +41,8 @@ test("component views validate each retained document range index once", async (
   });
   const observed = { ...view, usage: { ...view.usage, ranges } };
   const reader = new ComponentMaterialReader({
-    read: async (route) => Buffer.from(fixture.after.outputs.get(route) ?? ""),
+    read: async (route) =>
+      Buffer.from(textOutput(fixture.after.outputs, route) ?? ""),
   });
 
   await compareComponentView(
@@ -125,7 +100,7 @@ for (const baseline of ["screens", "components"] as const)
         },
       },
     };
-    const expected = await computeChangedRoutes(
+    const expected = await computeChangedIds(
       fixture.config,
       "main",
       fixture.git,
@@ -133,7 +108,7 @@ for (const baseline of ["screens", "components"] as const)
     assert.ok(expected);
 
     assert.deepEqual(
-      await computeChangedRoutes(fixture.config, "main", git),
+      await computeChangedIds(fixture.config, "main", git),
       expected,
     );
     const paths = fixture.before.manifest.entries.flatMap((entry) =>
@@ -151,7 +126,7 @@ for (const baseline of ["screens", "components"] as const)
 test("shared classification batches both sides including removed dark variants", async (t) => {
   const fixture = await componentReviewFixture(t, (source) =>
     source.replace(
-      ', { id: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+      ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
       "",
     ),
   );
@@ -159,7 +134,7 @@ test("shared classification batches both sides including removed dark variants",
     const batches: string[][] = [];
     const reads: string[] = [];
     const read = async (route: string) => {
-      const html = compilation.outputs.get(route);
+      const html = textOutput(compilation.outputs, route);
       assert.notEqual(html, undefined, route);
       return Buffer.from(html!);
     };

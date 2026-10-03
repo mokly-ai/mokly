@@ -71,7 +71,6 @@ export const reviewImpactScreens = [
     desktop: <IgnoredOnlyCompare viewport="desktop" />,
     id: "design-review-ignored-only",
     mobile: <IgnoredOnlyCompare viewport="mobile" />,
-    slug: "ignored-only",
     title: "Ignored only",
   }),
   screen({
@@ -81,7 +80,6 @@ export const reviewImpactScreens = [
     desktop: <EmptyChanges viewport="desktop" />,
     id: "design-review-empty",
     mobile: <EmptyChanges viewport="mobile" />,
-    slug: "empty",
     title: "No changes",
   }),
 ];

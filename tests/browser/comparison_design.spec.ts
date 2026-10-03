@@ -5,10 +5,30 @@ import { expect, test } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
-const design = (route: string): string =>
-  pathToFileURL(
-    path.join(repositoryRoot, "examples/basic/generated/design", route),
+const designIds: Readonly<Record<string, string>> = {
+  "browse/views/use-case": "design-browse-use-case",
+  "review/outcomes/changed": "design-review-changed",
+  "review/outcomes/added": "design-review-added",
+  "review/outcomes/removed": "design-review-removed",
+  "review/outcomes/difference": "design-review-difference",
+  "review/impact/stylesheets/excluded": "design-review-style-excluded",
+  "review/impact/stylesheets/matched": "design-review-style-matched",
+  "review/impact/ignored-only": "design-review-ignored-only",
+  "review/outcomes/previous-version/no-captured-view":
+    "design-review-removed-no-view",
+  "review/impact/empty": "design-review-empty",
+};
+const design = (route: string): string => {
+  const match = /^(.*)\.(mobile|desktop)\.html$/u.exec(route);
+  const id = match && designIds[match[1] ?? ""];
+  if (!match || !id) throw new Error(`Unknown comparison design: ${route}`);
+  return pathToFileURL(
+    path.join(
+      repositoryRoot,
+      `examples/basic/generated/screens/${id}.${match[2]}.html`,
+    ),
   ).href;
+};
 
 test("stylesheet and empty Changes filters preserve their depicted catalogue", async ({
   page,
@@ -16,19 +36,25 @@ test("stylesheet and empty Changes filters preserve their depicted catalogue", a
   await page.goto(design("review/impact/stylesheets/excluded.desktop.html"));
   await expect(page.locator(".mbk-nav-filter-count")).toHaveText("1");
   await page.locator("a.mbk-nav-filter-opt").click();
-  await expect(page).toHaveURL(/stylesheets\/matched\.desktop\.html$/);
+  await expect(page).toHaveURL(
+    /screens\/design-review-style-matched\.desktop\.html$/,
+  );
   await expect(page.locator(".mbk-nav-filter-opt.active")).toHaveText(
     "Changes1",
   );
   await page.locator("a.mbk-nav-filter-opt").click();
-  await expect(page).toHaveURL(/stylesheets\/excluded\.desktop\.html$/);
+  await expect(page).toHaveURL(
+    /screens\/design-review-style-excluded\.desktop\.html$/,
+  );
 
   await page.goto(design("review/impact/ignored-only.desktop.html"));
   await page.locator("a.mbk-nav-filter-opt").click();
-  await expect(page).toHaveURL(/impact\/empty\.desktop\.html$/);
+  await expect(page).toHaveURL(/screens\/design-review-empty\.desktop\.html$/);
   await expect(page.locator(".mbk-nav-filter-count")).toHaveText("0");
   await page.locator("a.mbk-nav-filter-opt").click();
-  await expect(page).toHaveURL(/impact\/ignored-only\.desktop\.html$/);
+  await expect(page).toHaveURL(
+    /screens\/design-review-ignored-only\.desktop\.html$/,
+  );
 });
 
 test("Excluded styles shows changed Welcome controls in both artboards", async ({

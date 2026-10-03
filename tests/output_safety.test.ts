@@ -49,13 +49,9 @@ test("build rejects non-canonical related-document paths", async (context) => {
 });
 
 test("build rejects generated routes inside nested authored roots", async (context) => {
-  const source = validEntrySource().replace(
-    "screens/home.html",
-    "src/entries/generated.html",
-  );
-  const fixture = await createFixture(source);
+  const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
-  await nestEntriesUnderMockups(fixture);
+  await nestEntriesUnderMockups(fixture, "screens");
   const config = await loadConfig(fixture.root);
 
   await assert.rejects(
@@ -72,7 +68,7 @@ test("writer rejects crafted output inside nested authored roots", async (contex
   const compilation = await compileCatalogue(config);
   const outputs = new Map(compilation.outputs);
   outputs.set("src/entries/injected.html", "<html></html>\n");
-  const unsafe: Compilation = { manifest: compilation.manifest, outputs };
+  const unsafe: Compilation = { ...compilation, outputs };
 
   await assert.rejects(
     () => writeCompilation(unsafe, config),
@@ -93,21 +89,17 @@ test("writer rejects a crafted URL-sensitive output route", async (context) => {
   outputs.set('screens/injected" onclick="alert.html', "<html></html>\n");
 
   await assert.rejects(
-    () => writeCompilation({ manifest: compilation.manifest, outputs }, config),
+    () => writeCompilation({ ...compilation, outputs }, config),
     /generated route is unsafe/,
   );
 });
 
 test("build rejects generated routes through authored-root symlinks", async (context) => {
-  const source = validEntrySource().replace(
-    "screens/home.html",
-    "linked-source/generated.html",
-  );
-  const fixture = await createFixture(source);
+  const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   await fs.promises.symlink(
     "../entries",
-    path.join(fixture.mockupsDir, "linked-source"),
+    path.join(fixture.mockupsDir, "screens"),
   );
   const config = await loadConfig(fixture.root);
 
@@ -119,8 +111,9 @@ test("build rejects generated routes through authored-root symlinks", async (con
 
 async function nestEntriesUnderMockups(
   fixture: Awaited<ReturnType<typeof createFixture>>,
+  directory = "src/entries",
 ): Promise<void> {
-  const nestedEntries = path.join(fixture.mockupsDir, "src", "entries");
+  const nestedEntries = path.join(fixture.mockupsDir, directory);
   await fs.promises.mkdir(nestedEntries, { recursive: true });
   await fs.promises.rename(
     fixture.entryPath,
@@ -128,6 +121,6 @@ async function nestEntriesUnderMockups(
   );
   await fs.promises.writeFile(
     fixture.configPath,
-    'export default { entriesDir: "mockups/src/entries", mockupsDir: "mockups", repoRoot: "." };\n',
+    `export default { entriesDir: ${JSON.stringify(`mockups/${directory}`)}, mockupsDir: "mockups", repoRoot: "." };\n`,
   );
 }

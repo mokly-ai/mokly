@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 import { inspectConsumerExport } from "./export.mjs";
 import { runBin, smokeServer } from "./fixture.mjs";
@@ -38,10 +39,17 @@ export async function smokeRegisteredComponents(
   const manifest = JSON.parse(
     await fs.readFile(path.join(root, output, "mokly-manifest.json"), "utf8"),
   );
-  assert.equal(manifest.schemaVersion, 6);
+  assert.equal(manifest.schemaVersion, 8);
+  const componentEntries = manifest.entries.filter(
+    (entry) => entry.kind === "component",
+  );
   assert.equal(
-    manifest.entries.filter((entry) => entry.kind === "component").length,
+    componentEntries.filter((entry) => !("variantOf" in entry)).length,
     2,
+  );
+  assert.equal(
+    componentEntries.filter((entry) => "variantOf" in entry).length,
+    3,
   );
   const consumer = manifest.entries.find(
     (entry) => entry.id === "packed-components",
@@ -50,18 +58,26 @@ export async function smokeRegisteredComponents(
     const action = manifest.entries.find(
       (entry) => entry.id === "packed-action",
     );
-    const view = action.variants[0].componentViews[0];
+    const variant = componentEntries.find(
+      (entry) => entry.variantOf === action.id,
+    );
+    const view = variant.componentViews[0];
     assert.deepEqual(view.resources, [
       { path: "component.css", componentIds: ["packed-action"] },
     ]);
+    const { viewRoute } = await import(
+      pathToFileURL(path.join(root, "node_modules/@mokly/viewer/dist/data.js"))
+        .href
+    );
     const html = await fs.readFile(
-      path.join(root, output, action.variants[0].fragments.mobile),
+      path.join(
+        root,
+        output,
+        viewRoute("component", variant.id, "mobile", "light"),
+      ),
       "utf8",
     );
-    assert.match(
-      html,
-      /<link rel="stylesheet" href="\.\.\/\.\.\/component\.css">/,
-    );
+    assert.match(html, /<link rel="stylesheet" href="\.\.\/component\.css">/);
   }
   for (const view of consumer.componentViews) {
     assert.ok(view.instances.length > 0);
@@ -79,7 +95,7 @@ export async function smokeRegisteredComponents(
   );
   await smokeServer(root, ["--base", "HEAD"], async (url) => {
     const page = await (
-      await fetch(`${url}/view/components/action.html`)
+      await fetch(`${url}/view/components/packed-action.html`)
     ).text();
     const state = page.match(
       /<script[^>]*data-mokly-host-capability-state=""[^>]*>([^<]+)<\/script>/,
@@ -96,7 +112,7 @@ export async function smokeRegisteredComponents(
       },
       body: JSON.stringify({
         componentId: "packed-action",
-        variantId: "default",
+        variantId: "packed-action-default",
         viewport: "mobile",
         colorScheme: "light",
         generation: capability.generation,
@@ -119,12 +135,12 @@ export async function smokeRegisteredComponents(
     root,
     "published",
     "HEAD",
-    ["view/components/action.html", "view/components/panel.html"],
+    ["view/components/packed-action.html", "view/components/packed-panel.html"],
     5,
   );
   assert.equal(review.components.length, 2);
   const published = await fs.readFile(
-    path.join(root, "published/view/components/action.html"),
+    path.join(root, "published/view/components/packed-action.html"),
     "utf8",
   );
   assert.doesNotMatch(published, /renderCapability/);
