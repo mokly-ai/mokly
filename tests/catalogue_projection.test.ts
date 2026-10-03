@@ -212,6 +212,10 @@ test("public v4 fixture conforms and compatible readers ignore additive fields",
   fixture.screens[0].future = true;
   fixture.screens[0].views[0].usage.future = true;
   assert.deepEqual(readCatalogue(fixture), model);
+  assert.throws(
+    () => readCatalogue({ ...fixture, schemaVersion: 3 }),
+    /unsupported schemaVersion/,
+  );
   assert.throws(() => readCatalogue({ ...fixture, schemaVersion: 2 }));
   assert.throws(() => readCatalogue({ ...fixture, schemaVersion: 1 }));
   assert.throws(() =>

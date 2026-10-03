@@ -11,12 +11,8 @@ constructs one typed authored-plus-generated `ChangeEvidence` shared by Review
 and material Changes classification, and verifies inputs again
 before installation. `site.ts` uses the existing shell and Browse adapter to
 assemble one shell page per entry at `view/<path>/index.html`, package assets, and
-immutable comparisons. The approved
-[path identity plan](../../plans/path-identity.md) writes those shell pages at
-`view/<path>/index.html` and derives every snapshot and preview name from the
-entry path under the
-[artifact path contract](../../docs/protocol/mokly-artifact-paths.md); the
-id-derived names below are the current implementation.
+immutable comparisons. Snapshot and preview names derive from entry paths
+under the [artifact path contract](../../docs/protocol/mokly-artifact-paths.md).
 Publish's `--no-changes` uses this same engine with baseline reads, removed
 entries and comparisons omitted. Current-only assembly retains the normal
 input consistency checks and a null delivery comparison URL. A capture callback

@@ -64,6 +64,7 @@ test("the provider exposes live capabilities and export-style omission", () => {
 
 test("a request scope cancels work when its source or entry changes", () => {
   const initial = viewerCapabilityRequest(source, "button");
+  assert.deepEqual(initial, { entryPath: "button", source });
   const scope = new ViewerCapabilityScope(initial);
   const first = scope.signal;
   assert.equal(scope.replace(initial), first);
@@ -121,7 +122,10 @@ test("evidence adoption fences source identity and monotonic revisions", () => {
   assert.equal(
     readViewerEvidenceRevision(
       source,
-      viewerCapabilityRequest({ ...source, base: "release" }, request.entryId),
+      viewerCapabilityRequest(
+        { ...source, base: "release" },
+        request.entryPath,
+      ),
       nextSource,
       next,
     ),

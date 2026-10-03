@@ -33,7 +33,7 @@ export interface InstanceRef {
 export interface InstanceEvent {
   instance: InstanceRef | null;
   boxes: readonly Box[];
-  frame: { entryId: string; stepIndex?: number };
+  frame: { entryPath: string; stepIndex?: number };
 }
 export interface ViewerMarker {
   id: string;

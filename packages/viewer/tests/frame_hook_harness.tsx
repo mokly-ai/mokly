@@ -226,7 +226,7 @@ function HookFrame({ host, usage }: { host: HookHost; usage: CatalogueUsage }) {
   const mounted = useMountedShellFrame({
     enabled: true,
     identity: {
-      entryId: `frame-hook-${host.documentIdentity}`,
+      entryPath: `frame-hook-${host.documentIdentity}`,
     },
     onEvent: () => undefined,
     source: host.source,

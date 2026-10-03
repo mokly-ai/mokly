@@ -130,8 +130,11 @@ separated query and hash. The former `unavailableViewHref` is unnecessary:
 
 ## Reserved Prefixes And Validation
 
-`view/`, `static/`, `__mokly/`, `snapshots/`, and `previews/` are the only
-reserved artifact prefixes. No kind prefix exists, so a top-level folder may be
+`view/`, `static/`, `__mokly/`, `snapshots/`, `previews/`, and
+`mokly-generated/` are reserved artifact prefixes. The last contains only
+generated CSS and assets beneath `mockupsDir` (or exported `static/`). An
+entry's first path segment cannot equal `mokly-generated`, compared
+case-insensitively, under the [path grammar](./mokly-paths.md#segment-grammar). No kind prefix exists, so a top-level folder may be
 named `screens`, `pages`, or `components`. Generated file names use the
 authored case of each segment; the output inventory rejects two files whose
 case-folded paths collide, including a resource against a document directory.

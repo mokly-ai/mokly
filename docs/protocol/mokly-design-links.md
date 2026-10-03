@@ -5,8 +5,7 @@
 Implemented in the 66 Browse/Changes design screens and two example screens with
 `MockLink`/`MockLink asChild`. Those 66 Browse/Changes designs retain canonical
 links; [components](./mokly-component-design.md) and
-[removed previews](./mokly-removed-previews.md) extend the contract. The
-[path identity plan](../../plans/path-identity.md) migrates them from ids to paths.
+[removed previews](./mokly-removed-previews.md) extend the contract. Links use complete paths under the [path contract](./mokly-paths.md).
 
 ## Scope And Ownership
 
@@ -27,13 +26,13 @@ setting stays with the outer viewer.
 
 Every design screen has mobile and desktop views. They are light-only
 generated documents, including artboards depicting a dark product screen, except
-the appearance screens (the `design-appearance-*` entries), the canonical
+the appearance screens (the `design/browse/appearance/**` entries), the canonical
 `design/browse/views/screen` and `design/browse/views/details-screen`, their two retained
 Welcome appearance variants, and the Welcome comparison family. These render
 in both schemes so the outer Appearance control switches the depicted
 catalogue. Link targets name design entry paths, not the example paths printed in
 the depicted shell's metadata. Existing entries, screens, and text links remain
-available. `example-farewell` remains an intentionally absent product entry.
+available. `example/screens/farewell` remains an intentionally absent product entry.
 This depicted dark set is representative; the runtime's single Appearance
 preference, rather than per-screen dark renders, keeps a whole session dark.
 
@@ -97,26 +96,26 @@ navigation, while the variants remain under Welcome. No unrelated entry moves.
 
 ## Navigation Controls
 
-| Control/context                                 | Destination or behavior                                                                                                                                       |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Brand, home breadcrumb, missing-route recovery  | `design/browse/views/home`                                                                                                                                    |
-| Home: Open the first screen                     | `design/browse/views/screen`                                                                                                                                  |
-| All catalogue: Welcome / Details / Example tour | `design/browse/views/screen` / `design/browse/views/details-screen` / `design/browse/views/use-case`                                                          |
-| Changed catalogue: Welcome / Details / Farewell | `design/changes/diff-controls/current` / `design/changes/outcomes/added` / `design/changes/outcomes/removed`                                                  |
-| Changed catalogue: Survey / Invite / Archive    | `design/changes/outcomes/previous-version/long` / `design/changes/outcomes/previous-version/loading` / `design/changes/outcomes/previous-version/unavailable` |
-| Changed catalogue: Timeline                     | `design/changes/outcomes/previous-version/no-view`                                                                                                            |
-| Removed documents: four Changes rows            | `design/browse/pages/removed` / `-long` / `-loading` / `-unavailable`, each returning to `design/browse/views/home` from All                                  |
-| MiniWelcome: Open the details screen            | `design/browse/views/details-screen`                                                                                                                          |
-| MiniDetails: Return to welcome                  | `design/browse/views/screen`                                                                                                                                  |
-| Depicted use-case step reference                | Welcome: `design/browse/views/screen`; Details: `design/browse/views/details-screen`                                                                          |
-| Welcome/Details inspector: Example tour         | `design/browse/views/use-case`                                                                                                                                |
-| Home menu open / drawer close                   | `design/browse/states/navigation` / `design/browse/views/home`                                                                                                |
-| Menu from another narrow design                 | Canonical `design/browse/states/navigation`; selecting a leaf opens that leaf's canonical destination                                                         |
-| Welcome All / Changes filter                    | `design/browse/views/screen` / `design/changes/diff-controls/current`                                                                                         |
-| Details All / Changes filter                    | `design/browse/views/details-screen` / `design/changes/outcomes/added`                                                                                        |
-| Removed screen All filter                       | `design/browse/views/home`, because the depicted product screen has no current entry                                                                          |
-| Empty Changes All filter                        | `design/browse/views/screen`                                                                                                                                  |
-| Removed consumer return, component explorer     | `design/components/states/removed`, from the desktop Action row and the narrow Changes shortcut, never from the stage                                         |
+| Control/context                                 | Destination or behavior                                                                                                                                                                                                                  |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Brand, home breadcrumb, missing-route recovery  | `design/browse/views/home`                                                                                                                                                                                                               |
+| Home: Open the first screen                     | `design/browse/views/screen`                                                                                                                                                                                                             |
+| All catalogue: Welcome / Details / Example tour | `design/browse/views/screen` / `design/browse/views/details-screen` / `design/browse/views/use-case`                                                                                                                                     |
+| Changed catalogue: Welcome / Details / Farewell | `design/changes/diff-controls/current` / `design/changes/outcomes/added` / `design/changes/outcomes/removed`                                                                                                                             |
+| Changed catalogue: Survey / Invite / Archive    | `design/changes/outcomes/previous-version/long` / `design/changes/outcomes/previous-version/loading` / `design/changes/outcomes/previous-version/unavailable`                                                                            |
+| Changed catalogue: Timeline                     | `design/changes/outcomes/previous-version/no-view`                                                                                                                                                                                       |
+| Removed documents: four Changes rows            | `design/browse/pages/removed` / `design/browse/pages/previous-version/long` / `design/browse/pages/previous-version/loading` / `design/browse/pages/previous-version/unavailable`, each returning to `design/browse/views/home` from All |
+| MiniWelcome: Open the details screen            | `design/browse/views/details-screen`                                                                                                                                                                                                     |
+| MiniDetails: Return to welcome                  | `design/browse/views/screen`                                                                                                                                                                                                             |
+| Depicted use-case step reference                | Welcome: `design/browse/views/screen`; Details: `design/browse/views/details-screen`                                                                                                                                                     |
+| Welcome/Details inspector: Example tour         | `design/browse/views/use-case`                                                                                                                                                                                                           |
+| Home menu open / drawer close                   | `design/browse/states/navigation` / `design/browse/views/home`                                                                                                                                                                           |
+| Menu from another narrow design                 | Canonical `design/browse/states/navigation`; selecting a leaf opens that leaf's canonical destination                                                                                                                                    |
+| Welcome All / Changes filter                    | `design/browse/views/screen` / `design/changes/diff-controls/current`                                                                                                                                                                    |
+| Details All / Changes filter                    | `design/browse/views/details-screen` / `design/changes/outcomes/added`                                                                                                                                                                   |
+| Removed screen All filter                       | `design/browse/views/home`, because the depicted product screen has no current entry                                                                                                                                                     |
+| Empty Changes All filter                        | `design/browse/views/screen`                                                                                                                                                                                                             |
+| Removed consumer return, component explorer     | `design/components/states/removed`, from the desktop Action row and the narrow Changes shortcut, never from the stage                                                                                                                    |
 
 Folder rows and folder-only crumbs are not link targets: a folder row only
 expands or collapses, and a folder crumb opens the folder's own page only when
@@ -198,7 +197,7 @@ its generated scheme. The depicted Appearance selector has no authored transitio
 No screen header depicts a scheme control; standalone Browse owns one
 Appearance selector in the top bar. `design/browse/views/screen`,
 `design/browse/views/details-screen`, the Welcome comparison
-family (`design-changes-*`, `design/changes/outcomes/changed`, and
+family (`design/changes/diff-controls/**`, `design/changes/outcomes/changed`, and
 `design/changes/outcomes/difference`) and the appearance entries
 render in Light and in Dark instead, and the outer Appearance control moves
 between those two generated views of the same entry. A link out of a dark
@@ -223,7 +222,7 @@ Welcome states; Browse and tag-picker states omit them. Each comparison destinat
 its Current action returns to `design/changes/diff-controls/current`. Current is already
 selected in `design/changes/diff-controls/current`, so it has no
 transition there. Returning to All uses the navigation table above.
-The scrolling `design-changes-*` examples keep those destinations; their
+The scrolling `design/changes/diff-controls/**` examples keep those destinations; their
 controls navigate nowhere and pane links are inert.
 
 Added Details shows its Current preview without comparison modes. Removed

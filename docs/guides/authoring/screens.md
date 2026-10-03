@@ -49,8 +49,9 @@ The screen above is `account/billing/invoice`: the directories between the
 root and the file, then the file name up to its first dot. That path is the
 screen's identity everywhere. Links name it, flows name it, its address in the
 catalogue is `/view/account/billing/invoice/`, and its views are written as
-`static/account/billing/invoice/index.mobile.html` and
-`index.desktop.html`, with `.dark` before `.html` for dark views.
+`account/billing/invoice/index.mobile.html` and `index.desktop.html` under
+`mockupsDir`, with `.dark` before `.html` for dark views. Serve exposes these
+files below `/static/`, and export writes them below `static/`.
 
 Set `slug` when the last segment should differ from the file name, and set
 `path` when a file cannot sit where its path should be; a declared path is
@@ -150,5 +151,8 @@ are ordinary members of the folder, not variants.
 | `EntryInput`                      | The metadata every entry shares           |
 | `RegistryDefinition`              | Any definition an entry module may export |
 
-Every input extends `EntryInput`; the path is derived from the file, and an
-`id` or `navPath` key is a type error.
+Every input extends `EntryInput`; the path derives from the file. Unknown
+fields fail registry validation. Use `satisfies ScreenInput` to check extra
+top-level keys statically: generic inference can accept extra keys while
+preserving the precise return type through wrappers. Fresh variant literals
+in direct `defineScreen` calls still receive excess-key checks.

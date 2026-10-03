@@ -11,7 +11,8 @@ and export. The package graph check verifies every delivered static and dynamic
 import resolves within that complete inventory.
 
 `host_capability_descriptor.ts` validates the private live Serve bootstrap and
-source identity. `host_capabilities.ts` defines the behavior context, atomic
+source identity. Live capability requests select an `entryPath` (or `null` for home).
+`host_capabilities.ts` defines the behavior context, atomic
 public/private evidence revision and route/source cancellation scope. Route and
 live evidence use the one strict live reader, which accepts only the exact
 scope derived from the page route. The accepted catalogue and optional complete

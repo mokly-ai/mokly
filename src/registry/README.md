@@ -8,7 +8,9 @@ identity. This module has no Markdown renderer or move-pairing engine.
 derives identity from the exporting module and retains the defining module as
 `sourcePath`. `path_derivation.ts` and `path_collisions.ts` are pure: prefixes,
 transparent directories, leaves, index collapse, declared paths, grammar and
-case-folded collisions need no filesystem access.
+case-folded collisions need no filesystem access. The first segment
+`mokly-generated` is reserved case-insensitively for generated styles and assets;
+entry diagnostics retain the exporting source location.
 
 `folder_records.ts` validates both folder carriers. `folder_validation.ts` checks
 record uniqueness, use and child order. The viewer-owned hierarchy builds one

@@ -184,7 +184,7 @@ test("a non-portable root name fails before emitting its generated stylesheet", 
     (error: Error) => {
       assert.equal(
         error.message,
-        "[mokly/build-invalid] generated stylesheet route is not portable: mokly-generated/styles/entries/AUX.mockup.tsx.css; rename the root module so every path segment is URL-safe",
+        "[mokly/build-invalid] cannot deliver imported CSS for entries/AUX.mockup.tsx: the module path is not URL-safe; rename its file or directories (an entry path override does not change stylesheet routes)",
       );
       return true;
     },

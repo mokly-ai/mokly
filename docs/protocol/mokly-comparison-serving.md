@@ -11,6 +11,10 @@ beyond the path-derived snapshot names they reference.
 
 ## Generation And Serving
 
+The comparison engine's ownership and ignored-region rules remain in force.
+Review configuration selects the Git base, snapshot directory, and shared-impact
+files. `serve --base` and `export --base` override that configured base.
+
 The [consumer static export](./mokly-export.md) reuses the comparison engine
 and result schema of the [Changes contract](./mokly-changes-serving.md#comparison-engine).
 Its [static delivery contract](./mokly-export-delivery.md)

@@ -40,11 +40,8 @@ strictly validated `preview.json` without creating page records in `review.json`
 Current and baseline manifests both require v8; recognized earlier output is
 handled before comparison under the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
-The approved [path identity plan](../../plans/path-identity.md) moves pairing
-from kind and id to kind and path, adds move detection with `previousPath`,
-and raises the result to v5 under the
-[move contract](../../docs/protocol/mokly-moves.md); this README describes
-the current id-keyed comparison.
+Review result v5 pairs by kind and case-folded path. Move detection and
+`previousPath` remain planned under the [move contract](../../docs/protocol/mokly-moves.md).
 
 Server classification and export use the same interfaces. Export pins only
 repository evidence and retains the same baseline reader, including its optional

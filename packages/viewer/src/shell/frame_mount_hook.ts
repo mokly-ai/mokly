@@ -280,7 +280,7 @@ function sameFrameIdentity(
 ): boolean {
   return (
     current.colorScheme === next.colorScheme &&
-    current.entryId === next.entryId &&
+    current.entryPath === next.entryPath &&
     current.stepIndex === next.stepIndex &&
     current.variantPath === next.variantPath &&
     current.viewport === next.viewport

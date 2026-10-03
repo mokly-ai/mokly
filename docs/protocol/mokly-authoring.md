@@ -3,7 +3,7 @@
 ## Delivery Status
 
 The path-based TypeScript authoring API is implemented. Markdown authoring
-remains planned in the [path identity plan](../../plans/path-identity.md).
+and move pairing remain planned in the [path identity plan](../../plans/path-identity.md).
 
 This contract expands the [package API](./mokly-package.md). Configuration
 follows the [configuration contract](./mokly-configuration.md); consumer
@@ -97,10 +97,14 @@ values use the lowercase kebab-case grammar `^[a-z0-9]+(?:-[a-z0-9]+)*$`. A
 list must not repeat a tag, and authored order is preserved rather than
 sorted. Tags are optional catalogue vocabulary, not a second hierarchy.
 
-The TypeScript input types are the authoring contract. A key they do not
-declare, such as a former `id`, `navPath`, `route`, or `variantOf`, is a type
-error in TypeScript and a registry `invalid-field` violation at runtime with
-the exact text `unknown field <field>`, attributed to the entry's source.
+The TypeScript input types define the allowed fields. Unknown keys always
+produce a registry `invalid-field` violation with the exact text
+`unknown field <field>`, attributed to the entry's source. Generic
+`defineScreen` inference can accept extra top-level keys so wrappers retain
+precise return types; use an explicit `ScreenInput` annotation or
+`satisfies ScreenInput` to check those keys statically. Fresh variant literals in direct calls
+retain excess-key checks. Runtime validation applies to every input, including
+structurally typed variables and untyped callers.
 Unknown flow-step fields use the same code and the text
 `step #<n>: unknown field <field>`, with one-based step numbers.
 Folder inputs use `invalid-folder` with the same `unknown field <field>` reason
@@ -115,8 +119,8 @@ comparison, and preview file under the
 `/view/<path>/`. Wire formats carry paths and view axes rather than file
 names. Path segments satisfy the
 [segment grammar](./mokly-paths.md#segment-grammar), so Mokly writes them into
-URLs verbatim. A configured static-asset segment starts with an ASCII letter
-or digit, then uses only URL-unreserved ASCII letters, digits, `.`, `_`, `~`,
+URLs verbatim. A configured static-asset segment starts with an ASCII letter,
+digit, underscore, or hyphen, then uses only URL-unreserved ASCII letters, digits, `.`, `_`, `~`,
 or `-`; its filename stem must not be a Windows device name.
 
 ## Module Attribution And Discovery

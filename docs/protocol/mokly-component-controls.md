@@ -5,8 +5,8 @@
 Local Serve edits props through the registered renderer; published controls are
 read-only. [Controls mockups](./mokly-component-controls-design.md) share the
 icon inspector and lifecycle. Forwarded loopback ports follow the rule below.
-The render request names entries by path under the
-[path identity plan](../../plans/path-identity.md); today it carries ids.
+The render request names entries by path and keeps a separate page id for
+coalescing requests from one open page.
 
 ## Scope And User Behavior
 
@@ -77,7 +77,7 @@ Users can browse, inspect, and compare the saved variants normally.
 
 Serve exposes private POST `/__mokly/components/render`. Its request carries
 the parent component's path, the variant entry's path, view axes, catalogue
-generation, entry path, and declared control overrides. It accepts no module
+generation, page id, and declared control overrides. It accepts no module
 path, source, callback, resource path, or renderer selection.
 
 The response's `view` uses [manifest usage records](./mokly-component-manifest.md).

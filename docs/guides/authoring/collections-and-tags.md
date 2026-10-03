@@ -25,11 +25,12 @@ By default a folder is titled after its last segment, with hyphens and
 underscores shown as spaces and the first letter capitalised, so
 `account-billing` reads as Account billing. Its children render folders first,
 then entries, each group by title. A folder record changes both. Put a
-`_folder.json` file in the directory:
+`_folder.json` file in `specs/account/invoices/`, beside an
+`invoice.mockup.tsx` entry:
 
 ```json
 {
-  "title": "Billing & Payments",
+  "title": "Invoices & Payments",
   "order": ["invoice", "..."],
   "exclude": ["drafts/**"]
 }
@@ -49,9 +50,9 @@ folder that has no directory because its entries declare their paths:
 ```ts
 import { defineFolder } from "@mokly/mokly";
 
-export const billing = defineFolder({
-  path: "account/billing",
-  title: "Billing & Payments",
+export const invoices = defineFolder({
+  path: "account/invoices",
+  title: "Invoices & Payments",
   order: ["invoice", "..."],
 });
 ```
@@ -66,10 +67,14 @@ catalogue and may only carry `order` and `exclude`.
 
 A folder can have a page of its own: an entry module named
 `index.mockup.tsx`, or an entry that declares `slug: "index"`. That entry takes
-the folder's path and appears as its first child row, using its authored title.
+the folder's path. A page or flow appears as its first child row with its title;
+a screen or component uses its own entry row.
 For example, `specs/account/index.mockup.tsx` opens at `/view/account/`.
-When a folder record sets no title, the index entry's title becomes the folder
-title. Variants keep their existing row and disclosure control.
+A screen or component index always supplies its folder's title, including
+breadcrumbs for descendants. A folder record cannot set `title` there; set the
+entry's title instead. `order` and `hidden` remain valid. Other index entries
+supply the folder title only when the record omits it. Screens and components
+keep their entry row and variant disclosure control.
 
 ## Classify with tags
 

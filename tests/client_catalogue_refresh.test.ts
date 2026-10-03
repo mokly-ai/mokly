@@ -70,7 +70,7 @@ function descriptor(
 }
 
 function request(value: ViewerCapabilityDescriptor): ViewerCapabilityRequest {
-  return { entryId: null, source: value.source };
+  return { entryPath: null, source: value.source };
 }
 
 class FakeSource {

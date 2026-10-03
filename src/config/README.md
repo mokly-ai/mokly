@@ -2,7 +2,8 @@
 
 This internal boundary resolves `MoklyConfig` from a config file. Filesystem paths
 are config-relative; source paths retained in manifests are repository-relative.
-Unknown configuration fields fail with `config-invalid`.
+Unknown configuration fields fail with `config-invalid`. Root path prefixes
+cannot start with `mokly-generated`, compared case-insensitively.
 
 `roots.ts` validates source directories, safe file globs, path prefixes and
 transparent directory names. Omission selects `[{ dir: "specs" }]` with

@@ -106,9 +106,45 @@ for (const kind of ["screen", "component"] as const) {
   });
 
   test(`${kind} variant paths are the parent path followed by their slug`, () => {
-    const [parent, child] = variantDefinitions(kind);
-    assert.ok(parent && child);
-    assert.deepEqual(allViolations([parent, child]), []);
+    const common = {
+      path: "account/invoice",
+      title: "Invoice",
+      description: "Invoice",
+      dependencies: [],
+      relatedDocs: [],
+    };
+    const authored =
+      kind === "screen"
+        ? defineScreen({
+            ...common,
+            mobile: "Invoice",
+            desktop: "Invoice",
+            variants: [variant("index")],
+          })
+        : defineComponent({
+            ...common,
+            propSchema: { kind: "object", properties: {} },
+            render: () => null,
+            variants: [{ slug: "index", title: "Index", props: {} }],
+          }).entries;
+    const entries = prepareRegistry(
+      collectModuleExports(
+        { default: __attributeDefinition(authored, sourceRelativePath) },
+        sourceRelativePath,
+      ),
+      config,
+    ).entries;
+    assert.deepEqual(
+      entries.map((entry) => entry.path),
+      ["account/invoice", "account/invoice/index"],
+    );
+    const child = entries[1]!;
+    assert.equal(
+      "variantOf" in child ? child.variantOf : undefined,
+      "account/invoice",
+    );
+    assert.equal(child.index, false);
+    assert.deepEqual(allViolations(entries), []);
   });
 }
 

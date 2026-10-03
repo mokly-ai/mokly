@@ -33,7 +33,8 @@ export const action = defineComponent({
 
 Render it in a screen with `action.Component`, and give repeated siblings
 distinct `moklyInstance` values so their identity survives an edit; the
-default value is the component's slug.
+default value is the last segment of the component's path. The
+`button/index.mockup.tsx` example therefore defaults to `button`.
 
 ## Keep the registration beside the component
 

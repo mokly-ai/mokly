@@ -18,7 +18,7 @@ export function matchesFrameInstance(
 ): boolean {
   const identity = session.identity;
   return (
-    identity.entryId === instance.screenPath &&
+    identity.entryPath === instance.screenPath &&
     identity.stepIndex === instance.stepIndex &&
     identity.viewport === instance.viewport &&
     identity.colorScheme === instance.colorScheme
@@ -87,7 +87,7 @@ export function frameInstanceRef(
   )
     return;
   return {
-    screenPath: identity.entryId,
+    screenPath: identity.entryPath,
     viewport: identity.viewport,
     colorScheme: identity.colorScheme,
     key,
@@ -105,7 +105,7 @@ function matchesWorkspaceFrame(
 ): boolean {
   const identity = session.identity;
   return (
-    identity.entryId === (view.variantPath ?? data.entry.path) &&
+    identity.entryPath === (view.variantPath ?? data.entry.path) &&
     identity.stepIndex === undefined &&
     identity.variantPath === view.variantPath &&
     identity.viewport === view.viewport &&

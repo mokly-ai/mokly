@@ -18,7 +18,7 @@ import {
 test("route evidence loading fences revision, location, and cancellation", async () => {
   const environment = new FakeEnvironment();
   const entry = catalogue.screens[0]!;
-  const request = { ...currentRequest(), entryId: entry.path };
+  const request = { ...currentRequest(), entryPath: entry.path };
   environment.location.href = `http://localhost${viewHref(entry.path)}`;
   environment.descriptor = {
     ...descriptor,
@@ -126,7 +126,7 @@ test("route evidence atomically carries a newer public and private revision", as
     descriptor,
     environment,
   ).evidence.loadRouteEvidence(
-    { ...currentRequest(), entryId: entry.path },
+    { ...currentRequest(), entryPath: entry.path },
     new AbortController().signal,
   );
 
@@ -149,7 +149,7 @@ test("route evidence atomically carries a newer public and private revision", as
       descriptor,
       environment,
     ).evidence.loadRouteEvidence(
-      { ...currentRequest(), entryId: entry.path },
+      { ...currentRequest(), entryPath: entry.path },
       new AbortController().signal,
     ),
     undefined,
@@ -172,7 +172,7 @@ test("use-case and page route evidence require no private workspace", async () =
       descriptor,
       environment,
     ).evidence.loadRouteEvidence(
-      { ...currentRequest(), entryId: entry.path },
+      { ...currentRequest(), entryPath: entry.path },
       new AbortController().signal,
     );
     assert.ok(revision, entry.path);
@@ -196,7 +196,7 @@ test("workspace capabilities reject stale requests and bind initial evidence", (
   });
   assert.throws(() =>
     capabilities.onDemand!.loadWorkspace(
-      { ...currentRequest(), entryId: "elsewhere" },
+      { ...currentRequest(), entryPath: "elsewhere" },
       {
         entry: { path: "components/action" },
         previewGeneration: descriptor.source.previewGeneration,
@@ -208,7 +208,7 @@ test("workspace capabilities reject stale requests and bind initial evidence", (
   assert.equal(loads, 0);
   assert.equal(
     capabilities.evidence.initialWorkspace(currentRequest())?.entry.path,
-    currentRequest().entryId,
+    currentRequest().entryPath,
   );
   assert.throws(() =>
     capabilities.evidence.initialWorkspace({
@@ -219,7 +219,7 @@ test("workspace capabilities reject stale requests and bind initial evidence", (
   assert.throws(() =>
     capabilities.evidence.initialWorkspace({
       ...currentRequest(),
-      entryId: "elsewhere",
+      entryPath: "elsewhere",
     }),
   );
 });

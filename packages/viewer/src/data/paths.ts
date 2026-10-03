@@ -4,7 +4,7 @@ import {
   isSafeRepositoryPath,
 } from "../navigation/logical.js";
 
-const PORTABLE_URL_SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._~-]*$/;
+const PORTABLE_URL_SEGMENT = /^[A-Za-z0-9_-][A-Za-z0-9._~-]*$/;
 
 /** Return whether a catalogue route is portable as both a path and a URL. */
 export function isSafeCatalogueRoute(value: string): boolean {

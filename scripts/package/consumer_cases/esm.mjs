@@ -74,7 +74,43 @@ export async function smokeEsmConsumer(context) {
   assert.ok(
     packedManifest.sourceFiles.includes("src/components/card/card.tsx"),
   );
-  await smokeServer(root);
+  for (const [entryPath, sourcePath] of [
+    ["account/invoice", "entries/account/invoice.mockup.tsx"],
+    ["guides/getting-started", "entries/guides/getting-started.mockup.ts"],
+  ]) {
+    assert.equal(
+      packedManifest.entries.find((entry) => entry.path === entryPath)
+        ?.sourcePath,
+      sourcePath,
+    );
+  }
+  assert.deepEqual(packedManifest.folders, [
+    {
+      path: "account",
+      title: "Billing & invoices",
+      order: ["invoice"],
+      sourcePath: "entries/account/_folder.json",
+    },
+    {
+      path: "guides",
+      title: "Guides & notes",
+      order: ["getting-started"],
+      sourcePath: "entries/guides/getting-started.mockup.ts",
+    },
+  ]);
+  assert.ok(
+    packedManifest.sourceFiles.includes("entries/account/_folder.json"),
+  );
+  await smokeServer(root, [], async (url) => {
+    const shell = await fetch(`${url}/view/account/invoice/`);
+    assert.equal(shell.status, 200);
+    assert.match(await shell.text(), /Billing &amp; invoices/);
+    const document = await fetch(
+      `${url}/static/account/invoice/index.mobile.html`,
+    );
+    assert.equal(document.status, 200);
+    assert.match(await document.text(), /data-packed-derived="mobile"/);
+  });
   await runCommand("npx", ["--no-install", "mokly", "--help"], {
     cwd: root,
   });

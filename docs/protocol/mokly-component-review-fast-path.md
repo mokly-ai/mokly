@@ -2,9 +2,7 @@
 
 ## Delivery Status
 
-The fast path is implemented over the strict manifest-v7 baseline boundary;
-the [path identity plan](../../plans/path-identity.md) moves that boundary to
-v8 without changing the decision below.
+The fast path is implemented over the strict path-keyed manifest-v8 baseline boundary.
 
 This contract owns the unchanged-view decision used by component-aware Changes
 classification. Input ownership and materiality remain defined by

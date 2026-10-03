@@ -86,7 +86,7 @@ export async function generateLargeFixture(
     ...(sharedStylesheets.length && linkedScreens
       ? [
           {
-            match: `area-*/screen-@(${Array.from({ length: linkedScreens }, (_, index) => index + 1).join("|")})/index*.html`,
+            match: `area-*/screens/activity-group-*/screen-@(${Array.from({ length: linkedScreens }, (_, index) => index + 1).join("|")})/index*.html`,
             stylesheets: ["assets/catalogue.css", ...sharedStylesheets],
           },
         ]

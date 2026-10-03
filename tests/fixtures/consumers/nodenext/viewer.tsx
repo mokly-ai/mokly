@@ -3,6 +3,7 @@ import { createRef } from "react";
 import { MoklyViewer, sameOriginAdapter } from "@mokly/viewer";
 import type {
   CatalogueReadModel,
+  InstanceEvent,
   MarkerState,
   MoklyViewerHandle,
   ViewerMarker,
@@ -12,6 +13,12 @@ import { resolveInstance } from "@mokly/viewer/data";
 import { renderViewer } from "@mokly/viewer/server";
 
 export const dataEntry: typeof resolveInstance = resolveInstance;
+
+export function instanceFramePath(event: InstanceEvent): string {
+  // @ts-expect-error Instance events expose only entryPath.
+  void event.frame.entryId;
+  return event.frame.entryPath;
+}
 
 export async function highlightComments(
   handle: MoklyViewerHandle,

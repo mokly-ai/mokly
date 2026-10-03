@@ -114,7 +114,8 @@ test(
           "utf8",
         );
         const linked =
-          entry.kind === "screen" && entry.path !== "area-1/screen-3";
+          entry.kind === "screen" &&
+          entry.path !== "area-1/screens/activity-group-1/screen-3";
         for (const id of [1, 2])
           assert.equal(html.includes(`assets/shared-${id}.css`), linked);
         assert.ok(!html.includes("scale-unrelated-rule"));
@@ -135,7 +136,7 @@ test(
       for (const view of screen.views)
         assert.deepEqual(
           view.excludedResources,
-          screen.path === "area-1/screen-3"
+          screen.path === "area-1/screens/activity-group-1/screen-3"
             ? undefined
             : [{ path: changedPath, reason: "no-matching-rule" }],
         );

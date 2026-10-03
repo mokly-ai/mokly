@@ -91,7 +91,9 @@ CSS Modules mutation checklist:
   directories after successful writes, without touching ordinary public files.
   Derived Check rejects every indexed file there and suggests only the directory
   `.gitignore` rule, not redundant per-file rules. Only portable stylesheet and supported asset routes may be
-  written beneath it. The exact diagnostics and precedence are in the
+  written beneath it. Leading underscores and hyphens are valid route segments.
+  Imported CSS still requires a portable module file path even when an entry
+  overrides its identity with `path`; the diagnostic names that module. The exact diagnostics and precedence are in the
   [imported-styles error contract](../../docs/protocol/mokly-imported-styles-errors.md).
   Committed Build and Check ask Git whether each generated route is committable
   when `repoRoot` is the Git work-tree top level. Nested/non-Git fixtures skip

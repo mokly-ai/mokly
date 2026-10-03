@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { cliErrorPresentation } from "../dist/cli/errors.js";
+import { MoklyError } from "../dist/errors.js";
+
 import { pathFixture, pageSource } from "./helpers/path_fixture.js";
 
 for (const slug of ["", "has space", "a.b", "a/b", "aux", "CON", 42, null]) {
@@ -81,4 +84,43 @@ test("two slug-less definitions collide independently of export naming", async (
     fixture.compile(),
     /\[duplicate-path\] path item is defined twice:\n {2}specs\/item.mockup.ts export a\n {2}specs\/item.mockup.ts export z/,
   );
+});
+
+test("genuine consumer evaluation failures remain bundle errors", async (t) => {
+  const fixture = await pathFixture({
+    "specs/broken.mockup.ts":
+      'throw new Error("consumer exploded"); export {};',
+  });
+  t.after(fixture.remove);
+  await assert.rejects(fixture.compile(), (error: unknown) => {
+    assert.ok(error instanceof MoklyError);
+    assert.equal(error.code, "build-invalid");
+    assert.equal(
+      error.message,
+      "[mokly/build-invalid] could not bundle consumer modules: consumer exploded",
+    );
+    return true;
+  });
+});
+
+test("consumer export errors keep their attributed CLI presentation", async (t) => {
+  const fixture = await pathFixture({
+    "specs/empty.mockup.ts": "export const helpers = [];",
+  });
+  t.after(fixture.remove);
+  await assert.rejects(fixture.compile(), (error: unknown) => {
+    assert.ok(error instanceof MoklyError);
+    assert.equal(
+      error.message,
+      "[mokly/build-invalid] [empty-module] specs/empty.mockup.ts exports no Mokly definition",
+    );
+    assert.equal(cliErrorPresentation(error).code, "build-invalid");
+    assert.equal(
+      cliErrorPresentation(error).detail,
+      "[empty-module] specs/empty.mockup.ts exports no Mokly definition",
+    );
+    assert.equal(error.message.match(/\[mokly\/build-invalid\]/g)?.length, 1);
+    assert.doesNotMatch(error.message, /could not bundle consumer modules/);
+    return true;
+  });
 });

@@ -47,23 +47,9 @@ export function __attributeDefinition(
   return value;
 }
 
-type VariantExtraKeys<T> = T extends { variants: readonly (infer V)[] }
-  ? V extends ScreenVariantInput
-    ? Exclude<keyof V, keyof ScreenVariantInput>
-    : never
-  : never;
-type ExactScreenVariants<T> = [VariantExtraKeys<T>] extends [never]
-  ? unknown
-  : {
-      variants: readonly (ScreenVariantInput &
-        Record<VariantExtraKeys<T>, never>)[];
-    };
-
 /** Define one screen and flatten its authored variants after it. */
-export function defineScreen<const T extends ScreenInput>(
-  input: T &
-    Record<Exclude<keyof T, keyof ScreenInput>, never> &
-    ExactScreenVariants<NoInfer<T>>,
+export function defineScreen<T extends ScreenInput>(
+  input: T & ScreenInput,
 ): DefineScreenResult<T>;
 export function defineScreen(
   input: ScreenInput,

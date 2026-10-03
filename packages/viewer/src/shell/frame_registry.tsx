@@ -17,7 +17,7 @@ import { ShellInspectionController } from "./frame_inspection_controller.js";
 /** Complete identity of one frame rendered by the current shell route. */
 export interface ShellFrameIdentity {
   colorScheme?: "dark" | "light";
-  entryId: string;
+  entryPath: string;
   stepIndex?: number;
   variantPath?: string;
   viewport?: "desktop" | "mobile";

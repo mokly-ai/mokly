@@ -42,11 +42,22 @@ function currentManifest() {
   };
 }
 
-test("manifest v7 carries identity and configuration but no derived paths", () => {
+test("manifest v8 carries paths and configuration but no derived artifact names", () => {
   const parsed = parseManifest(currentManifest());
   assert.deepEqual(parsed, currentManifest());
+  assert.throws(
+    () => parseManifest({ ...currentManifest(), schemaVersion: 7 }),
+    {
+      code: "manifest-invalid",
+      message:
+        "[mokly/manifest-invalid] expected Mokly manifest schema version 8; run mokly build",
+    },
+  );
 
   for (const [field, value] of [
+    ["id", "home"],
+    ["navPath", ["Home"]],
+    ["useCaseIds", []],
     ["route", entryRoute("home")],
     ["fragments", { mobile: "home.mobile.html", desktop: "home.html" }],
     ["darkFragments", { mobile: "dark-mobile.html", desktop: "dark.html" }],
@@ -64,9 +75,9 @@ test("manifest v7 carries identity and configuration but no derived paths", () =
   }
 });
 
-test("historical parsing accepts only v7 and derives its view paths", () => {
+test("historical parsing accepts only v8 and derives its view paths", () => {
   assert.throws(
-    () => parseHistoricalManifest({ schemaVersion: 6 }),
+    () => parseHistoricalManifest({ schemaVersion: 7 }),
     (error: unknown) =>
       (error as { code?: string }).code === "baseline-incompatible-earlier",
   );
@@ -97,7 +108,7 @@ test("review v5 is the only accepted comparison result", () => {
   };
   assert.deepEqual(parseReviewResult(result), result);
   assert.throws(
-    () => parseReviewResult({ ...result, schemaVersion: 3 }),
+    () => parseReviewResult({ ...result, schemaVersion: 4 }),
     /unsupported schemaVersion/,
   );
 });
@@ -110,4 +121,8 @@ test("removed page preview schema 3 carries only page identity", () => {
     path: "guide",
   };
   assert.deepEqual(parseRemovedPagePreview(preview), preview);
+  assert.throws(
+    () => parseRemovedPagePreview({ ...preview, schemaVersion: 2 }),
+    /^Error: \[mokly\/review\] unsupported preview version$/,
+  );
 });

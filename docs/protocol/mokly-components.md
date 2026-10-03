@@ -34,7 +34,7 @@ JSX throughout its screens.
 Register an adapter and its saved examples with the public API:
 
 ```tsx
-// src/components/action/action.mockup.tsx
+// src/components/action/index.mockup.tsx
 const action = defineComponent({
   title: "Action",
   description: "The primary action for a task.",

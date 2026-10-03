@@ -113,10 +113,8 @@ const unsafeBroadDefinition: ScreenDefinition = defineScreen(broadScreenInput);
 // @ts-expect-error An optional variants input can return one definition.
 const unsafeBroadArray: readonly ScreenDefinition[] =
   defineScreen(broadScreenInput);
-function defineThroughGeneric<const T extends ScreenInput>(
-  input: Parameters<typeof defineScreen<T>>[0],
-) {
-  return defineScreen<T>(input);
+function defineThroughGeneric<const T extends ScreenInput>(input: T) {
+  return defineScreen(input);
 }
 const genericSingle: ScreenDefinition = defineThroughGeneric(screenInputBase);
 const genericUndefined: ScreenDefinition = defineThroughGeneric({

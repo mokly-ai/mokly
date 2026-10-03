@@ -24,7 +24,11 @@ export function isPathSegment(value: unknown): value is string {
 
 /** Check a complete catalogue path without leading or trailing separators. */
 export function isEntryPath(value: unknown): value is string {
-  return typeof value === "string" && value.split("/").every(isPathSegment);
+  return (
+    typeof value === "string" &&
+    value.split("/")[0]?.toLowerCase() !== "mokly-generated" &&
+    value.split("/").every(isPathSegment)
+  );
 }
 
 /** Find conflicting spellings of a path or any of its folder prefixes. */

@@ -3,11 +3,11 @@
 ## Delivery Status
 
 Build, Check, Serve, export, and the viewer use file-derived paths.
-Markdown discovery and move pairing remain planned in the
+Markdown rendering and move pairing remain planned in the
 [path identity plan](../../plans/path-identity.md).
 
 This is the single contract for an entry's path: how it derives from the
-file that defines the entry, which strings are valid segments, how `index`
+discovered file that exports the entry, which strings are valid segments, how `index`
 collapses onto a directory, how a path becomes a URL, and which collisions
 fail the build. [Folders](./mokly-folders.md) owns titles and order,
 [entry modules](./mokly-entry-modules.md) owns export collection and slugs,
@@ -83,7 +83,10 @@ slug still follows the segment grammar, and variants still require a slug.
 A declared path is always complete. Index-ness comes from the `index` slug or an
 index document's `README.md`/`index.md` name; the declared path says where that
 folder's own page lives. Its relative-link base is that complete path. These rules
-also apply to a document's front-matter path.
+also apply to a document's front-matter path. Imported CSS delivery still derives
+stylesheet routes from the exporting module's repository path. A declared entry
+path cannot make a nonportable module path URL-safe; importing CSS in such a
+module fails with the [dedicated diagnostic](./mokly-imported-styles-errors.md).
 
 No other input changes a path. Mokly never compares a file name with its
 directory name, never counts the entries in a file, never changes the
@@ -99,7 +102,11 @@ character, and its lowercase form is not a Windows device name (`aux`, `con`,
 joined with `/`, with no empty, leading, or trailing segment. Two paths whose
 lowercase forms are equal name the same path for every collision rule, because
 generated files share case-insensitive hosts and filesystems. Links, URLs, and
-stored paths use the authored case.
+stored paths use the authored case. The first segment must not equal
+`mokly-generated`, compared case-insensitively: that output folder belongs to
+Mokly's CSS and assets. This applies to derived paths, declared paths and root
+`path` prefixes; later segments may use that name. Entries fail with the
+attributed `invalid-path` diagnostic below; root prefixes use `config-invalid`.
 
 A file or directory name used in derivation, an explicitly supplied slug, a
 declared path, root prefix, or transparent name outside this grammar fails the

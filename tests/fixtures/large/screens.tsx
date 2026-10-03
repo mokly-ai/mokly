@@ -45,7 +45,7 @@ function Screen({
   return (
     <main className={`scale-screen ${compact ? "compact" : "wide"}`}>
       <header>
-        <img src="../../assets/mark.svg" width="28" height="28" alt="" />
+        <img src="../../../../assets/mark.svg" width="28" height="28" alt="" />
         <span>{area.replaceAll("-", " ")}</span>
         <MockLink to={`${area}/guide`}>Help</MockLink>
       </header>
@@ -66,7 +66,7 @@ function Screen({
         <MockLink to={next} fragment="summary">
           Next activity
         </MockLink>
-        <MockLink to={`${area}/action`}>Available actions</MockLink>
+        <MockLink to={`${area}/components/action`}>Available actions</MockLink>
       </footer>
       <section id="summary">
         <h2>Summary</h2>

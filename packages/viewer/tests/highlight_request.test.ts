@@ -49,7 +49,7 @@ function session(
     element: {} as HTMLIFrameElement,
     generation,
     identity: {
-      entryId: "home",
+      entryPath: "home",
       viewport,
       colorScheme: "light",
     },
@@ -116,7 +116,7 @@ test("component variant frames match the documented instance reference shape", (
   const variant = session("desktop", 1);
   variant.identity = {
     ...variant.identity,
-    entryId: "action/disabled",
+    entryPath: "action/disabled",
     variantPath: "action/disabled",
   };
   const instance: InstanceRef = {

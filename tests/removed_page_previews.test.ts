@@ -195,6 +195,7 @@ test("preview reader strictly validates metadata and document identity", () => {
   };
   assert.deepEqual(parseRemovedPagePreview(valid), valid);
   for (const value of [
+    { ...valid, schemaVersion: 2 },
     { ...valid, schemaVersion: 1 },
     { ...valid, baseCommit: "invalid" },
     { ...valid, path: "../guide" },
