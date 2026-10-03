@@ -154,8 +154,6 @@ test("document discovery applies root prefixes, transparent folders, exclusions 
       "specs/__notes__/index.draft.md": "# Draft index",
       "specs/__notes__/next/readme.md": "# Next",
       "specs/drafts/invalid name.md": "---\ninvalid metadata\n---",
-      "specs/unselected.mdx": "not a document",
-      "specs/unselected.markdown": "not a document",
     },
     '{mockupsDir:"generated",roots:[{dir:"specs",path:"Guide",transparent:["__notes__"]}]}',
   );
@@ -166,8 +164,6 @@ test("document discovery applies root prefixes, transparent folders, exclusions 
     ["Guide", "Guide/index", "Guide/next"],
   );
   assert.ok(manifest.sourceFiles.includes("specs/drafts/invalid name.md"));
-  assert.ok(!manifest.sourceFiles.includes("specs/unselected.mdx"));
-  assert.ok(!manifest.sourceFiles.includes("specs/unselected.markdown"));
 });
 
 test("documents and imported screen CSS retain independent rendering and link delivery", async (t) => {

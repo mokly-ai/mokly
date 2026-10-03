@@ -24,11 +24,14 @@ both is a [duplicate index](./mokly-paths.md#diagnostics). A file name outside
 the [segment grammar](./mokly-paths.md#segment-grammar) fails the build; Mokly
 does not rename it. Documents have no variants and no `defineX` helper; the
 file is the definition.
+Index duplicates use the exact directory spelling; differently cased directories
+reach the shared `case-collision` rule instead.
 
 ## Front Matter
 
 A document may start with a front matter block: a first line of exactly
 `---`, one `key: value` line per field, and a closing line of exactly `---`.
+Strip one leading U+FEFF (UTF-8 BOM) before testing that first line.
 A value is a JSON string literal, a JSON array of string literals where a list
 is allowed, or bare text that is trimmed. Keys and their meanings are:
 
@@ -53,7 +56,7 @@ metadata rules. Description may be empty. The block is removed before rendering.
 
 ## Title And Description
 
-The title is the front matter `title`, else the text of the first heading of
+The title is the front matter `title`, else the text of the first nonempty heading of
 any level, else the file-name slug with hyphens and underscores replaced by
 spaces and the first character uppercased. The description is the front
 matter `description` or empty. The heading stays in the rendered body; the
@@ -66,7 +69,8 @@ items, and autolink literals. Raw HTML, inline or block, is rendered as literal
 text. Each heading receives an `id` built GitHub-style from its text:
 lowercase, spaces to hyphens, punctuation removed, and `-2`, `-3` suffixes for
 repeats. Unicode letters, numbers and underscores remain. Suffix selection
-skips ids already used by any earlier heading. Logical links accept these ids;
+skips ids already used by any earlier heading. A heading with no id characters
+retains its content and omits the id; empty headings never supply a title. Logical links accept these ids;
 file-link fragments are percent-decoded once before logical validation.
 An empty file-link fragment opens the document without an anchor. Fenced code keeps its language as a class and is not highlighted.
 The output is one complete HTML document per effective colour scheme with a
@@ -77,6 +81,11 @@ enables dark, `static/<path>/index.dark.html` applies the dark palette. The
 shell opens the document for the current appearance exactly as it selects a
 screen's scheme, and documents have no viewport axis. Documents pass the same
 ownership header, final HTML validation, and transactional write as pages.
+Final documents also pass the independent parse5 element, attribute and URL
+allowlist in [Document Rendering Safety](./mokly-document-safety.md), after any
+compatibility transformer. It rejects active markup, event/style attributes and
+unsupported URL schemes. The template remains script-free; a blanket script-blocking
+CSP meta is omitted because it also blocks Mokly's frame instrumentation.
 
 ## Links And Resources
 
@@ -106,6 +115,10 @@ links retain repository spelling when catalogue placement differs:
   must stay in the root. In-root symlink aliases are rejected too; a configured
   root alias is allowed. Resources may not escape the output or enter
   `mokly-generated/`. Their original bytes are retained, without decoding.
+  Output names use export's shared public-name policy: no dot-prefixed segment or
+  `node_modules`, `target`, `dist`, `coverage`, `test-results`, `playwright-report`
+  segment. Failure is `<location>: resource <destination> contains a hidden path segment`
+  or `<location>: resource <destination> is inside a private build or dependency directory (<name>)`.
   Inputs join `sourceFiles` for source protection, freshness and watch. They
   enter the graph before imported CSS validation, so a nested source root can
   share an explicitly referenced asset with CSS. Unrelated public files keep
@@ -114,6 +127,11 @@ links retain repository spelling when catalogue placement differs:
   validated previous manifest for this configuration, or a document still
   resolved or inventoried by the current config. Thus a config rename retains
   its documents' resource ownership. No unowned file may be replaced. The same transaction installs copies and removes owned orphans.
+- Classify existing targets under `mockupsDir`, including physical aliases,
+  before collecting inputs. A target proven to be Mokly-owned output or internal
+  metadata fails with `<location>: link target <destination> targets Mokly-owned output or metadata`.
+  A file eligible for the shared public-resource policy stays public and renders
+  only the link text or image alt text. It never joins `sourceFiles` or gets copied.
 - A relative destination that names any other existing repository file, such
   as a source file, renders as plain text showing the link text; Mokly never
   serves sources. These referenced files join the private source inventory,
@@ -121,12 +139,17 @@ links retain repository spelling when catalogue placement differs:
   document without importing or executing those files.
 - A relative destination that names no file fails with
   `<location>: link target <destination> does not exist`.
+  Unreadable components, overlong names and dangling symlinks use that same text;
+  filesystem errors never expose absolute paths.
 - An absolute `http:`, `https:`, or `mailto:` destination is kept unchanged.
   A fragment-only destination is validated against the document's own heading
   ids. A link's query is retained for resources; discovered-document links
   reject queries because logical catalogue links have no query field.
 
-Resource paths are decoded once before filesystem resolution and encoded per
+Decode CommonMark character references once in explicit link/image destinations and
+titles before resolution or HTML escaping. Autolink URI text, bare ampersands and code spans remain literal.
+The `mock:` prefix is case-sensitive; `MOCK:` is not a portable relative path.
+Resource paths are percent-decoded once before filesystem resolution and encoded per
 segment in HTML. Root-absolute paths, protocol-relative paths, backslashes,
 control characters, malformed encoding and unsupported URL schemes fail with
 `<location>: link target <destination> is not a portable relative path`.

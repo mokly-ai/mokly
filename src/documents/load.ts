@@ -39,13 +39,13 @@ export function loadDocuments(
     const file = toPosixPath(path.relative(root.dir, sourcePath));
     if (isIndexDocument(file)) {
       const directory = toPosixPath(path.dirname(location));
-      const previous = indexes.get(directory.toLowerCase());
+      const previous = indexes.get(directory);
       if (previous)
         throw new MoklyError(
           "build-invalid",
           `[duplicate-index] directory ${directory} has two index documents: ${previous} and ${path.basename(file)}`,
         );
-      indexes.set(directory.toLowerCase(), path.basename(file));
+      indexes.set(directory, path.basename(file));
     }
     const { metadata, body } = parseFrontMatter(
       fs.readFileSync(sourcePath, "utf8"),

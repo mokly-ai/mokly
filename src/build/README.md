@@ -3,6 +3,9 @@
 Build and Check load consumer definitions, validate their paths and relationships,
 render the selected views, and produce deterministic HTML and manifest v8. Serve,
 export, publication and local component controls share the same graph and validators.
+Final Markdown documents also pass `documents/safety.ts` after logical links and
+compatibility transforms. This independent parse5 allowlist rejects unsafe body
+markup while preserving the owned template and later delivery instrumentation.
 
 `move_targets.ts` accepts current authored hints for initial link diagnostics.
 Later document renders can receive accepted comparison pairs tied to that runtime

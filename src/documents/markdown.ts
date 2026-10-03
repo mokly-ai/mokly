@@ -30,31 +30,44 @@ export function renderMarkdown(
     async: false,
     renderer: {
       html: ({ text }) => escapeHtml(text),
+      text(token) {
+        return "tokens" in token && token.tokens
+          ? this.parser.parseInline(token.tokens)
+          : escapeHtml(decodeText(token.text));
+      },
       heading({ tokens, depth }) {
         const text = headingText(tokens);
-        title ??= text;
-        const base = text
-          .toLowerCase()
-          .replace(/[^\p{L}\p{N}\p{M}_\-\s]/gu, "")
-          .replace(/\s/g, "-");
+        if (text.trim()) title ??= text;
+        const base = text.trim()
+          ? text
+              .toLowerCase()
+              .replace(/[^\p{L}\p{N}\p{M}_\-\s]/gu, "")
+              .replace(/\s/g, "-")
+          : "";
+        const content = this.parser.parseInline(tokens);
+        if (!base) return `<h${depth}>${content}</h${depth}>\n`;
         let id = base;
         let repeat = 2;
         while (used.has(id)) id = `${base}-${repeat++}`;
         used.add(id);
         headings.push(id);
-        return `<h${depth} id="${escapeHtml(id)}">${this.parser.parseInline(tokens)}</h${depth}>\n`;
+        return `<h${depth} id="${escapeHtml(id)}">${content}</h${depth}>\n`;
       },
       link(token) {
-        destinations.push({ value: token.href, image: false });
-        const href = resolve(token.href, false);
-        const text = this.parser.parseInline(token.tokens);
+        const value = token.autolink ? token.href : decodeText(token.href);
+        destinations.push({ value, image: false });
+        const href = resolve(value, false);
+        const text = token.autolink
+          ? escapeHtml(token.text)
+          : this.parser.parseInline(token.tokens);
         return href === null
           ? text
           : `<a href="${escapeHtml(href)}"${titleAttribute(token.title)}>${text}</a>`;
       },
       image(token: Tokens.Image) {
-        destinations.push({ value: token.href, image: true });
-        const href = resolve(token.href, true);
+        const value = decodeText(token.href);
+        destinations.push({ value, image: true });
+        const href = resolve(value, true);
         const alt = headingText(token.tokens);
         return href === null
           ? escapeHtml(alt)
@@ -84,7 +97,7 @@ export function escapeHtml(value: string): string {
 }
 
 function titleAttribute(title: string | null | undefined): string {
-  return title ? ` title="${escapeHtml(title)}"` : "";
+  return title ? ` title="${escapeHtml(decodeText(title))}"` : "";
 }
 
 function headingText(tokens: readonly Token[]): string {
@@ -99,10 +112,11 @@ function headingText(tokens: readonly Token[]): string {
 }
 
 function decodeText(raw: string): string {
-  const fragment = parseFragment(
-    raw.replace(/</g, "&lt;").replace(/>/g, "&gt;"),
+  return raw.replace(
+    /&(?:#[0-9]{1,7}|#[xX][0-9a-fA-F]{1,6}|[A-Za-z][A-Za-z0-9]*);/g,
+    (reference) =>
+      parseFragment(reference)
+        .childNodes.map((node) => ("value" in node ? node.value : ""))
+        .join(""),
   );
-  return fragment.childNodes
-    .map((node) => ("value" in node ? node.value : ""))
-    .join("");
 }

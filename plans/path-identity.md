@@ -1,7 +1,7 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1–5 are complete. This plan supersedes
+discussion in this workspace. Milestones 1–5 and the Milestone 4A review fixes are complete. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -635,6 +635,57 @@ approved exceptions are GHSA-vfj7-8cjw-p6xm in development dependencies and the
         or adding an exemption. Record npm's changed fix suggestions separately.
   - [x] Smoke-test README and ordinary document routes, relative links, heading
         fragments, resource loading, Dark and reload through Serve and static export.
+
+The orchestrator reviews this milestone; the complete implementation review
+remains the final item in Milestone 8.
+
+## Milestone 4A: Markdown documents review fixes
+
+Close the document review findings with parser, output validation, source-boundary,
+and watch regressions. Keep documents safe and consistent across Build, Check,
+Serve and export. Add a failing regression before each fix.
+
+Status: Complete. Package (six consumer scenarios), unit (3,912), browser (745),
+hydration (229), and the remaining repository checks pass. The existing braces
+advisory and the same 28 source-length files retain their approved disposition.
+No dependency change, new violation or exemption was added.
+
+- [x] Escape raw-mode Markdown text for code, pre, kbd and script tags; add a
+      structural element/attribute/URL allowlist and evaluate template CSP (1).
+- [x] Strip one leading UTF-8 BOM before front-matter parsing (2).
+- [x] Reject copied resources that violate the export public-name policy (3).
+- [x] Reject links to Mokly-owned output and metadata before inventory; keep
+      public files public and render their references as plain text (4).
+- [x] Convert destination filesystem errors into the exact attributed missing-target
+      diagnostic, without absolute paths (5).
+- [x] Ignore empty headings for title fallback and never emit an empty heading id (6).
+- [x] Decode character references once in destinations and link/image titles (7).
+- [x] Require the lower-case mock: prefix in Markdown destinations (8).
+- [x] Detect duplicate indexes by exact directory spelling; preserve case-collision
+      diagnostics for directories that differ only by case (9).
+- [x] Restore missing destination, discovery, exact-error and Markdown/resource
+      add/change/remove watch tests (10).
+- [x] Keep copied resources and existing public media distinct; existing public
+      images also stay public and render as alt text without becoming inputs.
+- [x] Preserve bare ampersands and enforce disabled checkbox output in the
+      independent structural allowlist.
+- [x] Preserve literal URI references in CommonMark and GFM autolinks while
+      decoding explicit link/image destinations once; add regressions first.
+- [x] Update the document/source contracts, affected READMEs and guides; keep all
+      changed files within their existing size limits.
+- [x] Smoke-test the raw HTML reproduction through Serve and export.
+- [x] Run every verification suite serially, plus repository checks and changed-file
+      Prettier, under the existing audit and 28-file length dispositions.
+  - [x] Package: both packages pass all six consumer scenarios; example Build/Check
+        validate 452 files and all declaration checks pass.
+  - [x] Unit: 3,912 passed, with zero failures, skips or cancellations.
+  - [x] Repository format, lint, four ratchets, Rust fmt/Clippy, 15 Rust tests
+        and the 9-file Rust length audit pass.
+  - [x] Audit and source length retain only the approved advisory and 28 files.
+  - [x] Browser: 745 passed, with no skips; all three known base-flaky tests
+        passed on their first run.
+  - [x] Hydration: 229 passed, with no failures, skips or cancellations.
+- [x] Inspect deletions and staged changes, then commit and fast-forward push.
 
 The orchestrator reviews this milestone; the complete implementation review
 remains the final item in Milestone 8.

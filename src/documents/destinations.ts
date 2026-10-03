@@ -1,4 +1,3 @@
-import fs from "node:fs";
 import path from "node:path";
 
 import { encodeUrlPath, isSafeRepositoryPath } from "@mokly/viewer/data";
@@ -6,9 +5,17 @@ import { encodeUrlPath, isSafeRepositoryPath } from "@mokly/viewer/data";
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { MoklyError } from "../errors.js";
+import { MoklyError, isMoklyError } from "../errors.js";
 
-import { documentResourceRoute, isDocumentResource } from "./resource_paths.js";
+import {
+  documentTargetKind,
+  regularDocumentTarget,
+  readDocumentResource,
+} from "./destination_files.js";
+import {
+  documentResourceOutput,
+  isDocumentResource,
+} from "./resource_paths.js";
 
 type DocumentEntry = Extract<ResolvedRegistryEntry, { kind: "document" }>;
 
@@ -34,7 +41,11 @@ export function resolveDocumentDestinations(
   };
   for (const { value } of destinations) {
     if (links.has(value)) continue;
-    if (/^(?:https?:|mailto:|mock:)/i.test(value) || value.startsWith("#")) {
+    if (
+      /^(?:https?:|mailto:)/i.test(value) ||
+      value.startsWith("mock:") ||
+      value.startsWith("#")
+    ) {
       links.set(value, value);
       continue;
     }
@@ -57,21 +68,40 @@ export function resolveDocumentDestinations(
       fail(`link target ${value} is not a portable relative path`);
     const candidate = path.resolve(path.dirname(entry.sourcePath), relative!);
     const resource = isDocumentResource(candidate);
-    const real = projectRealPath(candidate);
+    const real = regularDocumentTarget(candidate);
+    if (real === undefined) {
+      if (resource && !isInside(root, candidate))
+        fail(`resource ${value} is outside the root`);
+      if (!isInside(config.repoRoot, candidate))
+        fail(`link target ${value} is outside the repository`);
+      fail(`link target ${value} does not exist`);
+    }
+    let kind: ReturnType<typeof documentTargetKind>;
+    try {
+      kind = documentTargetKind(candidate, real!, config);
+    } catch (error) {
+      if (isMoklyError(error)) throw error;
+      fail(`link target ${value} does not exist`);
+    }
+    if (kind! === "generated")
+      fail(`link target ${value} targets Mokly-owned output or metadata`);
     if (
       resource &&
-      (!isInside(root, candidate) || !isInside(projectRealPath(root), real))
+      kind! !== "public" &&
+      (!isInside(root, candidate) || !isInside(projectRealPath(root), real!))
     )
       fail(`resource ${value} is outside the root`);
     if (
       !isInside(config.repoRoot, candidate) ||
-      !isInside(projectRealPath(config.repoRoot), real)
+      !isInside(projectRealPath(config.repoRoot), real!)
     )
       fail(`link target ${value} is outside the repository`);
-    const info = fs.statSync(candidate, { throwIfNoEntry: false });
-    if (!info?.isFile()) fail(`link target ${value} does not exist`);
-    sourceFiles.add(candidate);
     const target = documents.get(candidate);
+    if (kind! === "public" && !target) {
+      links.set(value, null);
+      continue;
+    }
+    sourceFiles.add(candidate);
     if (target) {
       if (parts[2]) fail(`link target ${value} must not contain a query`);
       let fragment = parts[3] ?? "";
@@ -93,21 +123,26 @@ export function resolveDocumentDestinations(
         fail(
           `resource ${value} must be a regular file without symlink aliases`,
         );
-      const route = documentResourceRoute(
+      const output = documentResourceOutput(
         { path: entry.path, sourcePath: entry.sourceRelativePath },
         source,
       );
-      if (!route) fail(`resource ${value} is outside the output`);
-      const owner = owners.get(route!.toLowerCase());
-      if (owner !== undefined && (owner !== source || !outputs.has(route!)))
+      if (!output) fail(`resource ${value} is outside the output`);
+      if (output!.denial) fail(`resource ${value} ${output!.denial}`);
+      const route = output!.route;
+      const owner = owners.get(route.toLowerCase());
+      if (owner !== undefined && (owner !== source || !outputs.has(route)))
         fail(
           `resource ${value} collides with another generated resource at ${route}`,
         );
-      owners.set(route!.toLowerCase(), source);
-      if (!outputs.has(route!))
-        outputs.set(route!, new Uint8Array(fs.readFileSync(candidate)));
+      owners.set(route.toLowerCase(), source);
+      if (!outputs.has(route)) {
+        const bytes = readDocumentResource(candidate);
+        if (!bytes) fail(`link target ${value} does not exist`);
+        outputs.set(route, bytes!);
+      }
       resources.add(source);
-      const href = path.posix.relative(entry.path, route!);
+      const href = path.posix.relative(entry.path, route);
       links.set(
         value,
         `${href.startsWith(".") ? "" : "./"}${encodeUrlPath(href)}${parts[2] ?? ""}${parts[3] ?? ""}`,
