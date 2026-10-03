@@ -4,8 +4,7 @@
 
 Implemented in the path-addressed design catalogue. The outer shell renders the
 folder pages, entry rows, path chips, Markdown documents, and the first changed
-member that a folder screen's Changes row opens; `Moved` rows await the
-[path identity plan](../../plans/path-identity.md).
+member that a folder screen's Changes row opens, and `Moved` rows.
 
 This document describes the fixture catalogue that the Browse and Changes
 design screens browse, the branches they depict, and their transitions. The

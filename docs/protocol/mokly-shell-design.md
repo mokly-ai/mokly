@@ -31,8 +31,8 @@ Markdown document pages, and `Moved` Changes rows. Those states are approved
 below and designed in `design/browse/views/folder-overview`,
 `design/browse/pages/document`, `design/changes/outcomes/moved`, and the updated Browse,
 page, and component designs. The shell implements the Specs rows, breadcrumbs,
-path chip, and Markdown document pages, and a paired move keeps one entry; the
-[path identity plan](../../plans/path-identity.md) delivers its `Moved` label.
+path chip, Markdown document pages, and one `Moved` row for each paired
+move.
 
 Auto/Light/Dark interface appearance is designed in the
 `design/browse/appearance/**` mockups and specified by the

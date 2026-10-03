@@ -29,8 +29,13 @@ export interface NavLeafNode {
    * removed page it is a Changes row: All hides it, Changes shows it.
    */
   removedVariant?: boolean;
-  /** Parent entry path a retained baseline variant still names. */
+  /**
+   * Parent entry path a retained baseline variant attaches to: the path it
+   * still names, or that parent's current path when a move paired it.
+   */
   variantOf?: string;
+  /** The branch-point path of an entry a move paired; Changes labels it Moved. */
+  movedFrom?: string;
   entryKind: "component" | "document" | "screen" | "use-case" | "page";
   key: string;
   kind: "leaf";

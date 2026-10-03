@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-The path-based TypeScript API, Markdown authoring and move pairing are implemented.
-Remaining viewer presentation follows the [path identity plan](../../plans/path-identity.md).
+The path-based TypeScript API, Markdown authoring, move pairing, and their
+viewer presentation are implemented.
 
 This contract expands the [package API](./mokly-package.md). Configuration
 follows the [configuration contract](./mokly-configuration.md); consumer

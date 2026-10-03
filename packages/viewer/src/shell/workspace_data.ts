@@ -108,10 +108,12 @@ export function workspaceData(
   const resourceEvidence = snapshot?.screenEvidence?.find(
     (screen) => screen.path === entry.path,
   )?.views;
+  const baselinePath =
+    catalogue.previousPaths.get(evidenceEntry.path) ?? evidenceEntry.path;
   const baseline = snapshot?.baseline.entries.find(
     (item) =>
       item.kind === evidenceEntry.kind &&
-      item.path.toLowerCase() === evidenceEntry.path.toLowerCase(),
+      item.path.toLowerCase() === baselinePath.toLowerCase(),
   );
   const removed = !catalogue.manifest.entries.some(
     (candidate) => candidate.path === entry.path,
@@ -119,6 +121,10 @@ export function workspaceData(
   const change = result?.changes.find(
     (item) => (item.after ?? item.before)?.path === entry.path,
   );
+  /** A pure move is in Changes without changing, so it is not material. */
+  const materialChanges = snapshot?.changedEntries ?? context.changedEntries;
+  const pureMove =
+    change?.previousPath !== undefined && change.reasons.length === 0;
   const comparison = componentId
     ? result?.components.find((item) => item.path === componentId)
     : result?.screens.find((item) => item.path === entry.path);
@@ -129,9 +135,9 @@ export function workspaceData(
       ? "Removed"
       : snapshot && !baseline
         ? "Added"
-        : change ||
+        : (change && !pureMove) ||
             (entry.kind === "screen" && comparison?.state === "changed") ||
-            context.changedEntries?.includes(entry.path)
+            (!pureMove && materialChanges?.includes(entry.path))
           ? "Changed"
           : "Unmodified";
   const componentComparison =

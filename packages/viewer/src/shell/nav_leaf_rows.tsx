@@ -28,6 +28,7 @@ import {
   navigationFiltering,
   variantDisclosureKey,
 } from "./nav_model.js";
+import { navRowPresentation } from "./nav_moves.js";
 import type { NavLeafNode, NavSectionNode } from "./nav_tree.js";
 import { useOptionalShellStore } from "./store_context.js";
 import { WorkspaceIcon } from "./workspace_icons.js";
@@ -80,9 +81,10 @@ function NavRowLink(props: {
   const store = useOptionalShellStore();
   const context = store?.context ?? props.context;
   const active = props.node.entryId === props.context.activeId;
-  const changed = context.changedEntries?.includes(props.node.entryId) === true;
-  const changedVariants = (props.node.variants ?? []).some((variant) =>
-    context.changedEntries?.includes(variant.entryId),
+  const { changed, changedVariants, label } = navRowPresentation(
+    props.node,
+    store?.state.selection.view === "changes",
+    context.changedEntries,
   );
   const tags = props.node.tags ?? [];
   return (
@@ -110,7 +112,7 @@ function NavRowLink(props: {
         entryKind={props.node.entryKind}
         variant={props.variant ?? false}
       />
-      {props.node.label}
+      {label}
       <span
         className={NAV_CHANGED_TEXT_CLASS}
         {...{ [NAV_CHANGED_TEXT_ATTRIBUTE]: "" }}

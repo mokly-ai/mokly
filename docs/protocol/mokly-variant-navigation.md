@@ -6,9 +6,8 @@ Variant entry navigation, component-shaped icons, sibling comparison
 continuity, removed-variant Dark availability, fallback breadcrumbs, the Specs
 section, entry rows for a folder's own screen or component, and the Changes
 activation of a container row whose changed rows are only folder members
-(`design/browse/index-entries/**`) are implemented with path-keyed rows and the
-`variants:<path>` disclosure key. The `Moved` label awaits delivery through the
-[path identity plan](../../plans/path-identity.md).
+(`design/browse/index-entries/**`), and the `Moved` label are implemented with
+path-keyed rows and the `variants:<path>` disclosure key.
 
 This contract owns the shell presentation of screen and component variants.
 Variant authoring, inheritance, manifest relationships, and generated views are
@@ -85,7 +84,8 @@ keeps the row even though the variant is unmodified.
 
 A removed variant retains its baseline `variantOf`, parent title, and folder
 titles. When that path names a current non-variant parent of the same kind,
-attach the removed row after current variants; removed siblings retain baseline
+directly or as the previous path of a parent the move contract paired, attach
+the removed row after current variants; removed siblings retain baseline
 authored order, and their public records occupy the parent's ordering position.
 A parent with no current variants still discloses the list. Removing both
 parent and variant yields one removed entry for each.

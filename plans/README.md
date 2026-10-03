@@ -10,8 +10,8 @@
   review fixes, Markdown documents, viewer navigation and its review fixes,
   index entry mockups, document typography parity, the light-only document
   and member landing view mockups, the document presentation and index-entry
-  Changes rows, move detection, and the document review fixes are complete.
-  The Moved presentation and the close-out remain.
+  Changes rows, move detection, the document review fixes, and the Moved
+  presentation are complete. The close-out remains.
 - [Imported CSS Delivery](./imported-css-delivery.md) — shipped implementation
   and authorized final-review fixes complete; finding 3 was resolved by the
   separate `922c1ec` merge. Milestone 12 finding 1 was resolved in `d474975`;

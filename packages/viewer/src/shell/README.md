@@ -5,6 +5,13 @@ uses each side's original path for snapshot URLs, including moved variants.
 `catalogue.ts` keeps each paired current entry's branch-point path in
 `previousPaths`: Serve and export pass the accepted pairs to `createCatalogue`,
 and the public viewer reads `previousPath` from the read model.
+`catalogueMovedPath` maps a baseline path back to the moved entry, so a
+removed variant joins its moved parent and links to it. `nav_moves.ts`
+records that path on each row, and under Changes a moved row reads
+`<label> · Moved` in place of the changed mark. Details add a `Moved from` row
+after Source, and the comparison details name the previous path as the earlier
+side. A pure move is in Changes without changing, so workspace statuses count
+material changes only and keep it Unmodified.
 
 These React components are the Browse shell tree: catalogue, stages,
 navigation and inspector. `document.tsx` supplies the standalone document

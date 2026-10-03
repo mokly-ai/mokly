@@ -10,7 +10,8 @@ order: 3
 Changes compares your working tree with the branch point shared by `HEAD` and
 the Git base your configuration names, which is `origin/main` unless you say
 otherwise. It compares the generated documents, the local resources they
-render, entry metadata and the folder containing an entry.
+render and entry metadata, pairing each entry with the baseline entry of the
+same kind at the same path.
 
 Commits added to the base branch after you diverged do not appear as your
 changes. Staged, unstaged and untracked edits in your working tree do.
@@ -23,13 +24,44 @@ or inside a declared dependency folder can appear in Details without adding
 the screen to Changes. The entry's source file alone does not add it either;
 it appears in Details when it also matches one of those file groups. A
 registered component's own file or a dependency named by its exact path can
-still add its entry. An entry whose path changes appears as a removal and an
-addition. Moving source files while keeping the same declared path retains
-the entry pairing; output and metadata still determine its change status.
+still add its entry. Moving source files around does not fill Changes, and
+giving a folder a new title changes no entry.
 Regions marked with Review-ignore are classified as ignored, and a stylesheet
 edit marks a screen only when a changed rule could apply to it or cannot be
 resolved; rules that reach nothing on the screen are recorded as examined and
 excluded. Evidence remains available in Details even when no Changes row exists.
+
+## Moved entries
+
+Because an entry's path is its identity, moving a file to another directory
+or renaming it gives the entry a new path. Changes pairs the entry at the new
+path with the baseline entry it came from instead of reporting a removal and
+an addition, and labels the row Moved; the details show the previous path. A
+pure move stays in Changes so that you can see it, without counting as an
+output change, and a move with edits offers the usual comparison against the
+version at the old path.
+
+Mokly pairs a moved entry when exactly one baseline entry of the same kind
+matches it: first by a `movedFrom` you declared, then by identical content,
+then by the same source module and title, and, for pages and Markdown
+documents only, by content that is at least half alike. When more than one
+candidate matches, nothing is paired and the comparison reports the
+ambiguity, suggesting `movedFrom`. Declare it on the entry, or in a
+document's front matter, with the complete previous path:
+
+```tsx
+defineScreen({
+  movedFrom: "account/overview",
+  // The rest of the screen is unchanged.
+});
+```
+
+A `movedFrom` that names nothing in the baseline leaves the entry Added and
+is reported. Once the base branch contains the move, the declaration names no
+removed entry and can be deleted; keeping it is harmless. A moved screen with
+variants carries its variants with it, pairing each by slug. A variant you
+delete during the move stays listed under the screen at its new place,
+labelled Removed.
 
 ## Compare a screen
 
@@ -90,16 +122,17 @@ dots and Changed views point to changes elsewhere.
 An added entry shows its current preview and an Added status, with no
 comparison controls, because there is no earlier version.
 
-A removed page or screen keeps its Removed status and opens the version from
-the branch point instead, labelled "Showing previous version". A page opens in
-its document pane and a screen in its mobile and desktop frames, with the
-themes it was captured in. A viewport that was never captured says so on the
-stage and names the one that still opens. That version is read only: you can
-scroll it, select text and follow anchors inside it, but its links and forms
-do nothing, so an old link can never take you to current content. While it is
-being retrieved the stage says so, and if it cannot be shown you get "Previous
-version unavailable" with a Retry, while the rest of the catalogue stays
-usable.
+A removed page, document or screen keeps its Removed status and opens the
+version from the branch point instead, labelled "Showing previous version". A
+page or document opens in its document pane and a screen in its mobile and
+desktop frames, with the themes it was captured in. A viewport that was never
+captured says so on the stage and names the one that still opens. That version
+is read only: you can scroll it, select text and follow anchors inside it, but
+its links and forms do nothing, so an old link can never take you to current
+content. While it is being retrieved the stage says so, and if it cannot be
+shown you get "Previous version unavailable" with a Retry, while the rest of
+the catalogue stays usable. An entry that Changes paired as moved is never
+shown as removed.
 
 A removed component variant keeps its earlier version, so it can still be
 compared.
@@ -109,4 +142,5 @@ compared.
 If a referenced public file is invalid, Changes is unavailable until it is
 repaired, while All stays open. A verified deletion still identifies the
 screens it affects. Where history is unavailable, current previews stay
-available without change evidence.
+available without change evidence. A comparison base built by an earlier
+Mokly release makes Changes unavailable until the base includes this version.

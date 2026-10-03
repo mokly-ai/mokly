@@ -4,8 +4,8 @@ The implemented [component attribution extension](./mokly-component-changes.md)
 keeps affected-only consumers out of Changes and links them from the component.
 Screen and Review-ignore behavior remains below. Pairing uses kind and path,
 then the move signals; review result v5 carries `previousPath` on paired moves.
-Documents use the page material rules. Remaining viewer presentation follows the
-[path identity plan](../../plans/path-identity.md).
+Documents use the page material rules. The viewer presents paired entries under
+the [move contract](./mokly-moves.md).
 
 The catalogue's All / Changes filter narrows one navigation tree. There is no
 Review tab, report, or `mokly review`; `--out` belongs only to static `export`.

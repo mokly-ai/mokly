@@ -23,7 +23,11 @@ export interface WorkspaceVariantSet {
   rows: readonly WorkspaceVariant[];
 }
 
-/** Adapt sibling variant entries to one routed component workspace. */
+/**
+ * Adapt sibling variant entries to one routed component workspace. Baseline
+ * and removed variants name their parent's branch-point path, which differs
+ * from the current path when a move paired the parent.
+ */
 export function workspaceVariants(
   catalogue: Catalogue,
   entry: ManifestComponent,
@@ -40,19 +44,20 @@ export function workspaceVariants(
     (candidate): candidate is ManifestComponentVariant =>
       candidate.kind === "component" && isManifestComponentVariant(candidate),
   );
+  const parentPath = catalogue.previousPaths.get(entry.path) ?? entry.path;
   const baseline: ManifestComponentVariant[] = [
     ...(snapshot?.baseline.entries.filter(
       (candidate): candidate is ManifestComponentVariant =>
         candidate.kind === "component" &&
         isManifestComponentVariant(candidate) &&
-        candidate.variantOf === entry.path,
+        candidate.variantOf === parentPath,
     ) ?? []),
   ];
   const removed = catalogue.removedEntries.flatMap(
     ({ entry: candidate, snapshotId }) =>
       candidate.kind === "component" &&
       isManifestComponentVariant(candidate) &&
-      candidate.variantOf === entry.path
+      candidate.variantOf === parentPath
         ? [{ value: candidate, snapshotId }]
         : [],
   );
@@ -64,6 +69,8 @@ export function workspaceVariants(
     const review = comparison?.variants.find(
       (item) => item.path === value.path,
     );
+    const pureMove =
+      review?.previousPath !== undefined && review.state !== "changed";
     const isRemoved =
       parentRemoved || !current.some((item) => item.path === value.path);
     const status = !known
@@ -73,7 +80,7 @@ export function workspaceVariants(
         : review?.state === "added"
           ? "Added"
           : review?.state === "changed" ||
-              changedEntries?.includes(value.path) ||
+              (!pureMove && changedEntries?.includes(value.path)) ||
               (review?.before &&
                 review.after &&
                 JSON.stringify(review.before.props) !==

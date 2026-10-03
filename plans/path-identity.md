@@ -1,7 +1,7 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1–5, 3A, 3B, 4A, 6–6F, and 7 are complete. This plan supersedes
+discussion in this workspace. Milestones 1–5, 3A, 3B, 4A, 6–6F, 7, 7A, and 7B are complete. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -1208,18 +1208,44 @@ Tags: ui
 Present paired entries as the Milestone 2 mockups and the shell contract
 define.
 
-- [ ] Attach a removed variant to its moved parent through the current parent's
+- [x] Attach a removed variant to its moved parent through the current parent's
       `previousPath`; the removed record retains its baseline `variantOf`.
-- [ ] Label paired entries "Moved" in Changes rows and details, show the
+      `catalogueMovedPath` maps the baseline path back, so the row joins the
+      moved parent, and its crumb and `Variant of` chip link there.
+- [x] Label paired entries "Moved" in Changes rows and details, show the
       previous path in details, and drive the baseline side of comparisons
       from `previousPath` (`nav_changed.ts`, `details_rows.tsx`,
       `view_status.ts`, `comparison_request.ts`,
-      `packages/viewer/src/catalogue/snapshot_identity.ts`).
-- [ ] Add browser tests for moved rows and moved comparisons; verify parity
-      with the Milestone 2 screens.
-- [ ] Re-apply the drafted `docs/guides/catalogue/changes.md` from commit
-      `d65417d` and reconcile it with the implemented Changes view.
-- [ ] Run `cargo xtask check`, then commit and push.
+      `packages/viewer/src/catalogue/snapshot_identity.ts`). Milestone 5
+      already takes the comparison's before side and per-view evidence from
+      the paired baseline entry, and a paired entry has no removed record, so
+      those five files need no change. `nav_moves.ts` puts the previous path on
+      each row; under Changes a moved row reads `<label> · Moved` without the
+      changed mark. Details add `Moved from` after Source, and the comparison
+      details name the previous path. The server render now finds a moved
+      entry's baseline through that path and counts material changes only,
+      so a pure move stays Unmodified before and after hydration, and a moved
+      component keeps its baseline and removed variants
+      (`moved_rows.test.tsx`, `client_moved_evidence.test.ts`).
+- [x] Add browser tests for moved rows and moved comparisons; verify parity
+      with the Milestone 2 screens. `moved_changes.spec.ts` covers the rows at
+      both widths, Details, a pure move, and the removed variant;
+      `moved_comparisons.spec.ts` covers every comparison mode; and
+      `moved_export.spec.ts` covers the static export. The fixture pairs
+      through `movedFrom` and identical content only. Parity with
+      `design/changes/outcomes/moved` holds at both widths for the rows,
+      crumbs, path chip, comparison band, frame label, `Moved from` row, and
+      the sentence that names the previous path (`.context/m7b/`).
+- [x] Re-apply the drafted `docs/guides/catalogue/changes.md` from commit
+      `d65417d` and reconcile it with the implemented Changes view. The draft
+      matches the implemented behavior; a sentence adds the variant deleted
+      during a move. Every delivery status that still called documents, the
+      runtime Specs section, or moves planned now states them as implemented.
+- [x] Run `cargo xtask check`, then commit and push. The gate
+      passed: format, lint, file length (only the 28 known files), ratchets,
+      Rust fmt, Clippy, tests, and file length, and the package, unit (3,982
+      tests), browser (780), and hydration (238) suites. The dependency audit
+      fails only on the known GHSA-vfj7-8cjw-p6xm.
 
 ## Milestone 8: Guides, verification, close-out, and review
 

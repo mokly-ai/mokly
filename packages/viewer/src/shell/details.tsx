@@ -34,6 +34,9 @@ export function EntryDetailsBody(props: {
   const removed = props.catalogue.removedEntries.find(
     (record) => record.entry.path === entry.path,
   );
+  const movedFrom = removed
+    ? undefined
+    : props.catalogue.previousPaths.get(entry.path);
   return (
     <div className="mbk-details-body">
       <div>
@@ -56,6 +59,11 @@ export function EntryDetailsBody(props: {
         <MetaRow label="Source">
           <code className="mbk-code">{entry.sourcePath}</code>
         </MetaRow>
+        {movedFrom ? (
+          <MetaRow label="Moved from">
+            <code className="mbk-code">{movedFrom}</code>
+          </MetaRow>
+        ) : null}
         {entry.kind === "screen" && props.catalogue.hasDarkFragments ? (
           <MetaRow label="Schemes">{schemeNames(entry)}</MetaRow>
         ) : null}

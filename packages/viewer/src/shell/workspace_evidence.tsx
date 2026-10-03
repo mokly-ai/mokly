@@ -18,14 +18,19 @@ import {
   styleOutcomes,
 } from "./workspace_style_evidence.js";
 
-/** Comparison facts for the current entry and optional loaded comparison. */
+/**
+ * Comparison facts for the current entry and optional loaded comparison. A
+ * moved entry names the path its earlier side comes from.
+ */
 export function WorkspaceEvidence({
   data,
   loaded,
+  previousPath,
   variantPath,
 }: {
   data: WorkspaceData;
   loaded?: ReviewResult;
+  previousPath?: string;
   variantPath?: string;
 }) {
   const evidence = workspaceComparisonEvidence(data, variantPath, loaded);
@@ -53,6 +58,13 @@ export function WorkspaceEvidence({
         <>
           <h3>Comparison details</h3>
           <p>Compared with the branch point on {data.base}.</p>
+          {previousPath ? (
+            <p>
+              The previous version is at{" "}
+              <code className="mbk-code">{previousPath}</code>, where it was
+              before the move.
+            </p>
+          ) : null}
           {data.relatedComponents.map((component) => (
             <p key={component.path}>
               Changed component:{" "}

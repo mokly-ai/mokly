@@ -4,8 +4,8 @@
 
 Build, Check, Serve and export render documents. The shell presents them in
 the page view with their rows, breadcrumbs, path chip, Details, Related docs
-links, and `Light only` note. Move pairing remains planned in the
-[path identity plan](../../plans/path-identity.md).
+links, and `Light only` note. A moved document keeps one `Moved` row and names
+its previous path in Details.
 
 A document is a Markdown file that a [root](./mokly-paths.md#roots) matches.
 It becomes an entry of kind `document` with a path derived like every other

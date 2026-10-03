@@ -47,6 +47,7 @@ export function ComponentWorkspace({
     workspace;
   const variant = selection.variant;
   const variantPath = variant?.value.path;
+  const previousPath = catalogue.previousPaths.get(variantPath ?? entry.path);
   const changedViews = selectedChangedViews(
     workspaceEvidenceEntry(data),
     data.changedViews,
@@ -265,6 +266,7 @@ export function ComponentWorkspace({
                 {...(comparison.loaded
                   ? { loaded: comparison.loaded.result }
                   : {})}
+                {...(previousPath ? { previousPath } : {})}
                 {...(variantPath ? { variantPath } : {})}
               />
             ),

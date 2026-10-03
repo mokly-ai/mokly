@@ -3,24 +3,33 @@
 import { folderTitlesAt } from "../registry/folder_titles.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
-import type { Catalogue } from "./catalogue.js";
+import { catalogueMovedPath, type Catalogue } from "./catalogue.js";
 import type { ShellContext } from "./context.js";
 import { folderDisclosureKey } from "./disclosure_keys.js";
+import { withMovedRows } from "./nav_moves.js";
 import { buildNavSections } from "./nav_tree.js";
 import type { NavLeafNode, NavNode, NavSectionNode } from "./nav_tree.js";
 import { queryConstrains, rowMatchesQuery, searchRow } from "./search_query.js";
 
-/** Build the complete current-and-removed tree displayed in the rail. */
+/**
+ * Build the complete current-and-removed tree displayed in the rail. A removed
+ * variant whose parent moved attaches through that parent's previous path,
+ * while its record keeps the baseline `variantOf`.
+ */
 export function catalogueNavSections(
   catalogue: Catalogue,
 ): readonly NavSectionNode[] {
   const removed: NavLeafNode[] = catalogue.removedEntries.flatMap(
     ({ entry, snapshotId }) => {
-      const variantOf =
+      const baselineParent =
         (entry.kind === "screen" || entry.kind === "component") &&
         "variantOf" in entry
           ? entry.variantOf
           : undefined;
+      const variantOf =
+        baselineParent === undefined
+          ? undefined
+          : (catalogueMovedPath(catalogue, baselineParent) ?? baselineParent);
       const folderTitles = folderTitlesAt(catalogue.hierarchy, entry.path);
       return [
         {
@@ -39,7 +48,10 @@ export function catalogueNavSections(
       ];
     },
   );
-  return buildNavSections(catalogue.hierarchy, removed);
+  return withMovedRows(
+    buildNavSections(catalogue.hierarchy, removed),
+    catalogue.previousPaths,
+  );
 }
 
 /** Initial disclosure values rendered on the server for one active route. */

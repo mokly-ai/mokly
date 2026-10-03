@@ -93,8 +93,23 @@ export function catalogueVariantParentEntry(
     catalogue.removedEntries.find(
       ({ entry: historical }) => historical.path === entry.variantOf,
     )?.entry ??
-    catalogue.byPath.get(entry.variantOf)
+    catalogue.byPath.get(
+      catalogueMovedPath(catalogue, entry.variantOf) ?? entry.variantOf,
+    )
   );
+}
+
+/**
+ * The current path of the entry a move paired with a branch-point path, so a
+ * baseline reference to the old path reaches the entry at its new place.
+ */
+export function catalogueMovedPath(
+  catalogue: Catalogue,
+  previousPath: string,
+): string | undefined {
+  for (const [path, previous] of catalogue.previousPaths)
+    if (previous === previousPath) return path;
+  return undefined;
 }
 
 /** The union of the tags declared across every entry that can carry them. */

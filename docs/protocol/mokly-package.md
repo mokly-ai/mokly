@@ -22,9 +22,8 @@ the completed
 [Whole-document pages](./mokly-pages.md) use the same paths and hierarchy as
 screens and flows, and [Markdown documents](./mokly-documents.md) join them by
 file. Current and comparison-base manifests require v8; consumers use ordinary
-page definitions. Path identity and `roots` discovery are implemented; Markdown
-documents and move detection await delivery through the
-[path identity plan](../../plans/path-identity.md). The earlier
+page definitions. Path identity, `roots` discovery, Markdown documents, and move
+detection are implemented. The earlier
 co-located layout was delivered by the
 [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
 

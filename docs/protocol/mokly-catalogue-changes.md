@@ -3,8 +3,8 @@
 ## Delivery Status
 
 Catalogue impact/removal metadata uses kind and path, with baseline folder
-titles for removed entries. Documents use page-style material and removal rules. Move pairing is implemented; remaining presentation is planned
-in the [path identity plan](../../plans/path-identity.md). This snapshot is
+titles for removed entries. Documents use page-style material and removal rules. Move pairing and its viewer
+presentation are implemented. This snapshot is
 independent of the visual [comparison result](./mokly-changes.md);
 [removed previews](./mokly-removed-previews.md) owns baseline capture and delivery.
 

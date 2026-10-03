@@ -2,9 +2,8 @@
 
 ## Delivery Status
 
-Pairing, validation, diagnostics and comparison delivery implement this contract.
-The remaining viewer labels and details follow the
-[path identity plan](../../plans/path-identity.md).
+Pairing, validation, diagnostics, comparison delivery, and the viewer's `Moved`
+labels and details implement this contract.
 
 Because an entry's path is its identity, moving a file or renaming a
 directory changes identity. This contract pairs a removed baseline entry with
