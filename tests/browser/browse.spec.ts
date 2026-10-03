@@ -169,7 +169,7 @@ test("breadcrumbs track hierarchy through progressive history", async ({
   await page.goto("/view/example/screens/welcome/");
   const crumbs = page.getByLabel("Catalogue location");
   await expect(crumbs).toHaveText("Example›Screens");
-  await expect(crumbs.locator("a")).toHaveCount(0);
+  await expect(crumbs.locator("a")).toHaveAttribute("href", "/view/example/");
 
   await page.click(tourRow);
   await expect(page.locator("#mb-main h2")).toHaveText("Example tour");

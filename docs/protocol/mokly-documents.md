@@ -72,7 +72,12 @@ An empty file-link fragment opens the document without an anchor. Fenced code ke
 The output is one complete HTML document per effective colour scheme with a
 Mokly-owned template: `<html lang="en">`, the title in `<head>`, a
 package-owned stylesheet inlined with shell-consistent typography, and no
-script. The light document is `static/<path>/index.html`; when the catalogue
+script. The stylesheet uses the shell's palette and the typography that the
+document design `design/browse/pages/document` depicts: 14.5px body text on
+a 720px measure, 26px and 17px headings, semibold underlined links, bordered
+inline code, and full-width tables; below 600px the body is 14px and the
+title 22px. Elements that the design does not show follow the same scale.
+The light document is `static/<path>/index.html`; when the catalogue
 enables dark, `static/<path>/index.dark.html` applies the dark palette. The
 shell opens the document for the current appearance exactly as it selects a
 screen's scheme, and documents have no viewport axis. Documents pass the same

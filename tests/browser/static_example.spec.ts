@@ -113,7 +113,8 @@ test("the exported example discloses a screen's variants without a server", asyn
     "Welcome, empty workspace",
   );
   await expect(variantRow).toHaveAttribute("aria-current", "page");
-  await expect(page.getByLabel("Catalogue location").locator("a")).toHaveText(
+  await expect(page.getByLabel("Catalogue location").locator("a")).toHaveText([
+    "Example",
     "Welcome",
-  );
+  ]);
 });

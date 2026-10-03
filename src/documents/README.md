@@ -6,7 +6,9 @@ The file is the definition. Consumers need no React component or authoring helpe
 `front_matter.ts` implements the strict, pure metadata grammar. `markdown.ts`
 uses one fresh Marked instance per render. It escapes raw HTML, generates heading
 ids, retains code languages, and delegates destination rewriting. Parsing and
-rendering never read files. `template.ts` owns the script-free light/dark document.
+rendering never read files. `template.ts` owns the script-free light/dark document;
+its stylesheet follows the `design/browse/pages/document` design, which
+`tests/browser/document_typography.spec.ts` compares property by property.
 
 `load.ts` applies shared root/path rules and title fallbacks. `destinations.ts`
 owns confined repository reads. File links use the source directory; `mock:`

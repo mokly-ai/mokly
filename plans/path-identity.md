@@ -1,7 +1,7 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1–4, 3A, 3B, 6, 6A, and 6B are complete. This plan supersedes
+discussion in this workspace. Milestones 1–4, 3A, 3B, and 6–6D are complete. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -851,23 +851,45 @@ Bring Milestone 4's Markdown documents into this branch, so the later
 integration with the feature branch meets only Milestone 5's changes, and
 reconcile documents with the viewer navigation.
 
+Status: Complete. Package (six consumer scenarios), unit (3,841), browser
+(763), hydration (237), format, lint, repository ratchets, Rust formatting,
+Clippy, Rust tests, and the Rust file-length audit pass. The dependency audit
+still fails on GHSA-vfj7-8cjw-p6xm, and the source file-length audit lists
+only the 28 known files.
+
 - [x] Fetch the feature branch, record the source tip `4b10b657` and the
       additions audit from `bda69311` (one commit, `1b0eb703`: 27 added and
       108 changed files, no deletions), and merge it; resolve each conflict
       path by path.
-- [ ] Reconcile documents with the navigation: a `README.md` or `index.md`
+- [x] Reconcile documents with the navigation: a `README.md` or `index.md`
       folder page renders as the Overview row with the document icon;
       documents use the document icon in the tree and in search; search
       covers their titles, path segments, and tags; breadcrumbs open document
       folder pages; the example's README documents produce the rows the
-      mockups show.
-- [ ] Re-check parity against `design/browse/views/folder-overview` and
+      mockups show. The merged code already did all of this; new tests guard
+      it (`tests/nav_markdown_rows.test.ts`,
+      `tests/browser/markdown_navigation.spec.ts`).
+- [x] Re-check parity against `design/browse/views/folder-overview` and
       `design/browse/pages/document` with the real example, and save
-      screenshots under `.context/`.
-- [ ] Run the full gate and, after `git fetch origin main`,
+      screenshots under `.context/m6c/`. The rows, icons, titles, path chips,
+      crumbs, and control-free stage match. The document typography did not
+      match the design; Milestone 6D aligns it. The design's
+      `Catalogue home` crumb and icon-only Details bar differ for every entry
+      kind, so they stay with the earlier design and runtime differences
+      outside this plan. The real example also lists `Workspace guide`, which
+      the design's fixture catalogue does not depict.
+- [x] Update two browser tests that expected the Example folder's crumb to be
+      plain or absent: the README now gives Example its own page, so the crumb
+      links to `/view/example/` (`browse.spec.ts` "breadcrumbs track hierarchy
+      through progressive history", `static_example.spec.ts` "the exported
+      example discloses a screen's variants without a server").
+- [x] Run the full gate and, after `git fetch origin main`,
       `node scripts/verification/source-file-length.mjs`; only the 28 known
       files may be listed. The known exceptions are the dependency audit and
-      the cold-server `component_example.spec.ts` desktop failure.
+      the cold-server `component_example.spec.ts` desktop failure. The first
+      browser run passed 761 of 763; after the two crumb test updates, the
+      complete browser suite passed 763 of 763, the cold-server test
+      included.
 - [ ] Commit and push.
 
 Merge decisions (no file is deleted):
@@ -882,6 +904,31 @@ Merge decisions (no file is deleted):
 - `plans/path-identity.md`: list both sides' complete milestones in the
   header; in Milestone 7, keep Milestone 4's extended `relatedDocs` TODO and
   Milestone 6A's container-row TODO.
+
+## Milestone 6D: Document typography parity
+
+Tags: ui
+
+Render Markdown documents in the typography that the document design
+depicts, which the Milestone 6C parity check found different.
+
+Status: Complete, verified by the Milestone 6C full gate.
+
+- [x] Add a browser test that compares the document template's computed
+      styles with the `design/browse/pages/document` artboard, on desktop and
+      mobile, for the body, measure, headings, paragraphs, links, inline
+      code, tables, and lists; confirm that it fails first
+      (`tests/browser/document_typography.spec.ts`).
+- [x] Align `src/documents/template.ts` with the design: 14.5px body text on
+      a 720px measure, 26px and 17px headings, semibold underlined links,
+      bordered inline code, full-width tables, 22px list indents, and the
+      shell's soft background; below 600px, 14px body text and a 22px
+      title. Undepicted elements follow the same scale.
+- [x] State the typography in `docs/protocol/mokly-documents.md` and the
+      documents README.
+- [x] Run the full gate and, after `git fetch origin main`,
+      `node scripts/verification/source-file-length.mjs`.
+- [ ] Commit and push.
 
 ## Milestone 7: Viewer Changes and document presentation
 
