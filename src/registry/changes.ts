@@ -5,6 +5,8 @@ import type {
   ManifestV8,
 } from "@mokly/viewer/data";
 
+import type { EntryMove } from "../review/moves/types.js";
+
 import type { CatalogueMetadata } from "./catalogue_index.js";
 import { orderEntriesWithVariants } from "./entry_order.js";
 
@@ -32,6 +34,7 @@ export interface CatalogueChangeSnapshot {
 export function removedManifestEntries(
   manifest: CatalogueMetadata,
   baseline: HistoricalManifest,
+  moves: readonly EntryMove[] = [],
 ): RemovedEntrySnapshot[] {
   const hierarchy = analyzeHierarchy(
     baseline.entries,
@@ -40,13 +43,15 @@ export function removedManifestEntries(
   const paths = new Set(
     manifest.entries.map((entry) => entry.path.toLowerCase()),
   );
+  const paired = new Set(moves.map((move) => move.previousPath.toLowerCase()));
   return orderEntriesWithVariants(baseline.entries, (entry) => entry).flatMap(
     (entry): RemovedEntrySnapshot[] =>
       (entry.kind === "page" ||
         entry.kind === "document" ||
         entry.kind === "screen" ||
         entry.kind === "component") &&
-      !paths.has(entry.path.toLowerCase())
+      !paths.has(entry.path.toLowerCase()) &&
+      !paired.has(entry.path.toLowerCase())
         ? [
             {
               entry,

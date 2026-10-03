@@ -3,6 +3,8 @@ import type { ColorScheme, Viewport } from "@mokly/viewer";
 import type { HistoricalManifest, ManifestV8 } from "@mokly/viewer/data";
 import { entryRoute, documentRoute, VIEWPORTS } from "@mokly/viewer/data";
 
+import { baselineEntryIndex } from "../review/moves/entries.js";
+import { moveIdentity, type EntryMove } from "../review/moves/types.js";
 import { fragmentForView, unionColorSchemes } from "../review/screen_views.js";
 
 export interface DocumentPair {
@@ -18,13 +20,12 @@ export function documentPairs(
   baseline: HistoricalManifest,
   changed: ReadonlySet<string>,
   documents: "all" | "pages",
+  moves: readonly EntryMove[] = [],
 ): DocumentPair[] {
-  const bases = new Map(
-    baseline.entries.map((entry) => [entry.path.toLowerCase(), entry]),
-  );
+  const bases = baselineEntryIndex(baseline.entries, moves);
   const pairs: DocumentPair[] = [];
   for (const screen of manifest.entries) {
-    const baseEntry = bases.get(screen.path.toLowerCase());
+    const baseEntry = bases.get(moveIdentity(screen));
     if (screen.kind === "document") {
       for (const scheme of screen.colorSchemes) {
         const base =

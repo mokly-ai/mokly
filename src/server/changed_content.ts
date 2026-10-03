@@ -20,6 +20,7 @@ import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
   type OptionalReviewAssetReader,
+  type ReviewAssetReader,
 } from "../review/assets.js";
 import { baselineResourceConfig } from "../review/base_manifest.js";
 import type { ChangeEvidence } from "../review/change_evidence.js";
@@ -28,6 +29,8 @@ import {
   normalizeReviewPair,
   normalizeSingleDocument,
 } from "../review/ignore.js";
+import { catalogueLinkNormalizer } from "../review/moves/links.js";
+import type { MovePairing } from "../review/moves/types.js";
 
 import { documentPairs, type DocumentPair } from "./changed_document_pairs.js";
 import { ChangedResourceGraph } from "./changed_resources.js";
@@ -36,6 +39,12 @@ import { ChangedResourceGraph } from "./changed_resources.js";
 export interface ChangedContent {
   changedPaths: readonly string[];
   screens: readonly ScreenResourceEvidence[];
+}
+
+/** Reuse the comparison's accepted pairing and retained baseline reads. */
+export interface ChangedContentComparison {
+  pairing?: MovePairing;
+  beforeReader?: ReviewAssetReader;
 }
 
 /**
@@ -53,6 +62,7 @@ export async function changedContentPaths(
     config,
   ),
   documents: "all" | "pages" = "all",
+  comparison?: ChangedContentComparison,
 ): Promise<readonly string[]> {
   return (
     await classifyChangedContent(
@@ -64,6 +74,7 @@ export async function changedContentPaths(
       changedPaths,
       headReader,
       documents,
+      comparison,
     )
   ).changedPaths;
 }
@@ -80,6 +91,7 @@ export async function classifyChangedContent(
     config,
   ),
   documents: "all" | "pages" = "all",
+  comparison?: ChangedContentComparison,
 ): Promise<ChangedContent> {
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const repoPath = (route: string) => (prefix ? `${prefix}/${route}` : route);
@@ -99,16 +111,34 @@ export async function classifyChangedContent(
     }),
   );
   const derived = config.generatedOutput === "derived";
-  if (!derived && publicChanges.size === 0)
+  if (
+    !derived &&
+    publicChanges.size === 0 &&
+    !comparison?.pairing?.moves.length
+  )
     return { changedPaths: [], screens: [] };
-  const pairs = documentPairs(manifest, baseline, publicChanges, documents);
-  if (derived) for (const pair of pairs) pair.changed = true;
-  const baseReader = new GitReviewAssetReader(
-    baselineResourceConfig(config, baseline),
-    git,
-    commit,
-    prefix,
+  const moves = comparison?.pairing?.moves ?? [];
+  const links = catalogueLinkNormalizer(
+    baseline.entries,
+    manifest.entries,
+    moves,
   );
+  const pairs = documentPairs(
+    manifest,
+    baseline,
+    publicChanges,
+    documents,
+    moves,
+  );
+  if (derived) for (const pair of pairs) pair.changed = true;
+  const baseReader =
+    comparison?.beforeReader ??
+    new GitReviewAssetReader(
+      baselineResourceConfig(config, baseline),
+      git,
+      commit,
+      prefix,
+    );
   const result = new Set<string>();
   const normalizedDocuments = new Map<string, string>();
   const normalizedBases = new Map<string, string>();
@@ -122,7 +152,14 @@ export async function classifyChangedContent(
   ) => {
     if (!batch.length) return;
     const bases = await timeAsync("review.base-documents", () =>
-      baseReader.readMany(batch.map((pair) => pair.base)),
+      baseReader.readMany
+        ? baseReader.readMany(batch.map((pair) => pair.base))
+        : Promise.all(
+            batch.map(
+              async (pair) =>
+                [pair.base, await baseReader.read(pair.base)] as const,
+            ),
+          ).then((entries) => new Map(entries)),
     );
     for (const pair of batch) {
       const base = bases.get(pair.base);
@@ -135,9 +172,20 @@ export async function classifyChangedContent(
       const after =
         headDocuments.get(pair.head) ??
         Buffer.from(await headReader.read(pair.head)).toString("utf8");
-      const normalized = normalizeReviewPair(before, after, pair.context);
-      normalizedDocuments.set(pair.head, normalized.head);
-      normalizedBases.set(pair.head, normalized.base);
+      const normalized = normalizeReviewPair(
+        before,
+        after,
+        pair.context,
+        links(pair.base, pair.head),
+      );
+      normalizedDocuments.set(
+        pair.head,
+        normalized.resourceHead ?? normalized.head,
+      );
+      normalizedBases.set(
+        pair.head,
+        normalized.resourceBase ?? normalized.base,
+      );
       if (normalized.base !== normalized.head) {
         result.add(repoPath(pair.head));
         if (derived) publicChanges.add(pair.head);

@@ -1,7 +1,7 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1–4 are complete. This plan supersedes
+discussion in this workspace. Milestones 1–5 are complete. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -643,25 +643,82 @@ remains the final item in Milestone 8.
 
 Pair moved entries with their baseline and carry `previousPath`.
 
-- [ ] Restore the move passages drafted in `d65417d` in README and the guides
+Status: Complete. Package (six consumer scenarios), unit (3,849), browser (745),
+hydration (229), and the remaining repository checks pass. The approved
+exceptions remain the braces advisory and the same 28 source-length violations.
+No dependency change, new violation or exemption was added.
+
+- [x] Share one accepted move-pairing result across material classification,
+      catalogue projection, complete capture, selected capture and publication.
+- [x] Define diagnostic storage, pure-move reason records and symmetric ambiguity
+      diagnostics without adding document/page visual comparison records.
+- [x] Cover component parent/variant shape guards and preserve existing case-folded
+      same-path pairing, including its existing shape-change behavior.
+- [x] Retain original historical bytes and paths while normalizing logical links
+      and paired identity references for material comparison.
+- [x] Validate previous-path fields and paired source coverage at every strict
+      result/read-model boundary; keep inferred moves out of plain builds.
+- [x] Keep moved component variants in their current parent's comparison group,
+      including cross-parent moves and a former parent with no remaining variants.
+- [x] Keep copied document resources unmodified when their relative reference and
+      bytes survive a move; scope the byte proof to the paired document.
+- [x] Keep canonical catalogue links in material equality while preserving real
+      href values for resource traversal and CSS selector matching.
+- [x] Bind inferred link suggestions to accepted render generations. Initial
+      Build/Check/Serve/export compilation uses authored hints only, with no
+      diagnostic preflight over incomplete output.
+- [x] Preserve automatic parent priority over otherwise ambiguous same-slug
+      variants; require real variant evidence for parent content equality.
+
+- [x] Restore the move passages drafted in `d65417d` in README and the guides
       once pairing and moved-target diagnostics work; reconcile examples.
 
-- [ ] Validate `movedFrom`: grammar, complete path, not the current path, and
+- [x] Validate `movedFrom`: grammar, complete path, not the current path, and
       a baseline entry of the same kind.
-- [ ] Implement pairing in `src/review` and `src/catalogue/changes.ts` with the
+- [x] Implement pairing in `src/review` and `src/catalogue/changes.ts` with the
       signals in order, same-kind scoping, unique matches, link normalisation
       through the move map before material comparison, the documents-and-pages
       similarity metric, and the ambiguity diagnostic.
-- [ ] Emit `previousPath` in review result v5 and read model v4, keep the four
+  - [x] Add an injected pure policy with ordered passes, mutual uniqueness,
+        permanent ambiguity, parent/variant pairing and the exact line metric;
+        cover the policy with 13 focused regression tests.
+- [x] Emit `previousPath` in review result v5 and read model v4, keep the four
       change kinds, suppress removed previews for paired entries, and align
       Changes counts.
-- [ ] Make the unknown-link build error name the new path when the target
+- [x] Make the unknown-link build error name the new path when the target
       moved.
-- [ ] Add unit tests for every signal, ambiguity, and the false-positive
+- [x] Add unit tests for every signal, ambiguity, and the false-positive
       guards, including identical output under different source modules and
       titles for screens; add fixtures for moved documents and screens.
-- [ ] Smoke-test by moving a directory in the example and running a review.
-- [ ] Run `cargo xtask check`, then commit and push.
+- [x] Compare `relatedDocs` references to paired documents by logical identity;
+      retain plain repository labels and test screen, page and component owners.
+- [x] Smoke-test by moving a directory in a separate example repository, with
+      and without content edits. Serve and Review agree on seven pairs and no
+      removals; selected snapshots use the old paths. Three screens retain
+      material changes because their generated imported stylesheet routes moved.
+- [x] Update legacy fixtures to keep genuine Added/Removed evidence distinct
+      from detected moves; retain exact reader diagnostic assertions.
+- [x] Update static hydration coverage to retain a real removed page and prove
+      a paired page has its prior path, no removed record and no old-route alias.
+- [x] Drain the new controls test service before removing its fixture workspace.
+- [x] Verify identical content across the full scheme set and Light-only similarity.
+- [x] Run `cargo xtask check`, then commit and push.
+  - [x] Package: both packages pass all six consumer scenarios; example Build
+        and Check validate 452 files; all declaration checks pass.
+  - [x] Repository formatting, lint, four ratchets, Rust formatting, Clippy,
+        15 Rust tests and the 9-file Rust length audit pass.
+  - [x] Confirm the same braces advisory and exactly the original 28 source-length
+        violations, with no dependency change or new exception.
+  - [x] Pass changed-file Prettier, focused regressions and the deletion audit.
+  - [x] Browser: 745 passed, with zero skips; all three known base-flaky tests
+        passed on the first run.
+  - [x] Hydration: 229 passed, with zero skips or cancellations.
+  - [x] Unit: 3,849 passed, with zero skips or cancellations. Run suites without
+        overlapping preparation builds so their assets remain stable.
+  - [x] Inspect the staged diff, commit and fast-forward push.
+
+The orchestrator reviews this milestone; the complete implementation review
+remains the final item in Milestone 8.
 
 ## Milestone 6: Viewer navigation
 
@@ -703,6 +760,9 @@ Bring the shell to the Milestone 2 mockups.
 ## Milestone 7: Viewer Changes and document presentation
 
 Tags: ui
+
+- [ ] Attach a removed variant to its moved parent through the current parent's
+      `previousPath`; the removed record retains its baseline `variantOf`.
 
 - [ ] Treat removed document rows like removed page rows when filtering All and
       Changes; keep the document icon and final navigation behavior with the UI work.

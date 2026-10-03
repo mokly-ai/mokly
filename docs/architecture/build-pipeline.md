@@ -36,8 +36,8 @@ mobile/desktop light and optional dark HTML for every screen, screen variant, an
         `---- build: stage, back up owned files, rename, roll back on failure
 ```
 
-Path identity, roots, manifest v8 and review result v5 are implemented. Markdown
-rendering and move pairing remain planned under the
+Path identity, roots, manifest v8, review result v5, Markdown rendering and move
+pairing are implemented. Remaining viewer presentation follows the
 [path identity plan](../../plans/path-identity.md).
 
 ## 1. Config Loading

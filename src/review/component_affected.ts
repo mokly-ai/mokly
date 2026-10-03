@@ -12,19 +12,24 @@ import type {
 } from "@mokly/viewer/data";
 
 import { address, lexical } from "./component_metadata.js";
+import { baselinePathMapper } from "./moves/identity.js";
+import type { EntryMove } from "./moves/types.js";
 
 /** Derive consumer chains from input ownership, including slots and removed occurrences. */
 export function affectedConsumers(
   before: Manifest,
   after: Manifest,
   changed: ReadonlySet<string>,
+  moves: readonly EntryMove[] = [],
 ): AffectedConsumer[] {
+  const mapBefore = baselinePathMapper(before.entries, after.entries, moves);
   const groups = new Map<
     string,
     { record: AffectedConsumer; evidence: Map<string, AffectedUsageEvidence> }
   >();
   for (const side of ["before", "after"] as const) {
     const manifest = side === "before" ? before : after;
+    const canonical = side === "before" ? mapBefore : (path: string) => path;
     for (const entry of manifest.entries) {
       if (entry.kind !== "screen" && entry.kind !== "component") continue;
       const contextEntry =
@@ -62,7 +67,8 @@ export function affectedConsumers(
           view.usage.instances.map((instance) => [instance.key, instance]),
         );
         for (const instance of view.usage.instances) {
-          if (!changed.has(instance.componentId)) continue;
+          const changedComponentId = canonical(instance.componentId);
+          if (!changed.has(changedComponentId)) continue;
           const via: { componentId: string; instanceKey: string }[] = [];
           let next: typeof instance | undefined = instance;
           while (next) {
@@ -77,29 +83,29 @@ export function affectedConsumers(
           }
           const consumers: AffectedConsumer["consumer"][] = [
             entry.kind === "screen"
-              ? { kind: "screen", path: entry.path }
-              : { kind: "component", path: contextEntry.path },
+              ? { kind: "screen", path: canonical(entry.path) }
+              : { kind: "component", path: canonical(contextEntry.path) },
             ...via.slice(0, -1).map((ancestor) => ({
               kind: "component" as const,
-              path: ancestor.componentId,
+              path: canonical(ancestor.componentId),
             })),
           ];
           const evidence: AffectedUsageEvidence = { side, context, via };
           for (const consumer of consumers) {
             if (
               consumer.kind === "component" &&
-              consumer.path === instance.componentId
+              consumer.path === changedComponentId
             )
               continue;
             const key = affectedConsumerOrderKey({
-              changedComponentId: instance.componentId,
+              changedComponentId,
               consumer,
             });
             let group = groups.get(key);
             if (!group) {
               group = {
                 record: {
-                  changedComponentId: instance.componentId,
+                  changedComponentId,
                   consumer,
                   evidence: [],
                 },

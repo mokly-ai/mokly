@@ -56,6 +56,10 @@ values from the same view. It returns `missing` for an absent or different key,
 `present` for equal props keys, order and slot, and `moved` otherwise. It does not
 classify visual or material Changes.
 
+Comparison projection receives canonical catalogue links for equality and keeps
+real href values for resource traversal and CSS selector matching. Move pairing
+aligns component identities without changing captured bytes or instance offsets.
+
 Compiled JSX invocations record optional `source: { path, line, column }` in
 manifest v8. The path identifies the caller inside the repository, with 1-based
 coordinates. Programmatic or already-compiled calls can omit it. The internal

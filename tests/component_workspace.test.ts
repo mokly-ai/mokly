@@ -80,9 +80,15 @@ test("workspace badges, comparison eligibility and usage use recorded evidence",
   );
 });
 
-test("a changed screen id keeps distinct Added and Removed evidence in a component catalogue", async (t) => {
+test("unrelated screens retain distinct Added and Removed evidence in a component catalogue", async (t) => {
   const fixture = await componentReviewFixture(t, (source) =>
-    source.replace('path: "home"', 'path: "renamed"'),
+    source
+      .replace(
+        'path: "home", title: "Home"',
+        'path: "renamed", title: "Another screen"',
+      )
+      .replaceAll("<main>", "<aside>")
+      .replaceAll("</main>", "</aside>"),
   );
   const { result } = await compareReview(
     fixture.after,

@@ -22,6 +22,7 @@ import {
 import { CompilationAssetReader } from "./compilation_assets.js";
 import { classifyComponents } from "./component_classification.js";
 import { baselineForCurrentIdentities } from "./component_metadata.js";
+import { prepareMoveClassification } from "./moves/prepare.js";
 
 /** Retain every component variant and affected screen, then classify the same immutable bytes. */
 export async function compareComponentCatalogue(
@@ -35,7 +36,6 @@ export async function compareComponentCatalogue(
   baseRef: string,
   useFastPath?: boolean,
 ): Promise<ReviewArtifact> {
-  baseline = baselineForCurrentIdentities(baseline, compilation.manifest);
   const baseArtifacts = artifactViews(baseline);
   const headArtifacts = artifactViews(compilation.manifest);
   const basePaths = baseArtifacts.map(({ route }) => route);
@@ -63,7 +63,7 @@ export async function compareComponentCatalogue(
     compilation.outputs,
     headReader,
   );
-  const result = await classifyComponents({
+  const prepared = await prepareMoveClassification({
     before: baseline,
     after: compilation.manifest,
     beforeReader,
@@ -74,8 +74,15 @@ export async function compareComponentCatalogue(
     baseRef,
     ...(useFastPath === undefined ? {} : { useFastPath }),
   });
+  const result = await classifyComponents(prepared);
+  baseline = baselineForCurrentIdentities(
+    baseline,
+    compilation.manifest,
+    prepared.pairing.moves,
+  );
+  const retainedBaseArtifacts = artifactViews(baseline);
   const files = new Map<string, ReviewArtifactContent>();
-  for (const artifact of baseArtifacts)
+  for (const artifact of retainedBaseArtifacts)
     addArtifactFile(
       files,
       artifact.snapshot.before,
@@ -90,14 +97,20 @@ export async function compareComponentCatalogue(
   await copySnapshotDependencies(
     files,
     "before",
-    new Set(basePaths),
+    new Set(retainedBaseArtifacts.map((artifact) => artifact.route)),
     (route) => beforeReader.read(route),
     (routes) => baseReader.readMany(routes),
   );
   await copySnapshotDependencies(files, "after", new Set(headPaths), (route) =>
     afterReader.read(route),
   );
-  return { result, files };
+  return {
+    result,
+    files,
+    ...(prepared.pairing.moves.length || prepared.pairing.diagnostics.length
+      ? { pairing: prepared.pairing }
+      : {}),
+  };
 }
 
 function artifactViews(manifest: Manifest) {

@@ -2,9 +2,9 @@
 
 ## Delivery Status
 
-Approved contract. Current comparisons pair entries by kind and case-folded path and treat a
-moved entry as a removal plus an addition; the
-[path identity plan](../../plans/path-identity.md) delivers this contract.
+Pairing, validation, diagnostics and comparison delivery implement this contract.
+The remaining viewer labels and details follow the
+[path identity plan](../../plans/path-identity.md).
 
 Because an entry's path is its identity, moving a file or renaming a
 directory changes identity. This contract pairs a removed baseline entry with
@@ -25,6 +25,11 @@ pairs, each current variant whose slug equals a baseline variant's slug pairs
 with it, and the remaining variants of that kind continue through the signals
 as ordinary candidates.
 
+Candidate identity and variant slugs use case-folded paths. Case-only changes
+are existing identities, never moves. A component parent can move only to
+another component parent; component variants can move only to variants. This
+does not change same-path parent/variant shape-change classification.
+
 The signals run as passes in the order below. Within a pass, an added entry
 pairs with a removed entry only when it matches exactly one removed candidate
 under that signal and that removed candidate matches exactly one added
@@ -34,6 +39,16 @@ comparison records the diagnostic
 `added <kind> <path> matches removed entries <path> and <path>; declare movedFrom to pair it`,
 listing every match in UTF-16 order. Paired entries leave the candidate set
 before the next pass.
+
+For an ambiguous removed entry the symmetric diagnostic is
+`removed <kind> <path> matches added entries <path> and <path>; declare movedFrom to pair it`.
+List every counterpart, joined by `and`. A pass evaluates its candidate set
+before accepting pairs; it does not make greedy choices after removing a pair.
+Automatic same-slug variant pairs follow each accepted parent before the next
+signal. An explicit variant declaration takes precedence in the declared pass.
+Within each pass a proven parent claims its same-slug children before independent
+variant matches or ambiguity diagnostics. Parent content equality requires a
+pairing or identical view evidence for every variant, not schema and slugs alone.
 
 ## Signals
 
@@ -65,6 +80,15 @@ target's paired current path when the target was paired in an earlier pass, and
 otherwise the written path. Content is identical only when every corresponding
 view or document is identical and the set of views is the same.
 
+The shared paired-ignore normalizer retains real URLs separately for resource
+traversal and CSS selector matching. Link canonicalization changes equality
+material only; it never changes captured documents or the selector matching tree.
+Copied document resources at corresponding relative references remain unmodified
+when their confined before/after bytes match. This proof is scoped to that document.
+Reviewable references use the same paired identities: flow steps, memberships,
+variant parents, component usage and `relatedDocs` links to discovered documents.
+Unmatched repository document labels remain literal metadata.
+
 ## Similarity
 
 The similarity score of two documents or pages is computed over the lines of
@@ -74,6 +98,12 @@ intersection of the two line lists, the score is
 `2 × shared ÷ (linesBefore + linesAfter)`, a number from `0` to `1`. The
 threshold is `0.5`, inclusive, and ties for the best score make the entry
 ambiguous.
+
+An LF or CRLF terminates a line without adding an extra trailing empty line;
+interior empty lines count. Two empty documents have score `1`; exactly one
+empty document has score `0`. A tie counts only among eligible scores at or
+above the threshold, independently on each side, even if only one tied edge
+would otherwise be mutual.
 
 ## Declared Moves
 
@@ -86,6 +116,7 @@ value on two current entries, under the
 rejects nothing: a `movedFrom` that names no removed baseline entry of the same
 kind leaves the entry `added` and records the comparison diagnostic
 `<path>: movedFrom <path> matched no removed baseline entry of kind <kind>`.
+A nonmatching declaration excludes that added entry from later signals.
 A declaration may be removed once the base branch contains the move; keeping
 it is harmless, because it names no removed entry.
 
@@ -103,6 +134,23 @@ removed: no removed record, removed preview, or removed row is produced for it.
 A paired entry's comparison, previous version, and per-view evidence use the
 paired baseline entry's documents as the before side.
 
+Review v5 continues to contain screen, component and use-case records only.
+Each moved record carries `previousPath`; a pure move has an explicit empty
+`ChangedEntry.reasons` list. Page/document membership and prior paths belong to
+the catalogue snapshot and read model, not synthetic visual review records.
+The internal `ReviewArtifact.pairing` and `ComponentChangeSnapshot.pairing`
+retain `{ moves: { kind, path, previousPath }[], diagnostics: string[] }` for all
+kinds. The artifact summary consumes these fields for its all-kind `moved`
+count and exact diagnostics. They are not fields of `review.json` or public
+catalogue JSON. Plain builds publish no inferred or authored `previousPath`.
+
+Complete and selected capture retain each side's actual spelling and source
+documents. A moved component variant groups beneath its current parent; a
+removed variant stays with its baseline parent. A removed parent can therefore
+have an empty historical variant group after all its variants pair elsewhere.
+Affected-consumer evidence retains historical context and chain paths; its
+canonical consumer and changed-component identity use the accepted current path.
+
 The viewer labels a paired entry `Moved` in Changes rows and details and shows
 the previous path in details; the [variant navigation](./mokly-variant-navigation.md)
 and [catalogue changes](./mokly-catalogue-changes.md) contracts own the rows.
@@ -111,11 +159,21 @@ outside this repository.
 
 ## Links
 
-A build-time link to a path that names no current entry is
-`unknown-link-target`. When the comparison has paired that path as a removed
-entry's previous path, the diagnostic is `moved-link-target` and names the new
-path, under the [path diagnostics](./mokly-paths.md#diagnostics). Links never
-follow a move automatically.
+A link to a path that names no current entry is `unknown-link-target` unless a
+validated map knows its current destination. Build, Check, and initial Serve,
+export and comparison compilation use only the current catalogue's authored
+`movedFrom` hints. They do not infer moves from incomplete output or prepare a
+baseline solely to improve a failed link diagnostic.
+
+After comparison accepts both catalogues and its pairs, saved on-demand and
+temporary-props renders in that same renderer generation also receive those
+pairs. Accepted pairs take precedence over authored hints. The destination must
+still name a current entry of the paired kind. Runtime replacement and unavailable
+comparison evidence clear the accepted map; a mismatched generation is rejected.
+
+A known prior path reports `moved-link-target` with the new path under the
+[path diagnostics](./mokly-paths.md#diagnostics). If neither map knows it, the
+failure remains `unknown-link-target`. Links never follow a move automatically.
 
 ## Verification
 

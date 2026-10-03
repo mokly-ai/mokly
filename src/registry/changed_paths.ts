@@ -19,6 +19,10 @@ import type {
 
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { relatedDocumentReferences } from "../documents/references.js";
+import { baselineEntryIndex } from "../review/moves/entries.js";
+import { baselinePathMapper } from "../review/moves/identity.js";
+import { moveIdentity, type EntryMove } from "../review/moves/types.js";
 
 /** Match each entry, including every variant, against changed material and metadata. */
 export function changedManifestPaths(
@@ -26,6 +30,7 @@ export function changedManifestPaths(
   baseManifest: HistoricalManifest,
   config: ResolvedConfig,
   changedPaths: readonly string[],
+  moves: readonly EntryMove[] = [],
 ): readonly string[] {
   const mockupsPrefix = toPosixPath(
     path.relative(config.repoRoot, config.mockupsDir),
@@ -35,7 +40,18 @@ export function changedManifestPaths(
   const baseEntries = new Map(
     baseManifest.entries.map((entry) => [entry.path.toLowerCase(), entry]),
   );
+  const pairedBases = baselineEntryIndex(baseManifest.entries, moves);
+  const mapBefore = baselinePathMapper(
+    baseManifest.entries,
+    manifest.entries,
+    moves,
+  );
   const hierarchy = analyzeHierarchy<ManifestEntry>(manifest.entries).hierarchy;
+  const beforeDocuments = relatedDocumentReferences(
+    baseManifest.entries,
+    mapBefore,
+  );
+  const afterDocuments = relatedDocumentReferences(manifest.entries);
   const baseHierarchy = {
     variantParentByPath: new Map(
       baseManifest.entries.flatMap((entry) => {
@@ -51,12 +67,12 @@ export function changedManifestPaths(
     ),
   };
   for (const entry of manifest.entries) {
-    const baseEntry = baseEntries.get(entry.path.toLowerCase());
+    const baseEntry = pairedBases.get(moveIdentity(entry));
     const candidates = changedPathCandidates(entry, baseEntry, mockupsPrefix);
     if (
       isDeepStrictEqual(
-        changeProjection(entry, hierarchy),
-        changeProjection(baseEntry, baseHierarchy),
+        changeProjection(entry, hierarchy, undefined, afterDocuments),
+        changeProjection(baseEntry, baseHierarchy, mapBefore, beforeDocuments),
       ) &&
       !candidates.some((candidate) => changedPaths.includes(candidate))
     )
@@ -80,29 +96,38 @@ function changeProjection(
     CatalogueHierarchy<ManifestEntry | HistoricalManifestEntry>,
     "variantParentByPath"
   >,
+  mapPath: (path: string) => string = (path) => path,
+  mapDocument: (source: string) => string = (source) => source,
 ): unknown {
   if (!entry) return undefined;
   const common = {
     description: entry.description,
-    path: entry.path.toLowerCase(),
+    path: mapPath(entry.path).toLowerCase(),
     kind: entry.kind,
     rationale: entry.rationale,
-    relatedDocs: entry.relatedDocs,
+    relatedDocs: entry.relatedDocs.map(mapDocument),
     tags: entry.tags,
     title: entry.title,
   };
   if (entry.kind === "document")
     return JSON.stringify({ ...common, colorSchemes: entry.colorSchemes });
   if (entry.kind === "page") return common;
-  if (entry.kind === "use-case") return { ...common, steps: entry.steps };
+  if (entry.kind === "use-case")
+    return {
+      ...common,
+      steps: entry.steps.map((step) => ({
+        ...step,
+        screenPath: mapPath(step.screenPath),
+      })),
+    };
   if (entry.kind === "component" && isManifestComponentVariant(entry))
     return {
       ...common,
       colorSchemes: entry.colorSchemes,
       props: entry.props,
       suppliedSlots: entry.suppliedSlots,
-      variantParent: projectedVariantParent(entry, hierarchy),
-      variantOf: entry.variantOf?.toLowerCase(),
+      variantParent: projectedVariantParent(entry, hierarchy, mapPath),
+      variantOf: mapPath(entry.variantOf).toLowerCase(),
     };
   if (entry.kind === "component")
     return {
@@ -116,9 +141,11 @@ function changeProjection(
     ...common,
     address: entry.address,
     colorSchemes: entry.colorSchemes,
-    useCasePaths: entry.useCasePaths,
-    variantParent: projectedVariantParent(entry, hierarchy),
-    variantOf: entry.variantOf?.toLowerCase(),
+    useCasePaths: entry.useCasePaths.map(mapPath),
+    variantParent: projectedVariantParent(entry, hierarchy, mapPath),
+    variantOf: entry.variantOf
+      ? mapPath(entry.variantOf).toLowerCase()
+      : undefined,
   };
 }
 
@@ -128,10 +155,11 @@ function projectedVariantParent(
     CatalogueHierarchy<ManifestEntry | HistoricalManifestEntry>,
     "variantParentByPath"
   >,
+  mapPath: (path: string) => string,
 ): { path: string; title: string } | undefined {
   const parent = hierarchy.variantParentByPath.get(entry.path);
   return parent
-    ? { path: parent.path.toLowerCase(), title: parent.title }
+    ? { path: mapPath(parent.path).toLowerCase(), title: parent.title }
     : undefined;
 }
 

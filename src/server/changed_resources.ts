@@ -7,6 +7,7 @@ import { parse } from "parse5";
 import { isStylesheetPath } from "@mokly/viewer/data";
 
 import { timeAsync } from "../diagnostics/timings.js";
+import { equivalentDocumentResources } from "../documents/moved_resources.js";
 import {
   linkedDocumentResources,
   type DocumentResourceIndex,
@@ -126,10 +127,19 @@ export class ChangedResourceGraph {
           )
         : new Set<string>();
     const all = [...new Set([...bases, ...resources])];
+    const equivalent = await equivalentDocumentResources(
+      source,
+      document,
+      before,
+      this.documentResources,
+      this.baseline,
+      this.reader,
+    );
     const eligible = all.filter(
       (route) =>
-        this.changed.has(route) ||
-        this.changed.has(this.#physicalRoutes.get(route) ?? route),
+        !equivalent.has(route) &&
+        (this.changed.has(route) ||
+          this.changed.has(this.#physicalRoutes.get(route) ?? route)),
     );
     const cssPaths = eligible.filter(isStylesheetPath);
     const baseCss = await this.#base.optionalTexts(cssPaths);
@@ -181,7 +191,10 @@ export class ChangedResourceGraph {
     return {
       ...this.css.analyze(changes, pairs),
       ...(all.some(
-        (route) => this.#byteChanges.has(route) && !eligible.includes(route),
+        (route) =>
+          this.#byteChanges.has(route) &&
+          !eligible.includes(route) &&
+          !equivalent.has(route),
       )
         ? { resourceChanged: true as const }
         : {}),

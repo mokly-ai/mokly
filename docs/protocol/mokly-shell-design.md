@@ -31,7 +31,7 @@ Markdown document pages, and `Moved` Changes rows. Those states are approved
 below and designed in `design/browse/views/folder-overview`,
 `design/browse/pages/document`, `design/changes/outcomes/moved`, and the updated Browse,
 page, and component designs. The shell uses paths while retaining the Pages
-section and treating moves as removals plus additions until the
+section; paired moves retain one entry, while their labels await the
 [path identity plan](../../plans/path-identity.md) delivers the remaining behavior.
 
 Auto/Light/Dark interface appearance is designed in the

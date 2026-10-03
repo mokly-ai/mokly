@@ -9,6 +9,7 @@ import type {
 
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
+import type { EntryMove } from "../review/moves/types.js";
 
 export interface ScreenViewChanges {
   path: string;
@@ -21,18 +22,27 @@ export function screenViewChanges(
   baseline: HistoricalManifest,
   config: ResolvedConfig,
   materialPaths: readonly string[],
+  moves: readonly EntryMove[] = [],
 ): ScreenViewChanges[] {
   const changed = new Set(materialPaths);
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
+  const moved = new Map(
+    moves
+      .filter((move) => move.kind === "screen")
+      .map((move) => [move.previousPath.toLowerCase(), move.path]),
+  );
   const before = new Map(
     baseline.entries
       .filter((entry) => entry.kind === "screen")
-      .map((entry) => [entry.path, entry]),
+      .map((entry) => [
+        (moved.get(entry.path.toLowerCase()) ?? entry.path).toLowerCase(),
+        entry,
+      ]),
   );
   const after = new Map(
     current.entries
       .filter((entry) => entry.kind === "screen")
-      .map((entry) => [entry.path, entry]),
+      .map((entry) => [entry.path.toLowerCase(), entry]),
   );
   return [...new Set([...before.keys(), ...after.keys()])].sort().map((id) => {
     const previous = before.get(id),
@@ -67,6 +77,6 @@ export function screenViewChanges(
         ];
       }),
     );
-    return { path: id, views };
+    return { path: (current ?? previous)!.path, views };
   });
 }

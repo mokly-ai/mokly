@@ -1,5 +1,9 @@
 # Shared Browse shell
 
+`metadata.ts` carries accepted move evidence privately. `comparison_selection.ts`
+uses each side's original path for snapshot URLs, including moved variants.
+These data rules do not depend on a visible move label.
+
 These React components are the Browse shell tree: catalogue, stages,
 navigation and inspector. `document.tsx` supplies the standalone document
 envelope used through `@mokly/viewer/server`, and the same tree is hydrated in

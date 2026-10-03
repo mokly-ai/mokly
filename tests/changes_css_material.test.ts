@@ -60,6 +60,8 @@ for (const components of [false, true]) {
       fixture.entryPath,
       (await fs.readFile(fixture.entryPath, "utf8"))
         .replace('path: "home"', 'path: "moved"')
+        .replace('title: "Home"', 'title: "Unrelated screen"')
+        .replaceAll("Sign in", "An unrelated task")
         .replace('screenPath: "home"', 'screenPath: "moved"'),
     );
     const { result } = await fixture.compare();

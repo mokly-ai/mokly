@@ -27,6 +27,15 @@ The classifier keys these sources exactly as it keys entry pairs: by kind and
 path for every entry, including variants of both kinds; a paired moved entry
 keys by its current path.
 
+Source validation receives the same accepted pairs as classification. It requires
+exact `previousPath` coverage, both original side addresses, and one Changes
+record for every moved screen, component, variant or use case. Readers reject
+case-only previous paths, duplicate historical identities, and any paired
+historical identity also advertised as removed. Catalogue readers additionally
+require ready, included, unmodified-or-changed current records for prior paths.
+Empty entry reasons are valid only for a paired move. Page and document moves
+remain catalogue evidence under the [move contract](./mokly-moves.md#result).
+
 Source validation also receives the implementation-impact set computed from
 the classifier's paired material, unchanged inputs and dependency policy. It
 requires exact equality with the complete affected-consumer evidence derived

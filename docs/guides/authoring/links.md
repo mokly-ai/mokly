@@ -83,7 +83,10 @@ source tree are rejected as non-portable; use a relative URL for a real static
 asset or a complete document.
 
 A link to a path that names no entry fails the build with the linking entry
-and the path. Update links when you move an entry.
+and the path. When a current entry declares that old path in `movedFrom`, the
+error names the new path. Later preview renders can also use move pairs accepted
+for the same comparison generation. Initial builds use authored hints only.
+Links never follow a move automatically; update the destination.
 
 ## In the catalogue
 

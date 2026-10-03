@@ -4,6 +4,11 @@ Build and Check load consumer definitions, validate their paths and relationship
 render the selected views, and produce deterministic HTML and manifest v8. Serve,
 export, publication and local component controls share the same graph and validators.
 
+`move_targets.ts` accepts current authored hints for initial link diagnostics.
+Later document renders can receive accepted comparison pairs tied to that runtime
+generation. A known prior target produces `moved-link-target`; links never follow
+it automatically. Build and Check do not infer moves from incomplete output.
+
 Imported CSS follows the [delivery contract](../../docs/protocol/mokly-imported-styles.md).
 `load_graph.ts` now collects each configured renderer and entry root's CSS
 imports in JavaScript import order, traverses prelude `@import`s, and emits

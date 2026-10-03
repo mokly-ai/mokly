@@ -23,8 +23,8 @@ keyed by kind and path. The private catalogue-change snapshot is v2 and removed
 page preview metadata is v3. Delivery descriptors remain v3. The manifest stores
 folder records, declared dependencies, component variants and per-view usage,
 with no derivable file names. Markdown documents and their resource copies are
-implemented. Move detection remains planned; current review results omit
-`previousPath`.
+implemented. Accepted move pairs carry `previousPath` in review records and
+the public read model; the manifest retains authored hints only.
 Current and baseline manifest readers accept only one version; earlier output
 follows [baseline compatibility](./mokly-baseline-compatibility.md).
 

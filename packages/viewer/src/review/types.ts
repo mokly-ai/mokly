@@ -1,4 +1,5 @@
 import type { ColorScheme, Viewport } from "../data/axes.js";
+import type { ManifestEntry } from "../registry/types.js";
 
 import type { ReviewResultV5 } from "./component_types.js";
 
@@ -66,6 +67,15 @@ export interface ScreenReview {
 export interface ReviewArtifact {
   files: ReadonlyMap<string, ReviewArtifactContent>;
   result: ReviewResult;
+  /** Typed comparison metadata; documents and pages add no visual result records. */
+  pairing?: {
+    moves: readonly {
+      kind: ManifestEntry["kind"];
+      path: string;
+      previousPath: string;
+    }[];
+    diagnostics: readonly string[];
+  };
 }
 
 /** The only accepted comparison payload. */

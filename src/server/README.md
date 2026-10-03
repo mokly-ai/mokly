@@ -8,6 +8,10 @@ owns watchers, background work and the supervised HTTP child. `http.ts` and
 mutable catalogue and evidence lifecycle.
 `component_change_cache.ts` coalesces accepted classification reads across
 the server's content generations.
+`render_moves.ts` binds accepted pairs to that renderer generation for saved and
+controlled preview diagnostics. Pending evidence, runtime replacement and
+unavailable Changes clear the map. Background classification shares one pairing
+with public catalogue projection, removals and selected comparison capture.
 `watch_inventory.ts` refreshes exact watch inputs before watcher attachment.
 `http_shutdown.ts` stops HTTP admission, ends live-update streams, and disconnects
 open clients before draining every owned service. Incomplete request headers or

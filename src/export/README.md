@@ -13,6 +13,9 @@ before installation. `site.ts` uses the existing shell and Browse adapter to
 assemble one shell page per entry at `view/<path>/index.html`, package assets, and
 immutable comparisons. Snapshot and preview names derive from entry paths
 under the [artifact path contract](../../docs/protocol/mokly-artifact-paths.md).
+Review and catalogue classification share one accepted move pairing. Paired
+current entries carry prior paths and never produce removed previews. Capture
+uses the original baseline paths, including component and screen variants.
 Publish's `--no-changes` uses this same engine with baseline reads, removed
 entries and comparisons omitted. Current-only assembly retains the normal
 input consistency checks and a null delivery comparison URL. A capture callback

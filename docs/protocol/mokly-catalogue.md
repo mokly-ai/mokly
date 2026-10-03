@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Serve, export and viewers use path-keyed v4 with rendered documents and
-[scoped bootstraps](./mokly-shell-bootstrap.md). Move detection remains planned.
+[scoped bootstraps](./mokly-shell-bootstrap.md) and accepted move pairs.
 
 ## Location And Types
 

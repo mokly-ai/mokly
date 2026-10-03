@@ -9,6 +9,10 @@ import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { DocumentCache } from "../../build/document_cache.js";
 import type { CompiledDocument } from "../../build/document_compiler.js";
 import type { GeneratedFile } from "../../build/generated_file.js";
+import type {
+  AcceptedMoveTargets,
+  MoveTargetsProvider,
+} from "../../build/move_targets.js";
 import { timeAsync } from "../../diagnostics/timings.js";
 import { MoklyError } from "../../errors.js";
 
@@ -24,6 +28,11 @@ export interface DocumentServiceOptions {
   timeoutMs?: number;
   maxQueued?: number;
   onDocument?: (document: CompiledDocument) => void;
+  moveTargets?: MoveTargetsProvider;
+}
+export interface DocumentWorkerRequest {
+  route: string;
+  moveTargets?: AcceptedMoveTargets;
 }
 export class DocumentService {
   readonly generation: string;
@@ -199,7 +208,11 @@ export class DocumentService {
     this.failActive = failed;
     worker.on("message", message);
     try {
-      worker.postMessage(job.route);
+      const moveTargets = this.options.moveTargets?.(this.generation);
+      worker.postMessage({
+        route: job.route,
+        ...(moveTargets ? { moveTargets } : {}),
+      } satisfies DocumentWorkerRequest);
     } catch (error) {
       failed(error);
     }

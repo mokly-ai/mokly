@@ -40,10 +40,13 @@ test("hydrated Serve and export render a removed route", async (context) => {
   assert.match(exported, /Showing previous version/);
 });
 
-test("hydrated Serve and export distinguish removed and replacement ids", async (context) => {
+test("hydrated Serve and export distinguish removed and unrelated replacement paths", async (context) => {
   const fixture = await createExportFixture(pageSource());
   context.after(() => fixture.close());
-  await fs.writeFile(fixture.entryPath, pageSource("guide"));
+  await fs.writeFile(
+    fixture.entryPath,
+    pageSource("guide").replaceAll("Handbook", "Quick guide"),
+  );
   const server = await startReviewedServer(fixture);
   context.after(() => server.close());
 

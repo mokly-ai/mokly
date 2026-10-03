@@ -43,8 +43,10 @@ Paths, `slug`, `path` and `movedFrom`, links, tags, Changes, the source guards
 and the safe output transaction are the same. A title or folder title never
 changes a path; only the file's place or a declared path does. Pages take part
 in Changes but have no visual comparison, because there is no second view to
-compare. A changed path currently appears as a removal and an addition.
-`movedFrom` records the authored previous path; move pairing is not available yet.
+compare. Changes can pair a moved page even when its content changes: the
+normalised light documents must be at least half alike and be each other's
+unique best match. Set `movedFrom` to declare the complete previous path when
+the content cannot identify the move.
 
 ## Markdown documents
 
@@ -96,7 +98,9 @@ a file that does not exist fails the build, and `http:`, `https:` and
 
 Documents join Changes like pages: the rendered document, its resources
 and its metadata are compared with the branch point, a removed document shows
-its previous version, and a changed path currently appears as a removal and an addition.
+its previous version, and a moved document pairs with its earlier version by
+content or its front-matter `movedFrom` declaration. A paired document produces
+no removed entry.
 
 ## Exported types
 

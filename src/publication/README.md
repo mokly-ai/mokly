@@ -12,6 +12,8 @@ screen/page descriptors that consumer export uses. Failures cross this boundary
 as `MoklyError`. `shell_previews.ts` adds those descriptors only to captured
 static shells after the immutable generation path is known, leaving Serve's
 page descriptors absent.
+The descriptor builder consumes accepted move pairs, so a paired baseline entry
+cannot become a removed record or preview during repository publication.
 
 The `.mjs` files under `scripts/preview/` remain repository orchestration: they
 start and stop the capture server, call these typed operations, and hand the

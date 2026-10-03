@@ -5,7 +5,10 @@ import test from "node:test";
 import { DocumentCache } from "../dist/build/document_cache.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import { loadConfig } from "../dist/config/load.js";
-import { DocumentService } from "../dist/server/demand/service.js";
+import {
+  DocumentService,
+  type DocumentWorkerRequest,
+} from "../dist/server/demand/service.js";
 
 import {
   createFixture,
@@ -14,18 +17,18 @@ import {
 } from "./helpers/fixture.js";
 
 class FakeWorker extends EventEmitter {
-  readonly requests: string[] = [];
+  readonly requests: DocumentWorkerRequest[] = [];
   terminated = false;
   termination: Promise<number> = Promise.resolve(0);
-  postMessage(route: string): void {
-    this.requests.push(route);
+  postMessage(request: DocumentWorkerRequest): void {
+    this.requests.push(request);
   }
   async terminate(): Promise<number> {
     this.terminated = true;
     return this.termination;
   }
   respond(): void {
-    const route = this.requests.at(-1)!;
+    const route = this.requests.at(-1)!.route;
     this.emit("message", { ok: true, document: { route, html: route } });
   }
 }
@@ -45,6 +48,9 @@ test("demand worker coalesces, recovers after idle failure and keeps listeners b
   });
   fixture.beforeRemove(() => service.close());
   const first = service.read("home/index.desktop.html");
+  assert.deepEqual(workers[0]!.requests[0], {
+    route: "home/index.desktop.html",
+  });
   assert.equal(service.read("home/index.desktop.html"), first);
   workers[0]!.respond();
   await first;
@@ -142,4 +148,38 @@ test("document cache bounds bytes and evicts least recently used documents", () 
   assert.equal(cache.get("c"), "ccc");
   cache.clear();
   assert.equal(cache.get("c"), undefined);
+});
+
+test("demand rendering forwards only the currently accepted move map", async (t) => {
+  const fixture = await createFixture(validEntrySource());
+  t.after(() => removeFixture(fixture));
+  const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
+  const worker = new FakeWorker();
+  const scope = {
+    generation: runtime.generation,
+    moves: [
+      { kind: "screen" as const, path: "home", previousPath: "old-home" },
+    ],
+  };
+  let accepted = true;
+  const service = new DocumentService(runtime, () => {}, {
+    createWorker: () => worker,
+    moveTargets: (generation) => {
+      assert.equal(generation, runtime.generation);
+      return accepted ? scope : undefined;
+    },
+  });
+  fixture.beforeRemove(() => service.close());
+  const first = service.read("home/index.desktop.html");
+  assert.deepEqual(worker.requests[0], {
+    route: "home/index.desktop.html",
+    moveTargets: scope,
+  });
+  worker.respond();
+  await first;
+  accepted = false;
+  const second = service.read("home/index.mobile.html");
+  assert.deepEqual(worker.requests[1], { route: "home/index.mobile.html" });
+  worker.respond();
+  await second;
 });

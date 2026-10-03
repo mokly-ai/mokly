@@ -7,11 +7,15 @@ import {
   uniqueReasons,
   type entryPairs,
 } from "./component_metadata.js";
+import { previousPathFields } from "./moves/types.js";
 
 /** One Changes record per kind and path, independent of grouped component presentation. */
 export function pairedEntryChanges(
   changes: readonly ChangedEntry[],
   pairs: ReturnType<typeof entryPairs>,
+  mapBefore: (path: string) => string = (path) => path,
+  beforeDocuments: (source: string) => string = (source) => source,
+  afterDocuments: (source: string) => string = (source) => source,
 ): ChangedEntry[] {
   const reasonsByKey = new Map<string, EntryChangeReason[]>();
   for (const change of changes) {
@@ -31,12 +35,17 @@ export function pairedEntryChanges(
     );
     if (!before) retained.push({ kind: "added" });
     else if (!after) retained.push({ kind: "removed" });
-    else if (metadata(before) !== metadata(after))
+    else if (
+      metadata(before, mapBefore, beforeDocuments) !==
+      metadata(after, undefined, afterDocuments)
+    )
       retained.push({ kind: "metadata" });
-    if (!retained.length) return [];
+    const moved = previousPathFields(before, after);
+    if (!retained.length && !moved.previousPath) return [];
     return [
       {
         kind: selected.kind,
+        ...moved,
         ...(before ? { before: address(before) } : {}),
         ...(after ? { after: address(after) } : {}),
         reasons: uniqueReasons(retained),

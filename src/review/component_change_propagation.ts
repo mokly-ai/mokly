@@ -48,15 +48,12 @@ export function propagateUseCases(
   before: Manifest,
   after: Manifest,
   changes: ChangedEntry[],
+  mapBefore: (path: string) => string = (path) => path,
 ): void {
   const changedScreens = new Set(
     changes
-      .filter((entry) => entry.kind === "screen")
-      .flatMap((entry) =>
-        [entry.before?.path, entry.after?.path].filter(
-          (id): id is string => id !== undefined,
-        ),
-      ),
+      .filter((entry) => entry.kind === "screen" && entry.reasons.length > 0)
+      .map((entry) => (entry.after ?? entry.before)!.path),
   );
   for (const pair of pairs) {
     const entry = (pair.after ?? pair.before)!;
@@ -68,8 +65,10 @@ export function propagateUseCases(
               (index === 0 ? before : after).entries.flatMap((screen) =>
                 screen.kind === "screen" &&
                 screen.path === step.screenPath &&
-                changedScreens.has(screen.path)
-                  ? [screen.path]
+                changedScreens.has(
+                  index === 0 ? mapBefore(screen.path) : screen.path,
+                )
+                  ? [index === 0 ? mapBefore(screen.path) : screen.path]
                   : [],
               ),
             )

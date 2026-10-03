@@ -153,7 +153,7 @@ Usages and ancestor folders do not add rows/counts.
 
 ## Reasons And Secondary Evidence
 
-Changed entries have nonempty, duplicate-free reasons. Added/removed reasons
+Changed entries have duplicate-free reasons, empty only for a paired pure move. Added/removed reasons
 require the corresponding missing side; metadata compares the explicit entry
 projection, including a parent's schema/controls and a variant entry's props
 and supplied slots. Material means a
@@ -202,7 +202,7 @@ listed. A component is listed as affected only through an actual usage path, not
 because it happens to share a directory or dependency declaration.
 
 Every `via` is a nonempty caller-ownership chain from the consumer to the changed
-component; its last `componentId` equals `changedComponentId`. Each instance key
+component; its last `componentId`, mapped through accepted pairs, equals `changedComponentId`. Each instance key
 must exist in the referenced side/context's manifest usage, with its stated
 `componentId` and a valid ownership edge to the next occurrence. Direct screen
 use has one element. A component consumer either owns the context entry or is

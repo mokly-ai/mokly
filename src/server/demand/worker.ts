@@ -8,11 +8,16 @@ import {
 import { DocumentCompiler } from "../../build/document_compiler.js";
 import { errorMessage } from "../../errors.js";
 
+import type { DocumentWorkerRequest } from "./service.js";
+
 const runtime = workerData as ComponentRuntime;
 const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime));
-parentPort?.on("message", (route: string) => {
+parentPort?.on("message", ({ route, moveTargets }: DocumentWorkerRequest) => {
   try {
-    parentPort?.postMessage({ ok: true, document: compiler.render(route) });
+    parentPort?.postMessage({
+      ok: true,
+      document: compiler.render(route, undefined, moveTargets),
+    });
   } catch (error) {
     parentPort?.postMessage({ ok: false, error: errorMessage(error) });
   }

@@ -85,7 +85,7 @@ export async function startStaticFixture({
   }
 }
 
-/** Finalized export containing both removed and renamed historical routes. */
+/** Finalized export containing a removed page and a paired moved page. */
 export async function startHistoricalStaticFixture() {
   const fixture = await createExportFixture(
     historicalEntrySource(true, "renamed-old"),

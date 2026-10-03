@@ -66,7 +66,11 @@ export function assembleExport(
 } {
   const removedSnapshots =
     changesStatus === "ready"
-      ? removedManifestEntries(compilation.manifest, baseline)
+      ? removedManifestEntries(
+          compilation.manifest,
+          baseline,
+          comparison?.pairing?.moves,
+        )
       : [];
   const removed = removedSnapshots.map(({ entry }) => entry);
   const catalogue = createCatalogue(compilation.manifest, removedSnapshots);
@@ -114,6 +118,7 @@ export function assembleExport(
     baseline,
     config,
     contentChanges,
+    comparison?.pairing?.moves,
   );
   const pageIds = new Set(
     compilation.manifest.entries.flatMap((entry) =>
@@ -126,6 +131,7 @@ export function assembleExport(
           (item) => (item.after ?? item.before)!.path,
         ),
         ...materialIds.filter((id) => pageIds.has(id)),
+        ...(comparison.pairing?.moves.map((move) => move.path) ?? []),
       ]
     : materialIds;
   const context: ShellContext = {
@@ -139,6 +145,15 @@ export function assembleExport(
           componentChanges: {
             baseline,
             result: comparison.result,
+            ...(comparison.pairing ? { pairing: comparison.pairing } : {}),
+            changedEntries: [
+              ...new Set([
+                ...comparison.result.changes
+                  .filter((entry) => entry.reasons.length > 0)
+                  .map((entry) => (entry.after ?? entry.before)!.path),
+                ...materialIds.filter((id) => pageIds.has(id)),
+              ]),
+            ].sort(),
             screenEvidence: comparison.result.screens
               .map(({ path, views }) => ({
                 path,
