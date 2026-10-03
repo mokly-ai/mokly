@@ -696,6 +696,29 @@ no catalogue build, shared production list, or new internal export. The two
 affected browser specs, complete browser suite, hydration suite and complete
 gate run again after the fix commit. Existing milestones remain complete.
 
+The two ordinary preview specs pass all 14 cases after the registry fix.
+Their build/export fixture takes 166.20 seconds and serving takes 1.44 seconds,
+below its 300-second limit. The complete browser rerun then has 793 passes,
+one failed parity case and no skips. The failed desktop Welcome trace has
+byte-identical full-page screenshots. The user measured only two different
+pixels in the note element capture, at the anti-aliased rounded corner.
+The first repeat with `page.screenshot({ fullPage: true, clip })` has 17 passes
+and three desktop Welcome failures. Each failed image differs at the same two
+rounded-corner pixels. The Static page reaches the Live pixels after a later
+paint; fonts-ready does not wait for background-image decoding. A second repeat
+adds image decoding, two animation frames and a bounded stability loop; it has
+35 passes and five failures at those same two pixels. The page can retain a
+stable composited first paint because Playwright uses the viewport capture
+when the full page fits it. The follow-up changes only the test: decode the
+note's background image, wait two animation frames, then poll full-page Chrome
+captures with `captureBeyondViewport: true` 100 milliseconds apart until two
+consecutive PNGs match exactly, with a five-second limit. Crop the note from
+that stable PNG in a blank page's canvas. This forces a full-surface raster and
+avoids a second capture. It adds no dependency. Both assertions keep exact byte
+equality. No pixel tolerance or product change is added. All four cases pass
+ten times (40/40) in 2 minutes 36 seconds with exact byte equality. The complete
+browser, hydration and final complete gate run after the test-fix commit.
+
 ## Post-merge follow-up (non-blocking)
 
 - Live inspection: measure boundaries in the mounted DOM and re-enable

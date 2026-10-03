@@ -1,4 +1,10 @@
-import { expect, test, type FrameLocator } from "@playwright/test";
+import {
+  expect,
+  test,
+  type FrameLocator,
+  type Locator,
+  type Page,
+} from "@playwright/test";
 
 import { entryRoute } from "@mokly/viewer/data";
 
@@ -8,6 +14,78 @@ import {
   liveFrame,
   previewMode,
 } from "./interactive_shell_helpers.js";
+
+/**
+ * Force a full-surface raster even when the page fits the viewport. Compare
+ * stable full-page pixels and crop the note from that same raster.
+ */
+async function captureView(page: Page, note: Locator) {
+  await note.locator(".example-workspace-note-mark").evaluate(async (mark) => {
+    const background = getComputedStyle(mark).backgroundImage;
+    const url = background.match(/^url\(["']?(.*?)["']?\)$/)?.[1];
+    if (!url)
+      throw new Error(`Expected the note's background image: ${background}`);
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+  });
+  let screen: Buffer = Buffer.alloc(0);
+  const session = await page.context().newCDPSession(page);
+  try {
+    await expect
+      .poll(
+        async () => {
+          const { cssContentSize } = await session.send(
+            "Page.getLayoutMetrics",
+          );
+          const { data } = await session.send("Page.captureScreenshot", {
+            format: "png",
+            captureBeyondViewport: true,
+            clip: { ...cssContentSize, scale: 1 },
+          });
+          const next = Buffer.from(data, "base64");
+          const stable = screen.equals(next);
+          screen = next;
+          return stable;
+        },
+        {
+          timeout: 5_000,
+          intervals: [100],
+          message: "Stable full-page pixels",
+        },
+      )
+      .toBe(true);
+  } finally {
+    await session.detach();
+  }
+  const clip = await note.boundingBox();
+  expect(clip).not.toBeNull();
+  const cropPage = await page.context().newPage();
+  try {
+    const pixels = await cropPage.evaluate(
+      async ({ data, clip }) => {
+        const response = await fetch(`data:image/png;base64,${data}`);
+        const image = await createImageBitmap(await response.blob());
+        const left = Math.floor(clip.x);
+        const top = Math.floor(clip.y);
+        const canvas = new OffscreenCanvas(
+          Math.ceil(clip.x + clip.width) - left,
+          Math.ceil(clip.y + clip.height) - top,
+        );
+        canvas.getContext("2d")!.drawImage(image, -left, -top);
+        const png = await canvas.convertToBlob({ type: "image/png" });
+        return Array.from(new Uint8Array(await png.arrayBuffer()));
+      },
+      { data: screen.toString("base64"), clip: clip! },
+    );
+    return { screen, note: Buffer.from(pixels) };
+  } finally {
+    await cropPage.close();
+  }
+}
 
 /** Read module, plain CSS and PostCSS effects without the resource's origin. */
 async function noteStyles(frame: FrameLocator) {
@@ -91,10 +169,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
             name: "Workspace tip",
           });
           await expect(tip).toBeVisible();
-          screenshots.push({
-            note: await tip.screenshot(),
-            screen: await documentPage.screenshot({ fullPage: true }),
-          });
+          screenshots.push(await captureView(documentPage, tip));
         } finally {
           await documentPage.close();
         }
