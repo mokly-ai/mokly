@@ -40,14 +40,20 @@ test("every eligible cumulative RNW component-style view routes with exact catal
     context.diagnostic(
       `${mode}: ${routed} eligible views settled by the style route`,
     );
-    const classify = (useStylePath: boolean, useFastPath = true) =>
+    const classify = (
+      useStylePath: boolean,
+      useFastPath = true,
+      identical = false,
+    ) =>
       classifyComponents({
         before: input.before,
-        after: input.after,
+        after: identical ? input.before : input.after,
         config: input.config,
         beforeReader: memoryReader(input.beforeFiles),
-        afterReader: memoryReader(input.afterFiles),
-        changedPaths: input.changedPaths,
+        afterReader: memoryReader(
+          identical ? input.beforeFiles : input.afterFiles,
+        ),
+        changedPaths: identical ? [] : input.changedPaths,
         baseCommit: "a".repeat(40),
         baseRef: "main",
         useStylePath,
@@ -76,6 +82,31 @@ test("every eligible cumulative RNW component-style view routes with exact catal
     assert.deepEqual(
       actual.changes.map(({ before, after }) => (after ?? before)!.id),
       ["area-1-action"],
+    );
+    const unchangedEvents: TimingEvent[] = [];
+    const unchanged = await runWithTimings(
+      true,
+      "test",
+      () => classify(true, true, true),
+      {
+        write: (event) => unchangedEvents.push(event),
+      },
+    );
+    assert.deepEqual(unchanged, await classify(false, false, true));
+    const unchangedCounts = unchangedEvents.filter(
+      ({ stage, event }) =>
+        stage === "review.compare-screens" && event === "counts",
+    );
+    assert.equal(unchangedCounts.length, 1);
+    assert.deepEqual(unchangedCounts[0]!.counts, {
+      views: 64,
+      fastPath: 64,
+      stylePath: 0,
+      completePath: 0,
+      heapPeakMiB: unchangedCounts[0]!.counts!.heapPeakMiB,
+    });
+    context.diagnostic(
+      `${mode}: 64 identical views settled by the quick check`,
     );
   }
 });

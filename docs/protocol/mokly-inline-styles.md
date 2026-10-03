@@ -71,9 +71,9 @@ through markup ownership; style elements inside a slot range belong to the
 slot's owner. Ignore pairing exposes ids rather than normalized offsets,
 because generated-source removal changes lengths. Style eligibility uses the
 flat original-source spans from
-[page analysis](./mokly-page-analysis.md#contents-and-ignore-pairing), exactly
-those used by normalization and `ignoredIds`, even for markers inside raw text;
-it does not walk DOM comment nodes. An element inside a paired span stays in
+[page analysis](./mokly-page-analysis.md#contents-and-ignore-pairing) for eligibility,
+validation and pairing, even for markers inside raw text; it does not walk DOM
+comment nodes. Emitted ignore evidence follows the actual-material rule below. An element inside a paired span stays in
 place. A one-sided region remains ordinary analyzed material. The renderer
 supplies only the document string; the manifest supplies no head-style or
 public-resource assertions.
@@ -205,7 +205,10 @@ The view `state` and `material` flag derive from the actual materials under
 the [changes contract's definition](./mokly-changes.md): the paired
 ignore-normalized actual materials decide whether a paired view is `changed`
 with `material`, and the single-document normalizations of the two actual
-materials decide `unchanged` against `ignored-only`.
+materials decide `unchanged` against `ignored-only`. Emitted `ignoredIds` are
+sorted paired ids whose content differs in the actual materials after inline
+canonicalization, using the ordinary material-signal pairing rule. A region
+removed together with an eligible style contributes no emitted id.
 
 - A view whose unowned inline styles differ only through `excluded` rules has
   equal actual materials: its state is `unchanged`, it carries no `material`

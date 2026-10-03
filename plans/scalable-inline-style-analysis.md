@@ -1315,6 +1315,29 @@ and in checkpoint reports, outside the normative rule.
       3,757 unit, 725 browser and 219 hydration passes, package/static checks
       and the unchanged-source verification snapshots.
 
+- [x] Discovered: second supervisor round (starting `563de1e5`): add failing
+      per-view regressions for all review-marker quick-check gaps, indirect
+      missing derived resources, proof-induced diagnostic changes and differing
+      style eligibility across ignored parser context. Generalize quick-check
+      guards, use optional proof traversal without changing required-read
+      diagnostics, preserve complete reads, and document actual-material `ignoredIds`.
+- [x] Discovered: the second-round literal review-prefix guard does not cover
+      a CSS selector escape that serializes into an orphan review marker.
+      The supervisor rejected the broad `<`/backslash fallback and approved a
+      pure CSS-escape decoder with ASCII-case-insensitive `<!--mokly-` detection.
+      Keep the literal outer guard and ordered style-source equality. Decoder
+      unit tests, all-switch per-view regressions, a seeded differential and
+      ordinary utility/string controls prove the narrow rule; RNW stays 64/64
+      fast for no change and 64/64 style for component styles in both modes.
+      Preserve the proposal, rejected prototype and failing probes under
+      `.context/delegation/scalable/m8-round2-escaped-marker-proposal.md`.
+- [x] Discovered: verify the second-round fixes with targeted/full unit,
+      pinned-Chromium browser/hydration and static checks; retain evidence in
+      the [second checkpoint](../docs/dev/style-only-route-second-checkpoint.md),
+      commit locally and stop before measuring/pushing. All 923 targeted, 3,989
+      unit, 725 browser and 219 hydration tests pass, along with package/static
+      checks and 13 mutation checks. Full suites ran with frozen authored files.
+
 - [ ] Record the no-change and component-style samples of both fixtures.
 - [ ] Update `src/review/README.md` and the contracts' Delivery Status for
       delivered parts; run the suite and `cargo xtask check`.

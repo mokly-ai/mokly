@@ -33,8 +33,10 @@ export class ComponentMaterialReader {
   private missingResource?: (route: string) => boolean;
   private side: "before" | "after" = "after";
   private readonly normalized = new Map<string, Promise<string>>();
-  private readonly viewResources = new ViewResourceCache((seeds) =>
-    this.graph.collect(seeds),
+  private readonly viewResources = new ViewResourceCache(
+    (seeds) => this.graph.collect(seeds),
+    (seeds) =>
+      this.graph.collect(seeds, (routes) => this.prefetchProof(routes)),
   );
   constructor(private readonly reader: ReviewAssetReader) {
     this.canReadOptionally = Boolean(
@@ -112,18 +114,11 @@ export class ComponentMaterialReader {
     if (!this.reader.readMany) return;
     for (const route of routes) {
       const optional = this.optional.get(route);
-      if (optional && !this.files.has(route))
-        this.files.set(
-          route,
-          optional.then((content) => {
-            if (content === undefined)
-              throw new MoklyError(
-                "review-invalid",
-                `referenced resource is missing: ${route}`,
-              );
-            return content;
-          }),
-        );
+      if (optional && !this.files.has(route)) {
+        const content = await optional;
+        if (content !== undefined)
+          this.files.set(route, Promise.resolve(content));
+      }
     }
     const missing = [...new Set(routes)].filter(
       (route) => !this.files.has(route),
@@ -154,14 +149,7 @@ export class ComponentMaterialReader {
     if (!result) {
       const optional = this.optional.get(route);
       result = optional
-        ? optional.then((content) => {
-            if (content === undefined)
-              throw new MoklyError(
-                "review-invalid",
-                `referenced resource is missing: ${route}`,
-              );
-            return content;
-          })
+        ? optional.then((content) => content ?? this.reader.read(route))
         : this.reader.read(route);
       this.files.set(route, result);
     }
@@ -219,6 +207,36 @@ export class ComponentMaterialReader {
     references?: readonly string[],
   ): Promise<ReadonlySet<string>> {
     return this.viewResources.resources(route, html, excluded, references);
+  }
+
+  /** A missing base file anywhere in a proof closure means fall-through. */
+  resourcesIfPresent(
+    route: string,
+    html: string,
+    excluded?: ResourceExclusion,
+    references?: readonly string[],
+  ): Promise<ReadonlySet<string> | undefined> {
+    return this.viewResources.resourcesIfPresent(
+      route,
+      html,
+      excluded,
+      references,
+    );
+  }
+
+  private async prefetchProof(routes: readonly string[]): Promise<boolean> {
+    if (this.canReadOptionally) {
+      const files = await this.optionalTexts(routes);
+      return routes.every((route) => files.get(route) !== undefined);
+    }
+    // Required-only injected readers can still prove availability; their errors defer to full comparison.
+    try {
+      await this.prefetch(routes);
+      await Promise.all(routes.map((route) => this.read(route)));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private async prefetchResources(routes: readonly string[]): Promise<void> {

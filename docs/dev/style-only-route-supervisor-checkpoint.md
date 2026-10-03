@@ -5,6 +5,9 @@ This follow-up to [the M8 checkpoint](./style-only-route-checkpoint.md) starts a
 2899.930 MHz. This is a local code checkpoint: no measurements, fixture benchmark
 regeneration, push, final implementation review or next milestone.
 
+The [second supervisor checkpoint](./style-only-route-second-checkpoint.md)
+records follow-up source/escape and resource-proof corrections after `563de1e5`.
+
 ## Corrections
 
 1. Raw edited-style reference arrays must agree before the route trusts shared

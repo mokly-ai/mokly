@@ -18,10 +18,11 @@ import type {
   ComparedComponentView,
   ComponentViewContext,
 } from "./component_view.js";
+import { sameInlineOuterSources } from "./css/inline_styles.js";
 import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
 import type { PageAnalysisPair } from "./page_pair.js";
 import { identicalPageQuickCheck } from "./page_quick_check.js";
-import { pairedIgnoreTouchesStyles } from "./style_source_safety.js";
+import { styleNeedsFullValidation } from "./style_source_safety.js";
 
 export interface UnchangedComponentAttempt {
   comparison?: ComparedComponentView;
@@ -54,12 +55,12 @@ export async function compareUnchangedComponentView(
   if (!componentUsageTopologyEqual(before.usage, after.usage)) return {};
   if (pages) {
     const paired = pages.pairedIgnoreIds;
+    const baseStyles = pages.beforeAnalysis.inlineStyles(paired);
+    const headStyles = pages.afterAnalysis.inlineStyles(paired);
+    if (!sameInlineOuterSources(baseStyles, headStyles)) return {};
     for (const side of [pages.beforeAnalysis, pages.afterAnalysis])
       if (
-        pairedIgnoreTouchesStyles(
-          side.inlineStyles(paired),
-          side.ignored(paired),
-        ) ||
+        side.inlineStyles(paired).some(styleNeedsFullValidation) ||
         side.hasDroppedStyleReferences(paired)
       )
         return {};
@@ -125,13 +126,14 @@ export async function compareUnchangedComponentView(
     actualAfter,
   );
   const beforeResources = context.compareResourceBytes
-    ? await context.beforeReader.resources(
+    ? await context.beforeReader.resourcesIfPresent(
         before.path,
         actual.base,
         undefined,
         actualBefore,
       )
     : afterResources;
+  if (!beforeResources) return fallback();
   const projectedAfterResources =
     projected && excluded
       ? await context.afterReader.resources(
@@ -143,13 +145,14 @@ export async function compareUnchangedComponentView(
       : new Set<string>();
   const projectedBeforeResources =
     projected && excluded && context.compareResourceBytes
-      ? await context.beforeReader.resources(
+      ? await context.beforeReader.resourcesIfPresent(
           before.path,
           projected.before,
           excluded,
           prepared?.references?.before,
         )
       : projectedAfterResources;
+  if (!projectedBeforeResources) return fallback();
   const resources = new Set([
     ...beforeResources,
     ...afterResources,

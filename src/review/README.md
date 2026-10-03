@@ -389,11 +389,24 @@ Its [same-host measurements](../../docs/dev/shared-page-analysis-measurements.md
 retain the M6 controls, original-source payload bounds and exclusive work.
 The [style-route checkpoint](../../docs/dev/style-only-route-checkpoint.md)
 records per-view oracles, parse interception and the conservative seed proof.
-`style_source_safety.ts` shares the paired-ignore/style intersection fallback
-between non-identical quick checks and the route. Original spans validate and
-pair regions; full canonical materials still decide state and ignore evidence.
-Quick checks reject eligible-style resource records dropped by source removal,
-without parsing CSS. Route resource proof also requires equal raw references
-in the edited element, including selector arguments; missing derived base seeds
-fall through before required reads. Review markers in eligible tags and reserved
-prefixes in original/composed CSS preserve full material validation.
+`style_source_safety.ts` owns the route's paired-ignore/span checks and the
+quick checks' review-prefix test over eligible unowned style outer sources.
+Quick checks reject region markers (paired or one-sided) and material signals
+there, even on identical pages. They also use `css/escape_decoding.ts` to reject
+ASCII-case-insensitive decoded `<!--mokly-` in eligible content without CSS
+analysis. Ordinary utility escapes and literal `<` text remain eligible.
+Non-identical checks require equal ordered
+eligible style sources; ignored markup can alter parser context and eligibility.
+Original spans validate/pair regions; canonical actual materials own emitted
+ignore ids and state. Dropped eligible-style reference records still require
+fall-through, without parsing CSS.
+
+`ComponentMaterialReader.resourcesIfPresent` uses the normal graph with an
+availability proof at each unvisited frontier. Derived optimizations use it
+for base closures; missing files at any depth take fall-through. Successful
+reads and complete closures are reused. A failed proof never caches a partial
+closure as complete. Required reads and prefetch bypass cached optional absence
+and retain the underlying reader's diagnostics. Required-only injected readers
+probe their normal single/bulk reads and defer failures to full comparison.
+The route also requires equal raw references in the edited element, including
+selector arguments, and guards reserved prefixes in original/composed CSS.

@@ -73,8 +73,11 @@ Every condition must hold, otherwise use the full comparison:
    traverse both readers independently, reject changed reachable paths and
    require equal closure membership and bytes. These are transitive checks,
    not seed-path checks; a union cannot replace the derived comparisons.
-   A missing base seed is a failed proof and takes fallback, never a required
-   read error from the optimization.
+   Traverse the base proof closure with optional reads at every depth. Any
+   missing seed or transitive file fails the proof and takes fallback, never a
+   required-read error from the optimization. Reuse successful reads/closures;
+   a failed proof cannot cache a partial closure as complete or replace the
+   full path's own required-read diagnostic with a cached absence.
    Prove those shared seeds cover the stored references of the canonical
    rules as well. A source record touching a paired ignore span can be dropped
    while inline canonicalization retains its rule reference. Missing seed
@@ -112,7 +115,7 @@ and input-owner/root resolution. Unresolved selectors remain conservative.
 All changed rules lack stored references, while unchanged reference-bearing
 rules have identical values. Equal raw references in the edited element also
 cover selector-argument URLs that stored rule references omit. Missing base
-seeds fail the proof before required base traversal. The shared seed proof is conservative over potential
+files fail the optional proof at any graph depth, before required traversal. The shared seed proof is conservative over potential
 actual/projected reachability and rules out resource evidence on either side.
 Equal topology and identical implementation markup leave no non-inline
 implementation difference to discover. No projection, full HTML material,

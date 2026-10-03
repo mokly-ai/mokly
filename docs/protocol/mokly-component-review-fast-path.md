@@ -34,15 +34,23 @@ Apply these steps in order:
 
 0. Try the [identical-text check](./mokly-page-analysis.md#identical-text-quick-check).
    It shares the head analysis and raw seeds, skips projection and preserves
-   usage reasons. Its failed resource proof retains preparation for fall-through.
+   usage reasons. If any eligible unowned style's outer source contains
+   `<!--mokly-review-`, take fall-through: canonicalization may remove region
+   markers or material signals even from identical texts. Inspect only the head
+   in this check. Also decode CSS escapes in eligible style content and take
+   fall-through for decoded `<!--mokly-`, ASCII case-insensitively: serialization
+   can decode escapes into reserved markers. Use the source-only decoding rule
+   below, without inline CSS analysis. Failed proofs retain preparation.
 1. Retain v7 component markers on both sides and apply paired manual-ignore
    normalization. If documents differ outside paired ignored regions, take the
    fall-through. Marker-stripped equality is insufficient because marker
    positions participate in ownership projection. For non-identical sources,
-   also take fall-through when any paired ignore region, including either
-   marker, intersects any eligible unowned style's outer span on either side.
-   Inline canonicalization may remove that region; the complete path decides
-   state and ignore evidence from its actual materials with its existing rules.
+   require equal ordered eligible unowned style outer sources on both sides:
+   ignored markup can change HTML parsing context and therefore style eligibility.
+   Apply both guards on both sides: literal `<!--mokly-review-` in outer source,
+   and ASCII-case-insensitive decoded `<!--mokly-` in content. This includes
+   paired/one-sided region markers and material signals. The complete
+   path decides state, ignore evidence and validation after canonicalization.
 2. Compare usage records canonically. Neither side having usage is eligible;
    exactly one side having it takes fall-through. When both exist, every
    field must match except `props` and `propsKey` on entry-owned instances.
@@ -88,6 +96,20 @@ On failed quick-check proof, try the [style-only route](./mokly-style-only-route
 with its exact conditions; otherwise run the complete comparison. It is not a
 weaker fast-path resource decision. One-sided views run neither paired route.
 
+## Source-only Escape Guard
+
+Decode one to six hex digits after a backslash, consuming one following CSS
+whitespace terminator (CRLF counts as one). Other escaped characters yield that
+character. Inside source strings, escaped LF, CR, CRLF or FF is a removed line
+continuation. Zero, surrogate and out-of-range escaped code points, and a trailing
+backslash at EOF, yield U+FFFD. Escaped quotes do not open/close source strings.
+Keep quoting, comments and token separators in the decoded text so separate
+tokens cannot manufacture a prefix; comments have no escapes to interpret.
+This is a pure source scan, not CSS parsing or rule analysis. Ordinary utility
+escapes (`.md\:flex`, `.w-1\/2`, `.hover\:bg-red:hover`), `\201C` and literal
+`<` without the decoded prefix retain quick-check eligibility. Full comparison
+results and validation remain authoritative; no complete-path rule changes.
+
 ## Resource And One-Sided Rules
 
 Committed mode traverses only the head reader's actual closure, plus its
@@ -96,7 +118,15 @@ fall-through. With shared seeds, a base-only dependency is reachable only
 through a resource whose content differs and whose changed Git path is already
 in the head closure. Base traversal is therefore redundant. Derived mode
 traverses both readers independently for each required material and compares
-membership and bytes; equal unions are not proof of equality.
+membership and bytes; equal unions are not proof of equality. Traverse the
+proof's base closure with optional reads at every graph depth, for both actual
+and projected materials. Any missing seed or transitive file fails the proof;
+it never throws a missing-resource error from the optimization. Successful
+reads/closures remain reusable. Do not retain a failed partial closure as a
+complete result. Required full-path reads keep their own validation and errors:
+a cached optional absence must not substitute a different required-read error.
+Readers without optional methods may probe their required reads; a failed probe
+also falls through, and a successful one remains cached.
 
 Projected resources need not be a subset of actual resources: copying caller
 content out of an inert template can expose recorded references. Parser-discarded
@@ -123,6 +153,5 @@ would omit them as owned or excluded. A potentially changed reference takes
 fall-through. A resource record inside an eligible unowned style's outer span
 that touches a paired-ignore or removed span also requires fall-through:
 canonical rules can retain references dropped by raw source provenance.
-This check uses source records and spans, without inline analysis. A missing
-base seed in the derived shared-seed proof is a failed proof, not an error. No fast-path view, including a reference-bearing one, runs inline
-analysis or emits its evidence.
+This check uses source records and spans, without inline analysis. No fast-path
+view, including a reference-bearing one, runs inline analysis or emits its evidence.

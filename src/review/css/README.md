@@ -65,6 +65,14 @@ avoid a second assembly copy. `diff.ts`, `material.ts` and
 Statement/block form belongs in both keys: `@layer a;` versus `@layer a{}` is
 a removed/added, conservatively unresolved change on both paths.
 
+`escape_decoding.ts` is the quick checks' pure source decoder for reserved
+markers. It handles hex/non-hex escapes, CRLF terminators, string continuations,
+invalid code points and EOF without native parsing. Quotes and comments remain
+separators; escaped quotes do not change string context, and unquoted URL text
+keeps its own lexical context. It is separate from the existing identifier and
+resource decoding policies. Utility selector escapes and ordinary `<` text keep
+the quick path; only a decoded reserved prefix triggers this guard.
+
 ## Retention And Diagnostics
 
 `byte_lru.ts` and `parse_cache.ts` detach every retained key/string through

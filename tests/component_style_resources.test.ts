@@ -95,15 +95,24 @@ for (const mode of ["committed", "derived"] as const)
       "only the mode-required readers traverse stable closures",
       async () => {
         const comparisonContext = pageContext(original);
-        const readBefore = comparisonContext.beforeReader.resources.bind(
+        const readBefore =
+          comparisonContext.beforeReader.resourcesIfPresent.bind(
+            comparisonContext.beforeReader,
+          );
+        let requiredBaseCalls = 0;
+        const requiredBefore = comparisonContext.beforeReader.resources.bind(
           comparisonContext.beforeReader,
         );
+        comparisonContext.beforeReader.resources = (...args) => {
+          requiredBaseCalls++;
+          return requiredBefore(...args);
+        };
         const readAfter = comparisonContext.afterReader.resources.bind(
           comparisonContext.afterReader,
         );
         let baseCalls = 0;
         let headCalls = 0;
-        comparisonContext.beforeReader.resources = (...args) => {
+        comparisonContext.beforeReader.resourcesIfPresent = (...args) => {
           baseCalls++;
           return readBefore(...args);
         };
@@ -120,6 +129,7 @@ for (const mode of ["committed", "derived"] as const)
         assert.equal(result.comparisonPath, "style");
         assert.equal(baseCalls, mode === "committed" ? 0 : 1);
         assert.equal(headCalls, 1);
+        assert.equal(requiredBaseCalls, 0);
       },
     );
     await context.test("changed transitive Git resource", async () => {

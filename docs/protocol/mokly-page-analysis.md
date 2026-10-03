@@ -67,8 +67,8 @@ Original flat spans own region validation, pairing and content recording.
 Record content from the end of the start marker through the start of the end
 marker. Original pair normalization records sorted `pairedIgnoreIds` and
 sorted differing paired ids. View state and emitted `ignoredIds` follow the
-actual-material rules in [inline styles](./mokly-inline-styles.md#membership-and-states)
-and [Changes](./mokly-changes.md): canonicalization can remove a region.
+[actual-material state and ignore-evidence rule](./mokly-inline-styles.md#membership-and-states):
+canonicalization can remove a region, which then contributes no emitted id.
 This does not give original ignore evidence precedence over actual materials.
 Selection uses the original spans/paired ids, never offsets in inserted tokens.
 Cache the original pair's normalization once for retained/matching material
@@ -174,14 +174,15 @@ The [unchanged decision](./mokly-component-review-fast-path.md) first tests same
 path, exact original-text equality and canonical usage-topology equality,
 allowing entry-owned input changes. Validate ignores/ranges through the head
 analysis and share it for both sides, without projection, rewritten materials,
-hashing, inline analysis or implementation comparison.
+hashing, inline analysis or implementation comparison. Reject literal
+`<!--mokly-review-` in eligible outer sources and ASCII-case-insensitive
+`<!--mokly-` in escape-decoded content: serialization can produce reserved markers.
+Use the [pure source decoder](./mokly-component-review-fast-path.md#source-only-escape-guard).
 
-Its discovery seeds conservatively include original records **and** potential
-caller-slot-copy records. Both sides use the same raw seeds and route. Under
-the [resource proof](./mokly-component-review-fast-path.md#resource-and-one-sided-rules),
-committed mode traverses only the head reader's closure and rejects a changed
-Git path in it; derived mode traverses both readers independently and requires
-equal closure membership/bytes. Failure reuses analysis/discovery on fall-through.
+Shared raw seeds include original **and** potential caller-slot-copy records.
+The [resource proof](./mokly-component-review-fast-path.md#resource-and-one-sided-rules)
+traverses only the head closure in committed mode, rejecting changed Git paths.
+Derived mode independently compares both closures' membership/bytes.
 A non-identical attempt's unattributed projection is not a complete inline result:
 fall-through builds attributed materials from the same original analyses.
 On success state is `unchanged`, `ignoredIds` is empty, `material`/inline/
@@ -189,8 +190,8 @@ resource evidence and owned sets are absent/empty. Preserve usage `inputs`
 and `structure` signals as reasons; metadata/dependency reasons outside the
 per-view decision remain independent.
 
-Non-identical sources retain marker/topology, actual/projected equality and
-resource proofs using analyses/derived references, never parsed materials.
+Non-identical sources retain marker/topology, material and resource proofs and
+require equal ordered eligible style sources: ignored markup can change eligibility.
 Only ownership edits require projection/projected-resource proof; otherwise
 actual seeds come directly from analyses. Stable per-view projected exclusion
 and equal discovery identities reuse the quick attempt's closure on fall-through.
@@ -199,10 +200,9 @@ rules. A changed possibly reachable reference takes fall-through. So does a
 resource record within an eligible unowned style's outer span that touches a
 paired-ignore or removed span: canonicalization may retain its reference after
 raw provenance drops it. Detect this from the original records and spans,
-without parsing CSS. Non-identical quick checks also reject any paired region
-or marker intersecting such a style's outer span. These fallbacks preserve the
-complete path's material states and validation. Prepared analyses and discoveries
-are reused on fall-through; a missing base seed fails the derived resource proof.
+without parsing CSS. Both literal/decoded guards inspect only the head for
+identical sources and both sides for non-identical sources. The derived base proof uses optional reads at every graph depth:
+missing files fail proof without replacing complete required-read diagnostics.
 
 ## Fingerprinted Materials
 

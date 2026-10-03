@@ -17,6 +17,9 @@ export class ViewResourceCache {
     private readonly collect: (
       seeds: readonly string[],
     ) => Promise<ReadonlySet<string>>,
+    private readonly collectIfPresent: (
+      seeds: readonly string[],
+    ) => Promise<ReadonlySet<string> | undefined>,
   ) {}
 
   resources(
@@ -25,6 +28,57 @@ export class ViewResourceCache {
     excluded?: Exclusion,
     references?: readonly string[],
   ): Promise<ReadonlySet<string>> {
+    const { cached, discover } = this.discovery(
+      route,
+      html,
+      excluded,
+      references,
+    );
+    const existing = excluded ? cached.filtered.get(excluded) : cached.all;
+    if (existing) return existing;
+    const resources = timeAsync("review.resource-graph", () =>
+      this.collect(discover()),
+    );
+    this.retain(cached, excluded, resources);
+    return resources;
+  }
+
+  async resourcesIfPresent(
+    route: string,
+    html: string,
+    excluded?: Exclusion,
+    references?: readonly string[],
+  ): Promise<ReadonlySet<string> | undefined> {
+    const { cached, discover } = this.discovery(
+      route,
+      html,
+      excluded,
+      references,
+    );
+    const existing = excluded ? cached.filtered.get(excluded) : cached.all;
+    if (existing) return existing;
+    const resources = await timeAsync("review.resource-graph", () =>
+      this.collectIfPresent(discover()),
+    );
+    if (resources) this.retain(cached, excluded, Promise.resolve(resources));
+    return resources;
+  }
+
+  private retain(
+    cached: CachedResources,
+    excluded: Exclusion | undefined,
+    resources: Promise<ReadonlySet<string>>,
+  ): void {
+    if (excluded) cached.filtered.set(excluded, resources);
+    else cached.all = resources;
+  }
+
+  private discovery(
+    route: string,
+    html: string,
+    excluded: Exclusion | undefined,
+    references: readonly string[] | undefined,
+  ) {
     let documents = this.views.get(route);
     if (!documents) {
       documents = new Map();
@@ -43,17 +97,12 @@ export class ViewResourceCache {
       cached = { filtered: new WeakMap() };
       documents.set(identity, cached);
     }
-    const existing = excluded ? cached.filtered.get(excluded) : cached.all;
-    if (existing) return existing;
-    const resources = timeAsync("review.resource-graph", () =>
-      this.collect(
+    return {
+      cached,
+      discover: () =>
         (
           seeds ?? referencedRoutes(route, html, { resourceHints: false })
         ).filter((path) => !excluded?.(path)),
-      ),
-    );
-    if (excluded) cached.filtered.set(excluded, resources);
-    else cached.all = resources;
-    return resources;
+    };
   }
 }
