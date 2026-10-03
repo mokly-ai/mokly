@@ -141,7 +141,7 @@ test("every design link resolves to a real same-viewport design artifact without
     entry.path.startsWith("design/components/"),
   );
   assert.equal(componentDesigns.length, 39);
-  assert.equal(designs.length - componentDesigns.length, 70);
+  assert.equal(designs.length - componentDesigns.length, 71);
   for (const entry of designs) {
     for (const viewport of ["mobile", "desktop"] as const) {
       const { document, route } = await designDocument(entry.path, viewport);

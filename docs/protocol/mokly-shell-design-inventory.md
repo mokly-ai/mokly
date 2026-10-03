@@ -25,78 +25,79 @@ inventory when design entries change and verify exact agreement with that local
 derived manifest. Planned destinations stay in their feature contract until
 their standalone screens are implemented.
 
-| Entry                                                  | Folder                                                     | State                                                      |
-| ------------------------------------------------------ | ---------------------------------------------------------- | ---------------------------------------------------------- |
-| `design/browse/views/home`                             | Browse shell › Catalogue views                             | Catalogue home with navigation tree                        |
-| `design/browse/views/screen`                           | Browse shell › Catalogue views                             | Selected screen with framed fragments                      |
-| `design/browse/views/details-screen`                   | Browse shell › Catalogue views                             | Normal Details screen, a light-only subject                |
-| `design/browse/views/use-case`                         | Browse shell › Catalogue views                             | Selected use case with ordered steps                       |
-| `design/browse/views/folder-overview`                  | Browse shell › Catalogue views                             | A folder's README as its own page, Overview row current    |
-| `design/browse/states/details`                         | Browse shell › Shell states                                | Expanded details inspector                                 |
-| `design/browse/states/missing-route`                   | Browse shell › Shell states                                | Not-found view with navigation                             |
-| `design/browse/states/navigation`                      | Browse shell › Shell states                                | Collapsed navigation drawer                                |
-| `design/browse/states/tag-filter`                      | Browse shell › Shell states                                | Tag picker over a filtered tree                            |
-| `design/browse/views/screen/tag-picker`                | Browse shell › Catalogue views (variant)                   | Empty query, tag picker open                               |
-| `design/browse/views/screen/tag-forms`                 | Browse shell › Catalogue views (variant)                   | Forms filter, picker closed                                |
-| `design/browse/views/screen/tag-onboarding`            | Browse shell › Catalogue views (variant)                   | Onboarding filter, picker closed                           |
-| `design/browse/views/screen/tag-onboarding-picker`     | Browse shell › Catalogue views (variant)                   | Onboarding filter, picker open                             |
-| `design/browse/views/screen/dark-scheme`               | Browse shell › Catalogue views (variant)                   | Welcome with one catalogue-wide Appearance setting         |
-| `design/browse/views/screen/light-only`                | Browse shell › Catalogue views (variant)                   | Details keeps a light preview under Dark                   |
-| `design/browse/variants/variant-selected`              | Browse shell › Screen variants                             | Selected variant under its parent screen                   |
-| `design/browse/variants/variant-changes`               | Browse shell › Screen variants                             | Changed variant row inside its parent group                |
-| `design/browse/variants/variant-removed`               | Browse shell › Screen variants                             | Removed variant under a surviving parent                   |
-| `design/browse/variants/variant-reparented`            | Browse shell › Screen variants                             | Removed variant kept flat after its parent becomes variant |
-| `design/browse/variants/changed-views`                 | Browse shell › Screen variants                             | Change confined to the views that are not shown            |
-| `design/browse/index-entries/screen`                   | Browse shell › Index entries                               | Folder's own screen selected, variants and members listed  |
-| `design/browse/index-entries/member`                   | Browse shell › Index entries                               | Folder member selected, its crumb ending in that screen    |
-| `design/browse/index-entries/screen-changes`           | Browse shell › Index entries                               | Unmodified folder screen as an undotted Changes container  |
-| `design/browse/index-entries/member-changes`           | Browse shell › Index entries                               | First changed member, opened from that container row       |
-| `design/changes/diff-controls/current`                 | Changes › Diff controls                                    | Current screen in Changes                                  |
-| `design/changes/diff-controls/overlay`                 | Changes › Diff controls                                    | On-demand overlay comparison                               |
-| `design/changes/diff-controls/overlay-long`            | Changes › Diff controls                                    | Overlay on a long screen, scrolled part-way in one chrome  |
-| `design/changes/diff-controls/overlay-panel`           | Changes › Diff controls                                    | Overlay on an app shell, its panel scrolled part-way       |
-| `design/changes/diff-controls/side-by-side-apart`      | Changes › Diff controls                                    | Side by side with Scroll together off, scrolled apart      |
-| `design/changes/outcomes/changed`                      | Changes › Comparison outcomes                              | Changed screen, side-by-side compare                       |
-| `design/changes/outcomes/added`                        | Changes › Comparison outcomes                              | Added screen current preview without comparison controls   |
-| `design/changes/outcomes/removed`                      | Changes › Comparison outcomes                              | Removed badge and previous version without comparisons     |
-| `design/changes/outcomes/previous-version/long`        | Changes › Comparison outcomes › Previous screen versions   | A tall previous screen scrolling inside its device frame   |
-| `design/changes/outcomes/previous-version/loading`     | Changes › Comparison outcomes › Previous screen versions   | Waiting for a removed screen's previous views              |
-| `design/changes/outcomes/previous-version/unavailable` | Changes › Comparison outcomes › Previous screen versions   | Previous views unavailable, with Retry                     |
-| `design/changes/outcomes/previous-version/no-view`     | Changes › Comparison outcomes › Previous screen versions   | A viewport with no captured previous view                  |
-| `design/changes/outcomes/difference`                   | Changes › Comparison outcomes                              | Blend-mode difference comparison                           |
-| `design/changes/outcomes/moved`                        | Changes › Comparison outcomes                              | Moved screen in Overlay with its previous path             |
-| `design/changes/impact/shared-impact`                  | Changes › Impact states                                    | Unchanged screen from All with evidence                    |
-| `design/changes/impact/ignored-only`                   | Changes › Impact states                                    | Ignored-only Current view with evidence                    |
-| `design/changes/impact/empty`                          | Changes › Impact states                                    | Empty Changes filter retaining Current                     |
-| `design/changes/impact/styles/matched`                 | Changes › Impact states › Stylesheet evidence              | Changed styles that apply to the screen                    |
-| `design/changes/impact/styles/unresolved`              | Changes › Impact states › Stylesheet evidence              | A style change that can reach anything on the screen       |
-| `design/changes/impact/styles/unnamed`                 | Changes › Impact states › Stylesheet evidence              | The same reach with no style name to list                  |
-| `design/changes/impact/styles/excluded`                | Changes › Impact states › Stylesheet evidence              | Changed stylesheet examined and excluded                   |
-| `design/changes/availability/preparing`                | Changes › Comparison availability                          | Changes selected while the comparison is prepared          |
-| `design/changes/availability/unavailable`              | Changes › Comparison availability                          | Changes selected after the comparison could not be made    |
-| `design/browse/pages/view`                             | Browse shell › Document pages                              | Complete document in its folder                            |
-| `design/browse/pages/details`                          | Browse shell › Document pages                              | Document metadata and close action                         |
-| `design/browse/pages/navigation`                       | Browse shell › Document pages                              | Document with its narrow drawer open                       |
-| `design/browse/pages/document`                         | Browse shell › Document pages                              | Markdown document in shell typography with Details         |
-| `design/browse/pages/removed`                          | Browse shell › Document pages                              | Removed document's previous version with baseline ancestry |
-| `design/browse/pages/previous-version/long`            | Browse shell › Document pages › Previous document versions | A long previous document scrolling inside its pane         |
-| `design/browse/pages/previous-version/loading`         | Browse shell › Document pages › Previous document versions | Waiting for a removed document's previous version          |
-| `design/browse/pages/previous-version/unavailable`     | Browse shell › Document pages › Previous document versions | Previous document unavailable, with Retry                  |
-| `design/browse/publication/catalogue`                  | Browse shell › Published catalogue                         | Current catalogue with review omitted                      |
-| `design/browse/publication/changes`                    | Browse shell › Published catalogue                         | Catalogue with optional comparisons                        |
-| `design/browse/appearance/overview`                    | Browse shell › Appearance                                  | Canonical catalogue appearance around a selected screen    |
-| `design/browse/appearance/states/auto`                 | Browse shell › Appearance › Appearance states              | Appearance left on Auto                                    |
-| `design/browse/appearance/states/light-only`           | Browse shell › Appearance › Appearance states              | A screen with no dark render keeping its light frames      |
-| `design/browse/appearance/workspaces/props`            | Browse shell › Appearance › Panels and comparisons         | Props panel with a rejected value                          |
-| `design/browse/appearance/workspaces/instance`         | Browse shell › Appearance › Panels and comparisons         | Selected component instance panel                          |
-| `design/browse/appearance/workspaces/drawer`           | Browse shell › Appearance › Panels and comparisons         | Catalogue drawer on a narrow layout                        |
-| `design/browse/appearance/workspaces/side-by-side`     | Browse shell › Appearance › Panels and comparisons         | Side-by-side comparison                                    |
-| `design/browse/appearance/workspaces/difference`       | Browse shell › Appearance › Panels and comparisons         | Difference comparison                                      |
-| `design/browse/appearance/status/home`                 | Browse shell › Appearance › Status and recovery            | Home guidance with nothing selected                        |
-| `design/browse/appearance/status/loading`              | Browse shell › Appearance › Status and recovery            | Catalogue checking for changes                             |
-| `design/browse/appearance/status/error`                | Browse shell › Appearance › Status and recovery            | A screen that could not be shown, with another attempt     |
-| `design/browse/appearance/status/unavailable`          | Browse shell › Appearance › Status and recovery            | Changes unavailable                                        |
-| `design/browse/appearance/status/flow`                 | Browse shell › Appearance › Status and recovery            | Use-case steps around light screens                        |
+| Entry                                                  | Folder                                                     | State                                                         |
+| ------------------------------------------------------ | ---------------------------------------------------------- | ------------------------------------------------------------- |
+| `design/browse/views/home`                             | Browse shell › Catalogue views                             | Catalogue home with navigation tree                           |
+| `design/browse/views/screen`                           | Browse shell › Catalogue views                             | Selected screen with framed fragments                         |
+| `design/browse/views/details-screen`                   | Browse shell › Catalogue views                             | Normal Details screen, a light-only subject                   |
+| `design/browse/views/use-case`                         | Browse shell › Catalogue views                             | Selected use case with ordered steps                          |
+| `design/browse/views/folder-overview`                  | Browse shell › Catalogue views                             | A folder's README as its own page, Overview row current       |
+| `design/browse/states/details`                         | Browse shell › Shell states                                | Expanded details inspector                                    |
+| `design/browse/states/missing-route`                   | Browse shell › Shell states                                | Not-found view with navigation                                |
+| `design/browse/states/navigation`                      | Browse shell › Shell states                                | Collapsed navigation drawer                                   |
+| `design/browse/states/tag-filter`                      | Browse shell › Shell states                                | Tag picker over a filtered tree                               |
+| `design/browse/views/screen/tag-picker`                | Browse shell › Catalogue views (variant)                   | Empty query, tag picker open                                  |
+| `design/browse/views/screen/tag-forms`                 | Browse shell › Catalogue views (variant)                   | Forms filter, picker closed                                   |
+| `design/browse/views/screen/tag-onboarding`            | Browse shell › Catalogue views (variant)                   | Onboarding filter, picker closed                              |
+| `design/browse/views/screen/tag-onboarding-picker`     | Browse shell › Catalogue views (variant)                   | Onboarding filter, picker open                                |
+| `design/browse/views/screen/dark-scheme`               | Browse shell › Catalogue views (variant)                   | Welcome with one catalogue-wide Appearance setting            |
+| `design/browse/views/screen/light-only`                | Browse shell › Catalogue views (variant)                   | Details keeps a light preview under Dark                      |
+| `design/browse/variants/variant-selected`              | Browse shell › Screen variants                             | Selected variant under its parent screen                      |
+| `design/browse/variants/variant-changes`               | Browse shell › Screen variants                             | Changed variant row inside its parent group                   |
+| `design/browse/variants/variant-removed`               | Browse shell › Screen variants                             | Removed variant under a surviving parent                      |
+| `design/browse/variants/variant-reparented`            | Browse shell › Screen variants                             | Removed variant kept flat after its parent becomes variant    |
+| `design/browse/variants/changed-views`                 | Browse shell › Screen variants                             | Change confined to the views that are not shown               |
+| `design/browse/index-entries/screen`                   | Browse shell › Index entries                               | Folder's own screen selected, variants and members listed     |
+| `design/browse/index-entries/member`                   | Browse shell › Index entries                               | Folder member selected, its crumb ending in that screen       |
+| `design/browse/index-entries/screen-changes`           | Browse shell › Index entries                               | Unmodified folder screen as an undotted Changes container     |
+| `design/browse/index-entries/member-changes`           | Browse shell › Index entries                               | First changed member, opened from that container row          |
+| `design/changes/diff-controls/current`                 | Changes › Diff controls                                    | Current screen in Changes                                     |
+| `design/changes/diff-controls/overlay`                 | Changes › Diff controls                                    | On-demand overlay comparison                                  |
+| `design/changes/diff-controls/overlay-long`            | Changes › Diff controls                                    | Overlay on a long screen, scrolled part-way in one chrome     |
+| `design/changes/diff-controls/overlay-panel`           | Changes › Diff controls                                    | Overlay on an app shell, its panel scrolled part-way          |
+| `design/changes/diff-controls/side-by-side-apart`      | Changes › Diff controls                                    | Side by side with Scroll together off, scrolled apart         |
+| `design/changes/outcomes/changed`                      | Changes › Comparison outcomes                              | Changed screen, side-by-side compare                          |
+| `design/changes/outcomes/added`                        | Changes › Comparison outcomes                              | Added screen current preview without comparison controls      |
+| `design/changes/outcomes/removed`                      | Changes › Comparison outcomes                              | Removed badge and previous version without comparisons        |
+| `design/changes/outcomes/previous-version/long`        | Changes › Comparison outcomes › Previous screen versions   | A tall previous screen scrolling inside its device frame      |
+| `design/changes/outcomes/previous-version/loading`     | Changes › Comparison outcomes › Previous screen versions   | Waiting for a removed screen's previous views                 |
+| `design/changes/outcomes/previous-version/unavailable` | Changes › Comparison outcomes › Previous screen versions   | Previous views unavailable, with Retry                        |
+| `design/changes/outcomes/previous-version/no-view`     | Changes › Comparison outcomes › Previous screen versions   | A viewport with no captured previous view                     |
+| `design/changes/outcomes/difference`                   | Changes › Comparison outcomes                              | Blend-mode difference comparison                              |
+| `design/changes/outcomes/moved`                        | Changes › Comparison outcomes                              | Moved screen in Overlay with its previous path                |
+| `design/changes/impact/shared-impact`                  | Changes › Impact states                                    | Unchanged screen from All with evidence                       |
+| `design/changes/impact/ignored-only`                   | Changes › Impact states                                    | Ignored-only Current view with evidence                       |
+| `design/changes/impact/empty`                          | Changes › Impact states                                    | Empty Changes filter retaining Current                        |
+| `design/changes/impact/styles/matched`                 | Changes › Impact states › Stylesheet evidence              | Changed styles that apply to the screen                       |
+| `design/changes/impact/styles/unresolved`              | Changes › Impact states › Stylesheet evidence              | A style change that can reach anything on the screen          |
+| `design/changes/impact/styles/unnamed`                 | Changes › Impact states › Stylesheet evidence              | The same reach with no style name to list                     |
+| `design/changes/impact/styles/excluded`                | Changes › Impact states › Stylesheet evidence              | Changed stylesheet examined and excluded                      |
+| `design/changes/availability/preparing`                | Changes › Comparison availability                          | Changes selected while the comparison is prepared             |
+| `design/changes/availability/unavailable`              | Changes › Comparison availability                          | Changes selected after the comparison could not be made       |
+| `design/browse/pages/view`                             | Browse shell › Document pages                              | Complete document in its folder                               |
+| `design/browse/pages/details`                          | Browse shell › Document pages                              | Document metadata and close action                            |
+| `design/browse/pages/navigation`                       | Browse shell › Document pages                              | Document with its narrow drawer open                          |
+| `design/browse/pages/document`                         | Browse shell › Document pages                              | Markdown document in shell typography with Details            |
+| `design/browse/pages/removed`                          | Browse shell › Document pages                              | Removed document's previous version with baseline ancestry    |
+| `design/browse/pages/previous-version/long`            | Browse shell › Document pages › Previous document versions | A long previous document scrolling inside its pane            |
+| `design/browse/pages/previous-version/loading`         | Browse shell › Document pages › Previous document versions | Waiting for a removed document's previous version             |
+| `design/browse/pages/previous-version/unavailable`     | Browse shell › Document pages › Previous document versions | Previous document unavailable, with Retry                     |
+| `design/browse/publication/catalogue`                  | Browse shell › Published catalogue                         | Current catalogue with review omitted                         |
+| `design/browse/publication/changes`                    | Browse shell › Published catalogue                         | Catalogue with optional comparisons                           |
+| `design/browse/appearance/overview`                    | Browse shell › Appearance                                  | Canonical catalogue appearance around a selected screen       |
+| `design/browse/appearance/states/auto`                 | Browse shell › Appearance › Appearance states              | Appearance left on Auto                                       |
+| `design/browse/appearance/states/light-only`           | Browse shell › Appearance › Appearance states              | A screen with no dark render keeping its light frames         |
+| `design/browse/appearance/states/light-only-document`  | Browse shell › Appearance › Appearance states              | A removed document with no dark render keeping its light page |
+| `design/browse/appearance/workspaces/props`            | Browse shell › Appearance › Panels and comparisons         | Props panel with a rejected value                             |
+| `design/browse/appearance/workspaces/instance`         | Browse shell › Appearance › Panels and comparisons         | Selected component instance panel                             |
+| `design/browse/appearance/workspaces/drawer`           | Browse shell › Appearance › Panels and comparisons         | Catalogue drawer on a narrow layout                           |
+| `design/browse/appearance/workspaces/side-by-side`     | Browse shell › Appearance › Panels and comparisons         | Side-by-side comparison                                       |
+| `design/browse/appearance/workspaces/difference`       | Browse shell › Appearance › Panels and comparisons         | Difference comparison                                         |
+| `design/browse/appearance/status/home`                 | Browse shell › Appearance › Status and recovery            | Home guidance with nothing selected                           |
+| `design/browse/appearance/status/loading`              | Browse shell › Appearance › Status and recovery            | Catalogue checking for changes                                |
+| `design/browse/appearance/status/error`                | Browse shell › Appearance › Status and recovery            | A screen that could not be shown, with another attempt        |
+| `design/browse/appearance/status/unavailable`          | Browse shell › Appearance › Status and recovery            | Changes unavailable                                           |
+| `design/browse/appearance/status/flow`                 | Browse shell › Appearance › Status and recovery            | Use-case steps around light screens                           |
 
 The six entries marked as variants are variants of `design/browse/views/screen` and
 remain under that entry in authored order rather than becoming folder members.
@@ -169,7 +170,7 @@ Additional owning groups keep each new page at no more than five screens:
   Changes states that carry no comparison data yet, keeping the impact group
   to its own three aggregate outcomes.
 - `design/browse/appearance/overview` is the canonical appearance screen; the
-  `Appearance states` folder beneath it owns two screens and
+  `Appearance states` folder beneath it owns three screens and
   `Panels and comparisons` and `Status and recovery` own five each. Their previews follow the artboard. They specify the
   delivered Auto/Light/Dark interface appearance from
   [viewer appearance](./mokly-viewer-appearance.md). Every one of them renders in

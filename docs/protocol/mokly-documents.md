@@ -3,8 +3,8 @@
 ## Delivery Status
 
 Build, Check, Serve and export render documents. The viewer uses its existing
-page frame. Final navigation and Details presentation remain in the
-[path identity plan](../../plans/path-identity.md).
+page frame. Final navigation, Details presentation, and the `Light only` note
+remain in the [path identity plan](../../plans/path-identity.md).
 
 A document is a Markdown file that a [root](./mokly-paths.md#roots) matches.
 It becomes an entry of kind `document` with a path derived like every other
@@ -78,7 +78,12 @@ a 720px measure, 26px and 17px headings, semibold underlined links, bordered
 inline code, and full-width tables; below 600px the body is 14px and the
 title 22px. Elements that the design does not show follow the same scale.
 The light document is `static/<path>/index.html`; when the catalogue
-enables dark, `static/<path>/index.dark.html` applies the dark palette. The
+enables dark, `static/<path>/index.dark.html` applies the dark palette. A
+document without a dark document keeps its light one under Dark. When the
+catalogue has a dark axis, the shell names that fallback with the existing
+`Light only` note: in a quiet band above a current document's pane, and after
+`Showing previous version` for a removed one, as the
+`design/browse/appearance/states/light-only-document` design shows. The
 shell opens the document for the current appearance exactly as it selects a
 screen's scheme, and documents have no viewport axis. Documents pass the same
 ownership header, final HTML validation, and transactional write as pages.
@@ -168,7 +173,10 @@ Details show the description, tags, and source path. When another entry's
 `relatedDocs` repository path names a current document, projection emits
 `mock:<document path>` in `details.relatedDocs`. Other paths stay display labels;
 removed entries retain baseline repository labels. Public readers validate the
-logical reference against current documents. The viewer derives its URL.
+logical reference against current documents. The viewer derives its URL: the
+Related docs row shows each such reference as a link to the document's
+`/view/<path>/`, labelled with the document's title, and every other value as
+its display label.
 
 ## Changes
 

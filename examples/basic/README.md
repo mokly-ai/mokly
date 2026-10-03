@@ -43,7 +43,7 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 109 design screens now use 16 registered shared components, including
+Mokly's 110 design screens now use 16 registered shared components, including
 the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
 Inspector and Preview galleries with 69 component variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
@@ -151,10 +151,11 @@ render plain React DOM need none of this and can keep a plain
 `renderToStaticMarkup` adapter.
 
 The `Design` navigation group is the owning design catalogue for Mokly's
-Browse and Changes views. Its seventy Browse, page, publication, appearance and Changes
+Browse and Changes views. Its seventy-one Browse, page, publication, appearance and Changes
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
 scrolling, stylesheet evidence, the preparing and unavailable comparison states,
-and the previous-version states of removed documents and screens. Thirty-nine
+and the previous-version states of removed documents and screens, including a
+light-only document under Dark. Thirty-nine
 component explorer screens add component pages, saved variants, stacked
 comparisons, affected screens,
 repeated/nested inspection, highlighting, and empty or removed states. The shared icon inspector and complete controls
@@ -215,8 +216,8 @@ Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
 Eighty-five design screens use `colorSchemes: ["light"]` and draw only the light
-Mokly shell. Twenty-four screens instead inherit the catalogue's light/dark
-settings: thirteen Appearance screens, seven Changes designs, two product
+Mokly shell. Twenty-five screens instead inherit the catalogue's light/dark
+settings: fourteen Appearance screens, seven Changes designs, two product
 screens, and two retained Welcome appearance variants. `mokly build` writes a
 Light and a Dark file for each viewport, and the outer Appearance control moves
 between them.
@@ -235,7 +236,7 @@ A shared implementation edit appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. This is tested against fully registered baseline snapshots.
 
-The shared inspector/workspace sheets cover all 109 design screens and standalone
+The shared inspector/workspace sheets cover all 110 design screens and standalone
 library hosts. Other mixed component-design sheets remain scoped to the 39
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. `review.sharedImpact` is fallback

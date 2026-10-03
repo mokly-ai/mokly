@@ -930,34 +930,71 @@ Status: Complete, verified by the Milestone 6C full gate.
       `node scripts/verification/source-file-length.mjs`.
 - [x] Commit and push (`a341bbb1`).
 
+## Milestone 6E: Light-only document mockup
+
+Tags: mockup
+
+Milestone 7 shows the existing Light-only fallback note on documents. A
+document's stage has no frame label, and no design showed where the note goes,
+so mock it up first.
+
+- [x] Add `design/browse/appearance/states/light-only-document` in both schemes
+      and both viewports: on a branch that removed the Payment terms document,
+      its previous version has only a light render, so under Dark its pane
+      stays light and its label reads `Showing previous version — Light only`.
+- [x] Record the screen in the shell design inventory and the depicted
+      catalogue, and state the note's placement in the documents and removed
+      previews contracts.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      and the design tests; smoke-test the screen through `npm run dev`.
+- [x] Keep the pane light with a `data-mbk-light-only` palette scope in
+      `generated/design.css`, because an artboard states its own appearance
+      exactly once; add the screen's own stylesheet rule so it reads in the
+      shell's Markdown typography; update the design counts.
+- [ ] Commit and push.
+
 ## Milestone 7: Viewer Changes and document presentation
 
 Tags: ui
 
+The first part implements what does not depend on move data. The second part
+follows the merge of Milestone 5.
+
 - [ ] Treat removed document rows like removed page rows when filtering All and
       Changes; keep the document icon and final navigation behavior with the UI work.
 - [ ] Show the existing Light-only fallback note when a current or removed document
-      has no dark scheme but the reader selects Dark.
+      has no dark scheme but the reader selects Dark; match the Milestone 6E
+      screen.
+- [ ] Present documents in the page view with the document title, breadcrumbs,
+      the path chip, and Details showing the description, tags, and Markdown
+      source file; link `relatedDocs` matches to their document entries
+      (`details.relatedDocs` now emits validated `mock:<path>` references for
+      discovered current documents).
+- [ ] In Changes, keep an unchanged screen or component index whose only
+      changed rows are folder members as a container row with no change dot,
+      and make activating that row open its first visible changed member, as
+      an unchanged variant parent opens its first changed variant
+      (`changes_activation.ts`); match the Milestone 6A screens.
+- [ ] Add browser tests for document pages in Light and Dark at both widths,
+      the index-entry container rule, and the removed-document filters; verify
+      parity with `design/browse/pages/document`,
+      `design/browse/views/folder-overview`, and the four
+      `design/browse/index-entries/*` screens.
+- [ ] Re-apply the drafted `docs/guides/catalogue/export-and-host.md` from
+      commit `d65417d` and reconcile it with the implemented export.
+- [ ] Run the full gate for the first part, then commit and push.
+
+Second part, after Milestone 5 merges:
 
 - [ ] Label paired entries "Moved" in Changes rows and details, show the
       previous path in details, and drive the baseline side of comparisons
       from `previousPath` (`nav_changed.ts`, `details_rows.tsx`,
       `view_status.ts`, `comparison_request.ts`,
       `packages/viewer/src/catalogue/snapshot_identity.ts`).
-- [ ] Present documents in the page view with the document title, breadcrumbs,
-      and the source path in details; link `relatedDocs` matches to their
-      document entries (`details.relatedDocs` now emits validated `mock:<path>`
-      references for discovered current documents).
-- [ ] In Changes, keep an unchanged screen or component index whose only
-      changed rows are folder members as a container row with no change dot,
-      and make activating that row open its first visible changed member, as
-      an unchanged variant parent opens its first changed variant
-      (`changes_activation.ts`); match the Milestone 6A screens.
-- [ ] Add browser tests for moved rows, moved comparisons, and document pages;
-      verify parity with the Milestone 2 screens.
-- [ ] Re-apply the drafted `docs/guides/catalogue/changes.md` and
-      `export-and-host.md` from commit `d65417d` and reconcile them with the
-      implemented Changes view.
+- [ ] Add browser tests for moved rows and moved comparisons; verify parity
+      with the Milestone 2 screens.
+- [ ] Re-apply the drafted `docs/guides/catalogue/changes.md` from commit
+      `d65417d` and reconcile it with the implemented Changes view.
 - [ ] Run `cargo xtask check`, then commit and push.
 
 ## Milestone 8: Guides, verification, close-out, and review

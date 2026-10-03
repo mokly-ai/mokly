@@ -50,6 +50,12 @@ navigation, breadcrumbs, path chips, and Details agree across screens:
   Security changed, so their filter counts one entry. In Changes, Profile is
   unmodified and its only changed row is a folder member, so its row stays an
   undotted container above Security's dotted row.
+- `design/browse/appearance/states/light-only-document` depicts a branch that
+  removed Payment terms after the catalogue enabled Dark. Its previous version
+  has only a light render, and Changes counts one entry,
+  `Payment terms · Removed`. Under Dark its pane keeps the Light palette and
+  its label reads `Showing previous version — Light only`; its All filter
+  opens `design/browse/appearance/overview`.
 
 ## Transitions
 

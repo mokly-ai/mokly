@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-Implemented in the 70 Browse/Changes design screens and two example screens with
-`MockLink`/`MockLink asChild`. Those 70 Browse/Changes designs retain canonical
+Implemented in the 71 Browse/Changes design screens and two example screens with
+`MockLink`/`MockLink asChild`. Those 71 Browse/Changes designs retain canonical
 links; [components](./mokly-component-design.md) and
 [removed previews](./mokly-removed-previews.md) extend the contract. Links use complete paths under the [path contract](./mokly-paths.md).
 
