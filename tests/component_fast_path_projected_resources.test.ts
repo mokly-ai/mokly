@@ -93,6 +93,7 @@ for (const resourceCase of hiddenResourceCases)
           baseCommit: "a".repeat(40),
           baseRef: "main",
           useFastPath,
+          useStylePath: false,
         });
       const [optimized, complete] = await Promise.all([
         classify(true),
@@ -212,6 +213,7 @@ for (const context of ["select", "template"] as const)
           baseCommit: "a".repeat(40),
           baseRef: "main",
           useFastPath,
+          useStylePath: false,
         });
       const [optimized, complete] = await Promise.all([
         classify(true),

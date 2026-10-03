@@ -19,6 +19,8 @@ import type { ReadOnlyReviewRepository } from "./repository.js";
 export interface CompareReviewOptions {
   /** Disable the unchanged-view optimization for differential tests. */
   useFastPath?: boolean;
+  /** Disable the style-only route for differential tests. */
+  useStylePath?: boolean;
 }
 
 /** Compare checked head output to its Git branch point and retain pane artifacts. */
@@ -59,6 +61,6 @@ export async function compareReview(
     changedPaths,
     baseCommit,
     baseRef,
-    options.useFastPath,
+    options,
   );
 }

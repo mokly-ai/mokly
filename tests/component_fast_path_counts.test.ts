@@ -63,6 +63,7 @@ for (const generatedOutput of ["committed", "derived"] as const)
       views,
       fastPath: views,
       completePath: 0,
+      stylePath: 0,
     });
     assert.equal(
       events.filter(

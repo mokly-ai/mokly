@@ -39,6 +39,19 @@ resolved results retain runs, not full-list compatibility getters.
 Canonical appendix references live in a weak material association, leaving the
 delivered projection shape and every byte-equality assertion unchanged.
 
+`inline_preparation.ts` shares complete eligible-element parsing and view-wide
+cancellation between attribution and the style-only route. A failed route
+passes those same runs/deltas to complete attribution, including parse failures;
+it never diffs only the edited element. `style_route_rules.ts` checks stored
+full-rule references and selector syntax trees, including resolved nesting
+parents, for child-content predicates. Compilation failures keep their ordinary
+unresolved attribution. Route composition uses the existing canonical multisets;
+no residual-only equality optimization is implemented.
+The style route rejects `<!--mokly-` in original content or composed canonical
+material, including serialization-produced spellings. On fall-through, its
+view-local preparation reuses proved diff attributions while unchanged reference
+pairs still use both original trees, preserving their text-dependent matching.
+
 `rule_identity.ts` stores address/identity, rank, canonical text and references
 once in a weak rule association; the custom-property flag stays on the record.
 Data is computed on first use, after copying raw material for cached rules;

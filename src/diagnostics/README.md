@@ -35,6 +35,11 @@ reject uncounted, repeated or rewritten-page parses, including owned references.
 `review/page_parser.ts` counts its single `Parser.parse` at the same owning
 step; parser-token provenance adds no second parse. Interception covers both
 parse5 entrypoints so the subclass cannot evade the count.
+The style-only route records one `stylePath` per settled view and one head
+`pageAnalysis` parse. Attempts that fall through record only `completePath`;
+their element/segment counts reuse preparation instead of repeating parsing.
+Usage-topology/signal checks still contribute `implementationMs` on shortcut
+paths; that field alone does not imply a markup implementation comparison.
 
 Run `npm run build`, then:
 

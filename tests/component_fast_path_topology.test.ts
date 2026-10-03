@@ -108,7 +108,12 @@ test("invocation line shifts alone keep every view on the fast path", async (t) 
   assert.ok(views > 0);
   assert.ok((counts?.heapPeakMiB ?? 0) > 0);
   const { heapPeakMiB: _heap, ...paths } = counts!;
-  assert.deepEqual(paths, { views, fastPath: views, completePath: 0 });
+  assert.deepEqual(paths, {
+    views,
+    fastPath: views,
+    completePath: 0,
+    stylePath: 0,
+  });
 });
 
 function reviewFixture(

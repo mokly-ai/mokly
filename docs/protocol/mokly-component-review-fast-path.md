@@ -7,7 +7,7 @@ the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
 [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
 implements the analysis-backed quick check below with no inline work;
 [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
-adds the equivalent style-only attempt before complete fall-through; M8 remains pending.
+implements the equivalent style-only attempt before complete fall-through.
 M7's ownership-only projection and stable discovery policy clarify existing
 rules, closing documentation gaps rather than introducing new behavior.
 The [M7 checkpoint](../dev/shared-page-analysis-measurements.md) records its
@@ -80,7 +80,7 @@ the complete path. Nested input, topology, or ownership changes require full
 projection and implementation analysis. Entry-level metadata, added/removed,
 and dependency reasons are computed outside the per-view comparison.
 
-After M8, on failed quick-check proof, try the [style-only route](./mokly-style-only-route.md)
+On failed quick-check proof, try the [style-only route](./mokly-style-only-route.md)
 with its exact conditions; otherwise run the complete comparison. It is not a
 weaker fast-path resource decision. One-sided views run neither paired route.
 

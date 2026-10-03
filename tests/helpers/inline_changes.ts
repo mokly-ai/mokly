@@ -81,7 +81,7 @@ export async function inlineChangesFixture(
         undefined,
         undefined,
         [],
-        { useFastPath },
+        { useFastPath, useStylePath: useFastPath },
       );
     },
     live: () => computeCatalogueChanges(fixture.config, "main", repository()),

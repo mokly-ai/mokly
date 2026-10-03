@@ -21,6 +21,7 @@ import {
 } from "./component_resource_attribution.js";
 import { changedResourceBytes } from "./component_resource_changes.js";
 import type { ComponentMaterialReader } from "./component_resources.js";
+import { compareStyleOnlyView } from "./component_style_route.js";
 import { compareUnchangedComponentView } from "./component_view_fast_path.js";
 import {
   deliveredInlineStyles,
@@ -30,7 +31,7 @@ import { PageAnalysisPair } from "./page_pair.js";
 import type { ResourceComparison } from "./resource_comparison.js";
 
 export interface ComparedComponentView {
-  comparisonPath: "fast" | "complete";
+  comparisonPath: "fast" | "style" | "complete";
   view: ViewReview;
   reasons: readonly EntryChangeReason[];
   changedImplementations: ReadonlySet<string>;
@@ -47,6 +48,7 @@ export interface ComponentViewContext {
   resources: ResourceComparison;
   compareResourceBytes?: boolean;
   useFastPath?: boolean;
+  useStylePath?: boolean;
 }
 
 /** Compare material and declared inputs without altering the retained view documents. */
@@ -98,6 +100,10 @@ export async function compareComponentView(
     );
     if (attempt.comparison) return attempt.comparison;
     prepared = attempt.prepared;
+  }
+  if (pages && context.useStylePath !== false) {
+    const comparison = await compareStyleOnlyView(context, pages, view, root);
+    if (comparison) return comparison;
   }
   prepared ??= prepareComponentProjection(
     context,

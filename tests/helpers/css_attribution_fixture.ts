@@ -86,7 +86,9 @@ export async function cssAttributionFixture(
         undefined,
         undefined,
         [],
-        useFastPath === undefined ? {} : { useFastPath },
+        useFastPath === undefined
+          ? {}
+          : { useFastPath, useStylePath: useFastPath },
       ),
   };
 }

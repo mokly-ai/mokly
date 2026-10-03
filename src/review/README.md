@@ -303,27 +303,34 @@ Key code:
   `component_reason_sources.ts`, and `component_result_sources.ts`:
   source-complete v4 assembly, entry-view preparation, and validation.
 - `component_classification.ts`, `component_view.ts`: component ownership policy.
-  `compareComponentView` has two paths: an unchanged decision that settles a
+  `compareComponentView` first tries an unchanged decision that settles a
   paired view only when marker-retaining documents, routes, and usage topology
   agree, followed by head resource discovery in committed mode or independent
-  discovery for both sides in derived mode, and the complete comparison
-  (projection, range validation, CSS analysis, implementation diffing) for
-  views that can differ. Entry-owned props may differ on the fast path and
+  discovery for both sides in derived mode. A proven single-style edit then
+  uses `component_style_route.ts`; remaining views use the complete comparison
+  (projection, range validation, CSS analysis, implementation diffing).
+  Entry-owned props may differ on the fast path and
   invocation source metadata is ignored; every nested input or
   ownership-topology difference falls through. One-sided views
-  validate current or historical ranges before normalization. Both paths
-  produce identical records for valid builder output. Identical handcrafted
-  malformed ownership markers are outside that equivalence guarantee because
-  views without ownership text edits do not repeat range validation. Views with
-  instances, entry-owned slots or possible inline references validate ranges while preparing their resource projection. The
-  internal `useFastPath` classification input and trailing `compareReview`
-  options object exist only for differential tests and default to enabled. The decision rule lives in the
+  validate current or historical ranges before normalization. All paths
+  produce identical records for valid builder output. Component-aware usage
+  ranges are validated through the shared original analysis, including empty
+  usage; optimization switches do not weaken document validation. The
+  internal `useFastPath` and `useStylePath` classification/`compareReview`
+  options exist only for differential tests and default to enabled. Disable
+  both for the complete-path oracle. The decision rule lives in the
   [component change attribution contract](../../docs/protocol/mokly-component-review-fast-path.md).
   Identical source/path/topology shares head analysis and conservative original/
   caller-copy seeds, with no projection, inline analysis or hashing. Committed
   mode proves only the head closure; derived mode compares both independently.
   Non-identical attempts project only for ownership text edits. Fall-through reuses
   trees/discovery and rebuilds any unattributed material for full attribution.
+- `component_style_route.ts`, `style_windows.ts`: the numbered
+  [style-only proof](../../docs/protocol/mokly-style-only-route.md), with one
+  head tree, UTF-16 windows and no base parse, projection or implementation
+  comparison. Reconstructed base style spans retain document-wide ordinals;
+  shared inline preparation survives fallback. Both retained multisets are
+  composed normally. `stylePath` counts only settled views.
 - `page_analysis.ts`, `page_pair.ts`: lazy view-local source-located trees,
   validated UTF-16 ranges, flat ignore spans, styles and reference inventory.
   The pair caches raw normalization and one stable projected exclusion policy.
@@ -380,3 +387,5 @@ The [shared-page checkpoint](../../docs/dev/shared-page-analysis-checkpoint.md)
 records the captured oracle, exact parse bounds and intentional changed outcomes.
 Its [same-host measurements](../../docs/dev/shared-page-analysis-measurements.md)
 retain the M6 controls, original-source payload bounds and exclusive work.
+The [style-route checkpoint](../../docs/dev/style-only-route-checkpoint.md)
+records per-view oracles, parse interception and the conservative seed proof.

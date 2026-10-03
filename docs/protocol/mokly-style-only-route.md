@@ -2,9 +2,9 @@
 
 ## Delivery Status
 
-Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md),
-not yet implemented. [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
-delivers this route, its differential test switch and `stylePath` counts.
+Implemented in [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
+of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md),
+including its differential test switch and `stylePath` counts.
 It uses [M7 page analysis](./mokly-page-analysis.md) and
 [parse reuse](./mokly-css-parse-reuse.md); later fingerprints do not change its
 result contract.
@@ -36,6 +36,12 @@ Every condition must hold, otherwise use the full comparison:
    base window is in the same element, with unchanged start/end tags and attrs.
    The windows are disjoint from paired ignore regions and material-signal
    spans; validation and the existing one-sided-material rule still apply.
+   No eligible outer span may remove just one marker of a paired ignore
+   region: that would leave a lone marker for full material validation.
+   This includes markers in unchanged tag attributes, outside style content;
+   it is an uncertain source/span proof and must fall through.
+   A start marker ending exactly at the outer span's end is removed; an end
+   marker starting there is retained.
 4. Neither window contains `<`, nor do the up-to-eight code units immediately
    before either window. Check actual code units, not serialized selectors or
    a decoded string. This rules out a partial raw-text end-tag transition at
@@ -51,12 +57,26 @@ Every condition must hold, otherwise use the full comparison:
    selectors or resolved nesting parents. Literal attribute/string values with
    those words do not count. A selector compilation failure remains unresolved
    under the closed keep policy, not a proof of exclusion.
+   Also take full fallback when the reserved substring `<!--mokly-` occurs in
+   any eligible element's original content on either side, or in any composed
+   canonical actual/projected material on either side. Check composed text
+   because serialization can produce the spelling from a CSS string escape
+   such as `\3c !--mokly-component:`. This supervisor-approved M8 contract-gap
+   fix covers component, ignore, material and future inline-fingerprint markers
+   with one prefix. It preserves the full path's normalization and validation;
+   it changes no Decision or full-path result. Ordinary `mokly` text is allowed.
 6. The quick check's resource proof passes using the head analysis's shared
    raw reference seeds. In committed mode traverse only the **head reader's
    closure** and require no changed reachable Git path. In derived mode
    traverse both readers independently, reject changed reachable paths and
    require equal closure membership and bytes. These are transitive checks,
    not seed-path checks; a union cannot replace the derived comparisons.
+   Prove those shared seeds cover the stored references of the canonical
+   rules as well. A source record touching a paired ignore span can be dropped
+   while inline canonicalization retains its rule reference. Missing seed
+   coverage fails the conservative source/span proof and takes full fallback;
+   do not infer resource safety from the incomplete closure or add a second
+   discovery policy.
 
 Unchanged rules may contain references. Condition 5 means the diff changes
 none, even when a URL straddles a window boundary or lies in a condition
@@ -143,6 +163,24 @@ both `useStylePath` and `useFastPath`. This section owns M8's test obligations:
   explicitly `style:parent ~ main`, also inside functions/nesting parents;
   a parse failure in the edited or an unchanged element; unequal topology,
   missing usage; or a window intersecting paired ignore/material-signal spans.
+  Also cover an unchanged reference whose style-text source span touches a
+  paired ignore but whose canonical rule retains the reference: require full
+  fallback and unchanged resource evidence.
+- Require full fallback and route-disabled equality, per view in both modes,
+  for component-marker string edits (`r-10`/`r-20`), review-ignore start/end
+  lookalikes, material signals, an escaped `\3c !--mokly-component:` spelling
+  present only in composed text, inline-fingerprint lookalikes, and a lookalike
+  in an unchanged eligible element. An ordinary sheet containing `mokly` without
+  the reserved prefix must still route. Reuse prepared runs and safe diff
+  attribution on fallback; unchanged reference pairs retain two-tree matching
+  when their child-content selectors can distinguish the two texts.
+  Also preserve full-path validation failure when an unchanged eligible style's
+  tag contains one ignore boundary and its paired boundary lies outside the
+  element; prove both original sides reach the full path without counting a
+  failed view as completed.
+- Run seeded single-window edits on real React Native Web sheets, including
+  marker lookalikes. Assert each view's path and exact route-disabled result
+  equality whenever the route is taken; print the seed on failure.
 - Include grouped/nested duplicate displacement across differently shaped
   runs/elements under the cancellation contract. Require route/full equality
   when guards pass, and full fallback for reference-bearing diffed variants.

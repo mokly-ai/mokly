@@ -108,6 +108,9 @@ export function prepareComponentProjection(
           pairedIgnoreIds: paired,
           ...(root ? { rootComponentId: root } : {}),
           parser: context.resources.css.parser,
+          ...(pages?.inlinePreparation
+            ? { prepared: pages.inlinePreparation }
+            : {}),
           prepare: () => ({
             before: {
               document:
@@ -163,7 +166,7 @@ export function prepareComponentProjection(
     ownedComponentIds:
       analysis?.status === "resolved" ? analysis.ownedComponentIds : new Set(),
     ...(analysis ? { inlineAnalysis: analysis } : {}),
-    ...inlineEvidence(analysis),
+    ...prepareInlineEvidence(analysis),
     excluded:
       pages?.resourceExclusion(() =>
         projectedResourceExclusion(context, projected.pairedComponentIds, root),
@@ -188,7 +191,9 @@ function inlineMaterials(analysis: InlineAttributionResult | undefined): {
     : { before: empty, after: empty };
 }
 
-function inlineEvidence(analysis: InlineAttributionResult | undefined): {
+export function prepareInlineEvidence(
+  analysis: InlineAttributionResult | undefined,
+): {
   inlineEvidence?: PreparedInlineStyleEvidence;
 } {
   if (!analysis || analysis.status === "skipped") return {};

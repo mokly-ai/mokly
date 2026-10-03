@@ -92,6 +92,7 @@ test("each completed real view samples heap once; a rejecting view never samples
     views: home.length,
     fastPath: home.length,
     completePath: 0,
+    stylePath: 0,
     heapPeakMiB: 81.13,
   });
 });

@@ -69,6 +69,7 @@ test("v4 asserts analysed reason scope at the producer boundary", async (t) => {
           baseCommit: "a".repeat(40),
           baseRef: "main",
           useFastPath: false,
+          useStylePath: false,
         });
       if (valid) await assert.doesNotReject(compare);
       else

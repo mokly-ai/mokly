@@ -104,7 +104,7 @@ export class DocumentWork {
     }
   }
 
-  comparedView(path: "fast" | "complete"): void {
+  comparedView(path: "fast" | "style" | "complete"): void {
     this.paths.addPath(path);
     this.heapPeak = Math.max(this.heapPeak, this.heapSample());
   }

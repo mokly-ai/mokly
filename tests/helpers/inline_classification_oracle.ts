@@ -38,6 +38,7 @@ export async function compareInlineClassification(
       baseCommit: commit,
       baseRef: "main",
       useFastPath: false,
+      useStylePath: false,
       beforeReader: new GitReviewAssetReader(
         config,
         git.reader,

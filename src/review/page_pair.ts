@@ -1,10 +1,12 @@
 /** View-local lazy analyses, shared across quick-check fall-through. */
 import type { GeneratedComponentView } from "@mokly/viewer/data";
 
+import type { PreparedInlineRules } from "./css/inline_preparation.js";
 import { normalizeReviewPair, type NormalizedReviewPair } from "./ignore.js";
 import { PageAnalysis } from "./page_analysis.js";
 
 export class PageAnalysisPair {
+  inlinePreparation?: PreparedInlineRules;
   private base?: PageAnalysis;
   private head?: PageAnalysis;
   private normalized?: NormalizedReviewPair;

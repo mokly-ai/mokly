@@ -8,7 +8,7 @@ implements heap/document counts and complete sample outcomes;
 [M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse)
 implements segment counts; [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
 implements shared `pageAnalysis` parses; [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
-delivers `stylePath`, still pending; M2 records the reference in the fixture README.
+implements `stylePath`; M2 records the reference in the fixture README.
 M7 [measurements](../dev/shared-page-analysis-measurements.md) retain per-step work.
 
 ## Opt-in timings
@@ -72,8 +72,8 @@ Review phases use the same session, role and parent context as their caller:
   document checks use separate occurrences for material and resource comparison
   loops; a baseline-document batch span can therefore be nested inside one.
   Its component-aware counts are defined below; live document checks emit no
-  counts record. Before `stylePath` is delivered, the implemented record has
-  `views`, `fastPath`, `completePath`, `heapPeakMiB` with `fastPath + completePath = views`.
+  counts record. Its record has `views`, `fastPath`, `stylePath`, `completePath`
+  and `heapPeakMiB`; the three path counts partition completed views.
 - `review.resource-graph` covers reference discovery and transitive traversal
   for each material view or live document, and each before/after snapshot-copy
   closure. It includes resource reads and copying into the in-memory artifact.
@@ -101,7 +101,7 @@ Review phases use the same session, role and parent context as their caller:
   view, including span discovery and parser-cache lookups. A direct call to the
   pure engine emits the span even when identical outer style sources let it
   skip parsing. Complete paired component-aware comparisons call the engine;
-  the approved target also calls it from the style-only route, but never from
+  the style-only route also calls it, but never from
   a successful quick check. Contained parse or selector failures return unresolved
   attributions with span status `ok`; an
   escaping error ends the span with `error`. It logs no paths, selectors, CSS
@@ -165,7 +165,7 @@ Use the ordinary envelope with `event: counts`, numeric `counts`, no paths/text.
 Component-free/live loops emit no new records; build parses do not count.
 
 - `review.compare-screens`: `views`, `fastPath`, `completePath`,
-  `heapPeakMiB`, and (when delivered) `stylePath`. Integer path counts partition
+  `heapPeakMiB`, and `stylePath`. Integer path counts partition
   views whose comparison completed; attempts/failing views are not counted.
   `fastPath + completePath + stylePath = views`; a style fallback counts as
   complete, never twice. `heapPeakMiB` is the maximum V8 `used_heap_size` of the

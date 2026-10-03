@@ -2,24 +2,22 @@
 import type { ComponentViewRecord } from "@mokly/viewer";
 
 import type { RenderedRange } from "../../components/ranges.js";
-import { mayContainCssReferences } from "../../css_references.js";
 import { documentWorkSync, timeSync } from "../../diagnostics/timings.js";
 
 import type { diffCssRuleLists } from "./diff.js";
 import type { CssDocument } from "./document.js";
 import { createElementOwnerIndex } from "./element_owners.js";
 import {
+  prepareInlineRules,
+  type PreparedInlineRules,
+} from "./inline_preparation.js";
+import {
   attributeInlineRule,
   type AttributedInlineRule,
 } from "./inline_rule_matching.js";
-import {
-  parseInlineRuns,
-  type InlineRunOccurrence,
-} from "./inline_rule_runs.js";
-import { inlineSegmentChanges } from "./inline_segment_changes.js";
+import type { InlineRunOccurrence } from "./inline_rule_runs.js";
 import {
   findUnownedInlineStyles,
-  sameInlineOuterSources,
   type InlineStyleSpan,
 } from "./inline_styles.js";
 import type { CssRuleDiffResult, CssRuleParser } from "./types.js";
@@ -46,6 +44,7 @@ export interface InlineAttributionInput {
   rootComponentId?: string | undefined;
   parser: CssRuleParser;
   diffRules?: typeof diffCssRuleLists;
+  prepared?: PreparedInlineRules;
   prepare: () => {
     before: InlineAttributionMatchingSide;
     after: InlineAttributionMatchingSide;
@@ -89,10 +88,14 @@ export type InlineAttributionResult = CommonResult &
 export function attributeInlineRules(
   input: InlineAttributionInput,
 ): InlineAttributionResult {
-  return timeSync("review.inline-style-analysis", () => analyze(input));
+  return timeSync("review.inline-style-analysis", () =>
+    analyzeInlineRules(input),
+  );
 }
 
-function analyze(input: InlineAttributionInput): InlineAttributionResult {
+export function analyzeInlineRules(
+  input: InlineAttributionInput,
+): InlineAttributionResult {
   return documentWorkSync("inlineRuleMs", () => {
     const paired = new Set(input.pairedIgnoreIds);
     const beforeSpans =
@@ -110,51 +113,25 @@ function analyze(input: InlineAttributionInput): InlineAttributionResult {
         paired,
       );
     const common = { beforeSpans, afterSpans };
-    const outerSourcesEqual = sameInlineOuterSources(beforeSpans, afterSpans);
-    if (
-      outerSourcesEqual &&
-      ![...beforeSpans, ...afterSpans].some((span) =>
-        mayContainCssReferences(span.text),
-      )
-    )
-      return { ...common, status: "skipped" };
-
-    const before = parseInlineRuns(beforeSpans, input.parser);
-    const after = parseInlineRuns(afterSpans, input.parser);
-    if (before.status === "unresolved" || after.status === "unresolved")
+    const prepared =
+      input.prepared ??
+      prepareInlineRules(
+        beforeSpans,
+        afterSpans,
+        input.parser,
+        input.diffRules,
+      );
+    if (prepared.status !== "resolved") return { ...common, ...prepared };
+    const { beforeRuns, afterRuns, deltas: analyzed } = prepared;
+    const material = { beforeRuns, afterRuns };
+    if (!analyzed.length)
       return {
         ...common,
-        status: "unresolved",
-        failures: [
-          ...(before.status === "unresolved"
-            ? [{ side: "before" as const, error: before.error }]
-            : []),
-          ...(after.status === "unresolved"
-            ? [{ side: "after" as const, error: after.error }]
-            : []),
-        ],
-        retainedSelectors: { status: "unresolved", selectors: [] },
+        status: "resolved",
+        ...material,
+        rules: [],
+        ownedComponentIds: new Set(),
       };
-
-    const analyzed = inlineSegmentChanges(
-      before,
-      after,
-      input.diffRules,
-    ).deltas;
-    const material = {
-      beforeRuns: before.occurrences,
-      afterRuns: after.occurrences,
-    };
-    if (!analyzed.length)
-      if (outerSourcesEqual) return { ...common, status: "skipped" };
-      else
-        return {
-          ...common,
-          status: "resolved",
-          ...material,
-          rules: [],
-          ownedComponentIds: new Set(),
-        };
     const matching = input.prepare();
     const beforeOwners = createElementOwnerIndex({
       ranges: matching.before.ranges,
@@ -168,12 +145,14 @@ function analyze(input: InlineAttributionInput): InlineAttributionResult {
       counterpart: input.before.usage,
       rootComponentId: input.rootComponentId,
     });
-    const rules = analyzed.map((change) =>
-      attributeInlineRule(
-        change,
-        { document: matching.before.document, owners: beforeOwners },
-        { document: matching.after.document, owners: afterOwners },
-      ),
+    const rules = analyzed.map(
+      (change) =>
+        prepared.attributedChanges?.get(change) ??
+        attributeInlineRule(
+          change,
+          { document: matching.before.document, owners: beforeOwners },
+          { document: matching.after.document, owners: afterOwners },
+        ),
     );
     const diffedRules = rules.filter(
       ({ change }) => change.kind !== "unchanged",

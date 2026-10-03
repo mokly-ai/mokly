@@ -105,6 +105,9 @@ export async function classifyComponentsWithSources(
     ...(input.useFastPath === undefined
       ? {}
       : { useFastPath: input.useFastPath }),
+    ...(input.useStylePath === undefined
+      ? {}
+      : { useStylePath: input.useStylePath }),
   };
   await prefetchClassificationViews(
     context,

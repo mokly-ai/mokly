@@ -11,6 +11,7 @@ export async function compareCacheBounds(input: ComponentClassificationInput) {
     const result = await classifyComponents({
       ...input,
       useFastPath: false,
+      useStylePath: false,
       ...(cssCacheBytes === undefined ? {} : { cssCacheBytes }),
       cssParser: {
         parse(source) {

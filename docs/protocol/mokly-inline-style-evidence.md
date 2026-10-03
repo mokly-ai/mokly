@@ -8,7 +8,7 @@ owns analysis; [validation](./mokly-component-review-validation.md#inline-style-
 owns strict shapes and [presentation](./mokly-css-evidence-presentation.md) owns copy.
 Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
 [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
-delivers identical evidence from the [style-only route](./mokly-style-only-route.md#result).
+implements identical evidence from the [style-only route](./mokly-style-only-route.md#result).
 No evidence shape, ordering, state coupling or delivery schema changes.
 
 ## Evidence Shape And Emission

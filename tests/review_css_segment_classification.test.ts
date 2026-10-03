@@ -75,6 +75,7 @@ for (const mode of ["committed", "derived"] as const)
               baseCommit: commit,
               baseRef: "main",
               useFastPath: false,
+              useStylePath: false,
               beforeReader: new GitReviewAssetReader(
                 config,
                 git.reader,

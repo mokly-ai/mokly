@@ -119,14 +119,21 @@ export function assertComparisonCounts(
     "completePath",
     "fastPath",
     "heapPeakMiB",
+    "stylePath",
     "views",
   ]);
   assert.ok(
-    [counts?.views, counts?.fastPath, counts?.completePath].every(
-      (value) => Number.isInteger(value) && value! >= 0,
-    ),
+    [
+      counts?.views,
+      counts?.fastPath,
+      counts?.completePath,
+      counts?.stylePath,
+    ].every((value) => Number.isInteger(value) && value! >= 0),
   );
-  assert.equal(counts!.fastPath! + counts!.completePath!, counts!.views);
+  assert.equal(
+    counts!.fastPath! + counts!.completePath! + counts!.stylePath!,
+    counts!.views,
+  );
   assert.ok(Number.isFinite(counts!.heapPeakMiB) && counts!.heapPeakMiB! > 0);
   assertDocumentWorkCounts(events, role);
 }

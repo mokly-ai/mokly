@@ -174,6 +174,16 @@ export function reviewIgnoreRegions(
   return [...parseDocument(source, route).regions.values()];
 }
 
+/** Source spans of material signals, after the caller validates the marker syntax. */
+export function reviewMaterialSpans(
+  source: string,
+): readonly { start: number; end: number }[] {
+  return [...source.matchAll(MATERIAL_SCAN)].map((match) => ({
+    start: match.index,
+    end: match.index + match[0].length,
+  }));
+}
+
 function parseMaterials(
   content: string,
   route: string,

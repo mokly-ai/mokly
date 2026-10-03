@@ -59,7 +59,11 @@ export async function comparePageViews(
   oracle = false,
   useFastPath = true,
 ) {
-  const context = { ...pageContext(fixture, !oracle), useFastPath };
+  const context = {
+    ...pageContext(fixture, !oracle),
+    useFastPath,
+    useStylePath: false,
+  };
   const compare = oracle ? delivered : compareComponentView;
   const results = [];
   for (const entry of fixture.after.entries) {

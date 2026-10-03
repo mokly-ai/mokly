@@ -19,6 +19,7 @@ import {
   type GitReviewAssetReader,
   type ReviewAssetReader,
 } from "./assets.js";
+import type { CompareReviewOptions } from "./compare.js";
 import { CompilationAssetReader } from "./compilation_assets.js";
 import { classifyComponents } from "./component_classification.js";
 import { baselineForCurrentIdentities } from "./component_metadata.js";
@@ -33,7 +34,7 @@ export async function compareComponentCatalogue(
   changedPaths: readonly string[],
   baseCommit: string,
   baseRef: string,
-  useFastPath?: boolean,
+  options: CompareReviewOptions = {},
 ): Promise<ReviewArtifact> {
   baseline = baselineForCurrentIdentities(baseline, compilation.manifest);
   const baseArtifacts = artifactViews(baseline);
@@ -72,7 +73,7 @@ export async function compareComponentCatalogue(
     changedPaths,
     baseCommit,
     baseRef,
-    ...(useFastPath === undefined ? {} : { useFastPath }),
+    ...options,
   });
   const files = new Map<string, ReviewArtifactContent>();
   for (const artifact of baseArtifacts)

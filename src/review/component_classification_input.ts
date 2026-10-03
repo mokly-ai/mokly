@@ -19,4 +19,6 @@ export interface ComponentClassificationInput {
   cssCacheBytes?: number;
   /** Test-only: disable the unchanged-view decision so both paths can be compared. */
   useFastPath?: boolean;
+  /** Test-only: disable the style-only route without changing validation. */
+  useStylePath?: boolean;
 }

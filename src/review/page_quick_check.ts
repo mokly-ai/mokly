@@ -15,8 +15,33 @@ export async function identicalPageQuickCheck(
   pages: PageAnalysisPair,
   view: ViewReview,
 ): Promise<ComparedComponentView | undefined> {
+  if (!(await unchangedPageResources(context, pages))) return;
+  const signals = componentUsageSignals(pages.before.usage, pages.after.usage);
+  return {
+    comparisonPath: "fast",
+    view: { ...view, state: "unchanged", ignoredIds: [] },
+    reasons: [
+      ...(signals.inputs ? [{ kind: "inputs" as const }] : []),
+      ...(signals.structure ? [{ kind: "structure" as const }] : []),
+    ],
+    changedImplementations: new Set(),
+    ownedResources: [],
+  };
+}
+
+/** Conservative shared-seed proof: head closure in committed mode, both in derived mode. */
+export async function unchangedPageResources(
+  context: ComponentViewContext,
+  pages: PageAnalysisPair,
+  requiredReferences?: Iterable<string>,
+): Promise<boolean> {
   const head = pages.afterAnalysis;
   const seeds = head.conservativeReferences(pages.pairedIgnoreIds);
+  if (requiredReferences) {
+    const covered = new Set(seeds);
+    for (const reference of requiredReferences)
+      if (!covered.has(reference)) return false;
+  }
   const afterResources = await context.afterReader.resources(
     head.route,
     head.source,
@@ -38,7 +63,7 @@ export async function identicalPageQuickCheck(
       context.changed.has(path(route)),
     )
   )
-    return;
+    return false;
   if (
     context.compareResourceBytes &&
     (
@@ -50,16 +75,6 @@ export async function identicalPageQuickCheck(
       )
     ).size
   )
-    return;
-  const signals = componentUsageSignals(pages.before.usage, pages.after.usage);
-  return {
-    comparisonPath: "fast",
-    view: { ...view, state: "unchanged", ignoredIds: [] },
-    reasons: [
-      ...(signals.inputs ? [{ kind: "inputs" as const }] : []),
-      ...(signals.structure ? [{ kind: "structure" as const }] : []),
-    ],
-    changedImplementations: new Set(),
-    ownedResources: [],
-  };
+    return false;
+  return true;
 }

@@ -78,6 +78,7 @@ async function comparisonModes(
       beforeReader: memoryReader(fixture.beforeFiles),
       afterReader: memoryReader(fixture.afterFiles),
       useFastPath,
+      useStylePath: false,
     });
   const events: TimingEvent[] = [];
   const fast = await runWithTimings(true, "test", () => classify(true), {

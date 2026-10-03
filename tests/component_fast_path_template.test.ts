@@ -85,6 +85,7 @@ for (const templateCase of templateCases)
           baseCommit: "a".repeat(40),
           baseRef: "main",
           useFastPath,
+          useStylePath: false,
         });
       const [optimized, complete] = await Promise.all([
         classify(true),
@@ -136,6 +137,7 @@ for (const selectCase of selectCases)
           baseCommit: "a".repeat(40),
           baseRef: "main",
           useFastPath,
+          useStylePath: false,
         });
       const [optimized, complete] = await Promise.all([
         classify(true),

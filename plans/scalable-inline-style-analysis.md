@@ -1176,7 +1176,9 @@ the original page; give identical texts a single-parse quick check.
       known browser timing spec passes this run, so no exception is needed.
       The checkpoint records intervals and raw reports. Non-audit Repository
       checks also pass. A new report commit follows; no amend or push.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] `git add -A`, commit with Conventional Commits, and push the branch.
+      The supervisor pushed `96ddc06c` on October 3, 2026 with the known
+      `braces` audit blocker documented in the commit bodies.
 - [x] Use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
@@ -1238,28 +1240,54 @@ Summary: settle views whose only difference is inside one unowned style
 element from the rule diff and the head page analysis, with results identical
 to the full comparison.
 
-- [ ] Implement the route between the quick check and the full comparison
+Supervisor decision, October 3, 2026: M5 finding 1 is not approved; retain
+block-level cancellation and its grouped/nested displacement contract. The
+residual-multiset equality TODO was removed by the supervisor (see M6 finding
+2): M8 composes and compares retained multisets exactly as the route contract
+states. The candidate is recorded under M9A, not approved for implementation.
+
+- [x] Implement the route between the quick check and the full comparison
       with every Style-Only Route condition, and the test-only switch that
       disables it.
-- [ ] Count routed views as `stylePath` in the `review.compare-screens` counts
+- [x] Count routed views as `stylePath` in the `review.compare-screens` counts
       record.
-- [ ] Implement every differential and per-view path proof in the
+- [x] Implement every differential and per-view path proof in the
       [route contract's sole test list](../docs/protocol/mokly-style-only-route.md#fallback-counters-and-proof).
       It owns positive cases, precise window/reference guards, all fallbacks
       including `:parent`, view-wide grouped/nested displacement and the
       complete-path oracle. Do not maintain a second case list here.
-- [ ] Discovered: reuse all unchanged element runs and full-path preparation
+- [x] Discovered: reuse all unchanged element runs and full-path preparation
       as the route contract requires; never decide from a changed-element-only
       diff.
-- [ ] Discovered: prove actual/projected material equality from residual
-      multisets and equal retention of cancelled occurrences under the existing
-      block-run/matched-reference policies. Eligible comparisons must not sort,
-      copy or concatenate cancelled rules merely to test equality; fall back to
-      ordinary composition when the proof fails. Add counting tests and exact
-      differential checks in every approved grouped/nested equality domain.
+- [x] Discovered: pin failed conservative seed coverage when a style-text
+      reference record touches a paired ignore but canonicalization retains
+      the reference. Require full fallback under condition 6's source/span
+      proof, using the existing raw seeds without another resource policy;
+      clarify this proof in the route contract and retain regression-first evidence.
+- [x] Discovered: finish targeted/full unit, pinned-Chromium browser and
+      hydration suites and static checks, commit the code checkpoint locally,
+      report and stop before measuring. Measurements, `cargo xtask check` and
+      push follow supervisor approval; the final review remains the supervisor's.
+- [x] Discovered: the supervisor approved closing the marker-normalization
+      gap with the reserved `<!--mokly-` substring guard on original eligible
+      content and all composed canonical materials. Amend condition 5 and its
+      sole test list, add regression-first per-view and seeded coverage, and
+      reuse prepared runs and safe attribution on fallback. No Decision or
+      full-path result changes; retain the proposal/reproduction evidence.
+- [x] Discovered: preserve full material validation when removing an eligible
+      style would split paired ignore boundaries (including a marker in a tag
+      attribute). Pin the failure first and complete condition 3's conservative
+      source/span proof; retain the interrupted verification run and repeat the
+      final suites after the fix. No full-path behavior changes.
+      The [code checkpoint](../docs/dev/style-only-route-checkpoint.md) records all
+      completed implementation/proof work, the supervisor-approved gap fix and final
+      verification. Measurements, the combined gate and push remain pending approval.
+
 - [ ] Record the no-change and component-style samples of both fixtures.
 - [ ] Update `src/review/README.md` and the contracts' Delivery Status for
       delivered parts; run the suite and `cargo xtask check`.
+      README/status updates and all individual suites are complete; the
+      unqualified combined gate follows approved measurements per the brief.
 - [ ] `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
@@ -1300,6 +1328,12 @@ sheet-proportional scanning, cache/run lookup and cancellation (about 63–72 s
 in the cumulative style envelope), even when full material composition is
 avoided. This is new measured work, not permission to implement the recorded
 M5 review's alternative cancellation design.
+
+Unapproved candidate moved from M8 by the supervisor: prove actual/projected
+material equality from residual multisets and equal retention of cancelled
+occurrences, avoiding sorting/copying/concatenation of cancelled rules for
+equality alone. This requires the user's approval and a change to the route
+contract's Result and proof sections before implementation (M6 finding 2).
 
 - [ ] Reconcile the post-M9 counts/profiles with M6's ranges. Record per-path
       costs and identify the remaining obstacle to every Decision 13 ratio;
