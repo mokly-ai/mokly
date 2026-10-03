@@ -233,7 +233,9 @@ referenced HTML/CSS/resources are validated again after transformation.
 
 `output_collisions.ts` checks the portable file namespace, including case-folded
 public-file versus generated-directory collisions. Proven generated orphans do
-not block moves. Demand compilation caches this inventory within its generation. `transaction.ts` preserves overwrite, rollback and source guards;
+not block moves. Demand compilation caches this inventory within its generation.
+`transaction.ts` holds the repository writer lock across nested-directory pruning,
+installation and rollback, while preserving overwrite and source guards;
 it removes only output whose ownership is still proven by a resolved file,
 inventoried source or matching configured root glob. Unclaimed files stay untouched.
 
@@ -261,6 +263,11 @@ cargo xtask check
   resource lookup and relative encoded stylesheet delivery for every view.
 - `jsx_dev_runtime.ts`, `component_source.ts`: invocation capture without output
   or input-identity changes.
+- `transaction.ts`, `check.ts`: safe output installation and verification.
+- `output_lock.ts`, `output_lock_file.ts`: the repository writer lock that
+  serializes every generated-output transaction across processes. Callers that
+  must read the tree they wrote use `withOutputLock` with
+  `writeLockedCompilation`; waiters reclaim only provably stopped holders.
 
 See [paths](../../docs/protocol/mokly-paths.md),
 [entry modules](../../docs/protocol/mokly-entry-modules.md),

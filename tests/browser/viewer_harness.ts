@@ -37,6 +37,10 @@ interface FrameHookHarness {
     status: "pending" | "unavailable",
     snapshot?: string,
   ): void;
+  renderUsageWhileMountFinishes(
+    id: string,
+    status: "pending" | "unavailable",
+  ): void;
   rerender(id: string): void;
   resolveMount(id: string): void;
   resolveUpdate(id: string): void;

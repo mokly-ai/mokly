@@ -136,9 +136,9 @@ are used in this view. Missing metadata says inspection is unavailable.
 Bootstrap usage omitted only while route evidence is loading is neither empty
 nor unavailable metadata. The Components panel and Highlight control use
 `Waiting for the component preview.` until real usage is adopted into the
-mounted frame. A failed route-evidence read leaves inspection unavailable and
-exposes recovery through the Usage panel; it never substitutes the empty-view
-copy.
+mounted frame. Usage adopted during mounting reaches it before ready, so
+Highlight cannot use older usage. Failed route evidence keeps inspection
+unavailable and offers recovery through Usage, never the empty-view copy.
 
 Repeated instances remain individually selectable. Nested component groups start
 collapsed and can be expanded to inspect inner instances. Selecting an instance

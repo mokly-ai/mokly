@@ -13,7 +13,10 @@ validation are implemented.
 
 `cargo xtask check` is the complete local and release complete-mode entrypoint.
 With no options it runs every gate sequentially in one checkout, beginning with
-the live workspace dependency audit. A selected suite is partial evidence and
+the live workspace dependency audit. Only active reviewed path exceptions can
+cover findings; the [dependency security contract](./dependency-security.md)
+defines their UTC expiry and 31-day limit. The packed-consumer production audit
+has no exceptions. A selected suite is partial evidence and
 must never report that the complete gate passed. CI's validated aggregate of all
 required jobs and reports is complete verification of their exact tree; the
 [release evidence contract](./npm-release-evidence.md) defines reuse.

@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
+import { outputLockPath } from "../dist/build/output_lock.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 
 import { pageSource, pathFixture } from "./helpers/path_fixture.js";
@@ -45,6 +46,10 @@ test("rollback removes new directories and restores pruned ancestors and files",
     fs.promises,
     "rename",
     async (...args: Parameters<typeof fs.promises.rename>) => {
+      assert.ok(
+        fs.existsSync(outputLockPath(config.repoRoot)),
+        "the lock covers installation and rollback",
+      );
       if (
         !failed &&
         String(args[0]).includes("/stage/") &&
@@ -93,5 +98,6 @@ test("unchanged output directories survive replacement without directory watch e
     pageSource("", "<html><body>Changed</body></html>"),
   );
   await writeCompilation(await fixture.compile(), config);
-  assert.deepEqual(removed, []);
+  const lockDirectory = path.dirname(outputLockPath(config.repoRoot));
+  assert.deepEqual(removed, [lockDirectory, path.dirname(lockDirectory)]);
 });

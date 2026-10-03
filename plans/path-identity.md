@@ -871,6 +871,377 @@ Bring the shell to the Milestone 2 mockups.
       reconcile them with the implemented shell.
 - [ ] Run `cargo xtask check`, then commit and push.
 
+The following Milestones 6A–6F record completed work on
+`conductor/path-identity-m6-viewer` at `3996b061`. Their implementation is not
+integrated into this feature branch yet. Milestone 6G copies only these plan
+records; the orchestrator will schedule the viewer branch merge separately.
+
+## Milestone 6A: Index entry mockups
+
+Tags: mockup
+
+Mock up a screen that is its folder's own page and lists the folder's members
+under its row, in Browse and in Changes, before Milestone 7 implements the
+Changes click rule for it.
+
+Status: Complete. Package (six consumer scenarios), unit (3,748), browser
+(753), hydration (232), format, lint, repository ratchets, Rust formatting,
+Clippy, and Rust tests pass. Two repository checks still fail on earlier work:
+GHSA-vfj7-8cjw-p6xm, the approved exception, and the source file-length audit,
+which flags 28 files that Milestones 3 and 3B changed and that were already
+over 300 lines. This milestone added no file to that list. The user decided
+to have those files split in a separate refactoring milestone after this branch
+merges, and to run `node scripts/verification/source-file-length.mjs` in every
+later milestone's verification.
+
+- [x] Add design screens, each with mobile and desktop variants, for: a screen
+      that is its folder's own page with its variants and folder members under
+      its row, showing the link beside the disclosure button, the `contents`
+      toggle wording, variants before members, and a member's breadcrumbs; an
+      unchanged index entry whose only changed rows are folder members, shown
+      in Changes as a container row with no dot; and the first changed member
+      that activating that row opens. Extend the depicted catalogue under
+      Account, keep each screen reachable from existing designs, keep
+      annotations outside the screen area, and stay within five screens per
+      folder.
+- [x] Add catalogue navigation library variants for those rows, so the shared
+      component also shows them in its mobile drawer presentation.
+- [x] Rename `mbk-idchip` to `mbk-pathchip` throughout the mockups and their
+      styles, and update the tests that pin the class name.
+- [x] Define the Changes click rule in `mokly-variant-navigation.md` and
+      `mokly-changes.md`, and record the new screens and transitions in
+      `mokly-shell-design-inventory.md` and the design-links contract.
+- [x] Move the depicted catalogue, its branches, and its transitions from the
+      inventory into `mokly-shell-design-catalogue.md`, so the inventory stays
+      within its 250-line limit and the design-links contract within its cap.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      the design unit tests and design browser specs, and the full gate except
+      the known audit failure; smoke-test the new screens through
+      `npm run dev`.
+- [x] Split `tests/nav_tree.test.ts`, which Milestone 6 grew past 300 lines,
+      into `nav_tree.test.ts`, `nav_tree_tags.test.ts`, and a shared
+      `tests/helpers/nav_tree_fixture.ts`.
+- [x] Mark `design/browse/index-entries/member-changes` as a changed design
+      in the comparison-eligibility browser spec, because it offers the
+      comparison band.
+- [x] Commit and push (`916d3c0e`).
+
+## Milestone 6B: Viewer navigation review fixes
+
+Tags: ui
+
+Fix what an independent review of Milestone 6 found in the shell's rows,
+breadcrumb reveal, search, and tests. Every bug gets a failing test first.
+
+Status: Complete. Package (six consumer scenarios), unit (3,759), hydration
+(234), format, lint, repository ratchets, Rust formatting, Clippy, and Rust
+tests pass. The browser suite passes 756 of 757 tests. The failing test,
+`component_example.spec.ts` › desktop, fails on a cold server in this
+environment and passes when the server is warm; it fails in two of three
+fresh-server runs both at `916d3c0e` and on this branch, so it is not caused by
+this milestone. The dependency audit still fails on GHSA-vfj7-8cjw-p6xm, the
+approved exception, and the source file-length audit lists only the 28
+pre-existing files.
+
+- [x] Hide the variant and member rows of a hidden folder's own screen or
+      component in All and search, and keep a saved-open list hidden before
+      hydration when its parent row is hidden (`nav_tree.ts`,
+      `early_disclosures.ts`, `preferences.ts`); cover a hidden screen index
+      and a hidden component index in unit and browser tests.
+- [x] Make the breadcrumb reveal clear a tag-only query, and keep the reveal
+      pending until the folder row is visible, then focus and scroll it, also
+      when an embedded host commits the cleared selection later
+      (`store_actions.ts`, `nav_scroll.ts`).
+- [x] When search and the Changes filter hide a folder only together, clear
+      the search, then fall back to All (`nav_reveal.ts`), and state that order
+      in the folder contract.
+- [x] Sort a folder whose own page is in the other section by the row it
+      renders as in each section (`registry/hierarchy.ts`). The public tree
+      now carries each folder's `order` and the top-level `treeOrder`, so the
+      viewer orders each section as Serve does
+      (`docs/protocol/mokly-catalogue-tree.md`).
+- [x] Match search against folder titles, so a folder whose resolved title
+      matches shows with all its descendants (`nav_model.ts`), and state the
+      rule in the navigation contract.
+- [x] Use one shared helper for a row's search text, so Changes activation and
+      row visibility agree for removed variants (`changes_activation.ts`,
+      `nav_model.ts`).
+- [x] Make three tests prove their titles: v3 keys whose form v4 keeps in
+      `browse_disclosures.spec.ts`, both file layouts built through the real
+      registry (moved from `nav_folder_rows.test.ts` to
+      `tests/nav_file_layouts.test.ts`, because the registry lives in the root
+      package), and the pre-hydration state held back with `delayHydration` in
+      `browse_folder_rows.spec.ts`.
+- [x] Replace the stale Pages statements in `mokly-component-explorer.md` and
+      `examples/basic/README.md` (the README statement was already replaced in
+      Milestone 6A).
+- [x] Require the folder-title lookup in `revealSelection`,
+      `mergeSelection`, and `searchRow`, so no caller can leave folder titles
+      out of a search row.
+- [x] Move the shell destination queries from `mokly-navigation.md` to
+      `mokly-shell-destinations.md`, so the navigation contract states the
+      folder-title search rule within its reviewed cap, now 383 lines.
+- [x] Run the focused tests, Prettier on changed files, the full gate except
+      the known audit failure, and
+      `node scripts/verification/source-file-length.mjs`, which must list no
+      file beyond the 28 pre-existing ones; re-check parity for changed rows.
+      The example's section trees are identical before and after the change,
+      and no design state depicts a hidden folder, a cross-section folder
+      page, or a free-text search.
+- [x] Commit and push (`f01a6e2f`).
+
+## Milestone 6C: Integrate Milestone 4
+
+Bring Milestone 4's Markdown documents into this branch, so the later
+integration with the feature branch meets only Milestone 5's changes, and
+reconcile documents with the viewer navigation.
+
+Status: Complete. Package (six consumer scenarios), unit (3,841), browser
+(763), hydration (237), format, lint, repository ratchets, Rust formatting,
+Clippy, Rust tests, and the Rust file-length audit pass. The dependency audit
+still fails on GHSA-vfj7-8cjw-p6xm, and the source file-length audit lists
+only the 28 known files.
+
+- [x] Fetch the feature branch, record the source tip `4b10b657` and the
+      additions audit from `bda69311` (one commit, `1b0eb703`: 27 added and
+      108 changed files, no deletions), and merge it; resolve each conflict
+      path by path.
+- [x] Reconcile documents with the navigation: a `README.md` or `index.md`
+      folder page renders as the Overview row with the document icon;
+      documents use the document icon in the tree and in search; search
+      covers their titles, path segments, and tags; breadcrumbs open document
+      folder pages; the example's README documents produce the rows the
+      mockups show. The merged code already did all of this; new tests guard
+      it (`tests/nav_markdown_rows.test.ts`,
+      `tests/browser/markdown_navigation.spec.ts`).
+- [x] Re-check parity against `design/browse/views/folder-overview` and
+      `design/browse/pages/document` with the real example, and save
+      screenshots under `.context/m6c/`. The rows, icons, titles, path chips,
+      crumbs, and control-free stage match. The document typography did not
+      match the design; Milestone 6D aligns it. The design's
+      `Catalogue home` crumb and icon-only Details bar differ for every entry
+      kind, so they stay with the earlier design and runtime differences
+      outside this plan. The real example also lists `Workspace guide`, which
+      the design's fixture catalogue does not depict.
+- [x] Update two browser tests that expected the Example folder's crumb to be
+      plain or absent: the README now gives Example its own page, so the crumb
+      links to `/view/example/` (`browse.spec.ts` "breadcrumbs track hierarchy
+      through progressive history", `static_example.spec.ts` "the exported
+      example discloses a screen's variants without a server").
+- [x] Run the full gate and, after `git fetch origin main`,
+      `node scripts/verification/source-file-length.mjs`; only the 28 known
+      files may be listed. The known exceptions are the dependency audit and
+      the cold-server `component_example.spec.ts` desktop failure. The first
+      browser run passed 761 of 763; after the two crumb test updates, the
+      complete browser suite passed 763 of 763, the cold-server test
+      included.
+- [x] Commit and push (`13faa1e6`, `a341bbb1`).
+
+Merge decisions (no file is deleted):
+
+- `docs/protocol/mokly-changes.md`: keep Milestone 4's statement that
+  documents use the page material rules, and keep Milestone 6A's statement
+  that opening a folder screen's first changed member remains planned.
+- `examples/basic/README.md`: keep this branch's statement that the runtime
+  renders the Specs tree, because Milestone 6 replaced the Pages label; take
+  Milestone 4's description of the real example documents; name the design
+  screens as the subject of the next sentence, which had become ambiguous.
+- `plans/path-identity.md`: list both sides' complete milestones in the
+  header; in Milestone 7, keep Milestone 4's extended `relatedDocs` TODO and
+  Milestone 6A's container-row TODO.
+
+## Milestone 6D: Document typography parity
+
+Tags: ui
+
+Render Markdown documents in the typography that the document design
+depicts, which the Milestone 6C parity check found different.
+
+Status: Complete, verified by the Milestone 6C full gate.
+
+- [x] Add a browser test that compares the document template's computed
+      styles with the `design/browse/pages/document` artboard, on desktop and
+      mobile, for the body, measure, headings, paragraphs, links, inline
+      code, tables, and lists; confirm that it fails first
+      (`tests/browser/document_typography.spec.ts`).
+- [x] Align `src/documents/template.ts` with the design: 14.5px body text on
+      a 720px measure, 26px and 17px headings, semibold underlined links,
+      bordered inline code, full-width tables, 22px list indents, and the
+      shell's soft background; below 600px, 14px body text and a 22px
+      title. Undepicted elements follow the same scale.
+- [x] State the typography in `docs/protocol/mokly-documents.md` and the
+      documents README.
+- [x] Run the full gate and, after `git fetch origin main`,
+      `node scripts/verification/source-file-length.mjs`.
+- [x] Commit and push (`a341bbb1`).
+
+## Milestone 6E: Light-only document mockup
+
+Tags: mockup
+
+Milestone 7 shows the existing Light-only fallback note on documents. A
+document's stage has no frame label, and no design showed where the note goes,
+so mock it up first.
+
+- [x] Add `design/browse/appearance/states/light-only-document` in both schemes
+      and both viewports: on a branch that removed the Payment terms document,
+      its previous version has only a light render, so under Dark its pane
+      stays light and its label reads `Showing previous version — Light only`.
+- [x] Record the screen in the shell design inventory and the depicted
+      catalogue, and state the note's placement in the documents and removed
+      previews contracts.
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      and the design tests; smoke-test the screen through `npm run dev`.
+- [x] Keep the pane light with a `data-mbk-light-only` palette scope in
+      `generated/design.css`, because an artboard states its own appearance
+      exactly once; add the screen's own stylesheet rule so it reads in the
+      shell's Markdown typography; update the design counts.
+- [x] Commit and push (`2b213e96`, pushed with the first part of
+      Milestone 7).
+
+## Milestone 6F: Index member landing view mockup
+
+Tags: mockup
+
+Activating the unmodified Profile row in Changes opens Security on its first
+changed view, because `mokly-changes.md` lands a reader on the first changed
+view when the current selection is not a changed entry. The
+`design/browse/index-entries/member-changes` mockup showed Both instead. This
+milestone aligns the mockup with that rule, as
+`design/browse/variants/variant-changes` already shows one view.
+
+- [x] Depict Security as changed in its Light views on both viewports, so its
+      first changed view is Mobile · Light. Select Mobile on both artboards,
+      and mark the viewport control because Desktop also changed; the
+      Appearance control stays unmarked.
+- [x] Describe the landing view in the shell design inventory and the
+      depicted catalogue.
+- [x] Pin the selection and the mark in the design unit and browser tests
+      (`tests/design_index_entries.test.ts`,
+      `tests/browser/design_index_entries.spec.ts`).
+- [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
+      and the design tests; smoke-test the screen through `npm run dev`. The
+      design unit tests (167) and design browser tests (92) pass. At both
+      artboard widths the screen shows Mobile with the viewport mark and the
+      comparison band (`.context/m6f/`).
+- [x] Commit and push (`99032ff2`).
+
+## Milestone 6G: Integrate main
+
+Preserve main's audited dependency exception and output/frame race fixes while
+adapting them to file-derived paths, nested output transactions and path-keyed
+frame usage. Keep the viewer branch separate until the orchestrator requests it.
+
+Status: Complete. Package (six consumer scenarios), unit (4,050), browser (746)
+and hydration (229) pass. The dependency audit now passes with main's unchanged,
+reviewed exception. Only 26 members of the old 28-file length list remain.
+The two-parent merge and every remerge-diff path were reviewed before push.
+
+- [x] Fetch main, capture the source tip and merge base, and save every main
+      addition in `.context/main-additions-6g.txt` before integration.
+- [x] Merge `origin/main` and resolve each conflict path by path. Preserve the
+      audit evaluator, exception, fixtures and tests without alteration.
+- [x] Retain the writer lock, cancellation and export capture/recheck protection
+      around nested output installation, pruning and rollback.
+- [x] Retain frame usage synchronization and its race test with path-keyed
+      identity; migrate every new main regression to the path layout.
+- [x] Audit every main addition, source README and protocol change for feature
+      preservation; enumerate every authorized deletion relative to main.
+- [x] Run focused regressions and the unmodified `cargo xtask check`; run every
+      remaining suite and repository command if the known length check stops it.
+      Keep only the known 28-file length disposition for Milestone 6I.
+- [x] Commit the two-parent merge with its resolution and deletion decisions.
+      Immediately confirm exactly two parents and inspect every remerge-diff path.
+- [x] Finish any required post-merge verification, then fast-forward push the
+      feature branch and report the merge review and test results.
+
+Preservation record:
+
+- Source tip: `25afbc75bbae5638acf5a70b0a7385de3be41f1f`; merge base:
+  `b2c82c15`; main tip: `800fe9f88a0173429b25baa1bcf41ed9e59b2256`.
+  The saved additions audit lists 67 paths, including 28 additions. All remain.
+- `docs/protocol/README.md`: keep main's exception/audit description and the
+  feature's catalogue serialization and public-exclusion links.
+- `plans/README.md`: retain Path Identity as Active, update its status, and keep
+  main's completed Imported CSS Delivery entry instead of its stale Active copy.
+- `src/build/README.md`: retain the path-specific module guide and add main's
+  lock APIs and transaction guidance without duplicating existing module entries.
+- `src/build/transaction.ts`: retain both `OutputDirectories` and the lock imports.
+  Main's lock surrounds validation, backup, nested-directory pruning, installation,
+  rollback, cleanup and final generated-directory pruning. Case-folded target
+  discovery and previous-manifest ownership remain unchanged.
+- `packages/viewer/src/shell/frame_mount_hook.ts` keeps `entryPath`/`variantPath`
+  while main's unchanged `frame_session_usage.ts` finishes usage adoption in the
+  same task as its final revision check. Keep the extracted fake and race test;
+  migrate the harness's replacement URL to `<path>/index.html`.
+- `tests/helpers/generated_output_fixture.ts` uses complete nested paths instead
+  of `id`/`navPath`. The concurrency test retains main's exact-byte/tree checks
+  and also proves removal of obsolete screen directories. The existing rollback
+  test asserts the lock remains held; the no-directory-watch test now permits
+  only the lock's private cache-directory cleanup, not generated-directory churn.
+- Preserve every audit evaluator, exception, fixture and audit test byte for byte
+  from main. Keep export's locked write/capture and recheck, Serve wait cancellation,
+  baseline ancestor retries, streaming watch helpers, and native CI lock coverage.
+- `mokly-component-explorer.md`: state the retained mount/usage rule in concise
+  prose so the merged document stays within its existing 250-line cap.
+- Main's frame hook and harness extraction resolves two of the old 28 length
+  violations. The audit now lists 26 members of that original set, with no new
+  violation or exemption; Milestone 6I owns the remaining split.
+
+Authorized deletions relative to main:
+
+All 17 deletions predate this merge and follow the accepted Milestone 1/3 path
+migration and decision 14. No main addition is deleted. The exact paths and
+preserved replacements are:
+
+- `docs/protocol/mokly-nav-paths.md`: Milestone 1 replaces navigation labels with `mokly-paths.md` and `mokly-folders.md`.
+- `docs/protocol/mokly-nested-authoring.md`: Milestone 1 replaces the old nesting model with roots and folder contracts.
+- `examples/basic/entries/design/browse/appearance/index.tsx`: Milestone 3 splits discovery into `specs/design/browse/appearance/*.mockup.ts` and preserves the overview and child render helpers.
+- `examples/basic/entries/design/components/controls/index.tsx`: Milestone 3 relocates the controls definition to `specs/design/components/controls/index.tsx` with an `index.mockup.ts` entry.
+- `examples/basic/entries/design/components/index.tsx`: Milestone 3 relocates the component overview to `specs/design/components/index.tsx` with an `index.mockup.ts` entry.
+- `examples/basic/entries/design/components/pages/stacked/screens.tsx`: Milestone 3 preserves these screens at `specs/design/components/pages/stacked/screens.tsx`.
+- `examples/basic/entries/design/components/parts/destinations.ts`: Milestone 3 preserves the destination map at `specs/design/components/parts/destinations.ts`, using paths.
+- `examples/basic/entries/design/components/states/additions/screens.tsx`: Milestone 3 preserves these screens at `specs/design/components/states/additions/screens.tsx`.
+- `examples/basic/entries/design/components/states/loading/screens.tsx`: Milestone 3 preserves these screens at `specs/design/components/states/loading/screens.tsx`.
+- `examples/basic/entries/design/components/states/shared-impact/screens.tsx`: Milestone 3 preserves these screens at `specs/design/components/states/shared-impact/screens.tsx`.
+- `examples/basic/entries/design/design.mockup.tsx`: Milestone 3 replaces the `defineRoot`/`folder` aggregator with discovered `.mockup.ts` entries and `_folder.json` records under `specs/design`.
+- `examples/basic/entries/design/library/library.mockup.ts`: Milestone 3 replaces the aggregate export with one `.mockup.ts` entry beside each library component under `specs/design/library`.
+- `examples/basic/entries/design/parts/destinations.ts`: Milestone 3 preserves the path-based destination map at `specs/design/parts/destinations.ts`.
+- `examples/basic/entries/design/parts/screen_heads.tsx`: Milestone 3 preserves the header components at `specs/design/parts/screen_heads.tsx`.
+- `packages/viewer/src/registry/hierarchy_conflicts.ts`: Milestone 3 replaces navPath/title conflicts with path collision validation and the path-derived hierarchy.
+- `src/config/entry_globs.ts`: Milestone 3 replaces the single entry-glob model with `roots.ts`, `root_membership.ts` and root-scoped discovery.
+- `src/registry/changed_ids.ts`: Milestone 3 replaces ID comparison with `src/registry/changed_paths.ts`.
+
+Focused integration checks: 122 passed. Package checks pass all six consumer
+scenarios and validate 452 example files. Unit checks pass all 4,050 tests with
+zero failures, skips or cancellations. Browser checks pass all 746 tests, including
+main's frame-usage race regression; all three known flaky tests pass first run.
+Hydration passes 229 tests with zero failures, skips or cancellations. All four
+repository ratchets, Rust fmt/Clippy, 15 Rust tests and the 9-file Rust length
+audit pass. Changed-file Prettier and whitespace checks pass.
+The unmodified aggregate gate passes
+its audit, format and lint steps, then stops at the 26 remaining known length
+violations. No other exception is added; the remaining commands run separately.
+
+Merge review:
+
+- Confirmed exactly two parents immediately after committing: the saved source
+  tip `25afbc75` and main `800fe9f8`. No octopus or viewer merge was created.
+- Reviewed all 11 remerge-diff paths: the protocol index, component-explorer
+  contract, shell README, frame hook harness, plan index, this plan, build README,
+  transaction, concurrency test, generated-output fixture and path transaction
+  regressions. Each difference is accounted for by the preservation record above.
+- No lost main feature was found. The subsequent amendment only completes this
+  review record and verification status; repeat the two-parent and every-path
+  remerge checks after that amendment, before pushing.
+- Rechecked all 17 authorized deletions against main. They exactly match the
+  pre-integration ledger; this merge removes no file from its feature parent.
+- The 6A–6F text is a plan-only copy from the viewer branch, with its separate
+  branch status stated above. The viewer implementation remains unmerged.
+
+The orchestrator owns the later viewer merge and length split. The complete
+implementation review remains the final item in Milestone 8.
+
 ## Milestone 7: Viewer Changes and document presentation
 
 Tags: ui

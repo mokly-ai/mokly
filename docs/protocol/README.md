@@ -190,7 +190,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   - [One-time registry bootstrap](./npm-bootstrap.md)
   - [GitHub publishing protections](./npm-github-protections.md)
 - [Dependency security](./dependency-security.md) — advisory gates, targeted
-  updates, temporary overrides, and packed-consumer audit coverage.
+  updates, temporary patched-release overrides, reviewed path exceptions, and
+  strict packed-consumer audit coverage.
 
 - [Catalogue serialization](./mokly-catalogue-serialization.md) — canonical bytes,
   snapshot identity and strict current-format readers.
