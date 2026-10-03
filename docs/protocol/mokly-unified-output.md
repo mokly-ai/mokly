@@ -129,6 +129,16 @@ Keep the exact tracked/mixed/untracked and stale-output errors in
 Untracked checks never inspect an old output tree, even for CSS ownership.
 Build can write ignored output; neither `.gitignore` nor head tracking gates it.
 
+Preserve main's repository-scoped generated-output lock and its exact holder,
+realpath-alias, bounded wait, cancellation, dead-holder reclamation and cleanup
+guarantees. Acquire it once for the entire generated-tree transaction, including
+validation, staging, backup, install, rollback and cleanup. Build, watched Build
+and the opted-in Serve parent use the same lock; the child never acquires it.
+Cancellation stops waiting for the lock, not a transaction already underway.
+Keep the output.lock timing span. Plain Serve, export and publication neither
+write generated output nor acquire its writer lock; their independent source,
+resource-byte and capture stability checks remain required.
+
 Only `build`, `build --watch`, and `serve --build` write the whole tree through
 the existing transaction. Carry raw bytes through staging, rollback, retained
 runtimes, and worker/child IPC. Validate an existing tree's regular-file and

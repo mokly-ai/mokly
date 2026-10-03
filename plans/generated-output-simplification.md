@@ -775,6 +775,47 @@ links. Milestone 11 must import them before adding links. The test names denote
 whole matching families, including helpers and browser/package counterparts;
 they are preservation requirements, not a reduced validation selection.
 
+### Mainline audit refresh for Milestone 11
+
+Source tip fetched for the first merge:
+`800fe9f88a0173429b25baa1bcf41ed9e59b2256`.
+Pre-merge implementation checkpoint: `6df09b371ef2363440bd12ee1865af11eed747c0`.
+The merge base remains `bf9e3c9a4151fedacf8c7db5bc957609689a348b`.
+Audit `git diff --name-status b2c82c15..800fe9f8` in addition to the 11-commit
+preservation list above. Fetch again before the merged push; record and merge
+any new source commits before rerunning the required full gate.
+
+12. `1dc91580` (#130): preserve the dependency-audit runner, evaluator,
+    lockfile/path validation, declarations, fixtures and all audit tests.
+    Preserve the exact dev-only GHSA-vfj7-8cjw-p6xm exception through
+    2026-11-03 UTC, including expiry, stale-record rejection, sole-dependent
+    checks and failure on other advisories or production paths. Keep the new
+    dependencies:check command and strict exception-free packed-consumer audits
+    unchanged. Preserve security/release/CI documentation and package tests.
+13. `800fe9f8` (#129): preserve repository/realpath-scoped output-lock exclusion,
+    holder/token validation, bounded wait/cancellation, dead-holder reclaim,
+    release and directory-removal race handling. Adapt the lock to encompass
+    one complete generated-tree transaction: validation, staging, backup,
+    replacement, rollback and cleanup. Every explicit writer acquires it:
+    build, build --watch and the Serve parent for serve --build. Preserve
+    output.lock timings and cancellation that stops lock waiting, not an
+    already-started transaction. Plain Serve, export and publication use
+    in-memory output and must neither write nor acquire this writer lock.
+    Preserve independent export input-stability and cancellation fences.
+    Keep output_lock.ts and output_lock_file.ts guarantees and the concurrency,
+    lock-wait, native lock, baseline-directory race, timing and watcher tests;
+    adapt mode/disk-output expectations only under the approved output contract.
+    Keep the frame_session_usage.ts race fix, mount-hook integration, fake
+    adapters/harness and frame_hook_usage_race.spec.ts assertions. Preserve
+    all other #129 fixes, including baseline mkdir retries and open-stream
+    watcher tests. Do not implement Milestone 12 or 14 while resolving this merge.
+
+The user explicitly authorizes replacing main's export write/read-lock path
+with in-memory export and publication capture. Record these adaptations and
+all other main-relative removals by path in the merge commit and this plan.
+This does not authorize removing the writer lock, the frame race fix, an audit
+check or any unrelated mainline test.
+
 ### Fixed decisions for implementation
 
 - Use private manifest 8, extending v7 entries with closure/blob fields and
@@ -1004,6 +1045,9 @@ Backend.
       while replacing only the authorized layout, modes and version clauses.
       Include `mokly-baseline-compatibility.md`, retaining its earlier-version
       outcome with the approved v8 threshold.
+- [ ] Preserve #130's audit implementation/data/tests and strict consumer audits
+      unchanged. Adapt #129's output lock around every whole-tree writer, keep
+      in-memory nonwriters lock-free, and preserve its frame-usage race fix.
 - [ ] Implement the Milestone 9 layout and manifest: one constant,
       generated stylesheets and assets relative to the generated directory,
       reserved route segments, the shared reference rule, and imported CSS
