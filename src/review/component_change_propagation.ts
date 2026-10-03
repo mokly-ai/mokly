@@ -8,7 +8,7 @@ import type {
 import {
   address,
   uniqueReasons,
-  type RoutedEntry,
+  type ReviewEntry,
 } from "./component_metadata.js";
 
 export function propagateImplementations(
@@ -41,8 +41,8 @@ export function propagateImplementations(
 
 export function propagateUseCases(
   pairs: readonly {
-    before: RoutedEntry | undefined;
-    after: RoutedEntry | undefined;
+    before: ReviewEntry | undefined;
+    after: ReviewEntry | undefined;
   }[],
   before: Manifest,
   after: Manifest,
@@ -52,38 +52,38 @@ export function propagateUseCases(
     changes
       .filter((entry) => entry.kind === "screen")
       .flatMap((entry) =>
-        [entry.before?.route, entry.after?.route].filter(
-          (route): route is string => route !== undefined,
+        [entry.before?.id, entry.after?.id].filter(
+          (id): id is string => id !== undefined,
         ),
       ),
   );
   for (const pair of pairs) {
     const entry = (pair.after ?? pair.before)!;
     if (entry.kind !== "use-case") continue;
-    const routes = new Set(
+    const screenIds = new Set(
       [pair.before, pair.after].flatMap((item, index) =>
         item?.kind === "use-case"
           ? item.steps.flatMap((step) =>
               (index === 0 ? before : after).entries.flatMap((screen) =>
                 screen.kind === "screen" &&
                 screen.id === step.screenId &&
-                changedScreens.has(screen.route)
-                  ? [screen.route]
+                changedScreens.has(screen.id)
+                  ? [screen.id]
                   : [],
               ),
             )
           : [],
       ),
     );
-    if (!routes.size) continue;
+    if (!screenIds.size) continue;
     const existing = changes.find(
       (change) =>
         change.kind === "use-case" &&
-        (change.after ?? change.before)?.route === entry.route,
+        (change.after ?? change.before)?.id === entry.id,
     );
     const reasons = uniqueReasons([
       ...(existing?.reasons ?? []),
-      ...[...routes].map((route) => ({ kind: "screen" as const, route })),
+      ...[...screenIds].map((id) => ({ kind: "screen" as const, id })),
     ]);
     if (existing) existing.reasons = reasons;
     else

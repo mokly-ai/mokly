@@ -19,9 +19,7 @@ export function catalogueUrl(value: string | URL): URL {
     throw new Error("The catalogue address is unavailable.");
   return url;
 }
-export function objectSource(
-  source: CatalogueSource,
-): source is CatalogueReadModel {
+function objectSource(source: CatalogueSource): source is CatalogueReadModel {
   return typeof source === "object" && !(source instanceof URL);
 }
 export function sourceIdentity(source: CatalogueSource): CatalogueSource {

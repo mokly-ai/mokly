@@ -9,6 +9,7 @@ import { handleCatalogueRequest } from "../src/server/http_routes.js";
 
 for (const route of [
   "/__mokly/shell.css",
+  "/__mokly/client/appearance-startup.js",
   "/__mokly/client/react-shell.js",
   "/__mokly/navigation/logical.js",
   "/__mokly/fonts/InterVariable.woff2",
@@ -33,7 +34,10 @@ for (const route of [
       () => undefined,
       new Set(),
       {
-        clientModules: new Map([["react-shell.js", asset]]),
+        clientModules: new Map([
+          ["appearance-startup.js", asset],
+          ["react-shell.js", asset],
+        ]),
         navigationModules: new Map([["logical.js", asset]]),
         fontAssets: new Map([["InterVariable.woff2", asset]]),
       },

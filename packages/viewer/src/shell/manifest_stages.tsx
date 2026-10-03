@@ -6,7 +6,7 @@ import {
   type GeneratedPathPrefix,
 } from "../catalogue/delivery_paths.js";
 import type { Viewport } from "../data/axes.js";
-import { catalogueViewHref } from "../navigation/delivery.js";
+import { entryRoute, viewHref, viewRoute } from "../navigation/routes.js";
 import type { ManifestScreen, ManifestUseCase } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -36,10 +36,16 @@ function fragmentSources(
   if (!hasDarkFragments) {
     return { dark: undefined, light: undefined };
   }
-  const dark = screen.darkFragments?.[viewport];
+  const dark = screen.colorSchemes.includes("dark")
+    ? viewRoute("screen", screen.id, viewport, "dark")
+    : undefined;
   return {
     dark: dark === undefined ? undefined : fragmentSrc(dark, fragment, prefix),
-    light: fragmentSrc(screen.fragments[viewport], fragment, prefix),
+    light: fragmentSrc(
+      viewRoute("screen", screen.id, viewport, "light"),
+      fragment,
+      prefix,
+    ),
   };
 }
 
@@ -47,7 +53,7 @@ function isSchemeFallback(
   screen: ManifestScreen,
   hasDarkFragments: boolean,
 ): boolean {
-  return hasDarkFragments && screen.darkFragments === undefined;
+  return hasDarkFragments && !screen.colorSchemes.includes("dark");
 }
 
 function FrameLabel(props: { fallback: boolean; text: string }) {
@@ -68,7 +74,7 @@ export function FramesStage(props: {
   screen: ManifestScreen;
 }) {
   const screen = props.screen;
-  const address = screen.address ?? screen.route;
+  const address = screen.address ?? entryRoute("screen", screen.id);
   const mobile = fragmentSources(
     screen,
     "mobile",
@@ -105,9 +111,8 @@ export function FramesStage(props: {
             data-fragment-light={mobile.light}
             sandbox="allow-same-origin"
             src={fragmentSrc(
-              screen.fragments.mobile,
+              viewRoute("screen", screen.id, "mobile", "light"),
               props.fragment,
-              props.prefix,
             )}
             title={`${screen.title} — mobile`}
           />
@@ -127,9 +132,8 @@ export function FramesStage(props: {
             data-fragment-light={desktop.light}
             sandbox="allow-same-origin"
             src={fragmentSrc(
-              screen.fragments.desktop,
+              viewRoute("screen", screen.id, "desktop", "light"),
               props.fragment,
-              props.prefix,
             )}
             title={`${screen.title} — desktop`}
           />
@@ -161,7 +165,7 @@ function FlowScreen(props: {
       data-color-scheme-fallback={fallback ? "" : undefined}
     >
       <BrowserFrame
-        address={screen.address ?? screen.route}
+        address={screen.address ?? entryRoute("screen", screen.id)}
         frameKey={`${screen.id}:flow:${props.stepIndex}`}
       >
         <iframe
@@ -171,9 +175,8 @@ function FlowScreen(props: {
           data-fragment-light={desktop.light}
           sandbox="allow-same-origin"
           src={fragmentSrc(
-            screen.fragments.desktop,
+            viewRoute("screen", screen.id, "desktop", "light"),
             props.fragment,
-            props.prefix,
           )}
           title={`${screen.title} — desktop`}
         />
@@ -203,7 +206,7 @@ export function UseCaseFlowStage(props: {
                   {screen ? (
                     <a
                       className="flow-step-link"
-                      href={catalogueViewHref(screen.route)}
+                      href={viewHref(screen.kind, screen.id)}
                     >
                       This screen in the catalogue: {screen.title} →
                     </a>
@@ -212,7 +215,7 @@ export function UseCaseFlowStage(props: {
               </div>
               {screen ? (
                 <FlowScreen
-                  {...(props.catalogue.manifest.schemaVersion === 6 ||
+                  {...(props.catalogue.manifest.schemaVersion === 8 ||
                   props.catalogue.manifest.schemaVersion === "live-index-1"
                     ? { prefix: GENERATED_DIRECTORY }
                     : {})}

@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import { MoklyError } from "../errors.js";
 
 import { isBaselineCachePath, MOKLY_CACHE } from "./cache_paths.js";
@@ -11,6 +13,7 @@ import {
   isVanishedDirectory,
   isVanishedModule,
 } from "./entry_discovery_paths.js";
+import { compareCodeUnits } from "./path_order.js";
 import { isInside, projectRealPath, toPosixPath } from "./paths.js";
 import { isDeniedSourceSegment } from "./private_directories.js";
 import type { ResolvedConfig } from "./types.js";
@@ -20,7 +23,8 @@ import type { ResolvedConfig } from "./types.js";
  * The cache denial remains here for direct callers that bypass config validation.
  */
 export function discoverEntryModules(
-  config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot" | "review">,
+  config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot" | "review"> &
+    Partial<Pick<ResolvedConfig, "mockupsDir">>,
 ): string[] {
   const paths = discoveryPaths(config);
   const discovered = new Set<string>();
@@ -58,7 +62,7 @@ export function discoverEntryModules(
         .map((deniedRoot) =>
           toPosixPath(path.relative(config.repoRoot, deniedRoot)),
         )
-        .sort((left, right) => left.localeCompare(right));
+        .sort(compareCodeUnits);
       throw new MoklyError(
         "config-invalid",
         `entries glob matches no module: ${glob}${notSearched.length > 0 ? `; not searched: ${notSearched.join(", ")}` : ""}`,
@@ -66,7 +70,8 @@ export function discoverEntryModules(
     }
   }
   return [...discovered].sort((left, right) =>
-    toPosixPath(path.relative(config.repoRoot, left)).localeCompare(
+    compareCodeUnits(
+      toPosixPath(path.relative(config.repoRoot, left)),
       toPosixPath(path.relative(config.repoRoot, right)),
     ),
   );
@@ -92,7 +97,7 @@ function walkEntryCandidates(
       }
       return entry.isFile() ? [candidate] : [];
     })
-    .sort((left, right) => left.localeCompare(right));
+    .sort(compareCodeUnits);
 }
 
 /** Return null for a vanished or replaced module, a denial reason, or undefined when accepted. */
@@ -110,6 +115,8 @@ function entryModuleDenial(
   }
   if (isBaselineCachePath(module, repoRoot))
     return `is inside the private ${MOKLY_CACHE} directory`;
+  if (paths.generatedOutput && isInside(paths.generatedOutput.lexical, module))
+    return `is inside ${GENERATED_DIRECTORY}/`;
   let real: string;
   try {
     real = projectRealPath(module);
@@ -119,6 +126,8 @@ function entryModuleDenial(
   }
   if (!isInside(repoRoot, module) || !isInside(realRepoRoot, real))
     return "resolves outside repoRoot through a symlink";
+  if (paths.generatedOutput && isInside(paths.generatedOutput.projected, real))
+    return `is inside ${GENERATED_DIRECTORY}/`;
   if (
     isInside(reviewOutput.lexical, module) ||
     isInside(reviewOutput.projected, real)
@@ -142,9 +151,21 @@ function isSkippedEntryDirectory(
   paths: DiscoveryPaths,
   skippedRoots: string[],
 ): boolean {
-  if (path.resolve(candidate) === paths.reviewOutput.lexical) return true;
+  if (
+    path.resolve(candidate) === paths.reviewOutput.lexical ||
+    (paths.generatedOutput &&
+      isInside(paths.generatedOutput.lexical, candidate))
+  )
+    return true;
   try {
-    return projectRealPath(candidate) === paths.reviewOutput.projected;
+    const physical = projectRealPath(candidate);
+    return (
+      physical === paths.reviewOutput.projected ||
+      !!(
+        paths.generatedOutput &&
+        isInside(paths.generatedOutput.projected, physical)
+      )
+    );
   } catch (cause) {
     if (!isVanishedDirectory(cause))
       throw discoveryPathError(candidate, paths.repoRoot, cause);

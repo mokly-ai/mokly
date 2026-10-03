@@ -27,13 +27,13 @@ for (const width of [390, 1280]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/id/example-handbook?fragment=next-steps");
+    await page.goto("/view/pages/example-handbook.html?fragment=next-steps");
     await expect(page.locator("#mb-main h2")).toHaveText("Getting started");
     const frame = page.locator(".mbk-stage-embed iframe");
     await expect(frame).toHaveCount(1);
     await expect(frame).toHaveAttribute(
       "src",
-      /\/static\/mokly-generated\/handbook.html#next-steps$/,
+      /\/static\/mokly-generated\/pages\/example-handbook.html#next-steps$/,
     );
     await expect(frame).toHaveAttribute("sandbox", "allow-same-origin");
     await expect(
@@ -45,8 +45,8 @@ for (const width of [390, 1280]) {
       page.frameLocator(".mbk-stage-embed iframe").locator("#next-steps"),
     ).toBeVisible();
     await page.locator("[data-mokly-details] summary").click();
-    await expect(page.locator("[data-mokly-details]")).toContainText(
-      "handbook.html",
+    await expect(page.locator("[data-mokly-details]")).not.toContainText(
+      "pages/example-handbook.html",
     );
     await expect(page.locator("[data-mokly-details]")).toContainText(
       "documents",
@@ -58,7 +58,7 @@ for (const width of [390, 1280]) {
         .click();
     await expect(
       page.locator(
-        '[data-nav-section="pages"] [data-nav-collection="collection:example"]',
+        '[data-nav-section="pages"] [data-nav-folder="folder:Example"]',
       ),
     ).toHaveCount(1);
     await expect(
@@ -68,7 +68,6 @@ for (const width of [390, 1280]) {
     for (const query of [
       "example-handbook",
       "Getting started",
-      "handbook.html",
       "tag:documents",
     ]) {
       await search.fill(query);
@@ -76,9 +75,13 @@ for (const width of [390, 1280]) {
         page.locator('[data-entry-id="example-handbook"]'),
       ).toBeVisible();
     }
+    await search.fill("pages/example-handbook.html");
+    await expect(
+      page.locator('[data-entry-id="example-handbook"]'),
+    ).toBeHidden();
     await search.fill("");
     await page
-      .locator('[data-nav-collection="collection:example-screens"] > summary')
+      .locator('[data-nav-folder="folder:Example/Screens"] > summary')
       .click();
     await page.locator('[data-entry-id="example-welcome"]').click();
     await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
@@ -89,7 +92,9 @@ for (const width of [390, 1280]) {
       .frameLocator(screenFrame)
       .getByRole("link", { name: "Read the handbook" })
       .click();
-    await expect(page).toHaveURL(/\/view\/handbook.html\?fragment=next-steps$/);
+    await expect(page).toHaveURL(
+      /\/view\/pages\/example-handbook.html\?fragment=next-steps$/,
+    );
     await page.goBack();
     await expect(page.locator("#mb-main h2")).toHaveText("Welcome");
     await page.goForward();
@@ -102,39 +107,38 @@ for (const viewport of ["mobile", "desktop"] as const) {
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
-    await page.goto("/id/design-page-view");
+    await page.goto("/view/screens/design-page-view.html");
     await chooseViewport(page, viewport);
     const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
     await frame.locator(".ce-inspector-link").click();
-    await expect(page).toHaveURL(
-      /\/view\/design\/browse\/pages\/details\.html$/,
-    );
+    await expect(page).toHaveURL(/\/view\/screens\/design-page-details\.html$/);
     await expect(frame.locator(".mbk-details-body")).toContainText(
-      "handbook.html",
+      "entries/catalogue.mockup.tsx",
+    );
+    await expect(frame.locator(".mbk-details-body")).not.toContainText(
+      "Generated",
     );
     await frame.locator(".ce-inspector-link").click();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/view\.html$/);
+    await expect(page).toHaveURL(/\/view\/screens\/design-page-view\.html$/);
     if (viewport === "mobile") {
       await frame
         .getByRole("link", { name: "Open catalogue navigation" })
         .click();
       await expect(page).toHaveURL(
-        /\/view\/design\/browse\/pages\/navigation\.html$/,
+        /\/view\/screens\/design-page-navigation\.html$/,
       );
       await frame
         .getByRole("link", { name: "Close catalogue navigation" })
         .click();
-      await expect(page).toHaveURL(
-        /\/view\/design\/browse\/pages\/view\.html$/,
-      );
+      await expect(page).toHaveURL(/\/view\/screens\/design-page-view\.html$/);
     }
     await frame
       .getByRole("link", { name: "Open Welcome", exact: true })
       .click();
     await expect(page).toHaveURL(
-      /\/view\/design\/browse\/views\/screen\.html$/,
+      /\/view\/screens\/design-browse-screen\.html$/,
     );
     await page.goBack();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/view\.html$/);
+    await expect(page).toHaveURL(/\/view\/screens\/design-page-view\.html$/);
   });
 }

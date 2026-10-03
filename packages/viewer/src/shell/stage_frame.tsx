@@ -2,12 +2,14 @@
 
 import { useContext, useMemo } from "react";
 
+import { currentDocumentPath } from "../catalogue/delivery_paths.js";
 import type {
-  CatalogueRoutedEntry,
-  CatalogueView,
-} from "../catalogue/types.js";
+  ShellCatalogueRoutedEntry,
+  ShellCatalogueView,
+} from "../catalogue/scoped_types.js";
 import { temporaryPreviewAdapter } from "../client/same_origin_adapter.js";
 import type { GeneratedComponentView } from "../components/views.js";
+import { entryRoute } from "../navigation/routes.js";
 import { DisplaySelection } from "../viewer/display_context.js";
 
 import { useMountedShellFrame } from "./frame_mount_hook.js";
@@ -23,6 +25,7 @@ import {
   generatedFrameSource,
   generatedUsage,
   generatedView,
+  shellFrameUsage,
   unavailableUsage,
 } from "./stage_sources.js";
 import { useOptionalShellStore } from "./store_context.js";
@@ -39,14 +42,14 @@ export function StageFrame({
   views,
   viewport,
 }: {
-  entry: CatalogueRoutedEntry;
+  entry: Extract<ShellCatalogueRoutedEntry, { kind: "component" | "screen" }>;
   flow?: boolean;
   fragment?: string;
   hasDarkFragments: boolean;
   previewViews?: readonly GeneratedComponentView[];
   stepIndex?: number;
   variantId?: string;
-  views: readonly CatalogueView[];
+  views: readonly ShellCatalogueView[];
   viewport: "desktop" | "mobile";
 }) {
   const selection = useContext(DisplaySelection);
@@ -71,20 +74,14 @@ export function StageFrame({
       ? (previewDark ?? previewLight)
       : previewLight;
   const source = preview
-    ? generatedFrameSource(
-        preview,
-        fragment,
-        stepIndex,
-        registry?.generatedPathPrefix,
-      )
-    : frameSource(selected, fragment, stepIndex);
+    ? generatedFrameSource(preview, fragment, stepIndex)
+    : frameSource(entry, selected, fragment, stepIndex);
   const temporary =
     preview?.path.startsWith("/__mokly/components/renders/") ?? false;
   const previewAdapter = useMemo(temporaryPreviewAdapter, []);
   const identity = useMemo<ShellFrameIdentity>(
     () => ({
       entryId: entry.id,
-      route: entry.route,
       viewport,
       ...(preview || selected
         ? { colorScheme: preview?.colorScheme ?? selected!.colorScheme }
@@ -92,22 +89,20 @@ export function StageFrame({
       ...(stepIndex === undefined ? {} : { stepIndex }),
       ...(variantId ? { variantId } : {}),
     }),
-    [entry.id, entry.route, preview, selected, stepIndex, variantId, viewport],
+    [entry.id, preview, selected, stepIndex, variantId, viewport],
   );
   const mounted = useMountedShellFrame({
     ...(temporary ? { adapter: previewAdapter } : {}),
     enabled: store?.interactive ?? false,
     identity,
     source,
-    usage: preview
-      ? generatedUsage(preview)
-      : (selected?.usage ?? unavailableUsage),
+    usage: preview ? generatedUsage(preview) : shellFrameUsage(selected?.usage),
   });
   const initialSource = useFrameSource(
     mounted.frameRef,
     source,
     registry?.baseUrl,
-    temporary,
+    temporary || Boolean(store?.interactive && registry),
   );
   const component = entry.kind === "component";
   const frame = source ? (
@@ -121,25 +116,15 @@ export function StageFrame({
       data-fragment-light={
         hasDarkFragments
           ? previewLight
-            ? generatedFrameSource(
-                previewLight,
-                fragment,
-                stepIndex,
-                registry?.generatedPathPrefix,
-              )
-            : frameSource(light, fragment, stepIndex)
+            ? generatedFrameSource(previewLight, fragment, stepIndex)
+            : frameSource(entry, light, fragment, stepIndex)
           : undefined
       }
       data-fragment-dark={
         hasDarkFragments
           ? previewDark
-            ? generatedFrameSource(
-                previewDark,
-                fragment,
-                stepIndex,
-                registry?.generatedPathPrefix,
-              )
-            : frameSource(dark, fragment, stepIndex)
+            ? generatedFrameSource(previewDark, fragment, stepIndex)
+            : frameSource(entry, dark, fragment, stepIndex)
           : undefined
       }
       ref={mounted.frameRef}
@@ -154,9 +139,7 @@ export function StageFrame({
     <PhoneFrame>{frame}</PhoneFrame>
   ) : (
     <BrowserFrame
-      address={
-        entry.kind === "screen" ? (entry.address ?? entry.route) : entry.route
-      }
+      address={entry.address ?? entryRoute("screen", entry.id)}
       frameKey={frameIdentityKey(identity)}
     >
       {frame}
@@ -171,6 +154,9 @@ export function StageFrame({
       }
       data-color-scheme-fallback={
         hasDarkFragments && !previewDark && !dark ? "" : undefined
+      }
+      data-preview-color-scheme={
+        preview?.colorScheme ?? selected?.colorScheme ?? "light"
       }
     >
       {!flow ? (
@@ -194,17 +180,18 @@ export function DocumentStageFrame({
   entry,
   fragment,
 }: {
-  entry: Extract<CatalogueRoutedEntry, { kind: "page" }>;
+  entry: Extract<ShellCatalogueRoutedEntry, { kind: "page" }>;
   fragment?: string;
 }) {
   const store = useOptionalShellStore();
   const registry = useOptionalShellFrameRegistry();
-  const source = entry.documentPath
-    ? framePath(entry.documentPath, fragment)
-    : undefined;
+  const source = framePath(
+    currentDocumentPath(entryRoute("page", entry.id)),
+    fragment,
+  );
   const identity = useMemo<ShellFrameIdentity>(
-    () => ({ entryId: entry.id, route: entry.route }),
-    [entry.id, entry.route],
+    () => ({ entryId: entry.id }),
+    [entry.id],
   );
   const mounted = useMountedShellFrame({
     enabled: store?.interactive ?? false,
@@ -216,9 +203,14 @@ export function DocumentStageFrame({
     mounted.frameRef,
     source,
     registry?.baseUrl,
+    Boolean(store?.interactive && registry),
   );
   return (
-    <div className="mbk-stage-embed" data-mokly-scroll="embed">
+    <div
+      className="mbk-stage-embed"
+      data-mokly-scroll="embed"
+      data-preview-color-scheme="light"
+    >
       {source ? (
         <iframe
           aria-busy={mounted.status === "loading" ? true : undefined}
@@ -261,7 +253,7 @@ function FrameLabel({
 
 function frameIdentityKey(identity: ShellFrameIdentity): string {
   return JSON.stringify([
-    identity.route,
+    identity.entryId,
     identity.variantId,
     identity.stepIndex,
     identity.viewport,

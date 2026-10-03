@@ -1,41 +1,28 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import { test } from "node:test";
 
-import { readCatalogue } from "../src/catalogue/reader.js";
 import { encodeProps } from "../src/components/codec.js";
-import type { ManifestComponent } from "../src/components/manifest_types.js";
+import { type ManifestComponent } from "../src/components/manifest_types.js";
 import {
   controlDraft,
   validateControlDraft,
 } from "../src/shell/component_control_fields.js";
-import { controlsUnavailable } from "../src/shell/component_controls_state.js";
 import {
   workspaceData,
   type WorkspaceData,
   type WorkspaceVariant,
 } from "../src/shell/workspace_data.js";
-import { usageHref } from "../src/shell/workspace_usage.js";
 import {
   resolveWorkspaceView,
+  resolveWorkspaceViews,
   visibleWorkspaceViews,
 } from "../src/shell/workspace_views.js";
-import { viewerCatalogue } from "../src/viewer/projection.js";
 
-const model = readCatalogue(
-  JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v1.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  ),
-);
-const catalogue = viewerCatalogue(model);
-const source = catalogue.byId.get("action");
-if (source?.kind !== "component") throw new Error("Missing component fixture");
+import {
+  catalogue,
+  source,
+  sourceVariant,
+} from "./component_workspace_fixture.js";
 
 test("control drafts preserve primitive edits and emit typed overrides", () => {
   const component: ManifestComponent = {
@@ -79,7 +66,7 @@ test("control drafts preserve primitive edits and emit typed overrides", () => {
     comparisonEligible: false,
     removed: false,
     value: {
-      ...source.variants[0]!,
+      ...sourceVariant,
       props: encodeProps({
         label: "Continue",
         count: -0,
@@ -138,36 +125,55 @@ test("workspace view selection uses exact contexts and light fallback", () => {
         viewport: "mobile",
         colorScheme: "light",
         path: "mobile-light.html",
-        variantId: "default",
+        variantId: "action-default",
       },
       {
         viewport: "mobile",
         colorScheme: "dark",
         path: "mobile-dark.html",
-        variantId: "default",
+        variantId: "action-default",
       },
       {
         viewport: "desktop",
         colorScheme: "light",
         path: "desktop-light.html",
-        variantId: "default",
+        variantId: "action-default",
       },
     ],
   } satisfies WorkspaceData;
   assert.deepEqual(
-    visibleWorkspaceViews(data, "default", "both", "dark").map(
+    visibleWorkspaceViews(data, "action-default", "both", "dark").map(
       (view) => view.path,
     ),
     ["mobile-dark.html", "desktop-light.html"],
   );
   assert.deepEqual(
-    visibleWorkspaceViews(data, "default", "desktop", "light").map(
+    visibleWorkspaceViews(data, "action-default", "desktop", "light").map(
       (view) => view.path,
     ),
     ["desktop-light.html"],
   );
-
-  const variant = data.variants.find(({ value }) => value.id === "default");
+  assert.deepEqual(
+    resolveWorkspaceViews(data, "action-default", "both", "dark"),
+    {
+      colorScheme: "dark",
+      views: [data.views[1], data.views[2]],
+    },
+  );
+  const lightOnly = {
+    ...data,
+    views: data.views.filter(({ colorScheme }) => colorScheme === "light"),
+  } satisfies WorkspaceData;
+  assert.deepEqual(
+    resolveWorkspaceViews(lightOnly, "action-default", "both", "dark"),
+    {
+      colorScheme: "light",
+      views: lightOnly.views,
+    },
+  );
+  const variant = data.variants.find(
+    ({ value }) => value.id === "action-default",
+  );
   assert.ok(variant);
   const mixedEvidence = {
     ...data,
@@ -175,7 +181,7 @@ test("workspace view selection uses exact contexts and light fallback", () => {
     comparisonEligible: true,
     views: data.views.filter(({ colorScheme }) => colorScheme === "light"),
     viewStates: {
-      default: [
+      "action-default": [
         {
           viewport: "mobile" as const,
           colorScheme: "light" as const,
@@ -223,7 +229,7 @@ test("workspace view selection uses exact contexts and light fallback", () => {
       colorScheme: "light",
       comparisonEligible: false,
       evidence: "selection",
-      status: "Changed",
+      status: "Unmodified",
       views: [mixedEvidence.views[0]!],
     },
   );
@@ -232,7 +238,9 @@ test("workspace view selection uses exact contexts and light fallback", () => {
     resolveWorkspaceView(
       {
         ...mixedEvidence,
-        viewStates: { default: [mixedEvidence.viewStates.default[0]!] },
+        viewStates: {
+          "action-default": [mixedEvidence.viewStates["action-default"][0]!],
+        },
       },
       { variant, comparisonEligible: true },
       "both",
@@ -242,42 +250,8 @@ test("workspace view selection uses exact contexts and light fallback", () => {
       colorScheme: "light",
       comparisonEligible: true,
       evidence: "selection",
-      status: "Changed",
+      status: "Unmodified",
       views: mixedEvidence.views,
     },
-  );
-});
-
-test("control availability and usage URLs explain the active product state", () => {
-  const variant = {
-    comparisonEligible: false,
-    removed: false,
-    value: source.variants[0]!,
-  } satisfies WorkspaceVariant;
-  const data = {
-    entry: source,
-  } as WorkspaceData;
-  assert.equal(
-    controlsUnavailable(data, variant, true, true),
-    "Comparisons show the saved variant. Return to Current to edit props.",
-  );
-  assert.equal(
-    controlsUnavailable(data, variant, false, false),
-    "Open this catalogue locally to edit props.",
-  );
-  assert.equal(controlsUnavailable(data, variant, false, true), undefined);
-  assert.equal(
-    usageHref({
-      title: "Home",
-      route: "screens/home.html",
-      variantId: "default",
-      viewport: "mobile",
-      colorScheme: "dark",
-      instanceKey: "a".repeat(64),
-      direct: true,
-      removed: true,
-      comparisonEligible: true,
-    }),
-    `/view/screens/home.html?viewport=mobile&scheme=dark&instance=${"a".repeat(64)}&variant=default&comparison=side`,
   );
 });

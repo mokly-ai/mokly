@@ -9,8 +9,8 @@ import type {
 
 export interface ViewerSelection {
   screenId: string | null;
-  /** Saved variant of a selected component; absent means its default variant. */
-  variantId?: string | undefined;
+  /** Exact removed record; absent selects current or uniquely identified history. */
+  snapshotId?: string | undefined;
   view: "all" | "changes";
   viewport: "mobile" | "desktop" | "both";
   colorScheme: "light" | "dark";
@@ -24,7 +24,6 @@ export type CatalogueSource =
   CatalogueReadModel | string | URL | CatalogueFetcher;
 export interface InstanceRef {
   screenId: string;
-  variantId?: string;
   /** Required for a flow occurrence; absent for a standalone screen or component. */
   stepIndex?: number;
   viewport: "mobile" | "desktop";
@@ -48,8 +47,8 @@ export interface MarkerState {
 }
 export interface ScreenNavigateEvent {
   screenId: string;
-  route: string;
-  variantId?: string;
+  /** Present exactly when the committed destination is historical content. */
+  snapshotId?: string;
   fragment?: string;
   navigation?: FrameNavigation;
 }
@@ -112,11 +111,20 @@ export type SourceProps =
       catalogue: Exclude<CatalogueSource, CatalogueReadModel>;
       baseUrl?: never;
     };
+
+/**
+ * Appearance of the interface around previews. `auto` follows the reader's
+ * preferred color scheme and remains independent of preview selection.
+ */
+export type ViewerTheme = "auto" | "dark" | "light";
+
 export type MoklyViewerProps = SourceProps &
   SelectionProps &
   ViewerEvents & {
     /** Stable identifier unique among viewer roots in the host document. */
     viewerId: string;
+    /** Interface appearance; omission means `auto`. */
+    theme?: ViewerTheme;
     frameAdapter?: FrameAdapter;
     markers?: readonly ViewerMarker[];
     slots?: ViewerSlots;

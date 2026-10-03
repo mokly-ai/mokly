@@ -2,14 +2,11 @@
 
 ## Delivery Status
 
-Approved target for Milestone 12 of
-[Generated Output Simplification](../../plans/generated-output-simplification.md),
-after Milestone 11 merges `main`. Current implementation still uses `__mokly/`.
-This contract replaces path and version clauses in
-[generated delivery](./mokly-generated-delivery.md),
-[catalogue](./mokly-catalogue.md), [export delivery](./mokly-export-delivery.md),
-[ownership](./mokly-export-ownership.md) and [upload](./mokly-upload.md).
-The content-delta exchange on `main` is preserved.
+The `mokly-viewer/` rename is an approved pending target in
+[Generated Output Simplification](../../plans/generated-output-simplification.md).
+Current delivery uses `__mokly/`, catalogue v4, delivery v4 and bootstrap v1;
+ownership v2 and upload v1 remain until the rename. The final contract below
+replaces their path and version clauses together, preserving content-delta uploads.
 
 ## Paths And Single Ownership
 
@@ -77,13 +74,12 @@ is:
 | Plan response                       | 1          | Unchanged content-delta exchange                                            |
 | Comparison result                   | 4          | Unchanged identity-derived snapshot schema from `main`                      |
 
-Milestone 11 must already emit public catalogue v4, delivery v4 and versioned
-bootstrap v1 because moving the static generated paths is itself incompatible with
-`main`'s v3 readers. It may still use the old viewer root until Milestone 12.
-That intermediate format is branch-only, must not be published as a supported
-package, and has no compatibility reader. Milestone 12 finalizes their path
-rules above and bumps upload/ownership together. Both milestones use strict
-version checks; no new format is passed through a v3 or earlier parser.
+The unified layout already emits catalogue v4, delivery v4 and bootstrap v1:
+moving static generated paths is incompatible with v3 readers. Its intermediate
+`__mokly/` format is branch-only, must not become a supported package and has no
+compatibility reader. The namespace rename finalizes the paths below and bumps
+upload/ownership together. Strict version gates apply throughout; no v3 parser
+may interpret a v4 model.
 
 Catalogue v4 retains `main`'s identity-only entries and adds required
 `generatedPathPrefix: "mokly-generated"`, typed from the shared constant.

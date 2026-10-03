@@ -30,6 +30,9 @@
   the simplest, smallest, or quickest fix when a larger change would materially
   reduce future bugs, review findings, or maintenance risk; explain the tradeoff
   and recommend the scope that best protects the codebase.
+- Write agent responses to the user, including summaries, plans, and review
+  output, in Simplified Technical English (STE, ASD-STE100): short sentences,
+  one instruction per sentence, active voice, and simple, consistent words
 - Documentation-only or plan-only changes, including initial plan creation, do not require `cargo xtask check`; validate the changed Markdown and review the diff instead
 - This project is not currently in production/live, so breaking changes are
   acceptable when they improve correctness, architecture, or product quality
@@ -294,6 +297,8 @@
 
 ### Rust File Size Limits
 
+The repository gate also limits changed TypeScript/JavaScript anywhere in the repository to 300 lines and protocol Markdown to 250 lines, except pages with exact reviewed caps in `tests/protocol_doc_sizes.test.ts`; fetch `origin/main` before `cargo xtask source-file-length-lint`. It excludes only Git-ignored untracked files.
+
 The file length linter enforces a **300-line** hard cap for Rust files under `crates/` and `xtask/` when they are changed relative to `origin/main` or present in the working tree. Run `cargo xtask rust-file-length-lint --all` to audit every Rust file under those directories. Files exceeding 300 lines must be refactored into multiple modules; there is no override mechanism.
 
 ### File Size Management
@@ -509,6 +514,27 @@ docs, mockups, plans, migrations, or schema—without explicit user approval.
 
 - Resolve conflicts path-by-path; never bulk-take `--ours` or `--theirs` for a
   tree, directory, or feature. Passing CI does not prove preservation.
+- Immediately after committing each merge, before another commit, name it and
+  confirm it has exactly two parents; merge one branch at a time because Git
+  skips remerge diffs for octopus merges. Stop if the parent check fails.
+  Review every listed path before pushing:
+
+  ```sh
+  merge=$(git rev-parse HEAD)
+  git rev-parse --verify --quiet "$merge^2" >/dev/null &&
+    ! git rev-parse --verify --quiet "$merge^3" >/dev/null # succeeds only for exactly two parents
+  git show --remerge-diff --stat "$merge"
+  git show --remerge-diff "$merge" -- <path> # repeat for every listed path
+  git diff "$merge" HEAD # review commits made after the merge
+  ```
+
+  The remerge diff shows conflict resolutions, edits to one-sided files,
+  undone changes and deletions. Restore lost content before pushing with
+  `git commit --amend`, which keeps both parents; then review the merge again.
+  After pushing, use a follow-up commit.
+  Justify each intentional decision in the PR description, naming every path
+  it affects. If no PR exists yet, record the justifications in the active
+  plan milestone and copy them into the PR description when it opens.
 
 - Before commit and after commit, inspect the diff and deletions against main:
 

@@ -1,10 +1,11 @@
-/** Leaf rows and screen-variant disclosures for the React shell. */
+/** Leaf rows and entry-variant disclosures for the React shell. */
 
-import { catalogueViewHref } from "../navigation/delivery.js";
+import { entryRoute, viewHref } from "../navigation/routes.js";
 
 import type { ShellContext } from "./context.js";
 import {
   ChevronIcon,
+  ComponentVariantIcon,
   FlowIcon,
   PageIcon,
   ScreenIcon,
@@ -34,7 +35,11 @@ function LeafGlyph(props: {
   if (props.variant) {
     return (
       <span className="mbk-nav-ico variant">
-        <VariantIcon />
+        {props.entryKind === "component" ? (
+          <ComponentVariantIcon />
+        ) : (
+          <VariantIcon />
+        )}
       </span>
     );
   }
@@ -68,10 +73,10 @@ function NavRowLink(props: {
 }) {
   const store = useOptionalShellStore();
   const context = store?.context ?? props.context;
-  const active = props.node.route === props.context.activeRoute;
-  const changed = context.changedRoutes?.includes(props.node.route) === true;
+  const active = props.node.entryId === props.context.activeId;
+  const changed = context.changedIds?.includes(props.node.entryId) === true;
   const changedVariants = (props.node.variants ?? []).some((variant) =>
-    context.changedRoutes?.includes(variant.route),
+    context.changedIds?.includes(variant.entryId),
   );
   const tags = props.node.tags ?? [];
   return (
@@ -87,9 +92,11 @@ function NavRowLink(props: {
       data-removed-page={props.node.removedPage ? "" : undefined}
       data-removed-variant={props.node.removedVariant ? "" : undefined}
       hidden={props.hidden}
-      data-route={props.node.route}
+      data-route={entryRoute(props.node.entryKind, props.node.entryId)}
       data-tags={tags.length > 0 ? tags.join(" ") : undefined}
-      href={catalogueViewHref(props.node.route)}
+      href={`${viewHref(props.node.entryKind, props.node.entryId)}${
+        props.node.snapshotId ? `?snapshot=${props.node.snapshotId}` : ""
+      }`}
       style={navRowStyle(props.depth)}
     >
       <LeafGlyph
@@ -108,7 +115,7 @@ function NavRowLink(props: {
 }
 
 /**
- * A leaf row. A screen that owns variants pairs its link with a chevron
+ * A leaf row. An entry that owns variants pairs its link with a chevron
  * button and is followed by the list that button discloses; the list is open
  * on the server only while the active route is the parent or one of them.
  */
@@ -148,8 +155,8 @@ export function LeafRow(props: {
       )
     : variants.filter((variant) => !variant.removedVariant);
   const active =
-    props.node.route === props.context.activeRoute ||
-    variants.some((variant) => variant.route === props.context.activeRoute);
+    props.node.entryId === props.context.activeId ||
+    variants.some((variant) => variant.entryId === props.context.activeId);
   const open = filtering
     ? matchingVariants.length > 0
     : (store?.state.disclosures[key] ?? active);

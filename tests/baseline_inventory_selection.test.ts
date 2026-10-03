@@ -11,7 +11,7 @@ import { prepareReviewRepository } from "../dist/review/prepare.js";
 import { derivedFixture } from "./helpers/derived_fixture.js";
 
 for (const variant of ["complete", "missing", "stale", "extra"] as const) {
-  test(`committed v6 inventory selects ${variant} output with one tree read`, async (context) => {
+  test(`committed v8 inventory selects ${variant} output with one tree read`, async (context) => {
     const fixture = await derivedFixture(context);
     await writeCompilation(
       await compileCatalogue(fixture.config),
@@ -45,7 +45,7 @@ for (const variant of ["complete", "missing", "stale", "extra"] as const) {
       diagnostic: (message) => diagnostics.push(message),
     });
     assert.equal(treeReads, 1);
-    assert.equal(selected.descriptor.layout, "generated-v6");
+    assert.equal(selected.descriptor.layout, "generated-v8");
     assert.equal(selected.descriptor.generatedRoot, "mockups/mokly-generated");
     assert.equal(
       selected.selection,

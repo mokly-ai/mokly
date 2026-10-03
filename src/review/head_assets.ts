@@ -1,10 +1,14 @@
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
-import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import {
+  generatedResourceRoute,
+  isSafeRepositoryPath,
+} from "@mokly/viewer/data";
 import type { Manifest } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../build/compile.js";
+import { generatedBytes, type GeneratedFile } from "../build/generated_file.js";
 import { isInside, projectRealPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
@@ -18,15 +22,19 @@ import {
 export class CompiledReviewAssetReader extends FileSystemReviewAssetReader {
   constructor(
     private readonly headConfig: ResolvedConfig,
-    private readonly outputs?: ReadonlyMap<string, string>,
+    private readonly outputs?: ReadonlyMap<string, GeneratedFile>,
   ) {
     super(headConfig);
   }
 
   override async readLocated(route: string): Promise<LocatedReviewAsset> {
-    const content = this.outputs?.get(route);
+    const generatedRoute = generatedResourceRoute(route);
+    const content =
+      generatedRoute === undefined
+        ? undefined
+        : this.outputs?.get(generatedRoute);
     if (content === undefined) return super.readLocated(route);
-    const logicalPath = path.resolve(this.headConfig.generatedDir, route);
+    const logicalPath = path.resolve(this.headConfig.mockupsDir, route);
     if (
       !isSafeRepositoryPath(route) ||
       !isInside(this.headConfig.generatedDir, logicalPath)
@@ -36,11 +44,11 @@ export class CompiledReviewAssetReader extends FileSystemReviewAssetReader {
         `Generated comparison resource is not public: ${route} (unsafe path)`,
       );
     return {
-      content: Buffer.from(content),
+      content: generatedBytes(content),
       location: {
         logicalPath,
         physicalPath: path.resolve(
-          projectRealPath(this.headConfig.generatedDir),
+          projectRealPath(this.headConfig.mockupsDir),
           route,
         ),
         relativePath: route,
@@ -54,8 +62,8 @@ export class CompiledReviewAssetReader extends FileSystemReviewAssetReader {
 export async function compiledHeadOutputs(
   config: ResolvedConfig,
   manifest: Manifest,
-  outputs?: ReadonlyMap<string, string>,
-): Promise<ReadonlyMap<string, string>> {
+  outputs?: ReadonlyMap<string, GeneratedFile>,
+): Promise<ReadonlyMap<string, GeneratedFile>> {
   if (outputs) return outputs;
   const compilation = await compileCatalogue(config);
   if (!isDeepStrictEqual(compilation.manifest, manifest))

@@ -23,18 +23,17 @@ test("derived Changes and selected comparisons use compiled source when generate
     "HEAD",
     prepared,
   );
-  assert.deepEqual(changes.changedRoutes, [
-    "screens/home.html",
-    "user-flows/tour.html",
-  ]);
+  assert.deepEqual(changes.changedIds, ["home", "tour"]);
   const snapshot = changes.componentChanges!;
   assert.ok(snapshot.comparison);
   assert.ok(snapshot.comparison.headOutputs);
   const { compileCatalogue } = await import("../dist/build/compile.js");
   const current = await compileCatalogue(fixture.config);
-  await fs.mkdir(path.join(fixture.mockupsDir, "screens"), { recursive: true });
+  await fs.mkdir(path.join(fixture.generatedDir, "screens"), {
+    recursive: true,
+  });
   await fs.writeFile(
-    path.join(fixture.mockupsDir, "screens/home.mobile.html"),
+    path.join(fixture.generatedDir, "screens/home.mobile.html"),
     "wrong local bytes",
   );
   const comparison = await new RepositorySelectedReview(
@@ -45,16 +44,25 @@ test("derived Changes and selected comparisons use compiled source when generate
       ...snapshot.comparison,
       before: snapshot.baseline,
       after: current.manifest,
+      result: snapshot.result!,
     },
-    { route: "screens/home.html" },
+    { id: "home" },
     new AbortController().signal,
   );
   assert.match(
-    String(comparison.files.get("snapshots/after/screens/home.mobile.html")),
+    String(
+      comparison.files.get(
+        "snapshots/after/mokly-generated/screens/home.mobile.html",
+      ),
+    ),
     /Source-only change/,
   );
   assert.doesNotMatch(
-    String(comparison.files.get("snapshots/before/screens/home.mobile.html")),
+    String(
+      comparison.files.get(
+        "snapshots/before/mokly-generated/screens/home.mobile.html",
+      ),
+    ),
     /Source-only change/,
   );
 });

@@ -1,12 +1,17 @@
-import { MoklyError } from "../errors.js";
-
+import {
+  invalidBundle,
+  unsupportedUploadVersion,
+  uploadTooLarge,
+} from "./errors.js";
 import type { UploadManifest } from "./types.js";
 import {
   boundedText,
   exactVersion,
   GIT_SHA,
+  isRecord,
   repositoryHost,
   repositorySegment,
+  uploadTimestamp,
   uploadPath,
 } from "./validation.js";
 
@@ -26,18 +31,20 @@ const FIELDS = [
   "exportedAt",
   "comparisonPath",
 ];
+const INVALID_MANIFEST_MESSAGE =
+  "Upload metadata is invalid; check repository, revision and config paths.";
 
 /** Validate the generated v1 envelope before it enters the export snapshot. */
 export function validateUploadManifest(value: unknown): UploadManifest {
-  if (!record(value) || !keys(value, FIELDS)) throw invalid();
+  if (!isRecord(value) || !keys(value, FIELDS))
+    throw invalidBundle(INVALID_MANIFEST_MESSAGE);
   if (value["schemaVersion"] !== 1)
-    throw new MoklyError(
-      "upload-unsupported-version",
+    throw unsupportedUploadVersion(
       "Use a receiver and Mokly version that support upload v1.",
     );
   const repository = value["repository"];
   if (
-    !record(repository) ||
+    !isRecord(repository) ||
     !keys(repository, ["host", "owner", "name"]) ||
     !repositoryHost(repository["host"]) ||
     !boundedText(repository["owner"], 255) ||
@@ -45,7 +52,7 @@ export function validateUploadManifest(value: unknown): UploadManifest {
     !boundedText(repository["name"], 255) ||
     !repositorySegment(repository["name"])
   )
-    throw invalid();
+    throw invalidBundle(INVALID_MANIFEST_MESSAGE);
   if (
     !exactVersion(value["moklyVersion"]) ||
     !boundedText(value["branch"], 255) ||
@@ -53,23 +60,18 @@ export function validateUploadManifest(value: unknown): UploadManifest {
     !GIT_SHA.test(value["headSha"]) ||
     !uploadPath(value["configPath"])
   )
-    throw invalid();
-  const date = value["exportedAt"];
-  if (
-    typeof date !== "string" ||
-    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(date) ||
-    !Number.isFinite(Date.parse(date)) ||
-    new Date(date).toISOString() !== date
-  )
-    throw invalid();
+    throw invalidBundle(INVALID_MANIFEST_MESSAGE);
+  if (!uploadTimestamp(value["exportedAt"]))
+    throw invalidBundle(INVALID_MANIFEST_MESSAGE);
   const pr = value["pullRequest"];
   if (
     pr !== null &&
     (typeof pr !== "number" || !Number.isSafeInteger(pr) || pr < 1)
   )
-    throw invalid();
+    throw invalidBundle(INVALID_MANIFEST_MESSAGE);
   if (value["comparisonPath"] === null) {
-    if (value["baseRef"] !== null || value["baseSha"] !== null) throw invalid();
+    if (value["baseRef"] !== null || value["baseSha"] !== null)
+      throw invalidBundle(INVALID_MANIFEST_MESSAGE);
   } else if (
     !boundedText(value["baseRef"], 255) ||
     typeof value["baseSha"] !== "string" ||
@@ -79,17 +81,10 @@ export function validateUploadManifest(value: unknown): UploadManifest {
       value["comparisonPath"],
     )
   )
-    throw invalid();
+    throw invalidBundle(INVALID_MANIFEST_MESSAGE);
   if (Buffer.byteLength(JSON.stringify(value)) > 16 * 1024)
-    throw new MoklyError(
-      "upload-too-large",
-      "The upload manifest exceeds 16 KiB.",
-    );
+    throw uploadTooLarge("The upload manifest exceeds 16 KiB.");
   return value as unknown as UploadManifest;
-}
-
-function record(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function keys(
@@ -99,12 +94,5 @@ function keys(
   return (
     Object.keys(value).length === fields.length &&
     fields.every((name) => Object.hasOwn(value, name))
-  );
-}
-
-function invalid(): MoklyError {
-  return new MoklyError(
-    "upload-invalid-bundle",
-    "Upload metadata is invalid; check repository, revision and config paths.",
   );
 }

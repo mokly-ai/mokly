@@ -2,12 +2,10 @@
 
 ## Delivery Status
 
-Approved Milestone 11 target in
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
-Correction 3 option A replaces the branch's old-schema and cross-layout readers.
 Only v8 content reaches a baseline reader. Earlier-version detection follows
 the [manifest gate](./mokly-generated-manifest.md#historical-readers-and-layouts).
-The branch's current v6 implementation is not changed by this documentation.
+Implementation and verification are tracked by
+[Generated Output Simplification](../../plans/generated-output-simplification.md).
 
 ## Per-Commit Descriptor
 

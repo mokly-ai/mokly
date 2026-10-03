@@ -3,7 +3,11 @@ import path from "node:path";
 import { timeAsync } from "../diagnostics/timings.js";
 import { errorMessage } from "../errors.js";
 
-import { completedBaseline, removePartialBaseline } from "./cache.js";
+import {
+  assertCurrentCache,
+  completedBaseline,
+  removePartialBaseline,
+} from "./cache.js";
 import {
   assertMockupsPath,
   cacheLayout,
@@ -13,6 +17,7 @@ import {
 } from "./cache_layout.js";
 import { cleanupBaselines } from "./cleanup.js";
 import { baselineEnvironment, runBaselineCommands } from "./commands.js";
+import { isIncompatibleEarlierBaseline } from "./compatibility.js";
 import { ensureBaselineDirectory } from "./confinement.js";
 import { removeBaselineDebris } from "./debris.js";
 import {
@@ -101,6 +106,7 @@ export class CachedBaselineBuilder implements BaselineBuilder {
         const cached = await completedBaseline(this.fs, layout, request);
         if (cached) {
           adopted = true;
+          assertCurrentCache(cached);
           request.onProgress?.({
             type: "complete",
             commit: request.commit,
@@ -230,8 +236,9 @@ export class CachedBaselineBuilder implements BaselineBuilder {
             "baseline-interrupted",
             "Baseline preparation was interrupted",
             error,
+            { cancelled: true },
           )
-        : error instanceof BaselineError
+        : error instanceof BaselineError || isIncompatibleEarlierBaseline(error)
           ? error
           : new BaselineError(
               "baseline-output-invalid",

@@ -1,5 +1,7 @@
-import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
-import { generatedViews } from "@mokly/viewer/data";
+import {
+  isManifestComponentVariant,
+  snapshotViewPath,
+} from "@mokly/viewer/data";
 import type {
   Manifest,
   ReviewArtifact,
@@ -9,13 +11,14 @@ import type {
 import type { Compilation } from "../build/compile.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
-import { generatedManifestRoutes } from "../registry/generated_routes.js";
 
+import { addArtifactFile } from "./artifact_files.js";
 import { type GitReviewAssetReader, type ReviewAssetReader } from "./assets.js";
 import { CompilationAssetReader } from "./compilation_assets.js";
 import { classifyComponents } from "./component_classification.js";
-import { addArtifactFile, snapshotPath } from "./paths.js";
-import { copySnapshotDependencies } from "./snapshot_dependencies.js";
+import { baselineForCurrentIdentities } from "./component_metadata.js";
+import { copySnapshotDependencies } from "./snapshot_resources.js";
+import { reviewViews } from "./views.js";
 
 /** Retain every component variant and affected screen, then classify the same immutable bytes. */
 export async function compareComponentCatalogue(
@@ -29,12 +32,11 @@ export async function compareComponentCatalogue(
   baseRef: string,
   useFastPath?: boolean,
 ): Promise<ReviewArtifact> {
-  const basePaths = baseline.entries.flatMap((entry) =>
-    generatedViews(entry).map((view) => view.path),
-  );
-  const headPaths = compilation.manifest.entries.flatMap((entry) =>
-    generatedViews(entry).map((view) => view.path),
-  );
+  baseline = baselineForCurrentIdentities(baseline, compilation.manifest);
+  const baseArtifacts = artifactViews(baseline);
+  const headArtifacts = artifactViews(compilation.manifest);
+  const basePaths = baseArtifacts.map(({ route }) => route);
+  const headPaths = headArtifacts.map(({ route }) => route);
   const baseFiles = await timeAsync("review.base-documents", () =>
     baseReader.readMany(basePaths),
   );
@@ -70,17 +72,17 @@ export async function compareComponentCatalogue(
     ...(useFastPath === undefined ? {} : { useFastPath }),
   });
   const files = new Map<string, ReviewArtifactContent>();
-  for (const route of basePaths)
+  for (const artifact of baseArtifacts)
     addArtifactFile(
       files,
-      snapshotPath("before", route),
-      Buffer.from(await beforeReader.read(route)).toString("utf8"),
+      artifact.snapshot.before,
+      Buffer.from(await beforeReader.read(artifact.route)).toString("utf8"),
     );
-  for (const route of headPaths)
+  for (const artifact of headArtifacts)
     addArtifactFile(
       files,
-      snapshotPath("after", route),
-      Buffer.from(await afterReader.read(route)).toString("utf8"),
+      artifact.snapshot.after,
+      Buffer.from(await afterReader.read(artifact.route)).toString("utf8"),
     );
   await copySnapshotDependencies(
     files,
@@ -88,10 +90,6 @@ export async function compareComponentCatalogue(
     new Set(basePaths),
     (route) => beforeReader.read(route),
     (routes) => baseReader.readMany(routes),
-    {
-      prefix: baseline.schemaVersion === 6 ? GENERATED_DIRECTORY : "",
-      routes: generatedManifestRoutes(baseline),
-    },
   );
   await copySnapshotDependencies(
     files,
@@ -99,10 +97,35 @@ export async function compareComponentCatalogue(
     new Set(headPaths),
     (route) => afterReader.read(route),
     undefined,
-    {
-      prefix: GENERATED_DIRECTORY,
-      routes: generatedManifestRoutes(compilation.manifest),
-    },
   );
   return { result, files };
+}
+
+function artifactViews(manifest: Manifest) {
+  return manifest.entries.flatMap((entry) => {
+    if (
+      entry.kind !== "screen" &&
+      !(entry.kind === "component" && isManifestComponentVariant(entry))
+    )
+      return [];
+    return reviewViews(entry).map((view) => ({
+      route: view.path,
+      snapshot: {
+        after: snapshotViewPath(
+          "after",
+          entry.kind,
+          entry.id,
+          view.viewport,
+          view.colorScheme,
+        ),
+        before: snapshotViewPath(
+          "before",
+          entry.kind,
+          entry.id,
+          view.viewport,
+          view.colorScheme,
+        ),
+      },
+    }));
+  });
 }

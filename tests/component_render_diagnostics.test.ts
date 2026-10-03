@@ -16,7 +16,7 @@ test("preview-resource source denials reach stderr without exposing the cause in
     (source) => source,
     componentEntrySource({
       actionRender:
-        '(props) => props.label === "Private" ? <img src="../../../secret.source.html" /> : <button>{props.label}</button>',
+        '(props) => props.label === "Private" ? <img src="../../secret.source.html" /> : <button>{props.label}</button>',
     }),
   );
   await fs.writeFile(
@@ -48,7 +48,7 @@ test("preview-resource source denials reach stderr without exposing the cause in
     },
     body: JSON.stringify({
       componentId: "action",
-      variantId: "default",
+      variantId: "action-default",
       viewport: "mobile",
       colorScheme: "light",
       generation: renderCapability.generation,

@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { GENERATED_DIRECTORY, isSafeRepositoryPath } from "@mokly/viewer/data";
 
+import { generatedBytes, type GeneratedFile } from "../build/generated_file.js";
 import { isPublicStaticFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
@@ -13,7 +14,7 @@ import { exportResourceDenial } from "./resource_policy.js";
 /** Capture compiled documents and only their validated authored closure. */
 export async function capturePublicFiles(
   config: ResolvedConfig,
-  generated: ReadonlyMap<string, string>,
+  generated: ReadonlyMap<string, GeneratedFile>,
   closure: readonly string[],
 ): Promise<ReadonlyMap<string, Buffer>> {
   const files = new Map<string, Buffer>();
@@ -53,7 +54,7 @@ export async function capturePublicFiles(
     if (name === MANIFEST_NAME) continue;
     if (!isSafeRepositoryPath(name))
       throw exportError(`Invalid generated route: ${name}`);
-    files.set(`${GENERATED_DIRECTORY}/${name}`, Buffer.from(content));
+    files.set(`${GENERATED_DIRECTORY}/${name}`, generatedBytes(content));
   }
   return new Map(
     [...files].sort(([left], [right]) => left.localeCompare(right)),

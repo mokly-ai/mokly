@@ -1,6 +1,11 @@
 /** Strict shared validation for private control edits, separate from renderer execution. */
 
-import type { ComponentPropsData, PropValue } from "@mokly/viewer";
+import type {
+  ComponentPropsData,
+  ManifestComponent,
+  ManifestComponentVariant,
+  PropValue,
+} from "@mokly/viewer";
 import {
   decodeProps,
   decodeValue,
@@ -11,6 +16,7 @@ import {
   ComponentRenderError,
   type ComponentRenderRequest,
   generatedViews,
+  isManifestComponentVariant,
 } from "@mokly/viewer/data";
 
 import type { CatalogueMetadata } from "../registry/catalogue_index.js";
@@ -57,18 +63,25 @@ export function validateRenderRequest(
         "The catalogue changed. Reload to continue editing.",
       );
     const component = manifest.entries.find(
-      (entry) => entry.kind === "component" && entry.id === item.componentId,
+      (entry): entry is ManifestComponent =>
+        entry.kind === "component" &&
+        !isManifestComponentVariant(entry) &&
+        entry.id === item.componentId,
     );
-    const variant =
-      component?.kind === "component" &&
-      component.variants.find((variant) => variant.id === item.variantId);
-    if (component?.kind !== "component" || !variant)
+    const variant = manifest.entries.find(
+      (entry): entry is ManifestComponentVariant =>
+        entry.kind === "component" &&
+        isManifestComponentVariant(entry) &&
+        entry.id === item.variantId &&
+        entry.variantOf === item.componentId,
+    );
+    if (!component || !variant)
       throw new ComponentRenderError(
         "unknown-entry",
         "This component or variant is unavailable.",
       );
     if (
-      !generatedViews(component).some(
+      !generatedViews(variant).some(
         (view) =>
           view.variantId === item.variantId &&
           view.viewport === item.viewport &&

@@ -4,14 +4,19 @@ import { fileURLToPath } from "node:url";
 
 import type { Metafile } from "esbuild";
 
-import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import { GENERATED_DIRECTORY, isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { isAuthoredEntryPath } from "../config/entry_membership.js";
 import { locatePath } from "../config/file_locations.js";
+import { isPackageCode } from "../config/package_code.js";
 import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
+import {
+  createMetafilePathMapper,
+  type MetafilePathMapper,
+} from "./metafile_paths.js";
 import type { SourceDenial } from "./source_denial.js";
 
 /** Names reserved for authoring, including stale helpers no longer imported. */
@@ -51,7 +56,12 @@ export function isAuthoringSource(
     if (aliases === "exclusions") return;
     throw error;
   }
-  if (isInside(projectRealPath(config.generatedDir), real))
+  if (
+    isInside(
+      path.join(projectRealPath(config.mockupsDir), GENERATED_DIRECTORY),
+      real,
+    )
+  )
     return { kind: "generated" };
   if (aliases === "exclusions") return;
   if (isAuthoredEntryPath(real, config, true)) return { kind: "entries" };
@@ -100,28 +110,38 @@ export function graphSourceFiles(
   metafile: Metafile,
   workingDir: string,
   repoRoot: string,
+  mockupsDir: string,
+  mapper: MetafilePathMapper = createMetafilePathMapper(workingDir),
 ): string[] {
   const runtime = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
   const viewerRuntime = fs.realpathSync(
     path.dirname(fileURLToPath(import.meta.resolve("@mokly/viewer/data"))),
   );
+  const realRepoRoot = projectRealPath(repoRoot);
   const candidates = Object.keys(metafile.inputs).flatMap((input) => {
-    const absolute = path.resolve(workingDir, input);
+    const absolute = mapper.path(input);
     if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) return [];
     const real = fs.realpathSync(absolute);
     if (isInside(runtime, real) || isInside(viewerRuntime, real)) return [];
-    if (real.split(path.sep).includes("node_modules")) return [];
+    if (isPackageCode(absolute, repoRoot, { file: real, root: realRepoRoot }))
+      return [];
     return [absolute];
   });
-  return normalizeSourceFiles(candidates, repoRoot);
+  return normalizeSourceFiles(candidates, repoRoot, mockupsDir);
 }
 
 /** Prove regular in-repository inputs and retain logical and physical identities. */
 export function normalizeSourceFiles(
   files: readonly string[],
   repoRoot: string,
+  mockupsDir: string,
 ): string[] {
   const inventory = new Set<string>();
+  const reservedRoot = path.join(mockupsDir, GENERATED_DIRECTORY);
+  const realReservedRoot = path.join(
+    projectRealPath(mockupsDir),
+    GENERATED_DIRECTORY,
+  );
   for (const file of files) {
     const absolute = path.resolve(repoRoot, file);
     const location = locatePath(absolute, repoRoot);
@@ -134,6 +154,12 @@ export function normalizeSourceFiles(
       location.relativePath,
       location.physicalRelativePath,
     ]) {
+      const logicalReserved = isInside(reservedRoot, absolute);
+      if (logicalReserved || isInside(realReservedRoot, location.physicalPath))
+        throw new MoklyError(
+          "build-invalid",
+          `authoring input is inside ${GENERATED_DIRECTORY}/: ${logicalReserved ? location.relativePath : location.physicalRelativePath}; move authored sources outside Mokly's output directory`,
+        );
       if (!isSafeRepositoryPath(relative))
         throw new MoklyError(
           "build-invalid",

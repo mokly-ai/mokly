@@ -4,10 +4,7 @@ import type {
   ViewReview,
 } from "@mokly/viewer/data";
 
-import {
-  stripHistoricalMarkers,
-  stripMarkers,
-} from "../components/comparison_material.js";
+import { stripMarkers } from "../components/comparison_material.js";
 import { changedComponentImplementations } from "../components/comparison_projection.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import { MoklyError } from "../errors.js";
@@ -25,8 +22,6 @@ import { changedResourceBytes } from "./component_resource_changes.js";
 import type { ComponentMaterialReader } from "./component_resources.js";
 import { compareUnchangedComponentView } from "./component_view_fast_path.js";
 import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
-import { normalizeDocumentUrls } from "./normalize_urls.js";
-import { snapshotPath } from "./paths.js";
 import type { ResourceComparison } from "./resource_comparison.js";
 
 export interface ComparedComponentView {
@@ -67,15 +62,13 @@ export async function compareComponentView(
     viewport: selected.viewport,
     colorScheme: selected.colorScheme,
     ignoredIds: [],
-    ...(before ? { beforePath: snapshotPath("before", before.path) } : {}),
-    ...(after ? { afterPath: snapshotPath("after", after.path) } : {}),
     state: before ? "removed" : "added",
   };
   if (base === undefined || head === undefined) {
     const normalized =
       base !== undefined
-        ? normalizeOneSidedView(base, before!, "historical")
-        : normalizeOneSidedView(head!, after!, "current");
+        ? normalizeOneSidedView(base, before!)
+        : normalizeOneSidedView(head!, after!);
     const evidence = await context.resources.compare(
       before ? { path: before.path, html: normalized } : undefined,
       after ? { path: after.path, html: normalized } : undefined,
@@ -119,37 +112,14 @@ export async function compareComponentView(
   );
   const { baseRanges, headRanges, projected, excluded } = prepared;
   const reasons: EntryChangeReason[] = [];
-  if (
-    normalizeDocumentUrls(
-      projected.before,
-      before!.path,
-      context.beforeReader.generated.prefix,
-      context.beforeReader.generated.routes,
-    ) !==
-    normalizeDocumentUrls(
-      projected.after,
-      after!.path,
-      context.afterReader.generated.prefix,
-      context.afterReader.generated.routes,
-    )
-  )
-    reasons.push({ kind: "material" });
+  if (projected.before !== projected.after) reasons.push({ kind: "material" });
   if (projected.inputs) reasons.push({ kind: "inputs" });
   if (projected.structure) reasons.push({ kind: "structure" });
   const actual = normalizeReviewPair(
-    stripHistoricalMarkers(base),
+    stripMarkers(base, before?.usage, baseRanges),
     stripMarkers(head, after?.usage, headRanges),
     selected.path,
-    {
-      before: context.beforeReader.generated.prefix,
-      after: context.afterReader.generated.prefix,
-      beforeRoutes: context.beforeReader.generated.routes,
-      afterRoutes: context.afterReader.generated.routes,
-    },
   );
-  const materialChanged =
-    (actual.comparisonBase ?? actual.base) !==
-    (actual.comparisonHead ?? actual.head);
   const repoPath = (path: string) =>
     context.prefix ? `${context.prefix}/${path}` : path;
   const evidence = await context.resources.compare(
@@ -216,28 +186,11 @@ export async function compareComponentView(
       ...view,
       ...actualEvidence,
       ignoredIds: actual.ignoredIds,
-      ...(materialChanged ? { material: true as const } : {}),
+      ...(actual.base !== actual.head ? { material: true as const } : {}),
       state:
-        materialChanged || actualResourceChange
+        actual.base !== actual.head || actualResourceChange
           ? "changed"
-          : normalizeDocumentUrls(
-                normalizeSingleDocument(
-                  stripHistoricalMarkers(base),
-                  before!.path,
-                ),
-                before!.path,
-                context.beforeReader.generated.prefix,
-                context.beforeReader.generated.routes,
-              ) ===
-              normalizeDocumentUrls(
-                normalizeSingleDocument(
-                  stripMarkers(head, after?.usage, headRanges),
-                  after!.path,
-                ),
-                after!.path,
-                context.afterReader.generated.prefix,
-                context.afterReader.generated.routes,
-              )
+          : projected.rawEqual
             ? "unchanged"
             : "ignored-only",
     },
@@ -248,14 +201,10 @@ export async function compareComponentView(
 function normalizeOneSidedView(
   html: string,
   view: GeneratedComponentView,
-  dialect: "current" | "historical",
 ): string {
   const ranges = view.usage
-    ? validateComponentRanges(html, view.usage.ranges, dialect)
+    ? validateComponentRanges(html, view.usage.ranges)
     : undefined;
-  const material =
-    dialect === "historical"
-      ? stripHistoricalMarkers(html)
-      : stripMarkers(html, view.usage, ranges);
+  const material = stripMarkers(html, view.usage, ranges);
   return normalizeSingleDocument(material, view.path);
 }

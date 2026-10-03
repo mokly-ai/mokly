@@ -14,7 +14,7 @@ import type {
   BaselineProcessRunner,
 } from "./types.js";
 
-export const MAX_COMMAND_OUTPUT_BYTES = 64 * 1024;
+const MAX_COMMAND_OUTPUT_BYTES = 64 * 1024;
 export const MAX_ARCHIVE_BYTES = 64 * 1024 * 1024;
 
 /** Bounded subprocess capture; cancellation drains the process group before settling. */

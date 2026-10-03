@@ -1,15 +1,15 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { Readable } from "node:stream";
-import { pipeline } from "node:stream/promises";
 import test from "node:test";
-import { gunzipSync } from "node:zlib";
-
-import { extract } from "tar-stream";
 
 import { readCatalogue } from "@mokly/viewer";
-import { parseRemovedPagePreview, parseReviewResult } from "@mokly/viewer/data";
+import {
+  entryRoute,
+  parseRemovedPagePreview,
+  parseReviewResult,
+  viewRoute,
+} from "@mokly/viewer/data";
 
 import {
   EXPORT_MARKER,
@@ -18,13 +18,15 @@ import {
 } from "../dist/export/ownership.js";
 import { exportCatalogue } from "../dist/export/run.js";
 import { bundleUpload } from "../dist/publish/bundle.js";
-import { buildPreview } from "../scripts/preview/catalogue.mjs";
 
-import { assertPublishedPagePreview } from "./helpers/published_preview.js";
 import {
   createRemovedDeliveryFixture,
   REMOVED_BASELINE_IMAGE_BYTES,
 } from "./helpers/removed_delivery_fixture.js";
+import {
+  archiveNames,
+  readArtifact,
+} from "./removed_preview_delivery_fixture.js";
 
 test("Changes export packages removed previews into every delivery boundary", async (t) => {
   const fixture = await createRemovedDeliveryFixture();
@@ -49,38 +51,38 @@ test("Changes export packages removed previews into every delivery boundary", as
     ),
   );
   const page = model.removedEntries.find(
-    ({ entry }) => entry.route === "archive/removed.html",
+    ({ entry }) => entry.id === "removed-page",
   );
   const screen = model.removedEntries.find(
-    ({ entry }) => entry.route === "screens/removed.html",
+    ({ entry }) => entry.id === "removed-screen",
   );
   assert.deepEqual(screen?.preview, { kind: "screen" });
   assert.ok(page?.preview?.kind === "page");
   for (const removed of [page, screen])
-    assert.deepEqual(
-      removed?.ancestors.map(({ title }) => title),
-      ["Fixture", "Deleted archive", "Deleted section"],
-    );
+    assert.deepEqual(removed?.entry.navPath, [
+      "Fixture",
+      "Deleted archive",
+      "Deleted section",
+    ]);
   assert.notEqual(fixture.baseCommit, fixture.branchEditCommit);
-  const pagePath = page.preview.path;
-  const generationRoot = path.posix.dirname(
-    path.posix.dirname(path.posix.dirname(pagePath)),
-  );
-  assert.equal(pagePath, `${generationRoot}/pages/archive/removed.html.json`);
+  const generationRoot = path.posix.dirname(model.comparisonUrl!);
+  const pagePath = `${generationRoot}/pages/removed-page.json`;
+  assert.equal(pagePath, `${generationRoot}/pages/removed-page.json`);
   const preview = parseRemovedPagePreview(
     JSON.parse(await fs.readFile(path.join(fixture.output, pagePath), "utf8")),
   );
   assert.equal(preview.baseCommit, fixture.baseCommit);
-  assert.equal(preview.documentPath, "snapshots/before/archive/removed.html");
+  assert.equal(preview.id, "removed-page");
+  const pageDocument = `snapshots/before/mokly-generated/${entryRoute("page", preview.id)}`;
   const document = await fs.readFile(
-    path.join(fixture.output, generationRoot, preview.documentPath),
+    path.join(fixture.output, generationRoot, pageDocument),
     "utf8",
   );
   assert.match(document, /Previous page/);
   assert.doesNotMatch(document, /Branch edit/);
   for (const name of [
     pagePath,
-    `${generationRoot}/snapshots/before/archive/removed.html`,
+    `${generationRoot}/snapshots/before/mokly-generated/pages/removed-page.html`,
     `${generationRoot}/snapshots/before/assets/page.css`,
     `${generationRoot}/snapshots/before/assets/nested.css`,
     `${generationRoot}/snapshots/before/assets/past.png`,
@@ -116,11 +118,15 @@ test("Changes export packages removed previews into every delivery boundary", as
     ),
   );
   const desktop = review.screens
-    .find(({ route }) => route === "screens/removed.html")
+    .find(({ id }) => id === "removed-screen")
     ?.views.find(({ viewport }) => viewport === "desktop");
-  assert.ok(desktop?.beforePath);
+  assert.ok(desktop);
   const screenDocument = await fs.readFile(
-    path.join(fixture.output, generationRoot, desktop.beforePath),
+    path.join(
+      fixture.output,
+      generationRoot,
+      `snapshots/before/mokly-generated/${viewRoute("screen", "removed-screen", desktop.viewport, desktop.colorScheme)}`,
+    ),
     "utf8",
   );
   assert.match(screenDocument, /Previous desktop screen/);
@@ -128,11 +134,12 @@ test("Changes export packages removed previews into every delivery boundary", as
   const ownership = parseExportOwnership(
     await fs.readFile(path.join(fixture.output, EXPORT_MARKER), "utf8"),
   );
-  assert.ok(ownership?.files.includes(pagePath));
+  assert.equal(ownership.kind, "valid");
+  if (ownership.kind !== "valid") assert.fail("expected valid ownership");
+  const ownedPaths = ownership.value.files.map(({ path: name }) => name);
+  assert.ok(ownedPaths.includes(pagePath));
   assert.ok(
-    ownership?.files.includes(
-      `${generationRoot}/snapshots/before/assets/past.png`,
-    ),
+    ownedPaths.includes(`${generationRoot}/snapshots/before/assets/past.png`),
   );
   const archived = await archiveNames(await bundleUpload(captured));
   assert.ok(archived.has(pagePath));
@@ -194,92 +201,3 @@ test("an incomplete page closure preserves the previous export", async (t) => {
   );
   assert.deepEqual(await readArtifact(fixture.output), previous);
 });
-
-test("repository publication packages previews and default replacement removes them", async (t) => {
-  const fixture = await createRemovedDeliveryFixture();
-  t.after(() => fixture.close());
-  const output = path.join(fixture.root, ".context/published");
-  const originalFetch = globalThis.fetch;
-  const requests: { method: string; url: string }[] = [];
-  t.mock.method(
-    globalThis,
-    "fetch",
-    async (...args: Parameters<typeof originalFetch>) => {
-      requests.push({
-        method:
-          args[0] instanceof Request
-            ? args[0].method
-            : (args[1]?.method ?? "GET"),
-        url: args[0] instanceof Request ? args[0].url : String(args[0]),
-      });
-      return originalFetch(...args);
-    },
-  );
-  await buildPreview(fixture.config, output, {
-    base: "origin/main",
-    includeChanges: true,
-  });
-  const withChanges = readCatalogue(
-    JSON.parse(
-      await fs.readFile(path.join(output, "__mokly/catalogue.json"), "utf8"),
-    ),
-  );
-  const page = withChanges.removedEntries.find(
-    ({ entry }) => entry.route === "archive/removed.html",
-  );
-  assert.ok(page?.preview?.kind === "page");
-  await assertPublishedPagePreview(output, page.preview);
-  await fs.access(path.join(output, "__mokly/client/react-shell.js"));
-  await fs.access(path.join(output, page.preview.path));
-  await fs.access(
-    path.join(
-      output,
-      path.posix.dirname(withChanges.comparisonUrl!),
-      "snapshots/before/assets/past.png",
-    ),
-  );
-  assert.deepEqual(
-    requests.filter(({ method, url }) => {
-      const request = new URL(url);
-      return (
-        method === "HEAD" ||
-        request.searchParams.has("page") ||
-        request.pathname === "/__mokly/events"
-      );
-    }),
-    [],
-  );
-  await fs.rm(path.join(fixture.root, ".git"), { recursive: true });
-  await buildPreview(fixture.config, output);
-  assert.ok(
-    (await ownedEntries(output)).files.every(
-      (name) => !name.startsWith("__mokly/diffs/"),
-    ),
-  );
-});
-
-async function archiveNames(compressed: Buffer): Promise<ReadonlySet<string>> {
-  const unpack = extract();
-  const names = new Set<string>();
-  unpack.on("entry", (header, stream, next) => {
-    names.add(header.name);
-    stream.on("end", next);
-    stream.resume();
-  });
-  await pipeline(Readable.from([gunzipSync(compressed)]), unpack);
-  return names;
-}
-
-async function readArtifact(
-  root: string,
-): Promise<ReadonlyMap<string, Buffer>> {
-  const entries = await ownedEntries(root);
-  return new Map(
-    await Promise.all(
-      entries.files.map(
-        async (name) =>
-          [name, await fs.readFile(path.join(root, name))] as const,
-      ),
-    ),
-  );
-}

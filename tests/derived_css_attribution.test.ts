@@ -38,7 +38,7 @@ for (const components of [false, true]) {
       ? "mockups/components/shared.css"
       : "mockups/shared.css";
     const current = await compileCatalogue(fixture.config);
-    const route = components ? "components/action.html" : "screens/home.html";
+    const id = components ? "action-default" : "home";
     for (const [rule, expectedState] of [
       [".guide { padding: 2px; }", "unchanged"],
       [".auth { padding: 3px; }", "changed"],
@@ -49,10 +49,7 @@ for (const components of [false, true]) {
         "HEAD",
         repository,
       );
-      assert.equal(
-        live.changedRoutes?.includes(route),
-        expectedState === "changed",
-      );
+      assert.equal(live.changedIds?.includes(id), expectedState === "changed");
       const complete = await compareReview(
         current,
         fixture.config,
@@ -69,16 +66,16 @@ for (const components of [false, true]) {
           ...snapshot.comparison!,
           before: snapshot.baseline,
           after: current.manifest,
-          ...(snapshot.result ? { result: snapshot.result } : {}),
+          result: snapshot.result!,
         },
-        { route, ...(components ? { variantId: "default" } : {}) },
+        { id },
         new AbortController().signal,
       );
       const result = parseReviewResult(selected.result);
       const views =
-        components && result.schemaVersion === 3
+        components && result.schemaVersion === 4
           ? result.components[0]!.variants[0]!.views
-          : result.screens.find((screen) => screen.route === route)!.views;
+          : result.screens.find((screen) => screen.id === id)!.views;
       assert.ok(views.length > 0);
       for (const view of views) {
         assert.equal(view.state, expectedState);

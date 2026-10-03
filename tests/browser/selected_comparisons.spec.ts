@@ -2,9 +2,17 @@ import { expect, test } from "@playwright/test";
 
 import type { RunningServer } from "../../dist/server/http_types.js";
 
-import { loadComparison } from "./comparison_actions.js";
+import {
+  expectPresentedPane,
+  loadComparison,
+  PANE_SOURCE,
+} from "./comparison_actions.js";
 import { selectedComparisonFixture } from "./selected_comparison_fixture.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
+import {
+  chooseScheme,
+  chooseVariant,
+  chooseViewport,
+} from "./workspace_actions.js";
 
 let server: RunningServer;
 const cleanup: (() => Promise<void>)[] = [];
@@ -36,20 +44,23 @@ test("live Difference requests the active screen and keeps real before/current p
     page.frameLocator(".mb-pane--after iframe").locator("main"),
   ).toContainText("Updated screen");
   expect(requests).toHaveLength(1);
-  expect(requests[0]!.searchParams.get("route")).toBe("screens/home.html");
-  expect(requests[0]!.searchParams.has("variant")).toBe(false);
+  expect(requests[0]!.searchParams.get("id")).toBe("home");
+  expect(requests[0]!.searchParams.size).toBe(1);
   await expect(page.locator(".mb-panes")).toHaveAttribute(
     "data-compare-mode",
     "difference",
   );
-  await expect(page.locator(".mb-pane--before iframe")).toHaveAttribute(
-    "sandbox",
-    "",
-  );
+  await expectPresentedPane(page.locator(".mb-pane--before iframe"));
+  await expectPresentedPane(page.locator(".mb-pane--after iframe"));
   await chooseScheme(page, "dark");
   await expect(
     page.frameLocator(".mb-pane--after iframe").locator("main"),
   ).toContainText("Updated screen");
+  for (const pane of ["before", "after"])
+    await expect(page.locator(`.mb-pane--${pane} iframe`)).toHaveAttribute(
+      PANE_SOURCE,
+      /\.desktop\.dark\.html$/u,
+    );
   expect(requests).toHaveLength(1);
 });
 
@@ -63,10 +74,8 @@ test("saved variant selection and refresh keep the selected comparison scope", a
   });
   await page.goto(`${server.url}/view/components/action.html`);
   await chooseViewport(page, "mobile");
-  await page
-    .getByLabel("Saved variant", { exact: true })
-    .selectOption("disabled");
-  await expect(page).toHaveURL(/variant=disabled/);
+  await chooseVariant(page, "Disabled");
+  await expect(page).toHaveURL(/\/view\/components\/action-disabled\.html$/);
   await loadComparison(page, "Overlay");
   await expect(
     page
@@ -80,20 +89,18 @@ test("saved variant selection and refresh keep the selected comparison scope", a
   ).toBeDisabled();
   await loadComparison(page, "Refresh comparison");
   expect(requests).toHaveLength(2);
-  for (const request of requests) {
-    expect(request.searchParams.get("route")).toBe("components/action.html");
-    expect(request.searchParams.get("variant")).toBe("disabled");
+  for (const [index, request] of requests.entries()) {
+    expect(request.searchParams.get("id")).toBe("action-disabled");
+    expect(request.searchParams.size).toBe(index === 0 ? 1 : 2);
   }
   expect(requests[1]!.searchParams.get("refresh")).toBe("1");
-  await page
-    .getByLabel("Saved variant", { exact: true })
-    .selectOption("default");
-  await expect(page).toHaveURL(/variant=default/);
+  await chooseVariant(page, "Default");
+  await expect(page).toHaveURL(/\/view\/components\/action-default\.html$/);
   await page.getByRole("button", { name: "Side by side", exact: true }).click();
   await expect(
     page
       .frameLocator(".mb-pane--after iframe")
       .getByRole("button", { name: "Proceed", exact: true }),
   ).toBeEnabled();
-  expect(requests.at(-1)!.searchParams.get("variant")).toBe("default");
+  expect(requests.at(-1)!.searchParams.get("id")).toBe("action-default");
 });

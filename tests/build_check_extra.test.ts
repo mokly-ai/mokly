@@ -55,7 +55,7 @@ test("check never follows an unexpected symlink", async (context) => {
   );
   assert.throws(
     () => checkCompilation(compilation, config),
-    /extra generated files:\n {2}- mokly-generated\/external/,
+    /contains a symlink or non-regular entry: mockups\/mokly-generated\/external/,
   );
 });
 

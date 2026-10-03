@@ -58,6 +58,19 @@ test("standalone browser modules isolate React to the hydration bundle", async (
   }
   assert.equal(hydrationBundles, 1);
 });
+test("standalone appearance startup is a self-contained classic bundle", async () => {
+  const code = await fs.readFile(
+    path.join(root, "dist/browser/appearance-startup.js"),
+    "utf8",
+  );
+  assert.match(code, /^\s*(?:"use strict";\s*)?\(\(\) => \{/);
+  assert.match(code, /mokly:theme/);
+  assert.doesNotMatch(code, /^\s*(?:import|export)\b/m);
+  assert.doesNotMatch(
+    code,
+    /react-dom|hydrateRoot|react\.production|["'](?:react|node:|@mokly\/mokly)|(?:^|\/)dist\/cli\//,
+  );
+});
 test("the Node-only SSR entry cannot be imported into a browser graph", async () => {
   await assert.rejects(
     build({

@@ -26,7 +26,6 @@ test("preview fragment routes update every applicable frame source", () => {
         {
           ...mobile,
           colorScheme: "dark",
-          fragmentPath: "static/screens/home.mobile.dark.html",
         },
       ],
     },
@@ -38,13 +37,13 @@ test("preview fragment routes update every applicable frame source", () => {
   );
 
   const expected = [
-    `/static/screens/home.mobile.html#${ENCODED_FRAGMENT}`,
-    `/static/screens/home.desktop.html#${ENCODED_FRAGMENT}`,
+    `/static/mokly-generated/screens/home.mobile.html#${ENCODED_FRAGMENT}`,
+    `/static/mokly-generated/screens/home.desktop.html#${ENCODED_FRAGMENT}`,
   ];
   assert.deepEqual(attributeValues(markup, "src"), expected);
   assert.deepEqual(attributeValues(markup, "data-fragment-light"), expected);
   assert.deepEqual(attributeValues(markup, "data-fragment-dark"), [
-    `/static/screens/home.mobile.dark.html#${ENCODED_FRAGMENT}`,
+    `/static/mokly-generated/screens/home.mobile.dark.html#${ENCODED_FRAGMENT}`,
   ]);
 });
 
@@ -68,8 +67,8 @@ test("only the first flow step receives a preview fragment", () => {
   );
   const sources = attributeValues(markup, "src");
   assert.deepEqual(sources, [
-    `/static/screens/home.desktop.html#${ENCODED_FRAGMENT}`,
-    "/static/screens/home.desktop.html",
+    `/static/mokly-generated/screens/home.desktop.html#${ENCODED_FRAGMENT}`,
+    "/static/mokly-generated/screens/home.desktop.html",
   ]);
   assert.equal(sources.filter((source) => source.includes("#")).length, 1);
 });
@@ -97,8 +96,8 @@ test("a valid absent anchor retains its encoded hash without a DOM lookup", () =
     "absent",
   );
   assert.deepEqual(attributeValues(markup, "src"), [
-    "/static/screens/home.mobile.html#absent",
-    "/static/screens/home.desktop.html#absent",
+    "/static/mokly-generated/screens/home.mobile.html#absent",
+    "/static/mokly-generated/screens/home.desktop.html#absent",
   ]);
 });
 

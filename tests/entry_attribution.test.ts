@@ -9,6 +9,7 @@ import { resolveExportOutput } from "../dist/export/paths.js";
 import { receiveComponentRuntimeStartup } from "../dist/server/controls/runtime_ipc.js";
 import { classifyWatchPath } from "../dist/server/watch_events.js";
 
+import { currentManifest } from "./helpers/current_manifest.js";
 import {
   createFixture,
   removeFixture,
@@ -46,7 +47,7 @@ ${metadata}
 export const button = defineComponent({ ...metadata, id: "button", title: "Button", description: "A co-located button", route: "components/button.html",
   propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } },
   render: (props) => <Button label={props.label} />,
-  variants: [{ id: "default", title: "Default", props: { label: "Continue" } }] });
+  variants: [{ id: "button-default", title: "Default", props: { label: "Continue" } }] });
 `,
   );
   await write(
@@ -56,7 +57,7 @@ export const button = defineComponent({ ...metadata, id: "button", title: "Butto
 import { defineScreen } from "@mokly/mokly";
 import { button } from "./button.mokly.js";
 ${metadata}
-export const mockups = [button.entry, defineScreen({ ...metadata, useCaseIds: [], id: "button-demo", title: "Button demo", description: "Uses the button", route: "screens/button-demo.html", mobile: <main><button.Component label="Go" /></main>, desktop: <main><button.Component label="Go" /></main> })];
+export const mockups = [button.entries, defineScreen({ ...metadata, useCaseIds: [], id: "button-demo", title: "Button demo", description: "Uses the button", route: "screens/button-demo.html", mobile: <main><button.Component label="Go" /></main>, desktop: <main><button.Component label="Go" /></main> })];
 `,
   );
   await fs.promises.writeFile(
@@ -75,10 +76,7 @@ test("a component defined in a helper beside its implementation is attributed to
     (entry) => entry.id === "button",
   );
   assert.equal(button?.sourcePath, "src/components/button/button.mokly.tsx");
-  assert.deepEqual(button?.dependencies, [
-    "notes.md",
-    "src/components/button/button.mokly.tsx",
-  ]);
+  assert.deepEqual(button?.declaredDependencies, ["notes.md"]);
   const demo = compilation.manifest.entries.find(
     (entry) => entry.id === "button-demo",
   );
@@ -207,7 +205,11 @@ test("runtime startup rejects a message without entry globs", async () => {
       generatedDir: "/repo/generated/mokly-generated",
       repoRoot: "/repo",
     },
-    manifest: { entries: [], schemaVersion: 5, sourceFiles: [] },
+    manifest: currentManifest({
+      entries: [],
+      schemaVersion: 8,
+      sourceFiles: [],
+    }),
   };
   process.emit("message", {
     ...valid,

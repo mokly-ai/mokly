@@ -7,7 +7,7 @@ this directory adds no supported JavaScript package exports.
 
 `BaselineBuilder` in `types.ts` accepts `build(request)`, where the request names
 one resolved commit, repository root, repository-relative `mockupsPath`, exact
-argv commands, optional historical-v2 compatibility, and an `AbortSignal`.
+argv commands, and an `AbortSignal`.
 `CachedBaselineBuilder(fs, runner, clock, maintenance, options)` implements it
 with four injected collaborators: filesystem, process runner, clock and
 `BaselineMaintenanceReporter`. The Node implementations live in `filesystem.ts`,
@@ -68,11 +68,9 @@ blob reads only for commits with a complete matching manifest inventory;
 other commits rebuild. The builder extracts to `source`, runs commands,
 discovers the historical catalogue root, validates its manifest and output tree,
 moves only `mokly-generated/` and copies the manifest's authored asset closure to
-their repository-relative paths under `output/`; pre-v6 single-directory
-baselines move the whole historical catalogue. Readers resolve
-repository-relative paths beneath `output/` for v6 or strip the discovered
-historical root for flat legacy entries; neither uses the current
-`mockupsDir` to translate base paths. It deletes the extraction and writes
+their repository-relative paths under `output/`. Only v8 content is adopted;
+readers append repository-relative paths beneath `output/`, using the pinned
+historical root. It deletes the remaining extraction and writes
 `complete.json`. Completion of the marker write commits the result immediately.
 Cancellation before that point removes partial output; cancellation afterward
 returns the completed result and skips remaining retention work. Cleanup and
@@ -87,11 +85,13 @@ Rebuild discovery prefers the requested root, then searches the bounded
 extraction for exactly one valid manifest; details and reader path mapping
 are in [baseline addressing](../../docs/protocol/mokly-baseline-addressing.md).
 `inputs.json` records the requested current repository-relative catalogue
-path; new completion markers record the discovered historical root, its v6
-or legacy layout, and the commands. Pre-v6 markers retain the flat legacy
-layout with the requested root. A complete entry for different settings fails
-explicitly and remains intact. Remove that commit's cache entry before changing
-its catalogue/build settings. Partial entries are rebuilt under the entry lock.
+path; new completion markers record v8, `generated-v8`, the discovered root
+and the commands. Earlier completed entries support only a bounded compatibility
+probe; they never create a content reader. Request/recipe mismatches fail intact.
+Missing completion data is rebuilt under the lock. Malformed completed output
+fails with its evidence retained. Earlier committed envelopes reject before a
+build; earlier rebuilt output is removed before the typed incompatible outcome.
+`compatibility.ts` retains main's exact product copy and command behavior.
 
 Lock publication uses a fully written temporary file and an exclusive hard link.
 The filesystem captures the temporary file's identity before publication and
@@ -136,11 +136,12 @@ historical code before it starts; there is no child-only fallback.
 
 `RebuiltBaselineReader(fs, repoRoot, outputDir, commit, mockupsPath, signal?)`
 reads only a completed output tree. Its `BaselineReader` API retains
-repository-relative paths and the pinned commit; it strips the output prefix
-internally. It rejects symlinks at every ancestor and non-regular files. Bulk
+repository-relative paths and the pinned commit; it appends the path beneath its cache output. It rejects symlinks at every ancestor and non-regular files. Bulk
 reads use the Git reader's 4,096-object / 48 MiB batch limits, with at most 32
 filesystem reads in flight. The review asset reader additionally applies the
-historical manifest's source inventory and reserved-name policy.
+accepted v8 baseline's source inventory and reserved-name policy. Earlier output
+follows the
+[baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
 
 ```bash
 npm run build
@@ -154,7 +155,7 @@ interruption and symlink rejection. See the
 and [storage and execution rules](../../docs/protocol/mokly-baseline-storage.md)
 and [review boundaries](../review/README.md).
 
-`baseline_process_tree.test.ts` runs real nested commands on Linux and in the
+`tests/baseline_process_tree.test.ts` runs real nested commands on Linux and in the
 Windows/macOS CI jobs, including cancellation after the launcher exits. Native
 binding fault tests exercise assignment, setup and ownership ordering without
 requiring a Windows host.

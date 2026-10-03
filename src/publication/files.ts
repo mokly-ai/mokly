@@ -30,7 +30,10 @@ export async function publicationFiles(
       isBaselineCachePath(file, config.repoRoot) ||
       isInside(config.generatedDir, file) ||
       isInside(
-        projectRealPath(config.generatedDir),
+        path.join(
+          projectRealPath(config.mockupsDir),
+          path.basename(config.generatedDir),
+        ),
         resolvedOrLogicalPath(file),
       ) ||
       excluded.some((directory) => isInside(directory, file)) ||

@@ -9,7 +9,9 @@ import { createExportFixture } from "../helpers/export_fixture.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
+import { PANE_SOURCE } from "./comparison_actions.js";
 import { assertServedShellMarker } from "./export_shell.js";
+import { chooseScheme } from "./workspace_actions.js";
 
 let site: Awaited<ReturnType<typeof serveStaticFiles>>;
 let directory: string;
@@ -34,7 +36,7 @@ test.beforeAll(async () => {
     site = await serveStaticFiles(directory);
     await assertServedShellMarker(
       site.url,
-      "/view/components/action.html?variant=disabled",
+      "/view/components/action-disabled.html",
     );
   } finally {
     await fixture.close();
@@ -60,7 +62,7 @@ for (const viewport of ["desktop", "mobile"] as const)
         ? { width: 1280, height: 900 }
         : { width: 390, height: 844 },
     );
-    await page.goto(`${site.url}/view/components/action.html?variant=disabled`);
+    await page.goto(`${site.url}/view/components/action-disabled.html`);
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     await expect(page.locator('[data-prop-control="label"]')).toBeDisabled();
     await expect(page.locator('[data-prop-control="disabled"]')).toBeChecked();
@@ -75,7 +77,7 @@ for (const viewport of ["desktop", "mobile"] as const)
         .frameLocator(`[data-workspace-frame="${viewport}"]`)
         .getByRole("button", { name: "Continue" }),
     ).toBeDisabled();
-    await page.getByRole("button", { name: "Dark mode", exact: true }).click();
+    await chooseScheme(page, "dark");
     await expect
       .poll(() =>
         page
@@ -91,7 +93,7 @@ for (const viewport of ["desktop", "mobile"] as const)
     await expect(
       page.locator("[data-diff-stage] iframe").last(),
     ).toHaveAttribute(
-      "src",
+      PANE_SOURCE,
       new RegExp(`disabled\\.${viewport}\\.dark\\.html$`),
     );
     await page.getByRole("button", { name: "Current", exact: true }).click();

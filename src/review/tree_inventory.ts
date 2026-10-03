@@ -1,9 +1,6 @@
-import type { ManifestV6 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 
-import {
-  joinCataloguePath,
-  type BaselineCatalogue,
-} from "../baseline/catalogue.js";
+import type { BaselineCatalogue } from "../baseline/catalogue.js";
 import { MoklyError } from "../errors.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
 
@@ -52,7 +49,7 @@ export function treeEntryKind(
 export function incompleteGeneratedInventory(
   tree: ReadonlyMap<string, TreeEntry>,
   descriptor: BaselineCatalogue,
-  manifest: ManifestV6,
+  manifest: ManifestV8,
 ):
   | {
       reason: "missing" | "mismatched blob hashes" | "extra files";
@@ -99,8 +96,4 @@ export function inventoryDiagnostic(
         ? "has extra files"
         : "has mismatched blob hashes"
   }: ${issue.paths.join(", ")}.`;
-}
-
-export function manifestTreePath(descriptor: BaselineCatalogue): string {
-  return joinCataloguePath(descriptor.generatedRoot, MANIFEST_NAME);
 }

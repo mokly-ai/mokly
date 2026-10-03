@@ -2,7 +2,7 @@ import fs from "node:fs";
 
 const VERSION = "(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)";
 
-export function resolvePublishRef({
+function resolvePublishRef({
   eventName,
   manualRef,
   releaseCreated,

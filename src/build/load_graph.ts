@@ -2,13 +2,16 @@ import path from "node:path";
 
 import { build } from "esbuild";
 
-import type { RegistryDefinition } from "../authoring/types.js";
 import type { CompatibilityTransformer } from "../compatibility/types.js";
 import type { ComponentGraphRenderer } from "../components/render.js";
 import { discoverEntryModules } from "../config/entry_discovery.js";
+import {
+  FileSystemPostcssConfigLoader,
+  type PostcssConfigLoader,
+} from "../config/postcss_loader.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
-import { MoklyError, errorMessage } from "../errors.js";
+import { MoklyError, errorMessage, isMoklyError } from "../errors.js";
 import type { Renderer } from "../renderer/types.js";
 
 import { evaluateBundle, rememberBundle } from "./consumer_bundle.js";
@@ -21,7 +24,15 @@ import {
   consumerReactPlugin,
   packageNodePaths,
 } from "./consumer_resolution.js";
+import type { GeneratedFile } from "./generated_file.js";
+import { createMetafilePathMapper } from "./metafile_paths.js";
 import { graphSourceFiles, normalizeSourceFiles } from "./source_inventory.js";
+import { bundleStyles } from "./styles/bundle.js";
+import { GraphStyles } from "./styles/collect.js";
+import { collectPostcssDependencies } from "./styles/dependency_inventory.js";
+import { createStyleProcessor } from "./styles/processor_setup.js";
+import { graphStyleRoots } from "./styles/root_graph.js";
+import { inventoryTransformerStyles } from "./styles/transformer_inventory.js";
 
 /** Consumer modules loaded in one React-safe esbuild graph. */
 export interface LoadedGraph {
@@ -31,21 +42,31 @@ export interface LoadedGraph {
   sourceFiles: readonly string[];
   renderer: Renderer;
   renderWithComponents: ComponentGraphRenderer;
+  /** Per-root generated CSS routes (renderer and entries only). */
+  stylesheetRoutes: ReadonlyMap<string, string>;
+  /** CSS text and opaque assets for this compilation. */
+  styleOutputs: ReadonlyMap<string, GeneratedFile>;
+  /** Authored CSS-pass inputs and assets actually delivered by a root. */
+  deliveredStyleSources: readonly string[];
+  /** Globbed plugin dependencies monitored for new authored files. */
+  postcssWatchDirectories?: ResolvedConfig["postcssWatchDirectories"];
 }
 
 /** Bundle and import all React-bearing consumer modules as one graph. */
 export async function loadConsumerGraph(
   config: ResolvedConfig,
   evaluate = true,
+  postcssLoader: PostcssConfigLoader = new FileSystemPostcssConfigLoader(),
 ): Promise<LoadedGraph> {
   return timeAsync(evaluate ? "graph.load" : "graph.inventory", () =>
-    loadGraph(config, evaluate),
+    loadGraph(config, evaluate, postcssLoader),
   );
 }
 
 async function loadGraph(
   config: ResolvedConfig,
   evaluate: boolean,
+  postcssLoader: PostcssConfigLoader,
 ): Promise<LoadedGraph> {
   const entrySources = timeSync("graph.discover", () =>
     discoverEntryModules(config),
@@ -56,6 +77,8 @@ async function loadGraph(
     path.dirname(config.configPath),
     ".mokly-consumer.cjs",
   );
+  const processor = await createStyleProcessor(config, postcssLoader);
+  const styles = new GraphStyles(config, processor.preprocessor);
   try {
     const built = await timeAsync("graph.bundle", () =>
       build({
@@ -72,7 +95,12 @@ async function loadGraph(
         format: "cjs",
         jsx: "automatic",
         jsxDev: true,
-        loader: config.moduleResolution.loaders,
+        loader: {
+          ...config.moduleResolution.loaders,
+          ...(config.moduleResolution.loaders[".css"] === "empty"
+            ? { ".module.css": "empty" as const }
+            : {}),
+        },
         logLevel: "silent",
         ...(config.moduleResolution.mainFields
           ? { mainFields: [...config.moduleResolution.mainFields] }
@@ -84,6 +112,7 @@ async function loadGraph(
           consumerEntryPlugin(config, entrySources),
           packageApiPlugin(config),
           consumerReactPlugin(config),
+          styles.plugin,
         ],
         ...(config.moduleResolution.resolveExtensions
           ? {
@@ -93,13 +122,60 @@ async function loadGraph(
         target: "node22",
       }),
     );
+    const extraOutputs = built.outputFiles!.filter(
+      (file) => file.path !== outputPath,
+    );
+    if (extraOutputs.length)
+      throw new MoklyError(
+        "build-invalid",
+        `consumer graph emitted an undelivered file: ${path.relative(config.repoRoot, extraOutputs[0]!.path).split(path.sep).join("/")}; use a dataurl or binary loader for JavaScript assets instead of file`,
+      );
+    const mapper = createMetafilePathMapper(path.dirname(config.configPath));
+    const roots = graphStyleRoots(config, built.metafile, entrySources, mapper);
+    const graphFiles = graphSourceFiles(
+      built.metafile,
+      path.dirname(config.configPath),
+      config.repoRoot,
+      config.mockupsDir,
+      mapper,
+    );
+    const deliveryRoots = roots.filter((root) => root.emit);
+    const transformerStyles = roots.find((root) => !root.emit)?.styles ?? [];
+    const graphInputs = new Set(
+      graphFiles.map((file) => path.resolve(config.repoRoot, file)),
+    );
+    const bundled = deliveryRoots.some((root) => root.styles.length)
+      ? await bundleStyles(
+          config,
+          deliveryRoots,
+          graphInputs,
+          styles.preprocessor,
+          styles.classMaps,
+        )
+      : {
+          outputs: new Map<string, GeneratedFile>(),
+          routes: new Map<string, string>(),
+          sourceFiles: new Set<string>(),
+        };
+    const transformerFiles = await inventoryTransformerStyles(
+      config,
+      transformerStyles,
+      graphInputs,
+      styles.preprocessor,
+      bundled.sourceFiles,
+    );
+    const dependencies = collectPostcssDependencies(
+      config,
+      styles.preprocessor.reports,
+      graphInputs,
+    );
     const sourceFiles = normalizeSourceFiles(
       [
-        ...graphSourceFiles(
-          built.metafile,
-          path.dirname(config.configPath),
-          config.repoRoot,
-        ),
+        ...graphFiles,
+        ...bundled.sourceFiles,
+        ...transformerFiles,
+        ...styles.preprocessor.sourceFiles,
+        ...dependencies.sourceFiles,
         ...(config.configSourceFiles ?? [config.configPath]),
         ...entrySources,
         ...(config.renderer ? [config.renderer] : []),
@@ -108,12 +184,22 @@ async function loadGraph(
           : []),
       ],
       config.repoRoot,
+      config.mockupsDir,
+    );
+    const deliveredStyleSources = normalizeSourceFiles(
+      [...bundled.sourceFiles],
+      config.repoRoot,
+      config.mockupsDir,
     );
     if (!evaluate)
       return {
         definitions: [],
         entrySources,
         sourceFiles,
+        stylesheetRoutes: bundled.routes,
+        styleOutputs: bundled.outputs,
+        deliveredStyleSources,
+        postcssWatchDirectories: dependencies.watchDirectories,
         renderWithComponents: () => {
           throw new Error("inventory-only graph cannot render");
         },
@@ -156,13 +242,20 @@ async function loadGraph(
       definitions: imported.definitions,
       entrySources,
       sourceFiles,
+      stylesheetRoutes: bundled.routes,
+      styleOutputs: bundled.outputs,
+      deliveredStyleSources,
+      postcssWatchDirectories: dependencies.watchDirectories,
       renderer: imported.renderer as Renderer,
       renderWithComponents: imported.renderWithComponents,
     };
     rememberBundle(graph, bundle);
     return graph;
   } catch (error) {
+    if (styles.failure) throw styles.failure;
     if (error instanceof MoklyError) throw error;
+    if (isMoklyError(error))
+      throw new MoklyError(error.code, error.detail, { cause: error });
     throw new MoklyError(
       "build-invalid",
       `could not bundle consumer modules: ${errorMessage(error)}`,
@@ -170,14 +263,7 @@ async function loadGraph(
         cause: error,
       },
     );
+  } finally {
+    await processor.close();
   }
-}
-
-/** Narrow an unknown loaded value after runtime validation. */
-export function asRegistryDefinition(
-  value: unknown,
-): RegistryDefinition | undefined {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-    ? (value as RegistryDefinition)
-    : undefined;
 }

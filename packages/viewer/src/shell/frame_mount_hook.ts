@@ -12,23 +12,22 @@ import type { RefObject } from "react";
 import { currentDocumentRoute } from "../catalogue/delivery_paths.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
 import type { FrameAdapter, FrameEvent } from "../client/frame_adapter.js";
+import { FrameError } from "../client/frame_error.js";
 import { cancelFrameMount } from "../client/frame_mount.js";
 
 import { runFrameCleanup } from "./frame_cleanup.js";
-import {
-  adoptUsage,
-  disposeSession,
-  sameFrameIdentity,
-  synchronizeMountedUsage,
-  type ActiveSession,
-} from "./frame_mount_session.js";
 import { mountedFrameReadiness } from "./frame_readiness.js";
 import {
   type ShellFrameIdentity,
+  type ShellFrameRegistry,
   useOptionalShellFrameRegistry,
 } from "./frame_registry.js";
-
-export type ShellFrameStatus = "error" | "loading" | "ready" | "unavailable";
+import {
+  adoptUsage,
+  finishMountedUsage,
+  type ActiveSession,
+  type ShellFrameStatus,
+} from "./frame_session_usage.js";
 
 interface MountedFrameInput {
   adapter?: FrameAdapter;
@@ -137,19 +136,15 @@ export function useMountedShellFrame(input: MountedFrameInput): {
         session.appliedUsageRevision = mountedUsageRevision;
         session.unsubscribe = mounted.subscribe(receive);
         registry.changed();
-        const synchronized = await synchronizeMountedUsage(
-          registry,
-          session,
-          replace,
-        );
-        if (!synchronized) return;
-        session.initializing = false;
-        readiness.resolve(mounted);
-        if (!controller.signal.aborted && active.current === session) {
-          session.status = "ready";
-          setStatus("ready");
-          registry.changed();
-        }
+        await finishMountedUsage(registry, session, replace, () => {
+          session.initializing = false;
+          readiness.resolve(mounted);
+          if (!controller.signal.aborted && active.current === session) {
+            session.status = "ready";
+            setStatus("ready");
+            registry.changed();
+          }
+        });
       })
       .catch((error: unknown) => {
         readiness.reject(error);
@@ -176,4 +171,33 @@ export function useMountedShellFrame(input: MountedFrameInput): {
   }, [input.identity, input.usage, registry]);
 
   return { frameRef, status };
+}
+
+function sameFrameIdentity(
+  current: ShellFrameIdentity,
+  next: ShellFrameIdentity,
+): boolean {
+  return (
+    current.colorScheme === next.colorScheme &&
+    current.entryId === next.entryId &&
+    current.stepIndex === next.stepIndex &&
+    current.variantId === next.variantId &&
+    current.viewport === next.viewport
+  );
+}
+
+function disposeSession(
+  registry: ShellFrameRegistry,
+  session: ActiveSession,
+  active: RefObject<ActiveSession | undefined>,
+): void {
+  if (active.current === session) active.current = undefined;
+  runFrameCleanup([
+    () => session.rejectReady(new FrameError("disposed")),
+    () => session.controller.abort(),
+    () => session.unsubscribe?.(),
+    () => session.mounted?.dispose(),
+    () => cancelFrameMount(session.element),
+    () => registry.remove(session),
+  ]);
 }

@@ -5,7 +5,7 @@ import {
   type NavigationFixture,
 } from "./navigation_fixture.js";
 import { expectFrameSource } from "./workspace_actions.js";
-import { chooseViewport } from "./workspace_actions.js";
+import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
 let navigation: NavigationFixture;
 
@@ -14,13 +14,13 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  await navigation.close();
+  await navigation?.close();
 });
 
-async function clickAndWaitForFrameLoad(
+async function actAndWaitForFrameLoad(
   page: Page,
   frameSelector: string,
-  triggerSelector: string,
+  act: () => Promise<void>,
 ): Promise<void> {
   const frame = page.locator(frameSelector);
   await frame.evaluate((element) => {
@@ -31,7 +31,7 @@ async function clickAndWaitForFrameLoad(
       { once: true },
     );
   });
-  await page.click(triggerSelector);
+  await act();
   await expect(frame).toHaveAttribute("data-test-load-state", "complete", {
     timeout: 15_000,
   });
@@ -45,16 +45,15 @@ test("MockLink navigation reveals the destination and preserves shell state", as
 }) => {
   await page.goto(`${navigation.url}/view/screens/home.html`);
   await chooseViewport(page, "mobile");
-  await clickAndWaitForFrameLoad(
-    page,
-    ".mbk-frame-mobile iframe",
-    "[data-workspace-scheme]",
+  // Changing the appearance reloads the frame, which is what this exercises.
+  await actAndWaitForFrameLoad(page, ".mbk-frame-mobile iframe", () =>
+    chooseScheme(page, "dark"),
   );
   const detailsPanel = page.locator("[data-workspace-inspector]");
   if ((await detailsPanel.getAttribute("data-open")) === "true") {
     await page.getByRole("tab", { name: "Details", exact: true }).click();
   }
-  const other = page.locator('details[data-nav-collection="collection:other"]');
+  const other = page.locator('details[data-nav-folder="folder:Other"]');
   await other.evaluate((element: HTMLDetailsElement) => {
     element.open = true;
   });
@@ -134,7 +133,7 @@ test("Changed navigation preserves collapsed unrelated groups", async ({
 }) => {
   await page.goto(`${navigation.url}/view/screens/home.html`);
   await page.click('[data-filter="changed"]');
-  const other = page.locator('details[data-nav-collection="collection:other"]');
+  const other = page.locator('details[data-nav-folder="folder:Other"]');
   await expect(other).toHaveAttribute("open", "");
   await other.locator("summary").click();
   await expect(other).not.toHaveAttribute("open", "");
@@ -154,7 +153,7 @@ test("editing an active filter reveals newly matching groups", async ({
 }) => {
   await page.goto(`${navigation.url}/view/screens/home.html`);
   await page.click('[data-filter="changed"]');
-  const other = page.locator('details[data-nav-collection="collection:other"]');
+  const other = page.locator('details[data-nav-folder="folder:Other"]');
   await other.locator("summary").click();
   await expect(other).not.toHaveAttribute("open", "");
 
@@ -166,11 +165,11 @@ test("editing an active filter reveals newly matching groups", async ({
   ).toBeVisible();
 });
 
-test("clearing filtering keeps the destination collection open", async ({
+test("clearing filtering keeps the destination folder open", async ({
   page,
 }) => {
   await page.goto(`${navigation.url}/view/screens/home.html`);
-  const other = page.locator('details[data-nav-collection="collection:other"]');
+  const other = page.locator('details[data-nav-folder="folder:Other"]');
   await other.locator("summary").click();
   await expect(other).not.toHaveAttribute("open", "");
   await page.click('[data-filter="changed"]');
@@ -204,7 +203,7 @@ test("raw native links navigate from desktop, area, SVG, flow, and legacy frames
     .click();
   await expectDestination(page);
 
-  await page.goto(`${navigation.url}/view/guide.html`);
+  await page.goto(`${navigation.url}/view/pages/guide.html`);
   await expect(page.locator(".mbk-stage-embed iframe")).toHaveAttribute(
     "data-mokly-frame-state",
     "ready",
@@ -239,7 +238,7 @@ test("logical activation stays host-owned during a frame source handoff", async 
   try {
     await page.goto(`${navigation.url}/view/screens/home.html`);
     await chooseViewport(page, "mobile");
-    await page.locator("[data-workspace-scheme]").click();
+    await chooseScheme(page, "dark");
     await requestStarted;
     await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
       "data-mokly-frame-state",

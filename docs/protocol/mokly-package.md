@@ -20,9 +20,8 @@ the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
 
 [Whole-document pages](./mokly-pages.md) use the same IDs and hierarchy as
-screens and flows. Current manifests require v6. The
-[breaking migration](./mokly-page-migration.md) removes legacy configuration,
-discovery, and rendering adapters; consumers use ordinary page definitions.
+screens and flows. Current and comparison-base manifests require v8; consumers
+use ordinary page definitions.
 The co-located layout below, discovered through `entries` globs, was delivered
 by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
 
@@ -42,9 +41,12 @@ by the [co-located entry discovery plan](../../plans/co-located-entry-discovery.
   to use `mokly.config.*`; generator identities, plain generated markers, and
   `MOKLY_*` environment variables do not include the npm scope.
 
-The initial supported runtime is Node.js 22.14 or newer. CI must exercise the
-minimum supported release and the current Firna release runtime. Unsupported
-Node versions fail immediately with an actionable version error.
+The supported runtime is Node.js `>=22.14.0 <24.14.0` or `>=24.19.0`. CI tests
+the minimum supported release, 22.14.0, and the pinned 24.21.0 release; these are
+tested representatives, not the support bounds. Node 24.14–24.18 are excluded
+because their native CommonJS export pre-parser can abort under concurrent
+ESM-to-CommonJS loading. A minimal CLI bootstrap rejects unsupported Node
+versions with an actionable error before loading other application modules.
 
 ## CLI
 
@@ -121,12 +123,12 @@ examples, not mandatory runtime locations. An explicit `entries` glob defines
 the complete entry shape with no additional suffix filter. The `.mockup.ts` and
 `.mockup.tsx` convention remains recommended, and `entriesDir` selects it by
 expanding to `<dir>/**/*.mockup.{ts,tsx}`. See
-[entry discovery](./mokly-configuration.md#entry-discovery).
+[entry discovery](./mokly-configuration-discovery.md#entry-discovery).
 
 ## Public Authoring API
 
 The [authoring contract](./mokly-authoring.md) defines exported helpers and
-input types, hierarchy, routes, and catalogue links.
+input types, hierarchy, derived routes, and catalogue links.
 
 ## Rendering Boundary
 
@@ -140,29 +142,23 @@ defines the consumer cutover adapter and its route/link constraints.
 
 ## Generated Contract
 
-The [generated-output contract](./mokly-generated-output.md) defines
-fragments, manifest v6, deterministic ordering, Git tracking and asset closure.
+The [generated-output contract](./mokly-rendering.md#generated-contract) defines
+fragments, manifest v8, deterministic ordering, and generated-file ownership;
+the [imported-styles contract](./mokly-imported-styles.md) defines binary CSS
+assets and per-root stylesheet routes in that output.
 
-## Page Migration And Historical Comparisons
+## Pages And Baseline Comparisons
 
-`legacy` configuration is rejected, including an explicitly undefined value.
-Register complete synchronous HTML with `definePage` or nested `page`; move
-comment components, source allowlists, and stage policy into consumer code.
-The [migration contract](./mokly-page-migration.md) specifies safe archival
-of verified old artifacts without weakening source protection.
-
-Current reads accept only canonical `mokly-generated/mokly-manifest.json` schema v6 with a
-`mokly` generator identity and validate the
-[resolved source inventory](./mokly-source-protection.md). Git comparisons
-prefer that filename, then accept the former `mokabook-manifest.json` and
-normalize its `mokabook` generator identity. They accept v5, historical v3, and
-both disjoint historical v4 formats. A v2 `mockbook-manifest.json` is considered
-only when both newer historical filenames are absent and
-`compatibility.readManifestV2` is enabled. Invalid higher-precedence history
-never falls back. Historical readers never execute consumer code.
+Register complete synchronous HTML with `definePage` or nested `page`. Current
+reads require canonical manifest v8 and validate the
+[resolved source inventory](./mokly-source-protection.md). Git comparisons use
+the same version boundary; the
+[baseline compatibility contract](./mokly-baseline-compatibility.md) defines
+how earlier output makes Changes unavailable without failing current output.
+Baseline readers never execute consumer code through the current package.
 
 The [page contract](./mokly-pages.md) defines the public page inputs,
-rendering pipeline, exact routes, inheritance, and schema validation.
+rendering pipeline, derived routes, inheritance, and schema validation.
 
 ## Packaged Documentation
 
@@ -186,6 +182,7 @@ literals, and package boundary.
 
 ## Related Docs
 
+- [Generated output and manifest v8](./mokly-rendering-generated.md#generated-contract)
 - [Build, Browse, and Review runtime](./mokly-runtime.md)
 - [Packaged CLI guides](./mokly-guides.md)
 - [CI and npm release](./npm-release.md)

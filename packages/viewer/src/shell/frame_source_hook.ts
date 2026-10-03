@@ -5,12 +5,12 @@ import type { RefObject } from "react";
 
 import { resolvedFrameSource } from "./stage_sources.js";
 
-/** Preserve the server source initially, then apply route-driven source changes. */
+/** Keep the initial source stable; adapters own navigation once mounted. */
 export function useFrameSource(
   frameRef: RefObject<HTMLIFrameElement | null>,
   source: string | undefined,
   baseUrl: string | URL | undefined,
-  temporary = false,
+  adapterOwned = false,
 ): string | undefined {
   const initial = useRef<string | undefined>(undefined);
   initial.current ??= resolvedFrameSource(source, baseUrl);
@@ -21,13 +21,13 @@ export function useFrameSource(
       baseUrl ?? frame?.ownerDocument.baseURI,
     );
     if (!frame || !resolved) return;
-    if (temporary) return;
+    if (adapterOwned) return;
     const current = frame.getAttribute("src");
     const currentUrl = current
       ? new URL(current, frame.ownerDocument.baseURI).href
       : undefined;
     const nextUrl = new URL(resolved, frame.ownerDocument.baseURI).href;
     if (currentUrl !== nextUrl) frame.setAttribute("src", resolved);
-  }, [baseUrl, frameRef, source, temporary]);
+  }, [adapterOwned, baseUrl, frameRef, source]);
   return initial.current;
 }

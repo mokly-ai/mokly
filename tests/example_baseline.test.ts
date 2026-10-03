@@ -29,7 +29,7 @@ test("the example fixture rebuilds an untracked baseline from its own source and
     .trim()
     .split("\n")
     .filter((file) => file.endsWith(".css"));
-  assert.equal(tracked.length, 28);
+  assert.equal(tracked.length, 33);
   const manifestPath = path.join(config.generatedDir, "mokly-manifest.json");
   await assert.rejects(fs.access(manifestPath), { code: "ENOENT" });
   const prepared = await prepareReviewRepository(config, "HEAD");

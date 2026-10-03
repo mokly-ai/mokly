@@ -40,8 +40,8 @@ test(
     await fs.writeFile(
       path.join(root, "build.cjs"),
       `const fs = require("node:fs");
-fs.mkdirSync("mockups");
-fs.writeFileSync("mockups/mokly-manifest.json", JSON.stringify({ schemaVersion: 5, generatedBy: "mokly", sourceFiles: [], entries: [] }));
+fs.mkdirSync("mockups/mokly-generated/pages", { recursive: true });
+fs.writeFileSync("mockups/mokly-generated/mokly-manifest.json", JSON.stringify({ schemaVersion: 8, generatedBy: "mokly", sourceFiles: [], entries: [], assetClosure: ["page.html"], generatedFiles: [], blobHashAlgorithm: "sha1" }));
 fs.writeFileSync("mockups/page.html", "Historical output");
 `,
     );
@@ -64,7 +64,10 @@ fs.writeFileSync("mockups/page.html", "Historical output");
     };
     const result = await builder.build(request);
     assert.equal(
-      await fs.readFile(path.join(result.outputDir, "page.html"), "utf8"),
+      await fs.readFile(
+        path.join(result.outputDir, "mockups/page.html"),
+        "utf8",
+      ),
       "Historical output",
     );
     assert.equal((await builder.build(request)).cacheHit, true);

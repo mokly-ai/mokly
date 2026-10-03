@@ -1,4 +1,4 @@
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 
 import { baselineCatalogue } from "../../dist/baseline/catalogue.js";
@@ -20,18 +20,7 @@ export function committedReviewRepository(
 ): ReadOnlyReviewRepository {
   const root =
     toPosixPath(path.relative(config.repoRoot, config.mockupsDir)) || ".";
-  const generatedManifest =
-    root === "."
-      ? "mokly-generated/mokly-manifest.json"
-      : `${root}/mokly-generated/mokly-manifest.json`;
-  const lookup = spawnSync(
-    "git",
-    ["-C", config.repoRoot, "cat-file", "-e", `${commit}:${generatedManifest}`],
-    { stdio: "ignore" },
-  );
-  if (lookup.error) throw lookup.error;
-  const layout = lookup.status === 0 ? "generated-v6" : "legacy";
-  const descriptor = baselineCatalogue(commit, root, layout);
+  const descriptor = baselineCatalogue(commit, root);
   return {
     evidence: new GitRepositoryEvidence(runner),
     reader: new CommittedBaselineReader(runner, descriptor),

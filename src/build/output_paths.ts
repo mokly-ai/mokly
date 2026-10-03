@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { isSafeCatalogueRoute } from "@mokly/viewer/data";
+import { GENERATED_DIRECTORY, isSafeCatalogueRoute } from "@mokly/viewer/data";
 
 import { isInside, projectRealPath } from "../config/paths.js";
 import { isInternalCatalogueFile } from "../config/public_files.js";
@@ -11,14 +11,16 @@ import { gitBlobHash } from "../registry/blob_hash.js";
 import { MANIFEST_NAME, serializeManifest } from "../registry/manifest.js";
 
 import type { Compilation } from "./compile.js";
+import { generatedBytes } from "./generated_file.js";
 import { isReservedSource } from "./source_inventory.js";
+import { isValidGeneratedRoute } from "./styles/routes.js";
 
-/** Refuse a staged tree whose exact bytes differ from its v6 manifest inventory. */
+/** Refuse a staged tree whose exact bytes differ from its v8 manifest inventory. */
 export function validateGeneratedInventory(compilation: Compilation): void {
   const { manifest, outputs } = compilation;
   const routes = [...outputs.keys()]
     .filter((route) => route !== MANIFEST_NAME)
-    .sort((left, right) => left.localeCompare(right));
+    .sort();
   const recorded = manifest.generatedFiles;
   if (
     routes.length !== recorded.length ||
@@ -31,7 +33,7 @@ export function validateGeneratedInventory(compilation: Compilation): void {
   for (const { path: route, blobHash } of recorded) {
     const content = outputs.get(route)!;
     if (
-      gitBlobHash(Buffer.from(content, "utf8"), manifest.blobHashAlgorithm) !==
+      gitBlobHash(generatedBytes(content), manifest.blobHashAlgorithm) !==
       blobHash
     )
       throw new MoklyError(
@@ -51,35 +53,44 @@ export function validateGeneratedOutputPaths(
   routes: Iterable<string>,
   config: ResolvedConfig,
 ): void {
-  const realRepoRoot = fs.realpathSync(config.repoRoot);
-  const realMockupsRoot = projectRealPath(config.generatedDir);
-  if (!isInside(realRepoRoot, realMockupsRoot)) {
-    throw new MoklyError(
-      "build-invalid",
-      "mockupsDir resolves outside repoRoot through a symlink",
-    );
-  }
+  const realMockupsRoot = validateGeneratedRoot(config);
   for (const route of routes) {
-    if (route !== MANIFEST_NAME && !isSafeCatalogueRoute(route)) {
+    if (
+      route !== MANIFEST_NAME &&
+      !isSafeCatalogueRoute(route) &&
+      !isValidGeneratedRoute(route)
+    ) {
       throw new MoklyError(
         "build-invalid",
         `generated route is unsafe: ${route}`,
       );
     }
+    const first = route.split("/")[0]!;
+    if (
+      /\.html?$/i.test(route) &&
+      ["styles", "assets"].includes(first.toLowerCase())
+    )
+      throw new MoklyError(
+        "build-invalid",
+        `generated HTML route uses reserved first segment ${first}: ${route}; styles and assets are reserved for generated stylesheets and assets`,
+      );
     if (isReservedSource(route))
       throw new MoklyError(
         "build-invalid",
         `generated route has a reserved source basename: ${route}`,
       );
     const target = path.resolve(config.generatedDir, route);
-    if (route !== MANIFEST_NAME && isInternalCatalogueFile(target, config))
+    if (
+      route !== MANIFEST_NAME &&
+      isInternalCatalogueFile(target, config, false)
+    )
       throw new MoklyError(
         "build-invalid",
         `generated route targets internal catalogue metadata: ${route}`,
       );
     let projectedTarget: string;
     try {
-      projectedTarget = projectRealPath(target);
+      projectedTarget = path.resolve(realMockupsRoot, route);
     } catch (error) {
       throw new MoklyError(
         "build-invalid",
@@ -100,4 +111,20 @@ export function validateGeneratedOutputPaths(
       );
     }
   }
+}
+
+/** Confine catalogue ancestors before any disposable-tree inspection or write. */
+export function validateGeneratedRoot(config: ResolvedConfig): string {
+  const realRepoRoot = fs.realpathSync(config.repoRoot);
+  const realMockupsRoot = path.join(
+    projectRealPath(config.mockupsDir),
+    GENERATED_DIRECTORY,
+  );
+  if (!isInside(realRepoRoot, realMockupsRoot)) {
+    throw new MoklyError(
+      "build-invalid",
+      "mockupsDir resolves outside repoRoot through a symlink",
+    );
+  }
+  return realMockupsRoot;
 }

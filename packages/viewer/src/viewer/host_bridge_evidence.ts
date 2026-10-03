@@ -123,7 +123,7 @@ export function viewerInstanceSessions(
 }
 
 /** Reapply masks and geometry after retained sessions adopt newer evidence. */
-export async function restoreViewerEvidence({
+async function restoreViewerEvidence({
   current,
   geometry,
   inspection,

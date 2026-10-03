@@ -116,7 +116,7 @@ export function createEvidenceGithub({
   };
 }
 
-export function githubApiRoot(serverUrl) {
+function githubApiRoot(serverUrl) {
   const normalized = serverUrl.replace(/\/$/, "");
   return normalized === "https://github.com"
     ? "https://api.github.com"

@@ -183,6 +183,6 @@ test("loading the published script directly never starts inspection or navigatio
     page.getByRole("button", { name: "Continue", exact: true }),
   ).toBeVisible();
   await expect(page).toHaveURL(
-    /\/static\/mokly-generated\/components\/action\.variants\/default\.mobile\.html$/,
+    /\/static\/mokly-generated\/components\/action-default\.mobile\.html$/,
   );
 });

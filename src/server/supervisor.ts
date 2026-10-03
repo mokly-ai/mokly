@@ -1,6 +1,6 @@
 /** Restart supervision retains ownership until each child's cleanup completes. */
 
-import type { ManifestV5 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 
 import type { BaselineCatalogue } from "../baseline/catalogue.js";
 import type { ComponentRuntime } from "../build/component_runtime.js";
@@ -25,7 +25,7 @@ import {
 
 /** Restartable child interface used by watched Serve. */
 export interface ProcessSupervisor {
-  completeCatalogue?(manifest: ManifestV5, generation: string): void;
+  completeCatalogue?(manifest: ManifestV8, generation: string): void;
   onForeground?(callback: (active: boolean) => void): void;
   onDiagnostic?(callback: (message: string) => void): void;
   onPreviewResources?(
@@ -38,7 +38,7 @@ export interface ProcessSupervisor {
   ): void;
   close(): Promise<void>;
   notifyUpdate(
-    changedRoutes: readonly string[] | undefined,
+    changedIds: readonly string[] | undefined,
     componentChanges?: ComponentChangeSnapshot,
     changesStatus?: ChangesStatus,
     kind?: CatalogueUpdateKind,
@@ -209,7 +209,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   }
 
   notifyUpdate(
-    changedRoutes: readonly string[] | undefined,
+    changedIds: readonly string[] | undefined,
     componentChanges?: ComponentChangeSnapshot,
     changesStatus?: ChangesStatus,
     kind?: CatalogueUpdateKind,
@@ -224,7 +224,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     child.send(
       childUpdateMessage(
         this.#updateVersion,
-        changedRoutes,
+        changedIds,
         componentChanges,
         changesStatus,
         kind,
@@ -236,7 +236,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     );
   }
 
-  completeCatalogue(manifest: ManifestV5, generation: string): void {
+  completeCatalogue(manifest: ManifestV8, generation: string): void {
     if (
       this.#runtime?.generation !== generation ||
       !this.#child ||

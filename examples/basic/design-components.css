@@ -39,7 +39,7 @@
 }
 .ce-design .mbk-seg button.active {
   background: white;
-  box-shadow: 0 1px 2px rgba(20, 28, 22, 0.1);
+  box-shadow: var(--chrome-shadow-soft);
   color: var(--chrome-ink);
 }
 .ce-variants {
@@ -64,12 +64,15 @@
   padding: 5px 10px;
 }
 .ce-variants a[aria-current] {
-  background: #edf3ef;
-  border-color: #b9cfc2;
+  background: var(--mbk-accent-surface);
+  border-color: var(--mbk-sage-deep);
   color: var(--mbk-sage-deep);
   font-weight: 600;
 }
+/* One height sizes every depicted component viewport, so a Side by side canvas
+   and the stacked frame of Overlay and Difference always match. */
 .ce-canvas {
+  --ce-canvas-height: 190px;
   background: white;
   border: 1px solid var(--chrome-border-strong);
   border-radius: 10px;
@@ -93,7 +96,7 @@
   align-items: center;
   display: flex;
   justify-content: center;
-  min-height: 190px;
+  min-height: var(--ce-canvas-height);
   padding: 28px;
 }
 .ce-action {
@@ -109,9 +112,9 @@
   white-space: nowrap;
 }
 .ce-action:disabled {
-  background: #e6ebe7;
-  border-color: #d7dfd9;
-  color: #5d6f63;
+  background: var(--chrome-disabled-bg);
+  border-color: var(--chrome-disabled-edge);
+  color: var(--chrome-disabled-ink);
   cursor: default;
 }
 .ce-action--before {
@@ -120,8 +123,8 @@
 }
 .ce-toolbar-example {
   align-items: center;
-  background: #f3f6f3;
-  border: 1px solid #dce5de;
+  background: var(--ce-soft);
+  border: 1px solid var(--ce-edge);
   border-radius: 10px;
   display: flex;
   font-size: 12px;
@@ -143,8 +146,74 @@
   font-size: 12px;
   margin: 0 0 12px;
 }
-.ce-component-comparison .mbk-compare {
+.ce-component-comparison .mbk-compare[data-compare-mode="side"] {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+/* Overlay and Difference keep one bordered frame: its caption stays above the
+   viewport both versions share, the only scroll container in the frame. */
+.ce-canvas > .mbk-stack-viewport {
+  height: var(--ce-canvas-height);
+}
+.ce-canvas .mbk-stack-layer {
+  background-color: var(--ce-surface);
+}
+/* The tall Checklist is drawn part-way down, with the frame's scrollbar thumb
+   placed and sized to match the shown share of it. */
+.ce-canvas > .mbk-stack-viewport[data-scrolled] > .mbk-stack {
+  transform: translateY(-160px);
+}
+.ce-canvas .mbk-stack-thumb {
+  height: 37.4%;
+  top: 31.5%;
+}
+.ce-checklist {
+  font-size: 13px;
+  max-width: 360px;
+  padding: 6px 0;
+  width: 100%;
+}
+.ce-checklist-title {
+  font-weight: 600;
+  height: 40px;
+  line-height: 40px;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ce-checklist-steps {
+  display: grid;
+  grid-auto-rows: 40px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ce-checklist-steps > li {
+  align-items: center;
+  border-top: 1px solid var(--ce-edge);
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+.ce-checklist-mark {
+  align-items: center;
+  border: 1px solid var(--ce-secondary);
+  border-radius: 50%;
+  display: inline-flex;
+  flex: 0 0 18px;
+  font-size: 11px;
+  height: 18px;
+  justify-content: center;
+}
+.ce-checklist-steps > li[data-complete] .ce-checklist-mark {
+  background: var(--mbk-sage);
+  border-color: var(--mbk-sage);
+  color: white;
+}
+.ce-checklist-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .ce-component-comparison .mbk-compare-side {
   min-width: 0;
@@ -157,6 +226,9 @@
   border-top: 1px solid var(--chrome-border);
   margin-top: 20px;
   padding-top: 16px;
+}
+.ce-comparison-paths li {
+  overflow-wrap: anywhere;
 }
 .ce-prop-comparison {
   border-collapse: collapse;
@@ -188,8 +260,8 @@
   padding: 1px 5px;
 }
 .ce-badge {
-  background: #edf3ef;
-  border: 1px solid #b9cfc2;
+  background: var(--mbk-accent-surface);
+  border: 1px solid var(--mbk-sage-deep);
   border-radius: 999px;
   color: var(--mbk-sage-deep);
   font-size: 12px;
@@ -206,7 +278,13 @@
   .mbk-compare {
   grid-template-columns: 1fr;
 }
+.ce-preview-view[data-preview-viewport="mobile"] .ce-canvas {
+  --ce-canvas-height: 180px;
+}
 .ce-preview-view[data-preview-viewport="mobile"] .ce-canvas-content {
-  min-height: 180px;
   padding: 18px;
+}
+.ce-preview-view[data-preview-viewport="mobile"] .ce-canvas .mbk-stack-thumb {
+  height: 36.9%;
+  top: 32.8%;
 }

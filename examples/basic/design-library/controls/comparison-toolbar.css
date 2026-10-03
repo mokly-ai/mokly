@@ -7,7 +7,7 @@
   display: flex;
   flex-shrink: 0;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 8px 16px;
   justify-content: space-between;
   padding: 8px 24px;
 }
@@ -21,6 +21,67 @@
   justify-content: center;
   margin-left: auto;
   width: 26px;
+}
+
+/* Scroll together follows the mode group in every diff mode: a native
+   checkbox with switch semantics laid over a drawn track and knob, so the
+   whole control is its hit area and keyboard focus stays on the checkbox. */
+.mbk-cmp-sync {
+  align-items: center;
+  color: var(--chrome-ink-2);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 600;
+  gap: 8px;
+  position: relative;
+  white-space: nowrap;
+}
+
+.mbk-cmp-sync input {
+  cursor: inherit;
+  height: 100%;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.mbk-cmp-sync-track {
+  background: var(--chrome-bg);
+  border: 1px solid var(--chrome-control-edge);
+  border-radius: 999px;
+  flex-shrink: 0;
+  height: 18px;
+  position: relative;
+  width: 30px;
+}
+
+.mbk-cmp-sync-track::after {
+  background: var(--chrome-control-edge);
+  border-radius: 50%;
+  content: "";
+  height: 12px;
+  left: 2px;
+  position: absolute;
+  top: 2px;
+  width: 12px;
+}
+
+.mbk-cmp-sync:has(input:checked) .mbk-cmp-sync-track {
+  background: var(--mbk-sage-deep);
+  border-color: var(--mbk-sage-deep);
+}
+
+.mbk-cmp-sync:has(input:checked) .mbk-cmp-sync-track::after {
+  background: var(--mbk-accent-contrast);
+  left: 14px;
+}
+
+.mbk-cmp-sync:has(input:focus-visible) .mbk-cmp-sync-track {
+  outline: 2px solid var(--mbk-sage-deep);
+  outline-offset: 2px;
 }
 
 .mbk-shell--mobile .mbk-cmp-toolbar {

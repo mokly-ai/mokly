@@ -4,7 +4,7 @@ import test from "node:test";
 
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
 import type { CatalogueNode } from "../packages/viewer/dist/catalogue/types.js";
-import type { ManifestV5 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import { projectCatalogue } from "../src/catalogue/projection.js";
@@ -27,7 +27,7 @@ test("projection exposes real usage and attribution without private evidence", a
     configPath: "mokly.config.ts",
     catalogue: createCatalogue(fixture.after.manifest),
     changesStatus: "ready" as const,
-    changedRoutes: evidence.changedRoutes,
+    changedIds: evidence.changedIds,
     evidence,
     comparisonUrl: null,
     revision: { content: 0, evidence: 0 },
@@ -53,10 +53,7 @@ test("projection exposes real usage and attribution without private evidence", a
     home.views.map(({ viewport, colorScheme }) => `${viewport}/${colorScheme}`),
     ["mobile/light", "mobile/dark", "desktop/light", "desktop/dark"],
   );
-  assert.equal(
-    home.views[0]?.fragmentPath,
-    "static/mokly-generated/screens/home.mobile.html",
-  );
+  assert.equal("fragmentPath" in home.views[0]!, false);
   const json = serializeCatalogue(model);
   for (const privateField of [
     "sourceFiles",
@@ -66,10 +63,8 @@ test("projection exposes real usage and attribution without private evidence", a
     "endOffset",
     "styles",
     "resources",
-    "legacyPages",
     "headDigests",
     "changedPaths",
-    "navPath",
   ])
     assert.equal(json.includes(`"${privateField}":`), false, privateField);
   assert.equal(json.includes(fixture.root), false);
@@ -81,7 +76,12 @@ test("projection exposes real usage and attribution without private evidence", a
       entries: [...fixture.after.manifest.entries].reverse(),
     }),
   });
-  assert.equal(serializeCatalogue(reordered), json);
+  assert.deepEqual(
+    reordered.components
+      .filter((entry) => "variantOf" in entry)
+      .map((entry) => entry.id),
+    ["action-disabled", "action-default", "pane-default"],
+  );
   assert.equal(model.comparisonUrl, null);
   assert.equal(
     projectCatalogue({
@@ -98,46 +98,21 @@ test("projection exposes screen variants beneath their parent entry", async (t) 
     (entry): entry is CurrentManifestScreen => entry.kind === "screen",
   );
   assert.ok(parent);
-  const stem = parent.route.slice(0, -5);
+  const zetaId = `${parent.id}-zeta`;
   const zeta: CurrentManifestScreen = {
     ...structuredClone(parent),
     description: "Zeta workspace",
-    fragments: {
-      desktop: `${stem}.variants/zeta.desktop.html`,
-      mobile: `${stem}.variants/zeta.mobile.html`,
-    },
-    id: `${parent.id}-zeta`,
-    route: `${stem}.variants/zeta.html`,
+    id: zetaId,
     title: `${parent.title}, zeta`,
     useCaseIds: [],
     variantOf: parent.id,
-    ...(parent.darkFragments
-      ? {
-          darkFragments: {
-            desktop: `${stem}.variants/zeta.desktop.dark.html`,
-            mobile: `${stem}.variants/zeta.mobile.dark.html`,
-          },
-        }
-      : {}),
   };
+  const alphaId = `${parent.id}-alpha`;
   const alpha: CurrentManifestScreen = {
     ...structuredClone(zeta),
     description: "Alpha workspace",
-    fragments: {
-      desktop: `${stem}.variants/alpha.desktop.html`,
-      mobile: `${stem}.variants/alpha.mobile.html`,
-    },
-    id: `${parent.id}-alpha`,
-    route: `${stem}.variants/alpha.html`,
+    id: alphaId,
     title: `${parent.title}, alpha`,
-    ...(zeta.darkFragments
-      ? {
-          darkFragments: {
-            desktop: `${stem}.variants/alpha.desktop.dark.html`,
-            mobile: `${stem}.variants/alpha.mobile.dark.html`,
-          },
-        }
-      : {}),
   };
   const model = projectCatalogue({
     configPath: "mokly.config.ts",
@@ -176,14 +151,49 @@ test("projection exposes screen variants beneath their parent entry", async (t) 
   );
 });
 
-test("public v1 fixture conforms and compatible readers ignore additive fields", async () => {
+test("removed variants keep baseline authored order at a surviving parent's position", async (t) => {
+  const fixture = await componentReviewFixture(t, (source) => source);
+  const current = fixture.after.manifest.entries.find(
+    (entry): entry is CurrentManifestScreen =>
+      entry.kind === "screen" && entry.id === "home",
+  );
+  assert.ok(current);
+  const removedScreen = (id: string, variantOf?: string) => ({
+    entry: {
+      ...structuredClone(current),
+      id,
+      title: id,
+      ...(variantOf === undefined ? {} : { variantOf }),
+    },
+  });
+  const catalogue = createCatalogue(fixture.after.manifest, [
+    removedScreen("a-removed"),
+    removedScreen("z-variant", current.id),
+    removedScreen("b-variant", current.id),
+    removedScreen("m-removed"),
+  ]);
+  const model = projectCatalogue({
+    configPath: "mokly.config.ts",
+    catalogue,
+    changesStatus: "ready",
+    comparisonUrl: null,
+    revision: { content: 0, evidence: 0 },
+  });
+
+  assert.deepEqual(
+    model.removedEntries.map(({ entry }) => entry.id),
+    ["a-removed", "z-variant", "b-variant", "m-removed"],
+  );
+});
+
+test("public v4 fixture conforms and compatible readers ignore additive fields", async () => {
   const json = await fs.readFile(
-    "docs/protocol/fixtures/catalogue-v1.json",
+    "docs/protocol/fixtures/catalogue-v4.json",
     "utf8",
   );
   const fixture = JSON.parse(json);
   const model = readCatalogue(fixture);
-  assert.equal(model.schemaVersion, 1);
+  assert.equal(model.schemaVersion, 4);
   assert.deepEqual(
     model.removedEntries.map(({ entry, preview }) => [entry.kind, preview]),
     [
@@ -191,7 +201,6 @@ test("public v1 fixture conforms and compatible readers ignore additive fields",
         "page",
         {
           kind: "page",
-          path: `__mokly/diffs/__generations/${"c".repeat(64)}/pages/archive/removed-page.html.json`,
         },
       ],
       ["screen", { kind: "screen" }],
@@ -203,6 +212,7 @@ test("public v1 fixture conforms and compatible readers ignore additive fields",
   fixture.screens[0].views[0].usage.future = true;
   assert.deepEqual(readCatalogue(fixture), model);
   assert.throws(() => readCatalogue({ ...fixture, schemaVersion: 2 }));
+  assert.throws(() => readCatalogue({ ...fixture, schemaVersion: 1 }));
   assert.throws(() =>
     readCatalogue({ schemaVersion: 5, generatedBy: "mokly", entries: [] }),
   );
@@ -210,7 +220,7 @@ test("public v1 fixture conforms and compatible readers ignore additive fields",
 
 test("reader rejects unsafe paths, private extensions and broken known references", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v1.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
   );
   const mutations = [
     (value: typeof fixture) => {
@@ -223,10 +233,10 @@ test("reader rejects unsafe paths, private extensions and broken known reference
       value.screens[0].details.relatedDocs = ["../secret.md"];
     },
     (value: typeof fixture) => {
-      value.screens[0].views[0].fragmentPath = "static/../secret.html";
+      value.screens[0].views[0].viewport = "tablet";
     },
     (value: typeof fixture) => {
-      value.screens[0].views[0].fragmentPath = "static/page.html?token=secret";
+      value.screens[0].views[0].colorScheme = "sepia";
     },
     (value: typeof fixture) => {
       value.comparisonUrl = "__mokly/diffs/review.json";
@@ -238,7 +248,7 @@ test("reader rejects unsafe paths, private extensions and broken known reference
       value.extension = { styles: [{ startOffset: 2 }] };
     },
     (value: typeof fixture) => {
-      value.tree.pages[0].id = "missing";
+      value.tree.pages[0].children[0].children[0].id = "missing";
     },
     (value: typeof fixture) => {
       value.screens[0].useCaseIds = ["missing"];
@@ -259,8 +269,8 @@ function findNode(
   id: string,
 ): CatalogueNode | undefined {
   for (const node of nodes) {
-    if (node.id === id) return node;
-    if (node.kind === "collection") {
+    if (node.kind === "entry" && node.id === id) return node;
+    if (node.children) {
       const nested = findNode(node.children, id);
       if (nested) return nested;
     }
@@ -269,6 +279,6 @@ function findNode(
 }
 
 type CurrentManifestScreen = Extract<
-  ManifestV5["entries"][number],
+  ManifestV8["entries"][number],
   { kind: "screen" }
 >;

@@ -80,11 +80,13 @@ test("source protection recognizes reserved files and aliases", async (context) 
 
 test("generated routes may have names formerly reserved by the public directory policy", async (context) => {
   const fixture = await createFixture(
-    `import { definePage } from "@mokly/mokly"; export const mockups = [definePage({ id: "page", title: "Page", description: "Page", dependencies: [], relatedDocs: [], route: "internal/page.html", render: () => "<!doctype html><html><body><p>Page</p></body></html>" })];`,
+    `import { definePage } from "@mokly/mokly"; export const mockups = [definePage({ id: "internal-page", title: "Page", description: "Page", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body><p>Page</p></body></html>" })];`,
   );
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
-  assert.ok((await compileCatalogue(config)).outputs.has("internal/page.html"));
+  assert.ok(
+    (await compileCatalogue(config)).outputs.has("pages/internal-page.html"),
+  );
 });
 
 test("a reference to protected authored HTML fails with its referring route", async (context) => {
@@ -110,7 +112,7 @@ test("a reference to protected authored HTML fails with its referring route", as
 
 test("an imported JSON input remains watched, not public by directory membership", async (context) => {
   const fixture = await createFixture(
-    `${validEntrySource()}\nimport settings from "../mockups/tsconfig.fixture.json"; mockups[1].title = settings.title;`,
+    `${validEntrySource()}\nimport settings from "../mockups/tsconfig.fixture.json"; mockups[0].title = settings.title;`,
     {
       extraConfig:
         'watch: { rules: [{ paths: ["mockups/tsconfig.fixture.json"], action: "rebuild" }] },',

@@ -11,6 +11,19 @@ export interface FileLocation {
   readonly physicalRelativePath: string;
 }
 
+/** Map a reported physical path back through a symlinked configured root. */
+export function logicalRepositoryPath(
+  candidate: string,
+  repoRoot: string,
+): string {
+  const absolute = path.resolve(candidate);
+  if (isInside(repoRoot, absolute)) return absolute;
+  const physicalRoot = projectRealPath(repoRoot);
+  return isInside(physicalRoot, absolute)
+    ? path.resolve(repoRoot, path.relative(physicalRoot, absolute))
+    : absolute;
+}
+
 /** Locate existing or missing paths without accepting escaping or dangling links. */
 export function locatePath(
   candidate: string,
@@ -18,7 +31,7 @@ export function locatePath(
   repoRoot = root,
 ): FileLocation | undefined {
   try {
-    const logicalPath = path.resolve(candidate);
+    const logicalPath = logicalRepositoryPath(candidate, repoRoot);
     if (!isInside(repoRoot, root) || !isInside(root, logicalPath)) return;
     const realRepo = fs.realpathSync(repoRoot);
     const realRoot = fs.realpathSync(root);

@@ -2,10 +2,13 @@ import path from "node:path";
 
 import { braceExpand } from "minimatch";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import { MoklyError } from "../errors.js";
 
 import { isBaselineCachePath, MOKLY_CACHE } from "./cache_paths.js";
 import { isInside, resolveInside, toPosixPath } from "./paths.js";
+import { isReservedConfiguredPath } from "./reserved_paths.js";
 import { requireString, validateStringArray } from "./rules.js";
 
 /** Glob appended to an `entriesDir` shorthand directory. */
@@ -24,6 +27,7 @@ export function resolveEntryGlobs(
   input: { entries?: unknown; entriesDir?: unknown },
   repoRoot: string,
   configDir: string,
+  mockupsDir: string,
 ): EntryGlobs {
   const hasEntries = input.entries !== undefined;
   const hasEntriesDir = input.entriesDir !== undefined;
@@ -50,6 +54,11 @@ export function resolveEntryGlobs(
         "config-invalid",
         `entriesDir must not be inside ${MOKLY_CACHE}`,
       );
+    if (isReservedConfiguredPath(entriesDir, mockupsDir))
+      throw new MoklyError(
+        "config-invalid",
+        `entriesDir must not select ${GENERATED_DIRECTORY}/: ${input.entriesDir}; choose a directory of authored entry modules`,
+      );
     const relative = path.relative(repoRoot, entriesDir);
     const prefix = relative === "" ? "" : `${toPosixPath(relative)}/`;
     return { globs: [`${prefix}${ENTRIES_DIR_GLOB}`], entriesDir };
@@ -57,7 +66,7 @@ export function resolveEntryGlobs(
   const globs = validateStringArray(
     input.entries as readonly string[],
     "entries",
-  ).map((glob) => validateEntryGlob(glob, repoRoot));
+  ).map((glob) => validateEntryGlob(glob, repoRoot, mockupsDir));
   if (globs.length === 0)
     throw new MoklyError("config-invalid", "entries must not be empty");
   const seen = new Set<string>();
@@ -78,7 +87,11 @@ export function globStablePrefix(glob: string): string {
   ).join("/");
 }
 
-function validateEntryGlob(glob: string, repoRoot: string): string {
+function validateEntryGlob(
+  glob: string,
+  repoRoot: string,
+  mockupsDir: string,
+): string {
   const normalized = glob.replaceAll("\\", "/").replace(/^\.\//, "");
   let alternatives: string[];
   try {
@@ -96,6 +109,11 @@ function validateEntryGlob(glob: string, repoRoot: string): string {
     throw new MoklyError(
       "config-invalid",
       `entries glob must stay inside repoRoot and outside ${MOKLY_CACHE}: ${glob}`,
+    );
+  if (isReservedConfiguredPath(prefixRoot, mockupsDir))
+    throw new MoklyError(
+      "config-invalid",
+      `entries must not select ${GENERATED_DIRECTORY}/: ${glob}; narrow the entry glob to authored files`,
     );
   return normalized;
 }

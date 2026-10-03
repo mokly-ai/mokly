@@ -1,19 +1,16 @@
 import path from "node:path";
 
-import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import {
+  generatedResourceRoute,
+  isSafeRepositoryPath,
+} from "@mokly/viewer/data";
 
 import { sourceDenialMessage } from "../build/source_denial.js";
 import { isAuthoringSource } from "../build/source_inventory.js";
 import { entryModuleRoots } from "../config/entry_membership.js";
 import { isInside, projectRealPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
-import {
-  FORMER_MANIFEST_NAME,
-  LEGACY_MANIFEST_NAME,
-  MANIFEST_NAME,
-} from "../registry/manifest.js";
-
-import { exportError } from "./error.js";
+import { EARLIER_MANIFEST_NAMES, MANIFEST_NAME } from "../registry/manifest.js";
 
 const PRIVATE_DIRECTORIES = new Set([
   "node_modules",
@@ -46,9 +43,7 @@ function exportPublicNameDenial(
     options.resolveAliases === false ? "none" : "all",
   );
   if (denial) return sourceDenialMessage(denial);
-  if (
-    [MANIFEST_NAME, FORMER_MANIFEST_NAME, LEGACY_MANIFEST_NAME].includes(name)
-  )
+  if ([MANIFEST_NAME, ...EARLIER_MANIFEST_NAMES].includes(name as never))
     return "targets internal catalogue metadata";
   for (const part of name.split("/")) {
     if (part.startsWith(".")) return "contains a hidden path segment";
@@ -72,13 +67,10 @@ export function exportResourcePolicy(
 export function exportResourceDenial(
   config: ResolvedConfig,
   resolveAliases = true,
+  generatedRoutes: ReadonlySet<string> = new Set(),
 ): (name: string) => string | undefined {
   const mockups = projectRealPath(config.mockupsDir);
   const packages = config.moduleResolution.packageRoots.map(projectRealPath);
-  if (packages.includes(mockups))
-    throw exportError(
-      "A consumer package root must not equal mockupsDir; choose a separate public output directory.",
-    );
   const roots = [
     ...entryModuleRoots(config).map((root) => ({
       path: root,
@@ -89,13 +81,17 @@ export function exportResourceDenial(
       reason: "is inside the Review output directory",
     },
     ...packages
-      .filter((root) => isInside(mockups, root))
+      .filter((root) => root !== mockups && isInside(mockups, root))
       .map((root) => ({
         path: root,
         reason: "is inside a consumer package root",
       })),
   ].flatMap((root) => [root, { ...root, path: projectRealPath(root.path) }]);
   const files = [
+    ...packages.map((root) => ({
+      path: path.join(root, "package.json"),
+      reason: "is consumer package metadata",
+    })),
     {
       path: config.configPath,
       reason: "is the catalogue configuration module",
@@ -118,6 +114,11 @@ export function exportResourceDenial(
       : [],
   );
   return (name) => {
+    const generated = generatedResourceRoute(name);
+    if (generated !== undefined)
+      return generatedRoutes.has(generated) && generated !== MANIFEST_NAME
+        ? undefined
+        : "is not an accepted generated resource";
     const denial = exportPublicNameDenial(name, config, { resolveAliases });
     if (denial) return denial;
     const candidates = [

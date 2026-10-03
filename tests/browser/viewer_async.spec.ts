@@ -113,6 +113,7 @@ test("fetcher replacement aborts stale work and a failed URL source can retry", 
     host.props = {
       ...host.props,
       catalogue: new URL("/public-catalogue.json", location.href),
+      theme: "dark",
     } as MoklyViewerProps;
     delete host.props.baseUrl;
     host.render();
@@ -120,10 +121,18 @@ test("fetcher replacement aborts stale work and a failed URL source can retry", 
   await expect(page.getByRole("alert")).toContainText(
     "The catalogue could not be loaded",
   );
+  await expect(page.locator("#one .mokly-viewer")).toHaveAttribute(
+    "data-mokly-theme",
+    "dark",
+  );
   await page.getByRole("button", { name: "Try again" }).click();
   await expect(
     page.getByRole("heading", { name: "Home", exact: true }),
   ).toBeVisible();
+  await expect(page.locator("#one .mokly-viewer")).toHaveAttribute(
+    "data-mokly-theme",
+    "dark",
+  );
   expect(attempts).toBe(2);
   expect(
     await page.evaluate(() =>

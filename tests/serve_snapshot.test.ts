@@ -20,7 +20,7 @@ import { documentText } from "./helpers/html.js";
 
 const page = `
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ id: "guide", title: "Guide", route: "guide.html", description: "Guide", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Guide</body></html>" }));
+mockups.push(definePage({ id: "guide", title: "Guide", description: "Guide", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Guide</body></html>" }));
 `;
 
 test("no-watch startup retains removed metadata from its single Changes calculation", async (context) => {
@@ -49,7 +49,7 @@ test("no-watch startup retains removed metadata from its single Changes calculat
   fixture.beforeRemove(() => running.close());
   await classified;
   const home = await (await fetch(running.url)).text();
-  const removed = await fetch(`${running.url}/view/guide.html`);
+  const removed = await fetch(`${running.url}/view/pages/guide.html`);
   assert.equal(removed.status, 200);
   assert.match(documentText(await removed.text()), /Showing previous version/);
   assert.match(home, /data-removed-page=""/);
@@ -84,11 +84,14 @@ test("unavailable startup Changes leaves a complete current catalogue without re
   assert.match(home, /data-entry-id="home"/);
   assert.match(home, /data-changes-status="unavailable"/);
   assert.doesNotMatch(home, /data-removed-page/);
-  assert.equal((await fetch(`${running.url}/view/guide.html`)).status, 404);
+  assert.equal(
+    (await fetch(`${running.url}/view/pages/guide.html`)).status,
+    404,
+  );
   assert.equal(calls, 1);
 });
 
-test("HTTP startup rejects invalid current metadata before querying history", async (context) => {
+test("HTTP startup rejects supplied invalid metadata before querying history", async (context) => {
   const fixture = await changedFixture(context);
   await fs.writeFile(
     path.join(fixture.mockupsDir, "mokly-generated/mokly-manifest.json"),
@@ -106,6 +109,12 @@ test("HTTP startup rejects invalid current metadata before querying history", as
 
   await assert.rejects(
     startCatalogueServer(fixture.config, {
+      manifest: JSON.parse(
+        await fs.readFile(
+          path.join(fixture.generatedDir, "mokly-manifest.json"),
+          "utf8",
+        ),
+      ),
       base: "main",
       port: 0,
       review: configuredServedReview(
@@ -189,6 +198,9 @@ test("a no-watch component catalogue reuses its resolved ownership evidence", as
     component,
     /data-changed="true"[^>]*data-route="components\/action.html"/,
   );
-  assert.equal((await fetch(`${running.url}/view/guide.html`)).status, 200);
+  assert.equal(
+    (await fetch(`${running.url}/view/pages/guide.html`)).status,
+    200,
+  );
   assert.equal(calls, 1);
 });

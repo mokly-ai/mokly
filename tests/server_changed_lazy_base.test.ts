@@ -9,6 +9,7 @@ import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
 } from "../dist/review/assets.js";
+import { asChangeEvidence } from "../dist/review/change_evidence.js";
 import { CommittedBaselineReader } from "../dist/review/committed.js";
 import {
   NodeGitCommandRunner,
@@ -24,7 +25,7 @@ import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
 
 for (const resource of ["image.svg", "unused.css", "shared.css"])
-  test(`live ${resource} changes read base documents only for CSS consumers`, async (t) => {
+  test(`live ${resource} changes compare both memory and baseline documents once`, async (t) => {
     const fixture = await cssAttributionFixture(t, false, {
       prepare: async ({ configPath }) => {
         await fs.writeFile(
@@ -58,7 +59,7 @@ for (const resource of ["image.svg", "unused.css", "shared.css"])
       fixture.config,
       git.reader,
       await git.evidence.mergeBase("main", "HEAD"),
-      [`mockups/${resource}`],
+      asChangeEvidence([`mockups/${resource}`]),
       new CompiledReviewAssetReader(
         fixture.config,
         (await compileCatalogue(fixture.config)).outputs,
@@ -98,18 +99,10 @@ test("non-CSS evidence does not traverse a supplied base resource graph", async 
     new Map(),
     undefined,
     false,
-    {
-      prefix: "mokly-generated",
-      routes: new Set(["screens/home.mobile.html"]),
-    },
-    {
-      prefix: "mokly-generated",
-      routes: new Set(["screens/home.mobile.html"]),
-    },
   );
   assert.deepEqual(
-    await graph.compare("screens/home.mobile.html", document, {
-      path: "screens/home.mobile.html",
+    await graph.compare("mokly-generated/screens/home.mobile.html", document, {
+      path: "mokly-generated/screens/home.mobile.html",
       html: document,
     }),
     {
@@ -130,13 +123,8 @@ test("deleted stylesheet resources still retain their consumers", async (t) => {
     fixture.config,
     git.reader,
     await git.evidence.mergeBase("main", "HEAD"),
-    ["mockups/shared.css"],
+    asChangeEvidence(["mockups/shared.css"]),
     new CompiledReviewAssetReader(fixture.config, accepted.outputs),
-  );
-  assert.ok(
-    result.changedPaths.includes(
-      "mockups/mokly-generated/screens/home.mobile.html",
-    ),
   );
   assert.equal(
     result.screens[0]?.views[0]?.reasons?.[0]?.analysis?.status,
@@ -175,7 +163,7 @@ test("changed documents retain a removed image without any stylesheet in the dif
     fixture.config,
     git.reader,
     commit,
-    changedPaths,
+    asChangeEvidence(changedPaths),
     new CompiledReviewAssetReader(
       fixture.config,
       (await compileCatalogue(fixture.config)).outputs,
@@ -187,9 +175,7 @@ test("changed documents retain a removed image without any stylesheet in the dif
         `mockups/mokly-generated/screens/home.${viewport}.html`,
       ),
     );
-  const consumer = result.screens.find(
-    (screen) => screen.route === "screens/home.html",
-  );
+  const consumer = result.screens.find((screen) => screen.id === "home");
   assert.equal(consumer?.views.length, 2);
   for (const view of consumer!.views)
     assert.deepEqual(view.reasons, [

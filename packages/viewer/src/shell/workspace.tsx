@@ -5,32 +5,28 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { canonicalJson } from "../components/data.js";
 
 import type { Catalogue } from "./catalogue.js";
-import type { LoadedComparison } from "./comparison_request.js";
 import { useComponentControls } from "./component_controls.js";
 import type { ShellContext } from "./context.js";
-import { DiffScreen } from "./diffs.js";
+import { ControlledDiffScreen } from "./diffs.js";
 import { ScreenHead, targetHead } from "./head.js";
 import { Inspector } from "./inspector.js";
 import { useInspectorResize } from "./inspector_resize.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
 import { useOptionalShellStore } from "./store_context.js";
-import type { ComparisonMode } from "./use_comparison.js";
-import { useWorkspaceData } from "./use_workspace_data.js";
+import { useComparison } from "./use_comparison.js";
 import { useWorkspaceUsage } from "./use_workspace_usage.js";
+import { useActiveWorkspace } from "./workspace_context.js";
 import { WorkspaceControls } from "./workspace_controls.js";
 import type { WorkspaceData } from "./workspace_data.js";
+import { workspaceEvidenceEntry } from "./workspace_entry.js";
 import { WorkspaceEvidence } from "./workspace_evidence.js";
 import { useWorkspaceInspection } from "./workspace_inspection.js";
 import { WorkspaceInstances } from "./workspace_instances.js";
 import { WorkspaceProps } from "./workspace_props.js";
-import { selectedVariantId } from "./workspace_selection.js";
 import { WorkspaceStage } from "./workspace_stage.js";
 import { WorkspaceUsage } from "./workspace_usage.js";
 import { WorkspaceVariantBar } from "./workspace_variant_bar.js";
-import {
-  resolveWorkspaceView,
-  visibleWorkspaceViews,
-} from "./workspace_views.js";
+import { visibleWorkspaceViews } from "./workspace_views.js";
 import { selectedChangedViews } from "./workspace_views_data.js";
 
 /** Render a routed screen or component with its evidence and inspection tools. */
@@ -45,46 +41,27 @@ export function ComponentWorkspace({
 }) {
   const store = useOptionalShellStore();
   const workspaceRef = useRef<HTMLElement>(null);
-  const { data, refresh, request } = useWorkspaceData(
-    catalogue,
-    context,
-    entry,
-  );
-  const selection = selectedVariantId(
-    data,
-    store?.state.route.variantValues ?? store?.state.route.variant,
-  );
+  const workspace = useActiveWorkspace();
+  if (!workspace) throw new Error("The active workspace is unavailable.");
+  const { data, refresh, request, selection, resolvedView, presentation } =
+    workspace;
   const variant = selection.variant;
   const variantId = variant?.value.id;
   const changedViews = selectedChangedViews(
-    entry,
+    workspaceEvidenceEntry(data),
     data.changedViews,
     variantId,
   );
   const viewport = store?.state.selection.viewport ?? "both";
   const colorScheme = store?.state.selection.colorScheme ?? "light";
-  const resolvedView = useMemo(
-    () => resolveWorkspaceView(data, selection, viewport, colorScheme),
-    [
-      colorScheme,
-      data,
-      data.status,
-      data.views,
-      data.viewStates,
-      selection.comparisonEligible,
-      selection.error,
-      variant?.status,
-      variantId,
-      viewport,
-    ],
-  );
   const savedViews = resolvedView.views;
-  const [comparisonMode, setComparisonMode] =
-    useState<ComparisonMode>("current");
-  const [loadedComparison, setLoadedComparison] = useState<
-    LoadedComparison | undefined
-  >();
-  const comparing = comparisonMode !== "current";
+  const comparison = useComparison({
+    effectiveColorScheme: resolvedView.colorScheme,
+    eligible: Boolean(data.comparisons && presentation.comparisonEligible),
+    entryId: variantId ?? entry.id,
+    ...(data.component ? { owner: data.component.id } : {}),
+  });
+  const comparing = comparison.mode !== "current";
   const controls = useComponentControls({
     comparing,
     contexts: savedViews,
@@ -131,13 +108,11 @@ export function ComponentWorkspace({
   });
 
   useEffect(() => {
-    setComparisonMode("current");
-    setLoadedComparison(undefined);
     setActiveViewport(
       store?.state.route.viewport === "mobile" ? "mobile" : "desktop",
     );
     setSelectedKey(store?.state.route.instance);
-  }, [entry.route, store?.state.route.instance, store?.state.route.viewport]);
+  }, [entry.id, store?.state.route.instance, store?.state.route.viewport]);
 
   useEffect(() => {
     if (selectedKey && activeView?.usage && !selectedInstance)
@@ -173,15 +148,15 @@ export function ComponentWorkspace({
   const inspection = useWorkspaceInspection({
     comparisonActive: comparing,
     data,
-    invalidSelection: Boolean(
-      data.removed || selection.error || variant?.removed,
-    ),
+    invalidSelection: Boolean(data.removed || variant?.removed),
     onSelect: selectInstance,
     ...(selectedKey ? { selectedKey } : {}),
     views,
   });
   const target = { kind: "entry" as const, entry };
   const head = targetHead(catalogue, target);
+  const headStatus =
+    data.component?.id === entry.id ? data.status : presentation.status;
   const preview = data.removed
     ? removedPreviewData(catalogue, context, entry)
     : undefined;
@@ -193,7 +168,6 @@ export function ComponentWorkspace({
       previewViews={controls.previewViews}
       target={target}
       variantRemoved={variant?.removed ?? false}
-      {...(selection.error ? { error: selection.error } : {})}
       {...(variantId ? { variantId } : {})}
     />
   );
@@ -227,7 +201,7 @@ export function ComponentWorkspace({
         action={
           <WorkspaceControls
             changedViews={changedViews}
-            dark={catalogue.hasDarkFragments}
+            dark={Boolean(context.embedded) && catalogue.hasDarkFragments}
             effectiveColorScheme={resolvedView.colorScheme}
             highlight={highlight}
           />
@@ -238,43 +212,28 @@ export function ComponentWorkspace({
         status={
           <span
             className="mbk-entry-status"
-            data-status={resolvedView.status}
+            data-status={headStatus}
             data-workspace-status=""
-            hidden={!resolvedView.status}
+            hidden={!headStatus}
           >
-            {resolvedView.status}
+            {headStatus}
           </span>
         }
       />
-      <WorkspaceVariantBar
-        data={data}
-        onSelect={(value) => store?.selectVariant(value)}
-        {...(variant ? { variant } : {})}
-      />
-      <p
-        className="mbk-selection-error"
-        data-workspace-error=""
-        hidden={!selection.error}
-        role="status"
-      >
-        {selection.error}
-      </p>
+      <WorkspaceVariantBar data={data} {...(variant ? { variant } : {})} />
       <div className="mbk-workspace-panes">
         <div className="mbk-preview-pane" data-workspace-preview="">
           {preview ? (
             <RemovedPreviewStage data={preview} />
           ) : data.comparisons ? (
-            <DiffScreen
-              effectiveColorScheme={resolvedView.colorScheme}
-              component={entry.kind === "component"}
-              eligible={resolvedView.comparisonEligible}
-              onComparisonChange={setLoadedComparison}
-              onModeChange={setComparisonMode}
-              route={entry.route}
-              {...(variantId ? { variantId } : {})}
+            <ControlledDiffScreen
+              comparison={comparison}
+              entryId={variantId ?? entry.id}
+              entryKind={entry.kind}
+              eligible={presentation.comparisonEligible}
             >
               {stage}
-            </DiffScreen>
+            </ControlledDiffScreen>
           ) : (
             stage
           )}
@@ -303,14 +262,16 @@ export function ComponentWorkspace({
             details: (
               <WorkspaceEvidence
                 data={data}
-                {...(loadedComparison
-                  ? { loaded: loadedComparison.result }
+                {...(comparison.loaded
+                  ? { loaded: comparison.loaded.result }
                   : {})}
                 {...(variantId ? { variantId } : {})}
               />
             ),
             props: propsPanel,
-            usage: <WorkspaceUsage data={data} />,
+            usage: (
+              <WorkspaceUsage data={data} delivery={workspace.usageDelivery} />
+            ),
           }}
         />
       </div>

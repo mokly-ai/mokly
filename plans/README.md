@@ -9,23 +9,77 @@
   the approved directory rename avoids dot-path restrictions on static hosts.
   Milestone 9 defines the approved unified CSS/output layout, manifest v8,
   v8-only baseline policy, viewer namespace/version gates and independent lint
-  contracts, with an audited preservation list for all 11 mainline commits.
+  contracts, with an audited preservation list for the audited mainline commits, including #130 and #129.
   Milestone 10 implements the independent directory literal guard and corrects
   the source-root and fixed-name contracts. Its functional checks pass; the
   user accepted the sole braces audit failure for the pre-merge code checkpoint.
-  Main supplies the expiring audit exception, and the merged gate must pass.
-  Milestones 11–15 merge `main`, rename `__mokly/` to `mokly-viewer/`, finish
+  Main supplies the expiring audit exception; the merged full gate passes.
+  Milestone 11 merges main at `800fe9f8`, unifies output and preserves its features.
+  Milestones 12–15 rename `__mokly/` to `mokly-viewer/`, finish
   lint coverage, prepare the browser example baseline once in Milestone 14,
   then verify and review in Milestone 15. Correction 3 A selects v8-only
-  baselines; findings 32 B and 34 C are documented. Milestone 11 has not
-  started. Other findings await direction; Cloud rollout is a post-merge follow-up.
+  baselines; findings 32 B and 34 C are documented. Milestone 11 is complete. Other findings await direction; Cloud rollout is a post-merge follow-up.
+- [Delta Publishing](./delta-publishing.md) — replace the single-archive
+  `mokly publish` upload with the content-addressed plan, blob and complete
+  exchange, the schema 2 export ownership marker, v2 fixtures and guides for
+  the next minor release. Implemented, verified, pushed and reviewed; the
+  approved [review findings](../docs/reviews/delta-publishing.md) were fixed
+  in Milestones 7–13, second-review findings 1 and 2 in Milestones 14–17 and
+  the third-review findings in Milestones 18–22 and the fourth-review findings
+  in Milestones 23–27, and the remote-state cleanup script was removed in
+  Milestones 28–29, and the remote-branch lint was replaced by a workflow
+  guard in Milestones 30–31, and the guard's scanner moved into a test helper
+  in Milestones 32–33, and the browser shard that exceeded CI's job timeout was
+  rebalanced in Milestones 34–39, and main's navigation paths and derived
+  routes were merged in Milestones 40–41. The remaining open review
+  findings await the user's decision. The plan stays Active until its pull
+  request merges.
+- [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) — replace
+  collection entities and `childIds` with a Storybook-style `navPath` on
+  every leaf, derived from nested `folder` titles; manifest v6 and read
+  model v2. Milestones 1–12 are implemented, verified, pushed, and reviewed;
+  findings 1–16 are fixed, findings 17–21 await the user's decision, and the
+  plan stays Active until its PR merges.
+- [Path-Only Evidence Stays Out Of Changes](./changes-path-only-evidence.md)
+  — a changed file matched only by a shared-impact glob or a declared
+  dependency directory becomes comparison evidence instead of listing every
+  matching entry in Changes; owned paths and exact declared files keep their
+  reasons. Milestones 1–12 are complete on the navigation path plan's branch
+  and findings 3–8 are fixed; finding 2 moves to
+  [Configurable Changes Listing](./configurable-changes-listing.md), findings
+  9–11 await the user's decision, and the plan stays Active until PR #118
+  merges.
+- [Configurable Changes Listing](./configurable-changes-listing.md) — settings
+  under `review.changes` decide which invisible change kinds (component data,
+  component structure, declared files, shared files) list an entry in Changes;
+  all default to not listed, metadata stays listed, and every reason is still
+  recorded as evidence. Planned for a new PR after PR #118 merges; the
+  settings UI comes later.
+- [Comparison Pane Scroll Alignment](./comparison-pane-scroll-alignment.md)
+  — Overlay and Difference drift apart when scrolled because each snapshot
+  scrolls inside its own opaque frame; comparison panes become viewer-owned,
+  device-sized presentations driven by one shared chrome viewport
+  (Milestones 1 to 4, delivered), and
+  Milestones 5 to 7 mirror inner scroll regions such as app-shell panels and
+  add a "Scroll together" toggle; the contract (Milestone 5), mockups
+  (Milestone 6) and runtime (Milestone 7) are delivered. Implementation is
+  complete; move this plan to Completed when its implementation PR merges.
+- [Viewer Dark Mode](./viewer-dark-mode.md) — shared viewer appearance, one
+  standalone Auto/Light/Dark control for interface and previews, and
+  host-owned theme with independent previews when embedded. Dark neutrals align
+  with Mokly Cloud. Implementation is complete; move this plan to Completed when
+  its implementation PR merges.
 - [Release-Gated Node Compatibility](./release-gated-node-compatibility.md) —
   run the minimum supported runtime on ordinary changes and reserve the full
   Node 22.14/24 compatibility matrix for Release Please pull requests.
-- [Screen Variants Follow-up](./screen-variants-follow-up.md) — deferred
-  design-catalogue conversion, two open review findings, two delivered
-  view-resolution fixes, and later navigation ideas from PR #101;
-  implementation is in progress on a separate branch.
+- [Screen Variants Follow-up](./screen-variants-follow-up.md) — implementation
+  verified for the six-route design-catalogue conversion and five review
+  fixes from PR #101; pushed and reviewed in
+  [PR #115](https://github.com/mokly-ai/mokly/pull/115). The historical
+  snapshot-selection and mockup parity fixes are verified, pushed and
+  reviewed. Mainline Appearance integration is verified, pushed and reviewed.
+  The plan stays Active until merge. Later navigation ideas
+  remain non-blocking follow-ups.
 - [Co-Located Entry Discovery Follow-up](./co-located-entry-discovery-follow-up.md)
   — all deferred seventh/eighth-round findings, the latest entry-layout
   documentation finding, and the remaining follow-up tasks from PR #101;
@@ -57,9 +111,36 @@
   — publish consumes the release PR's validated CI evidence for the same
   tree instead of re-running the complete gate, with the complete gate as
   the fail-closed fallback.
+- [Route-Scoped Shell Bootstrap](./route-scoped-shell-bootstrap.md) — Serve
+  pages embed the catalogue index plus only their own entry's component usage
+  and serialise that state once. The public `catalogue.json` stays complete;
+  normalized non-client static content stays stable while viewer client changes
+  update deployment identity. Implementation is complete; move this plan to
+  Completed when its implementation PR merges.
+- [Id-Derived Routes, Unified Variants, And Identity-Keyed Wire](./id-derived-routes.md)
+  — identity is kind plus id: documents derive as `screens/<id>.html`,
+  `pages/<id>.html`, `user-flows/<id>.html`, and `components/<id>.html`;
+  authored `route`, `slug`, `segment`, and `path` go away; component
+  variants become entries with global ids like screen variants; the
+  manifest, read model, review result, and viewer indexes drop every
+  derivable path field and key on id; and the static export writes each
+  shell once without the `id/<id>/index.html` alias. No backwards
+  compatibility. Milestones 1–23 are implemented, verified, pushed, and
+  reviewed on `calummoore/halifax-v2`; the third follow-up review's 9 findings
+  await the user's decision, and the plan stays Active until its pull request
+  merges.
 
 ## Completed
 
+- [Imported CSS Delivery](./imported-css-delivery.md) — delivered in PR #125
+  (`ff376d7`): imported CSS, CSS Modules, binary assets and optional consumer
+  PostCSS ship through Build, Check, Serve, export, publication and Changes.
+  The plan Status lists each review round. The
+  [Milestone 47 review](../docs/reviews/imported-css-delivery-milestone-47.md)
+  findings were resolved after the merge in `ec04332`, and a generated-output
+  writer race found while testing them is fixed in `01d5924` and `da916c0`;
+  other unselected findings remain open in their review records for the
+  user's decision.
 - [Screen Variants](./screen-variants.md) — PR #101's delivered scope is
   complete: authoring, navigation, Changes, per-view evidence, and the approved
   review fixes. Unfinished work is owned by

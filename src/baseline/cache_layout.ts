@@ -2,10 +2,9 @@ import path from "node:path";
 
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
-import type { BaselineCatalogue } from "./catalogue.js";
 import { BaselineError } from "./errors.js";
 
-export const BASELINE_CACHE_PATH = ".mokly-cache/baselines";
+const BASELINE_CACHE_PATH = ".mokly-cache/baselines";
 export const DEFAULT_RETAINED_COUNT = 3;
 export const LOCK_TIMEOUT_MS = 120_000;
 export const LOCK_POLL_MS = 100;
@@ -17,9 +16,9 @@ export interface CompletionMarker {
   readonly commit: string;
   readonly finishedAt: string;
   readonly commands: readonly (readonly string[])[];
-  readonly manifestVersion: 2 | 3 | 4 | 5 | 6;
+  readonly manifestVersion: number;
   readonly historicalCatalogueRoot?: string;
-  readonly layout?: BaselineCatalogue["layout"];
+  readonly layout?: "generated-v8" | "generated-v6" | "legacy";
 }
 
 export interface CacheLayout {
@@ -91,13 +90,17 @@ export function parseCompletionMarker(
     typeof marker.finishedAt !== "string" ||
     !Number.isFinite(Date.parse(marker.finishedAt)) ||
     !validCommands(marker.commands) ||
-    ![2, 3, 4, 5, 6].includes(marker.manifestVersion ?? 0) ||
-    (marker.manifestVersion === 6 &&
-      (marker.layout !== "generated-v6" ||
+    !Number.isInteger(marker.manifestVersion) ||
+    (marker.manifestVersion as number) > 8 ||
+    (marker.manifestVersion === 8 &&
+      (marker.layout !== "generated-v8" ||
         !marker.historicalCatalogueRoot ||
         (marker.historicalCatalogueRoot !== "." &&
           !isSafeRepositoryPath(marker.historicalCatalogueRoot)))) ||
+    (marker.layout === "generated-v6" && !marker.historicalCatalogueRoot) ||
+    (marker.manifestVersion !== 8 && marker.layout === "generated-v8") ||
     (marker.layout !== undefined &&
+      marker.layout !== "generated-v8" &&
       marker.layout !== "generated-v6" &&
       marker.layout !== "legacy") ||
     (marker.historicalCatalogueRoot !== undefined &&

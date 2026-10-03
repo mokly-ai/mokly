@@ -210,7 +210,7 @@ test("view swaps, disposal, and absent inspector timeouts discard old work", asy
     )) as typeof PostAdapter;
     return postMessageAdapter({ frameOrigin: origin })
       .mount(document.querySelector<HTMLIFrameElement>("#frame")!, {
-        url: new URL("/static/silent.html", origin),
+        url: new URL("/static/mokly-generated/silent.html", origin),
         usage: { status: "unavailable" },
       })
       .then(

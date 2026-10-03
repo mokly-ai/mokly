@@ -5,6 +5,7 @@ import type { Page } from "@playwright/test";
 
 import { adaptBrowseDocument } from "../../dist/browse/document_adapter.js";
 import { compileCatalogue } from "../../dist/build/compile.js";
+import { generatedText } from "../../dist/build/generated_file.js";
 import { projectCatalogue } from "../../dist/catalogue/projection.js";
 import { loadConfig } from "../../dist/config/load.js";
 import {
@@ -17,6 +18,7 @@ import type {
 } from "../../packages/viewer/dist/client/frame_adapter.js";
 import type * as PostAdapter from "../../packages/viewer/dist/client/post_message_adapter.js";
 import type { ComponentViewRecord } from "../../packages/viewer/dist/components/manifest_types.js";
+import { viewRoute } from "../../packages/viewer/dist/data.js";
 import { createCatalogue } from "../../packages/viewer/dist/shell/catalogue.js";
 import { componentEntrySource } from "../helpers/component_fixture.js";
 import { createFixture, removeFixture } from "../helpers/fixture.js";
@@ -38,13 +40,23 @@ export async function crossOriginFixture(
   const fixture = await createFixture(
     componentEntrySource(
       options ?? {
-        body: '<action.Component label="Visible" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><action.Component moklyInstance="multiple" label="Multiple" disabled /><div style={{height:800}} /><div style={{height:100,overflow:"auto"}}><div style={{height:200}}/><action.Component moklyInstance="scroll" label="Scroll" /></div><MockLink to="action">Open Action</MockLink><a href="./home.mobile.html?handoff=exact" id="exact-resource-link">Open exact next document</a>',
+        body: '<action.Component label="Visible" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><action.Component moklyInstance="multiple" label="Multiple" disabled /><div style={{height:800}} /><div style={{height:100,overflow:"auto"}}><div style={{height:200}}/><action.Component moklyInstance="scroll" label="Scroll" /></div><MockLink to="action">Open Action</MockLink><a href="../../unowned.html" id="unowned-link">Open unowned document</a><a href="./home.mobile.html?handoff=exact" id="exact-resource-link">Open exact next document</a>',
         actionRender:
           "(props) => props.hidden ? null : props.disabled ? <><span>First root</span> Text root <strong>Last root</strong></> : <button style={{width:160,height:40}}>{props.label}</button>",
       },
     ),
     { extraConfig },
   );
+  await Promise.all([
+    fs.writeFile(
+      path.join(fixture.mockupsDir, "unowned.html"),
+      unownedDocument,
+    ),
+    fs.writeFile(
+      path.join(fixture.mockupsDir, "silent.html"),
+      "<!doctype html><p>No inspector</p>",
+    ),
+  ]);
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
   const catalogue = createCatalogue(compilation.manifest);
   const root = path.join(fixture.root, "site");
@@ -54,22 +66,19 @@ export async function crossOriginFixture(
       "index.html",
       '<!doctype html><body><iframe id="frame" style="width:390px;height:300px;border:0"></iframe></body>',
     ],
-    ["static/silent.html", "<!doctype html><p>No inspector</p>"],
+    [
+      "static/mokly-generated/silent.html",
+      "<!doctype html><p>No inspector</p>",
+    ],
   ]);
   for (const [name, bytes] of compilation.outputs)
-    if (name.endsWith(".html")) {
-      const adapted = adaptBrowseDocument(bytes, name, catalogue);
+    if (name.endsWith(".html"))
       files.set(
         `static/mokly-generated/${name}`,
-        name.startsWith("screens/home.")
-          ? adapted.replace(
-              "</body>",
-              '<a href="../../unowned.html" id="unowned-link">Open unowned document</a></body>',
-            )
-          : adapted,
+        adaptBrowseDocument(generatedText(bytes, name)!, name, catalogue),
       );
-    }
   files.set("static/unowned.html", unownedDocument);
+  files.set("static/silent.html", "<!doctype html><p>No inspector</p>");
   for (const [name, bytes] of loadBrowserClientModules())
     files.set(`__mokly/client/${name}`, bytes);
   for (const [name, bytes] of loadBrowserNavigationModules())
@@ -84,12 +93,13 @@ export async function crossOriginFixture(
     (entry) => entry.kind === "screen" && entry.id === "home",
   );
   if (home?.kind !== "screen") throw new Error("No fixture screen");
+  const mobileView = viewRoute("screen", home.id, "mobile", "light");
   const renderId = `${"a".repeat(48)}.${"b".repeat(64)}`;
-  const temporaryPath = `/__mokly/components/renders/${renderId}/${home.fragments.mobile}`;
+  const temporaryPath = `/__mokly/components/renders/${renderId}/mokly-generated/${mobileView}`;
   const temporaryFile = path.join(root, temporaryPath.slice(1));
   await fs.mkdir(path.dirname(temporaryFile), { recursive: true });
   await fs.copyFile(
-    path.join(root, "static/mokly-generated", home.fragments.mobile),
+    path.join(root, "static", "mokly-generated", mobileView),
     temporaryFile,
   );
   const usage = home.componentViews![0]!;

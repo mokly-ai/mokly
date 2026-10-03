@@ -1,14 +1,14 @@
-import type { ReviewResultV3 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV4 } from "../../packages/viewer/dist/review/component_types.js";
 import type { ViewReview } from "../../packages/viewer/dist/review/types.js";
 import type { ScreenViewChanges } from "../../packages/viewer/dist/shell/metadata.js";
 
-const HOME = "screens/home.html";
+const HOME = "home";
 
 /** Only Home's dark renders differ; every light view stays unchanged. */
 export function darkOnlyScreenViews(): readonly ScreenViewChanges[] {
   return [
     {
-      route: HOME,
+      id: HOME,
       views: [
         { viewport: "mobile", colorScheme: "light", state: "unchanged" },
         { viewport: "mobile", colorScheme: "dark", state: "changed" },
@@ -17,7 +17,7 @@ export function darkOnlyScreenViews(): readonly ScreenViewChanges[] {
       ],
     },
     {
-      route: "screens/details.html",
+      id: "details",
       views: [
         { viewport: "mobile", colorScheme: "light", state: "unchanged" },
         { viewport: "mobile", colorScheme: "dark", state: "unchanged" },
@@ -40,7 +40,7 @@ function variantViews(changed: boolean): readonly ViewReview[] {
 }
 
 /** Component comparison where only the second saved variant changed in dark. */
-export function secondVariantDarkOnlyResult(): ReviewResultV3 {
+export function secondVariantDarkOnlyResult(): ReviewResultV4 {
   return {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
@@ -49,21 +49,46 @@ export function secondVariantDarkOnlyResult(): ReviewResultV3 {
     changes: [],
     components: [
       {
+        after: { id: "action", title: "Action" },
+        before: { id: "action", title: "Action" },
         dependencies: [],
         id: "action",
-        route: "components/action.html",
         sharedImpact: [],
         state: "changed",
         title: "Action",
         variants: [
           {
-            id: "default",
+            after: {
+              id: "action-default",
+              title: "Default",
+              props: {},
+              suppliedSlots: [],
+            },
+            before: {
+              id: "action-default",
+              title: "Default",
+              props: {},
+              suppliedSlots: [],
+            },
+            id: "action-default",
             state: "unchanged",
             title: "Default",
             views: variantViews(false),
           },
           {
-            id: "disabled",
+            after: {
+              id: "action-disabled",
+              title: "Disabled",
+              props: {},
+              suppliedSlots: [],
+            },
+            before: {
+              id: "action-disabled",
+              title: "Disabled",
+              props: {},
+              suppliedSlots: [],
+            },
+            id: "action-disabled",
             state: "changed",
             title: "Disabled",
             views: variantViews(true),
@@ -72,7 +97,7 @@ export function secondVariantDarkOnlyResult(): ReviewResultV3 {
       },
     ],
     ignoredImpact: [],
-    schemaVersion: 3,
+    schemaVersion: 4,
     screens: [],
     sharedImpact: [],
   };

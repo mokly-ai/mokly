@@ -47,14 +47,15 @@ export function ScreenPage({
         action={
           <ViewControls
             viewport={viewport}
-            schemeDisabled={removed}
             highlight={{
               active: highlighting,
               unavailable: removed
                 ? "removed"
-                : state === "unavailable" || state === "empty"
-                  ? state
-                  : undefined,
+                : state === "inspection-loading"
+                  ? "loading"
+                  : state === "unavailable" || state === "empty"
+                    ? state
+                    : undefined,
             }}
           />
         }

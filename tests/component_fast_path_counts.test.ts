@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  generatedBytes,
+  type GeneratedFile,
+} from "../dist/build/generated_file.js";
+import {
   runWithTimings,
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
@@ -10,59 +14,60 @@ import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
-test("zero-change classification discovers each required side once", async (t) => {
-  const fixture = await componentReviewFixture(t, (source) => source);
-  const events: TimingEvent[] = [];
-  const reader = (outputs: ReadonlyMap<string, string>) => ({
-    read: async (route: string) => {
-      const content = outputs.get(route);
-      assert.notEqual(content, undefined, route);
-      return Buffer.from(content!);
-    },
-  });
-  await runWithTimings(
-    true,
-    "test",
-    () =>
-      classifyComponents({
-        before: fixture.before.manifest,
-        after: fixture.after.manifest,
-        beforeReader: reader(fixture.before.outputs),
-        afterReader: reader(fixture.after.outputs),
-        config: fixture.config,
-        changedPaths: [],
-        baseCommit: "a".repeat(40),
-        baseRef: "main",
-      }),
-    { write: (event) => events.push(event) },
-  );
-  const views = fixture.after.manifest.entries.reduce(
-    (count, entry) => count + generatedViews(entry).length,
-    0,
-  );
-  const projectedViews = fixture.after.manifest.entries
-    .flatMap((entry) => generatedViews(entry))
-    .filter((view) =>
-      view.usage
-        ? view.usage.instances.length > 0 ||
-          view.usage.styles.length > 0 ||
-          view.usage.slots.some((slot) => slot.owner.kind === "entry")
-        : false,
-    ).length;
-  const counts = events.find(
-    (event) =>
-      event.stage === "review.compare-screens" && event.event === "counts",
-  );
-  assert.deepEqual(counts?.counts, {
-    views,
-    fastPath: views,
-    completePath: 0,
-  });
-  assert.equal(
-    events.filter(
+for (const evidenceKind of ["git", "bytes"] as const)
+  test(`zero-change ${evidenceKind} classification discovers each required side once`, async (t) => {
+    const fixture = await componentReviewFixture(t, (source) => source);
+    const events: TimingEvent[] = [];
+    const reader = (outputs: ReadonlyMap<string, GeneratedFile>) => ({
+      read: async (route: string) => {
+        const content = outputs.get(route.replace(/^mokly-generated\//, ""));
+        assert.notEqual(content, undefined, route);
+        return generatedBytes(content!);
+      },
+    });
+    await runWithTimings(
+      true,
+      "test",
+      () =>
+        classifyComponents({
+          before: fixture.before.manifest,
+          after: fixture.after.manifest,
+          beforeReader: reader(fixture.before.outputs),
+          afterReader: reader(fixture.after.outputs),
+          config: fixture.config,
+          changedPaths: [],
+          baseCommit: "a".repeat(40),
+          baseRef: "main",
+        }),
+      { write: (event) => events.push(event) },
+    );
+    const views = fixture.after.manifest.entries.reduce(
+      (count, entry) => count + generatedViews(entry).length,
+      0,
+    );
+    const projectedViews = fixture.after.manifest.entries
+      .flatMap((entry) => generatedViews(entry))
+      .filter((view) =>
+        view.usage
+          ? view.usage.instances.length > 0 ||
+            view.usage.styles.length > 0 ||
+            view.usage.slots.some((slot) => slot.owner.kind === "entry")
+          : false,
+      ).length;
+    const counts = events.find(
       (event) =>
-        event.stage === "review.resource-graph" && event.event === "start",
-    ).length,
-    (views + projectedViews) * 2,
-  );
-});
+        event.stage === "review.compare-screens" && event.event === "counts",
+    );
+    assert.deepEqual(counts?.counts, {
+      views,
+      fastPath: views,
+      completePath: 0,
+    });
+    assert.equal(
+      events.filter(
+        (event) =>
+          event.stage === "review.resource-graph" && event.event === "start",
+      ).length,
+      (views + projectedViews) * 2,
+    );
+  });

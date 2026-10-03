@@ -95,6 +95,7 @@ test("every named authoring concept retains its guide", () => {
       "pages",
       "links",
       "review-ignore",
+      "styles",
     ],
   );
 });

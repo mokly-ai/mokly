@@ -35,7 +35,9 @@ collaboration UI.
 
 - **A complete catalogue experience.** Render pages, screens, component
   variants and user flows with search, tags, responsive previews, color
-  schemes, Changes filtering and inspection.
+  schemes, Changes filtering, inspection, and Overlay, Difference and Side by
+  side comparisons whose pages and paired scrolling panels move together by
+  default, with a reader-controlled Scroll together switch.
 - **Designed to be embedded.** Connect the viewer to application state through
   controlled selection, typed events, host-owned slots and an imperative ref.
 - **Component-aware collaboration.** Resolve saved component references,
@@ -159,6 +161,13 @@ or frame adapter intentionally remounts the viewer and cancels pending work.
 
 ### Selection
 
+`screenId` names one catalogue entry. Screen and component variants use their
+own global entry IDs, just like parents, pages and flows; there is no separate
+variant selection field. The component variant bar navigates between those
+entry IDs, so controlled hosts receive ordinary `screenId` proposals. A
+component variant page keeps the parent component title as its heading while
+the ID chip, status, URL, and Details describe the selected variant entry.
+
 Use `defaultSelection` for an uncontrolled viewer:
 
 ```tsx
@@ -194,12 +203,24 @@ Controlled changes are proposals until the host passes the new selection back.
 Do not provide `defaultSelection` in controlled mode, and remount the viewer if
 you need to change modes.
 
+Removed entries advertise an optional opaque `snapshotId`. Supply it with the
+stable `screenId` to select that exact historical record. The viewer carries it
+through controlled proposals, navigation events and axis/filter changes. An
+id-only selection of a removed record normalizes to its published identity;
+stale or unknown snapshots render unavailable. Readers reject a catalogue in
+which current and removed records share an id. Live evidence may update an
+explicit snapshot in place and makes a replaced identity unavailable.
+
+Shell links may name `viewport` and `scheme` independently. Exactly one valid
+value for an axis applies in the same selection proposal; invalid or repeated
+values retain that sticky axis.
+
 The selected color scheme remains host-visible even when the chosen screen or
-saved variant has only a Light render. In that case the preview keeps the Dark
-selection and Light-only label, while status, change marks, and comparisons use
-the effective Light view. If ready evidence does not cover every shown view,
-the Viewer preserves the selected entry or variant's published status and
-comparison eligibility independently.
+component variant has only a Light render. In that case the preview keeps the
+Dark selection and Light-only label, while status, change marks, and
+comparisons use the effective Light view. If ready evidence does not cover
+every shown view, the Viewer preserves the selected entry's published status
+and comparison eligibility independently.
 
 ### Host integration
 
@@ -221,11 +242,18 @@ frame sessions.
 
 ### Component instance references
 
-Instance events return an `InstanceRef` scoped to a screen, saved variant or
-flow step, viewport, color scheme and stable component key. Persist that value
-to reconnect external data such as a review comment. `resolveInstance` compares
-a saved component record with its corresponding current record from a newer
-catalogue without fetching preview evidence.
+Instance events return an `InstanceRef` scoped to a screen, component variant
+or flow step, viewport, color scheme and stable component key. Persist that
+value to reconnect external data such as a review comment. `resolveInstance`
+compares a saved component record with its corresponding current record from a
+newer catalogue without fetching preview evidence.
+
+`InstanceRef.screenId` is the owning entry's id, including for a component
+variant; the shape has no `variantId`. `onScreenNavigate` reports
+`{ screenId, snapshotId?, fragment?, navigation? }`, with no route or variant
+id. Under the [viewer event contract](../../docs/protocol/mokly-viewer.md#package-and-props),
+`snapshotId` is present when the committed historical record publishes an
+opaque identity and is absent when that record has no published identity.
 
 Markers accept unique IDs, exact instance references and React content. Marker
 content is pointer-inert by default; opt an interactive child in with
@@ -242,6 +270,7 @@ exposed as a host API.
 | `catalogue`                          | Catalogue object, absolute URL or fetcher                                                                         |
 | `baseUrl`                            | Required artifact origin for an object source only                                                                |
 | `frameAdapter`                       | Preview transport; defaults to `sameOriginAdapter()`                                                              |
+| `theme`                              | Interface appearance, independent of preview selection; defaults to `"auto"`                                      |
 | `defaultSelection`                   | Partial initial selection for uncontrolled mode                                                                   |
 | `selection`                          | Complete host-owned `ViewerSelection`                                                                             |
 | `onSelectionChange`                  | Receives viewer selection proposals                                                                               |
@@ -282,11 +311,23 @@ cancellation and evidence-refresh behavior are defined in the
 | `@mokly/viewer/server`     | Node-only synchronous rendering and full-document server helpers                      |
 | `@mokly/viewer/browser`    | Side-effectful hydration entry for Mokly's standalone documents                       |
 | `@mokly/viewer/data`       | Pure catalogue, component and comparison value contracts for tooling                  |
-| `@mokly/viewer/runtime`    | Browser-safe standalone and live-host integration primitives                          |
+| `@mokly/viewer/runtime`    | Browser-safe standalone, entry-scoped bootstrap and live-host integration primitives  |
 
 React applications normally need only the root entry and stylesheet. Do not
 import `@mokly/viewer/browser` in an application-owned React root; it
 automatically hydrates a matching standalone Mokly document.
+
+`@mokly/viewer/data` also exports the shared path helpers `entryRoute`,
+`viewRoute`, `viewHref`, `snapshotViewPath`, `snapshotPagePath`, and
+`pagePreviewMetadataPath`, plus `snapshotSidePath` and `snapshotResourcePath`
+for snapshot roots and their confined resources. `parseViewHref` reads
+canonical and provider-normalized `/view/` paths back into identity;
+`providerNormalizedHtmlPath` and `unavailableViewHref` own the browser forms.
+The complete naming contract is
+[identity-derived artifact paths](../../docs/protocol/mokly-artifact-paths.md).
+`isEntryId` adds portable Windows filename rules
+to the broader `isCatalogueId` grammar used by tags and logical links;
+`isWindowsDeviceName` exposes that filename check directly.
 
 ## Server Rendering
 
@@ -309,9 +350,80 @@ export function catalogueHtml(json: unknown, artifactOrigin: string) {
 
 Server rendering is synchronous and object-only. Hydrate with `MoklyViewer`
 using the same `viewerId`, catalogue, base URL, initial selection and slots so
-the first client render matches the server output.
+the first client render matches the server output. Pass the same `theme` as
+well. For first-party full-document rendering, an explicit `renderViewer`
+theme overrides the host context; omitting it preserves that context value.
+
+Standalone documents load `appearance-startup.js` before styles to apply stored,
+URL-pinned or automatic appearance for first paint. Hydration adopts that state,
+including a Dark interface around Light-only previews. A reader's choice wins
+over later URL pins during navigation and Back/Forward. Missing startup assets
+leave Appearance hidden; back/forward-cache restoration retains and refreshes
+the controller. Final disposal removes both system and selector listeners.
+Serve loads live capabilities separately; static navigation reads inert
+workspace evidence from the same finalized deployment.
+
+Serve's inline shell bootstrap keeps the complete navigation/index model but
+retains usage only for that entry's derived scope; other views use the
+runtime-only `omitted` state. The matching private capability descriptor
+supplies complete cross-route Usage. Static pages keep their compact external
+reference and resolve the complete shared `catalogue.json`. The public `readCatalogue`
+boundary accepts only that complete v4 model and rejects `omitted`.
+
+The runtime subpath exposes `projectScopedCatalogue`, the
+`ShellCatalogueUsage`/`ShellCatalogueReadModel` types and the strict
+`readScopedShellBootstrap` boundary. Browser hydration and live evidence use
+the centralized `readLiveShellBootstrap` boundary, which accepts only exact
+entry scope and rejects complete or partial live payloads. Its state reader
+also accepts the unchanged external reference used by finalized static pages.
+Serve's private `react-host.js` imports the same type-checked `react-shell.js`
+entry that finalized pages load directly. That one bundle handles strict live
+scope and the external static reference; viewer changes may change its bytes
+and therefore the finalized deployment identity.
+
+Full-document rendering serializes each bootstrap and capability descriptor
+once. Hydration reuses the exact embedded text across later React renders;
+canonical parse/validation plus serialization is tested to reproduce those
+bytes. See the
+[standalone bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md).
+
+### Standalone reader preferences
+
+Serve and export keep these origin-local preferences in `localStorage`:
+
+| Key                                | Choice                            |
+| ---------------------------------- | --------------------------------- |
+| `mokly:theme`                      | Explicit Light or Dark appearance |
+| `mokly:nav-disclosure:v3`          | Open catalogue groups             |
+| `mokly:details-disclosure`         | Details open or closed            |
+| `mokly:navigation-width:v1`        | Navigation split width            |
+| `mokly:comparison-scroll-together` | `on` or `off`; missing means on   |
+
+Scroll together appears after the comparison modes in Side by side, Overlay,
+and Difference. It updates the open comparison without reloading panes. An
+embedded `MoklyViewer` never reads this storage key; it keeps the choice only
+for the lifetime of that mounted viewer. The
+[region pairing](../../docs/protocol/mokly-comparison-region-pairing.md) and
+[Scroll together](../../docs/protocol/mokly-comparison-scroll-together.md)
+contracts define panel pairing, per-mode behavior, and re-alignment.
 
 ## Theming
+
+`theme` accepts `"auto"`, `"light"` or `"dark"`. Auto is the default and follows
+system preference. It is independent of `selection.colorScheme`, so hosts can
+pair either interface appearance with either preview scheme. Theme updates
+preserve frame sessions, selection, temporary props, picking, highlights and
+markers, without changing the host document or sibling viewers.
+
+Standalone Serve/export instead expose one Appearance selector for interface
+and previews together. Its change indicator names changed views in another
+scheme; embedded viewers retain their independent preview control. See the
+[appearance contract](../../docs/protocol/mokly-viewer-appearance.md) and
+[semantic palette](../../docs/protocol/mokly-viewer-palette.md).
+
+Dark uses Mokly Cloud's warm Folio neutrals for backgrounds, panels, text and
+borders, with sage accents. The palette is packaged locally and preserves the
+colors authored inside each preview.
 
 Import the packaged stylesheet once, then override the supported custom
 properties on a containing element:
@@ -324,8 +436,11 @@ properties on a containing element:
 }
 ```
 
-Maintain readable contrast between the accent and its contrast color. Viewer
-styles are scoped away from the surrounding application and host slot content.
+Maintain readable contrast in both appearances. Unset overrides use the current
+semantic palette defaults; fonts are packaged locally. These properties tune
+the viewer's accent only; the Mokly logo in the top bar keeps its brand colors
+in each appearance. Viewer styles are scoped away from the surrounding
+application and host slot content.
 Internal selectors, DOM structure, geometry and other custom properties are not
 extension APIs.
 
@@ -346,10 +461,13 @@ guessing from the host. See the [generated delivery contract](../../docs/protoco
   `sameOriginAdapter()` explicitly.
 - **Cross origin:** configure `postMessageAdapter` with the artifact's exact,
   nonopaque origin. Allow the embedding application's exact origin with CORS on
-  every advertised catalogue, preview, font, stylesheet, client and historical
-  comparison resource. Wildcard CORS and credentialed requests are not used.
-- **Content Security Policy:** removed historical documents are fetched and
-  rendered in script-disabled `srcdoc` frames at the host origin. Restrictive
+  every advertised catalogue, preview, font, stylesheet, client and comparison
+  generation resource, including the snapshot HTML the viewer fetches for
+  removed previews and comparison panes. Wildcard CORS and credentialed
+  requests are not used.
+- **Content Security Policy:** removed historical documents and comparison pane
+  documents are fetched and rendered in script-disabled `srcdoc` frames at the
+  host origin. Restrictive
   policies must allow the artifact origin for the documented resource types and
   permit their generated inline styles; this does not grant script execution.
 - **Isolation:** the cross-origin adapter pins both origins and a per-session
@@ -363,8 +481,9 @@ complete path, header, sandbox and CSP requirements.
 
 `@mokly/viewer` owns the validated catalogue reader, Browse presentation,
 selection model, navigation, inspection, instance resolution and frame
-adapters. It makes no analytics or discovery requests and does not use ambient
-credentials.
+adapters. Its runtime subpath owns strict entry-scoped bootstrap validation
+without extending the public catalogue type. It makes no analytics or
+discovery requests and does not use ambient credentials.
 
 The embedding application owns catalogue delivery, authentication, its URL and
 route mapping, surrounding product UI, slot content, markers and collaboration
@@ -393,8 +512,36 @@ consumers.
 - [`src/viewer`](./src/viewer) — React lifecycle, selection, host integration
   and instance operations
 - [`src/shell`](./src/shell) — shared catalogue shell and scoped styles
+- [`src/registry/nav_paths.ts`](./src/registry/nav_paths.ts) and [`src/registry/hierarchy_conflicts.ts`](./src/registry/hierarchy_conflicts.ts) — shared folder keys, labels, sibling order and source-attributed path conflicts
 - [`src/client`](./src/client) — frame adapters, transport and geometry
 - [`src/catalogue`](./src/catalogue) — public catalogue types and validation
+- [`src/navigation/routes.ts`](./src/navigation/routes.ts) — shared entry,
+  view, snapshot, preview, shell-URL, and browser-path derivation
+- [`src/review/order.ts`](./src/review/order.ts) — canonical affected-consumer
+  ordering shared by review producers and readers
+- [`src/shell/workspace_entry.ts`](./src/shell/workspace_entry.ts) and
+  [`src/shell/workspace_variants.ts`](./src/shell/workspace_variants.ts) —
+  routed workspace identity and sibling component-variant entries
+- [`src/shell/use_comparison.ts`](./src/shell/use_comparison.ts),
+  [`src/shell/comparison_presentation.ts`](./src/shell/comparison_presentation.ts), and
+  [`src/shell/diffs.tsx`](./src/shell/diffs.tsx) — the single comparison-mode
+  owner, request identity, and current/comparison presentation
+- [`src/shell/store_browser_actions.ts`](./src/shell/store_browser_actions.ts)
+  and [`src/shell/store_browser_urls.ts`](./src/shell/store_browser_urls.ts) —
+  standalone DOM actions and provider-normalized URL policy
+- [`src/shell/workspace_data.ts`](./src/shell/workspace_data.ts) and
+  [`src/shell/workspace_usage_data.ts`](./src/shell/workspace_usage_data.ts) —
+  routed workspace data and its usage/affected-consumer projection
+- [`src/shell/store_host.ts`](./src/shell/store_host.ts) and
+  [`src/shell/store_host_routes.ts`](./src/shell/store_host_routes.ts) —
+  controlled and uncontrolled selection commits, frame-link misses, and
+  navigation events
+- [`src/shell/frame_instances.ts`](./src/shell/frame_instances.ts) — exact
+  documented `InstanceRef` matching against mounted preview frames
+- [`src/standalone/bootstrap.ts`](./src/standalone/bootstrap.ts),
+  [`src/standalone/bootstrap_types.ts`](./src/standalone/bootstrap_types.ts), and
+  [`src/standalone/bootstrap_validation.ts`](./src/standalone/bootstrap_validation.ts)
+  — standalone hydration projection, wire shape, and validation
 - [`src/inspector`](./src/inspector) — bounded in-frame inspection runtime
 - [`tests`](./tests) — package-level conformance tests
 
@@ -404,6 +551,7 @@ consumers.
 - [Markers and multi-instance highlights](../../docs/protocol/mokly-viewer-markers.md)
 - [Catalogue read model](../../docs/protocol/mokly-catalogue.md)
 - [Generated document delivery](../../docs/protocol/mokly-generated-delivery.md)
+- [Standalone shell bootstrap](../../docs/protocol/mokly-shell-bootstrap.md)
 - [Frame adapter protocol](../../docs/protocol/mokly-frame-adapter.md)
 - [Component instance identity](../../docs/protocol/mokly-instances.md)
 - [Package ownership boundary](../../docs/architecture/package-boundary.md)

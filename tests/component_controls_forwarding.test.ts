@@ -73,7 +73,7 @@ test("active controls enforce loopback Host admission on ordinary catalogue rout
   for (const route of [
     "/",
     "/view/components/action.html",
-    "/static/mokly-generated/components/action.variants/default.mobile.html",
+    "/static/mokly-generated/components/action-default.mobile.html",
   ]) {
     assert.equal(
       (
@@ -113,7 +113,7 @@ test("forwarded controls preserve POST authority and preview access rules", asyn
   assert.ok(renderCapability);
   const body = JSON.stringify({
     componentId: "action",
-    variantId: "default",
+    variantId: "action-default",
     viewport: "desktop",
     colorScheme: "light",
     generation: renderCapability.generation,

@@ -12,6 +12,7 @@ import { MANIFEST_NAME } from "../dist/registry/manifest.js";
 import { GitProcessError } from "../dist/review/git_process.js";
 
 import { derivedFixture } from "./helpers/derived_fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("derived check accepts missing or stale local output and tracked authored public files", async (t) => {
   const fixture = await derivedFixture(t, undefined, {
@@ -96,7 +97,7 @@ test("check rejects indexed stray output but ignores indexed authored files", as
   const guide = "mockups/guide.html";
   await fs.writeFile(
     path.join(fixture.root, guide),
-    `<!doctype html>\n${fixture.baseline.outputs.get("screens/home.mobile.html")}`,
+    `<!doctype html>\n${textOutput(fixture.baseline.outputs, "screens/home.mobile.html")}`,
   );
   await fixture.git("add", "-f", "--", guide);
   await fs.rm(path.join(fixture.root, guide));

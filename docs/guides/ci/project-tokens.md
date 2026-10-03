@@ -8,8 +8,9 @@ order: 3
 ## One token per publishing job
 
 Publishing presents a bearer token to the endpoint you name. The token is read
-from `MOKLY_TOKEN` or from `--token`, and it is sent in the request's
-`Authorization` header and nowhere else.
+from `MOKLY_TOKEN` or from `--token`, and it is sent in the `Authorization`
+header of every upload request, only to the endpoint's own origin, and
+nowhere else.
 
 ## Where to keep it
 

@@ -2,13 +2,10 @@
 
 ## Delivery Status
 
-Approved Milestone 11 target in
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
-Correction 3 option A permits only v8 baselines. The current branch still
-implements v6; this document specifies the merge behavior without changing code.
-Keep per-commit selection, rebuilds and `preparing`; apply the
-[v8 version gate](./mokly-generated-manifest.md) before creating a reader.
-Only `check` inspects head Git index tracking.
+Only v8 baselines are readable. Per-commit selection, rebuilds and `preparing`
+apply the [v8 version gate](./mokly-generated-manifest.md) before creating a reader.
+Only `check` inspects head Git index tracking. Implementation and verification
+are tracked by [Generated Output Simplification](../../plans/generated-output-simplification.md).
 
 ## Purpose And Configuration
 

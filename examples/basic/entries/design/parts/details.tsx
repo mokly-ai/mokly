@@ -17,7 +17,7 @@ function DetailsBody({
   subject,
 }: {
   activeTag?: string | undefined;
-  changedViews?: string | undefined;
+  changedViews?: ReactNode;
   subject: ScreenSubject;
 }) {
   const metadata = SUBJECTS[subject];
@@ -33,9 +33,6 @@ function DetailsBody({
       <div className="mbk-meta">
         <MetaRow name="source" label="Source">
           <code className="mbk-code">{metadata.source}</code>
-        </MetaRow>
-        <MetaRow name="generated" label="Generated">
-          <code className="mbk-code">{metadata.generated}</code>
         </MetaRow>
         <MetaRow name="schemes" label="Schemes">
           {metadata.schemes}
@@ -75,7 +72,7 @@ type DetailsPanelProps = {
   /** Tag drawn as the selected chip because it is the current search term. */
   activeTag?: string | undefined;
   /** Views whose render changed, listed when the change misses the shown one. */
-  changedViews?: string | undefined;
+  changedViews?: ReactNode;
   open?: boolean;
   comparisonEvidence?: ReactNode;
 } & (

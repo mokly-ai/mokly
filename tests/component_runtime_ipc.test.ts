@@ -3,6 +3,8 @@ import test from "node:test";
 
 import { receiveComponentRuntimeStartup } from "../dist/server/controls/runtime_ipc.js";
 
+import { currentManifest } from "./helpers/current_manifest.js";
+
 function startup(generatedDir: unknown): object {
   return {
     type: "component-runtime-startup",
@@ -13,7 +15,11 @@ function startup(generatedDir: unknown): object {
       generatedDir,
       repoRoot: "/repo",
     },
-    manifest: { entries: [], schemaVersion: 6, sourceFiles: [] },
+    manifest: currentManifest({
+      entries: [],
+      schemaVersion: 8,
+      sourceFiles: [],
+    }),
   };
 }
 

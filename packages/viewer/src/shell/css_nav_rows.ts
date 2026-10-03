@@ -18,13 +18,12 @@ export const CSS_NAV_ROWS = `.mbk-body {
 }
 
 .mbk-nav {
-  --mbk-guide: #dbded8;
   position: relative;
   display: flex;
   flex-direction: column;
   width: var(--mbk-nav-width, 248px);
   flex-shrink: 0;
-  background: #fbfbfa;
+  background: var(--chrome-raised);
   border-right: 1px solid var(--chrome-border);
   overflow: visible;
 }
@@ -83,13 +82,13 @@ export const CSS_NAV_ROWS = `.mbk-body {
 .mbk-nav-filter-opt[aria-pressed="true"] {
   background: var(--chrome-surface);
   color: var(--chrome-ink);
-  box-shadow: 0 1px 2px rgba(20, 28, 22, 0.1);
+  box-shadow: var(--chrome-shadow-soft);
 }
 
 .mbk-nav-filter-count {
   margin-left: 6px;
   border-radius: 999px;
-  background: rgba(20, 28, 22, 0.08);
+  background: var(--chrome-count-bg);
   color: var(--chrome-ink-2);
   font-family: var(--mono);
   font-size: 10px;

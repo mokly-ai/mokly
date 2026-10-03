@@ -7,29 +7,17 @@ import type {
   ReviewResult,
 } from "@mokly/viewer/data";
 
-import {
-  validateArtifactResources,
-  type ArtifactLayouts,
-} from "./artifact_resources.js";
+import { addArtifactFile } from "./artifact_files.js";
+import { validateArtifactResources } from "./artifact_resources.js";
 import { markdownCode, markdownText } from "./markdown.js";
 import { hasOutputChange, isImpactOnly } from "./materiality.js";
-import { addArtifactFile } from "./paths.js";
 
 /** Add comparison metadata to isolated snapshot files. */
 export function renderReviewArtifact(
-  artifact: ReviewArtifact & { readonly generatedLayouts?: ArtifactLayouts },
+  artifact: ReviewArtifact,
 ): ReadonlyMap<string, ReviewArtifactContent> {
-  if (
-    artifact.result.schemaVersion === 3 ||
-    artifact.result.screens.some((screen) =>
-      screen.views.some(
-        (view) =>
-          view.material !== undefined || view.reasons || view.excludedResources,
-      ),
-    )
-  )
-    parseReviewResult(artifact.result);
-  validateArtifactResources(artifact, artifact.generatedLayouts);
+  parseReviewResult(artifact.result);
+  validateArtifactResources(artifact);
   const files = new Map(artifact.files);
   addArtifactFile(
     files,
@@ -47,15 +35,6 @@ export function renderReviewArtifact(
 
 /** Create a concise deterministic CI summary. */
 export function summaryMarkdown(result: ReviewResult): string {
-  if (result.schemaVersion === 3)
-    return `## Mokly Review
-
-Base: ${markdownCode(result.baseRef)} (${markdownCode(result.baseCommit.slice(0, 12))})
-
-Changes: ${result.changes.length}; screens: ${result.screens.length}; components: ${result.components.length}; affected consumers: ${result.affectedConsumers.length}.
-
-${result.changes.map((change) => `- ${change.kind}: ${markdownText((change.after ?? change.before)!.title)} (${change.reasons.map((reason) => reason.kind).join(", ")})`).join("\n")}
-`;
   const outputChanges = result.screens.filter(hasOutputChange).length;
   const impactEvidence = result.screens.filter(
     (screen) => screen.sharedImpact.length > 0,
@@ -72,13 +51,22 @@ ${result.changes.map((change) => `- ${change.kind}: ${markdownText((change.after
     `Screens: ${result.screens.length}; output changes: ${outputChanges}; changed: ${counts.get("changed") ?? 0}; added: ${counts.get("added") ?? 0}; removed: ${counts.get("removed") ?? 0}; ignored-only: ${counts.get("ignored-only") ?? 0}; impact evidence: ${impactEvidence}; impact-only: ${impactOnly}.`,
     "",
     "Output changes count screens with changed documents or retained resource evidence, once per screen across all viewports and color schemes; catalogue Changes also considers metadata and flows. Impact evidence is counted independently; impact-only screens have no output change and can also be ignored-only.",
+    "",
+    `Changes: ${result.changes.length}; components: ${result.components.length}; affected consumers: ${result.affectedConsumers.length}.`,
   ];
-  if (result.sharedImpact.length > 0) {
+  if (result.changes.length > 0)
+    lines.push(
+      "",
+      ...result.changes.map(
+        (change) =>
+          `- ${change.kind}: ${markdownText((change.after ?? change.before)!.title)} (${change.reasons.map((reason) => reason.kind).join(", ")})`,
+      ),
+    );
+  if (result.sharedImpact.length > 0)
     lines.push(
       "",
       "Shared-impact paths:",
       ...result.sharedImpact.map((item) => `- ${markdownCode(item)}`),
     );
-  }
   return `${lines.join("\n")}\n`;
 }

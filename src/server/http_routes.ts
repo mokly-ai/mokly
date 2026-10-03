@@ -4,6 +4,7 @@ import type { RenderCapability } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 import { shellContext, SHELL_CSS } from "@mokly/viewer/server";
 
+import type { GeneratedFile } from "../build/generated_file.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import {
@@ -22,7 +23,7 @@ import { send } from "./respond.js";
 import type { ReviewRoutes } from "./review_routes.js";
 import { serveStatic } from "./static_routes.js";
 import type { ChangesStatus } from "./update_messages.js";
-import { redirectId, renderView } from "./view_routes.js";
+import { renderView } from "./view_routes.js";
 
 /** Dispatch a request against one validated catalogue generation. */
 export async function handleCatalogueRequest(
@@ -32,7 +33,7 @@ export async function handleCatalogueRequest(
   catalogue: Catalogue,
   config: ResolvedConfig,
   base: string,
-  currentChangedRoutes: () => readonly string[] | undefined,
+  currentChangedIds: () => readonly string[] | undefined,
   streams: Set<ServerResponse>,
   assets: ServedAssets,
   currentVersion: () => number,
@@ -43,7 +44,8 @@ export async function handleCatalogueRequest(
   changesStatus?: ChangesStatus,
   contentVersion?: number,
   publicCatalogue?: PublicCatalogueSource,
-  generatedOutputs?: ReadonlyMap<string, string>,
+  acceptedGenerated?: ReadonlyMap<string, GeneratedFile>,
+  unavailableComparisons = false,
   assetClosure?: ReadonlySet<string>,
 ): Promise<void> {
   if (method !== "GET" && method !== "HEAD")
@@ -104,30 +106,30 @@ export async function handleCatalogueRequest(
       config,
       catalogue,
       method,
-      generatedOutputs,
+      acceptedGenerated,
       assetClosure,
     );
   const changed =
-    componentChanges?.changedRoutes ??
+    componentChanges?.changedIds ??
     (componentChanges?.result
       ? componentChanges.result.changes.map(
-          (entry) => (entry.after ?? entry.before)!.route,
+          (entry) => (entry.after ?? entry.before)!.id,
         )
-      : currentChangedRoutes());
+      : currentChangedIds());
   const context = shellContext(
     base,
     changed
       ? [
           ...new Set([
             ...changed,
-            ...catalogue.removedEntries.map(({ entry }) => entry.route),
+            ...catalogue.removedEntries.map(({ entry }) => entry.id),
           ]),
         ]
       : undefined,
     requestVersion,
   );
   if (publicCatalogue) context.readModel = readPublicCatalogue(publicCatalogue);
-  context.comparisons = reviewRoutes !== undefined;
+  context.comparisons = reviewRoutes !== undefined || unavailableComparisons;
   if (contentVersion !== undefined) context.contentVersion = contentVersion;
   if (documents && renderCapability)
     context.previewGeneration = renderCapability.generation;
@@ -142,18 +144,6 @@ export async function handleCatalogueRequest(
       homePage(catalogue, context),
       method,
     );
-  if (url.pathname.startsWith("/id/"))
-    return redirectId(
-      response,
-      url,
-      url.pathname.slice(4),
-      catalogue,
-      config,
-      context,
-      method,
-      documents,
-      generatedOutputs,
-    );
   if (url.pathname.startsWith("/view/"))
     return renderView(
       response,
@@ -164,7 +154,7 @@ export async function handleCatalogueRequest(
       context,
       method,
       documents,
-      generatedOutputs,
+      acceptedGenerated,
     );
   return send(
     response,

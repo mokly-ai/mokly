@@ -28,7 +28,7 @@ test("an isolated export contains a complete exact-file resource graph", async (
   ).toBe(404);
 });
 
-test("aliases and frame activations retain canonical files, fragments, and history", async ({
+test("frame activations retain canonical files, fragments, and history", async ({
   page,
   context,
 }) => {
@@ -36,7 +36,7 @@ test("aliases and frame activations retain canonical files, fragments, and histo
   page.on("response", (response) => {
     if (response.status() >= 400) failures.push(response.url());
   });
-  await page.goto(`${site.url}/id/home/?fragment=home-mobile&ignored=1`);
+  await page.goto(`${site.url}/view/screens/home.html?fragment=home-mobile`);
   await expect(page).toHaveURL(
     `${site.url}/view/screens/home.html?fragment=home-mobile`,
   );
@@ -77,6 +77,11 @@ test("aliases and frame activations retain canonical files, fragments, and histo
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
   await page.goForward();
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
+  await page.reload();
+  await expect(page).toHaveURL(
+    `${site.url}/view/screens/details.html?fragment=details`,
+  );
+  await expect(page.locator("#mb-main h2")).toHaveText("Details");
   expect(failures).toEqual([]);
 });
 
@@ -106,13 +111,15 @@ test("static search, tags, Changes, details, and flows retain the existing shell
     await expectFrameSource(frame, /\.dark\.html$/);
 });
 
-test("static aliases contain a real screen with JavaScript disabled", async ({
+test("removed aliases are absent and canonical screens work without JavaScript", async ({
   browser,
 }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   try {
     const page = await context.newPage();
-    await page.goto(`${site.url}/id/home/index.html`);
+    const removedAlias = await page.goto(`${site.url}/id/home/index.html`);
+    expect(removedAlias?.status()).toBe(404);
+    await page.goto(`${site.url}/view/screens/home.html`);
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
     await expect(
       page.frameLocator(".mbk-frame-mobile iframe").locator("h1"),
@@ -154,4 +161,40 @@ test("keyboard, middle-click, and named frame targets use exact static routes", 
     expect(await opened.evaluate(() => window.opener === null)).toBe(true);
     await opened.close();
   }
+});
+
+test("an exported catalogue restores a pinned then saved appearance", async ({
+  page,
+}) => {
+  const screen = `${site.url}/view/screens/home.html`;
+  await page.goto(`${screen}?scheme=dark`);
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-mokly-theme",
+    "dark",
+  );
+  await expectFrameSource(
+    page.locator(".mbk-frame-mobile iframe"),
+    /home\.mobile\.dark\.html$/,
+  );
+  // A pin dresses one document, so the export is still on Auto next visit.
+  await page.goto(screen);
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-mokly-theme",
+    "auto",
+  );
+
+  await chooseScheme(page, "dark");
+  await page.goto(screen);
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-mokly-theme",
+    "dark",
+  );
+  await expect(page.locator("body")).toHaveAttribute(
+    "data-mokly-color-scheme",
+    "dark",
+  );
+  await expectFrameSource(
+    page.locator(".mbk-frame-mobile iframe"),
+    /home\.mobile\.dark\.html$/,
+  );
 });

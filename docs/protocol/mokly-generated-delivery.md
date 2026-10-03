@@ -2,12 +2,11 @@
 
 ## Delivery Status
 
-Approved Milestones 11–12 target in
+This contract defines identity-derived HTML addresses for v8 output and the
+strict catalogue-v4 policy. The current viewer namespace is `__mokly/`;
+[the approved rename](./mokly-viewer-namespace.md) is a separate pending change.
+Implementation and verification are tracked by
 [Generated Output Simplification](../../plans/generated-output-simplification.md).
-Finding 32 option B corrects the route-prefix documentation only. It adds no
-runtime route validation. Keep the separately approved `styles`/`assets`
-reservation and the [namespace/version contract](./mokly-viewer-namespace.md).
-The branch's pre-merge v6/public-v1 implementation is not the merged policy.
 
 ## Routes And Layout Signal
 
@@ -102,8 +101,10 @@ Only v8 baselines provide comparison content. A pre-v8 base follows the exact
 it supplies no legacy-layout snapshots or removed-entry previews. Snapshot
 publication uses its existing generation-local layout for accepted v8 content.
 
-Catalogue v4, static delivery v4, bootstrap v1, ownership v3 and upload v2
-follow the [namespace version gates](./mokly-viewer-namespace.md#version-matrix).
+Current delivery uses catalogue v4, static delivery v4 and bootstrap v1.
+Ownership v2 and upload v1 remain until the pending viewer-namespace rename,
+which adopts ownership v3 and upload v2 under the
+[namespace version gates](./mokly-viewer-namespace.md#version-matrix).
 Receivers validate their supported formats before paths; they never rewrite
 an old artifact into the current layout. The marker/transport gate and strict
 viewer version gate protect current-only artifacts as well as comparisons.

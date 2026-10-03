@@ -39,11 +39,11 @@ for (const producer of ["live", "export"])
     );
     if (producer === "live") {
       assert.deepEqual(
-        changes.componentChanges?.screenEvidence?.map(({ route, views }) => ({
-          route,
+        changes.componentChanges?.screenEvidence?.map(({ id, views }) => ({
+          id,
           views: views.map((view) => view.viewport),
         })),
-        [{ route: "screens/home.html", views: ["mobile", "mobile"] }],
+        [{ id: "home", views: ["mobile", "mobile"] }],
       );
       return;
     }
@@ -63,7 +63,9 @@ for (const producer of ["live", "export"])
       [],
     );
     for (const screen of comparison.result.screens) {
-      const html = String(site.inventory.files.get(`view/${screen.route}`));
+      const html = String(
+        site.inventory.files.get(`view/screens/${screen.id}.html`),
+      );
       const json = /<script[^>]*data-workspace-data[^>]*>(.*?)<\/script>/s.exec(
         html,
       )?.[1];

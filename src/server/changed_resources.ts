@@ -7,7 +7,6 @@ import { parse } from "parse5";
 import { isStylesheetPath } from "@mokly/viewer/data";
 
 import { timeAsync } from "../diagnostics/timings.js";
-import { MoklyError } from "../errors.js";
 import { referencedRoutes } from "../review/asset_references.js";
 import type {
   OptionalReviewAssetReader,
@@ -20,7 +19,7 @@ import {
   type ChangedResource,
   type ResourceEvidence,
 } from "../review/css/resource_analysis.js";
-import { normalizeReviewPair } from "../review/ignore.js";
+import { decideReferencedResource } from "../review/deleted_resource.js";
 import { ResourceGraph } from "../review/resource_graph.js";
 
 /** Cache shared resource edges for one immutable changed-route calculation. */
@@ -47,29 +46,18 @@ export class ChangedResourceGraph {
     private readonly documents: ReadonlyMap<string, string>,
     private readonly css: CssResourceAnalysis = new CssResourceAnalysis(),
     private readonly compareBytes = false,
-    private readonly headLayout: {
-      readonly prefix: string;
-      readonly routes: ReadonlySet<string>;
-    } = { prefix: "", routes: new Set() },
-    private readonly baseLayout: {
-      readonly prefix: string;
-      readonly routes: ReadonlySet<string>;
-    } = { prefix: "", routes: new Set() },
   ) {
-    this.#base = new ComponentMaterialReader(baseline, baseLayout);
-    this.#head = new ComponentMaterialReader(
-      {
-        read: async (route) =>
-          this.#rawContents.has(route)
-            ? Buffer.from(this.#rawContents.get(route)!)
-            : reader.read(route),
-        readIfExists: async (route) =>
-          this.#rawContents.has(route)
-            ? Buffer.from(this.#rawContents.get(route)!)
-            : reader.readIfExists(route),
-      },
-      headLayout,
-    );
+    this.#base = new ComponentMaterialReader(baseline);
+    this.#head = new ComponentMaterialReader({
+      read: async (route) =>
+        this.#rawContents.has(route)
+          ? Buffer.from(this.#rawContents.get(route)!)
+          : reader.read(route),
+      readIfExists: async (route) =>
+        this.#rawContents.has(route)
+          ? Buffer.from(this.#rawContents.get(route)!)
+          : reader.readIfExists(route),
+    });
     this.#base.pairWith(this.#head, "before");
     this.#head.pairWith(this.#base, "after");
     this.#baseGraph = new ResourceGraph({
@@ -79,14 +67,9 @@ export class ChangedResourceGraph {
         ),
       readReferences: async (route) =>
         /\.(css|html?)$/i.test(route)
-          ? referencedRoutes(
-              route,
-              await this.#base.resourceText(route),
-              {
-                resourceHints: false,
-              },
-              this.baseLayout,
-            )
+          ? referencedRoutes(route, await this.#base.resourceText(route), {
+              resourceHints: false,
+            })
           : [],
     });
   }
@@ -109,12 +92,7 @@ export class ChangedResourceGraph {
     if (cached?.document === document) return cached.resources;
     const resources = await timeAsync("review.resource-graph", () =>
       this.#graph.collect(
-        referencedRoutes(
-          source,
-          document,
-          { resourceHints: false },
-          this.headLayout,
-        ),
+        referencedRoutes(source, document, { resourceHints: false }),
       ),
     );
     this.#viewResources.set(source, { document, resources });
@@ -136,14 +114,9 @@ export class ChangedResourceGraph {
     const bases =
       before && (this.compareBytes || changedStylesheet || changedDocument)
         ? await this.#baseGraph.collect(
-            referencedRoutes(
-              before.path,
-              before.html,
-              {
-                resourceHints: false,
-              },
-              this.baseLayout,
-            ),
+            referencedRoutes(before.path, before.html, {
+              resourceHints: false,
+            }),
           )
         : new Set<string>();
     const all = [...new Set([...bases, ...resources])];
@@ -222,59 +195,30 @@ export class ChangedResourceGraph {
     if (content === undefined) {
       const asset = await this.reader.readLocated(route);
       this.#physicalRoutes.set(route, asset.location.physicalRelativePath);
-      const bytes = asset.content;
-      if (bytes === undefined) {
-        if (!this.compareBytes && !this.isChanged(route))
-          throw new MoklyError(
-            "review-invalid",
-            `referenced resource is missing: ${route}`,
-          );
-        await this.#base.prefetch([route]);
-        await this.#base.read(route);
+      const decision = await decideReferencedResource(
+        route,
+        {
+          readIfExists: (candidate) =>
+            this.baseline.readIfExists?.(candidate) ??
+            this.baseline.read(candidate),
+        },
+        { readIfExists: async () => asset.content },
+        this.isChanged(route),
+        this.compareBytes,
+      );
+      if (decision.kind === "verified-deletion") {
         this.#byteChanges.add(route);
         return [];
       }
+      const bytes = decision.after;
       const extension = path.posix.extname(route).toLowerCase();
-      if (this.compareBytes) {
-        const historicalRoute = asset.location.physicalRelativePath;
-        const before =
-          this.isChanged(route) && historicalRoute !== route
-            ? undefined
-            : this.baseline.readIfExists
-              ? await this.baseline.readIfExists(historicalRoute)
-              : await this.baseline.read(historicalRoute);
-        if (before === undefined) this.#byteChanges.add(route);
-        else if ([".html", ".htm"].includes(extension)) {
-          const pair = normalizeReviewPair(
-            Buffer.from(before).toString("utf8"),
-            Buffer.from(bytes).toString("utf8"),
-            route,
-            {
-              before: this.baseLayout.prefix,
-              after: this.headLayout.prefix,
-              beforeRoutes: this.baseLayout.routes,
-              afterRoutes: this.headLayout.routes,
-            },
-          );
-          if (
-            (pair.comparisonBase ?? pair.base) !==
-            (pair.comparisonHead ?? pair.head)
-          )
-            this.#byteChanges.add(route);
-        } else if (!Buffer.from(before).equals(bytes))
-          this.#byteChanges.add(route);
-      }
+      if (decision.byteChanged) this.#byteChanges.add(route);
       if (![".css", ".html", ".htm"].includes(extension)) return [];
       content = Buffer.from(bytes).toString("utf8");
       this.#rawContents.set(route, content);
       if (extension !== ".css") content = await this.#head.resourceText(route);
     }
     this.#contents.set(route, content);
-    return referencedRoutes(
-      route,
-      content,
-      { resourceHints: false },
-      this.headLayout,
-    );
+    return referencedRoutes(route, content, { resourceHints: false });
   }
 }

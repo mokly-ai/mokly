@@ -1,6 +1,12 @@
-import type { ManifestV5 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 import { createCatalogue, type Catalogue } from "@mokly/viewer/server";
 
+import { compileCatalogue } from "../build/compile.js";
+import {
+  compilationForManifest,
+  componentRuntime,
+} from "../build/component_runtime.js";
+import type { GeneratedFile } from "../build/generated_file.js";
 import { assertFreshSourceInventory } from "../build/source_freshness.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync } from "../diagnostics/timings.js";
@@ -10,7 +16,12 @@ import {
   type CatalogueIndex,
 } from "../registry/catalogue_index.js";
 import type { CatalogueChangeSnapshot } from "../registry/changes.js";
-import { parseManifest, readManifest } from "../registry/manifest.js";
+import { parseManifest } from "../registry/manifest.js";
+import {
+  acceptedGenerationFromInventory,
+  acceptedGenerationFromCompilation,
+  type AcceptedGeneration,
+} from "../review/accepted_generation.js";
 import type { ReadOnlyReviewRepository } from "../review/repository.js";
 
 import {
@@ -25,6 +36,7 @@ const configIdentity = Symbol("validated catalogue config");
 export interface CatalogueSnapshot {
   readonly [configIdentity]: ResolvedConfig;
   readonly catalogue: Catalogue;
+  readonly outputs?: ReadonlyMap<string, GeneratedFile>;
   readonly changes?: CatalogueChangeSnapshot;
   readonly componentChanges?: ComponentChangeSnapshot;
 }
@@ -33,21 +45,43 @@ export interface CatalogueSnapshot {
 export async function loadCatalogueSnapshot(
   config: ResolvedConfig,
   resolveChanges?: (
-    manifest: ManifestV5,
+    manifest: ManifestV8,
+    accepted: AcceptedGeneration,
   ) => Promise<ResolvedCatalogueChanges | undefined>,
-  manifest: ManifestV5 = readManifest(config),
+  manifest?: ManifestV8,
 ): Promise<CatalogueSnapshot> {
-  timeSync("catalogue.validate", () => parseManifest(manifest));
-  await timeAsync("catalogue.source-freshness", () =>
-    assertFreshSourceInventory(config, manifest),
-  );
+  const supplied = manifest !== undefined;
+  const compilation = manifest
+    ? compilationForManifest(manifest, config)
+    : await compileCatalogue(config);
+  manifest ??= compilation!.manifest;
+  const acceptedManifest = manifest;
+  timeSync("catalogue.validate", () => parseManifest(acceptedManifest));
+  const inventory = supplied
+    ? await timeAsync("catalogue.source-freshness", () =>
+        assertFreshSourceInventory(config, acceptedManifest),
+      )
+    : undefined;
+  if (!supplied && compilation) {
+    config.sourceFiles = acceptedManifest.sourceFiles;
+    config.postcssWatchDirectories =
+      componentRuntime(compilation).config.postcssWatchDirectories ?? [];
+  }
   const changes = resolveChanges
-    ? await timeAsync("changes.classify", () => resolveChanges(manifest))
+    ? await timeAsync("changes.classify", () =>
+        resolveChanges(
+          acceptedManifest,
+          compilation
+            ? acceptedGenerationFromCompilation(compilation)
+            : acceptedGenerationFromInventory(inventory!),
+        ),
+      )
     : undefined;
   return {
     [configIdentity]: config,
+    ...(compilation ? { outputs: compilation.outputs } : {}),
     catalogue: timeSync("catalogue.index", () =>
-      createCatalogue(manifest, changes?.removedEntries),
+      createCatalogue(acceptedManifest, changes?.removedEntries),
     ),
     ...(changes ? { changes } : {}),
     ...(changes?.componentChanges
@@ -70,20 +104,22 @@ export async function loadLiveCatalogueSnapshot(
 export function loadServedCatalogueSnapshot(
   config: ResolvedConfig,
   base?: string,
-  manifest?: ManifestV5,
+  manifest?: ManifestV8,
   repository?: () => ReadOnlyReviewRepository,
 ): Promise<CatalogueSnapshot> {
   return loadCatalogueSnapshot(
     config,
     base === undefined || !repository
       ? undefined
-      : async (current) => {
+      : async (current, accepted) => {
           try {
             return await computeCatalogueChanges(
               config,
               base,
               repository(),
               current,
+              undefined,
+              accepted,
             );
           } catch (error) {
             if (

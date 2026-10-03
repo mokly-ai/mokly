@@ -1,19 +1,15 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import {
-  startNavigationFixture,
-  type NavigationFixture,
-} from "./navigation_fixture.js";
+  expectDestination,
+  startSuite,
+  stopSuite,
+  suiteState,
+} from "./browse_navigation_security_fixture.js";
 
-let navigation: NavigationFixture;
+test.beforeAll(startSuite);
 
-test.beforeAll(async () => {
-  navigation = await startNavigationFixture();
-});
-
-test.afterAll(async () => {
-  await navigation.close();
-});
+test.afterAll(stopSuite);
 
 test.beforeEach(async ({ page }) => {
   await page.route("https://cross-origin.example.test/nested.html", (route) =>
@@ -47,7 +43,7 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
     { label: "named", selector: "#named-link" },
   ]) {
     await test.step(activation.label, async () => {
-      await page.goto(`${navigation.url}/view/screens/home.html`);
+      await page.goto(`${suiteState.navigation.url}/view/screens/home.html`);
       const opened = page.context().waitForEvent("page");
       await page
         .frameLocator(".mbk-frame-mobile iframe")
@@ -69,7 +65,7 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
   }
 
   await test.step("Control-click", async () => {
-    await page.goto(`${navigation.url}/view/screens/home.html`);
+    await page.goto(`${suiteState.navigation.url}/view/screens/home.html`);
     await page.evaluate(() => {
       const shell = window as typeof window & {
         __moklyOpenCalls?: unknown[][];
@@ -92,12 +88,47 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
               .__moklyOpenCalls,
         ),
       )
-      .toEqual([["/id/details?fragment=section", "_blank", "noopener"]]);
+      .toEqual([
+        ["/view/screens/details.html?fragment=section", "_blank", "noopener"],
+      ]);
     await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
   });
 
+  await test.step("named target is opened at its canonical view URL", async () => {
+    await page.goto(`${suiteState.navigation.url}/view/screens/home.html`);
+    await page.evaluate(() => {
+      const shell = window as typeof window & {
+        __moklyOpenCalls?: unknown[][];
+      };
+      shell.__moklyOpenCalls = [];
+      shell.open = (...args: Parameters<typeof window.open>) => {
+        shell.__moklyOpenCalls?.push(args);
+        return null;
+      };
+    });
+    await page
+      .frameLocator(".mbk-frame-mobile iframe")
+      .locator("#named-link")
+      .click();
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            (window as typeof window & { __moklyOpenCalls?: unknown[][] })
+              .__moklyOpenCalls,
+        ),
+      )
+      .toEqual([
+        [
+          "/view/screens/details.html?fragment=section",
+          "DetailsFrame",
+          "noopener",
+        ],
+      ]);
+  });
+
   for (const selector of ["#top-link", "#parent-link"]) {
-    await page.goto(`${navigation.url}/view/screens/home.html`);
+    await page.goto(`${suiteState.navigation.url}/view/screens/home.html`);
     await page
       .frameLocator(".mbk-frame-mobile iframe")
       .locator(selector)
@@ -109,7 +140,7 @@ test("modified and explicit targets open only canonical parent-owned contexts", 
 test("sandboxed direct and nested content cannot escape or invoke parent enhancement", async ({
   page,
 }) => {
-  await page.goto(`${navigation.url}/view/screens/home.html`);
+  await page.goto(`${suiteState.navigation.url}/view/screens/home.html`);
   const frame = page.frameLocator(".mbk-frame-mobile iframe");
   await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
     "sandbox",
@@ -181,117 +212,3 @@ test("sandboxed direct and nested content cannot escape or invoke parent enhance
   expect(page.context().pages()).toHaveLength(pageCount);
   await expect(page.locator("#mb-main h2")).toHaveText("Home");
 });
-
-test("an unowned frame document stays frame-owned during shell replacement", async ({
-  page,
-}) => {
-  await page.goto(`${navigation.url}/view/screens/home.html`);
-  const frame = page.frameLocator(".mbk-frame-mobile iframe");
-  await frame.locator("#unowned-details-link").click();
-  await expect(frame.locator("#extra-link")).toBeVisible();
-
-  let releaseRequest = () => {};
-  let reportRequest = () => {};
-  const requestStarted = new Promise<void>((resolve) => {
-    reportRequest = resolve;
-  });
-  const requestReleased = new Promise<void>((resolve) => {
-    releaseRequest = resolve;
-  });
-  await page.route(
-    "**/static/mokly-generated/screens/home.mobile.dark.html",
-    async (route) => {
-      reportRequest();
-      await requestReleased;
-      await route.continue();
-    },
-  );
-
-  try {
-    await page.locator("[data-workspace-scheme]").click();
-    await requestStarted;
-    await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
-      "data-mokly-frame-state",
-      "loading",
-    );
-
-    const defaultPrevented = await page.evaluate(() => {
-      const frame = document.querySelector<HTMLIFrameElement>(
-        ".mbk-frame-mobile iframe",
-      )!;
-      const doc = frame.contentDocument!;
-      const element = doc.querySelector("#extra-link")!;
-      let prevented: boolean | undefined;
-      doc.addEventListener(
-        "click",
-        (event) => {
-          prevented = event.defaultPrevented;
-          event.preventDefault();
-        },
-        { once: true },
-      );
-      element.dispatchEvent(
-        new MouseEvent("click", {
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-      return prevented;
-    });
-    expect(defaultPrevented).toBe(false);
-    await page.waitForTimeout(100);
-    await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
-    await expect(page.locator("#mb-main h2")).toHaveText("Home");
-
-    releaseRequest();
-    await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
-      "data-mokly-frame-state",
-      "ready",
-    );
-    await frame.locator("#mock-link").click();
-    await expectDestination(page);
-  } finally {
-    releaseRequest();
-  }
-});
-
-test("JavaScript-disabled Browse keeps portable links inside the sandbox", async ({
-  browser,
-}) => {
-  const context = await browser.newContext({ javaScriptEnabled: false });
-  const page = await context.newPage();
-  await page.goto(
-    `${navigation.url}/view/screens/details.html?fragment=section`,
-  );
-  await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
-    "src",
-    /details\.mobile\.html#section$/,
-  );
-
-  await page.goto(`${navigation.url}/view/screens/home.html`);
-  await page
-    .frameLocator(".mbk-frame-mobile iframe")
-    .locator("#mock-link")
-    .click();
-
-  await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
-  await expect(page.locator("#mb-main h2")).toHaveText("Home");
-  await expect
-    .poll(() =>
-      page
-        .frames()
-        .some((candidate) =>
-          candidate.url().endsWith("details.mobile.html#section"),
-        ),
-    )
-    .toBe(true);
-  expect(context.pages()).toHaveLength(1);
-  await context.close();
-});
-
-async function expectDestination(page: Page): Promise<void> {
-  await expect(page).toHaveURL(
-    /\/view\/screens\/details\.html\?fragment=section$/,
-  );
-  await expect(page.locator("#mb-main h2")).toHaveText("Details");
-}

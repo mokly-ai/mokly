@@ -36,7 +36,6 @@ export function HiddenComponentMobile() {
 export const pageScreens = [
   screen({
     id: "design-component-help",
-    slug: "help",
     title: "Component without a visible region",
     colorSchemes: ["light"],
     description:
@@ -46,17 +45,15 @@ export const pageScreens = [
   }),
   screen({
     id: "design-component-variants",
-    slug: "variants",
     title: "Saved variant",
     colorSchemes: ["light"],
     description:
-      "Disabled selected, with the actual saved prop value visible in Props.",
+      "Disabled selected and Unmodified while another saved variant makes the component Changed; no unavailable comparison is offered.",
     desktop: <SavedVariantDesktop />,
     mobile: <SavedVariantMobile />,
   }),
   screen({
     id: "design-component-comparison",
-    slug: "comparison",
     title: "Compare a component",
     colorSchemes: ["light"],
     description:
@@ -66,7 +63,6 @@ export const pageScreens = [
   }),
   screen({
     id: "design-component-affected",
-    slug: "affected",
     title: "Changed component and affected screens",
     colorSchemes: ["light"],
     description:
@@ -76,7 +72,6 @@ export const pageScreens = [
   }),
   screen({
     id: "design-component-toolbar",
-    slug: "toolbar",
     title: "Component consuming a component",
     colorSchemes: ["light"],
     description:

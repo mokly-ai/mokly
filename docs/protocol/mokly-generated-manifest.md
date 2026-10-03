@@ -2,14 +2,10 @@
 
 ## Delivery Status
 
-Approved Milestone 11 target in
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
-The branch still emits v6 until that implementation lands. Correction 3 option A
-supersedes the earlier multi-version-reader design: only v8 is readable as a
-current or baseline catalogue. Preserve `main`'s earlier-version outcome with
-its threshold raised to v8. This documentation update changes no reader code.
-During the merge, reconcile `main`'s `mokly-baseline-compatibility.md` with this
-gate and add its link only after that document is present.
+Current and baseline readers accept only v8. The
+[baseline compatibility contract](./mokly-baseline-compatibility.md) defines the
+earlier-version outcome and exact product copy. Implementation and verification
+are tracked by [Generated Output Simplification](../../plans/generated-output-simplification.md).
 
 ## Approved Manifest V8
 
@@ -19,7 +15,7 @@ Emit this envelope for every newly compiled catalogue:
 interface ManifestV8 {
   schemaVersion: 8;
   generatedBy: "mokly";
-  entries: readonly ManifestEntryV7[];
+  entries: readonly ManifestEntry[];
   sourceFiles: readonly string[];
   assetClosure: readonly string[];
   generatedFiles: readonly { path: string; blobHash: string }[];
@@ -27,8 +23,7 @@ interface ManifestV8 {
 }
 ```
 
-`ManifestEntryV7` names `main`'s identity-only entry contract, not a required
-runtime type name. Preserve `navPath`, `declaredDependencies`, effective schemes,
+`ManifestEntry` is the identity-only entry contract. Preserve `navPath`, `declaredDependencies`, effective schemes,
 ordinary screen/component variant entries with `variantOf`, and all usage,
 props, controls, ownership and relationship checks. Component parents have no
 views. Keep authored variants immediately after their parent and kind/id order

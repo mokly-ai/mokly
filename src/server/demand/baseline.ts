@@ -1,4 +1,5 @@
 /** A historical build outlives content generations and is cancelled only when its inputs change. */
+import { isIncompatibleEarlierBaseline } from "../../baseline/compatibility.js";
 import { assertBaselineActive, BaselineError } from "../../baseline/errors.js";
 import type {
   BaselineBuilder,
@@ -30,6 +31,10 @@ export class BackgroundBaseline {
     private readonly progressChanged?: (event: BaselineProgress) => void,
     private readonly diagnostic?: (message: string) => void,
   ) {}
+
+  get commit(): string | undefined {
+    return this.active?.commit;
+  }
 
   get status(): "preparing" | "pending" {
     return this.preparing ? "preparing" : "pending";
@@ -70,9 +75,9 @@ export class BackgroundBaseline {
         ...(this.diagnostic ? { diagnostic: this.diagnostic } : {}),
       });
       this.active = { key, commit, controller, result };
-      void result.catch(() => {
+      void result.catch((error: unknown) => {
         if (this.active?.controller === controller) {
-          this.active = undefined;
+          if (!isIncompatibleEarlierBaseline(error)) this.active = undefined;
           this.preparing = false;
         }
       });
@@ -119,7 +124,6 @@ function preparationKey(config: ResolvedConfig): string {
     config.configPath,
     config.mockupsDir,
     config.review.baselineBuild,
-    config.compatibility.readManifestV2,
   ]);
 }
 

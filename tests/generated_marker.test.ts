@@ -55,6 +55,7 @@ test("generated marker is source-independent even for comment-unsafe source name
 
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
   const output = compilation.outputs.get("screens/home.mobile.html") ?? "";
+  if (typeof output !== "string") throw new Error("Expected generated HTML");
   assert.ok(output.startsWith(GENERATED_MARKER));
   assert.doesNotMatch(output.slice(0, output.indexOf("\n")), /source|a-->b/);
 });

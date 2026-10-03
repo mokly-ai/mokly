@@ -66,7 +66,7 @@ test("unrelated dangling and cyclic links do not prevent publication", async (co
   await buildPreview(config, path.join(fixture.root, ".context/published"));
 });
 
-test("publication rejects an escaping generated manifest route before reading its bytes", async (context) => {
+test("publication ignores an escaping local generated manifest without reading its bytes", async (context) => {
   const fixture = await createFixture();
   const outside = await createFixture();
   context.after(() => removeFixture(fixture));
@@ -88,10 +88,7 @@ test("publication rejects an escaping generated manifest route before reading it
       return original.apply(fs.promises, args);
     },
   );
-  await assert.rejects(
-    buildPreview(config, path.join(fixture.root, ".context/published")),
-    /inside|confined|publication input|generated route escapes/,
-  );
+  await buildPreview(config, path.join(fixture.root, ".context/published"));
   assert.equal(reads, 0);
 });
 

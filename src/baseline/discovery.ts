@@ -7,9 +7,14 @@ import { MANIFEST_NAME } from "../registry/manifest.js";
 import { MAX_BATCH_OUTPUT_BYTES } from "../review/git_batch.js";
 
 import { joinCataloguePath } from "./catalogue.js";
+import { incompatibleEarlierBaseline } from "./compatibility.js";
 import { confinedBaselineStat, validateOutputTree } from "./confinement.js";
 import { BaselineError, assertBaselineActive } from "./errors.js";
-import { historicalCatalogueAt, type HistoricalCatalogue } from "./manifest.js";
+import {
+  historicalCatalogueAt,
+  type HistoricalCatalogue,
+  type CatalogueProbe,
+} from "./manifest.js";
 import type { BaselineBuildRequest, BaselineFileSystem } from "./types.js";
 
 /** Prefer the requested root, then search a bounded extraction without following links. */
@@ -24,20 +29,17 @@ export async function discoverHistoricalCatalogue(
     extraction,
     requested,
     request.commit,
-    request.allowManifestV2 ?? false,
     request.signal,
   );
-  if (preferred) return preferred;
-  const candidates: HistoricalCatalogue[] = [];
+  if (preferred) {
+    if ("incompatible" in preferred) throw incompatibleEarlierBaseline();
+    return preferred;
+  }
+  const candidates: CatalogueProbe[] = [];
   const pending = [extraction];
-  let visited = 0;
+  let visited = 1;
   while (pending.length) {
     assertBaselineActive(request.signal);
-    if (++visited > 65_536)
-      throw new BaselineError(
-        "baseline-output-invalid",
-        "Historical catalogue search exceeds extraction bounds",
-      );
     const directory = pending.pop()!;
     if (
       directory !== requested &&
@@ -52,7 +54,6 @@ export async function discoverHistoricalCatalogue(
           extraction,
           directory,
           request.commit,
-          request.allowManifestV2 ?? false,
           request.signal,
         );
         if (candidate) candidates.push(candidate);
@@ -61,6 +62,12 @@ export async function discoverHistoricalCatalogue(
       }
     }
     const names = await fs.list(directory);
+    visited += names.length;
+    if (visited > 65_536)
+      throw new BaselineError(
+        "baseline-output-invalid",
+        "Historical catalogue search exceeds extraction bounds",
+      );
     for (const name of [...names].sort().reverse()) {
       if ([".git", ".mokly-cache", "node_modules"].includes(name)) continue;
       if ((await fs.stat(path.join(directory, name)))?.kind === "directory")
@@ -69,9 +76,10 @@ export async function discoverHistoricalCatalogue(
   }
   if (candidates.length !== 1) {
     const names = candidates
-      .map(
-        ({ descriptor }) =>
-          `${descriptor.catalogueRoot} (${descriptor.layout})`,
+      .map((candidate) =>
+        "incompatible" in candidate
+          ? `${candidate.root} (incompatible-earlier)`
+          : `${candidate.descriptor.catalogueRoot} (generated-v8)`,
       )
       .sort();
     throw new BaselineError(
@@ -79,10 +87,12 @@ export async function discoverHistoricalCatalogue(
       `No unique historical catalogue after baseline build; candidates: ${names.join(", ") || "(none)"}.`,
     );
   }
-  return candidates[0]!;
+  const selected = candidates[0]!;
+  if ("incompatible" in selected) throw incompatibleEarlierBaseline();
+  return selected;
 }
 
-/** Ensure historical compilation really populated its v6 inventory before harvesting. */
+/** Ensure historical compilation really populated its v8 inventory before harvesting. */
 export async function validateBuiltInventory(
   fs: BaselineFileSystem,
   extraction: string,
@@ -90,7 +100,6 @@ export async function validateBuiltInventory(
   signal?: AbortSignal,
 ): Promise<void> {
   const manifest = selected.manifest;
-  if (manifest.schemaVersion !== 6 || !("generatedFiles" in manifest)) return;
   const generated = path.join(extraction, selected.descriptor.generatedRoot);
   await validateOutputTree(fs, generated, signal);
   const actual: string[] = [];

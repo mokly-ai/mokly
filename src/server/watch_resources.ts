@@ -2,7 +2,10 @@
 
 import path from "node:path";
 
-import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+import {
+  generatedResourcePath,
+  generatedResourceRoute,
+} from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import type { Compilation } from "../build/compile.js";
@@ -15,6 +18,7 @@ import { ResourceGraph } from "../review/resource_graph.js";
 import {
   configuredStylesheetPaths,
   isPackageOwnedIgnoredWatchPath,
+  isRecoverablePublicResource,
 } from "./watch_paths.js";
 
 /** Reachable inputs and recovery edges from one resource-discovery pass. */
@@ -41,15 +45,12 @@ export async function discoverWatchResources(
     (stylesheet) => !/^https?:\/\//.test(stylesheet),
   );
   const configured = new Set(stylesheets);
-  const generated = {
-    prefix: GENERATED_DIRECTORY,
-    routes: new Set(compilation.outputs.keys()),
-  };
   const graph = new ResourceGraph({
     async readReferences(route): Promise<readonly string[]> {
       const logical = path.resolve(config.mockupsDir, route);
-      let content: ReviewArtifactContent | undefined =
-        compilation.outputs.get(route);
+      let content: ReviewArtifactContent | undefined = compilation.outputs.get(
+        generatedResourceRoute(route) ?? "",
+      );
       if (content === undefined) locations.set(route, [logical]);
       try {
         if (content === undefined) {
@@ -65,14 +66,9 @@ export async function discoverWatchResources(
           }
           content = asset.content;
         }
-        const edges = referencedRoutes(
-          route,
-          content,
-          {
-            resourceHints: false,
-          },
-          generated,
-        );
+        const edges = referencedRoutes(route, content, {
+          resourceHints: false,
+        });
         references.set(route, edges);
         return edges;
       } catch (error) {
@@ -93,12 +89,20 @@ export async function discoverWatchResources(
   const documents = [...compilation.outputs.keys()].filter((route) =>
     /\.(?:html?|css)$/i.test(route),
   );
-  const reachable = await graph.collect(documents);
+  const reachable = await graph.collect(documents.map(generatedResourcePath));
   const paths = new Set<string>();
   for (const route of reachable) {
-    if (compilation.outputs.has(route) || configured.has(route)) continue;
+    if (
+      compilation.outputs.has(generatedResourceRoute(route) ?? "") ||
+      configured.has(route)
+    )
+      continue;
     for (const candidate of locations.get(route) ?? []) {
-      if (!isPackageOwnedIgnoredWatchPath(candidate, config))
+      if (
+        (!isPackageOwnedIgnoredWatchPath(candidate, config) ||
+          isRecoverablePublicResource(candidate, config)) &&
+        true
+      )
         paths.add(candidate);
     }
   }
@@ -108,7 +112,10 @@ export async function discoverWatchResources(
     locations,
     invalid,
     closure: new Set(
-      [...reachable].filter((route) => !compilation.outputs.has(route)),
+      [...reachable].filter(
+        (route) =>
+          !compilation.outputs.has(generatedResourceRoute(route) ?? ""),
+      ),
     ),
   };
 }

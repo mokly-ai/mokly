@@ -1,10 +1,19 @@
 import { expect, type Page, type Locator } from "@playwright/test";
 
-/** Use the visible view control in a workspace or a legacy flow. */
+/**
+ * Choose an appearance. A standalone document has one Appearance control that
+ * sets the interface and the previews together; an embedded root keeps its own
+ * preview switch, so both are supported here.
+ */
 export async function chooseScheme(
   page: Page,
   value: "light" | "dark",
 ): Promise<void> {
+  const appearance = page.locator("[data-mokly-appearance-select]");
+  if (await appearance.count()) {
+    await appearance.selectOption(value);
+    return;
+  }
   const toggle = page.locator("[data-workspace-scheme]");
   if (await toggle.count()) {
     if (
@@ -19,6 +28,13 @@ export async function chooseViewport(
   value: "mobile" | "desktop" | "both",
 ): Promise<void> {
   await page.getByLabel("Viewport", { exact: true }).selectOption(value);
+}
+/** Navigate through the workspace's entry-backed saved-variant bar. */
+export async function chooseVariant(page: Page, title: string): Promise<void> {
+  await page
+    .getByRole("navigation", { name: "Saved variants" })
+    .getByRole("link", { name: title, exact: true })
+    .click();
 }
 /** Assert the actual immediate document, including history-replacing frame swaps. */
 export async function expectFramePath(

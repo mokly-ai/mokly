@@ -38,7 +38,7 @@ for (const [name, alter] of Object.entries(alterations)) {
           },
         },
       }),
-      /shell.*metadata|metadata.*shell/i,
+      /shell.*metadata|metadata.*shell|Unsupported Mokly delivery version/i,
     );
     assert.deepEqual(await directoryFiles(fixture.output), previous);
   });

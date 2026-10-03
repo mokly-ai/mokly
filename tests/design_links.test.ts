@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
-import fs from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
+
+import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 
 import {
   attribute,
@@ -11,7 +12,6 @@ import {
   elements,
   textContent,
 } from "./helpers/design_catalogue.js";
-import { repositoryRoot } from "./helpers/fixture.js";
 
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: design actions navigate to the subject's owning screen`, async () => {
@@ -27,16 +27,6 @@ for (const viewport of ["mobile", "desktop"] as const) {
         "design-browse-details-screen",
         "mbk-shot-link",
         ["design-browse-screen"],
-      ],
-      [
-        "design-browse-dark-scheme",
-        "mbk-shot-link",
-        ["design-browse-light-only"],
-      ],
-      [
-        "design-browse-light-only",
-        "mbk-shot-link",
-        ["design-browse-dark-scheme"],
       ],
       [
         "design-browse-use-case",
@@ -96,7 +86,10 @@ for (const viewport of ["mobile", "desktop"] as const) {
         ["Details", "design-browse-details-screen"],
         ["Example tour", "design-browse-use-case"],
         ["Action", "design-component-overview"],
+        ["Default", "design-component-overview"],
+        ["Disabled", "design-component-variants"],
         ["Toolbar", "design-component-toolbar"],
+        ["Default", "design-component-toolbar"],
       ],
     );
     assert.equal(
@@ -128,8 +121,8 @@ test("every design link resolves to a real same-viewport design artifact without
   const componentDesigns = designs.filter((entry) =>
     entry.id.startsWith("design-component-"),
   );
-  assert.equal(componentDesigns.length, 32);
-  assert.equal(designs.length - componentDesigns.length, 47);
+  assert.equal(componentDesigns.length, 39);
+  assert.equal(designs.length - componentDesigns.length, 63);
   for (const entry of designs) {
     for (const viewport of ["mobile", "desktop"] as const) {
       const { document, route } = await designDocument(entry.id, viewport);
@@ -152,7 +145,7 @@ test("every design link resolves to a real same-viewport design artifact without
           path.posix.normalize(
             path.posix.join(path.posix.dirname(route), href),
           ),
-          target.fragments[viewport],
+          viewRoute("screen", target.id, viewport, "light"),
         );
         assert.equal(attribute(link, "role"), undefined);
         for (const child of link.childNodes) {
@@ -189,7 +182,7 @@ test("no design route doubles as a directory holding another design route", asyn
   const { manifest } = await designCatalogue;
   const routes = manifest.entries.flatMap((entry) =>
     entry.kind === "screen" && entry.id.startsWith("design-")
-      ? [entry.route]
+      ? [entryRoute("screen", entry.id)]
       : [],
   );
   const directories = new Set(
@@ -201,33 +194,6 @@ test("no design route doubles as a directory holding another design route", asyn
   for (const route of routes)
     assert.ok(
       !directories.has(route.replace(/\.html$/, "")),
-      `${route} collides with a collection segment of the same name`,
+      `${route} collides with a route directory segment of the same name`,
     );
-});
-
-test("the canonical documented inventory exactly matches the complete design registry", async () => {
-  const { manifest } = await designCatalogue;
-  const spec = (
-    await Promise.all(
-      [
-        "docs/protocol/mokly-shell-design.md",
-        "docs/protocol/mokly-component-design.md",
-        "docs/protocol/mokly-component-inspector-design.md",
-        "docs/protocol/mokly-component-controls-design.md",
-      ].map((file) => fs.readFile(path.join(repositoryRoot, file), "utf8")),
-    )
-  ).join("\n");
-  const documented = [
-    ...spec.matchAll(/\|\s*`(design-[^`]+)`\s*\|\s*`([^`]+)`/g),
-  ]
-    .map((match) => `${match[1]} ${match[2]}`)
-    .sort();
-  const actual = manifest.entries
-    .flatMap((entry) =>
-      entry.kind === "screen" && entry.id.startsWith("design-")
-        ? [`${entry.id} ${entry.route}`]
-        : [],
-    )
-    .sort();
-  assert.deepEqual(documented, actual);
 });

@@ -6,10 +6,30 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 import { capturePublicFiles } from "../dist/export/public_files.js";
-import { exportResourcePolicy } from "../dist/export/resource_policy.js";
+import {
+  exportResourceDenial,
+  exportResourcePolicy,
+} from "../dist/export/resource_policy.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { writeExclusionFiles } from "./helpers/public_exclusions.js";
+
+test("authored style and asset names retain private-folder checks", async (t) => {
+  const fixture = await createExportFixture();
+  t.after(() => fixture.close());
+  for (const route of [
+    "styles/node_modules/private.css",
+    "assets/dist/private.svg",
+  ]) {
+    const policy = exportResourceDenial(
+      fixture.config,
+      false,
+      new Set([route]),
+    );
+    assert.match(policy(route) ?? "", /private build or dependency directory/);
+    assert.equal(policy(`mokly-generated/${route}`), undefined);
+  }
+});
 
 test("nested package payloads are excluded but ancestor package roots remain usable", async (context) => {
   const fixture = await createExportFixture();
@@ -49,7 +69,7 @@ test("nested package payloads are excluded but ancestor package roots remain usa
   );
 });
 
-test("a package root equal to mockupsDir fails explicitly instead of publishing a package", async (context) => {
+test("a package root equal to mockupsDir still protects its package metadata", async (context) => {
   const fixture = await createExportFixture();
   context.after(() => fixture.close());
   await fs.promises.writeFile(
@@ -65,7 +85,7 @@ test("a package root equal to mockupsDir fails explicitly instead of publishing 
   };
   await assert.rejects(
     capturePublicFiles(config, new Map(), ["package.json"]),
-    /package root.*mockupsDir/,
+    /consumer package metadata/,
   );
 });
 

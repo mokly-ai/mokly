@@ -1,7 +1,7 @@
 /** Shared React frame primitives for browser-only registry harnesses. */
 
 import type {
-  CatalogueRoutedEntry,
+  CatalogueRecord,
   CatalogueUsage,
   CatalogueView,
 } from "../src/catalogue/types.js";
@@ -21,18 +21,17 @@ export function RegistryHarnessFrame({
   usage,
   view,
 }: {
-  entry: CatalogueRoutedEntry;
+  entry: Extract<CatalogueRecord, { kind: "component" | "screen" }>;
   onEvent(event: FrameEvent): void;
   usage: CatalogueUsage;
   view: CatalogueView;
 }) {
   const registry = useOptionalShellFrameRegistry();
-  const source = frameSource(view);
+  const source = frameSource(entry, view);
   const mounted = useMountedShellFrame({
     enabled: true,
     identity: {
       entryId: entry.id,
-      route: entry.route,
       viewport: view.viewport,
       colorScheme: view.colorScheme,
     },

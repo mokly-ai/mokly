@@ -7,16 +7,17 @@ import type {
   SetStateAction,
 } from "react";
 
+import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
 import type { FrameNavigation } from "../client/frame_adapter.js";
-import { routedEntries } from "../viewer/selection.js";
 import type { ViewerSelection } from "../viewer/types.js";
 
-import type { Catalogue } from "./catalogue.js";
+import { catalogueSelectionEntry, type Catalogue } from "./catalogue.js";
 import { changesActivation } from "./changes_activation.js";
 import type { ShellContext } from "./context.js";
 import { disclosurePath } from "./nav_model.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import { routeFromUrl, type ShellRoute } from "./routes.js";
+import { sameShellRoute } from "./store_browser_routes.js";
 import type { EmbeddedShellEnvironment } from "./store_host.js";
 import { openDisclosures, type ShellState } from "./store_state.js";
 
@@ -32,19 +33,45 @@ export function hostRoute(
   fragment?: string,
 ): ShellRoute {
   const entry = selection.screenId
-    ? catalogue.byId.get(selection.screenId)
+    ? catalogueSelectionEntry(
+        catalogue,
+        selection.screenId,
+        selection.snapshotId,
+      )
     : undefined;
-  const view =
-    entry && entry.kind !== "collection"
-      ? { kind: "target" as const, target: { kind: "entry" as const, entry } }
-      : selection.screenId === null
-        ? { kind: "home" as const }
-        : { kind: "missing" as const, requested: selection.screenId };
+  const view = entry
+    ? { kind: "target" as const, target: { kind: "entry" as const, entry } }
+    : selection.screenId === null
+      ? { kind: "home" as const }
+      : { kind: "missing" as const, requested: selection.screenId };
   return {
     view,
+    ...(selection.snapshotId ? { snapshot: selection.snapshotId } : {}),
     ...(fragment ? { fragment } : {}),
-    ...(selection.variantId ? { variant: selection.variantId } : {}),
   };
+}
+
+/** Whether committing a selection must reinstall its route-owned display. */
+export function hostSelectionRouteChanged(
+  catalogue: Catalogue,
+  state: ShellState,
+  selection: ViewerSelection,
+  fragment = state.route.fragment,
+): boolean {
+  return !sameShellRoute(
+    state.route,
+    hostRoute(catalogue, selection, fragment),
+  );
+}
+
+/** Apply an unavailable frame destination only when the Viewer owns selection. */
+export function frameMissState(
+  state: ShellState,
+  route: ShellRoute,
+  sections: readonly NavSectionNode[],
+  controlled: boolean,
+): ShellState {
+  return controlled ? state : withHostRoute(state, route, sections);
 }
 
 export function withHostRoute(
@@ -54,7 +81,7 @@ export function withHostRoute(
 ): ShellState {
   const path =
     route.view.kind === "target"
-      ? disclosurePath(sections, route.view.target.entry.route)
+      ? disclosurePath(sections, route.view.target.entry.id)
       : [];
   return {
     ...state,
@@ -79,17 +106,18 @@ export function announceNavigation(
   fragment: string | undefined,
   pending: PendingNavigation | undefined,
 ): void {
-  const entry = routedEntries(environment.model).find(
-    (candidate) => candidate.id === selection.screenId,
-  );
+  const entry =
+    typeof selection.screenId === "string"
+      ? resolveCatalogueSelection(
+          environment.model,
+          selection.screenId,
+          selection.snapshotId,
+        )?.entry
+      : undefined;
   if (!entry) return;
-  const variantId =
-    selection.variantId ??
-    (entry.kind === "component" ? entry.variants[0]?.id : undefined);
   environment.events().onScreenNavigate?.({
     screenId: entry.id,
-    route: entry.route,
-    ...(variantId ? { variantId } : {}),
+    ...(selection.snapshotId ? { snapshotId: selection.snapshotId } : {}),
     ...(fragment ? { fragment } : {}),
     ...(pending?.navigation ? { navigation: pending.navigation } : {}),
   });
@@ -114,13 +142,35 @@ export function hostClick(
   if (!anchor || !eligibleAnchor(event, anchor)) return;
   const href = anchor.getAttribute("href");
   if (!href) return;
-  const requested = routeFromUrl(catalogue, new URL(href, environment.baseUrl));
+  const url = new URL(href, environment.baseUrl);
+  if (!ownedCatalogueUrl(url, environment.baseUrl, anchor.ownerDocument))
+    return;
+  const requested = routeFromUrl(catalogue, url);
   const route = anchor.hasAttribute("data-nav-row")
     ? changesActivation(catalogue, context, state.selection, requested)
     : requested;
-  if (route.view.kind === "missing") return;
   event.preventDefault();
+  if (route.view.kind === "missing") {
+    environment.events().onError?.({
+      code: "selection",
+      message: "The requested catalogue selection is unavailable.",
+    });
+    return;
+  }
   request(route);
+}
+
+function ownedCatalogueUrl(
+  url: URL,
+  baseUrl: URL,
+  ownerDocument: Document,
+): boolean {
+  return (
+    (url.origin === baseUrl.origin ||
+      url.origin === ownerDocument.location.origin) &&
+    url.hash === "" &&
+    (url.pathname === "/" || url.pathname.startsWith("/view/"))
+  );
 }
 
 function closePickerFromTag(

@@ -15,37 +15,34 @@ const COMPARISON = `/__mokly/diffs/__generations/${GENERATION}/review.json`;
 const BASE = "https://catalogue.test/view/archive/removed.html";
 
 const delivery: StaticDelivery = {
-  schemaVersion: 2,
+  schemaVersion: 4,
   deploymentId: "c".repeat(64),
   canonicalPath: "/view/archive/removed.html",
   comparisonUrl: COMPARISON,
-  idRoutes: {},
 };
 
 const removedPage: RemovedPreviewData = {
   id: "removed-page",
   kind: "page",
-  route: "archive/removed.html",
   title: "Removed page",
 };
 
 const removedScreen: RemovedPreviewData = {
   id: "removed-screen",
   kind: "screen",
-  route: "screens/removed.html",
   title: "Removed screen",
 };
 
-const pagePath = `__mokly/diffs/__generations/${GENERATION}/pages/archive/removed.html.json`;
+const pagePath = `__mokly/diffs/__generations/${GENERATION}/pages/removed-page.json`;
 
 test("development stages request the stable selected endpoint", () => {
   assert.equal(
     previewEndpoint(removedPage, undefined, BASE, false)?.endpoint.href,
-    "https://catalogue.test/__mokly/diffs/review.json?page=archive%2Fremoved.html",
+    "https://catalogue.test/__mokly/diffs/review.json?page=removed-page",
   );
   assert.equal(
     previewEndpoint(removedScreen, undefined, BASE, true)?.endpoint.href,
-    "https://catalogue.test/__mokly/diffs/review.json?route=screens%2Fremoved.html&refresh=1",
+    "https://catalogue.test/__mokly/diffs/review.json?id=removed-screen&refresh=1",
   );
 });
 
@@ -66,7 +63,7 @@ test("static delivery loads only what the catalogue advertises", () => {
   );
   assert.equal(
     previewEndpoint(
-      { ...removedPage, published: { kind: "page", path: pagePath } },
+      { ...removedPage, published: { kind: "page" } },
       delivery,
       BASE,
       false,
@@ -75,7 +72,7 @@ test("static delivery loads only what the catalogue advertises", () => {
   );
   assert.equal(
     previewEndpoint(
-      { ...removedPage, published: { kind: "page", path: pagePath } },
+      { ...removedPage, published: { kind: "page" } },
       { comparisonUrl: COMPARISON.slice(1) },
       BASE,
       false,
@@ -84,32 +81,7 @@ test("static delivery loads only what the catalogue advertises", () => {
   );
 });
 
-test("an advertised address from another generation or route is declined", () => {
-  const other = pagePath.replace(GENERATION, "d".repeat(64));
-  assert.equal(
-    previewEndpoint(
-      { ...removedPage, published: { kind: "page", path: other } },
-      delivery,
-      BASE,
-      false,
-    ),
-    undefined,
-  );
-  assert.equal(
-    previewEndpoint(
-      {
-        ...removedPage,
-        published: {
-          kind: "page",
-          path: pagePath.replace("removed.html", "other.html"),
-        },
-      },
-      delivery,
-      BASE,
-      false,
-    ),
-    undefined,
-  );
+test("a mismatched kind or unavailable generation is declined", () => {
   assert.equal(
     previewEndpoint(
       { ...removedPage, published: { kind: "screen" } },
@@ -139,7 +111,7 @@ test("a damaged or unknown descriptor advertises nothing", () => {
   );
   assert.equal(
     readPreviewDescriptor(
-      JSON.stringify({ ...removedPage, route: "../escape.html" }),
+      JSON.stringify({ kind: "page", title: "Missing id" }),
     ),
     undefined,
   );
@@ -147,7 +119,7 @@ test("a damaged or unknown descriptor advertises nothing", () => {
     readPreviewDescriptor(
       JSON.stringify({ ...removedPage, published: { kind: "page" } }),
     ),
-    removedPage,
+    { ...removedPage, published: { kind: "page" } },
   );
   assert.deepEqual(
     readPreviewDescriptor(
@@ -161,21 +133,24 @@ test("a damaged or unknown descriptor advertises nothing", () => {
   );
 });
 
-test("an embedded viewer may request only advertised addresses", () => {
+test("the documented embedded fetch set advertises comparison snapshots", () => {
   const model = {
     comparisonUrl: COMPARISON.slice(1),
     removedEntries: [
-      { entry: { route: "screens/removed.html" }, preview: { kind: "screen" } },
+      { entry: { id: "removed-screen" }, preview: { kind: "screen" } },
       {
-        entry: { route: "archive/removed.html" },
-        preview: { kind: "page", path: pagePath },
+        entry: { id: "removed-page" },
+        preview: { kind: "page" },
       },
-      { entry: { route: "flows/tour.html" } },
+      { entry: { id: "tour" } },
     ],
   } as unknown as CatalogueReadModel;
   assert.deepEqual(advertisedPreviewPaths(model), {
     files: [COMPARISON.slice(1), pagePath],
-    prefixes: [`__mokly/diffs/__generations/${GENERATION}/snapshots/before/`],
+    prefixes: [
+      `__mokly/diffs/__generations/${GENERATION}/snapshots/before/`,
+      `__mokly/diffs/__generations/${GENERATION}/snapshots/after/`,
+    ],
   });
   assert.deepEqual(
     advertisedPreviewPaths({

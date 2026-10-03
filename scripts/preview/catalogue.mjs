@@ -1,7 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { viewHref } from "@mokly/viewer/data";
+
 import { compileCatalogue } from "../../dist/build/compile.js";
+import { componentRuntime } from "../../dist/build/component_runtime.js";
+import { generatedBytes } from "../../dist/build/generated_file.js";
 import { projectCatalogue } from "../../dist/catalogue/projection.js";
 import {
   CATALOGUE_PATH,
@@ -9,25 +13,24 @@ import {
 } from "../../dist/catalogue/serialization.js";
 import { isInside, projectRealPath } from "../../dist/config/paths.js";
 import { errorMessage } from "../../dist/errors.js";
-import { externalizeCapturedShell } from "../../dist/export/captured_shell.js";
+import {
+  externalizeCapturedShell,
+  readCapturedShellCatalogue,
+} from "../../dist/export/captured_shell.js";
 import { withExportCleanup } from "../../dist/export/cleanup.js";
 import { assertExportOwnership } from "../../dist/export/ownership.js";
 import { resolveExportOutput } from "../../dist/export/paths.js";
 import { ExportTransaction } from "../../dist/export/transaction.js";
 import { publicationOptions } from "../../dist/publication/options.js";
 import { copyPublicFiles } from "../../dist/publication/resources.js";
-import { prepareReviewRepository } from "../../dist/review/prepare.js";
-import { loadCatalogueSnapshot } from "../../dist/server/catalogue_snapshot.js";
-import { computeCatalogueChanges } from "../../dist/server/changed.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 
 import { previewOwnership, stagePreviewArtifact } from "./artifact.mjs";
 import {
-  captureAssets,
-  capturePage,
-  encodePath,
-  writeText,
-} from "./capture.mjs";
+  publicationSnapshot,
+  preparePublicationBaseline,
+} from "./baseline.mjs";
+import { captureAssets, capturePage, writeText } from "./capture.mjs";
 import {
   captureComparison,
   capturePublicationPagePreviews,
@@ -36,7 +39,7 @@ import {
 } from "./comparisons.mjs";
 import { capturePublicationInputs } from "./inputs.mjs";
 
-/** Capture one compiled generation without writing to the consumer catalogue. */
+/** Capture a validated in-memory compilation; the npm wrapper also prepares the example. */
 export async function buildPreview(config, output, options = {}) {
   const ownership = previewOwnership(config);
   const capability = publicationOptions(options);
@@ -47,7 +50,7 @@ export async function buildPreview(config, output, options = {}) {
     await assertExportOwnership(destination, ownership);
   } catch (cause) {
     throw new Error(
-      `refusing to replace unowned preview directory: ${output}`,
+      `refusing to replace unowned preview directory: ${output}. ${errorMessage(cause)}`,
       { cause },
     );
   }
@@ -60,41 +63,52 @@ export async function buildPreview(config, output, options = {}) {
         const base = capability.includeChanges
           ? (capability.base ?? config.review.base)
           : "";
-        const prepared = capability.includeChanges
-          ? await prepareReviewRepository(config, base)
-          : undefined;
+        const preparation = await preparePublicationBaseline(
+          config,
+          base,
+          capability.includeChanges,
+        );
+        const prepared = preparation.prepared;
         const git = prepared;
-        const compilation = await compileCatalogue(config);
+        const compiled = await compileCatalogue(config);
         const inputs = await capturePublicationInputs(
           config,
           excludedRoots,
-          compilation,
+          compiled,
         );
-        const snapshot = await loadCatalogueSnapshot(
+        const {
+          incompatible: snapshotIncompatible,
+          snapshot,
+          changeEvidence,
+        } = await publicationSnapshot(
           config,
-          git
-            ? (manifest) =>
-                computeCatalogueChanges(
-                  config,
-                  base,
-                  git,
-                  manifest,
-                  compilation.outputs,
-                )
-            : undefined,
-          inputs.manifest,
+          git,
+          base,
+          compiled?.manifest ?? inputs.manifest,
+          compiled,
+          excludedRoots,
         );
+        const incompatible = preparation.incompatible || snapshotIncompatible;
         const { catalogue, changes } = snapshot;
         const manifest = catalogue.manifest;
-        const review = git
-          ? previewComparisonProvider(config, stage, base, git)
-          : undefined;
+        const review =
+          git && !incompatible
+            ? previewComparisonProvider(
+                config,
+                stage,
+                base,
+                git,
+                changeEvidence,
+              )
+            : undefined;
         const server = await startCatalogueServer(config, {
           base,
+          ...(incompatible ? { changesStatus: "unavailable" } : {}),
           liveChanges: false,
           snapshot,
-          generatedOutputs: compilation.outputs,
+          generatedOutputs: compiled.outputs,
           port: 0,
+          ...(compiled ? { componentRuntime: componentRuntime(compiled) } : {}),
           ...(review ? { review } : {}),
         });
         let comparison;
@@ -114,14 +128,9 @@ export async function buildPreview(config, output, options = {}) {
           await capturePage(server.url, "/", stage, "index.html");
           capturedShells.add("index.html");
           for (const entry of [...manifest.entries, ...removed]) {
-            if (entry.kind === "collection") continue;
-            const name = `view/${entry.route}`;
-            await capturePage(
-              server.url,
-              `/view/${encodePath(entry.route)}`,
-              stage,
-              name,
-            );
+            const route = viewHref(entry.kind, entry.id);
+            const name = route.slice(1);
+            await capturePage(server.url, route, stage, name);
             capturedShells.add(name);
           }
           await capturePage(
@@ -149,7 +158,7 @@ export async function buildPreview(config, output, options = {}) {
           catalogue,
           stage,
           excludedRoots,
-          compilation.outputs,
+          compiled.outputs,
         );
         const readModel = projectCatalogue({
           configPath: path
@@ -157,8 +166,12 @@ export async function buildPreview(config, output, options = {}) {
             .split(path.sep)
             .join("/"),
           catalogue,
-          changesStatus: comparison ? "ready" : "disabled",
-          changedRoutes: changes?.changedRoutes,
+          changesStatus: comparison
+            ? "ready"
+            : incompatible
+              ? "unavailable"
+              : "disabled",
+          changedIds: changes?.changedIds,
           evidence: snapshot.componentChanges,
           comparison: comparison?.result,
           comparisonUrl: comparison
@@ -167,6 +180,7 @@ export async function buildPreview(config, output, options = {}) {
           removedPreviews: comparison?.removedPreviews,
           revision: { content: 0, evidence: 0 },
         });
+        const capturedCatalogue = readCapturedShellCatalogue(readModel);
         for (const name of capturedShells) {
           const html = await fs.promises.readFile(
             path.join(stage, name),
@@ -175,7 +189,7 @@ export async function buildPreview(config, output, options = {}) {
           await writeText(
             stage,
             name,
-            externalizeCapturedShell(name, html, readModel),
+            externalizeCapturedShell(name, html, capturedCatalogue),
           );
         }
         await writeText(stage, CATALOGUE_PATH, serializeCatalogue(readModel));
@@ -199,6 +213,22 @@ export async function buildPreview(config, output, options = {}) {
           throw new Error(
             "consumer inputs changed during publication; retry with stable inputs",
           );
+        if (compiled) {
+          const after = await compileCatalogue(config);
+          if (
+            after.outputs.size !== compiled.outputs.size ||
+            [...compiled.outputs].some(([route, content]) => {
+              const current = after.outputs.get(route);
+              return (
+                current === undefined ||
+                !generatedBytes(content).equals(generatedBytes(current))
+              );
+            })
+          )
+            throw new Error(
+              "consumer inputs changed during publication; retry with stable inputs",
+            );
+        }
         assertSafeOutput(output, config.repoRoot);
         await prepared?.assertUnchanged();
         if (

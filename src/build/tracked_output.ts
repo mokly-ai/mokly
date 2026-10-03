@@ -37,7 +37,10 @@ export class GitTrackedGeneratedOutput implements TrackedGeneratedOutput {
           toPosixPath(
             path.relative(
               projectRealPath(config.repoRoot),
-              projectRealPath(config.generatedDir),
+              path.join(
+                projectRealPath(config.mockupsDir),
+                GENERATED_DIRECTORY,
+              ),
             ),
           ),
         ]),
@@ -72,7 +75,9 @@ export class GitTrackedGeneratedOutput implements TrackedGeneratedOutput {
       const pathForRoute = (prefix: string, route: string) =>
         prefix ? `${prefix}/${route}` : route;
       const tracked = [...new Set(indexed)].filter((name) =>
-        prefixes.some((prefix) => name.startsWith(`${prefix}/`)),
+        prefixes.some(
+          (prefix) => name === prefix || name.startsWith(`${prefix}/`),
+        ),
       );
       if (!tracked.length) return "untracked";
       const missing = [...compilation.outputs.keys()]

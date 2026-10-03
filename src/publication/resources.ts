@@ -1,10 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+import {
+  GENERATED_DIRECTORY,
+  entryRoute,
+  generatedViews,
+} from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../browse/document_adapter.js";
+import type { GeneratedFile } from "../build/generated_file.js";
 import { locatePath } from "../config/file_locations.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { capturePublicFiles } from "../export/public_files.js";
@@ -17,11 +22,10 @@ export async function copyPublicFiles(
   catalogue: Catalogue,
   stage: string,
   _excludedRoots: readonly string[],
-  generatedOutputs: ReadonlyMap<string, string>,
+  generatedOutputs: ReadonlyMap<string, GeneratedFile>,
 ): Promise<void> {
   const root = path.join(stage, "static");
   const copied = new Set<string>();
-  const generatedRoutes = new Set([...generatedOutputs.keys()]);
   const files = await capturePublicFiles(
     config,
     generatedOutputs,
@@ -45,18 +49,12 @@ export async function copyPublicFiles(
     const content = await fs.promises.readFile(file);
     const logical = route.startsWith(`${GENERATED_DIRECTORY}/`)
       ? route.slice(GENERATED_DIRECTORY.length + 1)
-      : route;
-    for (const resource of referencedRoutes(logical, content, undefined, {
-      prefix: GENERATED_DIRECTORY,
-      routes: generatedRoutes,
-    })) {
-      const target = generatedRoutes.has(resource)
-        ? `${GENERATED_DIRECTORY}/${resource}`
-        : resource;
-      if (!copied.has(target)) throw resourceError(target, route);
-      await exportedFile(root, stage, target, route);
+      : undefined;
+    for (const resource of referencedRoutes(route, content)) {
+      if (!copied.has(resource)) throw resourceError(resource, route);
+      await exportedFile(root, stage, resource, route);
     }
-    if (/\.html?$/i.test(route) && generatedRoutes.has(logical))
+    if (/\.html?$/i.test(route))
       documents.set(
         route,
         adaptBrowseDocument(content.toString("utf8"), logical, catalogue),
@@ -70,13 +68,8 @@ export async function copyPublicFiles(
 function catalogueDocuments(catalogue: Catalogue): readonly string[] {
   return catalogue.manifest.entries.flatMap((entry) =>
     entry.kind === "page"
-      ? [entry.route]
-      : entry.kind === "screen"
-        ? [
-            ...Object.values(entry.fragments),
-            ...Object.values(entry.darkFragments ?? {}),
-          ]
-        : [],
+      ? [entryRoute("page", entry.id)]
+      : generatedViews(entry).map((view) => view.path),
   );
 }
 

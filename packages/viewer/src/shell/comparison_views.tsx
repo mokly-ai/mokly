@@ -1,10 +1,21 @@
-/** React rendering for isolated before/current comparison panes. */
+/** React rendering for the aligned Before and Current comparison panes. */
 
-import type { ViewReview } from "../review/types.js";
+import { useEffect, useState } from "react";
 
-import type { LoadedComparison } from "./comparison_request.js";
+import { entryRoute, type ViewRouteKind } from "../navigation/routes.js";
+import type { SnapshotPresentation } from "../previews/presentation.js";
+
+import { comparisonChrome, type PaneDocument } from "./comparison_chrome.js";
+import {
+  createScrollOwner,
+  type ComparisonSide,
+  type ScrollOwner,
+} from "./comparison_scroll_owner.js";
+import { createComparisonScrollSync } from "./comparison_scroll_sync.js";
+import type { SelectedComparisonView } from "./comparison_selection.js";
+import { SideBySideComparison } from "./comparison_side.js";
+import { StackedComparison } from "./comparison_stack.js";
 import { entryWording } from "./entry_wording.js";
-import { BrowserFrame, PhoneFrame } from "./frames.js";
 import type { ComparisonPresentation } from "./use_comparison.js";
 import { isStyleOnlyView } from "./workspace_style_evidence.js";
 
@@ -16,176 +27,109 @@ const stateLabels = {
   unchanged: "No changes to this screen",
 } as const;
 
-/** Render panes for the active route, saved variant, and adopted presentation. */
-export function ComparisonViews({
-  component,
-  loaded,
-  presentation,
-  route,
-  variantId,
-}: {
-  component: boolean;
-  loaded: LoadedComparison;
+interface SectionProps {
+  entryId: string;
+  entryKind: ViewRouteKind;
+  /** The last-scrolled version, shared by every section of the comparison. */
+  owner: ScrollOwner;
   presentation: ComparisonPresentation;
-  route: string;
-  variantId?: string;
+  presentations: ReadonlyMap<string, SnapshotPresentation>;
+  selected: SelectedComparisonView;
+  /** Whether Scroll together is on; switching it never reloads a pane. */
+  together: boolean;
+}
+
+/**
+ * Render every selected viewport section from its presented documents. The
+ * sections of one shown comparison share its last-scrolled version.
+ */
+export function ComparisonViews({
+  views,
+  ...props
+}: Omit<SectionProps, "owner" | "selected"> & {
+  views: readonly SelectedComparisonView[] | undefined;
 }) {
-  const entry = comparisonEntry(loaded, route, variantId);
-  if (!entry) return <p>This screen has no comparison available.</p>;
-  const wording = entryWording(component ? "component" : "screen");
+  const [owner] = useState(createScrollOwner);
+  if (!views) return <p>This screen has no comparison available.</p>;
   return (
     <>
-      {(["mobile", "desktop"] as const).map((viewport) => {
-        if (
-          presentation.viewport !== "both" &&
-          presentation.viewport !== viewport
-        )
-          return null;
-        const view =
-          entry.views.find(
-            (candidate) =>
-              candidate.viewport === viewport &&
-              candidate.colorScheme === presentation.colorScheme,
-          ) ??
-          entry.views.find(
-            (candidate) =>
-              candidate.viewport === viewport &&
-              candidate.colorScheme === "light",
-          );
-        if (!view) return null;
-        const mode =
-          view.beforePath && view.afterPath ? presentation.mode : "side";
-        const label = isStyleOnlyView(view)
-          ? "Styles this screen uses changed"
-          : stateLabels[view.state];
-        return (
-          <section
-            className={`mbk-diff-view mbk-diff-${viewport}`}
-            data-diff-viewport={viewport}
-            key={viewport}
-          >
-            <h3>
-              {viewport === "mobile" ? "Mobile" : "Desktop"} ·{" "}
-              {wording.label(label)}
-              {presentation.requestedColorScheme !== view.colorScheme
-                ? " · Light only"
-                : ""}
-            </h3>
-            <div className="mb-panes" data-compare-mode={mode}>
-              <ComparisonPane
-                component={component}
-                loaded={loaded}
-                route={route}
-                side="before"
-                view={view}
-              />
-              <ComparisonPane
-                component={component}
-                loaded={loaded}
-                route={route}
-                side="after"
-                view={view}
-              />
-            </div>
-          </section>
-        );
-      })}
+      {views.map((selected) => (
+        <ComparisonSection
+          key={selected.viewport}
+          {...props}
+          owner={owner}
+          selected={selected}
+        />
+      ))}
     </>
   );
 }
 
-function ComparisonPane({
-  component,
-  loaded,
-  route,
-  side,
-  view,
-}: {
-  component: boolean;
-  loaded: LoadedComparison;
-  route: string;
-  side: "after" | "before";
-  view: ViewReview;
-}) {
-  const label = side === "before" ? "Before" : "Current";
-  const source = side === "before" ? view.beforePath : view.afterPath;
+/** One viewport's heading and panes, owning the section's scroll offset. */
+function ComparisonSection({
+  entryId,
+  entryKind,
+  owner,
+  presentation,
+  presentations,
+  selected,
+  together,
+}: SectionProps) {
+  const [sync] = useState(() =>
+    createComparisonScrollSync({ owner, together }),
+  );
+  useEffect(() => sync.setTogether(together), [sync, together]);
+  const { documents, mode, view, viewport } = selected;
+  const component = entryKind === "component";
+  const wording = entryWording(component ? "component" : "screen");
+  const label = isStyleOnlyView(view)
+    ? "Styles this screen uses changed"
+    : stateLabels[view.state];
+  const pane = (side: ComparisonSide): PaneDocument | undefined => {
+    const address = documents[side];
+    const document = address ? presentations.get(address) : undefined;
+    if (!document) return;
+    return {
+      presentation: document,
+      side,
+      title: `${side === "before" ? "Before" : "Current"} — ${view.viewport} — ${view.colorScheme}`,
+    };
+  };
+  const before = pane("before");
+  const after = pane("after");
+  const chrome = comparisonChrome(
+    component,
+    viewport,
+    entryRoute(entryKind, entryId),
+  );
   return (
-    <div className={`mb-pane mb-pane--${side}`}>
-      <p className="mb-pane-label">{label}</p>
-      {source ? (
-        <div
-          className="mb-pane-doc mbk-frame-wrap"
-          data-color-scheme-fallback={
-            view.colorScheme === "light" ? "" : undefined
-          }
-        >
-          <ComparisonFrame
-            component={component}
-            label={label}
-            route={route}
-            source={snapshotUrl(loaded.url, source)}
-            view={view}
-          />
-        </div>
+    <section
+      className={`mbk-diff-view mbk-diff-${viewport}`}
+      data-diff-viewport={viewport}
+    >
+      <h3>
+        {viewport === "mobile" ? "Mobile" : "Desktop"} · {wording.label(label)}
+        {presentation.requestedColorScheme !== view.colorScheme
+          ? " · Light only"
+          : ""}
+      </h3>
+      {mode !== "side" && before && after ? (
+        <StackedComparison
+          after={after}
+          before={before}
+          chrome={chrome}
+          mode={mode}
+          sync={sync}
+          view={view}
+        />
       ) : (
-        <p className="mb-pane-missing">
-          {side === "before"
-            ? "This screen was added on this branch."
-            : "This screen was removed on this branch."}
-        </p>
+        <SideBySideComparison
+          chrome={chrome}
+          documents={{ after, before }}
+          sync={sync}
+          view={view}
+        />
       )}
-    </div>
+    </section>
   );
-}
-
-function ComparisonFrame({
-  component,
-  label,
-  route,
-  source,
-  view,
-}: {
-  component: boolean;
-  label: string;
-  route: string;
-  source: string;
-  view: ViewReview;
-}) {
-  const frame = (
-    <iframe
-      className="mbk-frag"
-      sandbox=""
-      src={source}
-      title={`${label} — ${view.viewport} — ${view.colorScheme}`}
-    />
-  );
-  if (component) return frame;
-  return view.viewport === "mobile" ? (
-    <PhoneFrame>{frame}</PhoneFrame>
-  ) : (
-    <BrowserFrame address={route} expandable={false}>
-      {frame}
-    </BrowserFrame>
-  );
-}
-
-function comparisonEntry(
-  loaded: LoadedComparison,
-  route: string,
-  variantId: string | undefined,
-): { views: readonly ViewReview[] } | undefined {
-  const component =
-    loaded.result.schemaVersion === 3
-      ? loaded.result.components.find((candidate) => candidate.route === route)
-      : undefined;
-  const variant = component?.variants.find(
-    (candidate) => candidate.id === variantId,
-  );
-  if (component) return variant;
-  return loaded.result.screens.find((candidate) => candidate.route === route);
-}
-
-function snapshotUrl(base: string, source: string): string {
-  return new URL(source.split("/").map(encodeURIComponent).join("/"), base)
-    .href;
 }

@@ -206,7 +206,6 @@ function frameSession(mounted: MountedFrame): ShellFrameSession {
     identity: {
       colorScheme: "light",
       entryId: "screen",
-      route: "screen.html",
       viewport: "desktop",
     },
     mounted,

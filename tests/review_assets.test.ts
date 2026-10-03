@@ -8,8 +8,10 @@ import { promisify } from "node:util";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
+import { gitBlobHash } from "../dist/registry/blob_hash.js";
+import { serializeManifest } from "../dist/registry/manifest.js";
 import { runReview } from "../dist/review/run.js";
-import { copySnapshotDependencies } from "../dist/review/snapshot_dependencies.js";
+import { copySnapshotDependencies } from "../dist/review/snapshot_resources.js";
 
 import { committedReviewRepository } from "./helpers/committed_repository.js";
 import {
@@ -185,6 +187,16 @@ test("Review rejects non-regular base dependency blobs", async (context) => {
       '<link rel="stylesheet" href="../../linked.css" /></head>',
     ),
   );
+  const manifestPath = path.join(config.generatedDir, "mokly-manifest.json");
+  const baseline = JSON.parse(await fs.promises.readFile(manifestPath, "utf8"));
+  baseline.assetClosure = ["linked.css"];
+  baseline.generatedFiles.find(
+    (file: { path: string }) => file.path === "screens/home.mobile.html",
+  ).blobHash = gitBlobHash(
+    await fs.promises.readFile(baseFragment),
+    baseline.blobHashAlgorithm,
+  );
+  await fs.promises.writeFile(manifestPath, serializeManifest(baseline));
   await git(fixture.root, ["init", "-q"]);
   await git(fixture.root, ["config", "user.name", "Mokly Test"]);
   await git(fixture.root, ["config", "user.email", "mokly@example.invalid"]);

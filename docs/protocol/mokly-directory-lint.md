@@ -2,12 +2,11 @@
 
 ## Delivery Status
 
-Approved target for Milestones 10, 12 and 13 of
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
-Milestone 10 implements the independent generated-directory literal rule before
-the merge, including escaped string, template and regular-expression spellings.
-Milestone 12 adds the viewer name. Milestone 13 proves merged coverage and
-enables duplicate-import checks. Those later changes remain approved targets.
+The independent generated-directory literal rule is implemented, including
+escaped string, template and regular-expression spellings. The approved follow-on
+work adds the viewer namespace, merged folder-coverage probes and duplicate-import
+enforcement. [Generated Output Simplification](../../plans/generated-output-simplification.md)
+tracks implementation and verification.
 
 ## Directory Name Rule
 
@@ -23,7 +22,7 @@ packages/viewer/src/**/*.{ts,tsx}
 scripts/preview/**/*.mjs
 ```
 
-Reject any occurrence of `mokly-generated`, and from Milestone 12
+Reject any occurrence of `mokly-generated`, and, after the namespace rename,
 `mokly-viewer`, in a string literal, template literal segment, or
 regular-expression literal. Include names embedded in paths and diagnostics.
 Check cooked string/template values and raw spellings; regex checks must read

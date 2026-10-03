@@ -12,6 +12,7 @@ import {
   type BaselineCatalogue,
 } from "../baseline/catalogue.js";
 import { SystemBaselineClock } from "../baseline/clock.js";
+import { incompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { assertBaselineActive, BaselineError } from "../baseline/errors.js";
 import { NodeBaselineFileSystem } from "../baseline/filesystem.js";
 import { StderrBaselineMaintenanceReporter } from "../baseline/maintenance.js";
@@ -28,8 +29,7 @@ import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
 import {
-  FORMER_MANIFEST_NAME,
-  LEGACY_MANIFEST_NAME,
+  EARLIER_MANIFEST_NAMES,
   MANIFEST_NAME,
   parseHistoricalManifest,
 } from "../registry/manifest.js";
@@ -112,13 +112,12 @@ export async function prepareReviewRepository(
     toPosixPath(path.relative(config.repoRoot, config.mockupsDir)) || ".";
   const blobReader = new CommittedBaselineReader(runner);
   let selection: BaselineSelection = "rebuild";
-  let descriptor = baselineCatalogue(commit, prefix, "generated-v6");
+  let descriptor = baselineCatalogue(commit, prefix, "generated-v8");
   const tree = await readCommitTree(runner, commit);
   for (const filename of [
     `${GENERATED_DIRECTORY}/${MANIFEST_NAME}`,
     MANIFEST_NAME,
-    FORMER_MANIFEST_NAME,
-    ...(config.compatibility.readManifestV2 ? [LEGACY_MANIFEST_NAME] : []),
+    ...EARLIER_MANIFEST_NAMES,
   ]) {
     const candidate = joinCataloguePath(prefix, filename);
     const kind = treeEntryKind(tree.get(candidate));
@@ -128,21 +127,19 @@ export async function prepareReviewRepository(
         "manifest-invalid",
         `historical manifest is not a regular file: ${candidate}`,
       );
+    if (EARLIER_MANIFEST_NAMES.some((name) => name === filename))
+      throw incompatibleEarlierBaseline();
     try {
       const manifest = parseHistoricalManifest(
         JSON.parse(await blobReader.readFile(commit, candidate)),
-        filename === LEGACY_MANIFEST_NAME,
       );
-      const layout = filename.startsWith(`${GENERATED_DIRECTORY}/`)
-        ? "generated-v6"
-        : "legacy";
-      if (layout === "generated-v6" && manifest.schemaVersion !== 6)
+      if (filename !== `${GENERATED_DIRECTORY}/${MANIFEST_NAME}`)
         throw new MoklyError(
           "manifest-invalid",
-          `historical manifest is not v6: ${candidate}`,
+          `historical v8 manifest must be in the generated directory: ${candidate}`,
         );
-      descriptor = baselineCatalogue(commit, prefix, layout);
-      if (manifest.schemaVersion === 6 && "generatedFiles" in manifest) {
+      descriptor = baselineCatalogue(commit, prefix);
+      if (manifest.schemaVersion === 8 && "generatedFiles" in manifest) {
         const issue = incompleteGeneratedInventory(tree, descriptor, manifest);
         if (issue) {
           const line = inventoryDiagnostic(commit, issue);
@@ -167,7 +164,6 @@ export async function prepareReviewRepository(
     commit,
     mockupsPath: prefix,
     commands: config.review.baselineBuild ?? [],
-    allowManifestV2: config.compatibility.readManifestV2,
     ...(options.signal ? { signal: options.signal } : {}),
     ...(options.onProgress ? { onProgress: options.onProgress } : {}),
   };
@@ -184,7 +180,12 @@ export async function prepareReviewRepository(
           )
         ).build(request)
       : undefined;
-  if (rebuilt?.marker.historicalCatalogueRoot && rebuilt.marker.layout)
+  if (rebuilt && rebuilt.marker.manifestVersion !== 8)
+    throw incompatibleEarlierBaseline();
+  if (
+    rebuilt?.marker.historicalCatalogueRoot &&
+    rebuilt.marker.layout === "generated-v8"
+  )
     descriptor = baselineCatalogue(
       commit,
       rebuilt.marker.historicalCatalogueRoot,

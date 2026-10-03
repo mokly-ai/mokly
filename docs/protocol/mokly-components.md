@@ -9,7 +9,7 @@ Existing unregistered catalogues retain their output and Review-ignore behavior.
 
 ## Product Contract
 
-A registered component owns a catalogue page, saved variants, and comparisons.
+A registered component owns a catalogue page, variant entries, and comparisons.
 Its actual rendered instances connect that page to consuming screens and other
 components. Registration supplies the identity used by previews, automatic
 change attribution, the shared icon inspector, and highlighting; consumers do not
@@ -22,8 +22,9 @@ its count unless they have an independent screen change. See the
 
 ## Authoring Boundary
 
-The root package exports `defineComponent`. It returns an `entry` for the
-`mockups` export and a typed `Component` wrapper for composition. The wrapper
+The root package exports `defineComponent`. It returns `entries` for the
+`mockups` export, the parent entry followed by one entry per variant in
+authored order, beside a typed `Component` wrapper for composition. The wrapper
 uses the consumer's real component through a render adapter. A consumer can
 re-export that wrapper once from its mockup component module and use ordinary
 JSX throughout its screens.
@@ -35,7 +36,6 @@ const action = defineComponent({
   id: "action",
   title: "Action",
   description: "The primary action for a task.",
-  route: "components/action.html",
   dependencies: ["src/components/Action.tsx"],
   relatedDocs: [],
   propSchema: {
@@ -48,12 +48,12 @@ const action = defineComponent({
   render: (props) => <Action disabled={props.disabled}>{props.label}</Action>,
   variants: [
     {
-      id: "default",
+      id: "action-default",
       title: "Default",
       props: { label: "Continue", disabled: false },
     },
     {
-      id: "disabled",
+      id: "action-disabled",
       title: "Disabled",
       props: { label: "Continue", disabled: true },
     },
@@ -64,7 +64,7 @@ const action = defineComponent({
   },
 });
 
-export const mockups = [action.entry];
+export const mockups = action.entries;
 
 // A screen uses the same registered render adapter.
 const submit = (
@@ -82,14 +82,22 @@ after registration. It snapshots schemas, controls and saved data before
 rendering. Invalid exports fail with source-attributed component diagnostics
 before output generation; helper branding alone is not validation.
 
-The input includes the common entry metadata, a stable relative `.html` route,
-`propSchema`, `render`, and a nonempty ordered `variants` list. `tags`,
-`colorSchemes`, `controls`, `slots`, and `ownedDependencies` are optional. Existing id, route,
-dependency, tag, and color-scheme validation applies. Variant ids are unique
-kebab-case strings within their component; the first variant is the default.
-Each variant contains an id, title, complete typed props, and an optional
-description. There is no
-implicit merge between variants.
+The input includes the common entry metadata, `propSchema`, `render`, and a
+nonempty ordered `variants` list. `tags`, `colorSchemes`, `controls`, `slots`,
+and `ownedDependencies` are optional. Existing id, dependency, tag, and
+color-scheme validation applies; component paths follow the
+[artifact path contract](./mokly-artifact-paths.md). Each
+variant contains an id, title, complete typed props, and an optional
+description. An authored description must be nonempty and becomes the variant
+entry's description; when omitted, the flattened entry copies the parent's
+description. `defineComponent` rejects unknown variant fields. Variant
+ids are global kebab-case catalogue ids, and each variant flattens into its own
+`kind: "component"` entry carrying `variantOf`, `props`, and `suppliedSlots`,
+copying the parent's `navPath` and inheriting its `colorSchemes`,
+`dependencies`, `relatedDocs`, and `tags`, as the
+[variant contract](./mokly-variants.md) defines. The parent entry has no
+`variants` field and no views; its page shows its first variant entry, which
+is the default. There is no implicit merge between variants.
 
 The required [prop schema](./mokly-component-props.md) determines the adapter,
 wrapper, and variant data types. Its shared runtime validator checks typed and
@@ -98,9 +106,10 @@ variants do not infer or override that schema. The adapter receives
 `render(props, { viewport, colorScheme })` and may choose a
 viewport-specific consumer component. Theme providers and styling remain
 consumer-owned.
-`RenderInput.entry` becomes a screen/component union and gains the selected
-variant id for component renders; both use the configured renderer and one
-consumer React instance. Packed-consumer tests cover this public type change.
+`RenderInput.entry` is a screen definition or a component variant entry, and
+a component render carries that variant's validated props in `componentProps`;
+both use the configured renderer and one consumer React instance.
+Packed-consumer tests cover this public type.
 
 Ordinary inputs are deterministic plain data: strings, booleans, finite
 numbers, null, arrays, and plain objects, with the existing material-key
@@ -121,48 +130,35 @@ consumer implementation belongs to its defining component/dependencies.
 
 ## Instances And Ownership
 
-`moklyInstance` is reserved for the wrapper, stripped before calling the
-consumer adapter, and uses the kebab-case id grammar. Its identity is scoped to
-the calling screen or component instance and slot. With no supplied instance
-id, the component id is the default; repeated instances in the same scope
-must supply distinct explicit ids. Duplicate identities fail with entry and
-view context rather than falling back to array indexes or random ids.
+`moklyInstance` is wrapper-only kebab-case input, stripped before consumer
+rendering. Its default, scope, stable key, duplicate rules, and sentinels belong
+to [Component Instance Identity](./mokly-instances.md). The
+[usage-record contract](./mokly-component-usage-records.md) owns collector
+records, input versus DOM ownership, repeated ranges, per-view separation, null
+instances, and the rule that only actual rendering establishes usage.
 
-The render collector records component id, scoped instance id, owner, parent
-instance, encounter order, data props and their material key, slot ownership,
-and a DOM range reference for each rendered occurrence. Ownership determines
-where an input change is reported; DOM ancestry determines inspector nesting.
-These relationships are distinct when a screen supplies another component in
-a container's slot. Repeated placement of one slot receives distinct range
-references while retaining the same input owner.
-
-Actual rendering supplies usage. Imports, unused branches, or declared
-dependencies do not invent instances. Mobile, desktop, light, dark, and saved
-variants have separate usage records. A registered component that renders null
-is still an invoked instance, but has no visible bounds. Collection and use-case
-membership never duplicates canonical usage records.
-
-Collection entries can contain component ids. Components have normal routes,
-id redirects, tags, and hierarchy-derived breadcrumbs. Use-case steps continue
-to reference screens only. Component-to-component and screen-to-component
-backlinks are derived from usage rather than separately authored relationships.
+Components author their own `navPath`; Components-section folders form from
+matching paths, independently of Pages. Components have derived routes, tags,
+and path-derived breadcrumbs, and a variant entry copies its parent's
+`navPath`. Use-case steps continue to reference screens only.
+Component-to-component and screen-to-component backlinks are derived from
+usage rather than separately authored relationships.
 
 ## Generated Artifacts
 
-One complete static document is generated for every component variant,
-viewport, and effective color scheme. For a route `components/action.html`,
-the default variant's mobile light file is
-`components/action.variants/default.mobile.html`; dark and desktop use the
-existing suffix conventions. Every variant follows this same rule. Output
-collision, resource, closure, and transactional whole-tree checks apply.
+One complete static document is generated for every component variant entry,
+viewport, and effective color scheme. The parent has no views; its page shows
+its first variant. Exact names follow the
+[artifact path contract](./mokly-artifact-paths.md). Output collision,
+ownership, resource, orphan, and transactional-write checks apply.
 
-Catalogues with registered components emit manifest schema v6, retaining typed
-component entries, variant fragments, and per-view usage records for screens
-and components. The [manifest schema](./mokly-component-manifest.md) defines
-every record, reference, ordering rule, and validation boundary. All current catalogues use v6, including those without components. Historical
-Git readers accept v3, both disjoint v4 formats, and the explicit v2 fallback;
-unknown versions fail. Historical manifests without usage metadata do not imply an empty
-component tree or justify suppressing changes.
+Every current catalogue emits manifest schema v8, including typed component
+parent and variant entries and per-view usage records for screens and component
+variants; no entry stores a route or view path. The
+[manifest schema](./mokly-component-manifest.md) defines every record,
+reference, ordering rule, and validation boundary. Baseline readers accept the
+same v8 contract; earlier output makes Changes unavailable as defined by
+[baseline compatibility](./mokly-baseline-compatibility.md).
 
 Inert, package-owned DOM markers bind generated ranges to their usage records.
 The collector is scoped to a render, not a process-global mutable registry.
@@ -179,17 +175,17 @@ Inspector values come from the generated records. Source metadata is repository-
 and remains secondary to the preview.
 
 Build, Check, watched rebuilds, published output, and packed consumers use the
-same registry and rendering pipeline. Existing unregistered components and
-legacy pages keep their current rendering and comparison behavior. A referenced
-wrapper whose entry is absent from the exported registry is a validation error.
+same registry and rendering pipeline. Unregistered components retain ordinary
+screen rendering and Review-ignore behavior. A referenced wrapper whose entry
+is absent from the exported registry is a validation error.
 Implementations must not silently register an unreachable component page.
 
 ## Related Contracts
 
 - [Component change attribution](./mokly-component-changes.md)
 - [Runtime prop schema and codec](./mokly-component-props.md)
-- [Manifest v5 schema](./mokly-component-manifest.md)
-- [Comparison v3 schema](./mokly-component-review.md)
+- [Manifest v8 schema](./mokly-component-manifest.md)
+- [Comparison v4 schema](./mokly-component-review.md)
 - [Component pages and screen inspection](./mokly-component-explorer.md)
 - [Component controls](./mokly-component-controls.md)
 - [Build pipeline](../architecture/build-pipeline.md)

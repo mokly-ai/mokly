@@ -1,7 +1,7 @@
 /** Normalize rule material without joining tokens across source boundaries. */
-import { transform } from "lightningcss";
 import type { Rule, Selector, StyleRule } from "lightningcss";
 
+import { transform } from "./lightning.js";
 import { CssSource, decodeCssIdentifier, tokenizeCss } from "./source.js";
 import type { CssSourceToken } from "./source.js";
 

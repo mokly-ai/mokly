@@ -5,10 +5,29 @@ import { expect, test } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
-const design = (route: string): string =>
-  pathToFileURL(
-    path.join(repositoryRoot, "examples/basic/mokly-generated/design", route),
+const designIds: Readonly<Record<string, string>> = {
+  "browse/views/use-case": "design-browse-use-case",
+  "review/outcomes/changed": "design-review-changed",
+  "review/outcomes/added": "design-review-added",
+  "review/outcomes/removed": "design-review-removed",
+  "review/outcomes/difference": "design-review-difference",
+  "review/impact/shared-impact": "design-review-shared-impact",
+  "review/impact/ignored-only": "design-review-ignored-only",
+  "review/outcomes/previous-version/no-captured-view":
+    "design-review-removed-no-view",
+  "review/impact/empty": "design-review-empty",
+};
+const design = (route: string): string => {
+  const match = /^(.*)\.(mobile|desktop)\.html$/u.exec(route);
+  const id = match && designIds[match[1] ?? ""];
+  if (!match || !id) throw new Error(`Unknown comparison design: ${route}`);
+  return pathToFileURL(
+    path.join(
+      repositoryRoot,
+      `examples/basic/mokly-generated/screens/${id}.${match[2]}.html`,
+    ),
   ).href;
+};
 
 test("flow designs keep comparisons on the owning screens", async ({
   page,
@@ -30,7 +49,6 @@ test("comparison designs use screen context instead of report chrome", async ({
     "outcomes/added",
     "outcomes/removed",
     "outcomes/difference",
-    "outcomes/dark-scheme",
     "impact/shared-impact",
     "impact/ignored-only",
   ]) {

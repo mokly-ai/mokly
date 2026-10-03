@@ -1,5 +1,4 @@
-import { defineCollection } from "@mokly/mokly";
-
+import { appearanceSelector } from "./chrome/appearance-selector.js";
 import { catalogueNavigation } from "./chrome/catalogue-navigation.js";
 import { screenHeader } from "./chrome/screen-header.js";
 import { topBar } from "./chrome/top-bar.js";
@@ -16,59 +15,21 @@ import { deviceFrame } from "./preview/device-frame.js";
 import { emptyState } from "./preview/empty-state.js";
 import { flowStep } from "./preview/flow-step.js";
 
-const groups = [
-  {
-    id: "chrome",
-    title: "Chrome",
-    entries: [topBar.entry, catalogueNavigation.entry, screenHeader.entry],
-  },
-  {
-    id: "controls",
-    title: "Controls",
-    entries: [
-      comparisonToolbar.entry,
-      viewControls.entry,
-      tagPicker.entry,
-      tagChip.entry,
-      changeStatusBadge.entry,
-    ],
-  },
-  {
-    id: "inspector",
-    title: "Inspector",
-    entries: [inspector.entry, metadataRow.entry, propField.entry],
-  },
-  {
-    id: "preview",
-    title: "Preview",
-    entries: [
-      deviceFrame.entry,
-      comparisonPane.entry,
-      emptyState.entry,
-      flowStep.entry,
-    ],
-  },
-];
-const metadata = {
-  dependencies: [],
-  relatedDocs: ["docs/protocol/mokly-design-component-library.md"],
-};
 export const mockups = [
-  defineCollection({
-    ...metadata,
-    id: "design-library",
-    title: "Shared components",
-    description: "The components used across Mokly's design screens.",
-    childIds: groups.map((group) => `design-library-${group.id}`),
-  }),
-  ...groups.flatMap((group) => [
-    defineCollection({
-      ...metadata,
-      id: `design-library-${group.id}`,
-      title: group.title,
-      description: `${group.title} shared across the design catalogue.`,
-      childIds: group.entries.map((entry) => entry.id),
-    }),
-    ...group.entries,
-  ]),
+  ...topBar.entries,
+  ...catalogueNavigation.entries,
+  ...screenHeader.entries,
+  ...appearanceSelector.entries,
+  ...comparisonToolbar.entries,
+  ...viewControls.entries,
+  ...tagPicker.entries,
+  ...tagChip.entries,
+  ...changeStatusBadge.entries,
+  ...inspector.entries,
+  ...metadataRow.entries,
+  ...propField.entries,
+  ...deviceFrame.entries,
+  ...comparisonPane.entries,
+  ...emptyState.entries,
+  ...flowStep.entries,
 ];

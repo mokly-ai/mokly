@@ -20,7 +20,7 @@ test("published updates replace or clear changed-route shell state", async (cont
       schemaVersion: 1,
       baseRef: "main",
       baseCommit: "a".repeat(40),
-      changedRoutes: ["screens/home.html"],
+      changedIds: ["home"],
       removedEntries: [],
     })),
     port: 0,
@@ -36,7 +36,7 @@ test("published updates replace or clear changed-route shell state", async (cont
     /data-changed="true"[^>]+data-route="screens\/home\.html"/,
   );
 
-  server.publishUpdate({ kind: "evidence", changedRoutes: [], version: 2 });
+  server.publishUpdate({ kind: "evidence", changedIds: [], version: 2 });
   const noChanges = await (await fetch(server.url)).text();
   assert.match(noChanges, /data-mokly-update-version="2"/);
   assert.match(noChanges, /data-mokly-content-version="1"/);
@@ -44,19 +44,19 @@ test("published updates replace or clear changed-route shell state", async (cont
   assert.doesNotMatch(noChanges, /data-changed="true"/);
 
   server.publishUpdate({
-    changedRoutes: ["screens/details.html"],
+    changedIds: ["details"],
     version: 2,
   });
   const stale = await (await fetch(server.url)).text();
   assert.match(stale, /class="mbk-nav-filter-count">0</);
   assert.doesNotMatch(stale, /data-changed="true"/);
 
-  server.publishUpdate({ changedRoutes: null, version: 3 });
+  server.publishUpdate({ changedIds: null, version: 3 });
   const unavailable = await (await fetch(server.url)).text();
   assert.match(unavailable, /data-changes-status="unavailable"/);
   assert.match(unavailable, /data-filter="changed"/);
   assert.match(unavailable, /data-mokly-content-version="3"/);
-  server.publishUpdate({ kind: "evidence", changedRoutes: [], version: 4 });
+  server.publishUpdate({ kind: "evidence", changedIds: [], version: 4 });
   assert.match(
     await (await fetch(server.url)).text(),
     /data-mokly-content-version="3"/,

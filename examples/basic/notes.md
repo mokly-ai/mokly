@@ -7,7 +7,7 @@ application product designs.
 
 Navigation follows the
 [design mockup links contract](../../docs/protocol/mokly-design-links.md).
-The 40 Browse and Changes artboards remain static documents, with native links
+The Browse and Changes artboards remain static documents, with native links
 between their canonical states in both viewport variants.
 
 The `Design` navigation group holds the approved mockups for Mokly's own
@@ -20,8 +20,8 @@ in each entry's description and rationale, never inside the rendered screens:
   deliberately has no standalone entry: it depicts a screen that was removed
   on a branch.
 - Supported controls are `MockLink` anchors: brand/home, catalogue leaves,
-  content and flow references, Welcome inspector, paired schemes, comparison
-  modes, and Welcome tag states. Links navigate to design ids, independently of
+  content and flow references, Welcome inspector, comparison modes, and
+  Welcome tag states. Links navigate to design ids, independently of
   the example ids shown in the secondary metadata. The two actual example
   buttons use `MockLink asChild` with their original Firna styles.
 - Viewport, copy, refresh, resize, and collapse-all remain depictions without
@@ -37,13 +37,14 @@ in each entry's description and rationale, never inside the rendered screens:
   [design mockup adoption](../../docs/protocol/mokly-design-links.md#canonical-destination-inventory)
   adds normal light Details and four tag states; that contract owns their
   destinations. The original inspector and forms-open routes stay available.
-- The dark-scheme, light-only, and dark view compare screens are light
-  documents that draw a shell with dark selected, so they opt out of dark
-  generation like every other design screen. Only the depicted device screens
-  change; the shell chrome around them stays light in both schemes.
-- The dark view compare screen shows the same `Welcome` comparison as the
-  changed screen, in its dark view. The normal scheme control changes the
-  comparison in place, while the catalogue shell remains light.
+- The two established scheme examples and four tag-state artboards remain
+  variants of the canonical Welcome design. Each has its own id-derived screen
+  route and stays grouped below Welcome in navigation.
+- The two retained scheme variants now render both Light and Dark artboards
+  through the shared Appearance selector. Welcome's device screen follows the
+  catalogue scheme; Details keeps its light frames under Dark and names the
+  fallback. The former separate dark comparison artboard is replaced by the
+  dual-scheme canonical changed screen.
 - The screen variant artboards depict `Welcome` owning two variants, `Empty
 workspace` and `Save failed`. Only `Empty workspace` has a design destination;
   `Save failed` is selected by the Changes artboards that own it. The variant
@@ -59,9 +60,13 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
   The removed variant has its own recorded details, like every removed screen.
 - The changed-views artboard records a direct or All-filter arrival at `Welcome`
   while its shown light view is unmodified: the change is confined to the dark
-  views, so the theme control and the viewport dropdown carry a mark and the
+  views, so top-bar Appearance and the viewport dropdown carry a mark and the
   details list them. Color scheme and viewport stay view axes and never become
   variants.
+- The reparented-variant artboard records the one-level fallback: `Welcome` is
+  now another screen's variant, so its removed `Save failed` child remains a
+  flat Changes row exactly once instead of becoming a nested variant or
+  disappearing.
 - The `forms` and `onboarding` tags are synthetic fixture labels that carry no
   product meaning: the Welcome entry declares both and the Details entry
   declares `forms` in their authored metadata, which is why the `tag:forms`
@@ -98,6 +103,47 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
   Every screen starts in Current, and diff snapshots load only after a click.
   The same band belongs to the actual shell in both development and published
   catalogues; it is independent of the design pictures rendered inside frames.
+- Overlay and Difference draw one device chrome holding both versions, as the
+  [comparison pane contract](../../docs/protocol/mokly-comparison-panes.md)
+  presents them: both layers fill the chrome's viewport at device size and
+  share one page offset, while paired inner regions follow the
+  [scrolling contract](../../docs/protocol/mokly-comparison-scrolling.md). Each
+  layer has its own opaque screen background, and the chrome itself never
+  blends. Side by side keeps one chrome per version. The Welcome sketch
+  inside any depicted comparison carries its link as inert text, because links
+  inside a comparison do nothing.
+- The long-overlay artboard shows Welcome continuing well below its first
+  screenful, part-way down, with one section reworded in place so every other
+  section stays aligned. A static artboard cannot scroll, so its offset and
+  scrollbar are drawn.
+- The stage's heading style applies only to its own heading, so the section
+  headings of a depicted Welcome keep the screen's ink in either scheme.
+- Every diff-mode band draws the Scroll together switch, on, after its modes
+  and before Refresh. It is a native checkbox that toggles in place and opens
+  no artboard; below the breakpoint the modes take the first row and the
+  switch starts the second.
+- The panel-overlay artboard shows Welcome built as an app shell: its top bar
+  and navigation, a tab bar on the phone, stay in place while both versions'
+  main panels are drawn part-way down at one position with the panel's own
+  scrollbar and one section reworded. The chrome's viewport has nothing to
+  scroll, so it draws no scrollbar.
+- The scrolled-apart artboard shows Side by side with Scroll together off:
+  each version is drawn at its own place down a long Welcome with its own
+  scrollbar, and both land in the sections rather than the introduction's
+  reserved space.
+- Those two artboards draw every row at a fixed height. Each drawn region
+  states its visible height, content height and offset once in
+  `generated/design-review-scroll.css`, and both the content's offset and its
+  scrollbar thumb follow those numbers, so they always agree and never depend
+  on text wrapping.
+- Component Overlay and Difference draw one bordered component frame holding
+  both versions of a saved variant, at the height of each Side by side canvas,
+  with its caption above the viewport both versions share. Each version paints
+  the canvas surface, and the frame and caption never blend. Action's mode
+  control links its four modes to their own artboards.
+- The tall-component artboard shows a synthetic Checklist taller than its
+  frame, part-way down, with one step reworded. Its rows keep fixed heights and
+  never wrap, so the drawn offset and scrollbar never depend on text layout.
 - The approved tokens, consumer-tunable accent properties, and responsive
   breakpoints are recorded in `docs/protocol/mokly-shell-design.md`.
 
@@ -123,6 +169,10 @@ following presentation differences are intentional:
   visibility are part of the destination screen.
 - There is no separate Review section or standalone comparison command. Stable
   design routes retain their old identifiers to preserve catalogue links.
+- Comparison artboards draw shorter browser frames than the served shell so two
+  versions fit side by side, and every comparison mode keeps that one frame
+  size. Component comparison artboards likewise draw a shorter bordered frame
+  than the served one, the same in every mode.
 - Difference mockups use CSS blending, as does the served comparison; no pixel
   percentages or invented diff metrics appear. Classification and impact facts
   come from the comparison engine in the runtime and from synthetic fixture data

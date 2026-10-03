@@ -23,13 +23,14 @@ import {
   directoryFiles,
 } from "./helpers/export_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("published copies receive only accepted identities after ownership/range validation", async (t) => {
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
   const catalogue = createCatalogue(compilation.manifest);
-  const original = compilation.outputs.get("screens/home.mobile.html")!;
+  const original = textOutput(compilation.outputs, "screens/home.mobile.html")!;
   const adapted = adaptBrowseDocument(
     original,
     "screens/home.mobile.html",
@@ -76,7 +77,10 @@ test("published copies receive only accepted identities after ownership/range va
     assert.deepEqual(bodyTags(copy), bodyTags(candidate));
     assert.match(copy, /<head><template data-mokly-inspector>/);
   }
-  assert.equal(compilation.outputs.get("screens/home.mobile.html"), original);
+  assert.equal(
+    textOutput(compilation.outputs, "screens/home.mobile.html"),
+    original,
+  );
   const unowned = "<!doctype html><p>Unowned</p>";
   assert.equal(
     adaptBrowseDocument(unowned, "unowned.html", catalogue),
@@ -139,6 +143,7 @@ test("export includes the inspector while generated and comparison bytes stay un
   const before = await directoryFiles(fixture.config.mockupsDir);
   const result = await exportCatalogue(fixture.config, { outDir: "site" });
   const files = await directoryFiles(fixture.output);
+  assert.ok(files.has("__mokly/client/appearance-startup.js"));
   assert.ok(files.has("__mokly/client/inspector.js"));
   assert.deepEqual(await directoryFiles(fixture.config.mockupsDir), before);
   const snapshotFiles = [...files].filter(
@@ -148,7 +153,7 @@ test("export includes the inspector while generated and comparison bytes stay un
   for (const [name, bytes] of snapshotFiles) {
     assert.doesNotMatch(bytes.toString(), /inspector.js|data-mokly-inspector/);
     const relative = name.replace(/^.*\/snapshots\/[^/]+\//, "");
-    assert.deepEqual(bytes, before.get(`mokly-generated/${relative}`), name);
+    assert.deepEqual(bytes, before.get(relative), name);
   }
   const inventory = JSON.parse(
     await fs.readFile(
@@ -156,7 +161,11 @@ test("export includes the inspector while generated and comparison bytes stay un
       "utf8",
     ),
   );
-  assert.ok(inventory.files.includes("__mokly/client/inspector.js"));
+  const ownedPaths = inventory.files.map(
+    ({ path: name }: { path: string }) => name,
+  );
+  assert.ok(ownedPaths.includes("__mokly/client/appearance-startup.js"));
+  assert.ok(ownedPaths.includes("__mokly/client/inspector.js"));
   assert.ok(result.comparisonUrl);
 });
 
@@ -167,6 +176,7 @@ test("repository preview adds its inspector after validating portable consumer r
   const original = await directoryFiles(fixture.config.mockupsDir);
   await buildPreview(fixture.config, output);
   const published = await directoryFiles(output);
+  assert.ok(published.has("__mokly/client/appearance-startup.js"));
   assert.ok(published.has("__mokly/client/inspector.js"));
   assert.match(
     published

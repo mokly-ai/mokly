@@ -2,7 +2,7 @@ import { expect, type Page } from "@playwright/test";
 
 import { test } from "./ordinary_preview_fixture.js";
 import type { OwnedPreviewFixture } from "./preview_fixture_owner.js";
-import { chooseScheme } from "./workspace_actions.js";
+import { chooseScheme, expectFrameSource } from "./workspace_actions.js";
 
 let preview: OwnedPreviewFixture;
 
@@ -43,19 +43,19 @@ for (const width of [390, 1280]) {
     });
     await page.setViewportSize({ width, height: 900 });
     await page.goto(
-      `${preview.url}/view/handbook?fragment=next-steps&filter=changed&mode=overlay`,
+      `${preview.url}/view/pages/example-handbook?fragment=next-steps&filter=changed&mode=overlay`,
     );
     await expect(page.locator("#mb-main h2")).toHaveText("Getting started");
     await expect(page.locator("[data-filter], [data-diff-screen]")).toHaveCount(
       0,
     );
-    await expect(page.locator(".mbk-stage-embed iframe")).toHaveAttribute(
-      "src",
+    await expectFrameSource(
+      page.locator(".mbk-stage-embed iframe"),
       /#next-steps$/,
     );
     await page.reload();
-    await expect(page.locator(".mbk-stage-embed iframe")).toHaveAttribute(
-      "src",
+    await expectFrameSource(
+      page.locator(".mbk-stage-embed iframe"),
       /#next-steps$/,
     );
     await expect(page.locator("html")).toHaveAttribute(
@@ -83,7 +83,7 @@ test("static catalogue navigation retains pointer and keyboard resizing", async 
   page,
 }) => {
   await page.setViewportSize({ height: 900, width: 1_280 });
-  await page.goto(`${preview.url}/view/screens/welcome`);
+  await page.goto(`${preview.url}/view/screens/example-welcome`);
   const nav = page.locator(".mbk-nav");
   const handle = page.getByRole("separator", {
     name: "Resize navigation panel",
@@ -112,12 +112,16 @@ test("static catalogue navigation retains pointer and keyboard resizing", async 
 test("direct screen fragments update current and swap sources", async ({
   page,
 }) => {
-  await page.goto(`${preview.url}/view/screens/details?fragment=details`);
+  await page.goto(
+    `${preview.url}/view/screens/example-details?fragment=details`,
+  );
   await expectAllSources(page, "#details");
   await chooseDark(page);
   await expectAllSources(page, "#details");
 
-  await page.goto(`${preview.url}/view/screens/details?fragment=absent-anchor`);
+  await page.goto(
+    `${preview.url}/view/screens/example-details?fragment=absent-anchor`,
+  );
   await expectAllSources(page, "#absent-anchor");
   await expectFrameAtTop(page);
   await chooseDark(page);
@@ -132,7 +136,7 @@ test("invalid and duplicate direct fragments leave every source unchanged", asyn
     "fragment=%23details",
     "fragment=details&fragment=other",
   ]) {
-    await page.goto(`${preview.url}/view/screens/details?${query}`);
+    await page.goto(`${preview.url}/view/screens/example-details?${query}`);
     for (const source of await frameSources(page)) {
       expect(source.src).not.toContain("#");
       expect(source.light).not.toContain("#");
@@ -169,7 +173,7 @@ test("use-case fragments apply to the first step only", async ({ page }) => {
 test("a static logical link retains its fragment through navigation and swaps", async ({
   page,
 }) => {
-  await page.goto(`${preview.url}/view/screens/welcome`);
+  await page.goto(`${preview.url}/view/screens/example-welcome`);
   await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");
   await expect(page.locator(".mbk-frame-mobile iframe")).toHaveAttribute(
     "data-mokly-frame-state",
@@ -179,7 +183,9 @@ test("a static logical link retains its fragment through navigation and swaps", 
     .frameLocator(".mbk-frame-mobile iframe")
     .getByRole("link", { name: "Open the details screen" })
     .click();
-  await expect(page).toHaveURL(/\/view\/screens\/details\?fragment=details$/);
+  await expect(page).toHaveURL(
+    /\/view\/screens\/example-details\?fragment=details$/,
+  );
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   await expectAllSources(page, "#details");
   await chooseDark(page);
@@ -191,7 +197,9 @@ test("JavaScript-disabled static preview stays at its portable top", async ({
 }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
-  await page.goto(`${preview.url}/view/screens/details?fragment=details`);
+  await page.goto(
+    `${preview.url}/view/screens/example-details?fragment=details`,
+  );
   await expect(page.locator("[data-mokly-nav-resize]")).toBeHidden();
   for (const source of await frameSources(page)) {
     expect(source.src).not.toContain("#");
@@ -242,7 +250,7 @@ function frameSources(
     frames.map((frame) => ({
       dark: frame.getAttribute("data-fragment-dark") ?? "",
       light: frame.getAttribute("data-fragment-light") ?? "",
-      src: frame.getAttribute("src") ?? "",
+      src: (frame as HTMLIFrameElement).contentDocument?.URL ?? "",
     })),
   );
 }

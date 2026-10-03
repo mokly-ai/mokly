@@ -1,12 +1,7 @@
 import { defineComponent, type ComponentProps } from "@mokly/mokly";
 
 import { libraryMetadata } from "../metadata.js";
-import {
-  optionalFlag,
-  previewViewport,
-  scheme,
-  schemeDestinations,
-} from "../schemas.js";
+import { optionalFlag, previewViewport } from "../schemas.js";
 
 import { ViewControlsView } from "./view-controls.view.js";
 
@@ -14,16 +9,14 @@ const propSchema = {
   kind: "object",
   properties: {
     selection: previewViewport,
-    scheme,
     highlight: optionalFlag,
     unavailable: {
       schema: {
         kind: "enum",
-        values: ["empty", "unavailable", "comparison", "removed"],
+        values: ["empty", "unavailable", "loading", "comparison", "removed"],
       },
       optional: true,
     },
-    schemeDisabled: optionalFlag,
     changedViews: {
       schema: {
         kind: "array",
@@ -33,27 +26,22 @@ const propSchema = {
             viewport: {
               schema: { kind: "enum", values: ["mobile", "desktop"] },
             },
-            scheme,
+            scheme: { schema: { kind: "enum", values: ["light", "dark"] } },
           },
         },
       },
       optional: true,
     },
-    destinations: schemeDestinations,
   },
 } as const;
 export type ViewControlsProps = ComponentProps<typeof propSchema, []>;
-const sample = {
-  selection: "desktop",
-  scheme: "light",
-  destinations: {},
-} as const;
+const sample = { selection: "desktop" } as const;
 export const viewControls = defineComponent({
   ...libraryMetadata(
     "controls",
     "view-controls",
     "View controls",
-    "Viewport, theme and component highlighting controls.",
+    "Viewport and component highlighting controls.",
   ),
   propSchema,
   controls: {
@@ -64,11 +52,6 @@ export const viewControls = defineComponent({
         label: value,
         value,
       })),
-    },
-    scheme: {
-      kind: "select",
-      label: "Theme",
-      options: scheme.schema.values.map((value) => ({ label: value, value })),
     },
     highlight: { kind: "boolean", label: "Highlight components" },
     unavailable: {
@@ -82,24 +65,28 @@ export const viewControls = defineComponent({
   },
   render: ViewControlsView,
   variants: [
-    { id: "default", title: "Default", props: sample },
     {
-      id: "both",
+      id: "design-ui-view-controls-default",
+      title: "Default",
+      props: sample,
+    },
+    {
+      id: "design-ui-view-controls-both",
       title: "Both viewports",
       props: { ...sample, selection: "both" },
     },
     {
-      id: "highlighted",
+      id: "design-ui-view-controls-highlighted",
       title: "Highlighted",
       props: { ...sample, highlight: true },
     },
     {
-      id: "unavailable",
+      id: "design-ui-view-controls-unavailable",
       title: "Unavailable",
       props: { ...sample, highlight: false, unavailable: "empty" },
     },
     {
-      id: "changed-views",
+      id: "design-ui-view-controls-changed-views",
       title: "Changed views",
       props: {
         ...sample,

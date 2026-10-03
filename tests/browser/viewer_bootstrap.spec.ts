@@ -2,12 +2,13 @@ import { expect, test } from "@playwright/test";
 
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 
+import { readDisclosureStorage } from "./disclosure_storage.js";
+
 test("reload recovery starts without fetching another catalogue snapshot", async ({
   page,
 }) => {
   const fixture = await startEvidenceFixture();
   let catalogueRequests = 0;
-  let catalogueAllowed = false;
   let connected = false;
   page.on("response", (response) => {
     if (new URL(response.url()).pathname === "/__mokly/events" && response.ok())
@@ -15,7 +16,7 @@ test("reload recovery starts without fetching another catalogue snapshot", async
   });
   await page.route("**/__mokly/catalogue.json", (route) => {
     catalogueRequests++;
-    return catalogueAllowed ? route.continue() : route.abort();
+    return route.abort();
   });
   try {
     await page.goto(`${fixture.server.url}/view/screens/home.html`);
@@ -24,7 +25,6 @@ test("reload recovery starts without fetching another catalogue snapshot", async
     await page.locator("html").evaluate((root) => {
       root.setAttribute("data-test-retained", "true");
     });
-    catalogueAllowed = true;
     expect(
       fixture.server.completeCatalogue?.(
         fixture.compilation.manifest,
@@ -36,7 +36,7 @@ test("reload recovery starts without fetching another catalogue snapshot", async
       "data-mokly-update-version",
       "2",
     );
-    expect(catalogueRequests).toBe(1);
+    expect(catalogueRequests).toBe(0);
     await expect(page.locator("html")).toHaveAttribute(
       "data-test-retained",
       "true",
@@ -72,11 +72,11 @@ test("early native disclosures survive delayed hydration and recovery", async ({
         version: 1,
         browse: {
           changedOnly: false,
-          closedCollectionIds: ["collection:pages:archive"],
+          disclosures: { "folder:pages:Fixture/Archive": false },
           colorScheme: "light",
           detailsOpen: false,
           drawerOpen: false,
-          filterBaselineClosedCollectionIds: null,
+          filterBaselineDisclosures: null,
           navScroll: 0,
           query: "",
           regionScrolls: {},
@@ -90,8 +90,8 @@ test("early native disclosures survive delayed hydration and recovery", async ({
       waitUntil: "commit",
     });
     await requested;
-    const screens = page.locator('[data-nav-collection="collection:screens"]');
-    const archive = page.locator('[data-nav-collection="collection:archive"]');
+    const screens = page.locator('[data-nav-folder="folder:Fixture/Screens"]');
+    const archive = page.locator('[data-nav-folder="folder:Fixture/Archive"]');
     await screens.locator("summary").click();
     await archive.locator("summary").click();
     await expect(screens).not.toHaveAttribute("open", "");
@@ -102,10 +102,11 @@ test("early native disclosures survive delayed hydration and recovery", async ({
     await expect(archive).toHaveAttribute("open", "");
     await expect(page.locator("[data-mokly-early-disclosure]")).toHaveCount(0);
     await expect
-      .poll(() =>
-        page.evaluate(() => localStorage.getItem("mokly:nav-disclosure:v2")),
-      )
-      .toContain("collection:pages:screens");
+      .poll(() => readDisclosureStorage(page))
+      .toMatchObject({
+        "folder:pages:Fixture/Screens": false,
+        "folder:pages:Fixture/Archive": true,
+      });
     await archive.locator("summary").click();
     await expect(archive).not.toHaveAttribute("open", "");
     await expect(page.locator("[data-mokly-early-disclosure]")).toHaveCount(0);

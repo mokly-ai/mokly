@@ -1,18 +1,11 @@
 import { stripGeneratedFirstLine } from "../build/generated_marker.js";
 
-import { normalizeDocumentUrls } from "./normalize_urls.js";
-
 const ID = "[a-z0-9]+(?:-[a-z0-9]+)*";
 const KEY = "[a-f0-9]{64}";
 const MARKER_SCAN = /<!--mokly-review-ignore:[\s\S]*?-->/g;
 const MARKER = new RegExp(`^<!--mokly-review-ignore:(start|end):(${ID})-->$`);
 const MATERIAL_SCAN = /<!--mokly-review-material:[\s\S]*?-->/g;
 const MATERIAL = new RegExp(`^<!--mokly-review-material:(${ID}):(${KEY})-->$`);
-const FORMER_MARKERS = [
-  ["<!--mokabook-component:", "<!--mokly-component:"],
-  ["<!--mokabook-review-ignore:", "<!--mokly-review-ignore:"],
-  ["<!--mokabook-review-material:", "<!--mokly-review-material:"],
-] as const;
 
 interface TextSegment {
   content: string;
@@ -37,16 +30,7 @@ interface ParsedDocument {
 export interface NormalizedReviewPair {
   base: string;
   head: string;
-  comparisonBase?: string;
-  comparisonHead?: string;
   ignoredIds: readonly string[];
-}
-
-/** Normalize historical comparison material, never HTML with unconsumed offsets. */
-export function normalizeHistoricalDocument(content: string): string {
-  for (const [former, current] of FORMER_MARKERS)
-    content = content.replaceAll(former, current);
-  return content;
 }
 
 /** Normalize only well-formed ignored regions present on both sides. */
@@ -54,12 +38,6 @@ export function normalizeReviewPair(
   baseHtml: string,
   headHtml: string,
   route: string,
-  layouts?: {
-    before: string;
-    after: string;
-    beforeRoutes?: ReadonlySet<string>;
-    afterRoutes?: ReadonlySet<string>;
-  },
 ): NormalizedReviewPair {
   const base = parseDocument(baseHtml, route);
   const head = parseDocument(headHtml, route);
@@ -93,27 +71,7 @@ export function normalizeReviewPair(
       (id) => base.regions.get(id)?.content !== head.regions.get(id)?.content,
     )
     .sort();
-  return {
-    base: normalizedBase,
-    head: normalizedHead,
-    ignoredIds,
-    ...(layouts && layouts.before !== layouts.after
-      ? {
-          comparisonBase: normalizeDocumentUrls(
-            normalizedBase,
-            route,
-            layouts.before,
-            layouts.beforeRoutes,
-          ),
-          comparisonHead: normalizeDocumentUrls(
-            normalizedHead,
-            route,
-            layouts.after,
-            layouts.afterRoutes,
-          ),
-        }
-      : {}),
-  };
+  return { base: normalizedBase, head: normalizedHead, ignoredIds };
 }
 
 /** Validate and strip markers while retaining real child content. */

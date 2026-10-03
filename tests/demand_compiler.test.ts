@@ -5,7 +5,7 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { compileRuntime } from "../dist/build/compile_runtime.js";
-import { evaluateBundle } from "../dist/build/consumer_bundle.js";
+import { runtimeGraph } from "../dist/build/component_runtime.js";
 import { DocumentCompiler } from "../dist/build/document_compiler.js";
 import { GENERATED_MARKER } from "../dist/build/generated_marker.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
@@ -31,10 +31,7 @@ for (const source of [validEntrySource(), componentEntrySource()]) {
     assert.throws(() => parseManifest(runtime.manifest), {
       code: "manifest-invalid",
     });
-    const compiler = new DocumentCompiler(runtime, {
-      ...evaluateBundle(runtime.bundle),
-      entrySources: runtime.bundle.entrySources,
-    });
+    const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime));
     const complete = await compileCatalogue(config);
     for (const [route, expected] of complete.outputs) {
       if (route === MANIFEST_NAME) continue;
@@ -57,10 +54,7 @@ test("demand links reject an unknown generated route even when a local file exis
     GENERATED_MARKER + "<html><body>Old</body></html>\n",
   );
   const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
-  const compiler = new DocumentCompiler(runtime, {
-    ...evaluateBundle(runtime.bundle),
-    entrySources: runtime.bundle.entrySources,
-  });
+  const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime));
   assert.throws(
     () => compiler.render("screens/home.desktop.html"),
     /missing target/,
@@ -72,8 +66,13 @@ test("live index checks dependency declarations before accepting unrendered entr
   t.after(() => removeFixture(fixture));
   const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
   const corrupt = structuredClone(runtime.manifest);
-  const entry = corrupt.entries.find((value) => value.kind === "component")!;
-  Object.assign(entry, { declaredDependencies: [] });
+  const entry = corrupt.entries.find(
+    (value) => value.kind === "component" && !("variantOf" in value),
+  )!;
+  Object.assign(entry, {
+    declaredDependencies: [],
+    ownedDependencies: ["notes.md"],
+  });
   assert.throws(() => parseCatalogueIndex(corrupt), /dependencies/);
 });
 

@@ -5,8 +5,10 @@ import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../../browse/document_adapter.js";
+import { generatedBytes } from "../../build/generated_file.js";
+import { isGeneratedRoute } from "../../build/styles/routes.js";
 import { errorMessage } from "../../errors.js";
-import { safeDecodePath, send } from "../respond.js";
+import { contentType, safeDecodePath, send } from "../respond.js";
 
 import type { DocumentService } from "./service.js";
 
@@ -27,12 +29,29 @@ export async function handleDemandRequest(
     : raw?.startsWith(`${GENERATED_DIRECTORY}/`)
       ? raw.slice(GENERATED_DIRECTORY.length + 1)
       : undefined;
-  if (!route || !documents.routes.has(route)) return false;
+  if (
+    !route ||
+    (!documents.routes.has(route) && (metadata || !documents.styles.has(route)))
+  )
+    if (!metadata && raw && isGeneratedRoute(raw)) {
+      send(response, 404, "text/plain", "Not found", method);
+      return true;
+    } else return false;
   if (method !== "GET" && method !== "HEAD") {
     send(response, 405, "text/plain", "Method not allowed", method);
     return true;
   }
   try {
+    const style = metadata ? undefined : documents.styles.get(route);
+    if (style !== undefined) {
+      response.writeHead(200, {
+        "cache-control": "no-store",
+        "content-type": contentType(route),
+        "x-content-type-options": "nosniff",
+      });
+      response.end(method === "HEAD" ? undefined : generatedBytes(style));
+      return true;
+    }
     if (
       metadata &&
       url.searchParams.get("generation") !== documents.generation

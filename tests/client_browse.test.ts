@@ -14,18 +14,19 @@ import {
 
 test("shell route resolution accepts catalogue routes and rejects other paths", () => {
   const catalogue = viewerCatalogue(catalogueModel());
-  for (const path of [
-    "/",
-    "/view/screens/home.html",
-    "/id/home",
-    "/id/home/index.html",
-  ])
+  for (const path of ["/", "/view/screens/home.html", "/view/screens/home"])
     assert.notEqual(
       routeFromUrl(catalogue, new URL(path, "https://example.test")).view.kind,
       "missing",
       path,
     );
-  for (const path of ["/static/screens/home.html", "/review", "/id/missing"])
+  for (const path of [
+    "/static/mokly-generated/screens/home.html",
+    "/review",
+    "/id/home",
+    "/id/home/index.html",
+    "/id/missing",
+  ])
     assert.equal(
       routeFromUrl(catalogue, new URL(path, "https://example.test")).view.kind,
       "missing",
@@ -51,7 +52,7 @@ test("shell link interception leaves native and external activations alone", () 
       eligible: true,
     },
     { name: "catalogue home", href: "/", eligible: true },
-    { name: "catalogue id", href: "/id/details", eligible: true },
+    { name: "catalogue id", href: "/id/details", eligible: false },
     {
       name: "explicit self target",
       href: "/view/screens/details.html",
@@ -187,17 +188,22 @@ test("recovery matches stable disclosure keys and ignores label paths", () => {
     href: "https://example.test/",
     initial: {
       recovery: recovery({
-        closedCollectionIds: ["/Same title", "collection:product"],
-        filterBaselineClosedCollectionIds: [
-          "/Same title",
-          "collection:product",
-        ],
+        disclosures: {
+          "/Same title": false,
+          "collection:Product": false,
+          "folder:pages:Product": false,
+        },
+        filterBaselineDisclosures: {
+          "/Same title": false,
+          "collection:Product": false,
+          "folder:pages:Product": false,
+        },
       }),
     },
   });
-  assert.equal(state.disclosures["collection:pages:product"], false);
-  assert.equal(state.disclosures["collection:components:product"], false);
-  assert.equal(state.filterBaseline?.["collection:pages:product"], false);
+  assert.equal(state.disclosures["folder:pages:Product"], false);
+  assert.equal(state.disclosures["folder:components:Product"], true);
+  assert.equal(state.filterBaseline?.["folder:pages:Product"], false);
   assert.equal(Object.hasOwn(state.disclosures, "/Same title"), false);
 });
 
@@ -207,7 +213,6 @@ function darkCatalogue(): CatalogueReadModel {
   const darkViews = screen.views.map((view) => ({
     ...view,
     colorScheme: "dark" as const,
-    fragmentPath: view.fragmentPath?.replace(".html", ".dark.html") ?? null,
   }));
   return {
     ...model,
@@ -225,11 +230,11 @@ function recovery(
   overrides: Partial<ShellRecoverySnapshot> = {},
 ): ShellRecoverySnapshot {
   return {
-    closedCollectionIds: [],
+    disclosures: {},
     colorScheme: "light",
     detailsOpen: false,
     drawerOpen: false,
-    filterBaselineClosedCollectionIds: null,
+    filterBaselineDisclosures: null,
     navScroll: 0,
     query: "",
     regionScrolls: {},
@@ -269,7 +274,7 @@ function shellAnchor(
 
 function shellLocation(): Location {
   return {
-    href: "https://example.test/view/screens/welcome.html?variant=default",
+    href: "https://example.test/view/screens/welcome.html?mode=default",
     origin: "https://example.test",
   } as Location;
 }

@@ -21,7 +21,7 @@ interface ReviewOutBoundary {
 }
 
 /** Directories that hold authored entry modules for a boundary check. */
-export function entryRootsOf(boundary: ReviewOutBoundary): string[] {
+function entryRootsOf(boundary: ReviewOutBoundary): string[] {
   if (boundary.entriesDir) return [boundary.entriesDir];
   return [
     ...new Set([
@@ -92,8 +92,13 @@ export function validateReviewOut(
   ];
   const realRepoRoot = fs.realpathSync(repoRoot);
   const realReviewOut = configuredRealPath(reviewOut, label, code);
-  const realProtectedRoots = protectedRoots.map((root) =>
-    configuredRealPath(root, label, code),
+  const realProtectedRoots = protectedRoots.map((root, index) =>
+    index === 0
+      ? path.join(
+          configuredRealPath(mockupsDir, label, code),
+          GENERATED_DIRECTORY,
+        )
+      : configuredRealPath(root, label, code),
   );
   if (
     reviewOut === repoRoot ||

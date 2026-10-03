@@ -11,10 +11,12 @@ import { renderReviewArtifact } from "../dist/review/artifact.js";
 import { compareReview } from "../dist/review/compare.js";
 import { CommittedRepository } from "../dist/review/git.js";
 import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
+import { generatedViews } from "../packages/viewer/dist/data.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -33,10 +35,10 @@ test("Review batches base viewport reads", async (context) => {
     ],
   ]);
   for (const screen of screens) {
-    for (const fragment of Object.values(screen.fragments)) {
+    for (const fragment of generatedViews(screen).map((view) => view.path)) {
       files.set(
         `mockups/mokly-generated/${fragment}`,
-        compilation.outputs.get(fragment) ?? "",
+        textOutput(compilation.outputs, fragment) ?? "",
       );
     }
   }
@@ -44,13 +46,13 @@ test("Review batches base viewport reads", async (context) => {
   let individualReads = 0;
   let batchedPathCount = 0;
   const git: ReadOnlyReviewRepository = {
-    descriptor: baselineCatalogue("a".repeat(40), "mockups", "generated-v6"),
+    descriptor: baselineCatalogue("a".repeat(40), "mockups", "generated-v8"),
     evidence: {
       changedPaths: async () => [],
       mergeBase: async () => "a".repeat(40),
     },
     reader: {
-      catalogue: baselineCatalogue("a".repeat(40), "mockups", "generated-v6"),
+      catalogue: baselineCatalogue("a".repeat(40), "mockups", "generated-v8"),
       fileExists: async (_commit, repoPath) => files.has(repoPath),
       fileKind: async (_commit, repoPath) =>
         files.has(repoPath) ? "regular" : "missing",
@@ -113,13 +115,10 @@ test("Review batches dark base fragments through CommittedRepository", async (co
     (entry) => entry.kind === "screen",
   );
   const expected = screens.flatMap((screen) => {
-    assert.ok(screen.darkFragments);
-    return [
-      `mockups/mokly-generated/${screen.fragments.mobile}`,
-      `mockups/mokly-generated/${screen.darkFragments.mobile}`,
-      `mockups/mokly-generated/${screen.fragments.desktop}`,
-      `mockups/mokly-generated/${screen.darkFragments.desktop}`,
-    ];
+    assert.ok(screen.colorSchemes.includes("dark"));
+    return generatedViews(screen).map(
+      (view) => `mockups/mokly-generated/${view.path}`,
+    );
   });
   const batchedPathspecs = calls
     .filter((arguments_) => arguments_[0] === "ls-tree")
@@ -135,93 +134,6 @@ test("Review batches dark base fragments through CommittedRepository", async (co
   assert.deepEqual(
     batchedPathspecs.filter((pathspec) => expected.includes(pathspec)).sort(),
     expected.sort(),
-  );
-});
-
-test("Git reads regular base files through two batch commands", async () => {
-  const regularObject = "b".repeat(40);
-  const symlinkObject = "c".repeat(40);
-  const regularContent = Buffer.from("content");
-  const calls: string[][] = [];
-  const client = new CommittedRepository({
-    run: async (arguments_) => {
-      calls.push([...arguments_]);
-      return [
-        `100644 blob ${regularObject} 7\tmockups/regular.html`,
-        `120000 blob ${symlinkObject} 6\tmockups/linked.html`,
-        "",
-      ].join("\0");
-    },
-    runBytesWithInput: async (arguments_, input) => {
-      calls.push([...arguments_]);
-      assert.equal(Buffer.from(input).toString("utf8"), `${regularObject}\n`);
-      return Buffer.concat([
-        Buffer.from(`${regularObject} blob 7\n`),
-        regularContent,
-        Buffer.from("\n"),
-      ]);
-    },
-  });
-
-  const files = await client.reader.readFiles("a".repeat(40), [
-    "mockups/regular.html",
-    "mockups/linked.html",
-    "mockups/missing.html",
-  ]);
-
-  assert.deepEqual(files.get("mockups/regular.html"), {
-    bytes: regularContent,
-    kind: "regular",
-  });
-  assert.deepEqual(files.get("mockups/linked.html"), { kind: "symlink" });
-  assert.deepEqual(files.get("mockups/missing.html"), { kind: "missing" });
-  assert.deepEqual(
-    calls.map(([command]) => command),
-    ["ls-tree", "cat-file"],
-  );
-  assert.deepEqual(calls[0], [
-    "ls-tree",
-    "-zl",
-    "--full-tree",
-    "a".repeat(40),
-    "--",
-    ":(literal)mockups/linked.html",
-    ":(literal)mockups/missing.html",
-    ":(literal)mockups/regular.html",
-  ]);
-});
-
-test("Git bounds tree metadata to exact pathspec batches", async () => {
-  const paths = Array.from(
-    { length: 600 },
-    (_, index) =>
-      `mockups/screens/screen-${String(index).padStart(4, "0")}.html`,
-  );
-  const calls: string[][] = [];
-  const client = new CommittedRepository({
-    run: async (arguments_) => {
-      calls.push([...arguments_]);
-      return "";
-    },
-    runBytesWithInput: async () => {
-      throw new Error("missing files must not read blobs");
-    },
-  });
-
-  const files = await client.reader.readFiles("a".repeat(40), paths);
-
-  assert.equal(files.size, paths.length);
-  assert.ok(calls.length > 1);
-  const pathspecs = calls.flatMap((arguments_) => {
-    assert.equal(arguments_[0], "ls-tree");
-    assert.equal(arguments_[1], "-zl");
-    const separator = arguments_.indexOf("--");
-    assert.notEqual(separator, -1);
-    return arguments_.slice(separator + 1);
-  });
-  assert.deepEqual(
-    pathspecs,
-    paths.map((repoPath) => `:(literal)${repoPath}`),
   );
 });
 
@@ -287,9 +199,10 @@ test("Git bounds zero-byte blob batches by object count", async () => {
 
 test("Comparison metadata has no per-screen HTML or navigation copies", () => {
   const screens = Array.from({ length: 40 }, (_, index) => ({
+    after: { id: `screen-${index}`, title: `Screen ${index}` },
+    before: { id: `screen-${index}`, title: `Screen ${index}` },
     dependencies: [],
     id: `screen-${index}`,
-    route: `screens/screen-${index}.html`,
     sharedImpact: [],
     state: "changed" as const,
     title: `Screen ${index}`,
@@ -301,15 +214,20 @@ test("Comparison metadata has no per-screen HTML or navigation copies", () => {
         viewport: "mobile" as const,
       },
     ],
-  }));
+  })).sort((left, right) =>
+    left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
+  );
   const result: ReviewResult = {
     baseCommit: "a".repeat(40),
     baseRef: "origin/main",
     changedPaths: [],
     ignoredImpact: [],
-    schemaVersion: 2,
+    schemaVersion: 4,
     screens,
     sharedImpact: [],
+    components: [],
+    changes: [],
+    affectedConsumers: [],
   };
 
   const files = renderReviewArtifact({ files: new Map(), result });

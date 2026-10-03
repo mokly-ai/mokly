@@ -46,14 +46,14 @@ test("derived export rebuilds and pins a baseline, captures compiled head bytes 
   const before = await fs.readFile(
     path.join(
       path.dirname(reviewPath),
-      "snapshots/before/screens/home.mobile.html",
+      "snapshots/before/mokly-generated/screens/home.mobile.html",
     ),
     "utf8",
   );
   const after = await fs.readFile(
     path.join(
       path.dirname(reviewPath),
-      "snapshots/after/screens/home.mobile.html",
+      "snapshots/after/mokly-generated/screens/home.mobile.html",
     ),
     "utf8",
   );

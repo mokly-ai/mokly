@@ -25,14 +25,14 @@ for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     const requests: string[] = [];
     page.on("request", (request) => requests.push(request.url()));
-    await page.goto(`${host.url}/view/archive/removed.html`);
+    await page.goto(`${host.url}/view/pages/removed-page.html`);
     await expect(page.locator(".mbk-previous")).toHaveText(
       "Showing previous version",
     );
     await expect(page.frameLocator(`${stage} iframe`).locator("h1")).toHaveText(
       "Previous page",
     );
-    await page.goto(`${host.url}/view/screens/removed.html`);
+    await page.goto(`${host.url}/view/screens/removed-screen.html`);
     await expect(
       page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
     ).toHaveText("Previous desktop screen");
@@ -40,9 +40,7 @@ for (const width of [390, 1280]) {
       requests.filter((url) => /\/__mokly\/diffs\/review\.json/.test(url)),
     ).toEqual([]);
     expect(
-      requests.filter((url) =>
-        /\/pages\/archive\/removed\.html\.json$/.test(url),
-      ),
+      requests.filter((url) => /\/pages\/removed-page\.json$/.test(url)),
     ).toHaveLength(1);
   });
 }
@@ -50,37 +48,42 @@ for (const width of [390, 1280]) {
 test("a catalogue that advertises nothing stays quiet", async ({ page }) => {
   const requests: string[] = [];
   page.on("request", (request) => requests.push(request.url()));
-  await page.route(`${host.url}/view/archive/removed.html`, async (route) => {
-    const response = await route.fetch();
-    const body = (await response.text()).replace(
-      /,&quot;published&quot;:\{[^}]*\}/,
-      "",
-    );
-    await route.fulfill({ response, body });
-  });
+  await page.route(
+    `${host.url}/view/pages/removed-page.html`,
+    async (route) => {
+      const response = await route.fetch();
+      const body = (await response.text()).replace(
+        /,&quot;published&quot;:\{[^}]*\}/,
+        "",
+      );
+      await route.fulfill({ response, body });
+    },
+  );
   await page.route(`${host.url}/__mokly/catalogue.json`, async (route) => {
     const response = await route.fetch();
     const catalogue = (await response.json()) as {
-      removedEntries: { entry: { route: string }; preview?: unknown }[];
+      removedEntries: { entry: { id: string }; preview?: unknown }[];
     };
     const removed = catalogue.removedEntries.find(
-      ({ entry }) => entry.route === "archive/removed.html",
+      ({ entry }) => entry.id === "removed-page",
     );
     if (removed) delete removed.preview;
     await route.fulfill({ response, json: catalogue });
   });
-  await page.goto(`${host.url}/view/archive/removed.html`);
+  await page.goto(`${host.url}/view/pages/removed-page.html`);
   await expect(page.locator(`${stage} h2`)).toHaveText(
     "Previous version unavailable",
   );
   await expect(page.locator(`${stage} [data-mokly-preview-retry]`)).toHaveText(
     "Retry",
   );
-  await page.locator('a[data-route="screens/removed.html"]').click();
+  await page.locator('a[data-route="screens/removed-screen.html"]').click();
   await expect(
     page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
   ).toHaveText("Previous desktop screen");
-  expect(requests.filter((url) => url.includes("/pages/"))).toEqual([]);
+  expect(
+    requests.filter((url) => /\/pages\/removed-page\.json$/.test(url)),
+  ).toEqual([]);
 });
 
 /** Only the fields this file rewrites; the rest is passed through unchanged. */
@@ -103,7 +106,7 @@ test("a viewport with no captured previous view says so", async ({ page }) => {
   const note = `${stage} .mbk-preview-note`;
   const rest = `${note} .mbk-preview-switch`;
   await dropMobileViews(page);
-  await page.goto(`${host.url}/view/screens/removed.html`);
+  await page.goto(`${host.url}/view/screens/removed-screen.html`);
   await expect(
     page.frameLocator(`${stage} .mbk-frame-desktop iframe`).locator("h1"),
   ).toHaveText("Previous desktop screen");
@@ -128,7 +131,7 @@ test("a viewport with no captured previous view says so", async ({ page }) => {
 });
 
 test("an exported previous version stays read-only", async ({ page }) => {
-  await page.goto(`${host.url}/view/archive/removed.html`);
+  await page.goto(`${host.url}/view/pages/removed-page.html`);
   const preview = page.frameLocator(`${stage} iframe`);
   await expect(preview.locator("h1")).toHaveText("Previous page");
   const address = page.url();

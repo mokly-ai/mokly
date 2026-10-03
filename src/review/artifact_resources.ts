@@ -1,45 +1,37 @@
-import { reviewInvalid } from "@mokly/viewer/data";
-import type { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+import {
+  reviewInvalid,
+  snapshotSidePath,
+  snapshotViewPath,
+} from "@mokly/viewer/data";
 import type { ReviewArtifact, ViewReview } from "@mokly/viewer/data";
 
 import { referencedRoutes } from "./asset_references.js";
-import { normalizeHistoricalDocument, normalizeReviewPair } from "./ignore.js";
-
-export interface ArtifactLayouts {
-  readonly before: typeof GENERATED_DIRECTORY | "";
-  readonly after: typeof GENERATED_DIRECTORY | "";
-}
+import { normalizeReviewPair } from "./ignore.js";
 
 /** Check graph-backed evidence against the actual retained snapshots before publication. */
-export function validateArtifactResources(
-  artifact: ReviewArtifact,
-  layouts: ArtifactLayouts = { before: "", after: "" },
-): void {
-  const views: ViewReview[] = artifact.result.screens.flatMap(
-    (screen) => screen.views,
-  );
-  if (artifact.result.schemaVersion === 3)
-    views.push(
-      ...artifact.result.components.flatMap((entry) =>
-        entry.variants.flatMap((variant) => variant.views),
+export function validateArtifactResources(artifact: ReviewArtifact): void {
+  const views: {
+    id: string;
+    kind: "component" | "screen";
+    view: ViewReview;
+  }[] = [
+    ...artifact.result.screens.flatMap((screen) =>
+      screen.views.map((view) => ({
+        id: screen.id,
+        kind: "screen" as const,
+        view,
+      })),
+    ),
+    ...artifact.result.components.flatMap((entry) =>
+      entry.variants.flatMap((variant) =>
+        variant.views.map((view) => ({
+          id: variant.id,
+          kind: "component" as const,
+          view,
+        })),
       ),
-    );
-  const generated = Object.fromEntries(
-    (["before", "after"] as const).map((side) => [
-      side,
-      {
-        prefix: layouts[side],
-        routes: new Set(
-          views.flatMap((view) => {
-            const pathname = view[`${side}Path`];
-            return pathname?.startsWith(`snapshots/${side}/`)
-              ? [pathname.slice(`snapshots/${side}/`.length)]
-              : [];
-          }),
-        ),
-      },
-    ]),
-  ) as Record<"before" | "after", { prefix: string; routes: Set<string> }>;
+    ),
+  ];
   const edges = new Map<string, readonly string[]>();
   const text = (route: string): string => {
     const bytes = artifact.files.get(route);
@@ -49,32 +41,50 @@ export function validateArtifactResources(
       ? bytes
       : Buffer.from(bytes).toString("utf8");
   };
-  for (const view of views) {
+  for (const item of views) {
+    const { view } = item;
     const evidence = [
       ...(view.reasons ?? []),
       ...(view.excludedResources ?? []),
     ];
     if (!evidence.length) continue;
     const reachable = new Set<string>();
-    const before = view.beforePath
-      ? normalizeHistoricalDocument(text(view.beforePath))
-      : undefined;
-    const after = view.afterPath ? text(view.afterPath) : undefined;
+    const beforePath =
+      view.state === "added"
+        ? undefined
+        : snapshotViewPath(
+            "before",
+            item.kind,
+            item.id,
+            view.viewport,
+            view.colorScheme,
+          );
+    const afterPath =
+      view.state === "removed"
+        ? undefined
+        : snapshotViewPath(
+            "after",
+            item.kind,
+            item.id,
+            view.viewport,
+            view.colorScheme,
+          );
+    const before = beforePath ? text(beforePath) : undefined;
+    const after = afterPath ? text(afterPath) : undefined;
     const normalized = normalizeReviewPair(
       before ?? after ?? "",
       after ?? before ?? "",
-      view.afterPath ?? view.beforePath!,
+      afterPath ?? beforePath!,
     );
     for (const side of ["before", "after"] as const) {
-      const root = view[`${side}Path`];
+      const root = side === "before" ? beforePath : afterPath;
       if (!root) continue;
-      const prefix = `snapshots/${side}/`;
+      const prefix = snapshotSidePath(side);
       const pending = referencedRoutes(
-        root.slice(prefix.length),
+        root,
         side === "before" ? normalized.base : normalized.head,
         { resourceHints: false },
-        generated[side],
-      ).map((route) => `${prefix}${route}`);
+      );
       const seen = new Set<string>();
       for (let index = 0; index < pending.length; index++) {
         const route = pending[index]!;
@@ -85,14 +95,9 @@ export function validateArtifactResources(
         reachable.add(route.slice(prefix.length));
         let references = edges.get(route);
         if (!references) {
-          references = referencedRoutes(
-            route.slice(prefix.length),
-            text(route),
-            {
-              resourceHints: false,
-            },
-            generated[side],
-          ).map((reference) => `${prefix}${reference}`);
+          references = referencedRoutes(route, text(route), {
+            resourceHints: false,
+          });
           edges.set(route, references);
         }
         pending.push(...references);

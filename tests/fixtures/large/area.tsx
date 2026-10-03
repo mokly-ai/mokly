@@ -1,9 +1,4 @@
-import {
-  defineCollection,
-  definePage,
-  defineScreen,
-  defineUseCase,
-} from "@mokly/mokly";
+import { definePage, defineScreen, defineUseCase } from "@mokly/mokly";
 
 import { createComponents } from "./components.js";
 import { DesktopScreen, MobileScreen } from "./screens.js";
@@ -26,55 +21,15 @@ export function createArea(area: string, count: number, rows: number) {
     group.length === 1 ? [...group, ids[0]!] : group,
   );
   return [
-    components.action.entry,
-    components.panel.entry,
-    defineCollection({
-      ...metadata,
-      id: area,
-      title: area.replaceAll("-", " "),
-      description: "A product workspace.",
-      childIds: [
-        `${area}-screens`,
-        `${area}-components`,
-        `${area}-flows`,
-        `${area}-guide`,
-      ],
-    }),
-    defineCollection({
-      ...metadata,
-      id: `${area}-screens`,
-      title: "Screens",
-      description: "Activity screens.",
-      childIds: groups.map((_, index) => `${area}-group-${index + 1}`),
-    }),
-    defineCollection({
-      ...metadata,
-      id: `${area}-components`,
-      title: "Components",
-      description: "Shared elements.",
-      childIds: [components.action.entry.id, components.panel.entry.id],
-    }),
-    defineCollection({
-      ...metadata,
-      id: `${area}-flows`,
-      title: "Flows",
-      description: "Connected journeys.",
-      childIds: groups.map((_, index) => `${area}-flow-${index + 1}`),
-    }),
+    components.action.entries,
+    components.panel.entries,
     ...groups.flatMap((group, index) => [
-      defineCollection({
-        ...metadata,
-        id: `${area}-group-${index + 1}`,
-        title: `Activity group ${index + 1}`,
-        description: "Related activities.",
-        childIds: group,
-      }),
       defineUseCase({
         ...metadata,
+        navPath: [area.replaceAll("-", " "), "Flows"],
         id: `${area}-flow-${index + 1}`,
         title: `Activity journey ${index + 1}`,
         description: "Review connected activities.",
-        route: `user-flows/${area}/journey-${index + 1}.html`,
         steps: flows[index]!.map((screenId) => ({ screenId })),
       }),
     ]),
@@ -88,10 +43,14 @@ export function createArea(area: string, count: number, rows: number) {
       };
       return defineScreen({
         ...metadata,
+        navPath: [
+          area.replaceAll("-", " "),
+          "Screens",
+          `Activity group ${Math.floor(index / 10) + 1}`,
+        ],
         id,
         title: `Activity ${index + 1}`,
         description: "Review and manage workspace activity.",
-        route: `${area}/screens/activity-${index + 1}.html`,
         tags: ["activity", index % 2 ? "complete" : "in-progress"],
         useCaseIds: flows.flatMap((group, groupIndex) =>
           group.includes(id) ? [`${area}-flow-${groupIndex + 1}`] : [],
@@ -102,10 +61,10 @@ export function createArea(area: string, count: number, rows: number) {
     }),
     definePage({
       ...metadata,
+      navPath: [area.replaceAll("-", " ")],
       id: `${area}-guide`,
       title: "Getting started",
       description: "A guide to workspace activity.",
-      route: `${area}/guide.html`,
       render: () =>
         `<!doctype html><html><head><title>Getting started</title><link rel="stylesheet" href="../../assets/catalogue.css"></head><body><main><h1>Getting started</h1><p>Review activity and save your changes.</p><a href="mock:${ids[0]}#summary">Open activity</a></main></body></html>`,
     }),

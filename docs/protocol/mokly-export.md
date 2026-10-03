@@ -2,19 +2,16 @@
 
 ## Delivery Status
 
-Implemented consumer CLI and shared export engine. Repository preview capture
-shares its artifact validation, static delivery, and output transaction. The
-[consumer static export plan](../../plans/consumer-static-export.md) tracks
-delivery of this contract and the [static delivery contract](./mokly-export-delivery.md).
-Normal build validation and the existing comparison schema remain authoritative.
-
-The [viewer library plan](../../plans/mokly-viewer-library.md) tracks the
-implemented public catalogue, inert published inspector and separate viewer
-package. Serve and export now share a server-rendered React shell that hydrates
-with the bundled viewer runtime. Consumer frames and comparison documents remain
-static, and the existing presentation and interactions are preserved.
+The consumer CLI, shared engine, and repository preview reuse artifact
+validation, [static delivery](./mokly-export-delivery.md), and one transaction.
+Serve/export share the viewer's server-rendered, hydrated React shell; consumer
+and comparison frames remain static. Build and comparison contracts stay
+authoritative.
 
 ## Scope
+
+Imported CSS capture uses accepted in-memory stylesheet and opaque asset bytes
+under the [unified output contract](./mokly-unified-output.md).
 
 An installed consumer can create a complete static Mokly catalogue using
 their existing config, entries, renderer, and assets. The resulting directory
@@ -61,7 +58,8 @@ their existing execution boundary; export adds no hosting network calls.
 
 ## Baseline And Comparisons
 
-The `export` command always includes comparisons. `publish --no-changes` uses
+The `export` command always requests Changes; an incompatible base follows the
+[baseline contract](./mokly-baseline-compatibility.md). `publish --no-changes` uses
 the same transactional engine with current-only assembly, no baseline reads,
 and the same source/public-byte consistency checks. It omits removed entries,
 diff files and comparison controls; delivery metadata has a null comparison URL.
@@ -73,32 +71,35 @@ and their merge base. Per-commit selection reads complete Git blobs or rebuilds
 the pinned commit before capture under the
 [baseline contract](./mokly-derived-baselines.md). CI must fetch
 sufficient history before invoking the command; export never fetches it.
-Unavailable or invalid baselines fail explicitly, including shallow-history
-failures. It does not silently export a zero Changes count or disable controls.
+Missing or invalid baselines fail explicitly, including shallow history.
+Recognized earlier output is the one exception: export succeeds with Changes
+unavailable, no history files, and the exact diagnostic defined by
+[baseline compatibility](./mokly-baseline-compatibility.md).
 
-Resolve and pin one merge-base commit for the operation. Both route-level
+Resolve and pin one merge-base commit for the operation. Both entry-level
 Changes attribution and screen comparisons use that commit, the same current
 manifest/generated documents, and the same changed-path exclusions. Apply the
 shared Changes calculation to captured public bytes: normalize paired ignored
 regions, compare reviewable metadata, and follow rendered local resources.
 Ignored-only edits, source moves, and dependency/shared-impact evidence alone
-do not add entries. Retain that evidence in comparisons, and do not derive the
-navigation filter by counting materially changed comparison screens.
+do not add entries, except the owned and exact declared paths of [component attribution](./mokly-component-changes.md#dependencies-and-styles).
+Retain that evidence in comparisons, and do not derive the navigation filter by counting materially changed comparison screens.
 
-Use Review schema v3 when either manifest contains registered components;
-otherwise retain schema v2. Both formats retain all existing states,
-shared/dependency impact, ignored regions, both viewports and all effective color
-schemes; see the [supported format matrix](./README.md#supported-formats).
-Removed screens, pages and components retain their baseline context; current ids
-and routes win when reused. Pages have no visual comparisons. A route absent
-from a side's manifest follows the existing added/removed rules. A declared but
+Comparisons use [review result v4](./mokly-changes-serving.md#comparison-engine) for
+every catalogue. It retains all existing states, shared/dependency impact,
+ignored regions, both viewports and all effective color schemes; see the
+[supported format matrix](./README.md#supported-formats). Removed screens,
+pages, components and variants retain their baseline context; current and
+removed records never share an id. Pages have no visual comparisons. An id
+absent from a side's manifest follows the
+existing added/removed rules. A declared but
 missing baseline document, invalid manifest, or unavailable resource fails;
 none becomes an invented empty baseline. Empty registries retain the normal
 build error; export does not weaken registry validation to create an empty site.
 
 Comparisons use private temporary storage, independent of `review.outDir` and
 any running development server. Exclude the final export directory, its
-temporary stage/backup/lock paths, and their resolved aliases from route and
+temporary stage/backup/lock paths, and their resolved aliases from entry and
 comparison change attribution before broad dependencies/shared-impact globs
 are evaluated. Exporting twice must not make the export affect its own Changes.
 Watch also ignores owned export artifacts and export transaction paths before
@@ -125,8 +126,18 @@ broad rules, without ignoring unrelated authored files with similar names.
    graph, and comparison engine as development. An ephemeral loopback server
    may be used, but no watcher or persistent process is started.
 5. Assemble all routes and resources defined by the static delivery contract.
-   Verify internal references, ownership, route collisions, and complete local
-   dependency closure before writing the export ownership inventory.
+   Validate every file path against the ownership contract's portable-path
+   rule when it enters the collision-checked inventory. Finalize the deployment
+   identity from every staged file except the ownership marker and any
+   publication metadata path declared by the adapter. Stamp that identity into
+   the owned catalogue and shell documents, then hash the exact final bytes of
+   every file, including publication metadata, and add the schema 2 marker
+   last. Verify internal references, ownership, all route and directory-prefix
+   collisions including the marker path, and complete local dependency closure
+   before writing the stage. A regular file over 64 MiB fails as
+   `export-invalid` before staging. The marker and declared publication
+   metadata are excluded from identity only; both remain owned and hashed by
+   the marker.
 6. Drain generation work and close temporary servers before installing the
    stage. Replace owned output with rollback protection, then clean owned
    temporary resources and release the writer reservation.
@@ -145,162 +156,24 @@ Cancellation is checked again after ownership validation and after the old
 directory moves to backup. The final stage-to-output rename is the commit point;
 once started it is drained along with cleanup, not interrupted mid-rename.
 
-## Output Ownership And Confinement
+A non-portable candidate fails with this exact product message, where `path`
+is interpolated with `JSON.stringify` so invisible characters are visible and
+no file content is exposed:
 
-The output must be a strict descendant of `repoRoot`. Validate both lexical
-and projected real paths before creating directories and again before replacing
-anything. Reject symlink output entries and escapes through symlink ancestors.
+```text
+[mokly/export-invalid] The export path ${JSON.stringify(path)} is not portable. Rename that file or folder, then export again.
+```
 
-An internal hosting adapter may declare a stricter output root. Require the
-output to be a strict descendant of that root both lexically and after projecting
-real paths, at preflight and again before installation. The repository preview
-uses `.context` as this root. A symlink inside it cannot redirect output elsewhere
-in the repo. A symlinked root is supported only when its resolved location still
-satisfies all core repository/source protections; the transaction pins the real
-output location so retargeting cannot redirect installation.
+`JSON.stringify` supplies the quoted representation. Because JSON permits DEL
+and C1 controls as literal characters, the exporter renders any category Cc
+character still present in that representation as lowercase `\uXXXX` before it
+reaches the terminal.
 
-Output must neither contain nor be contained by `mokly-generated/` or
-`mockupsDir` (lexically or through aliases) or
-`review.outDir`, and must not contain any resolved entry module or the
-directory holding one. It must not contain inventoried authoring inputs, the
-config, renderer module, or a consumer package's `package.json`. Reject
-repository root, Git metadata, dependency directories, and package runtime
-directories as targets. These checks also apply when the requested directory
-does not yet exist.
+## Output Safety
 
-Accept a missing destination or an empty real directory. A nonempty directory
-must have a regular `.mokly-export-artifact` ownership file using the
-[public v1 schema](./mokly-export-ownership.md) and its generated-file inventory.
-Reject missing/malformed markers,
-unexpected files outside the inventory, unsafe inventory paths, symlink entries,
-and unsupported versions. Treat the marker as public-safe metadata: no absolute
-checkout paths, credentials, or timestamps. Never use its strings as unchecked
-deletion targets. Export owns replacement of its recorded output files.
+Output confinement and ownership reservations follow the separate
+[export safety contract](./mokly-export-safety.md).
 
-Serialize writers to the same resolved output with an exclusive reservation;
-a competing process fails clearly. An abandoned reservation is never silently
-stolen. An actionable error identifies it for explicit recovery. Transaction
-paths are exact, operation-owned paths, never a broad glob or consumer directory.
-
-Reservations use `.mokly-export-reservations/locks/<output-basename>` beside
-the resolved output. Native real-path resolution and unmodified filename keys
-give case/symlink aliases the filesystem's own lock equivalence, without
-serializing genuinely distinct destinations. The internal namespace has a
-regular `.owner` containing `mokly-export-reservations-v1` plus a newline and
-remains after cleanup; never put authored files or export destinations inside it.
-Unowned namespaces and symlinked namespace/lock directories are rejected.
-The `.mokly-export-transaction` marker records `schemaVersion: 2` and the
-output basename; `stage/` and `backup/` remain inside that reservation. Old
-`.mokly-export-<20-hex>.lock` siblings block new exports until explicitly
-recovered. Confirm no writer is active, inspect any retained backup, and recover
-it before moving an abandoned reservation aside. Nothing is silently stolen.
-
-Do not accept the old `.mokly-preview-artifact` marker through the public
-command. The repository-only adapter may explicitly migrate a valid legacy
-preview at its known output path with the same backup/rollback guarantees;
-malformed markers and unrelated contents still fail.
-
-## Public Files And Package Boundary
-
-Include compiled fragments and pages under `mokly-generated/` and **only** the
-manifest v6 `assetClosure` at catalogue-relative paths; do not scan and copy
-unreferenced files or expose hand-written HTML as independent routes. Referenced
-authored HTML is a closure asset. Retain relative resource and fallback document links
-and verify their transitive HTML/CSS dependencies, including fonts, images,
-`srcset`, nested local documents, and linked stylesheets. Referenced files that
-cannot be exported safely fail the operation instead of producing broken links.
-Navigation fragments in shell/public HTML, including query-only links and host
-aliases, must identify an anchor in the resolved document. Build and export
-share fragment decoding and anchor checks. Resource fragments such as SVG/CSS
-identifiers retain their resource policy; historical snapshot navigation remains
-unmodified and receives resource-only validation.
-
-The shared public-file confinement check is a minimum boundary, not permission
-to copy the whole repository. Check each selected closure file against the
-protected source inventory, config and renderer, Git/dependency/cache trees,
-review/export outputs, and transaction paths. Explicit HTTP(S)
-and data resources retain the existing resource policy and are not downloaded;
-an export referencing remote resources is not guaranteed to work offline.
-
-One export resource policy applies to current copies and comparison snapshots.
-Configured consumer package roots cannot live inside `mokly-generated/`; a package
-root equal to `mockupsDir` remains supported when it does not expose protected
-files. Ancestor roots such as `packageRoots: ["."]` remain supported.
-
-Copy public resources into owned output as ordinary files, never symlinks.
-Reject selected symlink files/directories and escaping references explicitly;
-do not recursively traverse a symlinked directory. The existing stricter regular
-Git-file and source-root rules continue to apply to baseline dependencies.
-Run the shared ownership-aware Browse adapter on published current HTML copies;
-comparison documents remain byte-unmodified in separate before/after trees.
-
-Publish the required package shell assets and complete browser/navigation module
-graph from the installed package. Do not ship consumer TS/TSX, source maps,
-config modules, npm packages, `.git`, local environment files, comparison
-diagnostic summaries, or comparison ownership markers. The export's own
-public-safe inventory is distinct from private comparison metadata.
-
-[`__mokly/catalogue.json`](./mokly-catalogue.md) is implemented in the same
-collision-checked ownership/upload inventories, alongside the implemented
-`__mokly/client/inspector.js`. The read model is a public allowlist projection of manifest v6;
-`mokly-manifest.json` remains excluded. Ownership v1, upload v1, review v2/v3
-and delivery descriptor v2 keep their schema versions. Deployment identity
-includes the catalogue under the [delivery hashing rule](./mokly-export-delivery.md#deployment-identity)
-and includes the inspector and its inert maps.
-Only the ownership-aware adapter's current published HTML copies gain the
-Mokly-owned inspector script and bounded inert boundary metadata. The
-[inspector contract](./mokly-frame-adapter.md) requires a host handshake before
-activation. Authored/generated files on disk and comparison document bytes
-remain unchanged; consumer content and portable links are not rewritten to
-implement inspection. Default local frames keep scripts disabled.
-
-Core export modules belong under `src/export` and compile into `dist`. Consumers
-must not deep-import package internals or copy repository scripts. The CLI is
-the supported interface for export; no public JavaScript export engine API is
-added. The [`@mokly/viewer`](./mokly-viewer.md) package is a separate supported
-React/SSR viewer API consuming public catalogue data, not an export engine or
-permission to import CLI internals. Serve and export are its first hosts:
-they render its shell tree on the server and ship its standalone hydration
-bundle, including React, so exported browsers run the same shell as Serve.
-Consumer code never enters that bundle.
-Keep typed options/results and narrow testable filesystem, Git, and capture
-boundaries. Reuse existing generation/rendering rules rather than creating a
-second screen renderer or weakening build validation.
-
-## Compatibility And Non-Goals
-
-Repository preview captures the already-built catalogue through Browse and
-shares final artifact validation, delivery identity, and the output transaction.
-It retains optional Changes and its existing snapshot/alias rules. Cloudflare routing/header files
-remain adapter concerns. Legacy output migration must be tested independently
-of clean CI output. A provider adapter may add metadata before installation;
-it must not mutate an already-installed site or relax core confinement.
-
-The first version supports HTTP(S) deployment at the origin root. Subpath
-hosting, `file://` catalogue browsing, incremental/watch export, Git-free export,
-optional omission of comparisons, hosting adapters in the public CLI, deployment
-credentials, and a new visual design are outside this change. Portable individual
-fragments keep their existing direct-from-disk behavior.
-
-## Verification
-
-Implementation must cover option validation and config-relative paths, custom
-renderer/module resolution, v5 pages, both schemes/viewports, invalid empty and
-removed catalogues, non-default bases, missing history/resources, output overlap,
-symlinks, ownership/collisions, concurrent writers, input changes, rollback,
-shutdown, export self-attribution, public-file exclusion, and asset closure.
-
-Packed-consumer tests must exercise the installed CLI from a clean consumer
-with no access to repository scripts. Browser tests serve only the completed
-artifact through a basic static file server with no Mokly routes, rewrite
-rules, Git, or source tree, and verify all static delivery behavior. Retain
-Cloudflare preview regression coverage and the existing build/check/serve gate.
-
-## Registered Components
-
-Component catalogues retain manifest-v5 saved variants and comparison-schema-v3
-evidence, including removed variants and actual affected consumers. The same
-inspector renders in served and exported shells. Export supplies no local render
-capability or token; controls are read-only and make no render requests. The
-existing resource validation, deployment identity, route aliases, reservations,
-transaction, and immutable snapshot rules apply to component pages as well.
+The output inventory and imported CSS capture continue in
+[Export Public Files And Package Boundary](./mokly-export-public-files.md);
+the [ownership marker](./mokly-export-ownership.md) records exact file bytes.

@@ -7,6 +7,8 @@ import {
   compileCatalogue,
   type Compilation,
 } from "../../dist/build/compile.js";
+import type { GeneratedFile } from "../../dist/build/generated_file.js";
+import { generatedBytes } from "../../dist/build/generated_file.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
 import { classifyComponents } from "../../dist/review/component_classification.js";
@@ -27,7 +29,7 @@ export async function designLibraryFixture(t: {
   await copyExampleSources(root);
   const config = await loadConfig(path.join(root, "examples/basic"));
   const before = await compileCatalogue(config);
-  const resources = new Map<string, string>();
+  const resources = new Map<string, GeneratedFile>();
   for (const file of await fs.readdir(config.mockupsDir, { recursive: true })) {
     if (file.endsWith(".css"))
       resources.set(
@@ -35,7 +37,7 @@ export async function designLibraryFixture(t: {
         await fs.readFile(path.join(config.mockupsDir, file), "utf8"),
       );
   }
-  const originals = new Map<string, string>();
+  const originals = new Map<string, GeneratedFile>();
   async function edit(file: string, change: (source: string) => string) {
     const absolute = path.join(root, file);
     const source = await fs.readFile(absolute, "utf8");
@@ -75,9 +77,9 @@ export async function designLibraryFixture(t: {
     const descriptor = baselineCatalogue(
       commit,
       "examples/basic",
-      "generated-v6",
+      "generated-v8",
     );
-    const files = new Map<string, string>([
+    const files = new Map<string, GeneratedFile>([
       ...[...resources].map(
         ([file, contents]) => [`examples/basic/${file}`, contents] as const,
       ),
@@ -141,12 +143,17 @@ export async function designLibraryFixture(t: {
 
 export function snapshotReader(
   compilation: Compilation,
-  resources: ReadonlyMap<string, string>,
+  resources: ReadonlyMap<string, GeneratedFile>,
 ) {
   const read = async (file: string) => {
-    const value = compilation.outputs.get(file) ?? resources.get(file);
+    const value =
+      compilation.outputs.get(
+        file.startsWith("mokly-generated/")
+          ? file.slice("mokly-generated/".length)
+          : "",
+      ) ?? resources.get(file);
     assert.notEqual(value, undefined, file);
-    return Buffer.from(value!);
+    return generatedBytes(value!);
   };
   return {
     read,

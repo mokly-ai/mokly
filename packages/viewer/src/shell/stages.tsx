@@ -5,12 +5,15 @@
 
 import type { ReactNode } from "react";
 
-import { GENERATED_DIRECTORY } from "../catalogue/delivery_paths.js";
 import {
+  GENERATED_DIRECTORY,
   currentDocumentPath,
   type GeneratedPathPrefix,
 } from "../catalogue/delivery_paths.js";
+import type { ManifestComponentVariant } from "../components/manifest_types.js";
+import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
+import { entryRoute } from "../navigation/routes.js";
 import { routedEntries } from "../viewer/selection.js";
 
 import type { Catalogue } from "./catalogue.js";
@@ -67,7 +70,7 @@ export function TargetStage(props: {
 }) {
   const entry = props.target.entry;
   const prefix =
-    props.catalogue.manifest.schemaVersion === 6 ||
+    props.catalogue.manifest.schemaVersion === 8 ||
     props.catalogue.manifest.schemaVersion === "live-index-1"
       ? GENERATED_DIRECTORY
       : undefined;
@@ -88,20 +91,28 @@ export function TargetStage(props: {
   if (entry.kind === "page")
     return (
       <EmbedStage
-        {...(prefix ? { prefix } : {})}
-        route={entry.route}
+        route={entryRoute("page", entry.id)}
         title={entry.title}
         {...(props.fragment ? { fragment: props.fragment } : {})}
       />
     );
   if (entry.kind === "component") {
+    const parent = isManifestComponentVariant(entry)
+      ? props.catalogue.byId.get(entry.variantOf)
+      : entry;
+    if (parent?.kind !== "component" || isManifestComponentVariant(parent))
+      return <EmptyStage heading="Component unavailable">{null}</EmptyStage>;
+    const variants = (
+      props.catalogue.hierarchy.variantsById.get(parent.id) ?? []
+    ).filter(
+      (candidate): candidate is ManifestComponentVariant =>
+        candidate.kind === "component" && isManifestComponentVariant(candidate),
+    );
     const variant =
-      entry.variants.find((item) => item.id === props.variantId) ??
-      entry.variants[0]!;
+      variants.find((item) => item.id === props.variantId) ?? variants[0]!;
     return (
       <ComponentStage
-        {...(prefix ? { prefix } : {})}
-        title={entry.title}
+        title={parent.title}
         variant={variant}
         {...(props.previewViews ? { previewViews: props.previewViews } : {})}
       />

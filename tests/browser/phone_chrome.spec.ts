@@ -12,7 +12,7 @@ for (const width of [390, 1280]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 1000 });
-    await page.goto("/id/example-welcome");
+    await page.goto("/view/screens/example-welcome.html");
     await chooseViewport(page, "mobile");
     const home = page.locator(".mbk-frame-mobile > .phone-frame > .phone-home");
     await home.scrollIntoViewIfNeeded();
@@ -39,7 +39,7 @@ for (const width of [390, 1280]) {
     const viewport = width < 700 ? "mobile" : "desktop";
     const file = path.join(
       repositoryRoot,
-      `examples/basic/mokly-generated/design/library/preview/device-frame.variants/phone.${viewport}.html`,
+      `examples/basic/mokly-generated/components/design-ui-device-frame-phone.${viewport}.html`,
     );
     await page.goto(pathToFileURL(file).href);
     for (const selector of [".phone-home", ".phone-notch"]) {

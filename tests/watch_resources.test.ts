@@ -4,6 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { serve } from "../dist/server/serve.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
@@ -79,11 +80,12 @@ test(
           `${file} must invalidate its comparison`,
         );
         const result = (await fresh.json()) as ReviewResult;
-        const afterPath = result.screens.find((screen) => screen.id === "home")
-          ?.views[0]?.afterPath;
-        assert.ok(afterPath);
+        const view = result.screens.find((screen) => screen.id === "home")
+          ?.views[0];
+        assert.ok(view);
+        const afterPath = `snapshots/after/mokly-generated/${viewRoute("screen", "home", view.viewport, view.colorScheme)}`;
         const asset = await fetch(
-          new URL(`../${file}`, new URL(afterPath, fresh.url)),
+          new URL(`../../${file}`, new URL(afterPath, fresh.url)),
         );
         assert.equal(asset.status, 200);
         assert.equal(await asset.text(), content);

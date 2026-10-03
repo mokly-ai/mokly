@@ -23,11 +23,14 @@ test("composition selects committed reads without building and pins repository e
         if (argv[0] === "rev-parse") return fixture.root;
         if (argv[0] === "merge-base") return "a".repeat(40);
         if (argv[0] === "ls-tree")
-          return `100644 blob ${"a".repeat(40)}\tmockups/mokly-manifest.json\0`;
+          return `100644 blob ${"a".repeat(40)}\tmockups/mokly-generated/mokly-manifest.json\0`;
         if (argv[0] === "show")
           return JSON.stringify({
             entries: [],
-            schemaVersion: 5,
+            schemaVersion: 8,
+            assetClosure: [],
+            blobHashAlgorithm: "sha1",
+            generatedFiles: [],
             generatedBy: "mokly",
             sourceFiles: [],
           });
@@ -94,7 +97,9 @@ test("derived composition forwards cancellation and progress to the injected bui
             schemaVersion: 1,
             commit: request.commit,
             commands: request.commands,
-            manifestVersion: 5,
+            manifestVersion: 8,
+            historicalCatalogueRoot: "mockups",
+            layout: "generated-v8",
             finishedAt: new Date(0).toISOString(),
           },
         };

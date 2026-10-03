@@ -15,6 +15,8 @@ export function parseShardArgument(
 
 export function discoverUnitFiles(repositoryRoot: string): Promise<string[]>;
 
+export function discoverBrowserFiles(repositoryRoot: string): Promise<string[]>;
+
 export function nodeShardFiles(
   files: readonly string[],
   shard: VerificationShard | undefined,
@@ -26,7 +28,7 @@ export function verificationIdentity(
 
 export function defaultReportPath(
   repositoryRoot: string,
-  suite: "unit" | "browser",
+  suite: "unit" | "browser" | "hydration",
   shard: VerificationShard | undefined,
 ): string;
 

@@ -3,6 +3,7 @@ import type {
   MoklyViewerProps,
   ViewerMarker,
   ViewerSelection,
+  ViewerTheme,
 } from "@mokly/viewer";
 
 export interface ViewerHost {
@@ -12,6 +13,7 @@ export interface ViewerHost {
   render(): void;
   setMarkers(markers: readonly Omit<ViewerMarker, "content">[]): void;
   setSelection(value: ViewerSelection): void;
+  setTheme(theme: ViewerTheme): void;
 }
 interface Harness {
   start(id: string, options?: Record<string, unknown>): ViewerHost;
@@ -34,6 +36,10 @@ interface FrameHookHarness {
     id: string,
     status: "pending" | "unavailable",
     snapshot?: string,
+  ): void;
+  renderUsageWhileMountFinishes(
+    id: string,
+    status: "pending" | "unavailable",
   ): void;
   rerender(id: string): void;
   resolveMount(id: string): void;

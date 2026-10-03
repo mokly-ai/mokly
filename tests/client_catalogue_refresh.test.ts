@@ -4,6 +4,7 @@ import test from "node:test";
 import { setImmediate } from "node:timers/promises";
 
 import { readCatalogue } from "@mokly/viewer";
+import { projectScopedCatalogue } from "@mokly/viewer/runtime";
 import type {
   ViewerCapabilityDescriptor,
   ViewerCapabilityRequest,
@@ -14,17 +15,20 @@ import { createReactUpdateCapability } from "../dist/client/react_capability_upd
 
 const catalogue = readCatalogue(
   JSON.parse(
-    fs.readFileSync("docs/protocol/fixtures/catalogue-v1.json", "utf8"),
+    fs.readFileSync("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
   ),
 );
 
-/** Abort during JSON parsing must not adopt public or private evidence. */
-test("React live refresh fences a catalogue response that finishes after cancellation", async () => {
+/** Abort as the paired page body finishes must not adopt either evidence half. */
+test("React live refresh fences a page response that finishes after cancellation", async () => {
   const initial = descriptor(2, catalogue.revision.evidence);
   const nextCatalogue = structuredClone(catalogue);
   nextCatalogue.revision.evidence += 1;
   const next = descriptor(3, nextCatalogue.revision.evidence);
-  const environment = new FakeEnvironment(next, nextCatalogue);
+  const environment = new FakeEnvironment(
+    next,
+    projectScopedCatalogue(nextCatalogue, { kind: "home" }),
+  );
   const subscription = new AbortController();
   environment.abort = () => subscription.abort();
   let adopted = 0;
@@ -66,7 +70,7 @@ function descriptor(
 }
 
 function request(value: ViewerCapabilityDescriptor): ViewerCapabilityRequest {
-  return { route: null, source: value.source };
+  return { entryId: null, source: value.source };
 }
 
 class FakeSource {
@@ -111,8 +115,6 @@ class FakeEnvironment implements ReactCapabilityEnvironment {
       this.reloads += 1;
     },
   };
-  private requests = 0;
-
   constructor(
     private readonly next: ViewerCapabilityDescriptor,
     private readonly nextCatalogue: unknown,
@@ -123,19 +125,12 @@ class FakeEnvironment implements ReactCapabilityEnvironment {
   }
 
   fetch = async (): Promise<Response> => {
-    this.requests += 1;
-    if (this.requests === 1)
-      return {
-        ok: true,
-        url: this.location.href,
-        text: async () => "<html></html>",
-      } as Response;
     return {
       ok: true,
-      url: "http://localhost/__mokly/catalogue.json",
-      json: async () => {
+      url: this.location.href,
+      text: async () => {
         this.abort();
-        return this.nextCatalogue;
+        return "<html></html>";
       },
     } as Response;
   };
@@ -146,7 +141,30 @@ class FakeEnvironment implements ReactCapabilityEnvironment {
 
   parseDocument(): Document {
     return {
-      querySelector: () => ({ textContent: JSON.stringify(this.next) }),
+      querySelector: (selector: string) => ({
+        textContent: JSON.stringify(
+          selector.includes("data-mokly-shell-bootstrap")
+            ? shellBootstrap(this.next, this.nextCatalogue)
+            : this.next,
+        ),
+      }),
     } as unknown as Document;
   }
+}
+
+function shellBootstrap(
+  descriptor: ViewerCapabilityDescriptor,
+  model: unknown,
+) {
+  return {
+    schemaVersion: 1 as const,
+    catalogue: model,
+    context: {
+      base: descriptor.source.base,
+      comparisons: false,
+      contentVersion: descriptor.source.contentRevision,
+      updateVersion: descriptor.source.updateVersion,
+    },
+    view: { kind: "home" },
+  };
 }

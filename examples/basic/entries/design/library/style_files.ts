@@ -3,6 +3,7 @@ export const libraryStyleFiles = {
   "top-bar": "design-library/chrome/top-bar.css",
   "catalogue-navigation": "design-library/chrome/catalogue-navigation.css",
   "screen-header": "design-library/chrome/screen-header.css",
+  "appearance-selector": "design-library/chrome/appearance-selector.css",
   "comparison-toolbar": "design-library/controls/comparison-toolbar.css",
   "view-controls": "design-library/controls/view-controls.css",
   "tag-picker": "design-library/controls/tag-picker.css",

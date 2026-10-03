@@ -1,11 +1,12 @@
 import path from "node:path";
 
-import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
-import type { HistoricalManifest } from "@mokly/viewer/data";
+import {
+  GENERATED_DIRECTORY,
+  type HistoricalManifest,
+} from "@mokly/viewer/data";
 
 import {
-  FORMER_MANIFEST_NAME,
-  LEGACY_MANIFEST_NAME,
+  EARLIER_MANIFEST_NAMES,
   MANIFEST_NAME,
   parseHistoricalManifest,
 } from "../registry/manifest.js";
@@ -22,70 +23,68 @@ import type { BaselineFileSystem } from "./types.js";
 export interface HistoricalCatalogue {
   readonly descriptor: BaselineCatalogue;
   readonly manifest: HistoricalManifest;
-  readonly version: 2 | 3 | 4 | 5 | 6;
+  readonly version: 8;
 }
 
-/** Read the first eligible manifest at one historical root; never mask an invalid preferred file. */
+export type CatalogueProbe =
+  | HistoricalCatalogue
+  | {
+      readonly root: string;
+      readonly version: number;
+      readonly incompatible: true;
+    };
+
+/** Probe ordered names without reading earlier entries or resource inventories. */
 export async function historicalCatalogueAt(
   fs: BaselineFileSystem,
   extraction: string,
   root: string,
   commit: string,
-  allowV2: boolean,
   signal?: AbortSignal,
-): Promise<HistoricalCatalogue | undefined> {
+): Promise<CatalogueProbe | undefined> {
   const relative =
     path.relative(extraction, root).split(path.sep).join("/") || ".";
-  const candidates: readonly (readonly [
-    string,
-    BaselineCatalogue["layout"],
-    boolean,
-  ])[] = [
-    [`${GENERATED_DIRECTORY}/${MANIFEST_NAME}`, "generated-v6", false],
-    [MANIFEST_NAME, "legacy", false],
-    [FORMER_MANIFEST_NAME, "legacy", false],
-    ...(allowV2 ? [[LEGACY_MANIFEST_NAME, "legacy", true] as const] : []),
-  ];
-  for (const [filename, layout, versionTwo] of candidates) {
+  for (const filename of [
+    `${GENERATED_DIRECTORY}/${MANIFEST_NAME}`,
+    MANIFEST_NAME,
+    ...EARLIER_MANIFEST_NAMES,
+  ]) {
     const repoPath = joinCataloguePath(relative, filename);
     const stat = await confinedBaselineStat(fs, extraction, repoPath, signal);
     if (!stat) continue;
     if (stat.kind !== "regular")
       throw new Error(`Historical manifest is not a regular file: ${repoPath}`);
+    if (EARLIER_MANIFEST_NAMES.some((name) => name === filename))
+      return { root: relative, version: 6, incompatible: true };
     const value: unknown = JSON.parse(
       Buffer.from(
         await fs.read(path.join(extraction, repoPath), MAX_BATCH_OUTPUT_BYTES),
       ).toString("utf8"),
     );
-    const manifest = parseHistoricalManifest(value, versionTwo);
-    if (layout === "generated-v6" && manifest.schemaVersion !== 6)
+    const version = manifestEnvelopeVersion(value);
+    if (version < 8) return { root: relative, version, incompatible: true };
+    const manifest = parseHistoricalManifest(value);
+    if (filename !== `${GENERATED_DIRECTORY}/${MANIFEST_NAME}`)
       throw new Error(
-        `Historical ${GENERATED_DIRECTORY} manifest must be v6: ${repoPath}`,
+        `Historical v8 manifest must be in the generated directory: ${repoPath}`,
       );
     return {
-      descriptor: baselineCatalogue(commit, relative, layout),
+      descriptor: baselineCatalogue(commit, relative),
       manifest,
-      version: (value as { schemaVersion: 2 | 3 | 4 | 5 | 6 }).schemaVersion,
+      version: 8,
     };
   }
 }
 
-/** Validate the historical schema while retaining its original on-disk version. */
-export async function baselineManifestVersion(
-  fs: BaselineFileSystem,
-  root: string,
-  directory: string,
-  allowV2 = false,
-  signal?: AbortSignal,
-): Promise<2 | 3 | 4 | 5 | 6> {
-  const selected = await historicalCatalogueAt(
-    fs,
-    root,
-    directory,
-    "",
-    allowV2,
-    signal,
-  );
-  if (!selected) throw new Error("Historical manifest is missing");
-  return selected.version;
+export function manifestEnvelopeVersion(value: unknown): number {
+  const version =
+    value &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    "schemaVersion" in value
+      ? value.schemaVersion
+      : undefined;
+  if (!Number.isInteger(version))
+    throw new Error("Historical manifest has no integer schema version");
+  return version as number;
 }

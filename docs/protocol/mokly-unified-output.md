@@ -2,20 +2,13 @@
 
 ## Delivery Status
 
-Approved target for Milestone 11 of
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
-Milestone 9 changes documentation only. Until Milestone 11 lands,
-[generated output](./mokly-generated-output.md) describes this branch's v6
-implementation. This document defines the merge changes; unchanged contracts
-on both branches remain required. No output mode is restored.
-
-The audited `origin/main` is `b2c82c1591c91f2550a66c464833b1f864bdab07`.
-Its `mokly-imported-styles*.md`, `mokly-configuration-imported-styles.md`,
-`mokly-rendering-generated.md`, `mokly-artifact-paths.md`, and
-`mokly-export-public-files.md` are not present here yet. Milestone 11 must
-merge them, reconcile the changes below, and add links. Their CSS processing,
-validation, and delivery contracts remain in force except for the explicit
-output-mode and layout replacements below.
+The unified layout follows [Generated Output Simplification](../../plans/generated-output-simplification.md).
+The [imported CSS contract](./mokly-imported-styles.md),
+[CSS configuration](./mokly-configuration-imported-styles.md),
+[generated rendering](./mokly-rendering-generated.md),
+[artifact paths](./mokly-artifact-paths.md), and
+[export capture](./mokly-export-public-files.md) retain all non-mode behavior.
+The layout and command rules below apply across them.
 
 ## One Owned Tree
 
@@ -98,6 +91,10 @@ must resolve local references through the same generation and path policy:
    `mockupsDir`, outside the generated tree, and not protected source. Collect
    that file in `assetClosure` and traverse its HTML/CSS references. No directory
    walk grants public access. A local target outside both sets is invalid.
+
+Authored paths below `styles/` or `assets/` still use the ordinary private-directory
+checks. Those names alone do not grant generated-file access; only an accepted
+file below the outer `mokly-generated/` prefix gets that access.
 
 Generated CSS traverses `@import` and `url()` against the pending output map;
 binary resources are checked by existence and bytes, never parsed as text.

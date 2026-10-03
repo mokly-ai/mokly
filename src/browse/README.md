@@ -4,7 +4,9 @@
 HTML copies for Serve and export. It never writes generated source files or
 comparison snapshots. `trusted_document.ts` derives trusted routes and
 expected portable hrefs from the accepted manifest and in-memory compilation;
-authored resources receive no inspector.
+authored resources receive no inspector. Callers pass a generated-relative
+`route` only for accepted generated HTML. They pass `undefined` for authored
+closure HTML, including a file whose trailing path equals a generated route.
 
 The adapter checks route membership, complete component marker forest,
 native logical links, duplicate reserved attributes and portable destinations

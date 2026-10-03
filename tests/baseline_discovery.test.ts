@@ -11,7 +11,10 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 const historicalManifest = JSON.stringify({
   entries: [],
   generatedBy: "mokly",
-  schemaVersion: 5,
+  schemaVersion: 8,
+  assetClosure: [],
+  blobHashAlgorithm: "sha1",
+  generatedFiles: [],
   sourceFiles: [],
 });
 
@@ -33,7 +36,7 @@ test("historical discovery prefers the requested root and otherwise requires one
   await assert.rejects(discover(), /candidates: \(none\)/);
 
   const manifest = async (directory: string) => {
-    const target = path.join(fixture.root, directory);
+    const target = path.join(fixture.root, directory, "mokly-generated");
     await fs.mkdir(target, { recursive: true });
     await fs.writeFile(
       path.join(target, "mokly-manifest.json"),
@@ -48,21 +51,18 @@ test("historical discovery prefers the requested root and otherwise requires one
   await manifest("other/output");
   await assert.rejects(
     discover(),
-    /candidates: old\/generated \(legacy\), other\/output \(legacy\)/,
+    /candidates: old\/generated \(generated-v8\), other\/output \(generated-v8\)/,
   );
   await manifest("mockups");
   assert.equal((await discover()).descriptor.catalogueRoot, "mockups");
 });
 
-test("an invalid v6 manifest is not rediscovered as a legacy child", async (context) => {
+test("an invalid v8 manifest is not rediscovered as a legacy child", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const directory = path.join(fixture.root, "old/mokly-generated");
   await fs.mkdir(directory, { recursive: true });
-  await fs.writeFile(
-    path.join(directory, "mokly-manifest.json"),
-    historicalManifest,
-  );
+  await fs.writeFile(path.join(directory, "mokly-manifest.json"), "{}");
   await assert.rejects(
     discoverHistoricalCatalogue(new NodeBaselineFileSystem(), fixture.root, {
       repoRoot: fixture.root,

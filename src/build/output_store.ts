@@ -16,7 +16,11 @@ export interface GeneratedOutputStore {
     compilation: Compilation,
     config: ResolvedConfig,
   ): GeneratedOutputTracking | void | Promise<GeneratedOutputTracking | void>;
-  write(compilation: Compilation, config: ResolvedConfig): Promise<void>;
+  write(
+    compilation: Compilation,
+    config: ResolvedConfig,
+    signal?: AbortSignal,
+  ): Promise<void>;
 }
 
 /** Transactional operating-system generated-output store. */
@@ -35,7 +39,11 @@ export class FileSystemGeneratedOutputStore implements GeneratedOutputStore {
     return state;
   }
 
-  write(compilation: Compilation, config: ResolvedConfig): Promise<void> {
-    return writeCompilation(compilation, config);
+  write(
+    compilation: Compilation,
+    config: ResolvedConfig,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    return writeCompilation(compilation, config, signal);
   }
 }

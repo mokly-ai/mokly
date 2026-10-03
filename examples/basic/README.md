@@ -2,9 +2,22 @@
 
 This is a synthetic external-consumer fixture. It contains two distinct mobile
 and desktop product-style screens built with `@firna/ui` controls, nested
-collections, one use case, id-addressed links, a Firna renderer adapter, local
+folders, one use case, id-addressed links, a Firna renderer adapter, local
 stylesheets, light and dark product fragments, and a safe Review-ignore region.
-The Components → Example → Components collection contains real registered Action and Toolbar
+The Welcome screen also includes a small `WorkspaceNote` built from a CSS
+Module, an authored PNG-backed stylesheet, and Tailwind v4 utilities, including
+a small `note-title` utility. Its
+PostCSS module pins Tailwind's base and optimization, scans only `src/` with
+`source(none)` plus `@source`, and uses `.browserslistrc` Safari 14 targets
+for autoprefixer only. Mokly does not target or re-print CSS Modules.
+In `src/components/workspace-note/utilities.css`, `@source "../..";` scans
+only this example's `src/` tree, and `@utility note-title` applies to the
+Welcome component. The example sets `BROWSERSLIST_IGNORE_OLD_DATA=1` in its
+PostCSS module to avoid an aging `caniuse-lite` warning in reproducible demo
+builds; application owners should update Browserslist data instead.
+`shims.d.ts` declares CSS Module class maps and side-effect CSS imports for
+the example's TypeScript check.
+The Components → Example → Components folder contains real registered Action and Toolbar
 components. Both product screens use Action repeatedly, directly and inside the
 Toolbar, with caller-owned slots. Action has Default, Disabled and Secondary
 variants plus text, boolean, number, optional hint and emphasis controls; Toolbar
@@ -29,9 +42,9 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 79 design screens now use 15 registered shared components, including
-the footer tabs panel. Open **Components → Design → Shared components** for Chrome, Controls,
-Inspector and Preview galleries with 58 saved variants, real mobile/desktop
+Mokly's 102 design screens now use 16 registered shared components, including
+the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
+Inspector and Preview galleries with 67 component variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
 recorded relationships; pictured example data inside an artboard stays separate.
 See the [library authoring guide](./entries/design/library/README.md),
@@ -39,13 +52,13 @@ See the [library authoring guide](./entries/design/library/README.md),
 [library inventory](../../docs/protocol/mokly-design-component-library.md)
 and [plans index](../../plans/README.md).
 
-The entry definitions use collection membership as their only navigation
-hierarchy. The real `Example` collection owns `Screens`, the example tour, and
-Getting started; the real `Design` collection owns the `Mokly design` tree. Those parent
-collections preserve the intended visible groups and automatically produce
-the same breadcrumb ancestry. Consumer code does not provide `navPath`; when
-migrating an older catalogue, keep a former synthetic group only by adding an
-equivalent parent collection.
+The entry definitions use `navPath` as their only navigation hierarchy.
+`Example` groups Screens, the example tour, and Getting started; `Design`
+groups the Mokly design tree. Matching path labels merge within Pages or
+Components independently and produce the same breadcrumb labels. The flat
+component definitions author paths; nested screen and page definitions derive
+them from the root's navigation prefix and folder titles. Routes derive from
+ids and are independent of those labels.
 
 The Welcome screen uses
 `<MockLink to="example-details" fragment="details">` to prove that generated
@@ -64,8 +77,10 @@ The design screens use the same API for their brand, screen rows, miniature
 content, flow references, and supported scheme, comparison, and tag
 transitions. These links open canonical design states. Every selected screen uses the icon
 footer, native viewport dropdown, desktop inspector resizing and mobile sheet.
-Theme pairs use the icon in the same header group; component designs also
-support native local theme/highlight toggles. Copy, refresh, collapse-all and
+The catalogue-wide Appearance selector sits in the top bar while the header
+keeps its viewport control; component designs also show the local highlight
+control. Details shows authored metadata without Generated or Route rows,
+matching the derived-route shell contract. Copy, refresh, collapse-all and
 unsupported combinations remain visual depictions.
 The actual outer shell provides its normal runtime controls. See the
 [design mockup links contract](../../docs/protocol/mokly-design-links.md)
@@ -74,6 +89,21 @@ Shared destinations live in [destinations.ts](./entries/design/parts/destination
 [navigation_states.ts](./entries/design/parts/navigation_states.ts) explicitly
 selects which transitions each artboard supports. Add an owning screen and its
 contract before enabling a new transition.
+
+Six established Welcome design states remain real variants of
+`design-browse-screen`: two appearance examples and four tag picker/filter
+states. Both appearance variants render in Light and Dark using the single
+catalogue-wide Appearance selector; the Details example keeps its light device
+preview under Dark. They keep their own ids, `design-browse-dark-scheme`,
+`design-browse-light-only`, and the four `design-browse-tag-*` filter states,
+and therefore their own routes under `screens/`. The former
+`design-browse-tags` (Tag states) collection was empty; it has no folder row
+because no routed entry uses that `navPath`. The separate
+`design-browse-tag-filter` screen remains in Shell states.
+The reparented removed-variant design state depicts the Changes filter when
+only the historical child was removed: its rail shows a single flat Removed
+row, even though its former parent remains in the current catalogue as another
+screen's variant. This matches the served rail's Changes filter.
 
 `tests/helpers/replaced_copy.ts` lists the shell sentences the protocols
 replaced, and `tests/design_replaced_copy.test.ts` fails when any generated
@@ -99,14 +129,15 @@ render plain React DOM need none of this and can keep a plain
 `renderToStaticMarkup` adapter.
 
 The `Design` navigation group is the owning design catalogue for Mokly's
-Browse and Changes views. Its forty-seven Browse, page, publication and Changes
+Browse and Changes views. Its sixty-three Browse, page, publication, appearance and Changes
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
-stylesheet evidence, the preparing and unavailable comparison states, and the
-previous-version states of removed documents and screens. Thirty-two component
-explorer screens add component pages, saved variants, affected screens,
+scrolling, stylesheet evidence, the preparing and unavailable comparison states,
+and the previous-version states of removed documents and screens. Thirty-nine
+component explorer screens add component pages, saved variants, stacked
+comparisons, affected screens,
 repeated/nested inspection, highlighting, and empty or removed states. The shared icon inspector and complete controls
 mockups include edited/reset, optional, loading, validation, retry, comparison,
-and published saved-variant states. Every
+and published variant states. Every
 screen has distinct mobile and desktop components. The component designs are
 static mockups; the outer package workspace implements the live component explorer. Native
 fields can be edited, and authored state links show the designed outcomes.
@@ -115,9 +146,16 @@ shared resize grip on the catalogue navigation in Current and comparison views; 
 keep the drawer fixed. The recorded tokens and responsive rules live in
 [`docs/protocol/mokly-shell-design.md`](../../docs/protocol/mokly-shell-design.md).
 
-A grouped icon toolbar switches Mobile/Desktop/Both previews, light/dark, and
-screen highlighting. The original Browse/Changes theme pairs retain their
-canonical links; component previews change locally. Leaf components omit Nested components;
+The shared `generated/design.css` is authored source for the design screens.
+Its Dark interface uses the same warm Folio neutrals as Mokly Cloud and the
+packaged viewer; the [palette contract](../../docs/protocol/mokly-viewer-palette.md)
+records the source mapping and contrast checks. Preview content owns its colors
+independently of that interface palette.
+
+The header toolbar selects Mobile/Desktop/Both previews and offers highlighting
+where relevant; the top-bar Appearance selector changes the standalone scheme.
+Retained Welcome appearance variants publish both schemes under their stable
+ids, and embedded component previews follow their host's controls. Leaf components omit Nested components;
 Toolbar demonstrates composition. Unchanged fixtures show Unmodified and omit
 comparison modes. The fixed desktop shell contains separate preview and inspector
 panes; drag the centered grip on the divider line to resize the inspector. Mobile uses a
@@ -125,8 +163,16 @@ rounded bottom sheet over the preview, with an iOS-style grabber that toggles
 compact/expanded heights by touch, click, or Space. The runtime also supports pan gestures. In both layouts, the icon strip stays visible while the
 active content scrolls; closing and reopening retains edits. Viewport carets,
 the mobile menu, and the Usage icon use centered SVGs. Known entries show
-Added, Changed, Removed, or Unmodified; removing a variant marks its surviving
-component Changed. The States → Additions gallery demonstrates a newly added Badge.
+Added, Changed, Removed, or Unmodified; removing a variant lists it as its own
+Removed entry beneath its surviving component, whose row carries an aggregate
+mark. The States → Additions gallery demonstrates a newly added Badge.
+States → Shared impact shows an Unmodified Action opened from All with changed
+shared files in Details and no comparison band.
+The Pages → Stacked comparisons gallery holds Action's Overlay and Difference in
+one bordered frame, reached from its comparison mode control, and a Checklist
+taller than that frame, drawn part-way down it.
+States → Loading and recovery shows Usage loading, inspection waiting, and a
+failed Usage read with its Try again action.
 Removed screens show their status and previous version without comparison
 controls; the removed component variant retains its baseline comparison.
 Comparison facts live in Details, using shared fixture values for prop differences
@@ -134,24 +180,28 @@ and linked component changes. These rows do not generate descriptions of visual
 changes. Disabled highlighting explains its specific reason, and outline labels
 use separate rounded chips with a gap above the highlighted region.
 
-Open `design/components/overview.html` in Browse, or open
-`mokly-generated/design/components/overview.desktop.html` and
-`mokly-generated/design/components/overview.mobile.html`
+Open `screens/design-component-overview.html` in Browse, or open
+[`mokly-generated/screens/design-component-overview.desktop.html`](./mokly-generated/screens/design-component-overview.desktop.html)
+and [`design-component-overview.mobile.html`](./mokly-generated/screens/design-component-overview.mobile.html)
 directly from disk after `npm run build && npm run example:build`.
 The catalogue hierarchy links all owning design pages;
 there is no navigation footer inside an artboard. Product links connect
-component pages, variants, and consuming screens. The `controls` collection
+component pages, variants, and consuming screens. The Controls folder
 provides the canonical controls example plus Editing, States, and Published
 galleries; `inspector` shows both closed-panel layouts.
 Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
-All seventy-nine design screens use `colorSchemes: ["light"]`: they draw the
-Mokly shell, including the existing dark-selection examples. The two product
-screens inherit the catalogue's light/dark settings and prove dark generation.
-Design headers retain the approved screen-stack logo: 17px overlapping mobile
-and desktop outlines in a 24px sage square. Desktop keeps the navigation resize
-grip; mobile keeps its fixed drawer. The component designs reuse the existing shell, frames, controls,
+Seventy-eight design screens use `colorSchemes: ["light"]` and draw only the light
+Mokly shell. Twenty-four screens instead inherit the catalogue's light/dark
+settings: thirteen Appearance screens, seven Changes designs, two product
+screens, and two retained Welcome appearance variants. `mokly build` writes a
+Light and a Dark file for each viewport, and the outer Appearance control moves
+between them.
+Design headers use the published Mokly logo: the 22px mark of two overlapping
+rounded screens in the brand green (lighter in Dark), followed on desktop by
+the serif `mokly.` wordmark. Desktop keeps the navigation resize grip; mobile
+keeps its fixed drawer. The component designs reuse the existing shell, frames, controls,
 and a shared icon inspector, with synthetic usage fixtures under
 `entries/design/components/parts`. The real examples use the public `defineComponent` API.
 
@@ -163,17 +213,23 @@ A shared implementation edit appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. This is tested against fully registered baseline snapshots.
 
-The shared inspector/workspace sheets cover all 79 design screens and standalone
-library hosts. Other mixed component-design sheets remain scoped to the 32
+The shared inspector/workspace sheets cover all 102 design screens and standalone
+library hosts. Other mixed component-design sheets remain scoped to the 39
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. `review.sharedImpact` is fallback
 impact evidence for files the rendered resource graph cannot see, such as source
-or token modules. Linked stylesheets, including imported sheets, are attributed
-by rule: a changed rule must potentially match a view or be unresolved to keep
-that dependency. A broad stylesheet glob cannot restore an excluded stylesheet
-or add an unreferenced public file to Changes. Actual rendered references,
-generated usage and component ownership determine the scope; regression tests
-cover each exclusive sheet and the mixed/global sheets.
+or token modules. A glob match or a changed file inside a declared dependency
+directory alone leaves the entry out of Changes; owned component paths and
+exact declared files keep their direct reasons. A renderer or token edit that
+changes a document or referenced resource still appears. The
+[component path rule](../../docs/protocol/mokly-component-changes.md#dependencies-and-styles)
+defines membership and the [result schema](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence)
+preserves every entry's shared-impact evidence. Linked stylesheets, including
+imported sheets, are attributed by rule: a changed rule must potentially match
+a view or be unresolved to keep that dependency. A broad stylesheet glob cannot restore
+an excluded stylesheet or add an unreferenced public file to Changes. Actual
+rendered references, generated usage and component ownership determine the
+scope; regression tests cover each exclusive sheet and the mixed/global sheets.
 
 The recorded tokens and responsive rules live in the
 [shell design contract](../../docs/protocol/mokly-shell-design.md); component
@@ -185,22 +241,26 @@ routes, fixture relationships, mask geometry, and delivery status live in the
 
 All unchanged Browse designs, including the tag picker, omit comparison controls.
 Changed screens and changed or removed component variants retain an opaque
-comparison band. Added designs show their current preview and status without
+comparison band; in Side by side, Overlay and Difference it draws the Scroll
+together switch after the modes. The Diff controls group adds Overlay on an
+app-shell screen, whose panel scrolls as one while its top bar and navigation
+stay in place, and Side by side with the switch off, each version left at its
+own place. Their rows keep fixed heights, so the drawn positions never depend
+on text wrapping. Added designs show their current preview and status without
 comparison controls; removed screens and documents show their status and their
 previous version, labelled “Showing previous version”, without them. Their
-nested `design/browse/pages/previous-version/` and
-`design/review/outcomes/previous-version/` groups add the long, loading, and
-unavailable-with-retry states, each reached from its own row in the same flat
-Changes list. A removed screen also has a viewport with no captured previous
-view, whose stage names the viewport that still opens instead of standing
-empty.
+nested Previous document versions and Previous screen versions groups add the
+long, loading, and unavailable-with-retry states, each reached from its own
+row in the same flat Changes list. A removed screen also has a viewport with no
+captured previous view, whose stage names the viewport that still opens instead
+of standing empty.
 The Added outcome still shows its factual branch evidence in
 Details; evidence availability, comparison eligibility, and initial inspector
 disclosure are independent. The
 shared-impact and ignored-only examples open from All with zero Changes and one
-Current preview. Dependency evidence remains available in Details, while
-unchanged output and paired ignored-only edits do not fill the review list.
-The nested `design/review/impact/stylesheets/` group adds the rule-aware
+Current preview. Retained dependency and shared-impact evidence remains in
+Details; unchanged output and paired ignored-only edits do not fill the review list.
+The nested Stylesheet evidence group under Impact states adds the rule-aware
 stylesheet states: a changed stylesheet whose changed styles apply to the
 screen, one whose change can apply anywhere, and one examined and excluded so
 the screen stays out of Changes. Their contract is
@@ -229,7 +289,7 @@ npm run example:check
 npm run preview:build
 ```
 
-This example uses `mockupsDir: "."`; its schema-v6 manifest and HTML under
+This example uses `mockupsDir: "."`; its schema-v8 manifest and HTML under
 `mokly-generated/` are ignored local artifacts, absent in a fresh clone.
 `example:build` replaces the entire disposable `mokly-generated/` tree as one
 transaction; unexpected files inside it are removed without touching authored CSS.
@@ -239,9 +299,11 @@ Both `npm test` and `npm run test:browser` build the example before tests read i
 generated files. Baseline fixtures copy authored inputs and use the normal cached
 rebuild through the historical commit's own package source and lockfile. The
 hand-authored stylesheets (`styles.css`, `design.css`, `design-stage.css`,
-`design-review.css`, and the component design stylesheets) stay under the
-catalogue root and `design-library/`, referenced in place and tracked. The
-config's `review.baselineBuild` runs
+`design-review.css`, `design-review-scroll.css`, and the component design stylesheets) stay under the catalogue root and remain tracked. Imported styles live under
+`src/components/workspace-note/` and are never public files. Its imported
+image lives at `examples/imported-assets/workspace-note-signal.png`, outside
+this catalogue root, preserving imported-asset privacy. The config's
+`review.baselineBuild` runs
 `npm ci`, `npm run build`, then `npm run example:build` in the historical commit's
 extraction. The package build step ensures comparisons use that commit's own
 Mokly code. The resulting baseline is cached under `.mokly-cache/`.
@@ -251,7 +313,7 @@ current catalogue used by the main preview workflow. It preserves search, tags,
 navigation, Light/Dark choices, client assets, and light/dark fragment files.
 Generated HTML copies pass through the same manifest-bound link adapter as served
 Browse; direct preview URLs apply one validated `fragment` query progressively
-in the parent shell. PR previews explicitly include Changes and immutable screen and saved component
+in the parent shell. PR previews explicitly include Changes and immutable screen and component variant
 comparisons with `--include-changes --base origin/main`. Publishing then prepares
 isolated before/after resources and removed-entry states. Changed-screen
 snapshots load only after a comparison option is selected; selecting a removed
@@ -260,9 +322,38 @@ frames navigate between authored artboards; their pictured comparison controls
 do not request actual comparison snapshots. There is no separate Review section
 or comparison CLI command.
 
-The shell designs now include `design/browse/pages/` (document, details,
-removal, and the nested `previous-version/` states) and
-`design/browse/publication/` (current catalogue and Changes).
+The Browse shell › Appearance folder records the delivered Auto/Light/Dark
+interface appearance for standalone Browse. `design-appearance-overview` is its
+canonical screen; Appearance states owns two more, and Panels and comparisons
+and Status and recovery own five each. Every one of them is an ordinary
+dual-scheme entry, so `mokly build` writes a Light and a
+Dark file per viewport and Browse's Appearance control switches the mockup you
+are looking at, at the same route. The renderer passes
+`input.colorScheme` to the shared artboard scope, which stamps
+`data-mbk-appearance`; there is no second theme mechanism, no extra control and
+no script inside a mockup.
+
+Standalone Browse holds one Appearance setting, so the depicted top bar
+component owns it: every artboard with a top bar draws exactly one scheme
+control, the Appearance selector, and the depicted screen header carries the
+viewport control alone. The selector names the scheme its file was rendered for,
+except on the Auto artboard. The chrome and the
+screens it shows change together: Welcome, every comparison mode and the flow's
+first step are dark in the Dark render and light in the Light one, while the
+light-only Details screen keeps its light frames in both and names that fallback
+in its own caption. A comparison family publishes the same schemes for every
+member, so changing mode inside a dark catalogue never opens a light document. Device-screen tokens stay independent of the interface
+palette, and a comparison in Difference mode still blends on a base taken from
+the compared screens. The approved swatches and their contrast are the
+[semantic palette](../../docs/protocol/mokly-viewer-palette.md); the behavior
+is the [appearance contract](../../docs/protocol/mokly-viewer-appearance.md).
+The shipped standalone viewer uses the depicted one-control model, while the
+embedded viewer keeps its host-supplied theme alongside its own preview
+controls.
+
+The shell designs now include the Document pages folder (document, details,
+removal, and the nested Previous document versions states) and the Published
+catalogue folder (current catalogue and Changes).
 Each state has its own mobile and desktop component and reuses the shell,
 navigation, and stage primitives. The synthetic handbook in `entries/document.tsx`
 is shared by these designs and the first-class page example; its read-only copy
@@ -270,10 +361,10 @@ keeps the document's own appearance while its link, like every link in a
 previous version, does nothing.
 
 The `example-handbook` page imports the shared example document and belongs to
-the existing Example collection alongside Screens and Example tour. Its exact
-`handbook.html` route, `next-steps` anchor, and incoming Welcome link exercise
-the public page API. The design catalogue has seven responsive page states and
-two publication states.
+the Example folder alongside Screens and Example tour. Its derived
+`pages/example-handbook.html` route, `next-steps` anchor, and incoming Welcome
+link exercise the public page API. The design catalogue has seven responsive
+page states and two publication states.
 
 Every design uses the shared `Search catalogue…` wording. Home guidance and the
 `Item not found` state cover screens, documents, and flows; the runtime shell
@@ -290,8 +381,8 @@ node dist/cli/bin.js export --config examples/basic/mokly.config.ts --out ../../
 ```
 
 Output is config-relative. This command builds the example itself, retains exact
-`.html` URLs and real `/id/<id>/index.html` aliases, and needs no provider rewrites.
+`.html` URLs with one shell page per entry, and needs no provider rewrites.
 The consumer export command requires the configured Git history and rebuilds its
 baseline with the recipe above. The default repository preview exports current
 content without a baseline; preview Changes uses the same cached rebuild.
-See the [consumer publishing recipe](../../README.md#export-and-publish-a-consumer-build).
+See the [consumer publishing recipe](../../README.md#review-and-share).

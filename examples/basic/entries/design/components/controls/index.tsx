@@ -1,4 +1,4 @@
-import { collection, screen } from "@mokly/mokly";
+import { folder, screen } from "@mokly/mokly";
 
 import { componentStyleDependencies } from "../parts/styles.js";
 
@@ -15,12 +15,8 @@ export function ControlsOverviewMobile() {
 }
 
 /** Canonical controls design followed by bounded galleries of authored outcomes. */
-export const controlsDesign = collection({
-  id: "design-component-controls-design",
-  segment: "controls",
+export const controlsDesign = folder({
   title: "Prop controls",
-  description:
-    "Edit scalar props, switch complete saved presets, and recover from invalid values or rendering failures. Native fields are interactive; linked artboards show the authored preview outcomes. Live preview rendering is a later implementation milestone.",
   dependencies: [
     ...componentStyleDependencies,
     "examples/basic/design-component-controls.css",
@@ -32,7 +28,6 @@ export const controlsDesign = collection({
   children: [
     screen({
       id: "design-component-controls",
-      slug: "overview",
       title: "Component prop controls",
       description:
         "Default saved values with text, boolean, number, select, and optional controls beside the component preview.",
@@ -40,28 +35,16 @@ export const controlsDesign = collection({
       desktop: <ControlsOverviewDesktop />,
       mobile: <ControlsOverviewMobile />,
     }),
-    collection({
-      id: "design-component-controls-editing",
-      segment: "editing",
+    folder({
       title: "Editing and saved variants",
-      description:
-        "Edited props, an unset optional value, switching variants, and resetting edits.",
       children: editingScreens,
     }),
-    collection({
-      id: "design-component-controls-states",
-      segment: "states",
+    folder({
       title: "Rendering and comparison",
-      description:
-        "Loading, validation, failure and retry, and comparison boundaries.",
       children: statesScreens,
     }),
-    collection({
-      id: "design-component-controls-published",
-      segment: "published",
+    folder({
       title: "Published catalogue",
-      description:
-        "Saved variants remain selectable while their props stay read-only.",
       children: publishedScreens,
     }),
   ],

@@ -5,7 +5,6 @@ import test, { type TestContext } from "node:test";
 
 import { compileCatalogue, type Compilation } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
-import { normalizeDocumentUrls } from "../dist/review/normalize_urls.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import {
@@ -15,6 +14,7 @@ import {
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 for (const direction of ["added", "removed"] as const)
   test(`derived ${direction} stylesheet imports agree across paths`, async (t) => {
@@ -42,50 +42,45 @@ for (const direction of ["added", "removed"] as const)
     );
   });
 
-test("relocated views use the complete in-memory path", async (t) => {
-  const fixture = await relocatedFixture(t);
-  const beforePath = actionViewPath(fixture.before);
-  const afterPath = actionViewPath(fixture.after);
-  assert.notEqual(beforePath, afterPath);
-  assert.equal(
-    normalizeDocumentUrls(
-      fixture.before.outputs.get(beforePath)!,
-      beforePath,
-      "mokly-generated",
-    ),
-    normalizeDocumentUrls(
-      fixture.after.outputs.get(afterPath)!,
-      afterPath,
-      "mokly-generated",
-    ),
-  );
-  const changedPaths = ["entries/fixture.mockup.tsx"];
-  const beforeResources = {
-    "image.svg": "image",
-    "components/image.svg": "image",
-  };
-  const afterResources = {
-    ...beforeResources,
-    "components/nested/image.svg": "image",
-  };
-  const result = await assertFastPathEquivalent({
-    before: fixture.before.manifest,
-    after: fixture.after.manifest,
-    beforeFiles: compilationFiles(fixture.before, beforeResources),
-    afterFiles: compilationFiles(fixture.after, afterResources),
-    changedPaths,
-    config: fixture.config,
+for (const evidenceKind of ["bytes", "git"] as const)
+  test(`legacy route fields cannot relocate views in ${evidenceKind} mode`, async (t) => {
+    const fixture = await relocatedFixture(t);
+    const beforePath = actionViewPath(fixture.before);
+    const afterPath = actionViewPath(fixture.after);
+    assert.equal(beforePath, afterPath);
+    assert.equal(
+      textOutput(fixture.before.outputs, beforePath),
+      textOutput(fixture.after.outputs, afterPath),
+    );
+    const changedPaths = ["entries/fixture.mockup.tsx"];
+    if (evidenceKind === "git") changedPaths.push("mockups/image.svg");
+    const beforeResources = {
+      "image.svg": "image",
+      "components/image.svg": "image",
+    };
+    const afterResources = {
+      ...beforeResources,
+      ...(evidenceKind === "git" ? { "image.svg": "updated" } : {}),
+      "components/nested/image.svg": "image",
+    };
+    const result = await assertFastPathEquivalent({
+      before: fixture.before.manifest,
+      after: fixture.after.manifest,
+      beforeFiles: compilationFiles(fixture.before, beforeResources),
+      afterFiles: compilationFiles(fixture.after, afterResources),
+      changedPaths,
+      config: fixture.config,
+    });
+    assert.equal(
+      result.components.find((component) => component.id === "action")?.state,
+      evidenceKind === "git" ? "changed" : "unchanged",
+    );
   });
-  assert.equal(
-    result.components.find((component) => component.id === "action")?.state,
-    "changed",
-  );
-});
 
 async function relocatedFixture(t: TestContext) {
   const source = componentEntrySource({
     actionRender:
-      '(props) => <button>{props.label}{props.label === "Continue" ? <img src="../../../image.svg" /> : null}</button>',
+      '(props) => <button>{props.label}<img src="../../image.svg" /></button>',
   });
   const fixture = await createFixture(source);
   t.after(() => removeFixture(fixture));
@@ -102,12 +97,10 @@ async function relocatedFixture(t: TestContext) {
   const before = await compileCatalogue(config);
   await fs.writeFile(
     fixture.entryPath,
-    source
-      .replace(
-        'route: "components/action.html"',
-        'route: "components/nested/action.html"',
-      )
-      .replace('src="../../../image.svg"', 'src="../../../../image.svg"'),
+    source.replace(
+      'id: "action",',
+      'id: "action", route: "components/nested/action.html",',
+    ),
   );
   const after = await compileCatalogue(config);
   return { before, after, config };
@@ -115,7 +108,7 @@ async function relocatedFixture(t: TestContext) {
 
 function actionViewPath(compilation: Compilation): string {
   const action = compilation.manifest.entries.find(
-    (entry) => entry.kind === "component" && entry.id === "action",
+    (entry) => entry.kind === "component" && entry.id === "action-default",
   );
   assert.ok(action);
   return generatedViews(action)[0]!.path;
@@ -129,7 +122,7 @@ function withRootStylesheet(
     [...compilationFiles(compilation, resources)].map(([route, value]) => [
       route,
       route.endsWith(".html")
-        ? `${Buffer.from(value).toString("utf8")}<link rel="stylesheet" href="${path.posix.relative(path.posix.dirname(path.posix.join("mokly-generated", route)), "main.css")}">`
+        ? `${Buffer.from(value).toString("utf8")}<link rel="stylesheet" href="${path.posix.relative(path.posix.dirname(route), "main.css")}">`
         : value,
     ]),
   );

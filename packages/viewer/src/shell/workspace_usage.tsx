@@ -1,5 +1,8 @@
 /** Recorded component consumers rendered as stable grouped usage links. */
 
+import { viewHref } from "../navigation/routes.js";
+
+import type { UsageDeliveryState } from "./use_workspace_data.js";
 import type { UsageLink, WorkspaceData } from "./workspace_data.js";
 
 /** Build the routed consumer URL that selects its recorded instance. */
@@ -9,14 +12,37 @@ export function usageHref(link: UsageLink): string {
     scheme: link.colorScheme,
     instance: link.instanceKey,
   });
-  if (link.variantId) query.set("variant", link.variantId);
   if (link.removed && link.comparisonEligible) query.set("comparison", "side");
-  const route = link.route.split("/").map(encodeURIComponent).join("/");
-  return `/view/${route}?${query}`;
+  return `${viewHref(link.entryKind, link.entryId)}?${query}`;
 }
 
 /** Usage and affected-consumer sections for the inspector. */
-export function WorkspaceUsage({ data }: { data: WorkspaceData }) {
+export function WorkspaceUsage({
+  data,
+  delivery,
+}: {
+  data: WorkspaceData;
+  delivery: UsageDeliveryState;
+}) {
+  if (delivery.status !== "ready")
+    return (
+      <section aria-label="Usage status" data-usage-section="status">
+        {delivery.status === "loading" ? (
+          <p role="status">Loading usage…</p>
+        ) : (
+          <>
+            <p role="alert">Usage couldn’t be loaded.</p>
+            <button
+              className="mbk-text-button"
+              onClick={delivery.retry}
+              type="button"
+            >
+              Try again
+            </button>
+          </>
+        )}
+      </section>
+    );
   if (data.usageComplete === false)
     return (
       <p data-usage-section="status">
@@ -63,16 +89,11 @@ function UsageSection({
             ).size;
             return (
               <li
-                data-usage-link={JSON.stringify([
-                  first.route,
-                  first.variantId ?? "",
-                  first.removed,
-                ])}
+                data-usage-link={JSON.stringify([first.entryId, first.removed])}
                 key={usageGroupKey(first)}
               >
                 <a href={usageHref(first)}>
                   {first.title}
-                  {first.variantId ? ` · ${first.variantId}` : ""}
                   {first.removed ? " · Removed" : ""}
                 </a>
                 <small>
@@ -100,5 +121,5 @@ function groupedUsage(links: readonly UsageLink[]): UsageLink[][] {
 }
 
 function usageGroupKey(link: UsageLink): string {
-  return `${link.route}|${link.variantId ?? ""}|${link.removed}|${link.comparisonEligible}`;
+  return `${link.entryKind}|${link.entryId}|${link.removed}|${link.comparisonEligible}`;
 }

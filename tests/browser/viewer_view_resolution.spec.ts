@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import type { CatalogueReadModel } from "@mokly/viewer";
+import { catalogueComponentVariants } from "@mokly/viewer/data";
 
 import { followupFixture } from "./viewer_followup_fixture.js";
 
@@ -25,7 +26,6 @@ function readyCatalogue(): CatalogueReadModel {
     ...source,
     changesStatus: "ready",
     comparisonUrl,
-    collections: source.collections.map((entry) => ({ ...entry, changes })),
     screens: source.screens.map((entry) => ({ ...entry, changes })),
     pages: source.pages.map((entry) => ({ ...entry, changes })),
     useCases: source.useCases.map((entry) => ({ ...entry, changes })),
@@ -88,7 +88,7 @@ test("Viewer resolves a light fallback before status, marks and eligibility", as
   await expect(root.locator('[data-view-changed="scheme"]')).toBeHidden();
   await expect(root.locator('[data-view-changed="viewport"]')).toBeVisible();
   await expect(
-    root.getByRole("button", { name: "Dark mode", exact: true }),
+    root.getByRole("button", { name: "Dark preview", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   await expect(root.locator('[data-workspace-frame="mobile"]')).toHaveAttribute(
     "src",
@@ -103,7 +103,9 @@ test("Viewer keeps an unknown saved variant comparison ineligible", async ({
   const component = catalogue.components.find(({ id }) => id === "pane");
   if (!component) throw new Error("Missing Viewer component fixture");
   component.changes = { status: "ready", kind: "changed", included: true };
-  const variant = component.variants.find(({ id }) => id === "default");
+  const variant = catalogueComponentVariants(catalogue, component.id).find(
+    ({ id }) => id === "pane-default",
+  );
   if (!variant) throw new Error("Missing Viewer saved variant fixture");
   variant.comparison = { status: "unavailable" };
   variant.views = variant.views.map((view) => ({
@@ -112,12 +114,13 @@ test("Viewer keeps an unknown saved variant comparison ineligible", async ({
   }));
 
   await openViewer(page, "unknown", catalogue, {
-    screenId: component.id,
-    variantId: variant.id,
+    screenId: variant.id,
     viewport: "desktop",
   });
 
   const root = page.locator("#unknown");
-  await expect(root.locator("[data-workspace-status]")).toHaveText("Changed");
+  await expect(root.locator("[data-workspace-status]")).toHaveText(
+    "Unmodified",
+  );
   await expect(root.locator(".mbk-diff-toolbar")).toBeHidden();
 });

@@ -6,27 +6,103 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { minimatch } from "minimatch";
+
+import browserConfig from "../playwright.config.js";
+import { discoverUnitFiles } from "../scripts/verification/evidence.mjs";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
 
-test("public test commands retain native runner entrypoints", async () => {
+test("public browser test command retains the Playwright entrypoint", async () => {
   const packageJson = JSON.parse(
     await fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
   );
   const scripts = packageJson.scripts as Readonly<Record<string, string>>;
-  const unit = scripts.test;
   const browser = scripts["test:browser"];
-  assert.ok(unit);
   assert.ok(browser);
-
-  assert.match(
-    unit,
-    /&& tsx --test --test-concurrency=2 tests\/\*\*\/\*\.test\.ts /,
-  );
-  assert.equal(unit.includes("test:prepared"), false);
   assert.match(browser, /&& playwright test$/);
   assert.equal(browser.includes("test:browser:prepared"), false);
+});
+
+test("npm test and the strict gate share recursive unit discovery", async () => {
+  const packageJson = JSON.parse(
+    await fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
+  );
+  assert.equal(
+    packageJson.scripts.test,
+    "npm run prepare:verification && node scripts/verification/run-unit-dev.mjs",
+    "npm test must use the developer runner, not shell globs that silently skip root-level unit files",
+  );
+  assert.equal(
+    packageJson.scripts["test:prepared"],
+    "node scripts/verification/run-unit.mjs",
+  );
+  for (const [entrypoint, policy] of [
+    ["run-unit.mjs", "strict"],
+    ["run-unit-dev.mjs", "developer"],
+  ] as const) {
+    const source = await fs.readFile(
+      path.join(repositoryRoot, "scripts/verification", entrypoint),
+      "utf8",
+    );
+    assert.match(
+      source,
+      /from "\.\/unit-runner\.mjs"/u,
+      `${entrypoint} must use shared discovery and execution; unquoted shell globs and Playwright's matcher cannot cover the Node inventory`,
+    );
+    assert.ok(
+      source.includes(`runUnitVerification("${policy}",`),
+      `${entrypoint} must keep the ${policy} skip policy; test:prepared rejects skipped tests`,
+    );
+  }
+});
+
+test("unit discovery never loads a file from Playwright's testDir", async () => {
+  assert.ok(browserConfig.testDir);
+  const browserDirectory = path
+    .relative(
+      repositoryRoot,
+      path.resolve(repositoryRoot, browserConfig.testDir),
+    )
+    .split(path.sep)
+    .join("/");
+  const files = await discoverUnitFiles(repositoryRoot);
+  assert.deepEqual(
+    files.filter((file) => file.startsWith(`${browserDirectory}/`)),
+    [],
+    "Node tests inside Playwright's testDir can be loaded by Playwright's matcher as browser tests",
+  );
+});
+
+test("Playwright projects partition specs by the hydration filename rule", async () => {
+  const projects = browserConfig.projects ?? [];
+  assert.deepEqual(
+    projects.map((project) => project.name),
+    ["chromium", "hydration"],
+  );
+  const chromium = projects.find((project) => project.name === "chromium");
+  const hydration = projects.find((project) => project.name === "hydration");
+  assert.ok(chromium);
+  assert.ok(hydration);
+  assert.deepEqual(chromium.use, hydration.use);
+  if (typeof chromium.testIgnore !== "string")
+    assert.fail("chromium must ignore one hydration filename glob");
+  assert.equal(hydration.testMatch, chromium.testIgnore);
+
+  const testDirectory = path.resolve(repositoryRoot, browserConfig.testDir!);
+  const files = await specFiles(testDirectory, testDirectory);
+  const pattern = chromium.testIgnore;
+  const hydrationFiles = files.filter((file) => minimatch(file, pattern));
+  const browserFiles = files.filter((file) => !minimatch(file, pattern));
+  assert.ok(hydrationFiles.length > 0);
+  assert.ok(browserFiles.length > 0);
+  assert.deepEqual(
+    hydrationFiles,
+    files.filter((file) => path.basename(file).includes("hydration")),
+  );
+  assert.deepEqual([...browserFiles, ...hydrationFiles].sort(), files);
 });
 
 test("prepared verification commands remain shard-only wrappers", async () => {
@@ -42,6 +118,10 @@ test("prepared verification commands remain shard-only wrappers", async () => {
   assert.equal(
     scripts["test:browser:prepared"],
     "node scripts/verification/run-browser.mjs",
+  );
+  assert.equal(
+    scripts["test:hydration:prepared"],
+    "node scripts/verification/run-browser.mjs --suite hydration",
   );
 });
 
@@ -91,3 +171,14 @@ test("public package wrappers preserve caller arguments through npm", async (con
     ]);
   }
 });
+
+async function specFiles(directory: string, root: string): Promise<string[]> {
+  const files: string[] = [];
+  for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
+    const target = path.join(directory, entry.name);
+    if (entry.isDirectory()) files.push(...(await specFiles(target, root)));
+    else if (entry.isFile() && entry.name.endsWith(".spec.ts"))
+      files.push(path.relative(root, target).split(path.sep).join("/"));
+  }
+  return files.sort();
+}

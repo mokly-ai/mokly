@@ -1,6 +1,9 @@
-import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
-import { isSafeCatalogueRoute, isSafeRepositoryPath } from "@mokly/viewer/data";
-import type { ManifestV5 } from "@mokly/viewer/data";
+import {
+  isEntryId,
+  isSafeRepositoryPath,
+  GENERATED_DIRECTORY,
+} from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 
 import {
   parseBaselineCatalogue,
@@ -31,15 +34,15 @@ export interface CatalogueUpdate {
   kind?: CatalogueUpdateKind;
   /** Omit to retain status unless the update replaces change evidence. */
   changesStatus?: ChangesStatus;
-  /** Omit to retain state, use `null` when changed-route detection is unavailable. */
-  changedRoutes?: readonly string[] | null;
+  /** Omit to retain state, use `null` when changed-id detection is unavailable. */
+  changedIds?: readonly string[] | null;
   /** Omit to retain evidence, use `null` while fresh classification is unavailable. */
   componentChanges?: ComponentChangeSnapshot | null;
   /** Omit to allocate the next monotonically increasing update version. */
   version?: number;
 }
 
-/** Parent-to-child update command with an explicit changed-route snapshot. */
+/** Parent-to-child update command with an explicit changed-id snapshot. */
 export interface ChildUpdateMessage {
   assetClosure?: readonly string[];
   /** Omit to retain the reader; null revokes it while the parent prepares. */
@@ -48,7 +51,7 @@ export interface ChildUpdateMessage {
   baselineDescriptor?: BaselineCatalogue;
   kind?: CatalogueUpdateKind;
   changesStatus?: ChangesStatus;
-  changedRoutes: readonly string[] | null;
+  changedIds: readonly string[] | null;
   componentChanges: ComponentChangeSnapshot | null;
   type: "update";
   version: number;
@@ -56,7 +59,7 @@ export interface ChildUpdateMessage {
 
 export interface CatalogueCompleteMessage {
   type: "catalogue-complete";
-  manifest: ManifestV5;
+  manifest: ManifestV8;
   generation: string;
   version: number;
 }
@@ -104,8 +107,7 @@ export function parseCatalogueCompleteMessage(
     (candidate.version ?? 0) <= 0 ||
     !candidate.manifest ||
     typeof candidate.manifest !== "object" ||
-    (candidate.manifest.schemaVersion !== 5 &&
-      candidate.manifest.schemaVersion !== 6)
+    candidate.manifest.schemaVersion !== 8
   )
     return;
   return candidate as CatalogueCompleteMessage;
@@ -119,10 +121,10 @@ export type ChildCommand =
   | RuntimeStartupMessage
   | { type: "shutdown" };
 
-/** Create an immutable IPC update payload from the latest route computation. */
+/** Create an immutable IPC update payload from the latest identity computation. */
 export function childUpdateMessage(
   version: number,
-  changedRoutes: readonly string[] | undefined,
+  changedIds: readonly string[] | undefined,
   componentChanges?: ComponentChangeSnapshot,
   changesStatus?: ChangesStatus,
   kind?: CatalogueUpdateKind,
@@ -138,7 +140,7 @@ export function childUpdateMessage(
     ...(assetClosure ? { assetClosure: [...assetClosure] } : {}),
     ...(kind ? { kind } : {}),
     ...(changesStatus ? { changesStatus } : {}),
-    changedRoutes: changedRoutes ? [...changedRoutes] : null,
+    changedIds: changedIds ? [...changedIds] : null,
     componentChanges: componentChanges ?? null,
     type: "update",
     version,
@@ -163,7 +165,7 @@ export function parseChildUpdateMessage(
     assetClosure?: unknown;
     kind?: unknown;
     changesStatus?: unknown;
-    changedRoutes?: unknown;
+    changedIds?: unknown;
     componentChanges?: unknown;
     version?: unknown;
   };
@@ -193,7 +195,7 @@ export function parseChildUpdateMessage(
         ))) ||
     !Number.isSafeInteger(candidate.version) ||
     (candidate.version as number) <= 0 ||
-    !isChangedRoutes(candidate.changedRoutes) ||
+    !isChangedIds(candidate.changedIds) ||
     !isComponentChanges(candidate.componentChanges) ||
     (candidate.kind !== undefined &&
       candidate.kind !== "content" &&
@@ -225,7 +227,7 @@ export function parseChildUpdateMessage(
     ...(candidate.changesStatus
       ? { changesStatus: candidate.changesStatus }
       : {}),
-    changedRoutes: candidate.changedRoutes,
+    changedIds: candidate.changedIds,
     componentChanges: candidate.componentChanges,
     type: "update",
     version: candidate.version as number,
@@ -249,26 +251,23 @@ function isComponentChanges(
     return false;
   const snapshot = value as {
     baseline?: unknown;
-    changedRoutes?: unknown;
+    changedIds?: unknown;
     result?: unknown;
   };
   return (
     typeof snapshot.baseline === "object" &&
     snapshot.baseline !== null &&
-    (snapshot.changedRoutes === undefined ||
-      (isChangedRoutes(snapshot.changedRoutes) &&
-        snapshot.changedRoutes !== null)) &&
+    (snapshot.changedIds === undefined ||
+      (isChangedIds(snapshot.changedIds) && snapshot.changedIds !== null)) &&
     (snapshot.result === undefined ||
       (typeof snapshot.result === "object" && snapshot.result !== null))
   );
 }
 
-function isChangedRoutes(value: unknown): value is readonly string[] | null {
+function isChangedIds(value: unknown): value is readonly string[] | null {
   return (
     value === null ||
     (Array.isArray(value) &&
-      value.every(
-        (route) => typeof route === "string" && isSafeCatalogueRoute(route),
-      ))
+      value.every((id) => typeof id === "string" && isEntryId(id)))
   );
 }

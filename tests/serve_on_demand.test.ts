@@ -21,7 +21,7 @@ for (const watch of [false, true]) {
         `
       import { definePage } from "@mokly/mokly";
       mockups.push(definePage({ id: "broken", title: "Broken", description: "Broken page",
-        route: "broken.html", dependencies: [], relatedDocs: [],
+        dependencies: [], relatedDocs: [],
         render: () => { throw new Error("unrequested page rendered"); } }));
     `,
     );
@@ -38,7 +38,8 @@ for (const watch of [false, true]) {
     assert.equal(preview.status, 200);
     assert.match(await preview.text(), /id="home"/);
     assert.equal(
-      (await fetch(`${running.url}/static/mokly-generated/broken.html`)).status,
+      (await fetch(`${running.url}/static/mokly-generated/pages/broken.html`))
+        .status,
       500,
     );
     assert.equal((await fetch(running.url)).status, 200);
@@ -73,7 +74,7 @@ test("demand rendering validates logical anchors without rendering navigation-on
     400,
   );
   await assert.rejects(
-    fs.access(path.join(fixture.mockupsDir, "mokly-manifest.json")),
+    fs.access(path.join(fixture.generatedDir, "mokly-manifest.json")),
   );
 });
 
@@ -88,7 +89,7 @@ test(
         `
     import { definePage } from "@mokly/mokly";
     mockups.push(definePage({ id: "broken", title: "Broken", description: "Broken page",
-      route: "broken.html", dependencies: [], relatedDocs: [],
+      dependencies: [], relatedDocs: [],
       render: () => { throw new Error("background cannot complete"); } }));
   `,
     );
@@ -121,7 +122,7 @@ test(
       200,
     );
     await assert.rejects(
-      fs.access(path.join(fixture.mockupsDir, "mokly-manifest.json")),
+      fs.access(path.join(fixture.generatedDir, "mokly-manifest.json")),
     );
   },
 );

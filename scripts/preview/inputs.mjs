@@ -3,6 +3,8 @@ import path from "node:path";
 
 import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 
+import { compileCatalogue } from "../../dist/build/compile.js";
+import { generatedBytes } from "../../dist/build/generated_file.js";
 import {
   publicationFiles,
   publicationInput,
@@ -15,6 +17,7 @@ export async function capturePublicationInputs(
   excludedRoots,
   compilation,
 ) {
+  compilation ??= await compileCatalogue(config);
   const files = new Map();
   for (const [root, publicRoot] of [
     [config.repoRoot, false],
@@ -63,7 +66,9 @@ export async function capturePublicationInputs(
   for (const [route, content] of [...compilation.outputs].sort(
     ([left], [right]) => left.localeCompare(right),
   )) {
-    hash.update(`${GENERATED_DIRECTORY}/${route}\0${content}\0`);
+    hash.update(`${GENERATED_DIRECTORY}/${route}\0`);
+    hash.update(generatedBytes(content));
+    hash.update("\0");
   }
   return { fingerprint: hash.digest("hex"), manifest };
 }

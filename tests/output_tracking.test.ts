@@ -28,6 +28,12 @@ test("Check ignores local output without Git and validates tracked bytes from th
     path.join(repositoryRoot, "node_modules"),
     path.join(root, "node_modules"),
   );
+  const ceiling = process.env["GIT_CEILING_DIRECTORIES"];
+  process.env["GIT_CEILING_DIRECTORIES"] = path.dirname(root);
+  context.after(() => {
+    if (ceiling === undefined) delete process.env["GIT_CEILING_DIRECTORIES"];
+    else process.env["GIT_CEILING_DIRECTORIES"] = ceiling;
+  });
   const config = await loadConfig(root);
   const compilation = await compileCatalogue(config);
   const store = new FileSystemGeneratedOutputStore();
@@ -81,7 +87,7 @@ test("Build writes a new route in a tracked repository before staging it", async
       assert.match(String(error), /generated output is partly tracked by Git:/);
       assert.match(
         String(error),
-        /untracked:\n {2}- mockups\/mokly-generated\/new-page\.html/,
+        /untracked:\n {2}- mockups\/mokly-generated\/pages\/new-page\.html/,
       );
       return true;
     },

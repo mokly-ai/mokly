@@ -7,22 +7,9 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { validateGeneratedOutputPaths } from "../dist/build/output_paths.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
-import {
-  FORMER_MANIFEST_NAME,
-  LEGACY_MANIFEST_NAME,
-  MANIFEST_NAME,
-  parseManifest,
-  readManifest,
-} from "../dist/registry/manifest.js";
-import {
-  FileSystemReviewAssetReader,
-  GitReviewAssetReader,
-} from "../dist/review/assets.js";
-import { readBaseManifest } from "../dist/review/base_manifest.js";
-import {
-  NodeGitCommandRunner,
-  CommittedRepository,
-} from "../dist/review/git.js";
+import { MANIFEST_NAME, readManifest } from "../dist/registry/manifest.js";
+import { FileSystemReviewAssetReader } from "../dist/review/assets.js";
+import { NodeGitCommandRunner } from "../dist/review/git.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
 
@@ -31,14 +18,12 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
-
-const metadataRoutes = [
-  MANIFEST_NAME,
+import {
   FORMER_MANIFEST_NAME,
   LEGACY_MANIFEST_NAME,
-  "metadata.json",
-];
-const publicJson = '{"theme":"light"}';
+  metadataRoutes,
+  publicJson,
+} from "./private_metadata_fixture.js";
 
 test("a stale historical-manifest alias does not prevent ordinary public resources", async (context) => {
   const fixture = await createFixture(
@@ -97,7 +82,7 @@ test("generated page routes cannot overwrite a manifest through an alias", async
   await fs.promises.symlink("../mokly-manifest.json", fragment);
   await assert.rejects(
     writeCompilation(compilation, config),
-    /generated route targets internal catalogue metadata/,
+    /contains a symlink or non-regular entry/,
   );
   validateGeneratedOutputPaths([MANIFEST_NAME], config);
 });
@@ -243,140 +228,6 @@ for (const includeChanges of [false, true]) {
     );
     assert.ok(
       readManifest(config).sourceFiles.includes("entries/fixture.mockup.tsx"),
-    );
-  });
-}
-
-test("the former Mokabook manifest is accepted only from Git history", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
-  const compilation = await compileCatalogue(config);
-  const {
-    assetClosure: _closure,
-    blobHashAlgorithm: _algorithm,
-    generatedFiles: _files,
-    ...legacy
-  } = compilation.manifest;
-  const formerManifest = {
-    ...legacy,
-    schemaVersion: 5,
-    generatedBy: "mokabook",
-  };
-  assert.throws(
-    () => parseManifest(formerManifest),
-    /expected Mokly manifest schema version 6/,
-  );
-  await fs.promises.writeFile(
-    path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
-    JSON.stringify(formerManifest),
-  );
-  const runner = new NodeGitCommandRunner(fixture.root);
-  await runner.run(["init", "-q"]);
-  await runner.run(["add", "."]);
-  await runner.run([
-    "-c",
-    "user.name=Test",
-    "-c",
-    "user.email=test@example.invalid",
-    "commit",
-    "-qm",
-    "test: former Mokabook metadata",
-  ]);
-  const git = new CommittedRepository(runner);
-  const baseline = await readBaseManifest(git.reader, "HEAD", config);
-  assert.deepEqual(baseline, { ...legacy, schemaVersion: 5 });
-  const reader = new GitReviewAssetReader(
-    config,
-    git.reader,
-    "HEAD",
-    "mockups",
-  );
-  await assert.rejects(
-    reader.read(FORMER_MANIFEST_NAME),
-    /not a public static file/,
-  );
-});
-
-for (const schemaVersion of [2, 3, 4, 5]) {
-  test(`historical v${schemaVersion} manifests remain readable internally but cannot become Review assets`, async (context) => {
-    const fixture = await createFixture();
-    context.after(() => removeFixture(fixture));
-    const config = await loadConfig(fixture.root);
-    const compilation = await compileCatalogue(config);
-    await writeCompilation(compilation, config);
-    const {
-      assetClosure: _closure,
-      blobHashAlgorithm: _algorithm,
-      generatedFiles: _files,
-      ...legacy
-    } = compilation.manifest;
-    const { sourceFiles: _sources, ...historical } = legacy;
-    const manifest =
-      schemaVersion === 5
-        ? { ...legacy, schemaVersion: 5 }
-        : schemaVersion === 4
-          ? {
-              ...legacy,
-              schemaVersion: 4,
-              entries: compilation.manifest.entries.map(
-                ({ declaredDependencies: _declared, ...entry }) => entry,
-              ),
-            }
-          : {
-              ...historical,
-              schemaVersion,
-              generatedBy: schemaVersion === 2 ? "mockbook" : "mokly",
-              legacyPages: [],
-            };
-    const filename = schemaVersion === 2 ? LEGACY_MANIFEST_NAME : MANIFEST_NAME;
-    await fs.promises.rm(config.generatedDir, { recursive: true, force: true });
-    await fs.promises.writeFile(
-      path.join(fixture.mockupsDir, filename),
-      JSON.stringify(manifest),
-    );
-    await fs.promises.symlink(
-      filename,
-      path.join(fixture.mockupsDir, "metadata.json"),
-    );
-    await fs.promises.writeFile(
-      path.join(fixture.mockupsDir, "public.json"),
-      publicJson,
-    );
-    const runner = new NodeGitCommandRunner(fixture.root);
-    await runner.run(["init", "-q"]);
-    await runner.run(["add", "."]);
-    await runner.run([
-      "-c",
-      "user.name=Test",
-      "-c",
-      "user.email=test@example.invalid",
-      "commit",
-      "-qm",
-      "test: historical metadata",
-    ]);
-    const git = new CommittedRepository(runner);
-    config.compatibility.readManifestV2 = schemaVersion === 2;
-    const baseline = await readBaseManifest(git.reader, "HEAD", config);
-    assert.equal(
-      baseline.schemaVersion,
-      schemaVersion === 2 ? 3 : schemaVersion,
-    );
-    const reader = new GitReviewAssetReader(
-      config,
-      git.reader,
-      "HEAD",
-      "mockups",
-    );
-    for (const route of [filename, "metadata.json"])
-      await assert.rejects(
-        reader.read(route),
-        /not a public static file|not a regular Git file/,
-        route,
-      );
-    assert.equal(
-      Buffer.from(await reader.read("public.json")).toString(),
-      publicJson,
     );
   });
 }

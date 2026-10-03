@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { removedManifestEntries } from "../dist/registry/changes.js";
 import { viewPage } from "../dist/server/pages.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
@@ -32,7 +33,7 @@ function context(evidence?: ShellContext["componentChanges"]): ShellContext {
   return {
     base: "main",
     updateVersion: 1,
-    activeRoute: screen.route,
+    activeId: screen.id,
     ...(evidence ? { componentChanges: evidence } : {}),
   };
 }
@@ -47,7 +48,7 @@ test("a ready comparison names the views it marked changed", () => {
   );
 });
 
-test("a v3 component result keys every saved variant's view states", () => {
+test("a v4 component result keys every saved variant's view states", () => {
   const result = componentVariantResult();
   const comparison = result.components[0];
   assert.ok(comparison);
@@ -57,11 +58,15 @@ test("a v3 component result keys every saved variant's view states", () => {
     comparison,
   );
 
-  assert.deepEqual(Object.keys(evidence), ["default", "second", "removed"]);
+  assert.deepEqual(Object.keys(evidence), [
+    "badge-default",
+    "badge-second",
+    "badge-removed",
+  ]);
   assert.deepEqual(
-    evidence.second,
+    evidence["badge-second"],
     comparison.variants
-      .find(({ id }) => id === "second")
+      .find(({ id }) => id === "badge-second")
       ?.views.map(({ colorScheme, state, viewport }) => ({
         colorScheme,
         state,
@@ -73,9 +78,9 @@ test("a v3 component result keys every saved variant's view states", () => {
       component,
       context({ baseline: componentBaseline, result }),
       comparison,
-      "default",
+      "badge-default",
     ),
-    evidence.default,
+    evidence["badge-default"],
   );
 });
 
@@ -84,7 +89,7 @@ test("lightweight screen-view evidence names the same views", () => {
     baseline: screenManifest,
     screenViews: [
       {
-        route: screen.route,
+        id: screen.id,
         views: [
           { viewport: "desktop", colorScheme: "dark", state: "changed" },
           { viewport: "mobile", colorScheme: "light", state: "unchanged" },
@@ -121,7 +126,7 @@ test("added and removed views count as changed views", () => {
     baseline: screenManifest,
     screenViews: [
       {
-        route: screen.route,
+        id: screen.id,
         views: [
           { viewport: "mobile", colorScheme: "light", state: "added" },
           { viewport: "mobile", colorScheme: "dark", state: "ignored-only" },
@@ -172,7 +177,10 @@ test("workspace data publishes one changed-view list for a screen", () => {
 test("workspace data keeps changed views with current and removed variants", () => {
   const result = componentVariantResult();
   const data = workspaceData(
-    createCatalogue(componentManifest),
+    createCatalogue(
+      componentManifest,
+      removedManifestEntries(componentManifest, componentBaseline),
+    ),
     {
       base: "main",
       componentChanges: { baseline: componentBaseline, result },
@@ -182,9 +190,9 @@ test("workspace data keeps changed views with current and removed variants", () 
   );
 
   assert.deepEqual(data.changedViews, {
-    default: [],
-    second: DARK_VIEWS,
-    removed: [
+    "badge-default": [],
+    "badge-second": DARK_VIEWS,
+    "badge-removed": [
       { viewport: "mobile", colorScheme: "light" },
       { viewport: "mobile", colorScheme: "dark" },
       { viewport: "desktop", colorScheme: "light" },
@@ -205,12 +213,12 @@ test("workspace data keeps changed views with current and removed variants", () 
     ),
   );
   assert.equal(
-    data.variants.find(({ value }) => value.id === "removed")?.removed,
+    data.variants.find(({ value }) => value.id === "badge-removed")?.removed,
     true,
   );
 });
 
-test("the view controls and details name a dark-only change", () => {
+test("standalone Appearance and details name a dark-only change", () => {
   const catalogue = createCatalogue(screenManifest);
   const shellContext = context({
     baseline: screenManifest,
@@ -229,11 +237,12 @@ test("the view controls and details name a dark-only change", () => {
   );
   assert.equal(
     attribute(
-      workspaceControl(html, "data-workspace-scheme"),
+      shellControl(html, "data-mokly-appearance-select"),
       "aria-describedby",
     ),
     "mb-view-changed-scheme",
   );
+  assert.doesNotMatch(html, /data-workspace-scheme/);
   assert.equal(attribute(viewMark(html, "viewport"), "hidden"), "");
   assert.doesNotMatch(html, /aria-describedby="mb-view-changed-viewport"/);
   assert.match(
@@ -265,7 +274,7 @@ function viewMark(html: string, kind: "scheme" | "viewport") {
   return marks[0]!;
 }
 
-function workspaceControl(html: string, name: string) {
+function shellControl(html: string, name: string) {
   const controls = documentElements(
     html,
     (element) => attribute(element, name) !== undefined,

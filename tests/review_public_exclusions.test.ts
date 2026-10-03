@@ -20,48 +20,43 @@ const reader: BaselineReader = {
   readFileBytes: async () => Buffer.from("baseline"),
 };
 
-for (const schema of ["v2", "v3", "component-v4", "page-v4", "v5"]) {
-  test(`historical ${schema} resources protect sources but permit ordinary filenames`, async (t) => {
-    const fixture = await createFixture();
-    t.after(() => removeFixture(fixture));
-    const config = await loadConfig(fixture.root);
-    const manifest = {
-      schemaVersion: Number(schema.slice(-1)),
-      entries: [],
-      legacyPages: [],
-      ...(schema === "page-v4" || schema === "v5"
-        ? { sourceFiles: ["old-output/source.json"] }
-        : {}),
-    } as unknown as HistoricalManifest;
-    const historical = new GitReviewAssetReader(
-      baselineResourceConfig(config, manifest),
-      reader,
+test("historical v8 resources enforce their closure at the baseline root", async (t) => {
+  const fixture = await createFixture();
+  t.after(() => removeFixture(fixture));
+  const config = await loadConfig(fixture.root);
+  const manifest = {
+    schemaVersion: 8,
+    assetClosure: permittedNames,
+    generatedFiles: [],
+    blobHashAlgorithm: "sha1",
+    generatedBy: "mokly",
+    entries: [],
+    sourceFiles: ["old-output/source.json"],
+  } as unknown as HistoricalManifest;
+  const historical = new GitReviewAssetReader(
+    baselineResourceConfig(config, manifest),
+    reader,
+    "baseline",
+    "old-output",
+    manifest,
+  );
+  for (const [name, cause] of [
+    ["unreferenced.txt", /outside historical asset closure/],
+    ["mokly-manifest.json", /targets internal catalogue metadata/],
+    ["unused.source.html", /not a public static file/],
+  ] as const)
+    await assert.rejects(historical.read(name), cause, name);
+  for (const name of permittedNames)
+    assert.equal(
+      Buffer.from(await historical.read(name)).toString(),
       "baseline",
-      "old-output",
+      name,
     );
-    for (const name of ["mokly-manifest.json", "unused.source.html"])
-      await assert.rejects(
-        historical.read(name),
-        /not a public static file/,
-        name,
-      );
-    for (const name of [
-      ...permittedNames,
-      "README.md",
-      "internal/private.json",
-    ])
-      assert.equal(
-        Buffer.from(await historical.read(name)).toString(),
-        "baseline",
-        name,
-      );
-    if ("sourceFiles" in manifest)
-      await assert.rejects(
-        historical.read("source.json"),
-        /not a public static file/,
-      );
-  });
-}
+  await assert.rejects(
+    historical.read("source.json"),
+    /not a public static file|outside historical asset closure/,
+  );
+});
 
 test("historical regular resources ignore current filesystem aliases but still reject historical symlinks", async (t) => {
   const fixture = await createFixture();

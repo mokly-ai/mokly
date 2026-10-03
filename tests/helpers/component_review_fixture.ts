@@ -2,6 +2,11 @@ import fs from "node:fs/promises";
 
 import { baselineCatalogue } from "../../dist/baseline/catalogue.js";
 import { compileCatalogue } from "../../dist/build/compile.js";
+import type { GeneratedFile } from "../../dist/build/generated_file.js";
+import {
+  generatedBytes,
+  generatedText,
+} from "../../dist/build/generated_file.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
 import type { ReadOnlyReviewRepository } from "../../dist/review/repository.js";
@@ -9,6 +14,7 @@ import type { HistoricalManifest } from "../../packages/viewer/dist/registry/typ
 
 import { componentEntrySource } from "./component_fixture.js";
 import { createFixture, removeFixture } from "./fixture.js";
+import { textOutput } from "./generated_text.js";
 
 export async function componentReviewFixture(
   t: { after: (fn: () => Promise<void>) => void },
@@ -26,7 +32,7 @@ export async function componentReviewFixture(
   const changedPaths = [
     "entries/fixture.mockup.tsx",
     ...[...after.outputs]
-      .filter(([route, html]) => before.outputs.get(route) !== html)
+      .filter(([route, html]) => textOutput(before.outputs, route) !== html)
       .map(([route]) => `mockups/mokly-generated/${route}`),
   ];
   return {
@@ -42,21 +48,17 @@ export async function componentReviewFixture(
 export function componentGit(
   compilation: {
     readonly manifest: HistoricalManifest;
-    readonly outputs: ReadonlyMap<string, string>;
+    readonly outputs: ReadonlyMap<string, GeneratedFile>;
   },
   changedPaths: readonly string[] = [],
 ): ReadOnlyReviewRepository {
   const commit = "a".repeat(40);
-  const generated = compilation.manifest.schemaVersion === 6;
+  const generated = compilation.manifest.schemaVersion === 8;
   const assetClosure =
     "assetClosure" in compilation.manifest
       ? compilation.manifest.assetClosure
       : [];
-  const descriptor = baselineCatalogue(
-    commit,
-    "mockups",
-    generated ? "generated-v6" : "legacy",
-  );
+  const descriptor = baselineCatalogue(commit, "mockups", "generated-v8");
   const files = new Map(
     [...compilation.outputs].map(([route, html]) => [
       `mockups/${generated && !assetClosure.includes(route) ? "mokly-generated/" : ""}${route}`,
@@ -78,8 +80,8 @@ export function componentGit(
       fileExists: async (_commit, route) => files.has(route),
       fileKind: async (_commit, route) =>
         files.has(route) ? "regular" : "missing",
-      readFile: async (_commit, route) => read(route),
-      readFileBytes: async (_commit, route) => Buffer.from(read(route)),
+      readFile: async (_commit, route) => generatedText(read(route), route)!,
+      readFileBytes: async (_commit, route) => generatedBytes(read(route)),
     },
     descriptor,
   };

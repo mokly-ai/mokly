@@ -10,6 +10,7 @@ import { MemoryBaselineFileSystem } from "./helpers/baseline_memory.js";
 function fixture() {
   const fs = new MemoryBaselineFileSystem();
   fs.put("/repo/output", "directory");
+  fs.put("/repo/output/mockups", "directory");
   return {
     fs,
     reader: new RebuiltBaselineReader(
@@ -25,10 +26,10 @@ function fixture() {
 test("rebuilt readers classify missing, directory, symlink and special files without following them", async () => {
   const { fs, reader } = fixture();
   const bytes = Buffer.from([0, 255, 127, 17]);
-  fs.put("/repo/output/file", "regular", bytes);
-  fs.put("/repo/output/dir", "directory");
-  fs.put("/repo/output/link", "symlink");
-  fs.put("/repo/output/device", "other");
+  fs.put("/repo/output/mockups/file", "regular", bytes);
+  fs.put("/repo/output/mockups/dir", "directory");
+  fs.put("/repo/output/mockups/link", "symlink");
+  fs.put("/repo/output/mockups/device", "other");
   assert.deepEqual(
     Buffer.from(await reader.readFileBytes(baselineCommit, "mockups/file")),
     bytes,
@@ -104,7 +105,7 @@ test("rebuilt readers reject another commit and symlinks above the output root",
 test("rebuilt reader rejects oversized objects before reading their bytes", async () => {
   const { fs, reader } = fixture();
   fs.put(
-    "/repo/output/huge",
+    "/repo/output/mockups/huge",
     "regular",
     Buffer.alloc(0),
     MAX_BATCH_OUTPUT_BYTES,
@@ -122,7 +123,7 @@ test("rebuilt bulk reads deduplicate and bound filesystem concurrency across obj
     { length: 4100 },
     (_, index) => `mockups/file-${index}`,
   );
-  for (const name of paths) fs.put(`/repo/output/${name.slice(8)}`, "regular");
+  for (const name of paths) fs.put(`/repo/output/${name}`, "regular");
   const read = fs.read.bind(fs);
   let active = 0;
   let maximum = 0;

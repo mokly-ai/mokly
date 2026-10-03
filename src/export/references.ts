@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import { isSafeRepositoryPath, snapshotSidePath } from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import {
@@ -13,9 +13,12 @@ import {
   extractHtmlReferences,
   resolveLocalReferencePath,
 } from "../html_references.js";
+import { classifyResourceUrl } from "../resource_url.js";
 
 import { exportError } from "./error.js";
 import { ExportPathIndex } from "./path_index.js";
+
+const SNAPSHOT_MARKER = `/${path.posix.dirname(snapshotSidePath("before"))}/`;
 
 /** Prove every local document/resource/module request has an exported target. */
 export function validateExportReferences(
@@ -39,9 +42,12 @@ export function validateExportReferences(
         ? [
             [
               name,
-              htmlResource(
-                extractHtmlReferences(Buffer.from(bytes).toString("utf8")),
-              ),
+              (() => {
+                const extracted = extractHtmlReferences(
+                  Buffer.from(bytes).toString("utf8"),
+                );
+                return htmlResource(extracted);
+              })(),
             ] as const,
           ]
         : [],
@@ -54,7 +60,7 @@ export function validateExportReferences(
     if (extension === ".html" || extension === ".htm") {
       references.push(
         ...(documents.get(name)?.references ?? []).filter(
-          (item) => !item.checkFragment || !name.includes("/snapshots/"),
+          (item) => !item.checkFragment || !name.includes(SNAPSHOT_MARKER),
         ),
       );
     } else if (extension === ".css")
@@ -94,10 +100,16 @@ export function validateExportReferences(
 
 function referenceTarget(source: string, value: string): string | undefined {
   const reference = value.trim();
-  if (reference === "" || /^(?:https?:|mailto:|tel:|data:)/i.test(reference))
-    return undefined;
+  const classification = classifyResourceUrl(
+    reference,
+    source.endsWith(".css") ? "css" : "html",
+  );
+  if (classification.kind === "external") return;
   if (reference.startsWith("#") || reference.startsWith("?")) return source;
-  if (reference.startsWith("//") || /^[a-z][a-z0-9+.-]*:/i.test(reference))
+  if (
+    classification.kind === "invalid" &&
+    classification.reason !== "root-absolute"
+  )
     throw exportError(`Unsupported export URL: ${source} -> ${reference}`);
   const resolved = resolveLocalReferencePath(source, reference, true);
   if (resolved.kind === "invalid-encoding")

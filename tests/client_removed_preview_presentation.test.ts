@@ -2,10 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  MAX_PREVIEW_DOCUMENT_BYTES,
-  createPreviewPresentationLoader,
+  MAX_SNAPSHOT_DOCUMENT_BYTES,
+  createSnapshotPresentationLoader,
 } from "../packages/viewer/dist/previews/presentation.js";
-import type { LoadedPreview } from "../packages/viewer/dist/previews/request.js";
 
 const GENERATION =
   "https://catalogue.test/__mokly/diffs/__generations/presentation/";
@@ -16,14 +15,6 @@ interface FetchCall {
   credentials: RequestCredentials | undefined;
   signal: AbortSignal | null;
   url: string;
-}
-
-function loaded(): LoadedPreview {
-  return {
-    content: { kind: "page", url: SNAPSHOT },
-    generation: GENERATION,
-    url: `${GENERATION}review.json`,
-  };
 }
 
 function documentFixture(): Document {
@@ -114,8 +105,9 @@ function environment(value: () => Response) {
 
 test("pinned presentations accept extensionless delivery and cache by address", async () => {
   const fetch = environment(() => response(SNAPSHOT.slice(0, -5)));
-  const loader = createPreviewPresentationLoader(
-    loaded(),
+  const loader = createSnapshotPresentationLoader(
+    GENERATION,
+    ["before"],
     { kind: "pinned", comparisonUrl: `${GENERATION}review.json` },
     fetch.value,
   );
@@ -141,8 +133,9 @@ test("pinned presentations accept extensionless delivery and cache by address", 
 
 test("live presentations use same-origin credentials", async () => {
   const fetch = environment(() => response(SNAPSHOT));
-  const loader = createPreviewPresentationLoader(
-    loaded(),
+  const loader = createSnapshotPresentationLoader(
+    GENERATION,
+    ["before"],
     { kind: "live" },
     fetch.value,
   );
@@ -160,8 +153,9 @@ test("historical fetches reject responses outside the acceptance contract", asyn
   ];
   for (const candidate of cases) {
     const fetch = environment(() => candidate);
-    const loader = createPreviewPresentationLoader(
-      loaded(),
+    const loader = createSnapshotPresentationLoader(
+      GENERATION,
+      ["before"],
       { kind: "live" },
       fetch.value,
     );
@@ -172,16 +166,33 @@ test("historical fetches reject responses outside the acceptance contract", asyn
   }
 });
 
+test("removed-preview failures keep their unavailable copy", async () => {
+  const fetch = environment(() => {
+    throw new Error("provider details");
+  });
+  const loader = createSnapshotPresentationLoader(
+    GENERATION,
+    ["before"],
+    { kind: "live" },
+    fetch.value,
+  );
+  await assert.rejects(
+    loader.load(SNAPSHOT, AbortSignal.timeout(5_000)),
+    /^Error: The previous version is unavailable\.$/,
+  );
+});
+
 test("historical fetches count the body instead of trusting its headers", async () => {
   const fetch = environment(() => {
     const value = response(SNAPSHOT, {
-      body: byteBody(MAX_PREVIEW_DOCUMENT_BYTES + 1),
+      body: byteBody(MAX_SNAPSHOT_DOCUMENT_BYTES + 1),
     });
     value.headers.set("content-length", "1");
     return value;
   });
-  const loader = createPreviewPresentationLoader(
-    loaded(),
+  const loader = createSnapshotPresentationLoader(
+    GENERATION,
+    ["before"],
     { kind: "live" },
     fetch.value,
   );
@@ -193,15 +204,20 @@ test("historical fetches count the body instead of trusting its headers", async 
 
 test("a loader never fetches outside its generation snapshot prefix", async () => {
   const fetch = environment(() => response(SNAPSHOT));
-  const loader = createPreviewPresentationLoader(
-    loaded(),
+  const loader = createSnapshotPresentationLoader(
+    GENERATION,
+    ["before"],
     { kind: "live" },
     fetch.value,
   );
   for (const address of [
     `${GENERATION}snapshots/after/archive/removed.html`,
+    `${GENERATION}snapshots/`,
     `${GENERATION}snapshots/before/`,
+    `${GENERATION}snapshots/beforeX/archive/removed.html`,
+    `${GENERATION.replace("presentation", "other")}snapshots/before/archive/removed.html`,
     SNAPSHOT.replace("catalogue.test", "other.test"),
+    SNAPSHOT.replace("https://", "https://reader@"),
     `${SNAPSHOT}?changed=1`,
   ])
     await assert.rejects(
@@ -211,11 +227,9 @@ test("a loader never fetches outside its generation snapshot prefix", async () =
   assert.deepEqual(fetch.calls, []);
   assert.throws(
     () =>
-      createPreviewPresentationLoader(
-        {
-          ...loaded(),
-          generation: GENERATION.replace("catalogue.test", "other.test"),
-        },
+      createSnapshotPresentationLoader(
+        GENERATION.replace("catalogue.test", "other.test"),
+        ["before"],
         { kind: "live" },
         fetch.value,
       ),
@@ -235,8 +249,9 @@ test("cancellation stops a historical response body read", async () => {
       }),
     }),
   );
-  const loader = createPreviewPresentationLoader(
-    loaded(),
+  const loader = createSnapshotPresentationLoader(
+    GENERATION,
+    ["before"],
     { kind: "live" },
     fetch.value,
   );

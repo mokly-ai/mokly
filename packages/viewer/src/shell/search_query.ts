@@ -23,7 +23,7 @@ export function parseSearchQuery(raw: string): SearchQuery {
 /** Require every tag and the complete free-text phrase to match one row. */
 export function rowMatchesQuery(
   query: SearchQuery,
-  row: { id?: string; route: string; tags: readonly string[]; text: string },
+  row: { id: string; tags: readonly string[]; text: string },
 ): boolean {
   if (
     !query.tags.every((tag) =>
@@ -34,9 +34,9 @@ export function rowMatchesQuery(
   const freeText = query.freeText.toLowerCase();
   return (
     freeText === "" ||
-    (row.id ?? "").toLowerCase().includes(freeText) ||
+    row.id.toLowerCase().includes(freeText) ||
     row.text.toLowerCase().includes(freeText) ||
-    row.route.toLowerCase().includes(freeText)
+    row.tags.some((tag) => tag.toLowerCase().includes(freeText))
   );
 }
 

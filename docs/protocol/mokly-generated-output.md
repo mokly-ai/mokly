@@ -2,23 +2,19 @@
 
 ## Delivery Status
 
-The command, closure and writer behavior is implemented by
+The command, closure, unified layout and writer behavior follows
 [Generated Output Simplification](../../plans/generated-output-simplification.md).
-The merged route addressing and v8-only baseline gate below are Milestone 11
-targets; the pre-merge branch still emits v6.
-The approved [unified output](./mokly-unified-output.md),
-[manifest v8](./mokly-generated-manifest.md#approved-manifest-v8),
-[viewer namespace](./mokly-viewer-namespace.md), and
-[lint](./mokly-directory-lint.md) contracts govern Milestones 10–13; those
-changes are not implemented by the documentation-only Milestone 9. See
+[Unified output](./mokly-unified-output.md), [manifest v8](./mokly-generated-manifest.md),
 [configuration](./mokly-configuration.md), [baseline selection](./mokly-derived-baselines.md),
-[baseline storage](./mokly-baseline-storage.md), and [terminal output](./mokly-terminal-output.md).
+[baseline storage](./mokly-baseline-storage.md) and [terminal output](./mokly-terminal-output.md)
+define the implemented contract. The [viewer namespace](./mokly-viewer-namespace.md)
+and remaining [lint work](./mokly-directory-lint.md) are approved follow-on targets.
 
 ## Roots And Paths
 
 `mockupsDir` is the catalogue directory. Its fixed, Mokly-owned child
 `<mockupsDir>/mokly-generated/` holds generated documents/fragments and the
-manifest, with imported CSS and copied assets added by the merged layout.
+manifest, plus compiled CSS and copied assets.
 No authored file belongs in this child. Merged HTML routes derive from kind/id
 and start with `pages/`, `screens/` or `components/`; for example,
 `screens/a.mobile.html` is stored at
@@ -49,7 +45,7 @@ Production code defines `GENERATED_DIRECTORY` once in
 and regular-expression literals under `src/`, `packages/viewer/src/`, and
 `scripts/preview/`, including escaped spellings. The
 [lint contract](./mokly-directory-lint.md) keeps this rule independent of
-`main`'s source-ordering check; viewer-name enforcement remains Milestone 12.
+`main`'s source-ordering check; viewer-name enforcement remains pending with the namespace rename.
 The former dot-directory name was never released and is not a read alias.
 
 Resolved entries, the renderer, compatibility transformer, module-resolution
@@ -148,20 +144,14 @@ where `<n>` includes the manifest. `build` prints `Generated <n> Mokly files.`
 after every successful transaction. Rich equivalents and watched reporting
 are specified in [terminal output](./mokly-terminal-output.md).
 
-## Manifest V6 And Per-Commit Baselines
+## Manifest V8 And Per-Commit Baselines
 
-The pre-merge `schemaVersion: 6` envelope adds these fields to v5:
-
-```ts
-assetClosure: string[];
-generatedFiles: { path: string; blobHash: string }[];
-blobHashAlgorithm: "sha1" | "sha256";
-```
-
-The approved [manifest contract](./mokly-generated-manifest.md) retains this
-inventory in v8 and defines per-commit lookup and diagnostics. After the merge,
-only v8 content is readable. Earlier committed, rebuilt or cached manifests
-produce `main`'s incompatible-earlier outcome, not compatibility readers.
+The [manifest contract](./mokly-generated-manifest.md) defines identity-only v8
+entries, authored closure, exact generated-file inventory and Git blob hashes.
+It also owns ordered per-commit lookup, complete inventory verification and
+rebuild diagnostics. Only v8 content is readable. Earlier committed, rebuilt
+or cached manifests produce the incompatible-earlier outcome; they do not
+create compatibility readers.
 
 ## Closure, URLs, And Publication
 

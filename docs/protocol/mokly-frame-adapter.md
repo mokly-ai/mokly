@@ -31,8 +31,8 @@ interface InstanceBoundary {
 }
 interface FrameMount {
   url: URL;
-  route: string; // Logical document/fragment route, without static/ or mokly-generated/.
-  generatedPathPrefix?: "mokly-generated"; // Absent for an existing legacy catalogue.
+  route?: string; // Logical generated-relative document route.
+  generatedPathPrefix?: "mokly-generated"; // Defaults to the shared constant.
   usage: CatalogueUsage;
   signal?: AbortSignal;
   onEvent?: (event: FrameEvent) => void;
@@ -82,18 +82,12 @@ declare function postMessageAdapter(options: {
 }): FrameAdapter;
 ```
 
-Each mount owns one immediate viewer-created frame and its current URL/usage.
-The host supplies the selected catalogue view URL and layout signal; the
-adapter confines it to the exact `/static/mokly-generated/<route>` v6 or
-`/static/<route>` legacy HTML path and configured origin, with a valid logical
-hash. The prefix is taken from the active catalogue, never guessed from the
-URL. Loaded URLs are mapped back to the active logical route only after origin,
-prefix and membership validation; see
-[generated delivery](./mokly-generated-delivery.md#frames-and-reverse-mapping).
+Mount validation follows [generated delivery](./mokly-generated-delivery.md#frames-and-reverse-mapping).
 Caller-approved query parameters are retained; no selectors or comparison paths
-are accepted. Mount replaces the document with iframe history
-replacement semantics while the React shell keeps the portable `src` attribute
-aligned with the selected view. A superseded same-origin load may arrive during
+are accepted. Mount navigates with iframe history replacement semantics; the
+React shell retains its initial portable `src` after an adapter takes ownership.
+A ready same-origin document may be reused only after mount-scoped
+authentication accepts it. A superseded same-origin load may arrive during
 that handoff; it cannot fail or be adopted by the current mount, which remains
 pending for the exact assigned resource. A load, view/scheme swap or disposal
 invalidates the old session and its pending work; responses from it never update
@@ -105,6 +99,11 @@ subscription rather than installing a duplicate; the returned cleanup restores
 ordinary subscription semantics. This closes the interval between React session
 ownership and mount readiness without treating a loading frame as unenhanced.
 Callers that omit `onEvent` retain the explicit post-mount `subscribe` interface.
+A wrapper that changes the event stream, such as a test double, must wrap
+`onEvent` itself and pass that wrapped callback when the shell subscribes its
+mount-time receiver. Subscribing any other callback adds a second listener and
+leaves the unwrapped receiver attached, so every event arrives twice and events
+the wrapper meant to drop still arrive once.
 An optional mount signal cancels both pending initialization and an active
 session. Built-in adapters remove cancellation listeners on disposal. Viewer
 cleanup also fences late custom-adapter results and disposes them immediately.
@@ -136,7 +135,7 @@ replaces the usage snapshot and updates its existing event subscription. A
 pending/unavailable-to-ready update enables hover/click inspection without a
 document load or new session; the reverse transition disables it while preserving
 navigation. The viewer's frame update path uses this capability for unchanged
-URL/viewport/scheme/variant/step identities; custom adapters that omit it retain
+URL/viewport/scheme/step identities; custom adapters that omit it retain
 replacement-mount behavior for changed usage. Updates reject after disposal and
 their failures retain session cancellation ownership. This is a host-side method;
 the existing wire `subscribe` event set, schemas and inspector script are unchanged.
@@ -206,7 +205,8 @@ assigned resource loads. A document that no mount authenticated, including one
 the frame reached through its own native navigation, keeps portable native-link
 behavior until the replacement authenticates.
 
-The adapter records weak per-frame mount provenance. On the first same-origin
+The adapter records weak per-frame mount provenance and the last assigned
+resource, separately from the iframe's initial `src` attribute. On the first same-origin
 mount only, its immediate watcher may authenticate an already rendered
 document whose resource exactly matches the assignment; this is the explicit
 server-rendered hydration path. Every later mount captures the immediate
@@ -214,8 +214,21 @@ pre-replacement `Document`. When that exact object was not previously
 authenticated for the frame, both the watcher and `load` handler exclude it
 from assigned-resource authentication even if its URL exactly equals the new
 assignment. Only a different replacement `Document` may then pass the resource
-check. Frame and document provenance is weakly held and does not extend either
-object's lifetime.
+check. A rejected starting document must trigger a fresh history-replacing
+navigation even when both its URL and the iframe's `src` equal the assignment;
+URL equality alone cannot justify reuse or waiting for a load that is not in
+progress. This decision is independent of document readiness: rejected starting
+documents and different assigned resources are replaced while loading or
+interactive as well as after completion. Changing the assigned resource also
+cancels any earlier navigation, even when the still-visible authenticated
+document already matches the new choice. A delayed superseded response must
+never overwrite the latest preview selection.
+
+Authenticated matching documents and the initial matching server-rendered
+document are reused without reloading; incomplete accepted documents wait only
+for their own load completion. Only the first mount may wait for a
+startup-assigned recorded fragment that has not committed yet. Frame and
+document provenance is weakly held and does not extend either object's lifetime.
 
 As soon as the new immediate `Document` becomes same-origin-accessible, the
 adapter independently authenticates its exact origin, decoded resource path and
@@ -228,13 +241,12 @@ the receiver, so an unenhanced document continues to use its portable native
 links.
 
 The sandbox remains exactly `allow-same-origin`; consumer scripts stay disabled.
-Historical [removed previews](./mokly-removed-previews.md) do not enter this
-adapter. The viewer fetches and presents them as viewer-origin `srcdoc`
-documents in separate frames with the same sandbox, so its parent guard enforces
-read-only links and forms in every host.
+Historical [removed previews](./mokly-removed-previews.md) and
+[comparison panes](./mokly-comparison-panes.md) bypass this adapter as guarded,
+viewer-origin `srcdoc`; panes add only their documented scrolling behavior.
 Existing local memory previews retain their authenticated private transport.
 No inspector handshake, extra badge, pick control, or visible affordance appears
-locally. Unsupported/unowned documents and comparison snapshots gain no privilege.
+locally. Panes gain no inspection, geometry, markers, or navigation messages.
 
 ## Cross-Origin Mount And Handshake
 
@@ -345,57 +357,12 @@ The viewer uses the same `geometry` notification and `list` response to refresh
 package labels and host marker placement. This adds no wire field, message type
 or inspector-bundle behavior.
 
-## Published Inspector And Overlay
+## Published Inspector
 
-The Browse document adapter injects the dependency-free inspector IIFE from
-`__mokly/client/inspector.js` into **current published HTML copies only**, after
-ownership and marker validation. It supplies an inert allowlisted map of
-instance keys to range ids/parents and validated logical-link identities from
-that document's accepted metadata, so `r-n` comments can be resolved without
-reading a manifest. Bound this map to the limits above and 262,144 UTF-8 bytes;
-oversized maps disable cross-origin inspection explicitly. No private evidence
-or source text is embedded. Unowned files get no inspector/map.
-Repository preview validates portable consumer resources before adaptation;
-the complete export inventory validates the injected package resource afterward.
-
-The inert `template[data-mokly-inspector]` contains JSON with `ranges` and
-`links`, plus optional `error: "limit" | "unavailable"`. Range index `n` denotes
-`r-n`; each tuple is `[instanceKey | null, parentIndex | null]`. Null keys denote
-slots; parents refer only to earlier indices and must match actual nesting.
-Distinct keys derive from these authenticated ranges, including empty pairs.
-Links use `FrameNavigation` without `activation`, with at most 1,024 distinct
-identities. Overflow publishes an explicit error map, never a truncated map.
-Each accepted native link receives `data-mokly-inspector-link="n"`, indexing the
-deduplicated `links` array. Consumer-authored inspector markers and link indices
-are rejected. Both publication nodes are inserted into the head so body child
-positions and authored selectors remain unchanged, including implicit heads.
-
-On request the script draws the existing dimming mask and outlines in-frame;
-host labels and keyboard-accessible instance lists use public catalogue titles
-and returned boxes. Pick reuses Highlight components visuals. Do not clone or
-restyle consumer content. No overlay exists without a highlight/pick request.
-Overlay nodes are excluded from range/occlusion measurements and observers
-must not create a redraw loop. Disposal removes all package-owned overlay nodes.
-The in-frame SVG lives in a shadow root on a host after the body: consumer styles
-cannot restyle its shapes, redraw mutations stay outside observation, and body
-range/occlusion measurements exclude the host. Outgoing fields contain only
-validated ASCII identities/control values and numeric geometry; serialized
-character length therefore equals its UTF-8 byte length. Incoming strings still
-require explicit UTF-8 measurement before parsing.
-The host resets all presentation properties with inline important declarations,
-then sets its fixed, transparent, pointer-inert layout. The shadow SVG resets
-inherited presentation and explicitly remains pointer-inert before applying the
-owned mask and outline attributes.
-Universal and element selectors, backgrounds, box-model rules, display, color
-and opacity from consumer CSS cannot repaint the cutouts or hide the overlay.
-
-Generated files and comparison snapshots stay byte-unmodified. Snapshots never
-embed the script or negotiate a session. Local script-disabled
-frames retain parent-owned highlighting even when published copies contain the
-inert script. No React, server module, cookie, network request, or host-specific
-integration is included in the IIFE. `scripts/package-check.mjs` must enforce
-a **9 KiB (9,216 bytes) minified, uncompressed** script budget; the separately
-bounded per-document inert metadata is not executable code and is excluded.
+Static injection, inert document metadata, overlay isolation, and the script
+budget are defined by the
+[published inspector contract](./mokly-published-inspector.md). They do not
+change this adapter's handshake, wire messages, or same-origin behavior.
 
 ## Acceptance
 

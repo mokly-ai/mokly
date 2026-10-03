@@ -3,6 +3,8 @@ import path from "node:path";
 
 import { Minimatch } from "minimatch";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import { MoklyError } from "../errors.js";
 
 import { globStablePrefix } from "./entry_globs.js";
@@ -12,6 +14,10 @@ import type { ResolvedConfig } from "./types.js";
 /** Repository, Review output, and glob identities retained for one discovery pass. */
 export interface DiscoveryPaths {
   readonly repoRoot: string;
+  readonly generatedOutput?: {
+    readonly lexical: string;
+    readonly projected: string;
+  };
   readonly realRepoRoot: string;
   readonly reviewOutput: {
     readonly lexical: string;
@@ -27,7 +33,8 @@ export interface DiscoveryPaths {
 
 /** Project shared roots once, retaining a lexical Review boundary if it is unavailable. */
 export function discoveryPaths(
-  config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot" | "review">,
+  config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot" | "review"> &
+    Partial<Pick<ResolvedConfig, "mockupsDir">>,
 ): DiscoveryPaths {
   const lexical = path.resolve(config.review.outDir);
   let projected: string;
@@ -66,9 +73,21 @@ export function discoveryPaths(
   return {
     repoRoot: config.repoRoot,
     realRepoRoot,
+    ...(config.mockupsDir
+      ? {
+          generatedOutput: {
+            lexical: path.join(config.mockupsDir, GENERATED_DIRECTORY),
+            projected: generatedRootProjection(config.mockupsDir),
+          },
+        }
+      : {}),
     reviewOutput: { lexical, projected },
     globs,
   };
+}
+
+function generatedRootProjection(mockupsDir: string): string {
+  return path.join(projectRealPath(mockupsDir), GENERATED_DIRECTORY);
 }
 
 /** Only missing or replaced directories are benign races during discovery. */

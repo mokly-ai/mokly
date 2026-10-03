@@ -60,12 +60,12 @@ test("publication pins one baseline for Changes and comparisons when its ref adv
   assert.equal(review.baseCommit, baseline);
   assert.match(
     await read(
-      `${path.dirname(jsonPath)}/snapshots/before/screens/home.desktop.html`,
+      `${path.dirname(jsonPath)}/snapshots/before/mokly-generated/screens/home.desktop.html`,
     ),
     /Previous home/,
   );
   assert.match(
-    documentText(await read("view/removed-document.html")),
+    documentText(await read("view/pages/removed-document.html")),
     /Showing previous version/,
   );
   assert.match(await read("index.html"), /data-removed-page/);

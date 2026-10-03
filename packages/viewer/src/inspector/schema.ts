@@ -98,9 +98,7 @@ export const envelope = (
   typeof value.nonce === "string" &&
   /^[a-f0-9]{32}$/.test(value.nonce) &&
   (nonce === undefined || value.nonce === nonce);
-export const validBoundaries = (
-  value: unknown,
-): value is InstanceBoundary[] => {
+const validBoundaries = (value: unknown): value is InstanceBoundary[] => {
   if (!array(value, 1024)) return false;
   let previous = "",
     count = 0,
@@ -174,7 +172,7 @@ export const validHostMessage = (
       return false;
   }
 };
-export const validFrameMessage = (
+const validFrameMessage = (
   value: unknown,
   nonce?: string,
 ): value is Message => {

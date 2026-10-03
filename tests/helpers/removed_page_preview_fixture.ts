@@ -4,8 +4,7 @@ import type { TestContext } from "node:test";
 
 import type {
   HistoricalManifest,
-  ManifestPage,
-  ManifestV5,
+  HistoricalManifestPage,
 } from "@mokly/viewer/data";
 
 import { loadConfig } from "../../dist/config/load.js";
@@ -15,42 +14,32 @@ import type {
   GitFileKind,
 } from "../../dist/review/git.js";
 
+import { currentManifest } from "./current_manifest.js";
 import { createFixture, removeFixture } from "./fixture.js";
 
 export const PAGE_COMMIT = "b".repeat(40);
-export const PAGE_ROUTE = "archive/guide.html";
+export const PAGE_ROUTE = "mokly-generated/pages/guide.html";
 
 interface BaselineFile {
   bytes?: Uint8Array;
   kind: GitFileKind;
 }
 
-export async function removedPagePreviewFixture(
-  t: TestContext,
-  schemaVersion: 4 | 5 = 4,
-) {
+export async function removedPagePreviewFixture(t: TestContext) {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
-  const page: ManifestPage & { declaredDependencies: readonly string[] } = {
+  const page: HistoricalManifestPage = {
     declaredDependencies: [],
-    dependencies: ["entries/guide.mockup.tsx"],
     description: "Historical guide",
     id: "guide",
     kind: "page",
     navPath: ["Archive"],
     relatedDocs: ["docs/guide.md"],
-    route: PAGE_ROUTE,
     sourcePath: "entries/guide.mockup.tsx",
     tags: ["guide"],
     title: "Guide",
   };
-  const baseline = {
-    entries: [page],
-    generatedBy: "mokly",
-    schemaVersion,
-    sourceFiles: ["entries/guide.mockup.tsx"],
-  } as HistoricalManifest;
   const files = new Map<string, BaselineFile>();
   const add = (route: string, content: string | Uint8Array): void => {
     files.set(`mockups/${route}`, {
@@ -60,7 +49,7 @@ export async function removedPagePreviewFixture(
   };
   add(
     PAGE_ROUTE,
-    '<!doctype html><link rel="stylesheet" href="../assets/main.css"><img src="../assets/direct.png"><iframe src="../assets/embed.html"></iframe><main>Baseline guide</main>',
+    '<!doctype html><link rel="stylesheet" href="../../assets/main.css"><img src="../../assets/direct.png"><iframe src="../../assets/embed.html"></iframe><main>Baseline guide</main>',
   );
   add(
     "assets/main.css",
@@ -73,6 +62,20 @@ export async function removedPagePreviewFixture(
   add("assets/background.png", Uint8Array.from([8, 9]));
   add("assets/nested.png", Uint8Array.from([10, 11]));
   add("assets/embedded.png", Uint8Array.from([12, 13]));
+  const metadata = currentManifest({
+    entries: [page],
+    generatedBy: "mokly",
+    schemaVersion: 8,
+    sourceFiles: ["entries/guide.mockup.tsx"],
+  });
+  const baseline: HistoricalManifest = {
+    ...metadata,
+    generatedBy: "mokly",
+    assetClosure: [...files.keys()]
+      .map((file) => file.slice("mockups/".length))
+      .filter((file) => !file.startsWith("mokly-generated/"))
+      .sort(),
+  };
   for (const [repoPath] of files) {
     const route = repoPath.slice("mockups/".length);
     const current = path.join(fixture.mockupsDir, route);
@@ -85,8 +88,8 @@ export async function removedPagePreviewFixture(
     baseline,
     baseCommit: PAGE_COMMIT,
     baseRef: "main",
-    changedRoutes: [PAGE_ROUTE],
-    removedEntries: [{ entry: page, ancestors: [] }],
+    changedIds: [page.id],
+    removedEntries: [{ entry: page }],
     schemaVersion: 1 as const,
   };
   return { ...fixture, batches, baseline, config, files, page, reader, source };
@@ -120,9 +123,4 @@ export function baselineReader(
       );
     },
   };
-}
-
-export function v5Baseline(baseline: HistoricalManifest): ManifestV5 {
-  if (!("sourceFiles" in baseline)) throw new Error("Expected source files");
-  return { ...baseline, schemaVersion: 5 } as ManifestV5;
 }

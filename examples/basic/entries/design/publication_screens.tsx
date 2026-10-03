@@ -72,7 +72,6 @@ export const publicationScreens = [
     id: "design-publication-catalogue",
     title: "Current catalogue",
     description: "Navigation, search and variants with review omitted.",
-    slug: "catalogue",
     colorSchemes: ["light"],
     desktop: <CatalogueDesktop />,
     mobile: <CatalogueMobile />,
@@ -82,7 +81,6 @@ export const publicationScreens = [
     title: "Catalogue with Changes",
     description:
       "The same catalogue with Changes and optional screen comparisons.",
-    slug: "changes",
     colorSchemes: ["light"],
     desktop: <ChangesDesktop />,
     mobile: <ChangesMobile />,

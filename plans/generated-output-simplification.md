@@ -1035,53 +1035,238 @@ a different dependency.
 
 ## Milestone 11: Merge `main` and unify the generated directory
 
-Backend.
+Backend. Status: complete.
 
-- [ ] Record the source tip and merge base, merge `origin/main`, resolve
+Merged source tip: `800fe9f88a0173429b25baa1bcf41ed9e59b2256`. The final fetch
+confirmed that main had not moved. Conflicts were resolved path by path. The
+full gate passes, including main's audit exception and strict packed-consumer
+audits. An authorized local merge checkpoint supplied a v8 HEAD for main's
+unchanged browser comparison assertions. The final merge keeps exactly two
+parents; its remerge resolutions and all later edits were checked before push.
+
+The first complete unit diagnostic run reported 3,658 passes and 25 failures.
+Fixture paths, explicit metadata injection and version assertions have been
+corrected. Its obsolete negative startup test opened listeners, so that test
+process was stopped; the runner then reported
+`Error: assigned and observed files do not match`. The first browser diagnostic
+was stopped after 399 passes, 52 failures, one interruption and 511 tests not
+run. It exposed an authenticated preview URL mismatch, fixed with the shared
+path helper and a red/green transport regression. The focused browser rerun
+passed 87 of 91 cases; the two further path fixes then passed all ten focused
+cases. The two design-status assertions pass against the committed v8 HEAD. These diagnostic
+runs are not accepted full gates.
+
+All 19 paths deleted by main remain absent. The audit runner and exception,
+package and lock files, output-lock implementation, baseline directory-race
+fix and frame-session race fix match main. Its frame-usage race browser test
+passes. Disk, Serve, npm dev and static-export smoke tests load the imported
+styles and image. Serve/export leave local output unchanged. A real rebuild
+pinned to `800fe9f8` returns `baseline-incompatible-earlier`. Smoke servers have
+been stopped. The exact final command results are recorded below.
+
+- [x] Split touched test files that exceed main's 300-line limit. Preserve every
+      case, hook, deadline and fixture cleanup; record test inventories after the
+      split. This does not perform Milestone 14 global baseline preparation.
+- [x] Record the example imported-image move outside the catalogue root, the
+      v8 comparison resource namespace, and the bundled navigation asset graph.
+      These preserve main's imported-asset privacy and browser module closure.
+
+Authorized main-relative removals (decision 28 and the previously approved
+output simplification): `src/build/committable_output.ts`, `ownership.ts`,
+`tracked_ownership.ts`, and `src/config/public_exclusions.ts`; whole-tree writes,
+index-based Check and the authored closure replace those mode/header/exclusion
+paths. `tests/build_check_unclaimed.test.ts` is replaced by whole-tree extra-file
+and stale-file coverage. Header parser/owner-specific assertions in
+`tests/build_ownership.test.ts` now test the plain marker and nonmaterial historic
+notices. Git-ignore tests now prove builds are independent of committability and
+Check uses actual index membership. Export lock-wait tests now prove lock-free
+memory capture while a writer owns the lock. Preserve all other writer-lock
+and frame-usage tests.
+
+The whole-tree transaction also removes unused per-file safety and empty-directory
+pruning functions from `src/build/reserved_tree.ts`. Full-tree safety remains at
+writer and tracked-Check boundaries. `src/build/transaction.ts` keeps its locked
+helper private because export no longer calls a writer (decision 28 and the
+explicit #129 integration instruction). Main's internal-only `fixtureRecord`
+and `extractSourceSetReferences` stay private in `scripts/large/setup.mjs` and
+`src/html_references.ts`.
+
+Merge cleanup removes unused branch-only `src/registry/generated_routes.ts`,
+`src/review/component_classification_context.ts` and `src/server/http_request.ts`.
+Main's manifest inventory, component classification modules and
+`http_request_handler.ts` own their retained behavior. These are internal
+adapters, not removed product features. The internal-export ratchet verifies
+that the merge leaves no new unused exports.
+
+Correction 3 A removes branch-only `src/review/normalize_urls.ts`,
+`snapshot_dependencies.ts`, `tests/review_cross_layout.test.ts`, legacy reader
+branches and old content-schema adapters. Snapshot resource copying is retained
+in `src/review/snapshot_resources.ts`, with catalogue-relative generated and
+authored paths; there is no cross-layout document rewrite. Main's deletions
+remain deleted.
+
+Selected authored symlinks now follow the approved regular-file closure rule:
+`tests/changes_asset_aliases.test.ts` and `tests/publication_asset_aliases.test.ts`
+replace main's selected-alias materialization cases with rejection/private cases.
+Safe source/input fingerprint aliases remain supported. Direct Changes tests use
+retained accepted generations for deleted resources; fresh compilations still
+reject missing references. This preserves main's live deletion classification.
+
+The ordinary-preview fixture imports the canonical action and toolbar entry
+modules. Its narrowed graph must still include all Tailwind-scanned authoring
+inputs now that they sit under the catalogue root. Main's PostCSS public-file
+denial remains unchanged. This is fixture correctness, not shared global setup.
+
+The imported example image moved from
+`examples/basic/src/components/workspace-note/signal.png` to
+`examples/imported-assets/workspace-note-signal.png`, because this branch's
+catalogue root contains the example's `src/`. Keeping the image outside that root
+preserves main's imported-asset privacy rule. Fixture copies and CSS references
+follow the move. Navigation assets are bundled separately for browser delivery
+so shared path/version helpers do not create missing deployed module imports.
+Authored HTML whose catalogue-relative name equals a generated-relative name
+receives untrusted-document stripping, never generated navigation or inspector
+authority. This required namespace distinction preserves main's authentication
+contract under decision 28; dedicated Serve/export regressions cover it.
+
+- [x] Adapt main's split packed-consumer smoke fixtures and independent
+      catalogue reader to v8 paths and the required public generated prefix.
+      Remove fixture-only output modes, give the clean-cache consumer its own Git
+      root before Check, and commit its regenerated renamed-config baseline.
+      Preserve all six scenarios, API/type checks, binary checks and strict audits.
+
+- [x] Preserve main's private-directory denial for authored `styles/` and
+      `assets/` paths. Only accepted files under the generated prefix may bypass
+      that authored-file rule. Remove the now-unused shape-only public-generated
+      helper in `src/build/styles/routes.ts`; the accepted-output set replaces it.
+      Add a regression for authored dependency/build folders and their distinct
+      accepted generated counterparts.
+
+- [x] Align the live preview transport's authenticated response path with the
+      generated resource prefix. Keep generation, render-token and selected-view
+      checks; prove edits, forwarded hosts, reset and expiry in real browser tests.
+- [x] Retain main's nested authored-document security fixture as an authored
+      closure file. Update static and snapshot test addresses while preserving
+      native navigation, inspection and sandbox assertions.
+
+- [x] Record the source tip and merge base, merge `origin/main`, resolve
       conflicts path by path while preserving every feature listed in
       Milestone 9, and record every authorized removal in the merge commit.
-- [ ] Merge and reconcile the main-only protocol pages named in Milestone 9,
+- [x] Merge and reconcile the main-only protocol pages named in Milestone 9,
       then add their links. Preserve the current README and guide contracts
       while replacing only the authorized layout, modes and version clauses.
       Include `mokly-baseline-compatibility.md`, retaining its earlier-version
       outcome with the approved v8 threshold.
-- [ ] Preserve #130's audit implementation/data/tests and strict consumer audits
+- [x] Preserve #130's audit implementation/data/tests and strict consumer audits
       unchanged. Adapt #129's output lock around every whole-tree writer, keep
       in-memory nonwriters lock-free, and preserve its frame-usage race fix.
-- [ ] Implement the Milestone 9 layout and manifest: one constant,
+- [x] Implement the Milestone 9 layout and manifest: one constant,
       generated stylesheets and assets relative to the generated directory,
       reserved route segments, the shared reference rule, and imported CSS
       with Git-index tracking, in-memory head output, per-commit baselines,
       and the opt-in writers.
-- [ ] Implement correction 3 A: only v8 current/baseline readers; detect committed
+- [x] Implement correction 3 A: only v8 current/baseline readers; detect committed
       v2–v7 envelopes and former-name sentinels without rebuilding; detect earlier
       output after its own rebuild; retain main's exact typed outcome, product
       copy and Serve/export/publication behavior.
-- [ ] Keep v8 inventory verification, per-commit blob/rebuild selection and bounded
+- [x] Keep v8 inventory verification, per-commit blob/rebuild selection and bounded
       moved-root discovery. Implement the documented old-cache compatibility probe
       and identity checks; write only v8 completed caches and clean up rejected
       rebuilt output without harvesting it.
-- [ ] Remove this branch's pre-v8 readers, old-schema adapters, legacy flat
+- [x] Remove this branch's pre-v8 readers, old-schema adapters, legacy flat
       reader/harvest and cross-layout URL normalization. Keep ordinary resource
       resolution and every mainline deletion; do not restore removed legacy
       fixtures or APIs. Record the affected paths and approved removals.
-- [ ] Test committed, rebuilt and cached earlier bases; malformed/newer versions;
+- [x] Test committed, rebuilt and cached earlier bases; malformed/newer versions;
       v8 complete/incomplete inventories and moved roots; exact once-per-base
       unavailable copy; current-only exports/publication and recovery to a v8 base.
-- [ ] Reconcile generated-prefix documentation with kind/id-derived HTML paths
+- [x] Reconcile generated-prefix documentation with kind/id-derived HTML paths
       and strict catalogue v4. Add no new validation for finding 32; retain the
       separately approved styles/assets reservation and main's path helpers.
-- [ ] Update the tests and fixtures from both sides. Add tests that page
+- [x] Update the tests and fixtures from both sides. Add tests that page
       routes cannot collide with `styles/` or `assets/`, and that a page loads
       its imported stylesheet from disk, through Serve, and in an export.
-- [ ] Smoke test the example: build, `check`, Serve with Changes against
+- [x] Smoke test the example: build, `check`, Serve with Changes against
       `origin/main`, an export served by a static file server, and a screen
       with imported CSS that is styled in all three.
       If the pinned base predates v8, expect the documented unavailable state;
       use a separate v8 fixture to prove actual comparison delivery before merge.
-- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+- [x] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; commit and push.
+
+### Final validation and preservation evidence
+
+All commands ran under Node 22.14.0 with temporary files under `.context/tmp`.
+
+| Command                 | Result                                                                                                                                                                |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run format:check`  | Pass.                                                                                                                                                                 |
+| `npm run lint`          | Pass.                                                                                                                                                                 |
+| `npm run typecheck`     | Pass, including viewer and script declarations.                                                                                                                       |
+| `npm test`              | 3,686 pass; zero failed, skipped or cancelled.                                                                                                                        |
+| `npm run test:browser`  | 963 pass, including hydration; 24.3 minutes.                                                                                                                          |
+| `npm run example:check` | 436 valid untracked files.                                                                                                                                            |
+| `cargo xtask check`     | Pass: audit, formatting, lint, ratchets, Rust checks, package inspection, six packed-consumer scenarios, 3,686 unit tests, 740 browser cases and 223 hydration cases. |
+
+`node --import tsx --test tests/markdown_links.test.ts tests/protocol_doc_history.test.ts tests/protocol_doc_sizes.test.ts`
+passes all six checks. The final diff passes `git diff --check`. The file-length
+and export ratchets pass without new exemptions or raised protocol caps. All
+30 moved example stylesheets match main after formatting. Sixteen test-file
+refactors retain their 143 recorded test statements, hooks and cleanup. All
+19 mainline deletions remain absent. The audit runner/exception, package and
+lock files, output-lock implementation and frame-session race fix match main.
+
+The first `cargo xtask check` stopped at its packed-consumer smoke. Two old-path
+reads were then corrected without removing assertions or changing audits. Their
+exact errors were:
+
+```text
+Error: ENOENT: no such file or directory, open '/home/vercel-sandbox/mokly/.context/package-smoke-BHXOmg/esm-consumer/mockups/screens/packed-home.desktop.html'
+[xtask/command] `npm run package:smoke:prepared -- --artifacts .context/verification/package-artifacts` failed with status 1
+Error: ENOENT: no such file or directory, stat '/home/vercel-sandbox/mokly/.context/package-smoke-RgKhlA/esm-consumer/published/static/screens/packed-card.mobile.html'
+```
+
+The corrected packed smoke passes all six scenarios. The complete `cargo xtask
+check` retry passes in 2,728.33 seconds. Its audit output is:
+
+```text
+Accepted dependency risk: GHSA-vfj7-8cjw-p6xm; package: braces.
+Path: node_modules/metro-file-map -> node_modules/micromatch -> node_modules/braces
+End date: 2026-11-03 UTC; 31 days left.
+Reason: Dev-only React Native peer dependency. The repository does not run Metro or send untrusted patterns to it. No patched release is available.
+Tracking: https://github.com/advisories/GHSA-vfj7-8cjw-p6xm
+```
+
+The full browser diagnostic before the final passing run reported 949 passes,
+two ordinary-preview setup failures and 12 cases not run. The exact setup error
+was:
+
+```text
+MoklyError: [mokly/build-invalid] PostCSS plugin @tailwindcss/postcss scanned a public mockups file in examples/basic/src/components/workspace-note/utilities.css: examples/basic/src/components/action/action.mockup.tsx; exclude mockupsDir from the plugin's sources (Tailwind: @source not "../../..")
+```
+
+Canonical entry imports fixed that fixture while retaining the privacy check;
+all 14 affected browser cases and both complete browser gates then passed.
+The private-directory regression also failed before its fix: the expected
+`/private build or dependency directory/` diagnostic was an empty string. The
+corrected guard admits only actual generated counterparts. Its 14-test export
+and publication group passes. The old shape-only `isPublicGeneratedRoute`
+helper was removed from `src/build/styles/routes.ts`; the accepted-output set
+now owns that authorization, as required by decision 28.
+
+The partial clone emitted this nonfatal remerge diagnostic, including on one
+retry:
+
+```text
+fatal: remote error: upload-pack: not our ref 4fdf3756a8a41e7946e5716a52c0ffdd38efd177
+```
+
+The offline remerge run produced the same complete patch. Both commands exited
+zero. The initial merge had 621 remerge paths; the path ledger, main-relative
+patches, test inventory and final amendment were reviewed. No final
+implementation review has run; that remains the orchestrator's Milestone 15.
+Milestones 12–14, finding 17 and other unapproved findings remain untouched.
 
 ## Milestone 12: Rename the `__mokly/` namespace to `mokly-viewer/`
 

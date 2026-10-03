@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { evaluateBundle } from "../dist/build/consumer_bundle.js";
+import { runtimeGraph } from "../dist/build/component_runtime.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import { loadConfig } from "../dist/config/load.js";
 import { ComponentRenderService } from "../dist/server/controls/service.js";
@@ -17,14 +17,14 @@ test("Props renders only its view and freezes resources without copying linked p
   const source =
     componentEntrySource({
       actionRender: `(props) => <section>
-    <button>{props.label}</button><img src="../../../image.svg" alt="Example" />
-    <a href="../../broken.html">Reference</a><MockLink to="home">Home</MockLink>
+    <button>{props.label}</button><img src="../../image.svg" alt="Example" />
+    <a href="../pages/broken.html">Reference</a><MockLink to="home">Home</MockLink>
   </section>`,
     }) +
     `
     import { definePage } from "@mokly/mokly";
     mockups.push(definePage({ id: "broken", title: "Broken", description: "Broken page",
-      route: "broken.html", dependencies: [], relatedDocs: [],
+      dependencies: [], relatedDocs: [],
       render: () => { throw new Error("unrelated page must not render"); } }));
   `;
   const fixture = await createFixture(source);
@@ -36,21 +36,14 @@ test("Props renders only its view and freezes resources without copying linked p
   fixture.beforeRemove(() => service.close());
   const request: ComponentRenderRequest = {
     componentId: "action",
-    variantId: "default",
+    variantId: "action-default",
     viewport: "desktop",
     colorScheme: "light",
     generation: runtime.generation,
     pageId: "a".repeat(32),
     overrides: { label: { kind: "set", value: ["string", "Edited"] } },
   };
-  renderTransient(
-    runtime,
-    {
-      ...evaluateBundle(runtime.bundle),
-      entrySources: runtime.bundle.entrySources,
-    },
-    request,
-  );
+  renderTransient(runtime, runtimeGraph(runtime), request);
   const result = await service.render(request, new AbortController().signal);
   const bundle = service.store.get(result.renderId);
   assert.deepEqual(
@@ -59,7 +52,7 @@ test("Props renders only its view and freezes resources without copying linked p
   );
   const html = Buffer.from(bundle.files.get(bundle.route)!.bytes).toString();
   assert.match(html, /Edited/);
-  assert.match(html, /href="\/static\/mokly-generated\/broken.html"/);
+  assert.match(html, /href="\/static\/mokly-generated\/pages\/broken.html"/);
   assert.match(
     html,
     /href="\/static\/mokly-generated\/screens\/home.desktop.html"/,

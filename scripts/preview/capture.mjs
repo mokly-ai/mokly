@@ -7,12 +7,14 @@ import {
   loadShellFontAssets,
 } from "../../dist/server/client_modules.js";
 
+import { normalizeProviderHtmlAttributes } from "./html_paths.mjs";
+
 const liveHostScript =
   '<script src="/__mokly/client/react-host.js" type="module"></script>';
 const staticHydrationScript =
   '<script src="/__mokly/client/react-shell.js" type="module"></script>';
 
-/** Capture shell HTML and its assets from the validated ephemeral server. */
+/** Capture the shell assets needed by the static preview. */
 export async function captureAssets(serverUrl, stage) {
   for (const asset of shellAssets()) {
     const response = await fetch(`${serverUrl}${asset}`);
@@ -50,6 +52,7 @@ function shellAssets() {
   ];
 }
 
+/** Capture an HTTP page and replace its live shell with a static one. */
 export async function capturePage(
   serverUrl,
   route,
@@ -71,23 +74,18 @@ export async function capturePage(
 }
 
 function staticPage(html) {
-  return html
-    .replace(' data-mokly-host-capabilities=""', "")
-    .replace(
-      /<script data-mokly-host-capability-state="" type="application\/json">[^<]*<\/script>/,
-      "",
-    )
-    .replace(liveHostScript, staticHydrationScript)
-    .replace(
-      /(href|src|data-fragment-light|data-fragment-dark)="\/(static|view)\/([^"]+)\.html"/g,
-      '$1="/$2/$3"',
-    );
+  return normalizeProviderHtmlAttributes(
+    html
+      .replace(' data-mokly-host-capabilities=""', "")
+      .replace(
+        /<script data-mokly-host-capability-state="" type="application\/json">[^<]*<\/script>/,
+        "",
+      )
+      .replace(liveHostScript, staticHydrationScript),
+  );
 }
 
-export function encodePath(value) {
-  return value.split("/").map(encodeURIComponent).join("/");
-}
-
+/** Stage UTF-8 shell or catalogue text at a relative preview path. */
 export async function writeText(root, relative, content) {
   await writeFile(root, relative, Buffer.from(content));
 }

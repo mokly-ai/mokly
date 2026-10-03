@@ -4,6 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { runExport } from "../dist/cli/export.js";
+import { isCancellation } from "../dist/errors.js";
 import {
   RESERVATION_DIRECTORY,
   isReservationDirectory,
@@ -74,6 +75,30 @@ test("cancellation drains work and retains the old artifact", async (context) =>
   );
   assert.deepEqual(await directoryFiles(fixture.output), previous);
   assert.equal(fs.existsSync(exportReservation(fixture.output)), false);
+});
+
+test("generateExport marks its generic AbortError wrapper as cancellation", async (context) => {
+  const fixture = await createExportFixture();
+  context.after(() => fixture.close());
+  const abort = new DOMException("adapter stopped", "AbortError");
+  await assert.rejects(
+    exportCatalogue(fixture.config, {
+      outDir: "site",
+      adapter: {
+        transform: () => {
+          throw abort;
+        },
+      },
+    }),
+    (error: unknown) => {
+      assert.equal(isCancellation(error), true);
+      assert.equal(
+        (error as Error).message,
+        "[mokly/export-invalid] Could not export catalogue: adapter stopped",
+      );
+      return true;
+    },
+  );
 });
 
 test("owned exports and active transactions do not trigger broad watch rules", async (context) => {

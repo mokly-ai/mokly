@@ -1,7 +1,7 @@
 /** Parse stylesheet rules with Lightning CSS while retaining ordered source material. */
-import { transform } from "lightningcss";
 import type { Rule } from "lightningcss";
 
+import { transform } from "./lightning.js";
 import {
   serializeBlock,
   serializePrelude,

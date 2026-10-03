@@ -8,6 +8,7 @@ import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../browse/document_adapter.js";
+import { generatedBytes, type GeneratedFile } from "../build/generated_file.js";
 import { publicFileLocation } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { errorMessage } from "../errors.js";
@@ -22,7 +23,7 @@ export function serveStatic(
   config: ResolvedConfig,
   catalogue: Catalogue,
   method: string,
-  generatedOutputs?: ReadonlyMap<string, string>,
+  generatedOutputs?: ReadonlyMap<string, GeneratedFile>,
   assetClosure?: ReadonlySet<string>,
 ): void {
   const relative = safeDecodePath(encodedPath);
@@ -65,7 +66,7 @@ export function serveStatic(
     content =
       generated === undefined
         ? fs.readFileSync(location.physicalPath)
-        : Buffer.from(generated);
+        : generatedBytes(generated);
   } catch {
     return send(response, 404, "text/plain", "Not found", method);
   }
@@ -75,7 +76,7 @@ export function serveStatic(
     try {
       body = adaptBrowseDocument(
         content.toString("utf8"),
-        generatedRoute ?? relative,
+        generatedRoute,
         catalogue,
       );
     } catch (error) {

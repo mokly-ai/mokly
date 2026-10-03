@@ -1,14 +1,12 @@
-import type { ManifestComponentVariant, CatalogueView } from "@mokly/viewer";
+import type { CatalogueView } from "@mokly/viewer";
 import type { ManifestEntry, ManifestScreen } from "@mokly/viewer/data";
-import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import {
-  fragmentViews,
-  currentDocumentPath,
+  generatedViews,
+  isManifestComponentVariant,
   readInstance,
   readRange,
   readSlot,
   lexical,
-  publicPath,
 } from "@mokly/viewer/data";
 
 import { comparisonSelection } from "./changes.js";
@@ -18,22 +16,22 @@ export function projectViews(
   input: CatalogueProjectionInput,
   retainedComponents: ReadonlySet<string>,
   entry: ManifestScreen | Extract<ManifestEntry, { kind: "component" }>,
-  source: ManifestScreen | ManifestComponentVariant,
   removed: boolean,
-  variantId?: string,
 ): CatalogueView[] {
+  if (entry.kind === "component" && !isManifestComponentVariant(entry))
+    return [];
   const result = input.comparison ?? input.evidence?.result;
   const reviewViews =
     entry.kind === "screen"
-      ? (result?.screens.find((item) => item.route === entry.route)?.views ??
-        input.evidence?.screenViews?.find((item) => item.route === entry.route)
+      ? (result?.screens.find((item) => item.id === entry.id)?.views ??
+        input.evidence?.screenViews?.find((item) => item.id === entry.id)
           ?.views)
-      : result?.schemaVersion === 3
+      : result && isManifestComponentVariant(entry)
         ? result.components
-            .find((item) => item.id === entry.id)
-            ?.variants.find((item) => item.id === variantId)?.views
+            .find((item) => item.id === entry.variantOf)
+            ?.variants.find((item) => item.id === entry.id)?.views
         : undefined;
-  return fragmentViews(source).map((view) => {
+  return generatedViews(entry).map((view) => {
     const recordedUsage =
       (!removed ? input.usage?.get(view.path) : undefined) ?? view.usage;
     const usage =
@@ -61,17 +59,6 @@ export function projectViews(
     return {
       viewport: view.viewport,
       colorScheme: view.colorScheme,
-      fragmentPath: removed
-        ? null
-        : publicPath(
-            currentDocumentPath(
-              view.path,
-              input.catalogue.manifest.schemaVersion === 6 ||
-                input.catalogue.manifest.schemaVersion === "live-index-1"
-                ? GENERATED_DIRECTORY
-                : undefined,
-            ),
-          ),
       usage: usage
         ? {
             status: "ready",

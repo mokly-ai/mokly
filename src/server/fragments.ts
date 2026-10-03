@@ -1,10 +1,16 @@
 /** Request-visible logical-fragment validation for served Browse routes. */
 
-import type { ManifestComponent } from "@mokly/viewer";
-import { generatedViews, isLogicalFragment } from "@mokly/viewer/data";
+import type { ManifestComponentVariant } from "@mokly/viewer";
+import {
+  generatedViews,
+  entryRoute,
+  isLogicalFragment,
+  isManifestComponentVariant,
+} from "@mokly/viewer/data";
 import type { ManifestEntry, ManifestScreen } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 
+import type { GeneratedFile } from "../build/generated_file.js";
 import { extractHtmlReferences } from "../html_references.js";
 
 import type { DocumentService } from "./demand/service.js";
@@ -15,7 +21,7 @@ export async function requestedFragment(
   entry: ManifestEntry | undefined,
   catalogue: Catalogue,
   documents?: DocumentService,
-  generatedOutputs?: ReadonlyMap<string, string>,
+  generatedOutputs?: ReadonlyMap<string, GeneratedFile>,
 ): Promise<string | null | undefined> {
   const values = url.searchParams.getAll("fragment");
   if (values.length === 0) return undefined;
@@ -23,7 +29,7 @@ export async function requestedFragment(
   if (!fragment || !isLogicalFragment(fragment)) return null;
   if (entry?.kind === "page")
     return (await containsFragment(
-      entry.route,
+      entryRoute("page", entry.id),
       fragment,
       documents,
       generatedOutputs,
@@ -39,36 +45,28 @@ export async function requestedFragment(
   return fragment;
 }
 
-/** Add the one canonical encoded fragment query to a route. */
-export function withFragmentQuery(route: string, fragment?: string): string {
-  return fragment === undefined
-    ? route
-    : `${route}?fragment=${encodeURIComponent(fragment)}`;
-}
-
 function destinationScreen(
   entry: ManifestEntry | undefined,
   catalogue: Catalogue,
-): ManifestScreen | ManifestComponent | undefined {
-  if (entry?.kind === "screen" || entry?.kind === "component") return entry;
+): ManifestScreen | ManifestComponentVariant | undefined {
+  if (entry?.kind === "screen") return entry;
+  if (entry?.kind === "component")
+    return isManifestComponentVariant(entry)
+      ? entry
+      : (catalogue.hierarchy.variantsById.get(entry.id)?.[0] as
+          ManifestComponentVariant | undefined);
   if (entry?.kind !== "use-case" || !entry.steps[0]) return undefined;
   const candidate = catalogue.byId.get(entry.steps[0].screenId);
   return candidate?.kind === "screen" ? candidate : undefined;
 }
 
 async function allViewsContain(
-  screen: ManifestScreen | ManifestComponent,
+  screen: ManifestScreen | ManifestComponentVariant,
   fragment: string,
   documents?: DocumentService,
-  generatedOutputs?: ReadonlyMap<string, string>,
+  generatedOutputs?: ReadonlyMap<string, GeneratedFile>,
 ): Promise<boolean> {
-  const routes = generatedViews(screen)
-    .filter(
-      (view) =>
-        screen.kind !== "component" ||
-        view.variantId === screen.variants[0]!.id,
-    )
-    .map((view) => view.path);
+  const routes = generatedViews(screen).map((view) => view.path);
   return (
     await Promise.all(
       routes.map((route) =>
@@ -82,7 +80,7 @@ async function containsFragment(
   route: string,
   fragment: string,
   documents?: DocumentService,
-  generatedOutputs?: ReadonlyMap<string, string>,
+  generatedOutputs?: ReadonlyMap<string, GeneratedFile>,
 ): Promise<boolean> {
   try {
     if (documents)
@@ -91,7 +89,10 @@ async function containsFragment(
       ).anchors.has(fragment);
     const html = generatedOutputs?.get(route);
     return (
-      html !== undefined && extractHtmlReferences(html).anchors.has(fragment)
+      html !== undefined &&
+      extractHtmlReferences(Buffer.from(html).toString("utf8")).anchors.has(
+        fragment,
+      )
     );
   } catch {
     return false;

@@ -75,7 +75,7 @@ test("watched startup does not await repository classification", async (context)
     async read(_config, manifest) {
       events.push("classification:start");
       await pending;
-      return { baseline: manifest, changedRoutes: ["screens/home.html"] };
+      return { baseline: manifest, changedIds: ["home"] };
     },
   };
   const running = await serve(

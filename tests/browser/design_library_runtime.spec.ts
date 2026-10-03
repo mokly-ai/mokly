@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
-import { chooseViewport } from "./workspace_actions.js";
+import { chooseVariant, chooseViewport } from "./workspace_actions.js";
 
 for (const viewport of ["desktop", "mobile"] as const) {
   test(`${viewport}: design props are temporary, support unset/reset, and load newly visible nested styles`, async ({
@@ -30,9 +30,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ),
       );
     const before = await contents();
-    await page.goto("/view/design/library/chrome/top-bar.html");
+    await page.goto("/view/components/design-ui-top-bar.html");
     await chooseViewport(page, viewport);
-    const status = await page.locator("[data-workspace-status]").textContent();
+    const status = page.locator("[data-workspace-status]");
+    const parentStatus = await status.innerText();
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     if (viewport === "mobile")
       await page
@@ -52,11 +53,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await expect(frame.locator(".mbk-search-value")).toHaveCount(0);
     await page.getByRole("button", { name: "Reset", exact: true }).click();
     await expect(frame.locator(".mbk-tag-picker")).toHaveCount(0);
-    await page
-      .getByLabel("Saved variant", { exact: true })
-      .selectOption("search");
+    await expect(status).toHaveText(parentStatus);
+    await chooseVariant(page, "Search");
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
-    await expect(page.locator("[data-workspace-status]")).toHaveText(status!);
+    await expect(status).toHaveText("Unmodified");
     expect(await contents()).toEqual(before);
   });
 
@@ -68,7 +68,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ? { width: 390, height: 844 }
         : { width: 1280, height: 900 },
     );
-    await page.goto("/view/design/browse/states/tags/picker.html");
+    await page.goto("/view/screens/design-browse-tag-picker.html");
     await chooseViewport(page, viewport);
     await page.getByRole("tab", { name: "Components", exact: true }).click();
     if (viewport === "mobile")
@@ -111,9 +111,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await page
       .getByRole("link", { name: "Open component", exact: true })
       .click();
-    await expect(page).toHaveURL(
-      /\/view\/design\/library\/controls\/tag-chip.html/,
-    );
+    await expect(page).toHaveURL(/\/view\/components\/design-ui-tag-chip.html/);
     await page.getByRole("tab", { name: "Usage", exact: true }).click();
     const usage = page.getByRole("tabpanel", { name: "Usage", exact: true });
     await usage
@@ -121,15 +119,13 @@ for (const viewport of ["desktop", "mobile"] as const) {
       .first()
       .click();
     await expect(page).toHaveURL(
-      /\/view\/design\/browse\/states\/tags\/picker.html/,
+      /\/view\/screens\/design-browse-tag-picker.html/,
     );
     await page.goBack();
-    await expect(page).toHaveURL(
-      /\/view\/design\/library\/controls\/tag-chip.html/,
-    );
+    await expect(page).toHaveURL(/\/view\/components\/design-ui-tag-chip.html/);
     await page.goForward();
     await expect(page).toHaveURL(
-      /\/view\/design\/browse\/states\/tags\/picker.html/,
+      /\/view\/screens\/design-browse-tag-picker.html/,
     );
   });
 }

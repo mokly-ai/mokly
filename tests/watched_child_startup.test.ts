@@ -26,7 +26,7 @@ test(
     const compilation = await compileCatalogue(config);
     await writeCompilation(compilation, config);
     await fs.writeFile(
-      path.join(fixture.mockupsDir, MANIFEST_NAME),
+      path.join(fixture.generatedDir, MANIFEST_NAME),
       "invalid stale manifest\n",
     );
     const childBin = path.join(repositoryRoot, "dist/cli/bin.js");

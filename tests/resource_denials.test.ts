@@ -32,7 +32,7 @@ for (const [name, cause] of [
   ["private/theme.css", /resolved entry module.*entries/],
   ["theme.source.html", /reserved source basename/],
   ["helper.css", /authoring input.*sourceFiles/],
-  ["mokly-generated/README.css", /generated output/],
+  ["mokly-generated/README.css", /generated (?:output|resource)/],
 ] as const) {
   test(`resource validation and Review retain the protection cause for ${name}`, async (t) => {
     const fixture = await createFixture();
@@ -70,12 +70,21 @@ for (const [name, cause] of [
         assert.ok(error.message.includes(route));
         return check(error);
       });
+    let reads = 0;
+    const countedBaseline = {
+      ...baseline,
+      readFileBytes: async () => {
+        reads += 1;
+        return Buffer.from("private");
+      },
+    };
     for (const reader of [
       new FileSystemReviewAssetReader(config),
-      new GitReviewAssetReader(config, baseline, "baseline", "mockups"),
+      new GitReviewAssetReader(config, countedBaseline, "baseline", "mockups"),
       new CompiledReviewAssetReader(config, new Map()),
     ])
       await assert.rejects(reader.read(name), check);
+    assert.equal(reads, 0);
   });
 }
 
@@ -98,8 +107,11 @@ test("export comparison rejects protected source files in a snapshot", async (t)
             changedPaths: [],
             ignoredImpact: [],
             screens: [],
-            schemaVersion: 2,
+            schemaVersion: 4,
             sharedImpact: [],
+            components: [],
+            changes: [],
+            affectedConsumers: [],
           },
         },
         new Map(),

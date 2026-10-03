@@ -4,7 +4,7 @@ import type { ScreenPageState } from "./screen_preview.js";
 
 export type ChangeStatus = "unmodified" | "added" | "changed" | "removed";
 
-export interface ComparisonFixture {
+interface ChangedComparisonFixture {
   status: Exclude<ChangeStatus, "unmodified">;
   reason: "output" | "inputs" | "added" | "removed" | "variant-removed";
   variant?: string;
@@ -21,6 +21,13 @@ export interface ComparisonFixture {
   }[];
 }
 
+interface SharedImpactFixture {
+  status: "unmodified";
+  sharedImpact: readonly string[];
+}
+
+export type ComparisonFixture = ChangedComparisonFixture | SharedImpactFixture;
+
 /** Paired synthetic values also supply the current screen and its Props panel. */
 export const footerLabelChange = {
   instance: "Action · Footer action",
@@ -36,17 +43,37 @@ export const actionComparison = {
   savedPropsUnchanged: true,
 } as const satisfies ComparisonFixture;
 
+/** The Checklist's own output changed while its saved props stayed the same. */
+const checklistComparison = {
+  status: "changed",
+  reason: "output",
+  variant: "Default",
+  savedPropsUnchanged: true,
+} as const satisfies ComparisonFixture;
+
 /** These are authored comparison records, not analysis of rendered pixels. */
 const componentComparisons: Partial<
   Record<ComponentPageState, ComparisonFixture>
 > = {
   comparison: actionComparison,
+  overlay: actionComparison,
+  difference: actionComparison,
+  "overlay-tall": checklistComparison,
   affected: actionComparison,
   added: { status: "added", reason: "added", variant: "Default" },
   removed: { status: "changed", reason: "variant-removed", variant: "Compact" },
+  "shared-impact": {
+    status: "unmodified",
+    sharedImpact: [
+      "examples/basic/src/components/action/action.mokly.tsx",
+      "examples/basic/src/components/toolbar/toolbar.mokly.tsx",
+    ],
+  },
 };
 
-const screenComparisons: Partial<Record<ScreenPageState, ComparisonFixture>> = {
+const screenComparisons: Partial<
+  Record<ScreenPageState, ChangedComparisonFixture>
+> = {
   "direct-change": {
     status: "changed",
     reason: "inputs",

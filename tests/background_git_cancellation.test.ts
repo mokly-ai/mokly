@@ -33,7 +33,7 @@ test(
   },
 );
 
-test("classification retains unavailable evidence when asynchronous Git reads fail", async (t) => {
+test("screen-only classification preserves asynchronous Git failures for diagnostics", async (t) => {
   const fixture = await changedFixture(t);
   const compilation = await compileCatalogue(fixture.config);
   const commands: string[] = [];
@@ -45,19 +45,17 @@ test("classification retains unavailable evidence when asynchronous Git reads fa
       throw new Error("Git read failed");
     },
   });
-  assert.equal(
-    await classifier.read(
-      fixture.config,
-      compilation.manifest,
-      "main",
-      undefined,
-      {
-        commit: "a".repeat(40),
-        selection: "blobs",
+  await assert.rejects(
+    classifier.read(fixture.config, compilation.manifest, "main", undefined, {
+      commit: "a".repeat(40),
+      selection: "blobs",
+      generation: {
         outputs: compilation.outputs,
+        routes: [...compilation.outputs.keys()],
+        deliveredStyleSources: compilation.deliveredStyleSources,
       },
-    ),
-    undefined,
+    }),
+    /Git read failed/,
   );
   assert.ok(commands.includes("ls-tree"));
 });

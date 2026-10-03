@@ -1,11 +1,17 @@
+import path from "node:path";
+
 import eslint from "@eslint/js";
+import { includeIgnoreFile } from "eslint/config";
 import importPlugin from "eslint-plugin-import-x";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
 import noDirectoryLiterals from "./scripts/eslint/no-directory-literals.mjs";
 
+const gitignorePath = path.join(import.meta.dirname, ".gitignore");
+
 export default tseslint.config(
+  includeIgnoreFile(gitignorePath, "Repository .gitignore patterns"),
   {
     ignores: [
       "**/.context/**",
@@ -68,6 +74,25 @@ export default tseslint.config(
     ignores: ["packages/viewer/src/catalogue/delivery_paths.ts"],
     rules: {
       "mokly/no-directory-literals": "error",
+    },
+  },
+  {
+    files: [
+      "src/config/**/*.ts",
+      "src/build/discovery.ts",
+      "src/build/styles/**/*.ts",
+      "src/build/source_inventory.ts",
+      "src/build/package_owned_paths.ts",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "CallExpression[callee.property.name='localeCompare']",
+          message:
+            "Sort source paths with compareCodeUnits to avoid locale-dependent inventories and diagnostics.",
+        },
+      ],
     },
   },
 );

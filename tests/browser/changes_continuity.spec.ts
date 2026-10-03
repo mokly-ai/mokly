@@ -48,10 +48,10 @@ for (const mobile of [false, true]) {
         .evaluate((body) => body.setAttribute("data-test-retained", "true"));
       if (mobile) await page.locator("[data-mokly-menu]").click();
       await page
-        .locator('[data-nav-collection="collection:archive"] > summary')
+        .locator('[data-nav-folder="folder:Fixture/Archive"] > summary')
         .click();
       await page
-        .locator('[data-nav-collection="collection:screens"] > summary')
+        .locator('[data-nav-folder="folder:Fixture/Screens"] > summary')
         .click();
       await page.locator('[data-nav-section="pages"] > summary').click();
       await page.locator("[data-mokly-nav-scroll]").evaluate((tree) => {
@@ -79,7 +79,7 @@ for (const mobile of [false, true]) {
       await expect(page.locator('[data-filter="all"]')).toBeFocused();
       server.publishUpdate({
         kind: "evidence",
-        changedRoutes: ["screens/details.html"],
+        changedIds: ["details"],
         changesStatus: "ready",
       });
       await expect(page.locator(".mbk-nav-filter-count")).toHaveText("1");
@@ -99,7 +99,7 @@ for (const mobile of [false, true]) {
       const searched = await navigationState(page);
       server.publishUpdate({
         kind: "evidence",
-        changedRoutes: [],
+        changedIds: [],
         changesStatus: "ready",
       });
       await expect(page.locator(".mbk-nav-filter-count")).toHaveText("0");

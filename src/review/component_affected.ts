@@ -1,4 +1,8 @@
-import { canonicalJson, generatedViews } from "@mokly/viewer/data";
+import {
+  affectedConsumerOrderKey,
+  canonicalJson,
+  isManifestComponentVariant,
+} from "@mokly/viewer/data";
 import type {
   Manifest,
   AffectedConsumer,
@@ -7,6 +11,7 @@ import type {
 } from "@mokly/viewer/data";
 
 import { address, lexical } from "./component_metadata.js";
+import { reviewViews } from "./views.js";
 
 /** Derive consumer chains from input ownership, including slots and removed occurrences. */
 export function affectedConsumers(
@@ -22,7 +27,21 @@ export function affectedConsumers(
     const manifest = side === "before" ? before : after;
     for (const entry of manifest.entries) {
       if (entry.kind !== "screen" && entry.kind !== "component") continue;
-      for (const view of generatedViews(entry)) {
+      const contextEntry =
+        entry.kind === "component" && isManifestComponentVariant(entry)
+          ? manifest.entries.find(
+              (candidate) =>
+                candidate.kind === "component" &&
+                !isManifestComponentVariant(candidate) &&
+                candidate.id === entry.variantOf,
+            )
+          : entry;
+      if (
+        !contextEntry ||
+        (contextEntry.kind !== "screen" && contextEntry.kind !== "component")
+      )
+        continue;
+      for (const view of reviewViews(entry)) {
         if (!view.usage) continue;
         const context: ComponentUsageContext =
           entry.kind === "screen"
@@ -34,8 +53,8 @@ export function affectedConsumers(
               }
             : {
                 kind: "component",
-                entry: address(entry),
-                variantId: view.variantId!,
+                entry: address(contextEntry),
+                variantId: entry.id,
                 viewport: view.viewport,
                 colorScheme: view.colorScheme,
               };
@@ -58,8 +77,8 @@ export function affectedConsumers(
           }
           const consumers: AffectedConsumer["consumer"][] = [
             entry.kind === "screen"
-              ? { kind: "screen", route: entry.route }
-              : { kind: "component", id: entry.id },
+              ? { kind: "screen", id: entry.id }
+              : { kind: "component", id: contextEntry.id },
             ...via.slice(0, -1).map((ancestor) => ({
               kind: "component" as const,
               id: ancestor.componentId,
@@ -72,7 +91,10 @@ export function affectedConsumers(
               consumer.id === instance.componentId
             )
               continue;
-            const key = `${instance.componentId}:${consumer.kind}:${consumer.kind === "screen" ? consumer.route : consumer.id}`;
+            const key = affectedConsumerOrderKey({
+              changedComponentId: instance.componentId,
+              consumer,
+            });
             let group = groups.get(key);
             if (!group) {
               group = {
@@ -98,7 +120,7 @@ export function affectedConsumers(
       evidence: [...group.evidence.values()].sort(compareEvidence),
     }));
 }
-export function compareEvidence(
+function compareEvidence(
   a: AffectedUsageEvidence,
   b: AffectedUsageEvidence,
 ): number {
@@ -106,7 +128,7 @@ export function compareEvidence(
     item.context.kind === "component" ? item.context.variantId : "";
   return (
     (a.side === "before" ? 0 : 1) - (b.side === "before" ? 0 : 1) ||
-    lexical(a.context.entry.route, b.context.entry.route) ||
+    lexical(a.context.entry.id, b.context.entry.id) ||
     lexical(variant(a), variant(b)) ||
     (a.context.viewport === "mobile" ? 0 : 1) -
       (b.context.viewport === "mobile" ? 0 : 1) ||

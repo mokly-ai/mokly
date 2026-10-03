@@ -5,7 +5,7 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { prepareReviewRepository } from "../dist/review/prepare.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
@@ -20,7 +20,7 @@ for (const kind of ["screen", "page"]) {
               body: `<img src="../../${route}" alt="Logo" />`,
             })
           : validEntrySource() +
-            `\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Document", route: "handbook.html", dependencies: [], relatedDocs: [], render: () => '<html><body><img src="../${route}" alt="Logo"/></body></html>' }));`;
+            `\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Document", dependencies: [], relatedDocs: [], render: () => '<html><body><img src="../../${route}" alt="Logo"/></body></html>' }));`;
       const fixture = await changedFixture(
         context,
         source,
@@ -56,7 +56,7 @@ for (const kind of ["screen", "page"]) {
       );
       await assert.rejects(
         compileCatalogue(fixture.config),
-        /\[mokly\/build-invalid\].*document links and resources are invalid/s,
+        /document links and resources are invalid/,
       );
     });
   }
@@ -65,7 +65,7 @@ for (const kind of ["screen", "page"]) {
 test("unreferenced aliases remain private and outside Changes", async (context) => {
   const source = validEntrySource({
     body: "<p>Content</p>",
-  });
+  }).replace("import { defineScreen", "import { ReviewIgnore, defineScreen");
   const fixture = await changedFixture(
     context,
     source,
@@ -80,7 +80,7 @@ test("unreferenced aliases remain private and outside Changes", async (context) 
     '<svg width="96"/>',
   );
   assert.deepEqual(
-    await computeChangedRoutes(
+    await computeChangedIds(
       fixture.config,
       "HEAD",
       await prepareReviewRepository(fixture.config, "HEAD"),

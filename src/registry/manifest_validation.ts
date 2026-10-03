@@ -1,281 +1,120 @@
-import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
-import { isCatalogueId } from "@mokly/viewer/data";
-import type { HistoricalManifest } from "@mokly/viewer/data";
+import { entryRoute, isEntryId, viewRoute } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 
-import {
-  componentFragmentPaths,
-  validateManifestComponentUsage,
-} from "../components/manifest_validation.js";
+import { incompatibleEarlierBaseline } from "../baseline/compatibility.js";
+import { validateManifestComponentUsage } from "../components/manifest_validation.js";
 import { MoklyError } from "../errors.js";
 
-import { validateEntry, validateCurrentFields } from "./manifest_entries.js";
+import type { ManifestMetadata } from "./manifest.js";
+import { validateManifestEntry } from "./manifest_entries.js";
+import { validateManifestInventory } from "./manifest_inventory.js";
 import { validateManifestRelationships } from "./manifest_relationships.js";
-import {
-  record,
-  stringArray,
-  validateRepoPath,
-  validateRoute,
-} from "./manifest_values.js";
+import { record, stringArray, validateRepoPath } from "./manifest_values.js";
 
-/** Validate unknown manifest JSON and normalize temporary schema version 2. */
+/** Validate current or historical JSON against the one supported v8 schema. */
 export function validateManifest(
   value: unknown,
-  allowV2: boolean,
   historical = false,
-): HistoricalManifest {
-  const manifest = validateManifestMetadata(value, allowV2, historical);
-  validateManifestComponentUsage(manifest);
-  return manifest;
+  componentUsage = true,
+): ManifestV8 {
+  const metadata = validateMetadata(value, historical, componentUsage, true);
+  validateManifestInventory(value as Record<string, unknown>, metadata);
+  return value as ManifestV8;
 }
 
-/** Shared metadata validation; only the live index omits rendered-view validation. */
-export function validateManifestMetadata(
+function validateMetadata(
   value: unknown,
-  allowV2 = false,
-  historical = false,
-): HistoricalManifest {
-  if (!record(value) || !Array.isArray(value.entries))
-    throw new MoklyError(
-      "manifest-invalid",
-      "manifest must contain an entries array",
-    );
-  let normalized = value;
-  if (value.schemaVersion === 2 && allowV2 && historical) {
-    normalized = { ...value, generatedBy: "mokly", schemaVersion: 3 };
-  } else if (historical && value.generatedBy === "mokabook") {
-    normalized = { ...value, generatedBy: "mokly" };
-  }
-  const current =
-    normalized.schemaVersion === 5 || normalized.schemaVersion === 6;
-  const generated = normalized.schemaVersion === 6;
-  const pages =
-    current || (normalized.schemaVersion === 4 && "sourceFiles" in normalized);
+  historical: boolean,
+  componentUsage: boolean,
+  inventory: boolean,
+): ManifestMetadata {
   if (
-    (!current &&
-      !(historical && [3, 4].includes(normalized.schemaVersion as number))) ||
-    normalized.generatedBy !== "mokly"
+    historical &&
+    record(value) &&
+    Number.isInteger(value.schemaVersion) &&
+    (value.schemaVersion as number) < 8
   )
-    throw new MoklyError(
-      "manifest-invalid",
-      "expected Mokly manifest schema version 6; run mokly build",
-    );
-  if (pages) {
-    if (
-      Object.keys(normalized).some(
-        (key) =>
-          ![
-            "entries",
-            "generatedBy",
-            "schemaVersion",
-            "sourceFiles",
-            ...(generated
-              ? ["assetClosure", "blobHashAlgorithm", "generatedFiles"]
-              : []),
-          ].includes(key),
-      )
+    throw incompatibleEarlierBaseline();
+  if (!record(value) || !Array.isArray(value.entries))
+    failure("manifest must contain an entries array");
+  if (value.schemaVersion !== 8 || value.generatedBy !== "mokly")
+    failure("expected Mokly manifest schema version 8; run mokly build");
+  if (
+    Object.keys(value).some(
+      (key) =>
+        ![
+          "entries",
+          "generatedBy",
+          "schemaVersion",
+          "sourceFiles",
+          ...(inventory
+            ? ["assetClosure", "blobHashAlgorithm", "generatedFiles"]
+            : []),
+        ].includes(key),
     )
-      throw new MoklyError("manifest-invalid", "unexpected manifest field");
-    if (
-      !stringArray(normalized.sourceFiles) ||
-      JSON.stringify(normalized.sourceFiles) !==
-        JSON.stringify([...new Set(normalized.sourceFiles)].sort())
-    )
-      throw new MoklyError(
-        "manifest-invalid",
-        "sourceFiles must be a sorted unique array",
-      );
-    for (const source of normalized.sourceFiles)
-      validateRepoPath(source, "sourceFiles");
-    if (generated) validateGeneratedInventory(normalized);
-  } else if (!Array.isArray(normalized.legacyPages))
-    throw new MoklyError(
-      "manifest-invalid",
-      "historical manifest needs legacyPages",
-    );
+  )
+    failure("unexpected manifest field");
+  if (
+    !stringArray(value.sourceFiles) ||
+    JSON.stringify(value.sourceFiles) !==
+      JSON.stringify([...new Set(value.sourceFiles)].sort())
+  )
+    failure("sourceFiles must be a sorted unique array");
+  for (const source of value.sourceFiles)
+    validateRepoPath(source, "sourceFiles");
+
+  const rawEntries = value.entries as Record<string, unknown>[];
+  const components = rawEntries.some((entry) => entry?.kind === "component");
   const entries: Record<string, unknown>[] = [];
   const byId = new Map<string, Record<string, unknown>>();
-  const routes = new Set<string>();
-  for (const rawEntry of value.entries) {
+  const outputPaths = new Set<string>();
+  for (const rawEntry of rawEntries) {
     if (
       !record(rawEntry) ||
       typeof rawEntry.id !== "string" ||
       typeof rawEntry.kind !== "string"
-    ) {
-      throw new MoklyError(
-        "manifest-invalid",
-        "every manifest entry needs string id and kind",
-      );
-    }
-    const entry = rawEntry;
+    )
+      failure("every manifest entry needs string id and kind");
     const id = rawEntry.id;
-    if (!isCatalogueId(id)) {
-      throw new MoklyError("manifest-invalid", `invalid manifest id: ${id}`);
-    }
-    if (pages) {
-      validateCurrentFields(entry, current);
-      if (
-        !(normalized.sourceFiles as string[]).includes(
-          entry.sourcePath as string,
-        )
-      )
-        throw new MoklyError(
-          "manifest-invalid",
-          `sourceFiles omits ${String(entry.sourcePath)}`,
-        );
-    } else if (entry.kind === "page")
-      throw new MoklyError(
-        "manifest-invalid",
-        "pages require the registered-page manifest format",
-      );
-    validateEntry(entry, current || (normalized.schemaVersion === 4 && !pages));
-    if (byId.has(id)) {
-      throw new MoklyError("manifest-invalid", `duplicate manifest id: ${id}`);
-    }
-    entries.push(entry);
-    byId.set(id, entry);
-    if (entry.kind !== "collection") {
-      if (typeof entry.route !== "string" || routes.has(entry.route)) {
-        throw new MoklyError(
-          "manifest-invalid",
-          `invalid or duplicate manifest route for ${entry.id}`,
-        );
-      }
-      routes.add(entry.route);
-    }
-  }
-  const outputRoutes = validateFragmentRoutes(entries, routes);
-  if (!pages)
-    validateLegacyPages(normalized.legacyPages as unknown[], outputRoutes);
-  validateManifestRelationships(entries, byId);
-  const manifest = normalized as unknown as HistoricalManifest;
-  return manifest;
-}
-
-function validateGeneratedInventory(manifest: Record<string, unknown>): void {
-  const algorithm = manifest.blobHashAlgorithm;
-  if (algorithm !== "sha1" && algorithm !== "sha256")
-    throw new MoklyError("manifest-invalid", "invalid blobHashAlgorithm");
-  const closure = manifest.assetClosure;
-  if (
-    !stringArray(closure) ||
-    JSON.stringify(closure) !== JSON.stringify([...new Set(closure)].sort())
-  )
-    throw new MoklyError(
-      "manifest-invalid",
-      "assetClosure must be a sorted unique array",
-    );
-  for (const route of closure) {
-    validateRepoPath(route, "assetClosure");
+    if (!isEntryId(id)) failure(`invalid manifest id: ${id}`);
+    validateManifestEntry(rawEntry, components);
     if (
-      route === GENERATED_DIRECTORY ||
-      route.startsWith(`${GENERATED_DIRECTORY}/`)
+      !(value.sourceFiles as string[]).includes(rawEntry.sourcePath as string)
     )
-      throw new MoklyError(
-        "manifest-invalid",
-        "assetClosure contains generated output",
-      );
-  }
-  const inventory = manifest.generatedFiles;
-  if (
-    !Array.isArray(inventory) ||
-    inventory.some(
-      (item) =>
-        !record(item) ||
-        typeof item.path !== "string" ||
-        typeof item.blobHash !== "string",
-    ) ||
-    JSON.stringify(inventory.map((item) => item.path)) !==
-      JSON.stringify([...new Set(inventory.map((item) => item.path))].sort())
-  )
-    throw new MoklyError(
-      "manifest-invalid",
-      "generatedFiles must be sorted and unique",
+      failure(`sourceFiles omits ${String(rawEntry.sourcePath)}`);
+    if (byId.has(id)) failure(`duplicate manifest id: ${id}`);
+    entries.push(rawEntry);
+    byId.set(id, rawEntry);
+    addOutputPath(
+      outputPaths,
+      entryRoute(rawEntry.kind as ManifestV8["entries"][number]["kind"], id),
     );
-  for (const item of inventory) {
-    validateRoute(item.path, "generatedFiles.path");
     if (
-      !new RegExp(`^[0-9a-f]{${algorithm === "sha1" ? 40 : 64}}$`).test(
-        item.blobHash,
-      )
+      rawEntry.kind === "screen" ||
+      (rawEntry.kind === "component" && typeof rawEntry.variantOf === "string")
     )
-      throw new MoklyError(
-        "manifest-invalid",
-        `invalid blob hash for ${item.path}`,
-      );
-  }
-}
-
-function validateFragmentRoutes(
-  entries: readonly Record<string, unknown>[],
-  routedEntries: ReadonlySet<string>,
-): Set<string> {
-  const outputRoutes = new Set(routedEntries);
-  for (const entry of entries) {
-    if (entry.kind === "component") {
-      for (const fragment of componentFragmentPaths(entry)) {
-        if (outputRoutes.has(fragment))
-          throw new MoklyError(
-            "manifest-invalid",
-            `colliding component fragment: ${fragment}`,
+      for (const viewport of ["mobile", "desktop"] as const)
+        for (const colorScheme of rawEntry.colorSchemes as ("light" | "dark")[])
+          addOutputPath(
+            outputPaths,
+            viewRoute(rawEntry.kind, id, viewport, colorScheme),
           );
-        outputRoutes.add(fragment);
-      }
-      continue;
-    }
-    if (entry.kind !== "screen" || !record(entry.fragments)) continue;
-    for (const viewport of ["mobile", "desktop"] as const) {
-      const fragment = entry.fragments[viewport] as string;
-      const expected = (entry.route as string).replace(
-        /\.html$/,
-        `.${viewport}.html`,
-      );
-      if (fragment !== expected || outputRoutes.has(fragment)) {
-        throw new MoklyError(
-          "manifest-invalid",
-          `${String(entry.id)} has invalid or colliding ${viewport} fragment`,
-        );
-      }
-      outputRoutes.add(fragment);
-    }
-    if (!record(entry.darkFragments)) continue;
-    for (const viewport of ["mobile", "desktop"] as const) {
-      const fragment = entry.darkFragments[viewport] as string;
-      const expected = (entry.route as string).replace(
-        /\.html$/,
-        `.${viewport}.dark.html`,
-      );
-      if (fragment !== expected || outputRoutes.has(fragment)) {
-        throw new MoklyError(
-          "manifest-invalid",
-          `${String(entry.id)} has invalid or colliding ${viewport} dark fragment`,
-        );
-      }
-      outputRoutes.add(fragment);
-    }
   }
-  return outputRoutes;
+  validateManifestRelationships(entries, byId);
+  if (componentUsage) validateManifestComponentUsage(value as never);
+  return value as unknown as ManifestMetadata;
 }
 
-function validateLegacyPages(pages: unknown[], routes: Set<string>): void {
-  for (const page of pages) {
-    if (
-      !record(page) ||
-      typeof page.route !== "string" ||
-      typeof page.sourcePath !== "string"
-    ) {
-      throw new MoklyError(
-        "manifest-invalid",
-        "every legacy page needs route and sourcePath",
-      );
-    }
-    validateRoute(page.route, "legacy page");
-    validateRepoPath(page.sourcePath, "legacy page sourcePath");
-    if (routes.has(page.route)) {
-      throw new MoklyError(
-        "manifest-invalid",
-        `duplicate manifest route: ${page.route}`,
-      );
-    }
-    routes.add(page.route);
-  }
+/** Validate the same v8 metadata used by the live catalogue boundary. */
+export function validateManifestMetadata(value: unknown): ManifestMetadata {
+  return validateMetadata(value, false, false, false);
+}
+
+function addOutputPath(paths: Set<string>, candidate: string): void {
+  if (paths.has(candidate)) failure(`duplicate manifest output: ${candidate}`);
+  paths.add(candidate);
+}
+
+function failure(message: string): never {
+  throw new MoklyError("manifest-invalid", message);
 }

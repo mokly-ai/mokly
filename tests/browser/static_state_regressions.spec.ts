@@ -10,6 +10,7 @@ import { repositoryRoot } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
 import { assertServedShellMarker } from "./export_shell.js";
+import { expectFrameSource } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof createExportFixture>>;
 let server: Awaited<ReturnType<typeof serveStaticFiles>>;
@@ -66,25 +67,24 @@ test.beforeEach(async () => {
 test("a static direct URL restores its variant and fragment after refresh", async ({
   page,
 }) => {
-  const url = `${server.url}/view/components/action.html?variant=disabled&fragment=${fragment}`;
+  const url = `${server.url}/view/components/action-disabled.html?fragment=${fragment}`;
   await page.goto(url);
-  await expectStaticComponentQuery(page, "disabled");
+  await expectStaticComponentQuery(page, "action-disabled");
 
   await page.reload();
-  await expectStaticComponentQuery(page, "disabled");
+  await expectStaticComponentQuery(page, "action-disabled");
 });
 
-test("a static alias retains its initial fragment through normalization and refresh", async ({
+test("a static component route retains its initial fragment through refresh", async ({
   page,
 }) => {
-  await page.goto(`${server.url}/id/action/?fragment=${fragment}`);
-  await expect(page).toHaveURL(
+  await page.goto(
     `${server.url}/view/components/action.html?fragment=${fragment}`,
   );
-  await expectStaticComponentQuery(page, "default");
+  await expectStaticComponentQuery(page, "action-default");
 
   await page.reload();
-  await expectStaticComponentQuery(page, "default");
+  await expectStaticComponentQuery(page, "action-default");
 });
 
 for (const failure of ["missing", "different deployment"] as const)
@@ -260,17 +260,16 @@ async function expectStaticComponentQuery(
   page: Page,
   variant: string,
 ): Promise<void> {
-  await expect(page.getByLabel("Saved variant", { exact: true })).toHaveValue(
-    variant,
-  );
+  const title = variant === "action-disabled" ? "Disabled" : "Default";
+  await expect(
+    page
+      .getByRole("navigation", { name: "Saved variants" })
+      .getByRole("link", { name: title, exact: true }),
+  ).toHaveAttribute("aria-current", "page");
   for (const viewport of ["mobile", "desktop"])
-    await expect(
+    await expectFrameSource(
       page.locator(`iframe[data-workspace-frame="${viewport}"]`),
-    ).toHaveAttribute(
-      "src",
-      new RegExp(
-        `action\\.variants/${variant}\\.${viewport}\\.html#${fragment}$`,
-      ),
+      new RegExp(`${variant}\\.${viewport}\\.html#${fragment}$`),
     );
 }
 

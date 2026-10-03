@@ -5,6 +5,7 @@ import {
 } from "../catalogue/delivery_paths.js";
 import type { ManifestComponentVariant } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
+import { viewRoute } from "../navigation/routes.js";
 
 import { framePath } from "./stage_sources.js";
 import { generatedFrameSource, generatedView } from "./stage_sources.js";
@@ -42,12 +43,20 @@ export function ComponentStage({
         );
         const light = previewLight
           ? generatedFrameSource(previewLight, undefined, undefined, prefix)
-          : framePath(currentDocumentPath(variant.fragments[viewport], prefix));
+          : framePath(
+              currentDocumentPath(
+                viewRoute("component", variant.id, viewport, "light"),
+                prefix,
+              ),
+            );
         const dark = previewDark
           ? generatedFrameSource(previewDark, undefined, undefined, prefix)
-          : variant.darkFragments?.[viewport]
+          : variant.colorSchemes.includes("dark")
             ? framePath(
-                currentDocumentPath(variant.darkFragments[viewport], prefix),
+                currentDocumentPath(
+                  viewRoute("component", variant.id, viewport, "dark"),
+                  prefix,
+                ),
               )
             : undefined;
         return (

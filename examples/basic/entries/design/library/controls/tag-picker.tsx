@@ -30,12 +30,20 @@ export const tagPicker = defineComponent({
   controls: { activeTag: { kind: "text", label: "Active tag" } },
   render: TagPickerView,
   variants: [
-    { id: "all", title: "All tags", props: { tags: libraryTags } },
     {
-      id: "selected",
+      id: "design-ui-tag-picker-all",
+      title: "All tags",
+      props: { tags: libraryTags },
+    },
+    {
+      id: "design-ui-tag-picker-selected",
       title: "Selected tag",
       props: { tags: libraryTags, activeTag: "forms" },
     },
-    { id: "empty", title: "No tags", props: { tags: [] } },
+    {
+      id: "design-ui-tag-picker-empty",
+      title: "No tags",
+      props: { tags: [] },
+    },
   ],
 });

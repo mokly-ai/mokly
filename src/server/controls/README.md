@@ -30,8 +30,14 @@ never include resource paths, exclusion globs, or other diagnostic details.
 `transient.ts` uses Build's stylesheet selection, renderer, compatibility/link
 transformation, ownership, range, prop, per-view metadata and resource checks.
 It retains one `DocumentCompiler` per generation instead of cloning and validating
-the full catalogue for each keystroke. Referenced closure resources are copied
-into the edited document's immutable memory bundle.
+the full catalogue for each keystroke. Existing
+public resources are copied into the edited document's immutable memory bundle.
+The pending generation supplies linked CSS and referenced opaque asset bytes
+to the Props-render bundle. Reserved generated resources come only from that
+generation's retained outputs:
+a stale stylesheet or asset on disk cannot satisfy a transient preview link.
+The capture keeps font/image bytes opaque and parses only stylesheet text for
+referenced resources.
 Generated inline styles remain part of its HTML. No generated file, manifest,
 watch event, Review artifact, or export inventory is written by this service.
 

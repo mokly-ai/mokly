@@ -1,26 +1,25 @@
 /** Browser URL, history, focus, and scroll integration for the shell store. */
 
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
-import type {
-  Dispatch,
-  KeyboardEvent,
-  MouseEvent,
-  SetStateAction,
-} from "react";
+import type { Dispatch, SetStateAction } from "react";
 
-import type { FrameNavigation } from "../client/frame_adapter.js";
-import {
-  resolveDeliveryHref,
-  validFragmentQuery,
-} from "../navigation/delivery.js";
+import { standaloneAppearanceHost } from "../standalone/appearance_host.js";
 
 import type { Catalogue } from "./catalogue.js";
-import { changesActivation } from "./changes_activation.js";
 import type { ShellContext } from "./context.js";
 import { currentDeploymentMatches } from "./delivery.js";
 import type { NavSectionNode } from "./nav_tree.js";
 import { routeDocumentKey, routeFromUrl, routeHref } from "./routes.js";
-import { eligibleShellAnchor, sameShellRoute } from "./store_browser_routes.js";
+import {
+  shellBrowserActions,
+  type ShellBrowserActions,
+} from "./store_browser_actions.js";
+import { sameShellRoute } from "./store_browser_routes.js";
+import {
+  browserRouteHref,
+  canonicalHistoricalUrl,
+  isProviderNormalizedRoute,
+} from "./store_browser_urls.js";
 import { withRoute } from "./store_filters.js";
 import {
   captureScrolls,
@@ -40,14 +39,7 @@ interface BrowserStoreInput {
   state: ShellState;
 }
 
-/** Browser-only actions returned to the React shell provider. */
-export interface ShellBrowserActions {
-  navigateFrame(href: string, navigation?: FrameNavigation): void;
-  onShellClick(event: MouseEvent<HTMLElement>): void;
-  onShellKeyDown(event: KeyboardEvent<HTMLElement>): void;
-  openFrame(href: string, target: string): void;
-  selectVariant(value: string): void;
-}
+export type { ShellBrowserActions } from "./store_browser_actions.js";
 
 /** Bind one store to standalone history without reading globals during SSR. */
 export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
@@ -70,8 +62,7 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       activated?: ReturnType<typeof routeFromUrl>,
     ) => {
       const win = window;
-      const route =
-        activated ?? routeFromUrl(input.catalogue, url, input.context.delivery);
+      const route = activated ?? routeFromUrl(input.catalogue, url);
       if (push) {
         persistScroll(win, captureScrolls(document));
         win.history.pushState({ scrolls: {} }, "", url);
@@ -81,6 +72,7 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
         pendingScroll.current = scrolls;
         pendingFocus.current = true;
       }
+      standaloneAppearanceHost(win)?.applyRoute(route.colorScheme);
       input.setState((state) =>
         withRoute(state, route, input.catalogue, input.sections),
       );
@@ -99,19 +91,15 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       const win = window;
       const sameDocument =
         installedDocumentKey.current === routeDocumentKey(requested);
-      const requestedRoute = routeFromUrl(
-        input.catalogue,
-        requested,
-        input.context.delivery,
-      );
+      const requestedRoute = routeFromUrl(input.catalogue, requested);
       let canonical = requested;
       if (requestedRoute.view.kind === "target")
         canonical = new URL(
           browserRouteHref(
             routeHref(
-              requestedRoute.view.target.entry.route,
+              requestedRoute.view.target.entry.kind,
+              requestedRoute.view.target.entry.id,
               requestedRoute.fragment,
-              requestedRoute.variant,
               requestedRoute,
             ),
             providerNormalizedRoutes.current,
@@ -172,22 +160,21 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
       win.location.pathname,
       input.context.delivery?.canonicalPath,
     );
-    if (input.context.delivery && win.location.pathname.startsWith("/id/")) {
-      win.history.replaceState(
-        win.history.state,
-        "",
-        `${input.context.delivery.canonicalPath}${validFragmentQuery(win.location.search)}`,
-      );
+    let initialUrl = new URL(win.location.href);
+    let initialRoute = routeFromUrl(input.catalogue, initialUrl);
+    const canonicalInitial = canonicalHistoricalUrl(
+      initialUrl,
+      initialRoute,
+      providerNormalizedRoutes.current,
+    );
+    if (canonicalInitial.href !== initialUrl.href) {
+      win.history.replaceState(win.history.state, "", canonicalInitial);
+      initialUrl = canonicalInitial;
+      initialRoute = routeFromUrl(input.catalogue, initialUrl);
     }
-    const initialUrl = new URL(win.location.href);
     installedDocumentKey.current = routeDocumentKey(initialUrl);
     persistScroll(win, captureScrolls(document));
     restoreScrolls(document, stateRef.current.regionScrolls);
-    const initialRoute = routeFromUrl(
-      input.catalogue,
-      initialUrl,
-      input.context.delivery,
-    );
     if (!sameShellRoute(stateRef.current.route, initialRoute))
       install(initialUrl, false, {}, false);
     const controller = new AbortController();
@@ -246,114 +233,12 @@ export function useShellBrowser(input: BrowserStoreInput): ShellBrowserActions {
     }
   }, [input.catalogue, input.interactive, input.state.route]);
 
-  const openFrame = useCallback(
-    (href: string, target: string) => {
-      const resolved = resolveDeliveryHref(href, input.context.delivery);
-      if (resolved) window.open(resolved, target, "noopener");
-    },
-    [input.context.delivery],
-  );
-  const selectVariant = useCallback(
-    (value: string) => {
-      const url = new URL(window.location.href);
-      url.searchParams.set("variant", value);
-      url.searchParams.delete("instance");
-      void navigate(url.href);
-    },
-    [navigate],
-  );
-  return {
-    navigateFrame: (href) => {
-      const target = resolveDeliveryHref(href, input.context.delivery) ?? href;
-      setTimeout(() => void navigate(target), 0);
-    },
-    openFrame,
-    selectVariant,
-    onShellClick: (event) => {
-      const target = event.target instanceof Element ? event.target : undefined;
-      if (!target) return;
-      const state = stateRef.current;
-      const outsidePickerTag =
-        target.closest("[data-mokly-tag]") &&
-        !target.closest("[data-mokly-tag-picker]");
-      if (
-        state.tagPickerOpen &&
-        !target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]")
-      ) {
-        input.setState((current) => ({ ...current, tagPickerOpen: false }));
-        if (outsidePickerTag) {
-          const root = event.currentTarget;
-          queueMicrotask(() =>
-            root.querySelector<HTMLElement>("[data-mokly-tag-toggle]")?.focus(),
-          );
-        }
-      }
-      if (target.closest("[data-mokly-tag-toggle], [data-mokly-tag-picker]"))
-        return;
-      if (state.expandedFrame && !target.closest(".browser-frame.is-expanded"))
-        input.setState((current) => ({ ...current, expandedFrame: undefined }));
-      const anchor = target.closest<HTMLAnchorElement>("a[href]");
-      if (!anchor || !eligibleShellAnchor(event, anchor, window.location))
-        return;
-      event.preventDefault();
-      const requested = new URL(anchor.href, window.location.href);
-      const route = routeFromUrl(
-        input.catalogue,
-        requested,
-        input.context.delivery,
-      );
-      const activated = anchor.hasAttribute("data-nav-row")
-        ? changesActivation(
-            input.catalogue,
-            input.context,
-            state.selection,
-            route,
-          )
-        : route;
-      if (activated === route || activated.view.kind !== "target") {
-        void navigate(requested.href);
-        return;
-      }
-      const href = routeHref(
-        activated.view.target.entry.route,
-        activated.fragment,
-        activated.variant,
-        {
-          ...(activated.comparison ? { comparison: activated.comparison } : {}),
-          ...(activated.instance ? { instance: activated.instance } : {}),
-          ...(activated.variantValues
-            ? { variantValues: activated.variantValues }
-            : {}),
-        },
-      );
-      void transition(new URL(href, requested), true, {}, activated);
-    },
-    onShellKeyDown: (event) => {
-      if (event.key !== "Escape") return;
-      if (stateRef.current.tagPickerOpen) {
-        event.preventDefault();
-        input.setState((state) => ({ ...state, tagPickerOpen: false }));
-        event.currentTarget
-          .querySelector<HTMLElement>("[data-mokly-tag-toggle]")
-          ?.focus();
-      } else if (stateRef.current.expandedFrame) {
-        event.preventDefault();
-        input.setState((state) => ({ ...state, expandedFrame: undefined }));
-      }
-    },
-  };
-}
-
-function isProviderNormalizedRoute(
-  pathname: string,
-  canonicalPath: string | undefined,
-): boolean {
-  return (
-    canonicalPath?.endsWith(".html") === true &&
-    pathname === canonicalPath.slice(0, -5)
-  );
-}
-
-function browserRouteHref(href: string, providerNormalized: boolean): string {
-  return providerNormalized ? href.replace(/\.html(?=\?|$)/, "") : href;
+  return shellBrowserActions({
+    catalogue: input.catalogue,
+    context: input.context,
+    navigate,
+    setState: input.setState,
+    state: () => stateRef.current,
+    transition,
+  });
 }

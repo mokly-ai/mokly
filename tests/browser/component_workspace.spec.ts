@@ -57,15 +57,13 @@ for (const viewport of ["desktop", "mobile"] as const) {
           ).toHaveAttribute("data-preview-viewport", selected);
         await expect(label).toHaveValue("Keep this edit");
       }
-      await toolbar.getByRole("switch", { name: "Dark mode" }).check();
       await expect(
-        page.locator(".ce-canvas:visible .ce-scheme-dark"),
-      ).toHaveCount(2);
-      await expect(page.locator(".ce-canvas:visible").first()).toHaveCSS(
-        "background-color",
-        "rgb(30, 37, 33)",
-      );
-      await toolbar.getByRole("switch", { name: "Dark mode" }).uncheck();
+        toolbar.getByRole("switch", { name: "Dark preview" }),
+      ).toHaveCount(0);
+      await expect(page.locator(".ce-canvas:visible .ce-scheme")).toHaveText([
+        "Light",
+        "Light",
+      ]);
       await expect(page.locator(".ce-canvas:visible").first()).toHaveCSS(
         "background-color",
         "rgb(255, 255, 255)",
@@ -190,7 +188,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
 test("view controls and highlighting work inside sandboxed Browse frames", async ({
   page,
 }) => {
-  await page.goto("/view/design/components/inspection/details.html");
+  await page.goto("/view/screens/design-component-inspection-details.html");
   const frame = page.frameLocator(".mbk-frame-desktop iframe");
   const toolbar = frame.getByRole("toolbar", { name: "Preview options" });
   await toolbar

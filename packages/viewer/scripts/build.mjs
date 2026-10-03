@@ -23,6 +23,20 @@ await buildBrowserModules(
 );
 await build({
   bundle: true,
+  entryPoints: Object.fromEntries(
+    ["logical", "routes", "target", "delivery"].map((name) => [
+      name,
+      path.join(root, `src/navigation/${name}.ts`),
+    ]),
+  ),
+  format: "esm",
+  logLevel: "silent",
+  outdir: path.join(target, "browser-navigation"),
+  platform: "browser",
+  target: "es2023",
+});
+await build({
+  bundle: true,
   define: { "process.env.NODE_ENV": '"production"' },
   entryPoints: [path.join(root, "src/browser.tsx")],
   format: "esm",
@@ -34,10 +48,16 @@ await build({
 });
 await build({
   bundle: true,
-  entryPoints: [path.join(root, "src/standalone/navigation_resize.ts")],
+  entryPoints: {
+    "appearance-startup": path.join(
+      root,
+      "src/standalone/appearance_startup.ts",
+    ),
+    "navigation-resize": path.join(root, "src/standalone/navigation_resize.ts"),
+  },
   format: "iife",
   logLevel: "silent",
-  outfile: path.join(target, "browser/navigation-resize.js"),
+  outdir: path.join(target, "browser"),
   platform: "browser",
   target: "es2023",
 });

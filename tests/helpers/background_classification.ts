@@ -28,7 +28,16 @@ export function observeBackgroundClassification(
           compilation.manifest,
           base,
           undefined,
-          prepared ? { ...prepared, outputs: compilation.outputs } : undefined,
+          prepared
+            ? {
+                ...prepared,
+                generation: {
+                  outputs: compilation.outputs,
+                  routes: [...compilation.outputs.keys()],
+                  deliveredStyleSources: compilation.deliveredStyleSources,
+                },
+              }
+            : undefined,
         );
       } finally {
         complete();

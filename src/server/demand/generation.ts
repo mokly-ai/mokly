@@ -1,4 +1,5 @@
 /** Background output/evidence can be adopted only by its still-current source generation. */
+import { isIncompatibleEarlierBaseline } from "../../baseline/compatibility.js";
 import type {
   BaselineBuilder,
   BaselineProgress,
@@ -8,7 +9,12 @@ import type { ComponentRuntime } from "../../build/component_runtime.js";
 import type { GeneratedOutputStore } from "../../build/output_store.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { timeAsync, timingCounts } from "../../diagnostics/timings.js";
+import { acceptedGenerationFromCompilation } from "../../review/accepted_generation.js";
 import type { PreparedReviewRepository } from "../../review/prepare.js";
+import {
+  isEarlierBaselineClassification,
+  isInvalidBaselineClassification,
+} from "../classification_result.js";
 import {
   RepositoryCatalogueChangeClassifier,
   type CatalogueChangeClassifier,
@@ -43,6 +49,8 @@ export interface BackgroundGenerationOptions {
   readonly baselineProgress?: (event: BaselineProgress) => void;
   /** Route background failures through the process's sole terminal owner. */
   readonly diagnostic?: (error: unknown) => void;
+  /** Report the expected earlier-version outcome once per baseline commit. */
+  readonly incompatibleBaseline?: (commit: string) => void;
   /** Injected by tests; the composition root builds the real one on demand. */
   readonly builder?: BaselineBuilder;
   readonly writeOutput?: boolean;
@@ -106,7 +114,11 @@ export class BackgroundGeneration {
         if (!current()) return;
         if (!existing && this.options.writeOutput) {
           const started = Date.now();
-          await this.store.write(compilation, runtime.config);
+          await this.store.write(
+            compilation,
+            runtime.config,
+            controller.signal,
+          );
           this.options.outputWritten?.(compilation, Date.now() - started);
         }
         if (!current()) return;
@@ -121,13 +133,8 @@ export class BackgroundGeneration {
               )
             : undefined;
         if (!current()) return;
-        if (baseline)
-          this.options.baselinePrepared?.({
-            commit: baseline.commit,
-            selection: baseline.selection,
-            descriptor: baseline.descriptor,
-          });
-        const snapshot = await timeAsync("changes.classify", () =>
+        if (baseline) this.options.baselinePrepared?.(baseline);
+        const classification = await timeAsync("changes.classify", () =>
           this.classifier instanceof RepositoryCatalogueChangeClassifier
             ? worker.classify(base, baseline)
             : Promise.race([
@@ -136,7 +143,9 @@ export class BackgroundGeneration {
                   compilation.manifest,
                   base,
                   controller.signal,
-                  { outputs: compilation.outputs },
+                  {
+                    generation: acceptedGenerationFromCompilation(compilation),
+                  },
                 ),
                 new Promise<undefined>((resolve) =>
                   controller.signal.addEventListener(
@@ -148,15 +157,26 @@ export class BackgroundGeneration {
               ]),
         );
         if (current()) {
+          const snapshot =
+            isEarlierBaselineClassification(classification) ||
+            isInvalidBaselineClassification(classification)
+              ? undefined
+              : classification;
+          if (isEarlierBaselineClassification(classification))
+            this.options.incompatibleBaseline?.(classification.commit);
+          if (isInvalidBaselineClassification(classification))
+            this.options.diagnostic?.(new Error(classification.diagnostic));
           if (snapshot)
             timingCounts("changes.publish", () => ({
-              changedRoutes: snapshot.changedRoutes?.length ?? 0,
+              changedIds: snapshot.changedIds?.length ?? 0,
             }));
           this.classified(snapshot);
         }
       } catch (error) {
         if (current()) {
-          if (this.options.diagnostic) this.options.diagnostic(error);
+          if (isIncompatibleEarlierBaseline(error))
+            this.options.incompatibleBaseline?.(this.baseline.commit ?? base);
+          else if (this.options.diagnostic) this.options.diagnostic(error);
           else new PlainServeReporter().runtimeDiagnostic(error);
           this.classified(undefined);
         }

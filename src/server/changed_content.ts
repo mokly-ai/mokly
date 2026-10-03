@@ -2,9 +2,9 @@
 
 import path from "node:path";
 
-import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import type {
-  Manifest,
+  HistoricalManifest,
+  ManifestV8,
   ScreenResourceEvidence,
   ViewResourceEvidence,
 } from "@mokly/viewer/data";
@@ -14,20 +14,16 @@ import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
-import { generatedManifestRoutes } from "../registry/generated_routes.js";
-import {
-  FORMER_MANIFEST_NAME,
-  LEGACY_MANIFEST_NAME,
-  MANIFEST_NAME,
-} from "../registry/manifest.js";
+import { EARLIER_MANIFEST_NAMES, MANIFEST_NAME } from "../registry/manifest.js";
 import {
   GitReviewAssetReader,
+  FileSystemReviewAssetReader,
   type OptionalReviewAssetReader,
 } from "../review/assets.js";
 import { baselineResourceConfig } from "../review/base_manifest.js";
+import type { ChangeEvidence } from "../review/change_evidence.js";
 import type { BaselineReader } from "../review/git.js";
 import {
-  normalizeHistoricalDocument,
   normalizeReviewPair,
   normalizeSingleDocument,
 } from "../review/ignore.js";
@@ -46,13 +42,15 @@ export interface ChangedContent {
  * Exclude authoring paths lexically so retargeted public aliases still reach validation.
  */
 export async function changedContentPaths(
-  manifest: Manifest,
-  baseline: Manifest,
+  manifest: ManifestV8,
+  baseline: HistoricalManifest,
   config: ResolvedConfig,
   git: BaselineReader,
   commit: string,
-  changedPaths: readonly string[],
-  headReader: OptionalReviewAssetReader,
+  changedPaths: ChangeEvidence,
+  headReader: OptionalReviewAssetReader = new FileSystemReviewAssetReader(
+    config,
+  ),
   documents: "all" | "pages" = "all",
 ): Promise<readonly string[]> {
   return (
@@ -71,40 +69,36 @@ export async function changedContentPaths(
 
 /** Preserve resource evidence from the v2 membership pass without repeating analysis. */
 export async function classifyChangedContent(
-  manifest: Manifest,
-  baseline: Manifest,
+  manifest: ManifestV8,
+  baseline: HistoricalManifest,
   config: ResolvedConfig,
   git: BaselineReader,
   commit: string,
-  changedPaths: readonly string[],
-  headReader: OptionalReviewAssetReader,
+  changedPaths: ChangeEvidence,
+  headReader: OptionalReviewAssetReader = new FileSystemReviewAssetReader(
+    config,
+  ),
   documents: "all" | "pages" = "all",
 ): Promise<ChangedContent> {
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
-  const generatedPaths = generatedManifestRoutes(manifest);
-  const baselinePaths = generatedManifestRoutes(baseline);
-  const basePrefix =
-    git.catalogue?.layout === "generated-v6" ? GENERATED_DIRECTORY : "";
-  const headLayout = { prefix: GENERATED_DIRECTORY, routes: generatedPaths };
-  const baseLayout = { prefix: basePrefix, routes: baselinePaths };
-  const repoPath = (route: string) => {
-    const relative = generatedPaths.has(route)
-      ? `${GENERATED_DIRECTORY}/${route}`
-      : route;
-    return prefix ? `${prefix}/${relative}` : relative;
-  };
+  const repoPath = (route: string) => (prefix ? `${prefix}/${route}` : route);
+  const generatedPaths = new Set(
+    [...manifest.generatedFiles, ...baseline.generatedFiles].map((file) =>
+      path.resolve(config.generatedDir, file.path),
+    ),
+  );
   const publicChanges = new Set(
     changedPaths.flatMap((changed) => {
       const candidate = path.resolve(config.repoRoot, changed);
       if (
         !isInside(config.mockupsDir, candidate) ||
-        isAuthoringSource(candidate, config, "exclusions") !== undefined
+        (!generatedPaths.has(candidate) &&
+          isAuthoringSource(candidate, config, "exclusions") !== undefined)
       )
         return [];
       const route = toPosixPath(path.relative(config.mockupsDir, candidate));
       return route === MANIFEST_NAME ||
-        route === FORMER_MANIFEST_NAME ||
-        route === LEGACY_MANIFEST_NAME
+        EARLIER_MANIFEST_NAMES.includes(route as never)
         ? []
         : [route];
     }),
@@ -140,24 +134,14 @@ export async function classifyChangedContent(
           "review-invalid",
           `base fragment is missing: ${pair.base}`,
         );
-      const before = normalizeHistoricalDocument(
-        Buffer.from(base).toString("utf8"),
-      );
+      const before = Buffer.from(base).toString("utf8");
       const after =
         headDocuments.get(pair.head) ??
         Buffer.from(await headReader.read(pair.head)).toString("utf8");
-      const normalized = normalizeReviewPair(before, after, pair.head, {
-        before: basePrefix,
-        after: GENERATED_DIRECTORY,
-        beforeRoutes: baselinePaths,
-        afterRoutes: generatedPaths,
-      });
+      const normalized = normalizeReviewPair(before, after, pair.head);
       normalizedDocuments.set(pair.head, normalized.head);
       normalizedBases.set(pair.head, normalized.base);
-      if (
-        (normalized.comparisonBase ?? normalized.base) !==
-        (normalized.comparisonHead ?? normalized.head)
-      ) {
+      if (normalized.base !== normalized.head) {
         result.add(repoPath(pair.head));
         publicChanges.add(pair.head);
       } else if (pair.base === pair.head) publicChanges.delete(pair.head);
@@ -175,8 +159,6 @@ export async function classifyChangedContent(
     normalizedDocuments,
     undefined,
     true,
-    headLayout,
-    baseLayout,
   );
   await timeAsync("review.compare-screens", async () => {
     for (let offset = 0; offset < pairs.length; offset += 32) {
@@ -222,8 +204,8 @@ export async function classifyChangedContent(
           pair.view &&
           (evidence.reasons?.length || evidence.excludedResources?.length)
         ) {
-          const { route, viewport, colorScheme } = pair.view;
-          const views = screens.get(route) ?? [];
+          const { id, viewport, colorScheme } = pair.view;
+          const views = screens.get(id) ?? [];
           views.push({
             viewport,
             colorScheme,
@@ -246,7 +228,7 @@ export async function classifyChangedContent(
                 }
               : {}),
           });
-          screens.set(route, views);
+          screens.set(id, views);
         }
       }
     }
@@ -255,6 +237,6 @@ export async function classifyChangedContent(
     changedPaths: [...result].sort(),
     screens: [...screens.keys()]
       .sort()
-      .map((route) => ({ route, views: screens.get(route)! })),
+      .map((id) => ({ id, views: screens.get(id)! })),
   };
 }

@@ -2,18 +2,10 @@
 
 ## Delivery Status
 
-Implemented by the repository-only preview builder. Current catalogues publish
-without review by default; an explicit option includes a pinned comparison.
-[Optional Published Changes](../../plans/optional-published-changes.md) records
-implementation verification. Changes-enabled previews package removed pages and
-screens as implemented by the
-[removed content previews plan](../../plans/removed-content-previews.md). This
-does not change the npm CLI.
-New publications advertise `mokly-generated` in the public catalogue and capture
-v6 documents under `static/mokly-generated/<route>` with referenced authored assets
-under `static/<catalogue-relative path>`. Existing prefixless publications
-remain readable by the viewer; the snapshot and upload rules are in
-[generated delivery](./mokly-generated-delivery.md).
+The repository preview builder publishes current content by default; an option
+adds a pinned comparison. [Optional Published Changes](../../plans/optional-published-changes.md)
+records verification, and [removed previews](./mokly-removed-previews.md) owns
+packaged history. The npm CLI is unchanged.
 
 ## Publication Option
 
@@ -51,22 +43,22 @@ same contract for JavaScript callers. With changes enabled, `base` overrides
 branch names, and an existing review configuration never enable the option
 implicitly. This extends the repository script, not the npm package CLI.
 
-The supported npm command compiles and validates the catalogue in memory before
-capture, without running `mokly build` or writing under `mockupsDir`. Direct
-callers use the same compilation and capture boundaries, which validate the
-source inventory and input stability; no local generated tree is required.
+Publication capture compiles and validates in memory; it never writes the
+consumer generated tree. The repository npm wrapper explicitly builds tooling
+and the example before capture. Direct callers need no local generated tree;
+source inventory and input stability are checked by the capture boundary.
 Consumer `mokly export` also compiles in memory and includes Changes by default.
 
 ## Current Catalogue By Default
 
 Publish the current home, catalogue routes, resources, metadata, search, tags,
-collection hierarchy, ID redirects, and not-found page. Preserve screen
-viewport/color selection and page rendering.
+folder hierarchy, and not-found page. Preserve screen viewport/color selection
+and page rendering.
 
 Omit All/Changes controls and counts, screen comparison controls, removed-entry
-rows/routes/redirects, comparison JSON, and baseline snapshots/resources. Do not
-resolve Git history, compute changes, read historical manifests, or initialize
-a comparison provider. Publication must succeed from a valid source archive
+rows and previous-version pages, comparison JSON, and baseline
+snapshots/resources. Do not resolve Git history, compute changes, read baseline
+output, or initialize a comparison provider. Publication must succeed from a valid source archive
 without `.git` or a configured base ref.
 
 Pass an explicit publication capability to the capture server and shell so
@@ -87,11 +79,12 @@ for home, missing-route, and removed-entry pages.
 Existing generated comparison directories, including configured review output,
 must stay excluded from public asset copying. Building over a previous export
 with comparisons replaces the complete owned artifact transactionally, removing
-obsolete review files and redirects; never leave them reachable through a
-previous generation or stale asset copy.
+obsolete review files; never leave them reachable through a previous
+generation or stale asset copy.
 
 Both publication options use the consumer exporter's shared output transaction,
-ownership inventory, alias/reference validation, and complete deployment identity.
+deployment identity over non-marker files other than declared publication
+metadata, finalized ownership inventory, and alias/reference validation.
 The destination must retain its captured identity until installation; an unowned
 replacement is preserved, including one introduced during capture. Retain the
 writer reservation, OS-enforced non-replacing moves, and safe backup recovery
@@ -101,8 +94,9 @@ Migration retains valid generated routes beneath names such as `target` and
 `node_modules`, while private/source names remain disallowed. This does not
 make other files under those directories public.
 Its owned reservation namespace remains after cleanup, with no active locks.
-Static id aliases contain real shells; current-only shell metadata explicitly
-sets `comparisonUrl: null` and never requests a development comparison endpoint.
+Each entry's shell is written once at its derived `view/<route>`; current-only
+shell metadata explicitly sets `comparisonUrl: null` and never requests a
+development comparison endpoint.
 
 Use the shared confined file enumeration for input fingerprints, not public
 copying. Resolve each logical path inside the real repository before reading
@@ -129,14 +123,22 @@ inputs, and confined staging/destination paths stay excluded.
 
 ## Consistent Publication Snapshot
 
-Both options begin input capture before loading the current catalogue. Read
-the manifest bytes once and hash those exact bytes together with its inventoried
+Capture one validated in-memory compilation, including generated HTML, CSS,
+opaque assets, manifest and authored closure. No local generated tree is read or
+written. A missing accepted route fails even if disk output contains it.
+The CSS/PostCSS inventory freshness pass and scoped npm URL checks remain required.
+Fingerprint exact generated bytes and authored inputs; include every inventoried
+helper even beneath otherwise excluded `.context` directories. Recompile and
+fingerprint before installation; any input or byte drift aborts capture.
+
+Both options begin input capture before loading the current catalogue. Use
+the compilation's manifest bytes and hash them together with its inventoried
 inputs and public resources. Include inventoried helpers even beneath otherwise
 excluded `.context` directories. Construct one validated catalogue snapshot
 from that captured manifest and use it for the capture server, page capture
-list, resource adaptation, and ID
-redirects. When Changes is enabled, compute its route impact and removed-entry
-metadata from that exact current manifest and the pinned Git baseline. The
+list, and resource adaptation. When Changes is enabled, compute its
+changed-entry impact and removed-entry metadata from that exact current
+manifest and the pinned Git baseline. The
 capture server must not independently reload the manifest.
 
 Exclude the active staging directory and destination from input enumeration by
@@ -149,89 +151,11 @@ Fingerprint again after capturing pages, comparisons, and public resources and
 before installing the staged artifact. A changed fingerprint fails publication
 and preserves the previous artifact. A completed rebuild before the initial
 fingerprint belongs wholly to the new snapshot; a rebuild after it must not
-produce mixed navigation, missing pages, or stale redirects. Default publication
-performs the same filesystem consistency checks without consulting Git.
+produce mixed navigation, missing pages, or stale shell metadata. Default
+publication performs the same filesystem consistency checks without consulting
+Git.
 
-## Explicitly Include Changes
-
-With `--include-changes`, publish the existing All/Changes navigation and screen
-comparison controls, including a zero changed count. Retain removed-screen
-metadata, routes, and comparisons under the existing ID/route precedence rules.
-Render those removed screens with their Removed badge and no comparison
-controls. Publication packages their baseline views and advertises the
-descriptor defined by [removed previews](./mokly-removed-previews.md), which the
-shell resolves into the previous version.
-Include page impact and removed registered-page states from the
-[shared catalogue snapshot](./mokly-catalogue-changes.md), including flat
-Changes rows after deleting their parents and each removed page's packaged
-preview. Pages have no visual comparisons; screen metadata
-remains supported.
-
-Resolve the effective base and HEAD once, then pin their merge-base commit for
-both route impact and screen comparisons. Capture the current catalogue,
-generated documents, and resources consistently for that build; fail if inputs
-change during capture rather than mix revisions. Record the resolved comparison
-baseline with the exported review metadata. The artifact represents the files
-captured at publication time, including any permitted uncommitted input, rather
-than claiming that HEAD alone identifies those bytes.
-
-Package validated comparison data and isolated resources under the existing
-immutable generation path. Browser diff selection loads the packaged result;
-refresh/retry uses that same result. Later Git commits or changes to the base
-ref do not update a published artifact. Only a new publication replaces it.
-After that generation path is known, repository publication uses the consumer
-exporter's typed removed-preview descriptor builder and adds each descriptor to
-the matching captured static shell. This artifact-only step does not advertise
-page paths from the development server used during capture.
-
-An unavailable base, invalid historical manifest, capture inconsistency, or
-comparison failure aborts publication and preserves the previous owned output.
-Do not silently fall back to a catalogue without changes when they were
-explicitly requested. Preserve source protection, snapshot isolation, resource
-confinement, and sandbox restrictions in both options.
-Both options apply the
-[shared source policy](./mokly-source-protection.md), including unimported
-reserved files and complete config/consumer input inventories.
-
-## Workflows And Presentation
-
-The existing `main` preview job uses the default command. The PR preview job
-explicitly passes `--include-changes --base origin/main`, retaining its current
-review purpose and full-history checkout. Deployment aliases, credentials,
-ownership checks, cleanup, and npm publication remain unchanged.
-
-The option is selected at build time. A visitor cannot toggle omitted review
-data on. Local development keeps its existing Git-aware Changes and on-demand
-comparison behavior. Reuse the same shell components, enabling controls from
-the explicit capability rather than an environment label or separate shell.
-Before UI implementation, add mobile and desktop mockups of the current
-catalogue with review omitted and the same catalogue with review included.
-
-## Acceptance
-
-Test default and explicit options through the script and internal boundary,
-including invalid arguments and configured/default/overridden bases. Prove
-default publication performs no Git/review calls and works without history.
-Opt existing comparison tests and PR workflow fixtures in explicitly.
-
-Test archive inputs, removed-entry absence, excluded stale comparison assets,
-review-to-default replacement, rollback, unavailable/advancing bases, input
-changes during capture, and frozen comparisons after publication. Browser tests
-cover controls, persisted preferences, direct links, search/tags, anchors,
-Back/Forward, zero-change review, and no comparison network requests by default
-at mobile and desktop widths. Preserve existing comparison and safety tests.
-Parameterize static-export tests over both options: no live-update entrypoint,
-no EventSource or polling request, and no events endpoint or redirect. Test
-home, current, not-found, and supported removed-entry routes while proving
-normal navigation and opted-in comparison loading still work.
-For both options, reject escaping context, parent, and output symlinks without
-changing the outside target. Prove valid in-repository symlinks in the
-fingerprinted source graph and a symlinked repository root still support
-publication; a selected closure symlink is invalid.
-Test a rebuild immediately before the first input scan and a manifest mutation
-after its initial read. Verify navigation, captured routes, ID redirects, and
-opted-in change metadata agree, and failed capture preserves the previous output.
-Cover safe file/directory aliases in input fingerprints (not public copying),
-target-only edits, private aliases, unrelated outside/dangling/cyclic links,
-and an escaping manifest before any target read. Remove a copied resource during staging to prove validation
-checks exported bytes and preserves the previous artifact.
+Changes-enabled publication continues in
+[Publication Changes And Acceptance](./mokly-publication-changes.md);
+imported CSS capture follows the
+[imported-styles contract](./mokly-imported-styles.md).

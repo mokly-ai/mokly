@@ -42,7 +42,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
         await page.goto(fileUrl(screen.fragments[viewport]));
         await expect(page.locator(".mbk-details-bar")).toHaveCount(0);
         await expect(
-          page.getByRole("group", { name: /^(Viewport|Color scheme)$/ }),
+          page.getByRole("group", {
+            name: /^(Viewport|Preview color scheme)$/,
+          }),
         ).toHaveCount(0);
         if (withoutInspector.has(screen.id)) continue;
         await expect(page.locator(".ce-inspector"), screen.id).toHaveCount(1);
@@ -72,7 +74,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
     test("Browse viewport selection and footer opening stay inside the fixed shell", async ({
       page,
     }) => {
-      await page.goto(fileUrl(`design/browse/views/screen.${viewport}.html`));
+      await page.goto(fileUrl(`screens/design-browse-screen.${viewport}.html`));
       const header = page.locator(".mbk-screen-head");
       const initialHeader = await header.boundingBox();
       const options = page.getByLabel("Preview viewport", { exact: true });
@@ -121,7 +123,7 @@ test("Both keeps full-size phone and desktop previews from overlapping", async (
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto(fileUrl("design/browse/views/screen.desktop.html"));
+  await page.goto(fileUrl("screens/design-browse-screen.desktop.html"));
   const phone = (await page.locator(".phone-frame").boundingBox())!;
   const desktop = (await page.locator(".browser-frame").boundingBox())!;
   expect(
@@ -131,7 +133,7 @@ test("Both keeps full-size phone and desktop previews from overlapping", async (
 
 test("Browse footer resizes through its centered divider", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto(fileUrl("design/browse/views/screen.desktop.html"));
+  await page.goto(fileUrl("screens/design-browse-screen.desktop.html"));
   await page.getByRole("button", { name: "Details", exact: true }).click();
   const panel = page.locator(".ce-inspector");
   const before = (await panel.boundingBox())!;

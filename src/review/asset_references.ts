@@ -1,101 +1,73 @@
 import path from "node:path";
 
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 import {
   extractCssReferences,
   extractHtmlReferences,
-  resolveLocalReferencePath,
   type HtmlReferenceOptions,
 } from "../html_references.js";
+import { classifyResourceUrl } from "../resource_url.js";
 
 /** Resolve portable local resource references using the snapshot URL rules. */
 export function referencedRoutes(
   sourceRoute: string,
   content: ReviewArtifactContent,
   options?: HtmlReferenceOptions,
-  generated?: { readonly prefix: string; readonly routes: ReadonlySet<string> },
 ): string[] {
   const extension = path.posix.extname(sourceRoute).toLowerCase();
   const text =
     typeof content === "string"
       ? content
       : Buffer.from(content).toString("utf8");
+  const html =
+    extension === ".html" || extension === ".htm"
+      ? extractHtmlReferences(text, options)
+      : undefined;
   const references =
-    extension === ".css"
-      ? extractCssReferences(text)
-      : extension === ".html" || extension === ".htm"
-        ? extractHtmlReferences(text, options).resources
-        : [];
+    extension === ".css" ? extractCssReferences(text) : (html?.resources ?? []);
   return [
     ...new Set(
       references.flatMap((reference) => {
-        const source = generated?.routes.has(sourceRoute)
-          ? path.posix.join(generated.prefix, sourceRoute)
-          : sourceRoute;
-        const resolved = resolveReference(source, reference);
-        if (
-          resolved &&
-          generated &&
-          resolved.startsWith(`${generated.prefix}/`)
-        ) {
-          const route = resolved.slice(generated.prefix.length + 1);
-          if (!generated.routes.has(route))
-            throw assetError(
-              sourceRoute,
-              `referenced generated document is missing: ${reference}`,
-            );
-          return [route];
-        }
+        const resolved = resolveReference(sourceRoute, reference);
         return resolved ? [resolved] : [];
       }),
     ),
   ].sort();
 }
 
-export function resolveReference(
+function resolveReference(
   sourceRoute: string,
   rawReference: string,
 ): string | undefined {
   const reference = rawReference.trim();
-  if (reference.startsWith("//")) {
+  const classification = classifyResourceUrl(
+    reference,
+    sourceRoute.endsWith(".css") ? "css" : "html",
+  );
+  if (classification.kind === "external" || reference.startsWith("#")) return;
+  if (classification.kind === "invalid") {
     throw assetError(
       sourceRoute,
-      `non-portable asset URL ${reference} (protocol-relative)`,
+      `non-portable asset URL ${reference} (${classification.reason})`,
     );
   }
-  if (reference.startsWith("/")) {
-    throw assetError(
-      sourceRoute,
-      `non-portable asset URL ${reference} (root-absolute)`,
-    );
+  const encodedPath = reference.split(/[?#]/, 1)[0] ?? "";
+  let decodedPath: string;
+  try {
+    decodedPath = decodeURIComponent(encodedPath);
+  } catch (error) {
+    throw assetError(sourceRoute, `invalid asset URL ${reference}`, error);
   }
-  if (
-    reference === "" ||
-    reference.startsWith("#") ||
-    /^(?:https?:|data:)/i.test(reference)
-  ) {
-    return undefined;
-  }
-  if (/^[a-z][a-z0-9+.-]*:/i.test(reference)) {
-    throw assetError(
-      sourceRoute,
-      `non-portable asset URL ${reference} (unsupported scheme)`,
-    );
-  }
-  const resolved = resolveLocalReferencePath(sourceRoute, reference);
-  if (resolved.kind === "invalid-encoding")
-    throw assetError(sourceRoute, `invalid asset URL ${reference}`);
-  if (resolved.kind === "root-absolute")
-    throw assetError(
-      sourceRoute,
-      `non-portable asset URL ${reference} (root-absolute)`,
-    );
-  if (resolved.kind !== "resolved") {
+  const resolved = path.posix.normalize(
+    path.posix.join(path.posix.dirname(sourceRoute), decodedPath),
+  );
+  if (!isSafeRepositoryPath(resolved)) {
     throw assetError(sourceRoute, `asset URL escapes mockupsDir: ${reference}`);
   }
-  return resolved.path;
+  return resolved;
 }
 
 function assetError(

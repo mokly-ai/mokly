@@ -12,14 +12,14 @@ import {
   baselineManifest,
 } from "./helpers/baseline_fixture.js";
 
-test("a former Mokabook manifest remains valid rebuilt history", async () => {
+test("an earlier rebuilt sentinel is rejected without harvesting output", async () => {
   const fixture = baselineFixture();
   const run = fixture.runner.run;
   fixture.runner.run = async (command) => {
     const result = await run(command);
     if (command.argv[0] !== "git") {
       await fixture.fs.remove(
-        path.join(command.cwd, "mockups/mokly-manifest.json"),
+        path.join(command.cwd, "mockups/mokly-generated/mokly-manifest.json"),
       );
       await fixture.fs.write(
         path.join(command.cwd, "mockups/mokabook-manifest.json"),
@@ -30,18 +30,25 @@ test("a former Mokabook manifest remains valid rebuilt history", async () => {
     }
     return result;
   };
-  const result = await fixture.builder.build(fixture.request);
-  assert.equal(result.marker.manifestVersion, 5);
+  await assert.rejects(fixture.builder.build(fixture.request), {
+    code: "baseline-incompatible-earlier",
+  });
+  assert.equal(
+    await fixture.fs.stat(
+      cacheLayout(fixture.request.repoRoot, fixture.request.commit).marker,
+    ),
+    undefined,
+  );
 });
 
-test("legacy rebuilt manifests retain version 2 and require explicit compatibility", async () => {
+test("the oldest rebuilt sentinel is rejected without parsing its contents", async () => {
   const fixture = baselineFixture();
   const run = fixture.runner.run;
   fixture.runner.run = async (command) => {
     const result = await run(command);
     if (command.argv[0] !== "git") {
       await fixture.fs.remove(
-        path.join(command.cwd, "mockups/mokly-manifest.json"),
+        path.join(command.cwd, "mockups/mokly-generated/mokly-manifest.json"),
       );
       await fixture.fs.write(
         path.join(command.cwd, "mockups/mockbook-manifest.json"),
@@ -50,24 +57,24 @@ test("legacy rebuilt manifests retain version 2 and require explicit compatibili
             schemaVersion: 2,
             generatedBy: "mockbook",
             entries: [],
-            legacyPages: [],
           }),
         ),
       );
     }
     return result;
   };
-  const request = { ...fixture.request, allowManifestV2: true };
-  const result = await fixture.builder.build(request);
-  assert.equal(result.marker.manifestVersion, 2);
-  assert.equal((await fixture.builder.build(request)).cacheHit, true);
-  await assert.rejects(
-    fixture.builder.build({ ...fixture.request, commit: "b".repeat(40) }),
-    { code: "baseline-output-invalid" },
+  await assert.rejects(fixture.builder.build(fixture.request), {
+    code: "baseline-incompatible-earlier",
+  });
+  assert.equal(
+    await fixture.fs.stat(
+      cacheLayout(fixture.request.repoRoot, fixture.request.commit).marker,
+    ),
+    undefined,
   );
 });
 
-test("invalid cache markers are partial entries and cannot hide corrupt manifests", async () => {
+test("corrupt completed cache data fails intact with an explicit diagnostic", async () => {
   const { builder, request, fs } = baselineFixture();
   const result = await builder.build(request);
   assert.equal(
@@ -88,14 +95,21 @@ test("invalid cache markers are partial entries and cannot hide corrupt manifest
     ),
     undefined,
   );
-  const manifest = path.join(result.outputDir, "mokly-manifest.json");
+  const manifest = path.join(
+    result.outputDir,
+    "mockups/mokly-generated/mokly-manifest.json",
+  );
   fs.put(manifest, "regular", Buffer.from("{}"));
-  assert.equal((await builder.build(request)).cacheHit, false);
+  await assert.rejects(builder.build(request), {
+    code: "baseline-output-invalid",
+  });
   const layout = cacheLayout(request.repoRoot, request.commit);
   fs.put(
     layout.marker,
     "regular",
     Buffer.from(JSON.stringify({ ...result.marker, commit: "b".repeat(40) })),
   );
-  assert.equal((await builder.build(request)).cacheHit, false);
+  await assert.rejects(builder.build(request), {
+    code: "baseline-output-invalid",
+  });
 });

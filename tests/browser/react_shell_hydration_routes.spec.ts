@@ -4,6 +4,7 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 
 import { parseManifest } from "../../dist/registry/manifest.js";
+import { entryRoute } from "../../packages/viewer/dist/data.js";
 
 import {
   buildDevelopmentBundle,
@@ -21,11 +22,7 @@ const manifest = parseManifest(
   ),
 );
 const fixtureRoutes = [
-  ...new Set(
-    manifest.entries.flatMap((entry) =>
-      entry.kind === "collection" ? [] : [entry.route],
-    ),
-  ),
+  ...new Set(manifest.entries.map((entry) => entryRoute(entry.kind, entry.id))),
 ];
 expect(fixtureRoutes.length).toBeGreaterThan(80);
 
@@ -48,11 +45,10 @@ for (const route of fixtureRoutes) {
   });
 }
 
-for (const route of [
-  "/",
-  "/view/not-in-catalogue.html",
-  "/id/example-welcome",
-]) {
+for (const [route, expectedStatus] of [
+  ["/", 200],
+  ["/view/not-in-catalogue.html", 200],
+] as const) {
   test(`development React hydrates shell route ${route}`, async ({ page }) => {
     const errors = captureBrowserErrors(page);
     await installDevelopmentBundle(page, developmentBundle);
@@ -64,7 +60,7 @@ for (const route of [
       });
     }
     const response = await page.goto(route);
-    expect(response?.status(), route).toBe(200);
+    expect(response?.status(), route).toBe(expectedStatus);
     await expectCleanHydration(page, errors, route);
   });
 }

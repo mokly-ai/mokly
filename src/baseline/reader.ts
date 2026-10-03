@@ -26,7 +26,7 @@ export class RebuiltBaselineReader implements BaselineReader {
     readonly catalogue: BaselineCatalogue = baselineCatalogue(
       commit,
       mockupsPath || ".",
-      "legacy",
+      "generated-v8",
     ),
   ) {}
 
@@ -163,14 +163,7 @@ export class RebuiltBaselineReader implements BaselineReader {
         "baseline-output-invalid",
         `Path or commit is outside the prepared baseline: ${repoPath}`,
       );
-    return this.catalogue.layout === "generated-v6"
-      ? path.join(this.outputDir, repoPath)
-      : path.join(
-          this.outputDir,
-          this.catalogue.catalogueRoot === "."
-            ? repoPath
-            : repoPath.slice(this.catalogue.catalogueRoot.length + 1),
-        );
+    return path.join(this.outputDir, repoPath);
   }
 }
 

@@ -12,7 +12,12 @@ import resolves within that complete inventory.
 
 `host_capability_descriptor.ts` validates the private live Serve bootstrap and
 source identity. `host_capabilities.ts` defines the behavior context, atomic
-public/private evidence revision and route/source cancellation scope. Both are
+public/private evidence revision and route/source cancellation scope. Route and
+live evidence use the one strict live reader, which accepts only the exact
+scope derived from the page route. The accepted catalogue and optional complete
+private workspace replace the installed scoped model together, so usage from
+visited routes never accumulates. A rejected current route read is reported to the
+shell as failed Usage; obsolete or aborted reads stay inert. Both modules are
 kept protocol modules; static export omits their standalone browser outputs.
 
 Disclosure capture and pre-hydration navigation width capture are owned directly
@@ -22,6 +27,18 @@ its initial hydration render. Interactive navigation resizing starts after
 hydration. Load or page exit cleans up capture state, and unfiltered choices use
 the existing durable preference. The standalone build continues to deliver
 this entry as `navigation-resize.js`.
+
+Standalone appearance is also owned under `src/standalone`, not by a second
+client interaction runtime. The classic `appearance-startup.js` bundle restores
+the document mark, preference and system listener before styles paint, updates
+parsed frames and the native selector, and exposes a narrow refresh handoff.
+The browser entry refreshes that controller before hydration; the React bridge
+then adopts its effective document scheme while the shell store independently
+selects an available preview scheme. The selector stays hidden if the classic
+host is absent. Persisted page exits keep the controller for back-forward-cache
+restoration and refresh it on return; final exits dispose it and its lifecycle
+listeners. The complete build-output manifest delivers both the classic bundle
+and `react-shell.js`.
 
 `frame_adapter.ts` defines the transport-independent mount, boundary, highlight,
 scroll and event interfaces in the [frame contract](../../../../docs/protocol/mokly-frame-adapter.md).
@@ -34,7 +51,8 @@ scroll restoration and authenticated temporary control previews. Direct frame
 document/window access lives in the local transport, rather than workspace,
 Browse state, or controls. `component_geometry.ts` retains its existing geometry
 entrypoints and shares containing-block-aware clipping with the inspector in
-`inspector/clipping.ts`; `same_origin_highlight.ts` owns the unchanged
+[`../inspector/clipping.ts`](../inspector/clipping.ts);
+`same_origin_highlight.ts` owns the unchanged
 mask, labels, selection and observer lifecycle.
 
 `same_origin_identity.ts` is the single document-authentication boundary for
@@ -47,15 +65,32 @@ on the first same-origin mount. A later mount excludes its exact unrecorded
 starting object even when its URL equals the assignment, so an unowned document
 reached through native frame navigation keeps portable link behavior until a
 different replacement object authenticates.
+Once hydrated, adapters exclusively navigate live previews with history
+replacement. The server's initial `src` may therefore remain unchanged after a
+scheme swap. `same_origin_load.ts` decides reuse, waiting, or replacement from
+document ownership and the last assigned resource before considering readiness.
+A new resource assignment cancels any superseded navigation, even if the
+still-visible document already matches the latest choice. Rejected starting
+documents are replaced while loading or interactive as well as after completion;
+slow resources must not strand a scheme switch or reconnect. Only the first
+mount may wait for a startup-assigned recorded fragment already loading.
+An authenticated matching document can reconnect without reloading and waits
+for completion before inspection becomes ready. Matching URLs alone do not
+authorize reuse.
 
 Frames holding a previous version carry `data-mokly-preview-frame` and
-`data-mokly-preview-source`. They are owned directly by the
-[React preview controller](../previews/README.md), not a frame adapter, so no
-inspector or logical-navigation handshake happens for historical documents.
-The controller fetches each historical document and presents it as a
-viewer-origin, script-disabled `srcdoc`; its parent guard therefore cancels
-every link and form in every host, owns same-document anchor scrolling, and
-restores the accepted presentation if the frame navigates.
+`data-mokly-preview-source`; comparison pane frames carry
+`data-mokly-comparison-frame`, `data-mokly-preview-source` and
+`scrolling="no"`. Both are owned directly by React controllers, the
+[preview controller](../previews/README.md) and the comparison pane modules in
+[the shell](../shell/README.md), not a frame adapter, so no inspector or
+logical-navigation handshake happens for them. Each controller fetches every
+snapshot document and presents it as a viewer-origin, script-disabled
+`srcdoc`; its parent guard therefore cancels every link and form in every host,
+owns same-document anchors, and restores the accepted presentation if the frame
+navigates. Comparison pages are driven by their chrome viewports, while paired
+inner regions, keys, and anchors follow the
+[comparison scrolling contract](../../../../docs/protocol/mokly-comparison-scrolling.md).
 
 `post_message_adapter.ts` explicitly opts into a separate HTTP(S) origin. It sets
 the cross-origin sandbox, replaces iframe history, and negotiates a fresh random
@@ -63,10 +98,14 @@ nonce after load. `message_transport.ts` owns the five-second request timeouts,
 16-request bound and response matching. A replacement or disposal invalidates
 the session and all pending work. Subscriptions share one remote event set;
 removing the final subscriber sends an empty replacement set.
-`frame_usage.ts` shares the automatic event capability rule: only validated ready
-usage enables pointer inspection and geometry events; other usage retains only
-navigation. Both built-in mounts accept `updateUsage` to refresh this capability
-without replacing their document/session. The update clears old inspection
+`stage_sources.ts` normalizes bootstrap-only omitted usage to the same pending
+frame state as a view awaiting evidence before it reaches an adapter, so it
+shows the existing waiting copy rather than empty or unavailable inspection.
+`frame_usage.ts` shares the automatic event capability rule: only validated
+ready usage enables pointer inspection and geometry events; other usage retains
+only navigation. Both built-in mounts accept
+`updateUsage` to refresh this capability without replacing their
+document/session. The update clears old inspection
 presentation and preserves navigation subscribers; no inspector wire change is
 needed. Viewer frame updates use it when the document identity is unchanged.
 The viewer inspection owner restores valid presentation after adoption, retains
@@ -84,10 +123,10 @@ existing route/new-context handling. Events contain logical identities and
 activation metadata, never consumer URLs. The transport does not open windows.
 Local Serve/export do not select this adapter or expose a pick control.
 
-Standalone saved variants use shell history. Embedded viewers propose public
-selection through the host boundary, and apply a variant only after controlled
-or uncontrolled selection commits. This avoids a second private variant state
-or direct history write inside embedded viewers.
+Standalone component variant entries use shell history. Embedded viewers
+propose public selection through the host boundary, and apply a variant only
+after controlled or uncontrolled selection commits. This avoids a second
+private variant state or direct history write inside embedded viewers.
 
 ```bash
 npm run build
@@ -97,5 +136,6 @@ npx playwright test tests/browser/frame_adapter.spec.ts tests/browser/frame_adap
 
 Related boundaries: [inspector](../inspector/README.md),
 [Browse document adaptation](../../../../src/browse/README.md),
-[logical navigation](../../../../docs/protocol/mokly-navigation.md), and
+[logical navigation](../../../../docs/protocol/mokly-navigation.md),
+[standalone bootstrap](../../../../docs/protocol/mokly-shell-bootstrap.md), and
 [implementation plans](../../../../plans/README.md).

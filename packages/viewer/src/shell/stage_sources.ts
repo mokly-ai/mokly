@@ -4,12 +4,18 @@ import {
   currentDocumentPath,
   type GeneratedPathPrefix,
 } from "../catalogue/delivery_paths.js";
-import type { CatalogueUsage, CatalogueView } from "../catalogue/types.js";
+import type {
+  ShellCatalogueUsage,
+  ShellCatalogueView,
+} from "../catalogue/scoped_types.js";
+import type { CatalogueUsage } from "../catalogue/types.js";
 import type { ComponentViewRecord } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
 import { encodeUrlPath } from "../data/paths.js";
+import { viewRoute } from "../navigation/routes.js";
 
 export const unavailableUsage: CatalogueUsage = { status: "unavailable" };
+const pendingUsage: CatalogueUsage = { status: "pending" };
 const generatedUsages = new WeakMap<ComponentViewRecord, CatalogueUsage>();
 
 export function framePath(path: string, fragment?: string): string {
@@ -18,15 +24,26 @@ export function framePath(path: string, fragment?: string): string {
 }
 
 export function frameSource(
-  view: CatalogueView | undefined,
+  entry: { id: string; kind: "component" | "screen" },
+  view: ShellCatalogueView | undefined,
   fragment?: string,
   stepIndex?: number,
 ): string | undefined {
-  if (!view?.fragmentPath) return;
+  if (!view) return;
   return framePath(
-    view.fragmentPath,
+    currentDocumentPath(
+      viewRoute(entry.kind, entry.id, view.viewport, view.colorScheme),
+    ),
     stepIndex === undefined || stepIndex === 0 ? fragment : undefined,
   );
+}
+
+/** Normalize bootstrap-only omission to the frame's existing pending state. */
+export function shellFrameUsage(
+  usage: ShellCatalogueUsage | undefined,
+): CatalogueUsage {
+  if (!usage) return unavailableUsage;
+  return usage.status === "omitted" ? pendingUsage : usage;
 }
 
 export function generatedView(

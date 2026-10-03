@@ -13,7 +13,10 @@ interface InspectionProbe {
   hold?: Operation;
   waiting: boolean;
   release: (fail: boolean) => void;
+  /** Deliver an event to the mobile viewer session as its preview would. */
   emit: (event: FrameEvent) => void;
+  /** Geometry reports the previews sent, which the viewer never receives. */
+  withheldGeometry: number;
   calls: { viewport: string; operation: string }[];
   outcome?: string;
   instance: InstanceRef;
@@ -52,6 +55,7 @@ export async function startInspection(
         waiting: false,
         release: () => {},
         emit: () => {},
+        withheldGeometry: 0,
         calls: [],
         instance: {
           screenId: "home",
@@ -64,10 +68,26 @@ export async function startInspection(
       window.inspectionProbe = probe;
       const original = host.props.frameAdapter!;
       host.props.catalogue = catalogue;
+      /**
+       * Pass a preview event on unless it is the preview's own geometry. The
+       * viewer receives events through the mount-time `onEvent` and then
+       * adopts it by subscribing that same callback, so the filtered `onEvent`
+       * must also be the callback the adapter sees adopted.
+       */
+      const withoutGeometry =
+        (listener: (event: FrameEvent) => void) => (event: FrameEvent) => {
+          if (event.type === "geometry") probe.withheldGeometry += 1;
+          else listener(event);
+        };
       host.props.frameAdapter = {
         async mount(frame, options) {
-          const mounted = await original.mount(frame, options);
           const viewport = frame.dataset["workspaceFrame"]!;
+          const receiver = options.onEvent;
+          const onEvent = receiver && withoutGeometry(receiver);
+          const mounted = await original.mount(
+            frame,
+            onEvent ? { ...options, onEvent } : options,
+          );
           const hold = async () => {
             probe.waiting = true;
             await new Promise<void>((resolve, reject) => {
@@ -104,9 +124,11 @@ export async function startInspection(
             },
             subscribe(listener) {
               if (viewport === "mobile") probe.emit = listener;
-              return mounted.subscribe((event) => {
-                if (event.type !== "geometry") listener(event);
-              });
+              return mounted.subscribe(
+                onEvent && listener === receiver
+                  ? onEvent
+                  : withoutGeometry(listener),
+              );
             },
           };
         },

@@ -148,6 +148,12 @@ test("build and untracked check work outside a Git repository", async (t) => {
     path.join(repositoryRoot, "node_modules"),
     path.join(root, "node_modules"),
   );
+  const ceiling = process.env["GIT_CEILING_DIRECTORIES"];
+  process.env["GIT_CEILING_DIRECTORIES"] = path.dirname(root);
+  t.after(() => {
+    if (ceiling === undefined) delete process.env["GIT_CEILING_DIRECTORIES"];
+    else process.env["GIT_CEILING_DIRECTORIES"] = ceiling;
+  });
   const config = await loadConfig(root);
   await assert.rejects(
     () => new ConfiguredGitCommandRunner(config).requireTopLevel(),

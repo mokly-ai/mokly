@@ -7,6 +7,7 @@ import type {
   GeneratedComponentView,
   RenderCapability,
 } from "@mokly/viewer/data";
+import { generatedResourcePath } from "@mokly/viewer/data";
 import { localFramePath } from "@mokly/viewer/runtime";
 import type { WorkspaceData } from "@mokly/viewer/server";
 
@@ -48,7 +49,7 @@ export async function requestComponentPreview(
     !/^[a-f0-9]{48}\.[a-f0-9]{64}$/.test(result.renderId) ||
     result.generation !== capability.generation ||
     result.previewUrl !==
-      `/__mokly/components/renders/${result.renderId}/${view.path.split("/").map(encodeURIComponent).join("/")}` ||
+      `/__mokly/components/renders/${result.renderId}/${generatedResourcePath(view.path).split("/").map(encodeURIComponent).join("/")}` ||
     result.view?.viewport !== view.viewport ||
     result.view.colorScheme !== view.colorScheme ||
     !Array.isArray(result.view.instances) ||

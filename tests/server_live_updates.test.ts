@@ -1,10 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { readCatalogue } from "@mokly/viewer";
+
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import { startCatalogueServer } from "../dist/server/http.js";
+import {
+  readViewerCapabilityDescriptor,
+  serializeViewerCapabilityDescriptor,
+} from "../packages/viewer/dist/client/host_capability_descriptor.js";
+import {
+  readScopedShellBootstrap,
+  serializeShellBootstrap,
+} from "../packages/viewer/dist/runtime.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
@@ -35,6 +45,22 @@ test("every served document loads the hydrated live host", async (context) => {
     /data-mokly-host-capability-state="" type="application\/json">([^<]+)<\/script>/,
   )?.[1];
   assert.ok(capabilityState);
+  const bootstrapState = reactDocument.match(
+    /data-mokly-shell-bootstrap="" type="application\/json">([^<]+)<\/script>/,
+  )?.[1];
+  assert.ok(bootstrapState);
+  assert.equal(
+    serializeShellBootstrap(
+      readScopedShellBootstrap(JSON.parse(bootstrapState)),
+    ),
+    bootstrapState,
+  );
+  assert.equal(
+    serializeViewerCapabilityDescriptor(
+      readViewerCapabilityDescriptor(JSON.parse(capabilityState)),
+    ),
+    capabilityState,
+  );
   const capability = JSON.parse(capabilityState) as {
     workspace: Record<string, unknown> & {
       affected: unknown[];
@@ -67,14 +93,25 @@ test("every served document loads the hydrated live host", async (context) => {
     (await fetch(`${server.url}/__mokly/client/react-shell.js`)).status,
     200,
   );
+  const appearance = await fetch(
+    `${server.url}/__mokly/client/appearance-startup.js`,
+  );
+  assert.equal(appearance.status, 200);
+  assert.match(await appearance.text(), /mokly:theme/);
   assert.equal(
     (await fetch(`${server.url}/__mokly/client/react-host.js`)).status,
     200,
   );
-  assert.match(
-    await (await fetch(`${server.url}/__mokly/client/react-host.js`)).text(),
-    /\.\/react-shell\.js/,
-  );
+  const liveHost = await (
+    await fetch(`${server.url}/__mokly/client/react-host.js`)
+  ).text();
+  assert.match(liveHost, /\.\/react-shell\.js/);
+  assert.doesNotMatch(liveHost, /hydrateRoot/);
+  const publicCatalogue = await (
+    await fetch(`${server.url}/__mokly/catalogue.json`)
+  ).json();
+  assert.doesNotThrow(() => readCatalogue(publicCatalogue));
+  assert.doesNotMatch(JSON.stringify(publicCatalogue), /"status":"omitted"/);
   assert.equal(
     (await fetch(`${server.url}/__mokly/client/unknown.js`)).status,
     404,

@@ -3,6 +3,7 @@ import http, { type ServerResponse } from "node:http";
 import { createCatalogue } from "@mokly/viewer/server";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
+import type { GeneratedFile } from "../build/generated_file.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
@@ -16,12 +17,12 @@ import {
   loadBrowserNavigationModules,
   loadShellFontAssets,
 } from "./client_modules.js";
-import { ComponentChangeCache } from "./component_changes.js";
+import { ComponentChangeCache } from "./component_change_cache.js";
 import { ComponentRenderService } from "./controls/service.js";
 import { ForegroundActivity } from "./demand/activity.js";
 import { DocumentService } from "./demand/service.js";
-import { createHttpRequestListener } from "./http_request.js";
-import { handleCatalogueRequest } from "./http_routes.js";
+import { acceptedGeneratedStatic } from "./generated_static.js";
+import { catalogueRequestHandler } from "./http_request_handler.js";
 import { closeCatalogueHttp } from "./http_shutdown.js";
 import { initialHttpSnapshot } from "./http_snapshot.js";
 import type { RunningServer, ServerOptions } from "./http_types.js";
@@ -49,11 +50,10 @@ export async function startCatalogueServer(
   let assetClosure: ReadonlySet<string> = new Set(
     "assetClosure" in manifest ? manifest.assetClosure : [],
   );
-  let generatedOutputs =
+  let acceptedGenerated: ReadonlyMap<string, GeneratedFile> =
     options.generatedOutputs ??
-    (options.componentRuntime?.manifest.schemaVersion === 6
-      ? new Map(options.componentRuntime.outputs)
-      : undefined);
+    snapshot.outputs ??
+    acceptedGeneratedStatic(options.componentRuntime);
   let controls = options.componentRuntime
     ? new ComponentRenderService(options.componentRuntime)
     : undefined;
@@ -62,6 +62,11 @@ export async function startCatalogueServer(
     runtime.manifest.schemaVersion === "live-index-1"
       ? new DocumentService(runtime, activity.channel(), {
           onDocument: (document) => {
+            if (document.assetClosure)
+              assetClosure = new Set([
+                ...assetClosure,
+                ...document.assetClosure,
+              ]);
             if (runtime.generation === controls?.capability().generation)
               publicCatalogue.acceptDocument(
                 document,
@@ -117,13 +122,11 @@ export async function startCatalogueServer(
   let activeCatalogue = componentChanges
     ? catalogueAtBaseline(manifest, componentChanges.baseline)
     : catalogue;
-  let changedRoutes =
-    changes?.changedRoutes ??
-    options.changedRoutes ??
-    componentChanges?.changedRoutes;
+  let changedIds =
+    changes?.changedIds ?? options.changedIds ?? componentChanges?.changedIds;
   let changesStatus: ChangesStatus =
     options.changesStatus ??
-    (changedRoutes || componentChanges ? "ready" : "unavailable");
+    (changedIds || componentChanges ? "ready" : "unavailable");
   let updateVersion = options.updateVersion ?? 1;
   let contentVersion = updateVersion;
   let publicComparison: PublicComparison | undefined;
@@ -135,7 +138,8 @@ export async function startCatalogueServer(
     options.liveChanges === false &&
     !options.review &&
     routes === undefined &&
-    !hasEvidence
+    !hasEvidence &&
+    options.changesStatus !== "unavailable"
       ? ("disabled" as const)
       : status;
   const publicInput = (
@@ -144,11 +148,11 @@ export async function startCatalogueServer(
     livePublicInput(
       activeCatalogue,
       publicChangesStatus(
-        changedRoutes,
+        changedIds,
         componentChanges !== undefined,
         changesStatus,
       ),
-      changedRoutes,
+      changedIds,
       componentChanges,
       comparison,
     );
@@ -158,35 +162,24 @@ export async function startCatalogueServer(
     contentVersion,
   );
   const server = http.createServer(
-    createHttpRequestListener({
+    catalogueRequestHandler({
       activity,
+      activeCatalogue: () => activeCatalogue,
+      assets: { clientModules, fontAssets, navigationModules },
+      acceptedGenerated: () => acceptedGenerated,
+      assetClosure: () => assetClosure,
+      changedIds: () => changedIds,
+      changesStatus: () => changesStatus,
+      componentChanges: () => componentChanges,
+      config,
+      contentVersion: () => contentVersion,
       controls: () => controls,
-      onDiagnostic: options.onDiagnostic,
-      dispatch: (request, response) => {
-        const requestedVersion = updateVersion;
-        const requestedChanges = changedRoutes;
-        return handleCatalogueRequest(
-          request.url ?? "/",
-          request.method ?? "GET",
-          response,
-          activeCatalogue,
-          config,
-          options.base,
-          () => requestedChanges,
-          streams,
-          { clientModules, fontAssets, navigationModules },
-          () => requestedVersion,
-          reviewRoutes,
-          componentChanges,
-          controls?.capability(),
-          documents,
-          options.liveChanges === false ? undefined : changesStatus,
-          contentVersion,
-          publicCatalogue,
-          generatedOutputs,
-          assetClosure,
-        );
-      },
+      documents: () => documents,
+      options,
+      publicCatalogue,
+      reviewRoutes,
+      streams,
+      updateVersion: () => updateVersion,
     }),
   );
   await timeAsync("server.listen", () =>
@@ -227,11 +220,11 @@ export async function startCatalogueServer(
     },
     port: address.port,
     replaceComponentRuntime(runtime): void {
+      acceptedGenerated = acceptedGeneratedStatic(runtime);
       publicCatalogue.clearUsage();
-      generatedOutputs =
-        runtime.manifest.schemaVersion === 6
-          ? new Map(runtime.outputs)
-          : undefined;
+      assetClosure = new Set(
+        "assetClosure" in runtime.manifest ? runtime.manifest.assetClosure : [],
+      );
       void documents?.close();
       documents = createDocuments(runtime);
       if (runtime.manifest.schemaVersion === "live-index-1") {
@@ -248,7 +241,7 @@ export async function startCatalogueServer(
         {
           catalogue,
           activeCatalogue,
-          changedRoutes,
+          changedIds,
           componentChanges,
           changesStatus,
           updateVersion,
@@ -261,11 +254,11 @@ export async function startCatalogueServer(
         livePublicInput(
           next.activeCatalogue,
           publicChangesStatus(
-            next.changedRoutes,
+            next.changedIds,
             next.componentChanges !== undefined,
             next.changesStatus,
           ),
-          next.changedRoutes,
+          next.changedIds,
           next.componentChanges,
           undefined,
         ),
@@ -274,7 +267,7 @@ export async function startCatalogueServer(
       );
       ({
         activeCatalogue,
-        changedRoutes,
+        changedIds,
         componentChanges,
         changesStatus,
         updateVersion,

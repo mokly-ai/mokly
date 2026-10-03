@@ -6,12 +6,17 @@ import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
 import type { Compilation } from "./compile.js";
+import { generatedMatchesBytes, type GeneratedFile } from "./generated_file.js";
+import { validateGeneratedRoot } from "./output_paths.js";
+import { assertSafeGeneratedTree } from "./reserved_tree.js";
 
 /** Compare every generated path and exact byte without following output symlinks. */
 export function checkCompilation(
   compilation: Compilation,
   config: ResolvedConfig,
 ): void {
+  validateGeneratedRoot(config);
+  assertSafeGeneratedTree(config);
   const actual = listGeneratedEntries(config.generatedDir);
   const missing: string[] = [];
   const stale: string[] = [];
@@ -78,7 +83,7 @@ function listGeneratedEntries(root: string): Map<string, "file" | "other"> {
   return entries;
 }
 
-function matchesBytes(candidate: string, expected: string): boolean {
+function matchesBytes(candidate: string, expected: GeneratedFile): boolean {
   try {
     const handle = fs.openSync(
       candidate,
@@ -87,7 +92,7 @@ function matchesBytes(candidate: string, expected: string): boolean {
     try {
       return (
         fs.fstatSync(handle).isFile() &&
-        fs.readFileSync(handle).equals(Buffer.from(expected, "utf8"))
+        generatedMatchesBytes(expected, fs.readFileSync(handle))
       );
     } finally {
       fs.closeSync(handle);

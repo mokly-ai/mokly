@@ -81,7 +81,7 @@ test("CI selects the release runtime profile only for trusted release PRs", asyn
 
 test("selected runtimes drive every functional matrix and Required CI", async () => {
   const workflow = await readWorkflow();
-  for (const name of ["package", "unit", "browser"] as const) {
+  for (const name of ["package", "unit", "browser", "hydration"] as const) {
     const job = workflow.jobs[name];
     assert.ok(job, name);
     assert.equal(job.strategy?.matrix.node, selectedNodeMatrix, name);

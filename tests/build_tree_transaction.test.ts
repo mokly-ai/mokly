@@ -75,7 +75,7 @@ test("build refuses symlinks at and inside the generated tree without following 
   await fs.promises.symlink(config.mockupsDir, config.generatedDir, "dir");
   await assert.rejects(
     () => writeCompilation(compilation, config),
-    /symbolic link/i,
+    /symlink|symbolic link/i,
   );
   assert.equal(await fs.promises.readFile(external, "utf8"), "original");
   await fs.promises.unlink(config.generatedDir);
@@ -86,7 +86,7 @@ test("build refuses symlinks at and inside the generated tree without following 
   );
   await assert.rejects(
     () => writeCompilation(compilation, config),
-    /symbolic link/i,
+    /symlink|symbolic link/i,
   );
   assert.equal(await fs.promises.readFile(external, "utf8"), "original");
 });

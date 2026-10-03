@@ -8,6 +8,8 @@ import type {
 } from "../dist/server/component_changes.js";
 import { WatchClassification } from "../dist/server/watch_classification.js";
 
+import { currentManifest } from "./helpers/current_manifest.js";
+
 test("background classification aborts superseded work and publishes only the latest result", async () => {
   const pending: {
     resolve: (snapshot: ComponentChangeSnapshot) => void;
@@ -26,8 +28,8 @@ test("background classification aborts superseded work and publishes only the la
   const first = snapshot("first");
   const second = snapshot("second");
 
-  classification.schedule(config(), first.baseline, "main");
-  classification.schedule(config(), second.baseline, "main");
+  classification.schedule(config(), manifest(), "main");
+  classification.schedule(config(), manifest(), "main");
   assert.equal(pending[0]?.signal.aborted, true);
   pending[0]?.resolve(first);
   pending[1]?.resolve(second);
@@ -53,7 +55,7 @@ test("closing background classification aborts work and prevents publication", a
   );
   const result = snapshot("closed");
 
-  classification.schedule(config(), result.baseline, "main");
+  classification.schedule(config(), manifest(), "main");
   classification.close();
   resolve(result);
   await settled();
@@ -64,13 +66,22 @@ test("closing background classification aborts work and prevents publication", a
 
 function snapshot(id: string): ComponentChangeSnapshot {
   return {
-    baseline: {
+    baseline: currentManifest({
       entries: [],
       generatedBy: "mokly",
-      legacyPages: [{ route: `${id}.html`, sourcePath: `${id}.html` }],
-      schemaVersion: 3,
-    },
+      schemaVersion: 8,
+      sourceFiles: [`${id}.html`],
+    }),
   };
+}
+
+function manifest() {
+  return currentManifest({
+    entries: [],
+    generatedBy: "mokly" as const,
+    schemaVersion: 8 as const,
+    sourceFiles: [],
+  });
 }
 
 function config(): ResolvedConfig {

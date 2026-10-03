@@ -5,11 +5,12 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { readManifest } from "../dist/registry/manifest.js";
+import { asChangeEvidence } from "../dist/review/change_evidence.js";
 import { CompiledReviewAssetReader } from "../dist/review/head_assets.js";
-import { computeChangedRoutes } from "../dist/server/changed.js";
+import { computeChangedIds } from "../dist/server/changed.js";
 import { classifyChangedContent } from "../dist/server/changed_content.js";
 
-import { changedFixture } from "./helpers/changed_fixture.js";
+import { changedFixture, retainedChanges } from "./helpers/changed_fixture.js";
 import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { validEntrySource } from "./helpers/fixture.js";
 
@@ -31,7 +32,7 @@ for (const reference of ["/root.css", "../notes.md", "missing.css"]) {
       `@import "${reference}";`,
     );
     assert.equal(
-      await computeChangedRoutes(
+      await computeChangedIds(
         fixture.config,
         "HEAD",
         committedReviewRepository(fixture.config),
@@ -64,7 +65,7 @@ for (const replacement of ["outside", "source", "dangling", "directory"]) {
         image,
       );
     assert.equal(
-      await computeChangedRoutes(
+      await computeChangedIds(
         fixture.config,
         "HEAD",
         committedReviewRepository(fixture.config),
@@ -97,7 +98,7 @@ test("Changes validates other resources after finding a changed resource", async
     'p { background: url("/invalid.png"); }',
   );
   assert.equal(
-    await computeChangedRoutes(
+    await computeChangedIds(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -127,7 +128,7 @@ for (const state of ["changed", "added"]) {
     await fs.unlink(path.join(fixture.mockupsDir, "image.svg"));
     await fs.symlink("../notes.md", path.join(fixture.mockupsDir, "image.svg"));
     assert.equal(
-      await computeChangedRoutes(
+      await computeChangedIds(
         fixture.config,
         "HEAD",
         committedReviewRepository(fixture.config),
@@ -155,7 +156,7 @@ test("Changes rejects resources symlinked into source roots inside mockupsDir", 
     path.join(fixture.mockupsDir, "image.svg"),
   );
   assert.equal(
-    await computeChangedRoutes(
+    await computeChangedIds(
       { ...fixture.config, entriesDir },
       "HEAD",
       committedReviewRepository({ ...fixture.config, entriesDir }),
@@ -167,7 +168,7 @@ test("Changes rejects resources symlinked into source roots inside mockupsDir", 
 test("Changes rejects invalid references inside a changed embedded document", async (t) => {
   const source =
     validEntrySource({
-      body: '<iframe src="./embedded.html" title="Embed" />',
+      body: '<iframe src="../pages/embedded.html" title="Embed" />',
     }) +
     '\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ id: "embedded", title: "Embed", description: "Embedded page", route: "screens/embedded.html", dependencies: [], relatedDocs: [], render: () => "<html><body>Valid embedded page</body></html>" }));';
   const fixture = await changedFixture(t, source);
@@ -180,7 +181,7 @@ test("Changes rejects invalid references inside a changed embedded document", as
   );
   await assert.rejects(compileCatalogue(fixture.config), /root-absolute link/);
   assert.equal(
-    await computeChangedRoutes(
+    await computeChangedIds(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -204,7 +205,7 @@ test("a removed resource beneath an escaping symlink is not a valid deletion", a
   await fs.rm(path.join(fixture.mockupsDir, "images"), { recursive: true });
   await fs.symlink("../entries", path.join(fixture.mockupsDir, "images"));
   assert.equal(
-    await computeChangedRoutes(
+    await computeChangedIds(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
@@ -227,13 +228,17 @@ test("Changes rejects deleted directories still referenced by a screen", async (
   );
   await fs.rm(path.join(fixture.mockupsDir, "images"), { recursive: true });
   assert.deepEqual(
-    await computeChangedRoutes(
+    await computeChangedIds(
       fixture.config,
       "HEAD",
       committedReviewRepository(fixture.config),
     ),
     undefined,
   );
+  assert.deepEqual((await retainedChanges(fixture)).changedIds, [
+    "home",
+    "tour",
+  ]);
 });
 
 test("README edits are not public content changes and require no resource traversal", async (t) => {
@@ -261,14 +266,14 @@ test("README edits are not public content changes and require no resource traver
     fixture.config,
     committedReviewRepository(fixture.config).reader,
     "HEAD",
-    ["mockups/README.md"],
+    asChangeEvidence(["mockups/README.md"]),
     new ObservedReader(fixture.config, accepted.outputs),
   );
   assert.deepEqual(result, { changedPaths: [], screens: [] });
   assert.deepEqual(reads.sort(), [
-    "screens/details.desktop.html",
-    "screens/details.mobile.html",
-    "screens/home.desktop.html",
-    "screens/home.mobile.html",
+    "mokly-generated/screens/details.desktop.html",
+    "mokly-generated/screens/details.mobile.html",
+    "mokly-generated/screens/home.desktop.html",
+    "mokly-generated/screens/home.mobile.html",
   ]);
 });

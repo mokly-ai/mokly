@@ -17,6 +17,7 @@ const GUIDE_FILES = [
   "docs/guides/start/build.md",
   "docs/guides/start/serve.md",
   "docs/guides/authoring/config.md",
+  "docs/guides/authoring/styles.md",
   "docs/guides/authoring/screens.md",
   "docs/guides/authoring/components.md",
   "docs/guides/authoring/viewports-and-color-schemes.md",
@@ -96,13 +97,17 @@ export function validatePackageReport(report, name = "@mokly/mokly") {
     "dist/publish/run.js",
     ...GUIDE_FILES,
     "docs/protocol/mokly-upload.md",
+    "docs/protocol/mokly-upload-exchange.md",
+    "docs/protocol/mokly-upload-validation.md",
     "docs/protocol/mokly-export-ownership.md",
-    "docs/protocol/fixtures/export-ownership-v1.json",
+    "docs/protocol/fixtures/export-ownership-v2.json",
+    "docs/protocol/fixtures/upload-plan-v1.json",
     "docs/protocol/mokly-catalogue.md",
-    "docs/protocol/fixtures/catalogue-v1.json",
+    "docs/protocol/fixtures/catalogue-v4.json",
     "dist/catalogue/projection.js",
     "dist/components/definition.js",
     "dist/server/controls/worker.js",
+    "dist/build/styles/postcss_worker.js",
     "dist/browser.manifest.json",
     "docs/protocol/mokly-frame-adapter.md",
     "dist/export/run.js",
@@ -147,7 +152,7 @@ export async function inspectRuntimeLicenses(repositoryRoot) {
   assert.deepEqual(invalid, [], "runtime dependency licenses must be declared");
 }
 
-export function validateViewerReport(report) {
+function validateViewerReport(report) {
   assert.equal(report.name, "@mokly/viewer");
   assert.match(report.version, /^\d+\.\d+\.\d+$/);
   const files = report.files.map((file) => file.path);

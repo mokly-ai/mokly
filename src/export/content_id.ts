@@ -3,10 +3,12 @@ import crypto from "node:crypto";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 /** Stable path/content hashes without locale- or insertion-order dependence. */
-export function contentIdentities(
+function contentIdentities(
   files: ReadonlyMap<string, ReviewArtifactContent>,
+  excluded: ReadonlySet<string> = new Set(),
 ): readonly (readonly [string, string])[] {
   return [...files]
+    .filter(([name]) => !excluded.has(name))
     .sort(comparePaths)
     .map(([name, bytes]) => [
       name,
@@ -24,15 +26,16 @@ export function comparisonContentId(
     .digest("hex");
 }
 
-/** Include alias edges as well as every finalized deployment file. */
+/** Include alias edges and every non-excluded finalized deployment file. */
 export function deploymentContentId(
   files: ReadonlyMap<string, ReviewArtifactContent>,
   aliases: ReadonlyMap<string, string>,
+  excluded: ReadonlySet<string> = new Set(),
 ): string {
   const edges = [...aliases].sort(comparePaths);
   return crypto
     .createHash("sha256")
-    .update(JSON.stringify([contentIdentities(files), edges]))
+    .update(JSON.stringify([contentIdentities(files, excluded), edges]))
     .digest("hex");
 }
 

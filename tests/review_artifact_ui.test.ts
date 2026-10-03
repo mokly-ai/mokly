@@ -15,13 +15,14 @@ const result: ReviewResult = {
   baseRef: "origin/main",
   changedPaths: [],
   ignoredImpact: [],
-  schemaVersion: 2,
+  schemaVersion: 4,
   sharedImpact: ["styles.css"],
   screens: [
     {
+      after: { id: "home", title: "Home" },
+      before: { id: "home", title: "Home" },
       dependencies: [],
       id: "home",
-      route: "screens/home.html",
       title: "Home",
       state: "unchanged",
       sharedImpact: ["styles.css"],
@@ -31,27 +32,28 @@ const result: ReviewResult = {
           viewport: "mobile",
           state: "unchanged",
           ignoredIds: [],
-          beforePath: "snapshots/base/home.html",
-          afterPath: "snapshots/head/home.html",
         },
       ],
     },
   ],
+  components: [],
+  changes: [],
+  affectedConsumers: [],
 };
 
 test("component summary titles are literal single-line Markdown", () => {
   const summary = summaryMarkdown({
     ...result,
-    schemaVersion: 3,
+    schemaVersion: 4,
     screens: [],
     components: [],
     affectedConsumers: [],
+    sharedImpact: [],
     changes: [
       {
         kind: "component",
         after: {
           id: "action",
-          route: "components/action.html",
           title:
             "Action\r\n## Approved [link](https://example.com) <b> &amp; `code` *bold*",
         },
@@ -73,30 +75,36 @@ test("component summary titles are literal single-line Markdown", () => {
 
 test("comparison artifacts contain data and snapshots without a separate UI", () => {
   const snapshots = new Map([
-    ["snapshots/base/home.html", "<main>Before</main>"],
-    ["snapshots/head/home.html", "<main>After</main>"],
+    [
+      "snapshots/before/mokly-generated/screens/home.mobile.html",
+      "<main>Before</main>",
+    ],
+    [
+      "snapshots/after/mokly-generated/screens/home.mobile.html",
+      "<main>After</main>",
+    ],
   ]);
   const files = renderReviewArtifact({ files: snapshots, result });
   assert.deepEqual(JSON.parse(String(files.get("review.json"))), result);
   assert.equal(
-    files.get("snapshots/base/home.html"),
-    snapshots.get("snapshots/base/home.html"),
+    files.get("snapshots/before/mokly-generated/screens/home.mobile.html"),
+    snapshots.get("snapshots/before/mokly-generated/screens/home.mobile.html"),
   );
   assert.deepEqual([...files.keys()].sort(), [
     ".mokly-review-artifact",
     "review.json",
-    "snapshots/base/home.html",
-    "snapshots/head/home.html",
+    "snapshots/after/mokly-generated/screens/home.mobile.html",
+    "snapshots/before/mokly-generated/screens/home.mobile.html",
     "summary.md",
   ]);
-  assert.match(String(files.get("summary.md")), /impact-only: 1/);
+  assert.match(String(files.get("summary.md")), /Changes: 0/);
 });
 
 test("empty comparisons still return a valid result", () => {
   const empty = { ...result, screens: [], sharedImpact: [] };
   const files = renderReviewArtifact({ files: new Map(), result: empty });
   assert.deepEqual(JSON.parse(String(files.get("review.json"))), empty);
-  assert.match(String(files.get("summary.md")), /Screens: 0/);
+  assert.match(String(files.get("summary.md")), /Changes: 0/);
 });
 
 for (const [state, outputChanges, impactOnly] of [

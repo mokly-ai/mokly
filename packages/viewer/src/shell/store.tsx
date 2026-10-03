@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { GENERATED_DIRECTORY } from "../catalogue/delivery_paths.js";
 import type { FrameAdapter } from "../client/frame_adapter.js";
 import { DisplaySelection } from "../viewer/display_context.js";
+import type { ViewerSelection } from "../viewer/types.js";
 
 import { ViewerLiveBoundary } from "./capability_context.js";
 import { useViewerCapabilityStore } from "./capability_store.js";
@@ -18,6 +19,7 @@ import type { ShellContext } from "./context.js";
 import { ShellFrameEventRouter } from "./frame_event_router.js";
 import { ShellFrameRegistryProvider } from "./frame_registry.js";
 import { catalogueNavSections } from "./nav_model.js";
+import { routeScreenId, type ShellRoute } from "./routes.js";
 import { shellRecoverySnapshot, shellStore } from "./store_actions.js";
 import { useShellBrowser } from "./store_browser.js";
 import { ShellStoreBoundary, type ShellStore } from "./store_context.js";
@@ -31,6 +33,7 @@ import type {
   ShellState,
 } from "./store_state.js";
 import type { ShellView } from "./views.js";
+import { WorkspaceProvider } from "./workspace_context.js";
 
 interface ShellStoreProviderProps {
   catalogue: Catalogue;
@@ -116,15 +119,7 @@ export function ShellStoreProvider({
         ...initialState,
         recovery,
       });
-      const selection = {
-        ...restored.selection,
-        screenId:
-          current.route.view.kind === "target"
-            ? current.route.view.target.entry.id
-            : null,
-      };
-      if (current.route.variant) selection.variantId = current.route.variant;
-      else delete selection.variantId;
+      const selection = selectionForRoute(restored.selection, current.route);
       return { ...restored, route: current.route, selection };
     });
   }, [
@@ -161,7 +156,7 @@ export function ShellStoreProvider({
         >
           <ShellFrameRegistryProvider
             {...(activeCatalogue.publicModel?.generatedPathPrefix ||
-            activeCatalogue.manifest.schemaVersion === 6 ||
+            activeCatalogue.manifest.schemaVersion === 8 ||
             activeCatalogue.manifest.schemaVersion === "live-index-1"
               ? { generatedPathPrefix: GENERATED_DIRECTORY }
               : {})}
@@ -170,7 +165,9 @@ export function ShellStoreProvider({
           >
             <DisplaySelection.Provider value={state.selection}>
               <ShellFrameEventRouter />
-              {children}
+              <WorkspaceProvider initial={initialState?.workspace}>
+                {children}
+              </WorkspaceProvider>
             </DisplaySelection.Provider>
           </ShellFrameRegistryProvider>
         </ComparisonEnvironmentProvider>
@@ -194,21 +191,38 @@ function initialShellState(
   };
 }
 
-function currentContext(context: ShellContext, state: ShellStore["state"]) {
+/** Synchronize recovered preferences with the route that won initialization. */
+export function selectionForRoute(
+  selection: ViewerSelection,
+  route: ShellRoute,
+): ViewerSelection {
+  const next = { ...selection, screenId: routeScreenId(route) };
+  if (route.snapshot) next.snapshotId = route.snapshot;
+  else delete next.snapshotId;
+  return next;
+}
+
+/** Project mutable route identity into the context consumed by shell children. */
+export function currentContext(
+  context: ShellContext,
+  state: ShellStore["state"],
+) {
   const {
-    activeRoute: _activeRoute,
+    activeId: _activeId,
     changesStatus: _changesStatus,
     fragment: _fragment,
+    snapshotId: _snapshotId,
     ...stable
   } = context;
-  const activeRoute =
+  const activeId =
     state.route.view.kind === "target"
-      ? state.route.view.target.entry.route
+      ? state.route.view.target.entry.id
       : undefined;
   return {
     ...stable,
-    ...(activeRoute ? { activeRoute } : {}),
+    ...(activeId ? { activeId } : {}),
     ...(state.changesStatus ? { changesStatus: state.changesStatus } : {}),
     ...(state.route.fragment ? { fragment: state.route.fragment } : {}),
+    ...(state.route.snapshot ? { snapshotId: state.route.snapshot } : {}),
   };
 }

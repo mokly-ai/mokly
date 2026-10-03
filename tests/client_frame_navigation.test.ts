@@ -15,19 +15,24 @@ const primary = {
   target: null,
 };
 
-test("trusted frame activation derives canonical catalogue routes", () => {
+test("trusted frame activation returns logical catalogue destinations", () => {
   assert.deepEqual(classifyFrameActivation(primary), {
-    href: "/id/details?fragment=section",
-    kind: "navigate",
+    activation: "primary",
+    fragment: "section",
+    id: "details",
+    target: { kind: "self" },
   });
   assert.deepEqual(classifyFrameActivation({ ...primary, marker: "tour" }), {
-    href: "/id/tour",
-    kind: "navigate",
+    activation: "primary",
+    id: "tour",
+    target: { kind: "self" },
   });
   for (const target of ["_top", "_parent"]) {
     assert.deepEqual(classifyFrameActivation({ ...primary, target }), {
-      href: "/id/details?fragment=section",
-      kind: "navigate",
+      activation: "primary",
+      fragment: "section",
+      id: "details",
+      target: { kind: target.slice(1) },
     });
   }
 });
@@ -37,9 +42,10 @@ test("modified and explicit new-context activation stays parent-owned", () => {
     assert.deepEqual(
       classifyFrameActivation({ ...primary, [modifier]: true }),
       {
-        href: "/id/details?fragment=section",
-        kind: "open",
-        target: "_blank",
+        activation: "modified",
+        fragment: "section",
+        id: "details",
+        target: { kind: "self" },
       },
     );
   }
@@ -50,22 +56,25 @@ test("modified and explicit new-context activation stays parent-owned", () => {
       eventType: "auxclick",
     }),
     {
-      href: "/id/details?fragment=section",
-      kind: "open",
-      target: "_blank",
+      activation: "middle",
+      fragment: "section",
+      id: "details",
+      target: { kind: "self" },
     },
   );
   assert.deepEqual(classifyFrameActivation({ ...primary, target: "_blank" }), {
-    href: "/id/details?fragment=section",
-    kind: "open",
-    target: "_blank",
+    activation: "primary",
+    fragment: "section",
+    id: "details",
+    target: { kind: "blank" },
   });
   assert.deepEqual(
     classifyFrameActivation({ ...primary, target: "Report.Frame" }),
     {
-      href: "/id/details?fragment=section",
-      kind: "open",
-      target: "Report.Frame",
+      activation: "primary",
+      fragment: "section",
+      id: "details",
+      target: { kind: "named", name: "Report.Frame" },
     },
   );
 });

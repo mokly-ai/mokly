@@ -51,7 +51,7 @@ details.mbk-nav-group[open] > summary .mbk-nav-ico.folder > svg:nth-child(2) {
 
 .mbk-nav-row.active .mbk-nav-ico,
 .mbk-nav-row[aria-current="page"] .mbk-nav-ico {
-  color: rgba(255, 255, 255, 0.9);
+  color: color-mix(in srgb, var(--mokly-accent-contrast) 90%, transparent);
 }
 
 .mbk-nav-row.active .mbk-nav-label,
@@ -68,7 +68,7 @@ details.mbk-nav-group[open] > summary .mbk-nav-ico.folder > svg:nth-child(2) {
 
 .mbk-nav-row.active .mbk-nav-count,
 .mbk-nav-row[aria-current="page"] .mbk-nav-count {
-  color: rgba(255, 255, 255, 0.75);
+  color: color-mix(in srgb, var(--mokly-accent-contrast) 75%, transparent);
 }
 
 .mbk-nav-row[hidden],
@@ -117,7 +117,7 @@ details.mbk-nav-group > summary::-webkit-details-marker {
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: #c98a2b;
+  background: var(--mbk-status-changed-ink);
 }
 
 @media (max-width: 56.25rem) {
@@ -152,11 +152,97 @@ details.mbk-nav-group > summary::-webkit-details-marker {
     max-width: 20rem;
     border-right: 1px solid var(--chrome-border);
     overflow: hidden;
-    box-shadow: 0 0 0 100vmax rgba(20, 28, 22, 0.4);
+    box-shadow: 0 0 0 100vmax var(--chrome-scrim);
   }
 
   .mbk[data-drawer="open"] .mbk-nav {
     display: flex;
+  }
+}
+
+/* ---- Appearance ------------------------------------------------------- */
+
+.mbk-appearance {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 9px;
+  border: 1px solid var(--chrome-control-edge);
+  border-radius: 8px;
+  background: var(--chrome-surface);
+  color: var(--chrome-ink-2);
+  cursor: pointer;
+}
+
+.mbk-appearance[hidden] {
+  display: none;
+}
+
+.mbk-appearance:hover {
+  border-color: var(--mbk-accent-deep);
+  background: var(--mbk-accent-surface);
+  color: var(--mbk-accent-deep);
+}
+
+.mbk-appearance:focus-within {
+  outline: 2px solid var(--mbk-accent-deep);
+  outline-offset: 2px;
+}
+
+.mbk-appearance svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* All three faces are rendered and the current one is revealed by attribute,
+   so the startup asset changes the visible glyph and word by setting one
+   value rather than rewriting markup. */
+.mbk-appearance-option {
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.mbk-appearance[data-appearance-value="auto"] > [data-appearance-option="auto"],
+.mbk-appearance[data-appearance-value="light"]
+  > [data-appearance-option="light"],
+.mbk-appearance[data-appearance-value="dark"] > [data-appearance-option="dark"] {
+  display: inline-flex;
+}
+
+.mbk-appearance-value {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mbk-appearance > select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+/* Below the breakpoint the label collapses to its glyph, so search and the
+   menu keep their room while the control stays reachable. */
+@media (max-width: 56.25rem) {
+  .mbk-appearance {
+    padding: 0 7px;
+  }
+
+  .mbk-appearance-value {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
 `;

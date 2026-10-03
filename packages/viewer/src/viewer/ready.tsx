@@ -8,6 +8,7 @@ import {
   useSyncExternalStore,
 } from "react";
 
+import type { ScrollTogetherPreference } from "../shell/comparison_scroll_preference.js";
 import { EmbeddedViewerShell } from "../shell/embedded_viewer.js";
 import { ShellIdentifierProvider } from "../shell/identifier_context.js";
 import { ShellStoreProvider } from "../shell/store.js";
@@ -21,6 +22,7 @@ import { ViewerHostBridge } from "./host_bridge.js";
 import { viewerCatalogue, viewerContext, viewerView } from "./projection.js";
 import { defaultSelection, normalizeSelection } from "./selection.js";
 import type { LoadedCatalogue } from "./source.js";
+import { themeAttributes } from "./theme.js";
 import type { MoklyViewerProps, ViewerSelection } from "./types.js";
 
 type ReadyProps = MoklyViewerProps & {
@@ -29,6 +31,8 @@ type ReadyProps = MoklyViewerProps & {
   bridgeOwner: object;
   identifierPrefix: string;
   replaced: () => boolean;
+  /** The mounted viewer's Scroll together choice, kept across sources. */
+  scrollTogether: ScrollTogetherPreference;
 };
 
 const subscribeBrowser = () => () => undefined;
@@ -63,7 +67,11 @@ export function ReadyViewer(props: ReadyProps) {
   }, [normalized]);
   if (!normalized)
     return (
-      <div className="mokly-viewer mbk-empty" role="alert">
+      <div
+        className="mokly-viewer mbk-empty"
+        role="alert"
+        {...themeAttributes(props.theme)}
+      >
         The requested view is unavailable.
       </div>
     );
@@ -105,10 +113,14 @@ function MountedViewer(
   );
   const comparisonEnvironment = useMemo(
     () =>
-      viewerComparisonEnvironment(props.loaded, (error) => {
-        report(error, "comparison");
-      }),
-    [props.loaded, report],
+      viewerComparisonEnvironment(
+        props.loaded,
+        (error) => {
+          report(error, "comparison");
+        },
+        props.scrollTogether,
+      ),
+    [props.loaded, props.scrollTogether, report],
   );
   return (
     <ShellIdentifierProvider prefix={props.identifierPrefix}>
@@ -140,6 +152,7 @@ function MountedViewer(
           onError={props.onError}
           onMarkerChange={props.onMarkerChange}
           rootRef={root}
+          {...(props.theme ? { theme: props.theme } : {})}
           {...(props.slots ? { slots: props.slots } : {})}
         />
       </ShellStoreProvider>

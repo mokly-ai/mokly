@@ -48,14 +48,15 @@ const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 /** Authenticate one HTML copy for presentation inside the Browse shell. */
 export function adaptBrowseDocument(
   content: string,
-  route: string,
+  route: string | undefined,
   catalogue: Catalogue,
 ): string {
-  const trusted = trustedDocument(route, catalogue);
+  const trusted =
+    route === undefined ? undefined : trustedDocument(route, catalogue);
   const document = parse(content, {
     sourceCodeLocationInfo: true,
   }) as unknown as HtmlNode;
-  if (!trusted)
+  if (!trusted || route === undefined)
     return stripGeneratedFirstLine(stripUntrustedMetadata(content, document));
   if (trusted.componentView)
     validateComponentRanges(content, trusted.componentView.ranges);

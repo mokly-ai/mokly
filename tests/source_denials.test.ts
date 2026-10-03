@@ -4,6 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { validateGeneratedOutputPaths } from "../dist/build/output_paths.js";
+import { assertSafeGeneratedTree } from "../dist/build/reserved_tree.js";
 import { isAuthoringSource } from "../dist/build/source_inventory.js";
 import { loadConfig } from "../dist/config/load.js";
 
@@ -86,7 +87,7 @@ test("generated routes stay confined while authored names remain independent", a
     path.join(fixture.mockupsDir, "mokly-generated/source-alias"),
   );
   await fs.writeFile(
-    path.join(fixture.mockupsDir, "mokly-manifest.json"),
+    path.join(fixture.generatedDir, "mokly-manifest.json"),
     "{}",
   );
   await fs.symlink(
@@ -98,9 +99,8 @@ test("generated routes stay confined while authored names remain independent", a
     sourceFiles: ["mockups/helper.html"],
   };
   for (const [route, cause] of [
-    ["source-alias/page.html", /escapes mockupsDir/],
+    ["../page.html", /generated route is unsafe/],
     ["page.source.html", /reserved source basename/],
-    ["metadata.html", /internal catalogue metadata/],
   ] as const) {
     assert.throws(
       () => validateGeneratedOutputPaths([route], config),
@@ -112,6 +112,18 @@ test("generated routes stay confined while authored names remain independent", a
     );
   }
   assert.doesNotThrow(() =>
-    validateGeneratedOutputPaths(["helper.html"], config),
+    validateGeneratedOutputPaths(
+      ["helper.html", "metadata.html", "source-alias/page.html"],
+      config,
+    ),
+  );
+  assert.throws(
+    () => assertSafeGeneratedTree(config),
+    /symlink or non-regular entry: .*metadata.html/,
+  );
+  await fs.rm(path.join(fixture.generatedDir, "metadata.html"));
+  assert.throws(
+    () => assertSafeGeneratedTree(config),
+    /symlink or non-regular entry: .*source-alias/,
   );
 });

@@ -3,11 +3,20 @@ import fs from "node:fs";
 import path from "node:path";
 
 import type { ComponentViewRecord, ComponentWireProps } from "@mokly/viewer";
-import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+import {
+  generatedResourcePath,
+  generatedResourceRoute,
+  entryRoute,
+} from "@mokly/viewer/data";
 import { ComponentRenderError, generatedViews } from "@mokly/viewer/data";
 import { createCatalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../../browse/document_adapter.js";
+import {
+  generatedBytes,
+  type GeneratedFile,
+} from "../../build/generated_file.js";
+import { isGeneratedRoute } from "../../build/styles/routes.js";
 import {
   isPublicStaticFile,
   publicFileFailureReason,
@@ -15,7 +24,6 @@ import {
 import type { ResolvedConfig } from "../../config/types.js";
 import type { CatalogueMetadata } from "../../registry/catalogue_index.js";
 import { referencedRoutes } from "../../review/asset_references.js";
-import { rebaseGeneratedSnapshotUrls } from "../../review/normalize_urls.js";
 import { contentType } from "../respond.js";
 
 import { rebaseTransientNavigation } from "./transient_links.js";
@@ -33,26 +41,34 @@ export interface TransientRender {
 }
 export function captureRenderBundle(
   route: string,
-  outputs: ReadonlyMap<string, string>,
+  outputs: ReadonlyMap<string, GeneratedFile>,
   manifest: CatalogueMetadata,
   config: ResolvedConfig,
-  readGenerated?: (route: string) => string | undefined,
+  readGenerated?: (route: string) => GeneratedFile | undefined,
 ): ReadonlyMap<string, RenderFile> {
   const catalogue = createCatalogue(manifest);
   const generatedRoutes = new Set(
     manifest.entries.flatMap((entry) => [
-      ...(entry.kind === "page" ? [entry.route] : []),
+      ...(entry.kind === "page" ? [entryRoute("page", entry.id)] : []),
       ...generatedViews(entry).map((view) => view.path),
     ]),
   );
-  const layout = { prefix: GENERATED_DIRECTORY, routes: generatedRoutes };
   const files = new Map<string, RenderFile>();
-  const pending = [route];
+  const pending = [generatedResourcePath(route)];
   let size = 0;
   while (pending.length) {
     const current = pending.shift()!;
     if (files.has(current)) continue;
-    const generated = outputs.get(current) ?? readGenerated?.(current);
+    const relative = generatedResourceRoute(current);
+    const generated =
+      relative === undefined
+        ? undefined
+        : (outputs.get(relative) ?? readGenerated?.(relative));
+    if (generated === undefined && isGeneratedRoute(current))
+      throw new ComponentRenderError(
+        "render-failed",
+        "Preview resource is unavailable; rebuild the catalogue and try again.",
+      );
     const candidate = path.resolve(config.mockupsDir, current);
     if (generated === undefined && !isPublicStaticFile(candidate, config))
       throw new Error(
@@ -61,32 +77,18 @@ export function captureRenderBundle(
     let bytes =
       generated === undefined
         ? fs.readFileSync(candidate)
-        : Buffer.from(generated);
+        : generatedBytes(generated);
     const type = contentType(current);
-    const references = referencedRoutes(
-      current,
-      bytes,
-      { resourceHints: false },
-      layout,
-    );
+    const references = referencedRoutes(current, bytes, {
+      resourceHints: false,
+    });
     if (type.startsWith("text/html"))
       bytes = Buffer.from(
-        generated === undefined
-          ? rebaseTransientNavigation(
-              adaptBrowseDocument(bytes.toString(), current, catalogue),
-              current,
-              generatedRoutes,
-            )
-          : rebaseGeneratedSnapshotUrls(
-              rebaseTransientNavigation(
-                adaptBrowseDocument(bytes.toString(), current, catalogue),
-                `${GENERATED_DIRECTORY}/${current}`,
-                generatedRoutes,
-              ),
-              current,
-              GENERATED_DIRECTORY,
-              generatedRoutes,
-            ),
+        rebaseTransientNavigation(
+          adaptBrowseDocument(bytes.toString(), relative, catalogue),
+          current,
+          generatedRoutes,
+        ),
       );
     size += bytes.byteLength;
     if (size > RENDER_BYTES)

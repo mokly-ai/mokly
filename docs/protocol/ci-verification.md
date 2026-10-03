@@ -2,27 +2,24 @@
 
 ## Delivery Status
 
-The suite CLI, inventory evidence, event-specific parallel workflow graph, and
-existing fixture reuse are implemented; the linked shared-baseline
-preparation for Milestone 14 remains an approved target. The
-[hosted acceptance measurement](../reviews/ci-performance.md) records the
-delivered timing, capacity, cache, cost, and coverage evidence. The
-authoritative complete local and complete-mode release gate remains
-`cargo xtask check`; the full hosted aggregate is reusable evidence for its
-exact tree. The public package forwarding and hierarchical cancellation
-additions below are implemented by the corresponding review-follow-up
-milestones.
+The suite CLI, evidence, workflow graph, fixture reuse, and every repository
+ratchet are implemented. [Hosted measurements](../reviews/ci-performance.md)
+record timing and coverage. `cargo xtask check` remains the complete local gate;
+a validated hosted aggregate is reusable evidence for its exact tree. Public
+package argument forwarding, hierarchical cancellation, and pull-request title
+validation are implemented.
 
 ## Verification Boundary
 
-`cargo xtask check` is the complete local verification entrypoint and the
-release workflow's complete-mode entrypoint. With no options it runs every gate
-sequentially in one checkout, beginning with the live workspace dependency
-audit. A selected suite is partial evidence and must never report that the
-complete gate passed. CI's validated aggregate of every required job and all
-sharded reports is complete verification of the exact tree named by those
-reports; the [release evidence contract](./npm-release-evidence.md) defines how
-a publish may reuse that proof.
+`cargo xtask check` is the complete local and release complete-mode entrypoint.
+With no options it runs every gate sequentially in one checkout, beginning with
+the live workspace dependency audit. Only active reviewed path exceptions can
+cover findings; the [dependency security contract](./dependency-security.md)
+defines their UTC expiry and 31-day limit. The packed-consumer production audit
+has no exceptions. A selected suite is partial evidence and
+must never report that the complete gate passed. CI's validated aggregate of all
+required jobs and reports is complete verification of their exact tree; the
+[release evidence contract](./npm-release-evidence.md) defines reuse.
 
 The CLI is:
 
@@ -32,6 +29,7 @@ cargo xtask check --suite repository
 cargo xtask check --suite package
 cargo xtask check --suite unit --shard 1/4
 cargo xtask check --suite browser --shard 1/4
+cargo xtask check --suite hydration
 ```
 
 `--shard INDEX/TOTAL` uses one-based positive integers, requires
@@ -39,193 +37,213 @@ cargo xtask check --suite browser --shard 1/4
 is valid only with `unit` or `browser`. Unit sharding is delegated to Node's
 `--test-shard`; browser sharding is delegated to Playwright's `--shard`.
 Omitting `--shard` runs the complete selected suite. Unknown suites, malformed
-shards, missing values, and attempts to shard the repository or package suite
-fail before any subprocess starts.
+shards, missing values, and attempts to shard the repository, package, or
+hydration suite fail before any subprocess starts.
 
 ## Gate Ownership
 
-| Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                                                                |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Repository       | Live `npm run dependencies:check` first; Prettier check; ESLint; `cargo fmt --all -- --check`; workspace Clippy with warnings denied; workspace Rust tests; Rust file-length audit.                                                                                                                                                                                                        |
-| Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; all five clean consumer smokes using that pair. Real `prepack` builds remain part of packing. |
-| Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most two files active. A shard runs its whole-file partition.                                                                                                                                                                                                                                |
-| Browser          | One ordinary package/example preparation followed by every discovered Playwright spec, with `fullyParallel: false`, one worker, existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                                                                                 |
-| Native platforms | On macOS and Windows, build once and run export transaction and destination-race tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                                                            |
-| Required CI      | Evaluate the result and evidence from the repository job, every package runtime selected for this event, all selected unit and browser runtime/shard combinations, and both native platforms.                                                                                                                                                                                              |
+| Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                                                            |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repository       | Live dependency audit first; Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                                                                                                          |
+| Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; every clean consumer smoke using that pair. Real `prepack` builds remain part of packing. |
+| Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most two files active. A shard runs its whole-file partition.                                                                                                                                                                                                                            |
+| Browser          | One ordinary package/example preparation followed by every non-hydration Playwright spec, with `fullyParallel: false`, one worker, existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                                                                          |
+| Hydration        | One ordinary package/example preparation followed by every Playwright spec whose filename contains `hydration`, using the same browser settings without sharding.                                                                                                                                                                                                                      |
+| Native platforms | On macOS and Windows, build once and run export transaction and destination-race tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                                                        |
+| Required CI      | Evaluate the result and evidence from the repository job, every package runtime selected for this event, all selected unit, browser, and hydration runtime combinations, and both native platforms.                                                                                                                                                                                    |
 
-The complete command and selected suites must be generated from the same gate
-definitions. Adding a command to a suite therefore adds it to the complete
-gate. The Rust file-length auditor is a repository-gate operation implemented
-inside xtask rather than a subprocess in the command list; it has the same
-failure semantics as the listed commands.
+Complete and selected suites share gate definitions; adding a suite command adds
+it to the complete gate. In-process auditors fail like subprocesses.
 
-The public npm entrypoints `npm test`, `npm run typecheck`, and
-`npm run test:browser` remain clean-checkout entrypoints: each prepares its
-required package output, and both test commands also prepare the example. The
-browser command supports Playwright listing, filtering, and selected spec paths;
-any filtered selection is partial verification. The public unit command retains
-its complete explicit file inventory and concurrency limit. Public
-`package:check` and `package:smoke` wrappers preserve every caller argument
-across their nested npm boundary; in particular, `--artifacts DIR` reaches the
-prepared consumer as the same two arguments. Internal prepared test entrypoints
-skip preparation, reject arguments other than the optional shard, and fail when
-required output is missing. Prepared package commands may instead receive the
-archive pair created by the package gate. Xtask suite invocations prepare their
-own output and call only the prepared consumers. Output is reused only for the
-lifetime of that suite invocation.
+File-length, protocol-cap, and unused-internal-export ratchets use
+`git merge-base HEAD origin/main`; the public-package-export ratchet instead
+uses the newest matching release tags reachable from `HEAD`. The
+[owning contract](./verification-ratchets.md) defines the module extensions,
+shrink-only baselines, and recursive `docs/protocol/**` scan excluding
+`fixtures/`.
 
-Builds that are themselves under test are not removed. Package dry-run
-allowlist inspection retains its existing `--ignore-scripts` boundary, while
-real packing keeps its lifecycle builds. Historical baseline reconstruction,
-clean consumer installation, clean-cache npx execution, source mutation,
-startup, and cache-invalidation regressions retain independent preparation.
+The repository prerequisite also runs the workspace-root source/protocol
+length audit. It covers changed repository TypeScript/JavaScript and protocol
+Markdown plus non-ignored untracked files. Protocol pages over 250 lines use
+only the exact reviewed caps in `tests/protocol_doc_sizes.test.ts`; `cargo xtask
+source-file-length-lint --all` audits every scoped file. This remains in
+addition to main's repository ratchets.
+The full scope and failure semantics are in
+[Repository Gate And Length Audits](./ci-verification-repository.md).
 
-## CI Graph And Checkout Ownership
+ESLint derives global ignores from `.gitignore` before adding its broader
+ESLint-only ignores. Ignored build, cache, report, and tool scratch paths,
+including Wrangler scratch, cannot make a later complete gate fail.
 
-The repository job is the shared prerequisite for every verification job. Each
-downstream job starts from a fresh checkout and owns its writable build,
-example, fixture, report, and trace output. No live checkout or writable build
-directory is transferred between jobs. All jobs that resolve `origin/main` or
-create historical baselines receive complete Git history.
+The public `npm test` and `npm run test:browser` commands prepare package and
+example output; the latter runs both Playwright projects and every spec.
+Filtering or selecting a project is partial verification. `npm test` and
+`test:prepared` share recursive discovery of `.test.ts` and `.test.tsx` files
+under `tests/` and `packages/viewer/tests/`, with two-file concurrency. The
+developer runner fails on failures, cancellations, and unreported files; it
+tolerates skipped and todo tests (including intentional Windows skips) and
+prints their count. The prepared runner and every `cargo xtask check` suite
+reject skips and todos. Node unit tests stay outside Playwright's
+`tests/browser/` directory. Playwright matches only `**/*.spec.ts`; `chromium`
+ignores filenames containing `hydration`, while `hydration` matches only them.
 
-For ordinary pull requests and pushes to `main`, the workflow fans out to:
+Public `package:check` and `package:smoke` preserve caller arguments, including
+`--artifacts DIR`, across nested npm. Prepared test commands skip preparation,
+reject arguments other than the optional shard, and fail when required output is
+missing; prepared package commands may instead receive the gate's archive pair.
+Xtask prepares output per suite and calls only prepared consumers; output is
+reused only within that suite.
 
-- one package job on Node 22.14.0;
-- four unit shards on Node 22.14.0;
-- four browser shards on Node 22.14.0; and
-- native jobs on macOS and Windows at Node 22.14.0.
+Builds under test are not removed. Package dry-run allowlist inspection retains
+`--ignore-scripts`, while real packing keeps lifecycle builds. Historical
+baseline reconstruction, clean consumers and caches, source mutation, startup,
+and cache invalidation retain independent preparation.
 
-For a same-repository Release Please pull request, the package job and every
-unit/browser shard also run on Node 24. A release pull request is recognized
-only when its head repository is this repository and either its head ref starts
-with `release-please--` or it has an `autorelease:` label. A fork cannot opt
-itself into the more expensive profile by choosing a matching branch name.
+## Deterministic Test Repository Inputs
 
-The repository job resolves floating Node 24 once, then an explicit shell step
-reads `process.versions.node` and exposes that exact version plus the selected
-matrix and report-runtime identities as job outputs. Every package, unit, and
-browser job selected for Node 24, plus the Required CI aggregate, requests the
-captured version. CI therefore adopts new Node 24 patches without allowing
-differing runner caches to give sibling shards different versions. Matrix labels
-and report runtime identities remain `node-24`; reports still record the exact
-installed version, and the aggregate continues to reject mixed versions within
-a group. The setup action itself does not provide the installed version output.
+Unit and browser tests must depend only on the tree under test and fixture-owned
+state. The example preview unit test copies the checked-out example and tooling
+into an isolated fixture repository, commits that fixture-owned baseline,
+applies one deterministic source edit and asserts its exact changed
+destinations and count. The browser suite's example server runs with
+`--base HEAD` and compares with the checked-out `HEAD`. A fixture repository may
+create and read its own remotes because those references are fixture-owned
+inputs inside the test tree.
 
-Node 22.14 is the ordinary functional runtime because it is the package's
-declared minimum. The Node 24 repository prerequisite still runs on every
-event. Deferring the second complete functional run means a Node 24-only
-regression can reach unreleased `main`, but the dual-runtime Release Please gate
-must catch it before versions, tags or npm artifacts can be published. Release
-Please normally updates its pull request after a releasable merge, keeping that
-feedback close to the originating change without paying for both full suites on
-every ordinary pull-request and `main` run.
+CI's package, unit, browser, and hydration jobs key npm's download cache from
+the checked-out `package-lock.json`; none resolves `origin/main` or reads a
+branch-point lockfile. Identical trees must produce identical test results; the
+release workflow's exact-tree evidence reuse depends on that determinism.
 
-Matrix jobs use `fail-fast: false`, so one failing shard does not erase evidence
-from its peers. Chromium is installed only in browser jobs. Rust formatting,
-Clippy and tests run only in the repository job; selected suite jobs still
-compile xtask to dispatch their gate. Jobs that execute npm use npm 11.7.0. All
-Linux and Windows jobs across the CI, preview, and release workflows use
-Blacksmith's 2-vCPU tiers. Native macOS verification uses the provider's
-smallest available tier, which is 6 vCPUs. CI jobs have read-only repository
-permissions and a 20-minute execution timeout. Superseded workflow runs remain
-cancellable.
+The remaining automated checks for repository inputs are deliberately narrow:
 
-The stable `Required CI` job uses `if: always()` and fails closed unless every
-required job result is exactly `success`. It also validates the evidence
-aggregate described below against the runtime profile emitted by the repository
-job: eight unit/browser reports for ordinary events and sixteen for a Release
-Please pull request. A failed, skipped, cancelled, absent, duplicated,
-wrong-runtime, wrong-shard, wrong-commit, unsupported-profile, missing or extra
-report fails the aggregate. The aggregate may not infer success from a matrix
-job's presence alone.
+- [`tests/preview.test.ts`](../../tests/preview.test.ts) owns the isolated
+  fixture baseline, deterministic edit and exact changed-result assertions.
+- [`tests/deployment.test.ts`](../../tests/deployment.test.ts) requires the
+  browser server command to use `--base HEAD`.
+- [`tests/ci_workflow.test.ts`](../../tests/ci_workflow.test.ts) requires the
+  package, unit, browser, and hydration jobs to use the checked-out lockfile and
+  never resolve `origin/main` or a branch-point lockfile.
+
+Nothing scans test code for remote-branch reads. New tests rely on review to
+keep this deterministic-input rule.
+
+No workflow or composite-action `run:` step may delete remote Git state. In a
+shared Git worktree, such a command deletes the shared repository's remotes,
+remote-tracking references or upstream settings.
+[`tests/ci_workflow_remote_state.test.ts`](../../tests/ci_workflow_remote_state.test.ts)
+enforces this as a text check across workflow and composite-action steps, using
+the command scanner in
+[`tests/helpers/remote_state_commands.ts`](../../tests/helpers/remote_state_commands.ts).
+It cannot see commands inside scripts that a step calls.
+
+## Pull Request Title Contract
+
+A separate pull-request workflow validates titles on `opened`, `edited`,
+`reopened` and `synchronize`. It passes the untrusted title through an
+environment variable to a repository script; workflow expressions never
+interpolate the title into shell source. The workflow runs
+`scripts/verification/pull-request-title.mjs`, which reads only
+`PULL_REQUEST_TITLE` and needs no installed dependencies.
+
+The complete title is at most 50 Unicode code points, has no leading or
+trailing whitespace or newline, and has this Conventional Commits shape:
+
+```text
+<type>(<optional-scope>)<optional-!>: <description>
+```
+
+`type` is exactly one of `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`,
+`refactor`, `revert`, `style` or `test`. When present, `scope` is lowercase
+ASCII matching `[a-z0-9._/-]+`. `!` may follow the type or closing scope. The
+separator is exactly colon plus one space. `description` is nonempty, begins
+and ends with a non-whitespace character, and contains no newline. Examples
+include `fix: preserve upload counts`, `chore(main): release 0.13.0` and
+`feat(publish)!: upload catalogue content deltas`.
+
+This type list is fixed. Its unit test checks that it covers the Conventional
+Commit examples in `AGENTS.md`; it does not derive policy from Git history or
+remote-tracking references.
+
+An invalid title exits unsuccessfully and prints exactly:
+
+```text
+Pull request titles must use type(scope)!: description with type build, chore, ci, docs, feat, fix, perf, refactor, revert, style, or test. Keep any scope lowercase and the whole title to 50 characters or fewer.
+```
+
+The check protects release notes because this repository squash-merges pull
+requests and release-please reads the squash title on `main`. A breaking title
+retains its `BREAKING CHANGE:` explanation in the squash body; title validation
+does not inspect or synthesize that body.
+
+## CI Workflow Graph
+
+The hosted job graph, checkout ownership, runtime profiles, runner policy,
+30-minute timeouts, and stable `Required CI` status follow the separate
+[CI workflow graph contract](./ci-workflow.md).
+The suites below own the report evidence that status validates.
+Inventory and evidence rules remain here because local selected suites and
+hosted jobs share them.
 
 ## Inventory And Report Evidence
 
-Test totals are discovered on the executing runtime; no fixed count is part of
-the contract. Before execution, the unit runner independently discovers all
-matching `.test.ts` and `.test.tsx` files across the root and viewer suites. The
-browser runner independently asks Playwright for the current spec inventory.
-Discovery fails on an empty suite.
+Unit and Playwright inventories are discovered on the executing runtime, not
+fixed in advance. Browser or hydration discovery asks Playwright; an empty suite
+fails. A failed browser discovery reports the load errors from Playwright's JSON
+output as well as its standard error.
 
 Development hydration registers one browser test per unique generated catalogue
-route at discovery time, plus the home, missing-route and id-redirect cases.
-Each route keeps the normal test deadline and error assertions; catalogue growth
-cannot exhaust a shared route-loop deadline. Unit coverage checks that browser
-discovery includes every generated route exactly once.
+route at discovery time, plus the home and missing-route cases. Each route keeps
+the normal test deadline and error assertions; catalogue growth cannot exhaust a
+shared route-loop deadline. Unit coverage checks that browser discovery includes
+every generated route exactly once.
 
 Each runner records the commit SHA, runtime, suite, optional shard, complete
 discovered file inventory, assigned file inventory, observed executed files,
-per-file timing, process outcome, and skipped/cancelled evidence. Browser
-discovery additionally records every test by stable project, relative file,
-line, column and title path; the Playwright reporter records each observed
-test's result, duration, and serialized errors. Unit reports retain the Node
-reporter's failure names and diagnostics. Once execution starts, the wrapper
-writes a report after the test process exits on success or failure, then
-validates it. A discovery or preparation failure before execution may leave no
-report; the shard job and aggregate still fail. Reporter callback failures or
-missing output can therefore never turn into success.
+per-file timing, process outcome, and skipped/cancelled evidence. Browser and
+hydration reports also record the all-project spec inventory and every test by
+stable project, relative file, line, column and title path; the Playwright
+reporter records each observed test's result, duration, and serialized errors.
+Unit reports retain the Node reporter's failure names and diagnostics. Once
+execution starts, the wrapper writes a report after the test process exits on
+success or failure, then validates it. A discovery or preparation failure before
+execution may leave no report; the shard job and aggregate still fail. Reporter
+callback failures or missing output can therefore never turn into success.
 
 For an unsharded run, the observed file set must equal independent discovery
 exactly. For sharded CI, the aggregate requires all four reports for each
-runtime and suite, proves assignments are non-empty and pairwise disjoint, and
-compares their union and observed execution against a separately discovered
-complete inventory. Browser evidence also requires the observed test IDs across
-the four shards to equal independent unsharded discovery exactly once. A
-missing file or test, duplicate assignment or observed test, unexpected file or
-test, skipped or cancelled test, non-zero exit, signal exit, or absent/invalid
-report fails verification. Per-file and per-test durations are retained so
-imbalance can be measured without changing whole-file partitioning.
+runtime and sharded suite, proves assignments are non-empty and pairwise
+disjoint, and compares their union and observed execution against a separately
+discovered complete suite inventory. Browser evidence also requires the observed
+test IDs across the four shards to equal independent unsharded discovery exactly
+once. Each runtime requires one unsharded hydration report; every browser-like
+report must carry the same all-project inventory, and the browser and hydration
+file inventories must be disjoint and exhaust it. A missing file or test,
+duplicate assignment or observed test, unexpected file or test, skipped or
+cancelled test, non-zero exit, signal exit, or absent/invalid report fails
+verification. Per-file and per-test durations are retained so imbalance can be
+measured without changing whole-file partitioning.
 
 Report artifacts have stable, unique suite, runtime and shard names and use
 replacement uploads. A failed-job rerun can therefore replace its own report
 while successful reports from an earlier attempt in the same workflow run stay
 available; whole-workflow reruns replace all report artifacts. The aggregate
 downloads only the `verification-*` report namespace. Browser trace artifacts
-remain attempt-specific. Unit and browser jobs retain inventory, timing, and
-failure details; browser failures additionally retain traces and Playwright
-error context. A successful `Required CI` job plus its revalidated complete
-report aggregate is reusable complete verification for the tree the reports
-name within that event's runtime profile; individual reports remain partial
-evidence. Release publication accepts only the dual-runtime Release Please
-profile, then applies the additional tree and live unit-inventory checks in the
-[release evidence contract](./npm-release-evidence.md). The ordinary
-eight-report profile cannot skip the complete publish gate. Reports are
-retained for 14 days, which bounds their release reuse; missing or expired
-evidence falls back to the complete gate.
+remain attempt-specific. Unit, browser, and hydration jobs retain inventory,
+timing, and failure details; Playwright failures additionally retain traces and
+Playwright error context. A successful `Required CI` job plus its revalidated
+complete report aggregate is reusable complete verification for the tree the
+reports name within that event's runtime profile; individual reports remain
+partial evidence. Release publication accepts only the dual-runtime Release
+Please profile, then applies the additional tree, live unit-inventory, and live
+Playwright-inventory checks in the
+[release evidence contract](./npm-release-evidence.md). The ordinary nine-report
+profile cannot skip the complete publish gate. Reports are retained for 14 days,
+which bounds their release reuse; missing or expired evidence falls back to the
+complete gate.
 
-## Dependency Cache And Security
+The cache and audit continuation is [Dependency Cache And Security](./ci-verification-security.md).
 
-CI caches npm's download cache only. `actions/setup-node` keys it from the
-committed `package-lock.json`; jobs that can run historical installs also add a
-lockfile read from the merge-base commit. `npm ci` always runs, including after
-a cache hit, and every platform's optional native package remains available.
-A cache miss is an ordinary cold install and never permits a skipped command.
-
-The live workspace audit runs first in the repository prerequisite and does not
-depend on cache state. The complete local and release commands retain the same
-audit-first ordering. Every selected package-runtime job also preserves the
-separate production audit of the freshly resolved ESM consumer, which is
-outside the workspace lockfile and overrides; the release profile proves it on
-both runtimes. Intentionally isolated clean-cache consumer
-tests keep private empty npm caches. Release publishing retains its uncached,
-OIDC-scoped boundary and exact-artifact checks.
-
-## Fixture Lifetime And Cleanup
-
-The [fixture preparation and lifetime contract](./ci-fixture-preparation.md)
-owns fixture isolation, process ownership, the 600-second real-export fixture
-budget, and the approved once-per-invocation example baseline preparation.
-The global sharing change is a Milestone 14 target, not yet implemented.
-
-## Failure, Cancellation And Cleanup
-
-Retain the [failure and cleanup contract](./ci-fixture-preparation.md#failure-cancellation-and-cleanup):
-fail the sequence, drain its owned process tree and preserve failed evidence.
-No shared preparation may weaken ownership or turn missing tests into success.
-
-## Acceptance Measurement
-
-The [measurement contract](./ci-fixture-preparation.md#acceptance-measurement)
-retains the original hosted CI baseline and exact-tree acceptance requirements.
-[Shared baseline measurements](./ci-fixture-preparation.md#timing-and-acceptance-for-shared-preparation)
-add comparable before/after browser and fixture timings for Milestone 14.
+The [shared fixture preparation contract](./ci-fixture-preparation.md) defines
+pending global baseline preparation and the unchanged 600-second
+fixture limit. Existing workflow and audit contracts remain in force.

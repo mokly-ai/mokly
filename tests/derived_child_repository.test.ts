@@ -10,6 +10,7 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { prepareReviewRepository } from "../dist/review/prepare.js";
 import { runServerChild } from "../dist/server/child.js";
 import { childUpdateMessage } from "../dist/server/update_messages.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import { derivedFixture } from "./helpers/derived_fixture.js";
@@ -105,14 +106,26 @@ test("derived HTTP child rejects an unprepared unselected comparison without bui
       const result = parseReviewResult(await response.json());
       assert.equal(result.baseCommit, commit);
       const view = result.screens
-        .find((screen) => screen.route === "screens/home.html")!
+        .find((screen) => screen.id === "home")!
         .views.find((view) => view.viewport === "mobile")!;
       const before = await (
-        await fetch(new URL(view.beforePath!, response.url))
+        await fetch(
+          new URL(
+            `snapshots/before/mokly-generated/${viewRoute("screen", "home", view.viewport, view.colorScheme)}`,
+            response.url,
+          ),
+        )
       ).text();
       assert.equal(before.includes("Moved baseline"), movedBaseline);
       assert.match(
-        await (await fetch(new URL(view.afterPath!, response.url))).text(),
+        await (
+          await fetch(
+            new URL(
+              `snapshots/after/mokly-generated/${viewRoute("screen", "home", view.viewport, view.colorScheme)}`,
+              response.url,
+            ),
+          )
+        ).text(),
         /Current source/,
       );
     };

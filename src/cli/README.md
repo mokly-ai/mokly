@@ -16,15 +16,42 @@ presentation.
 
 ## What This Code Does
 
-`run.ts` loads configuration and invokes the existing package services. The
-reporter directory preserves stable plain output for pipes, CI, and timing
-diagnostics while rendering progress, lifecycle events, and actionable errors
-for interactive terminals. Serve arms graceful shutdown before reporting its
-ready URL, so any announced process can accept an immediate interrupt. Rich
-success ticks are green when the terminal supports colour and remain unstyled
-when colour is disabled. `bin.ts` is the process boundary: it selects the
-reporter before parsing arguments, applies secret redaction, and controls the
-exit code.
+`bin.ts` loads only the dependency-free Node compatibility bootstrap. Supported
+runtimes then load `main.ts`, which owns reporter setup and error presentation;
+affected and otherwise unsupported runtimes stop before the application module
+graph is evaluated. `run.ts` loads configuration and invokes the existing
+package services. The reporter directory preserves stable plain output for
+pipes, CI, and timing diagnostics while rendering progress, lifecycle events,
+and actionable errors for interactive terminals. Serve arms graceful shutdown
+before reporting its ready URL, so any announced process can accept an immediate
+interrupt. Rich success ticks are green when the terminal supports colour and
+remain unstyled when colour is disabled. `main.ts` is the application process
+boundary: it selects the reporter before parsing arguments, applies secret
+redaction, and controls the exit code.
+
+Publish updates the active rich upload phase as missing blobs complete, then
+renders its counted or already-published `PublishResult`. Plain mode emits only
+the stable result line and optional credential-safe viewer URL. One terminal
+count formatter owns singular and plural nouns for publish and Serve output.
+Every in-place TTY frame erases the full current line before drawing, so shorter
+progress labels and re-plan resets cannot retain stale characters.
+
+Publish cancellation and transport exhaustion retain the `upload-failed` code
+but carry distinct typed presentation variants. Plain mode prints each complete
+actionable message; rich mode splits it into a non-repeating headline and hint.
+`publish_failure.ts` preserves a typed cancellation object, while `main.ts`
+selects the fixed publish cancellation copy only for terminal rendering and
+keeps the original for diagnostics. The export boundary explicitly marks
+failures in its pre-installation window after one event-loop turn gives
+already-delivered signals time to run. It marks the original typed error,
+preserving its class, fields, message and diagnostic stack. Transaction setup,
+generated-output writes and every recovery or cleanup error retain their
+guidance. Export and publish also hold a referenced handle for the lifetime of
+their signal listeners, so an interrupted unreferenced helper cannot make Node
+exit before the reporter sets status 1.
+
+Publish-only modules are loaded after command selection. Build, Check, Export,
+and supervised Serve children therefore do not initialize the upload exchange.
 
 Rich presentation never changes `MoklyError`, generated output, HTTP responses,
 or timing JSON. The supervised Serve child stays plain and forwards diagnostics
@@ -53,11 +80,13 @@ ordinary test runners pipe stdout and intentionally select plain mode.
 ### Key Code
 
 - `arguments.ts` validates the command grammar and option ownership.
+- `bootstrap.ts` owns the supported Node range and gates application loading.
+- `main.ts` owns process-level reporter setup, redaction, and exit behavior.
 - `run.ts` composes command work and reports its phases and summaries.
 - `reporter/` contains mode selection, terminal helpers, plain/rich output, and
   interactive controls.
 - `errors.ts` maps every typed Mokly error to rich headline and hint copy.
-- `bin.ts` owns process exit, stack opt-in, and secret-safe failure rendering.
+- `bin.ts` is the minimal executable that runs the compatibility bootstrap.
 - `export.ts` and `publish.ts` own signal-aware one-shot command lifecycles.
 
 ### Related Docs

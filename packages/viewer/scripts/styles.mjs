@@ -33,20 +33,23 @@ export function embeddedStyles(shell, extensions) {
     .match(/@font-face\s*\{[^}]*\}/)[0]
     .replaceAll('"Inter"', '"Mokly Inter"')
     .replace("/__mokly/fonts/", "./assets/fonts/");
-  const defaults = new Map([
-    ["--mokly-accent", "#4f7864"],
-    ["--mokly-accent-contrast", "#ffffff"],
-    ["--mokly-accent-soft", "rgba(79, 120, 100, 0.1)"],
+  // Dropping the public declarations lets a host value on an ancestor inherit
+  // in. Each use then falls back to the matching default, which the palette
+  // restates per appearance, so an un-overridden dark root is not pinned Light.
+  const overridable = new Map([
+    ["--mokly-accent", "--_mokly-private-accent-default"],
+    ["--mokly-accent-contrast", "--_mokly-private-accent-contrast-default"],
+    ["--mokly-accent-soft", "--_mokly-private-accent-soft-default"],
   ]);
   let scoped = scopeShellSelectors(
     shell
       .replace(/@font-face\s*\{[^}]*\}/, "")
       .replaceAll('"Inter"', '"Mokly Inter"'),
   );
-  for (const [name, value] of defaults) {
+  for (const [name, fallback] of overridable) {
     scoped = scoped
-      .replace(new RegExp(`  ${name}: [^;]+;\\n`), "")
-      .replaceAll(`var(${name})`, `var(${name}, ${value})`);
+      .replaceAll(new RegExp(`  ${name}: [^;]+;\\n`, "g"), "")
+      .replaceAll(`var(${name})`, `var(${name}, var(${fallback}))`);
   }
   return `${font}\n@scope (.mokly-viewer) to ([data-mokly-slot]) {\n${scoped}\n}\n${extensions}`;
 }

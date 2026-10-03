@@ -10,7 +10,7 @@ import {
 import {
   adoptedViewerCatalogue,
   shellStateWithViewerEvidence,
-  viewerCapabilityRoute,
+  viewerCapabilityEntryId,
 } from "./capability_adoption.js";
 import type { Catalogue } from "./catalogue.js";
 import type { ShellState } from "./store_state.js";
@@ -23,6 +23,7 @@ export interface BoundViewerWorkspace {
 
 export interface ViewerCapabilitySnapshot {
   catalogue: Catalogue;
+  routeEvidence?: ViewerCapabilityRequest;
   source?: ViewerCapabilitySource;
   workspace?: BoundViewerWorkspace;
 }
@@ -50,11 +51,12 @@ export function commitViewerEvidence(
   if (!nextState) return;
   const request = viewerCapabilityRequest(
     revision.source,
-    viewerCapabilityRoute(nextState.route),
+    viewerCapabilityEntryId(nextState.route),
   );
   return {
     snapshot: {
       catalogue,
+      routeEvidence: request,
       source: revision.source,
       ...(revision.workspace
         ? { workspace: { request, value: revision.workspace } }

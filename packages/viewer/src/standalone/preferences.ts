@@ -1,6 +1,9 @@
 /** Browser preference handoff performed before standalone hydration. */
 
-import type { ShellInitialState } from "../shell/store_state.js";
+import type {
+  ShellInitialState,
+  WorkspaceHydrationState,
+} from "../shell/store_state.js";
 
 import {
   setDisclosureOpen,
@@ -28,6 +31,7 @@ export function prepareHydrationState(
     persistDetailsPreference(win, effectiveDetailsOpen);
   }
   const navigation = readInitialNavigationWidth(doc);
+  const colorScheme = doc.body.getAttribute("data-mokly-color-scheme");
   const disclosures = readStoredDisclosures(doc);
   const earlyDisclosures = Object.fromEntries(readEarlyDisclosures(doc));
   const activePath = Object.fromEntries(
@@ -39,7 +43,12 @@ export function prepareHydrationState(
     ...earlyDisclosures,
   });
   persistHydrationDisclosures(doc);
+  const workspace = readWorkspaceHydration(doc);
   return {
+    ...(workspace ? { workspace } : {}),
+    ...(colorScheme === "dark" || colorScheme === "light"
+      ? { colorScheme }
+      : {}),
     disclosures,
     ...(detailsOpen === undefined ? {} : { detailsOpen }),
     ...(earlyDetailsOpen === undefined ? {} : { earlyDetailsOpen }),
@@ -50,6 +59,30 @@ export function prepareHydrationState(
           navigationWidth: navigation.width,
         }
       : {}),
+  };
+}
+
+function readWorkspaceHydration(
+  doc: Document,
+): WorkspaceHydrationState | undefined {
+  const workspace = doc.querySelector<HTMLElement>("[data-workspace]");
+  if (!workspace) return;
+  const status = workspace.querySelector<HTMLElement>("[data-workspace-status]")
+    ?.dataset["status"];
+  const toolbar = workspace.querySelector<HTMLElement>(".mbk-diff-toolbar");
+  const mark = (kind: "scheme" | "viewport") =>
+    doc.querySelector<HTMLElement>(`[data-view-changed="${kind}"]`)?.hidden ===
+    false;
+  return {
+    status:
+      status === "Added" ||
+      status === "Changed" ||
+      status === "Removed" ||
+      status === "Unmodified"
+        ? status
+        : undefined,
+    comparisonEligible: toolbar?.hidden === false,
+    marks: { scheme: mark("scheme"), viewport: mark("viewport") },
   };
 }
 

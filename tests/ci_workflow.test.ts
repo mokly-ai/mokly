@@ -7,14 +7,23 @@ import { promisify } from "node:util";
 
 import { parse } from "yaml";
 
+import {
+  SUPPORTED_NODE_RANGE,
+  TESTED_NODE_VERSIONS,
+  isSupportedNodeVersion,
+} from "../dist/cli/bootstrap.js";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
+const testedNodeVersions: readonly string[] = TESTED_NODE_VERSIONS;
+const [minimumTestedNode, currentTestedNode] = TESTED_NODE_VERSIONS;
 const resultVariables = [
   "REPOSITORY_RESULT",
   "PACKAGE_RESULT",
   "UNIT_RESULT",
   "BROWSER_RESULT",
+  "HYDRATION_RESULT",
   "NATIVE_RESULT",
 ] as const;
 
@@ -55,6 +64,7 @@ test("CI shards complete verification behind one prerequisite", async () => {
   assert.equal(workflow.concurrency["cancel-in-progress"], true);
   assert.deepEqual(Object.keys(workflow.jobs).sort(), [
     "browser",
+    "hydration",
     "native",
     "package",
     "repository",
@@ -65,30 +75,36 @@ test("CI shards complete verification behind one prerequisite", async () => {
   const packageJob = workflow.jobs.package;
   const unit = workflow.jobs.unit;
   const browser = workflow.jobs.browser;
+  const hydration = workflow.jobs.hydration;
   const native = workflow.jobs.native;
   const required = workflow.jobs.required;
   assert.ok(repository);
   assert.ok(packageJob);
   assert.ok(unit);
   assert.ok(browser);
+  assert.ok(hydration);
   assert.ok(native);
   assert.ok(required);
   for (const job of Object.values(workflow.jobs))
-    assert.equal(job["timeout-minutes"], 20);
+    assert.equal(job["timeout-minutes"], 30);
   assert.deepEqual(required.needs, [
     "repository",
     "package",
     "unit",
     "browser",
+    "hydration",
     "native",
   ]);
   assert.equal(required.name, "Required CI");
   assert.equal(required.if, "always()");
-  for (const job of [packageJob, unit, browser, native])
+  for (const job of [packageJob, unit, browser, hydration, native])
     assert.deepEqual(job.needs, ["repository"]);
   const selectedNodeMatrix =
     "${{ fromJSON(needs.repository.outputs.node-matrix) }}";
   assert.equal(packageJob.strategy?.matrix.node, selectedNodeMatrix);
+  assert.equal(hydration.strategy?.matrix.node, selectedNodeMatrix);
+  assert.equal(hydration.strategy?.["fail-fast"], false);
+  assert.equal(hydration.strategy?.matrix.shard, undefined);
   for (const job of [unit, browser]) {
     assert.equal(job.strategy?.["fail-fast"], false);
     assert.equal(job.strategy?.matrix.node, selectedNodeMatrix);
@@ -119,9 +135,14 @@ test("CI shards complete verification behind one prerequisite", async () => {
       step.run?.includes("cargo xtask check --suite browser --shard"),
     ),
   );
+  assert.ok(
+    hydration.steps.some((step) =>
+      step.run?.includes("cargo xtask check --suite hydration"),
+    ),
+  );
   assert.equal(
     (source.match(/playwright install --with-deps chromium/g) ?? []).length,
-    1,
+    2,
   );
   assert.match(source, /include-hidden-files: true/);
   assert.match(source, /scripts\/verification\/aggregate\.mjs/);
@@ -135,6 +156,14 @@ test("CI shards complete verification behind one prerequisite", async () => {
     );
     assert.equal(upload?.with?.overwrite, true);
   }
+  const hydrationUpload = hydration.steps.find((step) =>
+    step.uses?.startsWith("actions/upload-artifact@"),
+  );
+  assert.equal(
+    hydrationUpload?.with?.name,
+    "verification-hydration-node-${{ matrix.node }}",
+  );
+  assert.equal(hydrationUpload?.with?.overwrite, true);
   const download = required.steps.find((step) =>
     step.uses?.startsWith("actions/download-artifact@"),
   );
@@ -149,7 +178,14 @@ test("CI shards complete verification behind one prerequisite", async () => {
       step.run?.includes("tests/export_destination_races.test.ts"),
     ),
   );
-  for (const job of [repository, packageJob, unit, browser, native]) {
+  for (const job of [
+    repository,
+    packageJob,
+    unit,
+    browser,
+    hydration,
+    native,
+  ]) {
     assertFullHistoryCheckout(job);
     const setupNode = job.steps.find((step) =>
       step.uses?.startsWith("actions/setup-node@"),
@@ -157,7 +193,85 @@ test("CI shards complete verification behind one prerequisite", async () => {
     assert.equal(setupNode?.with?.cache, "npm");
     assert.ok(job.steps.some((step) => step.run === "npm ci"));
   }
+  for (const job of [packageJob, unit, browser, hydration]) {
+    assert.equal(
+      job.steps.some(
+        (step) => step.name === "Read baseline dependency lockfile",
+      ),
+      false,
+    );
+    const setupNode = job.steps.find((step) =>
+      step.uses?.startsWith("actions/setup-node@"),
+    );
+    assert.equal(
+      setupNode?.with?.["cache-dependency-path"],
+      "package-lock.json",
+    );
+  }
+  for (const [job, suite] of [
+    [unit, "unit"],
+    [browser, "browser"],
+    [hydration, "hydration"],
+  ] as const) {
+    const installIndex = job.steps.findIndex((step) => step.run === "npm ci");
+    const chromiumIndex = job.steps.findIndex((step) =>
+      step.run?.includes("playwright install --with-deps chromium"),
+    );
+    const suiteIndex = job.steps.findIndex((step) =>
+      step.run?.includes(`cargo xtask check --suite ${suite}`),
+    );
+    assert.ok(installIndex >= 0 && installIndex < suiteIndex);
+    if (suite === "browser" || suite === "hydration")
+      assert.ok(chromiumIndex >= 0 && chromiumIndex < suiteIndex);
+    const commands = job.steps.map((step) => step.run ?? "").join("\n");
+    assert.doesNotMatch(
+      commands,
+      /git merge-base HEAD origin\/main/u,
+      `${suite} must not resolve its cache input from origin/main`,
+    );
+    assert.doesNotMatch(
+      commands,
+      /(?:branch-point|baseline-package-lock|git show [^\n]*package-lock\.json)/u,
+      `${suite} must use the checked-out lockfile`,
+    );
+  }
+  assert.doesNotMatch(source, /origin\/main/u);
+  assert.doesNotMatch(source, /baseline-package-lock/u);
+  assert.equal(setupNodeVersion(repository), 24);
+  assert.equal(setupNodeVersion(native), minimumTestedNode);
+  assert.equal(
+    setupNodeVersion(required),
+    "${{ needs.repository.outputs.node-24-version }}",
+  );
   assertPinnedActions(workflow);
+});
+
+test("local, package and CI runtimes share the Node compatibility policy", async () => {
+  const [version, manifestSource, lockSource, readme] = await Promise.all([
+    fs.readFile(path.join(repositoryRoot, ".node-version"), "utf8"),
+    fs.readFile(path.join(repositoryRoot, "package.json"), "utf8"),
+    fs.readFile(path.join(repositoryRoot, "package-lock.json"), "utf8"),
+    fs.readFile(path.join(repositoryRoot, "README.md"), "utf8"),
+  ]);
+  const manifest = JSON.parse(manifestSource) as {
+    engines: { node: string };
+  };
+  const lock = JSON.parse(lockSource) as {
+    packages: { "": { engines: { node: string } } };
+  };
+  assert.equal(version.trim(), currentTestedNode);
+  assert.equal(manifest.engines.node, SUPPORTED_NODE_RANGE);
+  assert.equal(lock.packages[""].engines.node, manifest.engines.node);
+  assert.ok(
+    readme.includes(`\`${SUPPORTED_NODE_RANGE}\``),
+    "the README must document the supported Node range",
+  );
+  assert.ok(
+    readme.includes("[`.node-version`](./.node-version)"),
+    "development setup must follow the tested Node version",
+  );
+  assert.ok(TESTED_NODE_VERSIONS.every(isSupportedNodeVersion));
+  assert.ok(testedNodeVersions.includes(version.trim()));
 });
 
 test("CI resolves the latest Node 24 patch once for every dependent job", async () => {
@@ -186,7 +300,7 @@ test("CI resolves the latest Node 24 patch once for every dependent job", async 
     "${{ steps.node-version.outputs.value }}",
   );
   assert.doesNotMatch(source, /steps\.node\.outputs\.node-version/);
-  for (const name of ["package", "unit", "browser", "required"]) {
+  for (const name of ["package", "unit", "browser", "hydration", "required"]) {
     const job = workflow.jobs[name];
     assert.ok(job, name);
     assert.ok(job.needs?.includes("repository"), name);
@@ -264,4 +378,9 @@ function assertFullHistoryCheckout(job: WorkflowJob): void {
   );
   assert.ok(checkout);
   assert.equal(checkout.with?.["fetch-depth"], 0);
+}
+
+function setupNodeVersion(job: WorkflowJob): unknown {
+  return job.steps.find((step) => step.uses?.startsWith("actions/setup-node@"))
+    ?.with?.["node-version"];
 }
