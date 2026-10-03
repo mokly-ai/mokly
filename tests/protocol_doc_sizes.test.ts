@@ -13,7 +13,7 @@ const oversizedCaps: Readonly<Record<string, number>> = {
   "mokly-design-components.md": 254,
   "mokly-design-links.md": 329,
   "mokly-export-delivery.md": 264,
-  "mokly-frame-adapter.md": 381,
+  "mokly-frame-adapter.md": 362,
   "mokly-navigation.md": 410,
   "mokly-removed-previews.md": 278,
   "mokly-runtime.md": 442,

@@ -719,6 +719,37 @@ equality. No pixel tolerance or product change is added. All four cases pass
 ten times (40/40) in 2 minutes 36 seconds with exact byte equality. The complete
 browser, hydration and final complete gate run after the test-fix commit.
 
+The next complete gate passed repository, package and all 3,843 unit cases,
+then failed one desktop component inspection case. The unchanged main test
+passed 30 times in isolation. Delaying the Toolbar desktop response by 1,500
+milliseconds reproduced the unavailable Highlight state twice in six runs on
+the merged tree, but not in six runs on main. In both trees, mobile Usage
+provided the two instance rows while the desktop frame was still blank.
+
+A deterministic microtask probe then delivered ready usage after the initial
+synchronization check and before initialization ended. It failed on both
+main `1dc91580` and the merged tree: the session was Ready with usage revision
+1, but the adapter still held unavailable metadata and received no update.
+The frame hook is identical to main. This is an existing main race that the
+merge's scheduling exposed more often. The user authorized a fix here after
+that classification. A separate committed regression test fails in all three
+repeats before the fix. The fix moves the end of initialization into the
+synchronous final synchronization check. Later evidence uses the existing
+ordered update and readiness path. Adapter behavior, frame navigation and
+inspection failure handling remain unchanged. The complete browser, hydration
+and final gate run after this fix. Existing milestones remain complete.
+
+After the readiness fix, the deterministic test passes all ten repeats. The
+1,500-millisecond delayed-frame reproduction passes all ten repeats: Highlight
+is offered before the desktop load each time and remains active after it.
+The unchanged component example passes desktop and mobile ten times each
+(20/20). The temporary main worktree is removed. The frame usage adoption
+paragraphs move intact to a focused protocol document with the initial handoff
+rule; the frame-adapter exact cap is lowered from 381 to 362. No cap is added
+or raised. The source length gate also requires moving the unchanged identity
+comparison and disposal helpers from the 304-line frame hook to
+`frame_session_lifecycle.ts`. The separate product commit records the existing-main diagnosis.
+
 ## Post-merge follow-up (non-blocking)
 
 - Live inspection: measure boundaries in the mounted DOM and re-enable

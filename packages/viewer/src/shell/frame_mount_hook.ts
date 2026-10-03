@@ -25,6 +25,10 @@ import {
   type ShellFrameSession,
   useOptionalShellFrameRegistry,
 } from "./frame_registry.js";
+import {
+  disposeSession,
+  sameFrameIdentity,
+} from "./frame_session_lifecycle.js";
 
 export type ShellFrameStatus = "error" | "loading" | "ready" | "unavailable";
 
@@ -139,7 +143,6 @@ export function useMountedShellFrame(input: MountedFrameInput): {
           replace,
         );
         if (!synchronized) return;
-        session.initializing = false;
         readiness.resolve(mounted);
         if (!controller.signal.aborted && active.current === session) {
           session.status = "ready";
@@ -271,34 +274,6 @@ async function synchronizeMountedUsage(
       if (revision === session.usageRevision) throw error;
     }
   }
+  session.initializing = false;
   return !session.controller.signal.aborted;
-}
-
-function sameFrameIdentity(
-  current: ShellFrameIdentity,
-  next: ShellFrameIdentity,
-): boolean {
-  return (
-    current.colorScheme === next.colorScheme &&
-    current.entryId === next.entryId &&
-    current.stepIndex === next.stepIndex &&
-    current.variantId === next.variantId &&
-    current.viewport === next.viewport
-  );
-}
-
-function disposeSession(
-  registry: ShellFrameRegistry,
-  session: ActiveSession,
-  active: RefObject<ActiveSession | undefined>,
-): void {
-  if (active.current === session) active.current = undefined;
-  runFrameCleanup([
-    () => session.rejectReady(new FrameError("disposed")),
-    () => session.controller.abort(),
-    () => session.unsubscribe?.(),
-    () => session.mounted?.dispose(),
-    () => cancelFrameMount(session.element),
-    () => registry.remove(session),
-  ]);
 }

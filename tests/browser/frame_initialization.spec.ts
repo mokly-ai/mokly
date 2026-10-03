@@ -1,6 +1,7 @@
+import { fileURLToPath } from "node:url";
+
 import { expect, test } from "@playwright/test";
 import { build } from "esbuild";
-import { fileURLToPath } from "node:url";
 
 import type {} from "../helpers/frame_initialization.js";
 

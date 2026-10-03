@@ -69,6 +69,8 @@ readers accept only v7; earlier output follows
   hydration, strict reading, evidence adoption, and static capture.
 - [Embeddable viewer](./mokly-viewer.md) — approved `@mokly/viewer` API and
   shared hydrated shell.
+- [Frame usage adoption](./mokly-frame-usage-adoption.md) — initial readiness,
+  ordered updates, inspection restoration and cancellation.
 - [Live viewer capabilities](./mokly-live-capabilities.md) — private Serve
   evidence, updates, recovery, previews and on-demand rendering for React.
 - [Interactive host integration](./mokly-interactive-host-integration.md) —
