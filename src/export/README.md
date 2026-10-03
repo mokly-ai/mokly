@@ -54,6 +54,11 @@ The projection omits views without retained or excluded resources and drops
 screens whose evidence slice is empty. Comparison JSON separately retains all
 view states and the material-change flag.
 
+Export shares the complete catalogue's CSS rule proof with page classification.
+It publishes the same `resourceEvidence` on catalogue views and whole-document
+pages. Publication capture uses the same ready snapshot. Neither path infers
+component changes from stylesheet declarations or resource owners.
+
 Review result v5 is the only comparison result: a catalogue without
 registered components emits the same shape with empty component arrays.
 Snapshot roots and resources use `snapshotSidePath` and

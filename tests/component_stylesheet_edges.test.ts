@@ -19,7 +19,7 @@ import {
 import { removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
-test("realpath aliases share one first-declaration link and both rendered owners", async (context) => {
+test("realpath aliases share one first-declaration link and both rendered declarers", async (context) => {
   const source = declared("action.css", "alias.css")
     .replace(
       '<pane.Component><action.Component label="Go" /></pane.Component><action.Component moklyInstance="hidden" label="Hidden" hidden />',
@@ -42,9 +42,12 @@ test("realpath aliases share one first-declaration link and both rendered owners
   )!;
   assert.equal((html.match(/href="\.\.\/action\.css"/g) ?? []).length, 1);
   assert.doesNotMatch(html, /href="\.\.\/alias\.css"/);
-  assert.deepEqual(screen.componentViews![0]!.resources, [
-    { path: "action.css", componentIds: ["action", "pane"] },
-  ]);
+  assert.deepEqual(
+    screen.componentViews![0]!.insertedStylesheets!.map(
+      ({ path, componentIds }) => ({ path, componentIds }),
+    ),
+    [{ path: "action.css", componentIds: ["action", "pane"] }],
+  );
 
   const baseline = {
     ...before,
@@ -70,7 +73,8 @@ test("realpath aliases share one first-declaration link and both rendered owners
   if (result.schemaVersion !== 5) return;
   assert.deepEqual(result.changes.map((entry) => entry.after?.id).sort(), [
     "action",
-    "pane",
+    "action-default",
+    "action-disabled",
   ]);
   assert.ok(
     result.affectedConsumers.some(
@@ -78,13 +82,13 @@ test("realpath aliases share one first-declaration link and both rendered owners
     ),
   );
   assert.ok(
-    result.affectedConsumers.some(
+    !result.affectedConsumers.some(
       (consumer) => consumer.changedComponentId === "pane",
     ),
   );
 });
 
-test("renderer-authored aliases stay in place and select the first link's public ownership path", async (context) => {
+test("renderer-authored aliases stay in place without inserted provenance or CSS owners", async (context) => {
   const fixture = await fixtureWithSheets(
     declared("action.css", "alias.css"),
     'renderer: "renderer.tsx", stylesheets: [],',
@@ -106,9 +110,7 @@ export default (input) => { const prefix = "../"; return '<html><head><meta name
   assert.equal((html.match(/href="\.\.\/alias\.css"/g) ?? []).length, 1);
   assert.equal((html.match(/href="\.\.\/action\.css"/g) ?? []).length, 1);
   assert.ok(html.indexOf('name="first"') < html.indexOf("alias.css"));
-  assert.deepEqual(screen.componentViews![0]!.resources, [
-    { path: "alias.css", componentIds: ["action", "pane"] },
-  ]);
+  assert.deepEqual(screen.componentViews![0]!.resources, []);
 });
 
 test("dot-prefixed alias filenames inside the public root remain reusable", async (context) => {

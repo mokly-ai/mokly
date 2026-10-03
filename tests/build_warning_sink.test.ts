@@ -26,13 +26,13 @@ test("warnings deduplicate across phases, sort before readiness and repeat only 
   ]);
   sink.add(warning("removed-dependencies", ["home"]));
   sink.add(
-    warning("ignored-declared-resource-owner", [
+    warning("ignored-stylesheet-resource-owner", [
       "home.mobile.html",
       "/repo/action.css",
     ]),
   );
   assert.deepEqual(emitted.slice(-1), [
-    "ignored-declared-resource-owner:home.mobile.html:/repo/action.css",
+    "ignored-stylesheet-resource-owner:home.mobile.html:/repo/action.css",
   ]);
   sink.reset();
   sink.add(warning("removed-dependencies", ["home"]));

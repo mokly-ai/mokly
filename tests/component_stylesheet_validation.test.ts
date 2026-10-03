@@ -104,11 +104,11 @@ test("realpath aliases deduplicate declarations and reuse configured links", asy
     screen.componentViews![0]!.resources.find(
       (resource) => resource.path === "alias.css",
     )?.componentIds,
-    ["action"],
+    undefined,
   );
 });
 
-test("renderer resource aliases cannot override declared owners", async (t) => {
+test("renderer CSS aliases are ignored and declarations retain inserted provenance", async (t) => {
   const fixture = await fixtureWithSheets(
     declared(),
     'renderer: "renderer.tsx",',
@@ -123,7 +123,7 @@ test("renderer resource aliases cannot override declared owners", async (t) => {
   const screen = result.manifest.entries.find((entry) => entry.id === "home");
   assert.ok(screen?.kind === "screen");
   assert.deepEqual(
-    screen.componentViews![0]!.resources.find(
+    screen.componentViews![0]!.insertedStylesheets!.find(
       (resource) => resource.path === "action.css",
     )?.componentIds,
     ["action"],

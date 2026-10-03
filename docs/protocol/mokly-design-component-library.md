@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-CSS provenance without derived owners is planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+CSS provenance without derived owners is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 The remaining contract is implemented.

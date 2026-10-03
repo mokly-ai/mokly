@@ -78,9 +78,24 @@
           "comparison": {
             "status": "unavailable"
           },
+          "resourceEvidence": {
+            "excludedResources": [
+              {
+                "path": "mockups/action.css",
+                "reason": "no-matching-rule"
+              }
+            ]
+          },
           "usage": {
             "instances": [],
-            "ranges": [],
+            "ranges": [
+              {
+                "id": "r-0",
+                "target": {
+                  "kind": "root"
+                }
+              }
+            ],
             "slots": [],
             "status": "ready"
           },
@@ -91,9 +106,24 @@
           "comparison": {
             "status": "unavailable"
           },
+          "resourceEvidence": {
+            "excludedResources": [
+              {
+                "path": "mockups/action.css",
+                "reason": "no-matching-rule"
+              }
+            ]
+          },
           "usage": {
             "instances": [],
-            "ranges": [],
+            "ranges": [
+              {
+                "id": "r-0",
+                "target": {
+                  "kind": "root"
+                }
+              }
+            ],
             "slots": [],
             "status": "ready"
           },
@@ -122,6 +152,14 @@
       "id": "guide",
       "kind": "page",
       "navPath": [],
+      "resourceEvidence": {
+        "excludedResources": [
+          {
+            "path": "mockups/page.css",
+            "reason": "no-matching-rule"
+          }
+        ]
+      },
       "tags": [],
       "title": "Guide"
     }
@@ -250,6 +288,14 @@
           "colorScheme": "light",
           "comparison": {
             "status": "unavailable"
+          },
+          "resourceEvidence": {
+            "excludedResources": [
+              {
+                "path": "mockups/action.css",
+                "reason": "no-matching-rule"
+              }
+            ]
           },
           "usage": {
             "instances": [],

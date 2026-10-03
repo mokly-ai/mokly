@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Uniform CSS rule attribution in this guide is planned for Milestone 19 of the
+Uniform CSS rule attribution in this guide is implemented in Milestone 19 of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 The example declares component CSS with `stylesheets`, uses manifest v8 and

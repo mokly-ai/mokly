@@ -8,6 +8,7 @@ import {
   readSchema,
   readSlot,
 } from "./component_values.js";
+import { readResourceEvidence } from "./resource_evidence.js";
 import type {
   ShellCatalogueRoutedEntry,
   ShellCatalogueUsage,
@@ -123,6 +124,9 @@ function readViewWithUsage<Usage extends ShellCatalogueUsage>(
     colorScheme: choice(input.colorScheme, ["light", "dark"] as const),
     usage: read(input.usage),
     comparison: readComparison(input.comparison),
+    ...(input.resourceEvidence === undefined
+      ? {}
+      : { resourceEvidence: readResourceEvidence(input.resourceEvidence) }),
   };
 }
 function common(input: Record<string, unknown>): CatalogueEntry {
@@ -185,6 +189,9 @@ function readEntryWithViews<View extends ShellCatalogueView>(
     return {
       ...base,
       kind,
+      ...(input.resourceEvidence === undefined
+        ? {}
+        : { resourceEvidence: readResourceEvidence(input.resourceEvidence) }),
     };
   if (kind === "use-case")
     return {

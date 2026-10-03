@@ -69,13 +69,13 @@ test(
       path.join(fixture.mockupsDir, "action.css"),
       "button{color:green}",
     );
-    html = await waitForChangedCount(server.url, version(html), 1);
+    html = await waitForChangedCount(server.url, version(html), 3);
     assert.equal((await workspace("screens/home.html")).change, undefined);
     await fs.writeFile(
       fixture.entryPath,
       edited.replaceAll('label="Finish"', 'label="Purchase"'),
     );
-    await waitForChangedCount(server.url, version(html), 2);
+    await waitForChangedCount(server.url, version(html), 4);
     assert.equal(
       (await workspace("screens/home.html")).change?.after?.id,
       "home",
@@ -91,8 +91,8 @@ test(
       review.changes
         .map((entry: { after: { id: string } }) => entry.after.id)
         .sort(),
-      ["action", "home"],
+      ["action", "action-default", "action-disabled", "home"],
     );
-    assert.equal(changedCount(await catalogue(server.url)), 2);
+    assert.equal(changedCount(await catalogue(server.url)), 4);
   },
 );

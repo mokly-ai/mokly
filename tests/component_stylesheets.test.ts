@@ -5,7 +5,6 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { componentRuntime } from "../dist/build/component_runtime.js";
-import { insertComponentStylesheets } from "../dist/components/stylesheet_links.js";
 import { loadConfig } from "../dist/config/load.js";
 import { classifyWatchPath } from "../dist/server/watch_events.js";
 import { watchTargets } from "../dist/server/watch_paths.js";
@@ -20,7 +19,7 @@ import { componentVariants } from "./helpers/component_views.js";
 import { removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
-test("rendered components link their files in first-render order and own only their linked files", async (t) => {
+test("rendered components link their files in first-render order and record only inserted-link provenance", async (t) => {
   const fixture = await fixtureWithSheets();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -39,10 +38,17 @@ test("rendered components link their files in first-render order and own only th
     ),
     ["../base.css", "../pane.css", "../action.css"],
   );
-  assert.deepEqual(screen.componentViews![0]!.resources, [
-    { path: "action.css", componentIds: ["action"] },
-    { path: "pane.css", componentIds: ["pane"] },
-  ]);
+  assert.deepEqual(
+    screen
+      .componentViews![0]!.insertedStylesheets!.map(
+        ({ path, componentIds }) => ({ path, componentIds }),
+      )
+      .sort((a, b) => a.path.localeCompare(b.path)),
+    [
+      { path: "action.css", componentIds: ["action"] },
+      { path: "pane.css", componentIds: ["pane"] },
+    ],
+  );
   const action = componentVariants(manifest, "action")[0]!;
   assert.equal(action.kind, "component");
   if (action.kind !== "component") return;
@@ -52,9 +58,12 @@ test("rendered components link their files in first-render order and own only th
   )!;
   assert.match(actionHtml, /action\.css/);
   assert.doesNotMatch(actionHtml, /pane\.css/);
-  assert.deepEqual(action.componentViews[0]!.resources, [
-    { path: "action.css", componentIds: ["action"] },
-  ]);
+  assert.deepEqual(
+    action.componentViews[0]!.insertedStylesheets!.map(
+      ({ path, componentIds }) => ({ path, componentIds }),
+    ),
+    [{ path: "action.css", componentIds: ["action"] }],
+  );
   const runtimeConfig = componentRuntime(compilation).config;
   assert.ok(
     watchTargets(runtimeConfig).includes(
@@ -91,9 +100,12 @@ test("null markup still links the declared root stylesheet without configured li
     html,
     /<link rel="stylesheet" href="\.\.\/action\.css"><\/head>/,
   );
-  assert.deepEqual(action.componentViews[0]!.resources, [
-    { path: "action.css", componentIds: ["action"] },
-  ]);
+  assert.deepEqual(
+    action.componentViews[0]!.insertedStylesheets!.map(
+      ({ path, componentIds }) => ({ path, componentIds }),
+    ),
+    [{ path: "action.css", componentIds: ["action"] }],
+  );
   const screen = result.manifest.entries.find((entry) => entry.id === "home");
   assert.ok(screen?.kind === "screen");
   const screenHtml = textOutput(
@@ -104,7 +116,7 @@ test("null markup still links the declared root stylesheet without configured li
   assert.doesNotMatch(screenHtml, /<button/);
 });
 
-test("shared declarations merge owners and encode public hrefs without doubling links", async (t) => {
+test("shared declarations merge declaring ids and encode public hrefs without doubling links", async (t) => {
   const file = "shared & encoded.css";
   const fixture = await fixtureWithSheets(
     declared(file, file),
@@ -125,9 +137,14 @@ test("shared declarations merge owners and encode public hrefs without doubling 
     [...html.matchAll(/href="\.\.\/shared%20%26%20encoded\.css"/g)].length,
     1,
   );
-  assert.deepEqual(screen.componentViews![0]!.resources, [
-    { path: file, componentIds: ["action", "pane"] },
-  ]);
+  assert.deepEqual(
+    screen
+      .componentViews![0]!.insertedStylesheets!.map(
+        ({ path, componentIds }) => ({ path, componentIds }),
+      )
+      .sort((a, b) => a.path.localeCompare(b.path)),
+    [{ path: file, componentIds: ["action", "pane"] }],
+  );
 });
 
 test("insertion rebases renderer-owned style offsets through the source header", async (t) => {
@@ -175,7 +192,7 @@ for (const [name, source, rule, pattern] of [
     );
   });
 
-test("renderer ownership for declared CSS is ignored in favour of rendered declarers", async (t) => {
+test("renderer ownership for declared CSS is ignored while provenance is retained", async (t) => {
   const fixture = await fixtureWithSheets(
     declared(),
     'renderer: "renderer.tsx",',
@@ -188,112 +205,20 @@ test("renderer ownership for declared CSS is ignored in favour of rendered decla
   const result = await compileCatalogue(await loadConfig(fixture.root));
   const screen = result.manifest.entries.find((entry) => entry.id === "home");
   assert.ok(screen?.kind === "screen");
-  assert.deepEqual(screen.componentViews![0]!.resources, [
-    { path: "action.css", componentIds: ["action"] },
-    { path: "pane.css", componentIds: ["pane"] },
-  ]);
+  assert.deepEqual(
+    screen
+      .componentViews![0]!.insertedStylesheets!.map(
+        ({ path, componentIds }) => ({ path, componentIds }),
+      )
+      .sort((a, b) => a.path.localeCompare(b.path)),
+    [
+      { path: "action.css", componentIds: ["action"] },
+      { path: "pane.css", componentIds: ["pane"] },
+    ],
+  );
   assert.ok(
     result.warnings?.some(
-      (warning) => warning.code === "ignored-declared-resource-owner",
+      (warning) => warning.code === "ignored-stylesheet-resource-owner",
     ),
   );
 });
-
-for (const value of [
-  "[componentStylesheets, componentStylesheets]",
-  "[], lightStylesheets: [componentStylesheets]",
-])
-  test(`rejects invalid configured marker ${value}`, async (t) => {
-    const fixture = await fixtureWithSheets(
-      declared(),
-      `stylesheets: [{ match: "**", stylesheets: ${value} }],`,
-    );
-    t.after(() => removeFixture(fixture));
-    await fs.writeFile(
-      fixture.configPath,
-      (await fs.readFile(fixture.configPath, "utf8")).replace(
-        "{ defineConfig }",
-        "{ defineConfig, componentStylesheets }",
-      ),
-    );
-    await assert.rejects(
-      loadConfig(fixture.root),
-      /componentStylesheets|marker/,
-    );
-  });
-
-test("missing configured link places component links at the end of the head", async (t) => {
-  const fixture = await fixtureWithSheets(
-    declared(),
-    'renderer: "renderer.tsx", stylesheets: [{ match: "**", stylesheets: ["base.css"] }],',
-  );
-  t.after(() => removeFixture(fixture));
-  await fs.writeFile(
-    path.join(fixture.root, "renderer.tsx"),
-    `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
-  );
-  const result = await compileCatalogue(await loadConfig(fixture.root));
-  const screen = result.manifest.entries.find((entry) => entry.id === "home");
-  assert.ok(screen?.kind === "screen");
-  const html = textOutput(
-    result.outputs,
-    viewRoute(screen.kind, screen.id, "mobile", "light"),
-  )!;
-  assert.doesNotMatch(html, /href="\.\.\/base\.css"/);
-  assert.match(html, /pane\.css/);
-  assert.match(html, /action\.css/);
-});
-
-test("a configured link away from the insertion position may be absent", () => {
-  const html = insertComponentStylesheets(
-    '<html><head><link rel="stylesheet" href="b.css"><link rel="stylesheet" href="c.css"></head><body></body></html>',
-    "screens/home.html",
-    ["a.css", "b.css", "c.css"],
-    2,
-    ["action.css"],
-  );
-  assert.match(
-    html,
-    /href="b\.css"><link rel="stylesheet" href="\.\.\/action\.css"><link rel="stylesheet" href="c\.css"/,
-  );
-});
-
-for (const [name, head] of [
-  [
-    "duplicate",
-    '<link rel="stylesheet" href="${input.stylesheets[0]}"><link rel="stylesheet" href="${input.stylesheets[0]}">',
-  ],
-  [
-    "out of order",
-    '<link rel="stylesheet" href="${input.stylesheets[1]}"><link rel="stylesheet" href="${input.stylesheets[0]}">',
-  ],
-  [
-    "outside head",
-    '</head><body><link rel="stylesheet" href="${input.stylesheets[0]}">',
-  ],
-] as const)
-  test(`keeps ${name} configured links when inserting component links`, async (t) => {
-    const fixture = await fixtureWithSheets(
-      declared(),
-      'renderer: "renderer.tsx", stylesheets: [{ match: "**", stylesheets: ["base.css", "extra.css"] }],',
-    );
-    t.after(() => removeFixture(fixture));
-    await fs.writeFile(
-      path.join(fixture.mockupsDir, "extra.css"),
-      "body{margin:0}",
-    );
-    await fs.writeFile(
-      path.join(fixture.root, "renderer.tsx"),
-      `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => \`<html><head>${head}</head><body>\${renderToStaticMarkup(input.node)}</body></html>\`;`,
-    );
-    const result = await compileCatalogue(await loadConfig(fixture.root));
-    const screen = result.manifest.entries.find((entry) => entry.id === "home");
-    assert.ok(screen?.kind === "screen");
-    const html = textOutput(
-      result.outputs,
-      viewRoute(screen.kind, screen.id, "mobile", "light"),
-    )!;
-    assert.match(html, /href="\.\.\/pane\.css"/);
-    assert.match(html, /href="\.\.\/action\.css"/);
-    assert.match(html, /href="\.\.\/base\.css"/);
-  });

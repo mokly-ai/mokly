@@ -5,8 +5,7 @@ The schema and public types remain in that contract.
 
 ## Delivery Status
 
-The v4 resource-evidence allowlist and root-range target are planned for
-[M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+The v4 resource-evidence allowlist and root-range target are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 ## Projection And Privacy
 

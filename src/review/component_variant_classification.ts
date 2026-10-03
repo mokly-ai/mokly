@@ -116,6 +116,11 @@ export function classifyComponentVariants(
     if (ownsViewChange) reasons.push(...comparedReasons);
     else if (comparedReasons.length > 0 && !parentDependencyEvidence)
       parentReasons.push(...comparedReasons);
+    const rootCss = comparisons.flatMap(
+      (comparison) => comparison.componentCssReasons ?? [],
+    );
+    reasons.push(...rootCss);
+    parentReasons.push(...rootCss);
     reviews.push({
       id,
       title: selected.title,

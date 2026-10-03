@@ -9,6 +9,7 @@ import type {
   ObjectPropSchema,
 } from "../components/prop_types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
+import type { ResourceEvidence } from "../review/types.js";
 
 export type ChangesStatus =
   "preparing" | "pending" | "ready" | "unavailable" | "disabled";
@@ -76,6 +77,7 @@ export type CatalogueUsage =
     }
   | { status: "pending" | "unavailable" };
 export interface CatalogueView {
+  resourceEvidence?: ResourceEvidence;
   viewport: Viewport;
   colorScheme: ColorScheme;
   usage: CatalogueUsage;
@@ -92,6 +94,7 @@ export interface CatalogueScreen extends CatalogueEntry {
 }
 export interface CataloguePage extends CatalogueEntry {
   kind: "page";
+  resourceEvidence?: ResourceEvidence;
 }
 export interface CatalogueUseCase extends CatalogueEntry {
   kind: "use-case";

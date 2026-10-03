@@ -2,8 +2,7 @@
 
 ## Delivery Status
 
-Root output ranges and removal of CSS resource owners are planned for
-[M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md). Manifest v8 changes in place.
+Root output ranges and removal of CSS resource owners are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md). Manifest v8 changes in place.
 
 manifest-v8 generation, validation, Serve, and static export use the public
 `defineComponent` API. These are the normative interfaces

@@ -29,7 +29,10 @@ export function assertViewAnalysisScope(
 ): void {
   for (const view of views)
     for (const reason of view.reasons ?? [])
-      if (reason.analysis && !analysisOwnsStylesheet(reason.path, config))
+      if (
+        (reason.analysis || isStylesheetPath(reason.path)) &&
+        !analysisOwnsStylesheet(reason.path, config)
+      )
         throw new MoklyError(
           "review-invalid",
           `analysed resource is outside stylesheet scope: ${reason.path}`,

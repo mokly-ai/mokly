@@ -7,6 +7,7 @@ import { computeCatalogueChanges } from "../dist/server/changed.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
+import { resourceReasonSummaries } from "./helpers/css_evidence.js";
 
 for (const components of [false, true]) {
   for (const [name, css, included, status] of [
@@ -33,7 +34,7 @@ for (const components of [false, true]) {
         assert.equal(view.state, included ? "changed" : "unchanged");
         if (included) {
           assert.deepEqual(view.excludedResources, undefined);
-          assert.deepEqual(view.reasons, [
+          assert.deepEqual(resourceReasonSummaries(view.reasons), [
             {
               kind: "dependency",
               path: "mockups/shared.css",
@@ -108,7 +109,7 @@ for (const components of [false, true]) {
       for (const view of artifact.result.screens.find(
         (entry) => entry.id === "home",
       )!.views) {
-        assert.deepEqual(view.reasons, [
+        assert.deepEqual(resourceReasonSummaries(view.reasons), [
           { kind: "dependency", path: `mockups/${resource}` },
         ]);
         assert.equal(view.state, "changed");

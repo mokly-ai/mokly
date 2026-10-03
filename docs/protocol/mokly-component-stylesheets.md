@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Linking and provenance are implemented. The removal of CSS ownership records
-and uniform rule attribution are planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+and uniform rule attribution are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 The [ownership and comparison contract](./mokly-component-stylesheet-ownership.md) defines final link provenance and evidence.

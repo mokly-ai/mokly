@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Uniform CSS page membership and catalogue evidence are planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
+Uniform CSS page membership and catalogue evidence are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
 of the [source-path removal plan](../../plans/remove-source-path-evidence.md); the details display is planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
 
 Implemented with [pages](./mokly-pages.md), variants, and publication. Catalogue

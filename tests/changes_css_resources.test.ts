@@ -7,6 +7,7 @@ import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
+import { cssSummary } from "./helpers/css_evidence.js";
 
 for (const components of [false, true]) {
   test(`v5 (components=${components}) paired ignored content in embedded documents cannot keep CSS`, async (t) => {
@@ -50,7 +51,7 @@ for (const components of [false, true]) {
     for (const view of result.screens.find((screen) => screen.id === "home")!
       .views) {
       assert.equal(view.state, "changed");
-      assert.deepEqual(view.reasons?.[0]?.analysis, {
+      assert.deepEqual(cssSummary(view.reasons?.[0]?.analysis), {
         status: "matched",
         selectors: [".inside-frame"],
       });

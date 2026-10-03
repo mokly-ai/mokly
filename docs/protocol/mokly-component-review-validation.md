@@ -6,8 +6,7 @@ implemented by both the producer and strict v5 reader.
 
 ## Delivery Status
 
-Rule-specific source proof and own-page CSS impact validation are planned for
-[M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+Rule-specific source proof and own-page CSS impact validation are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 ## Validation And Canonical Output
 

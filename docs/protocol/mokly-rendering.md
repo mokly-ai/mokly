@@ -9,7 +9,7 @@ public exclusions.
 ## Delivery Status
 
 Removing derived CSS owners, filtering renderer CSS owners and recording root
-output boundaries are planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+output boundaries are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 The remaining contract is implemented.
 

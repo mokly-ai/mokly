@@ -22,6 +22,7 @@ import {
 import { CompilationAssetReader } from "./compilation_assets.js";
 import { classifyComponents } from "./component_classification.js";
 import { baselineForCurrentIdentities } from "./component_metadata.js";
+import type { CssResourceAnalysis } from "./css/resource_analysis.js";
 
 /** Retain every component variant and affected screen, then classify the same immutable bytes. */
 export async function compareComponentCatalogue(
@@ -34,6 +35,7 @@ export async function compareComponentCatalogue(
   baseCommit: string,
   baseRef: string,
   useFastPath?: boolean,
+  cssAnalysis?: CssResourceAnalysis,
 ): Promise<ReviewArtifact> {
   baseline = baselineForCurrentIdentities(baseline, compilation.manifest);
   const baseArtifacts = artifactViews(baseline);
@@ -72,6 +74,7 @@ export async function compareComponentCatalogue(
     changedPaths,
     baseCommit,
     baseRef,
+    ...(cssAnalysis ? { cssAnalysis } : {}),
     ...(useFastPath === undefined ? {} : { useFastPath }),
   });
   const files = new Map<string, ReviewArtifactContent>();

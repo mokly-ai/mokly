@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Root output ranges, CSS owner removal and uniform CSS attribution below are
-planned for Milestone 19 of the
+implemented in Milestone 19 of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 Use `defineComponent` to give a shared React component its own catalogue page,
@@ -16,7 +16,7 @@ The `stylesheets` input was delivered by
 Milestone 3. Milestone 6 removed source-path inputs; current output uses
 manifest v8.
 Milestone 11 of that plan groups declarations by real file, merges all rendered
-owners, and reuses renderer-authored links without exposing declarations through
+declarers, and reuses renderer-authored links without exposing declarations through
 `RenderInput.entry`. The first rendered declaration determines a new link's
 public path; a renderer-authored link keeps its own path and position.
 
@@ -126,8 +126,9 @@ The [ownership and comparison contract](../../docs/protocol/mokly-component-styl
 defines final-link validation and private link provenance.
 `stylesheet_provenance.ts` strips transient tokens from final HTML, while
 `comparison_stylesheets.ts` removes only proven inserted links from review
-material. `render.tsx` returns structured warnings for ignored renderer
-ownership. Build, Check, export, publish and Serve now report those warnings
+material. `build/renderer_resources.ts` discards CSS ownership assertions after public
+file checks and emits the stylesheet warning. `render.tsx` returns temporary
+link declarations separately from the private usage record. Build, Check, export, publish and Serve now report those warnings
 through the shared invocation sink.
 Historical Mokabook comparisons preserve the original document coordinates when
 applying recorded style ownership; internal marker renames alone do not create

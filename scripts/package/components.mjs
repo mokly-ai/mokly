@@ -62,9 +62,18 @@ export async function smokeRegisteredComponents(
       (entry) => entry.variantOf === action.id,
     );
     const view = variant.componentViews[0];
-    assert.deepEqual(view.resources, [
-      { path: "component.css", componentIds: ["packed-action"] },
-    ]);
+    assert.deepEqual(view.resources, []);
+    assert.deepEqual(
+      view.insertedStylesheets.map(({ path, componentIds }) => ({
+        path,
+        componentIds,
+      })),
+      [{ path: "component.css", componentIds: ["packed-action"] }],
+    );
+    assert.equal(
+      view.ranges.filter((range) => range.target.kind === "root").length,
+      1,
+    );
     const { viewRoute } = await import(
       pathToFileURL(path.join(root, "node_modules/@mokly/viewer/dist/data.js"))
         .href

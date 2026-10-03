@@ -6,6 +6,7 @@ import type {
   ManifestV8,
   ReviewResultV5,
   ScreenResourceEvidence,
+  PageResourceEvidence,
 } from "@mokly/viewer/data";
 
 import { isIncompatibleEarlierBaseline } from "../baseline/compatibility.js";
@@ -25,6 +26,7 @@ import {
 import type { ChangeEvidence } from "../review/change_evidence.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { classifyComponents } from "../review/component_classification.js";
+import { CssResourceAnalysis } from "../review/css/resource_analysis.js";
 import { EvidenceAssetReader } from "../review/evidence_assets.js";
 import { CommittedRepository, type GitCommandRunner } from "../review/git.js";
 import { derivedHeadOutputs } from "../review/head_assets.js";
@@ -49,6 +51,7 @@ export interface ComponentChangeSnapshot {
   result?: ReviewResultV5;
   comparison?: ReviewEvidence;
   screenEvidence?: readonly ScreenResourceEvidence[];
+  pageEvidence?: readonly PageResourceEvidence[];
   screenViews?: readonly ScreenViewChanges[];
 }
 export interface ComponentChangeSource {
@@ -195,16 +198,7 @@ export async function readCatalogueChanges(
       accepted?.deliveredStyleSources,
       accepted?.routes,
     ));
-  const content = await classifyChangedContent(
-    manifest,
-    baseline,
-    config,
-    git.reader,
-    commit,
-    changedPaths,
-    reader,
-    components ? "pages" : "all",
-  );
+  const cssAnalysis = new CssResourceAnalysis();
   const result = await classifyComponents({
     before: baseline,
     after: manifest,
@@ -214,7 +208,20 @@ export async function readCatalogueChanges(
     changedPaths,
     beforeReader,
     afterReader: reader,
+    cssAnalysis,
   });
+  const content = await classifyChangedContent(
+    manifest,
+    baseline,
+    config,
+    git.reader,
+    commit,
+    changedPaths,
+    reader,
+    components ? "pages" : "all",
+    cssAnalysis,
+    result,
+  );
   const pageIds = new Set(
     manifest.entries.flatMap((entry) =>
       entry.kind === "page" ? [entry.id] : [],
@@ -246,25 +253,39 @@ export async function readCatalogueChanges(
         : {}),
     },
     result,
-    ...(!components
-      ? {
-          screenViews: screenViewChanges(
-            manifest,
-            baseline,
-            config,
-            content.changedPaths,
-          ),
-        }
-      : {}),
-    ...(!components && content.screens.length
-      ? { screenEvidence: content.screens }
-      : {}),
+    screenViews: !components
+      ? screenViewChanges(manifest, baseline, config, content.changedPaths)
+      : result.screens.map(({ id, views }) => ({
+          id,
+          views: views.map(({ viewport, colorScheme, state }) => ({
+            viewport,
+            colorScheme,
+            state,
+          })),
+        })),
+    screenEvidence: !components
+      ? content.screens
+      : result.screens
+          .map(({ id, views }) => ({
+            id,
+            views: views
+              .filter(
+                (view) =>
+                  view.reasons?.length || view.excludedResources?.length,
+              )
+              .map(({ viewport, colorScheme, reasons, excludedResources }) => ({
+                viewport,
+                colorScheme,
+                ...(reasons ? { reasons } : {}),
+                ...(excludedResources ? { excludedResources } : {}),
+              })),
+          }))
+          .filter((entry) => entry.views.length),
+    ...(content.pages.length ? { pageEvidence: content.pages } : {}),
     changedIds: [
       ...new Set([
         ...ids,
-        ...(components
-          ? result.changes.map((entry) => (entry.after ?? entry.before)!.id)
-          : []),
+        ...result.changes.map((entry) => (entry.after ?? entry.before)!.id),
       ]),
     ].sort(),
   };

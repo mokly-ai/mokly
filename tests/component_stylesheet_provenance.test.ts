@@ -58,7 +58,7 @@ test("adding a declared stylesheet changes its component, not its screen consume
   );
 });
 
-test("declaring already-configured CSS changes its component through ownership", async (context) => {
+test("declaring already-configured CSS adds no Changes reason", async (context) => {
   const beforeSource = componentEntrySource({
     body: '<action.Component label="Go" />',
     paneRender: "(props) => <section>{props.children}</section>",
@@ -74,7 +74,7 @@ test("declaring already-configured CSS changes its component through ownership",
   );
   assert.deepEqual(
     result.changes.map((entry) => entry.after?.id),
-    ["action"],
+    [],
   );
 });
 

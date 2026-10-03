@@ -4,7 +4,7 @@ Continuation of [Changes And Screen Comparisons](./mokly-changes.md).
 
 ## Delivery Status
 
-The expanded v5 per-rule and page evidence is planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+The expanded v5 per-rule and page evidence is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md); its comparison details are planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
 
 ## Generation and serving

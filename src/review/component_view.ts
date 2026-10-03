@@ -2,8 +2,9 @@ import type {
   GeneratedComponentView,
   EntryChangeReason,
   ViewReview,
+  DependencyReason,
 } from "@mokly/viewer/data";
-import { canonicalJson } from "@mokly/viewer/data";
+import { canonicalJson, isStylesheetPath } from "@mokly/viewer/data";
 
 import {
   stripHistoricalMarkers,
@@ -25,6 +26,7 @@ import {
 import { changedResourceBytes } from "./component_resource_changes.js";
 import type { ComponentMaterialReader } from "./component_resources.js";
 import { compareUnchangedComponentView } from "./component_view_fast_path.js";
+import { componentCssDocuments } from "./css/containment.js";
 import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
 import type { ResourceComparison } from "./resource_comparison.js";
 
@@ -34,6 +36,7 @@ export interface ComparedComponentView {
   reasons: readonly EntryChangeReason[];
   changedImplementations: ReadonlySet<string>;
   ownedResources: readonly OwnedResourceReason[];
+  componentCssReasons?: readonly DependencyReason[];
 }
 export interface ComponentViewContext {
   beforeReader: ComponentMaterialReader;
@@ -75,6 +78,18 @@ export async function compareComponentView(
     const evidence = await context.resources.compare(
       before ? { path: before.path, html: normalized.resource } : undefined,
       after ? { path: after.path, html: normalized.resource } : undefined,
+      undefined,
+      undefined,
+      () => [
+        componentCssDocuments(
+          base,
+          head,
+          selected.path,
+          before?.usage,
+          after?.usage,
+          root,
+        ),
+      ],
     );
     return {
       comparisonPath: "complete",
@@ -111,12 +126,20 @@ export async function compareComponentView(
     root &&
     canonicalJson(
       before!.usage?.resources
-        .filter((resource) => resource.componentIds.includes(root))
+        .filter(
+          (resource) =>
+            !isStylesheetPath(resource.path) &&
+            resource.componentIds.includes(root),
+        )
         .map((resource) => resource.path) ?? [],
     ) !==
       canonicalJson(
         after!.usage?.resources
-          .filter((resource) => resource.componentIds.includes(root))
+          .filter(
+            (resource) =>
+              !isStylesheetPath(resource.path) &&
+              resource.componentIds.includes(root),
+          )
           .map((resource) => resource.path) ?? [],
       ),
   );
@@ -152,6 +175,18 @@ export async function compareComponentView(
   const actualEvidence = await context.resources.compare(
     { path: before!.path, html: actualResource.base },
     { path: after!.path, html: actualResource.head },
+    undefined,
+    undefined,
+    () => [
+      componentCssDocuments(
+        base,
+        head,
+        selected.path,
+        before?.usage,
+        after?.usage,
+        root,
+      ),
+    ],
   );
   const byteChanges = context.compareResourceBytes
     ? await changedResourceBytes(
@@ -169,8 +204,6 @@ export async function compareComponentView(
         context.afterReader,
       )
     : new Set<string>();
-  if ([...byteChanges].some((route) => !context.changed.has(repoPath(route))))
-    reasons.push({ kind: "material" });
   const actualByteChanges = context.compareResourceBytes
     ? await changedResourceBytes(
         await context.beforeReader.resources(before!.path, actualResource.base),
@@ -179,6 +212,14 @@ export async function compareComponentView(
         context.afterReader,
       )
     : new Set<string>();
+  if (
+    [...byteChanges].some(
+      (route) =>
+        (!isStylesheetPath(route) || actualByteChanges.has(route)) &&
+        !context.changed.has(repoPath(route)),
+    )
+  )
+    reasons.push({ kind: "material" });
   const actualResourceChange =
     Boolean(actualEvidence.reasons?.length) ||
     [...actualByteChanges].some(
@@ -205,9 +246,7 @@ export async function compareComponentView(
       ...view,
       ...actualEvidence,
       ignoredIds: actual.ignoredIds,
-      ...(actual.base !== actual.head || rootOwnershipChanged
-        ? { material: true as const }
-        : {}),
+      ...(actual.base !== actual.head ? { material: true as const } : {}),
       state:
         actual.base !== actual.head ||
         actualResourceChange ||

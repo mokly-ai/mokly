@@ -53,6 +53,13 @@ declarations; their wire encoding, keys and ownership references remain validate
 Display strings and props remain authored data; repository-relative source
 metadata never grants permission to serve source files.
 
+Ready Changes includes optional `resourceEvidence` on each screen or saved
+component view and on each whole-document page. It carries the same retained
+rule keys, changed component ids, page selectors and exclusions as comparison
+v5. Pending, unavailable and disabled snapshots omit it. Pages still have no
+visual comparison records. The shared reader validates rule summaries and
+rejects private coordinates. Entry-scoped bootstraps retain this evidence.
+
 `serialization.ts` writes recursively sorted object keys, two-space indentation,
 and a final newline. Entry arrays sort by kind name and then id, with a
 parent's variants following it in authored order; usage records have canonical

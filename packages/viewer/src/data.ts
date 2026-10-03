@@ -140,15 +140,21 @@ export type {
   ReviewArtifactContent,
   ReviewState,
   DependencyReason,
+  DependencyAnalysis,
+  CssRuleAttribution,
+  CssPageEvidence,
+  ResourceEvidence,
   ExcludedResource,
   ViewReview,
   ViewResourceEvidence,
   ScreenResourceEvidence,
+  PageResourceEvidence,
   ScreenReview,
   ReviewArtifact,
   ReviewResult,
 } from "./review/types.js";
 export { parseReviewResult } from "./review/result_validation.js";
+export { cssAnalysis, mergeCssAnalysis } from "./review/css/evidence.js";
 export { parseRemovedPagePreview } from "./review/page_preview.js";
 export type {
   RemovedPagePreview,

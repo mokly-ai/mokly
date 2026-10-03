@@ -17,10 +17,8 @@ import {
   propagateImplementations,
   propagateUseCases,
 } from "./component_change_propagation.js";
-import {
-  entryViews,
-  prefetchClassificationViews,
-} from "./component_classification_entries.js";
+import { classificationComparisons } from "./component_classification_comparisons.js";
+import { prefetchClassificationViews } from "./component_classification_entries.js";
 import type { ComponentClassificationInput } from "./component_classification_input.js";
 import { ComponentComparisonCounts } from "./component_comparison_counts.js";
 import {
@@ -31,7 +29,6 @@ import {
   metadata,
   uniqueReasons,
 } from "./component_metadata.js";
-import { viewPairs } from "./component_pairing.js";
 import { ComponentReasonSources } from "./component_reason_sources.js";
 import {
   propagateOwnedResources,
@@ -43,10 +40,7 @@ import {
   classifyComponentVariants,
   componentVariantEntries,
 } from "./component_variant_classification.js";
-import {
-  compareComponentView,
-  type ComponentViewContext,
-} from "./component_view.js";
+import type { ComponentViewContext } from "./component_view.js";
 import { assertViewAnalysisScope } from "./css/paths.js";
 import { CssResourceAnalysis } from "./css/resource_analysis.js";
 import { ResourceComparison } from "./resource_comparison.js";
@@ -83,7 +77,7 @@ export async function classifyComponentsWithSources(
       afterReader,
       changed,
       prefix,
-      new CssResourceAnalysis(input.cssParser),
+      input.cssAnalysis ?? new CssResourceAnalysis(input.cssParser),
       compareResourceBytes,
     ),
     compareResourceBytes,
@@ -103,11 +97,19 @@ export async function classifyComponentsWithSources(
   const impacting = new Set<string>();
   const actualImplementations = new Set<string>();
   const ownedResources: OwnedResourceReason[] = [];
-  const reasonSources = new ComponentReasonSources();
+  const reasonSources = new ComponentReasonSources(
+    context.resources.css.attribution,
+  );
   const pairs = entryPairs(before, after);
   const comparisonCounts = new ComponentComparisonCounts();
   await timeAsync("review.compare-screens", async () => {
-    for (const pair of pairs) {
+    const entries = await classificationComparisons(
+      context,
+      pairs,
+      beforeVariantEntries,
+      afterVariantEntries,
+    );
+    for (const { pair, pairedViews, compared } of entries) {
       const entry = (pair.after ?? pair.before)!;
       const sides = {
         ...(pair.before ? { before: address(pair.before) } : {}),
@@ -126,21 +128,6 @@ export async function classifyComponentsWithSources(
         ...address(entry),
         ...sides,
       };
-      const baseViews = entryViews(pair.before, beforeVariantEntries);
-      const headViews = entryViews(pair.after, afterVariantEntries);
-      const pairedViews = viewPairs(baseViews, headViews);
-      const compared = await Promise.all(
-        pairedViews.map((view) =>
-          compareComponentView(
-            context,
-            view.before,
-            view.after,
-            entry.kind === "component" && !isManifestComponentVariant(entry)
-              ? entry.id
-              : undefined,
-          ),
-        ),
-      );
       comparisonCounts.add(compared);
       assertViewAnalysisScope(
         compared.map((result) => result.view),

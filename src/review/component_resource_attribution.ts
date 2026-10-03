@@ -31,7 +31,7 @@ export function ownedResourceReasons(
     ),
   ]);
   return reasons.flatMap((reason) => {
-    if (isStylesheetPath(reason.path) && !reason.analysis) return [];
+    if (isStylesheetPath(reason.path)) return [];
     const publicPath = prefix
       ? reason.path.slice(prefix.length + 1)
       : reason.path;

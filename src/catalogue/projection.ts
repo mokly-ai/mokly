@@ -70,10 +70,26 @@ export function projectCatalogue(
   });
   const record = (entry: ManifestEntry, removed: boolean): CatalogueRecord => {
     const base = common(entry, removed);
+    const pageEvidence =
+      input.changesStatus === "ready"
+        ? input.evidence?.pageEvidence?.find((item) => item.id === entry.id)
+        : undefined;
     if (entry.kind === "page")
       return {
         ...base,
         kind: "page",
+        ...(pageEvidence
+          ? {
+              resourceEvidence: {
+                ...(pageEvidence.reasons
+                  ? { reasons: pageEvidence.reasons }
+                  : {}),
+                ...(pageEvidence.excludedResources
+                  ? { excludedResources: pageEvidence.excludedResources }
+                  : {}),
+              },
+            }
+          : {}),
       };
     if (entry.kind === "use-case")
       return {

@@ -3,8 +3,7 @@
 ## Delivery Status
 
 Link provenance and comparison exclusion are implemented. Removing derived
-CSS owners and ignoring all renderer CSS owner records are planned for
-[M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+CSS owners and ignoring all renderer CSS owner records are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 The page evidence display is planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
 
 The [declaration and linking contract](./mokly-component-stylesheets.md) defines the stylesheet inputs and placement.

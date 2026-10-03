@@ -7,6 +7,7 @@ import {
 } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
+import type { LinkedComponentStylesheet } from "../components/render.js";
 import { isComponentVariantDefinition } from "../components/types.js";
 import type { ResolvedConfig } from "../config/types.js";
 
@@ -24,6 +25,7 @@ export async function renderCooperatively(
   checkpoint: () => Promise<void>,
   pending: PendingGeneratedFiles,
   onWarning?: (warning: BuildWarning) => void,
+  stylesheetLinks?: Map<string, readonly LinkedComponentStylesheet[]>,
 ): Promise<Map<string, string>> {
   const outputs = new Map<string, string>();
   const render = async (
@@ -40,6 +42,7 @@ export async function renderCooperatively(
       selection,
       { routes: graph.stylesheetRoutes, pending },
       onWarning,
+      stylesheetLinks,
     ))
       outputs.set(route, content);
   };

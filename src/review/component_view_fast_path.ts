@@ -58,6 +58,7 @@ export async function compareUnchangedComponentView(
     (usage) =>
       usage &&
       (usage.instances.length > 0 ||
+        usage.ranges.some((range) => range.target.kind === "root") ||
         usage.styles.length > 0 ||
         usage.slots.some((slot) => slot.owner.kind === "entry")),
   );

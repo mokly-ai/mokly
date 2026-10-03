@@ -4,13 +4,13 @@ import path from "node:path";
 import type { ReactNode } from "react";
 
 import type { ComponentViewRecord } from "@mokly/viewer";
-import { invalidData, validateResourcePath } from "@mokly/viewer/data";
+import { invalidData } from "@mokly/viewer/data";
 
 import type { BuildWarning } from "../build/warnings.js";
-import { ignoredDeclaredResourceOwner } from "../build/warnings.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { RenderInput, Renderer, RenderResult } from "../renderer/types.js";
 
+import { Boundary } from "./boundary.js";
 import { ComponentCollector } from "./collector.js";
 import { componentInputs } from "./inputs.js";
 import { serializeComponentSentinels } from "./ranges.js";
@@ -26,9 +26,15 @@ import type {
   ComponentVariantDefinition,
 } from "./types.js";
 
+export interface LinkedComponentStylesheet {
+  physical: string;
+  componentIds: readonly string[];
+}
+
 export interface ComponentRenderOutput {
   html: string;
   view: ComponentViewRecord;
+  stylesheetLinks: readonly LinkedComponentStylesheet[];
   warnings?: readonly BuildWarning[];
 }
 export type ComponentGraphRenderer = (
@@ -39,7 +45,6 @@ export type ComponentGraphRenderer = (
     route: string;
     position: number;
     mockupsDir: string;
-    isPublicFile: (candidate: string) => boolean;
   },
 ) => ComponentRenderOutput;
 
@@ -60,13 +65,18 @@ export const renderWithComponents: ComponentGraphRenderer = (
       value={{ collector, owner: { kind: "entry" }, placement: 0 }}
     >
       {input.entry.kind === "component" ? (
-        <ComponentRoot
-          definition={definitions.find(
-            (definition) => definition.id === input.entry.variantOf,
-          )}
-          entry={input.entry}
-          input={input}
-        />
+        <Boundary
+          scope={{ collector, owner: { kind: "entry" }, placement: 0 }}
+          target={{ kind: "root" }}
+        >
+          <ComponentRoot
+            definition={definitions.find(
+              (definition) => definition.id === input.entry.variantOf,
+            )}
+            entry={input.entry}
+            input={input}
+          />
+        </Boundary>
       ) : (
         input.node
       )}
@@ -89,7 +99,7 @@ export const renderWithComponents: ComponentGraphRenderer = (
     serializeReviewSentinels(rendered.html),
     collector.boundaries,
   );
-  const owners = new Map<string, { file: string; ids: Set<string> }>();
+  const declarations = new Map<string, { file: string; ids: Set<string> }>();
   const renderedDefinitions = [
     ...(input.entry.kind === "component"
       ? [definitions.find((entry) => entry.id === input.entry.variantOf)!]
@@ -103,45 +113,13 @@ export const renderWithComponents: ComponentGraphRenderer = (
       const physical = fs.realpathSync(
         path.resolve(placement.mockupsDir, file),
       );
-      if (!owners.has(physical)) owners.set(physical, { file, ids: new Set() });
-      owners.get(physical)!.ids.add(definition.id);
+      if (!declarations.has(physical))
+        declarations.set(physical, { file, ids: new Set() });
+      declarations.get(physical)!.ids.add(definition.id);
     }
   }
-  const physicalPaths = new Set(owners.keys());
-  const allDeclared = new Set(
-    definitions.flatMap((definition) =>
-      definition.stylesheets.map((file) =>
-        fs.realpathSync(path.resolve(placement.mockupsDir, file)),
-      ),
-    ),
-  );
+  const physicalPaths = new Set(declarations.keys());
   const warnings: BuildWarning[] = [];
-  const warned = new Set<string>();
-  const retainedResources = (rendered.resources ?? []).filter((resource) => {
-    validateResourcePath(resource.path, placement.route);
-    const candidate = path.resolve(placement.mockupsDir, resource.path);
-    const physicalPath = fs.existsSync(candidate)
-      ? fs.realpathSync(candidate)
-      : undefined;
-    if (physicalPath === undefined || !allDeclared.has(physicalPath))
-      return true;
-    if (!placement.isPublicFile(candidate))
-      invalidData(
-        placement.route,
-        `renderer resource is not a public file: ${resource.path}`,
-      );
-    if (!warned.has(physicalPath)) {
-      warned.add(physicalPath);
-      warnings.push(
-        ignoredDeclaredResourceOwner(
-          placement.route,
-          physicalPath,
-          resource.path,
-        ),
-      );
-    }
-    return false;
-  });
   const rendererLinks = rendererStylesheetPaths(
     serialized.html,
     placement.route,
@@ -154,9 +132,9 @@ export const renderWithComponents: ComponentGraphRenderer = (
     placement.route,
     input.stylesheets,
     placement.position,
-    [...owners]
+    [...declarations]
       .filter(([physical]) => !rendererLinks.has(physical))
-      .map(([, owner]) => owner.file),
+      .map(([, declaration]) => declaration.file),
     true,
     (warning) => warnings.push(warning),
   );
@@ -171,17 +149,19 @@ export const renderWithComponents: ComponentGraphRenderer = (
     ),
     ranges: serialized.ranges,
     styles: rebaseStyleOwnership(rendered.html, html, rendered.styles ?? []),
-    resources: [
-      ...retainedResources,
-      ...[...owners].map(([physical, { file, ids }]) => ({
-        path: rendererLinks.get(physical) ?? file,
-        componentIds: [...ids].sort(),
-      })),
-    ].sort((left, right) =>
+    resources: [...(rendered.resources ?? [])].sort((left, right) =>
       left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
     ),
   };
-  return { html, view, ...(warnings.length ? { warnings } : {}) };
+  return {
+    html,
+    view,
+    stylesheetLinks: [...declarations].map(([physical, { ids }]) => ({
+      physical,
+      componentIds: [...ids].sort(),
+    })),
+    ...(warnings.length ? { warnings } : {}),
+  };
 };
 
 function ComponentRoot({

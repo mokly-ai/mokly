@@ -1,3 +1,5 @@
+import { isStylesheetPath, validateResourcePath } from "@mokly/viewer/data";
+
 import { MoklyError } from "../errors.js";
 
 import { record, stringArray } from "./manifest_values.js";
@@ -10,6 +12,7 @@ const REMOVED_FIELDS = [
 
 /** Normalize supported earlier metadata before the current validator reads it. */
 export function normalizeHistoricalManifest(value: unknown): unknown {
+  value = dropHistoricalCssOwners(value);
   if (
     !record(value) ||
     typeof value.schemaVersion !== "number" ||
@@ -106,6 +109,37 @@ export function normalizeHistoricalManifest(value: unknown): unknown {
   };
   delete normalized.legacyPages;
   return normalized;
+}
+
+/** Earlier v8 output also carried owners; this is strictly a historical boundary. */
+function dropHistoricalCssOwners(value: unknown): unknown {
+  if (!record(value) || !Array.isArray(value.entries)) return value;
+  const normalize = (entry: unknown): unknown => {
+    if (!record(entry)) return entry;
+    return {
+      ...entry,
+      ...(Array.isArray(entry.variants)
+        ? { variants: entry.variants.map(normalize) }
+        : {}),
+      ...(Array.isArray(entry.componentViews)
+        ? {
+            componentViews: entry.componentViews.map((view: unknown) => {
+              if (!record(view) || !Array.isArray(view.resources)) return view;
+              return {
+                ...view,
+                resources: view.resources.filter((resource: unknown) => {
+                  if (!record(resource) || typeof resource.path !== "string")
+                    return true;
+                  validateResourcePath(resource.path, "$historical");
+                  return !isStylesheetPath(resource.path);
+                }),
+              };
+            }),
+          }
+        : {}),
+    };
+  };
+  return { ...value, entries: value.entries.map(normalize) };
 }
 
 function stripRemovedFields(

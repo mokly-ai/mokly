@@ -89,10 +89,7 @@ for (const ownership of ["renderer", "declared", "unowned"] as const)
     const artifact = await compareReview(after, config, git, "main");
     assert.equal(artifact.result.schemaVersion, 5);
     if (artifact.result.schemaVersion !== 5) return;
-    const expected =
-      ownership === "unowned"
-        ? ["action-default", "action-disabled", "pane-default", "home"]
-        : ["action"];
+    const expected = ["action", "action-default", "action-disabled"];
     assert.deepEqual(
       artifact.result.changes.map((entry) => entry.after!.id),
       expected,

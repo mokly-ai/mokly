@@ -3,7 +3,7 @@
 ## Delivery Status
 
 The expanded `DependencyAnalysis` from the [CSS evidence schema](./mokly-css-attribution-membership.md)
-is planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md), within v5.
+is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md), within v5.
 
 Implemented for the unified comparison v5 format. The [comparison contract](./mokly-component-review.md) owns attribution, and [validation](./mokly-component-review-validation.md) owns source coverage.
 

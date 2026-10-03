@@ -4,7 +4,7 @@ Continuation of [CSS Change Attribution](./mokly-css-attribution.md).
 
 ## Delivery Status
 
-Planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md):
+Implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md):
 rule and page evidence, classification and strict readers. Comparison details
 are planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence). Comparison result v5, catalogue read model v4 and
 manifest v8 are unreleased and change in place; no version is added.

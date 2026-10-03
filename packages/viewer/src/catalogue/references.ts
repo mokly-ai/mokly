@@ -68,6 +68,16 @@ export function validateCatalogueReferences(model: ValidatedCatalogue): void {
       .map((entry) => [entry.id, entry]),
   );
   for (const entry of all) {
+    const evidence =
+      entry.kind === "page"
+        ? [entry.resourceEvidence]
+        : "views" in entry
+          ? entry.views.map((view) => view.resourceEvidence)
+          : [];
+    require(model.changesStatus === "ready" ||
+      evidence.every(
+        (item) => item === undefined,
+      ), "resource evidence requires ready Changes");
     unique(entry.tags);
     const removed = !current.includes(entry);
     require(entry.changes.status ===

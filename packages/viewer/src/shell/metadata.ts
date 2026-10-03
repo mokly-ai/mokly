@@ -4,7 +4,11 @@ import type {
   ManifestV8,
 } from "../registry/types.js";
 import type { ReviewResultV5 } from "../review/component_types.js";
-import type { ScreenResourceEvidence, ViewReview } from "../review/types.js";
+import type {
+  ScreenResourceEvidence,
+  PageResourceEvidence,
+  ViewReview,
+} from "../review/types.js";
 
 export type CatalogueMetadata =
   | ManifestV8
@@ -31,6 +35,7 @@ export interface ShellEvidence {
   baseline: HistoricalManifest;
   result?: ReviewResultV5;
   screenEvidence?: readonly ScreenResourceEvidence[];
+  pageEvidence?: readonly PageResourceEvidence[];
   screenViews?: readonly ScreenViewChanges[];
 }
 export type LiveChangesStatus =

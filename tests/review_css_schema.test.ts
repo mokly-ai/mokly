@@ -4,12 +4,13 @@ import test from "node:test";
 import { renderReviewArtifact } from "../dist/review/artifact.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
+import { fixtureCssAnalysis } from "./helpers/css_evidence.js";
 import {
   cssSchemaFiles,
   cssSchemaFixture,
 } from "./helpers/review_css_schema.js";
 
-for (const version of [4] as const) {
+for (const version of [5] as const) {
   test(`v${version} validates material even without resource evidence`, () => {
     const result = cssSchemaFixture();
     for (const view of result.screens[0]!.views) {
@@ -145,7 +146,7 @@ for (const version of [4] as const) {
   test(`v${version} permits unresolved empty selectors only on CSS`, () => {
     const value = cssSchemaFixture();
     Object.assign(value.screens[0]!.views[0]!.reasons![0]!, {
-      analysis: { status: "unresolved", selectors: [] },
+      analysis: fixtureCssAnalysis("unresolved", []),
     });
     assert.deepEqual(parseReviewResult(value), value);
     Object.assign(value, { changedPaths: ["image.svg"] });

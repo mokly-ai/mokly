@@ -4,8 +4,14 @@ import {
   parseReviewResult,
   requireEqual,
   reviewInvalid,
+  canonicalJson,
 } from "@mokly/viewer/data";
-import type { Manifest, ReviewResultV5, ViewReview } from "@mokly/viewer/data";
+import type {
+  Manifest,
+  ReviewResultV5,
+  ViewReview,
+  DependencyReason,
+} from "@mokly/viewer/data";
 
 import { affectedConsumers } from "./component_affected.js";
 import {
@@ -18,11 +24,14 @@ import {
 } from "./component_metadata.js";
 import { variantAddress } from "./component_pairing.js";
 import { componentVariantEntries } from "./component_variant_classification.js";
+import type { CssAttribution } from "./css/attribution.js";
 
 /** Classifier evidence that can justify an entry's `dependency` reasons. */
 export interface DependencyReasonSources {
-  /** Paths contributed by filtered policy, views, exact screen CSS, or owned CSS. */
+  /** Reachable paths with eligible page, kept-root or non-CSS owner reasons. */
   pathsByEntry: ReadonlyMap<string, ReadonlySet<string>>;
+  reasonsByEntry?: ReadonlyMap<string, readonly DependencyReason[]>;
+  cssProof?: CssAttribution | undefined;
 }
 
 /** Validate result coverage, addresses, dependency sources, and usage against both manifests. */
@@ -34,6 +43,18 @@ export function validateComponentReviewSources(
   sources: DependencyReasonSources,
 ): void {
   parseReviewResult(result);
+  for (const view of [
+    ...result.screens.flatMap((screen) => screen.views),
+    ...result.components.flatMap((component) =>
+      component.variants.flatMap((variant) => variant.views),
+    ),
+  ])
+    for (const reason of view.reasons ?? [])
+      if (reason.analysis) {
+        if (!sources.cssProof)
+          reviewInvalid("CSS source evidence requires frozen catalogue proof");
+        sources.cssProof.validate(reason.analysis);
+      }
   before = baselineForCurrentIdentities(before, after);
   const beforeVariants = componentVariantEntries(before.entries);
   const afterVariants = componentVariantEntries(after.entries);
@@ -131,6 +152,16 @@ function validateChange(
     },
   );
   for (const reason of change.reasons) {
+    if (reason.kind === "dependency" && reason.analysis) {
+      const eligible = sources.reasonsByEntry
+        ?.get(entryPairKey(selected))
+        ?.find((item) => item.path === reason.path);
+      if (!eligible || canonicalJson(reason) !== canonicalJson(eligible))
+        reviewInvalid("dependency reason has no eligible rule source evidence");
+      if (!sources.cssProof)
+        reviewInvalid("CSS source evidence requires frozen catalogue proof");
+      sources.cssProof.validate(reason.analysis);
+    }
     if (
       reason.kind === "dependency" &&
       !sources.pathsByEntry.get(entryPairKey(selected))?.has(reason.path)

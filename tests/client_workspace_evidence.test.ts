@@ -8,6 +8,8 @@ import type { EntryChangeReason } from "../packages/viewer/dist/review/component
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 
+import { fixtureCssAnalysis } from "./helpers/css_evidence.js";
+
 const SHARED = "mockups/shared.css";
 const TOKENS = "mockups/tokens.css";
 
@@ -52,7 +54,7 @@ test("the inspector lists changed files, applying styles, then exclusions", () =
         {
           kind: "dependency",
           path: SHARED,
-          analysis: { status: "matched", selectors: [".auth"] },
+          analysis: fixtureCssAnalysis("matched", [".auth"]),
         },
       ],
     },
@@ -71,7 +73,7 @@ test("the inspector lists changed files, applying styles, then exclusions", () =
             {
               kind: "dependency",
               path: SHARED,
-              analysis: { status: "matched", selectors: [".auth"] },
+              analysis: fixtureCssAnalysis("matched", [".auth"]),
             },
           ],
         },
@@ -158,12 +160,12 @@ for (const kind of ["screen", "component"] as const) {
         {
           kind: "dependency",
           path: SHARED,
-          analysis: { status: "matched", selectors: [".action"] },
+          analysis: fixtureCssAnalysis("matched", [".action"]),
         },
         {
           kind: "dependency",
           path: TOKENS,
-          analysis: { status: "unresolved", selectors: [":root"] },
+          analysis: fixtureCssAnalysis("unresolved", [":root"]),
         },
       ],
       ["mockups/excluded.css"],
@@ -187,7 +189,7 @@ for (const kind of ["screen", "component"] as const) {
         {
           kind: "dependency",
           path: SHARED,
-          analysis: { status: "unresolved", selectors: [] },
+          analysis: fixtureCssAnalysis("unresolved", []),
         },
       ],
       ["mockups/excluded-a.css", "mockups/excluded-b.css"],
@@ -211,7 +213,7 @@ for (const kind of ["screen", "component"] as const) {
       {
         kind: "dependency",
         path: SHARED,
-        analysis: { status: "matched", selectors: [] },
+        analysis: fixtureCssAnalysis("matched", []),
       },
     ]);
     assert.ok(markup.includes(`<p>${copy.matchedWithoutSelectors}</p>`));

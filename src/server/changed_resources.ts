@@ -4,6 +4,7 @@ import path from "node:path";
 
 import { parse } from "parse5";
 
+import type { ResourceEvidence } from "@mokly/viewer/data";
 import { isStylesheetPath } from "@mokly/viewer/data";
 
 import { timeAsync } from "../diagnostics/timings.js";
@@ -13,12 +14,12 @@ import type {
   ReviewAssetReader,
 } from "../review/assets.js";
 import { ComponentMaterialReader } from "../review/component_resources.js";
-import type { CssDocumentPair } from "../review/css/document.js";
 import {
   CssResourceAnalysis,
   type ChangedResource,
-  type ResourceEvidence,
+  type ResourceMatchingPair,
 } from "../review/css/resource_analysis.js";
+import { documentStylesheetScope } from "../review/css/resource_scope.js";
 import { decideReferencedResource } from "../review/deleted_resource.js";
 import { ResourceGraph } from "../review/resource_graph.js";
 
@@ -60,6 +61,9 @@ export class ChangedResourceGraph {
     });
     this.#base.pairWith(this.#head, "before");
     this.#head.pairWith(this.#base, "after");
+    this.#head.allowMissingResources(
+      (route) => this.compareBytes || this.isChanged(route),
+    );
     this.#baseGraph = new ResourceGraph({
       prefetch: (routes) =>
         this.#base.prefetch(
@@ -104,6 +108,7 @@ export class ChangedResourceGraph {
     source: string,
     document: string,
     before?: { path: string; html: string },
+    acceptedCss?: ResourceEvidence,
   ): Promise<ResourceEvidence & { resourceChanged?: true }> {
     const resources = await this.resources(source, document);
     const changedStylesheet = [...resources].some(
@@ -125,10 +130,13 @@ export class ChangedResourceGraph {
         this.changed.has(route) ||
         this.changed.has(this.#physicalRoutes.get(route) ?? route),
     );
-    const cssPaths = eligible.filter(isStylesheetPath);
+    const analyzed = acceptedCss
+      ? eligible.filter((route) => !isStylesheetPath(route))
+      : eligible;
+    const cssPaths = analyzed.filter(isStylesheetPath);
     const baseCss = await this.#base.optionalTexts(cssPaths);
     const changes: ChangedResource[] = [];
-    for (const route of eligible) {
+    for (const route of analyzed) {
       const after = isStylesheetPath(route)
         ? (this.#contents.get(route) ??
           (await this.reader
@@ -149,11 +157,15 @@ export class ChangedResourceGraph {
         ...(after === undefined ? {} : { after }),
       });
     }
-    const pairs: CssDocumentPair[] = cssPaths.length
+    const pairs: ResourceMatchingPair[] = cssPaths.length
       ? [
           {
             ...(before ? { before: parse(before.html) } : {}),
             after: parse(document),
+            paths: await this.stylesheetScope(before, {
+              path: source,
+              html: document,
+            }),
           },
         ]
       : [];
@@ -170,10 +182,22 @@ export class ChangedResourceGraph {
       pairs.push({
         ...(base === undefined ? {} : { before: parse(base) }),
         ...(head === undefined ? {} : { after: parse(head) }),
+        paths: await this.stylesheetScope(
+          base === undefined ? undefined : { path: route, html: base },
+          head === undefined ? undefined : { path: route, html: head },
+        ),
       });
     }
+    const evidence = this.css.analyze(changes, pairs);
+    const reasons = [
+      ...(evidence.reasons ?? []),
+      ...(acceptedCss?.reasons ?? []),
+    ].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+    const excludedResources =
+      evidence.excludedResources ?? acceptedCss?.excludedResources;
     return {
-      ...this.css.analyze(changes, pairs),
+      ...(reasons.length ? { reasons } : {}),
+      ...(excludedResources?.length ? { excludedResources } : {}),
       ...(all.some(
         (route) => this.#byteChanges.has(route) && !eligible.includes(route),
       )
@@ -187,6 +211,22 @@ export class ChangedResourceGraph {
       this.#byteChanges.has(route) ||
       this.changed.has(route) ||
       this.changed.has(this.#physicalRoutes.get(route) ?? route)
+    );
+  }
+
+  private stylesheetScope(
+    before?: { path: string; html: string },
+    after?: { path: string; html: string },
+  ) {
+    return documentStylesheetScope(
+      [
+        ...(before ? [{ reader: this.#base, ...before }] : []),
+        ...(after ? [{ reader: this.#head, ...after }] : []),
+      ],
+      (route) =>
+        this.changed.has(route)
+          ? route
+          : (this.#physicalRoutes.get(route) ?? route),
     );
   }
 

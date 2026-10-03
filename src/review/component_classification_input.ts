@@ -3,6 +3,7 @@ import type { Manifest } from "@mokly/viewer/data";
 import type { ResolvedConfig } from "../config/types.js";
 
 import type { ReviewAssetReader } from "./assets.js";
+import type { CssResourceAnalysis } from "./css/resource_analysis.js";
 import type { CssRuleParser } from "./css/types.js";
 
 export interface ComponentClassificationInput {
@@ -15,6 +16,7 @@ export interface ComponentClassificationInput {
   baseCommit: string;
   baseRef: string;
   cssParser?: CssRuleParser;
+  cssAnalysis?: CssResourceAnalysis;
   /** Test-only: disable the unchanged-view decision so both paths can be compared. */
   useFastPath?: boolean;
 }

@@ -6,7 +6,7 @@ export interface BuildWarning {
     | "removed-shared-impact"
     | "duplicate-component-stylesheet"
     | "missing-configured-stylesheet-link"
-    | "ignored-declared-resource-owner";
+    | "ignored-stylesheet-resource-owner";
   context: readonly string[];
   message: string;
 }
@@ -17,7 +17,7 @@ const WARNING_CODES = new Set<BuildWarning["code"]>([
   "removed-shared-impact",
   "duplicate-component-stylesheet",
   "missing-configured-stylesheet-link",
-  "ignored-declared-resource-owner",
+  "ignored-stylesheet-resource-owner",
 ]);
 
 export function isBuildWarning(value: unknown): value is BuildWarning {
@@ -89,14 +89,14 @@ export function missingConfiguredStylesheetLink(
   };
 }
 
-export function ignoredDeclaredResourceOwner(
+export function ignoredStylesheetResourceOwner(
   route: string,
   physicalPath: string,
   publicPath: string,
 ): BuildWarning {
   return {
-    code: "ignored-declared-resource-owner",
+    code: "ignored-stylesheet-resource-owner",
     context: [route, physicalPath],
-    message: `renderer resources for declared stylesheet ${JSON.stringify(publicPath)} on ${JSON.stringify(route)} are ignored; Mokly derives owners from rendered components.`,
+    message: `Stylesheet ownership for ${JSON.stringify(publicPath)} on ${JSON.stringify(route)} is ignored. Changes follow the elements that each changed rule matches.`,
   };
 }

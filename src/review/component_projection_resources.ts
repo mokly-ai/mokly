@@ -1,6 +1,10 @@
 /** Shared ownership-projected resource policy for fast and complete comparisons. */
 
-import { canonicalJson, type GeneratedComponentView } from "@mokly/viewer/data";
+import {
+  canonicalJson,
+  isStylesheetPath,
+  type GeneratedComponentView,
+} from "@mokly/viewer/data";
 
 import {
   projectComponentPair,
@@ -77,6 +81,7 @@ function suppressOwnedResource(
   after: GeneratedComponentView,
   root?: string,
 ): boolean {
+  if (isStylesheetPath(path)) return false;
   if (!before.usage || !after.usage) return false;
   const left = before.usage.resources.find((item) => item.path === path);
   const right = after.usage.resources.find((item) => item.path === path);

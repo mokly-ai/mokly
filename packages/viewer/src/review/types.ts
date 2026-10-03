@@ -10,9 +10,24 @@ export type ReviewState =
   "added" | "changed" | "ignored-only" | "removed" | "unchanged";
 
 /** Potential impact from the changed rules of one reachable stylesheet. */
+export interface CssRuleAttribution {
+  ruleKey?: string;
+  status: "matched" | "unresolved";
+  selectors: readonly string[];
+  changedComponentIds: readonly string[];
+  pageSelectors: readonly string[];
+}
+
+export interface CssPageEvidence {
+  selectors: readonly string[];
+  unresolved?: true;
+}
+
 export interface DependencyAnalysis {
   status: "matched" | "unresolved";
   selectors: readonly string[];
+  rules: readonly CssRuleAttribution[];
+  pageEvidence?: CssPageEvidence;
 }
 
 /** A changed resource retained as dependency evidence. */
@@ -29,13 +44,16 @@ export interface ExcludedResource {
 }
 
 /** One view comparison, addressed only by its axes. */
-export interface ViewReview {
+export interface ResourceEvidence {
+  reasons?: readonly DependencyReason[];
+  excludedResources?: readonly ExcludedResource[];
+}
+
+export interface ViewReview extends ResourceEvidence {
   colorScheme: ColorScheme;
   ignoredIds: readonly string[];
   /** Present exactly when the paired ignore-normalized documents differ. */
   material?: true;
-  reasons?: readonly DependencyReason[];
-  excludedResources?: readonly ExcludedResource[];
   state: ReviewState;
   viewport: Viewport;
 }
@@ -50,6 +68,11 @@ export type ViewResourceEvidence = Pick<
 export interface ScreenResourceEvidence {
   id: string;
   views: readonly ViewResourceEvidence[];
+}
+
+/** Single-document evidence, outside visual comparison records. */
+export interface PageResourceEvidence extends ResourceEvidence {
+  id: string;
 }
 
 /** One stable screen identity comparison. */

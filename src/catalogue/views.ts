@@ -31,6 +31,12 @@ export function projectViews(
             .find((item) => item.id === entry.variantOf)
             ?.variants.find((item) => item.id === entry.id)?.views
         : undefined;
+  const resourceViews =
+    entry.kind === "screen"
+      ? (input.evidence?.screenEvidence?.find((item) => item.id === entry.id)
+          ?.views ??
+        result?.screens.find((item) => item.id === entry.id)?.views)
+      : reviewViews;
   return generatedViews(entry).map((view) => {
     const recordedUsage =
       (!removed ? input.usage?.get(view.path) : undefined) ?? view.usage;
@@ -56,7 +62,28 @@ export function projectViews(
             item.viewport === view.viewport &&
             item.colorScheme === view.colorScheme,
         )?.state;
+    const evidence =
+      input.changesStatus === "ready"
+        ? resourceViews?.find(
+            (item) =>
+              item.viewport === view.viewport &&
+              item.colorScheme === view.colorScheme,
+          )
+        : undefined;
     return {
+      ...(evidence && ("reasons" in evidence || "excludedResources" in evidence)
+        ? {
+            resourceEvidence: {
+              ...("reasons" in evidence && evidence.reasons?.length
+                ? { reasons: evidence.reasons }
+                : {}),
+              ...("excludedResources" in evidence &&
+              evidence.excludedResources?.length
+                ? { excludedResources: evidence.excludedResources }
+                : {}),
+            },
+          }
+        : {}),
       viewport: view.viewport,
       colorScheme: view.colorScheme,
       usage: usage

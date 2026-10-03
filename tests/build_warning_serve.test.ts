@@ -129,7 +129,7 @@ export default (input) => { const html = '<html><head></head><body>' + renderToS
       true,
     );
     const warning =
-      '[mokly/warning] renderer resources for declared stylesheet "action.css" on "screens/home.mobile.html" are ignored; Mokly derives owners from rendered components.';
+      '[mokly/warning] Stylesheet ownership for "action.css" on "screens/home.mobile.html" is ignored. Changes follow the elements that each changed rule matches.';
     for (let attempt = 0; attempt < 2; attempt += 1)
       assert.equal(
         (await fetch(`${running.url}/static/screens/home.mobile.html`)).status,

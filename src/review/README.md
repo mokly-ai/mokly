@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Uniform CSS classification and evidence fields below are planned for Milestone 19;
+Uniform CSS classification and evidence fields below are implemented in Milestone 19;
 comparison details are planned for Milestone 20 of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
@@ -209,7 +209,7 @@ const outcome = analyzeStylesheetChange(
   ".button { color: blue; }",
   { after: parse('<!doctype html><button class="button">Save</button>') },
 );
-// { kind: "kept", status: "matched", selectors: [".button"] }
+// A kept outcome also retains each rule delta and all matched elements.
 ```
 
 Pass the already-normalized before/after parse5 documents; either side may be
@@ -282,8 +282,8 @@ ignore-normalized documents differ, including added and removed views. Ownership
 projections do not define this flag. A material change keeps the ordinary screen
 heading even when stylesheet evidence is also present. The result retains
 optional view `reasons` (with stylesheet `analysis`) and `excludedResources`.
-Entry reasons merge by path and union selectors, with
-unresolved evidence taking precedence. The shared browser/server decoder rejects
+Entry reasons merge by path and rule identity. They union page selectors
+separately from all selectors, with unresolved evidence taking precedence. The shared browser/server decoder rejects
 invalid or contradictory evidence; canonical artifact serialization preserves it.
 Owned non-CSS resources retained at an actual invocation keep their component
 in Changes even when saved variants exclude them. CSS requires kept matches on the
@@ -303,6 +303,15 @@ excludes resource reads and preparation of the input document trees. Cache hits
 still run diffing and matching. Compare its interval union with the enclosing
 background `changes.classify` duration in the same session; do not sum parent
 and child spans. See the [timing contract](../../docs/protocol/mokly-timings.md).
+
+`component_classification_comparisons.ts` collects all view comparisons before
+`css/attribution.ts` freezes own-page proof. It keeps unfiltered matches for
+nested filtering and kept matches for component reasons. `css/identity.ts`
+checks both the SHA-256 key and its normalized tuple. `css/normalized_ranges.ts`
+rebases root proof through paired ignore, including a removed root marker.
+`css/resource_scope.ts` keeps each embedded document's stylesheet scope separate.
+Live screen-only content checks reuse the completed CSS evidence and keep their
+existing non-CSS alias policy. Selected results never repeat rule analysis.
 
 ## Development
 

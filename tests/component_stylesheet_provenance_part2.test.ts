@@ -85,7 +85,7 @@ export default (input) => { const home = input.entry.id === "home"; const html =
   assert.ok(
     compilation.warnings?.some(
       (warning) =>
-        warning.code === "ignored-declared-resource-owner" &&
+        warning.code === "ignored-stylesheet-resource-owner" &&
         warning.context[0] === "screens/home.mobile.html" &&
         warning.message.includes("action.css"),
     ),

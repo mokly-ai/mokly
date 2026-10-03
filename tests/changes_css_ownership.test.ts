@@ -16,10 +16,11 @@ import { parseReviewResult } from "../packages/viewer/dist/review/result_validat
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
+import { resourceReasonSummaries } from "./helpers/css_evidence.js";
 
 for (const ownership of ["renderer", "declared"] as const)
   for (const matches of [false, true])
-    test(`actual invocation CSS ownership=${ownership}, matches=${matches}`, async (t) => {
+    test(`consumer-only CSS ignores ownership=${ownership}, matches=${matches}`, async (t) => {
       const source = componentEntrySource({
         actionRender:
           '(props) => <button className={props.label === "Finish" ? "actual-only" : "saved"}>{props.label}</button>',
@@ -59,7 +60,7 @@ export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' +
         "main",
         committedReviewRepository(fixture.config),
       );
-      const expected = matches ? ["action"] : [];
+      const expected = matches ? ["home"] : [];
       assert.deepEqual(live.changedIds, expected);
       const artifact = await compareReview(
         await compileCatalogue(fixture.config),
@@ -77,12 +78,20 @@ export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' +
         analysis: { status: "matched", selectors: [".actual-only"] },
       };
       for (const change of result.changes)
-        assert.deepEqual(change.reasons, [reason]);
+        assert.deepEqual(
+          resourceReasonSummaries(
+            change.reasons.filter((reason) => reason.kind === "dependency"),
+          ),
+          [reason],
+        );
       const home = result.screens.find((entry) => entry.id === "home")!;
       assert.equal(home.views.length, 4);
       for (const view of home.views) {
         assert.equal(view.state, matches ? "changed" : "unchanged");
-        assert.deepEqual(view.reasons, matches ? [reason] : undefined);
+        assert.deepEqual(
+          resourceReasonSummaries(view.reasons),
+          matches ? [reason] : undefined,
+        );
         assert.deepEqual(
           view.excludedResources,
           matches
@@ -103,7 +112,7 @@ export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' +
           }
         }
       }
-      assert.equal(Boolean(result.affectedConsumers.length), matches);
+      assert.deepEqual(result.affectedConsumers, []);
       const files = renderReviewArtifact(artifact);
       assert.deepEqual(
         parseReviewResult(JSON.parse(String(files.get("review.json")))),

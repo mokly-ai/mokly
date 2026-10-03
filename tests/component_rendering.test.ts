@@ -45,9 +45,7 @@ test("component style ownership rebases through generated headers while preservi
     html.slice(view.styles[0]!.startOffset, view.styles[0]!.endOffset),
     ".action{border-radius:12px}",
   );
-  assert.deepEqual(view.resources, [
-    { path: "action.css", componentIds: ["action"] },
-  ]);
+  assert.deepEqual(view.resources, []);
   await writeCompilation(result, config);
   checkCompilation(await compileCatalogue(config), config);
   await fs.writeFile(

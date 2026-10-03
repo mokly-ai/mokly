@@ -262,6 +262,6 @@ test("README edits are not public content changes and require no resource traver
     asChangeEvidence(["mockups/README.md"]),
     new ObservedReader(fixture.config),
   );
-  assert.deepEqual(result, { changedPaths: [], screens: [] });
+  assert.deepEqual(result, { changedPaths: [], screens: [], pages: [] });
   assert.deepEqual(reads, []);
 });

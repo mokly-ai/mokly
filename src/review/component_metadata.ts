@@ -1,4 +1,8 @@
-import { canonicalJson, isManifestComponentVariant } from "@mokly/viewer/data";
+import {
+  canonicalJson,
+  isManifestComponentVariant,
+  mergeCssAnalysis,
+} from "@mokly/viewer/data";
 import type {
   Manifest,
   ManifestEntry,
@@ -86,16 +90,7 @@ export function uniqueReasons(
       if (analyses.length) {
         merged.set(key, {
           ...reason,
-          analysis: {
-            status: analyses.some(
-              (analysis) => analysis.status === "unresolved",
-            )
-              ? "unresolved"
-              : "matched",
-            selectors: [
-              ...new Set(analyses.flatMap((analysis) => analysis.selectors)),
-            ].sort(),
-          },
+          analysis: mergeCssAnalysis(analyses),
         });
         continue;
       }

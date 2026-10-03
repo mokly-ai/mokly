@@ -1,6 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
-
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
 import type {
@@ -10,9 +7,9 @@ import type {
 
 import { MoklyError } from "../errors.js";
 
+import type { LinkedComponentStylesheet } from "./render.js";
 import { stylesheetLink } from "./stylesheet_links.js";
 import { publicFileFromHref } from "./stylesheet_reuse.js";
-import type { ComponentDefinition } from "./types.js";
 
 type Node = DefaultTreeAdapterMap["node"];
 type Location = NonNullable<
@@ -27,14 +24,6 @@ interface LinkedFile {
   location: Location;
   token?: string;
   attribute?: { startOffset: number; endOffset: number };
-}
-
-function realFile(mockupsDir: string, publicPath: string): string | undefined {
-  try {
-    return fs.realpathSync(path.resolve(mockupsDir, publicPath));
-  } catch {
-    return undefined;
-  }
 }
 
 function links(html: string, route: string, mockupsDir: string): LinkedFile[] {
@@ -81,23 +70,15 @@ function links(html: string, route: string, mockupsDir: string): LinkedFile[] {
   return found;
 }
 
-/** Strip transient link tokens and retain only ownership still linked in final HTML. */
+/** Strip transient link tokens using the issued declaration data, without CSS ownership. */
 export function finalizeComponentStylesheets(
   before: string,
   final: string,
   view: ComponentViewRecord,
   route: string,
   mockupsDir: string,
-  definitions: readonly ComponentDefinition[],
-  configuredHrefs: readonly string[] = [],
+  declarations: readonly LinkedComponentStylesheet[],
 ): { html: string; view: ComponentViewRecord } {
-  const declared = new Set(
-    definitions.flatMap((definition) =>
-      definition.stylesheets.map((file) =>
-        fs.realpathSync(path.resolve(mockupsDir, file)),
-      ),
-    ),
-  );
   const issued = new Map(
     links(before, route, mockupsDir)
       .filter((link) => link.token !== undefined)
@@ -140,50 +121,21 @@ export function finalizeComponentStylesheets(
         total + (removal.end <= offset ? removal.end - removal.start : 0),
       0,
     );
-  const linked = new Map<string, LinkedFile[]>();
-  for (const link of finalLinks) {
-    const paths = linked.get(link.physical) ?? [];
-    paths.push(link);
-    linked.set(link.physical, paths);
-  }
-  const resources = view.resources
-    .flatMap((resource) => {
-      const physical = realFile(mockupsDir, resource.path);
-      if (!physical || !declared.has(physical)) return [resource];
-      const paths = linked.get(physical);
-      if (!paths?.length) return [];
-      const configured = configuredHrefs.flatMap((href) =>
-        paths.filter((link) => link.href === href),
-      )[0];
-      return [
-        {
-          ...resource,
-          path:
-            configured?.publicPath ??
-            paths.find((link) => link.publicPath === resource.path)
-              ?.publicPath ??
-            paths[0]!.publicPath,
-        },
-      ];
-    })
-    .sort((left, right) =>
-      left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
-    );
   const insertedStylesheets: InsertedComponentStylesheet[] = marked
     .map((link) => {
-      const owners = resources.find(
-        (resource) => realFile(mockupsDir, resource.path) === link.physical,
+      const declarer = declarations.find(
+        (declaration) => declaration.physical === link.physical,
       );
-      if (!owners)
+      if (!declarer)
         throw new MoklyError(
           "build-invalid",
-          `${route}: missing declared stylesheet owner`,
+          `${route}: missing declared stylesheet provenance`,
         );
       return {
         startOffset: adjusted(link.location.startOffset),
         endOffset: adjusted(link.location.endOffset),
         path: link.publicPath,
-        componentIds: owners.componentIds,
+        componentIds: declarer.componentIds,
       };
     })
     .sort((left, right) => left.startOffset - right.startOffset);
@@ -193,5 +145,5 @@ export function finalizeComponentStylesheets(
         "build-invalid",
         `${route}: invalid inserted stylesheet span`,
       );
-  return { html, view: { ...view, resources, insertedStylesheets } };
+  return { html, view: { ...view, insertedStylesheets } };
 }

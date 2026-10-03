@@ -157,14 +157,14 @@ for (const duplicate of ["action.css", "alias.css"])
     )!;
     assert.equal((html.match(/href="\.\.\/action\.css"/g) ?? []).length, 1);
     assert.deepEqual(
-      screen.componentViews![0]!.resources.find(
+      screen.componentViews![0]!.insertedStylesheets!.find(
         (item) => item.path === "action.css",
       )?.componentIds,
       ["action"],
     );
   });
 
-test("configured and declared real file keeps the configured link and rendered owners", async (context) => {
+test("configured and declared real file keeps the configured link without ownership", async (context) => {
   const fixture = await fixtureWithSheets(
     declared(),
     'stylesheets: [{ match: "**", stylesheets: ["action.css"] }],',
@@ -179,9 +179,9 @@ test("configured and declared real file keeps the configured link and rendered o
   )!;
   assert.equal((html.match(/href="\.\.\/action\.css"/g) ?? []).length, 1);
   assert.deepEqual(
-    screen.componentViews![0]!.resources.find(
+    screen.componentViews![0]!.insertedStylesheets!.find(
       (item) => item.path === "action.css",
     )?.componentIds,
-    ["action"],
+    undefined,
   );
 });

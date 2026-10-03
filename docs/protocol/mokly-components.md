@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Uniform CSS attribution and warnings for all stylesheet owner records are
-planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 The remaining contract is implemented.
 

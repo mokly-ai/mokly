@@ -9,6 +9,8 @@ import { parseReviewResult } from "../packages/viewer/dist/review/result_validat
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 
+import { fixtureCssAnalysis } from "./helpers/css_evidence.js";
+
 test("loaded comparison details merge with classification, deduplicate selectors and suppress retained exclusions", () => {
   const data = workspace();
   data.resourceEvidence = [
@@ -19,7 +21,7 @@ test("loaded comparison details merge with classification, deduplicate selectors
         {
           kind: "dependency",
           path: "mockups/shared.css",
-          analysis: { status: "matched", selectors: [".auth"] },
+          analysis: fixtureCssAnalysis("matched", [".auth"]),
         },
       ],
       excludedResources: [
@@ -39,15 +41,12 @@ test("loaded comparison details merge with classification, deduplicate selectors
             {
               kind: "dependency",
               path: "mockups/shared.css",
-              analysis: {
-                status: "unresolved",
-                selectors: [".auth", ".global"],
-              },
+              analysis: fixtureCssAnalysis("unresolved", [".auth", ".global"]),
             },
             {
               kind: "dependency",
               path: "mockups/unused.css",
-              analysis: { status: "matched", selectors: [".saved"] },
+              analysis: fixtureCssAnalysis("matched", [".saved"]),
             },
           ],
         },

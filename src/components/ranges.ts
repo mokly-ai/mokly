@@ -118,16 +118,16 @@ export function validateComponentRanges(
     if (data.startsWith("mokly-review-ignore:start:")) ignored = true;
     if (data.startsWith("mokly-review-ignore:end:")) ignored = false;
     if (!data.startsWith(prefix)) return;
-    if (ignored)
-      invalidData(
-        "$document",
-        "ReviewIgnore cannot enclose component or caller-slot boundaries",
-      );
     const match = /^mokly-component:(start|end):(r-[0-9]+)$/.exec(data);
     const location = node.sourceCodeLocation;
     const record = expected.get(match?.[2] ?? "");
     if (!match || !record || !location)
       invalidData("$document", "unknown or malformed component boundary");
+    if (ignored && record.target.kind !== "root")
+      invalidData(
+        "$document",
+        "ReviewIgnore cannot enclose component or caller-slot boundaries",
+      );
     if (match[1] === "start") {
       if (
         record.id !== `r-${starts++}` ||

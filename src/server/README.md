@@ -98,6 +98,14 @@ hydrated React document. Serve loads the small `react-host.js` composition over
 the shared `react-shell.js`; export and preview load `react-shell.js` directly.
 The CLI host modules retain private live-update and capability transports.
 
+`component_changes.ts` completes the catalogue-wide CSS proof before it
+publishes evidence. `classified_css.ts` passes that screen evidence to the
+lightweight content pass without another rule analysis. Non-CSS aliases keep
+their existing policy. Whole-document pages share the same rule classifier and
+pinned baseline. Ready public views and pages retain `resourceEvidence`; pending
+and unavailable updates clear it. Selected endpoints copy frozen rule facts,
+including changes proved on other component pages, without evaluating entries.
+
 `screen_view_changes.ts` retains per-view screen-only material decisions from
 the existing classification pass. The public projection does not infer Changes
 membership from visual comparisons or invent empty usage for unfinished views.

@@ -200,7 +200,7 @@ export default (input) => ({ html: '<html><head></head><body>' + renderToStaticM
   assert.equal(
     lines.filter((line) =>
       line.includes(
-        'renderer resources for declared stylesheet "action.css" on "screens/home.mobile.html"',
+        'Stylesheet ownership for "action.css" on "screens/home.mobile.html"',
       ),
     ).length,
     1,

@@ -211,13 +211,13 @@ preflight-free Tailwind v4 utilities to exercise this delivery end to end.
 
 ## Delivery Status
 
-Uniform CSS attribution is planned for Milestone 19 of the
+Uniform CSS attribution is implemented in Milestone 19 of the
 [source-path removal plan](./plans/remove-source-path-evidence.md); comparison
 details follow in Milestone 20. Configured, declared and imported stylesheets
-will use the same [CSS rule contract](./docs/protocol/mokly-css-attribution-rules.md).
+use the same [CSS rule contract](./docs/protocol/mokly-css-attribution-rules.md).
 Components change through own-page matches kept after nested filtering. Outside matches
 and unresolved rules give a page its own row. Stylesheet owner records have no
-role in that decision. The plan keeps this target separate from delivered code.
+role in that decision.
 
 ## Review and share
 

@@ -7,7 +7,7 @@ import { componentVariants } from "./helpers/component_views.js";
 import { designLibraryFixture } from "./helpers/design_library_fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
-test("declared library CSS is owned only by rendered design components", async (t) => {
+test("declared library CSS records only rendered declaring components in provenance", async (t) => {
   const fixture = await designLibraryFixture(t);
   const stylesheet = "design-library/chrome/top-bar.css";
   const owner = { path: stylesheet, componentIds: ["design-ui-top-bar"] };
@@ -15,13 +15,14 @@ test("declared library CSS is owned only by rendered design components", async (
     (entry) => entry.id === "design-ui-top-bar",
   );
   assert.ok(component?.kind === "component");
+  const rootLink = componentVariants(
+    fixture.before.manifest,
+    component.id,
+  )[0]!.componentViews[0]!.insertedStylesheets!.find(
+    (resource) => resource.path === stylesheet,
+  );
   assert.deepEqual(
-    componentVariants(
-      fixture.before.manifest,
-      component.id,
-    )[0]!.componentViews[0]!.resources.find(
-      (resource) => resource.path === stylesheet,
-    ),
+    rootLink && { path: rootLink.path, componentIds: rootLink.componentIds },
     owner,
   );
   let consumers = 0;
@@ -31,11 +32,18 @@ test("declared library CSS is owned only by rendered design components", async (
       const rendersTopBar = view.instances.some(
         (instance) => instance.componentId === component.id,
       );
-      const resource = view.resources.find(
+      const resource = view.insertedStylesheets?.find(
         (record) => record.path === stylesheet,
       );
       if (rendersTopBar) {
-        assert.deepEqual(resource, owner);
+        assert.deepEqual(
+          resource && {
+            path: resource.path,
+            componentIds: resource.componentIds,
+          },
+          owner,
+        );
+        assert.deepEqual(view.resources, []);
         consumers++;
       } else assert.equal(resource, undefined);
     }

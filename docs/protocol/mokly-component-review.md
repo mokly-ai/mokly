@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-CSS per-rule attribution and the revised v5 evidence are planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
+CSS per-rule attribution and the revised v5 evidence are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
 of the [source-path removal plan](../../plans/remove-source-path-evidence.md). Comparison details are planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
 
 The producer, source validator, artifact publisher, exporter, and browser decoder

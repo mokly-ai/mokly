@@ -1,6 +1,10 @@
 import path from "node:path";
 
-import type { HistoricalManifest, ReviewArtifact } from "@mokly/viewer/data";
+import type {
+  HistoricalManifest,
+  ReviewArtifact,
+  PageResourceEvidence,
+} from "@mokly/viewer/data";
 
 import { isIncompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { compileCatalogue } from "../build/compile.js";
@@ -10,7 +14,6 @@ import type { ResolvedConfig } from "../config/types.js";
 import { errorMessage, isCancellation, isMoklyError } from "../errors.js";
 import { removedManifestEntries } from "../registry/changes.js";
 import { parseHistoricalManifest } from "../registry/manifest.js";
-import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
 import { GitReviewAssetReader } from "../review/assets.js";
 import {
   baselineResourceConfig,
@@ -18,6 +21,7 @@ import {
 } from "../review/base_manifest.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { compareReview } from "../review/compare.js";
+import { CssResourceAnalysis } from "../review/css/resource_analysis.js";
 import { importedChangedPaths } from "../review/imported_changes.js";
 import {
   captureRemovedPagePreviews,
@@ -25,7 +29,7 @@ import {
   RepositoryRemovedPagePreview,
 } from "../review/page_preview.js";
 import { prepareReviewRepository } from "../review/prepare.js";
-import { changedContentPaths } from "../server/changed_content.js";
+import { classifyChangedContent } from "../server/changed_content.js";
 
 import { withExportCleanup } from "./cleanup.js";
 import {
@@ -127,6 +131,8 @@ async function generateExport(
             : [];
         let comparison: ReviewArtifact | undefined;
         let contentChanges: readonly string[] = [];
+        let pageEvidence: readonly PageResourceEvidence[] = [];
+        const cssAnalysis = new CssResourceAnalysis();
         if (prepared && baseline) {
           const prefix = toPosixPath(
             path.relative(config.repoRoot, config.mockupsDir),
@@ -156,9 +162,9 @@ async function generateExport(
             transaction.stage,
             assetReader,
             exclusions,
-            { changeEvidence },
+            { changeEvidence, cssAnalysis },
           );
-          contentChanges = await changedContentPaths(
+          const content = await classifyChangedContent(
             compilation.manifest,
             baseline,
             config,
@@ -166,8 +172,11 @@ async function generateExport(
             prepared.commit,
             changeEvidence,
             assetReader,
-            hasRegisteredComponents(compilation.manifest) ? "pages" : "all",
+            "pages",
+            cssAnalysis,
           );
+          contentChanges = content.changedPaths;
+          pageEvidence = content.pages;
           const removedEntries = removedManifestEntries(
             compilation.manifest,
             baseline,
@@ -201,6 +210,7 @@ async function generateExport(
             : incompatible
               ? "unavailable"
               : "ready",
+          pageEvidence,
         );
         if (
           !options.noChanges &&

@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 
+import { isStylesheetPath } from "@mokly/viewer/data";
+
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
 
@@ -208,6 +210,22 @@ export class ComponentMaterialReader {
     if (excluded) cached.filtered.set(excluded, resources);
     else cached.all = resources;
     return resources;
+  }
+
+  /** CSS imports share a document; embedded HTML starts its own stylesheet scope. */
+  async stylesheets(route: string, html: string): Promise<ReadonlySet<string>> {
+    const found = new Set<string>();
+    const pending = referencedRoutes(route, html, {
+      resourceHints: false,
+    }).filter(isStylesheetPath);
+    while (pending.length) {
+      const stylesheet = pending.pop()!;
+      if (found.has(stylesheet)) continue;
+      found.add(stylesheet);
+      const references = await this.resourceReferences(stylesheet);
+      pending.push(...references.filter(isStylesheetPath));
+    }
+    return found;
   }
 
   private async prefetchResources(routes: readonly string[]): Promise<void> {

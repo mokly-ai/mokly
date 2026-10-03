@@ -15,6 +15,8 @@ import {
   styleOutcomes,
 } from "../packages/viewer/dist/shell/workspace_style_evidence.js";
 
+import { fixtureCssAnalysis } from "./helpers/css_evidence.js";
+
 const SHARED = "mockups/shared.css";
 const TOKENS = "mockups/tokens.css";
 
@@ -25,17 +27,17 @@ test("analysed reasons group into one list per retained outcome", () => {
     {
       kind: "dependency",
       path: SHARED,
-      analysis: { status: "matched", selectors: ["main a", ".auth"] },
+      analysis: fixtureCssAnalysis("matched", ["main a", ".auth"]),
     },
     {
       kind: "dependency",
       path: TOKENS,
-      analysis: { status: "matched", selectors: [".auth"] },
+      analysis: fixtureCssAnalysis("matched", [".auth"]),
     },
     {
       kind: "dependency",
       path: "mockups/root.css",
-      analysis: { status: "unresolved", selectors: [":root"] },
+      analysis: fixtureCssAnalysis("unresolved", [":root"]),
     },
   ]);
 
@@ -69,7 +71,7 @@ test("a stylesheet retained by any view is never also listed as excluded", () =>
         {
           kind: "dependency",
           path: SHARED,
-          analysis: { status: "matched", selectors: [".auth"] },
+          analysis: fixtureCssAnalysis("matched", [".auth"]),
         },
       ],
     },
@@ -108,7 +110,7 @@ test("only a changed view kept solely by stylesheet analysis reads as styles", (
   const analysed = {
     kind: "dependency",
     path: SHARED,
-    analysis: { status: "matched", selectors: [".auth"] },
+    analysis: fixtureCssAnalysis("matched", [".auth"]),
   } as const;
 
   assert.equal(
@@ -140,7 +142,7 @@ test("matched evidence names the changed files and then the applying styles", ()
       {
         kind: "dependency",
         path: SHARED,
-        analysis: { status: "matched", selectors: [".auth", "main a"] },
+        analysis: fixtureCssAnalysis("matched", [".auth", "main a"]),
       },
     ],
   });
@@ -162,7 +164,7 @@ test("unresolved evidence says the change can apply anywhere", () => {
       {
         kind: "dependency",
         path: SHARED,
-        analysis: { status: "unresolved", selectors: [":root"] },
+        analysis: fixtureCssAnalysis("unresolved", [":root"]),
       },
     ],
   });
@@ -181,7 +183,7 @@ test("an unresolved outcome without selectors closes with a full stop", () => {
       {
         kind: "dependency",
         path: SHARED,
-        analysis: { status: "unresolved", selectors: [] },
+        analysis: fixtureCssAnalysis("unresolved", []),
       },
     ],
   });

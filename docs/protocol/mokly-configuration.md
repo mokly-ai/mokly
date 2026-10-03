@@ -7,7 +7,7 @@ behavior, including imported CSS and optional PostCSS.
 ## Delivery Status
 
 Uniform CSS membership, independent of configured or declared delivery, is
-planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 The remaining contract is implemented.
 

@@ -5,6 +5,7 @@ import type {
   ComponentReview,
   EntryChangeReason,
 } from "../review/component_types.js";
+import { mergeCssAnalysis } from "../review/css/evidence.js";
 import type {
   ReviewResult,
   ScreenReview,
@@ -92,18 +93,7 @@ function mergeReasons(
         ...reason,
         ...(analyses.length
           ? {
-              analysis: {
-                status: analyses.some(
-                  (analysis) => analysis.status === "unresolved",
-                )
-                  ? "unresolved"
-                  : "matched",
-                selectors: [
-                  ...new Set(
-                    analyses.flatMap((analysis) => analysis.selectors),
-                  ),
-                ].sort(),
-              },
+              analysis: mergeCssAnalysis(analyses),
             }
           : {}),
       });

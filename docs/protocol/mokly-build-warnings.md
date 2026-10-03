@@ -3,7 +3,7 @@
 ## Delivery Status
 
 The warning channel is implemented. Extending the ignored-owner warning to
-all stylesheets is planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+all stylesheets is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 ## Warning Boundary

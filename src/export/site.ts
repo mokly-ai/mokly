@@ -1,6 +1,10 @@
 import path from "node:path";
 
-import type { HistoricalManifest, ReviewArtifact } from "@mokly/viewer/data";
+import type {
+  HistoricalManifest,
+  ReviewArtifact,
+  PageResourceEvidence,
+} from "@mokly/viewer/data";
 import {
   canonicalJson,
   entryRoute,
@@ -59,6 +63,7 @@ export function assembleExport(
   changesStatus: "disabled" | "ready" | "unavailable" = comparison
     ? "ready"
     : "disabled",
+  pageEvidence: readonly PageResourceEvidence[] = [],
 ): {
   inventory: ExportInventory;
   delivery: StaticDelivery;
@@ -139,6 +144,7 @@ export function assembleExport(
           componentChanges: {
             baseline,
             result: comparison.result,
+            ...(pageEvidence.length ? { pageEvidence } : {}),
             screenEvidence: comparison.result.screens
               .map(({ id, views }) => ({
                 id,

@@ -13,7 +13,7 @@ by rejecting the case-insensitive pattern `\bmilestones?\s+\d`.
 ## Delivery Status
 
 Uniform CSS attribution, root boundaries, evidence fields and stylesheet-owner
-warnings are planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+warnings are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 Comparison details are planned for [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence). Unreleased v8/v4/v5 change in place.
 
 The remaining contract is implemented.

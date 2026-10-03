@@ -88,7 +88,8 @@ export function validateManifest(
   validateManifestRelationships(entries, byId);
   if (historical)
     assertHistoricalLayout(original, value as unknown as ManifestV8);
-  if (componentUsage) validateManifestComponentUsage(value as never);
+  if (componentUsage)
+    validateManifestComponentUsage(value as never, historical);
   return value as unknown as ManifestV8;
 }
 

@@ -56,7 +56,7 @@ test("standalone links follow rendered variants without duplicate hrefs", async 
   }
 });
 
-test("empty saved component variant retains its own owner without child styles", async () => {
+test("empty saved component variant retains its own link provenance without child styles", async () => {
   const { manifest, outputs } = await designCatalogue;
   const picker = manifest.entries.find(
     (entry) => entry.id === "design-ui-tag-picker",
@@ -73,8 +73,12 @@ test("empty saved component variant retains its own owner without child styles",
     assert.match(html, /href="[^"]*\/controls\/tag-picker\.css"/);
     assert.doesNotMatch(html, /href="[^"]*\/controls\/tag-chip\.css"/);
     assert.deepEqual(
-      empty.componentViews.find((view) => view.viewport === viewport)!
-        .resources,
+      empty.componentViews
+        .find((view) => view.viewport === viewport)!
+        .insertedStylesheets!.map(({ path, componentIds }) => ({
+          path,
+          componentIds,
+        })),
       [
         {
           path: "design-library/controls/tag-picker.css",
@@ -126,7 +130,7 @@ test("standalone variants emit only the exclusive child styles they actually ren
     );
 });
 
-test("declared CSS belongs to its component in each rendered variant", async () => {
+test("declared CSS records its declaring component in each inserted variant link", async () => {
   const { manifest } = await designCatalogue;
   for (const entry of manifest.entries) {
     if (
@@ -140,7 +144,7 @@ test("declared CSS belongs to its component in each rendered variant", async () 
     for (const variant of componentVariants(manifest, entry.id))
       for (const view of variant.componentViews)
         assert.ok(
-          view.resources.some(
+          view.insertedStylesheets!.some(
             (resource) =>
               resource.path.endsWith(`/` + slug + `.css`) &&
               resource.componentIds.includes(entry.id),

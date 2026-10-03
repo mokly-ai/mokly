@@ -15,6 +15,7 @@ import { baselineResourceConfig, readBaseManifest } from "./base_manifest.js";
 import type { ChangeEvidence } from "./change_evidence.js";
 import { reviewChangedPaths } from "./changed_paths.js";
 import { compareComponentCatalogue } from "./component_compare.js";
+import type { CssResourceAnalysis } from "./css/resource_analysis.js";
 import { importedChangedPaths } from "./imported_changes.js";
 import type { ReadOnlyReviewRepository } from "./repository.js";
 
@@ -23,6 +24,7 @@ export interface CompareReviewOptions {
   useFastPath?: boolean;
   /** Reuse the exact merged evidence already constructed for export/publication. */
   changeEvidence?: ChangeEvidence;
+  cssAnalysis?: CssResourceAnalysis;
 }
 
 /** Compare checked head output to its Git branch point and retain pane artifacts. */
@@ -76,5 +78,6 @@ export async function compareReview(
     baseCommit,
     baseRef,
     options.useFastPath,
+    options.cssAnalysis,
   );
 }

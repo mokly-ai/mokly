@@ -30,7 +30,9 @@ export interface ComponentSlotRecord {
   sourceSlotKey?: string;
 }
 export type ComponentRangeTarget =
-  { kind: "instance"; instanceKey: string } | { kind: "slot"; slotKey: string };
+  | { kind: "instance"; instanceKey: string }
+  | { kind: "slot"; slotKey: string }
+  | { kind: "root" };
 export interface ComponentRangeRecord {
   id: string;
   target: ComponentRangeTarget;

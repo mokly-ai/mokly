@@ -15,12 +15,9 @@ import {
 } from "../compatibility/transform.js";
 import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
+import type { LinkedComponentStylesheet } from "../components/render.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
 import { finalizeComponentStylesheets } from "../components/stylesheet_provenance.js";
-import {
-  isComponentVariantDefinition,
-  type ComponentDefinition,
-} from "../components/types.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 import {
@@ -47,7 +44,7 @@ import {
   validateGeneratedOwnershipHeaders,
 } from "./ownership.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
-import { renderFragments, stylesheetPlacementFor } from "./render.js";
+import { renderFragments } from "./render.js";
 import type { BuildWarning } from "./warnings.js";
 
 /** Pure/countable boundaries used once per accepted document generation. */
@@ -192,6 +189,10 @@ export class DocumentCompiler {
     const views = new Map<string, ArtifactView>();
     const componentViews = new Map<string, ComponentViewRecord>();
     const warnings: BuildWarning[] = [];
+    const stylesheetLinks = new Map<
+      string,
+      readonly LinkedComponentStylesheet[]
+    >();
     const outputs = renderFragments(
       this.entries,
       this.graph.renderer,
@@ -208,6 +209,7 @@ export class DocumentCompiler {
       target,
       { routes: this.graph.stylesheetRoutes, pending: this.pending },
       (warning) => warnings.push(warning),
+      stylesheetLinks,
     );
     const original = outputs.get(route)!;
     const records = transformCompatibilityDocuments(
@@ -240,19 +242,7 @@ export class DocumentCompiler {
             captured,
             route,
             config.mockupsDir,
-            this.entries.filter(
-              (entry): entry is ComponentDefinition & ResolvedRegistryEntry =>
-                entry.kind === "component" &&
-                !isComponentVariantDefinition(entry),
-            ),
-            stylesheetPlacementFor(
-              entryRoute(entry.kind, entry.id),
-              route,
-              target.colorScheme,
-              config,
-              entry.entryRoot,
-              { routes: this.graph.stylesheetRoutes, pending: this.pending },
-            ).hrefs,
+            stylesheetLinks.get(route) ?? [],
           );
           html = finalized.html;
           outputs.set(route, html);

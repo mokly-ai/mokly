@@ -30,6 +30,13 @@ component view records, including optional inserted-stylesheet provenance.
 That provenance is not part of the public catalogue read model; see the
 [component manifest contract](../../docs/protocol/mokly-component-manifest.md).
 
+Saved component views have one explicit root boundary. It does not add a Used
+by instance. Catalogue v4 exposes optional `resourceEvidence` on views and
+whole-document pages while Changes is ready. Comparison v5 carries the same
+rule identities, changed component ids and page evidence. The readers validate
+these fields without receiving private match coordinates. These unreleased
+formats change in place; regenerate earlier output.
+
 > Need to create a catalogue? Use
 > [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly). The viewer is a
 > delivery-only package: it reads public catalogue artifacts and never runs

@@ -28,6 +28,11 @@ source/output changes. Committed capture reads checked disk bytes. Both paths
 validate staged CSS references, including scoped npm assets, and exclude
 private source modules and PostCSS-discovered dependencies.
 
+Changes-enabled capture retains the same catalogue view and page
+`resourceEvidence` as live Serve and consumer export. Rule keys, changed
+component ids and page selectors come from the accepted complete classifier.
+Snapshot capture and selected requests do not recompute component membership.
+
 Focused verification:
 
 ```bash

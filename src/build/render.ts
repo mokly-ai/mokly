@@ -13,7 +13,10 @@ import {
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { componentInputs } from "../components/inputs.js";
-import type { ComponentGraphRenderer } from "../components/render.js";
+import type {
+  ComponentGraphRenderer,
+  LinkedComponentStylesheet,
+} from "../components/render.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
 import {
   isComponentVariantDefinition,
@@ -30,6 +33,7 @@ import type { Renderer } from "../renderer/types.js";
 
 import { generatedHeader } from "./ownership.js";
 import { renderPage } from "./render_page.js";
+import { rendererWithoutCssOwners } from "./renderer_resources.js";
 import { stylesheetHref, type StyleDelivery } from "./styles/links.js";
 import { isGeneratedRoute } from "./styles/routes.js";
 import type { BuildWarning } from "./warnings.js";
@@ -49,6 +53,7 @@ export function renderFragments(
   },
   styles?: StyleDelivery,
   onWarning?: (warning: BuildWarning) => void,
+  stylesheetLinks?: Map<string, readonly LinkedComponentStylesheet[]>,
 ): Map<string, string> {
   const outputs = new Map<string, string>();
   const components = entries.filter(
@@ -99,6 +104,13 @@ export function renderFragments(
           );
           const stylesheets = placement.hrefs;
           let rendered: string;
+          const safeRenderer = rendererWithoutCssOwners(
+            renderer,
+            route,
+            config,
+            styles?.pending,
+            onWarning,
+          );
           try {
             const componentProps =
               entry.kind === "component"
@@ -117,14 +129,13 @@ export function renderFragments(
               ...(componentProps ? { componentProps } : {}),
             };
             if (components.length) {
-              const output = graphRenderer(input, renderer, components, {
+              const output = graphRenderer(input, safeRenderer, components, {
                 route,
                 position: placement.position,
                 mockupsDir: config.mockupsDir,
-                isPublicFile: (candidate) =>
-                  isPublicStaticFile(candidate, config),
               });
               rendered = output.html;
+              stylesheetLinks?.set(route, output.stylesheetLinks);
               if (onWarning) output.warnings?.forEach(onWarning);
               componentViews.set(route, {
                 ...output.view,
@@ -135,7 +146,7 @@ export function renderFragments(
                 ),
               });
             } else {
-              const result = renderer(input);
+              const result = safeRenderer(input);
               rendered = typeof result === "string" ? result : result.html;
               if (
                 typeof result !== "string" &&

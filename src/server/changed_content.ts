@@ -6,6 +6,8 @@ import type {
   HistoricalManifest,
   ManifestV8,
   ScreenResourceEvidence,
+  PageResourceEvidence,
+  ReviewResultV5,
   ViewResourceEvidence,
 } from "@mokly/viewer/data";
 
@@ -22,6 +24,7 @@ import {
 } from "../review/assets.js";
 import { baselineResourceConfig } from "../review/base_manifest.js";
 import type { ChangeEvidence } from "../review/change_evidence.js";
+import { CssResourceAnalysis } from "../review/css/resource_analysis.js";
 import type { BaselineReader } from "../review/git.js";
 import {
   normalizeReviewPair,
@@ -30,11 +33,13 @@ import {
 
 import { documentPairs, type DocumentPair } from "./changed_document_pairs.js";
 import { ChangedResourceGraph } from "./changed_resources.js";
+import { classifiedScreenCss } from "./classified_css.js";
 
 /** Material membership and per-view resource evidence from one traversal. */
 export interface ChangedContent {
   changedPaths: readonly string[];
   screens: readonly ScreenResourceEvidence[];
+  pages: readonly PageResourceEvidence[];
 }
 
 /**
@@ -79,6 +84,8 @@ export async function classifyChangedContent(
     config,
   ),
   documents: "all" | "pages" = "all",
+  css: CssResourceAnalysis = new CssResourceAnalysis(),
+  classified?: ReviewResultV5,
 ): Promise<ChangedContent> {
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const repoPath = (route: string) => (prefix ? `${prefix}/${route}` : route);
@@ -99,7 +106,7 @@ export async function classifyChangedContent(
   );
   const derived = config.generatedOutput === "derived";
   if (!derived && publicChanges.size === 0)
-    return { changedPaths: [], screens: [] };
+    return { changedPaths: [], screens: [], pages: [] };
   const pairs = documentPairs(manifest, baseline, publicChanges, documents);
   if (derived) for (const pair of pairs) pair.changed = true;
   const baseReader = new GitReviewAssetReader(
@@ -148,14 +155,15 @@ export async function classifyChangedContent(
       await readBases(changedPairs.slice(offset, offset + 32));
   });
   if (!derived && publicChanges.size === 0)
-    return { changedPaths: [...result].sort(), screens: [] };
+    return { changedPaths: [...result].sort(), screens: [], pages: [] };
   const screens = new Map<string, ViewResourceEvidence[]>();
+  const pages: PageResourceEvidence[] = [];
   const resources = new ChangedResourceGraph(
     headReader,
     baseReader,
     publicChanges,
     normalizedDocuments,
-    undefined,
+    css,
     derived,
   );
   await timeAsync("review.compare-screens", async () => {
@@ -195,9 +203,35 @@ export async function classifyChangedContent(
           pair.base && before !== undefined
             ? { path: pair.base, html: before }
             : undefined,
+          classifiedScreenCss(classified, pair.view, prefix),
         );
         if (evidence.reasons?.length || evidence.resourceChanged)
           result.add(repoPath(pair.head));
+        if (
+          pair.pageId &&
+          (evidence.reasons?.length || evidence.excludedResources?.length)
+        )
+          pages.push({
+            id: pair.pageId,
+            ...(evidence.reasons
+              ? {
+                  reasons: evidence.reasons.map((reason) => ({
+                    ...reason,
+                    path: repoPath(reason.path),
+                  })),
+                }
+              : {}),
+            ...(evidence.excludedResources
+              ? {
+                  excludedResources: evidence.excludedResources.map(
+                    (resource) => ({
+                      ...resource,
+                      path: repoPath(resource.path),
+                    }),
+                  ),
+                }
+              : {}),
+          });
         if (
           pair.view &&
           (evidence.reasons?.length || evidence.excludedResources?.length)
@@ -233,6 +267,7 @@ export async function classifyChangedContent(
   });
   return {
     changedPaths: [...result].sort(),
+    pages: pages.sort((a, b) => (a.id < b.id ? -1 : 1)),
     screens: [...screens.keys()]
       .sort()
       .map((id) => ({ id, views: screens.get(id)! })),

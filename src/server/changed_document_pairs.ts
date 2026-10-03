@@ -11,6 +11,7 @@ export interface DocumentPair {
   context: string;
   changed: boolean;
   view?: { id: string; viewport: Viewport; colorScheme: ColorScheme };
+  pageId?: string;
 }
 
 export function documentPairs(
@@ -33,6 +34,7 @@ export function documentPairs(
         ...(base ? { base } : {}),
         head,
         context: head,
+        pageId: screen.id,
         changed: base !== head || changed.has(head),
       });
       continue;

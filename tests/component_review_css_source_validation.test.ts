@@ -41,7 +41,7 @@ test("source validation rejects a reason injected onto an affected-only screen",
       reasons: [{ kind: "dependency", path: changed }],
     },
   ];
-  assert.doesNotThrow(() => parseReviewResult(tampered));
+  assert.throws(() => parseReviewResult(tampered), /analysis/);
   assert.throws(
     () =>
       validateComponentReviewSources(
@@ -51,7 +51,7 @@ test("source validation rejects a reason injected onto an affected-only screen",
         classified.implementationImpact,
         classified.sources,
       ),
-    /dependency reason has no source evidence/,
+    /dependency reason has no source evidence|analysis/,
   );
 });
 
@@ -84,7 +84,7 @@ for (const kind of ["component", "screen"] as const)
         reasons: [{ kind: "dependency", path: "mockups/action.css" }],
       },
     ];
-    assert.doesNotThrow(() => parseReviewResult(tampered));
+    assert.throws(() => parseReviewResult(tampered), /analysis/);
     assert.throws(
       () =>
         validateComponentReviewSources(
@@ -94,11 +94,11 @@ for (const kind of ["component", "screen"] as const)
           classified.implementationImpact,
           classified.sources,
         ),
-      /dependency reason has no source evidence/,
+      /dependency reason has no source evidence|analysis/,
     );
   });
 
-test("a configured and declared stylesheet retains only its component Changes row", async (t) => {
+test("a configured and declared stylesheet retains its component and matching saved-variant Changes rows", async (t) => {
   const fixture = await stylesheetValidationFixture(t, "both", true);
   const { before, after, result, classified } = fixture;
   const screen = result.screens.find((entry) => entry.id === "home")!;
@@ -109,7 +109,7 @@ test("a configured and declared stylesheet retains only its component Changes ro
   );
   assert.deepEqual(
     result.changes.map((entry) => entry.after?.id),
-    ["action"],
+    ["action", "action-default", "action-disabled"],
   );
   assert.ok(
     result.changes[0]!.reasons.some(

@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Uniform CSS eligibility, root-boundary handling and catalogue-wide rule proof
-are planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 The fast path and its strict-v8 baseline boundary are implemented.
 

@@ -1,5 +1,6 @@
 import { reviewMaterialKey } from "../data/material_key.js";
 import { isCatalogueId } from "../navigation/logical.js";
+import { isStylesheetPath } from "../review/css/stylesheet_path.js";
 
 import { decodeProps, encodeProps } from "./codec.js";
 import { canonicalJson, exactKeys, invalidData } from "./data.js";
@@ -24,6 +25,7 @@ export function validateComponentViews(
   >,
   at: string,
   rootId?: string,
+  historical = false,
 ): asserts value is readonly ComponentViewRecord[] {
   const axes = ["mobile", "desktop"].flatMap((viewport) =>
     (dark ? ["light", "dark"] : ["light"]).map(
@@ -57,6 +59,7 @@ export function validateComponentViews(
       components,
       `${at} / ${axes[i]}`,
       rootId,
+      historical,
     );
   });
 }
@@ -150,6 +153,15 @@ export function validateComponentViewRecord(
   const slots = new Map(view.slots.map((item) => [item.key, item]));
   validateOrders(view.instances, at);
   validateViewReferences(view, components, instances, slots, at, historical);
+  const roots = view.ranges.filter((range) => range.target.kind === "root");
+  if (
+    roots.length > (rootId ? 1 : 0) ||
+    (rootId && !historical && roots.length !== 1)
+  )
+    invalidData(
+      at,
+      "saved component views require exactly one root range; screens have none",
+    );
   const rendered = new Set([
     ...view.instances.map((instance) => instance.componentId),
     ...(rootId ? [rootId] : []),
@@ -170,6 +182,8 @@ export function validateComponentViewRecord(
   for (const resource of view.resources) {
     exactKeys(resource, ["path", "componentIds"], at);
     validateResourcePath(resource.path, at);
+    if (isStylesheetPath(resource.path))
+      invalidData(at, "stylesheet resources cannot have owners");
     validateOwners(resource.componentIds, rendered, at);
   }
   sortedStrings(

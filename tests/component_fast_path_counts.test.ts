@@ -50,6 +50,7 @@ for (const generatedOutput of ["committed", "derived"] as const)
       .filter((view) =>
         view.usage
           ? view.usage.instances.length > 0 ||
+            view.usage.ranges.some((range) => range.target.kind === "root") ||
             view.usage.styles.length > 0 ||
             view.usage.slots.some((slot) => slot.owner.kind === "entry")
           : false,

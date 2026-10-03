@@ -3,6 +3,8 @@ import type {
   ViewReview,
 } from "../../packages/viewer/dist/review/types.js";
 
+import { fixtureCssAnalysis } from "./css_evidence.js";
+
 /** Snapshot closure for both valid schema fixtures. */
 export function cssSchemaFiles(): Map<string, string> {
   return new Map(
@@ -37,7 +39,7 @@ export function cssSchemaFixture(): ReviewResult {
         {
           kind: "dependency",
           path: "mockups/shared.css",
-          analysis: { status: "matched", selectors: [".auth", ".button"] },
+          analysis: fixtureCssAnalysis("matched", [".auth", ".button"]),
         },
       ],
     },

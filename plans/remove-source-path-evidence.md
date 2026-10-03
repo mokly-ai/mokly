@@ -13,14 +13,13 @@ includes main through `b2c82c15`,
 including imported CSS (#125), route-scoped bootstraps (#120), and the STE
 instructions (#128), in addition to the five originally listed commits.
 Milestone 17 is complete and verified. It documents the uniform CSS change rule. Milestone 18 depicts the
-outside-component evidence in the design mockups. Milestones 19 and 20 remain
-pending: classification and comparison details. The contract changes
+outside-component evidence in the design mockups. Milestone 19 is implemented
+and verified. Milestone 20 remains pending for comparison details. The contract changes
 unreleased manifest v8, catalogue v4 and comparison v5 in place. CSS resource
 owners no longer route stylesheet changes; declared links and their provenance
 remain. The review refinement uses kept own-page matches for component
 membership. Nesting alone does not change enclosing components. Page rows
-retain inclusive containment. The current implementation will adopt that
-contract in Milestone 19.
+retain inclusive containment. Milestone 19 implements that contract.
 The binding Decisions And Scope remove all three inputs and adopt
 component-declared stylesheets in place of the stylesheet role of
 `ownedDependencies`. The user approved both the removals and the component
@@ -1107,78 +1106,151 @@ run did not repeat this.
 
 ## Milestone 19: Classify CSS by where its rules match
 
-- [ ] Failure-first tests for each way CSS reaches a page (configured, declared,
+- [x] Failure-first tests for each way CSS reaches a page (configured, declared,
       imported by a declared stylesheet, bundled from a JavaScript import):
-  - [ ] A changed rule that styles only a component's output puts that
+  - [x] A changed rule that styles only a component's output puts that
         component in Changes, with its consumers under Affected screens.
-  - [ ] A changed rule that styles an element outside the component output
+  - [x] A changed rule that styles an element outside the component output
         puts the page in Changes.
-  - [ ] Screen CSS that styles the inside of a component, but does not reach
+  - [x] Screen CSS that styles the inside of a component, but does not reach
         the component's own page, puts the screen in Changes and leaves the
         component unchanged.
-  - [ ] An unresolved rule puts the page in Changes.
-- [ ] Record which elements each changed rule matches, decide inside or
+  - [x] An unresolved rule puts the page in Changes.
+- [x] Record which elements each changed rule matches, decide inside or
       outside with the component output markers, identify the same rule across
       stylesheets, and attribute each change by the 2026-10-03 rule. Remove
       CSS attribution through ownership records. Keep the complete and fast
       comparison paths equal.
-- [ ] Add failure-first coverage for these four nested-output cases:
-  - [ ] `.action` changes Action only; Toolbar's own-page matches are inside
+- [x] Add failure-first coverage for these four nested-output cases:
+  - [x] `.action` changes Action only; Toolbar's own-page matches are inside
         Action, so Toolbar is under Action's Affected screens.
-  - [ ] `.toolbar .action` has no match on Action's own pages. Toolbar keeps
+  - [x] `.toolbar .action` has no match on Action's own pages. Toolbar keeps
         its matches and changes; its consumers are affected and Action is unchanged.
-  - [ ] With Icon inside Action inside Toolbar, `.icon` changes Icon only.
-  - [ ] Y's own-page matches all lie inside changed Z, so Y is not changed.
+  - [x] With Icon inside Action inside Toolbar, `.icon` changes Icon only.
+  - [x] Y's own-page matches all lie inside changed Z, so Y is not changed.
         Y still takes an X-own-page match inside Y but outside Z. X keeps no
         match and is not changed as a component; X's saved view gets a page
         row, with no affected consumers from that page reason.
-- [ ] Test that self-nested X never takes a match from X, that mutually nested
+- [x] Test that self-nested X never takes a match from X, that mutually nested
       components need no evaluation order, and that a variant gets a component
       reason only for a match its parent keeps on that variant's own page.
       Preserve inclusive nested containment for page-row subtraction.
-- [ ] Cover all saved variants/viewports/schemes, wrappers outside roots, empty
+- [x] Cover all saved variants/viewports/schemes, wrappers outside roots, empty
       output, paired Review-ignore and missing historical root bounds. Preserve
       previously valid Review-ignore around root-only output.
-- [ ] Add one explicit root output range per new component saved view in v8.
+- [x] Add one explicit root output range per new component saved view in v8.
       Keep it separate from instances and caller inputs. Update range readers,
       compatibility validation, marker stripping and v4 inspection without
       adding a phantom Used by occurrence or a marker-only material change.
-- [ ] Add the normalized before/after rule key, duplicate aggregation and
+- [x] Add the normalized before/after rule key, duplicate aggregation and
       catalogue-wide unfiltered and kept own-page match collection. Evaluate
       nested filtering only against unfiltered own-page sets, never against
       the changed-component set. Test equal generated copies,
       different declarations, conditions, added/removed rules and stylesheets,
       added/removed views, embedded documents and parser-inserted elements.
-- [ ] Stop deriving CSS `resources`. Feed inserted-link provenance directly
+- [x] Stop deriving CSS `resources`. Feed inserted-link provenance directly
       from linking data. Preserve placement, aliases, final-token checks,
       compatibility removal, root-link retention and comparison exclusion.
-- [ ] Remove CSS owner suppression, root-owner material reasons and invocation
+- [x] Remove CSS owner suppression, root-owner material reasons and invocation
       promotion. Drop historical CSS owner records, including earlier v8
       output. Keep non-CSS owners and document `styles` behavior unchanged.
       Test a declaration-only edit that reuses an unchanged configured link.
-- [ ] Replace `ignored-declared-resource-owner` with
+- [x] Replace `ignored-declared-resource-owner` with
       `ignored-stylesheet-resource-owner` and the exact documented message.
       Ignore every renderer CSS owner record after public-file checks. Cover
       unlinked/generated/imported CSS, no registered components or rendered
       declarer, duplicate aliases, pending generated routes, unsafe paths and ignored invalid owner ids.
       Test stable generated identities and one warning per route/file identity
       in Build, Check, export, publish and Serve, including on-demand/transient rendering and IPC.
-- [ ] Extend comparison v5 with per-rule changed component ids, page selectors
+- [x] Extend comparison v5 with per-rule changed component ids, page selectors
       and unresolved page evidence. Extend catalogue v4 view/page evidence;
       keep whole-document pages outside visual comparison records. Update
       strict readers, public allowlists, fixtures, canonical output and source
       proof without a version increment or private match-coordinate exposure.
       Validate component reasons against kept matches and preserve the raw
       own-page sets needed to prove nested filtering.
-- [ ] Test independent component/page rules in one file, a selector matching
+- [x] Test independent component/page rules in one file, a selector matching
       both inside and outside, partial unresolved evidence, component wrapper
       page rows without affected consumers, parent versus saved-variant rows,
       and unchanged non-CSS actual-invocation attribution.
-- [ ] Preserve complete/fast/Browse/watch/selected/export/publication agreement.
+- [x] Preserve complete/fast/Browse/watch/selected/export/publication agreement.
       Carry the complete rule-to-component facts through accepted generations,
       cache invalidation and selected projection. Test selection before/after
       a component's own-page evidence changes, without rerunning consumer code.
-- [ ] Run the focused tests and the complete unit suite at 100%.
+- [x] Keep CSS that only appears after component projection out of both rule
+      reasons and derived byte-material reasons. Keep non-CSS projection behavior.
+- [x] Reuse complete screen CSS evidence in lightweight content checks. Preserve
+      the existing non-CSS alias policy without repeating rule analysis.
+- [x] Run the focused tests and the complete unit suite at 100%.
+
+Implementation notes:
+
+- The rule classifier retains all matched elements and their validated output
+  ranges. It freezes unfiltered own-page sets before nested filtering. Entry
+  reasons retain only eligible rules. Public evidence contains no coordinates.
+- CSS assertions no longer create resource owners. Inserted-link provenance
+  uses temporary linking data. Non-CSS ownership and document styles remain.
+- The lightweight screen pass reuses complete CSS evidence. It retains its
+  existing non-CSS alias handling. Whole-document pages use the same classifier.
+- Smoke used an isolated, current-format copy of the real example with watched
+  `mokly serve`. All 12 cases passed: configured, declared, CSS-imported and
+  JavaScript-imported delivery, each with a component rule, a screen heading
+  rule and a screen-only rule inside Action. Component cases listed Action and
+  its three saved variants. Other cases listed Welcome, Welcome empty, Details
+  and their flow. Selected API evidence matched catalogue evidence. Browser
+  computed styles matched each edit. All temporary edits were restored; the
+  fixture Git status is clean. Logs and screenshots are in `.context/m19/`.
+- This milestone adds no file deletions relative to `70ccbdef`. The four earlier
+  plan-approved deletions and the v3-to-v4 fixture rename remain.
+- The required fetch found `origin/main` at `800fe9f8`, with two commits after
+  this branch's `b2c82c15` base: output/frame race fixes (#129) and an audit
+  exception (#130). This task does not merge them or change the audit. The
+  reviewer must preserve those commits when integrating main. The following
+  apparent deletions in the two-tree `origin/main` diff are main-only additions,
+  not removals authored by this milestone:
+
+  - `packages/viewer/src/shell/frame_session_usage.ts`
+  - `packages/viewer/tests/frame_hook_fakes.ts`
+  - `scripts/verification/dependency-audit-evaluation.d.mts`
+  - `scripts/verification/dependency-audit-evaluation.mjs`
+  - `scripts/verification/dependency-audit-exceptions.d.mts`
+  - `scripts/verification/dependency-audit-exceptions.json`
+  - `scripts/verification/dependency-audit-exceptions.mjs`
+  - `scripts/verification/dependency-audit-lockfile.d.mts`
+  - `scripts/verification/dependency-audit-lockfile.mjs`
+  - `scripts/verification/dependency-audit.d.mts`
+  - `scripts/verification/dependency-audit.mjs`
+  - `src/build/output_lock.ts`
+  - `src/build/output_lock_file.ts`
+  - `tests/baseline_directory_walk.test.ts`
+  - `tests/browser/frame_hook_usage_race.spec.ts`
+  - `tests/ci_native_output_lock.test.ts`
+  - `tests/fixtures/dependency-audit/README.md`
+  - `tests/fixtures/dependency-audit/lockfile.json`
+  - `tests/fixtures/dependency-audit/report.json`
+  - `tests/generated_output_concurrency.test.ts`
+  - `tests/generated_output_lock.test.ts`
+  - `tests/generated_output_lock_waits.test.ts`
+  - `tests/helpers/dependency_audit.ts`
+  - `tests/helpers/generated_output_fixture.ts`
+  - `tests/verification_dependency_audit.test.ts`
+  - `tests/verification_dependency_audit_runner.test.ts`
+  - `tests/verification_dependency_audit_validation.test.ts`
+  - `tests/watched_resource_wait_open_stream.test.ts`
+
+Verification: the exact complete unit command and `cargo xtask check --suite
+unit` each pass 3,779 tests. The browser suite passes 746 tests. Hydration passes
+224 tests. These suites have no failures, skips or cancellations. All 15 Rust
+tests and all six packed-consumer scenarios pass. The focused run passes 782
+tests, the example library run passes 51 tests, and the six requested docs
+suites pass 26 tests. Build, typecheck, lint, formatting, file limits,
+repository checks and both example commands pass. `cargo xtask check` stops
+only at the unchanged `braces` audit (GHSA-vfj7-8cjw-p6xm, 13 high findings,
+no fix). Every other requested check step passes separately. Exact commands,
+first-failure names and smoke results are in `.context/m19/report.md` and
+`.context/m19/checks.jsonl`. The task requires a local commit without a push;
+the reviewer owns the later push and review. No M20 presentation or copy work
+is included.
 
 ## Milestone 20: Show the outside-component evidence
 

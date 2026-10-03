@@ -7,16 +7,13 @@ import {
 } from "@mokly/viewer/data";
 import type { ManifestV8, ArtifactView } from "@mokly/viewer/data";
 
-import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { transformCompatibilityDocuments } from "../compatibility/transform.js";
 import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
+import type { LinkedComponentStylesheet } from "../components/render.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
 import { finalizeComponentStylesheets } from "../components/stylesheet_provenance.js";
-import {
-  isComponentVariantDefinition,
-  type ComponentDefinition,
-} from "../components/types.js";
+import { isComponentVariantDefinition } from "../components/types.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
 import {
@@ -36,7 +33,7 @@ import { validateLogicalFragments } from "./logical_records.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
 import { validateGeneratedOwnershipHeaders } from "./ownership.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
-import { renderFragments, stylesheetPlacementFor } from "./render.js";
+import { renderFragments } from "./render.js";
 import { renderCooperatively } from "./render_cooperative.js";
 import type { BuildWarning } from "./warnings.js";
 
@@ -91,6 +88,10 @@ async function compileMeasured(
   }));
   const fragmentViews = new Map<string, ArtifactView>();
   const componentViews = new Map<string, ComponentViewRecord>();
+  const stylesheetLinks = new Map<
+    string,
+    readonly LinkedComponentStylesheet[]
+  >();
   const pending = new PendingGeneratedFiles(graph.styleOutputs);
   const outputs = accepted
     ? await timeAsync("render", () =>
@@ -103,6 +104,7 @@ async function compileMeasured(
           accepted.checkpoint,
           pending,
           recordWarning,
+          stylesheetLinks,
         ),
       )
     : timeSync("render", () =>
@@ -116,14 +118,11 @@ async function compileMeasured(
           undefined,
           { routes: graph.stylesheetRoutes, pending },
           recordWarning,
+          stylesheetLinks,
         ),
       );
   pending.addHtmlMap(outputs);
   const generatedOwners = new Map<string, string>();
-  const catalogueRoutes = new Map<
-    string,
-    { route: string; entryRoot?: string }
-  >();
   for (const entry of registry.entries) {
     if (entry.kind === "page")
       generatedOwners.set(
@@ -143,10 +142,6 @@ async function compileMeasured(
         )) {
           const route = viewRoute(entry.kind, entry.id, viewport, colorScheme);
           generatedOwners.set(route, entry.sourceRelativePath);
-          catalogueRoutes.set(route, {
-            route: entryRoute(entry.kind, entry.id),
-            ...(entry.entryRoot ? { entryRoot: entry.entryRoot } : {}),
-          });
         }
       }
     }
@@ -175,18 +170,7 @@ async function compileMeasured(
         view,
         route,
         config.mockupsDir,
-        registry.entries.filter(
-          (entry): entry is ComponentDefinition & ResolvedRegistryEntry =>
-            entry.kind === "component" && !isComponentVariantDefinition(entry),
-        ),
-        stylesheetPlacementFor(
-          catalogueRoutes.get(route)!.route,
-          route,
-          fragmentViews.get(route)!.colorScheme,
-          config,
-          catalogueRoutes.get(route)!.entryRoot,
-          { routes: graph.stylesheetRoutes, pending },
-        ).hrefs,
+        stylesheetLinks.get(route) ?? [],
       );
       outputs.set(route, finalized.html);
       validateComponentRanges(finalized.html, view.ranges);

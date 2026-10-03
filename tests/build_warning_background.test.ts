@@ -45,7 +45,7 @@ export default (input) => { const html = '<html><head></head><body>' + renderToS
       await new Promise((resolve) => setTimeout(resolve, 25));
     }
     const warningIndex = events.findIndex((line) =>
-      line.includes("ignored; Mokly derives owners"),
+      line.includes("ignored. Changes follow the elements"),
     );
     const failureIndex = events.findIndex((line) =>
       line.includes("broken page after warned render"),

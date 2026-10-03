@@ -11,6 +11,7 @@ import { computeCatalogueChanges } from "../dist/server/changed.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
+import { resourceReasonSummaries } from "./helpers/css_evidence.js";
 import { derivedFixture } from "./helpers/derived_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
 
@@ -78,7 +79,7 @@ for (const components of [false, true]) {
             { path: evidencePath, reason: "no-matching-rule" },
           ]);
         else
-          assert.deepEqual(view.reasons, [
+          assert.deepEqual(resourceReasonSummaries(view.reasons), [
             {
               kind: "dependency",
               path: evidencePath,

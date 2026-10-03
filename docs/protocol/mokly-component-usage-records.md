@@ -4,7 +4,7 @@
 
 Implemented for manifest v8, including strict admission of normalized baseline usage
 records. Root output ranges, non-CSS-only resource records and independent
-stylesheet provenance are planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+stylesheet provenance are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md), within v8.
 
 This contract owns the per-view component instance, slot, range, style, and

@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Root output boundaries, independent stylesheet provenance and warnings for all
-CSS resource-owner records below are planned for Milestone 19 of the
+CSS resource-owner records below are implemented in Milestone 19 of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 This internal module loads consumer definitions, renders every configured view,
@@ -104,6 +104,13 @@ CSS Modules mutation checklist:
   when `repoRoot` is the Git work-tree top level. Nested/non-Git fixtures skip
   the check; effective ignore rules and precise negations are reported before
   committed output is written or compared.
+
+`renderer_resources.ts` validates each asserted public file before it ignores
+CSS owner records. Generated CSS uses its pending canonical route as its stable
+warning identity. Authored CSS uses its confined real path, including aliases.
+This filter runs before the empty-component-registry check. Saved roots have
+an explicit output boundary. Temporary rendered declarations feed final link
+provenance directly; usage `resources` contains only non-CSS ownership.
 
 ## Consumer Graph
 

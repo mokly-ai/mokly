@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Ignoring all CSS owner records after safety checks is planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
+Ignoring all CSS owner records after safety checks is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
 of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 The remaining contract is implemented.

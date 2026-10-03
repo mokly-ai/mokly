@@ -1,6 +1,6 @@
 import { isValidElement, useContext, type ReactNode } from "react";
 
-import type { ComponentSlotRecord, ComponentRangeTarget } from "@mokly/viewer";
+import type { ComponentSlotRecord } from "@mokly/viewer";
 import {
   isCatalogueId,
   invalidData,
@@ -8,6 +8,7 @@ import {
   validateComponentSource,
 } from "@mokly/viewer/data";
 
+import { Boundary } from "./boundary.js";
 import { componentInputs } from "./inputs.js";
 import { ComponentContext, type ComponentScope } from "./render_context.js";
 import type { ComponentDefinition } from "./types.js";
@@ -116,24 +117,5 @@ function OwnedSlot({ capture }: { capture: CapturedSlot }): ReactNode {
     >
       {capture.node}
     </Boundary>
-  );
-}
-
-function Boundary({
-  scope,
-  target,
-  children,
-}: {
-  scope: ComponentScope;
-  target: ComponentRangeTarget;
-  children: ReactNode;
-}): ReactNode {
-  const token = scope.collector.boundary(target);
-  return (
-    <>
-      <template data-mokly-component-start={token} />
-      <ComponentContext value={scope}>{children}</ComponentContext>
-      <template data-mokly-component-end={token} />
-    </>
   );
 }

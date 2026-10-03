@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Uniform CSS attribution in the acceptance table is planned for [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
+Uniform CSS attribution in the acceptance table is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
 of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 The basic consumer records shared instances without changing existing design
