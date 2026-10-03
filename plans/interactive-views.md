@@ -678,6 +678,24 @@ that path and keeps every Live example instruction. The example README already
 owns the repository source locations. The complete unit suite and then the
 complete gate run again after the follow-up commit.
 
+The next complete gate passed the repository, package and all 3,842 unit
+tests. The browser suite had 780 passes, two setup failures and 12 skips.
+Both failed setup paths use the ordinary preview fixture. Merge 1 registered
+Workspace note as a saved Mokly component and rendered it through the registry
+on Welcome. This gives the imported-style component its own Static/Live view
+and records its screen usage. The focused ordinary fixture still exported
+only the older example component list. The follow-up imports `workspaceNote`
+and includes `workspaceNote.entries`, without changing the production example.
+The fixture failed in 7.67 seconds and 7.58 seconds, below its 300-second limit.
+
+A new unit guard parses the real catalogue and the ordinary fixture source.
+It requires each imported example component module, each named component
+binding, and its registry entries in the fixture. The guard fails before the
+fix in 30 milliseconds. It uses the existing TypeScript parser and requires
+no catalogue build, shared production list, or new internal export. The two
+affected browser specs, complete browser suite, hydration suite and complete
+gate run again after the fix commit. Existing milestones remain complete.
+
 ## Post-merge follow-up (non-blocking)
 
 - Live inspection: measure boundaries in the mounted DOM and re-enable

@@ -209,6 +209,7 @@ import { definePage, defineRoot } from "@mokly/mokly";
 import { action } from "../src/components/action/action.mokly.js";
 import { guestPicker } from "../src/components/guest-picker/guest-picker.mokly.js";
 import { toolbar } from "../src/components/toolbar/toolbar.mokly.js";
+import { workspaceNote } from "../src/components/workspace-note/workspace-note.mokly.js";
 import { mockups as exampleEntries } from "./catalogue.mockup.js";
 import { detailsScreen } from "./design/browse/views/details-screen.js";
 import { browseViewScreens } from "./design/browse_screens.js";
@@ -250,6 +251,7 @@ export const mockups = [
   action.entries,
   guestPicker.entries,
   toolbar.entries,
+  workspaceNote.entries,
   libraryEntries,
   designEntries,
   fallbackEntries,
