@@ -1,5 +1,11 @@
 # On-demand Serve
 
+## Delivery Status
+
+On-demand startup, rendering and evidence completion are implemented. The
+route-evidence loading and failed Usage states are implemented by the
+[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
+
 ## Startup and completeness
 
 Serve loads one consumer graph and validates its catalogue metadata, routes,
@@ -27,6 +33,24 @@ graph. Rendering runs outside
 the HTTP event loop in a bounded, terminable worker. Concurrent requests for the
 same view share work. Only validated results enter the generation-local bounded
 cache. A renderer failure cannot make unrelated routes or shutdown unavailable.
+
+Under [imported-CSS delivery](./mokly-imported-styles.md), reserved stylesheet
+and asset routes use the accepted generation's compilation bytes for GET/HEAD
+with CSS/image/font content types, never a stale disk file. Resource validation
+accepts pending generated routes; transient Props previews use the same
+generation's byte-safe closure. Ordinary authored assets retain confined
+static delivery. Inventory-only startup freshness runs the CSS/PostCSS
+dependency pass without rendering every view.
+Every `/static/mokly-generated/**` request is generation-owned: if the route
+is absent from that accepted generation, return 404 even when a stale file
+exists on disk. Apply this to watched and no-watch committed/derived Serve,
+on-demand dispatch, and transient controls; never delegate a reserved route
+to the ordinary static filesystem fallback. Valid routes return exactly the
+accepted bytes with the route's MIME type, including `%40` npm scopes.
+For committed Serve without a retained runtime, derive the exact accepted
+reserved-route set from the inventory-only graph and snapshot only those disk
+bytes at startup; a syntactically valid stray on disk is still a 404. A runtime
+already carries the accepted CSS and asset bytes for both output modes.
 
 The foreground service admits one active document and 32 queued distinct routes,
 with a ten-second deadline, a 256 MiB worker heap limit and a 64 MiB result cache.
@@ -61,8 +85,20 @@ Evidence completion updates the mounted shell and retains navigation and preview
 documents. It cannot clear search, open a collapsed current folder or interrupt
 temporary props. The [live evidence contract](./mokly-live-evidence.md) defines
 revision fences, navigation races, usage ownership and reload fallback.
-The existing mobile/desktop Inspection unavailable designs also cover this usage
-state: “Usage is unavailable until the catalogue has been checked.” It does not
+
+After in-shell navigation, a route-scoped bootstrap can intentionally omit the
+destination's usage until its paired private workspace arrives. During that
+delivery gap, the Usage panel says `Loading usage…` and shows no consumer
+counts, empty state, `Used by`, or `Affected` rows. A failed or rejected current
+evidence read says `Usage couldn’t be loaded.` and provides a `Try again`
+button. Retry repeats the fenced route-evidence read without replacing preview
+frames. Omitted displayed-view usage is pending, so screen inspection keeps
+`Waiting for the component preview.` until real route usage is adopted in
+place. It must never flash the validated-empty copy.
+
+The existing mobile/desktop Inspection unavailable designs cover genuinely
+unavailable catalogue usage: “Usage is unavailable until the catalogue has
+been checked.” That state is distinct from route delivery failure. It does not
 add an environment label or replace a real zero-consumer result.
 
 Props requests validate and capture only the edited view and its resource closure.

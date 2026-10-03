@@ -48,6 +48,8 @@ export type { UsageLink } from "./workspace_usage_data.js";
 export interface WorkspaceData {
   previewGeneration?: string;
   usageComplete?: boolean;
+  /** Selected public views are waiting for route-scoped usage evidence. */
+  viewUsagePending?: boolean;
   renderCapability?: RenderCapability;
   /** The exact routed entry whose chrome and lifecycle own this workspace. */
   entry: WorkspaceEntry;

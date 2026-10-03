@@ -144,6 +144,18 @@ remain public unless another protection rule or consumer exclusion matches.
 
 ## Complete Source Inventory
 
+The complete inventory includes imported CSS, nested `@import`s, local `url()`
+assets, transformer-only CSS inputs, and PostCSS-reported file and directory
+dependencies. Inventory-only freshness runs the same CSS/PostCSS pass. Ignore
+plugin paths outside `repoRoot` or physically below `node_modules` before
+normalization, honor directory globs, and never inventory generated output.
+An explicit generated-output report fails in both modes; directory matches
+fail committed mode and skip generated files in derived mode. A reported
+public file under `mockupsDir` fails unless the graph already inventoried it
+as a source. Every file below `mokly-generated/` remains package-owned output,
+not an authored input, even without an HTML header. See
+[imported stylesheet delivery](./mokly-imported-styles.md).
+
 Manifest v8 `sourceFiles` is a sorted, unique array of repository-relative POSIX
 paths. Derive it from the union of file inputs resolved by both the config
 bundle and the consumer bundle, including inputs eliminated by tree shaking:

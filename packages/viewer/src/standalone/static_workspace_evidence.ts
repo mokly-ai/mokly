@@ -132,7 +132,7 @@ function sameStaticSource(
 ): boolean {
   return (
     candidate.view.kind === "target" &&
-    candidate.view.entryId === id &&
+    candidate.view.entryPath === id &&
     candidate.view.entryKind === kind &&
     candidate.catalogue.identity.id === installed.catalogue.identity.id &&
     candidate.catalogue.deploymentId === installed.catalogue.deploymentId &&

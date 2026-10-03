@@ -17,6 +17,7 @@ export default defineConfig({
     { dir: "src/components", path: "example/components" },
   ],
   mockupsDir: "generated",
+  postcss: "postcss.config.mjs",
   moduleResolution: {
     aliases: { "react-native": "react-native-web" },
     conditions: ["react-native", "import", "module", "default"],

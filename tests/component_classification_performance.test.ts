@@ -16,6 +16,7 @@ import { generatedViews } from "../packages/viewer/dist/components/views.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("component metadata reflects authored paths without a hierarchy projection", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
@@ -75,7 +76,8 @@ test("component views validate each retained document range index once", async (
   });
   const observed = { ...view, usage: { ...view.usage, ranges } };
   const reader = new ComponentMaterialReader({
-    read: async (route) => Buffer.from(fixture.after.outputs.get(route) ?? ""),
+    read: async (route) =>
+      Buffer.from(textOutput(fixture.after.outputs, route) ?? ""),
   });
 
   await compareComponentView(
@@ -172,7 +174,7 @@ test("shared classification batches both sides including removed dark variants",
     const batches: string[][] = [];
     const reads: string[] = [];
     const read = async (route: string) => {
-      const html = compilation.outputs.get(route);
+      const html = textOutput(compilation.outputs, route);
       assert.notEqual(html, undefined, route);
       return Buffer.from(html!);
     };

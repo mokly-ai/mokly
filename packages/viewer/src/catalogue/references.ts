@@ -6,6 +6,14 @@ import { validateComponentViewRecord } from "../components/view_validation.js";
 import { firstPathCaseCollision } from "../navigation/logical.js";
 import { VIEWPORTS } from "../registry/views.js";
 
+import type {
+  ShellCatalogueComponent,
+  ShellCatalogueReadModel,
+  ShellCatalogueRoutedEntry,
+  ShellCatalogueScreen,
+  ShellCatalogueVariant,
+  ShellCatalogueView,
+} from "./scoped_types.js";
 import { validateCatalogueTree } from "./tree_validation.js";
 import type {
   CatalogueComponent,
@@ -17,10 +25,16 @@ import type {
 } from "./types.js";
 import { unique } from "./values.js";
 
+type ValidatedCatalogue = CatalogueReadModel | ShellCatalogueReadModel;
+type ValidatedRoutedEntry = CatalogueRecord | ShellCatalogueRoutedEntry;
+type ValidatedComponent = CatalogueComponent | ShellCatalogueComponent;
+type ValidatedVariant = CatalogueComponentVariant | ShellCatalogueVariant;
+type ValidatedView = CatalogueView | ShellCatalogueView;
+
 /** Validate relationships after parsing all known fields, including both ownership sections. */
-export function validateCatalogueReferences(model: CatalogueReadModel): void {
+export function validateCatalogueReferences(model: ValidatedCatalogue): void {
   require(model.identity.title === "Mokly", "catalogue title must be Mokly");
-  const current: CatalogueRecord[] = [
+  const current: ValidatedRoutedEntry[] = [
     ...model.screens,
     ...model.pages,
     ...model.documents,
@@ -52,7 +66,7 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
   const components = new Map(
     [...historical, ...current]
       .filter(
-        (entry): entry is CatalogueComponent =>
+        (entry): entry is ValidatedComponent =>
           entry.kind === "component" && !("variantOf" in entry),
       )
       .map((entry) => [entry.path, entry]),
@@ -139,9 +153,9 @@ export function validateCatalogueReferences(model: CatalogueReadModel): void {
 }
 
 function validateViews(
-  entry: CatalogueScreen | CatalogueComponentVariant,
-  views: readonly CatalogueView[],
-  components: ReadonlyMap<string, CatalogueComponent>,
+  entry: CatalogueScreen | ShellCatalogueScreen | ValidatedVariant,
+  views: readonly ValidatedView[],
+  components: ReadonlyMap<string, ValidatedComponent>,
   historical: boolean,
 ): void {
   require(['["light"]', '["light","dark"]'].includes(
@@ -182,9 +196,9 @@ function validateViews(
 }
 
 function validateComponentVariant(
-  entry: CatalogueComponentVariant,
-  components: ReadonlyMap<string, CatalogueComponent>,
-  current: readonly CatalogueRecord[],
+  entry: ValidatedVariant,
+  components: ReadonlyMap<string, ValidatedComponent>,
+  current: readonly ValidatedRoutedEntry[],
   removed: boolean,
 ): void {
   if (entry.comparison.status === "ready")
@@ -203,7 +217,7 @@ function validateComponentVariant(
   const parent = components.get(entry.variantOf);
   if (!removed) {
     require(current.includes(
-      parent as CatalogueRecord,
+      parent as ValidatedRoutedEntry,
     ), "variant parent component must exist");
   }
   unique(entry.suppliedSlots);

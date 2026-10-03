@@ -19,6 +19,7 @@ import {
   renders,
   type Viewport,
 } from "./helpers/design_stacks.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 /** Designs that stack both versions inside one device chrome. */
 const STACKED = [
@@ -155,7 +156,7 @@ test("links inside every depicted comparison and pane sample do nothing", async 
   let regions = 0;
   let samples = 0;
   for (const route of await designOutputs()) {
-    const html = outputs.get(route);
+    const html = textOutput(outputs, route);
     assert.ok(html, route);
     const document = parse(html);
     const depicted = COMPARISON_REGIONS.flatMap((name) =>

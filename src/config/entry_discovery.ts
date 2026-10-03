@@ -9,6 +9,7 @@ import {
   entryModuleError,
 } from "./entry_discovery_validation.js";
 import { walkEntryCandidates } from "./entry_discovery_walk.js";
+import { compareCodeUnits } from "./path_order.js";
 import { toPosixPath } from "./paths.js";
 import type { ResolvedConfig } from "./types.js";
 
@@ -23,7 +24,8 @@ export interface EntryDiscovery {
 
 /** Discover a fresh candidate without changing any accepted configuration. */
 export function discoverEntries(
-  config: Pick<ResolvedConfig, "roots" | "repoRoot" | "review">,
+  config: Pick<ResolvedConfig, "roots" | "repoRoot" | "review"> &
+    Partial<Pick<ResolvedConfig, "mockupsDir">>,
 ): EntryDiscovery {
   const paths = discoveryPaths(config);
   const discovered = new Set<string>();
@@ -84,7 +86,7 @@ export function discoverEntries(
         .map((deniedRoot) =>
           toPosixPath(path.relative(config.repoRoot, deniedRoot)),
         )
-        .sort((left, right) => left.localeCompare(right));
+        .sort(compareCodeUnits);
       throw new MoklyError(
         "config-invalid",
         `root matches no file: ${toPosixPath(path.relative(config.repoRoot, root)) || "."}${notSearched.length > 0 ? `; not searched: ${notSearched.join(", ")}` : ""}`,
@@ -92,7 +94,8 @@ export function discoverEntries(
     }
   }
   const order = (left: string, right: string) =>
-    toPosixPath(path.relative(config.repoRoot, left)).localeCompare(
+    compareCodeUnits(
+      toPosixPath(path.relative(config.repoRoot, left)),
       toPosixPath(path.relative(config.repoRoot, right)),
     );
   const files = [...discovered].sort(order);
@@ -107,7 +110,8 @@ export function discoverEntries(
 
 /** Resolve executable modules when a caller needs only discovery membership. */
 export function discoverEntryModules(
-  config: Pick<ResolvedConfig, "roots" | "repoRoot" | "review">,
+  config: Pick<ResolvedConfig, "roots" | "repoRoot" | "review"> &
+    Partial<Pick<ResolvedConfig, "mockupsDir">>,
 ): readonly string[] {
   return discoverEntries(config).entryModules;
 }

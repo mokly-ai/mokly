@@ -12,6 +12,9 @@ walk `roots` -> entry modules, Markdown documents, `_folder.json` records + rend
 one esbuild graph, with React resolved from the consumer
         |
         v
+collect imported CSS, run optional PostCSS, bundle per-root CSS and assets
+        |
+        v
 derive paths, collect exports, validate definitions and cross-references in memory
         |
         v
@@ -24,7 +27,7 @@ adapt explicit child controls -> resolve mock:<path> links -> compatibility brid
 validate markers/links/resources
         |
         v
-mobile/desktop light and optional dark HTML for every screen, screen variant, and component variant entry, whole documents, Mokly-rendered Markdown documents + schema-v8 manifest in memory
+mobile/desktop light and optional dark HTML for every screen, screen variant, and component variant entry, whole documents + schema-v8 manifest + CSS and binary asset outputs in memory
         |
         +---- check (committed): compare with disk, write nothing
         |
@@ -33,11 +36,9 @@ mobile/desktop light and optional dark HTML for every screen, screen variant, an
         `---- build: stage, back up owned files, rename, roll back on failure
 ```
 
-Path identity, `roots`, Markdown documents, manifest v8, and review result v5
-are approved contracts under the
-[path identity plan](../../plans/path-identity.md); the current implementation
-still resolves `entries` globs and derives routes from kind and id until that
-plan delivers them.
+Path identity, roots, manifest v8 and review result v5 are implemented. Markdown
+rendering and move pairing remain planned under the
+[path identity plan](../../plans/path-identity.md).
 
 ## 1. Config Loading
 
@@ -87,10 +88,27 @@ resolved set travels with the config beside `sourceFiles`.
 
 ## 2. One Consumer Graph
 
+The additional stylesheet step follows
+[imported stylesheet delivery](../protocol/mokly-imported-styles.md). After
+the JavaScript graph, derive renderer and entry
+import order, compute the full renderer CSS closure, and prune its files
+at any depth of entry imports _before_ PostCSS can inline them. PostCSS runs
+per effective stylesheet input; lazy CSS Modules plugins rename local
+classes, IDs and keyframes using a repo-relative path hash without rewriting
+other authored CSS. A second esbuild pass produces one CSS file per
+configured renderer/entry root and path-mirrored local assets. The
+compatibility transformer is a graph source, not a CSS delivery root;
+its CSS tree is inventoried without publishing a stylesheet. The union of
+both passes and plugin dependencies is used even by inventory-only freshness
+checks. Generated text and binary bytes share the same ownership, check,
+transaction and export boundaries without adding fields to manifest v8.
+Imported CSS does not add a separate
+manifest schema. Routes and navigation both derive from each entry path.
+
 The resolved entry modules, the configured renderer, imported page
 helpers, and an optional temporary compatibility transformer are imported by a single virtual entry and
-bundled together; Markdown documents are not bundled, because Mokly reads and
-renders them itself under the [document contract](../protocol/mokly-documents.md).
+bundled together; matched Markdown files stay private watched inputs until document rendering is
+implemented under the [document contract](../protocol/mokly-documents.md).
 The internal bundle is CommonJS so Node-oriented consumer
 dependencies can retain dynamic built-in imports. Esbuild returns this bundle
 in memory; evaluation creates no temporary module file. A private compilation

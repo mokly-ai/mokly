@@ -78,7 +78,7 @@ continues to propagate to use cases through their screen steps. Current display
 metadata comes from the matching current catalogue; removed display metadata
 comes from `removedEntries`. No removed-use-case support is introduced here.
 
-Visual comparisons use [review result v5](./mokly-changes.md#comparison-engine)
+Visual comparisons use [review result v5](./mokly-changes-serving.md#comparison-engine)
 for every catalogue. Pages and documents add no comparison records. Neither
 catalogue change detection nor page or document removal requires snapshot
 generation. The publisher must not discover removed pages or documents by reading

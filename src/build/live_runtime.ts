@@ -23,6 +23,7 @@ export async function prepareLiveRuntime(
       ...graph.discovery,
       entryModules: graph.entrySources,
       sourceFiles: graph.sourceFiles,
+      postcssWatchDirectories: graph.postcssWatchDirectories ?? [],
     };
     const registry = prepareRegistry(graph.definitions, config);
     const manifest = createCatalogueIndex(
@@ -32,11 +33,14 @@ export async function prepareLiveRuntime(
       registry.folders,
     );
     validateGeneratedOutputPaths(
-      manifest.entries.flatMap((entry) =>
-        entry.kind === "page"
-          ? [entryRoute(entry.path)]
-          : generatedViews(entry).map((view) => view.path),
-      ),
+      [
+        ...manifest.entries.flatMap((entry) =>
+          entry.kind === "page"
+            ? [entryRoute(entry.path)]
+            : generatedViews(entry).map((view) => view.path),
+        ),
+        ...graph.styleOutputs.keys(),
+      ],
       config,
     );
     return {
@@ -45,6 +49,9 @@ export async function prepareLiveRuntime(
       generation: randomBytes(16).toString("hex"),
       manifest,
       outputs: [],
+      stylesheetRoutes: [...graph.stylesheetRoutes],
+      styleOutputs: [...graph.styleOutputs],
+      deliveredStyleSources: graph.deliveredStyleSources,
     };
   });
 }

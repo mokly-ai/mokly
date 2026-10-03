@@ -10,6 +10,7 @@ import { isBaselineCachePath } from "./cache_paths.js";
 import { requireDirectory } from "./path_validation.js";
 import { projectRealPath, resolveInside } from "./paths.js";
 import { validatePublicExclude } from "./public_exclusions.js";
+import { validateRootReservedPath } from "./reserved_paths.js";
 import { requireString } from "./rules.js";
 import type { ResolvedRoot } from "./types.js";
 
@@ -20,6 +21,7 @@ export function resolveRoots(
   value: unknown,
   repoRoot: string,
   configDir: string,
+  mockupsDir: string,
 ): readonly ResolvedRoot[] {
   const input: unknown = value === undefined ? [{ dir: "specs" }] : value;
   if (!Array.isArray(input) || !input.length)
@@ -35,6 +37,7 @@ export function resolveRoots(
         throw invalid(`${at}.${key}`, "is an unknown field");
     requireString(root.dir, `${at}.dir`);
     const dir = resolveInside(repoRoot, configDir, root.dir, `${at}.dir`);
+    validateRootReservedPath(dir, root.dir, index, mockupsDir);
     requireDirectory(dir, `${at}.dir`);
     if (isBaselineCachePath(dir, repoRoot))
       throw invalid(`${at}.dir`, "must not be inside .mokly-cache");
@@ -46,6 +49,7 @@ export function resolveRoots(
       root.files === undefined ? DEFAULT_FILES : root.files,
       `${at}.files`,
     );
+    validateRootReservedPath(dir, root.dir, index, mockupsDir, files);
     try {
       for (const glob of files) new Minimatch(glob, { dot: true });
     } catch {

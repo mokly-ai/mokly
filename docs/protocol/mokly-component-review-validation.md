@@ -43,7 +43,7 @@ classification and shell inspector.
 
 Entry paths follow the [path grammar](./mokly-paths.md#segment-grammar);
 `ignoredIds` use the
-[Review-ignore grammar](./mokly-changes.md#review-ignore). The result
+[Review-ignore grammar](./mokly-changes-serving.md#review-ignore). The result
 stores no snapshot path: files are derived with the shared builders in the
 [artifact path contract](./mokly-artifact-paths.md). When those files are
 written or served, reject absolute paths, traversal, encoded

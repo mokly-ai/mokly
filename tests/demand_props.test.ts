@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { evaluateBundle } from "../dist/build/consumer_bundle.js";
+import { runtimeGraph } from "../dist/build/component_runtime.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import { loadConfig } from "../dist/config/load.js";
 import { ComponentRenderService } from "../dist/server/controls/service.js";
@@ -43,14 +43,7 @@ test("Props renders only its view and freezes resources without copying linked p
     pageId: "a".repeat(32),
     overrides: { label: { kind: "set", value: ["string", "Edited"] } },
   };
-  renderTransient(
-    runtime,
-    {
-      ...evaluateBundle(runtime.bundle),
-      entrySources: runtime.bundle.entrySources,
-    },
-    request,
-  );
+  renderTransient(runtime, runtimeGraph(runtime), request);
   const result = await service.render(request, new AbortController().signal);
   const bundle = service.store.get(result.renderId);
   assert.deepEqual(

@@ -11,6 +11,7 @@ import { isComponentVariantDefinition } from "../components/types.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import type { LoadedGraph } from "./load_graph.js";
+import type { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
 
 export async function renderCooperatively(
@@ -20,6 +21,7 @@ export async function renderCooperatively(
   fragmentViews: Map<string, ArtifactView>,
   componentViews: Map<string, ComponentViewRecord>,
   checkpoint: () => Promise<void>,
+  pending: PendingGeneratedFiles,
 ): Promise<Map<string, string>> {
   const outputs = new Map<string, string>();
   const render = async (
@@ -34,6 +36,7 @@ export async function renderCooperatively(
       graph.renderWithComponents,
       componentViews,
       selection,
+      { routes: graph.stylesheetRoutes, pending },
     ))
       outputs.set(route, content);
   };

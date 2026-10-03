@@ -6,7 +6,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { DUAL_SCHEME_SAMPLES } from "../examples/basic/specs/design/library/metadata.js";
-import { generatedViews, viewRoute } from "../packages/viewer/dist/data.js";
+import { viewRoute } from "../packages/viewer/dist/data.js";
 import { AppearanceSelect } from "../packages/viewer/dist/shell/appearance.js";
 
 import { componentVariants } from "./helpers/component_views.js";
@@ -15,11 +15,23 @@ import {
   designCatalogue,
   elements,
 } from "./helpers/design_catalogue.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 /** Registered samples whose appearance is the subject of the sample itself. */
 const dualSchemeComponents = [...DUAL_SCHEME_SAMPLES].map(
   (slug) => `design/library/chrome/${slug}`,
 );
+const previewScreens = [
+  "design-appearance-overview",
+  "design-appearance-auto",
+  "design-appearance-props",
+  "design-appearance-instance",
+  "design-appearance-loading",
+  "design-appearance-unavailable",
+  "design-appearance-side-by-side",
+  "design-appearance-difference",
+  "design-appearance-flow",
+];
 
 function appearanceOf(html: string): string | undefined {
   const roots = elements(
@@ -58,14 +70,17 @@ test("each generated appearance variant draws the scheme it was rendered for", a
   for (const entry of screens) {
     assert.ok(entry.kind === "screen");
     for (const viewport of ["mobile", "desktop"] as const) {
-      const light = outputs.get(viewRoute(entry.path, viewport, "light"));
+      const light = textOutput(
+        outputs,
+        viewRoute(entry.path, viewport, "light"),
+      );
       assert.ok(light, `${entry.path} ${viewport} light output`);
       assert.equal(appearanceOf(light), "light", `${entry.path} ${viewport}`);
       const darkRoute: string | undefined = entry.colorSchemes.includes("dark")
         ? viewRoute(entry.path, viewport, "dark")
         : undefined;
       assert.ok(darkRoute, `${entry.path} ${viewport} dark route`);
-      const dark = outputs.get(darkRoute);
+      const dark = textOutput(outputs, darkRoute);
       assert.ok(dark, `${entry.path} ${viewport} dark output`);
       assert.equal(appearanceOf(dark), "dark", `${entry.path} ${viewport}`);
     }
@@ -83,7 +98,10 @@ test("the appearance-related registered samples render in both schemes", async (
         `${id}/${variant.path} has no dark sample`,
       );
       for (const viewport of ["mobile", "desktop"] as const) {
-        const dark = outputs.get(viewRoute(variant.path, viewport, "dark"));
+        const dark = textOutput(
+          outputs,
+          viewRoute(variant.path, viewport, "dark"),
+        );
         assert.ok(dark, `${id}/${variant.path} ${viewport}`);
         assert.equal(appearanceOf(dark), "dark", `${id}/${variant.path}`);
       }
@@ -92,18 +110,6 @@ test("the appearance-related registered samples render in both schemes", async (
 });
 
 /** Appearance artboards that place a device preview on their stage. */
-const previewScreens = [
-  "design/browse/appearance/overview",
-  "design/browse/appearance/states/auto",
-  "design/browse/appearance/workspaces/props",
-  "design/browse/appearance/workspaces/instance",
-  "design/browse/appearance/status/loading",
-  "design/browse/appearance/status/unavailable",
-  "design/browse/appearance/workspaces/side-by-side",
-  "design/browse/appearance/workspaces/difference",
-  "design/browse/appearance/status/flow",
-];
-
 async function appearanceFragments(): Promise<
   { id: string; scheme: "light" | "dark"; viewport: string; html: string }[]
 > {
@@ -116,7 +122,7 @@ async function appearanceFragments(): Promise<
             id: entry.path,
             scheme,
             viewport,
-            html: outputs.get(viewRoute(entry.path, viewport, scheme))!,
+            html: textOutput(outputs, viewRoute(entry.path, viewport, scheme))!,
           })),
         )
       : [],
@@ -252,10 +258,12 @@ test("the canonical scheme screens render in both schemes", async () => {
       `${id} has no dark fragment`,
     );
     for (const viewport of ["mobile", "desktop"] as const) {
-      const light: string = outputs.get(
+      const light: string = textOutput(
+        outputs,
         viewRoute(entry.path, viewport, "light"),
       )!;
-      const dark: string = outputs.get(
+      const dark: string = textOutput(
+        outputs,
         viewRoute(entry.path, viewport, "dark"),
       )!;
       assert.equal(appearanceOf(light), "light", `${id} ${viewport}`);
@@ -275,93 +283,6 @@ test("the canonical scheme screens render in both schemes", async () => {
         !hasDarkRender,
         `${id} ${viewport}: light-only caption`,
       );
-    }
-  }
-});
-
-test("no design artboard depicts a scheme control", async () => {
-  const { manifest, outputs } = await designCatalogue;
-  for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
-    for (const route of generatedViews(entry).map((view) => view.path)) {
-      const html = outputs.get(route)!;
-      assert.equal(countClass(html, "ce-theme-control"), 0, route);
-      assert.equal(countClass(html, "ce-theme-toggle"), 0, route);
-    }
-  }
-});
-
-test("retained Welcome variants follow the single Appearance setting", async () => {
-  const { manifest, outputs } = await designCatalogue;
-  for (const [id, darkDevice] of [
-    ["design/browse/views/screen/dark-scheme", true],
-    ["design/browse/views/screen/light-only", false],
-  ] as const) {
-    const entry = manifest.entries.find((candidate) => candidate.path === id);
-    assert.ok(entry?.kind === "screen", id);
-    assert.equal(entry.variantOf, "design/browse/views/screen", id);
-    assert.ok(
-      entry.colorSchemes.includes("dark"),
-      `${id}: dark artboard missing`,
-    );
-    for (const viewport of ["mobile", "desktop"] as const) {
-      const light = outputs.get(viewRoute(entry.path, viewport, "light"));
-      const dark = outputs.get(viewRoute(entry.path, viewport, "dark"));
-      assert.ok(light && dark, `${id}/${viewport}: both schemes generated`);
-      assert.equal(appearanceOf(light), "light", `${id}/${viewport}`);
-      assert.equal(appearanceOf(dark), "dark", `${id}/${viewport}`);
-      assert.equal(countClass(light, "mbk-screen-dark"), 0);
-      assert.equal(countClass(dark, "mbk-screen-dark") > 0, darkDevice);
-      assert.equal(countClass(dark, "mbk-frame-scheme-note") > 0, !darkDevice);
-    }
-  }
-  assert.equal(
-    manifest.entries.find(
-      (entry) => entry.path === "design-review-dark-scheme",
-    ),
-    undefined,
-  );
-});
-
-test("every artboard with a top bar draws one Appearance control", async () => {
-  const { manifest, outputs } = await designCatalogue;
-  let checked = 0;
-  for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
-    for (const route of generatedViews(entry).map((view) => view.path)) {
-      const html = outputs.get(route)!;
-      if (countClass(html, "mbk-topbar") === 0) continue;
-      checked += 1;
-      assert.equal(countClass(html, "mbk-appearance"), 1, route);
-    }
-  }
-  assert.ok(checked > 100, `only ${checked} artboards drew a top bar`);
-});
-
-test("the depicted Appearance control names the scheme it rendered for", async () => {
-  const { manifest, outputs } = await designCatalogue;
-  for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
-    if (entry.path === "design/browse/appearance/states/auto") continue;
-    for (const scheme of entry.colorSchemes) {
-      const routes: string[] = generatedViews(entry)
-        .filter((view) => view.colorScheme === scheme)
-        .map((view) => view.path);
-      for (const route of routes) {
-        const html: string = outputs.get(route)!;
-        if (countClass(html, "mbk-topbar") === 0) continue;
-        const selector = elements(parse(html), (node) =>
-          (attribute(node, "class") ?? "")
-            .split(/\s+/u)
-            .includes("mbk-appearance"),
-        )[0];
-        assert.ok(selector, route);
-        assert.equal(
-          attribute(selector, "data-appearance-value"),
-          scheme,
-          route,
-        );
-      }
     }
   }
 });

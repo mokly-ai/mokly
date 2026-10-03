@@ -9,10 +9,21 @@ import {
   readSlot,
 } from "./component_values.js";
 import type {
+  ShellCatalogueRoutedEntry,
+  ShellCatalogueUsage,
+  ShellCatalogueView,
+} from "./scoped_types.js";
+import type {
   CatalogueChanges,
+  CatalogueComponent,
+  CatalogueComponentVariant,
   CatalogueEntry,
+  CatalogueDocument,
+  CataloguePage,
   CatalogueRecord,
+  CatalogueScreen,
   CatalogueUsage,
+  CatalogueUseCase,
   CatalogueView,
   ComparisonSelection,
 } from "./types.js";
@@ -80,12 +91,39 @@ function readUsage(value: unknown): CatalogueUsage {
       }
     : { status };
 }
+function readShellUsage(value: unknown): ShellCatalogueUsage {
+  const input = object(value),
+    status = choice(input.status, [
+      "ready",
+      "pending",
+      "unavailable",
+      "omitted",
+    ] as const);
+  if (status !== "ready") absent(input, ["instances", "slots", "ranges"]);
+  return status === "ready"
+    ? {
+        status,
+        instances: array(input.instances).map(readInstance),
+        slots: array(input.slots).map(readSlot),
+        ranges: array(input.ranges).map(readRange),
+      }
+    : { status };
+}
 function readView(value: unknown): CatalogueView {
+  return readViewWithUsage(value, readUsage);
+}
+function readShellView(value: unknown): ShellCatalogueView {
+  return readViewWithUsage(value, readShellUsage);
+}
+function readViewWithUsage<Usage extends ShellCatalogueUsage>(
+  value: unknown,
+  read: (value: unknown) => Usage,
+): Omit<CatalogueView, "usage"> & { usage: Usage } {
   const input = object(value);
   return {
     viewport: choice(input.viewport, ["mobile", "desktop"] as const),
     colorScheme: choice(input.colorScheme, ["light", "dark"] as const),
-    usage: readUsage(input.usage),
+    usage: read(input.usage),
     comparison: readComparison(input.comparison),
   };
 }
@@ -111,6 +149,28 @@ function common(input: Record<string, unknown>): CatalogueEntry {
   return result;
 }
 export function readEntry(value: unknown): CatalogueRecord {
+  return readEntryWithViews(value, readView);
+}
+export function readShellEntry(value: unknown): ShellCatalogueRoutedEntry {
+  return readEntryWithViews(value, readShellView);
+}
+
+type ParsedVariant<View extends ShellCatalogueView> = Omit<
+  CatalogueComponentVariant,
+  "views"
+> & { views: readonly View[] };
+type ParsedEntry<View extends ShellCatalogueView> =
+  | (Omit<CatalogueScreen, "views"> & { views: readonly View[] })
+  | CataloguePage
+  | CatalogueDocument
+  | CatalogueUseCase
+  | CatalogueComponent
+  | ParsedVariant<View>;
+
+function readEntryWithViews<View extends ShellCatalogueView>(
+  value: unknown,
+  readCatalogueView: (value: unknown) => View,
+): ParsedEntry<View> {
   const input = object(value),
     base = common(input);
   if (Object.hasOwn(input, "preview"))
@@ -153,7 +213,7 @@ export function readEntry(value: unknown): CatalogueRecord {
       ...base,
       kind,
       ...axes,
-      views: array(input.views).map(readView),
+      views: array(input.views).map(readCatalogueView),
       useCasePaths: array(input.useCasePaths).map(entryPath),
       ...(input.address !== undefined
         ? { address: string(input.address) }
@@ -170,7 +230,7 @@ export function readEntry(value: unknown): CatalogueRecord {
       variantOf: entryPath(input.variantOf),
       props: readProps(input.props),
       suppliedSlots: array(input.suppliedSlots).map(string),
-      views: array(input.views).map(readView),
+      views: array(input.views).map(readCatalogueView),
       comparison: readComparison(input.comparison),
     };
   const schema = readSchema(input.propSchema);

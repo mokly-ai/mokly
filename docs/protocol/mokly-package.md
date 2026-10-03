@@ -109,7 +109,7 @@ The [configuration contract](./mokly-configuration.md) defines the complete type
 shape, path validation, source/output boundaries, and individual field behavior.
 
 `publicExclude` defaults and validation follow the
-[configuration contract](./mokly-configuration.md#public-exclusion-configuration),
+[configuration contract](./mokly-public-exclusions.md),
 with matching and public access defined by the
 [source-protection contract](./mokly-source-protection.md#public-exclusions).
 
@@ -146,7 +146,9 @@ defines the consumer cutover adapter and its ownership constraints.
 ## Generated Contract
 
 The [generated-output contract](./mokly-rendering.md#generated-contract) defines
-views, manifest v8, deterministic ordering, and generated-file ownership.
+fragments, manifest v8, deterministic ordering, and generated-file ownership;
+the [imported-styles contract](./mokly-imported-styles.md) defines binary CSS
+assets and per-root stylesheet routes in that output.
 
 ## Pages And Baseline Comparisons
 
@@ -183,6 +185,7 @@ literals, and package boundary.
 
 ## Related Docs
 
+- [Generated output and manifest v8](./mokly-rendering-generated.md#generated-contract)
 - [Build, Browse, and Review runtime](./mokly-runtime.md)
 - [Packaged CLI guides](./mokly-guides.md)
 - [CI and npm release](./npm-release.md)

@@ -79,7 +79,7 @@ Every npm-running job installs npm 11.7.0 and runs `npm ci`. CI caches only npm
 downloads. Every npm-running job keys npm's download cache from the checked-out
 `package-lock.json`; none reads a branch-point lockfile. The
 [deterministic repository-input rule](./ci-verification.md#deterministic-test-repository-inputs)
-and [cache and security semantics](./ci-verification.md#dependency-cache-and-security)
+and [cache and security semantics](./ci-verification-security.md#dependency-cache-and-security)
 own these boundaries.
 
 Linux and Windows jobs across CI, preview, and release workflows use

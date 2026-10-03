@@ -4,6 +4,19 @@ This is a synthetic external-consumer fixture. It contains two distinct mobile
 and desktop product-style screens built with `@firna/ui` controls, file-derived
 folders, one use case, path-addressed links, a Firna renderer adapter, local
 stylesheets, light and dark product fragments, and a safe Review-ignore region.
+The Welcome screen also includes a small `WorkspaceNote` built from a CSS
+Module, an authored PNG-backed stylesheet, and Tailwind v4 utilities, including
+a small `note-title` utility. Its
+PostCSS module pins Tailwind's base and optimization, scans only `src/` with
+`source(none)` plus `@source`, and uses `.browserslistrc` Safari 14 targets
+for autoprefixer only. Mokly does not target or re-print CSS Modules.
+In `src/components/workspace-note/utilities.css`, `@source "../..";` scans
+only this example's `src/` tree, and `@utility note-title` applies to the
+Welcome component. The example sets `BROWSERSLIST_IGNORE_OLD_DATA=1` in its
+PostCSS module to avoid an aging `caniuse-lite` warning in reproducible demo
+builds; application owners should update Browserslist data instead.
+`shims.d.ts` declares CSS Module class maps and side-effect CSS imports for
+the example's TypeScript check.
 The Components → Example → Components folder contains real registered Action and Toolbar
 components. Both product screens use Action repeatedly, directly and inside the
 Toolbar, with caller-owned slots. Action has Default, Disabled and Secondary
@@ -30,7 +43,7 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 102 design screens now use 16 registered shared components, including
+Mokly's 105 design screens now use 16 registered shared components, including
 the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
 Inspector and Preview galleries with 67 component variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
@@ -136,7 +149,7 @@ The `Design` navigation group is the owning design catalogue for Mokly's
 Browse and Changes views. Its sixty-six Browse, page, publication, appearance and Changes
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
 scrolling, stylesheet evidence, the preparing and unavailable comparison states,
-and the previous-version states of removed documents and screens. Thirty-six
+and the previous-version states of removed documents and screens. Thirty-nine
 component explorer screens add component pages, saved variants, stacked
 comparisons, affected screens,
 repeated/nested inspection, highlighting, and empty or removed states. The shared icon inspector and complete controls
@@ -175,6 +188,8 @@ shared files in Details and no comparison band.
 The Pages → Stacked comparisons gallery holds Action's Overlay and Difference in
 one bordered frame, reached from its comparison mode control, and a Checklist
 taller than that frame, drawn part-way down it.
+States → Loading and recovery shows Usage loading, inspection waiting, and a
+failed Usage read with its Try again action.
 Removed screens show their status and previous version without comparison
 controls; the removed component variant retains its baseline comparison.
 Comparison facts live in Details, using shared fixture values for prop differences
@@ -183,8 +198,8 @@ changes. Disabled highlighting explains its specific reason, and outline labels
 use separate rounded chips with a gap above the highlighted region.
 
 Open `screens/design/components/overview.html` in Browse, or open
-[`generated/screens/design/components/overview.desktop.html`](./generated/screens/design/components/overview.desktop.html)
-and [`design/components/overview.mobile.html`](./generated/screens/design/components/overview.mobile.html)
+[`generated/screens/design/components/overview.desktop.html`](./generated/design/components/overview/index.desktop.html)
+and [`design/components/overview.mobile.html`](./generated/design/components/overview/index.mobile.html)
 directly from disk after `npm run build && npm run example:build`.
 The catalogue hierarchy links all owning design pages;
 there is no navigation footer inside an artboard. Product links connect
@@ -194,7 +209,7 @@ galleries; `inspector` shows both closed-panel layouts.
 Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
-Seventy-eight design screens use `colorSchemes: ["light"]` and draw only the light
+Eighty-one design screens use `colorSchemes: ["light"]` and draw only the light
 Mokly shell. Twenty-four screens instead inherit the catalogue's light/dark
 settings: thirteen Appearance screens, seven Changes designs, two product
 screens, and two retained Welcome appearance variants. `mokly build` writes a
@@ -215,8 +230,8 @@ A shared implementation edit appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
 appear in Changes. This is tested against fully registered baseline snapshots.
 
-The shared inspector/workspace sheets cover all 102 design screens and standalone
-library hosts. Other mixed component-design sheets remain scoped to the 36
+The shared inspector/workspace sheets cover all 105 design screens and standalone
+library hosts. Other mixed component-design sheets remain scoped to the 39
 component-design routes and hosts; the controls sheet additionally remains
 scoped to its eleven owning screen routes. `review.sharedImpact` is fallback
 impact evidence for files the rendered resource graph cannot see, such as source
@@ -291,8 +306,9 @@ npm run example:check
 npm run preview:build
 ```
 
-This example uses the default `generatedOutput: "derived"`. Generated HTML and
-the schema-v7 manifest under `generated/` are ignored local artifacts, absent in a fresh clone.
+This example uses the default `generatedOutput: "derived"`. Generated HTML,
+the schema-v7 manifest, and `generated/mokly-generated/` stylesheets and binary
+assets are ignored local artifacts, absent in a fresh clone.
 `example:build` writes them transactionally; `example:check` validates the current
 compilation and rejects tracked generated output without requiring files on disk.
 Committed-mode stale and deterministic-output tests use isolated consumer fixtures.
@@ -301,7 +317,9 @@ generated files. Baseline fixtures copy authored inputs and use the normal cache
 rebuild through the historical commit's own package source and lockfile. The
 hand-authored stylesheets (`styles.css`, `design.css`, `design-stage.css`,
 `design-documents.css`, `design-review.css`, `design-review-scroll.css`, and the component design stylesheets) also live under `generated/` because it doubles as the
-public static root and remain tracked. The config's `review.baselineBuild` runs
+public static root and remain tracked. Imported styles live under
+`src/components/workspace-note/` and are never public files. The config's
+`review.baselineBuild` runs
 `npm ci`, `npm run build`, then `npm run example:build` in the historical commit's
 extraction. The package build step ensures comparisons use that commit's own
 Mokly code. The resulting baseline is cached under `.mokly-cache/`.

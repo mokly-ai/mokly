@@ -78,6 +78,7 @@ test("writer rejects crafted output inside nested authored roots", async (contex
   const outputs = new Map(compilation.outputs);
   outputs.set("src/entries/index.html", "<html></html>\n");
   const unsafe: Compilation = {
+    ...compilation,
     manifest: {
       ...compilation.manifest,
       sourceFiles: [
@@ -107,7 +108,7 @@ test("writer rejects a crafted URL-sensitive output route", async (context) => {
   outputs.set('screens/injected" onclick="alert.html', "<html></html>\n");
 
   await assert.rejects(
-    () => writeCompilation({ manifest: compilation.manifest, outputs }, config),
+    () => writeCompilation({ ...compilation, outputs }, config),
     /generated route is unsafe/,
   );
 });

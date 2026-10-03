@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { evaluateBundle } from "../dist/build/consumer_bundle.js";
+import { runtimeGraph } from "../dist/build/component_runtime.js";
 import { DocumentCompiler } from "../dist/build/document_compiler.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import { generatedHeader } from "../dist/build/ownership.js";
@@ -28,10 +28,7 @@ test("demand output collision inventory is scanned once and renewed for each gen
     if (args[0] === config.mockupsDir) scans++;
     return Reflect.apply(readdir, fs, args);
   });
-  const compiler = new DocumentCompiler(runtime, {
-    ...evaluateBundle(runtime.bundle),
-    entrySources: runtime.bundle.entrySources,
-  });
+  const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime));
   compiler.render("one/index.html");
   const initial = scans;
   assert.ok(initial > 0);

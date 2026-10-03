@@ -198,7 +198,7 @@ it follows the [baseline compatibility contract](./mokly-baseline-compatibility.
 
 Use the existing merge base with `origin/main` or the configured base; staged,
 unstaged, and untracked current edits still participate. Cross-kind path reuse
-and moves follow the [comparison pairing rule](./mokly-changes.md#comparison-engine)
+and moves follow the [comparison pairing rule](./mokly-changes-serving.md#comparison-engine)
 and the [move contract](./mokly-moves.md); title edits remain metadata changes.
 
 New/removed components and variants retain explicit missing comparison sides.

@@ -6,10 +6,8 @@ import test from "node:test";
 import { exportCatalogue } from "../dist/export/run.js";
 import { readManifest } from "../dist/registry/manifest.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
-import {
-  ComponentChangeCache,
-  RepositoryComponentChanges,
-} from "../dist/server/component_changes.js";
+import { ComponentChangeCache } from "../dist/server/component_change_cache.js";
+import { RepositoryComponentChanges } from "../dist/server/component_changes.js";
 import { configuredServedReview } from "../dist/server/configured_review.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";

@@ -242,7 +242,17 @@ test("the committed catalogue uses one baseline view batch and agrees across Ser
     resourceReads.length,
     "shared resources are read once, never once per consumer",
   );
-  assert.ok(resourceReads.length <= fixture.resources.size);
+  const availableResources = new Set(
+    [
+      ...fixture.resources.keys(),
+      ...[...fixture.before.outputs.keys()].filter((route) =>
+        route.startsWith("mokly-generated/"),
+      ),
+    ].map((route) => `examples/basic/generated/${route}`),
+  );
+  assert.ok(resourceReads.length <= availableResources.size);
+  for (const file of resourceReads)
+    assert.ok(availableResources.has(file), file);
   const { result } = await compareReview(after, fixture.config, git, "main");
   assert.equal(result.schemaVersion, 5);
   if (result.schemaVersion === 5) {

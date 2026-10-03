@@ -7,15 +7,16 @@ owns everything that gives a screen application meaning or appearance. The
 boundary is enforced through peer dependencies, a renderer hook, declarative
 paths, and synthetic tests.
 
-| Mokly owns                              | Consumer owns                    | Configured at the boundary |
-| --------------------------------------- | -------------------------------- | -------------------------- |
-| Registry definitions and validation     | Product screens and fixture data | Source and output roots    |
-| esbuild discovery and one-graph loading | Product component library        | Renderer/module resolution |
-| Static fragments and manifest schema    | Theme/tokens/providers           | Stylesheet rules           |
-| Generated-file ownership and check      | Product CSS/fonts/images         | Document transformer       |
-| Safe paths and catalogue navigation     | Product route semantics          | Additional watch inputs    |
-| Git comparison and Review-ignore rules  | Comparison policy                | Base, output, impact globs |
-| Complete static catalogue export        | Hosting, credentials, deployment | Export output and Git base |
+| Mokly owns                                            | Consumer owns                                 | Configured at the boundary               |
+| ----------------------------------------------------- | --------------------------------------------- | ---------------------------------------- |
+| Registry definitions and validation                   | Product screens and fixture data              | Source and output roots                  |
+| esbuild discovery and one-graph loading               | Product component library                     | Renderer/module resolution               |
+| Static fragments and manifest schema                  | Theme/tokens/providers                        | Stylesheet rules                         |
+| Per-root CSS/asset bundling and PostCSS orchestration | Imported CSS/fonts/images and PostCSS plugins | `postcss` module and CSS `empty` opt-out |
+| Generated-file ownership and check                    | Product CSS/fonts/images                      | Document transformer                     |
+| Safe paths and catalogue navigation                   | Product route semantics                       | Additional watch inputs                  |
+| Git comparison and Review-ignore rules                | Comparison policy                             | Base, output, impact globs               |
+| Complete static catalogue export                      | Hosting, credentials, deployment              | Export output and Git base               |
 
 ## Dependency Direction
 
@@ -35,6 +36,11 @@ Module-resolution configuration is likewise consumer-owned: aliases,
 conditions, package fields, extensions, loaders, and package roots describe the
 consumer component tree. Mokly validates and applies them without supplying
 React Native Web or application-specific defaults.
+The [imported-CSS contract](../protocol/mokly-imported-styles.md) reserves
+`.css`/`.module.css` import handling and `mokly-generated/` ownership for
+Mokly. Consumer files, PostCSS plugins and their dependency/version choices
+remain consumer-owned; Mokly owns their private inventory and byte-safe
+delivery rather than shipping product CSS in its npm package.
 
 ## Registered Components
 
@@ -90,16 +96,15 @@ the viewer before the CLI that depends on it.
 ## Complete-Document Boundary
 
 Consumers register complete HTML with `definePage`; a Markdown file matched by a
-configured root is a [document](../protocol/mokly-documents.md) that Mokly
-renders itself. A page callback may reuse an existing render helper; consumer
+configured root remains a protected watched input until
+[document rendering](../protocol/mokly-documents.md) is implemented. A page callback may reuse an existing render helper; consumer
 policy owns source allowlists and document-stage rules. A configured
 complete-document transformer remains an explicit deterministic boundary whose
 result receives normal validation. Current and comparison-base manifests both
 require v8 under the
 [baseline compatibility contract](../protocol/mokly-baseline-compatibility.md).
-That version, path identity, and `roots` are approved contracts; the current
-implementation still requires v7 and kind-and-id identity until the
-[path identity plan](../../plans/path-identity.md) delivers them.
+Path identity and roots are implemented; Markdown rendering and move detection
+remain in the [path identity plan](../../plans/path-identity.md).
 
 ## Runtime Boundary
 

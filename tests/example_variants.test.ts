@@ -8,6 +8,7 @@ import {
 } from "../packages/viewer/dist/data.js";
 
 import { designCatalogue } from "./helpers/design_catalogue.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("example catalogue generates exactly one inherited Welcome variant", async () => {
   const { manifest, outputs } = await designCatalogue;
@@ -33,7 +34,7 @@ test("example catalogue generates exactly one inherited Welcome variant", async 
     "example/screens/welcome/empty/index.desktop.html",
   );
   for (const route of generatedViews(variant).map((view) => view.path)) {
-    const html = outputs.get(route);
+    const html = textOutput(outputs, route);
     assert.match(html ?? "", /aria-label="Workspace name"/);
     assert.match(html ?? "", /disabled=""/);
   }

@@ -8,6 +8,7 @@ import type { ComponentRuntime } from "../../build/component_runtime.js";
 import type { GeneratedOutputStore } from "../../build/output_store.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { timeAsync, timingCounts } from "../../diagnostics/timings.js";
+import { acceptedGenerationFromCompilation } from "../../review/accepted_generation.js";
 import {
   isEarlierBaselineClassification,
   isInvalidBaselineClassification,
@@ -124,7 +125,9 @@ export class BackgroundGeneration {
                   compilation.manifest,
                   base,
                   controller.signal,
-                  { outputs: compilation.outputs },
+                  {
+                    generation: acceptedGenerationFromCompilation(compilation),
+                  },
                 ),
                 new Promise<undefined>((resolve) =>
                   controller.signal.addEventListener(

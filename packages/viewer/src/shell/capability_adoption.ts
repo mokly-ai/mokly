@@ -1,6 +1,6 @@
 /** Pure validation and projection for live evidence accepted by the shell store. */
 
-import type { CatalogueReadModel } from "../catalogue/types.js";
+import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
 import type { ViewerEvidenceRevision } from "../client/host_capabilities.js";
 import {
   viewerCapabilityRequestMatches,
@@ -210,6 +210,9 @@ function sameCurrentRoute(
   return true;
 }
 
-function removedEntry(catalogue: CatalogueReadModel | undefined, id: string) {
+function removedEntry(
+  catalogue: ShellCatalogueReadModel | undefined,
+  id: string,
+) {
   return catalogue?.removedEntries.find((item) => item.entry.path === id);
 }

@@ -12,6 +12,7 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("id-link rewriting changes only complete href attributes", async (context) => {
   const fixture = await createFixture(
@@ -23,7 +24,8 @@ test("id-link rewriting changes only complete href attributes", async (context) 
   const config = await loadConfig(fixture.root);
 
   const compilation = await compileCatalogue(config);
-  const mobile = compilation.outputs.get("home/index.mobile.html") ?? "";
+  const mobile =
+    textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
 
   assert.match(mobile, /Literal mock:missing-screen and mock:details/);
   assert.match(mobile, /data-route="mock:details"/);
@@ -48,7 +50,8 @@ test("id-link rewriting uses parsed encoded href values", async (context) => {
   const config = await loadConfig(fixture.root);
 
   const compilation = await compileCatalogue(config);
-  const mobile = compilation.outputs.get("home/index.mobile.html") ?? "";
+  const mobile =
+    textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
 
   assert.match(mobile, /href="\.\.\/details\/index\.mobile\.html"/);
   assert.doesNotMatch(mobile, /mock&#58;details/);
@@ -95,7 +98,8 @@ test("id-link rewriting resolves both navigation attributes", async (context) =>
     );
 
     const compilation = await compileCatalogue(config);
-    const mobile = compilation.outputs.get("home/index.mobile.html") ?? "";
+    const mobile =
+      textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
 
     assert.doesNotMatch(mobile, /mock:details/);
     assert.match(mobile, /href="\.\.\/details\/index\.mobile\.html"/);
@@ -186,7 +190,8 @@ test("framework-emitted stylesheet URLs encode path segments", async (context) =
   const config = await loadConfig(fixture.root);
 
   const compilation = await compileCatalogue(config);
-  const mobile = compilation.outputs.get("home/index.mobile.html") ?? "";
+  const mobile =
+    textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
 
   assert.match(mobile, /href="\.\.\/theme%20%231\.css"/);
 });
@@ -213,9 +218,10 @@ test("stylesheet rules match catalogue routes for every viewport", async (contex
   const compilation = await compileCatalogue(config);
 
   for (const viewport of ["mobile", "desktop"]) {
-    const home = compilation.outputs.get(`home/index.${viewport}.html`) ?? "";
+    const home =
+      textOutput(compilation.outputs, `home/index.${viewport}.html`) ?? "";
     const details =
-      compilation.outputs.get(`details/index.${viewport}.html`) ?? "";
+      textOutput(compilation.outputs, `details/index.${viewport}.html`) ?? "";
     assert.match(home, /href="\.\.\/home\.css"/);
     assert.doesNotMatch(details, /home\.css/);
   }
@@ -228,7 +234,8 @@ test("dark fragments link within dark and fall back to light-only", async (conte
   context.after(() => removeFixture(fixture));
 
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const mobileDark = compilation.outputs.get("a/index.mobile.dark.html") ?? "";
+  const mobileDark =
+    textOutput(compilation.outputs, "a/index.mobile.dark.html") ?? "";
 
   assert.match(mobileDark, /href="\.\.\/b\/index\.mobile\.dark\.html"/);
   assert.match(mobileDark, /href="\.\.\/c\/index\.mobile\.html"/);

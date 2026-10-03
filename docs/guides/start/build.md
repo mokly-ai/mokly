@@ -13,7 +13,7 @@ npx mokly build
 
 Build validates your entries, renders every screen and page and
 writes the result under `mockupsDir`: one directory per entry named by its
-path, holding a document per viewport and color scheme, plus
+path, holding a document per viewport and color scheme, the `mokly-generated/` stylesheet and asset tree when imported CSS is used, plus
 `mokly-manifest.json`. Writes are transactional, so a failed build leaves the
 previous output in place.
 
@@ -31,6 +31,7 @@ documents, the manifest and `.mokly-cache/`:
 .mokly-cache/
 specs/generated/**/*.html
 specs/generated/mokly-manifest.json
+specs/generated/mokly-generated/
 ```
 
 `mokly check` requires those paths to be untracked and validates the current

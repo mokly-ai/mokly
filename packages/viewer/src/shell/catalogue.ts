@@ -1,4 +1,4 @@
-import type { CatalogueReadModel } from "../catalogue/types.js";
+import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import {
   analyzeHierarchy,
@@ -16,7 +16,7 @@ import { type RemovedEntrySnapshot } from "./metadata.js";
 
 /** Validated lookup model used by server routes. */
 export interface Catalogue {
-  publicModel?: CatalogueReadModel;
+  publicModel?: ShellCatalogueReadModel;
   byPath: ReadonlyMap<string, CatalogueManifestEntry>;
   /** Whether any current or retained view was rendered in the dark scheme. */
   hasDarkFragments: boolean;

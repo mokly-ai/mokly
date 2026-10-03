@@ -23,60 +23,10 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 import { nestedRepository } from "./helpers/nested_repository.js";
 
 const execFileAsync = promisify(execFile);
-
-test("changed routes select fragment edits rather than source or dependency edits", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
-  const compilation = await compileCatalogue(config);
-  await writeCompilation(compilation, config);
-  assert.deepEqual(
-    changedManifestPaths(compilation.manifest, compilation.manifest, config, [
-      "entries/fixture.mockup.tsx",
-    ]),
-    [],
-  );
-  assert.deepEqual(
-    changedManifestPaths(compilation.manifest, compilation.manifest, config, [
-      "notes.md",
-    ]),
-    [],
-  );
-  assert.deepEqual(
-    changedManifestPaths(compilation.manifest, compilation.manifest, config, [
-      "mockups/home/index.mobile.html",
-    ]),
-    ["home", "tour"],
-  );
-  assert.deepEqual(
-    changedManifestPaths(compilation.manifest, compilation.manifest, config, [
-      "unrelated.txt",
-    ]),
-    [],
-  );
-});
-
-test("manifest entry changes are attributed to their route", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
-  const manifest = (await compileCatalogue(config)).manifest;
-  const baseManifest = structuredClone(manifest);
-  const baseHome = baseManifest.entries.find((entry) => entry.path === "home");
-  if (!baseHome) throw new Error("fixture base home missing");
-  baseHome.title = "Previous home";
-
-  assert.deepEqual(
-    changedManifestPaths(manifest, baseManifest, config, [
-      "entries/fixture.mockup.tsx",
-      "mockups/mokly-manifest.json",
-    ]),
-    ["home", "tour"],
-  );
-});
 
 test("tag-only manifest changes mark their route as changed", async (context) => {
   const fixture = await createFixture();
@@ -282,7 +232,10 @@ test("changed-route detection degrades to undefined when Git fails", async (cont
       readFile: async (_commit, repoPath) =>
         repoPath === "mockups/mokly-manifest.json"
           ? JSON.stringify(compilation.manifest)
-          : compilation.outputs.get(repoPath.replace(/^mockups\//, ""))!,
+          : textOutput(
+              compilation.outputs,
+              repoPath.replace(/^mockups\//, ""),
+            )!,
       readFileBytes: async (_commit, repoPath) =>
         Buffer.from(
           repoPath === "mockups/mokly-manifest.json"

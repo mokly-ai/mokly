@@ -1,5 +1,11 @@
 /** Last-good runtime transfer over the watched child's private IPC channel. */
 import type { ComponentRuntime } from "../../build/component_runtime.js";
+import {
+  receiveGeneratedFile,
+  transferGeneratedFile,
+  type GeneratedFile,
+  type TransferredGeneratedFile,
+} from "../../build/generated_file.js";
 import { validatePublicExclude } from "../../config/public_exclusions.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError } from "../../errors.js";
@@ -14,13 +20,28 @@ export interface RuntimeStartupMessage {
 /** Heavy retained fields not already supplied in the startup message. */
 export type TransferredComponentRuntime = Pick<
   ComponentRuntime,
-  "bundle" | "generation" | "outputs"
+  | "bundle"
+  | "generation"
+  | "outputs"
+  | "stylesheetRoutes"
+  | "styleOutputs"
+  | "deliveredStyleSources"
 >;
 
 export interface RuntimeMessage {
   type: "component-runtime";
-  runtime: TransferredComponentRuntime;
+  runtime: Omit<TransferredComponentRuntime, "outputs" | "styleOutputs"> & {
+    outputs: readonly (readonly [string, TransferredGeneratedFile])[];
+    styleOutputs: readonly (readonly [string, TransferredGeneratedFile])[];
+  };
   /** Reserved update version published only after the runtime is attached. */
+  version?: number;
+}
+
+/** Decoded accepted runtime, ready for rendering or binary-safe serving. */
+export interface ReceivedRuntimeMessage {
+  type: "component-runtime";
+  runtime: TransferredComponentRuntime;
   version?: number;
 }
 
@@ -33,7 +54,14 @@ export function componentRuntimeMessage(
     runtime: {
       bundle: runtime.bundle,
       generation: runtime.generation,
-      outputs: runtime.outputs,
+      outputs: runtime.outputs.map(
+        ([route, content]) => [route, transferGeneratedFile(content)] as const,
+      ),
+      stylesheetRoutes: runtime.stylesheetRoutes,
+      styleOutputs: runtime.styleOutputs.map(
+        ([route, content]) => [route, transferGeneratedFile(content)] as const,
+      ),
+      deliveredStyleSources: runtime.deliveredStyleSources,
     },
     type: "component-runtime",
     ...(version === undefined ? {} : { version }),
@@ -46,7 +74,7 @@ export function requestComponentRuntime(): void {
 }
 
 /** Live indexes need their small rendering graph attached before announcing readiness. */
-export function receiveRequestedRuntime(): Promise<RuntimeMessage> {
+export function receiveRequestedRuntime(): Promise<ReceivedRuntimeMessage> {
   return new Promise((resolve, reject) => {
     const cleanup = () => {
       clearTimeout(timer);
@@ -156,7 +184,7 @@ function parseRuntimeStartupMessage(
 
 export function parseRuntimeMessage(
   value: unknown,
-): RuntimeMessage | undefined {
+): ReceivedRuntimeMessage | undefined {
   if (
     !value ||
     typeof value !== "object" ||
@@ -165,15 +193,34 @@ export function parseRuntimeMessage(
     !("runtime" in value)
   )
     return;
-  const runtime = value.runtime as TransferredComponentRuntime | undefined;
+  const runtime = value.runtime as RuntimeMessage["runtime"] | undefined;
   const version = "version" in value ? value.version : undefined;
   if (
     !runtime ||
     typeof runtime.generation !== "string" ||
     typeof runtime.bundle?.code !== "string" ||
     !Array.isArray(runtime.outputs) ||
+    !Array.isArray(runtime.stylesheetRoutes) ||
+    !Array.isArray(runtime.styleOutputs) ||
+    !Array.isArray(runtime.deliveredStyleSources) ||
+    !runtime.deliveredStyleSources.every(
+      (source) => typeof source === "string",
+    ) ||
     (version !== undefined &&
       (!Number.isSafeInteger(version) || (version as number) <= 0))
+  )
+    return;
+  const outputs = receiveOutputPairs(runtime.outputs);
+  const styleOutputs = receiveOutputPairs(runtime.styleOutputs);
+  if (!outputs || !styleOutputs) return;
+  if (
+    !runtime.stylesheetRoutes.every(
+      (item) =>
+        Array.isArray(item) &&
+        item.length === 2 &&
+        typeof item[0] === "string" &&
+        typeof item[1] === "string",
+    )
   )
     return;
   return {
@@ -181,8 +228,29 @@ export function parseRuntimeMessage(
     runtime: {
       bundle: runtime.bundle,
       generation: runtime.generation,
-      outputs: runtime.outputs,
+      outputs,
+      stylesheetRoutes: runtime.stylesheetRoutes,
+      styleOutputs,
+      deliveredStyleSources: runtime.deliveredStyleSources,
     },
     ...(version === undefined ? {} : { version: version as number }),
   };
+}
+
+function receiveOutputPairs(
+  pairs: readonly (readonly [string, TransferredGeneratedFile])[],
+): Array<readonly [string, GeneratedFile]> | undefined {
+  const outputs: Array<readonly [string, GeneratedFile]> = [];
+  for (const item of pairs) {
+    if (
+      !Array.isArray(item) ||
+      item.length !== 2 ||
+      typeof item[0] !== "string"
+    )
+      return;
+    const content = receiveGeneratedFile(item[1]);
+    if (content === undefined) return;
+    outputs.push([item[0], content]);
+  }
+  return outputs;
 }

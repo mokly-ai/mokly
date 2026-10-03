@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { textOutput } from "./helpers/generated_text.js";
 import { pathFixture, pageSource } from "./helpers/path_fixture.js";
 
 const metadata =
@@ -28,7 +29,7 @@ test("index, ordinary, variant and declared paths share the resolved link-base r
     "account/billing/declared/index.html",
   ])
     assert.match(
-      result.outputs.get(route)!,
+      textOutput(result.outputs, route)!,
       /data-mokly-link="account\/billing\/payment-methods"/,
     );
 });

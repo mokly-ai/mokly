@@ -22,9 +22,9 @@ npx mokly build
 
 Under `mockupsDir`, one directory per entry named by its path: a document per
 effective viewport and color scheme for each screen and component variant,
-the document of each page, the light and dark renderings of each Markdown
-document, and `mokly-manifest.json` beside them. Writes are transactional, so
-a failed build leaves the previous output in place.
+the document of each page, generated CSS/assets beneath `mokly-generated/`,
+and `mokly-manifest.json`. Writes are transactional, so a failed build leaves
+the previous output in place.
 
 The manifest stays internal: its source inventory is never served over HTTP,
 published in an export or included in comparison resources. Ordinary public
@@ -37,9 +37,17 @@ ownership header, so authored output is never deleted by a build. Move the
 authored file or give the entry a different path; Mokly derives every
 generated file name from it.
 
+Mokly owns and replaces the entire `mokly-generated/` directory: do not put
+consumer-authored files there. Build removes obsolete files anywhere in that
+reserved directory after a successful transaction.
+
 ## Committed and derived output
 
 With the default `generatedOutput: "derived"`, keep the generated routes, the
-manifest and `.mokly-cache/` out of Git; build still writes them locally in the
-same transaction. With `generatedOutput: "committed"`, commit what build
-writes.
+manifest, `mokly-generated/` and `.mokly-cache/` out of Git; build still
+writes them locally in the same transaction. With `generatedOutput:
+"committed"`, commit what build writes. When the repository is a Git work-tree
+root, Build and Check reject generated files hidden by `.gitignore`; the error
+names the matching rule and a negation to add in that rule's `.gitignore` file.
+Do not ignore the mockups directory itself: remove that rule or choose derived
+output.

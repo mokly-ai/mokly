@@ -21,6 +21,7 @@ import {
   type OptionalReviewAssetReader,
 } from "../review/assets.js";
 import { baselineResourceConfig } from "../review/base_manifest.js";
+import type { ChangeEvidence } from "../review/change_evidence.js";
 import type { BaselineReader } from "../review/git.js";
 import {
   normalizeReviewPair,
@@ -46,7 +47,7 @@ export async function changedContentPaths(
   config: ResolvedConfig,
   git: BaselineReader,
   commit: string,
-  changedPaths: readonly string[],
+  changedPaths: ChangeEvidence,
   headReader: OptionalReviewAssetReader = new FileSystemReviewAssetReader(
     config,
   ),
@@ -73,7 +74,7 @@ export async function classifyChangedContent(
   config: ResolvedConfig,
   git: BaselineReader,
   commit: string,
-  changedPaths: readonly string[],
+  changedPaths: ChangeEvidence,
   headReader: OptionalReviewAssetReader = new FileSystemReviewAssetReader(
     config,
   ),

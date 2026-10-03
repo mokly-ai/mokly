@@ -13,6 +13,7 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("configured transforms rewrite document links using path-keyed logical routes", async (context) => {
   const fixture = await createFixture(
@@ -76,11 +77,13 @@ export default function transform(input: CompatibilityTransformInput): string {
     "legacy/ambiguous.source.ts",
   );
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const mobile = compilation.outputs.get("home/index.mobile.html") ?? "";
+  const mobile =
+    textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
   const mobileDark =
-    compilation.outputs.get("home/index.mobile.dark.html") ?? "";
-  const legacy = compilation.outputs.get("notice/index.html") ?? "";
-  const ambiguousLegacy = compilation.outputs.get("ambiguous/index.html") ?? "";
+    textOutput(compilation.outputs, "home/index.mobile.dark.html") ?? "";
+  const legacy = textOutput(compilation.outputs, "notice/index.html") ?? "";
+  const ambiguousLegacy =
+    textOutput(compilation.outputs, "ambiguous/index.html") ?? "";
 
   assert.match(mobile, /href="#"/);
   assert.match(mobile, /href="\.\.\/details\/index\.mobile\.html"/);
@@ -127,9 +130,13 @@ export default function transform(input: CompatibilityTransformInput): string {
 
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
 
-  for (const [route, output] of compilation.outputs) {
+  for (const route of compilation.outputs.keys()) {
     if (!route.endsWith(".html")) continue;
-    assert.match(output, /data-shared-logical-routes="true"/, route);
+    assert.match(
+      textOutput(compilation.outputs, route)!,
+      /data-shared-logical-routes="true"/,
+      route,
+    );
   }
 });
 

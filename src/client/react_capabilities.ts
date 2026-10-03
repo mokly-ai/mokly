@@ -75,7 +75,7 @@ export function createReactViewerCapabilities(
         if (!viewerCapabilitySourceEquals(source, request.source))
           throw new Error("The live viewer source changed.");
         const workspace = descriptor.workspace;
-        if ((workspace?.entry.path ?? null) !== request.entryId)
+        if (workspace && workspace.entry.path !== request.entryId)
           throw new Error("The live workspace changed.");
         return workspace;
       },
@@ -165,7 +165,7 @@ async function loadRouteEvidence(
   );
   if (
     !sameRenderCapability(installed, next) ||
-    (next.workspace?.entry.path ?? null) !== request.entryId
+    (next.workspace && next.workspace.entry.path !== request.entryId)
   )
     return;
   return readViewerRouteEvidenceRevision(

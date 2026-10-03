@@ -1,14 +1,18 @@
 /** Workspace values derived only from the validated public catalogue. */
-import { catalogueComponentVariants } from "../catalogue/entry_selection.js";
-import { resolveCatalogueSelection } from "../catalogue/entry_selection.js";
+
+import {
+  catalogueComponentVariants,
+  resolveCatalogueSelection,
+} from "../catalogue/entry_selection.js";
 import type {
-  CatalogueComponent,
-  CatalogueComponentVariant,
-  CatalogueReadModel,
-  CatalogueRecord,
-  CatalogueScreen,
-  CatalogueView,
-} from "../catalogue/types.js";
+  ShellCatalogueComponent,
+  ShellCatalogueReadModel,
+  ShellCatalogueRoutedEntry,
+  ShellCatalogueScreen,
+  ShellCatalogueVariant,
+  ShellCatalogueView,
+} from "../catalogue/scoped_types.js";
+import { catalogueHasOmittedUsage } from "../catalogue/usage_scope.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import { generatedViews } from "../components/views.js";
 import type { ReviewState } from "../review/types.js";
@@ -36,14 +40,16 @@ const reviewStates: Readonly<Record<keyof typeof statuses, ReviewState>> = {
   removed: "removed",
   unmodified: "unchanged",
 };
-function status(entry: CatalogueRecord): EntryStatus | undefined {
+
+function status(entry: ShellCatalogueRoutedEntry): EntryStatus | undefined {
   return entry.changes.status === "ready"
     ? statuses[entry.changes.kind]
     : undefined;
 }
+
 /** Published per-view comparisons name the same changed views the shell derives. */
 function publishedChangedViews(
-  views: readonly CatalogueView[],
+  views: readonly ShellCatalogueView[],
 ): readonly ChangedView[] {
   return orderChangedViews(
     views.flatMap((view) =>
@@ -57,8 +63,8 @@ function publishedChangedViews(
 
 /** Key public comparison evidence exactly like the served workspace data. */
 function publishedChangedViewsBySelection(
-  entry: CatalogueScreen | CatalogueComponent | CatalogueComponentVariant,
-  variants: readonly CatalogueComponentVariant[] = [],
+  entry: ShellCatalogueScreen | ShellCatalogueComponent | ShellCatalogueVariant,
+  variants: readonly ShellCatalogueVariant[] = [],
 ): ChangedViewsBySelection {
   if (entry.kind === "screen")
     return { [entry.path]: publishedChangedViews(entry.views) };
@@ -72,7 +78,7 @@ function publishedChangedViewsBySelection(
 
 /** Keep only published views whose comparison state is ready. */
 function publishedViewStates(
-  views: readonly CatalogueView[],
+  views: readonly ShellCatalogueView[],
 ): readonly ViewState[] | undefined {
   const states = views.flatMap((view) =>
     view.comparison.status === "ready"
@@ -90,8 +96,8 @@ function publishedViewStates(
 
 /** Key published ready states like the served workspace evidence. */
 function publishedViewStatesBySelection(
-  entry: CatalogueScreen | CatalogueComponent | CatalogueComponentVariant,
-  variants: readonly CatalogueComponentVariant[] = [],
+  entry: ShellCatalogueScreen | ShellCatalogueComponent | ShellCatalogueVariant,
+  variants: readonly ShellCatalogueVariant[] = [],
 ): ViewStatesBySelection {
   if (entry.kind === "screen") {
     const states = publishedViewStates(entry.views);
@@ -108,7 +114,7 @@ function publishedViewStatesBySelection(
 }
 
 export function publicWorkspace(
-  model: CatalogueReadModel,
+  model: ShellCatalogueReadModel,
   entry: WorkspaceData["entry"],
   comparisons = model.comparisonUrl !== null,
   snapshotId?: string,
@@ -122,18 +128,18 @@ export function publicWorkspace(
   )
     throw new Error("The selected item is unavailable.");
   const removed = model.removedEntries.some((item) => item.entry === original);
-  const publicComponent: CatalogueComponent | undefined =
+  const publicComponent: ShellCatalogueComponent | undefined =
     original.kind === "component"
       ? "variantOf" in original
         ? (model.components.find(
-            (candidate): candidate is CatalogueComponent =>
+            (candidate): candidate is ShellCatalogueComponent =>
               candidate.path === original.variantOf &&
               !("variantOf" in candidate),
           ) ??
           model.removedEntries
             .map(({ entry }) => entry)
             .find(
-              (candidate): candidate is CatalogueComponent =>
+              (candidate): candidate is ShellCatalogueComponent =>
                 candidate.kind === "component" &&
                 candidate.path === original.variantOf &&
                 !("variantOf" in candidate),
@@ -159,37 +165,45 @@ export function publicWorkspace(
   const parentRemoved = publicComponent
     ? model.removedEntries.some(({ entry }) => entry === publicComponent)
     : false;
-  const usedBy: UsageLink[] = [];
-  for (const owner of routedEntries(model)) {
-    if (owner.kind !== "screen" && owner.kind !== "component") continue;
-    for (const view of generatedViews(displayEntry(owner)))
-      for (const instance of view.usage?.instances ?? [])
-        if (instance.componentId === (componentId ?? entry.path))
-          usedBy.push({
-            entryId: owner.path,
-            entryKind: owner.kind,
-            title: publicEntryTitle(model, owner),
-            viewport: view.viewport,
-            colorScheme: view.colorScheme,
-            instanceKey: instance.key,
-            direct: instance.owner.kind === "entry",
-            removed: model.removedEntries.some(
-              (value) => value.entry === owner,
-            ),
-            comparisonEligible: false,
-          });
-  }
-  const entryStatus = status(original);
-  const sourceVariants = publicComponent
+  const sourceVariants: readonly ShellCatalogueVariant[] = publicComponent
     ? catalogueComponentVariants(model, publicComponent.path)
     : orphanVariant
       ? [original]
       : [];
+  const scoped = catalogueHasOmittedUsage(model);
+  const viewUsagePending =
+    original.kind === "screen"
+      ? original.views.some((view) => view.usage.status === "omitted")
+      : sourceVariants.some((variant) =>
+          variant.views.some((view) => view.usage.status === "omitted"),
+        );
+  const usedBy: UsageLink[] = [];
+  if (!scoped)
+    for (const owner of routedEntries(model)) {
+      if (owner.kind !== "screen" && owner.kind !== "component") continue;
+      for (const view of generatedViews(displayEntry(owner)))
+        for (const instance of view.usage?.instances ?? [])
+          if (instance.componentId === (componentId ?? entry.path))
+            usedBy.push({
+              entryId: owner.path,
+              entryKind: owner.kind,
+              title: publicEntryTitle(model, owner),
+              viewport: view.viewport,
+              colorScheme: view.colorScheme,
+              instanceKey: instance.key,
+              direct: instance.owner.kind === "entry",
+              removed: model.removedEntries.some(
+                (value) => value.entry === owner,
+              ),
+              comparisonEligible: false,
+            });
+    }
+  const entryStatus = status(original);
   const variants =
     component || orphanVariant
       ? sourceVariants.map((source) => {
           const value = displayEntry(source);
-          const snapshotId = model.removedEntries.find(
+          const sourceSnapshotId = model.removedEntries.find(
             ({ entry: candidate }) => candidate === source,
           )?.snapshotId;
           if (value.kind !== "component" || !("variantOf" in value))
@@ -204,7 +218,7 @@ export function publicWorkspace(
             comparisonEligible:
               source.comparison.status === "ready" &&
               source.comparison.eligible,
-            ...(snapshotId ? { snapshotId } : {}),
+            ...(sourceSnapshotId ? { snapshotId: sourceSnapshotId } : {}),
             ...(source.comparison.status === "ready"
               ? { status: statuses[source.comparison.kind] }
               : source.changes.status === "ready"
@@ -228,8 +242,8 @@ export function publicWorkspace(
       ),
     ]
       .filter(
-        (component): component is CatalogueComponent =>
-          !("variantOf" in component),
+        (candidate): candidate is ShellCatalogueComponent =>
+          !("variantOf" in candidate),
       )
       .map(({ path, title }) => ({ path, title })),
     views:
@@ -261,13 +275,14 @@ export function publicWorkspace(
     removed,
     relatedComponents: [],
     inputChanges: [],
+    ...(viewUsagePending ? { viewUsagePending: true } : {}),
     ...(workspaceStatus ? { status: workspaceStatus } : {}),
   };
 }
 
 function publicEntryTitle(
-  model: CatalogueReadModel,
-  entry: Extract<CatalogueRecord, { kind: "component" | "screen" }>,
+  model: ShellCatalogueReadModel,
+  entry: Extract<ShellCatalogueRoutedEntry, { kind: "component" | "screen" }>,
 ): string {
   if (entry.kind !== "component" || !("variantOf" in entry)) return entry.title;
   const parent = [

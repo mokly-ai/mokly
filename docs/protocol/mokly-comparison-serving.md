@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Implemented. This document is split from
-[Changes and screen comparisons](./mokly-changes.md#generation-and-serving) and
+[Changes and screen comparisons](./mokly-changes-serving.md#generation-and-serving) and
 owns on-demand comparison generation in development and packaged comparisons
 in published catalogues. The
 [path identity plan](../../plans/path-identity.md) changes none of these rules
@@ -12,7 +12,7 @@ beyond the path-derived snapshot names they reference.
 ## Generation And Serving
 
 The [consumer static export](./mokly-export.md) reuses the comparison engine
-and result schema of the [Changes contract](./mokly-changes.md#comparison-engine).
+and result schema of the [Changes contract](./mokly-changes-serving.md#comparison-engine).
 Its [static delivery contract](./mokly-export-delivery.md)
 defines direct generation URLs without requiring a hosting-provider redirect;
 the server and repository adapter retain their stable redirect for compatibility.

@@ -117,4 +117,6 @@ export type ResolvedRegistryEntry = EntryDefinition & {
   location: string;
   sourcePath: string;
   sourceRelativePath: string;
+  /** Resolved exporting entry root, independent of the definition's authored source. */
+  entryRoot?: string;
 };

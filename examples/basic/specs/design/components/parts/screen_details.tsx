@@ -10,6 +10,7 @@ import { SCREENS, screenIdentity } from "./metadata.js";
 import type { ScreenPageState } from "./screen_preview.js";
 
 function ScreenComponents({ state }: { state: ScreenPageState }) {
+  const loading = state === "inspection-loading";
   const unavailable = state === "unavailable";
   const empty = state === "empty";
   const consumer = state === "consumer";
@@ -17,17 +18,23 @@ function ScreenComponents({ state }: { state: ScreenPageState }) {
     <section className="ce-usage-section" aria-label="Components in this view">
       <h3>
         Components{" "}
-        <span>
-          {unavailable
-            ? "Unavailable"
-            : empty
-              ? "0"
-              : consumer
-                ? "1 instance"
-                : `${welcomeInstances.length} instances`}
-        </span>
+        {loading ? null : (
+          <span>
+            {unavailable
+              ? "Unavailable"
+              : empty
+                ? "0"
+                : consumer
+                  ? "1 instance"
+                  : `${welcomeInstances.length} instances`}
+          </span>
+        )}
       </h3>
-      {empty || unavailable ? (
+      {loading ? (
+        <p className="ce-empty-copy" role="status">
+          Waiting for the component preview.
+        </p>
+      ) : empty || unavailable ? (
         <p className="ce-empty-copy">
           {unavailable
             ? "Component inspection is unavailable for this screen."
@@ -76,7 +83,8 @@ function ScreenUsage({ state }: { state: ScreenPageState }) {
 export function ScreenDetails({ state }: { state: ScreenPageState }) {
   const screen = SCREENS[screenIdentity(state)];
   const removed = state === "removed-consumer";
-  const noInstances = state === "empty" || state === "unavailable";
+  const loading = state === "inspection-loading";
+  const noInstances = state === "empty" || state === "unavailable" || loading;
   const initial =
     state === "closed" || removed
       ? "closed"
@@ -116,9 +124,11 @@ export function ScreenDetails({ state }: { state: ScreenPageState }) {
                 label: "Props",
                 content: noInstances ? (
                   <p className="ce-empty-copy">
-                    {state === "unavailable"
-                      ? "Props are unavailable for this screen."
-                      : "Select a component to see its supplied props."}
+                    {loading
+                      ? "Waiting for the component preview."
+                      : state === "unavailable"
+                        ? "Props are unavailable for this screen."
+                        : "Select a component to see its supplied props."}
                   </p>
                 ) : (
                   <InstanceDetails state={state} />
@@ -129,9 +139,11 @@ export function ScreenDetails({ state }: { state: ScreenPageState }) {
                 label: "Usage",
                 content: noInstances ? (
                   <p className="ce-empty-copy">
-                    {state === "unavailable"
-                      ? "Usage is unavailable until the catalogue has been checked."
-                      : "This screen uses no registered components."}
+                    {loading
+                      ? "Loading usage…"
+                      : state === "unavailable"
+                        ? "Usage is unavailable until the catalogue has been checked."
+                        : "This screen uses no registered components."}
                   </p>
                 ) : (
                   <ScreenUsage state={state} />

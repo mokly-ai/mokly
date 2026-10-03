@@ -8,6 +8,7 @@ import { compactRuntime } from "../../build/compact_runtime.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { DocumentCache } from "../../build/document_cache.js";
 import type { CompiledDocument } from "../../build/document_compiler.js";
+import type { GeneratedFile } from "../../build/generated_file.js";
 import { timeAsync } from "../../diagnostics/timings.js";
 import { MoklyError } from "../../errors.js";
 
@@ -27,6 +28,7 @@ export interface DocumentServiceOptions {
 export class DocumentService {
   readonly generation: string;
   readonly routes: ReadonlySet<string>;
+  readonly styles: ReadonlyMap<string, GeneratedFile>;
   private readonly cache = new DocumentCache<CompiledDocument>(
     64 * 1024 * 1024,
     (value) => Buffer.byteLength(JSON.stringify(value)),
@@ -48,6 +50,7 @@ export class DocumentService {
   ) {
     this.runtime = compactRuntime(runtime);
     this.generation = runtime.generation;
+    this.styles = new Map(runtime.styleOutputs);
     this.routes = new Set(
       runtime.manifest.entries.flatMap((entry) =>
         entry.kind === "page"

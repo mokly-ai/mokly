@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  generatedBytes,
+  type GeneratedFile,
+} from "../dist/build/generated_file.js";
+import {
   runWithTimings,
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
@@ -69,11 +73,11 @@ test("marker movement with identical stripped HTML preserves consumer material",
 
 test("invocation line shifts alone keep every view on the fast path", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => "\n\n" + source);
-  const reader = (outputs: ReadonlyMap<string, string>) => ({
+  const reader = (outputs: ReadonlyMap<string, GeneratedFile>) => ({
     read: async (route: string) => {
       const content = outputs.get(route);
       assert.notEqual(content, undefined, route);
-      return Buffer.from(content!);
+      return generatedBytes(content!);
     },
   });
   const events: TimingEvent[] = [];

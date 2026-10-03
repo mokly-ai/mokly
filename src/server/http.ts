@@ -20,10 +20,14 @@ import {
   loadBrowserNavigationModules,
   loadShellFontAssets,
 } from "./client_modules.js";
-import { ComponentChangeCache } from "./component_changes.js";
+import { ComponentChangeCache } from "./component_change_cache.js";
 import { ComponentRenderService } from "./controls/service.js";
 import { ForegroundActivity } from "./demand/activity.js";
 import { DocumentService } from "./demand/service.js";
+import {
+  acceptedGeneratedStatic,
+  initialGeneratedStatic,
+} from "./generated_static.js";
 import { catalogueRequestHandler } from "./http_request_handler.js";
 import { closeCatalogueHttp } from "./http_shutdown.js";
 import type { RunningServer, ServerOptions } from "./http_types.js";
@@ -63,6 +67,10 @@ export async function startCatalogueServer(
   const changes = validated.changes;
   let catalogue = validated.catalogue;
   let manifest = catalogue.manifest;
+  let acceptedGenerated = await initialGeneratedStatic(
+    config,
+    options.componentRuntime,
+  );
   let controls = options.componentRuntime
     ? new ComponentRenderService(options.componentRuntime)
     : undefined;
@@ -172,6 +180,7 @@ export async function startCatalogueServer(
       activity,
       activeCatalogue: () => activeCatalogue,
       assets: { clientModules, fontAssets, navigationModules },
+      acceptedGenerated: () => acceptedGenerated,
       changedEntries: () => changedEntries,
       changesStatus: () => changesStatus,
       componentChanges: () => componentChanges,
@@ -223,6 +232,7 @@ export async function startCatalogueServer(
     },
     port: address.port,
     replaceComponentRuntime(runtime): void {
+      acceptedGenerated = acceptedGeneratedStatic(config, runtime);
       publicCatalogue.clearUsage();
       void documents?.close();
       documents = createDocuments(runtime);

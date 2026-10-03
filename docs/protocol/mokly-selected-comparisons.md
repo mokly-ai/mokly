@@ -50,7 +50,7 @@ different bytes fails instead of combining old evidence with new output. Missing
 or pending evidence produces the existing retryable comparison failure state;
 it never falls back to an exhaustive foreground build.
 
-Project the complete [review result v5](./mokly-changes.md#comparison-engine)
+Project the complete [review result v5](./mokly-changes-serving.md#comparison-engine)
 onto the selected entry: a screen, or a component variant entry addressed by
 its path. Keep its entry sides, `previousPath`, view states, ignored regions
 and direct change reasons. Recompute the selected screen ignored-impact

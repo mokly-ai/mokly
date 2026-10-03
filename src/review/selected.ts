@@ -13,6 +13,10 @@ import type {
   ReviewArtifactContent,
 } from "@mokly/viewer/data";
 
+import {
+  receiveGeneratedFile,
+  type GeneratedFile,
+} from "../build/generated_file.js";
 import { ConfiguredGitCommandRunner } from "../config/git.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -70,7 +74,19 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
     const after = new SelectedAssetReader(
       new CompiledReviewAssetReader(
         this.config,
-        source.headOutputs ? new Map(source.headOutputs) : undefined,
+        source.headOutputs
+          ? new Map<string, GeneratedFile>(
+              source.headOutputs.map(([route, content]) => {
+                const decoded = receiveGeneratedFile(content);
+                if (decoded === undefined)
+                  throw new MoklyError(
+                    "review-invalid",
+                    `Invalid generated comparison resource: ${route}`,
+                  );
+                return [route, decoded];
+              }),
+            )
+          : undefined,
       ),
       signal,
       source.headDigests,

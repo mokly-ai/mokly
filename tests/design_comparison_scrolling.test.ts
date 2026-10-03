@@ -19,6 +19,7 @@ import {
   previews,
   renders,
 } from "./helpers/design_stacks.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 /** Section headings of each version, in order, for one reworded-section check. */
 function reworded(before: Element, after: Element, where: string): void {
@@ -178,7 +179,7 @@ test("every diff-mode band draws Scroll together after its modes, and Current ne
   const diffModes = new Set<string>();
   let current = 0;
   for (const { id, route } of views) {
-    const html = outputs.get(route);
+    const html = textOutput(outputs, route);
     assert.ok(html, route);
     for (const toolbar of byClass(parse(html), "mbk-cmp-toolbar")) {
       const [modes, ...rest] = children(toolbar);

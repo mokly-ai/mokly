@@ -5,6 +5,10 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
+import {
+  readShellBootstrapState,
+  serializeShellBootstrap,
+} from "../packages/viewer/dist/standalone/bootstrap.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
 
 import {
@@ -89,6 +93,21 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
     },
   );
   const welcome = await read(output, "view/example/screens/welcome/index.html");
+  for (const [name, html] of [
+    ["index.html", index],
+    ["view/example/screens/welcome/index.html", welcome],
+    ["404.html", await read(output, "404.html")],
+  ] as const) {
+    const state = html.match(
+      /data-mokly-shell-bootstrap="" type="application\/json">([^<]+)<\/script>/,
+    )?.[1];
+    assert.ok(state, name);
+    assert.equal(
+      serializeShellBootstrap(readShellBootstrapState(JSON.parse(state))),
+      state,
+      name,
+    );
+  }
   assert.match(welcome, /Welcome · Mokly/);
   assert.match(welcome, /data-diff-screen="example\/screens\/welcome"/);
   assert.match(

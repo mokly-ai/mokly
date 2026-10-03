@@ -10,6 +10,7 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("logical hrefs mark every supported native link owner", async (context) => {
   const fixture = await createFixture(
@@ -26,7 +27,8 @@ test("logical hrefs mark every supported native link owner", async (context) => 
   context.after(() => removeFixture(fixture));
 
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const mobile = compilation.outputs.get("home/index.mobile.html") ?? "";
+  const mobile =
+    textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
 
   assert.equal((mobile.match(/data-mokly-link="details"/g) ?? []).length, 4);
   assert.match(
@@ -73,7 +75,8 @@ test("metadata-only logical references stay marker-free on any owner", async (co
   context.after(() => removeFixture(fixture));
 
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const mobile = compilation.outputs.get("home/index.mobile.html") ?? "";
+  const mobile =
+    textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
 
   assert.equal(
     (mobile.match(/data-nav-href="\.\.\/details\/index\.mobile\.html"/g) ?? [])
@@ -103,7 +106,8 @@ test("activatable links reject base URLs but retain base targets", async (contex
     }),
   );
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const mobile = compilation.outputs.get("home/index.mobile.html") ?? "";
+  const mobile =
+    textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
   assert.match(mobile, /<base target="catalogue"/);
   assert.match(mobile, /data-mokly-link="details"/);
 
@@ -129,7 +133,7 @@ test("logical fragments require one anchor across every target view", async (con
     "home/index.mobile.dark.html",
     "home/index.desktop.dark.html",
   ]) {
-    const output = compilation.outputs.get(route) ?? "";
+    const output = textOutput(compilation.outputs, route) ?? "";
     assert.match(output, /data-mokly-link="details#section"/);
     assert.match(output, /href="\.\.\/details\/index\.[^"]+\.html#section"/);
   }
@@ -170,8 +174,9 @@ test("logical destinations include use cases and reject non-routed ids", async (
   context.after(() => removeFixture(fixture));
 
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const light = compilation.outputs.get("home/index.mobile.html") ?? "";
-  const dark = compilation.outputs.get("home/index.desktop.dark.html") ?? "";
+  const light = textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
+  const dark =
+    textOutput(compilation.outputs, "home/index.desktop.dark.html") ?? "";
   assert.match(light, /href="\.\.\/details\/index\.mobile\.html#section"/);
   assert.match(light, /data-mokly-link="tour#section"/);
   assert.match(dark, /href="\.\.\/details\/index\.desktop\.html#section"/);

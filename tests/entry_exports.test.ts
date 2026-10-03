@@ -8,6 +8,7 @@ import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
 import { projectCatalogue } from "../src/catalogue/projection.js";
 
+import { textOutput } from "./helpers/generated_text.js";
 import { pathFixture, pageSource } from "./helpers/path_fixture.js";
 
 const page = () =>
@@ -105,7 +106,7 @@ test("component registrations collect their entries and typed links resolve befo
     ],
   );
   assert.match(
-    built.outputs.get("account/links/index.html")!,
+    textOutput(built.outputs, "account/links/index.html")!,
     /href="\.\.\/invoice\/index.desktop.html" data-mokly-link="account\/invoice"/,
   );
   assert.equal(built.manifest.schemaVersion, 8);
@@ -157,7 +158,7 @@ test("index component defaults use resolved path slugs and registration links re
     `import {definePage,mockLink} from '@mokly/mokly'; import alpha from './components/alpha/index.mockup'; const href=mockLink(alpha); export default definePage({title:'Links',description:'A component link',dependencies:[],relatedDocs:[],render:()=>'<html><body><a href="'+href+'">Alpha</a></body></html>'});`,
   );
   assert.match(
-    (await fixture.compile()).outputs.get("links/index.html")!,
+    textOutput((await fixture.compile()).outputs, "links/index.html")!,
     /data-mokly-link="components\/alpha"/,
   );
 });

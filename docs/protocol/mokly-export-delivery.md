@@ -5,8 +5,7 @@
 Implemented portable serving for [consumer export](./mokly-export.md), with
 Cloudflare normalization confined to its repository adapter. Public catalogue,
 viewer, inspector, and [removed previews](./mokly-removed-previews.md) share
-delivery descriptor v3 and one path-derived shell page per entry. Exports
-write read model v4 and the `/view/<path>/` directory layout.
+delivery descriptor v3 and one path-derived `/view/<path>/` shell page per entry.
 
 ## Hosting Contract
 
@@ -156,7 +155,8 @@ and match both bootstrap revisions and the catalogue identity. Only then may
 React hydrate the existing server tree. A missing, redirected, malformed, or
 mismatched catalogue leaves the complete server-rendered page and its ordinary
 links in place without installing partial interaction. Serve retains its
-self-contained inline read model and performs no initial catalogue fetch.
+self-contained [entry-scoped read model](./mokly-shell-bootstrap.md), performs
+no initial catalogue fetch, and never puts `omitted` in the shared catalogue.
 
 The pre-hydration disclosure and navigation-width handoff remains active until
 the asynchronous static catalogue resolution reaches the actual hydration

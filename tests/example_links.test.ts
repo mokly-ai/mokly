@@ -12,6 +12,7 @@ import {
   elements,
   textContent,
 } from "./helpers/design_catalogue.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 for (const viewport of ["mobile", "desktop"] as const) {
   for (const scheme of ["light", "dark"] as const) {
@@ -43,7 +44,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
           ? viewRoute(destination.path, viewport, scheme)
           : undefined;
         assert.ok(route && targetRoute);
-        const document = parse(outputs.get(route) ?? "");
+        const document = parse(textOutput(outputs, route) ?? "");
         const link = elements(
           document,
           (node) =>
@@ -85,7 +86,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
         if (fragment)
           assert.ok(
             elements(
-              parse(outputs.get(targetRoute) ?? ""),
+              parse(textOutput(outputs, targetRoute) ?? ""),
               (node) => attribute(node, "id") === fragment,
             ).length,
           );

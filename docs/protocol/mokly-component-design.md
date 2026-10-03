@@ -23,6 +23,8 @@ The path-derived files, the Specs section, and the component paths in Details
 below are the approved contract. These designs depict the kind-filtered
 sections and component paths, and the catalogue uses paths. The runtime Specs
 section awaits the [path identity plan](../../plans/path-identity.md).
+The Loading and recovery child gallery depicts entry-scoped Usage loading,
+inspection waiting, and retryable delivery failure.
 
 ## Owning Catalogue
 
@@ -67,10 +69,15 @@ mobile component and desktop component; there are no new user-flow pages.
 | `design/components/states/additions/added`                  | Added Badge current preview without comparison controls   |
 | `design/components/states/shared-impact/shared-impact`      | Unmodified Action with shared-file evidence in Details    |
 
-Each entry's files derive from its path under the
+| `design/components/states/loading/usage-loading` | Component Usage waiting for private entry evidence |
+| `design/components/states/loading/inspection-loading` | Screen inspection waiting for displayed-view usage |
+| `design/components/states/loading/usage-failed` | Usage read failure with a Try again action |
+
+The Loading and recovery folder sits below Empty and change states and contains
+exactly these three states. Each entry's files derive from its path under the
 [artifact path contract](./mokly-artifact-paths.md): its standalone views are
 `<path>/index.mobile.html` and `<path>/index.desktop.html`, and gallery
-membership is the entry's folder. All thirty-six component
+membership is the entry's folder. All thirty-nine component
 screens opt into light documents, matching the existing shell mockups. Their
 depicted preview caption names the artboard's own scheme, and the toolbar has
 no scheme switch: the catalogue's one Appearance control, drawn in their top
@@ -169,6 +176,11 @@ beside its title. In the removed scenario Compact is its own Removed entry
 beneath Action and reads Removed when selected; Farewell is Removed.
 States links an Additions child gallery with one new Badge example and one Changes
 entry, preserving the five-screen limit in its parent and the existing unused state.
+It also links the Loading and recovery child gallery. That gallery shows
+`Loading usage…` without counts or lists, screen inspection with
+`Waiting for the component preview.`, and `Usage couldn’t be loaded.` with a
+`Try again` button. Loading and failed states never reuse validated-empty or
+unavailable-metadata copy.
 Its Shared impact child gallery shows an unchanged Action component opened from
 All, with a changed-file list in Details and no comparison band or Changes entry.
 Comparison evidence appears only in the Details panel. Its typed fixture records
@@ -210,14 +222,11 @@ small gap above an intact rounded outline, shared by all three region layouts.
 Use the real generator; never hand-edit generated HTML. Six shared component
 stylesheets are hand-authored public inputs, scoped to the component design
 entries' generated documents.
-Route-scoped stylesheet matching links them only from the thirty-six component design routes;
-Changes follows those rendered resource references. The folder
-marker supplies inherited dependencies to its leaves for comparison evidence.
-The controls stylesheet is scoped further to its eleven owning entries, with a
-matching dependency and watch rule. Keep them out of the global
-`review.sharedImpact` list; watched stylesheet rules still reload their edits.
-Child folder dependency lists replace inherited lists; Controls explicitly
-spreads the shared stylesheet dependency set before adding its own stylesheet.
+Route-scoped stylesheet matching links them only from the thirty-nine component design routes;
+Changes follows those rendered resources. Shared metadata supplies dependency
+lists to each definition. Controls extends that list with its own stylesheet,
+scoped to eleven entries with a matching watch rule. Keep those stylesheets out
+of global `review.sharedImpact`; watched rules still reload their edits.
 Shared fixtures and reusable screen parts live beside the owning screen modules.
 
 `tests/component_design_attribution.test.ts` exercises each component stylesheet

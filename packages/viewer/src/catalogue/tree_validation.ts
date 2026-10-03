@@ -1,11 +1,12 @@
 import { invalidData } from "../components/data.js";
 
-import type { CatalogueNode, CatalogueRecord } from "./types.js";
+import type { ShellCatalogueRoutedEntry } from "./scoped_types.js";
+import type { CatalogueNode } from "./types.js";
 
 /** Validate public tree references without rebuilding private folder metadata. */
 export function validateCatalogueTree(
   tree: readonly CatalogueNode[],
-  entries: readonly CatalogueRecord[],
+  entries: readonly ShellCatalogueRoutedEntry[],
 ): void {
   const byPath = new Map(entries.map((entry) => [entry.path, entry]));
   const seen = new Set<string>();

@@ -115,12 +115,12 @@ captured document below the generation root: the directory of the redirected
 delivery. A page has its light document only; a document has one document per
 scheme in the removed record's `colorSchemes`. Readers accept only version 3.
 
-Capture reads the entry's historical documents and their transitive local
-closure through the pinned `BaselineReader` with the same Git asset reader,
-regular-file, bounded-batch, source-exclusion, reserved-file, and size rules as
-screen snapshots. Root-absolute, protocol-relative, and unsupported-scheme
-resource URLs fail capture. A current file at the same path never replaces a
-deleted or changed historical byte. The entry must belong to the accepted
+Capture reads the historical documents and its local closure through the pinned
+`BaselineReader`, with the same Git, regular-file, batch, source-exclusion,
+reserved-file and size rules as screen snapshots. The
+[resource URL rule](./mokly-changes-serving.md#resource-url-classification)
+keeps CSS `//` external and rejects non-portable HTML URLs; current files never
+replace historical bytes. The entry must belong to the accepted
 removed-entry snapshot of the generation being served; a snapshot from another
 generation is rejected before capture. No baseline is rebuilt during an HTTP
 request; unprepared derived evidence returns the existing retryable failure.

@@ -18,6 +18,8 @@ export const COMPONENT_PAGES = {
   unused: "design/components/states/unused",
   added: "design/components/states/additions/added",
   removed: "design/components/states/removed",
+  "usage-loading": "design/components/states/loading/usage-loading",
+  "usage-failed": "design/components/states/loading/usage-failed",
   "shared-impact": "design/components/states/shared-impact/shared-impact",
 } as const satisfies Record<ComponentPageState, string>;
 
@@ -34,6 +36,7 @@ export const INSPECTION_PAGES = {
   "help-selection": "design/components/inspection/selection/inspection-help",
   empty: "design/components/states/empty",
   unavailable: "design/components/states/unavailable",
+  "inspection-loading": "design/components/states/loading/inspection-loading",
   "removed-consumer": "design/components/states/removed-consumer",
 } as const satisfies Record<ScreenPageState, string>;
 

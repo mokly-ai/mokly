@@ -4,16 +4,17 @@ import test from "node:test";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { designLibraryFixture } from "./helpers/design_library_fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("mixed component design styles retain their actual rendered resource scope", async (t) => {
   const fixture = await designLibraryFixture(t);
   for (const [stylesheet, screens, components] of [
-    ["design-components.css", 36, 67],
-    ["design-component-inspection.css", 36, 67],
-    ["design-component-details.css", 36, 67],
+    ["design-components.css", 39, 67],
+    ["design-component-inspection.css", 39, 67],
+    ["design-component-details.css", 39, 67],
     ["design-component-inspector.css", "all-design", 67],
     ["design-component-workspace.css", "all-design", 67],
-    ["design-component-view.css", 36, 67],
+    ["design-component-view.css", 39, 67],
     ["design-component-controls.css", 11, 67],
     ["design.css", "all-design", 67],
     ["design-library.css", 0, 67],
@@ -26,7 +27,9 @@ test("mixed component design styles retain their actual rendered resource scope"
       );
       const expected = fixture.before.manifest.entries.filter((entry) =>
         generatedViews(entry).some((view) =>
-          fixture.before.outputs.get(view.path)!.includes(`/${stylesheet}"`),
+          textOutput(fixture.before.outputs, view.path)!.includes(
+            `/${stylesheet}"`,
+          ),
         ),
       );
       const expectedScreens = expected.filter(

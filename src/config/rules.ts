@@ -1,5 +1,6 @@
 import type { ColorScheme } from "@mokly/viewer";
 
+import { isGeneratedRoute } from "../build/styles/routes.js";
 import { MoklyError } from "../errors.js";
 
 import { validateRelativeRoute } from "./paths.js";
@@ -73,6 +74,8 @@ export function validateStylesheets(
       stylesheets: validateStylesheetPaths(
         rule.stylesheets,
         `stylesheets[${index}] path`,
+        index,
+        "stylesheets",
       ),
       ...(rule.lightStylesheets !== undefined
         ? {
@@ -109,7 +112,12 @@ function validateOptionalStylesheetPaths(
       `stylesheets[${index}].${field} must be an array`,
     );
   }
-  return validateStylesheetPaths(value, `stylesheets[${index}].${field} path`);
+  return validateStylesheetPaths(
+    value,
+    `stylesheets[${index}].${field} path`,
+    index,
+    field,
+  );
 }
 
 /**
@@ -138,12 +146,23 @@ function validateRuleStylesheetLinks(
   );
 }
 
-function validateStylesheetPaths(value: unknown[], label: string): string[] {
+function validateStylesheetPaths(
+  value: unknown[],
+  label: string,
+  index: number,
+  field: "stylesheets" | "lightStylesheets" | "darkStylesheets",
+): string[] {
   return value.map((stylesheet) => {
     requireString(stylesheet, label);
-    return /^https?:\/\//.test(stylesheet)
+    const normalized = /^https?:\/\//.test(stylesheet)
       ? stylesheet
       : validateRelativeRoute(stylesheet, label);
+    if (isGeneratedRoute(normalized))
+      throw new MoklyError(
+        "config-invalid",
+        `stylesheets[${index}].${field} must not reference mokly-generated/: ${normalized}; link imported CSS through the renderer instead`,
+      );
+    return normalized;
   });
 }
 

@@ -131,6 +131,8 @@ export const COMPONENT_ENTRY_BY_STATE = {
   unused: COMPONENT_ENTRIES.badge,
   added: COMPONENT_ENTRIES.badgeDefault,
   removed: COMPONENT_ENTRIES.actionCompact,
+  "usage-loading": COMPONENT_ENTRIES.action,
+  "usage-failed": COMPONENT_ENTRIES.action,
   "shared-impact": COMPONENT_ENTRIES.action,
   closed: COMPONENT_ENTRIES.action,
 } as const satisfies Record<ComponentPageState, ComponentEntryMetadata>;

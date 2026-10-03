@@ -94,7 +94,7 @@ test("source policy matches both aliases and projects missing children relative 
 
 for (const [kind, route, exclusion] of [
   ["page", "page/index.html", "page/**"],
-  ["screen", "page/index.mobile.html", "page/**"],
+  ["screen", "page/index.desktop.html", "page/**"],
 ] as const) {
   test(`build rejects excluded generated route ${route} before writing`, async (t) => {
     const definition =

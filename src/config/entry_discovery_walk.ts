@@ -12,6 +12,7 @@ import {
   readEntryDirectory,
 } from "./entry_discovery_validation.js";
 import { readFolderFile } from "./folder_files.js";
+import { compareCodeUnits } from "./path_order.js";
 import { toPosixPath } from "./paths.js";
 import { isDeniedSourceSegment } from "./private_directories.js";
 import type { ResolvedRoot } from "./types.js";
@@ -88,7 +89,7 @@ export function walkEntryCandidates(
         ? [{ file: candidate, excluded: isExcluded(candidate, exclusions) }]
         : [];
     })
-    .sort((left, right) => left.file.localeCompare(right.file));
+    .sort((left, right) => compareCodeUnits(left.file, right.file));
 }
 
 function isExcluded(file: string, exclusions: readonly Exclusion[]): boolean {

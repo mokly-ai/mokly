@@ -8,6 +8,7 @@ import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
 } from "../dist/review/assets.js";
+import { asChangeEvidence } from "../dist/review/change_evidence.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
 import {
   CommittedRepository,
@@ -194,7 +195,7 @@ for (const scenario of deletionCases) {
               commit,
               "mockups",
             ),
-            changedPaths,
+            changedPaths: asChangeEvidence(changedPaths),
             config,
           });
           return result.screens
@@ -211,7 +212,7 @@ for (const scenario of deletionCases) {
             config,
             baselineReader,
             commit,
-            changedPaths,
+            asChangeEvidence(changedPaths),
             new FileSystemReviewAssetReader(config),
           );
           return result.changedPaths.some((changed) =>

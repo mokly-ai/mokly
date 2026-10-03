@@ -31,7 +31,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       ...Object.values(CONTROLS_PAGES),
       ...Object.values(INSPECTION_PAGES),
     ];
-    assert.equal(new Set(destinations).size, 36);
+    assert.equal(new Set(destinations).size, 39);
     const family = new Map<string, keyof typeof MODE_LABELS>(
       Object.entries(actionModes).map(([mode, id]) => [
         id,

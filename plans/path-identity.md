@@ -1,7 +1,7 @@
 # Path Identity, Spec Tree, And Markdown Documents
 
 Status: Active. Created 2026-10-02 with the user's consent after the design
-discussion in this workspace. Milestones 1–3 are complete. This plan supersedes
+discussion in this workspace. Milestones 1–3 and 3A are complete. This plan supersedes
 the navigation-path contract delivered by
 [Path-Based Navigation Hierarchy](./nav-path-hierarchy.md) and the id-only
 identity delivered by [Id-Derived Routes](./id-derived-routes.md); both stay
@@ -458,6 +458,36 @@ Status: Complete. The only full-gate blocker is pre-existing GHSA-vfj7-8cjw-p6xm
         (2,948 unit tests, 726 browser tests, 221 hydration tests; zero skips).
         The orchestrator reviews each milestone; the implementation review remains the
         final item in Milestone 8.
+
+## Milestone 3A: Integrate main
+
+Preserve current main's imported CSS delivery and route-scoped shell bootstraps,
+adapting their contracts and implementation to path identity before later work.
+
+Status: Complete. The only full-gate blocker is pre-existing GHSA-vfj7-8cjw-p6xm in development dependencies; package (six consumer scenarios), unit (3,686), browser (742), hydration (226), and all remaining repository checks pass under the orchestrator's approved disposition, without an audit exemption or extra dependency change.
+
+- [x] Fetch main, capture the source tip and additions audit, and merge main;
+      resolve conflicts path by path while preserving every mainline feature.
+- [x] Adapt bootstrap scope, CSS delivery and assets to paths and nested artifacts;
+      migrate main's fixtures, tests and example changes to roots and slugs.
+- [x] Preserve reserved CSS-output validation for root directories and static file-pattern
+      prefixes, including symlink aliases; keep broad root discovery and watch safe.
+- [x] Reconcile docs, protocol caps and indexes; retain both sides' plans and README entries.
+- [x] Run all verification suites and remaining repository checks with the approved
+      GHSA-vfj7-8cjw-p6xm audit disposition; reproduce any suspected main browser failures.
+  - [x] Formatting, lint, all four repository ratchets, root/viewer/script types,
+        Rust formatting, Clippy, 15 Rust tests, and the Rust file-length audit.
+  - [x] Unit suite: 3,686 passed, with zero skips or cancellations.
+  - [x] Packed-consumer package suite: both packages passed all six scenarios.
+  - [x] Browser suite: 742 passed, including scoped evidence and imported CSS; zero skips.
+  - [x] Hydration suite: 226 passed, with zero skips or cancellations.
+  - [x] Verify the shared-catalogue hydration test on untouched main, migrate its
+        remaining flat URL, and rerun the complete hydration suite.
+  - [x] Development, example-check (445 files), controls, CLI export and static-browser smoke tests.
+- [x] Audit all deletions against main before and after the merge commit, record each
+      authorized replacement in the commit body, then commit and push.
+
+The orchestrator reviews this integration; the implementation review remains at M8.
 
 ## Milestone 4: Markdown documents
 

@@ -1,7 +1,8 @@
 # Mokly Configuration Contract
 
 This is the detailed configuration boundary of the
-[package contract](./mokly-package.md). These settings describe current behavior.
+[package contract](./mokly-package.md). These settings describe current
+behavior, including imported CSS and optional PostCSS.
 
 ## Delivery Status
 
@@ -9,6 +10,9 @@ Roots and their defaults, globs, prefixes and transparent directories are
 implemented. Matched Markdown files are protected, watched source inputs but
 are omitted from compilation; a catalogue needs at least one renderable definition.
 Markdown rendering remains planned. Every other setting below is implemented.
+The reserved CSS output directory, CSS delivery and `postcss` key are
+implemented. See [imported stylesheet delivery](./mokly-imported-styles.md)
+and [diagnostics](./mokly-imported-styles-errors.md) for exact errors.
 
 ## Configuration Discovery
 
@@ -97,6 +101,7 @@ interface MoklyConfig {
   publicExclude?: readonly string[]; // extends shipped public exclusions
   repoRoot?: string; // config directory
   renderer?: string;
+  postcss?: string; // config-relative PostCSS module
   moduleResolution?: {
     aliases?: Readonly<Record<string, string>>;
     conditions?: readonly string[];
@@ -205,15 +210,13 @@ roots must be in-repository directories containing `package.json`; their
 `node_modules` directories supplement consumer lookup. Aliases accept bare
 package specifiers only. Conditions, package fields, and extensions are ordered,
 deduplicated lists, while loader keys are extensions and values are supported
-esbuild loader names. React and React DOM still resolve through Mokly's
+JavaScript-safe esbuild loader names. The `css` loader is rejected for every
+extension because it would emit an undelivered sibling stylesheet. React and
+React DOM still resolve through Mokly's
 consumer-peer plugin so these options cannot introduce a second React runtime.
 
-The obsolete `legacy` config key is rejected, including `legacy: undefined`.
-`entries` and `entriesDir` are not configuration fields: a config that sets
-them fails as it would for any unknown key, and Mokly carries no migration
-message or fallback for them. Register every complete HTML document
-explicitly with `definePage`; Markdown documents are discovered through
-roots; baseline compatibility never restores old configuration.
+Configuration accepts only the declared fields above. An undeclared field fails
+with `config-invalid` and `unknown configuration field: <field>`.
 
 ## Roots
 
@@ -230,41 +233,15 @@ names, each a valid segment, that derivation removes. Omitting `roots` means
 roots with the same `dir`, or an invalid `path` or `transparent` value fails
 with `config-invalid` naming `roots[<index>].<field>`.
 
-Discovery walks each root without following symlinks and keeps every regular
-file that matches a `files` glob. Below the root, walks skip directories named
-`.git`, `node_modules`, `.mokly-cache`, `dist`, `coverage`, `target`,
-`test-results`, `playwright-report`, or `.context`, or prefixed with
-`.mokly-review-` or `.mokly-write-`; an explicit root inside such a directory
-is still scanned, because the rule applies below the root only. Regular file
-basenames are not denied. `_folder.json` files are read as
-[folder records](./mokly-folders.md) and never as entries, and a folder
-record's `exclude` globs remove matched files from that directory before
-derivation. A matched file ending in `.md` is a
-[document](./mokly-documents.md); every other matched file is an entry module
-under the [entry module contract](./mokly-entry-modules.md). The glob alone
-defines the shape, so `files: ["**/*.ts"]` evaluates every matched TypeScript
-file as a module.
+The [discovery contract](./mokly-configuration-discovery.md) defines traversal,
+folder-record ownership, filesystem races and the retained source inventory.
 
-Every `_folder.json` inside a walked root is also owned by exactly one root,
-independently of `files`. Overlapping roots that encounter that record fail with
-`config-invalid`: `file <file> is matched by roots[<first>] and roots[<second>]`,
-where `<file>` is repository-relative and the indices are in configured order.
-
-The [root discovery contract](./mokly-root-discovery.md) defines physical
-confinement, filesystem races and the retained ownership inventory.
-
-Every root must retain a file; otherwise `root matches no file: <dir>` lists
-denied and vanished paths, including dropped files, sorted under
-`; not searched: <repository-relative paths>`. The union across roots is sorted by repository-relative path. Every matched
+Every matched
 entry module or Markdown file belongs to exactly one root, including through
 physical aliases. If a file matches two roots after exclusions, discovery fails
 with `config-invalid` and exact text `file <path> is matched by roots[<n>] and
 roots[<m>]`, naming its repository-relative path and both zero-based root
 indices. Overlapping directories remain legal when their file sets are disjoint.
-Discovery retains that ownership, so a file derives from the root that selected
-it rather than the deepest directory that happens to contain it.
-
-## Public Exclusion Configuration
-
-The [public exclusion contract](./mokly-public-exclusions.md) defines
-`publicExclude` defaults, frozen resolution, safe glob validation and matching.
+[Public exclusions](./mokly-public-exclusions.md) defines defaults, frozen
+resolution and safe glob matching. [Imported CSS configuration](./mokly-configuration-imported-styles.md)
+defines `postcss` and reserved output.

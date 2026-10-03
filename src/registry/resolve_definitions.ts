@@ -213,6 +213,7 @@ export function resolveDefinitions(
       ...(variantOf === undefined ? {} : { variantOf }),
       location,
       sourceRelativePath,
+      entryRoot: path.resolve(config.repoRoot, item.modulePath),
       sourcePath: path.resolve(config.repoRoot, sourceRelativePath),
     } as ResolvedRegistryEntry);
   }

@@ -2,9 +2,9 @@
 
 ## Delivery Status
 
-Serve, export, repository preview and the viewer use read model v4, keyed by
-path. Document records and previous paths are reserved for Markdown rendering
-and move detection; current projections do not emit them.
+Serve, export, repository preview and the viewer use path-keyed read model v4.
+Live pages use [scoped bootstraps](./mokly-shell-bootstrap.md). Document records
+and previous paths remain reserved for Markdown rendering and move detection.
 
 ## Location And Types
 

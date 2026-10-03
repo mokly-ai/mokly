@@ -25,7 +25,13 @@ export function consumerBundle(graph: LoadedGraph): ConsumerBundle {
 }
 export function evaluateBundle(
   bundle: ConsumerBundle,
-): Omit<LoadedGraph, "entrySources"> {
+): Pick<
+  LoadedGraph,
+  | "definitions"
+  | "renderer"
+  | "renderWithComponents"
+  | "compatibilityTransformer"
+> {
   const module = { exports: {} };
   const run = new Script(
     `(function(exports, require, module, __filename, __dirname) {\n${bundle.code}\n})`,
@@ -44,5 +50,11 @@ export function evaluateBundle(
     bundle.filename,
     path.dirname(bundle.filename),
   );
-  return module.exports as Omit<LoadedGraph, "entrySources">;
+  return module.exports as Pick<
+    LoadedGraph,
+    | "definitions"
+    | "renderer"
+    | "renderWithComponents"
+    | "compatibilityTransformer"
+  >;
 }

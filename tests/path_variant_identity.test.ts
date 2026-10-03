@@ -6,6 +6,7 @@ import { parseManifest } from "../dist/registry/manifest.js";
 import { deriveEntryPath } from "../dist/registry/path_derivation.js";
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 
+import { textOutput } from "./helpers/generated_text.js";
 import { pageSource, pathFixture } from "./helpers/path_fixture.js";
 
 for (const kind of ["screen", "component"] as const)
@@ -33,7 +34,7 @@ test("a parent's declared path owns every variant path and link base", async (t)
     ["account/invoice", "account/invoice/index"],
   );
   assert.match(
-    compiled.outputs.get("account/invoice/index/index.mobile.html")!,
+    textOutput(compiled.outputs, "account/invoice/index/index.mobile.html")!,
     /data-mokly-link="account\/details"/,
   );
   const derived = deriveEntryPath({

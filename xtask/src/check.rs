@@ -126,9 +126,12 @@ impl CheckRequest {
 }
 
 /// Runs complete or selected repository verification.
+#[cfg_attr(test, unimock::unimock(api = [CheckRunnerRunMock, CheckRunnerSourceFileLengthMock]))]
 pub(crate) trait CheckRunner: Send + Sync {
     /// Execute the validated request in dependency order.
     fn run(&self, request: CheckRequest) -> Result<()>;
+    /// Audit changed source/protocol files or every scoped file.
+    fn source_file_length(&self, all: bool) -> Result<()>;
 }
 
 /// Verification implementation backed by injected side-effect boundaries.
@@ -154,16 +157,30 @@ impl DefaultCheckRunner {
 
     fn run_suite(&self, suite: VerificationSuite, shard: Option<Shard>) -> Result<()> {
         for command in commands_for(suite, shard) {
-            self.command_runner.run(&command)?;
+            self.run_command(command)?;
         }
         if suite == VerificationSuite::Repository {
             self.rust_file_length_auditor.run(&self.workspace)?;
         }
         Ok(())
     }
+
+    fn run_command(&self, command: CommandSpec) -> Result<()> {
+        self.command_runner
+            .run(&command.in_directory(self.workspace.clone()))
+    }
 }
 
 impl CheckRunner for DefaultCheckRunner {
+    fn source_file_length(&self, all: bool) -> Result<()> {
+        let mut command =
+            CommandSpec::new("node").args(["scripts/verification/source-file-length.mjs"]);
+        if all {
+            command = command.args(["--all"]);
+        }
+        self.run_command(command)
+    }
+
     fn run(&self, request: CheckRequest) -> Result<()> {
         if let Some(suite) = request.suite {
             return self.run_suite(suite, request.shard);
@@ -190,6 +207,7 @@ fn repository_commands() -> Vec<CommandSpec> {
         npm(&["run", "dependencies:check"]),
         npm(&["run", "format:check"]),
         npm(&["run", "lint"]),
+        CommandSpec::new("node").args(["scripts/verification/source-file-length.mjs"]),
         node(&["scripts/verification/repository-ratchets.mjs"]),
         cargo(&["fmt", "--all", "--", "--check"]),
         cargo(&[
