@@ -1252,6 +1252,24 @@ first-failure names and smoke results are in `.context/m19/report.md` and
 the reviewer owns the later push and review. No M20 presentation or copy work
 is included.
 
+## Milestone 19A: Integrate `main` #129 and #130
+
+`main` moved to `800fe9f8` after Milestone 16. #129 prevents output-write and
+frame-usage races. #130 adds an expiring audit exception for the `braces`
+advisory GHSA-vfj7-8cjw-p6xm. Merge it before the UI work, so that Milestone 20
+builds on main's viewer fixes and the complete gate can pass again.
+
+- [ ] Audit main's additions from the source tip, merge `origin/main` with
+      exactly two parents, resolve conflicts path by path and review every
+      remerge-diff path.
+- [ ] Compare every line that main added since `b2c82c15` with the merged
+      tree. Classify each absent line as an intended migration, a move or a
+      loss, and restore every loss before the push.
+- [ ] Run the complete `cargo xtask check`, including the dependency audit,
+      and require 100%. Remove the audit workaround from Milestone 21.
+- [ ] Inspect `git diff --name-status origin/main` and its deletions, record
+      the result in this milestone, commit the merge and push the branch.
+
 ## Milestone 20: Show the outside-component evidence
 
 Tags: ui
