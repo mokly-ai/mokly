@@ -1,29 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { FastPathFixture } from "./helpers/component_fast_path.js";
 import { markerEncoder } from "./helpers/css_marker_edits.js";
 import { styleRouteFixture, withHeadStyles } from "./helpers/style_route.js";
 import {
-  compareStyleSwitches,
+  captureStyleSwitches,
   styleSwitches,
 } from "./helpers/style_switches.js";
-
-async function capture(
-  fixture: FastPathFixture,
-  switches: (typeof styleSwitches)[number],
-) {
-  try {
-    const { comparisonPath, ...result } = await compareStyleSwitches(
-      fixture,
-      switches,
-    );
-    return { kind: "result" as const, comparisonPath, result };
-  } catch (error) {
-    assert.ok(error instanceof Error);
-    return { kind: "error" as const, name: error.name, message: error.message };
-  }
-}
 
 test("seeded decoded markers and ordinary escapes equal the complete-path oracle", async (context) => {
   const seed = 0x5eeda11;
@@ -64,9 +47,9 @@ test("seeded decoded markers and ordinary escapes equal the complete-path oracle
           beforeFiles: new Map([...input.beforeFiles, ["asset.svg", "same"]]),
           afterFiles: new Map([...input.afterFiles, ["asset.svg", "same"]]),
         };
-        const oracle = await capture(fixture, styleSwitches[0]);
+        const oracle = await captureStyleSwitches(fixture, styleSwitches[0]);
         for (const useStylePath of [false, true]) {
-          const result = await capture(fixture, {
+          const result = await captureStyleSwitches(fixture, {
             useFastPath: true,
             useStylePath,
           });

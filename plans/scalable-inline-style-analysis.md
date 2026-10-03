@@ -1338,6 +1338,21 @@ and in checkpoint reports, outside the normative rule.
       unit, 725 browser and 219 hydration tests pass, along with package/static
       checks and 13 mutation checks. Full suites ran with frozen authored files.
 
+- [x] Discovered: third supervisor round (starting `38515667`): reproduce
+      separator-joined reserved markers and false URL contexts before fixing
+      the conservative decoded guard and decoder. Add the mixed-batch proof
+      poisoning regression, cache only successful underlying probe reads, and
+      prove closure identity and optional-to-required transfer by mutation.
+      Correct the evidence link and extend the seeded differential/controls.
+- [x] Discovered: finish the third-round targeted/full unit, pinned-Chromium
+      browser/hydration and static checks on frozen sources; retain the
+      [third checkpoint](../docs/dev/style-only-route-third-checkpoint.md),
+      commit locally and stop before measuring or pushing. All 1,461 targeted,
+      4,527 unit, 725 browser (full rerun) and 219 hydration tests pass, alongside
+      package/static checks and eight rejected mutations. Preserve the first
+      browser run's ArrowDown timeout and the same failure on clean prepared M7;
+      no UI, timeout or authored-source change was made during verification.
+
 - [ ] Record the no-change and component-style samples of both fixtures.
 - [ ] Update `src/review/README.md` and the contracts' Delivery Status for
       delivered parts; run the suite and `cargo xtask check`.

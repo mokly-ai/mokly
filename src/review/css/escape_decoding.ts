@@ -6,6 +6,7 @@ export function decodeCssEscapes(source: string): string {
   let cursor = 0;
   let quote = "";
   let identifier = "";
+  let prefixed = false;
   let url = false;
   while (cursor < source.length) {
     const character = source[cursor]!;
@@ -13,13 +14,20 @@ export function decodeCssEscapes(source: string): string {
       const end = source.indexOf("*/", cursor + 2);
       cursor = end < 0 ? source.length : end + 2;
       identifier = "";
+      prefixed = false;
       continue;
     }
     if (character === "\\") {
+      const newline = /[\n\r\f]/.test(source[cursor + 1] ?? "");
       const escaped = escapeAt(source, cursor, Boolean(quote));
       pieces.push(source.slice(copied, cursor), escaped.value);
       cursor = copied = escaped.end;
-      if (!quote && !url) identifier = (identifier + escaped.value).slice(0, 4);
+      if (!quote && !url) {
+        if (newline) {
+          identifier = "";
+          prefixed = false;
+        } else identifier = (identifier + escaped.value).slice(0, 4);
+      }
       continue;
     }
     if (url) {
@@ -29,18 +37,22 @@ export function decodeCssEscapes(source: string): string {
     } else if (character === '"' || character === "'") {
       quote = character;
       identifier = "";
+      prefixed = false;
     } else if (character === "(") {
       let next = cursor + 1;
       while (isWhitespace(source[next])) next++;
       url =
+        !prefixed &&
         /^[uU][rR][lL]$/.test(identifier) &&
         source[next] !== '"' &&
         source[next] !== "'";
       identifier = "";
+      prefixed = false;
+    } else if (character === "\0" || /[-\w\u0080-\uffff]/.test(character)) {
+      identifier = (identifier + character).slice(0, 4);
     } else {
-      identifier = /[-\w\u0080-\uffff]/.test(character)
-        ? (identifier + character).slice(0, 4)
-        : "";
+      identifier = "";
+      prefixed = character === "#" || character === "@";
     }
     cursor++;
   }

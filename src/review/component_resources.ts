@@ -11,6 +11,7 @@ import {
 } from "./resource_document_analysis.js";
 import { normalizeResourceDocuments } from "./resource_documents.js";
 import { ResourceGraph } from "./resource_graph.js";
+import { prefetchProofReads } from "./resource_proof_reads.js";
 import { ViewResourceCache } from "./view_resources.js";
 
 type ResourceExclusion = (route: string) => boolean;
@@ -229,14 +230,7 @@ export class ComponentMaterialReader {
       const files = await this.optionalTexts(routes);
       return routes.every((route) => files.get(route) !== undefined);
     }
-    // Required-only injected readers can still prove availability; their errors defer to full comparison.
-    try {
-      await this.prefetch(routes);
-      await Promise.all(routes.map((route) => this.read(route)));
-      return true;
-    } catch {
-      return false;
-    }
+    return prefetchProofReads(this.reader, this.files, routes);
   }
 
   private async prefetchResources(routes: readonly string[]): Promise<void> {

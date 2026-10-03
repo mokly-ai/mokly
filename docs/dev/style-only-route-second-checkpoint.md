@@ -6,6 +6,9 @@ The host remains Intel Xeon @ 2.90GHz, 2899.930 MHz. This is a code checkpoint;
 no benchmark measurement, push, final implementation review or later milestone
 is included.
 
+The [third checkpoint](./style-only-route-third-checkpoint.md) records subsequent
+separator-joining, URL-token and required-only proof-cache corrections.
+
 ## Requested Corrections
 
 1. Both quick checks reject literal `<!--mokly-review-` in eligible unowned

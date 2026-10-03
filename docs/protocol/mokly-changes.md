@@ -403,9 +403,9 @@ Every catalogue emits [complete v4 results](./mokly-component-review.md), adding
 Catalogues without components leave only component-specific arrays empty.
 
 Optional resource evidence follows [CSS attribution](./mokly-css-attribution.md);
-`inlineStyles` and `ignoredIds` follow [inline ownership](./mokly-inline-styles.md#membership-and-states).
-`material` is present exactly when actual material differs after paired ignores
-and inline canonicalization. Its single-document normalizations decide unchanged
+`inlineStyles` follows [inline evidence](./mokly-inline-style-evidence.md), and
+`ignoredIds` follows [inline ownership](./mokly-inline-styles.md#membership-and-states).
+`material` is present exactly when actual material differs after paired ignores and inline canonicalization. Its single-document normalizations decide unchanged
 versus ignored-only. Empty lists are omitted; missing evidence means no analysis.
 Retained resource reasons make paired views changed; counts follow those states.
 

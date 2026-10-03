@@ -393,8 +393,10 @@ records per-view oracles, parse interception and the conservative seed proof.
 quick checks' review-prefix test over eligible unowned style outer sources.
 Quick checks reject region markers (paired or one-sided) and material signals
 there, even on identical pages. They also use `css/escape_decoding.ts` to reject
-ASCII-case-insensitive decoded `<!--mokly-` in eligible content without CSS
-analysis. Ordinary utility escapes and literal `<` text remain eligible.
+potential reserved markers in eligible content without CSS analysis: decoded
+`<`, separator/comment/`!`/`-` runs and ASCII-case-insensitive `mokly-`, also after
+removing escaped newlines everywhere. Ordinary utility escapes and other `<`
+text remain eligible.
 Non-identical checks require equal ordered
 eligible style sources; ignored markup can alter parser context and eligibility.
 Original spans validate/pair regions; canonical actual materials own emitted
@@ -407,6 +409,8 @@ for base closures; missing files at any depth take fall-through. Successful
 reads and complete closures are reused. A failed proof never caches a partial
 closure as complete. Required reads and prefetch bypass cached optional absence
 and retain the underlying reader's diagnostics. Required-only injected readers
-probe their normal single/bulk reads and defer failures to full comparison.
+probe underlying single/bulk reads through `resource_proof_reads.ts`, storing
+only successful bytes and deferring failures without caching their rejections.
+Tests require closure object reuse and one read per file on the optional/bulk path.
 The route also requires equal raw references in the edited element, including
 selector arguments, and guards reserved prefixes in original/composed CSS.

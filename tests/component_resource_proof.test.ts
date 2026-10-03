@@ -33,8 +33,8 @@ for (const batched of [false, true])
     );
   });
 
-for (const optional of [false, true])
-  test(`successful proofs reuse transitive reads and complete discovery, optional=${optional}`, async () => {
+for (const mode of ["required", "optional", "batched"] as const)
+  test(`successful proofs reuse the closure and each file exactly once, mode=${mode}`, async () => {
     const files = new Map([
       ["x.css", '@import "nested.css";'],
       ["nested.css", '@import "x.css";.x{background:url("y.svg")}'],
@@ -48,16 +48,36 @@ for (const optional of [false, true])
     };
     const reader = new ComponentMaterialReader({
       read,
-      ...(optional ? { readIfExists: read } : {}),
+      ...(mode === "optional" ? { readIfExists: read } : {}),
+      ...(mode === "batched"
+        ? {
+            readMany: async (routes: readonly string[]) =>
+              new Map(
+                await Promise.all(
+                  routes.map(
+                    async (route) => [route, await read(route)] as const,
+                  ),
+                ),
+              ),
+            readManyIfExists: async (routes: readonly string[]) =>
+              new Map(
+                await Promise.all(
+                  routes.map(
+                    async (route) => [route, await read(route)] as const,
+                  ),
+                ),
+              ),
+          }
+        : {}),
     });
     const expected = new Set(["x.css", "nested.css", "y.svg"]);
-    assert.deepEqual(
-      await reader.resourcesIfPresent("view.html", "", undefined, ["x.css"]),
-      expected,
-    );
-    assert.deepEqual(
+    const proven = await reader.resourcesIfPresent("view.html", "", undefined, [
+      "x.css",
+    ]);
+    assert.deepEqual(proven, expected);
+    assert.strictEqual(
       await reader.resources("view.html", "", undefined, ["x.css"]),
-      expected,
+      proven,
     );
     assert.deepEqual(
       await reader.resourcesIfPresent("second.html", "", undefined, ["x.css"]),
@@ -104,5 +124,27 @@ test("required-only batch readers keep their bulk-read capability during proof",
   assert.deepEqual(
     await reader.resourcesIfPresent("view.html", "", undefined, ["x.css"]),
     new Set(["x.css"]),
+  );
+});
+
+test("a failed single-file proof does not cache its rejection", async () => {
+  let reads = 0;
+  const reader = new ComponentMaterialReader({
+    read: async () => {
+      reads++;
+      throw new Error("missing file");
+    },
+  });
+  assert.equal(
+    await reader.resourcesIfPresent("view.html", "", undefined, [
+      "missing.svg",
+    ]),
+    undefined,
+  );
+  await assert.rejects(reader.read("missing.svg"), { message: "missing file" });
+  assert.equal(
+    reads,
+    2,
+    "required reads must reach the underlying reader after a failed proof",
   );
 });

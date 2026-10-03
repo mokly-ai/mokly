@@ -23,3 +23,25 @@ export function compareStyleSwitches(
     root,
   );
 }
+
+/** Compare failures as well as results against a fresh per-view oracle context. */
+export async function captureStyleSwitches(
+  fixture: FastPathFixture,
+  switches: (typeof styleSwitches)[number],
+) {
+  try {
+    const { comparisonPath, ...result } = await compareStyleSwitches(
+      fixture,
+      switches,
+    );
+    return { kind: "result" as const, comparisonPath, result };
+  } catch (error) {
+    if (!(error instanceof Error)) throw error;
+    return {
+      kind: "error" as const,
+      name: error.name,
+      message: error.message,
+      ...("code" in error ? { code: error.code } : {}),
+    };
+  }
+}

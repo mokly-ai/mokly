@@ -25,10 +25,15 @@ export function styleTagsContainReviewMarker(style: InlineStyleSpan): boolean {
   ].some((tag) => tag.includes("<!--mokly-review-"));
 }
 
-/** Quick checks cannot predict how canonicalization removes review markers. */
+const reservedMarker =
+  /<(?:[\t\n\f\r !-]|\/\*[\s\S]*?\*\/)*[mM][oO][kK][lL][yY]-/;
+
+/** A serializer-independent superset of literal, decoded and joined reserved markers. */
 export function styleNeedsFullValidation(style: InlineStyleSpan): boolean {
+  if (style.source.includes("<!--mokly-review-")) return true;
+  if (reservedMarker.test(decodeCssEscapes(style.text))) return true;
+  const continued = style.text.replace(/\\(?:\r\n|[\n\r\f])/g, "");
   return (
-    style.source.includes("<!--mokly-review-") ||
-    /<!--[mM][oO][kK][lL][yY]-/.test(decodeCssEscapes(style.text))
+    continued !== style.text && reservedMarker.test(decodeCssEscapes(continued))
   );
 }

@@ -53,15 +53,7 @@ test("line continuations disappear only inside source strings", () => {
   assert.equal(decodeCssEscapes("\\22 a\\\nb"), '"a\nb');
 });
 
-test("comments and token separators do not join decoded marker fragments", () => {
-  assert.equal(
-    decodeCssEscapes(String.raw`"\3c !" "--mokly-"`),
-    '"<!" "--mokly-"',
-  );
-  assert.equal(
-    decodeCssEscapes(String.raw`\3c !/**/--mokly-`),
-    "<!/**/--mokly-",
-  );
+test("comments and quoted or unquoted URLs retain string context", () => {
   assert.equal(
     decodeCssEscapes(String.raw`/* " \3c */`),
     String.raw`/* " \3c */`,

@@ -175,9 +175,9 @@ path, exact original-text equality and canonical usage-topology equality,
 allowing entry-owned input changes. Validate ignores/ranges through the head
 analysis and share it for both sides, without projection, rewritten materials,
 hashing, inline analysis or implementation comparison. Reject literal
-`<!--mokly-review-` in eligible outer sources and ASCII-case-insensitive
-`<!--mokly-` in escape-decoded content: serialization can produce reserved markers.
-Use the [pure source decoder](./mokly-component-review-fast-path.md#source-only-escape-guard).
+`<!--mokly-review-` in eligible outer sources and potential decoded reserved
+markers under the [source-only guard](./mokly-component-review-fast-path.md#source-only-escape-guard):
+serialization can decode escapes and join whitespace/comments into markers.
 
 Shared raw seeds include original **and** potential caller-slot-copy records.
 The [resource proof](./mokly-component-review-fast-path.md#resource-and-one-sided-rules)

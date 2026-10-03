@@ -37,10 +37,10 @@ Apply these steps in order:
    usage reasons. If any eligible unowned style's outer source contains
    `<!--mokly-review-`, take fall-through: canonicalization may remove region
    markers or material signals even from identical texts. Inspect only the head
-   in this check. Also decode CSS escapes in eligible style content and take
-   fall-through for decoded `<!--mokly-`, ASCII case-insensitively: serialization
-   can decode escapes into reserved markers. Use the source-only decoding rule
-   below, without inline CSS analysis. Failed proofs retain preparation.
+   in this check. Decode eligible content and use the conservative reserved-marker
+   matcher below: serialization can decode escapes and join comments/whitespace.
+   Also check after removing escaped newlines everywhere. These source-only
+   checks run no inline analysis; failed proofs retain preparation.
 1. Retain v7 component markers on both sides and apply paired manual-ignore
    normalization. If documents differ outside paired ignored regions, take the
    fall-through. Marker-stripped equality is insufficient because marker
@@ -48,7 +48,7 @@ Apply these steps in order:
    require equal ordered eligible unowned style outer sources on both sides:
    ignored markup can change HTML parsing context and therefore style eligibility.
    Apply both guards on both sides: literal `<!--mokly-review-` in outer source,
-   and ASCII-case-insensitive decoded `<!--mokly-` in content. This includes
+   and the conservative decoded reserved-marker matcher in content. This includes
    paired/one-sided region markers and material signals. The complete
    path decides state, ignore evidence and validation after canonicalization.
 2. Compare usage records canonically. Neither side having usage is eligible;
@@ -103,12 +103,24 @@ whitespace terminator (CRLF counts as one). Other escaped characters yield that
 character. Inside source strings, escaped LF, CR, CRLF or FF is a removed line
 continuation. Zero, surrogate and out-of-range escaped code points, and a trailing
 backslash at EOF, yield U+FFFD. Escaped quotes do not open/close source strings.
-Keep quoting, comments and token separators in the decoded text so separate
-tokens cannot manufacture a prefix; comments have no escapes to interpret.
-This is a pure source scan, not CSS parsing or rule analysis. Ordinary utility
-escapes (`.md\:flex`, `.w-1\/2`, `.hover\:bg-red:hover`), `\201C` and literal
-`<` without the decoded prefix retain quick-check eligibility. Full comparison
-results and validation remain authoritative; no complete-path rule changes.
+Only a standalone ident-like `url` enters unquoted-URL state. Hash and at-keyword
+names (including escaped starts) do not; raw NUL counts as an ident code point.
+
+Canonical serialization can drop comments between non-word tokens and whitespace
+next to `!`. Independently of its exact joining rules, fall through when decoded
+content matches this conservative superset, ASCII case-insensitively:
+
+```js
+/<(?:[\t\n\f\r !-]|\/\*[\s\S]*?\*\/)*mokly-/i;
+```
+
+For this guard only, also remove backslash plus LF, CR, CRLF or FF everywhere
+before decoding/matching. Accept either match, retaining the ordinary decoded
+check so this extension cannot reduce fallbacks. Comments remain in the decoded
+text and are accepted by the matcher; they do not prove a safe boundary.
+This source scan performs no CSS analysis. Ordinary utility escapes and `<`
+without this separator/marker pattern remain eligible. Complete results and
+validation remain authoritative.
 
 ## Resource And One-Sided Rules
 
@@ -126,7 +138,9 @@ reads/closures remain reusable. Do not retain a failed partial closure as a
 complete result. Required full-path reads keep their own validation and errors:
 a cached optional absence must not substitute a different required-read error.
 Readers without optional methods may probe their required reads; a failed probe
-also falls through, and a successful one remains cached.
+also falls through. Probe the underlying reader and cache only successfully
+returned bytes; a rejected probe or batch must never poison required reads of
+other files. Reuse successful bytes and the exact complete closure on fall-through.
 
 Projected resources need not be a subset of actual resources: copying caller
 content out of an inert template can expose recorded references. Parser-discarded

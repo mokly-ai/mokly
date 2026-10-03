@@ -67,11 +67,14 @@ a removed/added, conservatively unresolved change on both paths.
 
 `escape_decoding.ts` is the quick checks' pure source decoder for reserved
 markers. It handles hex/non-hex escapes, CRLF terminators, string continuations,
-invalid code points and EOF without native parsing. Quotes and comments remain
-separators; escaped quotes do not change string context, and unquoted URL text
-keeps its own lexical context. It is separate from the existing identifier and
-resource decoding policies. Utility selector escapes and ordinary `<` text keep
-the quick path; only a decoded reserved prefix triggers this guard.
+invalid code points and EOF without native parsing. Escaped quotes do not change
+string context. Only standalone `url` names start URL state; hash/at-keyword
+names do not, and NUL counts as an ident character. It is separate from the
+existing identifier/resource decoding policies. Canonical serialization can
+join whitespace/comments: the guard conservatively accepts any CSS whitespace,
+comment, `!` or `-` run between decoded `<` and ASCII-case-insensitive `mokly-`.
+It also checks after globally removing escaped newlines, preserving ordinary
+matches. Utility escapes and other `<` text keep the quick path.
 
 ## Retention And Diagnostics
 
