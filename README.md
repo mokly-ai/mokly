@@ -293,6 +293,11 @@ cargo xtask check
 
 That command runs formatting, linting, type checks, unit and integration tests,
 packed-package smoke tests, browser tests, dependency checks, and Rust checks.
+The local [directory-name lint rule](./scripts/eslint/no-directory-literals.mjs)
+requires production paths to use the shared generated-directory constant,
+including in strings, templates and regular expressions. Run `npm run lint`
+to check it; the [lint contract](./docs/protocol/mokly-directory-lint.md) records
+its scope and the later merge checks.
 See the [xtask README](./xtask/README.md) for focused suites. Hosted CI runs the
 functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can

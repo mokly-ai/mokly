@@ -4,9 +4,10 @@
 
 Approved target for Milestones 10, 12 and 13 of
 [Generated Output Simplification](../../plans/generated-output-simplification.md).
-Milestone 10 separates the existing directory check before the merge.
+Milestone 10 implements the independent generated-directory literal rule before
+the merge, including escaped string, template and regular-expression spellings.
 Milestone 12 adds the viewer name. Milestone 13 proves merged coverage and
-enables duplicate-import checks. No lint configuration changes in Milestone 9.
+enables duplicate-import checks. Those later changes remain approved targets.
 
 ## Directory Name Rule
 

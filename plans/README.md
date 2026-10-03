@@ -12,13 +12,13 @@
   contracts, with an audited preservation list for all 11 mainline commits.
   Milestone 10 implements the independent directory literal guard and corrects
   the source-root and fixed-name contracts. Its functional checks pass; the
-  existing `braces` dependency audit blocks the code commit pending direction.
+  user accepted the sole braces audit failure for the pre-merge code checkpoint.
+  Main supplies the expiring audit exception, and the merged gate must pass.
   Milestones 11–15 merge `main`, rename `__mokly/` to `mokly-viewer/`, finish
   lint coverage, prepare the browser example baseline once in Milestone 14,
   then verify and review in Milestone 15. Correction 3 A selects v8-only
   baselines; findings 32 B and 34 C are documented. Milestone 11 has not
-  started. Other findings and the dependency blocker await direction; Cloud
-  rollout is a post-merge follow-up.
+  started. Other findings await direction; Cloud rollout is a post-merge follow-up.
 - [Release-Gated Node Compatibility](./release-gated-node-compatibility.md) —
   run the minimum supported runtime on ordinary changes and reserve the full
   Node 22.14/24 compatibility matrix for Release Please pull requests.

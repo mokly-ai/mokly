@@ -3,6 +3,8 @@ import importPlugin from "eslint-plugin-import-x";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
+import noDirectoryLiterals from "./scripts/eslint/no-directory-literals.mjs";
+
 export default tseslint.config(
   {
     ignores: [
@@ -21,7 +23,10 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    plugins: { import: importPlugin },
+    plugins: {
+      import: importPlugin,
+      mokly: { rules: { "no-directory-literals": noDirectoryLiterals } },
+    },
     settings: {
       "import-x/internal-regex": "^@mokly/(?:mokly|viewer)(?:/|$)",
     },
@@ -62,19 +67,7 @@ export default tseslint.config(
     ],
     ignores: ["packages/viewer/src/catalogue/delivery_paths.ts"],
     rules: {
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector: "Literal[value=/mokly-generated/]",
-          message:
-            "Import GENERATED_DIRECTORY instead of spelling the output directory.",
-        },
-        {
-          selector: "TemplateElement[value.raw=/mokly-generated/]",
-          message:
-            "Import GENERATED_DIRECTORY instead of spelling the output directory.",
-        },
-      ],
+      "mokly/no-directory-literals": "error",
     },
   },
 );

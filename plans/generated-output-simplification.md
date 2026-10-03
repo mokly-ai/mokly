@@ -885,17 +885,17 @@ Current-branch claims were checked against the implementation, not the guides:
 Backend. This runs before the merge, so `main`'s `no-restricted-syntax`
 block and this branch's check never share one ESLint rule.
 
-Status: implementation and functional verification are ready; the code commit
-is blocked by the existing dependency audit. Documentation corrections were
+Status: complete. The user accepted the sole pre-merge audit failure for
+GHSA-vfj7-8cjw-p6xm and authorized this code commit before the main merge. Documentation corrections were
 committed and pushed as `f8f64e8f756fcc2a7b32b7eb69df8e38b8c4a354`.
 
 - [x] Replace the `no-restricted-syntax` directory-name check with the local
       ESLint rule, and prove that a string, a template, and a
       regular-expression literal are reported.
-- [ ] Record the orchestrator's decision on the dependency-audit blocker
+- [x] Record the orchestrator's decision on the dependency-audit blocker
       before committing the code. Do not change dependency versions without
       separate authorization.
-- [ ] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
+- [x] Run `npm run format:check`, `npm run lint`, `npm run typecheck`,
       `npm test`, `npm run test:browser`, `npm run example:check`, and
       `cargo xtask check`; commit and push.
 
@@ -911,9 +911,86 @@ retry passed both tests, and the complete run passed on Node 22.14.0.
 chain (GHSA-vfj7-8cjw-p6xm); the final audit reports `No fix available`.
 The audited `HEAD` and `origin/main` lockfiles both contain `braces` 3.0.3,
 `micromatch` 4.0.8 and `react-native-worklets` 0.8.3. No dependency or gate
-configuration was changed, and no code commit or final implementation review
-has run. Historical-reader correction 3 was later decided as A, and its
+configuration was changed before the merge. The user approved committing
+Milestone 10 with this sole audit failure; all other required functional
+commands passed. No final implementation review has run. Historical-reader correction 3 was later decided as A, and its
 documentation is updated without starting Milestone 11 or making a commit.
+
+User-approved checkpoint exception: #130 on main supplies the existing,
+expiring dev-only audit exception through 2026-11-03. Do not change package
+versions, the audit command or audit policy before merging it. This approval
+applies only to the Milestone 10 commit/push; Milestone 11 must pass the full
+gate, including the audit, before any merged tip is pushed. The captured
+pre-merge gate output is reproduced exactly below:
+
+```text
+$ npm run dependencies:check
+
+> @mokly/mokly@0.12.0 dependencies:check
+> npm audit --audit-level=low --include=prod --include=dev --include=optional --include=peer
+
+# npm audit report
+
+braces  *
+Severity: high
+braces vulnerable to stack-exhaustion denial of service through deeply nested patterns - https://github.com/advisories/GHSA-vfj7-8cjw-p6xm
+No fix available
+node_modules/braces
+  micromatch  >=0.2.0
+  Depends on vulnerable versions of braces
+  node_modules/micromatch
+    metro-file-map  *
+    Depends on vulnerable versions of micromatch
+    node_modules/metro-file-map
+      metro  >=0.71.0
+      Depends on vulnerable versions of metro-config
+      Depends on vulnerable versions of metro-file-map
+      Depends on vulnerable versions of metro-transform-worker
+      node_modules/metro
+        @react-native/community-cli-plugin  *
+        Depends on vulnerable versions of @react-native/metro-config
+        Depends on vulnerable versions of metro
+        Depends on vulnerable versions of metro-config
+        node_modules/@react-native/community-cli-plugin
+          react-native  >=0.73.0-nightly-20230506-1af868c52
+          Depends on vulnerable versions of @react-native/community-cli-plugin
+          Depends on vulnerable versions of @react-native/virtualized-lists
+          node_modules/react-native
+            @firna/ui  *
+            Depends on vulnerable versions of react-native
+            node_modules/@firna/ui
+            @react-native/virtualized-lists  >=0.85.0-nightly-20260108-1236b6be4
+            Depends on vulnerable versions of react-native
+            node_modules/@react-native/virtualized-lists
+            react-native-reanimated  4.1.7 || >=4.2.3
+            Depends on vulnerable versions of react-native
+            node_modules/react-native-reanimated
+        metro-config  >=0.71.0
+        Depends on vulnerable versions of metro
+        node_modules/metro-config
+          @react-native/metro-config  *
+          Depends on vulnerable versions of metro-config
+          node_modules/@react-native/metro-config
+            react-native-worklets  >=0.8.0-bundle-mode-preview-1
+            Depends on vulnerable versions of @react-native/metro-config
+            Depends on vulnerable versions of react-native
+            node_modules/react-native-worklets
+        metro-transform-worker  >=0.71.0
+        Depends on vulnerable versions of metro
+        node_modules/metro-transform-worker
+
+13 high severity vulnerabilities
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues possible (including breaking changes), run:
+  npm audit fix --force
+
+Some issues need review, and may require choosing
+a different dependency.
+[xtask/command] `npm run dependencies:check` failed with status 1
+```
 
 ## Milestone 11: Merge `main` and unify the generated directory
 
